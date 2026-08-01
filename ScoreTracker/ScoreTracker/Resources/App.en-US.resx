@@ -579,8 +579,14 @@
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Approachable unpassed charts around your level.</value>
   </data>
+  <data name="Approved" xml:space="preserve">
+    <value>Approved</value>
+  </data>
   <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
     <value>Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page.</value>
+  </data>
+  <data name="Approving a tool puts its name, description and link in front of every player. Everything else about it — webhooks, keys, who it can read — is the maker's business and is not reviewed here." xml:space="preserve">
+    <value>Approving a tool puts its name, description and link in front of every player. Everything else about it — webhooks, keys, who it can read — is the maker's business and is not reviewed here.</value>
   </data>
   <data name="Arcade" xml:space="preserve">
     <value>Arcade</value>
@@ -1177,6 +1183,9 @@
   </data>
   <data name="Community Tools" xml:space="preserve">
     <value>Community Tools</value>
+  </data>
+  <data name="Community tools awaiting review" xml:space="preserve">
+    <value>Community tools awaiting review</value>
   </data>
   <data name="Community tools can now use your scores" xml:space="preserve">
     <value>Community tools can now use your scores</value>
@@ -3315,6 +3324,9 @@
   <data name="None" xml:space="preserve">
 	  <value>None</value>
   </data>
+  <data name="None given" xml:space="preserve">
+    <value>None given</value>
+  </data>
   <data name="None of this works in PIUGame session mode" xml:space="preserve">
     <value>None of this works in PIUGame session mode</value>
   </data>
@@ -3432,6 +3444,9 @@
   </data>
   <data name="Nothing to undo yet" xml:space="preserve">
     <value>Nothing to undo yet</value>
+  </data>
+  <data name="Nothing waiting." xml:space="preserve">
+    <value>Nothing waiting.</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>now</value>
@@ -4080,6 +4095,9 @@
   <data name="Previous Folder" xml:space="preserve">
     <value>Previous Folder</value>
   </data>
+  <data name="Previously rejected: {0}" xml:space="preserve">
+    <value>Previously rejected: {0}</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -4389,8 +4407,17 @@
   <data name="Register this channel for a feed" xml:space="preserve">
     <value>Register this channel for a feed</value>
   </data>
+  <data name="Registered" xml:space="preserve">
+    <value>Registered</value>
+  </data>
   <data name="Registered No Score" xml:space="preserve">
     <value>registered — no score posted yet</value>
+  </data>
+  <data name="Reject {0}" xml:space="preserve">
+    <value>Reject {0}</value>
+  </data>
+  <data name="Rejected" xml:space="preserve">
+    <value>Rejected</value>
   </data>
   <data name="Rejected: key expired" xml:space="preserve">
     <value>Rejected: key expired</value>
@@ -5407,6 +5434,9 @@
   <data name="The level printed on the chart." xml:space="preserve">
     <value>The level printed on the chart.</value>
   </data>
+  <data name="The maker sees this on their tool page." xml:space="preserve">
+    <value>The maker sees this on their tool page.</value>
+  </data>
   <data name="The multiplier" xml:space="preserve">
     <value>The multiplier</value>
   </data>
@@ -5581,6 +5611,9 @@
   <data name="This tool asks for your PIUGame session" xml:space="preserve">
     <value>This tool asks for your PIUGame session</value>
   </data>
+  <data name="This tool asks players for their PIUGame session, not just their scores. Listing it puts that request in front of everyone — each player still has to accept the warning, but only approve this if you know who runs it." xml:space="preserve">
+    <value>This tool asks players for their PIUGame session, not just their scores. Listing it puts that request in front of everyone — each player still has to accept the warning, but only approve this if you know who runs it.</value>
+  </data>
   <data name="This user has no GameTag. Choose a username to assign before locking." xml:space="preserve">
 	  <value>This user has no GameTag. Choose a username to assign before locking.</value>
   </data>
@@ -5701,8 +5734,14 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>Today's Step posts at midnight.</value>
   </data>
+  <data name="Tool Review" xml:space="preserve">
+    <value>Tool Review</value>
+  </data>
   <data name="Tools" xml:space="preserve">
     <value>Tools</value>
+  </data>
+  <data name="Tools appear here when a maker asks to be listed publicly." xml:space="preserve">
+    <value>Tools appear here when a maker asks to be listed publicly.</value>
   </data>
   <data name="Tools built by players, on your scores. You choose who gets access." xml:space="preserve">
     <value>Tools built by players, on your scores. You choose who gets access.</value>
@@ -6182,6 +6221,9 @@
   </data>
   <data name="What it will be able to read" xml:space="preserve">
     <value>What it will be able to read</value>
+  </data>
+  <data name="What should they change?" xml:space="preserve">
+    <value>What should they change?</value>
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>What to work on (default Title Hunt)</value>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -203,7 +203,8 @@ public sealed class ToolKeyAndShareHandlerTests
     [Fact]
     public async Task CreatingAToolConnectsItsMakerAsPlayerOne()
     {
-        var saga = new ToolManagementSaga(_tools.Object, _currentUser.Object, FakeDateTime.At(Now).Object);
+        var saga = new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
+            FakeDateTime.At(Now).Object);
 
         var id = await saga.Handle(new CreateToolCommand("Planner"), CancellationToken.None);
 

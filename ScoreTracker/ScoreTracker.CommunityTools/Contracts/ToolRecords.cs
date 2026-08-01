@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.CommunityTools.Contracts;
 
@@ -7,6 +7,7 @@ namespace ScoreTracker.CommunityTools.Contracts;
 public sealed record ToolRecord(
     Guid Id,
     Guid OwnerUserId,
+    string OwnerName,
     string Name,
     string? Description,
     string? Url,

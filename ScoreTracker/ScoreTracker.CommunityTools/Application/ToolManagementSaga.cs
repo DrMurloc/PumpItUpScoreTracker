@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
@@ -31,11 +31,13 @@ internal sealed class ToolManagementSaga :
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IToolRepository _tools;
+    private readonly IUserReader _users;
 
-    public ToolManagementSaga(IToolRepository tools, ICurrentUserAccessor currentUser,
+    public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor dateTime)
     {
         _tools = tools;
+        _users = users;
         _currentUser = currentUser;
         _dateTime = dateTime;
     }
@@ -131,7 +133,11 @@ internal sealed class ToolManagementSaga :
 
     private async Task<ToolRecord> Project(Tool tool, CancellationToken cancellationToken)
     {
-        return new ToolRecord(tool.Id, tool.OwnerUserId, tool.Name.ToString(), tool.Description,
+        // Who registered it is the review queue's main signal, so it travels with the record
+        // rather than being looked up per row on the page.
+        var owner = await _users.GetUser(tool.OwnerUserId, cancellationToken);
+        return new ToolRecord(tool.Id, tool.OwnerUserId, owner?.Name.ToString() ?? string.Empty,
+            tool.Name.ToString(), tool.Description,
             tool.Url?.ToString(), tool.Visibility, tool.AcceptsAllToolsShare, tool.WebhookMode,
             tool.WebhookUrl?.ToString(), tool.Mixes.ToArray(),
             await _tools.CountConnectedPlayers(tool.Id, cancellationToken),

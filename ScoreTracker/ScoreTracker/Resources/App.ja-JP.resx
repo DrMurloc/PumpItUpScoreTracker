@@ -579,8 +579,14 @@
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>自分のレベル前後の、まだクリアしていない取り組みやすい譜面。</value>
   </data>
+  <data name="Approved" xml:space="preserve">
+    <value>承認しました</value>
+  </data>
   <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
     <value>承認されたツールがあなたのスコアを読み取れるようになります。ほとんどのスコア分析ツールがこれを使っています。別の設定なので、このページですぐにオフにできます。</value>
+  </data>
+  <data name="Approving a tool puts its name, description and link in front of every player. Everything else about it — webhooks, keys, who it can read — is the maker's business and is not reviewed here." xml:space="preserve">
+    <value>ツールを承認すると、その名前・説明・リンクがすべてのプレイヤーに表示されます。Webhook、キー、読み取り対象などそれ以外は作者の領分であり、ここでは審査しません。</value>
   </data>
   <data name="Arcade" xml:space="preserve">
     <value>アーケード</value>
@@ -1177,6 +1183,9 @@
   </data>
   <data name="Community Tools" xml:space="preserve">
     <value>コミュニティツール</value>
+  </data>
+  <data name="Community tools awaiting review" xml:space="preserve">
+    <value>審査待ちのコミュニティツール</value>
   </data>
   <data name="Community tools can now use your scores" xml:space="preserve">
     <value>コミュニティツールがあなたのスコアを使えるようになりました</value>
@@ -3315,6 +3324,9 @@
   <data name="None" xml:space="preserve">
 	  <value>なし</value>
   </data>
+  <data name="None given" xml:space="preserve">
+    <value>指定なし</value>
+  </data>
   <data name="None of this works in PIUGame session mode" xml:space="preserve">
     <value>PIUGameセッションモードでは何も動きません</value>
   </data>
@@ -3432,6 +3444,9 @@
   </data>
   <data name="Nothing to undo yet" xml:space="preserve">
     <value>取り消せるものはまだありません</value>
+  </data>
+  <data name="Nothing waiting." xml:space="preserve">
+    <value>待機中のものはありません。</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>たった今</value>
@@ -4080,6 +4095,9 @@
   <data name="Previous Folder" xml:space="preserve">
     <value>前のフォルダー</value>
   </data>
+  <data name="Previously rejected: {0}" xml:space="preserve">
+    <value>以前の却下理由: {0}</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -4389,8 +4407,17 @@
   <data name="Register this channel for a feed" xml:space="preserve">
     <value>このチャンネルをフィードに登録</value>
   </data>
+  <data name="Registered" xml:space="preserve">
+    <value>登録日</value>
+  </data>
   <data name="Registered No Score" xml:space="preserve">
     <value>登録済み — スコア未提出</value>
+  </data>
+  <data name="Reject {0}" xml:space="preserve">
+    <value>{0} を却下</value>
+  </data>
+  <data name="Rejected" xml:space="preserve">
+    <value>却下しました</value>
   </data>
   <data name="Rejected: key expired" xml:space="preserve">
     <value>拒否: キーの期限切れ</value>
@@ -5407,6 +5434,9 @@
   <data name="The level printed on the chart." xml:space="preserve">
     <value>譜面に表記されたレベル。</value>
   </data>
+  <data name="The maker sees this on their tool page." xml:space="preserve">
+    <value>作者は自分のツールページでこれを見ます。</value>
+  </data>
   <data name="The multiplier" xml:space="preserve">
     <value>倍率</value>
   </data>
@@ -5581,6 +5611,9 @@
   <data name="This tool asks for your PIUGame session" xml:space="preserve">
     <value>このツールはPIUGameセッションを要求します</value>
   </data>
+  <data name="This tool asks players for their PIUGame session, not just their scores. Listing it puts that request in front of everyone — each player still has to accept the warning, but only approve this if you know who runs it." xml:space="preserve">
+    <value>このツールはスコアだけでなく PIUGame セッションを要求します。掲載すると、その要求が全員の目に触れます — 各プレイヤーが警告に同意する必要はありますが、運営者を知っている場合のみ承認してください。</value>
+  </data>
   <data name="This user has no GameTag. Choose a username to assign before locking." xml:space="preserve">
 	  <value>このユーザーにはGameTagがありません。ロック前にユーザー名を割り当ててください。</value>
   </data>
@@ -5701,8 +5734,14 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>今日のステップは深夜に公開されます。</value>
   </data>
+  <data name="Tool Review" xml:space="preserve">
+    <value>ツール審査</value>
+  </data>
   <data name="Tools" xml:space="preserve">
     <value>ツール</value>
+  </data>
+  <data name="Tools appear here when a maker asks to be listed publicly." xml:space="preserve">
+    <value>作者が公開掲載を申請すると、ここに表示されます。</value>
   </data>
   <data name="Tools built by players, on your scores. You choose who gets access." xml:space="preserve">
     <value>プレイヤーが作ったツールが、あなたのスコアを使います。誰に許可するかはあなたが決めます。</value>
@@ -6182,6 +6221,9 @@
   </data>
   <data name="What it will be able to read" xml:space="preserve">
     <value>読み取れる情報</value>
+  </data>
+  <data name="What should they change?" xml:space="preserve">
+    <value>何を直すべきですか?</value>
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>取り組む目標（既定は称号ハント）</value>

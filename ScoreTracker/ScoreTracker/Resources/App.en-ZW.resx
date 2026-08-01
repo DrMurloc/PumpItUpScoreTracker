@@ -579,8 +579,14 @@
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Lurggrgllurggl rglgrglblub murgl blubmurm gromurp grorpmurm.</value>
   </data>
+  <data name="Approved" xml:space="preserve">
+    <value>Marogl</value>
+  </data>
   <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
     <value>Argla Rorgl murp blurgl gromurp Mgrlgmrg — ormo blu mgrlgmrg-rorgblub. Amurmo murgargl, gromurp murp grorp murmarglmurp, blu blaromurp.</value>
+  </data>
+  <data name="Approving a tool puts its name, description and link in front of every player. Everything else about it — webhooks, keys, who it can read — is the maker's business and is not reviewed here." xml:space="preserve">
+    <value>Marogl blurgl - alla plaruga glub burgla mo groblu, alla mogul. Bo grumbla, alla marogl: obbla, pragl, bloop groblu - alla blurgl mogla, opa marogl bo.</value>
   </data>
   <data name="Arcade" xml:space="preserve">
     <value>Blubgro</value>
@@ -1177,6 +1183,9 @@
   </data>
   <data name="Community Tools" xml:space="preserve">
     <value>Plglmurgblub Rorgl</value>
+  </data>
+  <data name="Community tools awaiting review" xml:space="preserve">
+    <value>Blurgl bo marogl grumba</value>
   </data>
   <data name="Community tools can now use your scores" xml:space="preserve">
     <value>Plglmurgblub Rorgl blorm murp murgm gromurp Mgrlgmrg</value>
@@ -3315,6 +3324,9 @@
   <data name="None" xml:space="preserve">
 	  <value>Rglmagl</value>
   </data>
+  <data name="None given" xml:space="preserve">
+    <value>Alla</value>
+  </data>
   <data name="None of this works in PIUGame session mode" xml:space="preserve">
     <value>Bam murgm murpmurp blu PIUGame murgloborg</value>
   </data>
@@ -3432,6 +3444,9 @@
   </data>
   <data name="Nothing to undo yet" xml:space="preserve">
     <value>Gorb glopa muru</value>
+  </data>
+  <data name="Nothing waiting." xml:space="preserve">
+    <value>Alla grumba.</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>magl</value>
@@ -4080,6 +4095,9 @@
   <data name="Previous Folder" xml:space="preserve">
     <value>Grglmurpgrgl Grrgllurg</value>
   </data>
+  <data name="Previously rejected: {0}" xml:space="preserve">
+    <value>Marogl blorp: {0}</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Grorpmrp</value>
   </data>
@@ -4389,8 +4407,17 @@
   <data name="Register this channel for a feed" xml:space="preserve">
     <value>Grorpplglblub grglmrp glmurmblarg ro gro grglgrrgl</value>
   </data>
+  <data name="Registered" xml:space="preserve">
+    <value>Grumbagl</value>
+  </data>
   <data name="Registered No Score" xml:space="preserve">
     <value>grumla — blub mrglrgl uma</value>
+  </data>
+  <data name="Reject {0}" xml:space="preserve">
+    <value>Blorp {0}</value>
+  </data>
+  <data name="Rejected" xml:space="preserve">
+    <value>Blorp</value>
   </data>
   <data name="Rejected: key expired" xml:space="preserve">
     <value>Murgloo: blarglurp murgloo</value>
@@ -5407,6 +5434,9 @@
   <data name="The level printed on the chart." xml:space="preserve">
     <value>Mrp grorpmurm morggromurm lurg mrp murgl.</value>
   </data>
+  <data name="The maker sees this on their tool page." xml:space="preserve">
+    <value>Blurgl mogla am bo groblu.</value>
+  </data>
   <data name="The multiplier" xml:space="preserve">
     <value>Mrp glmurmargl</value>
   </data>
@@ -5581,6 +5611,9 @@
   <data name="This tool asks for your PIUGame session" xml:space="preserve">
     <value>Blu Rorgl murgargl gromurp PIUGame murgloborg</value>
   </data>
+  <data name="This tool asks players for their PIUGame session, not just their scores. Listing it puts that request in front of everyone — each player still has to accept the warning, but only approve this if you know who runs it." xml:space="preserve">
+    <value>Blurgl mo PIUGAME grumba plaruga, alla bloop. Marogl olo grumbla amba - alla plaruga bo blurgl, opa marogl u am golba mogul.</value>
+  </data>
   <data name="This user has no GameTag. Choose a username to assign before locking." xml:space="preserve">
 	  <value>Grglmrp glorgblarg rgl mrp Grrglurgblarg. Arglro gro grrmrrgl grgl glmrgl glorggro roblubmagl.</value>
   </data>
@@ -5701,8 +5734,14 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>Maglrgl Glorgmagl urgmurg mr gromorgblub.</value>
   </data>
+  <data name="Tool Review" xml:space="preserve">
+    <value>Blurgl Marogl</value>
+  </data>
   <data name="Tools" xml:space="preserve">
     <value>Rorgl</value>
+  </data>
+  <data name="Tools appear here when a maker asks to be listed publicly." xml:space="preserve">
+    <value>Blurgl grumbla amba plaruga golba PIUGAME olo.</value>
   </data>
   <data name="Tools built by players, on your scores. You choose who gets access." xml:space="preserve">
     <value>Rorgl morp murpmurp, blu gromurp Mgrlgmrg. Gromurp murgargl bo argla.</value>
@@ -6182,6 +6221,9 @@
   </data>
   <data name="What it will be able to read" xml:space="preserve">
     <value>Murp murp blurgl</value>
+  </data>
+  <data name="What should they change?" xml:space="preserve">
+    <value>Amba golba?</value>
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>Rglmorg grgl murglurg lurg (plglgrgllurg Mrgl Murgblgrl)</value>
