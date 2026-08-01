@@ -503,12 +503,6 @@
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>Also forget my saved PIUGAME password</value>
   </data>
-  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
-    <value>Also send imported scores to PIU Tracker, a community score site.</value>
-  </data>
-  <data name="Also send scores to piutracker.app" xml:space="preserve">
-    <value>Also send scores to piutracker.app</value>
-  </data>
   <data name="Always" xml:space="preserve">
     <value>Always</value>
   </data>
@@ -3890,9 +3884,6 @@
   <data name="PIU Tier List" xml:space="preserve">
 	  <value>PIU Tier List</value>
   </data>
-  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
-    <value>PIU Tracker is fully public — scores you send there are public even if your profile isn't.</value>
-  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4801,6 +4792,9 @@
   </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Send it as Authorization: Bearer. Shown once — we store a hash.</value>
+  </data>
+  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
+    <value>Sending your scores to PIU Tracker or another community tool is managed from</value>
   </data>
   <data name="Sent for review" xml:space="preserve">
     <value>Sent for review</value>

@@ -30,7 +30,6 @@ public static class OfficialMirrorRegistrationExtensions
                 provider.GetRequiredService<IOptions<PiuGameConfiguration>>().Value.BaseUrl);
         });
         services.AddTransient<IOfficialSiteClient, OfficialSiteClient>();
-        services.AddTransient<IPiuTrackerClient, PiuTrackerClient>();
         services.AddTransient<IOfficialSnapshotRepository, EFOfficialSnapshotRepository>();
         services.AddTransient<IOfficialRecordRepository, EFOfficialRecordRepository>();
         services.AddTransient<IOfficialPlayerIdentityRepository, EFOfficialPlayerIdentityRepository>();

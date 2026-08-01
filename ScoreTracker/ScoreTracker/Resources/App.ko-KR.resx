@@ -501,12 +501,6 @@
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>저장된 PIUGAME 비밀번호도 삭제</value>
   </data>
-  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
-    <value>가져온 점수를 커뮤니티 점수 사이트인 PIU Tracker에도 전송합니다.</value>
-  </data>
-  <data name="Also send scores to piutracker.app" xml:space="preserve">
-    <value>piutracker.app에도 점수 보내기</value>
-  </data>
   <data name="Always" xml:space="preserve">
     <value>항상</value>
   </data>
@@ -3855,9 +3849,6 @@
   <data name="PIU Tier List" xml:space="preserve">
     <value>PIU 서열표</value>
   </data>
-  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
-    <value>PIU Tracker는 완전히 공개됩니다 — 프로필이 비공개여도 전송한 점수는 공개됩니다.</value>
-  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4753,6 +4744,9 @@
   </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Authorization: Bearer로 보내세요. 한 번만 표시되며 저희는 해시를 저장합니다.</value>
+  </data>
+  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
+    <value>PIU Tracker 등 커뮤니티 도구로 점수를 보내는 설정은 다음에서 관리합니다:</value>
   </data>
   <data name="Sent for review" xml:space="preserve">
     <value>검토 요청됨</value>

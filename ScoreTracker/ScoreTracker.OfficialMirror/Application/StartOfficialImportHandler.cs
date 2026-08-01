@@ -1,4 +1,4 @@
-using System.Security.Authentication;
+﻿using System.Security.Authentication;
 using MassTransit;
 using MediatR;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -73,7 +73,7 @@ internal sealed class StartOfficialImportHandler : IRequestHandler<StartOfficial
 
             await _bus.Publish(
                 new RunOfficialImportCommand(userId, request.Mix, sid, request.CardId,
-                    request.ExpectedGameTag, request.IncludeBroken, request.SyncPiuTracker), cancellationToken);
+                    request.ExpectedGameTag, request.IncludeBroken), cancellationToken);
             handedOff = true;
             return new ImportStartResult(ImportStartOutcome.Started);
         }

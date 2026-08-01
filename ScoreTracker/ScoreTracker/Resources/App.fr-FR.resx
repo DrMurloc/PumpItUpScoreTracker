@@ -503,12 +503,6 @@
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>Oublier aussi mon mot de passe PIUGAME enregistré</value>
   </data>
-  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
-    <value>Envoie aussi les scores importés vers PIU Tracker, un site de scores communautaire.</value>
-  </data>
-  <data name="Also send scores to piutracker.app" xml:space="preserve">
-    <value>Envoyer aussi les scores à piutracker.app</value>
-  </data>
   <data name="Always" xml:space="preserve">
     <value>Toujours</value>
   </data>
@@ -3889,9 +3883,6 @@
   <data name="PIU Tier List" xml:space="preserve">
     <value>Tier List PIU</value>
   </data>
-  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
-    <value>PIU Tracker est entièrement public — les scores que vous y envoyez sont publics même si votre profil ne l'est pas.</value>
-  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4800,6 +4791,9 @@
   </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Envoyez-la via Authorization: Bearer. Affichée une seule fois — nous stockons une empreinte.</value>
+  </data>
+  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
+    <value>L'envoi de vos scores vers PIU Tracker ou un autre outil communautaire se gère depuis</value>
   </data>
   <data name="Sent for review" xml:space="preserve">
     <value>Envoyé pour revue</value>

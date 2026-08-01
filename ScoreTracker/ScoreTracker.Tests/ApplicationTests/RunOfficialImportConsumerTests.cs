@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,7 +37,7 @@ public sealed class RunOfficialImportConsumerTests
         var userId = Guid.NewGuid();
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
-            "TAG", true, false)));
+            "TAG", true)));
 
         mediator.Verify(m => m.Send(It.Is<ExecuteImportCommand>(c =>
                 c.UserId == userId && c.Mix == MixEnum.Phoenix && c.Sid == "sid123" && c.CardId == "card1" &&
@@ -55,7 +55,7 @@ public sealed class RunOfficialImportConsumerTests
         var userId = Guid.NewGuid();
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
-            "TAG", false, false)));
+            "TAG", false)));
 
         guard.Verify(g => g.End(userId), Times.Once);
     }
@@ -72,7 +72,7 @@ public sealed class RunOfficialImportConsumerTests
         var userId = Guid.NewGuid();
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
-            "TAG", false, false)));
+            "TAG", false)));
 
         guard.Verify(g => g.End(userId), Times.Once);
     }
@@ -90,7 +90,7 @@ public sealed class RunOfficialImportConsumerTests
             new Mock<IImportConcurrencyGuard>().Object);
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
-            "TAG", false, false)));
+            "TAG", false)));
 
         // Scope-only (no cookie) so the live circuit that flowed in isn't signed out.
         currentUser.Verify(c => c.SetScopedUser(It.Is<User>(u => u.Id == userId)), Times.Once);
@@ -108,7 +108,7 @@ public sealed class RunOfficialImportConsumerTests
         var userId = Guid.NewGuid();
 
         await consumer.Consume(Context(new RunOfficialImportCommand(userId, MixEnum.Phoenix, "sid123", "card1",
-            "TAG", false, false)));
+            "TAG", false)));
 
         mediator.Verify(m => m.Publish(It.Is<ImportStatusErrorEvent>(e =>
                 e.UserId == userId && e.Error == "Invalid Login Information"),

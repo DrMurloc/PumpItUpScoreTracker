@@ -503,12 +503,6 @@
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>保存された PIUGAME のパスワードも削除する</value>
   </data>
-  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
-    <value>インポートしたスコアをコミュニティのスコアサイト PIU Tracker にも送信します。</value>
-  </data>
-  <data name="Also send scores to piutracker.app" xml:space="preserve">
-    <value>piutracker.app にもスコアを送信する</value>
-  </data>
   <data name="Always" xml:space="preserve">
     <value>常に</value>
   </data>
@@ -3890,9 +3884,6 @@
   <data name="PIU Tier List" xml:space="preserve">
 	  <value>PIUティアリスト</value>
   </data>
-  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
-    <value>PIU Tracker は完全に公開されています。プロフィールが非公開でも、送信したスコアは公開されます。</value>
-  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4801,6 +4792,9 @@
   </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Authorization: Bearer で送ってください。表示は一度きりで、保存するのはハッシュです。</value>
+  </data>
+  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
+    <value>PIU Tracker などのコミュニティツールへのスコア送信は、こちらで管理します:</value>
   </data>
   <data name="Sent for review" xml:space="preserve">
     <value>審査に送信しました</value>

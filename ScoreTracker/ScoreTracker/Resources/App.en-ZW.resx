@@ -503,12 +503,6 @@
   <data name="Also forget my saved PIUGAME password" xml:space="preserve">
     <value>Blurp PIUGAME gorbal ampu</value>
   </data>
-  <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
-    <value>Morgglorg mrmr plglgromurm mgrlgmrg grgl PIU Grrglgroblarg, gro plglmurgblub mrglrgl plglmorg.</value>
-  </data>
-  <data name="Also send scores to piutracker.app" xml:space="preserve">
-    <value>Morgglorg mrmr mgrlgmrg grgl plglgrorpgl.blub</value>
-  </data>
   <data name="Always" xml:space="preserve">
     <value>Mrgmurg</value>
   </data>
@@ -3890,9 +3884,6 @@
   <data name="PIU Tier List" xml:space="preserve">
 	  <value>PIU Mrpgrrgl Grog</value>
   </data>
-  <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
-    <value>PIU Grrglgroblarg urg plglgrgl mrglrgll — mgrlgmrg blub mrmr blgrlgrrgl mrp mrglrgll mrpplgl mr gromurp mrglarglrgl blgrlro.</value>
-  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4801,6 +4792,9 @@
   </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Murpo murgm blu murgblub murpgrogl. Murmo blomurp — bam murgloo murgblarg.</value>
+  </data>
+  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
+    <value>Grumba PIU Tracker olo maglub bloop, roggl argla:</value>
   </data>
   <data name="Sent for review" xml:space="preserve">
     <value>Murpo blu murgargl</value>

@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.OfficialMirror.Contracts.Messages;
@@ -7,4 +7,4 @@ namespace ScoreTracker.OfficialMirror.Contracts.Messages;
 // a password.
 [ExcludeFromCodeCoverage]
 public sealed record RunOfficialImportCommand(Guid UserId, MixEnum Mix, RedactedString Sid, string CardId,
-    string ExpectedGameTag, bool IncludeBroken, bool SyncPiuTracker);
+    string ExpectedGameTag, bool IncludeBroken);

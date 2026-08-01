@@ -73,24 +73,30 @@ internal sealed class SessionDeliveryClient : ISessionDeliveryClient
     {
         var now = _dateTime.Now;
         var deliveryId = "s-" + Guid.NewGuid().ToString("N")[..12];
+        var legacy = PiuTrackerSessionShape.Applies(tool.Id);
 
         // Built, signed and sent without ever being handed to the delivery repository.
-        var body = JsonSerializer.Serialize(new
-        {
-            deliveryId,
-            schemaVersion = DeliveryPayload.CurrentSchemaVersion,
-            sentAt = now,
-            mix = mix.ToString(),
-            userId,
-            gameTag,
-            sid = sid.Reveal()
-        }, Wire);
+        var body = legacy
+            ? PiuTrackerSessionShape.Body(sid.Reveal())
+            : JsonSerializer.Serialize(new
+            {
+                deliveryId,
+                schemaVersion = DeliveryPayload.CurrentSchemaVersion,
+                sentAt = now,
+                mix = mix.ToString(),
+                userId,
+                gameTag,
+                sid = sid.Reveal()
+            }, Wire);
+        var endpoint = legacy
+            ? PiuTrackerSessionShape.Endpoint(tool.WebhookUrl!, gameTag)
+            : tool.WebhookUrl!;
 
         var secret = await _secrets.GetSigningSecret(tool.Id, cancellationToken);
         var signature = WebhookSigning.Sign(secret, now.ToUnixTimeSeconds(), body);
         var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
 
-        var outcome = await _client.Post(tool.WebhookUrl!, body, deliveryId, signature, headerName,
+        var outcome = await _client.Post(endpoint, body, deliveryId, signature, headerName,
             headerValue, cancellationToken);
 
         // Metadata only. The console shows delivered or failed and nothing behind it, which is why

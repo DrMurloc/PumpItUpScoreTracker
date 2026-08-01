@@ -163,7 +163,9 @@ public sealed class LocalizationKeyTests
             "Start.GG", "SkillAttack", "DrMurloc", "PUMBILITY", "Pumbility", "piuscores", "PIUGAME",
             "PIUGame", "YouTube", "Youtube", "Discord", "Phoenix", "Murloc", "BITE",
             // The API docs surface names an external tool by its brand, same standing as Discord.
-            "Swagger"
+            "Swagger",
+            // A registered community tool, named on the import pages. Same standing as PIU Center.
+            "PIU Tracker"
         ];
 
         var violations = new List<string>();
