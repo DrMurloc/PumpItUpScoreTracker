@@ -42,9 +42,18 @@ public sealed record CreateToolInviteLinkCommand(Guid ToolId) : IRequest<Guid>;
 [ExcludeFromCodeCoverage]
 public sealed record RevokeToolInviteLinkCommand(Guid ToolId, Guid Code) : IRequest;
 
-/// <summary>A player granting one named tool access, whether from the directory or an invite.</summary>
+/// <summary>
+///     A player granting one named tool access, whether from the directory or an invite.
+///     <para>
+///         <see cref="AcceptedSessionSharing" /> is the consent the player actually gave, carried
+///         back so the handler can check it still matches what the tool asks for. A maker can move a
+///         tool into PIUGame-session mode the moment its last player disconnects — including in the
+///         seconds between a player opening the connect dialog and pressing the button. Without
+///         this, that player consented to score reads and granted piugame.com account control.
+///     </para>
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record ConnectToolCommand(Guid ToolId) : IRequest;
+public sealed record ConnectToolCommand(Guid ToolId, bool AcceptedSessionSharing = false) : IRequest;
 
 [ExcludeFromCodeCoverage]
 public sealed record DisconnectToolCommand(Guid ToolId) : IRequest;

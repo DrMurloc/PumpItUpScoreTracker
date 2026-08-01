@@ -39,6 +39,21 @@ internal sealed class ToolShareException : CommunityToolsException
 }
 
 /// <summary>
+///     The tool changed what it asks for between the dialog rendering and the player pressing the
+///     button. The message names the change rather than saying "try again", because the player is
+///     about to be shown a much more serious warning and the reason for it should not be a surprise.
+/// </summary>
+[ExcludeFromCodeCoverage]
+internal sealed class ToolConsentMismatchException : CommunityToolsException
+{
+    public ToolConsentMismatchException() : base(
+        "This tool now asks for your PIUGame session, not just your scores. " +
+        "Nothing was shared — open it again to see what that means.")
+    {
+    }
+}
+
+/// <summary>
 ///     A tool the caller may not touch, or that does not exist. One exception for both so a
 ///     probe cannot distinguish "not yours" from "not there".
 /// </summary>

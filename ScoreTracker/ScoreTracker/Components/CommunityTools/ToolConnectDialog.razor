@@ -100,7 +100,22 @@
     {
         if (Tool is null) return;
 
-        await Mediator.Send(new ConnectToolCommand(Tool.Id));
+        try
+        {
+            // What the player was shown, not what the tool is asking for now. If a maker moved the
+            // tool into session mode while this dialog was open, the handler refuses rather than
+            // reading this dialog's silence as consent.
+            await Mediator.Send(new ConnectToolCommand(Tool.Id, Tool.RequiresPiuGameSession));
+        }
+        catch (Exception e)
+        {
+            // A domain exception's message is written for the person who tripped it.
+            Snackbar.Add(e.Message, Severity.Error);
+            await Close();
+            await OnConnected.InvokeAsync();
+            return;
+        }
+
         Snackbar.Add(L["{0} can now read your scores", Tool.Name].Value, Severity.Success);
         await Close();
         await OnConnected.InvokeAsync();

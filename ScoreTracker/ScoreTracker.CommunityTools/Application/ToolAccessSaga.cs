@@ -41,6 +41,14 @@ internal sealed class ToolAccessSaga :
         var tool = await _tools.GetTool(request.ToolId, cancellationToken)
                    ?? throw new ToolNotFoundException();
 
+        // The tool may have entered session mode after the dialog rendered — a maker can do that the
+        // moment the last player disconnects. Consent to read scores is not consent to hand over a
+        // piugame.com session, so a mismatch is refused and the player sees the real warning next
+        // time. The reverse direction needs no gate: a session-mode consent landing on a tool that
+        // has since dropped to score reads got strictly less than it agreed to.
+        if (tool.RequiresExplicitShare && !request.AcceptedSessionSharing)
+            throw new ToolConsentMismatchException();
+
         await _tools.GrantShare(tool.Id, _currentUser.User.Id, ShareSource.Direct, _dateTime.Now,
             cancellationToken);
     }

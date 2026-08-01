@@ -152,6 +152,52 @@ public sealed class ToolKeyAndShareHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    // A maker may enter session mode the moment their last player disconnects — including while
+    // someone has the ordinary connect dialog open. That player agreed to score reads; granting
+    // would hand over a piugame.com session instead.
+    [Fact]
+    public async Task ConnectingToATooThatTurnedSessionModeOnMidDialogIsRefused()
+    {
+        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SessionModeTool());
+
+        await Assert.ThrowsAsync<ToolConsentMismatchException>(() => AccessSaga()
+            .Handle(new ConnectToolCommand(ToolId), CancellationToken.None));
+
+        _tools.Verify(t => t.GrantShare(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<ShareSource>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ConnectingToASessionModeToolWithTheWarningAcknowledgedGrants()
+    {
+        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SessionModeTool());
+
+        await AccessSaga().Handle(new ConnectToolCommand(ToolId, true), CancellationToken.None);
+
+        _tools.Verify(t => t.GrantShare(ToolId, MakerId, ShareSource.Direct, Now,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // The safe direction. Someone who agreed to hand over a session and lands on a tool that has
+    // since dropped to score reads got strictly less than they consented to.
+    [Fact]
+    public async Task AcknowledgingASessionThatIsNoLongerAskedForStillConnects()
+    {
+        await AccessSaga().Handle(new ConnectToolCommand(ToolId, true), CancellationToken.None);
+
+        _tools.Verify(t => t.GrantShare(ToolId, MakerId, ShareSource.Direct, Now,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static Tool SessionModeTool()
+    {
+        var tool = Tool.Create(ToolId, MakerId, Name.From("Tracker"), Now);
+        tool.SetWebhook(WebhookMode.PiuGameSession, new Uri("https://tracker.example/hook"), 0);
+        return tool;
+    }
+
     // Without this a maker has no real account to test against, and finding themselves in their
     // own directory would be a silly first step.
     [Fact]
