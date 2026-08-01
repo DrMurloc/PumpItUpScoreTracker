@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.SharedKernel.Enums;
@@ -100,18 +103,31 @@ public abstract class ApiV2ControllerBase : Controller
 
     /// <summary>
     ///     Conditional GET for the catalog, which changes a few times a year and is otherwise re-pulled
-    ///     in full by every tool on every run. Returns true when the caller already has this version,
-    ///     in which case the action must return <see cref="StatusCodes.Status304NotModified" />.
+    ///     in full by every tool on every run.
+    ///     <para>
+    ///         The ETag is a hash of the response body rather than a version stamp, because the catalog
+    ///         has no version stamp and the cheap substitutes are wrong: a row count plus an id
+    ///         aggregate would not change when a chart's level does, which is exactly the edit a tool
+    ///         most needs to see. Serializing here rather than handing MVC the object keeps it to one
+    ///         pass.
+    ///     </para>
     /// </summary>
-    protected bool IsNotModified(string version)
+    protected IActionResult CatalogJson(object payload)
     {
-        var etag = $"\"{version}\"";
+        var json = JsonSerializer.Serialize(payload, WireOptions);
+        var etag = $"\"{Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json)))[..32]}\"";
         Response.Headers.ETag = etag;
-        return Request.Headers.IfNoneMatch.Any(v => v == etag);
+        Response.Headers.CacheControl = "private, max-age=0, must-revalidate";
+
+        if (Request.Headers.IfNoneMatch.Any(v => v == etag))
+            return StatusCode(StatusCodes.Status304NotModified);
+
+        return Content(json, "application/json");
     }
 
-    protected StatusCodeResult NotModified()
-    {
-        return StatusCode(StatusCodes.Status304NotModified);
-    }
+    /// <summary>
+    ///     MVC's own web defaults, so a body written here is byte-identical to one MVC would have
+    ///     serialized. Program.cs does not customize JsonOptions; if it ever does, this must follow.
+    /// </summary>
+    internal static readonly JsonSerializerOptions WireOptions = new(JsonSerializerDefaults.Web);
 }
