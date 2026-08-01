@@ -1121,6 +1121,9 @@
   <data name="Community Tools" xml:space="preserve">
     <value>Outils de la communauté</value>
   </data>
+  <data name="Community tools can now use your scores" xml:space="preserve">
+    <value>Les outils de la communauté peuvent maintenant utiliser vos scores</value>
+  </data>
   <data name="Community Vote" xml:space="preserve">
     <value>Vote de la communauté</value>
   </data>
@@ -1983,6 +1986,9 @@
   </data>
   <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
     <value>Les Goods ne donnent aucune vie et, contrairement aux Perfects et aux Greats, ils ne construisent pas non plus le multiplicateur. Ils ne vous pénalisent jamais. Ils ne comptent simplement pas.</value>
+  </data>
+  <data name="Got it" xml:space="preserve">
+    <value>Compris</value>
   </data>
   <data name="Grade" xml:space="preserve">
     <value>Grade</value>
@@ -3216,6 +3222,9 @@
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>Rien n'a changé entre ces deux mix.</value>
   </data>
+  <data name="Nothing changed for you. You can still share with a single tool you trust using an invite link from its maker." xml:space="preserve">
+    <value>Rien n'a changé pour vous. Vous pouvez toujours partager avec un seul outil de confiance via un lien d'invitation de son créateur.</value>
+  </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Rien de ce dossier ne figure au classement de popularité.</value>
   </data>
@@ -3788,6 +3797,9 @@
   <data name="Players active" xml:space="preserve">
     <value>Joueurs actifs</value>
   </data>
+  <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
+    <value>Des joueurs de la communauté PIU construisent des choses à partir de vos scores — planificateurs de PUMBILITY, analyse de patterns, bots de classement Discord. Il y a désormais une page où vous pouvez les voir et choisir qui y a accès.</value>
+  </data>
   <data name="Players Like You" xml:space="preserve">
     <value>Joueurs comme vous</value>
   </data>
@@ -3914,6 +3926,9 @@
   <data name="Public" xml:space="preserve">
     <value>Publique</value>
     <comment>(on/off, si le compte est configuré en tant que publique)</comment>
+  </data>
+  <data name="Public profiles were switched on for community tools when this launched. Tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
+    <value>Les profils publics ont été activés pour les outils de la communauté au lancement. Les outils peuvent lire vos scores jusqu'à ce que vous le désactiviez — ce que vous pouvez faire à tout moment depuis votre page Compte.</value>
   </data>
   <data name="Public tool" xml:space="preserve">
     <value>Outil public</value>
@@ -5491,11 +5506,17 @@
   <data name="Try again" xml:space="preserve">
     <value>Réessayer</value>
   </data>
+  <data name="Turn it off" xml:space="preserve">
+    <value>Le désactiver</value>
+  </data>
   <data name="Turn Off" xml:space="preserve">
     <value>Désactiver</value>
   </data>
   <data name="Turn On" xml:space="preserve">
     <value>Activer</value>
+  </data>
+  <data name="Turning it off doesn't touch your profile. Your scores stay visible on PIU Scores either way." xml:space="preserve">
+    <value>Le désactiver ne touche pas à votre profil. Vos scores restent visibles sur PIU Scores dans les deux cas.</value>
   </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>Activer ceci revient à écrire votre mot de passe sur un post-it que vous gardez dans votre poche — sauf que la note est dans un code que personne ne peut lire d'un simple coup d'œil, pas même nous.</value>
@@ -6122,8 +6143,14 @@
   <data name="Your Points per Second" xml:space="preserve">
     <value>Vos points par seconde</value>
   </data>
+  <data name="Your profile is private, so nothing is shared." xml:space="preserve">
+    <value>Votre profil est privé, donc rien n'est partagé.</value>
+  </data>
   <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
     <value>Votre profil est privé. En rejoignant cette communauté, vos scores seront visibles par tous ses membres — sur ses leaderboards, pages de joueur et comparaisons. Vous resterez masqué partout ailleurs.</value>
+  </data>
+  <data name="Your profile is public, so sharing is on." xml:space="preserve">
+    <value>Votre profil est public, donc le partage est activé.</value>
   </data>
   <data name="Your progress" xml:space="preserve">
     <value>Ta progression</value>

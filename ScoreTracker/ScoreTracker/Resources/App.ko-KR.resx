@@ -1110,6 +1110,9 @@
   <data name="Community Tools" xml:space="preserve">
     <value>커뮤니티 도구</value>
   </data>
+  <data name="Community tools can now use your scores" xml:space="preserve">
+    <value>이제 커뮤니티 도구가 내 점수를 사용할 수 있습니다</value>
+  </data>
   <data name="Community Vote" xml:space="preserve">
     <value>커뮤니티 투표</value>
   </data>
@@ -1967,6 +1970,9 @@
   </data>
   <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
     <value>Good은 라이프를 주지 않고, Perfect나 Great과 달리 배율도 쌓지 않습니다. 해롭지는 않습니다. 그저 셈에 들어가지 않을 뿐입니다.</value>
+  </data>
+  <data name="Got it" xml:space="preserve">
+    <value>확인</value>
   </data>
   <data name="Grade" xml:space="preserve">
     <value>등급</value>
@@ -3186,6 +3192,9 @@
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>이 두 시리즈 사이에 바뀐 것이 없습니다.</value>
   </data>
+  <data name="Nothing changed for you. You can still share with a single tool you trust using an invite link from its maker." xml:space="preserve">
+    <value>바뀐 것은 없습니다. 제작자의 초대 링크로 신뢰하는 도구 하나와는 여전히 공유할 수 있습니다.</value>
+  </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>이 폴더의 채보는 인기 보드에 없습니다.</value>
   </data>
@@ -3753,6 +3762,9 @@
   <data name="Players active" xml:space="preserve">
     <value>활동한 플레이어</value>
   </data>
+  <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
+    <value>PIU 커뮤니티의 플레이어들이 여러분의 점수를 활용해 다양한 것을 만듭니다 — PUMBILITY 플래너, 패턴 분석, Discord 랭킹 봇 등. 이제 그 도구들을 보고 누구에게 허용할지 정할 수 있는 페이지가 생겼습니다.</value>
+  </data>
   <data name="Players Like You" xml:space="preserve">
     <value>나와 비슷한 플레이어</value>
   </data>
@@ -3878,6 +3890,9 @@
   </data>
   <data name="Public" xml:space="preserve">
     <value>공개</value>
+  </data>
+  <data name="Public profiles were switched on for community tools when this launched. Tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
+    <value>이 기능이 시작될 때 공개 프로필은 커뮤니티 도구에 대해 켜졌습니다. 끄기 전까지 도구가 내 점수를 읽을 수 있으며, 계정 페이지에서 언제든 끌 수 있습니다.</value>
   </data>
   <data name="Public tool" xml:space="preserve">
     <value>공개 도구</value>
@@ -5432,11 +5447,17 @@
   <data name="Try again" xml:space="preserve">
     <value>다시 시도</value>
   </data>
+  <data name="Turn it off" xml:space="preserve">
+    <value>끄기</value>
+  </data>
   <data name="Turn Off" xml:space="preserve">
     <value>끄기</value>
   </data>
   <data name="Turn On" xml:space="preserve">
     <value>켜기</value>
+  </data>
+  <data name="Turning it off doesn't touch your profile. Your scores stay visible on PIU Scores either way." xml:space="preserve">
+    <value>끄더라도 프로필은 그대로입니다. 점수는 어느 쪽이든 PIU Scores에서 계속 보입니다.</value>
   </data>
   <data name="Turning this on is like writing your password on a sticky note you keep in your own pocket — except the note is in a code nobody can read by looking at it, not even us." xml:space="preserve">
     <value>이 기능을 켜는 것은 자기 주머니에 넣어 두는 메모지에 비밀번호를 적어 두는 것과 같습니다. 다만 그 메모는 누구도 — 심지어 우리조차도 — 보기만 해서는 읽을 수 없는 암호로 적혀 있습니다.</value>
@@ -6053,8 +6074,14 @@
   <data name="Your Points per Second" xml:space="preserve">
     <value>본인 초당 포인트</value>
   </data>
+  <data name="Your profile is private, so nothing is shared." xml:space="preserve">
+    <value>프로필이 비공개 상태여서 공유되는 것이 없습니다.</value>
+  </data>
   <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
     <value>프로필이 비공개입니다. 이 커뮤니티에 가입하면 리더보드, 유저 페이지, 비교 화면에서 커뮤니티의 모든 멤버에게 점수가 공개됩니다. 다른 곳에서는 계속 비공개로 유지됩니다.</value>
+  </data>
+  <data name="Your profile is public, so sharing is on." xml:space="preserve">
+    <value>프로필이 공개 상태여서 공유가 켜져 있습니다.</value>
   </data>
   <data name="Your progress" xml:space="preserve">
     <value>내 진행도</value>
