@@ -55,3 +55,18 @@ public sealed record BlockToolCommand(Guid ToolId) : IRequest;
 
 [ExcludeFromCodeCoverage]
 public sealed record SetShareWithAllToolsCommand(bool Share) : IRequest;
+
+/// <summary>
+///     Fires a real, signed delivery at the tool's own endpoint.
+///     <para>
+///         Always marked as a test, and always about the maker's own account — a test can never
+///         carry another player's scores into someone's production database.
+///     </para>
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record SendTestDeliveryCommand(Guid ToolId, MixEnum Mix, bool UseMyLastImport,
+    int SyntheticCount = 10) : IRequest;
+
+/// <summary>Re-sends a past delivery whose body we still hold.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record ReplayDeliveryCommand(Guid ToolId, Guid DeliveryRowId) : IRequest<bool>;

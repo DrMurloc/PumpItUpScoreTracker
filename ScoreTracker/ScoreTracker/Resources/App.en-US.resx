@@ -339,6 +339,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use.</value>
   </data>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing.</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching</value>
   </data>
@@ -508,6 +511,9 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>Always</value>
+  </data>
+  <data name="Always a test, always you" xml:space="preserve">
+    <value>Always a test, always you</value>
   </data>
   <data name="always all mixes" xml:space="preserve">
     <value>always all mixes</value>
@@ -792,6 +798,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Boards</value>
+  </data>
+  <data name="Body expired" xml:space="preserve">
+    <value>Body expired</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
@@ -1253,6 +1262,9 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completionist Ultra</value>
   </data>
+  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
+    <value>Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy.</value>
+  </data>
   <data name="Configure" xml:space="preserve">
     <value>Configure</value>
   </data>
@@ -1446,6 +1458,9 @@
   </data>
   <data name="days on the pad" xml:space="preserve">
     <value>days on the pad</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Debug</value>
   </data>
   <data name="Debut" xml:space="preserve">
     <value>Debut</value>
@@ -1919,6 +1934,9 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>Find your next pass.</value>
   </data>
+  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
+    <value>Fire a delivery at your own endpoint, check your signature, replay what failed.</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>First</value>
   </data>
@@ -2086,6 +2104,9 @@
   </data>
   <data name="Goal" xml:space="preserve">
     <value>Goal</value>
+  </data>
+  <data name="Goes to your configured URL, signed exactly like a real one." xml:space="preserve">
+    <value>Goes to your configured URL, signed exactly like a real one.</value>
   </data>
   <data name="Good" xml:space="preserve">
     <value>Good</value>
@@ -2257,6 +2278,9 @@
   </data>
   <data name="How long you survive" xml:space="preserve">
     <value>How long you survive</value>
+  </data>
+  <data name="How many" xml:space="preserve">
+    <value>How many</value>
   </data>
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>How many (1–10, default 3)</value>
@@ -2758,6 +2782,9 @@
   <data name="Lv {0}" xml:space="preserve">
     <value>Lv {0}</value>
   </data>
+  <data name="Made-up scores" xml:space="preserve">
+    <value>Made-up scores</value>
+  </data>
   <data name="Make a tool" xml:space="preserve">
     <value>Make a tool</value>
   </data>
@@ -3021,6 +3048,9 @@
   </data>
   <data name="My grade" xml:space="preserve">
     <value>My grade</value>
+  </data>
+  <data name="My last import" xml:space="preserve">
+    <value>My last import</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>My legacy grade</value>
@@ -3291,6 +3321,9 @@
   <data name="None" xml:space="preserve">
 	  <value>None</value>
   </data>
+  <data name="None of this works in PIUGame session mode" xml:space="preserve">
+    <value>None of this works in PIUGame session mode</value>
+  </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Normalize to 100%</value>
   </data>
@@ -3396,6 +3429,9 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Nothing moved — all {0} charts kept their level.</value>
+  </data>
+  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
+    <value>Nothing to show yet — send a test delivery and it appears here.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Nothing to suggest yet — play and import some scores first.</value>
@@ -4298,6 +4334,9 @@
   <data name="Ready" xml:space="preserve">
     <value>Ready</value>
   </data>
+  <data name="Real scores from your own account. What a live delivery actually looks like." xml:space="preserve">
+    <value>Real scores from your own account. What a live delivery actually looks like.</value>
+  </data>
   <data name="Reason" xml:space="preserve">
 	  <value>Reason</value>
   </data>
@@ -4426,6 +4465,12 @@
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Reordering…</value>
+  </data>
+  <data name="Replay" xml:space="preserve">
+    <value>Replay</value>
+  </data>
+  <data name="Replay a delivery" xml:space="preserve">
+    <value>Replay a delivery</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>Report Video</value>
@@ -4748,11 +4793,20 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>selected mixes only</value>
   </data>
+  <data name="Send a test delivery" xml:space="preserve">
+    <value>Send a test delivery</value>
+  </data>
+  <data name="Send it" xml:space="preserve">
+    <value>Send it</value>
+  </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Send it as Authorization: Bearer. Shown once — we store a hash.</value>
   </data>
   <data name="Sent for review" xml:space="preserve">
     <value>Sent for review</value>
+  </data>
+  <data name="Sent — check the activity log for the result." xml:space="preserve">
+    <value>Sent — check the activity log for the result.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Series</value>
@@ -4947,6 +5001,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Sign-In Methods</value>
+  </data>
+  <data name="Signature check — your last delivery" xml:space="preserve">
+    <value>Signature check — your last delivery</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Silent — no players found in your competitive range yet.</value>
@@ -5160,6 +5217,9 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>steps by {0}</value>
   </data>
+  <data name="Still failing — check the activity log." xml:space="preserve">
+    <value>Still failing — check the activity log.</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>stingy to score even when passed</value>
   </data>
@@ -5247,6 +5307,9 @@
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>Switch on a filter to narrow what this chart is compared against.</value>
   </data>
+  <data name="Synthetic charts and scores, if you'd rather not use your own or want a specific size." xml:space="preserve">
+    <value>Synthetic charts and scores, if you'd rather not use your own or want a specific size.</value>
+  </data>
   <data name="Table" xml:space="preserve">
     <value>Table</value>
   </data>
@@ -5301,6 +5364,9 @@
   </data>
   <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
     <value>The board isn't full - any top 50 gets you on it.</value>
+  </data>
+  <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
+    <value>The body carries "test": true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores.</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>The cabinet</value>
@@ -6037,6 +6103,9 @@
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>We hold the master key</value>
+  </data>
+  <data name="We keep the body of a failed delivery for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
+    <value>We keep the body of a failed delivery for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone.</value>
   </data>
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using.</value>
@@ -6812,6 +6881,9 @@
   </data>
   <data name="{0} — activity" xml:space="preserve">
     <value>{0} — activity</value>
+  </data>
+  <data name="{0} — debug" xml:space="preserve">
+    <value>{0} — debug</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — settings</value>

@@ -339,6 +339,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>ドキュメント完備の公開 API がコミュニティ製ツールを支えます — ボット、オーバーレイ、統計サイト。アカウントからトークンを取得して、私たちと同じデータの上に作ってください。</value>
   </data>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>セッション配信には有効なpiugame.comのキーが含まれるため、こちらでは保存しません — 再送するものも、お見せできる本文も、サーバーが落ちていたときの再試行もありません。インポートでご自分のアカウントを使ってテストしてください。</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
   </data>
@@ -508,6 +511,9 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>常に</value>
+  </data>
+  <data name="Always a test, always you" xml:space="preserve">
+    <value>常にテストで、常にあなた自身です</value>
   </data>
   <data name="always all mixes" xml:space="preserve">
     <value>常にすべてのバージョン</value>
@@ -792,6 +798,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>ボード</value>
+  </data>
+  <data name="Body expired" xml:space="preserve">
+    <value>本文は期限切れ</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>ボスブレイカー</value>
@@ -1253,6 +1262,9 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completionist Ultra</value>
   </data>
+  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
+    <value>署名シークレットで、まさにこのバイト列に対してHMAC-SHA256を計算してください。違う場合はほぼ確実に、ハッシュ前にJSONを再シリアライズしています — パースして文字列化し直したコピーではなく、受信した生の本文をハッシュしてください。</value>
+  </data>
   <data name="Configure" xml:space="preserve">
     <value>設定</value>
   </data>
@@ -1446,6 +1458,9 @@
   </data>
   <data name="days on the pad" xml:space="preserve">
     <value>日プレイ</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>デバッグ</value>
   </data>
   <data name="Debut" xml:space="preserve">
     <value>初出</value>
@@ -1919,6 +1934,9 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>次のパスを見つけよう。</value>
   </data>
+  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
+    <value>自分のエンドポイントに配信を送り、署名を確認し、失敗したものを再送します。</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>初</value>
   </data>
@@ -2086,6 +2104,9 @@
   </data>
   <data name="Goal" xml:space="preserve">
     <value>目標</value>
+  </data>
+  <data name="Goes to your configured URL, signed exactly like a real one." xml:space="preserve">
+    <value>設定したURLへ、本物とまったく同じ署名で送ります。</value>
   </data>
   <data name="Good" xml:space="preserve">
     <value>良い</value>
@@ -2257,6 +2278,9 @@
   </data>
   <data name="How long you survive" xml:space="preserve">
     <value>生存できる長さ</value>
+  </data>
+  <data name="How many" xml:space="preserve">
+    <value>件数</value>
   </data>
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>何枚（1–10、既定 3）</value>
@@ -2758,6 +2782,9 @@
   <data name="Lv {0}" xml:space="preserve">
     <value>Lv {0}</value>
   </data>
+  <data name="Made-up scores" xml:space="preserve">
+    <value>ダミーのスコア</value>
+  </data>
   <data name="Make a tool" xml:space="preserve">
     <value>ツールを作る</value>
   </data>
@@ -3021,6 +3048,9 @@
   </data>
   <data name="My grade" xml:space="preserve">
     <value>自分のランク</value>
+  </data>
+  <data name="My last import" xml:space="preserve">
+    <value>自分の直近のインポート</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>自分のレガシーランク</value>
@@ -3291,6 +3321,9 @@
   <data name="None" xml:space="preserve">
 	  <value>なし</value>
   </data>
+  <data name="None of this works in PIUGame session mode" xml:space="preserve">
+    <value>PIUGameセッションモードでは何も動きません</value>
+  </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>100%に正規化</value>
   </data>
@@ -3396,6 +3429,9 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>変更なし — {0} 譜面すべてが難度を維持しています。</value>
+  </data>
+  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
+    <value>まだ表示するものはありません — テスト配信を送るとここに出ます。</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>まだ提案できるものがありません — プレイしてスコアをインポートしてください。</value>
@@ -4298,6 +4334,9 @@
   <data name="Ready" xml:space="preserve">
     <value>準備完了</value>
   </data>
+  <data name="Real scores from your own account. What a live delivery actually looks like." xml:space="preserve">
+    <value>自分のアカウントの実データ。実際の配信そのものの姿です。</value>
+  </data>
   <data name="Reason" xml:space="preserve">
 	  <value>理由</value>
   </data>
@@ -4426,6 +4465,12 @@
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>並び替え中…</value>
+  </data>
+  <data name="Replay" xml:space="preserve">
+    <value>再送</value>
+  </data>
+  <data name="Replay a delivery" xml:space="preserve">
+    <value>配信を再送</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>ビデオを報告</value>
@@ -4748,11 +4793,20 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>選んだバージョンのみ</value>
   </data>
+  <data name="Send a test delivery" xml:space="preserve">
+    <value>テスト配信を送る</value>
+  </data>
+  <data name="Send it" xml:space="preserve">
+    <value>送信</value>
+  </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Authorization: Bearer で送ってください。表示は一度きりで、保存するのはハッシュです。</value>
   </data>
   <data name="Sent for review" xml:space="preserve">
     <value>審査に送信しました</value>
+  </data>
+  <data name="Sent — check the activity log for the result." xml:space="preserve">
+    <value>送信しました — 結果はアクティビティで確認してください。</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>系列</value>
@@ -4947,6 +5001,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>ログイン方法</value>
+  </data>
+  <data name="Signature check — your last delivery" xml:space="preserve">
+    <value>署名の確認 — 直近の配信</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>停止中 — 競技レベル帯にまだプレイヤーがいません。</value>
@@ -5160,6 +5217,9 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>ステップ：{0}</value>
   </data>
+  <data name="Still failing — check the activity log." xml:space="preserve">
+    <value>まだ失敗しています — アクティビティを確認してください。</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>クリアしてもスコアは渋い</value>
   </data>
@@ -5247,6 +5307,9 @@
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>フィルターをオンにすると、この譜面の比較対象を絞り込めます。</value>
   </data>
+  <data name="Synthetic charts and scores, if you'd rather not use your own or want a specific size." xml:space="preserve">
+    <value>自分のデータを使いたくないとき、あるいは特定の件数を試したいときのダミー譜面とスコア。</value>
+  </data>
   <data name="Table" xml:space="preserve">
     <value>テーブル</value>
   </data>
@@ -5301,6 +5364,9 @@
   </data>
   <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
     <value>ボードはまだ満員ではありません - トップ50があれば載れます。</value>
+  </data>
+  <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
+    <value>本文には "test": true が入り、配信IDは test- で始まります。プレイヤーは常にあなた自身のアカウントで、テストが他人のスコアを送ることはありません。</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>ショーケース</value>
@@ -6037,6 +6103,9 @@
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>私たちはマスターキーを保管しています</value>
+  </data>
+  <data name="We keep the body of a failed delivery for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
+    <value>失敗した配信の本文は再送できるよう7日間保持します。それ以降もアクティビティには何が起きたか残りますが、ペイロードは消えます。</value>
   </data>
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>選んだバージョンのインポートだけを送ります。古いバージョンは1Mスケールではなく グレードで採点され、ペイロードがどちらのモデルかを示します。</value>
@@ -6812,6 +6881,9 @@
   </data>
   <data name="{0} — activity" xml:space="preserve">
     <value>{0} — アクティビティ</value>
+  </data>
+  <data name="{0} — debug" xml:space="preserve">
+    <value>{0} — デバッグ</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — 設定</value>

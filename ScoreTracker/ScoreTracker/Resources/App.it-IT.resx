@@ -339,6 +339,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Un'API pubblica con documentazione completa alimenta gli strumenti della community — bot, overlay, siti di statistiche. Prendi un token dal tuo account e costruisci sugli stessi dati che usiamo noi.</value>
   </data>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>Una consegna di sessione porta una chiave viva di piugame.com, quindi non la scriviamo mai — non c'è niente da rimandare, nessun corpo da mostrarti e nessun nuovo tentativo se il tuo server è giù quando parte. Prova sul tuo account importando.</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Uno zip di snapshot importa direttamente una versione dei dati già scaricata: stesso processo della scansione, senza download</value>
   </data>
@@ -508,6 +511,9 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>Sempre</value>
+  </data>
+  <data name="Always a test, always you" xml:space="preserve">
+    <value>Sempre una prova, sempre tu</value>
   </data>
   <data name="always all mixes" xml:space="preserve">
     <value>sempre tutti i Mix</value>
@@ -792,6 +798,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Classifiche</value>
+  </data>
+  <data name="Body expired" xml:space="preserve">
+    <value>Corpo scaduto</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
@@ -1253,6 +1262,9 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completionist Ultra</value>
   </data>
+  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
+    <value>Calcola HMAC-SHA256 esattamente su questi byte con la tua chiave di firma. Se la tua è diversa, quasi sicuramente stai ri-serializzando il JSON prima dell'hash — fai l'hash del corpo così com'è arrivato, non di una copia parsata e ri-serializzata.</value>
+  </data>
   <data name="Configure" xml:space="preserve">
     <value>Configura</value>
   </data>
@@ -1446,6 +1458,9 @@
   </data>
   <data name="days on the pad" xml:space="preserve">
     <value>giorni sulla pedana</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Debug</value>
   </data>
   <data name="Debut" xml:space="preserve">
     <value>Debutto</value>
@@ -1919,6 +1934,9 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>Trova il tuo prossimo pass.</value>
   </data>
+  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
+    <value>Manda una consegna al tuo endpoint, controlla la firma, rimanda quello che è fallito.</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>Primo</value>
   </data>
@@ -2086,6 +2104,9 @@
   </data>
   <data name="Goal" xml:space="preserve">
     <value>Obiettivo</value>
+  </data>
+  <data name="Goes to your configured URL, signed exactly like a real one." xml:space="preserve">
+    <value>Va all'URL che hai configurato, firmata esattamente come una vera.</value>
   </data>
   <data name="Good" xml:space="preserve">
     <value>Buono</value>
@@ -2257,6 +2278,9 @@
   </data>
   <data name="How long you survive" xml:space="preserve">
     <value>Quanto sopravvivi</value>
+  </data>
+  <data name="How many" xml:space="preserve">
+    <value>Quanti</value>
   </data>
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>Quanti (1–10, predefinito 3)</value>
@@ -2758,6 +2782,9 @@
   <data name="Lv {0}" xml:space="preserve">
     <value>Liv. {0}</value>
   </data>
+  <data name="Made-up scores" xml:space="preserve">
+    <value>Punteggi inventati</value>
+  </data>
   <data name="Make a tool" xml:space="preserve">
     <value>Crea uno strumento</value>
   </data>
@@ -3021,6 +3048,9 @@
   </data>
   <data name="My grade" xml:space="preserve">
     <value>Il mio grado</value>
+  </data>
+  <data name="My last import" xml:space="preserve">
+    <value>Il mio ultimo import</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>Il mio grado legacy</value>
@@ -3291,6 +3321,9 @@
   <data name="None" xml:space="preserve">
     <value>Nessuno</value>
   </data>
+  <data name="None of this works in PIUGame session mode" xml:space="preserve">
+    <value>Niente di questo funziona in modalità sessione PIUGame</value>
+  </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Normalizza al 100%</value>
   </data>
@@ -3396,6 +3429,9 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Nulla è cambiato — tutte le {0} chart hanno mantenuto il livello.</value>
+  </data>
+  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
+    <value>Ancora niente da mostrare — manda una consegna di prova e comparirà qui.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Ancora niente da suggerire — prima gioca e importa dei punteggi.</value>
@@ -4298,6 +4334,9 @@
   <data name="Ready" xml:space="preserve">
     <value>Pronto</value>
   </data>
+  <data name="Real scores from your own account. What a live delivery actually looks like." xml:space="preserve">
+    <value>Punteggi veri dal tuo account. Esattamente com'è una consegna dal vivo.</value>
+  </data>
   <data name="Reason" xml:space="preserve">
     <value>Motivo</value>
   </data>
@@ -4426,6 +4465,12 @@
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Riordino…</value>
+  </data>
+  <data name="Replay" xml:space="preserve">
+    <value>Rimanda</value>
+  </data>
+  <data name="Replay a delivery" xml:space="preserve">
+    <value>Rimanda una consegna</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>Segnala video</value>
@@ -4748,11 +4793,20 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>solo i Mix selezionati</value>
   </data>
+  <data name="Send a test delivery" xml:space="preserve">
+    <value>Manda una consegna di prova</value>
+  </data>
+  <data name="Send it" xml:space="preserve">
+    <value>Manda</value>
+  </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Inviala con Authorization: Bearer. Mostrata una volta sola — noi salviamo un hash.</value>
   </data>
   <data name="Sent for review" xml:space="preserve">
     <value>Inviato in revisione</value>
+  </data>
+  <data name="Sent — check the activity log for the result." xml:space="preserve">
+    <value>Mandata — guarda il risultato nell'attività.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Serie</value>
@@ -4947,6 +5001,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Metodi di accesso</value>
+  </data>
+  <data name="Signature check — your last delivery" xml:space="preserve">
+    <value>Controllo firma — la tua ultima consegna</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Silenzioso — ancora nessun giocatore nel tuo intervallo competitivo.</value>
@@ -5160,6 +5217,9 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>step di {0}</value>
   </data>
+  <data name="Still failing — check the activity log." xml:space="preserve">
+    <value>Ancora fallita — guarda l'attività.</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>avaro nel punteggio anche da passato</value>
   </data>
@@ -5247,6 +5307,9 @@
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>Attiva un filtro per restringere ciò con cui questa chart viene confrontata.</value>
   </data>
+  <data name="Synthetic charts and scores, if you'd rather not use your own or want a specific size." xml:space="preserve">
+    <value>Chart e punteggi sintetici, se preferisci non usare i tuoi o vuoi una dimensione precisa.</value>
+  </data>
   <data name="Table" xml:space="preserve">
     <value>Tabella</value>
   </data>
@@ -5301,6 +5364,9 @@
   </data>
   <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
     <value>La classifica non è piena - qualsiasi top 50 ti fa entrare.</value>
+  </data>
+  <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
+    <value>Il corpo porta "test": true e l'id della consegna inizia con test-. Il giocatore è sempre il tuo account — una prova non può mai mandarti i punteggi di qualcun altro.</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>La bacheca</value>
@@ -6037,6 +6103,9 @@
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>Noi abbiamo la chiave principale</value>
+  </data>
+  <data name="We keep the body of a failed delivery for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
+    <value>Teniamo il corpo di una consegna fallita per 7 giorni così puoi rimandarla. Dopo, l'attività mostra ancora cos'è successo, ma il payload non c'è più.</value>
   </data>
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Mandiamo solo le importazioni dei mix che scegli. I mix più vecchi si valutano a lettere e non sulla scala del milione — il payload dice quale modello usa.</value>
@@ -6812,6 +6881,9 @@
   </data>
   <data name="{0} — activity" xml:space="preserve">
     <value>{0} — attività</value>
+  </data>
+  <data name="{0} — debug" xml:space="preserve">
+    <value>{0} — debug</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — impostazioni</value>

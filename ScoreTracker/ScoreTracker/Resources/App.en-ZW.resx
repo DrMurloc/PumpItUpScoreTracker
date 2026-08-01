@@ -339,6 +339,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>GRO mrglrgll API glgrgl mrglmr blargplgl lurgrgl plglmurgblub-grglgrrgl rorgl — arglmr, glorgblarggrrgl, lurglurg mrmagl. Glorgmagl gro murpblgrl romurg gromurp grgl ro glorgmurg lurg mrp blubmurm gromurm mrgl murg.</value>
   </data>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>Murgloborg murpo murgm murgl piugame.com blarglurp, murgloo bam murgloo murgm. Bam murpmurp, bam murgm blu murgargl, bam murmo murgm gromurp murgblub bo murp. Murgargl gromurp Grgl blu murpmurp.</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>GRO mrpmaglmurp ro murgmrblarg gro groblgrlmagl gromurm grrglurgmurp grorpmrglblgrl - blubmurm blubgrrglmurm lurg mrp morgmurg, mrp maglplglblub</value>
   </data>
@@ -508,6 +511,9 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>Mrgmurg</value>
+  </data>
+  <data name="Always a test, always you" xml:space="preserve">
+    <value>Bam murpo, bam gromurp</value>
   </data>
   <data name="always all mixes" xml:space="preserve">
     <value>arba molu mulgo</value>
@@ -792,6 +798,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Grrglplgl</value>
+  </data>
+  <data name="Body expired" xml:space="preserve">
+    <value>Murgm murgloo</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Blubblgrl rglmurpmurp</value>
@@ -1253,6 +1262,9 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Blubmorggrglargl Blubmr</value>
   </data>
+  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
+    <value>Murgargl HMAC-SHA256 blu murgm murgl murm gromurp murgblub blarglurp. Murgm gromurp murmo, gromurp murpmurp murgm murgloo murgargl — murgblarg murgm murpo gromurp murgm, bo murmo murpmurp.</value>
+  </data>
   <data name="Configure" xml:space="preserve">
     <value>Grrglurgmurp</value>
   </data>
@@ -1446,6 +1458,9 @@
   </data>
   <data name="days on the pad" xml:space="preserve">
     <value>grrglmrgl lurg mrp grorp</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Murgblub</value>
   </data>
   <data name="Debut" xml:space="preserve">
     <value>Grglro</value>
@@ -1919,6 +1934,9 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>Blubgl gromurp grorpglorg maglplgl.</value>
   </data>
+  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
+    <value>Murpo murgm blu gromurp murgblarg, argla gromurp murgblub, murpmurp murgloo.</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>Murpargl</value>
   </data>
@@ -2086,6 +2104,9 @@
   </data>
   <data name="Goal" xml:space="preserve">
     <value>Mrpmrp</value>
+  </data>
+  <data name="Goes to your configured URL, signed exactly like a real one." xml:space="preserve">
+    <value>Murgm blu gromurp grabla, murgblub murgm murgl murmo.</value>
   </data>
   <data name="Good" xml:space="preserve">
     <value>Lurggrgl</value>
@@ -2257,6 +2278,9 @@
   </data>
   <data name="How long you survive" xml:space="preserve">
     <value>Gro blargmrgl blub mrpblgrlmr</value>
+  </data>
+  <data name="How many" xml:space="preserve">
+    <value>Murgargl murmo</value>
   </data>
   <data name="How many (1–10, default 3)" xml:space="preserve">
     <value>Gro mrblgrl (1–10, plglgrgllurg 3)</value>
@@ -2758,6 +2782,9 @@
   <data name="Lv {0}" xml:space="preserve">
     <value>Morg {0}</value>
   </data>
+  <data name="Made-up scores" xml:space="preserve">
+    <value>Bam Mgrlgmrg</value>
+  </data>
   <data name="Make a tool" xml:space="preserve">
     <value>Murpmurp Rorgl</value>
   </data>
@@ -3021,6 +3048,9 @@
   </data>
   <data name="My grade" xml:space="preserve">
     <value>Blgrl rorgl</value>
+  </data>
+  <data name="My last import" xml:space="preserve">
+    <value>Gromurp blomurp murpmurp</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>Blgrl rogrrgl rorgl</value>
@@ -3291,6 +3321,9 @@
   <data name="None" xml:space="preserve">
 	  <value>Rglmagl</value>
   </data>
+  <data name="None of this works in PIUGame session mode" xml:space="preserve">
+    <value>Bam murgm murpmurp blu PIUGame murgloborg</value>
+  </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Grglblgrlurg grgl 100%</value>
   </data>
@@ -3396,6 +3429,9 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Blarggllurg maglgrorp — rgl {0} murgl grorpglorg grglblarg grorpmurm.</value>
+  </data>
+  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
+    <value>Bam murgm blorm — murpo murgm murpo murm murgl murgargl murgm.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Blarggllurg grgl blgrlblgrlgrorp argl — grrglgrrgl ro glorggl mrgrgl mgrlgmrg murpargl.</value>
@@ -4298,6 +4334,9 @@
   <data name="Ready" xml:space="preserve">
     <value>Blargblgrl</value>
   </data>
+  <data name="Real scores from your own account. What a live delivery actually looks like." xml:space="preserve">
+    <value>Murgl Mgrlgmrg blu gromurp Grgl. Murgm murpo murgm murgargl.</value>
+  </data>
   <data name="Reason" xml:space="preserve">
 	  <value>Groglorg</value>
   </data>
@@ -4426,6 +4465,12 @@
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Mrpplglmrp…</value>
+  </data>
+  <data name="Replay" xml:space="preserve">
+    <value>Murpmurp</value>
+  </data>
+  <data name="Replay a delivery" xml:space="preserve">
+    <value>Murpmurp murpo</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>Mrglmurp Grrrgl</value>
@@ -4748,11 +4793,20 @@
   <data name="selected mixes only" xml:space="preserve">
     <value>lurga mulgo umba</value>
   </data>
+  <data name="Send a test delivery" xml:space="preserve">
+    <value>Murpo murgm murpo</value>
+  </data>
+  <data name="Send it" xml:space="preserve">
+    <value>Murpo</value>
+  </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Murpo murgm blu murgblub murpgrogl. Murmo blomurp — bam murgloo murgblarg.</value>
   </data>
   <data name="Sent for review" xml:space="preserve">
     <value>Murpo blu murgargl</value>
+  </data>
+  <data name="Sent — check the activity log for the result." xml:space="preserve">
+    <value>Murpo blorm — argla murgblarg blu murmo.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Morggrorp</value>
@@ -4947,6 +5001,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Mrpmurp-Mrp Mrglglorggrgl</value>
+  </data>
+  <data name="Signature check — your last delivery" xml:space="preserve">
+    <value>Murgblub argla — gromurp blomurp murpo</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Morggrgl — mrp morp arglurg mrp gromurp arglrglmrmurm blubmrgl argl.</value>
@@ -5160,6 +5217,9 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>plglmrgl murm {0}</value>
   </data>
+  <data name="Still failing — check the activity log." xml:space="preserve">
+    <value>Murgloo murmo — argla murgblarg.</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>murpmurp grgl mrglrgl mrpplgl mrpgrrgl rglplgl</value>
   </data>
@@ -5247,6 +5307,9 @@
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>Murmgrgl lurg gro grglmurg grgl arglurg rglmorg grglmrp murgl urg glorgmurplurg murmlurgmurp.</value>
   </data>
+  <data name="Synthetic charts and scores, if you'd rather not use your own or want a specific size." xml:space="preserve">
+    <value>Murmo Murgl murm Mgrlgmrg, murgloo gromurp bam murgm gromurp arplo murgargl murmo.</value>
+  </data>
   <data name="Table" xml:space="preserve">
     <value>Mrpblarg</value>
   </data>
@@ -5301,6 +5364,9 @@
   </data>
   <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
     <value>Mrp mrglblarg blgrlro mrglmr - ro blarg 50 rglblgrl blub lurg gl.</value>
+  </data>
+  <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
+    <value>Murgm murpo murgblarg murm murpo murgm murgargl blu murgblarg. Morp murgm gromurp Grgl — murpo bam murp murpo gromurp murmo Morp Mgrlgmrg.</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>Mrp mrglglmorg</value>
@@ -6037,6 +6103,9 @@
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>Mrgl rglmr mrp mrmagl grrgl</value>
+  </data>
+  <data name="We keep the body of a failed delivery for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
+    <value>Bam murgloo murgm blu murgloo murpo blu 7 murgl murgloo gromurp murp murpmurp. Murmo murgblarg murgl murgm murpmurp, murm murgm murpo blorm.</value>
   </data>
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Bam murpo murgblub blu murgl gromurp murgargl. Murgl murmo murgm blarglurp murm bo 1M murgloo — murpo murgm murgblarg murmo.</value>
@@ -6812,6 +6881,9 @@
   </data>
   <data name="{0} — activity" xml:space="preserve">
     <value>{0} — murgblarg</value>
+  </data>
+  <data name="{0} — debug" xml:space="preserve">
+    <value>{0} — murgblub</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — mrpgrogl</value>
