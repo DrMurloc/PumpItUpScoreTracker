@@ -56,9 +56,7 @@
             <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="SelectAllMixes">@L["All mixes"]</MudButton>
             @if (_selectedMixes.Any())
             {
-                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="@(() => _selectedMixes.Clear())">
-                    @L["Clear"]
-                </MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="ClearMixes">@L["Clear"]</MudButton>
             }
         </div>
         <MudChipSet T="string" SelectedValues="@_selectedMixes.Select(m => m.ToString()).ToHashSet()"
@@ -85,12 +83,18 @@
         <MudExpansionPanels MultiExpansion="true" Class="mb-4">
             <MudExpansionPanel Expanded="true">
                 <TitleContent>
-                    <MudText Typo="Typo.subtitle1"><b>@L["Scores"]</b> <span style="opacity:.7;">— @L["this mix only"]</span></MudText>
+                    <MudText Typo="Typo.subtitle1">
+                        <b>@L["Scores"]</b>
+                        <span style="opacity:.7;">
+                            @(NoMixChosen ? $"— {L["pick a mix first"]}" : $"— {L["selected mixes only"]}")
+                        </span>
+                    </MudText>
                 </TitleContent>
                 <ChildContent>
+                    @* Nothing to scope a score deletion to, so nothing here can be acted on. *@
                     @foreach (var item in ScoreItems)
                     {
-                        <MudCheckBox T="bool" Color="Color.Error" Dense="true"
+                        <MudCheckBox T="bool" Color="Color.Error" Dense="true" Disabled="NoMixChosen"
                                      Value="@_scoreItems.HasFlag(item.Flag)"
                                      ValueChanged="@(v => ToggleScore(item.Flag, v))">@L[item.Label]</MudCheckBox>
                     }
@@ -201,6 +205,8 @@
         _mixes = await Mediator.Send(new GetMixesWithScoresQuery(CurrentUser.User.Id));
     }
 
+    private bool NoMixChosen => _selectedMixes.Count == 0;
+
     // Scores need a mix to delete from; contributions are account-wide and need none.
     private bool NothingChosen =>
         (_scoreItems == ScoreDeletionItems.None || _selectedMixes.Count == 0) &&
@@ -210,6 +216,15 @@
     {
         _selectedMixes.Clear();
         foreach (var value in values) _selectedMixes.Add(Enum.Parse<MixEnum>(value));
+        // Clearing every mix disarms the score items too, rather than leaving ticks standing
+        // against a scope that no longer exists.
+        if (NoMixChosen) _scoreItems = ScoreDeletionItems.None;
+    }
+
+    private void ClearMixes()
+    {
+        _selectedMixes.Clear();
+        _scoreItems = ScoreDeletionItems.None;
     }
 
     private void SelectAllMixes()

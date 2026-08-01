@@ -3542,6 +3542,9 @@
   <data name="Pick a folder to compare your scores." xml:space="preserve">
     <value>Rglgro gro grrgllurg grgl lurgplglgrgl gromurp mgrlgmrg.</value>
   </data>
+  <data name="pick a mix first" xml:space="preserve">
+    <value>lurga mulgo polu</value>
+  </data>
   <data name="Pick a mix." xml:space="preserve">
     <value>Rglgro gro mrg.</value>
   </data>
@@ -4417,6 +4420,9 @@
   </data>
   <data name="Selected Chart" xml:space="preserve">
 	  <value>Urggrrglgro Murgl</value>
+  </data>
+  <data name="selected mixes only" xml:space="preserve">
+    <value>lurga mulgo umba</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Morggrorp</value>

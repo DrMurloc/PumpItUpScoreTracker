@@ -3542,6 +3542,9 @@
   <data name="Pick a folder to compare your scores." xml:space="preserve">
     <value>Pick a folder to compare your scores.</value>
   </data>
+  <data name="pick a mix first" xml:space="preserve">
+    <value>pick a mix first</value>
+  </data>
   <data name="Pick a mix." xml:space="preserve">
     <value>Pick a mix.</value>
   </data>
@@ -4417,6 +4420,9 @@
   </data>
   <data name="Selected Chart" xml:space="preserve">
 	  <value>Selected Chart</value>
+  </data>
+  <data name="selected mixes only" xml:space="preserve">
+    <value>selected mixes only</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Series</value>

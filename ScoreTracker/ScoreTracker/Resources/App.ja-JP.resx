@@ -3542,6 +3542,9 @@
   <data name="Pick a folder to compare your scores." xml:space="preserve">
     <value>フォルダーを選ぶとスコアを比較できます。</value>
   </data>
+  <data name="pick a mix first" xml:space="preserve">
+    <value>先にバージョンを選んでください</value>
+  </data>
   <data name="Pick a mix." xml:space="preserve">
     <value>バージョンを選んでください。</value>
   </data>
@@ -4417,6 +4420,9 @@
   </data>
   <data name="Selected Chart" xml:space="preserve">
 	  <value>選択した譜面</value>
+  </data>
+  <data name="selected mixes only" xml:space="preserve">
+    <value>選んだバージョンのみ</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>系列</value>

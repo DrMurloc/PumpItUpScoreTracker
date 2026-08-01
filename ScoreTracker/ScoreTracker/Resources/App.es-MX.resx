@@ -3507,6 +3507,9 @@
   <data name="Pick a folder to compare your scores." xml:space="preserve">
     <value>Elija un folder para comparar sus puntajes.</value>
   </data>
+  <data name="pick a mix first" xml:space="preserve">
+    <value>elige una versión primero</value>
+  </data>
   <data name="Pick a mix." xml:space="preserve">
     <value>Elige una versión.</value>
   </data>
@@ -4369,6 +4372,9 @@
   </data>
   <data name="Selected Chart" xml:space="preserve">
     <value>Chart seleccionado</value>
+  </data>
+  <data name="selected mixes only" xml:space="preserve">
+    <value>solo las versiones seleccionadas</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Series</value>
