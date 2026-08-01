@@ -37,5 +37,6 @@ public static class CommunityToolsRegistrationExtensions
     {
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<WebhookDeliverySaga>();
+        configurator.AddConsumer<WebhookMaintenanceSaga>();
     }
 }

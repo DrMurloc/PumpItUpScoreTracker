@@ -413,7 +413,11 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
     ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1"),  // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
-    ("purge-community-highlights",       r => r.PublishPurgeCommunityHighlights(),        "0 9 * * 0")   // Sundays 09:00 UTC — 30-day community-highlights retention
+    ("purge-community-highlights",       r => r.PublishPurgeCommunityHighlights(),        "0 9 * * 0"),  // Sundays 09:00 UTC — 30-day community-highlights retention
+    // The webhook queue lives in SQL, so a delivery survives a restart and this is what picks it
+    // back up. Five minutes is well inside the first backoff step, so nothing waits on the sweep.
+    ("retry-webhook-deliveries",         r => r.PublishRetryDueWebhookDeliveries(),       "*/5 * * * *"),
+    ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *")   // 08:00 UTC — 7-day bodies, 14-day activity log
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {
