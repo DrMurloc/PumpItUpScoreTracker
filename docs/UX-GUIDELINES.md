@@ -87,6 +87,16 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 
 **10. Thumbs first on mobile.** Primary navigation and primary actions live in the bottom third at phone widths (the bottom nav is this rule applied to the shell). The top corners are for identity and context, not workflows. Action-heavy pages claim the bottom third through the **page dock** (`PageDock` component → shell slot above the bottom nav): scrolling down slides the nav away so the two bars only coexist at rest, and the nav's items never move or reflow. **Focus mode** (`PageDock FocusMode`) drops the shell chrome entirely for takeover tasks — kiosk-style flows like tournament drafts — and the page owes the user an explicit exit affordance in return. A page that registers no dock gets the unchanged shell. (Landed with the randomizer overhaul, [docs/design/randomizer-overhaul.md](design/randomizer-overhaul.md).)
 
+**11. A destructive form arms itself, and its button names the damage.** Two patterns from the
+delete-my-data pass, and both generalize. **The armed-form gate**: a destructive form renders
+*visible but inert* until an explicit opt-in — never hidden behind an expander, because a hidden
+form makes people hunt and hunting makes them determined; visible-and-inert lets someone read what
+it offers and talk themselves out of it. **The blast-radius button**: a destructive confirm says
+what is about to happen — *Delete my Phoenix scores* — rather than *Confirm*. The count and the
+scope outperform another acknowledgement checkbox, and they fix the failure mode where nobody can
+tell what a control is about to take. Derived values that are recomputed from what is being deleted
+are stated as a consequence, never offered as a checkbox.
+
 ---
 
 ## 3. Enforcement

@@ -157,6 +157,34 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ToArray();
     }
 
+    public async Task DeleteForUser(Guid userId, MixEnum? mix, CancellationToken cancellationToken)
+    {
+        var mixId = mix == null ? (Guid?)null : MixIds.For(mix.Value);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.UserId == userId && (mixId == null || e.MixId == mixId))
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ScoreJournalEntry>> GetSessionEntries(Guid userId, Guid sessionId,
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.UserId == userId && e.SessionId == sessionId)
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
+    }
+
+    public async Task DeleteSession(Guid userId, Guid sessionId, CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.UserId == userId && e.SessionId == sessionId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
     private static ScoreJournalEntry Map(ScoreEventJournalEntity e)
     {
         return new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId, e.Score,

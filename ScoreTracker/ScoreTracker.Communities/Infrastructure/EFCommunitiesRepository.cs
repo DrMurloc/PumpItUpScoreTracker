@@ -15,6 +15,9 @@ namespace ScoreTracker.Communities.Infrastructure
 {
     internal sealed class EFCommunitiesRepository : ICommunityRepository, ICommunityReader
     {
+        // World is a system community that happens to carry IsRegional = 0.
+        private const string SystemCommunityName = "World";
+
         private const string CommunityCountCacheKey = $"{nameof(EFCommunitiesRepository)}_NonRegionalCount";
 
         private readonly IMemoryCache _cache;
@@ -262,6 +265,24 @@ namespace ScoreTracker.Communities.Infrastructure
             CancellationToken cancellationToken)
         {
             return await GetCommunities(userId, cancellationToken);
+        }
+
+        async Task<IEnumerable<OwnedCommunityRecord>> ICommunityReader.GetOwnedCommunities(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            // System communities are excluded: they are auto-joined and nobody can transfer or
+            // delete them, so counting them would block their owner's account forever.
+            // IsRegional covers the 93 per-country ones but NOT World, which is flagged 0 — the
+            // codebase identifies it by name (CommunityGlowReader, RecapSaga do the same).
+            var adminRole = CommunityRole.Admin.ToString();
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            return await (from c in database.Set<CommunityEntity>()
+                where c.OwningUserId == userId && !c.IsRegional && c.Name != SystemCommunityName
+                select new OwnedCommunityRecord(
+                    Name.From(c.Name),
+                    database.Set<CommunityMembershipEntity>().Count(m => m.CommunityId == c.Id),
+                    database.Set<CommunityMembershipEntity>()
+                        .Count(m => m.CommunityId == c.Id && m.Role == adminRole))).ToArrayAsync(cancellationToken);
         }
 
         async Task<IEnumerable<Guid>> ICommunityReader.GetMembers(Name communityName,

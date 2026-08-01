@@ -113,7 +113,12 @@ namespace ScoreTracker.OfficialMirror.Application
         internal async Task RunImport(Guid userId, MixEnum mix, string sid, string cardId, string expectedGameTag,
             bool includeBroken, bool syncPiuTracker, CancellationToken cancellationToken)
         {
-            var importSessionId = Guid.NewGuid();
+            // Opened through the Ledger rather than minted here, so the session row carries the
+            // game tag and card this run pulled from — the answer to "I imported the wrong card",
+            // which is the phrasing the Undo page exists for.
+            var importSessionId = await _mediator.Send(
+                new BeginScoreSessionCommand(userId, mix, ScoreJournalEntry.OfficialImportSource,
+                    expectedGameTag, cardId), cancellationToken);
 
             // Announce the run right away so the nav-bar "importing" indicator lights up while the
             // scrape works, even for a small import that saves fewer than one progress batch.

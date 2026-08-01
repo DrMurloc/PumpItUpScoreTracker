@@ -47,19 +47,28 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
     // that reads these runs after that.
     private readonly ConcurrentDictionary<(Guid UserId, MixEnum Mix), DetectedTitleState> _detectedTitles = new();
 
-    public Guid GetOrExtendSession(MixEnum mix, Guid userId, string source, DateTimeOffset now,
+    public (Guid Id, bool IsNew) GetOrExtendSession(MixEnum mix, Guid userId, string source, DateTimeOffset now,
         Guid? explicitSessionId = null)
     {
         var state = _sessions.GetOrAdd((userId, mix, source), _ => new SessionState());
         lock (state)
         {
+            var isNew = false;
             if (explicitSessionId != null)
+            {
+                // An explicit id belongs to a caller that opened the session itself (an import
+                // run), so it is never reported as new — recording it twice is that caller's
+                // problem to not have.
                 state.Id = explicitSessionId.Value;
+            }
             else if (state.Id == Guid.Empty || now - state.LastActivity > SessionGap)
+            {
                 state.Id = Guid.NewGuid();
+                isNew = true;
+            }
 
             state.LastActivity = now;
-            return state.Id;
+            return (state.Id, isNew);
         }
     }
 

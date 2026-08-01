@@ -64,6 +64,15 @@ public static class MixIds
             : throw new ArgumentOutOfRangeException(nameof(mix), mix, "No Mix row id known for mix");
     }
 
+    /// <summary>
+    ///     Whether a Mix row maps to a MixEnum. A picker that walks the Mix table needs this:
+    ///     a row seeded ahead of its enum value must be skipped, not thrown on.
+    /// </summary>
+    public static bool IsKnown(Guid mixId)
+    {
+        return ByGuid.ContainsKey(mixId);
+    }
+
     public static MixEnum ToEnum(Guid mixId)
     {
         return ByGuid.TryGetValue(mixId, out var mix)

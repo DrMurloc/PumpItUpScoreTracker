@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
 using Moq;
 using ScoreTracker.Communities.Application;
 using ScoreTracker.Communities.Contracts;
@@ -22,12 +23,13 @@ public sealed class CommunityManagementSagaTests
 {
     private readonly Mock<ICommunityRepository> _communities = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
+    private readonly Mock<IMediator> _mediator = new();
 
     private CommunityManagementSaga Build(Guid actingUserId)
     {
         _currentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(actingUserId).Build());
         _currentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
-        return new CommunityManagementSaga(_communities.Object, _currentUser.Object);
+        return new CommunityManagementSaga(_communities.Object, _currentUser.Object, _mediator.Object);
     }
 
     private void GivenCommunity(Community community)

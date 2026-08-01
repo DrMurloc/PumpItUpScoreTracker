@@ -11,6 +11,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -174,7 +175,9 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
     private readonly IMediator _mediator;
     private readonly IPlayerStatsReader _playerStats;
 
-    private static string ScoreCache(Guid userId, MixEnum mix)
+    // Internal so the purge repository evicts under the identical key rather than
+    // reconstructing the format and drifting from it.
+    internal static string ScoreCache(Guid userId, MixEnum mix)
     {
         return $"{nameof(EFPhoenixRecordsRepository)}_UserScores_{userId}_{mix}";
     }
@@ -526,16 +529,65 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 g.Sum(e => e.prs.Pumbility), g.Sum(e => e.prs.PumbilityPlus))).ToArrayAsync(cancellationToken);
     }
 
-    public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<MixScoreCount>> GetMixesWithScores(Guid userId,
+        CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var scores = await database.Set<PhoenixRecordEntity>().Where(p => p.UserId == userId).ToArrayAsync(cancellationToken);
-        var stats = await database.Set<PhoenixRecordStatsEntity>().Where(p => p.UserId == userId).ToArrayAsync(cancellationToken);
-        database.Set<PhoenixRecordEntity>().RemoveRange(scores);
-        database.Set<PhoenixRecordStatsEntity>().RemoveRange(stats);
-        await database.SaveChangesAsync(cancellationToken);
-        // The purge spans mixes, so every per-(user, mix) cache entry goes.
-        foreach (var mix in Enum.GetValues<MixEnum>())
-            _cache.Remove(ScoreCache(userId, mix));
+        // Both tables: Phoenix-scoring mixes record in PhoenixRecord, every pre-Phoenix mix in
+        // BestAttempt. A mix with nothing in it still comes back — hiding the empties is what
+        // made the picker look like it had forgotten the old mixes existed.
+        var phoenix = await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId)
+            .GroupBy(p => p.MixId)
+            .Select(g => new { MixId = g.Key, Count = g.Count() })
+            .ToArrayAsync(cancellationToken);
+        var legacy = await database.Set<BestAttemptEntity>()
+            .Where(b => b.UserId == userId)
+            .GroupBy(b => b.MixId)
+            .Select(g => new { MixId = g.Key, Count = g.Count() })
+            .ToArrayAsync(cancellationToken);
+        var counts = phoenix.Concat(legacy)
+            .GroupBy(x => x.MixId)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Count));
+
+        // Ordered by the Mix table's SortOrder, never enum order.
+        var mixes = await database.Set<MixEntity>()
+            .OrderBy(m => m.SortOrder)
+            .Select(m => new { m.Id, m.IsPrimary })
+            .ToArrayAsync(cancellationToken);
+        return mixes
+            .Where(m => MixIds.IsKnown(m.Id))
+            .Select(m => new MixScoreCount(MixIds.ToEnum(m.Id), counts.GetValueOrDefault(m.Id), m.IsPrimary))
+            .ToArray();
+    }
+
+    public async Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId,
+        CancellationToken cancellationToken = default)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId && p.ChartId == chartId && p.MixId == mixId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await database.Set<PhoenixRecordStatsEntity>()
+            .Where(p => p.UserId == userId && p.ChartId == chartId && p.MixId == mixId)
+            .ExecuteDeleteAsync(cancellationToken);
+        _cache.Remove(ScoreCache(userId, mix));
+    }
+
+    public async Task DeleteAllForUser(Guid userId, MixEnum? mix = null,
+        CancellationToken cancellationToken = default)
+    {
+        var mixId = mix == null ? (Guid?)null : MixIds.For(mix.Value);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId && (mixId == null || p.MixId == mixId))
+            .ExecuteDeleteAsync(cancellationToken);
+        await database.Set<PhoenixRecordStatsEntity>()
+            .Where(p => p.UserId == userId && (mixId == null || p.MixId == mixId))
+            .ExecuteDeleteAsync(cancellationToken);
+        // Cheaper to drop every per-(user, mix) entry than to reason about which survived.
+        foreach (var cached in Enum.GetValues<MixEnum>())
+            _cache.Remove(ScoreCache(userId, cached));
     }
 }

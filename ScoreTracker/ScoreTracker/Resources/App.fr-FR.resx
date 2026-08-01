@@ -461,6 +461,9 @@
   <data name="Already have an account? Any sign-in method you've linked works — and you can link more from your Account page." xml:space="preserve">
     <value>Vous avez déjà un compte ? Toute méthode de connexion déjà liée fonctionne — et vous pouvez en lier d'autres depuis votre page Compte.</value>
   </data>
+  <data name="Also forget my saved PIUGAME password" xml:space="preserve">
+    <value>Oublier aussi mon mot de passe PIUGAME enregistré</value>
+  </data>
   <data name="Also send imported scores to PIU Tracker, a community score site." xml:space="preserve">
     <value>Envoie aussi les scores importés vers PIU Tracker, un site de scores communautaire.</value>
   </data>
@@ -469,6 +472,9 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>Toujours</value>
+  </data>
+  <data name="always all mixes" xml:space="preserve">
+    <value>toujours tous les Mix</value>
   </data>
   <data name="Amazing" xml:space="preserve">
     <value>Incroyable</value>
@@ -503,6 +509,9 @@
   </data>
   <data name="Any level" xml:space="preserve">
     <value>Tout niveau</value>
+  </data>
+  <data name="any moment now" xml:space="preserve">
+    <value>d'un instant à l'autre</value>
   </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
@@ -809,6 +818,9 @@
   <data name="Cancel" xml:space="preserve">
     <value>Annuler</value>
   </data>
+  <data name="Cancel deletion" xml:space="preserve">
+    <value>Annuler la suppression</value>
+  </data>
   <data name="Capped — perfects pay +{0}" xml:space="preserve">
     <value>Au plafond : les Perfects rapportent +{0}</value>
   </data>
@@ -937,6 +949,9 @@
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Choisissez une carte de jeu, puis appuyez de nouveau sur Importer.</value>
   </data>
+  <data name="Choose a new creator" xml:space="preserve">
+    <value>Choisir un nouveau créateur</value>
+  </data>
   <data name="Choose the account to merge with" xml:space="preserve">
     <value>Choisissez le compte à fusionner</value>
   </data>
@@ -1045,6 +1060,9 @@
   </data>
   <data name="Communities to include" xml:space="preserve">
     <value>Communautés à inclure</value>
+  </data>
+  <data name="Communities you've only joined are fine — you can't transfer those, and they don't block anything." xml:space="preserve">
+    <value>Les communautés que vous avez seulement rejointes ne posent pas de problème : elles ne se transfèrent pas et ne bloquent rien.</value>
   </data>
   <data name="Community" xml:space="preserve">
     <value>Communauté</value>
@@ -1174,6 +1192,9 @@
   </data>
   <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
     <value>Échelle continue de modificateur (le modificateur s'incrémente entre les rangs)</value>
+  </data>
+  <data name="Contributions" xml:space="preserve">
+    <value>Contributions</value>
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>CoOp</value>
@@ -1338,6 +1359,9 @@
   <data name="Delete" xml:space="preserve">
     <value>Supprimer</value>
   </data>
+  <data name="Delete all my scores" xml:space="preserve">
+    <value>Supprimer tous mes scores</value>
+  </data>
   <data name="Delete All Scores" xml:space="preserve">
     <value>Supprimer tous les scores</value>
   </data>
@@ -1353,17 +1377,35 @@
   <data name="Delete Failed" xml:space="preserve">
     <value>La suppression a échoué. Réessayez.</value>
   </data>
+  <data name="Delete my account" xml:space="preserve">
+    <value>Supprimer mon compte</value>
+  </data>
+  <data name="Delete my {0} scores" xml:space="preserve">
+    <value>Supprimer mes scores {0}</value>
+  </data>
   <data name="Delete Submission Warning" xml:space="preserve">
     <value>Retirer {0} de l'inscription de {1} enlève ce score et sa photo du classement.</value>
   </data>
+  <data name="Delete the data I selected" xml:space="preserve">
+    <value>Supprimer les données sélectionnées</value>
+  </data>
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>Supprimer cette communauté et tout son contenu ? Cette action est irréversible.</value>
+  </data>
+  <data name="Delete your account" xml:space="preserve">
+    <value>Supprimer votre compte</value>
   </data>
   <data name="Deleted" xml:space="preserve">
     <value>Supprimé.</value>
   </data>
   <data name="Deletes every saved import password on every device. Users re-enter on their next import. Use if you suspect a breach." xml:space="preserve">
     <value>Supprime tous les mots de passe d'import enregistrés sur tous les appareils. Les utilisateurs les ressaisiront lors de leur prochain import. À utiliser en cas de suspicion de fuite.</value>
+  </data>
+  <data name="Deleting every mix resets your Pumbility, your titles and your folder progress everywhere." xml:space="preserve">
+    <value>Tout supprimer réinitialise votre Pumbility, vos titres et votre progression de dossiers partout.</value>
+  </data>
+  <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
+    <value>Supprimer vos scores {0} réinitialise votre Pumbility, vos titres et votre progression de dossiers pour ce Mix. Les autres Mix ne changent pas.</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>Rétrograder</value>
@@ -1608,6 +1650,9 @@
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>Tout ce qui suit vient des données réelles du site — le vrai produit, pas des captures.</value>
   </data>
+  <data name="Everything goes — scores, history, votes, tournament results, communities, and the account itself." xml:space="preserve">
+    <value>Tout disparaît : scores, historique, votes, résultats de tournois, communautés et le compte lui-même.</value>
+  </data>
   <data name="Everything it can do in your server" xml:space="preserve">
     <value>Tout ce qu'il sait faire sur votre serveur</value>
   </data>
@@ -1810,6 +1855,9 @@
   <data name="From" xml:space="preserve">
     <value>De</value>
   </data>
+  <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
+    <value>À partir de maintenant, chaque import et chaque session apparaît ici et vous pouvez en annuler n'importe lequel. Les scores que vous aviez déjà restent supprimables.</value>
+  </data>
   <data name="From Official" xml:space="preserve">
     <value>Du site officiel</value>
   </data>
@@ -1870,6 +1918,12 @@
   <data name="Give a song name." xml:space="preserve">
     <value>Indiquez le nom d'une chanson.</value>
   </data>
+  <data name="Go to account page" xml:space="preserve">
+    <value>Aller à mon compte</value>
+  </data>
+  <data name="Go to Delete" xml:space="preserve">
+    <value>Aller à Supprimer</value>
+  </data>
   <data name="Goal" xml:space="preserve">
     <value>Objectif</value>
   </data>
@@ -1927,11 +1981,17 @@
   <data name="Grouped by" xml:space="preserve">
     <value>Groupé par</value>
   </data>
+  <data name="Had a bad import?" xml:space="preserve">
+    <value>Un import raté ?</value>
+  </data>
   <data name="Half bar · 500" xml:space="preserve">
     <value>Demi-barre · 500</value>
   </data>
   <data name="Half-Double" xml:space="preserve">
     <value>Half-Double</value>
+  </data>
+  <data name="Hand over your communities first" xml:space="preserve">
+    <value>Transférez d'abord vos communautés</value>
   </data>
   <data name="Hands" xml:space="preserve">
     <value>Mains</value>
@@ -2143,6 +2203,9 @@
   <data name="Import to" xml:space="preserve">
     <value>Importer vers</value>
   </data>
+  <data name="Import undone" xml:space="preserve">
+    <value>Import annulé</value>
+  </data>
   <data name="Import Your Phoenix Scores" xml:space="preserve">
     <value>Importer vos scores Phoenix</value>
   </data>
@@ -2157,6 +2220,9 @@
   </data>
   <data name="Imported {0} new scores" xml:space="preserve">
     <value>{0} nouveaux scores importés</value>
+  </data>
+  <data name="Importing again will bring these scores straight back." xml:space="preserve">
+    <value>Réimporter ramènera ces scores immédiatement.</value>
   </data>
   <data name="Importing scores…" xml:space="preserve">
     <value>Importation des scores…</value>
@@ -2499,11 +2565,17 @@
   <data name="Manage invite links" xml:space="preserve">
     <value>Gérer les liens d'invitation</value>
   </data>
+  <data name="Manage or delete my data" xml:space="preserve">
+    <value>Gérer ou supprimer mes données</value>
+  </data>
   <data name="Manage users (ban/unban)" xml:space="preserve">
     <value>Gérer les utilisateurs (bannir/débannir)</value>
   </data>
   <data name="manual" xml:space="preserve">
     <value>manuel</value>
+  </data>
+  <data name="Manual entry" xml:space="preserve">
+    <value>Saisie manuelle</value>
   </data>
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Import manuel — script console + CSV</value>
@@ -2960,6 +3032,9 @@
   <data name="No unmatched keys" xml:space="preserve">
     <value>Aucune clé non associée</value>
   </data>
+  <data name="No — I want to permanently delete data." xml:space="preserve">
+    <value>Non — je veux supprimer définitivement des données.</value>
+  </data>
   <data name="Nobody climbed a chart board this week." xml:space="preserve">
     <value>Personne n'a grimpé sur un leaderboard de charts cette semaine.</value>
   </data>
@@ -3007,6 +3082,9 @@
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>Absent de {0} — ses {1} charts sont partis avec la chanson.</value>
+  </data>
+  <data name="Not now" xml:space="preserve">
+    <value>Pas maintenant</value>
   </data>
   <data name="Not played" xml:space="preserve">
     <value>Non joué</value>
@@ -3068,6 +3146,9 @@
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Rien à suggérer pour l'instant — jouez et importez des scores d'abord.</value>
+  </data>
+  <data name="Nothing to undo yet" xml:space="preserve">
+    <value>Rien à annuler pour l'instant</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>maintenant</value>
@@ -3460,6 +3541,9 @@
   <data name="Pick a folder to compare your scores." xml:space="preserve">
     <value>Choisissez un folder pour comparer vos scores.</value>
   </data>
+  <data name="pick a mix first" xml:space="preserve">
+    <value>choisissez d'abord un Mix</value>
+  </data>
   <data name="Pick a mix." xml:space="preserve">
     <value>Choisissez un Mix.</value>
   </data>
@@ -3507,6 +3591,9 @@
   </data>
   <data name="PIU Tracker is fully public — scores you send there are public even if your profile isn't." xml:space="preserve">
     <value>PIU Tracker est entièrement public — les scores que vous y envoyez sont publics même si votre profil ne l'est pas.</value>
+  </data>
+  <data name="PIUGAME" xml:space="preserve">
+    <value>PIUGAME</value>
   </data>
   <data name="PIUGAME Login" xml:space="preserve">
     <value>Connexion PIUGAME</value>
@@ -4228,6 +4315,9 @@
   <data name="Scores by competitive level" xml:space="preserve">
     <value>Scores par niveau compétitif</value>
   </data>
+  <data name="Scores from before we started recording sessions can't be undone — we didn't capture when they arrived, only when they were played. You can still delete them." xml:space="preserve">
+    <value>Les scores antérieurs à l'enregistrement des sessions ne peuvent pas être annulés : nous n'avons pas noté leur arrivée, seulement leur date de jeu. Vous pouvez toujours les supprimer.</value>
+  </data>
   <data name="Scores land here as boards close." xml:space="preserve">
     <value>Les scores apparaissent ici à la clôture des tableaux.</value>
   </data>
@@ -4242,6 +4332,9 @@
   </data>
   <data name="Scores tracked" xml:space="preserve">
     <value>Scores conservés</value>
+  </data>
+  <data name="Scores you've added since this import stay exactly as they are." xml:space="preserve">
+    <value>Les scores ajoutés depuis cet import restent inchangés.</value>
   </data>
   <data name="Scores, vs your level" xml:space="preserve">
     <value>Scores, face à ton niveau</value>
@@ -4321,8 +4414,14 @@
   <data name="Select Folders" xml:space="preserve">
     <value>Choisir les dossiers</value>
   </data>
+  <data name="Select what to delete" xml:space="preserve">
+    <value>Choisissez ce qu'il faut supprimer</value>
+  </data>
   <data name="Selected Chart" xml:space="preserve">
     <value>Chart sélectionnée</value>
+  </data>
+  <data name="selected mixes only" xml:space="preserve">
+    <value>uniquement les Mix sélectionnés</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Séries</value>
@@ -4830,6 +4929,9 @@
   <data name="That scoring configuration is invalid." xml:space="preserve">
     <value>Cette configuration de score est invalide.</value>
   </data>
+  <data name="That session can't be undone." xml:space="preserve">
+    <value>Cette session ne peut pas être annulée.</value>
+  </data>
   <data name="The arc" xml:space="preserve">
     <value>L&apos;arc</value>
   </data>
@@ -4959,8 +5061,14 @@
   <data name="Third" xml:space="preserve">
     <value>Troisième</value>
   </data>
+  <data name="This account is scheduled for deletion" xml:space="preserve">
+    <value>Ce compte est programmé pour suppression</value>
+  </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>Ce compte sera supprimé</value>
+  </data>
+  <data name="This can't be undone" xml:space="preserve">
+    <value>Ceci est irréversible</value>
   </data>
   <data name="This Cannot Be Undone" xml:space="preserve">
     <value>Cette action est irréversible.</value>
@@ -5006,6 +5114,9 @@
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>Ce Mix n'est pas normalisé en score — seuls la Note et le Pass sont disponibles.</value>
+  </data>
+  <data name="this mix only" xml:space="preserve">
+    <value>ce Mix uniquement</value>
   </data>
   <data name="This page is full." xml:space="preserve">
     <value>Cette page est pleine.</value>
@@ -5266,6 +5377,9 @@
   <data name="Type The Score" xml:space="preserve">
     <value>Saisir le score</value>
   </data>
+  <data name="Type {0} to confirm" xml:space="preserve">
+    <value>Tapez {0} pour confirmer</value>
+  </data>
   <data name="Ultra Popular" xml:space="preserve">
     <value>Ultra populaire</value>
   </data>
@@ -5287,8 +5401,29 @@
   <data name="Underrated" xml:space="preserve">
     <value>Sous-évalué</value>
   </data>
+  <data name="Undo" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="Undo an import instead" xml:space="preserve">
+    <value>Annuler un import à la place</value>
+  </data>
+  <data name="Undo an import, delete scores for one mix or all of them, or delete your account." xml:space="preserve">
+    <value>Annulez un import, supprimez les scores d'un Mix ou de tous, ou supprimez votre compte.</value>
+  </data>
   <data name="Undo Merge" xml:space="preserve">
     <value>Annuler la fusion</value>
+  </data>
+  <data name="Undo this import" xml:space="preserve">
+    <value>Annuler cet import</value>
+  </data>
+  <data name="Undo this import?" xml:space="preserve">
+    <value>Annuler cet import ?</value>
+  </data>
+  <data name="Undoing a session removes only the scores it added and puts back what you had before it. Other sessions aren't affected, including newer ones, and you can undo them in any order." xml:space="preserve">
+    <value>Annuler une session retire seulement les scores qu'elle a ajoutés et rétablit ce que vous aviez avant. Les autres sessions ne changent pas, même les plus récentes, et vous pouvez les annuler dans n'importe quel ordre.</value>
+  </data>
+  <data name="Undoing puts your scores back the way they were before it. Nothing is lost." xml:space="preserve">
+    <value>Annuler rétablit vos scores tels qu'ils étaient avant. Rien n'est perdu.</value>
   </data>
   <data name="Unknown" xml:space="preserve">
     <value>Inconnu</value>
@@ -5320,6 +5455,12 @@
   </data>
   <data name="Unranked" xml:space="preserve">
     <value>Non classé</value>
+  </data>
+  <data name="until everything is deleted" xml:space="preserve">
+    <value>avant la suppression totale</value>
+  </data>
+  <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
+    <value>D'ici là, votre profil est masqué et votre game tag est effacé.</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
     <value>Mettre à jour la chart</value>
@@ -5741,6 +5882,9 @@
   <data name="You're already a member of this community." xml:space="preserve">
     <value>Vous êtes déjà membre de cette communauté.</value>
   </data>
+  <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
+    <value>Vous êtes le créateur de {0} communautés. Quelqu'un doit les reprendre : choisissez un nouveau créateur pour chacune, ou supprimez-la si vous êtes seul.</value>
+  </data>
   <data name="You've been banned from this community and can't rejoin." xml:space="preserve">
     <value>Vous avez été banni de cette communauté et ne pouvez pas la rejoindre à nouveau.</value>
   </data>
@@ -5756,8 +5900,17 @@
   <data name="Your account is content-locked. Message an admin if you have questions." xml:space="preserve">
     <value>Votre compte est verrouillé en termes de contenu. Contactez un admin si vous avez des questions.</value>
   </data>
+  <data name="Your account is hidden right away and permanently deleted on {0}. Sign in before then to cancel." xml:space="preserve">
+    <value>Votre compte est masqué immédiatement et définitivement supprimé le {0}. Connectez-vous avant cette date pour annuler.</value>
+  </data>
   <data name="Your account is not associated with a game profile yet. Play a game on your account first, then try again." xml:space="preserve">
     <value>Votre compte n'est pas encore associé à un profil de jeu. Jouez d'abord une partie avec votre compte, puis réessayez.</value>
+  </data>
+  <data name="Your account is scheduled for deletion on {0}." xml:space="preserve">
+    <value>Votre compte est programmé pour suppression le {0}.</value>
+  </data>
+  <data name="Your account will not be deleted" xml:space="preserve">
+    <value>Votre compte ne sera pas supprimé</value>
   </data>
   <data name="Your best" xml:space="preserve">
     <value>Votre meilleur</value>
@@ -5776,6 +5929,9 @@
   </data>
   <data name="Your Data" xml:space="preserve">
     <value>Vos données</value>
+  </data>
+  <data name="Your data has been deleted" xml:space="preserve">
+    <value>Vos données ont été supprimées</value>
   </data>
   <data name="Your data is yours" xml:space="preserve">
     <value>Vos données vous appartiennent</value>
@@ -5825,6 +5981,9 @@
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>Ton Pumbility et ton niveau compétitif, plus tes rivaux les plus proches.</value>
   </data>
+  <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
+    <value>Votre Pumbility, vos titres, les lampes de dossier et vos statistiques se calculent à partir de ceci : ils se réinitialisent d'eux-mêmes. Vous ne pouvez pas les garder.</value>
+  </data>
   <data name="Your Region" xml:space="preserve">
     <value>Votre région</value>
   </data>
@@ -5836,6 +5995,9 @@
   </data>
   <data name="Your score spread per level, Singles against Doubles, the middle 50% shaded." xml:space="preserve">
     <value>Votre répartition des scores par niveau, Singles contre Doubles, les 50 % du milieu ombrés.</value>
+  </data>
+  <data name="Your scores are all in {0}." xml:space="preserve">
+    <value>Tous vos scores sont dans {0}.</value>
   </data>
   <data name="Your scores have been deleted" xml:space="preserve">
     <value>Vos scores ont été supprimés</value>
@@ -5909,8 +6071,14 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} terminés</value>
   </data>
+  <data name="{0} admins" xml:space="preserve">
+    <value>{0} administrateurs</value>
+  </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} entrés</value>
+  </data>
+  <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
+    <value>{0} devient le créateur de cette communauté et vous devenez administrateur. Il n'y a qu'une place de créateur : vous ne pourrez pas la reprendre vous-même.</value>
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
@@ -5923,6 +6091,12 @@
   </data>
   <data name="{0} charts added to songs that were already here" xml:space="preserve">
     <value>{0} charts ajoutés à des chansons déjà présentes</value>
+  </data>
+  <data name="{0} charts go back to their previous best" xml:space="preserve">
+    <value>{0} charts reviennent à leur meilleur score précédent</value>
+  </data>
+  <data name="{0} charts had no previous score and will be removed" xml:space="preserve">
+    <value>{0} charts n'avaient aucun score précédent et seront supprimés</value>
   </data>
   <data name="{0} charts have a different note count in {1} — the steps changed, not just the rating." xml:space="preserve">
     <value>{0} charts ont un nombre de notes différent dans {1} — les pas ont changé, pas seulement le niveau.</value>
@@ -5966,6 +6140,9 @@
   <data name="{0} days old" xml:space="preserve">
     <value>il y a {0} jours</value>
   </data>
+  <data name="{0} days, {1} hours" xml:space="preserve">
+    <value>{0} jours, {1} heures</value>
+  </data>
   <data name="{0} didn't move." xml:space="preserve">
     <value>{0} n'a pas bougé.</value>
   </data>
@@ -5995,6 +6172,12 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0} plus difficiles pour vous — surtout {1}</value>
+  </data>
+  <data name="{0} hours, {1} minutes" xml:space="preserve">
+    <value>{0} heures, {1} minutes</value>
+  </data>
+  <data name="{0} improved" xml:space="preserve">
+    <value>{0} améliorés</value>
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} n'est pas dans {1} — toute la chanson est partie.</value>

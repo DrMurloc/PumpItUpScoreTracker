@@ -136,8 +136,10 @@ generator):
   consumers. The purge trigger therefore **re-fires daily for a week** past `PurgeAfter`;
   deletes are naturally idempotent, so re-firing is free and self-healing.
 
-The same purge event chain is the future self-serve delete-account feature — merge is "purge +
-move logins," delete is just "purge."
+The same purge event chain now carries self-serve account deletion — merge is "purge + move
+logins," delete is just "purge" ([delete-my-data.md](delete-my-data.md) §8). Building on it
+surfaced eleven tables the purge had never covered, plus two verticals with no purge consumer
+at all; those are closed and ratcheted.
 
 ## Rollout order
 

@@ -16,4 +16,14 @@ public interface ICommunityReader
         CancellationToken cancellationToken = default);
 
     Task<IEnumerable<Guid>> GetMembers(Name communityName, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     The communities this user created, excluding the system ones (World and the
+    ///     per-country communities) — nobody can transfer those, so counting them would block
+    ///     every account on the site forever.
+    ///     Identity asks through this port because it must not reference Communities: Communities
+    ///     already references Identity, and the assemblies would cycle.
+    /// </summary>
+    Task<IEnumerable<OwnedCommunityRecord>> GetOwnedCommunities(Guid userId,
+        CancellationToken cancellationToken = default);
 }

@@ -7,6 +7,19 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure;
 
 internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
 {
+    /// <summary>
+    ///     Every table this vertical keys to a user. AccountPurgeCoverageTests checks this
+    ///     against the assembly, and UserDataPurge executes it — one list, so a table cannot
+    ///     be declared without also being deleted.
+    /// </summary>
+    internal static readonly Type[] UserOwned =
+    {
+        typeof(UserChartDifficultyRatingEntity),
+        typeof(UserPreferenceRatingEntity),
+        typeof(UserCoOpRatingEntity),
+        typeof(UserTierListEntryEntity)
+    };
+
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFAccountPurgeRepository(IDbContextFactory<ChartAttemptDbContext> factory)
@@ -14,16 +27,8 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
         _factory = factory;
     }
 
-    public async Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
+    public Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
     {
-        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        await database.Set<UserChartDifficultyRatingEntity>().Where(e => e.UserId == userId)
-            .ExecuteDeleteAsync(cancellationToken);
-        await database.Set<UserPreferenceRatingEntity>().Where(e => e.UserId == userId)
-            .ExecuteDeleteAsync(cancellationToken);
-        await database.Set<UserCoOpRatingEntity>().Where(e => e.UserId == userId)
-            .ExecuteDeleteAsync(cancellationToken);
-        await database.Set<UserTierListEntryEntity>().Where(e => e.UserId == userId)
-            .ExecuteDeleteAsync(cancellationToken);
+        return UserDataPurge.DeleteAll(_factory, UserOwned, userId, cancellationToken);
     }
 }

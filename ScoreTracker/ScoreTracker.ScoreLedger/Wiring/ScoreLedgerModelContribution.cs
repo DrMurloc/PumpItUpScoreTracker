@@ -33,6 +33,8 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
             .IncludeProperties(e => new { e.UserId, e.Score, e.Plate, e.IsBroken })
             .IsCreatedOnline();
 
+        modelBuilder.Entity<ScoreSessionEntity>().ToTable("ScoreSession");
+
         modelBuilder.Entity<ScoreEventJournalEntity>().ToTable("ScoreEventJournal");
         // Session lookups skip the pre-capture rows (SessionId is never backfilled).
         modelBuilder.Entity<ScoreEventJournalEntity>().HasIndex(e => e.SessionId)

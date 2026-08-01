@@ -1,0 +1,324 @@
+@page "/Account/Data/Delete"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts
+@using ScoreTracker.Identity.Contracts.Commands
+@using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.ScoreLedger.Contracts
+@using ScoreTracker.ScoreLedger.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.Account
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+<PageTitle>@L["Delete"]</PageTitle>
+
+<YourDataFrame Active="YourDataFrame.YourDataTab.Delete">
+    @* Undo first, and the destructive form stays inert until the player says they don't want it.
+       Visible-but-disabled rather than hidden on purpose: a hidden form makes people hunt, and
+       hunting makes them determined. See docs/design/delete-my-data.md §5. *@
+    <MudPaper Outlined="true" Class="pa-4 mb-4 undo-banner">
+        <div class="d-flex align-center justify-space-between flex-wrap gap-3">
+            <div>
+                <MudText Typo="Typo.subtitle1"><b>@L["Had a bad import?"]</b></MudText>
+                <MudText Typo="Typo.body2" Style="opacity:.8;">
+                    @L["Undoing puts your scores back the way they were before it. Nothing is lost."]
+                </MudText>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <MudButton Href="/Account/Data/Undo" Variant="Variant.Filled" Color="Color.Primary">
+                    @L["Undo an import instead"]
+                </MudButton>
+            </div>
+        </div>
+    </MudPaper>
+
+    <MudPaper Outlined="true" Class="pa-3 mb-4">
+        <MudCheckBox T="bool" @bind-Value="_armed" Color="Color.Error" Dense="true">
+            <b>@L["No — I want to permanently delete data."]</b>
+        </MudCheckBox>
+    </MudPaper>
+
+    <div class="@(_armed ? "" : "delete-inert")">
+        @* EVERY mix, not only the ones with scores in them — hiding the empties is
+           indistinguishable from having forgotten they exist, which is how the hardcoded
+           Phoenix/Phoenix 2/XX list read. The primary trio shows as chips and everything older
+           sits behind "More Mixes", mirroring the site's own mix picker.
+
+           Multi-select, and selected reads red like everything else here: these chips choose
+           what gets destroyed, not what gets shown. *@
+        <div class="d-flex align-center flex-wrap gap-2 mb-2">
+            <MudText Typo="Typo.overline">@L["Which mix"]</MudText>
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="SelectAllMixes">@L["All mixes"]</MudButton>
+            @if (_selectedMixes.Any())
+            {
+                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="ClearMixes">@L["Clear"]</MudButton>
+            }
+        </div>
+        <MudChipSet T="string" SelectedValues="@_selectedMixes.Select(m => m.ToString()).ToHashSet()"
+                    SelectedValuesChanged="MixesChanged"
+                    SelectionMode="SelectionMode.MultiSelection" CheckMark="true"
+                    SelectedColor="Color.Error" Class="mb-2">
+            @foreach (var mix in _mixes.Where(m => m.IsPrimary || m.ScoreCount > 0 || _showAllMixes))
+            {
+                <MudChip T="string" Value="@mix.Mix.ToString()" Variant="Variant.Outlined">
+                    @mix.Mix.GetName()@(mix.ScoreCount > 0 ? $" ({mix.ScoreCount:N0})" : "")
+                </MudChip>
+            }
+        </MudChipSet>
+        @if (!_showAllMixes && _mixes.Any(m => !m.IsPrimary && m.ScoreCount == 0))
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Text" Class="mb-4"
+                       OnClick="@(() => _showAllMixes = true)">@L["More Mixes"]</MudButton>
+        }
+        else
+        {
+            <div class="mb-4"></div>
+        }
+
+        <MudExpansionPanels MultiExpansion="true" Class="mb-4">
+            <MudExpansionPanel Expanded="true">
+                <TitleContent>
+                    <MudText Typo="Typo.subtitle1">
+                        <b>@L["Scores"]</b>
+                        <span style="opacity:.7;">
+                            @(NoMixChosen ? $"— {L["pick a mix first"]}" : $"— {L["selected mixes only"]}")
+                        </span>
+                    </MudText>
+                </TitleContent>
+                <ChildContent>
+                    @* Nothing to scope a score deletion to, so nothing here can be acted on. *@
+                    @foreach (var item in ScoreItems)
+                    {
+                        <MudCheckBox T="bool" Color="Color.Error" Dense="true" Disabled="NoMixChosen"
+                                     Value="@_scoreItems.HasFlag(item.Flag)"
+                                     ValueChanged="@(v => ToggleScore(item.Flag, v))">@L[item.Label]</MudCheckBox>
+                    }
+                    @* Derived state is a consequence, never a choice — it is recomputed from the
+                       records above and cannot outlive them. *@
+                    <MudAlert Severity="Severity.Normal" Dense="true" Class="mt-2">
+                        @L["Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them."]
+                    </MudAlert>
+                </ChildContent>
+            </MudExpansionPanel>
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudText Typo="Typo.subtitle1"><b>@L["Contributions"]</b> <span style="opacity:.7;">— @L["always all mixes"]</span></MudText>
+                </TitleContent>
+                <ChildContent>
+                    @foreach (var item in ContributionItems)
+                    {
+                        <MudCheckBox T="bool" Color="Color.Error" Dense="true"
+                                     Value="@_contributionItems.HasFlag(item.Flag)"
+                                     ValueChanged="@(v => ToggleContribution(item.Flag, v))">@L[item.Label]</MudCheckBox>
+                    }
+                </ChildContent>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Class="mb-4">
+            <MudText Typo="Typo.subtitle2"><b>@L["This can't be undone"]</b></MudText>
+            <MudText Typo="Typo.body2">@ConsequenceCopy()</MudText>
+        </MudAlert>
+
+        <div class="d-flex gap-2 flex-wrap align-center">
+            <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="@(!_armed || _busy || NothingChosen)"
+                       OnClick="Delete">@BlastRadiusLabel()</MudButton>
+            <MudButton Variant="Variant.Text" Href="/Account">@L["Cancel"]</MudButton>
+        </div>
+    </div>
+
+    @* The admin account is not self-deletable (the handler refuses regardless). Not offering it
+       beats offering it and refusing on click — a dead end you can only find by pressing the
+       most frightening button on the page. *@
+    @if (!CurrentUser.User.IsAdmin)
+    {
+        <MudDivider Class="my-8"/>
+
+        <MudPaper Outlined="true" Class="pa-4" Style="border-color: var(--mud-palette-error);">
+            <MudText Typo="Typo.h6" Color="Color.Error">@L["Delete your account"]</MudText>
+            <MudText Typo="Typo.body2" Class="mb-3">
+                @L["Everything goes — scores, history, votes, tournament results, communities, and the account itself."]
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="_busy"
+                       OnClick="StartAccountDeletion">@L["Delete my account"]</MudButton>
+        </MudPaper>
+    }
+</YourDataFrame>
+
+<DeleteAccountDialog @bind-Visible="_showAccountDialog" Blockers="_blockers" PurgeAfter="_purgeAfter"
+                     OnConfirmed="ConfirmAccountDeletion"/>
+
+<style>
+    .undo-banner { border-color: var(--mud-palette-primary); border-left-width: 3px; }
+
+    /* Inert, not hidden: readable so the player can decide against it. */
+    .delete-inert { opacity: .34; filter: grayscale(.7); pointer-events: none; }
+</style>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@code {
+    private static readonly (ScoreDeletionItems Flag, string Label)[] ScoreItems =
+    {
+        (ScoreDeletionItems.BestScores, "Best scores"),
+        (ScoreDeletionItems.PlayHistory, "Play history"),
+        (ScoreDeletionItems.RatingHistory, "Rating history"),
+        (ScoreDeletionItems.Highlights, "Session roundups & highlights"),
+        (ScoreDeletionItems.Milestones, "Milestones")
+    };
+
+    private static readonly (ContributionDeletionItems Flag, string Label)[] ContributionItems =
+    {
+        (ContributionDeletionItems.TierListVotes, "Tier list votes"),
+        (ContributionDeletionItems.ChartDifficultyRatings, "Chart difficulty ratings"),
+        (ContributionDeletionItems.ChartPreferenceRatings, "Chart preference ratings"),
+        (ContributionDeletionItems.CoOpRatings, "Co-op ratings"),
+        (ContributionDeletionItems.WeeklyAndDailyStep, "Weekly & Daily Step entries"),
+        (ContributionDeletionItems.TournamentResults, "Tournament results"),
+        (ContributionDeletionItems.CommunityMemberships, "Community memberships")
+    };
+
+    // Read, never assumed. Every mix stores scores — the legacy ones in BestAttempt rather
+    // than PhoenixRecord — so all of them are selectable, with counts where the player has any.
+    private IReadOnlyList<MixScoreCount> _mixes = Array.Empty<MixScoreCount>();
+    private bool _showAllMixes;
+
+    private bool _armed;
+    private bool _busy;
+    private bool _showAccountDialog;
+    private readonly HashSet<MixEnum> _selectedMixes = new();
+    private ScoreDeletionItems _scoreItems = ScoreDeletionItems.BestScores;
+    private ContributionDeletionItems _contributionItems = ContributionDeletionItems.None;
+    private IReadOnlyList<OwnedCommunityRecord> _blockers = Array.Empty<OwnedCommunityRecord>();
+    private DateTimeOffset? _purgeAfter;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _mixes = await Mediator.Send(new GetMixesWithScoresQuery(CurrentUser.User.Id));
+    }
+
+    private bool NoMixChosen => _selectedMixes.Count == 0;
+
+    // Scores need a mix to delete from; contributions are account-wide and need none.
+    private bool NothingChosen =>
+        (_scoreItems == ScoreDeletionItems.None || _selectedMixes.Count == 0) &&
+        _contributionItems == ContributionDeletionItems.None;
+
+    private void MixesChanged(IReadOnlyCollection<string> values)
+    {
+        _selectedMixes.Clear();
+        foreach (var value in values) _selectedMixes.Add(Enum.Parse<MixEnum>(value));
+        // Clearing every mix disarms the score items too, rather than leaving ticks standing
+        // against a scope that no longer exists.
+        if (NoMixChosen) _scoreItems = ScoreDeletionItems.None;
+    }
+
+    private void ClearMixes()
+    {
+        _selectedMixes.Clear();
+        _scoreItems = ScoreDeletionItems.None;
+    }
+
+    private void SelectAllMixes()
+    {
+        _selectedMixes.Clear();
+        foreach (var mix in _mixes) _selectedMixes.Add(mix.Mix);
+        // Selecting everything means the older ones must be visible, or the row would claim a
+        // selection the player cannot see.
+        _showAllMixes = true;
+    }
+
+    private void ToggleScore(ScoreDeletionItems flag, bool on)
+    {
+        _scoreItems = on ? _scoreItems | flag : _scoreItems & ~flag;
+    }
+
+    private void ToggleContribution(ContributionDeletionItems flag, bool on)
+    {
+        _contributionItems = on ? _contributionItems | flag : _contributionItems & ~flag;
+    }
+
+    private string ConsequenceCopy()
+    {
+        if (_selectedMixes.Count == 0 || _selectedMixes.Count == _mixes.Count)
+            return L["Deleting every mix resets your Pumbility, your titles and your folder progress everywhere."];
+        return L["Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched.",
+            string.Join(", ", _selectedMixes.Select(m => m.GetName()))];
+    }
+
+    // The button names what is about to happen rather than saying Confirm. The count is the
+    // guard — it is worth more than another acknowledgement checkbox.
+    private string BlastRadiusLabel()
+    {
+        if (NothingChosen) return L["Select what to delete"];
+        if (!_scoreItems.HasFlag(ScoreDeletionItems.BestScores) || _selectedMixes.Count == 0)
+            return L["Delete the data I selected"];
+        if (_selectedMixes.Count == _mixes.Count) return L["Delete all my scores"];
+        return L["Delete my {0} scores", string.Join(", ", _selectedMixes.Select(m => m.GetName()))];
+    }
+
+    private async Task Delete()
+    {
+        _busy = true;
+        try
+        {
+            if (_scoreItems != ScoreDeletionItems.None && _selectedMixes.Count > 0)
+                await Mediator.Send(new WipeUserScoresCommand(CurrentUser.User.Id, _selectedMixes.ToArray(),
+                    _scoreItems));
+            if (_contributionItems != ContributionDeletionItems.None)
+                await Mediator.Send(new DeleteMyContributionsCommand(CurrentUser.User.Id, _contributionItems));
+
+            Snackbar.Add(L["Your data has been deleted"], Severity.Success);
+            _scoreItems = ScoreDeletionItems.None;
+            _contributionItems = ContributionDeletionItems.None;
+            _selectedMixes.Clear();
+            _armed = false;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task StartAccountDeletion()
+    {
+        _busy = true;
+        try
+        {
+            // Blockers are read before anything is typed: nobody should confirm a username only
+            // to be told they cannot. The dialog renders them instead of a confirm box.
+            _blockers = await Mediator.Send(new GetAccountDeletionBlockersQuery(CurrentUser.User.Id));
+            _purgeAfter = null;
+            _showAccountDialog = true;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task ConfirmAccountDeletion()
+    {
+        var result = await Mediator.Send(new RequestAccountDeletionCommand(CurrentUser.User.Id));
+        if (result.Outcome == AccountDeletionOutcome.BlockedByOwnedCommunities)
+        {
+            // Someone handed them a community between opening the dialog and confirming.
+            _blockers = result.Blockers;
+            return;
+        }
+
+        _showAccountDialog = false;
+        // Signed out immediately: the account is hidden and scheduled, and staying signed in
+        // would invite them to keep using something they just asked us to delete.
+        Nav.NavigateTo("/logout", true);
+    }
+
+}

@@ -19,6 +19,7 @@ public sealed class AccountPurgeSagaTests
     private static readonly DateTimeOffset Now = new(2026, 8, 10, 12, 0, 0, TimeSpan.Zero);
 
     private readonly Mock<IMergeRequestRepository> _merges = new();
+    private readonly Mock<IAccountDeletionRepository> _deletions = new();
     private readonly Mock<IAccountPurgeRepository> _purge = new();
     private readonly Mock<ConsumeContext<ProcessAccountPurgesCommand>> _context = new();
     private readonly AccountPurgeSaga _saga;
@@ -26,8 +27,8 @@ public sealed class AccountPurgeSagaTests
     public AccountPurgeSagaTests()
     {
         _context.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
-        _saga = new AccountPurgeSaga(_merges.Object, _purge.Object, FakeDateTime.At(Now).Object,
-            NullLogger<AccountPurgeSaga>.Instance);
+        _saga = new AccountPurgeSaga(_merges.Object, _deletions.Object, _purge.Object,
+            FakeDateTime.At(Now).Object, NullLogger<AccountPurgeSaga>.Instance);
     }
 
     [Fact]

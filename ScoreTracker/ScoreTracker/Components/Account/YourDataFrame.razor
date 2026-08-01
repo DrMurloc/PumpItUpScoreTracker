@@ -1,0 +1,64 @@
+@namespace ScoreTracker.Web.Components.Account
+
+@* The shared chrome for the two Your Data routes. Undo comes first because it is the safer of
+   the pair and the one most people actually want.
+
+   The switch is the same segmented control the folder picker uses for chart type — filled =
+   active, outlined = not — and it sits immediately beside the heading. Right-aligned across the
+   header it read as page chrome; a switch has to be next to the thing it switches. *@
+<div class="yourdata-head">
+    <MudText Typo="Typo.h5" Class="yourdata-title">@L["Your Data"]</MudText>
+    @* Deliberately NOT reusing .folder-picker-types: that class is only a margin-bottom for the
+       picker popover, and it drags the group off-centre against the heading. The look comes from
+       the filled/outlined variants, not the class. *@
+    <MudButtonGroup OverrideStyles="false" Class="yourdata-switch">
+        <MudButton Href="/Account/Data/Undo" Size="Size.Small" Color="Color.Primary"
+                   Variant="@(Active == YourDataTab.Undo ? Variant.Filled : Variant.Outlined)">@L["Undo"]</MudButton>
+        <MudButton Href="/Account/Data/Delete" Size="Size.Small" Color="Color.Primary"
+                   Variant="@(Active == YourDataTab.Delete ? Variant.Filled : Variant.Outlined)">@L["Delete"]</MudButton>
+    </MudButtonGroup>
+</div>
+
+@ChildContent
+
+<style>
+    /* The layout's container pads sideways but not down, so pages space their own top edge. */
+    .yourdata-head {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .5rem 1rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: .75rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    }
+
+    /* Centring only works once every child's own vertical margin is out of the way: an h5's
+       leading is taller than a Small button, and a stray margin-bottom on either one shifts its
+       visual centre by half that margin. Zeroing both is what makes align-items mean what it
+       says. */
+    .yourdata-head > * {
+        margin-top: 0;
+        margin-bottom: 0;
+        align-self: center;
+    }
+
+    .yourdata-head .yourdata-title {
+        line-height: 1.2;
+    }
+</style>
+
+@code {
+
+    public enum YourDataTab
+    {
+        Undo,
+        Delete
+    }
+
+    [Parameter] public YourDataTab Active { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+}
