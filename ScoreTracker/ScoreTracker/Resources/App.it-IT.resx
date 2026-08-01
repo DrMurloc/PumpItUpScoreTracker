@@ -1217,6 +1217,9 @@
   <data name="Connected" xml:space="preserve">
     <value>Collegato</value>
   </data>
+  <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
+    <value>Collegare uno strumento di cui ti fidi funziona benissimo con un profilo privato — è un collegamento diretto, non condivisione pubblica. Il tuo profilo resta privato e nessun altro strumento ottiene accesso.</value>
+  </data>
   <data name="Content" xml:space="preserve">
     <value>Contenuto</value>
   </data>
@@ -2354,6 +2357,9 @@
   <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
     <value>Invita il bot, poi esegui /piu register in un canale per attivare i suoi feed e comandi.</value>
   </data>
+  <data name="invited you to connect" xml:space="preserve">
+    <value>ti ha invitato a collegarti</value>
+  </data>
   <data name="IsBroken" xml:space="preserve">
     <value>IsBroken</value>
     <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
@@ -2363,6 +2369,9 @@
   </data>
   <data name="It is not limited to reading scores, and we cannot limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
     <value>Non si limita a leggere i punteggi, e non possiamo limitarlo. La chiave resta valida finché piugame.com non la fa scadere.</value>
+  </data>
+  <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
+    <value>Potrebbe essere stato revocato, o lo strumento non esiste più. Chiedi un link nuovo a chi te l'ha mandato.</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Potrà leggere</value>
@@ -3864,6 +3873,9 @@
   <data name="Private by default" xml:space="preserve">
     <value>Privato per impostazione predefinita</value>
   </data>
+  <data name="Private tool" xml:space="preserve">
+    <value>Strumento privato</value>
+  </data>
   <data name="Pro &amp; Infinity" xml:space="preserve">
     <value>Pro e Infinity</value>
   </data>
@@ -3903,6 +3915,9 @@
   <data name="Public" xml:space="preserve">
     <value>Pubblico</value>
     <comment>(on/off, if account is set to public)</comment>
+  </data>
+  <data name="Public tool" xml:space="preserve">
+    <value>Strumento pubblico</value>
   </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>mostra le statistiche di un chart e i chart simili, con i link alle sue pagine</value>
@@ -4669,6 +4684,9 @@
   <data name="Sign in to accept this invite." xml:space="preserve">
     <value>Accedi per accettare questo invito.</value>
   </data>
+  <data name="Sign in to continue" xml:space="preserve">
+    <value>Accedi per continuare</value>
+  </data>
   <data name="Sign in to import." xml:space="preserve">
     <value>Accedi per importare.</value>
   </data>
@@ -5020,6 +5038,9 @@
   <data name="That feed wasn't registered here." xml:space="preserve">
     <value>Quel feed non era registrato qui.</value>
   </data>
+  <data name="That is control of your PIUGame account, not just your scores. You'll see the full warning before anything is shared." xml:space="preserve">
+    <value>È il controllo del tuo account PIUGame, non solo dei tuoi punteggi. Vedrai l'avviso completo prima che venga condiviso qualcosa.</value>
+  </data>
   <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
     <value>Quell'account PIUGAME non è collegato all'account selezionato</value>
   </data>
@@ -5209,6 +5230,9 @@
   <data name="This invite code has expired. Ask a member for a new link." xml:space="preserve">
     <value>Questo codice di invito è scaduto. Chiedi a un membro un nuovo link.</value>
   </data>
+  <data name="This invite link doesn't work" xml:space="preserve">
+    <value>Questo link d'invito non funziona</value>
+  </data>
   <data name="This invite link isn't valid." xml:space="preserve">
     <value>Questo link di invito non è valido.</value>
   </data>
@@ -5244,6 +5268,9 @@
   </data>
   <data name="This sign-in method is connected to a different account" xml:space="preserve">
     <value>Questo metodo di accesso è collegato a un altro account</value>
+  </data>
+  <data name="This tool asks for your PIUGame session" xml:space="preserve">
+    <value>Questo strumento chiede la tua sessione PIUGame</value>
   </data>
   <data name="This user has no GameTag. Choose a username to assign before locking." xml:space="preserve">
     <value>Questo utente non ha un GameTag. Scegli un nome utente da assegnare prima di bloccarlo.</value>
@@ -5717,6 +5744,9 @@
   <data name="Visible bar — always 1000" xml:space="preserve">
     <value>Barra visibile: sempre 1000</value>
   </data>
+  <data name="Visit site" xml:space="preserve">
+    <value>Vai al sito</value>
+  </data>
   <data name="Vote Count" xml:space="preserve">
     <value>{0} voti</value>
   </data>
@@ -5813,6 +5843,9 @@
   </data>
   <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
     <value>cosa serve per difendere ogni gradino della classifica PUMBILITY</value>
+  </data>
+  <data name="What it will be able to read" xml:space="preserve">
+    <value>Cosa potrà leggere</value>
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>Su cosa lavorare (predefinito Title Hunt)</value>
@@ -5997,6 +6030,9 @@
   <data name="You will no longer be able to sign in with this method" xml:space="preserve">
     <value>Non potrai più accedere con questo metodo</value>
   </data>
+  <data name="You'll come back here after signing in. Nothing is shared until you press Connect." xml:space="preserve">
+    <value>Tornerai qui dopo l'accesso. Non viene condiviso nulla finché non premi Collega.</value>
+  </data>
   <data name="You're already a member of this community." xml:space="preserve">
     <value>Sei già membro di questa comunità.</value>
   </data>
@@ -6128,6 +6164,9 @@
   </data>
   <data name="Your scores, plates and player profile, on every mix you've played." xml:space="preserve">
     <value>I tuoi punteggi, le plate e il profilo giocatore, su ogni mix a cui hai giocato.</value>
+  </data>
+  <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
+    <value>I tuoi punteggi, le tue plate e il tuo profilo giocatore, su ogni mix a cui hai giocato. Non può registrare punteggi, modificare nulla, né agire al posto tuo.</value>
   </data>
   <data name="Your session ended." xml:space="preserve">
     <value>La tua sessione è terminata.</value>

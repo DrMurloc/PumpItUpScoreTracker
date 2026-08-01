@@ -1217,6 +1217,9 @@
   <data name="Connected" xml:space="preserve">
     <value>接続済み</value>
   </data>
+  <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
+    <value>信頼できるツール1つに接続するのは非公開プロフィールでも問題ありません — 公開共有ではなく直接接続だからです。プロフィールは非公開のままで、ほかのツールがアクセスすることはありません。</value>
+  </data>
   <data name="Content" xml:space="preserve">
     <value>コンテンツ</value>
   </data>
@@ -2354,6 +2357,9 @@
   <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
     <value>ボットを招待してから、任意のチャンネルで /piu register を実行するとフィードとコマンドが有効になります。</value>
   </data>
+  <data name="invited you to connect" xml:space="preserve">
+    <value>があなたを招待しました</value>
+  </data>
   <data name="IsBroken" xml:space="preserve">
 	  <value>IsBroken</value>
 	  
@@ -2363,6 +2369,9 @@
   </data>
   <data name="It is not limited to reading scores, and we cannot limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
     <value>スコアの読み取りに限定されておらず、こちらで制限することもできません。キーはpiugame.comが失効させるまで有効です。</value>
+  </data>
+  <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
+    <value>取り消されたか、ツールが削除された可能性があります。送った人に新しいリンクをもらってください。</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>読み取れる情報</value>
@@ -3864,6 +3873,9 @@
   <data name="Private by default" xml:space="preserve">
     <value>デフォルトで非公開</value>
   </data>
+  <data name="Private tool" xml:space="preserve">
+    <value>非公開ツール</value>
+  </data>
   <data name="Pro &amp; Infinity" xml:space="preserve">
     <value>Pro &amp; Infinity</value>
   </data>
@@ -3904,6 +3916,9 @@
     <value>公開</value>
     
   <comment>(on/offもしアカウントが公開が設定された)</comment></data>
+  <data name="Public tool" xml:space="preserve">
+    <value>公開ツール</value>
+  </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>譜面のステータスと類似譜面を表示、ページへのリンク付き</value>
   </data>
@@ -4669,6 +4684,9 @@
   <data name="Sign in to accept this invite." xml:space="preserve">
     <value>招待を受けるにはログインしてください。</value>
   </data>
+  <data name="Sign in to continue" xml:space="preserve">
+    <value>続けるにはログイン</value>
+  </data>
   <data name="Sign in to import." xml:space="preserve">
     <value>インポートするにはサインインしてください。</value>
   </data>
@@ -5020,6 +5038,9 @@
   <data name="That feed wasn't registered here." xml:space="preserve">
     <value>そのフィードはここに登録されていません。</value>
   </data>
+  <data name="That is control of your PIUGame account, not just your scores. You'll see the full warning before anything is shared." xml:space="preserve">
+    <value>スコアだけでなく、PIUGameアカウントそのものを操作できる権限です。共有する前に完全な警告を表示します。</value>
+  </data>
   <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
     <value>そのPIUGAMEアカウントは選択したアカウントに連携されていません</value>
   </data>
@@ -5209,6 +5230,9 @@
   <data name="This invite code has expired. Ask a member for a new link." xml:space="preserve">
     <value>招待コードの期限が切れました。メンバーに新しいリンクを頼んでください。</value>
   </data>
+  <data name="This invite link doesn't work" xml:space="preserve">
+    <value>この招待リンクは使えません</value>
+  </data>
   <data name="This invite link isn't valid." xml:space="preserve">
     <value>この招待リンクは無効です。</value>
   </data>
@@ -5244,6 +5268,9 @@
   </data>
   <data name="This sign-in method is connected to a different account" xml:space="preserve">
     <value>このログイン方法は別のアカウントに連携されています</value>
+  </data>
+  <data name="This tool asks for your PIUGame session" xml:space="preserve">
+    <value>このツールはPIUGameセッションを要求します</value>
   </data>
   <data name="This user has no GameTag. Choose a username to assign before locking." xml:space="preserve">
 	  <value>このユーザーにはGameTagがありません。ロック前にユーザー名を割り当ててください。</value>
@@ -5717,6 +5744,9 @@
   <data name="Visible bar — always 1000" xml:space="preserve">
     <value>視覚バー — 常に1000</value>
   </data>
+  <data name="Visit site" xml:space="preserve">
+    <value>サイトを見る</value>
+  </data>
   <data name="Vote Count" xml:space="preserve">
     <value>{0}票</value>
   </data>
@@ -5813,6 +5843,9 @@
   </data>
   <data name="what it takes to hold each rung of the PUMBILITY board" xml:space="preserve">
     <value>PUMBILITYボードの各順位を守るために必要な水準</value>
+  </data>
+  <data name="What it will be able to read" xml:space="preserve">
+    <value>読み取れる情報</value>
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>取り組む目標（既定は称号ハント）</value>
@@ -5997,6 +6030,9 @@
   <data name="You will no longer be able to sign in with this method" xml:space="preserve">
     <value>この方法ではログインできなくなります</value>
   </data>
+  <data name="You'll come back here after signing in. Nothing is shared until you press Connect." xml:space="preserve">
+    <value>ログイン後このページに戻ります。接続を押すまで何も共有されません。</value>
+  </data>
   <data name="You're already a member of this community." xml:space="preserve">
     <value>すでにこのコミュニティのメンバーです。</value>
   </data>
@@ -6128,6 +6164,9 @@
   </data>
   <data name="Your scores, plates and player profile, on every mix you've played." xml:space="preserve">
     <value>プレイしたすべてのバージョンのスコア、プレート、プレイヤープロフィール。</value>
+  </data>
+  <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
+    <value>プレイしたすべてのバージョンのスコア、プレート、プレイヤープロフィール。スコアの記録や変更、あなたとして振る舞うことはできません。</value>
   </data>
   <data name="Your session ended." xml:space="preserve">
     <value>セッションが終了しました。</value>
