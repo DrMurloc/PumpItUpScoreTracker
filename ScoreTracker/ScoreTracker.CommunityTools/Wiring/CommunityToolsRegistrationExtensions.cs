@@ -17,6 +17,7 @@ public static class CommunityToolsRegistrationExtensions
     public static IServiceCollection AddCommunityTools(this IServiceCollection services)
     {
         services.AddTransient<IToolRepository, EFToolRepository>();
+        services.AddTransient<IToolKeyRepository, EFToolKeyRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, CommunityToolsModelContribution>();
         return services;

@@ -37,3 +37,15 @@ internal sealed class ToolShareException : CommunityToolsException
     {
     }
 }
+
+/// <summary>
+///     A tool the caller may not touch, or that does not exist. One exception for both so a
+///     probe cannot distinguish "not yours" from "not there".
+/// </summary>
+[ExcludeFromCodeCoverage]
+internal sealed class ToolNotFoundException : CommunityToolsException
+{
+    public ToolNotFoundException() : base("That tool doesn't exist, or isn't yours.")
+    {
+    }
+}
