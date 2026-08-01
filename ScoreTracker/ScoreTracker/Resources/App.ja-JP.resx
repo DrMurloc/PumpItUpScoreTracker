@@ -434,6 +434,9 @@
   <data name="all permissions" xml:space="preserve">
     <value>全権限</value>
   </data>
+  <data name="All public tools · {0}" xml:space="preserve">
+    <value>公開ツール一覧 · {0}</value>
+  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>保存済みの認証情報をすべて削除しました。</value>
   </data>
@@ -730,6 +733,9 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>選択したチャートをバインド</value>
   </data>
+  <data name="Block this tool" xml:space="preserve">
+    <value>このツールをブロック</value>
+  </data>
   <data name="Board" xml:space="preserve">
     <value>ボード</value>
   </data>
@@ -788,6 +794,9 @@
   <data name="Build Session" xml:space="preserve">
 	  <value>セッション構築</value>
   </data>
+  <data name="Build the first one, or connect to a private tool with an invite link." xml:space="preserve">
+    <value>最初の1つを作るか、招待リンクで非公開ツールに接続してください。</value>
+  </data>
   <data name="Build your home page from widgets you choose." xml:space="preserve">
     <value>ウィジェットを選んで自分だけのホームページを作ろう。</value>
   </data>
@@ -808,6 +817,9 @@
   </data>
   <data name="By Skill" xml:space="preserve">
     <value>スキル別</value>
+  </data>
+  <data name="by {0}" xml:space="preserve">
+    <value>作者: {0}</value>
   </data>
   <data name="By-Level Breakdown" xml:space="preserve">
     <value>レベル別内訳</value>
@@ -1106,6 +1118,9 @@
   <data name="Community Tier List" xml:space="preserve">
     <value>コミュニティのティアリスト</value>
   </data>
+  <data name="Community Tools" xml:space="preserve">
+    <value>コミュニティツール</value>
+  </data>
   <data name="Community Vote" xml:space="preserve">
     <value>コミュニティ投票</value>
   </data>
@@ -1193,6 +1208,15 @@
   <data name="Connect" xml:space="preserve">
     <value>連携</value>
   </data>
+  <data name="Connect one from the list below, or turn on sharing with all tools on your Account page." xml:space="preserve">
+    <value>下の一覧から接続するか、アカウントページですべてのツールとの共有をオンにしてください。</value>
+  </data>
+  <data name="Connect {0}" xml:space="preserve">
+    <value>{0}に接続</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>接続済み</value>
+  </data>
   <data name="Content" xml:space="preserve">
     <value>コンテンツ</value>
   </data>
@@ -1202,6 +1226,9 @@
   <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
 	  <value>連続倍率スケール（ランク間で倍率が増加）</value>
 	  
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>続ける</value>
   </data>
   <data name="Contributions" xml:space="preserve">
     <value>投稿したもの</value>
@@ -1651,6 +1678,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>今週はすべての記録が守られました。</value>
   </data>
+  <data name="Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
+    <value>インポートのたびに、piugame.comへあなたとしてログインするためのセッションキーをこのツールに渡します。そのキーが有効な間、そこであなたができることは何でもできます — カードの変更、設定の変更、PIUGameアカウントの削除まで。</value>
+  </data>
   <data name="Everyone who has gone public" xml:space="preserve">
     <value>公開している全プレーヤー</value>
   </data>
@@ -2021,6 +2051,9 @@
   <data name="Has errors" xml:space="preserve">
     <value>エラーあり</value>
   </data>
+  <data name="Have an invite link?" xml:space="preserve">
+    <value>招待リンクをお持ちですか？</value>
+  </data>
   <data name="held" xml:space="preserve">
     <value>維持</value>
   </data>
@@ -2143,6 +2176,12 @@
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
 	  <value>譜面を隠したいだけ</value>
+  </data>
+  <data name="I trust {0} — connect" xml:space="preserve">
+    <value>{0}を信頼します — 接続</value>
+  </data>
+  <data name="I understand {0} will be able to act as me on piugame.com, including deleting my account there." xml:space="preserve">
+    <value>{0}がpiugame.comで私として振る舞えること、そこのアカウント削除も可能であることを理解しました。</value>
   </data>
   <data name="I understand — join" xml:space="preserve">
     <value>理解しました — 参加する</value>
@@ -2303,6 +2342,9 @@
   <data name="Invite code (private communities only)" xml:space="preserve">
     <value>招待コード（非公開コミュニティのみ）</value>
   </data>
+  <data name="Invite link" xml:space="preserve">
+    <value>招待リンク</value>
+  </data>
   <data name="Invite Links" xml:space="preserve">
     <value>招待リンク</value>
   </data>
@@ -2315,6 +2357,15 @@
   <data name="IsBroken" xml:space="preserve">
 	  <value>IsBroken</value>
 	  
+  </data>
+  <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
+    <value>スコアの記録やアカウントの変更はできません。コミュニティツールからいつでも接続を解除できます。</value>
+  </data>
+  <data name="It is not limited to reading scores, and we cannot limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
+    <value>スコアの読み取りに限定されておらず、こちらで制限することもできません。キーはpiugame.comが失効させるまで有効です。</value>
+  </data>
+  <data name="It will be able to read" xml:space="preserve">
+    <value>読み取れる情報</value>
   </data>
   <data name="Jacks" xml:space="preserve">
     <value>ジャック</value>
@@ -2547,6 +2598,9 @@
   </data>
   <data name="Lv {0}" xml:space="preserve">
     <value>Lv {0}</value>
+  </data>
+  <data name="Make a tool" xml:space="preserve">
+    <value>ツールを作る</value>
   </data>
   <data name="Make Creator" xml:space="preserve">
     <value>作成者にする</value>
@@ -3042,6 +3096,12 @@
   <data name="No titles match what you're looking for." xml:space="preserve">
     <value>条件に合う称号がありません。</value>
   </data>
+  <data name="No tools are listed yet" xml:space="preserve">
+    <value>まだ登録されたツールはありません</value>
+  </data>
+  <data name="No tools can read your scores" xml:space="preserve">
+    <value>スコアを読み取れるツールはありません</value>
+  </data>
   <data name="No unmatched keys" xml:space="preserve">
     <value>未マッチのキーはありません</value>
   </data>
@@ -3431,6 +3491,9 @@
   <data name="Password saved on this device" xml:space="preserve">
     <value>パスワードをこのデバイスに保存しました</value>
   </data>
+  <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
+    <value>リンク全体、または末尾のコードだけを貼り付けてください。</value>
+  </data>
   <data name="Pending" xml:space="preserve">
     <value>未決定</value>
     
@@ -3619,6 +3682,9 @@
   </data>
   <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
     <value>PIUGAMEはCO-OPランキングを公開していません - このボードはミラーリングしたCO-OPリーダーボードから独自に算出した推定で、プレートはスコアから推定します（SG、995,000からUG、1,000,000でPG）。</value>
+  </data>
+  <data name="PIUGame session" xml:space="preserve">
+    <value>PIUGameセッション</value>
   </data>
   <data name="PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here." xml:space="preserve">
     <value>PIUGAME ログイン情報は piugame.com に直接送信されます。パスワードがここに保存・記録されることはありません。</value>
@@ -4000,6 +4066,9 @@
   </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>読み解くには、3つの異なる場所に保管された3つのものが同時に必要です：</value>
+  </data>
+  <data name="Reading your scores · {0}" xml:space="preserve">
+    <value>スコアを読み取り中 · {0}</value>
   </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>{0} 判定になります。</value>
@@ -5128,6 +5197,12 @@
   <data name="This folder serves {0}" xml:space="preserve">
     <value>このフォルダーは{0}向け</value>
   </data>
+  <data name="This gives {0} control of your PIUGame account." xml:space="preserve">
+    <value>これにより{0}があなたのPIUGameアカウントを操作できるようになります。</value>
+  </data>
+  <data name="This has nothing to do with your PIU Scores account, which stays under your control. Only connect if you trust the person who runs this tool." xml:space="preserve">
+    <value>これはあなたが管理し続けるPIU Scoresアカウントとは関係ありません。このツールの運営者を信頼できる場合にのみ接続してください。</value>
+  </data>
   <data name="This import will replace this page's widgets." xml:space="preserve">
     <value>インポートするとこのページのウィジェットが置き換えられます。</value>
   </data>
@@ -5212,6 +5287,9 @@
   <data name="Thresholds — each becomes a line" xml:space="preserve">
     <value>しきい値 — それぞれが1本の線になります</value>
   </data>
+  <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
+    <value>「すべてのツールと共有」経由</value>
+  </data>
   <data name="Tie" xml:space="preserve">
     <value>引き分け</value>
   </data>
@@ -5289,6 +5367,9 @@
   </data>
   <data name="Tools" xml:space="preserve">
     <value>ツール</value>
+  </data>
+  <data name="Tools built by players, on your scores. You choose who gets access." xml:space="preserve">
+    <value>プレイヤーが作ったツールが、あなたのスコアを使います。誰に許可するかはあなたが決めます。</value>
   </data>
   <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
     <value>Top 100 · Top 1000 ボーダー — 50× SS</value>
@@ -5871,6 +5952,9 @@
   <data name="You can sign in to your account with any connected method" xml:space="preserve">
     <value>連携済みのどの方法でもアカウントにログインできます</value>
   </data>
+  <data name="You connected directly" xml:space="preserve">
+    <value>自分で接続しました</value>
+  </data>
   <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
     <value>「{0}」という保存済みプリセットはありません。</value>
   </data>
@@ -6042,6 +6126,9 @@
   <data name="Your scores will be visible" xml:space="preserve">
     <value>スコアが公開されます</value>
   </data>
+  <data name="Your scores, plates and player profile, on every mix you've played." xml:space="preserve">
+    <value>プレイしたすべてのバージョンのスコア、プレート、プレイヤープロフィール。</value>
+  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>セッションが終了しました。</value>
   </data>
@@ -6116,6 +6203,12 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} can no longer read your scores" xml:space="preserve">
+    <value>{0}はもうあなたのスコアを読み取れません</value>
+  </data>
+  <data name="{0} can now read your scores" xml:space="preserve">
+    <value>{0}があなたのスコアを読み取れるようになりました</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0} は {2} から {1} 譜面の難度を変更（上昇 {3}、低下 {4}）し、{5} 曲を追加、{6} 曲を削除しました。</value>
@@ -6242,6 +6335,9 @@
   </data>
   <data name="{0} more scores" xml:space="preserve">
     <value>他 {0} 件のスコア</value>
+  </data>
+  <data name="{0} needs your PIUGame session" xml:space="preserve">
+    <value>{0}にはPIUGameセッションが必要です</value>
   </data>
   <data name="{0} new" xml:space="preserve">
     <value>新規 {0}</value>

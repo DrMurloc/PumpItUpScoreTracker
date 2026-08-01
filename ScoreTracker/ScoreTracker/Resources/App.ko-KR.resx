@@ -432,6 +432,9 @@
   <data name="all permissions" xml:space="preserve">
     <value>모든 권한</value>
   </data>
+  <data name="All public tools · {0}" xml:space="preserve">
+    <value>모든 공개 도구 · {0}</value>
+  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>저장된 모든 자격 증명이 삭제되었습니다.</value>
   </data>
@@ -723,6 +726,9 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>선택한 채보 연결</value>
   </data>
+  <data name="Block this tool" xml:space="preserve">
+    <value>이 도구 차단</value>
+  </data>
   <data name="Board" xml:space="preserve">
     <value>보드</value>
   </data>
@@ -780,6 +786,9 @@
   <data name="Build Session" xml:space="preserve">
     <value>세션 만들기</value>
   </data>
+  <data name="Build the first one, or connect to a private tool with an invite link." xml:space="preserve">
+    <value>첫 번째 도구를 만들거나, 초대 링크로 비공개 도구에 연결하세요.</value>
+  </data>
   <data name="Build your home page from widgets you choose." xml:space="preserve">
     <value>위젯을 선택해 나만의 홈 페이지를 만들어 보세요.</value>
   </data>
@@ -800,6 +809,9 @@
   </data>
   <data name="By Skill" xml:space="preserve">
     <value>스킬별</value>
+  </data>
+  <data name="by {0}" xml:space="preserve">
+    <value>제작: {0}</value>
   </data>
   <data name="By-Level Breakdown" xml:space="preserve">
     <value>레벨별 구성</value>
@@ -1095,6 +1107,9 @@
   <data name="Community Tier List" xml:space="preserve">
     <value>커뮤니티 티어리스트</value>
   </data>
+  <data name="Community Tools" xml:space="preserve">
+    <value>커뮤니티 도구</value>
+  </data>
   <data name="Community Vote" xml:space="preserve">
     <value>커뮤니티 투표</value>
   </data>
@@ -1182,6 +1197,15 @@
   <data name="Connect" xml:space="preserve">
     <value>연결</value>
   </data>
+  <data name="Connect one from the list below, or turn on sharing with all tools on your Account page." xml:space="preserve">
+    <value>아래 목록에서 하나를 연결하거나, 계정 페이지에서 모든 도구와의 공유를 켜세요.</value>
+  </data>
+  <data name="Connect {0}" xml:space="preserve">
+    <value>{0} 연결</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>연결됨</value>
+  </data>
   <data name="Content" xml:space="preserve">
     <value>콘텐츠</value>
   </data>
@@ -1190,6 +1214,9 @@
   </data>
   <data name="Continous Modifier Scale (modifier increments between letter grades)" xml:space="preserve">
     <value>연속 배율 스케일 (랭크 사이의 배율 증가)</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>계속</value>
   </data>
   <data name="Contributions" xml:space="preserve">
     <value>기여한 것</value>
@@ -1635,6 +1662,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>이번 주에는 모든 기록이 유지되었습니다.</value>
   </data>
+  <data name="Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
+    <value>임포트할 때마다 piugame.com에 여러분으로 로그인하는 데 사용하는 세션 키를 이 도구에 전달합니다. 그 키가 살아 있는 동안에는 여러분이 그곳에서 할 수 있는 모든 것 — 카드 변경, 설정 변경, PIUGame 계정 삭제까지 — 을 할 수 있습니다.</value>
+  </data>
   <data name="Everyone who has gone public" xml:space="preserve">
     <value>프로필을 공개한 모든 유저</value>
   </data>
@@ -2004,6 +2034,9 @@
   <data name="Has errors" xml:space="preserve">
     <value>오류 있음</value>
   </data>
+  <data name="Have an invite link?" xml:space="preserve">
+    <value>초대 링크가 있으신가요?</value>
+  </data>
   <data name="held" xml:space="preserve">
     <value>유지</value>
   </data>
@@ -2126,6 +2159,12 @@
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>그냥 채보를 숨기고 싶음</value>
+  </data>
+  <data name="I trust {0} — connect" xml:space="preserve">
+    <value>{0}을(를) 신뢰합니다 — 연결</value>
+  </data>
+  <data name="I understand {0} will be able to act as me on piugame.com, including deleting my account there." xml:space="preserve">
+    <value>{0}이(가) piugame.com에서 나로서 행동할 수 있으며, 그곳의 계정 삭제까지 가능하다는 점을 이해합니다.</value>
   </data>
   <data name="I understand — join" xml:space="preserve">
     <value>이해했습니다 — 가입</value>
@@ -2286,6 +2325,9 @@
   <data name="Invite code (private communities only)" xml:space="preserve">
     <value>초대 코드 (비공개 커뮤니티 전용)</value>
   </data>
+  <data name="Invite link" xml:space="preserve">
+    <value>초대 링크</value>
+  </data>
   <data name="Invite Links" xml:space="preserve">
     <value>초대 링크</value>
   </data>
@@ -2297,6 +2339,15 @@
   </data>
   <data name="IsBroken" xml:space="preserve">
     <value>IsBroken</value>
+  </data>
+  <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
+    <value>점수를 기록하거나 계정을 변경할 수는 없습니다. 커뮤니티 도구에서 언제든 연결을 해제할 수 있습니다.</value>
+  </data>
+  <data name="It is not limited to reading scores, and we cannot limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
+    <value>점수 읽기로 제한되지 않으며, 저희가 제한할 수도 없습니다. 키는 piugame.com이 만료시킬 때까지 유효합니다.</value>
+  </data>
+  <data name="It will be able to read" xml:space="preserve">
+    <value>읽을 수 있는 항목</value>
   </data>
   <data name="Jacks" xml:space="preserve">
     <value>잭</value>
@@ -2525,6 +2576,9 @@
   </data>
   <data name="Lv {0}" xml:space="preserve">
     <value>Lv {0}</value>
+  </data>
+  <data name="Make a tool" xml:space="preserve">
+    <value>도구 만들기</value>
   </data>
   <data name="Make Creator" xml:space="preserve">
     <value>개설자로 지정</value>
@@ -3012,6 +3066,12 @@
   <data name="No titles match what you're looking for." xml:space="preserve">
     <value>조건에 맞는 칭호가 없습니다.</value>
   </data>
+  <data name="No tools are listed yet" xml:space="preserve">
+    <value>아직 등록된 도구가 없습니다</value>
+  </data>
+  <data name="No tools can read your scores" xml:space="preserve">
+    <value>내 점수를 읽을 수 있는 도구가 없습니다</value>
+  </data>
   <data name="No unmatched keys" xml:space="preserve">
     <value>매칭되지 않은 키가 없습니다</value>
   </data>
@@ -3399,6 +3459,9 @@
   <data name="Password saved on this device" xml:space="preserve">
     <value>이 기기에 비밀번호를 저장했습니다</value>
   </data>
+  <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
+    <value>링크 전체 또는 끝의 코드만 붙여넣으세요.</value>
+  </data>
   <data name="Pending" xml:space="preserve">
     <value>대기 중</value>
   </data>
@@ -3584,6 +3647,9 @@
   </data>
   <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
     <value>PIUGAME는 CO-OP 랭킹을 제공하지 않습니다 - 이 보드는 미러링된 CO-OP 리더보드로 자체 계산한 최선의 추정치이며, 플레이트는 점수로 추정합니다 (SG, 995,000부터 UG, 1,000,000은 PG).</value>
+  </data>
+  <data name="PIUGame session" xml:space="preserve">
+    <value>PIUGame 세션</value>
   </data>
   <data name="PIUGAME sign-in goes directly to piugame.com — your password is never stored or logged here." xml:space="preserve">
     <value>PIUGAME 로그인 정보는 piugame.com으로 바로 전송되며, 비밀번호는 여기에 저장되거나 기록되지 않습니다.</value>
@@ -3961,6 +4027,9 @@
   </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>이를 읽으려면 세 곳에 나뉘어 보관된 세 가지가 동시에 필요합니다:</value>
+  </data>
+  <data name="Reading your scores · {0}" xml:space="preserve">
+    <value>내 점수를 읽는 중 · {0}</value>
   </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>{0} 등급입니다.</value>
@@ -5069,6 +5138,12 @@
   <data name="This folder serves {0}" xml:space="preserve">
     <value>이 폴더는 {0}용</value>
   </data>
+  <data name="This gives {0} control of your PIUGame account." xml:space="preserve">
+    <value>이렇게 하면 {0}이(가) 내 PIUGame 계정을 제어할 수 있게 됩니다.</value>
+  </data>
+  <data name="This has nothing to do with your PIU Scores account, which stays under your control. Only connect if you trust the person who runs this tool." xml:space="preserve">
+    <value>이는 여러분이 계속 통제하는 PIU Scores 계정과는 무관합니다. 이 도구를 운영하는 사람을 신뢰하는 경우에만 연결하세요.</value>
+  </data>
   <data name="This import will replace this page's widgets." xml:space="preserve">
     <value>가져오기를 실행하면 이 페이지의 위젯이 교체됩니다.</value>
   </data>
@@ -5153,6 +5228,9 @@
   <data name="Thresholds — each becomes a line" xml:space="preserve">
     <value>임계값 — 각각 하나의 선이 됩니다</value>
   </data>
+  <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
+    <value>"모든 도구와 공유"를 통해</value>
+  </data>
   <data name="Tie" xml:space="preserve">
     <value>무승부</value>
   </data>
@@ -5230,6 +5308,9 @@
   </data>
   <data name="Tools" xml:space="preserve">
     <value>도구</value>
+  </data>
+  <data name="Tools built by players, on your scores. You choose who gets access." xml:space="preserve">
+    <value>플레이어가 만든 도구가 여러분의 점수를 활용합니다. 누구에게 허용할지는 여러분이 정합니다.</value>
   </data>
   <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
     <value>Top 100 · Top 1000 컷 — 50× SS</value>
@@ -5801,6 +5882,9 @@
   <data name="You can sign in to your account with any connected method" xml:space="preserve">
     <value>연결된 어떤 방법으로도 계정에 로그인할 수 있습니다</value>
   </data>
+  <data name="You connected directly" xml:space="preserve">
+    <value>직접 연결함</value>
+  </data>
   <data name="You don't have a saved preset called &quot;{0}&quot;." xml:space="preserve">
     <value>&quot;{0}&quot;(이)라는 저장된 프리셋이 없습니다.</value>
   </data>
@@ -5972,6 +6056,9 @@
   <data name="Your scores will be visible" xml:space="preserve">
     <value>점수가 공개됩니다</value>
   </data>
+  <data name="Your scores, plates and player profile, on every mix you've played." xml:space="preserve">
+    <value>플레이한 모든 시리즈의 점수, 플레이트, 플레이어 프로필.</value>
+  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>세션이 종료되었습니다.</value>
   </data>
@@ -6046,6 +6133,12 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} can no longer read your scores" xml:space="preserve">
+    <value>{0}이(가) 더 이상 내 점수를 읽을 수 없습니다</value>
+  </data>
+  <data name="{0} can now read your scores" xml:space="preserve">
+    <value>{0}이(가) 이제 내 점수를 읽을 수 있습니다</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0}은(는) {2} 대비 채보 {1}개의 난이도를 조정했고(상향 {3}, 하향 {4}), 노래 {5}곡을 추가하고 {6}곡을 삭제했습니다.</value>
@@ -6172,6 +6265,9 @@
   </data>
   <data name="{0} more scores" xml:space="preserve">
     <value>점수 {0}개 더</value>
+  </data>
+  <data name="{0} needs your PIUGame session" xml:space="preserve">
+    <value>{0}에는 PIUGame 세션이 필요합니다</value>
   </data>
   <data name="{0} new" xml:space="preserve">
     <value>신규 {0}</value>

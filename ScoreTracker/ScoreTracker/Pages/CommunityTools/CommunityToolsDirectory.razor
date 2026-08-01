@@ -1,0 +1,201 @@
+@page "/CommunityTools"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Commands
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Components.CommunityTools
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Community Tools"]</PageTitle>
+
+@* This page's job is "who can read my scores", not "browse the catalogue" — so connections come
+   first and the directory second (UX rule 1). Rows wear the board skin rather than cards. *@
+
+<MudText Typo="Typo.h4" Class="mt-2">@L["Community Tools"]</MudText>
+<MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
+    @L["Tools built by players, on your scores. You choose who gets access."]
+</MudText>
+
+<div class="d-flex gap-2 mb-4 flex-wrap">
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => _showInviteEntry = true"
+               StartIcon="@Icons.Material.Filled.Link">@L["Have an invite link?"]</MudButton>
+    <MudButton Variant="Variant.Text" Href="/Developers"
+               StartIcon="@Icons.Material.Filled.Code">@L["Make a tool"]</MudButton>
+</div>
+
+<MudText Typo="Typo.subtitle2" Class="mb-1">@L["Reading your scores · {0}", _connections.Count]</MudText>
+@if (!_connections.Any())
+{
+    <MudAlert Severity="Severity.Normal" Variant="Variant.Outlined" Dense="true" Class="mb-4">
+        <MudText Typo="Typo.body2"><b>@L["No tools can read your scores"]</b></MudText>
+        <MudText Typo="Typo.body2">
+            @L["Connect one from the list below, or turn on sharing with all tools on your Account page."]
+        </MudText>
+    </MudAlert>
+}
+else
+{
+    <div class="mb-4">
+        @foreach (var connection in _connections)
+        {
+            <div class="olb-rank-card">
+                <div class="flex-grow-1" style="min-width:0;">
+                    <MudText Typo="Typo.body1">
+                        <b>@connection.Name</b>
+                        @if (connection.RequiresPiuGameSession)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">
+                                @L["PIUGame session"]
+                            </MudChip>
+                        }
+                    </MudText>
+                    <MudText Typo="Typo.caption" Style="opacity:.7;">
+                        @(connection.Source == ShareSource.Direct
+                            ? L["You connected directly"]
+                            : L["Through \"share with all tools\""])
+                        · @L["by {0}", connection.OwnerName]
+                    </MudText>
+                </div>
+                <div class="olb-rank-tail">
+                    <MudButton Size="Size.Small" Variant="Variant.Text"
+                               OnClick="() => Disconnect(connection)">
+                        @(connection.Source == ShareSource.Direct ? L["Disconnect"] : L["Block this tool"])
+                    </MudButton>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<MudText Typo="Typo.subtitle2" Class="mb-1">@L["All public tools · {0}", _publicTools.Count]</MudText>
+@if (!_publicTools.Any())
+{
+    <MudAlert Severity="Severity.Normal" Variant="Variant.Outlined" Dense="true">
+        <MudText Typo="Typo.body2"><b>@L["No tools are listed yet"]</b></MudText>
+        <MudText Typo="Typo.body2">@L["Build the first one, or connect to a private tool with an invite link."]</MudText>
+    </MudAlert>
+}
+else
+{
+    @foreach (var tool in _publicTools)
+    {
+        var connected = _connections.Any(c => c.ToolId == tool.Id);
+        <div class="olb-rank-card">
+            <div class="flex-grow-1" style="min-width:0;">
+                <MudText Typo="Typo.body1">
+                    <b>@tool.Name</b>
+                    @if (connected)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
+                            @L["Connected"]
+                        </MudChip>
+                    }
+                </MudText>
+                <MudText Typo="Typo.caption" Style="opacity:.7;">
+                    @tool.Description · @L["by {0}", tool.OwnerName]
+                </MudText>
+            </div>
+            <div class="olb-rank-tail">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                    @L["{0} Players", tool.ConnectedPlayers]
+                </MudChip>
+                @if (connected)
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Text"
+                               OnClick="() => DisconnectById(tool.Id)">@L["Disconnect"]</MudButton>
+                }
+                else
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                               OnClick="() => OpenConnect(tool)">@L["Connect"]</MudButton>
+                }
+            </div>
+        </div>
+    }
+}
+
+<ToolConnectDialog @bind-Visible="_showConnectDialog" Tool="_connecting" OnConnected="Reload"></ToolConnectDialog>
+
+<MudDialog @bind-Visible="_showInviteEntry">
+    <TitleContent><MudText Typo="Typo.h6">@L["Have an invite link?"]</MudText></TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-2">
+            @L["Paste the whole link, or just the code at the end of it."]
+        </MudText>
+        <MudTextField T="string" @bind-Value="_inviteEntry" Label=@L["Invite link"] Immediate="true"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="() => _showInviteEntry = false">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!HasInviteCode)"
+                   OnClick="FollowInvite">@L["Continue"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+@code {
+    private IReadOnlyList<PlayerToolConnectionRecord> _connections = Array.Empty<PlayerToolConnectionRecord>();
+    private IReadOnlyList<PublicToolRecord> _publicTools = Array.Empty<PublicToolRecord>();
+    private PublicToolRecord? _connecting;
+    private bool _showConnectDialog;
+    private bool _showInviteEntry;
+    private string _inviteEntry = string.Empty;
+
+    private bool HasInviteCode => TryReadInviteCode(_inviteEntry, out _);
+
+    protected override async Task OnInitializedAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        _connections = await Mediator.Send(new GetMyToolConnectionsQuery());
+        _publicTools = await Mediator.Send(new GetPublicToolsQuery());
+    }
+
+    private void OpenConnect(PublicToolRecord tool)
+    {
+        _connecting = tool;
+        _showConnectDialog = true;
+    }
+
+    // A direct grant is revoked; an all-tools one is blocked, because revoking a grant the player
+    // never made individually would be undone by the next sweep of the pool.
+    private async Task Disconnect(PlayerToolConnectionRecord connection)
+    {
+        if (connection.Source == ShareSource.Direct)
+            await Mediator.Send(new DisconnectToolCommand(connection.ToolId));
+        else
+            await Mediator.Send(new BlockToolCommand(connection.ToolId));
+
+        Snackbar.Add(L["{0} can no longer read your scores", connection.Name].Value, Severity.Success);
+        await Reload();
+    }
+
+    private async Task DisconnectById(Guid toolId)
+    {
+        var connection = _connections.FirstOrDefault(c => c.ToolId == toolId);
+        if (connection is not null) await Disconnect(connection);
+    }
+
+    /// <summary>Accepts a bare code or a whole invite URL — a player will paste whichever they were sent.</summary>
+    private static bool TryReadInviteCode(string entry, out Guid code)
+    {
+        code = Guid.Empty;
+        if (string.IsNullOrWhiteSpace(entry)) return false;
+
+        var tail = entry.Trim().TrimEnd('/');
+        var slash = tail.LastIndexOf('/');
+        if (slash >= 0) tail = tail[(slash + 1)..];
+        return Guid.TryParse(tail, out code);
+    }
+
+    private void FollowInvite()
+    {
+        if (!TryReadInviteCode(_inviteEntry, out var code)) return;
+
+        _showInviteEntry = false;
+        NavManager.NavigateTo($"/CommunityTools/Invite/{code}");
+    }
+}
