@@ -21,4 +21,11 @@ internal sealed class OfficialPlacementReader(IMediator mediator) : IOfficialPla
         return estimates.ToDictionary(kv => kv.Key,
             kv => new OfficialPlacementReading(kv.Value.Place, kv.Value.BoardDepth, kv.Value.AsOf));
     }
+
+    public async Task<OfficialBoardReading?> GetPumbilityBoard(MixEnum mix, string boardName,
+        CancellationToken cancellationToken)
+    {
+        var board = await mediator.Send(new GetOfficialPumbilityBoardQuery(mix, boardName), cancellationToken);
+        return board == null ? null : new OfficialBoardReading(board.AsOf, board.DescendingValues);
+    }
 }
