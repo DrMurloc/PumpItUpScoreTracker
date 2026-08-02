@@ -34,4 +34,22 @@ internal interface ICommunityHighlightRepository
 
     /// <summary>Drop index rows older than the cutoff. Returns rows removed.</summary>
     Task<int> PurgeBefore(DateTimeOffset cutoff, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     The backfill's source: rows written before the capture moved out, which still carry a
+    ///     payload. One row per event — the fan-out wrote the same payload to each of the winner's
+    ///     communities, so the extra copies are noise. Rows written since the move are skipped
+    ///     because their payload column is empty.
+    /// </summary>
+    Task<IReadOnlyList<LegacyHighlightPayload>> GetLegacyPayloads(CancellationToken cancellationToken);
 }
+
+/// <summary>One pre-move row, still carrying the JSON the ledger now wants.</summary>
+internal sealed record LegacyHighlightPayload(
+    Guid EventId,
+    Guid UserId,
+    MixEnum Mix,
+    DateTimeOffset OccurredAt,
+    Guid? SessionId,
+    string Payload,
+    int SchemaVersion);

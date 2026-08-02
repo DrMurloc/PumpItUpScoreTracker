@@ -79,4 +79,29 @@ internal sealed class EFCommunityHighlightRepository : ICommunityHighlightReposi
             .Where(h => h.OccurredAt < cutoff)
             .ExecuteDeleteAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<LegacyHighlightPayload>> GetLegacyPayloads(
+        CancellationToken cancellationToken)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Bounded by the 30-day retention the purge already enforces, so this is a small scan
+        // however many communities the fan-out hit. Grouping by event drops the duplicate copies
+        // the fan-out made; any one of them carries the same payload.
+        var rows = await database.Set<CommunityHighlightEntity>()
+            .AsNoTracking()
+            .Where(h => h.Payload != "")
+            .Select(h => new
+            {
+                h.EventId, h.UserId, h.MixId, h.OccurredAt, h.SessionId, h.Payload, h.SchemaVersion
+            })
+            .ToArrayAsync(cancellationToken);
+
+        return rows
+            .GroupBy(r => r.EventId)
+            .Select(g => g.First())
+            .Where(r => MixIds.IsKnown(r.MixId))
+            .Select(r => new LegacyHighlightPayload(r.EventId, r.UserId, MixIds.ToEnum(r.MixId), r.OccurredAt,
+                r.SessionId, r.Payload, r.SchemaVersion))
+            .ToArray();
+    }
 }

@@ -4,6 +4,7 @@
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Communities.Contracts.Messages
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Commands
 @using ScoreTracker.Identity.Contracts.Queries
@@ -22,6 +23,11 @@
    the further back it reaches the less that resembles the state it is claiming to restore. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="RebuildLatestSessions"
            data-testid="rebuild-latest-sessions">@L["Rebuild Latest Sessions"]</MudButton>
+@* One-shot for the highlights cutover: copies pre-move win payloads into the player-keyed
+   ledger so feeds keep their history instead of starting empty. Idempotent — a second run
+   collides on every event id and changes nothing. *@
+<MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="BackfillPlayerHighlights"
+           data-testid="backfill-player-highlights">@L["Backfill Highlights"]</MudButton>
 
 <MudCard>
     <MudCardHeader>@L["Credential security"]</MudCardHeader>
@@ -192,6 +198,12 @@
     {
         await Bus.Publish(new RebuildLatestSessionsCommand());
         Snackbar.Add(L["Rebuilding the latest session for every player."].Value, Severity.Success);
+    }
+
+    private async Task BackfillPlayerHighlights()
+    {
+        await Bus.Publish(new BackfillPlayerHighlightsCommand());
+        Snackbar.Add(L["Copying existing highlights into the new feed store."].Value, Severity.Success);
     }
 
     private bool _confirmingCycle;

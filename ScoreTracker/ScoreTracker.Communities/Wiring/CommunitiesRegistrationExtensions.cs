@@ -46,5 +46,6 @@ public static class CommunitiesRegistrationExtensions
         // The capture moved to PlayerProgress; what stays here is the audience index over it.
         configurator.AddConsumer<CommunityHighlightIndexSaga>();
         configurator.AddConsumer<CommunityHighlightPurgeConsumer>();
+        configurator.AddConsumer<PlayerHighlightBackfillConsumer>();
     }
 }
