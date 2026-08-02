@@ -1,0 +1,153 @@
+@using ScoreTracker.Rivals.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@namespace ScoreTracker.Web.Components.Rivals
+
+@* One rival, compared. Takes a RESOLVED SUBJECT rather than a user id, so the sections it can't
+   fill are absent with a reason instead of empty (docs/design/rivals.md D29). A board-only rival
+   is short by construction: the mirror covers level 20+ at roughly 300 deep, so "the charts we're
+   both on" is the honest unit where a folder would be a lie.
+
+   Win/loss reuses the row-glow vocabulary — ahead is the community green, behind is the rival
+   red. One vocabulary, two uses. *@
+@if (Record == null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2"/>
+}
+else
+{
+    <div class="rvl-h2h-top">
+        <span class="rvl-h2h-who">
+            <MudAvatar Size="Size.Medium">
+                <MudImage Src="@YourAvatar" Alt=""></MudImage>
+            </MudAvatar>
+            <b>@L["You"]</b>
+        </span>
+        <span class="rvl-h2h-vs">@L["VS"]</span>
+        <span class="rvl-h2h-who">
+            <MudAvatar Size="Size.Medium">
+                <MudImage Src="@(Record.Subject.Avatar?.ToString() ?? DefaultAvatar)" Alt=""></MudImage>
+            </MudAvatar>
+            <b>@Record.Subject.DisplayName</b>
+            @if (Record.Subject.IsGhost)
+            {
+                <span class="rvl-tag rvl-tag-ghost">@L["Board only"]</span>
+            }
+        </span>
+    </div>
+
+    <div class="rvl-tiles">
+        <div class="rvl-tile rvl-tile-win">
+            <b>@Record.YouAhead</b><span>@L["You ahead"]</span>
+        </div>
+        <div class="rvl-tile rvl-tile-lose">
+            <b>@Record.TheyAhead</b><span>@L["They ahead"]</span>
+        </div>
+        <div class="rvl-tile">
+            <b>@Record.Shared</b><span>@L["Shared"]</span>
+        </div>
+    </div>
+
+    <MudCard Class="mt-3">
+        <MudCardContent>
+            <div class="sbd-section-head">
+                <span class="sbd-eyebrow">@BoardTitle</span>
+                <span class="sbd-section-note">@L["{0} charts", Record.Rows.Count]</span>
+            </div>
+            @if (Record.Rows.Count == 0)
+            {
+                <div class="sbd-empty">
+                    <b>@L["Nothing to compare yet"]</b>
+                    <span>@EmptyReason</span>
+                </div>
+            }
+            else
+            {
+                @foreach (var row in Record.Rows)
+                {
+                    <div class="rvl-cmp-row">
+                        @if (Charts.TryGetValue(row.ChartId, out var chart))
+                        {
+                            <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                            <span class="rvl-cmp-song">@chart.Song.Name</span>
+                        }
+                        else
+                        {
+                            <span class="rvl-cmp-song">@L["Unknown chart"]</span>
+                        }
+                        <span class="@YoursClass(row)">@Format(row.YourScore)</span>
+                        <span class="@TheirsClass(row)">
+                            @Format(row.TheirScore)
+                            @if (row.TheirSource == RivalScoreSource.Official)
+                            {
+                                <span class="rival-official-mark" title="@L["Official board data"]">*</span>
+                            }
+                        </span>
+                        <span class="@DeltaClass(row)">@Delta(row)</span>
+                    </div>
+                }
+                @if (Footnote is { Length: > 0 } footnote)
+                {
+                    <p class="cld-footnote">@footnote</p>
+                }
+            }
+        </MudCardContent>
+    </MudCard>
+
+    @if (!Record.Subject.Can(RivalCapabilities.FolderCompare))
+    {
+        @* Absent with a reason, never rendered empty. The sentence is also the promotion
+           promise: it fills itself the day they import. *@
+        <div class="rvl-absent mt-3">
+            @L["Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports.", Record.Subject.DisplayName]
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public RivalHeadToHeadRecord? Record { get; set; }
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    [Parameter] public string YourAvatar { get; set; } = DefaultAvatar;
+
+    private const string DefaultAvatar = "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
+
+    // A folder for a site rival, "boards we're both on" for a board-only one. Same table, and the
+    // heading is what says which unit is being counted.
+    private string BoardTitle => Record!.Subject.Can(RivalCapabilities.FolderCompare)
+        ? L["Shared charts"]
+        : L["Boards you're both on"];
+
+    private string EmptyReason => Record!.Subject.Can(RivalCapabilities.FolderCompare)
+        ? L["Neither of you has scores on the same charts yet."]
+        : L["They haven't placed on any board you've played."];
+
+    private string? Footnote => Record!.OfficialAsOf is { } asOf
+        ? L["* Official board data, as of {0}. Boards cover level 20+ only.", asOf.ToString("d MMM")]
+        : null;
+
+    private static string Format(int? score) => score == null ? "—" : score.Value.ToString("N0");
+
+    private string YoursClass(RivalHeadToHeadRow row) =>
+        row.YourScore != null && row.TheirScore != null && row.YourScore > row.TheirScore
+            ? "rvl-cmp-score rvl-ahead"
+            : "rvl-cmp-score rvl-muted";
+
+    private string TheirsClass(RivalHeadToHeadRow row) =>
+        row.YourScore != null && row.TheirScore != null && row.TheirScore > row.YourScore
+            ? "rvl-cmp-score rvl-behind"
+            : "rvl-cmp-score rvl-muted";
+
+    private string DeltaClass(RivalHeadToHeadRow row) =>
+        row.YourScore == null || row.TheirScore == null
+            ? "rvl-cmp-delta rvl-muted"
+            : row.YourScore > row.TheirScore
+                ? "rvl-cmp-delta rvl-ahead"
+                : "rvl-cmp-delta rvl-behind";
+
+    private static string Delta(RivalHeadToHeadRow row)
+    {
+        if (row.YourScore == null || row.TheirScore == null) return "";
+        var delta = row.YourScore.Value - row.TheirScore.Value;
+        return delta >= 0 ? $"+{delta:N0}" : $"−{Math.Abs(delta):N0}";
+    }
+}

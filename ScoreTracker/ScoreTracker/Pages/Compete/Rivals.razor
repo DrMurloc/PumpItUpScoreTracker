@@ -1,0 +1,129 @@
+@page "/Rivals"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.Rivals.Contracts
+@using ScoreTracker.Rivals.Contracts.Commands
+@using ScoreTracker.Rivals.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components.Rivals
+
+<PageTitle>@L["Rivals"]</PageTitle>
+
+@* Players you picked out to measure yourself against. Unlike a community — a room you join — a
+   rivalry is a one-way arrow you draw, and the person on the other end can see it and cut it,
+   which is what the second tab is for (docs/design/rivals.md). *@
+@if (!CurrentUser.IsLoggedIn)
+{
+    <MudText Typo="Typo.body1">@L["Sign in to track rivals."]</MudText>
+}
+else
+{
+    <MudText Typo="Typo.h5" Class="mb-1">@L["Rivals"]</MudText>
+    <MudText Typo="Typo.caption" Class="dash-muted">@L["{0} rivals", _rivals.Count]</MudText>
+
+    <MudTabs Elevation="0" Class="mt-3" ApplyEffectsToContainer="true">
+        <MudTabPanel Text="@L["Your rivals"]">
+            @if (_selected != null)
+            {
+                <MudButton StartIcon="@Icons.Material.Filled.ArrowBack" Size="Size.Small"
+                           OnClick="() => _selected = null" Class="mb-2">@L["Back to rivals"]</MudButton>
+                <RivalComparison Record="_headToHead" Charts="_charts" YourAvatar="@MyAvatar"></RivalComparison>
+            }
+            else
+            {
+                <RivalRoster Rivals="_rivals" OnCompare="Compare" OnRemove="RemoveRival"></RivalRoster>
+                <AddRivalPanel OnAdded="Reload"></AddRivalPanel>
+                <RivalInviteCard Code="@_inviteCode" OnRecycle="RecycleCode"></RivalInviteCard>
+            }
+        </MudTabPanel>
+
+        <MudTabPanel Text="@L["Rivals of you"]">
+            <RivalsOfMeList Rivals="_rivalsOfMe" Blocked="_blocked" OnRemove="RemoveRival"
+                            OnBlock="Block" OnUnblock="Unblock"></RivalsOfMeList>
+        </MudTabPanel>
+
+        <MudTabPanel Text="@L["Feed"]">
+            <RivalHighlightsFeed Records="_feed" Charts="_charts" Clubmates="_clubmateIds"></RivalHighlightsFeed>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+@inject ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache ChartCatalog
+@code {
+    private const int FeedTake = 30;
+
+    [CascadingParameter(Name = "Mix")] public MixEnum CurrentMix { get; set; } = MixEnum.Phoenix;
+
+    private IReadOnlyList<RivalSubject> _rivals = Array.Empty<RivalSubject>();
+    private IReadOnlyList<RivalOfMeRecord> _rivalsOfMe = Array.Empty<RivalOfMeRecord>();
+    private IReadOnlyList<BlockedPlayerRecord> _blocked = Array.Empty<BlockedPlayerRecord>();
+    private IReadOnlyList<PlayerHighlightRecord> _feed = Array.Empty<PlayerHighlightRecord>();
+    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IReadOnlySet<Guid> _clubmateIds = new HashSet<Guid>();
+    private string? _inviteCode;
+    private RivalSubject? _selected;
+    private RivalHeadToHeadRecord? _headToHead;
+
+    private string MyAvatar => CurrentUser.IsLoggedIn
+        ? CurrentUser.User.ProfileImage.ToString()
+        : string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CurrentUser.IsLoggedIn) await Reload();
+    }
+
+    private async Task Reload()
+    {
+        _rivals = await Mediator.Send(new GetMyRivalsQuery(CurrentMix));
+        _rivalsOfMe = await Mediator.Send(new GetRivalsOfMeQuery());
+        _blocked = await Mediator.Send(new GetMyBlockedPlayersQuery());
+        _feed = (await Mediator.Send(new GetMyRivalHighlightsQuery(CurrentMix, FeedTake))).ToArray();
+        _charts = await ChartCatalog.GetCharts(CurrentMix);
+        // The feed marks a rival who is ALSO a clubmate in green. Red would mark every row here
+        // and therefore nothing — every row is a rival by construction.
+        _clubmateIds = _rivalsOfMe.Where(r => r.SharesCommunity).Select(r => r.UserId).ToHashSet();
+        _inviteCode = await Mediator.Send(new GetMyRivalInviteCodeQuery());
+    }
+
+    private async Task Compare(RivalSubject subject)
+    {
+        _selected = subject;
+        _headToHead = null;
+        _headToHead = await Mediator.Send(new GetRivalHeadToHeadQuery(CurrentMix, subject.EdgeId));
+    }
+
+    private async Task RemoveRival(Guid edgeId)
+    {
+        await Mediator.Send(new RemoveRivalCommand(edgeId));
+        Snackbar.Add(L["Rival removed."].Value, Severity.Success);
+        await Reload();
+    }
+
+    private async Task Block(Guid userId)
+    {
+        await Mediator.Send(new BlockRivalCommand(userId));
+        Snackbar.Add(L["Blocked. Neither of you can rival the other."].Value, Severity.Success);
+        await Reload();
+    }
+
+    private async Task Unblock(Guid userId)
+    {
+        await Mediator.Send(new UnblockRivalCommand(userId));
+        await Reload();
+    }
+
+    private async Task RecycleCode()
+    {
+        _inviteCode = await Mediator.Send(new RecycleRivalInviteCodeCommand());
+        Snackbar.Add(L["New code. The old link no longer works."].Value, Severity.Success);
+    }
+}

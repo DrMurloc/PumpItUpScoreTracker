@@ -1,0 +1,81 @@
+@using MediatR
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Rivals.Contracts
+@using ScoreTracker.Rivals.Contracts.Commands
+@using ScoreTracker.Rivals.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@namespace ScoreTracker.Web.Components.Rivals
+
+@* TWO search fields, not one merged autocomplete. The site index and the board index are
+   different populations with different rules, and merging them hides which one failed you
+   (docs/design/rivals.md D19). *@
+<MudCard Class="mt-3">
+    <MudCardContent>
+        <div class="sbd-section-head"><span class="sbd-eyebrow">@L["Add a rival"]</span></div>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="RivalCandidateRecord" Label="@L["Search players…"]"
+                                 SearchFunc="SearchPlayers" ToStringFunc="@(c => c?.PlayerName ?? "")"
+                                 ValueChanged="AddPlayer" ResetValueOnEmptyText="true"
+                                 Clearable="true" Dense="true"/>
+                <MudText Typo="Typo.caption" Class="dash-muted">
+                    @L["Public players and your community members."]
+                </MudText>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="string" Label="@L["Search board tags…"]"
+                                 SearchFunc="SearchTags" ValueChanged="AddTag"
+                                 ResetValueOnEmptyText="true" Clearable="true" Dense="true"/>
+                @* Departed tags are filtered out of the picker: offering one hands somebody a
+                   permanently empty rivalry (D21). *@
+                <MudText Typo="Typo.caption" Class="dash-muted">
+                    @L["Tags on the current boards. Departed tags aren't listed."]
+                </MudText>
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@code {
+    [Parameter] public EventCallback OnAdded { get; set; }
+
+    [CascadingParameter(Name = "Mix")] public MixEnum CurrentMix { get; set; } = MixEnum.Phoenix;
+
+    private async Task<IEnumerable<RivalCandidateRecord>> SearchPlayers(string term, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(term)) return Array.Empty<RivalCandidateRecord>();
+        return await Mediator.Send(new SearchRivalCandidatesQuery(term), token);
+    }
+
+    private async Task<IEnumerable<string>> SearchTags(string term, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(term)) return Array.Empty<string>();
+        return await Mediator.Send(new SearchRivalTagsQuery(CurrentMix, term), token);
+    }
+
+    private Task AddPlayer(RivalCandidateRecord? candidate) =>
+        candidate == null ? Task.CompletedTask : Add(new AddRivalCommand(candidate.UserId, null),
+            candidate.PlayerName);
+
+    private Task AddTag(string? tag) =>
+        string.IsNullOrWhiteSpace(tag) ? Task.CompletedTask : Add(new AddRivalCommand(null, tag), tag);
+
+    private async Task Add(AddRivalCommand command, string name)
+    {
+        try
+        {
+            await Mediator.Send(command);
+            Snackbar.Add(L["{0} added as a rival.", name].Value, Severity.Success);
+            await OnAdded.InvokeAsync();
+        }
+        catch (RivalNotAvailableException e)
+        {
+            // Deliberately generic. A private stranger and somebody who blocked you look identical
+            // from here, and both should — naming a block turns a quiet control into a
+            // confrontation.
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+    }
+}

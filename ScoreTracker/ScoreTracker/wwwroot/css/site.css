@@ -11812,3 +11812,189 @@ button.chart-card-art {
     padding-top: 7px;
     border-top: 1px solid rgba(255, 255, 255, .06);
 }
+
+/* ── Rivals (docs/design/rivals.md) ───────────────────────────────────────────────────── */
+
+.rvl-roster {
+    display: grid;
+    gap: 6px;
+}
+
+.rvl-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    background: var(--mix-surface-muted);
+    font-size: .85rem;
+}
+
+.rvl-row-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.rvl-row-name {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.rvl-row-meta {
+    font-size: .7rem;
+    color: var(--mix-ink-muted);
+    margin-top: 1px;
+}
+
+.rvl-tag {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid;
+}
+
+.rvl-tag-ghost {
+    color: var(--mix-accent);
+    border-color: color-mix(in srgb, var(--mix-accent) 45%, transparent);
+}
+
+.rvl-tag-crew {
+    color: var(--daily-community);
+    border-color: color-mix(in srgb, var(--daily-community) 45%, transparent);
+}
+
+.rvl-tag-priv, .rvl-tag-gone {
+    color: var(--mix-ink-muted);
+    border-color: color-mix(in srgb, var(--mix-ink-muted) 40%, transparent);
+}
+
+.rvl-code {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: var(--mix-background);
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 5px;
+    padding: 7px 11px;
+}
+
+.rvl-code-value {
+    font-family: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, monospace;
+    font-size: .92rem;
+    letter-spacing: .1em;
+    flex: 1;
+}
+
+.rvl-h2h-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 4px 2px 14px;
+    flex-wrap: wrap;
+}
+
+.rvl-h2h-who {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.rvl-h2h-vs {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--mix-ink-muted);
+    letter-spacing: .1em;
+}
+
+.rvl-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 8px;
+}
+
+.rvl-tile {
+    background: var(--mix-surface-muted);
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+}
+
+.rvl-tile b {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    display: block;
+    line-height: 1.05;
+}
+
+.rvl-tile span {
+    font-size: .61rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--mix-ink-muted);
+}
+
+/* Ahead is the community green, behind is the rival red — the row-glow vocabulary doing a
+   second job rather than a second palette meaning the same thing. */
+.rvl-tile-win b, .rvl-ahead {
+    color: var(--daily-community);
+}
+
+.rvl-tile-lose b, .rvl-behind {
+    color: var(--daily-rival);
+}
+
+.rvl-muted {
+    color: var(--mix-ink-muted);
+}
+
+.rvl-cmp-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 4px;
+    font-size: .8rem;
+    border-radius: 5px;
+}
+
+.rvl-cmp-row + .rvl-cmp-row {
+    border-top: 1px solid rgba(255, 255, 255, .05);
+}
+
+.rvl-cmp-song {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rvl-cmp-score {
+    font-variant-numeric: tabular-nums;
+    min-width: 74px;
+    text-align: right;
+}
+
+.rvl-cmp-delta {
+    min-width: 66px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: .74rem;
+}
+
+.rvl-cmp-score.rvl-ahead, .rvl-cmp-score.rvl-behind, .rvl-cmp-delta.rvl-ahead, .rvl-cmp-delta.rvl-behind {
+    font-weight: 600;
+}
+
+.rvl-absent {
+    padding: 9px 10px;
+    border: 1px dashed rgba(255, 255, 255, .14);
+    border-radius: 6px;
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+}

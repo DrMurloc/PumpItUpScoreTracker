@@ -1,0 +1,33 @@
+@namespace ScoreTracker.Web.Components.Rivals
+
+@* Only rendered for a PRIVATE account — a public one is findable in the picker, so a code would
+   be a step that changes nothing, and a control that changes nothing reads as one the user missed
+   (docs/design/rivals.md D23). The query returns null for a public account, which is what makes
+   this whole card disappear. *@
+@if (!string.IsNullOrWhiteSpace(Code))
+{
+    <MudCard Class="mt-3">
+        <MudCardContent>
+            <div class="sbd-section-head"><span class="sbd-eyebrow">@L["Your invite code"]</span></div>
+            <MudText Typo="Typo.caption" Class="dash-muted">
+                @L["Your profile is private, so people can't find you in search. Share this to let someone add you."]
+            </MudText>
+            <div class="rvl-code mt-2">
+                <span class="rvl-code-value">@Code</span>
+                <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                           OnClick="OnRecycle">@L["Get a new code"]</MudButton>
+            </div>
+            @* Recycling kills the link, not the people. Revoking somebody is the reverse list's
+               job (D24), and a recycle that silently unfriended people would be a different
+               feature wearing this one's label. *@
+            <MudText Typo="Typo.caption" Class="dash-muted mt-2">
+                @L["A new code stops the old link working. People who already added you stay — remove them from Rivals of you."]
+            </MudText>
+        </MudCardContent>
+    </MudCard>
+}
+
+@code {
+    [Parameter] public string? Code { get; set; }
+    [Parameter] public EventCallback OnRecycle { get; set; }
+}
