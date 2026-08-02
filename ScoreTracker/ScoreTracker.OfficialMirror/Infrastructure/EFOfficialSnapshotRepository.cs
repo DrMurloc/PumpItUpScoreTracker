@@ -381,6 +381,46 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArrayAsync(ct);
     }
 
+    public async Task<IReadOnlyList<string>> GetPlayerNamesInSnapshot(int snapshotId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        return await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.SnapshotId == snapshotId)
+            .Join(database.Set<OfficialPlayerEntity>(), p => p.PlayerId, x => x.Id, (_, x) => x.Username)
+            .Distinct()
+            .OrderBy(name => name)
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<PlayerDimension>> GetPlayersByUsernames(MixEnum mix,
+        IReadOnlyCollection<string> usernames, CancellationToken ct)
+    {
+        if (usernames.Count == 0) return Array.Empty<PlayerDimension>();
+        // Lookups accept either scrape shape — storage holds the normalized tag.
+        var tags = usernames.Select(OfficialPlayerTag.Normalize).Distinct().ToArray();
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        var entities = await database.Set<OfficialPlayerEntity>()
+            .Where(p => p.MixId == mixId && tags.Contains(p.Username))
+            .ToArrayAsync(ct);
+        return entities.Select(ToPlayer).ToArray();
+    }
+
+    public async Task<IReadOnlyList<PlayerChartPlacement>> GetChartPlacementsFor(int snapshotId,
+        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, CancellationToken ct)
+    {
+        if (playerIds.Count == 0 || chartIds.Count == 0) return Array.Empty<PlayerChartPlacement>();
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        return await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.SnapshotId == snapshotId && playerIds.Contains(p.PlayerId))
+            .Join(database.Set<OfficialLeaderboardEntity>()
+                    .Where(b => b.LeaderboardType == LeaderboardTypes.Chart
+                                && b.ChartId != null && chartIds.Contains(b.ChartId.Value)),
+                p => p.LeaderboardId, b => b.Id,
+                (p, b) => new PlayerChartPlacement(p.PlayerId, b.ChartId!.Value, p.Place, p.Score))
+            .ToArrayAsync(ct);
+    }
+
     public async Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId,
         CancellationToken ct)
     {

@@ -63,6 +63,28 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct);
 
     /// <summary>
+    ///     Tags that actually placed in one snapshot, as opposed to every tag ever seen. A picker
+    ///     offering somebody a departed tag hands them a permanently empty result
+    ///     (docs/design/rivals.md D21).
+    /// </summary>
+    Task<IReadOnlyList<string>> GetPlayerNamesInSnapshot(int snapshotId, CancellationToken ct);
+
+    /// <summary>
+    ///     The mirror players behind a set of tags, normalized on the way in — a caller outside
+    ///     this vertical must never normalize a tag itself (docs/design/rivals.md D7).
+    /// </summary>
+    Task<IReadOnlyList<PlayerDimension>> GetPlayersByUsernames(MixEnum mix,
+        IReadOnlyCollection<string> usernames, CancellationToken ct);
+
+    /// <summary>
+    ///     Board scores for a set of players across a set of CHARTS in one snapshot. Batched
+    ///     because a rivals board asks about dozens of charts at once, and a query per chart
+    ///     would put a burst on a page render. Charts with no mirrored board are simply absent.
+    /// </summary>
+    Task<IReadOnlyList<PlayerChartPlacement>> GetChartPlacementsFor(int snapshotId,
+        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, CancellationToken ct);
+
+    /// <summary>
     ///     Every player id with a placement in any of this mix's snapshots before the given
     ///     one — the all-history "seen" set that makes a debut a debut.
     /// </summary>
