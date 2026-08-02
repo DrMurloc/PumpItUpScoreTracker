@@ -31,6 +31,7 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<IPlayerMilestoneRepository, EFPlayerMilestoneRepository>();
         services.AddTransient<IPlayerSeasonRecapRepository, EFPlayerSeasonRecapRepository>();
         services.AddTransient<IPlayerFolderLevelRepository, EFPlayerFolderLevelRepository>();
+        services.AddTransient<IPlayerHighlightRepository, EFPlayerHighlightRepository>();
         services.AddTransient<CohortScoreProvider>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;

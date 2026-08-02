@@ -4,6 +4,7 @@ using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Infrastructure;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.Integration.Fixtures;

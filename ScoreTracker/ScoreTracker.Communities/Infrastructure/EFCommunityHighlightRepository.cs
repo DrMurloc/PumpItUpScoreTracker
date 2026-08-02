@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Domain;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.Communities.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.SharedKernel.Enums;
@@ -52,7 +52,7 @@ internal sealed class EFCommunityHighlightRepository : ICommunityHighlightReposi
             OccurredAt = occurredAt,
             SessionId = sessionId,
             Payload = payload,
-            SchemaVersion = CommunityHighlightSchema.CurrentVersion
+            SchemaVersion = PlayerHighlightSchema.CurrentVersion
         });
         await database.Set<CommunityHighlightEntity>().AddRangeAsync(rows, cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
@@ -72,7 +72,7 @@ internal sealed class EFCommunityHighlightRepository : ICommunityHighlightReposi
         // dedupe and take: keeps a World-scoped feed from pulling the whole 30-day table.
         var fetched = await (
                 from highlight in database.Set<CommunityHighlightEntity>()
-                where highlight.MixId == mixId && highlight.SchemaVersion == CommunityHighlightSchema.CurrentVersion
+                where highlight.MixId == mixId && highlight.SchemaVersion == PlayerHighlightSchema.CurrentVersion
                 join community in database.Set<CommunityEntity>() on highlight.CommunityId equals community.Id
                 where nameStrings.Contains(community.Name)
                 join requesterMembership in database.Set<CommunityMembershipEntity>()

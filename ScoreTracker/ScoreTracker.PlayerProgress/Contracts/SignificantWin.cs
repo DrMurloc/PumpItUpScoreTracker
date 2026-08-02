@@ -1,12 +1,18 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace ScoreTracker.Communities.Contracts;
+namespace ScoreTracker.PlayerProgress.Contracts;
 
 /// <summary>
-///     One community-scoped "big win" in a highlight feed summary
-///     (docs/design/home-page-widgets.md §7). Structured, NOT pre-rendered: the row
+///     One "big win" in a highlight feed summary. Structured, NOT pre-rendered: the row
 ///     component localizes the caption from these fields — UI strings never ride the DB
-///     payload. Persisted as a JSON list in scores.CommunityHighlight and read whole.
+///     payload. Persisted as a JSON list in scores.PlayerHighlight and read whole.
+///     <para>
+///         This vocabulary used to live in Communities, on the reasoning that significance was a
+///         community judgment. It isn't: the policy that produces these takes a SITE-WIDE rarity
+///         snapshot plus the player's own stats and never looks at a community. A community is
+///         only ever the audience — and now so is a rival list, which is what moved the type here
+///         (docs/design/rivals.md D31–D32).
+///     </para>
 ///     Field usage per <see cref="WinKind" />:
 ///     <list type="bullet">
 ///         <item>BigTitle — TitleName</item>
@@ -57,9 +63,13 @@ public enum WinKind
 ///         of a moment, and a moment summarised before folder standings existed is incomplete
 ///         rather than wrong. The weekly purge clears them inside 30 days.
 ///     </para>
+///     <para>
+///         Version 2 carries over unchanged from the Communities-owned era: the payload's JSON
+///         shape did not move when the type's namespace did, so stored rows read as current.
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
-public static class CommunityHighlightSchema
+public static class PlayerHighlightSchema
 {
     public const int CurrentVersion = 2;
 }

@@ -1,4 +1,4 @@
-using ScoreTracker.Communities.Contracts;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 

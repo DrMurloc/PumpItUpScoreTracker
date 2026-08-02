@@ -10,6 +10,7 @@ using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
