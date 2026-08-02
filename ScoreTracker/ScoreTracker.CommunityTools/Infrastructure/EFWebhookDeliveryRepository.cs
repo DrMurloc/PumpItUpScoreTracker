@@ -42,13 +42,17 @@ internal sealed class EFWebhookDeliveryRepository : IWebhookDeliveryRepository
         return entity.Id;
     }
 
-    public async Task RecordSuccess(Guid id, int statusCode, int latencyMs, bool keepBody,
+    public async Task RecordSuccess(Guid id, int attempt, int statusCode, int latencyMs, bool keepBody,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var query = database.Set<WebhookDeliveryEntity>().Where(d => d.Id == id);
 
+        // The attempt it succeeded on, not the count of failures before it. A console row reading
+        // "delivered, attempt 1" for something that took three tries is telling a maker their
+        // endpoint is fine when it is flaky.
         await query.ExecuteUpdateAsync(s => s
+            .SetProperty(d => d.Attempt, attempt)
             .SetProperty(d => d.Status, DeliveryStatus.Succeeded.ToString())
             .SetProperty(d => d.RemoteStatusCode, statusCode)
             .SetProperty(d => d.LatencyMs, latencyMs)

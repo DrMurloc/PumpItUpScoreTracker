@@ -18,7 +18,7 @@ internal interface IWebhookDeliveryRepository
         string? body, DateTimeOffset queuedAt, bool isTest,
         CancellationToken cancellationToken = default);
 
-    Task RecordSuccess(Guid id, int statusCode, int latencyMs, bool keepBody,
+    Task RecordSuccess(Guid id, int attempt, int statusCode, int latencyMs, bool keepBody,
         CancellationToken cancellationToken = default);
 
     Task RecordFailure(Guid id, int attempt, WebhookFailureReason reason, int? statusCode,

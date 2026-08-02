@@ -89,8 +89,8 @@ internal sealed class WebhookDeliveryDispatcher : IWebhookDeliveryDispatcher
             // Keep the body only when it is the tool's newest — the console's sample of what we sent.
             var latest = await _deliveries.GetLatestWithBody(tool.Id, cancellationToken);
             var keepBody = latest is null || latest.Id == delivery.Id;
-            await _deliveries.RecordSuccess(delivery.Id, outcome.StatusCode ?? 200, outcome.LatencyMs,
-                keepBody, cancellationToken);
+            await _deliveries.RecordSuccess(delivery.Id, delivery.Attempt + 1,
+                outcome.StatusCode ?? 200, outcome.LatencyMs, keepBody, cancellationToken);
             return true;
         }
 
