@@ -21,6 +21,8 @@ public static class RivalsRegistrationExtensions
         services.AddTransient<IRivalInviteCodeRepository, EFRivalInviteCodeRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<RivalSubjectResolver>();
+        services.AddTransient<RivalAudienceReader>();
+        services.AddTransient<RivalAdder>();
         services.AddSingleton<IDbModelContribution, RivalsModelContribution>();
         return services;
     }
