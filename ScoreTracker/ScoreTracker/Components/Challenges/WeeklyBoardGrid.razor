@@ -148,6 +148,9 @@ else
     /// <summary>User ids in a community you share — their rows glow green.</summary>
     [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
 
+    /// <summary>Site-user rivals. Board-only ones have no account, so no row here is theirs.</summary>
+    [Parameter] public IReadOnlySet<Guid>? RivalUserIds { get; set; }
+
     private const int TopCount = 3;
 
     private bool IsMine(WeeklyBoardRow row) => UserId != null && row.Entry.UserId == UserId;

@@ -88,6 +88,7 @@
     private readonly Dictionary<Guid, User> _users = new();
     private readonly Dictionary<Guid, double> _levels = new();
     private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _rivalIds = new HashSet<Guid>();
     private int _visible = InitialPlaces;
     private int _pagesShown;
     private int? _myPlace;
@@ -95,11 +96,19 @@
 
     private RenderFragment Row(UserPhoenixScore score, int place) => __builder =>
     {
+        // Precedence: you -> both -> rival -> community. The table family carries its own
+        // class names because a row here is several <td>s, not one box.
+        var isRival = _rivalIds.Contains(score.UserId);
+        var isCommunity = _communityIds.Contains(score.UserId);
         var rowClass = CurrentUser.IsLoggedIn && score.UserId == CurrentUser.User.Id
             ? "chart-lb-me"
-            : _communityIds.Contains(score.UserId)
-                ? "chart-lb-community"
-                : "";
+            : (isRival, isCommunity) switch
+            {
+                (true, true) => "chart-lb-both",
+                (true, false) => "chart-lb-rival",
+                (false, true) => "chart-lb-community",
+                _ => ""
+            };
         <tr class="@rowClass">
             <td class="chart-lb-place">@place</td>
             <td>
@@ -137,6 +146,7 @@
                 .FirstOrDefault()
             : null;
         _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+        _rivalIds = await CommunityGlow.GetMyRivalIds(Mix);
         _users.Clear();
         _levels.Clear();
         await LoadDetails();

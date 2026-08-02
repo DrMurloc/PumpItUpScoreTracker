@@ -73,7 +73,7 @@ else
                     @for (var p = 1; p <= 3; p++)
                     {
                         var row = _rows.Count >= p ? _rows[p - 1] : null;
-                        <div class="dash-top3-row @(row == null ? "dash-top3-empty" : row.IsYou ? "dash-lb-you" : row.IsCommunity ? "dash-lb-community" : "")"
+                        <div class="dash-top3-row @(row == null ? "dash-top3-empty" : RowClass(row))"
                              title="@(row == null ? null : ((int)row.Entry.Score).ToString("N0"))">
                             <span class="dash-top3-place"
                                   style="@(row == null ? null : ThemeScales.RarityStyle(1.0 - (double)p / _rows.Count))">@p</span>
@@ -156,7 +156,20 @@ else
     private const int BoardCap = 50;
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
-    private sealed record Row(int Place, DailyStepEntry Entry, User? User, bool IsYou, bool IsCommunity);
+    private sealed record Row(int Place, DailyStepEntry Entry, User? User, bool IsYou, bool IsCommunity,
+        bool IsRival);
+
+    // Precedence: you -> both -> rival -> community. A rival who is also a clubmate is more
+    // interesting as both than as either.
+    private static string RowClass(Row row) => row.IsYou
+        ? "dash-lb-you"
+        : (row.IsRival, row.IsCommunity) switch
+        {
+            (true, true) => "is-both",
+            (true, false) => "is-rival",
+            (false, true) => "dash-lb-community",
+            _ => ""
+        };
 
     private bool _loaded;
     private bool _tall;
@@ -168,6 +181,7 @@ else
     private WeeklyTournamentEntry[] _dialogEntries = Array.Empty<WeeklyTournamentEntry>();
     private IReadOnlySet<Guid> _officialUserIds = new HashSet<Guid>();
     private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _rivalIds = new HashSet<Guid>();
     private MixEnum _mix = MixEnum.Phoenix;
 
     private bool _showLeaderboard;
@@ -182,7 +196,7 @@ else
     private static readonly DialogOptions RecordDialogOptions = new()
         { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, CloseOnEscapeKey = true };
 
-    private RenderFragment RowFragment(Row row) =>@<div class="dash-lb-row @(row.IsYou ? "dash-lb-you" : row.IsCommunity ? "dash-lb-community" : "")">
+    private RenderFragment RowFragment(Row row) =>@<div class="dash-lb-row @RowClass(row)">
         <span class="dash-lb-place"
               style="@ThemeScales.RarityStyle(_rows.Count <= 0 ? 0 : 1.0 - (double)row.Place / _rows.Count)">@row.Place</span>
         <span class="dash-lb-who">
@@ -237,6 +251,7 @@ else
                 : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
 
             _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+            _rivalIds = await CommunityGlow.GetMyRivalIds(_mix);
 
             var board = await Mediator.Send(new GetDailyStepQuery(_mix));
             _chart = null;
@@ -273,7 +288,7 @@ else
                 : entries.OrderBy(e => e.IsBroken).ThenByDescending(e => (int)e.Score))
             .ToArray();
         _rows = ordered.Select((e, i) => new Row(i + 1, e, users.GetValueOrDefault(e.UserId),
-            e.UserId == me, _communityIds.Contains(e.UserId))).ToList();
+            e.UserId == me, _communityIds.Contains(e.UserId), _rivalIds.Contains(e.UserId))).ToList();
         _myRow = _rows.FirstOrDefault(r => r.IsYou);
 
         _dialogEntries = ordered.Select(e => new WeeklyTournamentEntry(e.UserId, e.ChartId, e.Score, e.Plate,

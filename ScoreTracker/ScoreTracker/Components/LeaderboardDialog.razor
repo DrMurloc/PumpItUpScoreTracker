@@ -45,7 +45,7 @@
         {
             @foreach (var row in _rows)
             {
-                <div class="weekly-lb-row @(row.IsMe ? "weekly-lb-me" : CommunityUserIds?.Contains(row.Entry.UserId) == true ? "weekly-lb-community" : "")">
+                <div class="weekly-lb-row @RowHighlight(row)">
                     <span class="weekly-lb-place" style="@ThemeScales.RarityStyle(row.Percentile)">
                         #@row.Place
                     </span>
@@ -108,6 +108,25 @@
 
     /// <summary>Optional: user ids in a community you share — their rows glow green.</summary>
     [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
+
+    /// <summary>Site-user rivals. Board-only ones have no account, so no row here is theirs.</summary>
+    [Parameter] public IReadOnlySet<Guid>? RivalUserIds { get; set; }
+
+    // Precedence: you -> both -> rival -> community. A rival who is also a clubmate is more
+    // interesting as both than as either.
+    private string RowHighlight(LeaderboardRow row)
+    {
+        if (row.IsMe) return "weekly-lb-me";
+        var isRival = RivalUserIds?.Contains(row.Entry.UserId) == true;
+        var isCommunity = CommunityUserIds?.Contains(row.Entry.UserId) == true;
+        return (isRival, isCommunity) switch
+        {
+            (true, true) => "is-both",
+            (true, false) => "is-rival",
+            (false, true) => "weekly-lb-community",
+            _ => string.Empty
+        };
+    }
 
     /// <summary>
     ///     User ids whose entry sat inside the chart's band (M20). Non-null enables the
