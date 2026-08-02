@@ -3616,10 +3616,68 @@ html.sheet-open .more-sheet-scrim {
 
 /* Daily Step widget (docs/design/daily-step.md): the shared daily chart as a leaderboard card. */
 
-/* Row-highlight tokens, global so the leaderboard dialog can glow too: you (blue), community (green). */
+/* Row-highlight tokens, global so the leaderboard dialog can glow too: you (blue), community
+   (green), rival (red). Mix-invariant like the judgment and lifebar groups — a rival reads as a
+   rival in every theme.
+
+   --daily-rival is NOT MixPalette.Error (#C72020): that one is too dark to read at 13% fill and
+   already means "something went wrong". This sits clear of the Phoenix secondary orange
+   (#FF6B35) too, so a rival never reads as a brand accent (docs/design/rivals.md D39). */
 :root {
     --daily-you: #4bb8ff;
     --daily-community: #43dc86;
+    --daily-rival: #FF3B5C;
+}
+
+/* ── Row highlighting, one utility set over four unrelated row layouts ──────────────────
+   .weekly-lb-row (flex), .chart-lb-* (table cells), .dash-ch-entry (feed card) and the rival
+   roster row share no layout at all, so the treatment is applied OVER whichever they use rather
+   than grown as a variant inside each family (docs/design/rivals.md §3.6).
+
+   Precedence is you → both → rival → community: you always wins, and a rival who is also a
+   clubmate is more interesting as both than as either. */
+.is-rival {
+    background: color-mix(in srgb, var(--daily-rival) 13%, transparent);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-rival) 60%, transparent);
+}
+
+/* Split fill plus a left and a right edge bar. A two-tone border-image ring would read as
+   segmented too, but it kills border-radius; this keeps the corners every other row has. */
+.is-both {
+    background: linear-gradient(90deg,
+        color-mix(in srgb, var(--daily-rival) 14%, transparent) 0 50%,
+        color-mix(in srgb, var(--daily-community) 14%, transparent) 50% 100%);
+    box-shadow: inset 3px 0 0 var(--daily-rival), inset -3px 0 0 var(--daily-community);
+}
+
+/* The table-cell family cannot carry a ring — a row is several <td>s and the shadow would draw
+   between them — so it tints cells and bars only the outer two. */
+.chart-lb-rival td {
+    background: color-mix(in srgb, var(--daily-rival) 13%, transparent);
+}
+
+.chart-lb-rival td:first-child {
+    box-shadow: inset 3px 0 0 var(--daily-rival);
+}
+
+.chart-lb-both td {
+    background: color-mix(in srgb, var(--daily-rival) 13%, transparent);
+}
+
+.chart-lb-both td:first-child {
+    box-shadow: inset 3px 0 0 var(--daily-rival);
+}
+
+.chart-lb-both td:last-child {
+    box-shadow: inset -3px 0 0 var(--daily-community);
+}
+
+/* A board-only rival's score came from the last weekly sweep. The asterisk is the whole
+   disclaimer — the footnote under the board carries the date (D27). */
+.rival-official-mark {
+    color: var(--mix-accent);
+    font-weight: 700;
+    cursor: help;
 }
 
 .dash-daily {
