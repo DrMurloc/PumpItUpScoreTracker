@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.DevTooling;
 using ScoreTracker.Data.Persistence;
-using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.Integration.Fixtures;
 
@@ -19,7 +18,7 @@ namespace ScoreTracker.Tests.Integration;
 /// </summary>
 [Collection(IntegrationTestCollection.Name)]
 [ExcludeFromCodeCoverage]
-public sealed class DevCatalogSeederTests : IAsyncLifetime
+public sealed class DevCatalogWriterTests : IAsyncLifetime
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
     private static readonly Guid ChartId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -27,7 +26,7 @@ public sealed class DevCatalogSeederTests : IAsyncLifetime
 
     private readonly SqlServerFixture _fixture;
 
-    public DevCatalogSeederTests(SqlServerFixture fixture)
+    public DevCatalogWriterTests(SqlServerFixture fixture)
     {
         _fixture = fixture;
     }
@@ -42,9 +41,9 @@ public sealed class DevCatalogSeederTests : IAsyncLifetime
         return Task.CompletedTask;
     }
 
-    private DevCatalogSeeder BuildSeeder()
+    private DevCatalogWriter BuildSeeder()
     {
-        return new DevCatalogSeeder(_fixture.DbContextFactory);
+        return new DevCatalogWriter(_fixture.DbContextFactory);
     }
 
     private static DevCatalogSnapshot Snapshot(params DevChartRow[] extraCharts)

@@ -635,6 +635,17 @@ importer. Two hard requirements:
 Acceptance test: wipe a local database, run Populate against `api/v2/*` only, confirm the site works.
 `dev/export` is deleted in the same PR that passes it.
 
+**Where it lives (2026-08-02).** All of it in `ScoreTracker.Data/DevTooling/`: the API reads, the
+wire shapes, the mapping and the SQL, every one of them internal. Domain keeps a single port with a
+primitive signature — an earlier cut put a snapshot record and six row types there, eight public
+types in the layer everything depends on, for a tool that runs on a laptop. Web keeps the Razor page
+and nothing else.
+
+The routes the harness calls are declared as a list and pinned by a test against the controllers'
+registered routes, because they once diverged: it asked for
+`api/v2/chart-analysis/chart-scoring-levels`, which never existed, and `/Dev/Populate` failed
+outright for two commits.
+
 ---
 
 ## 12. UI surfaces

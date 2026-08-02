@@ -20,7 +20,7 @@ namespace ScoreTracker.Data.DevTooling;
 ///         chart ids do not resolve — worse than an empty one.
 ///     </para>
 /// </summary>
-public sealed class DevCatalogSeeder : IDevCatalogSeeder
+internal sealed class DevCatalogWriter : IDevCatalogWriter
 {
     private const string Schema = "scores";
 
@@ -35,7 +35,7 @@ public sealed class DevCatalogSeeder : IDevCatalogSeeder
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
-    public DevCatalogSeeder(IDbContextFactory<ChartAttemptDbContext> factory)
+    public DevCatalogWriter(IDbContextFactory<ChartAttemptDbContext> factory)
     {
         _factory = factory;
     }

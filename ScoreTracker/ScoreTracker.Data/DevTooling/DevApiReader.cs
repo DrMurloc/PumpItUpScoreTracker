@@ -6,12 +6,11 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.Web.Configuration;
 
-namespace ScoreTracker.Web.Services;
+namespace ScoreTracker.Data.DevTooling;
 
 /// <summary>
-///     Dev harness importer: builds a local database out of the public API.
+///     Reads the live site's public API and hands the result to <see cref="IDevCatalogWriter" />.
 ///     <para>
 ///         It reads <c>api/v2/*</c> with a personal token, exactly as any integrator would. That is
 ///         the point rather than a convenience — if the harness can rebuild a working database from
@@ -19,7 +18,7 @@ namespace ScoreTracker.Web.Services;
 ///         instead of from someone building a tool.
 ///     </para>
 /// </summary>
-public sealed class DevSyncService
+internal sealed class DevApiReader
 {
     private static readonly JsonSerializerOptions Wire = new(JsonSerializerDefaults.Web);
 
@@ -30,25 +29,43 @@ public sealed class DevSyncService
     /// </summary>
     private static readonly string[] TierLists = { "score-difficulty", "pass-difficulty", "pg-difficulty" };
 
+    /// <summary>
+    ///     Every route this reader calls, as templates.
+    ///     <para>
+    ///         Hoisted out of the call sites so a test can enumerate them and check each resolves
+    ///         against the app's registered routes. That is not ceremony: this harness once asked for
+    ///         <c>api/v2/chart-analysis/chart-scoring-levels</c>, which had never existed, and because
+    ///         the call does not tolerate a miss it broke /Dev/Populate outright — silently, for two
+    ///         commits, because nothing ran the sync end to end.
+    ///     </para>
+    /// </summary>
+    internal static IReadOnlyList<string> RouteTemplates { get; } = new[]
+    {
+        "api/v2/mixes",
+        "api/v2/songs",
+        "api/v2/charts",
+        "api/v2/players/{playerId}/scores"
+    }.Concat(TierLists.Select(t => $"api/v2/tier-lists/{t}")).ToArray();
+
     private readonly IMemoryCache _cache;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IOptions<ProdSyncConfiguration> _options;
-    private readonly IDevCatalogSeeder _seeder;
+    private readonly IDevCatalogWriter _writer;
+    private readonly string _baseUrl;
 
-    public DevSyncService(IHttpClientFactory httpClientFactory, IDevCatalogSeeder seeder,
-        IOptions<ProdSyncConfiguration> options, IMemoryCache cache)
+    public DevApiReader(IHttpClientFactory httpClientFactory, IDevCatalogWriter writer,
+        string baseUrl, IMemoryCache cache)
     {
         _httpClientFactory = httpClientFactory;
-        _seeder = seeder;
-        _options = options;
+        _writer = writer;
+        _baseUrl = baseUrl;
         _cache = cache;
     }
 
-    public async Task Sync(string apiToken, Guid localUserId, Action<string> reportProgress,
+    public async Task Populate(string apiToken, Guid localUserId, Action<string> reportProgress,
         CancellationToken cancellationToken = default)
     {
         using var client = _httpClientFactory.CreateClient();
-        client.BaseAddress = new Uri(_options.Value.BaseUrl, UriKind.Absolute);
+        client.BaseAddress = new Uri(_baseUrl, UriKind.Absolute);
         client.Timeout = TimeSpan.FromMinutes(5);
         // Basic with a personal API token — the same scheme a partner tool authenticates with.
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
@@ -94,7 +111,7 @@ public sealed class DevSyncService
         }
 
         reportProgress($"Writing {charts.Count:N0} charts to the local database…");
-        await _seeder.ReplaceCatalog(new DevCatalogSnapshot(
+        await _writer.ReplaceCatalog(new DevCatalogSnapshot(
             mixes.Where(m => Enum.TryParse<MixEnum>(m.Name, out _))
                 .Select(m => new DevMixRow(Enum.Parse<MixEnum>(m.Name), m.DisplayName, m.SortOrder, m.IsPrimary))
                 .ToArray(),
@@ -117,7 +134,7 @@ public sealed class DevSyncService
         }
 
         reportProgress($"Writing {scores.Count:N0} scores…");
-        await _seeder.ReplaceUserScores(localUserId, scores, cancellationToken);
+        await _writer.ReplaceUserScores(localUserId, scores, cancellationToken);
 
         // The seeder writes raw SQL underneath the repositories, so every cached read (charts per
         // mix, song names, videos, skills, ...) is stale — including the empty chart list the login
@@ -126,6 +143,17 @@ public sealed class DevSyncService
         if (_cache is MemoryCache concrete) concrete.Clear();
 
         reportProgress("Done.");
+    }
+
+    /// <summary>
+    ///     Asserts at the call site that the path is one of the declared templates, so a URL typed
+    ///     directly into a request can never diverge from the list the route test checks.
+    /// </summary>
+    private static string Route(string path)
+    {
+        return RouteTemplates.Contains(path)
+            ? path
+            : throw new InvalidOperationException($"{path} is not in RouteTemplates.");
     }
 
     /// <summary>

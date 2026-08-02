@@ -1,4 +1,4 @@
-using BlazorApplicationInsights;
+﻿using BlazorApplicationInsights;
 using Hangfire;
 using Hangfire.SqlServer;
 using MassTransit;
@@ -31,6 +31,7 @@ using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
+using ScoreTracker.Data.DevTooling;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.HostedServices;
 using ScoreTracker.Web.Security;
@@ -224,7 +225,6 @@ builder.Services.AddBlazorApplicationInsights()
     .AddSingleton<IUiNotificationHub, UiNotificationHub>()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()
     .AddSingleton<AccountProofService>()
-    .AddTransient<DevSyncService>()
     .AddHttpContextAccessor()
     .AddHttpClient()
     .AddHostedService<BotHostedService>()
