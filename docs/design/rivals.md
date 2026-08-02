@@ -1,6 +1,6 @@
 # Rivals — design
 
-> **Status: DESIGNED, not built.** Workshopped 2026-08-02. Depends on the session-breakdown
+> **Status: BUILT.** Workshopped and built 2026-08-02, one PR, 34 commits. Depends on the session-breakdown
 > work (PR #211), which deliberately shipped with no Rivals hint at all
 > ([session-breakdown.md](session-breakdown.md) D20: *"It is the next project and this branch
 > blocks it."*).
@@ -278,7 +278,7 @@ the empty state names what would fill it.
 | **PlayerProgress** | Owns tier 2 after the move: the win policy + capturer, the `PlayerHighlight` store, and one published query for a set of users' recent wins. `RivalMatcher` renamed (D48). |
 | **Communities** | Loses the policy/capturer and the payload; keeps `CommunityHighlight` as the audience index (D33) and re-points its feed query at the new payload. `SignificantWin` / `WinKind` / the schema stamp re-home to `PlayerProgress.Contracts`. |
 | **OfficialMirror** | Two published events (D5), two published queries (resolve a tag to a subject; board scores for tags × charts at the latest sealed snapshot), and a snapshot-filtered variant of the player-names query for the picker (D21). |
-| **Identity** | One published player-search query for the site picker — no search contract exists today. |
+| **Identity** | **Nothing.** `SearchForUsersQuery` already exists; Rivals filters its results to public players ∪ the caller's clubmates. Teaching Identity what a community is would put the membership graph in the wrong vertical. |
 | **ScoreLedger** | **Nothing.** `IScoreReader.GetPlayerScores(mix, userIds, chartIds, ct)` is already the exact shape. |
 | **HomePage** | Nothing structural — the widget's config record gains a field, the type key is untouched (D38). |
 | **Data** | One migration (§4.3). |
@@ -378,9 +378,8 @@ implementation is a runtime-only failure nothing catches.
 | `Application/OfficialLeaderboardSaga.cs`, the rename-accept handler | + the two publishes |
 | `Infrastructure/OfficialSiteClient.cs` | the `?? DefaultAvatar` fix (§6) |
 
-**Identity — changed**: `Contracts/Queries/SearchPlayersQuery.cs` — new; public users plus a
-supplied community-member set (Rivals composes the membership side through Communities'
-existing `GetMyCommunitiesQuery` / `GetCommunityMembersQuery`).
+**Identity — unchanged.** The picker composes Identity's existing `SearchForUsersQuery` with the
+clubmate set, in Rivals. See the §4.1 note.
 
 **Web — changed**
 
@@ -555,3 +554,38 @@ Backfill: copy the last 30 days of `CommunityHighlight` into `PlayerHighlight`, 
 | `ScoreTracker.Tests.Components` | roster rendering (ghost tag + asterisk + footnote), the sessions toggle, the fifth dialog scope, the four highlight states, feed cross-markers |
 | `ScoreTracker.Tests.Integration` | the three repositories against real SQL, the unique filtered indexes, the purge covering both directions of `Rival` |
 | `ScoreTracker.Tests.E2E` | not a critical whole-workflow path — nothing new |
+
+
+---
+
+## 9. What shipped, and what did not
+
+Built 2026-08-02 across 34 commits on `claude/rivals-feature-52cade`. Suites at the end:
+**1,946 unit/component · 526 bUnit · 90 real-DB integration**, all green.
+
+Three things moved during the build and the decisions above already reflect them:
+
+- **D48 narrowed.** Only the recap's internal `RivalMatcher` renamed. `PlayerRecap` is serialized
+  whole behind a `SchemaVersion` equality gate, so renaming its public `Rivals` property would
+  blank every stored recap until an admin rebuild — a real cost for a cosmetic win. The
+  user-facing collision gets fixed in the resx instead.
+- **Identity needed no change at all** (§4.1). The picker composes its existing search.
+- **`RenameProposal.Mix` is nullable rather than a detector parameter.** The detector is genuinely
+  mix-agnostic and has eight call sites; threading data through a pure function so its output can
+  carry it is worse than saying what is true — Mix is null until stored, the same lifecycle `Id`
+  already expresses by being 0 until written.
+
+### Outstanding
+
+- **Localization.** Deferred to the pre-merge checks by the owner. Every new string already goes
+  through `L[…]`; what remains is the `en-US` entries the ratchet needs plus the eight
+  translations, inserted alphabetically, Murloc included.
+- **The `/Community/Player` summary lift (D29's second host).** `RivalComparison` was built
+  capability-gated and host-agnostic so it can take that page's subject, but the extraction from
+  `CommunityPlayer.razor` (513 lines) has not been done. The Rivals page uses the new component;
+  the community page still uses its own.
+- **Roster sort is newest-arrow-first, not recent-activity** (D18). Recent activity needs each
+  rival's last import, which is a read the roster does not otherwise make; the sort control is
+  the shape the field test should judge before that read gets added.
+- **Rival scores are `IN (…)`, not a TVP** (§2.5). Correct at any size, and the shape to revisit
+  if a three-hundred-rival roster proves slow in the field.
