@@ -65,7 +65,40 @@ public sealed class SessionBreakdownBuilderTests
         Assert.Equal("NEAR", board.Peers.First().PlayerName.ToString());
     }
 
+    [Fact]
+    public async Task PagingTheHistoryLeavesTheHeroExactlyWhereItWas()
+    {
+        // The hero is not what you paged. Rebuilding it is both wasted work and the reason the
+        // interaction used to look like a navigation.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
+        var (builder, model) = await BuildWith(chart, rows, Array.Empty<CommunityPeerScore>());
+
+        var paged = await builder.Refilter(model, User, 2, 20, null, CancellationToken.None);
+
+        Assert.Same(model.Hero, paged.Hero);
+    }
+
+    [Fact]
+    public async Task PromotingACardLeavesTheHistoryExactlyWhereItWas()
+    {
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
+        var (builder, model) = await BuildWith(chart, rows, Array.Empty<CommunityPeerScore>());
+
+        var reselected = await builder.Reselect(model, User, Session, 1, 20, null, CancellationToken.None);
+
+        Assert.Same(model.History, reselected.History);
+        Assert.NotNull(reselected.Hero);
+    }
+
     private static async Task<SessionsPageModel> Build(Chart chart,
+        RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers)
+    {
+        return (await BuildWith(chart, rows, peers)).Model;
+    }
+
+    private static async Task<(SessionBreakdownBuilder Builder, SessionsPageModel Model)> BuildWith(Chart chart,
         RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers)
     {
         var mediator = new Mock<IMediator>();
@@ -92,8 +125,8 @@ public sealed class SessionBreakdownBuilderTests
             .ReturnsAsync((IReadOnlyDictionary<Guid, IReadOnlyList<CommunityPeerScore>>)
                 new Dictionary<Guid, IReadOnlyList<CommunityPeerScore>> { [chart.Id] = peers });
 
-        return await new SessionBreakdownBuilder(mediator.Object)
-            .Build(User, null, 1, 20, null, CancellationToken.None);
+        var builder = new SessionBreakdownBuilder(mediator.Object);
+        return (builder, await builder.Build(User, null, 1, 20, null, CancellationToken.None));
     }
 
     private static void Setup<T>(Mock<IMediator> mediator, IRequest<T> request, T result)

@@ -11634,3 +11634,17 @@ button.chart-card-art {
         max-width: none;
     }
 }
+
+/* A targeted rebuild, not a page load: the content stays put and softens while it swaps.
+   Skeletons belong to the first load only. */
+.sbd-busy {
+    opacity: .55;
+    transition: opacity .12s ease-out;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sbd-busy {
+        transition: none;
+    }
+}

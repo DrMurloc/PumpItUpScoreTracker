@@ -41,26 +41,77 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
     /// <summary>Jackets per card before the "+N" count takes over.</summary>
     private const int TopChartsPerCard = 3;
 
+    /// <summary>First load: both halves.</summary>
     public async Task<SessionsPageModel> Build(Guid userId, Guid? selectedSessionId, int page, int pageSize,
         DateTimeOffset? before, CancellationToken cancellationToken)
     {
+        var (feed, selected, undone) = await Select(userId, selectedSessionId, page, pageSize, before,
+            cancellationToken);
+        if (selected == null) return Empty;
+
+        var sessions = await mediator.Send(new GetScoreSessionsQuery(userId), cancellationToken);
+        return new SessionsPageModel(
+            await BuildOne(userId, selected, sessions, cancellationToken),
+            await BuildHistory(userId, feed.Groups, sessions, cancellationToken),
+            feed.TotalGroups, undone);
+    }
+
+    /// <summary>
+    ///     Promoting a card into the hero. The history rows are unchanged — only which one is
+    ///     highlighted — so they are carried over rather than rebuilt, which is what keeps the
+    ///     interaction from looking like a page load.
+    /// </summary>
+    public async Task<SessionsPageModel> Reselect(SessionsPageModel current, Guid userId, Guid sessionId,
+        int page, int pageSize, DateTimeOffset? before, CancellationToken cancellationToken)
+    {
+        var (_, selected, undone) = await Select(userId, sessionId, page, pageSize, before, cancellationToken);
+        if (selected == null) return current;
+
+        var sessions = await mediator.Send(new GetScoreSessionsQuery(userId), cancellationToken);
+        return current with
+        {
+            Hero = await BuildOne(userId, selected, sessions, cancellationToken),
+            SelectedSessionWasUndone = undone
+        };
+    }
+
+    /// <summary>
+    ///     Paging or filtering the history. The hero is untouched — it is not what changed —
+    ///     so none of its peer, chart or milestone reads run again.
+    /// </summary>
+    public async Task<SessionsPageModel> Refilter(SessionsPageModel current, Guid userId, int page,
+        int pageSize, DateTimeOffset? before, CancellationToken cancellationToken)
+    {
         var feed = await mediator.Send(new GetRecentSessionsQuery(userId, page, pageSize, before),
             cancellationToken);
-        if (feed.Groups.Count == 0)
-            return new SessionsPageModel(null, Array.Empty<SessionHistoryRow>(), 0, false);
+        var sessions = await mediator.Send(new GetScoreSessionsQuery(userId), cancellationToken);
+        return current with
+        {
+            History = await BuildHistory(userId, feed.Groups, sessions, cancellationToken),
+            TotalGroups = feed.TotalGroups
+        };
+    }
 
-        // A Discord card outlives the session it links to — undo deletes the journal rows — so
-        // a deep link that finds nothing is a real state, not a 404-shaped hole (§2.3).
+    private static readonly SessionsPageModel Empty =
+        new(null, Array.Empty<SessionHistoryRow>(), 0, false);
+
+    /// <summary>
+    ///     Which group the hero shows. A Discord card outlives the session it links to — undo
+    ///     deletes the journal rows — so a deep link that finds nothing is a real state, not a
+    ///     404-shaped hole (§2.3).
+    /// </summary>
+    private async Task<(RecentSessionsPage Feed, RecentSessionsPage.SessionGroup? Selected, bool Undone)> Select(
+        Guid userId, Guid? selectedSessionId, int page, int pageSize, DateTimeOffset? before,
+        CancellationToken cancellationToken)
+    {
+        var feed = await mediator.Send(new GetRecentSessionsQuery(userId, page, pageSize, before),
+            cancellationToken);
+        if (feed.Groups.Count == 0) return (feed, null, false);
+
         var selected = selectedSessionId == null
             ? feed.Groups[0]
             : feed.Groups.FirstOrDefault(g => g.SessionId == selectedSessionId);
-        var undone = selectedSessionId != null && selected == null;
-        selected ??= feed.Groups[0];
-
-        var sessions = await mediator.Send(new GetScoreSessionsQuery(userId), cancellationToken);
-        var history = await BuildHistory(userId, feed.Groups, sessions, cancellationToken);
-        var breakdown = await BuildOne(userId, selected, sessions, cancellationToken);
-        return new SessionsPageModel(breakdown, history, feed.TotalGroups, undone);
+        return (feed, selected ?? feed.Groups[0], selectedSessionId != null && selected == null);
     }
 
     private async Task<SessionBreakdown> BuildOne(Guid userId, RecentSessionsPage.SessionGroup group,

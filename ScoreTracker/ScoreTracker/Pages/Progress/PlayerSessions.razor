@@ -19,7 +19,7 @@
         </div>
     </div>
 
-    @if (_loading)
+    @if (_firstLoad)
     {
         @* Skeletons match the shape they become — never a lone spinner on a data page. *@
         <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="320px" Class="mb-3"></MudSkeleton>
@@ -42,9 +42,11 @@
             </MudAlert>
         }
 
-        <SessionHero Breakdown="_model.Hero" OnOpenLeaderboard="OpenLeaderboard"></SessionHero>
+        <div class="@(_busy ? "sbd-busy" : null)">
+            <SessionHero Breakdown="_model.Hero" OnOpenLeaderboard="OpenLeaderboard"></SessionHero>
+        </div>
 
-        <div class="mt-4">
+        <div class="mt-4 @(_busy ? "sbd-busy" : null)">
             <SessionHistoryCards Rows="_model.History" SelectedSessionId="_model.Hero.Group.SessionId"
                                  Page="_page" PageCount="PageCount" Before="_before"
                                  OnView="ViewSession" OnPage="ChangePage" OnBefore="ChangeBefore">
@@ -76,7 +78,8 @@
     [Parameter] public Guid UserIdParam { get; set; }
 
     private User? _user;
-    private bool _loading = true;
+    private bool _firstLoad = true;
+    private bool _busy;
     private Guid? _selectedSessionId;
     private bool _leaderboardOpen;
     private int _page = 1;
@@ -105,12 +108,33 @@
 
     private async Task LoadAsync()
     {
-        _loading = true;
         _model = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page, HistoryPageSize,
-            // The picker is a date; the filter is an instant. Take the START of the chosen day
-            // so "before the 5th" excludes the 5th rather than half of it.
-            _before?.ToUniversalTime(), CancellationToken.None);
-        _loading = false;
+            Before, CancellationToken.None);
+        _firstLoad = false;
+    }
+
+    /// <summary>
+    ///     The picker is a date; the filter is an instant. Take the START of the chosen day so
+    ///     "before the 5th" excludes the 5th rather than half of it.
+    /// </summary>
+    private DateTimeOffset? Before => _before?.ToUniversalTime();
+
+    /// <summary>
+    ///     Runs a targeted rebuild without tearing the page down. Skeletons belong to the first
+    ///     load only — swapping the whole page for them on a filter change is what made these
+    ///     interactions feel like navigation on a page that never navigates.
+    /// </summary>
+    private async Task Refresh(Func<Task<SessionsPageModel>> rebuild)
+    {
+        _busy = true;
+        try
+        {
+            _model = await rebuild();
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 
     /// <summary>
@@ -122,7 +146,9 @@
     private async Task ViewSession(Guid sessionId)
     {
         _selectedSessionId = sessionId;
-        await LoadAsync();
+        // Only the hero changes — the cards are the same cards, one of them now highlighted.
+        await Refresh(() => Breakdowns.Reselect(_model, UserIdParam, sessionId, _page, HistoryPageSize,
+            Before, CancellationToken.None));
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri).GetLeftPart(UriPartial.Path);
         await JS.InvokeVoidAsync("history.replaceState", null, string.Empty, $"{uri}?session={sessionId}");
     }
@@ -132,7 +158,9 @@
     private async Task ChangePage(int page)
     {
         _page = page;
-        await LoadAsync();
+        // Only the grid changes; the hero is not what you paged.
+        await Refresh(() => Breakdowns.Refilter(_model, UserIdParam, _page, HistoryPageSize, Before,
+            CancellationToken.None));
     }
 
     private async Task ChangeBefore(DateTime? before)
@@ -141,7 +169,8 @@
         // A filter change invalidates the page number — page 3 of the old list is not page 3
         // of the new one.
         _page = 1;
-        await LoadAsync();
+        await Refresh(() => Breakdowns.Refilter(_model, UserIdParam, _page, HistoryPageSize, Before,
+            CancellationToken.None));
     }
 
     private void OpenLeaderboard(Guid chartId)
