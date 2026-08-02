@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -32,14 +32,13 @@ internal sealed class WebhookDeliveryClient : IWebhookDeliveryClient
     }
 
     public async Task<WebhookDeliveryOutcome> Post(Uri url, string body, string deliveryId,
-        string signature, string? headerName, string? headerValue, CancellationToken cancellationToken)
+        string? headerName, string? headerValue, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json")
         };
-        request.Headers.TryAddWithoutValidation(WebhookSigning.SignatureHeader, signature);
-        request.Headers.TryAddWithoutValidation(WebhookSigning.DeliveryIdHeader, deliveryId);
+        request.Headers.TryAddWithoutValidation(WebhookHeaders.DeliveryId, deliveryId);
         if (!string.IsNullOrWhiteSpace(headerName) && headerValue is not null)
             request.Headers.TryAddWithoutValidation(headerName, headerValue);
 
@@ -135,6 +134,6 @@ internal sealed record WebhookDeliveryOutcome(
 
 internal interface IWebhookDeliveryClient
 {
-    Task<WebhookDeliveryOutcome> Post(Uri url, string body, string deliveryId, string signature,
+    Task<WebhookDeliveryOutcome> Post(Uri url, string body, string deliveryId,
         string? headerName, string? headerValue, CancellationToken cancellationToken);
 }

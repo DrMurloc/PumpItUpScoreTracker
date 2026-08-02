@@ -339,8 +339,8 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>GRO mrglrgll API glgrgl mrglmr blargplgl lurgrgl plglmurgblub-grglgrrgl rorgl — arglmr, glorgblarggrrgl, lurglurg mrmagl. Glorgmagl gro murpblgrl romurg gromurp grgl ro glorgmurg lurg mrp blubmurm gromurm mrgl murg.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>Murgloborg murpo murgm murgl piugame.com blarglurp, murgloo bam murgloo murgm. Bam murpmurp, bam murgm blu murgargl, bam murmo murgm gromurp murgblub bo murp. Murgargl gromurp Grgl blu murpmurp.</value>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>Bloop grumba mo alla PIUGAME pragl - alla marogl, alla roggl, alla grumbla opa mogul bo. Blurgl am golba burgla.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>GRO mrpmaglmurp ro murgmrblarg gro groblgrlmagl gromurm grrglurgmurp grorpmrglblgrl - blubmurm blubgrrglmurm lurg mrp morgmurg, mrp maglplglblub</value>
@@ -1265,9 +1265,6 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Blubmorggrglargl Blubmr</value>
   </data>
-  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
-    <value>Murgargl HMAC-SHA256 blu murgm murgl murm gromurp murgblub blarglurp. Murgm gromurp murmo, gromurp murpmurp murgm murgloo murgargl — murgblarg murgm murpo gromurp murgm, bo murmo murpmurp.</value>
-  </data>
   <data name="Configure" xml:space="preserve">
     <value>Grrglurgmurp</value>
   </data>
@@ -1937,8 +1934,8 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>Blubgl gromurp grorpglorg maglplgl.</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
-    <value>Murpo murgm blu gromurp murgblarg, argla gromurp murgblub, murpmurp murgloo.</value>
+  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
+    <value>Grumba blurp mo bloop, roggl argla mogul.</value>
   </data>
   <data name="First" xml:space="preserve">
     <value>Murpargl</value>
@@ -3435,9 +3432,6 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Blarggllurg maglgrorp — rgl {0} murgl grorpglorg grglblarg grorpmurm.</value>
-  </data>
-  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
-    <value>Bam murgm blorm — murpo murgm murpo murm murgl murgargl murgm.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Blarggllurg grgl blgrlblgrlgrorp argl — grrglgrrgl ro glorggl mrgrgl mgrlgmrg murpargl.</value>
@@ -5022,9 +5016,6 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Mrpmurp-Mrp Mrglglorggrgl</value>
-  </data>
-  <data name="Signature check — your last delivery" xml:space="preserve">
-    <value>Murgblub argla — gromurp blomurp murpo</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Morggrgl — mrp morp arglurg mrp gromurp arglrglmrmurm blubmrgl argl.</value>

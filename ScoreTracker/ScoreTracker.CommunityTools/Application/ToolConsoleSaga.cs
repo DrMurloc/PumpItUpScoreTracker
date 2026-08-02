@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.CommunityTools.Domain;
@@ -10,7 +10,6 @@ namespace ScoreTracker.CommunityTools.Application;
 internal sealed class ToolConsoleSaga :
     IRequestHandler<GetToolActivityQuery, IReadOnlyList<ToolActivityRecord>>,
     IRequestHandler<GetToolActivitySummaryQuery, ToolActivitySummary>,
-    IRequestHandler<GetToolSignatureEchoQuery, SignatureEcho?>,
     IRequestHandler<GetToolDeliveryFeedQuery, IReadOnlyList<DeliveryFeedRecord>>
 {
     private readonly IToolActivityRepository _activity;
@@ -52,23 +51,6 @@ internal sealed class ToolConsoleSaga :
     }
 
     /// <summary>
-    ///     The exact bytes we signed, so a maker can diff them against what their own code hashed.
-    ///     Session mode has none — that body is never written down.
-    /// </summary>
-    public async Task<SignatureEcho?> Handle(GetToolSignatureEchoQuery request,
-        CancellationToken cancellationToken)
-    {
-        if (!await Owns(request.ToolId, cancellationToken)) return null;
-
-        var latest = await _deliveries.GetLatestWithBody(request.ToolId, cancellationToken);
-        if (latest?.Body is null || latest.Signature is null) return null;
-
-        return new SignatureEcho(latest.DeliveryId,
-            WebhookSigning.PayloadToSign(latest.SignedAt.ToUnixTimeSeconds(), latest.Body),
-            latest.Signature, latest.SignedAt);
-    }
-
-    /// <summary>
     ///     The delivery table with a route on it. Free to build because the table exists for the
     ///     console regardless, and it is the honest answer for a maker on a laptop with no public
     ///     URL — webhooks become an optimisation rather than a prerequisite.
@@ -80,14 +62,14 @@ internal sealed class ToolConsoleSaga :
             Math.Clamp(request.Limit, 1, 500), cancellationToken);
 
         var after = request.After;
-        var rows = deliveries.OrderBy(d => d.SignedAt).AsEnumerable();
+        var rows = deliveries.OrderBy(d => d.QueuedAt).AsEnumerable();
         if (after is not null)
         {
             var seen = deliveries.FirstOrDefault(d => d.DeliveryId == after);
-            if (seen is not null) rows = rows.Where(d => d.SignedAt > seen.SignedAt);
+            if (seen is not null) rows = rows.Where(d => d.QueuedAt > seen.QueuedAt);
         }
 
-        return rows.Select(d => new DeliveryFeedRecord(d.DeliveryId, d.SignedAt, d.Mode.ToString(),
+        return rows.Select(d => new DeliveryFeedRecord(d.DeliveryId, d.QueuedAt, d.Mode.ToString(),
             d.UserId, d.Mix.ToString(), d.Body)).ToArray();
     }
 

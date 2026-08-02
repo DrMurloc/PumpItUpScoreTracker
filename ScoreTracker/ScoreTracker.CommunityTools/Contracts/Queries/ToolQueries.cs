@@ -1,4 +1,4 @@
-using ScoreTracker.CommunityTools.Contracts;
+﻿using ScoreTracker.CommunityTools.Contracts;
 
 namespace ScoreTracker.CommunityTools.Contracts.Queries;
 
@@ -47,10 +47,6 @@ public sealed record GetToolActivityQuery(Guid ToolId, int Limit = 100)
 
 [ExcludeFromCodeCoverage]
 public sealed record GetToolActivitySummaryQuery(Guid ToolId) : IQuery<ToolActivitySummary>;
-
-/// <summary>The exact bytes we signed for the tool's most recent delivery.</summary>
-[ExcludeFromCodeCoverage]
-public sealed record GetToolSignatureEchoQuery(Guid ToolId) : IQuery<SignatureEcho?>;
 
 /// <summary>
 ///     The delivery table as a pull, for a tool that would rather poll than host an endpoint.

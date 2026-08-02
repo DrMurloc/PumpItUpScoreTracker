@@ -441,14 +441,22 @@ discriminates, and `changes` items carry the fields for that model with the othe
 Nulls-with-a-discriminator rather than polymorphism: easier to consume from a dynamically typed
 language, which most of these tools are.
 
-### Signing and auth
+### Auth
 
-Every delivery carries both, because sending both costs nothing and lets each maker pick:
+**A maker-supplied header**, name and value of their choosing, sent verbatim over TLS. One `if` in
+their handler. Required in PIUGame-session mode, optional elsewhere — that mode hands over a live
+credential, and an endpoint with no way to tell our call from anyone else's has no business
+receiving one.
 
-- `X-PIU-Signature: t=<unix>,v1=<hex>` — HMAC-SHA256 over `"<t>." + rawBody`. Stripe's scheme;
-  makers recognise it, and the timestamp inside the signed payload kills replay.
-- **A maker-supplied header**, name and value of their choosing, sent verbatim. The value is a
-  secret they own, so it is show-once on our side too. This is what most makers will actually check.
+> **Superseded 2026-08-02.** This section previously specified HMAC-SHA256 signing alongside the
+> header, justified as "sending both costs nothing." That was wrong twice over. It was not in the
+> brief — the ask was *"webhooks prob need optional API keys too so that toolmakers can secure their
+> own tools by verifying the call comes from me"*, which is the header. And it was not free: it cost
+> a signing module, a recoverably-stored secret, a column, a debug panel, ~600 words of integration
+> docs about re-serialization pitfalls, nine locales of copy, and a shipped defect — the secret was
+> never surfaced anywhere, so no maker could have verified a signature even if they wanted to.
+> TLS already authenticates the transport; the marginal gain was replay protection against an
+> attacker already inside the maker's TLS, who could equally forge the header. Removed at D1.
 
 `X-PIU-Delivery-Id` is the `EventId`. Retrying sends the same id; tools dedupe on it.
 

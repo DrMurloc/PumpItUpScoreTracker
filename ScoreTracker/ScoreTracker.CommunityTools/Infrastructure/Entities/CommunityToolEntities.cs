@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ScoreTracker.CommunityTools.Infrastructure.Entities;
 
@@ -20,15 +20,17 @@ internal sealed class ToolEntity
     [Required] [MaxLength(20)] public string WebhookMode { get; set; } = string.Empty;
     [MaxLength(500)] public string? WebhookUrl { get; set; }
 
-    /// <summary>Hashed. The plaintext is shown once when it is set and never stored.</summary>
-    [MaxLength(128)]
-    public string? SigningSecretHash { get; set; }
-
     /// <summary>A header the maker asks us to send so they can recognise our call.</summary>
     [MaxLength(64)]
     public string? OutboundHeaderName { get; set; }
 
-    [MaxLength(128)] public string? OutboundHeaderValueHash { get; set; }
+    /// <summary>
+    ///     Plaintext, and named so. We send it verbatim on every delivery, so it cannot be hashed —
+    ///     an earlier name implied otherwise, and the obvious "fix" for that would have broken every
+    ///     delivery a maker authenticates.
+    /// </summary>
+    [MaxLength(128)]
+    public string? OutboundHeaderValue { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ApprovedAt { get; set; }
     [MaxLength(500)] public string? RejectionReason { get; set; }
@@ -134,8 +136,7 @@ internal sealed class WebhookDeliveryEntity
     [Required] [MaxLength(20)] public string Mode { get; set; } = string.Empty;
     [Required] [MaxLength(40)] public string DeliveryId { get; set; } = string.Empty;
     public string? Body { get; set; }
-    public DateTimeOffset SignedAt { get; set; }
-    [MaxLength(128)] public string? Signature { get; set; }
+    public DateTimeOffset QueuedAt { get; set; }
     public int Attempt { get; set; }
     [Required] [MaxLength(20)] public string Status { get; set; } = string.Empty;
     public int? RemoteStatusCode { get; set; }

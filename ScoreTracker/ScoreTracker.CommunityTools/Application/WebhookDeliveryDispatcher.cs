@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
@@ -58,14 +58,12 @@ internal sealed class WebhookDeliveryDispatcher : IWebhookDeliveryDispatcher
             hasMore ? $"/api/v2/players/{player.UserId}/scores?mix={player.Mix}" : null);
 
         var body = JsonSerializer.Serialize(payload, Wire);
-        var secret = await _secrets.GetSigningSecret(tool.Id, cancellationToken);
-        var signature = WebhookSigning.Sign(secret, now.ToUnixTimeSeconds(), body);
 
         // Recorded before it is attempted: the bus is in-memory, so a process death mid-flight
         // would otherwise lose the delivery with no trace and no retry.
         var id = await _deliveries.Enqueue(tool.Id, player.UserId,
             Enum.Parse<ScoreTracker.SharedKernel.Enums.MixEnum>(player.Mix), tool.WebhookMode,
-            deliveryId, body, signature, now, isTest, cancellationToken);
+            deliveryId, body, now, isTest, cancellationToken);
 
         await Attempt(id, cancellationToken);
     }
@@ -73,18 +71,18 @@ internal sealed class WebhookDeliveryDispatcher : IWebhookDeliveryDispatcher
     public async Task<bool> Attempt(Guid deliveryId, CancellationToken cancellationToken)
     {
         var delivery = await _deliveries.Get(deliveryId, cancellationToken);
-        if (delivery?.Body is null || delivery.Signature is null) return false;
+        if (delivery?.Body is null) return false;
 
         var tool = await _tools.GetTool(delivery.ToolId, cancellationToken);
         if (tool?.WebhookUrl is null) return false;
 
         var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
         var outcome = await _client.Post(tool.WebhookUrl, delivery.Body, delivery.DeliveryId,
-            delivery.Signature, headerName, headerValue, cancellationToken);
+            headerName, headerValue, cancellationToken);
 
         if (outcome.Succeeded)
         {
-            // Keep the body only when it is the tool's newest — the console's signature sample.
+            // Keep the body only when it is the tool's newest — the console's sample of what we sent.
             var latest = await _deliveries.GetLatestWithBody(tool.Id, cancellationToken);
             var keepBody = latest is null || latest.Id == delivery.Id;
             await _deliveries.RecordSuccess(delivery.Id, outcome.StatusCode ?? 200, outcome.LatencyMs,
@@ -101,18 +99,14 @@ internal sealed class WebhookDeliveryDispatcher : IWebhookDeliveryDispatcher
 }
 
 /// <summary>
-///     Reads a tool's outbound secrets. Separate from <see cref="IToolRepository" /> because these
-///     are the only values in the vertical that must never travel with a tool record — a query that
-///     returns a Tool must not be a way to read its signing secret.
+///     Reads a tool's outbound header. Separate from <see cref="IToolRepository" /> because it is
+///     the one value in the vertical that must never travel with a tool record — a query that
+///     returns a Tool must not double as a way to read the secret a maker authenticates us by.
 /// </summary>
 internal interface IToolSecretReader
 {
-    Task<string> GetSigningSecret(Guid toolId, CancellationToken cancellationToken = default);
-
     Task<(string? Name, string? Value)> GetOutboundHeader(Guid toolId,
         CancellationToken cancellationToken = default);
-
-    Task SetSigningSecret(Guid toolId, string secret, CancellationToken cancellationToken = default);
 
     Task SetOutboundHeader(Guid toolId, string? name, string? value,
         CancellationToken cancellationToken = default);

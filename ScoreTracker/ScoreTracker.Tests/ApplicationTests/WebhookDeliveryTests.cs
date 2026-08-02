@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -188,30 +188,5 @@ public sealed class WebhookDeliveryTests
         Assert.NotNull(WebhookRetry.NextAttemptAfter(1, Now));
         Assert.True(WebhookRetry.NextAttemptAfter(2, Now) > WebhookRetry.NextAttemptAfter(1, Now));
         Assert.Null(WebhookRetry.NextAttemptAfter(WebhookRetry.MaxAttempts, Now));
-    }
-
-    // The timestamp is inside the signed payload, so a captured body cannot be replayed later under
-    // its original signature.
-    [Fact]
-    public void TheSignatureCoversTheTimestampAndTheRawBody()
-    {
-        const string body = "{\"deliveryId\":\"d-1\"}";
-        var atOne = WebhookSigning.Sign("whsec_test", 1000, body);
-        var atTwo = WebhookSigning.Sign("whsec_test", 2000, body);
-
-        Assert.StartsWith("t=1000,v1=", atOne);
-        Assert.NotEqual(atOne, atTwo);
-        Assert.Equal("1000." + body, WebhookSigning.PayloadToSign(1000, body));
-    }
-
-    // Re-serializing before hashing is the single most common integration failure, and it is a
-    // different digest — which is why the console echoes the exact signed bytes.
-    [Fact]
-    public void ReserializingTheBodyChangesTheSignature()
-    {
-        var asSent = WebhookSigning.Sign("whsec_test", 1000, "{\"a\":1,\"b\":2}");
-        var reserialized = WebhookSigning.Sign("whsec_test", 1000, "{\"a\": 1, \"b\": 2}");
-
-        Assert.NotEqual(asSent, reserialized);
     }
 }

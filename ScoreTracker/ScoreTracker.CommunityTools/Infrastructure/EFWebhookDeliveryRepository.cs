@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure.Entities;
@@ -17,7 +17,7 @@ internal sealed class EFWebhookDeliveryRepository : IWebhookDeliveryRepository
     }
 
     public async Task<Guid> Enqueue(Guid toolId, Guid userId, MixEnum mix, WebhookMode mode,
-        string deliveryId, string? body, string? signature, DateTimeOffset signedAt, bool isTest,
+        string deliveryId, string? body, DateTimeOffset queuedAt, bool isTest,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -31,8 +31,7 @@ internal sealed class EFWebhookDeliveryRepository : IWebhookDeliveryRepository
             DeliveryId = deliveryId,
             // Never for session mode: that body carries a live piugame.com credential.
             Body = WebhookRetention.ShouldPersistBody(mode, DeliveryStatus.Pending) ? body : null,
-            Signature = signature,
-            SignedAt = signedAt,
+            QueuedAt = queuedAt,
             Attempt = 0,
             Status = DeliveryStatus.Pending.ToString(),
             FailureReason = WebhookFailureReason.None.ToString(),
@@ -56,7 +55,7 @@ internal sealed class EFWebhookDeliveryRepository : IWebhookDeliveryRepository
             .SetProperty(d => d.NextAttemptAt, (DateTimeOffset?)null), cancellationToken);
 
         // A success nobody will replay does not need to exist; one per tool is kept as the
-        // console's signature sample.
+        // console's sample of what we sent.
         if (!keepBody)
             await query.ExecuteUpdateAsync(s => s.SetProperty(d => d.Body, (string?)null),
                 cancellationToken);
@@ -110,7 +109,7 @@ internal sealed class EFWebhookDeliveryRepository : IWebhookDeliveryRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await database.Set<WebhookDeliveryEntity>()
                 .Where(d => d.ToolId == toolId)
-                .OrderByDescending(d => d.SignedAt)
+                .OrderByDescending(d => d.QueuedAt)
                 .Take(limit)
                 .ToArrayAsync(cancellationToken))
             .Select(Map).ToArray();
@@ -122,7 +121,7 @@ internal sealed class EFWebhookDeliveryRepository : IWebhookDeliveryRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var entity = await database.Set<WebhookDeliveryEntity>()
             .Where(d => d.ToolId == toolId && d.Body != null)
-            .OrderByDescending(d => d.SignedAt)
+            .OrderByDescending(d => d.QueuedAt)
             .FirstOrDefaultAsync(cancellationToken);
         return entity is null ? null : Map(entity);
     }
@@ -132,10 +131,10 @@ internal sealed class EFWebhookDeliveryRepository : IWebhookDeliveryRepository
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         await database.Set<WebhookDeliveryEntity>()
-            .Where(d => d.SignedAt < bodiesBefore && d.Body != null)
+            .Where(d => d.QueuedAt < bodiesBefore && d.Body != null)
             .ExecuteUpdateAsync(s => s.SetProperty(d => d.Body, (string?)null), cancellationToken);
         await database.Set<WebhookDeliveryEntity>()
-            .Where(d => d.SignedAt < rowsBefore)
+            .Where(d => d.QueuedAt < rowsBefore)
             .ExecuteDeleteAsync(cancellationToken);
     }
 
@@ -143,7 +142,7 @@ internal sealed class EFWebhookDeliveryRepository : IWebhookDeliveryRepository
     {
         return new WebhookDeliveryRecord(e.Id, e.ToolId, e.UserId,
             MixIds.IsKnown(e.MixId) ? MixIds.ToEnum(e.MixId) : MixEnum.Phoenix,
-            Enum.Parse<WebhookMode>(e.Mode), e.DeliveryId, e.Body, e.SignedAt, e.Signature, e.Attempt,
+            Enum.Parse<WebhookMode>(e.Mode), e.DeliveryId, e.Body, e.QueuedAt, e.Attempt,
             Enum.Parse<DeliveryStatus>(e.Status), e.RemoteStatusCode,
             Enum.Parse<WebhookFailureReason>(e.FailureReason ?? nameof(WebhookFailureReason.None)),
             e.RemoteBodySnippet, e.LatencyMs, e.NextAttemptAt, e.IsTest);

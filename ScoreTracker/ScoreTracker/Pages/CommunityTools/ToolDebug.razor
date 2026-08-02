@@ -1,4 +1,4 @@
-@page "/Developers/{ToolId:guid}/Debug"
+﻿@page "/Developers/{ToolId:guid}/Debug"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.CommunityTools.Contracts
@@ -8,15 +8,14 @@
 @using ScoreTracker.Web.Services
 <PageTitle>@L["Debug"]</PageTitle>
 
-@* Three tools, in order of how much time they save: is anything firing, why doesn't my signature
-   match, and fix-then-verify. Session mode gets none of them and the page says why rather than
-   looking broken. *@
+@* Two tools, in order of how much time they save: is anything firing at all, and
+   fix-then-verify. Session mode gets neither and the page says why rather than looking broken. *@
 
 <div class="d-flex align-end gap-3 flex-wrap mt-2 mb-4">
     <div class="flex-grow-1">
         <MudText Typo="Typo.h5">@L["{0} — debug", _tool?.Name ?? string.Empty]</MudText>
         <MudText Typo="Typo.body2" Style="opacity:.75;">
-            @L["Fire a delivery at your own endpoint, check your signature, replay what failed."]
+            @L["Fire a delivery at your own endpoint, and replay what failed."]
         </MudText>
     </div>
     <MudButton Variant="Variant.Text" Href="@($"/Developers/{ToolId}/Console")">@L["Activity"]</MudButton>
@@ -27,7 +26,7 @@
     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
         <MudText Typo="Typo.body2"><b>@L["None of this works in PIUGame session mode"]</b></MudText>
         <MudText Typo="Typo.body2">
-            @L["A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing."]
+            @L["A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing."]
         </MudText>
     </MudAlert>
 }
@@ -77,28 +76,6 @@ else
         </div>
     </MudPaper>
 
-    <MudPaper Outlined="true" Class="pa-4 mb-4">
-        <MudText Typo="Typo.subtitle2" Class="mb-1">@L["Signature check — your last delivery"]</MudText>
-        <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-            @L["Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy."]
-        </MudText>
-        @if (_echo is null)
-        {
-            <MudText Typo="Typo.body2" Style="opacity:.6;">
-                @L["Nothing to show yet — send a test delivery and it appears here."]
-            </MudText>
-        }
-        else
-        {
-            <MudPaper Outlined="true" Class="pa-2 mb-2" Style="overflow-x:auto;">
-                <pre style="margin:0; font-size:12px; white-space:pre-wrap; word-break:break-all;">@_echo.SignedPayload</pre>
-            </MudPaper>
-            <MudPaper Outlined="true" Class="pa-2" Style="overflow-x:auto;">
-                <pre style="margin:0; font-size:12px; word-break:break-all;">@_echo.Signature</pre>
-            </MudPaper>
-        }
-    </MudPaper>
-
     <MudPaper Outlined="true" Class="pa-4">
         <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Replay a delivery"]</MudText>
         @foreach (var row in _activity.Where(r => r.DeliveryId is not null))
@@ -140,7 +117,6 @@ else
     [Parameter] public Guid ToolId { get; set; }
 
     private ToolRecord? _tool;
-    private SignatureEcho? _echo;
     private IReadOnlyList<ToolActivityRecord> _activity = Array.Empty<ToolActivityRecord>();
     private MixEnum _mix = MixEnum.Phoenix;
     private bool _useMyLastImport = true;
@@ -152,7 +128,6 @@ else
     private async Task Reload()
     {
         _tool = await Mediator.Send(new GetToolQuery(ToolId));
-        _echo = await Mediator.Send(new GetToolSignatureEchoQuery(ToolId));
         _activity = await Mediator.Send(new GetToolActivityQuery(ToolId, 25));
     }
 

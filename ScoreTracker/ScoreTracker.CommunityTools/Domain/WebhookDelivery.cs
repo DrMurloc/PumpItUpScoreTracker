@@ -1,4 +1,4 @@
-using ScoreTracker.CommunityTools.Contracts;
+﻿using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.CommunityTools.Domain;
@@ -13,8 +13,7 @@ internal sealed record WebhookDeliveryRecord(
     WebhookMode Mode,
     string DeliveryId,
     string? Body,
-    DateTimeOffset SignedAt,
-    string? Signature,
+    DateTimeOffset QueuedAt,
     int Attempt,
     DeliveryStatus Status,
     int? RemoteStatusCode,

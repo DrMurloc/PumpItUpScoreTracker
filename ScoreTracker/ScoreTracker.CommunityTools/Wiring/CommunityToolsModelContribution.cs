@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.CommunityTools.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence;
 
@@ -28,7 +28,7 @@ public sealed class CommunityToolsModelContribution : IDbModelContribution
         modelBuilder.Entity<ToolShareEntity>().HasIndex(s => s.UserId);
         modelBuilder.Entity<ToolBlockEntity>().HasIndex(b => new { b.ToolId, b.UserId }).IsUnique();
         modelBuilder.Entity<ToolMixSubscriptionEntity>().HasIndex(m => new { m.ToolId, m.MixId }).IsUnique();
-        modelBuilder.Entity<WebhookDeliveryEntity>().HasIndex(d => new { d.ToolId, d.SignedAt });
+        modelBuilder.Entity<WebhookDeliveryEntity>().HasIndex(d => new { d.ToolId, d.QueuedAt });
         // The retry sweep's query: everything still owed a delivery, oldest first.
         modelBuilder.Entity<WebhookDeliveryEntity>().HasIndex(d => d.NextAttemptAt);
         modelBuilder.Entity<ToolActivityEntity>().HasIndex(a => new { a.ToolId, a.OccurredAt });

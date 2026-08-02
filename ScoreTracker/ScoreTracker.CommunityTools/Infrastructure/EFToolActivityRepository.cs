@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure.Entities;
@@ -78,7 +78,7 @@ internal sealed class EFToolActivityRepository : IToolActivityRepository
         // one source of truth about a delivery.
         var deliveries = await database.Set<WebhookDeliveryEntity>()
             .Where(d => d.ToolId == toolId)
-            .OrderByDescending(d => d.SignedAt)
+            .OrderByDescending(d => d.QueuedAt)
             .Take(limit)
             .ToArrayAsync(cancellationToken);
 
@@ -122,7 +122,7 @@ internal sealed class EFToolActivityRepository : IToolActivityRepository
                 _ => ToolActivityKind.DeliveryRejected
             };
 
-        return new ToolActivityRecord(d.Id, kind, d.SignedAt, null, 1, d.RemoteBodySnippet,
+        return new ToolActivityRecord(d.Id, kind, d.QueuedAt, null, 1, d.RemoteBodySnippet,
             d.RemoteStatusCode, d.DeliveryId, d.Id,
             // Replayable only while we still hold the body — which a session-mode delivery never has.
             d.Body is not null && status != DeliveryStatus.Succeeded);

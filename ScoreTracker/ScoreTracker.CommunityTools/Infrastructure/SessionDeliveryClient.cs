@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.CommunityTools.Application;
 using ScoreTracker.CommunityTools.Contracts;
@@ -92,12 +92,10 @@ internal sealed class SessionDeliveryClient : ISessionDeliveryClient
             ? PiuTrackerSessionShape.Endpoint(tool.WebhookUrl!, gameTag)
             : tool.WebhookUrl!;
 
-        var secret = await _secrets.GetSigningSecret(tool.Id, cancellationToken);
-        var signature = WebhookSigning.Sign(secret, now.ToUnixTimeSeconds(), body);
         var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
 
-        var outcome = await _client.Post(endpoint, body, deliveryId, signature, headerName,
-            headerValue, cancellationToken);
+        var outcome = await _client.Post(endpoint, body, deliveryId, headerName, headerValue,
+            cancellationToken);
 
         // Metadata only. The console shows delivered or failed and nothing behind it, which is why
         // the debug page tells a session-mode maker there is no replay and no echo.

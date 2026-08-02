@@ -339,8 +339,8 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Une API publique entièrement documentée alimente les outils de la communauté — bots, overlays, sites de stats. Récupérez un jeton depuis votre compte et construisez sur les mêmes données que nous.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>Une livraison de session transporte une clé piugame.com active, donc nous ne l'écrivons jamais — rien à rejouer, aucun corps à vous montrer, et aucune nouvelle tentative si votre serveur est hors service au moment du déclenchement. Testez sur votre propre compte en important.</value>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>Une livraison de session transporte une clé piugame.com active, nous ne l'écrivons donc jamais : il n'y a rien à rejouer ni de nouvelle tentative si votre serveur est hors service au moment du déclenchement. Testez sur votre propre compte en important.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Un zip de snapshot importe directement une version de données déjà récupérée : même traitement que l'exploration, sans téléchargement</value>
@@ -1265,9 +1265,6 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completionist Ultra</value>
   </data>
-  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
-    <value>Calculez HMAC-SHA256 sur exactement ces octets avec votre secret de signature. Si la vôtre diffère, vous re-sérialisez presque certainement le JSON avant de hacher — hachez le corps tel qu'il est arrivé, pas une copie parsée puis re-sérialisée.</value>
-  </data>
   <data name="Configure" xml:space="preserve">
     <value>Configurer</value>
   </data>
@@ -1936,8 +1933,8 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>Trouvez votre prochain pass.</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
-    <value>Envoyez une livraison à votre propre endpoint, vérifiez votre signature, rejouez ce qui a échoué.</value>
+  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
+    <value>Envoyez une livraison vers votre propre endpoint, et rejouez ce qui a échoué.</value>
   </data>
   <data name="First" xml:space="preserve">
     <value>Premier</value>
@@ -3434,9 +3431,6 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Rien n'a bougé — les {0} charts gardent leur niveau.</value>
-  </data>
-  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
-    <value>Rien à montrer pour l'instant — envoyez une livraison de test et elle apparaîtra ici.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Rien à suggérer pour l'instant — jouez et importez des scores d'abord.</value>
@@ -5021,9 +5015,6 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Méthodes de connexion</value>
-  </data>
-  <data name="Signature check — your last delivery" xml:space="preserve">
-    <value>Vérification de signature — votre dernière livraison</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Silencieux — aucun joueur dans votre plage compétitive pour l'instant.</value>

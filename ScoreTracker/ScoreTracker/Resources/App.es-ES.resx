@@ -339,8 +339,8 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Una API pública con documentación completa impulsa las herramientas de la comunidad — bots, overlays, sitios de estadísticas. Consigue un token en tu cuenta y construye sobre los mismos datos que usamos.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>Una entrega de sesión lleva una clave viva de piugame.com, así que no la guardamos — no hay nada que reenviar, ningún cuerpo que enseñarte, y ningún reintento si tu servidor está caído cuando se dispara. Pruébalo contra tu propia cuenta importando.</value>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>Una entrega de sesión lleva una clave activa de piugame.com, así que nunca la guardamos: no hay nada que reenviar ni reintentos si tu servidor está caído cuando se dispara. Pruébalo con tu propia cuenta importando.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Un zip de snapshot importa directamente una publicación de datos ya descargada: el mismo proceso que el crawl, sin descargas</value>
@@ -1254,9 +1254,6 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completista Ultra</value>
   </data>
-  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
-    <value>Calcula HMAC-SHA256 sobre exactamente estos bytes con tu clave de firma. Si la tuya no coincide, casi seguro estás re-serializando el JSON antes de hacer el hash — haz el hash del cuerpo tal como te llegó, no de una copia parseada y vuelta a serializar.</value>
-  </data>
   <data name="Configure" xml:space="preserve">
     <value>Configurar</value>
   </data>
@@ -1920,8 +1917,8 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>Encuentra tu próximo pase.</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
-    <value>Lanza una entrega a tu propio endpoint, comprueba tu firma, reenvía lo que falló.</value>
+  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
+    <value>Envía una entrega a tu propio endpoint y reintenta lo que haya fallado.</value>
   </data>
   <data name="First" xml:space="preserve">
     <value>Primer</value>
@@ -3404,9 +3401,6 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>No cambió nada — los {0} charts mantienen su nivel.</value>
-  </data>
-  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
-    <value>Todavía no hay nada que mostrar — envía una entrega de prueba y aparecerá aquí.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Aún no hay nada que sugerir — juega e importa puntuaciones primero.</value>
@@ -4967,9 +4961,6 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Métodos de inicio de sesión</value>
-  </data>
-  <data name="Signature check — your last delivery" xml:space="preserve">
-    <value>Comprobación de firma — tu última entrega</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Inactiva — todavía no hay jugadores en tu rango competitivo.</value>

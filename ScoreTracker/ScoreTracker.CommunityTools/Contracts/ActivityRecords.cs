@@ -1,4 +1,4 @@
-namespace ScoreTracker.CommunityTools.Contracts;
+﻿namespace ScoreTracker.CommunityTools.Contracts;
 
 /// <summary>
 ///     The console's closed event vocabulary.
@@ -47,15 +47,6 @@ public sealed record ToolActivitySummary(
     int Failures,
     int RateLimited,
     int ConnectedPlayers);
-
-/// <summary>
-///     The exact bytes we signed for a tool's most recent delivery, next to the signature we
-///     computed. HMAC mismatches are almost always a re-serialized body, and this is the difference
-///     between two days of guessing and twenty minutes.
-/// </summary>
-[ExcludeFromCodeCoverage]
-public sealed record SignatureEcho(string DeliveryId, string SignedPayload, string Signature,
-    DateTimeOffset SignedAt);
 
 /// <summary>One delivery as the pull feed reports it. Body is null once it has aged out.</summary>
 [ExcludeFromCodeCoverage]

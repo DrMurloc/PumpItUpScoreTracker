@@ -339,8 +339,8 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Uma API pública com documentação completa move as ferramentas da comunidade — bots, overlays, sites de estatísticas. Pegue um token na sua conta e construa sobre os mesmos dados que usamos.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>Uma entrega de sessão leva uma chave viva do piugame.com, então não a guardamos — não há o que reenviar, nenhum corpo para mostrar, e nenhuma nova tentativa se seu servidor estiver fora quando ela dispara. Teste na sua própria conta importando.</value>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>Uma entrega de sessão carrega uma chave ativa do piugame.com, então nunca a gravamos — não há nada para reenviar nem nova tentativa se o seu servidor estiver fora do ar na hora. Teste na sua própria conta importando.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Um zip de snapshot importa diretamente uma versão de dados já baixada: mesmo processo da varredura, sem downloads</value>
@@ -1254,9 +1254,6 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completionist Ultra</value>
   </data>
-  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
-    <value>Calcule HMAC-SHA256 sobre exatamente estes bytes com sua chave de assinatura. Se a sua diferir, você quase certamente está re-serializando o JSON antes do hash — faça o hash do corpo como ele chegou, não de uma cópia parseada e re-serializada.</value>
-  </data>
   <data name="Configure" xml:space="preserve">
     <value>Configurar</value>
   </data>
@@ -1920,8 +1917,8 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>Encontre seu próximo pass.</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
-    <value>Dispare uma entrega para o seu endpoint, confira sua assinatura, reenvie o que falhou.</value>
+  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
+    <value>Dispare uma entrega para o seu próprio endpoint e reenvie o que falhou.</value>
   </data>
   <data name="First" xml:space="preserve">
     <value>Primeiro</value>
@@ -3404,9 +3401,6 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Nada mudou — todas as {0} charts mantiveram o nível.</value>
-  </data>
-  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
-    <value>Nada para mostrar ainda — envie uma entrega de teste e ela aparece aqui.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Nada para sugerir ainda — jogue e importe pontuações primeiro.</value>
@@ -4969,9 +4963,6 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Métodos de login</value>
-  </data>
-  <data name="Signature check — your last delivery" xml:space="preserve">
-    <value>Conferência de assinatura — sua última entrega</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Silencioso — ainda não há jogadores na sua faixa competitiva.</value>

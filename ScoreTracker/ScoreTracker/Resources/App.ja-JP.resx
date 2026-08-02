@@ -339,8 +339,8 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>ドキュメント完備の公開 API がコミュニティ製ツールを支えます — ボット、オーバーレイ、統計サイト。アカウントからトークンを取得して、私たちと同じデータの上に作ってください。</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>セッション配信には有効なpiugame.comのキーが含まれるため、こちらでは保存しません — 再送するものも、お見せできる本文も、サーバーが落ちていたときの再試行もありません。インポートでご自分のアカウントを使ってテストしてください。</value>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>セッション配信には有効な piugame.com のキーが含まれるため、こちらでは保存しません — 再送するものはなく、サーバーが停止していたときの再試行もありません。インポートでご自分のアカウントを使ってテストしてください。</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
@@ -1265,9 +1265,6 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completionist Ultra</value>
   </data>
-  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
-    <value>署名シークレットで、まさにこのバイト列に対してHMAC-SHA256を計算してください。違う場合はほぼ確実に、ハッシュ前にJSONを再シリアライズしています — パースして文字列化し直したコピーではなく、受信した生の本文をハッシュしてください。</value>
-  </data>
   <data name="Configure" xml:space="preserve">
     <value>設定</value>
   </data>
@@ -1937,8 +1934,8 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>次のパスを見つけよう。</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
-    <value>自分のエンドポイントに配信を送り、署名を確認し、失敗したものを再送します。</value>
+  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
+    <value>自分のエンドポイントに配信を送り、失敗したものを再送します。</value>
   </data>
   <data name="First" xml:space="preserve">
     <value>初</value>
@@ -3435,9 +3432,6 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>変更なし — {0} 譜面すべてが難度を維持しています。</value>
-  </data>
-  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
-    <value>まだ表示するものはありません — テスト配信を送るとここに出ます。</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>まだ提案できるものがありません — プレイしてスコアをインポートしてください。</value>
@@ -5022,9 +5016,6 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>ログイン方法</value>
-  </data>
-  <data name="Signature check — your last delivery" xml:space="preserve">
-    <value>署名の確認 — 直近の配信</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>停止中 — 競技レベル帯にまだプレイヤーがいません。</value>

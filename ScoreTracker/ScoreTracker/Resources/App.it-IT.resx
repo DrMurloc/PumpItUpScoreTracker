@@ -339,8 +339,8 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Un'API pubblica con documentazione completa alimenta gli strumenti della community — bot, overlay, siti di statistiche. Prendi un token dal tuo account e costruisci sugli stessi dati che usiamo noi.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>Una consegna di sessione porta una chiave viva di piugame.com, quindi non la scriviamo mai — non c'è niente da rimandare, nessun corpo da mostrarti e nessun nuovo tentativo se il tuo server è giù quando parte. Prova sul tuo account importando.</value>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>Una consegna di sessione porta una chiave piugame.com attiva, quindi non la scriviamo mai: non c'è nulla da riprovare né un nuovo tentativo se il tuo server è offline quando parte. Provala sul tuo account importando.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Uno zip di snapshot importa direttamente una versione dei dati già scaricata: stesso processo della scansione, senza download</value>
@@ -1265,9 +1265,6 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completionist Ultra</value>
   </data>
-  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
-    <value>Calcola HMAC-SHA256 esattamente su questi byte con la tua chiave di firma. Se la tua è diversa, quasi sicuramente stai ri-serializzando il JSON prima dell'hash — fai l'hash del corpo così com'è arrivato, non di una copia parsata e ri-serializzata.</value>
-  </data>
   <data name="Configure" xml:space="preserve">
     <value>Configura</value>
   </data>
@@ -1937,8 +1934,8 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>Trova il tuo prossimo pass.</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
-    <value>Manda una consegna al tuo endpoint, controlla la firma, rimanda quello che è fallito.</value>
+  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
+    <value>Invia una consegna al tuo endpoint e riprova quelle fallite.</value>
   </data>
   <data name="First" xml:space="preserve">
     <value>Primo</value>
@@ -3435,9 +3432,6 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Nulla è cambiato — tutte le {0} chart hanno mantenuto il livello.</value>
-  </data>
-  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
-    <value>Ancora niente da mostrare — manda una consegna di prova e comparirà qui.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Ancora niente da suggerire — prima gioca e importa dei punteggi.</value>
@@ -5022,9 +5016,6 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Metodi di accesso</value>
-  </data>
-  <data name="Signature check — your last delivery" xml:space="preserve">
-    <value>Controllo firma — la tua ultima consegna</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Silenzioso — ancora nessun giocatore nel tuo intervallo competitivo.</value>

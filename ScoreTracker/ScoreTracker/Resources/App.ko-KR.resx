@@ -339,8 +339,8 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>문서가 완비된 공개 API가 커뮤니티 툴을 움직입니다 — 봇, 오버레이, 통계 사이트. 계정에서 토큰을 받아 우리와 같은 데이터 위에 만들어 보세요.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay, no body to show you, and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>세션 전달에는 살아 있는 piugame.com 키가 담기므로 저희는 그것을 저장하지 않습니다 — 재전송할 것도, 보여 드릴 본문도, 서버가 꺼져 있을 때의 재시도도 없습니다. 임포트로 본인 계정에서 테스트하세요.</value>
+  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>세션 전달에는 살아 있는 piugame.com 키가 담기므로 저희는 그것을 저장하지 않습니다 — 재전송할 것도, 서버가 꺼져 있을 때의 재시도도 없습니다. 임포트로 본인 계정에서 테스트하세요.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
@@ -1254,9 +1254,6 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completionist Ultra</value>
   </data>
-  <data name="Compute HMAC-SHA256 over exactly these bytes with your signing secret. If yours differs, you're almost certainly re-serializing the JSON before hashing — hash the raw body you received, not a parsed-then-restringified copy." xml:space="preserve">
-    <value>서명 키로 정확히 이 바이트에 대해 HMAC-SHA256을 계산하세요. 다르다면 거의 확실히 해시 전에 JSON을 다시 직렬화한 것입니다 — 파싱 후 재문자열화한 사본이 아니라 수신한 원본 본문을 해시하세요.</value>
-  </data>
   <data name="Configure" xml:space="preserve">
     <value>설정</value>
   </data>
@@ -1920,8 +1917,8 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>다음 패스를 찾으세요.</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, check your signature, replay what failed." xml:space="preserve">
-    <value>내 엔드포인트로 전달을 보내고, 서명을 확인하고, 실패한 것을 재전송하세요.</value>
+  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
+    <value>내 엔드포인트로 전달을 보내고, 실패한 것을 재전송하세요.</value>
   </data>
   <data name="First" xml:space="preserve">
     <value>첫</value>
@@ -3404,9 +3401,6 @@
   </data>
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>변경 없음 — {0}개 채보 모두 난이도를 유지했습니다.</value>
-  </data>
-  <data name="Nothing to show yet — send a test delivery and it appears here." xml:space="preserve">
-    <value>아직 보여 드릴 것이 없습니다 — 테스트 전달을 보내면 여기에 표시됩니다.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>아직 추천할 것이 없습니다 — 먼저 플레이하고 점수를 가져오세요.</value>
@@ -4969,9 +4963,6 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>로그인 방법</value>
-  </data>
-  <data name="Signature check — your last delivery" xml:space="preserve">
-    <value>서명 확인 — 마지막 전달</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>비활성 — 아직 내 경쟁 레벨 범위에 플레이어가 없습니다.</value>

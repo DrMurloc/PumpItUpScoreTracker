@@ -136,16 +136,13 @@ Three modes, set on `/Developers`:
 
 ### Verifying it came from us
 
-Every delivery carries **both**, so pick whichever suits you:
+**Set a header on `/Developers`** — any name, any value — and we send it verbatim on every delivery
+over TLS. Check it in your handler and reject anything without it. That is one `if`, and it is the
+whole mechanism.
 
-- **A header you chose.** Set a header name and value on `/Developers`; we send it verbatim. This is
-  one `if` in your handler and it is what most tools use.
-- **`X-PIU-Signature: t=<unix>,v1=<hex>`** — HMAC-SHA256 over `"<t>." + rawBody` with your signing
-  secret. The timestamp is inside the signed payload, so a replay does not verify.
-
-> ⚠ If your signature check fails, you are almost certainly hashing a **re-serialized** copy of the
-> body rather than the raw bytes you received. Parsing and re-stringifying JSON changes whitespace
-> and key order. Hash the bytes off the wire.
+There is no request signature. An earlier revision signed each body with HMAC-SHA256; it was removed
+because TLS already authenticates the transport, and the marginal protection did not justify a
+crypto layer on both sides of the wire.
 
 ### Retries and duplicates
 
@@ -158,9 +155,11 @@ It hands over a live credential, so:
 
 - Every player must agree to it individually. It is never available through "share with all tools",
   and you can only switch a tool into it while no players are connected.
-- We never write the body down. There is **no retry, no replay, and no signature echo** for a session
-  delivery — if your server is down when it fires, it is gone. Your activity log shows delivered or
-  failed and nothing behind it.
+- We never write the body down. There is **no retry and no replay** for a session delivery — if your
+  server is down when it fires, it is gone. Your activity log shows delivered or failed and nothing
+  behind it.
+- Your header is **required** in this mode, not optional. We will not hand a live credential to an
+  endpoint that has no way of telling our call from anyone else's.
 
 ---
 
@@ -205,8 +204,8 @@ reworded.
 If you are building something substantial, you can run PIU Scores on your own machine and point
 webhooks at `localhost` — see [HOW-TO-RUN.md](HOW-TO-RUN.md). It needs Docker.
 
-Most makers never need this. Between the test delivery, the signature echo and replay on
-`/Developers`, the usual reasons to reach for a local instance are already covered.
+Most makers never need this. Between the test delivery and replay on `/Developers`, the usual
+reasons to reach for a local instance are already covered.
 
 ---
 
