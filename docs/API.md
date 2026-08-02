@@ -2,19 +2,65 @@
 
 High-level map of the HTTP surface. **Swagger is the source of truth for request/response shapes**: browse `/swagger/ui` on the live site (or locally while running the app) — the OpenAPI document lives at `/swagger/v1/swagger.json`.
 
+**Building a tool? Start with [INTEGRATING.md](INTEGRATING.md)**, not this page. That is the maker's
+manual — what the data means, what trips people up, how sharing and webhooks work. This page is the
+map.
+
+## Two surfaces
+
+| | `api/*` (v1) | `api/v2/*` |
+|---|---|---|
+| Status | **Frozen.** Still supported, still tested, no new endpoints | Where new work lands |
+| Auth | Personal token (Basic) | Personal token (Basic) **or** tool key (Bearer) |
+| Reads | Your own data | Your own data, or any player who shared with your tool |
+| Writes | Yes | **None.** Every mutation stays on v1 with a personal token |
+| Errors | Plain text / status codes | `application/problem+json` (RFC 9457) |
+| Paging | Page numbers | Opaque cursors — follow `next`, never construct it |
+| `mix` | Optional, defaults to Phoenix | **Required**, all 30 mixes accepted |
+
+v1 is not deprecated and has no removal date. If it does what you need, keep using it.
+
 ## Authentication
 
-All partner endpoints use **HTTP Basic auth with your API token as the password** (username is ignored):
+**Personal token** — HTTP Basic with the token as the password (username ignored):
 
 ```
 Authorization: Basic base64("anything:<your-api-token>")
 ```
 
-Tokens are issued per-user on the **Account page** of the site. Endpoints are marked `[ApiToken]`; the scheme resolves the token to a user, so every call runs in that user's context.
+Issued per-user on the **Account page**. Every call runs in that user's context. This is the only
+way to write.
 
-## The stable partner surface — `api/*`
+**Tool key** — Bearer, for a registered community tool reading the players who shared with it:
 
-These endpoints are the contract for community tool makers. Their exact JSON wire shapes are pinned by approval tests (`ScoreTracker.Tests.Api`) — a breaking change here is treated as breaking-change review, not a casual edit.
+```
+Authorization: Bearer pst_live_...
+```
+
+Issued on the **Developers page** and shown once. Read-only. See
+[INTEGRATING.md](INTEGRATING.md).
+
+## `api/v2/*`
+
+Cursor-paginated, `mix` required, RFC 9457 problem documents on failure. Catalog reads carry ETags —
+send `If-None-Match` and expect `304`.
+
+| Area | Route | What's there |
+|---|---|---|
+| Mixes | `api/v2/mixes` | Every mix, with its `scoringModel` (`phoenix` or `legacy`). Read this first — half the mixes score differently |
+| Songs | `api/v2/songs` | The song catalog for one mix |
+| Charts | `api/v2/charts` | Charts for one mix; `{id}`, `{id}/similar`, `random` |
+| Tier lists | `api/v2/tier-lists/{list}` | `scores` · `official-scores` · `pass-count` · `popularity` · `difficulty` · `pg` · `chabala` |
+| Chart analysis | `api/v2/chart-analysis/chart-scoring-levels`, `.../chart-skills` | Scoring difficulty per mix; PIU Center's step analysis (no mix — it describes the steps) |
+| Official | `api/v2/official/*` | The piugame mirror: rankings, players, per-chart boards, popularity, what-it-takes, weekly highlights. Public data — no sharing needed, and no PIU Scores `userId` on these rows |
+| Players | `api/v2/players` | Who shared with you; `{id}`, `{id}/scores`, `{id}/sessions`, `{id}/journal`. `me` works with a personal token |
+| Weekly charts | `api/v2/weekly-charts` | The current board and scores on it |
+| Tool | `api/v2/tool`, `api/v2/events` | Your tool's own registration and its activity log |
+
+## The frozen surface — `api/*`
+
+The original contract. Exact JSON wire shapes are pinned by approval tests
+(`ScoreTracker.Tests.Api`) — a breaking change here is breaking-change review, not a casual edit.
 
 | Area | Route | What's there |
 |---|---|---|
@@ -23,6 +69,11 @@ These endpoints are the contract for community tool makers. Their exact JSON wir
 | Tier lists | `api/tierlist` | Four rankings per level+chart type: `scores`, `officialscores`, `passcount`, `popularity` |
 | Weekly charts | `api/weeklyCharts` | The current weekly challenge board and player scores on it. **Breaking change 2026-07-30:** a score's `Plate` is now `null` when `IsBroken` is true — the game awards no plate for a failed stage, and the field previously carried a fabricated one ([score-truth-model.md](design/score-truth-model.md) D8) |
 | Tournaments | `api/tournaments` | Tournament list |
+
+One field on the `api/phoenixScores` POST is accepted and ignored: `syncScoreTracker`. Sending a
+player's session to PIU Tracker is a share they hold on the Community Tools page now, not a
+per-request flag. The field stays so an existing caller still gets a `200`, and the delivery it was
+asking for happens anyway if that player granted it.
 
 ### The `Mix` parameter (Phoenix 2)
 
@@ -42,4 +93,5 @@ Mix-aware endpoints take an **optional `Mix` parameter** — a query parameter o
 
 - Controllers are thin: every action dispatches a MediatR query/command — no business logic lives in the controller layer.
 - CORS: partner endpoints allow cross-origin calls via the `API` policy.
-- Building a PIU tool? You don't need to build your own importer — ask on [Discord](https://discord.gg/AvS5PxnvSN) about the score-import webhooks and existing integration patterns.
+- Rate limits on v2: 600 requests a minute for a tool key, 60 for a personal token. A `429` carries `Retry-After`.
+- Building a PIU tool? You don't need to build your own importer — register the tool and let the webhooks push to you. [INTEGRATING.md](INTEGRATING.md), then `#tool-makers` on [Discord](https://discord.gg/AvS5PxnvSN).

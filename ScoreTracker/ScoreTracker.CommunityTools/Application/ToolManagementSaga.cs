@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using ScoreTracker.CommunityTools.Contracts;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.CommunityTools.Domain;
@@ -30,20 +31,32 @@ internal sealed class ToolManagementSaga :
 {
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTime;
+    private readonly IMediator _mediator;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
-        IDateTimeOffsetAccessor dateTime)
+        IDateTimeOffsetAccessor dateTime, IMediator mediator)
     {
         _tools = tools;
         _users = users;
         _currentUser = currentUser;
         _dateTime = dateTime;
+        _mediator = mediator;
     }
 
     public async Task<Guid> Handle(CreateToolCommand request, CancellationToken cancellationToken)
     {
+        // The same guard owning a community carries (delete-my-data §8.2, §8.3). Without it you
+        // request deletion owning nothing, register a tool on day three, and it evaporates on day
+        // seven taking its connected players with it.
+        var pending = await _mediator.Send(new GetPendingAccountDeletionQuery(_currentUser.User.Id),
+            cancellationToken);
+        if (pending is not null)
+            throw new ToolListingException(
+                "Your account is scheduled for deletion, so you can't register a tool right now. " +
+                "Cancel the deletion first if you've changed your mind.");
+
         var tool = Tool.Create(Guid.NewGuid(), _currentUser.User.Id, Name.From(request.Name), _dateTime.Now);
         await _tools.Save(tool, cancellationToken);
 

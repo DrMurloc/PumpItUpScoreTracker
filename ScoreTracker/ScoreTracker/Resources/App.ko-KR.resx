@@ -6398,6 +6398,9 @@
   <data name="Your Communities" xml:space="preserve">
     <value>내 커뮤니티</value>
   </data>
+  <data name="Your community tools stop working" xml:space="preserve">
+    <value>커뮤니티 도구가 작동을 멈춥니다</value>
+  </data>
   <data name="Your Daily Step History" xml:space="preserve">
     <value>내 Daily Step 기록</value>
   </data>
@@ -6790,6 +6793,9 @@
   </data>
   <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
     <value>{0}명의 플레이어가 기록을 남겼고, {1}의 첫 {2}가 나왔습니다.</value>
+  </data>
+  <data name="{0} players lose access" xml:space="preserve">
+    <value>플레이어 {0}명이 접근을 잃습니다</value>
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>플레이어 {0}명 · {1} 주</value>

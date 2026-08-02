@@ -646,11 +646,25 @@ state, which doubles as the `/Developers` empty state.
 
 ## 14. Sequencing
 
-> **Build status, 2026-08-01.** C0–C12 are built, tested and pushed: the whole v2 API surface,
-> the CommunityTools vertical, purge coverage, keys/shares, tool-key auth with share gating, and
-> rate limiting. C13–C30 — the player and maker UI, webhook delivery, session mode, admin review
-> and the `dev/export` retirement — are **not built**. The branch is coherent and green at every
-> commit; nothing below C12 is half-done.
+> **Build status, 2026-08-01: complete.** C0–C30 are built, tested and pushed. The branch is green
+> at every commit.
+>
+> Three things landed differently from the plan below, and the reasons are worth keeping:
+>
+> - **C25 was mostly already standing.** The scary dialog shipped in the UI wave and the
+>   transition guard is a domain rule from C8, so the commit's real content was the gap between
+>   them — a maker can enter session mode the moment their last player disconnects, including
+>   while someone has the ordinary connect dialog open. `ConnectToolCommand` now carries the
+>   consent the player actually gave and refuses a mismatch.
+> - **C26 kept PIU Tracker's wire shape.** Migrating it onto the generic envelope would have meant
+>   TUSA shipping a matching change on the same day or 653 players losing their sync. The
+>   divergence is one class (`PiuTrackerSessionShape`) and a well-known tool id; everything else —
+>   signing, mix filtering, the activity log, the never-persist rule — is the same code every tool
+>   gets. §16's "hardcoded custom shape for that one specifically" is what this is.
+> - **C28 found a real gap.** The tier-list endpoint served four of the seven stored lists.
+>   `Difficulty` (the community vote list the Charts page filters on), `PG` and `Chabala` were
+>   missing — 7,228 rows, already public on /TierLists. All seven now. That is exactly the failure
+>   the "rebuild the dev database from the public API" exercise exists to surface.
 
 
 **One PR** (owner, 2026-08-01), built as an ordered commit chain. Every commit compiles and every
@@ -744,19 +758,22 @@ than in a cleanup pass at the end.
 
 ---
 
-## 15. Docs to update in the same PR
+## 15. Docs updated in this PR
+
+All done at C30 except the two the deletion forced earlier (API.md and CLAUDE.md lost their
+`dev/export` paragraphs at C29, with the code).
 
 | Doc | Change |
 |---|---|
 | [API.md](../API.md) | the v2 surface map; v1 marked frozen; the `dev/export` "NOT the partner surface" section is deleted at C29 |
 | **`docs/INTEGRATING.md`** | new — the maker's manual |
-| [DATABASE-SCHEMA.md](../DATABASE-SCHEMA.md) | rows for all eight new tables, plus `User.ShareWithAllTools` |
+| [DATABASE-SCHEMA.md](../DATABASE-SCHEMA.md) | a Community Tools section with all nine tables. The all-tools preference is its own table (`ToolSharePreference`) rather than a column on `User` — public and all-tools stay separable, and Identity's table stays Identity's |
 | [ARCHITECTURE.md](../ARCHITECTURE.md) | CommunityTools in the solution layout and the vertical list; the Pages table gains `/CommunityTools` and `/Developers`; the published-ports paragraph gains `ISessionDeliveryClient` as the OfficialMirror → CommunityTools cycle-breaker |
 | [CLAUDE.md](../../CLAUDE.md) | CommunityTools in the package-allowlist table with its `Microsoft.Extensions.Http` exemption; the new ratchets |
 | [SCHEDULED-JOBS.md](../SCHEDULED-JOBS.md) | the webhook retry sweep and the retention prune |
 | [UX-GUIDELINES.md](../UX-GUIDELINES.md) | the show-once reveal pattern, and the rule that a maker-facing surface may use maker vocabulary while player-facing copy never says "webhook" |
 | [HOW-TO-RUN.md](../HOW-TO-RUN.md) | `/Dev/Populate` now populates from `api/v2/*` (C28) |
-| [delete-my-data.md](delete-my-data.md) | §8.2 gains the tools cascade and the create-a-tool guard |
+| [delete-my-data.md](delete-my-data.md) | new §8.3: the tools cascade and the create-a-tool guard. Both were documented and **found unbuilt** while writing it — the guard and the consequence panel were built at C30 rather than left as prose describing something that did not exist |
 | [legacy-mixes.md](legacy-mixes.md) | the `scoringModel` discriminator on the wire |
 
 ---

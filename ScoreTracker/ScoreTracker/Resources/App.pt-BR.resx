@@ -6398,6 +6398,9 @@
   <data name="Your Communities" xml:space="preserve">
     <value>Suas comunidades</value>
   </data>
+  <data name="Your community tools stop working" xml:space="preserve">
+    <value>Suas ferramentas da comunidade param de funcionar</value>
+  </data>
   <data name="Your Daily Step History" xml:space="preserve">
     <value>Seu histórico do Daily Step</value>
   </data>
@@ -6790,6 +6793,9 @@
   </data>
   <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
     <value>{0} jogadores deixaram sua marca — e {1} caiu no seu primeiro {2}.</value>
+  </data>
+  <data name="{0} players lose access" xml:space="preserve">
+    <value>{0} jogadores perdem o acesso</value>
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} jogadores · semana de {1}</value>

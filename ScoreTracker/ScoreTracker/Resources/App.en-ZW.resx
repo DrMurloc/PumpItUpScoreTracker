@@ -6468,6 +6468,9 @@
   <data name="Your Communities" xml:space="preserve">
     <value>Gromurp Grglrglplglblub</value>
   </data>
+  <data name="Your community tools stop working" xml:space="preserve">
+    <value>Blurgl mogla alla marogl</value>
+  </data>
   <data name="Your Daily Step History" xml:space="preserve">
     <value>Gromurp Gromorg Glorgmagl Lurgmrmorg</value>
   </data>
@@ -6860,6 +6863,9 @@
   </data>
   <data name="{0} players left their mark — and {1} fell to its first {2}." xml:space="preserve">
     <value>{0} morp rolurg grglblarg murmmurm — ro {1} plgllurg grgl argl murpargl {2}.</value>
+  </data>
+  <data name="{0} players lose access" xml:space="preserve">
+    <value>{0} plaruga bloop golba</value>
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} morp · plglmorg mrgl {1}</value>

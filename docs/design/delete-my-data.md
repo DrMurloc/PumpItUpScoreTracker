@@ -383,6 +383,26 @@ established for OfficialMirror → Communities. One new method, `GetOwnedCommuni
 **System communities are excluded.** They are auto-joined and nobody can transfer or delete them,
 so counting them would block their owner's account forever.
 
+### 8.3 Community tools: a cascade for the player, a block for the maker
+
+Two different relationships to a tool, and they get opposite treatment.
+
+**A player's shares are a cascade.** `ToolShare`, `ToolBlock` and `ToolSharePreference` rows go with
+the account, and so do the `WebhookDelivery` rows that carry that player's data — a delivery body
+holds their scores, and leaving it in a maker's replay window past the deletion would be the
+deletion not happening. There is nothing for the player to do first; the purge handles it, and
+`AccountPurgeCoverageTests` fails if a new table in the vertical is added without a purge path.
+
+**Owning a registered tool blocks deletion, exactly as owning a community does.** Same reasoning,
+same shape: a tool other people connected to is other people's, and the players who granted it are
+relying on it. The maker deletes the tool or hands it over first. And while a deletion is pending,
+`CreateToolCommand` refuses — without that, the community guard's lesson repeats here, and someone
+requests deletion owning nothing, registers a tool on day three, and it evaporates on day seven.
+
+The check crosses the same way the community one does: CommunityTools does not reference Identity,
+so it reads the pending-deletion state through the published `IUserReader` port rather than closing
+a cycle.
+
 ⚠ **`IsRegional` is not sufficient.** Verified against the prod-synced local database
 2026-07-31: the flag covers the 93 per-country communities but **World is `IsRegional = 0`**, and
 it is owned by a real account (DrMurloc, 793 members). Filtering on the flag alone would have

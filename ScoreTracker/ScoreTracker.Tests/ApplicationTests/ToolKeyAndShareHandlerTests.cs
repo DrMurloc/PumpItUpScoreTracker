@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
 using Moq;
 using ScoreTracker.CommunityTools.Application;
 using ScoreTracker.CommunityTools.Contracts;
@@ -10,6 +11,8 @@ using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
@@ -23,6 +26,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private static readonly Guid ToolId = Guid.Parse("aaaaaaaa-1111-1111-1111-111111111111");
     private static readonly Guid MakerId = Guid.Parse("bbbbbbbb-2222-2222-2222-222222222222");
 
+    private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IToolKeyRepository> _keys = new();
     private readonly Mock<IToolRepository> _tools = new();
     private readonly Mock<IUserReader> _users = new();
@@ -203,12 +207,42 @@ public sealed class ToolKeyAndShareHandlerTests
     [Fact]
     public async Task CreatingAToolConnectsItsMakerAsPlayerOne()
     {
-        var saga = new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
-            FakeDateTime.At(Now).Object);
+        var saga = ManagementSaga();
 
         var id = await saga.Handle(new CreateToolCommand("Planner"), CancellationToken.None);
 
         _tools.Verify(t => t.GrantShare(id, MakerId, ShareSource.Direct, Now,
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private ToolManagementSaga ManagementSaga()
+    {
+        return new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
+            FakeDateTime.At(Now).Object, _mediator.Object);
+    }
+
+    // Same guard owning a community carries. Without it: request deletion owning nothing, register
+    // a tool on day three, and it evaporates on day seven taking its connected players with it.
+    [Fact]
+    public async Task AnAccountScheduledForDeletionCannotRegisterATool()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetPendingAccountDeletionQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PendingAccountDeletion(Now, Now.AddDays(7)));
+
+        await Assert.ThrowsAsync<ToolListingException>(() => ManagementSaga()
+            .Handle(new CreateToolCommand("Planner"), CancellationToken.None));
+
+        _tools.Verify(t => t.Save(It.IsAny<Tool>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CancellingTheDeletionLetsThemRegisterAgain()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetPendingAccountDeletionQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PendingAccountDeletion?)null);
+
+        await ManagementSaga().Handle(new CreateToolCommand("Planner"), CancellationToken.None);
+
+        _tools.Verify(t => t.Save(It.IsAny<Tool>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }
