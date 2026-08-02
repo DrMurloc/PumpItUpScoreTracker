@@ -11697,11 +11697,19 @@ button.chart-card-art {
    one level, and nth-of-type counts within each element's own parent, so images in separate
    wrappers both read as the first. */
 @media (max-aspect-ratio: 1/1), (max-width: 599.98px) {
+    /* The two rows are declared rather than left to auto-flow, because the score spans them
+       with 1 / -1 and -1 counts back from the end of the EXPLICIT grid. Against implicit
+       rows it resolves to line 1, the span collapses to a single row, and the score centres
+       on the grade alone instead of on the pair. A broken score has no plate, and the second
+       row is then an empty auto track, which is zero tall. */
     .sbd-score-stack {
         display: inline-grid;
         grid-auto-flow: row;
+        grid-template-columns: auto auto;
+        grid-template-rows: repeat(2, auto);
         align-items: center;
         column-gap: 4px;
+        row-gap: 0;
         line-height: 1.05;
     }
 
@@ -11713,8 +11721,6 @@ button.chart-card-art {
         height: 11px !important;
     }
 
-    /* Spans whatever rows the icons produced, so it centres against the stack rather than
-       sitting under it. A broken score has no plate and the span still holds. */
     .sbd-score-stack > p {
         grid-column: 2;
         grid-row: 1 / -1;
