@@ -11676,10 +11676,15 @@ button.chart-card-art {
     height: 14px !important;
 }
 
+/* margin:0 is load-bearing, not tidiness. Nothing resets <p> — not the UA sheet, not
+   MudBlazor, not this file — so the score arrives with a 1em block margin that pushes the
+   stack past the row it sits in and leaves the number floating off the icons beside it. */
 .sbd-score-stack > p {
     font-size: .82rem;
     line-height: 1.1;
     font-variant-numeric: tabular-nums;
+    margin: 0;
+    align-self: center;
 }
 
 /* Portrait and square: grade above plate in one column, score beside them. Keyed on aspect
