@@ -16,4 +16,12 @@ public sealed record CommunityHighlightsConfig
     public IReadOnlyList<string> Communities { get; set; } = Array.Empty<string>();
 
     public bool IncludeOwnWins { get; set; } = true;
+
+    /// <summary>
+    ///     Whether the feed also carries your rivals' wins (docs/design/rivals.md D38). Defaults
+    ///     FALSE and must stay that way: an absent field on a dashboard somebody configured months
+    ///     ago has to keep behaving exactly as it did, and silently adding rows to a shipped
+    ///     widget is a content change nobody asked for.
+    /// </summary>
+    public bool IncludeRivals { get; set; }
 }

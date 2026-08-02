@@ -54,9 +54,12 @@ public static class WidgetRegistry
             typeof(WeeklyConfigPanel),
             typeof(WeeklyConfig),
             RefreshOnScoreImport: true),
+        // The KEY stays "community-highlights" forever: it is persisted on every widget instance
+        // that already exists, and changing it would orphan every dashboard carrying one. Only the
+        // label moved, because the widget now mixes two audiences (docs/design/rivals.md D38).
         new("community-highlights",
-            "Community Highlights",
-            "Recent big wins from the communities you pick.",
+            "Highlights feed",
+            "Recent big wins from the communities you pick, and optionally your rivals.",
             WidgetCategory.Compete,
             Icons.Material.Filled.Groups,
             new[]
