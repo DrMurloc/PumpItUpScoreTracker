@@ -50,7 +50,7 @@ send `If-None-Match` and expect `304`.
 | Mixes | `api/v2/mixes` | Every mix, with its `scoringModel` (`phoenix` or `legacy`). Read this first — half the mixes score differently |
 | Songs | `api/v2/songs` | The song catalog for one mix |
 | Charts | `api/v2/charts` | Charts for one mix; `{id}`, `{id}/similar`, `random` |
-| Tier lists | `api/v2/tier-lists/{list}` | `scores` · `official-scores` · `pass-count` · `popularity` · `difficulty` · `pg` · `chabala` |
+| Tier lists | `api/v2/tier-lists/{list}` | `score-difficulty` · `pass-difficulty` · `pg-difficulty`. Phoenix and Phoenix 2 publish all three; earlier mixes publish `pass-difficulty` only, and the other two answer `404` |
 | Chart analysis | `api/v2/chart-analysis/chart-scoring-levels`, `.../chart-skills` | Scoring difficulty per mix; PIU Center's step analysis (no mix — it describes the steps) |
 | Official | `api/v2/official/*` | The piugame mirror: rankings, players, per-chart boards, popularity, what-it-takes, weekly highlights. Public data — no sharing needed, and no PIU Scores `userId` on these rows |
 | Players | `api/v2/players` | Who shared with you; `{id}`, `{id}/scores`, `{id}/sessions`, `{id}/journal`. `me` works with a personal token |
@@ -83,6 +83,7 @@ Mix-aware endpoints take an **optional `Mix` parameter** — a query parameter o
 - Accepted values (case-insensitive): `Phoenix` and `Phoenix2` — anything else, including `XX`, is a `400` listing the valid options. One grandfathered exception: `api/charts` GET predates the parameter and still accepts `XX` for legacy catalog reads (and previously *required* `Mix`; omitting it now defaults to Phoenix).
 - Applies to: `api/phoenixScores` GET + score POST (**not** POST `import` — the importer is Phoenix-only for now), `api/charts` GET + `random`, all four `api/tierlist/*` rankings, and both `api/weeklyCharts` GETs (each mix runs its own weekly board).
 - Tier lists return the **raw list for the requested mix**: unlike the site UI, the API never substitutes Phoenix data for an empty Phoenix 2 tier list, so expect `[]` until Phoenix 2 data accumulates rather than a response that silently changes meaning later.
+- On v2, three tier lists are published and each is named for the question it answers. `/TierLists` shows more than these — the extras are blend inputs and mirror-derived rankings, not difficulty judgements, and a `popularity` sort is not a difficulty sort. **`404` and `[]` mean different things**: `404` is "this mix never had that scoring model", `[]` is "nobody has voted yet".
 - `api/tournaments` takes no `Mix` parameter — tournament sessions carry their own mix.
 
 ## NOT the partner surface

@@ -110,7 +110,7 @@ Full shapes: [the scope artifact](https://claude.ai/code/artifact/6b1ad685-034b-
 | `GET /api/v2/charts/{chartId}` | `?expand=skills` for the full metric set |
 | `GET /api/v2/charts/random` | Ported |
 | `GET /api/v2/charts/{chartId}/similar` | §3.1 |
-| `GET /api/v2/tier-lists/{listType}` | `scores` · `official-scores` · `pass-count` · `popularity` — four v1 routes collapse to one |
+| `GET /api/v2/tier-lists/{listType}` | `score-difficulty` · `pass-difficulty` · `pg-difficulty` — four v1 routes collapse to one, and the published set is narrowed to the three that are difficulty judgements (owner, 2026-08-02, see §14) |
 | `GET /api/v2/chart-scoring-levels` | The `ChartScoringLevel` table — not published today |
 | `GET /api/v2/chart-skills` | §3.2 |
 
@@ -661,10 +661,15 @@ state, which doubles as the `/Developers` empty state.
 >   divergence is one class (`PiuTrackerSessionShape`) and a well-known tool id; everything else —
 >   signing, mix filtering, the activity log, the never-persist rule — is the same code every tool
 >   gets. §16's "hardcoded custom shape for that one specifically" is what this is.
-> - **C28 found a real gap.** The tier-list endpoint served four of the seven stored lists.
->   `Difficulty` (the community vote list the Charts page filters on), `PG` and `Chabala` were
->   missing — 7,228 rows, already public on /TierLists. All seven now. That is exactly the failure
->   the "rebuild the dev database from the public API" exercise exists to surface.
+> - **C28 found a real gap, and the owner then narrowed the answer.** The tier-list endpoint had
+>   served four of the seven stored lists; C28 exposed all seven so the dev harness could rebuild
+>   what the site shows. On review (2026-08-02) the owner cut it to **three**, renamed for the
+>   question each answers: `score-difficulty` (`Scores`), `pass-difficulty` (`Pass Count`, or
+>   `Difficulty` before Phoenix) and `pg-difficulty` (`PG`). `Official Scores`, `Popularity` and
+>   `Chabala` are visible on /TierLists but are not difficulty judgements, and publishing them
+>   invites an integrator to sort by a play count and call it difficulty. Score and PG difficulty
+>   answer `404` before Phoenix — those mixes had no such scoring model, which is a different fact
+>   from an empty list.
 
 
 **One PR** (owner, 2026-08-01), built as an ordered commit chain. Every commit compiles and every

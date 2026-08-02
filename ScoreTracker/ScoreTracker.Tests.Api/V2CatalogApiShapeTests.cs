@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Catalog.Contracts;
@@ -237,7 +237,8 @@ public sealed class V2CatalogApiShapeTests
                 new SongTierListEntry(Name.From("Scores"), ApiTestData.ChartId1, TierListCategory.Easy, 1)
             }, false));
 
-        var result = await WithContext(new TierListsController(_mediator.Object)).Get("scores", "Phoenix");
+        var result = await WithContext(new TierListsController(_mediator.Object))
+            .Get("score-difficulty", "Phoenix");
 
         JsonApproval.AssertWireShape("""
             {
@@ -264,7 +265,8 @@ public sealed class V2CatalogApiShapeTests
                 new SongTierListEntry(Name.From("Scores"), ApiTestData.ChartId1, TierListCategory.Easy, 1)
             }, true));
 
-        var result = await WithContext(new TierListsController(_mediator.Object)).Get("scores", "Phoenix2");
+        var result = await WithContext(new TierListsController(_mediator.Object))
+            .Get("score-difficulty", "Phoenix2");
 
         JsonApproval.AssertWireShape("""
             {
@@ -292,6 +294,71 @@ public sealed class V2CatalogApiShapeTests
     public async Task UnknownTierListIs404NotAnEmptyList()
     {
         var result = await WithContext(new TierListsController(_mediator.Object)).Get("nope", "Phoenix");
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal(StatusCodes.Status404NotFound, problem.Status);
+    }
+
+    // Three lists, named for the question each answers. Publishing "Popularity" alongside them
+    // would invite an integrator to read a play count as a difficulty judgement.
+    [Theory]
+    [InlineData("score-difficulty", "Scores")]
+    [InlineData("pass-difficulty", "Pass Count")]
+    [InlineData("pg-difficulty", "PG")]
+    public async Task EachPhoenixRouteReadsItsOwnStoredList(string route, string storedName)
+    {
+        Name? asked = null;
+        _mediator.Setup(m => m.Send(It.IsAny<GetTierListWithFallbackQuery>(), It.IsAny<CancellationToken>()))
+            .Callback((object q, CancellationToken _) => asked = ((GetTierListWithFallbackQuery)q).TierListName)
+            .ReturnsAsync(new TierListResult(Array.Empty<SongTierListEntry>(), false));
+
+        await WithContext(new TierListsController(_mediator.Object)).Get(route, "Phoenix");
+
+        Assert.Equal(storedName, asked?.ToString());
+    }
+
+    // Before Phoenix the lists were built as one "Difficulty" list rather than split by question,
+    // so the route stays stable and the mapping moves. A caller gets the same shape and meaning.
+    [Theory]
+    [InlineData("XX")]
+    [InlineData("Prime2")]
+    public async Task PassDifficultyReadsTheLegacyDifficultyListBeforePhoenix(string mix)
+    {
+        Name? asked = null;
+        _mediator.Setup(m => m.Send(It.IsAny<GetTierListWithFallbackQuery>(), It.IsAny<CancellationToken>()))
+            .Callback((object q, CancellationToken _) => asked = ((GetTierListWithFallbackQuery)q).TierListName)
+            .ReturnsAsync(new TierListResult(Array.Empty<SongTierListEntry>(), false));
+
+        await WithContext(new TierListsController(_mediator.Object)).Get("pass-difficulty", mix);
+
+        Assert.Equal("Difficulty", asked?.ToString());
+    }
+
+    // 404, not an empty 200: "this mix never had a scoring model" and "nobody has voted yet" are
+    // different answers, and a caller that cannot tell them apart waits for data that is not coming.
+    [Theory]
+    [InlineData("score-difficulty")]
+    [InlineData("pg-difficulty")]
+    public async Task ScoreAndPgDifficultyAre404BeforePhoenix(string route)
+    {
+        var result = await WithContext(new TierListsController(_mediator.Object)).Get(route, "XX");
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal(StatusCodes.Status404NotFound, problem.Status);
+        // The message names what this mix does have, so the next call is the right one.
+        Assert.Contains("pass-difficulty", problem.Detail);
+    }
+
+    // Deliberately unpublished (owner, 2026-08-02): they are visible on /TierLists but they are not
+    // difficulty judgements, so they are not part of the difficulty vocabulary.
+    [Theory]
+    [InlineData("official-scores")]
+    [InlineData("popularity")]
+    [InlineData("chabala")]
+    [InlineData("difficulty")]
+    public async Task TheUnpublishedListsAreNotRoutes(string route)
+    {
+        var result = await WithContext(new TierListsController(_mediator.Object)).Get(route, "Phoenix");
 
         var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
         Assert.Equal(StatusCodes.Status404NotFound, problem.Status);

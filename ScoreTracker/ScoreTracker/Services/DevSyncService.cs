@@ -1,3 +1,4 @@
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -23,12 +24,11 @@ public sealed class DevSyncService
     private static readonly JsonSerializerOptions Wire = new(JsonSerializerDefaults.Web);
 
     /// <summary>
-    ///     Every list the tier-list endpoint serves. Only Phoenix and Phoenix 2 carry any, but the
-    ///     harness asks the API rather than encoding that — an empty page is a cheap answer and the
-    ///     assumption would rot the day a third mix gets votes.
+    ///     Every list the tier-list endpoint publishes. Two of the three are Phoenix-only and answer
+    ///     with a 404 elsewhere, which the harness treats as "not here" rather than as a failure —
+    ///     asking and being told beats encoding the rule in a second place.
     /// </summary>
-    private static readonly string[] TierLists =
-        { "scores", "official-scores", "pass-count", "popularity", "difficulty", "pg", "chabala" };
+    private static readonly string[] TierLists = { "score-difficulty", "pass-difficulty", "pg-difficulty" };
 
     private readonly IMemoryCache _cache;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -83,9 +83,10 @@ public sealed class DevSyncService
 
             foreach (var list in TierLists)
             foreach (var entry in await Page<TierListWire>(client,
-                         $"api/v2/tier-lists/{list}?mix={wire.Name}", cancellationToken))
-                tierLists.Add(new DevTierListRow(StoredName(list), mix, entry.ChartId, entry.Category,
-                    entry.Order));
+                         $"api/v2/tier-lists/{list}?mix={wire.Name}", cancellationToken,
+                         skipMissing: true))
+                tierLists.Add(new DevTierListRow(StoredName(list, mix), mix, entry.ChartId,
+                    entry.Category, entry.Order));
 
             foreach (var level in await Page<ScoringLevelWire>(client,
                          $"api/v2/chart-analysis/chart-scoring-levels?mix={wire.Name}", cancellationToken))
@@ -127,18 +128,17 @@ public sealed class DevSyncService
         reportProgress("Done.");
     }
 
-    /// <summary>Route value back to the name the tier list is stored under.</summary>
-    private static string StoredName(string route)
+    /// <summary>
+    ///     Route value back to the name the list is stored under. Mirrors the controller's map,
+    ///     including that pass difficulty is one row before Phoenix and another from Phoenix on.
+    /// </summary>
+    private static string StoredName(string route, MixEnum mix)
     {
         return route switch
         {
-            "scores" => "Scores",
-            "official-scores" => "Official Scores",
-            "pass-count" => "Pass Count",
-            "popularity" => "Popularity",
-            "difficulty" => "Difficulty",
-            "pg" => "PG",
-            _ => "Chabala"
+            "score-difficulty" => "Scores",
+            "pg-difficulty" => "PG",
+            _ => mix.UsesLegacyScoring() ? "Difficulty" : "Pass Count"
         };
     }
 
@@ -146,14 +146,20 @@ public sealed class DevSyncService
     ///     Follows <c>next</c> to the end. The cursor is opaque and belongs to its filters, so the
     ///     URL is used as given rather than rebuilt.
     /// </summary>
+    /// <param name="skipMissing">
+    ///     Treat a 404 as an empty result. Only for collections the API publishes per mix — a
+    ///     Phoenix-only list asked for on a legacy mix is a correct "not here", not a failed sync.
+    /// </param>
     private static async Task<IReadOnlyList<T>> Page<T>(HttpClient client, string path,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, bool skipMissing = false)
     {
         var all = new List<T>();
         var next = path;
         while (next is not null)
         {
             using var response = await client.GetAsync(next, cancellationToken);
+            if (skipMissing && response.StatusCode == HttpStatusCode.NotFound) return all;
+
             response.EnsureSuccessStatusCode();
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             var page = await JsonSerializer.DeserializeAsync<PageWire<T>>(stream, Wire, cancellationToken);
