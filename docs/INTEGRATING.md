@@ -217,8 +217,6 @@ Most makers never need this. Between the test delivery, the signature echo and r
 - **Community data.** Memberships and community boards are other people's data; a share covers the
   sharer, not their crew.
 - **Player search.** You see who shared with you. Nothing enumerates the site.
-- **`dev/export/*`.** Raw table rows for the local dev harness. They change without notice, including
-  breaking changes. Do not build against them.
 
 ---
 

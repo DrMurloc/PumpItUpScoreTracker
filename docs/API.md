@@ -36,7 +36,6 @@ Mix-aware endpoints take an **optional `Mix` parameter** — a query parameter o
 
 ## NOT the partner surface
 
-- **`dev/export/*`** — raw table exports that exist solely so a local development copy of the site can populate itself (see [HOW-TO-RUN.md](HOW-TO-RUN.md)). They serialize physical table rows and **change without notice — including breaking changes — whenever the schema does**. Hidden from Swagger, not covered by the wire-shape tests. **Integrators must not build against these.**
 - **UI-supporting controllers** — `login/*` (OAuth challenge/callback + the dev-only backdoor), `logout/*`, `culture/Set` (locale cookie), `sitemap.xml`, and `api/admin/*` (admin diagnostics). These serve the Blazor app, not API callers.
 
 ## Conventions
