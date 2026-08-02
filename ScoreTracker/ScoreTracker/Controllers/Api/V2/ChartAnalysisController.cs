@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -9,8 +9,12 @@ using ScoreTracker.Web.Security;
 namespace ScoreTracker.Web.Controllers.Api.V2;
 
 /// <summary>
-///     Derived chart analysis: the site's scoring-difficulty numbers, and PIU Center's step analysis.
-///     Neither has ever been readable through the API.
+///     PIU Center's step analysis. Never readable through the API before v2.
+///     <para>
+///         Scoring difficulty used to live here too and now rides on the chart itself — it keys on
+///         (chart, mix), which is exactly what a chart DTO already is, and a separate resource for
+///         one float made an integrator join two calls to answer one question.
+///     </para>
 /// </summary>
 [ApiV2]
 [EnableRateLimiting(ApiV2RateLimiting.PolicyName)]
@@ -21,24 +25,6 @@ public sealed class ChartAnalysisController : ApiV2ControllerBase
     public ChartAnalysisController(IMediator mediator)
     {
         _mediator = mediator;
-    }
-
-    /// <summary>
-    ///     How hard each chart is to <i>score</i> on, as a float, which is a different question from
-    ///     its listed level. Per mix, because a chart's scoring difficulty moves when its steps do.
-    /// </summary>
-    [HttpGet(RoutePrefix + "/chart-scoring-levels")]
-    public async Task<IActionResult> GetScoringLevels([FromQuery(Name = "mix")] string? mixValue = null)
-    {
-        if (!V2MixParser.TryParse(mixValue, out var mix)) return MixRequiredProblem();
-
-        var levels = await _mediator.Send(new GetChartScoringLevelsQuery(mix));
-        var rows = levels
-            .OrderBy(kv => kv.Key)
-            .Select(kv => new ChartScoringLevelDto { ChartId = kv.Key, ScoringLevel = kv.Value })
-            .ToArray();
-
-        return CatalogJson(Page(rows, rows.Length, rows.Length, null));
     }
 
     /// <summary>

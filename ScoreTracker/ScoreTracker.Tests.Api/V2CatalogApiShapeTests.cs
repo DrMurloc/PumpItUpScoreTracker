@@ -19,6 +19,27 @@ public sealed class V2CatalogApiShapeTests
 {
     private readonly Mock<IMediator> _mediator = new();
 
+    public V2CatalogApiShapeTests()
+    {
+        // Scoring levels ride on every chart now, so every chart read asks for them. Empty by
+        // default; the tests that care about the value set their own.
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double>());
+    }
+
+    /// <summary>
+    ///     One field out of a finished body, for the assertions that check a value rather than the
+    ///     whole shape. Parsed rather than string-matched — the catalog reads self-serialize compact,
+    ///     so a substring assertion would be testing whitespace.
+    /// </summary>
+    private static System.Text.Json.JsonElement FirstRow(IActionResult result)
+    {
+        var json = result is ContentResult c
+            ? c.Content ?? string.Empty
+            : System.Text.Json.JsonSerializer.Serialize(((ObjectResult)result).Value);
+        return System.Text.Json.JsonDocument.Parse(json).RootElement.GetProperty("data")[0];
+    }
+
     private static T WithContext<T>(T controller) where T : ApiV2ControllerBase
     {
         controller.ControllerContext = new ControllerContext
@@ -123,7 +144,8 @@ public sealed class V2CatalogApiShapeTests
                   "noteCount": 731,
                   "playerCount": 1,
                   "stepArtist": "ANDAMIRO",
-                  "legacySlot": null
+                  "legacySlot": null,
+                  "scoringLevel": null
                 }
               ],
               "limit": 100,
@@ -131,6 +153,36 @@ public sealed class V2CatalogApiShapeTests
               "next": null
             }
             """, result);
+    }
+
+    // Scoring difficulty is chart metadata, not a separate resource — it keys on (chart, mix),
+    // exactly what this DTO is. A tool asking "how hard is this to score on" gets it in the same
+    // call rather than joining two.
+    [Fact]
+    public async Task ChartCarriesItsScoringLevelWhenWeHaveOne()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ApiTestData.Chart1 });
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double> { [ApiTestData.ChartId1] = 20.7 });
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix");
+
+        Assert.Equal(20.7, FirstRow(result).GetProperty("scoringLevel").GetDouble());
+    }
+
+    // Null, not zero and not the listed level. Every mix but Phoenix and XX has no measurement at
+    // all, and a tool reading a missing value as 0 would rank them as the easiest charts in the game.
+    [Fact]
+    public async Task AChartWithNoMeasurementReportsNullRatherThanZero()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ApiTestData.Chart1 });
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).Get("Phoenix2");
+
+        Assert.Equal(System.Text.Json.JsonValueKind.Null,
+            FirstRow(result).GetProperty("scoringLevel").ValueKind);
     }
 
     [Fact]

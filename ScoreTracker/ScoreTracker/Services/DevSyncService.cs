@@ -79,6 +79,9 @@ public sealed class DevSyncService
                 if (!Enum.TryParse<MixEnum>(chart.OriginalMix, out var originalMix)) originalMix = mix;
                 charts.Add(new DevChartRow(chart.Id, mix, originalMix, chart.SongName, chart.Type,
                     chart.Level, chart.NoteCount, chart.PlayerCount, chart.StepArtist, chart.LegacySlot));
+                // Scoring level rides on the chart now, so this is one fewer pass per mix.
+                if (chart.ScoringLevel is not null)
+                    scoringLevels.Add(new DevScoringLevelRow(mix, chart.Id, chart.ScoringLevel.Value));
             }
 
             foreach (var list in TierLists)
@@ -88,9 +91,6 @@ public sealed class DevSyncService
                 tierLists.Add(new DevTierListRow(StoredName(list, mix), mix, entry.ChartId,
                     entry.Category, entry.Order));
 
-            foreach (var level in await Page<ScoringLevelWire>(client,
-                         $"api/v2/chart-scoring-levels?mix={wire.Name}", cancellationToken))
-                scoringLevels.Add(new DevScoringLevelRow(mix, level.ChartId, level.ScoringLevel));
         }
 
         reportProgress($"Writing {charts.Count:N0} charts to the local database…");
@@ -182,11 +182,11 @@ public sealed class DevSyncService
         string ImageUrl, BpmWire? Bpm);
 
     private sealed record ChartWire(Guid Id, string Mix, string OriginalMix, string SongName, string Type,
-        int Level, int? NoteCount, int PlayerCount, string? StepArtist, string? LegacySlot);
+        int Level, int? NoteCount, int PlayerCount, string? StepArtist, string? LegacySlot,
+        double? ScoringLevel);
 
     private sealed record TierListWire(Guid ChartId, string Category, int Order);
 
-    private sealed record ScoringLevelWire(Guid ChartId, double ScoringLevel);
 
     private sealed record JudgmentsWire(int? Perfects, int? Greats, int? Goods, int? Bads, int? Misses);
 

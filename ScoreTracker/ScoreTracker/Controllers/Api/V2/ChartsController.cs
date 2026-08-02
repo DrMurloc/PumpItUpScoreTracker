@@ -1,8 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Application.Queries;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Exceptions;
@@ -70,7 +71,13 @@ public sealed class ChartsController : ApiV2ControllerBase
             .OrderBy(c => c.Id)
             .ToArray();
 
-        var rows = charts.Skip(offset).Take(pageSize).Select(c => new ChartV2Dto(c)).ToArray();
+        // Scoring difficulty is chart metadata, not a separate resource — it keys on (chart, mix),
+        // exactly the grain this DTO already has. One dictionary read per page rather than a second
+        // endpoint an integrator has to know to join.
+        var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(mix));
+        var rows = charts.Skip(offset).Take(pageSize)
+            .Select(c => new ChartV2Dto(c, scoringLevels.TryGetValue(c.Id, out var sl) ? sl : null))
+            .ToArray();
         var next = offset + rows.Length < charts.Length
             ? ContinuationToken.FromOffset(offset + rows.Length, fingerprint)
             : (ContinuationToken?)null;
@@ -89,7 +96,9 @@ public sealed class ChartsController : ApiV2ControllerBase
             .FirstOrDefault(c => c.Id == chartId);
         if (chart is null) return NotFoundProblem("No chart with that id exists in this mix.");
 
-        return CatalogJson(new ChartV2Dto(chart));
+        var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(mix));
+        return CatalogJson(new ChartV2Dto(chart,
+            scoringLevels.TryGetValue(chart.Id, out var scoringLevel) ? scoringLevel : null));
     }
 
     /// <summary>
@@ -220,7 +229,10 @@ public sealed class ChartsController : ApiV2ControllerBase
         try
         {
             var charts = await _mediator.Send(new GetRandomChartsQuery(settings, mix));
-            var rows = charts.Select(c => new ChartV2Dto(c)).ToArray();
+            var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(mix));
+            var rows = charts
+                .Select(c => new ChartV2Dto(c, scoringLevels.TryGetValue(c.Id, out var sl) ? sl : null))
+                .ToArray();
             return Json(Page(rows, rows.Length, rows.Length, null));
         }
         catch (RandomizerException e)

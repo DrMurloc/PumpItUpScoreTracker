@@ -112,7 +112,7 @@ feed were removed 2026-08-02, see below).
 | `GET /api/v2/charts/random` | Ported |
 | `GET /api/v2/charts/{chartId}/similar` | §3.1 |
 | `GET /api/v2/tier-lists/{listType}` | `score-difficulty` · `pass-difficulty` · `pg-difficulty` — four v1 routes collapse to one, and the published set is narrowed to the three that are difficulty judgements (owner, 2026-08-02, see §14) |
-| `GET /api/v2/chart-scoring-levels` | The `ChartScoringLevel` table — not published today |
+| ~~`GET /api/v2/chart-scoring-levels`~~ | **Folded onto the chart, 2026-08-02.** It keys on (chart, mix), which is what `ChartV2Dto` already is — publishing it separately mirrored our table layout rather than the domain, and made an integrator join two calls for one float. Null where unmeasured, which today is every mix but Phoenix and XX |
 | `GET /api/v2/chart-skills` | §3.2 |
 
 ### Players — share-gated

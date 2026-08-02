@@ -1,4 +1,4 @@
-using ScoreTracker.Catalog.Contracts;
+﻿using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 
@@ -67,8 +67,9 @@ public sealed class BpmDto
 
 public sealed class ChartV2Dto
 {
-    public ChartV2Dto(Chart chart)
+    public ChartV2Dto(Chart chart, double? scoringLevel)
     {
+        ScoringLevel = scoringLevel;
         Id = chart.Id;
         Mix = chart.Mix.ToString();
         OriginalMix = chart.OriginalMix.ToString();
@@ -104,6 +105,17 @@ public sealed class ChartV2Dto
     public int PlayerCount { get; set; }
     public string? StepArtist { get; set; }
     public string? LegacySlot { get; set; }
+
+    /// <summary>
+    ///     How hard the chart is to <i>score</i> on, as a float — a different question from
+    ///     <see cref="Level" />, which is what the game prints on the folder. Per mix, because a
+    ///     chart's scoring difficulty moves when its steps do.
+    ///     <para>
+    ///         <b>Null where we have no measurement</b>, which today is every mix except Phoenix and
+    ///         XX. Null is not zero and not "easy" — it means unknown.
+    ///     </para>
+    /// </summary>
+    public double? ScoringLevel { get; set; }
 }
 
 public sealed class TierListEntryV2Dto
@@ -111,12 +123,6 @@ public sealed class TierListEntryV2Dto
     public Guid ChartId { get; set; }
     public string Category { get; set; } = string.Empty;
     public int Order { get; set; }
-}
-
-public sealed class ChartScoringLevelDto
-{
-    public Guid ChartId { get; set; }
-    public double ScoringLevel { get; set; }
 }
 
 public sealed class ChartSkillProfileDto

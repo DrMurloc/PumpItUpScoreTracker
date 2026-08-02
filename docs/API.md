@@ -49,9 +49,9 @@ send `If-None-Match` and expect `304`.
 |---|---|---|
 | Mixes | `api/v2/mixes` | Every mix, with its `scoringModel` (`phoenix` or `legacy`). Read this first — half the mixes score differently |
 | Songs | `api/v2/songs` | The song catalog for one mix |
-| Charts | `api/v2/charts` | Charts for one mix; `{id}`, `{id}/similar`, `random` |
+| Charts | `api/v2/charts` | Charts for one mix; `{id}`, `{id}/similar`, `random`. Carries `scoringLevel` — how hard it is to *score* on, null where unmeasured |
 | Tier lists | `api/v2/tier-lists/{list}` | `score-difficulty` · `pass-difficulty` · `pg-difficulty`. Phoenix and Phoenix 2 publish all three; earlier mixes publish `pass-difficulty` only, and the other two answer `404` |
-| Chart analysis | `api/v2/chart-scoring-levels`, `api/v2/chart-skills` | Scoring difficulty per mix; PIU Center's step analysis (no mix — it describes the steps) |
+| Chart analysis | `api/v2/chart-skills` | PIU Center's step analysis (no mix — it describes the steps) |
 | Official | `api/v2/official/*` | The piugame mirror: rankings, players, per-chart boards, popularity, what-it-takes, weekly highlights. Public data — no sharing needed, and no PIU Scores `userId` on these rows |
 | Players | `api/v2/players` | Who shared with you; `{id}`, `{id}/scores`, `{id}/sessions`, `{id}/journal`. `me` works with a personal token |
 | Weekly charts | `api/v2/weekly-charts` | The current board and scores on it |
