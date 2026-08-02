@@ -923,6 +923,9 @@
   <data name="Change mix" xml:space="preserve">
     <value>Blgrlblub mrg</value>
   </data>
+  <data name="Changing the URL clears this." xml:space="preserve">
+    <value>Golba bo alla marogl.</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
 	  <value>Glmurmblarg Mrg</value>
   </data>
@@ -1872,6 +1875,9 @@
   </data>
   <data name="Failed" xml:space="preserve">
     <value>Rglmurm</value>
+  </data>
+  <data name="Failed: {0}{1}" xml:space="preserve">
+    <value>Blorp: {0}{1}</value>
   </data>
   <data name="Fairly rated to pass" xml:space="preserve">
     <value>Urgglorg maglmr grgl maglplgl</value>
@@ -3378,6 +3384,9 @@
   <data name="Not Tagged" xml:space="preserve">
     <value>Murm Grrglurg</value>
   </data>
+  <data name="Not verified — nothing is being sent" xml:space="preserve">
+    <value>Alla marogl — alla grumba</value>
+  </data>
   <data name="Not yet" xml:space="preserve">
     <value>Murm argl</value>
   </data>
@@ -4050,6 +4059,9 @@
   <data name="Points Pre-Score" xml:space="preserve">
 	  <value>Blargro Grorp-Mrglrgl</value>
   </data>
+  <data name="Poll the API instead." xml:space="preserve">
+    <value>Marogl bo API.</value>
+  </data>
   <data name="Poll the API, or read the event feed." xml:space="preserve">
     <value>Murgargl API, arplo blurgl murgm blaromurp.</value>
   </data>
@@ -4593,6 +4605,9 @@
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Glmurp Mgrlgmrg</value>
+  </data>
+  <data name="Save the URL, then press Verify. We'll POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} and your endpoint has to answer 200 with that challenge string in the body." xml:space="preserve">
+    <value>Blurgl bo marogl, opa Marogl. Grumba POST mo blarg, opa bloop probla 200 mo pragl.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>Murpmurm arglmaglmurmgro blubmrgl</value>
@@ -6028,6 +6043,15 @@
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Murplurgmagl romurg urgmrmurg glorggl</value>
+  </data>
+  <data name="Verified {0}" xml:space="preserve">
+    <value>Marogl {0}</value>
+  </data>
+  <data name="Verified — deliveries are on." xml:space="preserve">
+    <value>Marogl — grumba olo.</value>
+  </data>
+  <data name="Verify" xml:space="preserve">
+    <value>Marogl</value>
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Murpmorg mrp mrpblgrl grgl</value>

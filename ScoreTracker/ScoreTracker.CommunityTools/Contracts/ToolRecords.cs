@@ -19,7 +19,8 @@ public sealed record ToolRecord(
     int ConnectedPlayers,
     DateTimeOffset CreatedAt,
     DateTimeOffset? ApprovedAt,
-    string? RejectionReason);
+    string? RejectionReason,
+    DateTimeOffset? WebhookUrlVerifiedAt);
 
 /// <summary>A tool as a player browsing the directory sees it — no delivery configuration.</summary>
 [ExcludeFromCodeCoverage]

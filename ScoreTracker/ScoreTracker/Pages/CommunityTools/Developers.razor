@@ -1,4 +1,4 @@
-@page "/Developers"
+﻿@page "/Developers"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.CommunityTools.Contracts
@@ -104,7 +104,7 @@ else
                     <b>@L["Player ping"]</b> — @L["Just \"this player imported\". You pull what you need from the API."]
                 </MudRadio>
                 <MudRadio T="WebhookMode" Value="WebhookMode.None" Color="Color.Primary">
-                    <b>@L["Nothing"]</b> — @L["Poll the API, or read the event feed."]
+                    <b>@L["Nothing"]</b> — @L["Poll the API instead."]
                 </MudRadio>
                 <MudRadio T="WebhookMode" Value="WebhookMode.PiuGameSession" Color="Color.Warning"
                           Disabled="@(_selected.ConnectedPlayers > 0 && _selected.WebhookMode != WebhookMode.PiuGameSession)">
@@ -124,6 +124,34 @@ else
             {
                 <MudTextField T="string" @bind-Value="_editWebhookUrl" Label=@L["Deliver to"] Class="mt-3"
                               MaxLength="500"></MudTextField>
+
+                @* A configured URL is a claim; a verified one is a proof. Until we have the proof we
+                   would be one typo away from posting a player's scores to a stranger. *@
+                @if (_selected.WebhookUrlVerifiedAt is null)
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                        <MudText Typo="Typo.body2"><b>@L["Not verified — nothing is being sent"]</b></MudText>
+                        <MudText Typo="Typo.body2">
+                            @L["Save the URL, then press Verify. We'll POST {\"type\":\"url_verification\",\"challenge\":\"...\"} and your endpoint has to answer 200 with that challenge string in the body."]
+                        </MudText>
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudText Typo="Typo.caption" Class="d-block mt-2" Style="opacity:.75;">
+                        @L["Verified {0}", _selected.WebhookUrlVerifiedAt.Value.LocalDateTime.ToString("dd MMM yyyy")]
+                        · @L["Changing the URL clears this."]
+                    </MudText>
+                }
+
+                <div class="d-flex align-center gap-3 mt-2 flex-wrap">
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="_verifying"
+                               OnClick="VerifyWebhook">@L["Verify"]</MudButton>
+                    @if (_verifyResult is not null)
+                    {
+                        <MudText Typo="Typo.body2">@_verifyResult</MudText>
+                    }
+                </div>
             }
 
             <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@L["Mixes"]</MudText>
@@ -231,6 +259,8 @@ else
     private string _editWebhookUrl = string.Empty;
     private bool _editAcceptsAllTools = true;
     private WebhookMode _editMode = WebhookMode.None;
+    private bool _verifying;
+    private string? _verifyResult;
     private HashSet<MixEnum> _editMixes = new();
 
     private IReadOnlyList<(string Name, int DaysLeft)> _expiringSoon = Array.Empty<(string, int)>();
@@ -278,6 +308,37 @@ else
         await Reload();
         var created = _tools.FirstOrDefault(t => t.Id == id);
         if (created is not null) Select(created);
+    }
+
+    /// <summary>
+    ///     Verifies the saved URL, not the one in the box — a maker who edits and presses Verify
+    ///     without saving would otherwise get a green tick for a URL we are not going to use.
+    /// </summary>
+    private async Task VerifyWebhook()
+    {
+        if (_selected is null) return;
+
+        _verifying = true;
+        _verifyResult = null;
+        try
+        {
+            var result = await Mediator.Send(new VerifyToolWebhookCommand(_selected.Id));
+            _verifyResult = result.Verified
+                ? L["Verified — deliveries are on."].Value
+                // The remote's own words. Ours would tell them nothing they can act on.
+                : L["Failed: {0}{1}", result.Reason ?? string.Empty,
+                    result.StatusCode is null ? string.Empty : $" ({result.StatusCode})"].Value;
+            await Reload();
+        }
+        catch (Exception e)
+        {
+            // A domain exception's message is written for the person who tripped it.
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _verifying = false;
+        }
     }
 
     private async Task Save()

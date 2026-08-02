@@ -4,6 +4,7 @@ using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.CommunityTools.Domain;
+using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -21,6 +22,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<UpdateToolCommand>,
     IRequestHandler<SetToolAllToolsShareCommand>,
     IRequestHandler<SetToolWebhookCommand>,
+    IRequestHandler<VerifyToolWebhookCommand, WebhookVerificationResult>,
     IRequestHandler<RequestToolListingCommand>,
     IRequestHandler<ApproveToolCommand>,
     IRequestHandler<RejectToolCommand>,
@@ -29,20 +31,51 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<GetToolQuery, ToolRecord?>,
     IRequestHandler<GetToolsAwaitingReviewQuery, IReadOnlyList<ToolRecord>>
 {
+    private readonly IWebhookDeliveryClient _client;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IMediator _mediator;
+    private readonly IToolSecretReader _secrets;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
-        IDateTimeOffsetAccessor dateTime, IMediator mediator)
+        IDateTimeOffsetAccessor dateTime, IMediator mediator, IToolSecretReader secrets,
+        IWebhookDeliveryClient client)
     {
         _tools = tools;
         _users = users;
         _currentUser = currentUser;
         _dateTime = dateTime;
         _mediator = mediator;
+        _secrets = secrets;
+        _client = client;
+    }
+
+    /// <summary>
+    ///     POSTs a challenge to the configured URL and records the echo. Uses the same client, the
+    ///     same timeout and the same outbound header a real delivery would — verifying under gentler
+    ///     conditions than we deliver under proves nothing.
+    /// </summary>
+    public async Task<WebhookVerificationResult> Handle(VerifyToolWebhookCommand request,
+        CancellationToken cancellationToken)
+    {
+        var tool = await Owned(request.ToolId, cancellationToken);
+        if (tool.WebhookUrl is null)
+            throw new ToolWebhookModeException("Set a webhook URL before verifying it.");
+
+        var challenge = WebhookChallenge.Mint();
+        var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
+        var outcome = await _client.Verify(tool.WebhookUrl, challenge, headerName, headerValue,
+            cancellationToken);
+
+        if (!outcome.Succeeded)
+            return new WebhookVerificationResult(false, outcome.Reason.ToString(), outcome.StatusCode,
+                outcome.RemoteBodySnippet);
+
+        tool.MarkWebhookVerified(_dateTime.Now);
+        await _tools.Save(tool, cancellationToken);
+        return new WebhookVerificationResult(true, null, outcome.StatusCode, null);
     }
 
     public async Task<Guid> Handle(CreateToolCommand request, CancellationToken cancellationToken)
@@ -87,7 +120,9 @@ internal sealed class ToolManagementSaga :
         var tool = await Owned(request.ToolId, cancellationToken);
         var connected = await _tools.CountConnectedPlayers(request.ToolId, cancellationToken);
         tool.SetWebhook(request.Mode,
-            string.IsNullOrWhiteSpace(request.Url) ? null : new Uri(request.Url), connected);
+            string.IsNullOrWhiteSpace(request.Url) ? null : new Uri(request.Url), connected,
+            hasOutboundHeader: !string.IsNullOrWhiteSpace(
+                (await _secrets.GetOutboundHeader(request.ToolId, cancellationToken)).Name));
         tool.SetMixes(request.Mixes);
         await _tools.Save(tool, cancellationToken);
     }
@@ -154,7 +189,7 @@ internal sealed class ToolManagementSaga :
             tool.Url?.ToString(), tool.Visibility, tool.AcceptsAllToolsShare, tool.WebhookMode,
             tool.WebhookUrl?.ToString(), tool.Mixes.ToArray(),
             await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
-            tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason);
+            tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason, tool.WebhookUrlVerifiedAt);
     }
 
     private async Task<Tool> Owned(Guid toolId, CancellationToken cancellationToken)

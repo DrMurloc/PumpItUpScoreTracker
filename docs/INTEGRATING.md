@@ -134,11 +134,47 @@ Three modes, set on `/Developers`:
 }
 ```
 
+### Verifying your endpoint (do this first)
+
+**We send nothing to a URL you have not proven you control.** Save the URL on `/Developers`, press
+**Verify**, and we POST:
+
+```
+POST <your url>
+{ "type": "url_verification", "challenge": "vfy_8f2a91c04e" }
+```
+
+Answer `200` with that challenge string in the body — bare, quoted, or inside JSON, all fine:
+
+```
+200 OK
+
+vfy_8f2a91c04e
+```
+
+Only then do deliveries start. **Changing the URL clears verification** — otherwise verifying once
+and swapping to anything would make the whole exercise decorative.
+
+Why this exists: a typo in that box would otherwise mean we post a player's scores, on a schedule,
+to whoever happens to own the host you mistyped. This turns that into a failed save.
+
+If verification fails you get the reason and your server's own status code and response body — a
+`200` that does not echo is the interesting one, and usually means the URL is alive but it is not
+your handler.
+
 ### Verifying it came from us
 
 **Set a header on `/Developers`** — any name, any value — and we send it verbatim on every delivery
 over TLS. Check it in your handler and reject anything without it. That is one `if`, and it is the
 whole mechanism.
+
+Optional for score push and player ping — if someone guesses your URL the worst they do is write
+junk into your own database, which is yours to guard. **Required for PIUGame session mode**, where
+the thing arriving is a live piugame.com credential and an endpoint that cannot tell our call from
+anyone else's has no business receiving one.
+
+The header is sent on the verification POST too, so your handler can check it from the very first
+request.
 
 There is no request signature. An earlier revision signed each body with HMAC-SHA256; it was removed
 because TLS already authenticates the transport, and the marginal protection did not justify a

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.CommunityTools.Contracts.Commands;
@@ -16,6 +16,21 @@ public sealed record SetToolAllToolsShareCommand(Guid ToolId, bool Accepts) : IR
 [ExcludeFromCodeCoverage]
 public sealed record SetToolWebhookCommand(Guid ToolId, WebhookMode Mode, string? Url,
     IReadOnlyList<MixEnum> Mixes) : IRequest;
+
+/// <summary>
+///     Proves the maker controls their webhook URL by POSTing a challenge they must echo back.
+///     Nothing is delivered anywhere until this succeeds.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record VerifyToolWebhookCommand(Guid ToolId) : IRequest<WebhookVerificationResult>;
+
+/// <summary>
+///     The outcome, in the console's closed vocabulary plus whatever the remote actually said. No
+///     exception text — a maker can act on "your server returned 404" and cannot act on ours.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record WebhookVerificationResult(bool Verified, string? Reason, int? StatusCode,
+    string? ResponseSnippet);
 
 [ExcludeFromCodeCoverage]
 public sealed record RequestToolListingCommand(Guid ToolId) : IRequest;

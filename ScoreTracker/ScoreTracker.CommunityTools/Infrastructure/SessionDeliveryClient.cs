@@ -52,7 +52,10 @@ internal sealed class SessionDeliveryClient : ISessionDeliveryClient
         foreach (var share in shares.Where(s => s.Source == ShareSource.Direct))
         {
             var tool = await _tools.GetTool(share.ToolId, cancellationToken);
-            if (tool?.WebhookUrl is null || tool.WebhookMode != WebhookMode.PiuGameSession) continue;
+            if (tool is null || tool.WebhookMode != WebhookMode.PiuGameSession) continue;
+            // The mode that hands over a live piugame credential is the last place to trust an
+            // unproven URL.
+            if (!tool.CanDeliver) continue;
             if (tool.Mixes.Count > 0 && !tool.Mixes.Contains(mix)) continue;
 
             try

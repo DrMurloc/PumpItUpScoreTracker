@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -76,6 +77,55 @@ internal sealed class WebhookDeliveryClient : IWebhookDeliveryClient
         }
     }
 
+
+    /// <summary>
+    ///     POSTs a challenge and checks the endpoint echoes it back. Deliberately reuses the same
+    ///     timeout, the same failure classification and the same outbound header as a real delivery —
+    ///     a verification that succeeds under gentler conditions than a delivery would is worthless.
+    /// </summary>
+    public async Task<WebhookVerificationOutcome> Verify(Uri url, string challenge, string? headerName,
+        string? headerValue, CancellationToken cancellationToken)
+    {
+        var body = JsonSerializer.Serialize(new { type = WebhookChallenge.Type, challenge });
+        using var request = new HttpRequestMessage(HttpMethod.Post, url)
+        {
+            Content = new StringContent(body, Encoding.UTF8, "application/json")
+        };
+        if (!string.IsNullOrWhiteSpace(headerName) && headerValue is not null)
+            request.Headers.TryAddWithoutValidation(headerName, headerValue);
+
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(Timeout);
+
+        try
+        {
+            using var response = await _client.SendAsync(request, timeout.Token);
+            var snippet = await ReadSnippet(response, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+                return WebhookVerificationOutcome.Failed(
+                    (int)response.StatusCode >= 500
+                        ? WebhookFailureReason.ServerError
+                        : WebhookFailureReason.ClientError, (int)response.StatusCode, snippet);
+
+            // A 200 that does not echo is the interesting case: the URL is alive but it is not the
+            // maker's handler, or their handler ignored us. Reporting that as InvalidResponse with
+            // the body they sent is what makes it fixable.
+            return WebhookChallenge.Echoes(snippet, challenge)
+                ? WebhookVerificationOutcome.Verified()
+                : WebhookVerificationOutcome.Failed(WebhookFailureReason.InvalidResponse,
+                    (int)response.StatusCode, snippet);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return WebhookVerificationOutcome.Failed(WebhookFailureReason.Timeout, null, null);
+        }
+        catch (HttpRequestException e)
+        {
+            return WebhookVerificationOutcome.Failed(Classify(e), null, null);
+        }
+    }
+
     /// <summary>
     ///     Maps a transport failure onto the maker-facing vocabulary. "Couldn't reach your server"
     ///     and "your TLS is broken" are different problems, and a maker can act on the difference.
@@ -136,4 +186,27 @@ internal interface IWebhookDeliveryClient
 {
     Task<WebhookDeliveryOutcome> Post(Uri url, string body, string deliveryId,
         string? headerName, string? headerValue, CancellationToken cancellationToken);
+
+    Task<WebhookVerificationOutcome> Verify(Uri url, string challenge, string? headerName,
+        string? headerValue, CancellationToken cancellationToken);
+}
+
+/// <summary>What one verification attempt produced. Same closed vocabulary a delivery reports.</summary>
+[ExcludeFromCodeCoverage]
+internal sealed record WebhookVerificationOutcome(
+    bool Succeeded,
+    WebhookFailureReason Reason,
+    int? StatusCode,
+    string? RemoteBodySnippet)
+{
+    public static WebhookVerificationOutcome Verified()
+    {
+        return new WebhookVerificationOutcome(true, WebhookFailureReason.None, 200, null);
+    }
+
+    public static WebhookVerificationOutcome Failed(WebhookFailureReason reason, int? statusCode,
+        string? snippet)
+    {
+        return new WebhookVerificationOutcome(false, reason, statusCode, snippet);
+    }
 }

@@ -923,6 +923,9 @@
   <data name="Change mix" xml:space="preserve">
     <value>Change mix</value>
   </data>
+  <data name="Changing the URL clears this." xml:space="preserve">
+    <value>Changing the URL clears this.</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
 	  <value>Channel Name</value>
   </data>
@@ -1872,6 +1875,9 @@
   </data>
   <data name="Failed" xml:space="preserve">
     <value>Failed</value>
+  </data>
+  <data name="Failed: {0}{1}" xml:space="preserve">
+    <value>Failed: {0}{1}</value>
   </data>
   <data name="Fairly rated to pass" xml:space="preserve">
     <value>Fairly rated to pass</value>
@@ -3378,6 +3384,9 @@
   <data name="Not Tagged" xml:space="preserve">
     <value>Not Tagged</value>
   </data>
+  <data name="Not verified — nothing is being sent" xml:space="preserve">
+    <value>Not verified — nothing is being sent</value>
+  </data>
   <data name="Not yet" xml:space="preserve">
     <value>Not yet</value>
   </data>
@@ -4050,6 +4059,9 @@
   <data name="Points Pre-Score" xml:space="preserve">
 	  <value>Points Pre-Score</value>
   </data>
+  <data name="Poll the API instead." xml:space="preserve">
+    <value>Poll the API instead.</value>
+  </data>
   <data name="Poll the API, or read the event feed." xml:space="preserve">
     <value>Poll the API, or read the event feed.</value>
   </data>
@@ -4593,6 +4605,9 @@
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Save Scores</value>
+  </data>
+  <data name="Save the URL, then press Verify. We'll POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} and your endpoint has to answer 200 with that challenge string in the body." xml:space="preserve">
+    <value>Save the URL, then press Verify. We'll POST {"type":"url_verification","challenge":"..."} and your endpoint has to answer 200 with that challenge string in the body.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>Saved credentials loaded</value>
@@ -6028,6 +6043,15 @@
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Verified from official import</value>
+  </data>
+  <data name="Verified {0}" xml:space="preserve">
+    <value>Verified {0}</value>
+  </data>
+  <data name="Verified — deliveries are on." xml:space="preserve">
+    <value>Verified — deliveries are on.</value>
+  </data>
+  <data name="Verify" xml:space="preserve">
+    <value>Verify</value>
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Verify the other account</value>

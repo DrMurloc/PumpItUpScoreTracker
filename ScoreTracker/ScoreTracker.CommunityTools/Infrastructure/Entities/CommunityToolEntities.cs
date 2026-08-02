@@ -34,6 +34,12 @@ internal sealed class ToolEntity
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ApprovedAt { get; set; }
     [MaxLength(500)] public string? RejectionReason { get; set; }
+
+    /// <summary>
+    ///     When the maker last echoed our challenge back from <see cref="WebhookUrl" />. Null blocks
+    ///     every delivery — a configured URL is a claim, this is the proof.
+    /// </summary>
+    public DateTimeOffset? WebhookUrlVerifiedAt { get; set; }
 }
 
 /// <summary>Which mixes' imports trigger a delivery for this tool.</summary>

@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.CommunityTools.Contracts;
@@ -58,6 +58,9 @@ internal sealed class WebhookDeliverySaga : IConsumer<PlayerScoresUpdatedEvent>
             // Session mode is delivered inline during the import, where the sid exists — never from
             // here, which runs after the fact and has no credential to forward.
             if (tool.WebhookMode is WebhookMode.None or WebhookMode.PiuGameSession) continue;
+            // An unverified URL is a claim, not a destination. Skipping here rather than failing the
+            // delivery keeps the console clean: nothing was attempted, so nothing failed.
+            if (!tool.CanDeliver) continue;
             if (tool.Mixes.Count > 0 && !tool.Mixes.Contains(message.Mix)) continue;
 
             var changes = tool.WebhookMode == WebhookMode.ScorePush

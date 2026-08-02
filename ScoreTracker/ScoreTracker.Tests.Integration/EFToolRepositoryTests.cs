@@ -1,4 +1,4 @@
-using ScoreTracker.CommunityTools.Contracts;
+﻿using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -74,12 +74,12 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
         var scorePush = await SaveTool(repository, "Planner", t =>
         {
             PublicAndPooled(t);
-            t.SetWebhook(WebhookMode.ScorePush, new Uri("https://planner.example/hook"), 0);
+            t.SetWebhook(WebhookMode.ScorePush, new Uri("https://planner.example/hook"), 0, hasOutboundHeader: true);
         });
         var session = await SaveTool(repository, "Tracker", t =>
         {
             PublicAndPooled(t);
-            t.SetWebhook(WebhookMode.PiuGameSession, new Uri("https://tracker.example/hook"), 0);
+            t.SetWebhook(WebhookMode.PiuGameSession, new Uri("https://tracker.example/hook"), 0, hasOutboundHeader: true);
         });
 
         var reading = await repository.GetToolIdsReading(player);
@@ -102,7 +102,7 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
         var session = await SaveTool(repository, "Tracker", t =>
         {
             PublicAndPooled(t);
-            t.SetWebhook(WebhookMode.PiuGameSession, new Uri("https://tracker.example/hook"), 0);
+            t.SetWebhook(WebhookMode.PiuGameSession, new Uri("https://tracker.example/hook"), 0, hasOutboundHeader: true);
         });
 
         await repository.GrantShare(session.Id, player, ShareSource.Direct, Now);

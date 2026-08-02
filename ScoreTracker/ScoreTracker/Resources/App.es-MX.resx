@@ -915,6 +915,9 @@
   <data name="Change mix" xml:space="preserve">
     <value>Cambiar versión</value>
   </data>
+  <data name="Changing the URL clears this." xml:space="preserve">
+    <value>Cambiar la URL borra esto.</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
     <value>Nombre del canal</value>
   </data>
@@ -1856,6 +1859,9 @@
   </data>
   <data name="Failed" xml:space="preserve">
     <value>Falló</value>
+  </data>
+  <data name="Failed: {0}{1}" xml:space="preserve">
+    <value>Error: {0}{1}</value>
   </data>
   <data name="Fairly rated to pass" xml:space="preserve">
     <value>Dificultad de pase acorde a su nivel</value>
@@ -3348,6 +3354,9 @@
   <data name="Not Tagged" xml:space="preserve">
     <value>Sin etiquetar</value>
   </data>
+  <data name="Not verified — nothing is being sent" xml:space="preserve">
+    <value>Sin verificar: no se envía nada</value>
+  </data>
   <data name="Not yet" xml:space="preserve">
     <value>Pendientes</value>
   </data>
@@ -4014,6 +4023,9 @@
   <data name="Points Pre-Score" xml:space="preserve">
     <value>Puntos antes del puntaje</value>
   </data>
+  <data name="Poll the API instead." xml:space="preserve">
+    <value>Consulta la API por sondeo.</value>
+  </data>
   <data name="Poll the API, or read the event feed." xml:space="preserve">
     <value>Consulta la API, o lee el feed de eventos.</value>
   </data>
@@ -4549,6 +4561,9 @@
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Guardar puntajes</value>
+  </data>
+  <data name="Save the URL, then press Verify. We'll POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} and your endpoint has to answer 200 with that challenge string in the body." xml:space="preserve">
+    <value>Guarda la URL y presiona Verificar. Enviaremos un POST con {"type":"url_verification","challenge":"..."} y tu endpoint debe responder 200 con esa cadena challenge en el cuerpo.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>Credenciales guardadas cargadas</value>
@@ -5965,6 +5980,15 @@
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Verificado por importación oficial</value>
+  </data>
+  <data name="Verified {0}" xml:space="preserve">
+    <value>Verificada el {0}</value>
+  </data>
+  <data name="Verified — deliveries are on." xml:space="preserve">
+    <value>Verificada: los envíos están activos.</value>
+  </data>
+  <data name="Verify" xml:space="preserve">
+    <value>Verificar</value>
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Verifica la otra cuenta</value>

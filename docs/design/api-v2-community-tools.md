@@ -441,6 +441,25 @@ discriminates, and `changes` items carry the fields for that model with the othe
 Nulls-with-a-discriminator rather than polymorphism: easier to consume from a dynamically typed
 language, which most of these tools are.
 
+### Endpoint verification
+
+**Nothing is delivered to an unverified URL, in any mode** (owner, 2026-08-02: "higher trust for
+people sharing their scores"). We POST `{type: url_verification, challenge}` and the endpoint must
+echo the challenge; `Tool.WebhookUrlVerifiedAt` records it, `Tool.CanDeliver` gates on it, and
+`SetWebhook` clears it whenever the URL changes.
+
+The first framing of this rule was graduated — required for session mode, optional elsewhere — on
+the grounds that an unauthenticated score endpoint is the maker's own risk. That was wrong, and the
+owner corrected it: an *unverified* URL is not the maker's risk at all. It means **we** send **our
+players'** scores to a host nobody proved they own. The header protects the maker's system; the
+handshake protects the player's data, and only one of those is ours to carry.
+
+It proves cooperation at that moment, not domain ownership. A DNS TXT record or a `.well-known`
+path would prove more and cost real friction; three tools do not justify it yet.
+
+Checked in three places rather than one — the fan-out skips, the dispatcher refuses, and the
+session client refuses — because three callers reach the POST and only one of them is the fan-out.
+
 ### Auth
 
 **A maker-supplied header**, name and value of their choosing, sent verbatim over TLS. One `if` in

@@ -46,7 +46,9 @@ internal sealed class WebhookDeliveryDispatcher : IWebhookDeliveryDispatcher
         IReadOnlyList<DeliveryPayload.Change> changes, bool hasMore, bool isTest,
         CancellationToken cancellationToken)
     {
-        if (tool.WebhookUrl is null) return;
+        // The saga filters already, and this is the last gate before a POST leaves the process —
+        // three callers reach it and only one of them is the saga.
+        if (!tool.CanDeliver) return;
 
         var now = _dateTime.Now;
         // A test delivery is marked in three places — the flag, the id prefix, and the log — so a
@@ -74,7 +76,9 @@ internal sealed class WebhookDeliveryDispatcher : IWebhookDeliveryDispatcher
         if (delivery?.Body is null) return false;
 
         var tool = await _tools.GetTool(delivery.ToolId, cancellationToken);
-        if (tool?.WebhookUrl is null) return false;
+        // Re-checked on every retry: a maker who changes their URL mid-backoff has un-verified it,
+        // and the queued body must not follow them to somewhere unproven.
+        if (tool is null || !tool.CanDeliver) return false;
 
         var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
         var outcome = await _client.Post(tool.WebhookUrl, delivery.Body, delivery.DeliveryId,

@@ -10,6 +10,7 @@ using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.CommunityTools.Domain;
+using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts;
 using ScoreTracker.Identity.Contracts.Queries;
@@ -27,6 +28,8 @@ public sealed class ToolKeyAndShareHandlerTests
     private static readonly Guid MakerId = Guid.Parse("bbbbbbbb-2222-2222-2222-222222222222");
 
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IToolSecretReader> _secrets = new();
+    private readonly Mock<IWebhookDeliveryClient> _webhooks = new();
     private readonly Mock<IToolKeyRepository> _keys = new();
     private readonly Mock<IToolRepository> _tools = new();
     private readonly Mock<IUserReader> _users = new();
@@ -198,7 +201,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private static Tool SessionModeTool()
     {
         var tool = Tool.Create(ToolId, MakerId, Name.From("Tracker"), Now);
-        tool.SetWebhook(WebhookMode.PiuGameSession, new Uri("https://tracker.example/hook"), 0);
+        tool.SetWebhook(WebhookMode.PiuGameSession, new Uri("https://tracker.example/hook"), 0, hasOutboundHeader: true);
         return tool;
     }
 
@@ -218,7 +221,7 @@ public sealed class ToolKeyAndShareHandlerTests
     private ToolManagementSaga ManagementSaga()
     {
         return new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
-            FakeDateTime.At(Now).Object, _mediator.Object);
+            FakeDateTime.At(Now).Object, _mediator.Object, _secrets.Object, _webhooks.Object);
     }
 
     // Same guard owning a community carries. Without it: request deletion owning nothing, register

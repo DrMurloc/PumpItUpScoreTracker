@@ -33,7 +33,10 @@ public sealed class WebhookDeliveryTests
     private static Tool ToolWith(WebhookMode mode, params MixEnum[] mixes)
     {
         var tool = Tool.Create(ToolId, Guid.NewGuid(), Name.From("Planner"), Now);
-        tool.SetWebhook(mode, mode == WebhookMode.None ? null : Hook, 0);
+        tool.SetWebhook(mode, mode == WebhookMode.None ? null : Hook, 0, hasOutboundHeader: true);
+        // Verified, because these tests are about the fan-out. The gate itself is pinned separately
+        // by AnUnverifiedEndpointIsSkippedEntirely below.
+        if (mode != WebhookMode.None) tool.MarkWebhookVerified(Now);
         tool.SetMixes(mixes);
         return tool;
     }
@@ -188,5 +191,21 @@ public sealed class WebhookDeliveryTests
         Assert.NotNull(WebhookRetry.NextAttemptAfter(1, Now));
         Assert.True(WebhookRetry.NextAttemptAfter(2, Now) > WebhookRetry.NextAttemptAfter(1, Now));
         Assert.Null(WebhookRetry.NextAttemptAfter(WebhookRetry.MaxAttempts, Now));
+    }
+
+    // The whole point of the handshake: a URL nobody proved is not a destination. Skipped rather
+    // than failed, so the console stays clean — nothing was attempted, so nothing failed.
+    [Fact]
+    public async Task AnUnverifiedEndpointIsSkippedEntirely()
+    {
+        var tool = Tool.Create(ToolId, Guid.NewGuid(), Name.From("Planner"), Now);
+        tool.SetWebhook(WebhookMode.ScorePush, Hook, 0, hasOutboundHeader: true);
+        SetupTool(tool);
+
+        await Saga().Consume(Batch(MixEnum.Phoenix, 3));
+
+        _dispatcher.Verify(d => d.Dispatch(It.IsAny<Tool>(), It.IsAny<DeliveryPayload.PlayerBlock>(),
+            It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<DeliveryPayload.Change>>(), It.IsAny<bool>(),
+            It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

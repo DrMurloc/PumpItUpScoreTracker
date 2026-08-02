@@ -923,6 +923,9 @@
   <data name="Change mix" xml:space="preserve">
     <value>バージョンを変更</value>
   </data>
+  <data name="Changing the URL clears this." xml:space="preserve">
+    <value>URL を変更すると解除されます。</value>
+  </data>
   <data name="Channel Name" xml:space="preserve">
 	  <value>チャンネル名</value>
   </data>
@@ -1872,6 +1875,9 @@
   </data>
   <data name="Failed" xml:space="preserve">
     <value>失敗</value>
+  </data>
+  <data name="Failed: {0}{1}" xml:space="preserve">
+    <value>失敗: {0}{1}</value>
   </data>
   <data name="Fairly rated to pass" xml:space="preserve">
     <value>クリア難度は表記どおり</value>
@@ -3378,6 +3384,9 @@
   <data name="Not Tagged" xml:space="preserve">
     <value>タグなし</value>
   </data>
+  <data name="Not verified — nothing is being sent" xml:space="preserve">
+    <value>未確認 — 何も送信されません</value>
+  </data>
   <data name="Not yet" xml:space="preserve">
     <value>未獲得</value>
   </data>
@@ -4050,6 +4059,9 @@
   <data name="Points Pre-Score" xml:space="preserve">
 	  <value>ポイント（スコア前）</value>
   </data>
+  <data name="Poll the API instead." xml:space="preserve">
+    <value>代わりに API をポーリングしてください。</value>
+  </data>
   <data name="Poll the API, or read the event feed." xml:space="preserve">
     <value>APIをポーリングするか、イベントフィードを読んでください。</value>
   </data>
@@ -4593,6 +4605,9 @@
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>スコア保存</value>
+  </data>
+  <data name="Save the URL, then press Verify. We'll POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} and your endpoint has to answer 200 with that challenge string in the body." xml:space="preserve">
+    <value>URL を保存してから「確認」を押してください。こちらから {"type":"url_verification","challenge":"..."} を POST するので、エンドポイントは本文にその challenge 文字列を含めて 200 を返す必要があります。</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>保存済みの認証情報を読み込みました</value>
@@ -6028,6 +6043,15 @@
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>公式インポートで確認済み</value>
+  </data>
+  <data name="Verified {0}" xml:space="preserve">
+    <value>{0} に確認済み</value>
+  </data>
+  <data name="Verified — deliveries are on." xml:space="preserve">
+    <value>確認できました — 配信が有効になりました。</value>
+  </data>
+  <data name="Verify" xml:space="preserve">
+    <value>確認</value>
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>相手アカウントの確認</value>

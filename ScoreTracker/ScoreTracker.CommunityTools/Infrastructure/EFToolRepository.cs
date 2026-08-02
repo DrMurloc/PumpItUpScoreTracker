@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure.Entities;
@@ -60,6 +60,7 @@ internal sealed class EFToolRepository : IToolRepository
         entity.WebhookUrl = tool.WebhookUrl?.ToString();
         entity.ApprovedAt = tool.ApprovedAt;
         entity.RejectionReason = tool.RejectionReason;
+        entity.WebhookUrlVerifiedAt = tool.WebhookUrlVerifiedAt;
 
         // Mix subscriptions are replaced wholesale: the set is tiny and a diff would be more code
         // than it saves.
@@ -292,6 +293,6 @@ internal sealed class EFToolRepository : IToolRepository
             Enum.Parse<WebhookMode>(entity.WebhookMode),
             entity.WebhookUrl is null ? null : new Uri(entity.WebhookUrl),
             mixIds.Where(MixIds.IsKnown).Select(MixIds.ToEnum),
-            entity.CreatedAt, entity.ApprovedAt, entity.RejectionReason);
+            entity.CreatedAt, entity.ApprovedAt, entity.RejectionReason, entity.WebhookUrlVerifiedAt);
     }
 }
