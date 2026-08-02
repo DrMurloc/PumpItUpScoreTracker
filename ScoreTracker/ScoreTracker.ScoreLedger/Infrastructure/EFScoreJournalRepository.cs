@@ -95,7 +95,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
     }
 
     public async Task<(int TotalGroups, IReadOnlyList<JournalSessionRows> Groups)> GetSessionGroups(
-        Guid userId, int page, int pageSize, CancellationToken cancellationToken)
+        Guid userId, int page, int pageSize, DateTimeOffset? before, CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var rows = database.Set<ScoreEventJournalEntity>().Where(e => e.UserId == userId);
@@ -115,6 +115,7 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
 
         var ordered = sessionKeys.Select(k => (k.SessionId, Day: (DateTime?)null, k.MixId, k.Latest))
             .Concat(dayKeys.Select(k => (SessionId: (Guid?)null, Day: (DateTime?)k.Day, k.MixId, k.Latest)))
+            .Where(k => before == null || k.Latest < before)
             .OrderByDescending(k => k.Latest)
             .ToArray();
         var pageKeys = ordered.Skip((page - 1) * pageSize).Take(pageSize).ToArray();

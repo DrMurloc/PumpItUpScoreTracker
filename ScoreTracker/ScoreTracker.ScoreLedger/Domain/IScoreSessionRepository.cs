@@ -30,5 +30,11 @@ internal interface IScoreSessionRepository
     /// <summary>Newest first — the order the Undo page lists them in.</summary>
     Task<IReadOnlyList<ScoreSessionRecord>> ListFor(Guid userId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Each player's single most recent session. The backfill's whole scope — history is
+    ///     deliberately out of reach, because a rebuild computes against today's state.
+    /// </summary>
+    Task<IReadOnlyList<ScoreSessionRecord>> ListLatestPerUser(CancellationToken cancellationToken = default);
+
     Task Delete(Guid id, CancellationToken cancellationToken = default);
 }

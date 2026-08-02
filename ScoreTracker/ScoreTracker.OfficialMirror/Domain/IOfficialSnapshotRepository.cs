@@ -71,6 +71,14 @@ internal interface IOfficialSnapshotRepository
     /// <summary>One board's rows within one snapshot, in display order.</summary>
     Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId, CancellationToken ct);
 
+    /// <summary>
+    ///     Several boards' rows within one snapshot, in display order. The batch exists because
+    ///     a score session touches dozens of charts and the per-board overload would issue a
+    ///     query each; every row carries its LeaderboardId, so the caller regroups.
+    /// </summary>
+    Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, IReadOnlyCollection<int> leaderboardIds,
+        CancellationToken ct);
+
     /// <summary>Every placement in a snapshot joined with its board dimension.</summary>
     Task<IReadOnlyList<PlacementDetail>> GetPlacementDetails(int snapshotId, CancellationToken ct);
 

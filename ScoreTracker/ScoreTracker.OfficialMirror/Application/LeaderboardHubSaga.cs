@@ -26,11 +26,15 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>,
     IRequestHandler<GetWhatItTakesQuery, WhatItTakesRecord>,
     IRequestHandler<GetOfficialChartBoardQuery, OfficialChartBoardRecord?>,
-    IRequestHandler<GetLinkedOfficialPlayerTagQuery, string?>
+    IRequestHandler<GetLinkedOfficialPlayerTagQuery, string?>,
+    IRequestHandler<GetOfficialChartPlacementsQuery, IReadOnlyDictionary<Guid, OfficialPlacementEstimate>>,
+    IRequestHandler<GetOfficialPumbilityBoardQuery, OfficialPumbilityBoard?>
 {
-    private const string PumbilityAll = "PUMBILITY";
-    private const string PumbilitySingles = "PUMBILITY Singles";
-    private const string PumbilityDoubles = "PUMBILITY Doubles";
+    // The board names the sweep writes, published so the estimate callers and the scrape
+    // cannot drift to different spellings of the same board.
+    private const string PumbilityAll = PumbilityBoards.Combined;
+    private const string PumbilitySingles = PumbilityBoards.Singles;
+    private const string PumbilityDoubles = PumbilityBoards.Doubles;
     private const string CoOpType = "CoOp";
 
     // Never a scraped board name — routing the co-op view here forces the computed path.
@@ -46,6 +50,71 @@ internal sealed class LeaderboardHubSaga :
         _snapshots = snapshots;
         _records = records;
         _cache = cache;
+    }
+
+    /// <summary>
+    ///     Places a batch of scores on their charts' boards by counting the rows above each —
+    ///     the same arithmetic the sweep would do, run against a board it has not seen these
+    ///     scores on. A score below the board's last entry is omitted rather than reported at
+    ///     depth + 1: "outside the top 100" is not a placement.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<Guid, OfficialPlacementEstimate>> Handle(
+        GetOfficialChartPlacementsQuery request, CancellationToken cancellationToken)
+    {
+        var empty = (IReadOnlyDictionary<Guid, OfficialPlacementEstimate>)new Dictionary<Guid, OfficialPlacementEstimate>();
+        if (request.Scores.Count == 0) return empty;
+
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        if (latest?.CompletedAt == null) return empty;
+
+        var wanted = request.Scores.GroupBy(s => s.ChartId).ToDictionary(g => g.Key, g => g.First().Score);
+        var boards = (await _snapshots.GetBoards(request.Mix, cancellationToken))
+            .Where(b => b.LeaderboardType == LeaderboardTypes.Chart && b.ChartId != null
+                                                                    && wanted.ContainsKey(b.ChartId.Value))
+            .ToArray();
+        if (boards.Length == 0) return empty;
+
+        // The player's own row would otherwise count itself as competition. Without an import
+        // link there is nothing to exclude and the estimate is off by one — the honest limit.
+        var me = await _snapshots.GetPlayerByUserId(request.Mix, request.UserId, cancellationToken);
+        var placements = (await _snapshots.GetBoardPlacements(latest.Id, boards.Select(b => b.Id).ToArray(),
+                cancellationToken))
+            .ToLookup(p => p.LeaderboardId);
+
+        var results = new Dictionary<Guid, OfficialPlacementEstimate>();
+        foreach (var board in boards)
+        {
+            var chartId = board.ChartId!.Value;
+            var rows = placements[board.Id].ToArray();
+            if (rows.Length == 0) continue;
+
+            var score = wanted[chartId];
+            var contenders = me == null ? rows : rows.Where(r => r.PlayerId != me.Id).ToArray();
+            var place = contenders.Count(r => r.Score > score) + 1;
+            if (place > rows.Length) continue;
+            results[chartId] = new OfficialPlacementEstimate(place, rows.Length, latest.CompletedAt.Value);
+        }
+
+        return results;
+    }
+
+    public async Task<OfficialPumbilityBoard?> Handle(GetOfficialPumbilityBoardQuery request,
+        CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        if (latest?.CompletedAt == null) return null;
+
+        var board = (await _snapshots.GetBoards(request.Mix, cancellationToken))
+            .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Rating && b.Name == request.BoardName);
+        if (board == null) return null;
+
+        var values = (await _snapshots.GetBoardPlacements(latest.Id, board.Id, cancellationToken))
+            .Select(p => p.Score)
+            .OrderByDescending(v => v)
+            .ToArray();
+        return values.Length == 0
+            ? null
+            : new OfficialPumbilityBoard(request.BoardName, latest.CompletedAt.Value, values);
     }
 
     public async Task<WeeklyHighlightsRecord?> Handle(GetWeeklyHighlightsQuery request,

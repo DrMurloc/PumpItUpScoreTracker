@@ -1,5 +1,6 @@
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Identity.Contracts.Events;
@@ -56,11 +57,16 @@ internal sealed class PlayerRatingSaga :
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IBus _bus;
     private readonly IMediator _mediator;
+    private readonly IOfficialPlacementReader _officialBoards;
+    private readonly ILogger<PlayerRatingSaga> _logger;
 
     public PlayerRatingSaga(IScoreReader scores, IPhoenixRecordStatsRepository recordStats,
         IChartRepository charts, IPlayerStatsRepository stats, IScoreHighlightRepository highlights,
-        IPlayerMilestoneRepository milestones, IDateTimeOffsetAccessor dateTime, IBus bus, IMediator mediator)
+        IPlayerMilestoneRepository milestones, IDateTimeOffsetAccessor dateTime, IBus bus, IMediator mediator,
+        IOfficialPlacementReader officialBoards, ILogger<PlayerRatingSaga> logger)
     {
+        _officialBoards = officialBoards;
+        _logger = logger;
         _scores = scores;
         _recordStats = recordStats;
         _charts = charts;
@@ -247,6 +253,7 @@ internal sealed class PlayerRatingSaga :
             competitiveDoubles
         );
 
+        newStats = await EstimateOfficialRanks(mix, newStats, cancellationToken);
         await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
         var improvers = await FlagCompetitiveImprovers(request, oldStats, newStats, competitiveScores, charts,
             cancellationToken);
@@ -267,6 +274,71 @@ internal sealed class PlayerRatingSaga :
         await _mediator.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats, mix),
             cancellationToken);
         return new SessionStatsResult(milestones, improvers);
+    }
+
+    /// <summary>
+    ///     A rank movement worth announcing: onto the board for the first time, or up it.
+    ///     Falling off, or sliding down, mints nothing — the board moves under everyone every
+    ///     week and a player who did nothing should not be told they lost ground.
+    /// </summary>
+    private void AddRankGain(List<PlayerMilestoneWrite> milestones, RecalculateStatsCommand request,
+        MilestoneKind kind, int? oldRank, int? newRank, string boardName)
+    {
+        if (newRank == null) return;
+        if (oldRank != null && newRank >= oldRank) return;
+        milestones.Add(new PlayerMilestoneWrite(kind, request.SessionId, _dateTime.Now,
+            oldRank, newRank.Value, Detail: boardName));
+    }
+
+    /// <summary>
+    ///     Places the freshly computed pools on the official boards. We rank OUR number against
+    ///     the last sealed board rather than reading a rank back from it — a mirrored rank only
+    ///     moves when the sweep runs, so it could never reflect what the player just played.
+    ///     The board is up to a week old while the pool is current, so the estimate leans
+    ///     generous; <c>PumbilityBoardAsOf</c> is what lets the UI say so.
+    ///     <para>
+    ///         Phoenix publishes one combined board. Phoenix 2 publishes three, and its title
+    ///         ladder gates on the per-type pools, which is why they are worth carrying there
+    ///         and nowhere else.
+    ///     </para>
+    /// </summary>
+    private async Task<PlayerStatsRecord> EstimateOfficialRanks(MixEnum mix, PlayerStatsRecord stats,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var combined = await _officialBoards.GetPumbilityBoard(mix, OfficialPumbilityBoardNames.Combined,
+                cancellationToken);
+            if (combined == null) return stats;
+
+            int? RankOn(OfficialBoardReading? board, int pool)
+            {
+                if (board == null) return null;
+                return board.IsRanked(pool) ? board.PlaceFor(pool) : null;
+            }
+
+            var singles = mix == MixEnum.Phoenix2
+                ? await _officialBoards.GetPumbilityBoard(mix, OfficialPumbilityBoardNames.Singles, cancellationToken)
+                : null;
+            var doubles = mix == MixEnum.Phoenix2
+                ? await _officialBoards.GetPumbilityBoard(mix, OfficialPumbilityBoardNames.Doubles, cancellationToken)
+                : null;
+
+            return stats with
+            {
+                EstimatedPumbilityRank = RankOn(combined, stats.SkillRating),
+                EstimatedSinglesPumbilityRank = RankOn(singles, stats.SinglesRating),
+                EstimatedDoublesPumbilityRank = RankOn(doubles, stats.DoublesRating),
+                PumbilityBoardAsOf = combined.AsOf
+            };
+        }
+        catch (Exception ex)
+        {
+            // The mirror sweeps weekly and lives behind a login — a board it cannot serve
+            // costs the estimate, never the stats it rides along with.
+            _logger.LogError(ex, "Official PUMBILITY board read failed ({Mix}) — ranks left unchanged", mix);
+            return stats;
+        }
     }
 
     private double AverageOrDefault(IEnumerable<int> values, double def)
@@ -303,6 +375,22 @@ internal sealed class PlayerRatingSaga :
             if (newStats.DoublesRating > oldStats.DoublesRating)
                 milestones.Add(new PlayerMilestoneWrite(MilestoneKind.DoublesPumbilityGain, request.SessionId,
                     _dateTime.Now, oldStats.DoublesRating, newStats.DoublesRating));
+        }
+
+        // Official rank improves DOWNWARD, and only an improvement mints. An undo republishes
+        // an empty score event through this same path, which recomputes the pools lower and
+        // would otherwise announce the seat it just cost the player.
+        AddRankGain(milestones, request, MilestoneKind.OfficialPumbilityRank,
+            oldStats.EstimatedPumbilityRank, newStats.EstimatedPumbilityRank,
+            OfficialPumbilityBoardNames.Combined);
+        if (request.Mix == MixEnum.Phoenix2)
+        {
+            AddRankGain(milestones, request, MilestoneKind.OfficialPumbilityRank,
+                oldStats.EstimatedSinglesPumbilityRank, newStats.EstimatedSinglesPumbilityRank,
+                OfficialPumbilityBoardNames.Singles);
+            AddRankGain(milestones, request, MilestoneKind.OfficialPumbilityRank,
+                oldStats.EstimatedDoublesPumbilityRank, newStats.EstimatedDoublesPumbilityRank,
+                OfficialPumbilityBoardNames.Doubles);
         }
 
         if (CompetitiveGained(oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel))

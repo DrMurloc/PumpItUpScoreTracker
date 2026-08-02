@@ -287,6 +287,7 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
                 _dateTime.Now, null, null, t, null));
 
         var progress = await ComputeProgressDeltas(request, cancellationToken);
+        await PersistProgress(request, progress, cancellationToken);
         return new SessionTitlesResult(crossings.Concat(badges).ToArray(), progress);
     }
 
@@ -320,11 +321,46 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
             // shows spurious progress and the whole ladder appears to move at once.
             .Select(t => new TitleProgressDelta(t.Title.Name,
                 beforeByTitle.TryGetValue(t.Title.Name, out var b) ? b.PercentComplete : 0,
-                t.PercentComplete))
+                t.PercentComplete, ScopeOf(t), t.CompletionCount, t.Title.CompletionRequired))
             .Where(d => (int)(d.NewPercent * 100) > (int)(d.OldPercent * 100))
             .OrderByDescending(d => d.NewPercent)
             .Take(5)
             .ToArray();
+    }
+
+    /// <summary>
+    ///     What a progress bar gets drawn per. Phoenix difficulty titles are keyed on the LEVEL
+    ///     alone — <c>CompletionProgress</c> accepts any chart at that level, single or double —
+    ///     so "21" is the scope and there is no S21/D21 split to make. Phoenix 2 titles gate on
+    ///     a pool instead, which is not a folder at all.
+    /// </summary>
+    private static string ScopeOf(TitleProgress progress)
+    {
+        return (progress as PhoenixTitleProgress)?.PhoenixTitle switch
+        {
+            Phoenix2PumbilityTitle pumbility => pumbility.Pool.ToString(),
+            PhoenixDifficultyTitle difficulty => ((int)difficulty.Level).ToString(),
+            _ => string.Empty
+        };
+    }
+
+    /// <summary>
+    ///     Persists the batch's progress movements so the Sessions page can draw them — the
+    ///     event payload dies with the message, and the page renders long after. Only scoped
+    ///     deltas are stored: a title with no level or pool has no bar to draw, so a row for it
+    ///     would be weight the page never reads.
+    /// </summary>
+    private async Task PersistProgress(CaptureSessionTitles request, IReadOnlyList<TitleProgressDelta> deltas,
+        CancellationToken cancellationToken)
+    {
+        var writes = deltas
+            .Where(d => d.Scope.Length > 0)
+            .Select(d => new PlayerMilestoneWrite(MilestoneKind.TitleProgress, request.SessionId, _dateTime.Now,
+                d.OldPercent, d.NewPercent, d.Title,
+                $"{d.Scope}|{(int)d.Current}|{(int)d.Required}"))
+            .ToArray();
+        if (writes.Length == 0) return;
+        await _milestones.Append(request.Mix, request.UserId, writes, cancellationToken);
     }
 
     // The batch's before-state: current scores with the changed charts reverted to their

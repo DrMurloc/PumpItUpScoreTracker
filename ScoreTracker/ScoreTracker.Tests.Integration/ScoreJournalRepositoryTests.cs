@@ -46,7 +46,7 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
             CancellationToken.None);
         await repo.Append(Entry(userId, chartA, Now, 950000, sessionId: newSession), CancellationToken.None);
 
-        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 2,
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 2, before: null,
             CancellationToken.None);
 
         Assert.Equal(3, total);
@@ -55,7 +55,7 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         Assert.Equal(2, groups[0].Rows.Count);
         Assert.Equal(oldSession, groups[1].SessionId);
 
-        var (_, secondPage) = await repo.GetSessionGroups(userId, page: 2, pageSize: 2,
+        var (_, secondPage) = await repo.GetSessionGroups(userId, page: 2, pageSize: 2, before: null,
             CancellationToken.None);
         var legacy = Assert.Single(secondPage);
         Assert.Null(legacy.SessionId);
@@ -120,7 +120,7 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         await repo.Append(Entry(userId, chartB, Now.AddDays(-5).AddHours(1), 885000, mix: MixEnum.Phoenix2),
             CancellationToken.None);
 
-        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 10,
+        var (total, groups) = await repo.GetSessionGroups(userId, page: 1, pageSize: 10, before: null,
             CancellationToken.None);
 
         Assert.Equal(4, total);

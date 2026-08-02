@@ -25,5 +25,12 @@ public enum HighlightFlags
     CompetitiveImprover = 16,
 
     /// <summary>One of the first 3 passes ever in this (type, level) folder.</summary>
-    FolderDebut = 32
+    FolderDebut = 32,
+
+    /// <summary>
+    ///     The score places inside the chart's mirrored official board (Phoenix ≤100,
+    ///     Phoenix 2 300). Estimated against the last sealed snapshot, so the detail carries
+    ///     the board's date — see <see cref="HighlightDetail.OfficialAsOf" />.
+    /// </summary>
+    OfficialBoardPlacement = 64
 }

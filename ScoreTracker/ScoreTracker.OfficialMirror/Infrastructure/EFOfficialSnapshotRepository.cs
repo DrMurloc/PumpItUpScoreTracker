@@ -392,6 +392,18 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArrayAsync(ct);
     }
 
+    public async Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId,
+        IReadOnlyCollection<int> leaderboardIds, CancellationToken ct)
+    {
+        if (leaderboardIds.Count == 0) return Array.Empty<PlacementRow>();
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        return await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.SnapshotId == snapshotId && leaderboardIds.Contains(p.LeaderboardId))
+            .OrderBy(p => p.LeaderboardId).ThenBy(p => p.Place)
+            .Select(p => new PlacementRow(p.LeaderboardId, p.PlayerId, p.Place, p.Score))
+            .ToArrayAsync(ct);
+    }
+
     public async Task<IReadOnlyList<PlacementDetail>> GetPlacementDetails(int snapshotId, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);

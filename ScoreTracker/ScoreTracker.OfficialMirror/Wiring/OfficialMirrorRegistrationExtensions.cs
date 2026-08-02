@@ -2,6 +2,7 @@ using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure;
@@ -31,6 +32,7 @@ public static class OfficialMirrorRegistrationExtensions
         });
         services.AddTransient<IOfficialSiteClient, OfficialSiteClient>();
         services.AddTransient<IOfficialSnapshotRepository, EFOfficialSnapshotRepository>();
+        services.AddTransient<IOfficialPlacementReader, OfficialPlacementReader>();
         services.AddTransient<IOfficialRecordRepository, EFOfficialRecordRepository>();
         services.AddTransient<IOfficialPlayerIdentityRepository, EFOfficialPlayerIdentityRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
