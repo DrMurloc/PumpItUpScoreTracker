@@ -11802,3 +11802,13 @@ button.chart-card-art {
     margin-left: 6px;
     font-variant-numeric: tabular-nums;
 }
+
+/* One line under a rivals board: what the asterisk means, and how much of the roster is missing.
+   Silently dropping rivals would make a six-row board look like the whole list. */
+.cld-footnote {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    margin: 8px 0 0;
+    padding-top: 7px;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+}

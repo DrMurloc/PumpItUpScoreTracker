@@ -4,6 +4,8 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.Rivals.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
 
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Models
@@ -86,6 +88,10 @@ else
                     {
                         @row.Score.UserName
                     }
+                    @if (row.IsOfficial)
+                    {
+                        <span class="rival-official-mark" title="@L["Official board data"]">*</span>
+                    }
                 </span>
                 <span class="sbd-score-stack">
                     <ScoreBreakdown Score="row.Score.Score" Plate="row.Score.Plate" Mix="Mix"
@@ -93,6 +99,10 @@ else
                     </ScoreBreakdown>
                 </span>
             </div>
+        }
+        @if (RivalFootnote is { Length: > 0 } footnote)
+        {
+            <p class="cld-footnote" data-testid="cld-rival-footnote">@footnote</p>
         }
     </div>
 }
@@ -107,13 +117,14 @@ else
         World,
         Region,
         Community,
+        Rivals,
         CompetitivePeers
     }
 
     private static readonly LeaderboardScope[] Scopes =
     {
         LeaderboardScope.World, LeaderboardScope.Region, LeaderboardScope.Community,
-        LeaderboardScope.CompetitivePeers
+        LeaderboardScope.Rivals, LeaderboardScope.CompetitivePeers
     };
 
     [Parameter] public Guid ChartId { get; set; }
@@ -135,7 +146,8 @@ else
     /// </summary>
     [Parameter] public LeaderboardScope InitialScope { get; set; } = LeaderboardScope.World;
 
-    private sealed record Row(int Place, double Percentile, UserPhoenixScore Score, bool IsMe, bool IsCommunity);
+    private sealed record Row(int Place, double Percentile, UserPhoenixScore Score, bool IsMe,
+        bool IsCommunity, bool IsOfficial);
 
     private Chart? _chart;
     private bool _loading = true;
@@ -146,6 +158,10 @@ else
     private IReadOnlySet<Name> _regionalCommunities = new HashSet<Name>();
     private UserPhoenixScore[] _world = Array.Empty<UserPhoenixScore>();
     private IReadOnlySet<Guid> _clubmates = new HashSet<Guid>();
+    private IReadOnlyList<RivalSubject> _rivals = Array.Empty<RivalSubject>();
+    private IReadOnlySet<Guid> _officialRivalEdges = new HashSet<Guid>();
+    private DateTimeOffset? _rivalOfficialAsOf;
+    private int _rivalsWithoutAScore;
     private IReadOnlySet<Guid> _communityUserIds = new HashSet<Guid>();
     private List<Row> _rows = new();
     private IReadOnlyDictionary<Guid, User> _users = new Dictionary<Guid, User>();
@@ -187,6 +203,10 @@ else
             foreach (var community in _myCommunities)
                 clubmates.UnionWith(await Mediator.Send(new GetCommunityMembersQuery(community)));
             _clubmates = clubmates;
+
+            // Loaded up front so the chip can grey itself: a scope with nothing behind it is
+            // exactly what the disabled state is for.
+            _rivals = await Mediator.Send(new GetMyRivalsQuery(Mix)) ?? Array.Empty<RivalSubject>();
         }
 
         if (!IsAvailable(_scope)) _scope = LeaderboardScope.World;
@@ -233,7 +253,8 @@ else
             {
                 _rows.Add(new Row(tiePlace,
                     total == 0 ? 0 : (total - tiePlace + 1) / (double)total,
-                    score, score.UserId == myId, _communityUserIds.Contains(score.UserId)));
+                    score, score.UserId == myId, _communityUserIds.Contains(score.UserId),
+                    IsOfficialRow(score)));
                 place++;
             }
         }
@@ -255,6 +276,32 @@ else
                 var peers = (await Mediator.Send(new GetCompetitivePlayersQuery(_chart.Type, Mix))).ToHashSet();
                 _communityUserIds = _clubmates;
                 return _world.Where(s => peers.Contains(s.UserId)).ToArray();
+            }
+            case LeaderboardScope.Rivals:
+            {
+                // NOT a filter over _world. That array is the World COMMUNITY's breakdown and a
+                // private player is not in it, so filtering would silently drop the private rival
+                // who handed you their invite code - the one person most likely to be here.
+                var rivalScores = await Mediator.Send(new GetRivalScoresForChartsQuery(Mix, new[] { ChartId }));
+                _rivalOfficialAsOf = rivalScores.OfficialAsOf;
+                var rivalRows = rivalScores.ByChart.TryGetValue(ChartId, out var found)
+                    ? found
+                    : Array.Empty<RivalChartScore>();
+                _rivalsWithoutAScore = Math.Max(0, _rivals.Count - rivalRows.Count);
+                _officialRivalEdges = rivalRows.Where(r => r.Source == RivalScoreSource.Official)
+                    .Select(r => r.EdgeId).ToHashSet();
+
+                // Every row here IS a rival, so a red glow would mark everything and therefore
+                // nothing - the same reasoning that blanks the green on Community scope.
+                _communityUserIds = new HashSet<Guid>();
+                var mine = CurrentUser.IsLoggedIn
+                    ? _world.Where(s => s.UserId == CurrentUser.User.Id).ToArray()
+                    : Array.Empty<UserPhoenixScore>();
+                return rivalRows
+                    .Select(r => new UserPhoenixScore(r.UserId ?? Guid.Empty, ChartId, r.DisplayName, r.Score,
+                        null, r.IsBroken))
+                    .Concat(mine)
+                    .ToArray();
             }
             case LeaderboardScope.Region:
             {
@@ -297,6 +344,8 @@ else
     {
         LeaderboardScope.Region => _regionalCommunities.Count > 0,
         LeaderboardScope.Community => _myCommunities.Count > 0,
+        // Only lit when you have somebody to compare against (D44).
+        LeaderboardScope.Rivals => _rivals.Count > 0,
         // Competitive cohorts have no co-op side. The chip greys and says nothing further —
         // a sentence about cohorts costs more confusion than it buys (owner call).
         LeaderboardScope.CompetitivePeers => _chart is { Type: not ScoreTracker.SharedKernel.Enums.ChartType.CoOp },
@@ -309,6 +358,11 @@ else
     private string CommunityClass(Name community) =>
         _community == community ? "cld-chip cld-chip-on" : "cld-chip";
 
+    // A board-only rival has no account, so its score row carries Guid.Empty and its name is
+    // the tag. Only ever marked on the Rivals scope, which is the only one ghosts appear on.
+    private bool IsOfficialRow(UserPhoenixScore score) =>
+        _scope == LeaderboardScope.Rivals && _officialRivalEdges.Count > 0 && score.UserId == Guid.Empty;
+
     private string RowClass(Row row) =>
         row.IsMe ? "weekly-lb-me" : row.IsCommunity ? "weekly-lb-community" : string.Empty;
 
@@ -319,9 +373,30 @@ else
     {
         LeaderboardScope.Region => L["Region"],
         LeaderboardScope.Community => L["Community"],
+        LeaderboardScope.Rivals => L["Rivals"],
         LeaderboardScope.CompetitivePeers => L["Competitive Peers"],
         _ => L["World"]
     };
 
     private string EmptyText => L["Nobody here has played this yet."];
+
+    /// <summary>
+    ///     One line under the board rather than a marker on every row: the asterisk beside a
+    ///     score is the whole disclaimer, and this says what it means plus how much of the roster
+    ///     is missing. Silently dropping rivals would make a six-row board look like the whole
+    ///     list.
+    /// </summary>
+    private string? RivalFootnote
+    {
+        get
+        {
+            if (_scope != LeaderboardScope.Rivals) return null;
+            var parts = new List<string>();
+            if (_rivalOfficialAsOf is { } asOf)
+                parts.Add(L["* Official board data, as of {0}.", asOf.ToString("d MMM")].Value);
+            if (_rivalsWithoutAScore > 0)
+                parts.Add(L["{0} more rivals have not played this.", _rivalsWithoutAScore].Value);
+            return parts.Count == 0 ? null : string.Join(" · ", parts);
+        }
+    }
 }
