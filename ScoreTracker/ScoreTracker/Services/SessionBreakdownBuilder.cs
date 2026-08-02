@@ -161,14 +161,23 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
         IReadOnlyDictionary<Guid, Chart> charts, PlayerStatsRecord stats,
         CancellationToken cancellationToken)
     {
+        // Flagged charts lead, then the section FILLS with the hardest remaining ones. Gating
+        // purely on flags left every session that predates capture with an empty board and a
+        // "no community peers yet" that was false — the peers were there, the flags were not.
+        // Peers are read live, so an old session gets today's clubmates, which is the only
+        // honest answer available and the one worth having.
+        //
         // Distinct FIRST: `scores` is one entry per journal row, and a chart played several
-        // times in a session has several. That is not an edge case — it is exactly what a
-        // session with attempts looks like, which is the feature this section sits next to.
-        var wanted = scores
-            .Where(s => s.IsFlagged && s.Chart != null)
+        // times has several — exactly what a session with attempts looks like.
+        var byChart = scores
+            .Where(s => s.Chart != null)
             .GroupBy(s => s.Row.ChartId)
-            .OrderByDescending(g => (int)g.First().Chart!.Level)
-            .Select(g => g.Key)
+            .Select(g => (ChartId: g.Key, Chart: g.First().Chart!, Flagged: g.Any(x => x.IsFlagged)))
+            .ToArray();
+        var wanted = byChart
+            .OrderByDescending(x => x.Flagged)
+            .ThenByDescending(x => (int)x.Chart.Level)
+            .Select(x => x.ChartId)
             .Take(MaxPeerBoards)
             .ToArray();
         if (wanted.Length == 0) return Array.Empty<SessionPeerBoard>();

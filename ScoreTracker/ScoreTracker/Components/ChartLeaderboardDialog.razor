@@ -4,7 +4,7 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.ScoreLedger.Contracts.Queries
+
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
@@ -151,9 +151,10 @@
     {
         _loading = true;
         _chart = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: new[] { ChartId }))).FirstOrDefault();
-        // One score read serves World and Competitive Peers; the community scopes filter it by
-        // membership rather than asking the ledger a second time.
-        _world = (await Mediator.Send(new GetPhoenixScoresForChartQuery(ChartId, Mix)))
+        // The World COMMUNITY, not every score on the chart. Every account joins it, and a
+        // private player does not — so reading the board through it is what keeps a name that
+        // its owner hid off every scope in this dialog, World and Competitive Peers included.
+        _world = (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(WorldCommunity, ChartId, Mix)))
             .OrderByDescending(s => (int)s.Score)
             .ToArray();
 
@@ -227,26 +228,38 @@
             case LeaderboardScope.Region:
             {
                 if (_regionalCommunities.Count == 0) return Array.Empty<UserPhoenixScore>();
+                // A country board is not one of your clubs, so a clubmate on it is still worth
+                // marking — the glow only stops meaning something on the club's OWN board.
+                _communityUserIds = _clubmates;
                 return await CommunityScoresAsync(_regionalCommunities.First());
             }
             case LeaderboardScope.Community:
+                // Here every row IS a member, so a glow would mark everything and therefore
+                // nothing.
+                _communityUserIds = new HashSet<Guid>();
                 return _community == null
                     ? Array.Empty<UserPhoenixScore>()
                     : await CommunityScoresAsync(_community.Value);
             default:
                 _communityUserIds = _clubmates;
-                return _world;
+                // The World board IS the World community's breakdown, so a player who hid
+                // their profile is not on it. Competitive Peers deliberately keeps them: that
+                // scope is a cohort rather than a roster, and dropping people would disagree
+                // with the percentile the score row already printed.
+                return _world.Where(s => s.IsPublic).ToArray();
         }
     }
 
     private async Task<IReadOnlyList<UserPhoenixScore>> CommunityScoresAsync(Name community)
     {
-        // Inside a community board every row IS a clubmate, so the glow would mark everything
-        // and therefore nothing. The world-facing scopes are where it earns its keep.
-        _communityUserIds = new HashSet<Guid>();
         return (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(community, ChartId, Mix))).ToArray();
     }
 
+    /// <summary>
+    ///     Every account joins this on creation, and unlike the country communities it is not
+    ///     flagged regional — so "clubs you chose" has to name it, and the world board reads
+    ///     through it to inherit its membership rather than the whole ledger.
+    /// </summary>
     private const string WorldCommunity = "World";
 
     private bool IsAvailable(LeaderboardScope scope) => scope switch

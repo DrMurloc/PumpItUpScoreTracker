@@ -338,7 +338,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 where pba.ChartId == chartId && pba.MixId == mixId && pba.Score != null
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
-                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
+                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, u.IsPublic))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -375,7 +375,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                       userIdArray.Contains(pba.UserId)
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
-                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
+                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, u.IsPublic))
             .ToArrayAsync(cancellationToken);
     }
 
@@ -455,7 +455,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                       userIdArray.Contains(pba.UserId)
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
-                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken))
+                    PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, u.IsPublic))
             .ToArrayAsync(cancellationToken);
     }
 

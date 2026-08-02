@@ -43,14 +43,14 @@
         </div>
     }
 
-    @if (Flagged.Count > 0)
+    @if (Notable.Count > 0)
     {
         <div class="sbd-section" data-testid="session-notable">
             <div class="sbd-section-head">
                 <span class="sbd-eyebrow">@L["Scores that mattered"]</span>
                 <span class="sbd-section-note">@L["Coloured by your standing among players at your level"]</span>
             </div>
-            @foreach (var score in Flagged)
+            @foreach (var score in Notable)
             {
                 <SessionScoreRow Score="score" OnOpenLeaderboard="OnOpenLeaderboard"></SessionScoreRow>
             }
@@ -84,11 +84,19 @@
 @code {
     private const int InitialPlays = 8;
 
+    /// <summary>
+    ///     Rows in "Scores that mattered". Flagged ones lead and keep their captions; the rest
+    ///     of the slots fill with the hardest remaining scores carrying none. The section used
+    ///     to gate purely on flags, which left every session predating capture showing nothing
+    ///     — the same rule the Discord card already follows for its art rows.
+    /// </summary>
+    private const int NotableRows = 6;
+
     [Parameter] [EditorRequired] public SessionBreakdown Breakdown { get; set; } = null!;
     [Parameter] public EventCallback<Guid> OnOpenLeaderboard { get; set; }
 
     private int _visiblePlays = InitialPlays;
-    private IReadOnlyList<SessionScore> Flagged = Array.Empty<SessionScore>();
+    private IReadOnlyList<SessionScore> Notable = Array.Empty<SessionScore>();
     private IReadOnlyList<SessionScore> Ordered = Array.Empty<SessionScore>();
 
     protected override void OnParametersSet()
@@ -99,7 +107,10 @@
             .OrderByDescending(s => (int?)s.Chart?.Level ?? 0)
             .ThenByDescending(s => s.Row.OccurredAt)
             .ToArray();
-        Flagged = Ordered.Where(s => s.IsFlagged).ToArray();
+        Notable = Ordered.Where(s => s.IsFlagged)
+            .Concat(Ordered.Where(s => !s.IsFlagged))
+            .Take(NotableRows)
+            .ToArray();
         _visiblePlays = InitialPlays;
     }
 
