@@ -85,6 +85,87 @@ public sealed class ChartsController : ApiV2ControllerBase
         return CatalogJson(Page(rows, pageSize, charts.Length, next));
     }
 
+
+    /// <summary>
+    ///     PIU Center's step analysis for one chart: NPS, difficulty prediction, sustain, and
+    ///     per-skill coverage.
+    /// </summary>
+    /// <remarks>
+    ///     No <c>mix</c> parameter, and that is not an oversight — the analysis describes the steps,
+    ///     which do not change when a chart's listed level does. The same chart id returns the same
+    ///     answer on every mix it appears in.
+    /// </remarks>
+    [HttpGet("{chartId:guid}/skills")]
+    public async Task<IActionResult> GetChartSkills([FromRoute] Guid chartId)
+    {
+        var profiles = await _mediator.Send(new GetChartSkillProfilesQuery(new[] { chartId }));
+        var profile = profiles.FirstOrDefault();
+
+        // Distinguished from "no such chart" on purpose: most of the catalog is unanalysed, and a
+        // reader who cannot tell the two apart will chase a chart id that is perfectly valid.
+        if (profile is null)
+            return NotFoundProblem("That chart has no step analysis. Most of the catalog does not — " +
+                                   "PIU Center analyses a subset, and a chart being absent here says " +
+                                   "nothing about whether it exists.");
+
+        return CatalogJson(new ChartSkillProfileDto(profile));
+    }
+
+    /// <summary>
+    ///     Step analysis in bulk, filtered exactly like <see cref="Get" />, so a tool can pull the
+    ///     analysis for one mix's charts in one sweep rather than a call per chart.
+    /// </summary>
+    /// <remarks>
+    ///     <c>mix</c> is required because the <b>filters</b> are per-mix — a chart's level differs
+    ///     between mixes, so "level 20 in Phoenix" and "level 20 in XX" select different charts. The
+    ///     analysis itself is still mix-invariant: it describes the steps. Do not cache these per mix.
+    /// </remarks>
+    [HttpGet("skills")]
+    public async Task<IActionResult> GetSkills(
+        [FromQuery(Name = "mix")] string? mixValue = null,
+        [FromQuery(Name = "level")] int? level = null,
+        [FromQuery(Name = "type")] string? typeValue = null,
+        [FromQuery(Name = "cursor")] string? cursor = null,
+        [FromQuery(Name = "limit")] int? limit = null)
+    {
+        if (!TryReadRequest(mixValue, limit, out var mix, out var pageSize, out var failure)) return failure!;
+
+        ChartType? type = null;
+        if (typeValue is not null)
+        {
+            if (!Enum.TryParse<ChartType>(typeValue, true, out var parsed))
+                return Problem("invalid-chart-type", "The type parameter is not a chart type.",
+                    detail: $"Valid values: {string.Join(", ", Enum.GetNames<ChartType>())}");
+            type = parsed;
+        }
+
+        if (level is not null && !DifficultyLevel.IsValid(level.Value))
+            return Problem("invalid-level", "The level parameter is out of range.",
+                detail: $"Valid range: {DifficultyLevel.Min}–{DifficultyLevel.Max}");
+
+        var fingerprint = ContinuationToken.FingerprintOf(mix, level, type, pageSize);
+        var offset = 0;
+        if (cursor is not null)
+        {
+            if (!ContinuationToken.TryDecode(cursor, fingerprint, out var token)) return InvalidCursorProblem();
+            offset = token.Offset;
+        }
+
+        var chartIds = (await _mediator.Send(new GetChartsQuery(mix,
+                level is null ? null : DifficultyLevel.From(level.Value), type)))
+            .Select(c => c.Id).ToArray();
+
+        var profiles = (await _mediator.Send(new GetChartSkillProfilesQuery(chartIds)))
+            .OrderBy(p => p.ChartId).ToArray();
+
+        var rows = profiles.Skip(offset).Take(pageSize).Select(p => new ChartSkillProfileDto(p)).ToArray();
+        var next = offset + rows.Length < profiles.Length
+            ? ContinuationToken.FromOffset(offset + rows.Length, fingerprint)
+            : (ContinuationToken?)null;
+
+        return CatalogJson(Page(rows, pageSize, profiles.Length, next));
+    }
+
     /// <summary>One chart, as expressed in the requested mix.</summary>
     [HttpGet("{chartId:guid}")]
     public async Task<IActionResult> GetOne([FromRoute] Guid chartId,

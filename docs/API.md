@@ -51,7 +51,7 @@ send `If-None-Match` and expect `304`.
 | Songs | `api/v2/songs` | The song catalog for one mix |
 | Charts | `api/v2/charts` | Charts for one mix; `{id}`, `{id}/similar`, `random`. Carries `scoringLevel` — how hard it is to *score* on, null where unmeasured |
 | Tier lists | `api/v2/tier-lists/{list}` | `score-difficulty` · `pass-difficulty` · `pg-difficulty`. Phoenix and Phoenix 2 publish all three; earlier mixes publish `pass-difficulty` only, and the other two answer `404` |
-| Chart analysis | `api/v2/chart-skills` | PIU Center's step analysis (no mix — it describes the steps) |
+| Chart skills | `api/v2/charts/{id}/skills`, `api/v2/charts/skills` | PIU Center's step analysis, one chart or filtered in bulk. **The analysis is mix-invariant** — `mix` on the bulk route filters which charts match, it does not change the answer |
 | Official | `api/v2/official/*` | The piugame mirror: rankings, players, per-chart boards, popularity, what-it-takes, weekly highlights. Public data — no sharing needed, and no PIU Scores `userId` on these rows |
 | Players | `api/v2/players` | Who shared with you; `{id}`, `{id}/scores`, `{id}/sessions`, `{id}/journal`. `me` works with a personal token |
 | Weekly charts | `api/v2/weekly-charts` | The current board and scores on it |

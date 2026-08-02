@@ -243,7 +243,10 @@ public sealed class V2CatalogApiShapeTests
                     new[] { new ChartRarePattern("bracket-5", 3) })
             });
 
-        var result = await WithContext(new ChartAnalysisController(_mediator.Object)).GetSkills();
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { ApiTestData.Chart1 });
+
+        var result = await WithContext(new ChartsController(_mediator.Object)).GetSkills("Phoenix");
 
         JsonApproval.AssertWireShape("""
             {
@@ -447,5 +450,38 @@ public sealed class V2CatalogApiShapeTests
         var second = await controller.Get("Phoenix");
 
         Assert.Equal(StatusCodes.Status304NotModified, Assert.IsType<StatusCodeResult>(second).StatusCode);
+    }
+
+    // A sub-resource, not a query string: skills belong to a chart. And an unanalysed chart is a
+    // different answer from a chart that does not exist — most of the catalog is unanalysed, so a
+    // reader who cannot tell them apart chases a perfectly valid id.
+    [Fact]
+    public async Task OneChartsSkillsAreASubResource()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillProfilesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartSkillProfile(ApiTestData.ChartId1, 50726, 8.4, 18.4, 122, 140, true,
+                    Array.Empty<ChartSkillCoverage>(), Array.Empty<ChartRarePattern>())
+            });
+
+        var result = await WithContext(new ChartsController(_mediator.Object))
+            .GetChartSkills(ApiTestData.ChartId1);
+
+        Assert.IsType<ContentResult>(result);
+    }
+
+    [Fact]
+    public async Task AnUnanalysedChartIs404WithAnExplanation()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartSkillProfilesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSkillProfile>());
+
+        var result = await WithContext(new ChartsController(_mediator.Object))
+            .GetChartSkills(ApiTestData.ChartId1);
+
+        var problem = Assert.IsType<ProblemDetails>(Assert.IsType<ObjectResult>(result).Value);
+        Assert.Equal(StatusCodes.Status404NotFound, problem.Status);
+        Assert.Contains("does not", problem.Detail);
     }
 }
