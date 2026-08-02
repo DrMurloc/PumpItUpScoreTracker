@@ -23,6 +23,7 @@ public static class RivalsRegistrationExtensions
         services.AddTransient<RivalSubjectResolver>();
         services.AddTransient<RivalAudienceReader>();
         services.AddTransient<RivalAdder>();
+        services.AddTransient<RivalScoreReader>();
         services.AddSingleton<IDbModelContribution, RivalsModelContribution>();
         return services;
     }
