@@ -8,7 +8,7 @@
 @* MudTooltip renders a popover, which throws in static SSR (no provider in the static tree).
    The tooltip only carries hover text, so a static render drops it and keeps the grade, plate
    and score; in a circuit it comes back. *@
-@if (RendererInfo.IsInteractive)
+@if (RendererInfo.IsInteractive && Tooltip)
 {
     <MudTooltip Text=@(ShowTextAsTooltip?Text:ShowScore && string.IsNullOrWhiteSpace(Text)?RankingString:ScoreString) ShowOnFocus="true">
         @Body
@@ -61,6 +61,16 @@ else
 
     [Parameter]
     public bool ShowTextAsTooltip { get; set; } = false;
+
+    /// <summary>
+    ///     Set false where the hover text would only repeat what is already on screen — a
+    ///     leaderboard row prints the score right beside the icons. It also flattens the
+    ///     markup to a bare img/img/p, which is what lets a caller lay the three out itself;
+    ///     the tooltip wraps them in a container whose depth is MudBlazor's business, not the
+    ///     caller's.
+    /// </summary>
+    [Parameter]
+    public bool Tooltip { get; set; } = true;
 
     [Parameter]
     public bool OneLine { get; set; } = false;

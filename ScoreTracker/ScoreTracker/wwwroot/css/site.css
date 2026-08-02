@@ -11669,8 +11669,14 @@ button.chart-card-art {
 }
 
 /* Portrait and square: grade above plate in one column, score beside them. Keyed on aspect
-   rather than width because that is the axis that decides whether a row has horizontal room
-   — a portrait tablet is wide in pixels and still short of it. */
+   rather than width because that is the axis that decides whether a row has horizontal room —
+   a portrait tablet is wide in pixels and still short of it.
+
+   These rows pass Tooltip="false" to ScoreBreakdown, so the icons and the score are direct
+   children here and the grid can simply place them. Two earlier attempts tried to lay out
+   through MudTooltip's wrapper instead, and neither worked: display:contents only flattened
+   one level, and nth-of-type counts within each element's own parent, so images in separate
+   wrappers both read as the first. */
 @media (max-aspect-ratio: 1/1), (max-width: 599.98px) {
     .sbd-score-stack {
         display: inline-grid;
@@ -11680,28 +11686,19 @@ button.chart-card-art {
         line-height: 1.05;
     }
 
-    /* MudTooltip wraps this content in a circuit and does not in static SSR, and it nests
-       more than one level deep. Flattening EVERY wrapper — descendants, not just children —
-       is what makes the icons and the score real grid items either way. */
-    .sbd-score-stack *:not(img):not(p) {
-        display: contents;
-    }
-
-    /* Both icons claim column 1 and auto-flow puts them in successive rows. Deliberately not
-       nth-of-type: that counts within each element's OWN parent, so the moment the two images
-       sit in different wrappers they both read as the first and land side by side — which is
-       exactly what happened. */
-    .sbd-score-stack img {
+    /* Both icons claim column 1; auto-flow drops them into successive rows. */
+    .sbd-score-stack > img {
         grid-column: 1;
         height: 14px !important;
     }
 
-    /* Spans whatever rows the icons produced, so it centres against the stack instead of
+    /* Spans whatever rows the icons produced, so it centres against the stack rather than
        sitting under it. A broken score has no plate and the span still holds. */
-    .sbd-score-stack p {
+    .sbd-score-stack > p {
         grid-column: 2;
         grid-row: 1 / -1;
         align-self: center;
+        margin: 0;
         padding-left: 0 !important;
     }
 }
