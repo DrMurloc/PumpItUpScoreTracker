@@ -62,7 +62,8 @@ public static class UserDataPurge
     /// <summary>
     ///     The Guid property naming the owning user, and the delete bound to its nullability.
     ///     Convention-resolved so a vertical's manifest stays a plain type list; a type carrying
-    ///     two candidates throws rather than guessing which one means "whose data is this".
+    ///     two candidates throws rather than guessing which one means "whose data is this", unless
+    ///     it settles the question itself with <see cref="PurgeKeyAttribute" />.
     /// </summary>
     private static (MethodInfo Bound, string Column) PlanFor(ChartAttemptDbContext database, Type entityType)
     {
@@ -71,21 +72,31 @@ public static class UserDataPurge
                          $"{entityType.Name} is not mapped on the shared context — a vertical declared it " +
                          "user-owned but never contributed it to the model.");
 
-        var candidates = mapped.GetProperties()
-            .Where(p => (p.ClrType == typeof(Guid) || p.ClrType == typeof(Guid?)) &&
-                        p.Name.EndsWith("UserId", StringComparison.Ordinal))
+        var guids = mapped.GetProperties()
+            .Where(p => p.ClrType == typeof(Guid) || p.ClrType == typeof(Guid?))
             .ToArray();
+        var declared = entityType.GetCustomAttribute<PurgeKeyAttribute>()?.PropertyName;
+        var candidates = guids.Where(p => p.Name.EndsWith("UserId", StringComparison.Ordinal)).ToArray();
 
-        var key = candidates.Length switch
-        {
-            1 => candidates[0],
-            0 => throw new InvalidOperationException(
-                $"{entityType.Name} has no Guid *UserId property, so there is nothing to key a purge on."),
-            _ => throw new InvalidOperationException(
-                $"{entityType.Name} carries several user keys " +
-                $"({string.Join(", ", candidates.Select(c => c.Name))}); purging it needs a hand-written " +
-                "repository rather than the shared manifest.")
-        };
+        // A declared key is looked up among every mapped Guid, not just the *UserId ones, so an
+        // entity naming its owner column something else can still be purged by declaring it.
+        var key = declared is not null
+            ? guids.FirstOrDefault(p => p.Name == declared)
+              ?? throw new InvalidOperationException(
+                  $"{entityType.Name} declares [PurgeKey(\"{declared}\")] but has no mapped Guid property " +
+                  "by that name, so the purge has nothing to key on. The name is the property's, not the " +
+                  "column's.")
+            : candidates.Length switch
+            {
+                1 => candidates[0],
+                0 => throw new InvalidOperationException(
+                    $"{entityType.Name} has no Guid *UserId property, so there is nothing to key a purge on."),
+                _ => throw new InvalidOperationException(
+                    $"{entityType.Name} carries several user keys " +
+                    $"({string.Join(", ", candidates.Select(c => c.Name))}) and does not say which one owns " +
+                    "the row. Mark it [PurgeKey(nameof(...))] with the key whose user the row belongs to — " +
+                    "the others point at different people, and deleting on one of those takes their data.")
+            };
 
         var method = key.ClrType == typeof(Guid?) ? DeleteForNullableMethod : DeleteForMethod;
         return (method.MakeGenericMethod(entityType), key.Name);

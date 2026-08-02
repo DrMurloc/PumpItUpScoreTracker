@@ -662,7 +662,8 @@ daily `process-account-purges` job — is reused untouched.
 
 The purge is the kind of ecosystem that rots quietly: nothing breaks when a new vertical forgets
 it, and the symptom — data surviving a deletion the player was promised — is invisible until
-someone looks. Three new ratchets, one of which is a constraint rather than a test.
+someone looks. Four ratchets, one of which is a constraint rather than a test. R4 was added after
+R1 shipped and turned out to prove less than it looked like it proved.
 
 ### R1 — purge coverage (essential)
 
@@ -734,6 +735,33 @@ it. Phase 2 and phase 6 each add a table, so this is live risk now.
 
 Reflect over the vertical assemblies for `IDbModelContribution` implementations and assert
 `All()` contains one of each.
+
+### R4 — every purge actually runs (added after R1 proved insufficient)
+
+`Tests.Integration/AccountPurgeTests`. R1 asserts every user-keyed table is **named** by a manifest.
+Naming is not deleting: the manifest is a plain type list, and `UserDataPurge` resolves each type to
+an owning column *by convention at run time*. So a table can be declared, satisfy R1, and still throw
+the first time a real purge reaches it — and no suite notices, because none of them run one.
+
+`CommunityMembership` did exactly that. The roles/permissions overlay added `GrantedByUserId`
+alongside `UserId`, giving it two `*UserId` columns — a shape `PlanFor` deliberately refuses to guess
+between — while sitting **first** in Communities' manifest, so a real account deletion threw before
+deleting anything of that vertical's. R1 was green throughout, because the type was named.
+`MergeRequest` was already exempt for carrying two user keys, so the hazard was known; what was
+missing was anything that executed the code.
+
+R4 runs every vertical's purge repository end to end against the migrated schema for a user with no
+data. **Nothing is seeded, on purpose**: `DeleteAll` resolves and executes a plan per declared type
+whether or not rows exist, so an empty account still exercises every manifest entry — a type with no
+user key or several, one mapped but never migrated, one whose table or column drifted from its
+`ToTable`. Seeding would test more per row and would have to be extended by hand for every table any
+vertical ever adds; this way a new table is covered the moment it joins a manifest.
+
+The fix for an ambiguous entity is `[PurgeKey(nameof(UserId))]` on the entity itself, next to the
+columns, rather than the hand-written repository `PlanFor`'s old message suggested — a hand-written
+delete beside a manifest that still names the type is the drift R1 exists to prevent. It also closes
+R1's documented blind spot on the execution side: a declared key is looked up among every mapped
+Guid, so an entity whose owner column is not `*UserId`-suffixed can still be purged.
 
 ### The journal → session foreign key, and why there isn't one
 
