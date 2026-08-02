@@ -1,3 +1,5 @@
+@using MassTransit
+@using ScoreTracker.ScoreLedger.Contracts.Messages
 @page "/Admin"
 @rendermode RenderModes.Interactive
 @using MediatR
@@ -16,6 +18,10 @@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="ClearCache">@L["Clear Cache"]</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/PiuCenter">PIU Center</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/OfficialLeaderboards">Official Leaderboards</MudButton>
+@* Scoped to one session per player on purpose: a rebuild computes against today's state, and
+   the further back it reaches the less that resembles the state it is claiming to restore. *@
+<MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="RebuildLatestSessions"
+           data-testid="rebuild-latest-sessions">@L["Rebuild Latest Sessions"]</MudButton>
 
 <MudCard>
     <MudCardHeader>@L["Credential security"]</MudCardHeader>
@@ -159,7 +165,8 @@
 @inject IChartRepository _charts;
 @inject IMediator Mediator;
 @inject IUiSettingsAccessor UiSettings;
-@inject ISnackbar Snackbar;
+@inject ISnackbar Snackbar
+@inject IBus Bus
 @inject NavigationManager NavManager;
 @code
 {
@@ -179,6 +186,12 @@
     private void ClearCache()
     {
         _charts.ClearCache();
+    }
+
+    private async Task RebuildLatestSessions()
+    {
+        await Bus.Publish(new RebuildLatestSessionsCommand());
+        Snackbar.Add(L["Rebuilding the latest session for every player."].Value, Severity.Success);
     }
 
     private bool _confirmingCycle;

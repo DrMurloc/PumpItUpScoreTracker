@@ -1,0 +1,65 @@
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* The answer, above the fold. A session that moved nothing still renders the band — the
+   current numbers are the anchor — so the shape never changes under a quiet session. *@
+<div class="sbd-ceremony" data-testid="session-ceremony">
+    <div class="sbd-pumb">
+        <div class="sbd-eyebrow">PUMBILITY</div>
+        <div class="sbd-pumb-lead">
+            <span class="sbd-pumb-big">@Ceremony.HeadlinePumbility.ToString("N0")</span>
+            @if (Ceremony.PumbilityGain is > 0)
+            {
+                <span class="sbd-delta">+@Ceremony.PumbilityGain!.Value.ToString("N0")</span>
+            }
+        </div>
+        @if (Ceremony.PumbilityOld != null)
+        {
+            <div class="sbd-from">@L["From {0}", Ceremony.PumbilityOld.Value.ToString("N0")]</div>
+        }
+
+        @if (Ceremony.OfficialRank != null)
+        {
+            <div class="sbd-rank">
+                <span class="sbd-eyebrow">@L["World"]</span>
+                @* The tilde is not decoration: this is our pool placed on a board swept weekly,
+                   not a rank read back from it, so the date rides alongside. *@
+                <span class="sbd-rank-value">~#@Ceremony.OfficialRank</span>
+                @if (Ceremony.OfficialRankOld is { } was && was > Ceremony.OfficialRank)
+                {
+                    <span class="sbd-delta">▲ @(was - Ceremony.OfficialRank)</span>
+                }
+                @if (Ceremony.OfficialRankAsOf != null)
+                {
+                    <span class="sbd-asof">@L["official board · as of {0}",
+                        Ceremony.OfficialRankAsOf.Value.ToLocalTime().ToString("d")]</span>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="sbd-compet">
+        <div class="sbd-eyebrow">@L["Competitive"]</div>
+        <div class="sbd-compet-row">
+            <span class="sbd-compet-label">@L["Singles"]</span>
+            <span class="sbd-compet-value">@Ceremony.CurrentSinglesCompetitive.ToString("0.00")</span>
+            @if (Ceremony.SinglesCompetitiveNew != null && Ceremony.SinglesCompetitiveOld != null)
+            {
+                <span class="sbd-delta">▲ @((Ceremony.SinglesCompetitiveNew.Value - Ceremony.SinglesCompetitiveOld.Value).ToString("0.00"))</span>
+            }
+        </div>
+        <div class="sbd-compet-row">
+            <span class="sbd-compet-label">@L["Doubles"]</span>
+            <span class="sbd-compet-value">@Ceremony.CurrentDoublesCompetitive.ToString("0.00")</span>
+            @if (Ceremony.DoublesCompetitiveNew != null && Ceremony.DoublesCompetitiveOld != null)
+            {
+                <span class="sbd-delta">▲ @((Ceremony.DoublesCompetitiveNew.Value - Ceremony.DoublesCompetitiveOld.Value).ToString("0.00"))</span>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public SessionCeremony Ceremony { get; set; } = null!;
+
+}

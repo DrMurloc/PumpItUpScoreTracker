@@ -1,112 +1,97 @@
 @using MediatR
-@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts
-@using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.ScoreLedger.Contracts
-@using ScoreTracker.ScoreLedger.Contracts.Queries
-@using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
-@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services
 @page "/Player/{UserIdParam:guid}/Sessions"
 @rendermode RenderModes.Interactive
 
 @if (_user != null)
 {
-    <div class="d-flex align-center gap-3 mb-2">
+    <div class="d-flex align-center gap-3 mb-3">
         <MudAvatar>
             <MudImage Src="@_user.ProfileImage.ToString()" Alt="@_user.Name.ToString()"></MudImage>
         </MudAvatar>
         <div>
             <MudText Typo="Typo.h5">@_user.Name — @L["Sessions"]</MudText>
-            <MudText Typo="Typo.caption">@L["Play sessions, newest first"]</MudText>
+            <MudText Typo="Typo.caption">@L["Your most recent session, in full"]</MudText>
         </div>
     </div>
 
-    <div class="d-flex align-center flex-wrap gap-2 mb-3">
-        <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="@_filter"
-                    SelectedValueChanged="v => _filter = v ?? FilterAll" CheckMark="true">
-            <MudChip Value="@FilterAll" Text="@L["All"]"/>
-            <MudChip Value="@FilterOfNote" Text="@($"⭐ {L["Of Note"]}")"/>
-        </MudChipSet>
-        <MudSpacer/>
-        <MudSelect T="int" Value="_pageSize" ValueChanged="ChangePageSize" Dense="true" Style="max-width: 140px"
-                   Label="@L["Sessions per page"]">
-            <MudSelectItem T="int" Value="10">10</MudSelectItem>
-            <MudSelectItem T="int" Value="20">20</MudSelectItem>
-            <MudSelectItem T="int" Value="50">50</MudSelectItem>
-        </MudSelect>
-    </div>
-
-    @if (_loading)
+    @if (_firstLoad)
     {
-        <MudProgressLinear Indeterminate="true" Color="Color.Primary"></MudProgressLinear>
+        @* Skeletons match the shape they become — never a lone spinner on a data page. *@
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="320px" Class="mb-3"></MudSkeleton>
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="180px"></MudSkeleton>
     }
-    else if (!_page.Groups.Any())
+    else if (_model.Hero == null)
     {
-        <MudText>@L["No sessions recorded yet."]</MudText>
+        <MudAlert Severity="Severity.Normal" data-testid="sessions-empty">
+            @L["No sessions recorded yet."]
+        </MudAlert>
     }
     else
     {
-        <MudGrid Spacing="2">
-            @foreach (var group in _page.Groups)
-            {
-                @* 1-up phones, 2-up medium, 3-up large, 4-up extra large. *@
-                <MudItem xs="12" md="6" lg="4" xl="3">
-                    <SessionRoundupCard Group="group" Mix="group.Mix" Charts="_charts" Flags="_flags" Details="_details"
-                                        Milestones="MilestonesFor(group)"
-                                        OfNoteOnly="_filter == FilterOfNote"
-                                        StartExpanded="IsDeepLinked(group)"></SessionRoundupCard>
-                </MudItem>
-            }
-        </MudGrid>
+        @if (_model.SelectedSessionWasUndone)
+        {
+            @* A Discord card outlives the session it links to: undo deletes the journal rows.
+               Saying so beats rendering the newest session as if it were the linked one. *@
+            <MudAlert Severity="Severity.Info" Class="mb-3" data-testid="session-undone">
+                @L["That session was undone, so it no longer exists. Showing your most recent one instead."]
+            </MudAlert>
+        }
 
-        <div class="d-flex justify-center my-3">
-            <MudPagination Count="PageCount" Selected="_pageNumber" SelectedChanged="ChangePage"></MudPagination>
+        <div class="@(_busy ? "sbd-busy" : null)">
+            <SessionHero Breakdown="_model.Hero" OnOpenLeaderboard="OpenLeaderboard"></SessionHero>
         </div>
 
-        <MudText Typo="Typo.caption" Class="mt-1 d-block">
+        <div class="mt-4 @(_busy ? "sbd-busy" : null)">
+            <SessionHistoryCards Rows="_model.History" SelectedSessionId="_model.Hero.Group.SessionId"
+                                 Page="_page" PageCount="PageCount" Before="_before"
+                                 OnView="ViewSession" OnPage="ChangePage" OnBefore="ChangeBefore">
+            </SessionHistoryCards>
+        </div>
+
+        <MudText Typo="Typo.caption" Class="mt-2 d-block">
             @L["Score history begins with journaling (June 2026) — older plays aren't shown."]
         </MudText>
+
+        <ChartLeaderboardDialog @bind-Visible="_leaderboardOpen" ChartId="_leaderboardChartId"
+                                Mix="_model.Hero.Group.Mix"
+                                InitialScope="ChartLeaderboardDialog.LeaderboardScope.CompetitivePeers">
+        </ChartLeaderboardDialog>
     }
 }
 
 @inject IMediator Mediator
 @inject NavigationManager NavManager
-@inject IUiSettingsAccessor UiSettings
 @inject ICurrentUserAccessor CurrentUser
+@inject SessionBreakdownBuilder Breakdowns
+@inject IJSRuntime JS
 @code {
-    private const string FilterAll = "all";
-    private const string FilterOfNote = "ofNote";
+    // Two full rows of the desktop grid. The cards are 268px minimum inside a 1132px content
+    // column, so four fit a row — a page that ends mid-row reads as a rendering fault rather
+    // than the end of a page.
+    private const int HistoryPageSize = 8;
 
     [Parameter] public Guid UserIdParam { get; set; }
 
     private User? _user;
-    private string _filter = FilterAll;
-    private int _pageNumber = 1;
-    private int _pageSize = 10;
-    private bool _loading = true;
-    private Guid? _deepLinkedSession;
-
-    private RecentSessionsPage _page = new(0, Array.Empty<RecentSessionsPage.SessionGroup>());
-    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-    private IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightFlags> _flags =
-        new Dictionary<(Guid?, Guid), HighlightFlags>();
-    private IReadOnlyDictionary<(Guid? SessionId, Guid ChartId), HighlightDetail> _details =
-        new Dictionary<(Guid?, Guid), HighlightDetail>();
-    private ILookup<Guid?, PlayerMilestoneRecord> _milestones =
-        Array.Empty<PlayerMilestoneRecord>().ToLookup(m => m.SessionId);
-
-    private int PageCount => (int)Math.Ceiling(_page.TotalGroups / (double)_pageSize);
+    private bool _firstLoad = true;
+    private bool _busy;
+    private Guid? _selectedSessionId;
+    private bool _leaderboardOpen;
+    private int _page = 1;
+    private DateTime? _before;
+    private Guid _leaderboardChartId;
+    private SessionsPageModel _model = new(null, Array.Empty<SessionHistoryRow>(), 0, false);
 
     protected override async Task OnInitializedAsync()
     {
-        // Public players only: anyone else's private page redirects home; your own never
-        // does. The query behind it independently returns an empty page to non-owners, so
-        // this is presentation, not the guard.
+        // Public players only: anyone else's private page redirects home; your own never does.
+        // The builder's queries independently return nothing to non-owners, so this is
+        // presentation rather than the guard.
         _user = await Mediator.Send(new GetUserByIdQuery(UserIdParam));
         var isOwner = CurrentUser.IsLoggedIn && CurrentUser.User.Id == UserIdParam;
         if (_user == null || (!_user.IsPublic && !isOwner))
@@ -115,101 +100,82 @@
             return;
         }
 
-        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
-        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-        if (Guid.TryParse(query.Get("session"), out var session)) _deepLinkedSession = session;
+        var query = System.Web.HttpUtility.ParseQueryString(NavManager.ToAbsoluteUri(NavManager.Uri).Query);
+        if (Guid.TryParse(query.Get("session"), out var session)) _selectedSessionId = session;
 
         await LoadAsync();
     }
 
     private async Task LoadAsync()
     {
-        _loading = true;
-        _page = await Mediator.Send(new GetRecentSessionsQuery(UserIdParam, _pageNumber, _pageSize));
-
-        // Charts still resolve per mix (chart reads are mix-scoped).
-        var charts = new Dictionary<Guid, Chart>();
-        foreach (var mixGroups in _page.Groups.GroupBy(g => g.Mix))
-        {
-            var chartIds = mixGroups.SelectMany(g => g.Rows).Select(r => r.ChartId).Distinct().ToArray();
-            if (!chartIds.Any()) continue;
-            foreach (var chart in await Mediator.Send(new GetChartsQuery(mixGroups.Key, ChartIds: chartIds)))
-                charts[chart.Id] = chart;
-        }
-
-        // Highlights and session milestones FK straight to SessionId — never a date window.
-        // A highlight's OccurredAt is the batch-drain time, minutes past its journal rows, so
-        // a row-time window silently drops the freshest session's flags — exactly the session
-        // the Discord card deep-links to, which is why "Of Note" showed nothing.
-        var sessionIds = _page.Groups.Where(g => g.SessionId != null).Select(g => g.SessionId!.Value)
-            .Distinct().ToArray();
-        var flags = new Dictionary<(Guid? SessionId, Guid ChartId), HighlightFlags>();
-        var details = new Dictionary<(Guid? SessionId, Guid ChartId), HighlightDetail>();
-        var milestones = new List<PlayerMilestoneRecord>();
-        if (sessionIds.Any())
-        {
-            foreach (var pair in (await Mediator.Send(new GetScoreHighlightsForSessionsQuery(UserIdParam, sessionIds)))
-                         .GroupBy(h => (h.SessionId, h.ChartId)))
-            {
-                flags[pair.Key] = pair.Aggregate(HighlightFlags.None, (f, h) => f | h.Flags);
-                // One highlight row per (session, chart) is the norm; a race can duplicate it,
-                // so keep the richest detail.
-                details[pair.Key] = pair.OrderByDescending(h => DetailFields(h.Detail)).First().Detail
-                                    ?? new HighlightDetail();
-            }
-            milestones.AddRange(await Mediator.Send(new GetPlayerMilestonesForSessionsQuery(UserIdParam, sessionIds)));
-        }
-
-        // Session-less groups (pre-capture calendar days) carry only session-less milestones
-        // — weekly placements, admin recalcs — which have no session to FK to and match by day
-        // over their own window.
-        foreach (var dayGroups in _page.Groups.Where(g => g.SessionId == null && g.Day != null).GroupBy(g => g.Mix))
-        {
-            var since = dayGroups.Min(g => g.Start);
-            var until = dayGroups.Max(g => g.End);
-            milestones.AddRange((await Mediator.Send(new GetPlayerMilestonesQuery(UserIdParam, dayGroups.Key,
-                    since, until)))
-                .Where(m => m.SessionId == null));
-        }
-
-        _charts = charts;
-        _flags = flags;
-        _details = details;
-        _milestones = milestones.ToLookup(m => m.SessionId);
-        _loading = false;
+        _model = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page, HistoryPageSize,
+            Before, CancellationToken.None);
+        _firstLoad = false;
     }
 
-    private IReadOnlyList<PlayerMilestoneRecord> MilestonesFor(RecentSessionsPage.SessionGroup group)
+    /// <summary>
+    ///     The picker is a date; the filter is an instant. Take the START of the chosen day so
+    ///     "before the 5th" excludes the 5th rather than half of it.
+    /// </summary>
+    private DateTimeOffset? Before => _before?.ToUniversalTime();
+
+    /// <summary>
+    ///     Runs a targeted rebuild without tearing the page down. Skeletons belong to the first
+    ///     load only — swapping the whole page for them on a filter change is what made these
+    ///     interactions feel like navigation on a page that never navigates.
+    /// </summary>
+    private async Task Refresh(Func<Task<SessionsPageModel>> rebuild)
     {
-        if (group.SessionId != null) return _milestones[group.SessionId].ToArray();
-        // Session-less milestones (admin recalculations) attach to the matching day group.
-        return _milestones[null]
-            .Where(m => group.Day != null && DateOnly.FromDateTime(m.OccurredAt.Date) == group.Day)
-            .ToArray();
+        _busy = true;
+        try
+        {
+            _model = await rebuild();
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 
-    private bool IsDeepLinked(RecentSessionsPage.SessionGroup group)
+    /// <summary>
+    ///     Promotes a session into the hero and rewrites the URL in place. Deliberately not a
+    ///     NavigateTo: programmatic navigation on the static router triggers an enhanced reload,
+    ///     which is a flake this codebase has been bitten by. The link still has to work as a
+    ///     real deep link, which is why the query parameter is what changes.
+    /// </summary>
+    private async Task ViewSession(Guid sessionId)
     {
-        return _deepLinkedSession != null && group.SessionId == _deepLinkedSession;
+        _selectedSessionId = sessionId;
+        // Only the hero changes — the cards are the same cards, one of them now highlighted.
+        await Refresh(() => Breakdowns.Reselect(_model, UserIdParam, sessionId, _page, HistoryPageSize,
+            Before, CancellationToken.None));
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri).GetLeftPart(UriPartial.Path);
+        await JS.InvokeVoidAsync("history.replaceState", null, string.Empty, $"{uri}?session={sessionId}");
     }
 
-    private static int DetailFields(HighlightDetail? d)
-    {
-        if (d == null) return 0;
-        return new object?[] { d.PumbilityRank, d.FolderDebutOrdinal, d.PeerCount, d.SkillTitleName }
-            .Count(x => x != null);
-    }
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(_model.TotalGroups / (double)HistoryPageSize));
 
     private async Task ChangePage(int page)
     {
-        _pageNumber = page;
-        await LoadAsync();
+        _page = page;
+        // Only the grid changes; the hero is not what you paged.
+        await Refresh(() => Breakdowns.Refilter(_model, UserIdParam, _page, HistoryPageSize, Before,
+            CancellationToken.None));
     }
 
-    private async Task ChangePageSize(int size)
+    private async Task ChangeBefore(DateTime? before)
     {
-        _pageSize = size;
-        _pageNumber = 1;
-        await LoadAsync();
+        _before = before;
+        // A filter change invalidates the page number — page 3 of the old list is not page 3
+        // of the new one.
+        _page = 1;
+        await Refresh(() => Breakdowns.Refilter(_model, UserIdParam, _page, HistoryPageSize, Before,
+            CancellationToken.None));
+    }
+
+    private void OpenLeaderboard(Guid chartId)
+    {
+        _leaderboardChartId = chartId;
+        _leaderboardOpen = true;
     }
 }

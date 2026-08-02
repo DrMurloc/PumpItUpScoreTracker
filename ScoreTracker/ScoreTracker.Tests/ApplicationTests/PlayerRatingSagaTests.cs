@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Contracts.Events;
@@ -261,6 +262,113 @@ public sealed class PlayerRatingSagaTests
 
         highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.IsAny<IEnumerable<ScoreHighlightWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ClimbingTheOfficialBoardMintsARankMilestone()
+    {
+        var userId = Guid.NewGuid();
+        var stats = StatsMockWithRank(userId, 40);
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        // A one-seat board nobody outscores: any pool takes #1, up from the stored #40.
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(Array.Empty<Chart>()),
+            scores: ScoresMockReturning(userId, Array.Empty<RecordedPhoenixScore>()),
+            stats: stats, milestones: milestones,
+            officialBoards: BoardMockReturning(0));
+
+        await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
+
+        milestones.Verify(m => m.Append(MixEnum.Phoenix, userId,
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.OfficialPumbilityRank && x.OldValue == 40 && x.NewValue == 1)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ARankThatDidNotImproveMintsNothing()
+    {
+        // The guard that keeps an undo quiet: it republishes an empty score event through
+        // this path, recomputing the pool lower. Announcing the seat it just cost the player
+        // is the opposite of a milestone, so anything short of a climb mints nothing.
+        var userId = Guid.NewGuid();
+        var stats = StatsMockWithRank(userId, 1);
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(Array.Empty<Chart>()),
+            scores: ScoresMockReturning(userId, Array.Empty<RecordedPhoenixScore>()),
+            stats: stats, milestones: milestones,
+            officialBoards: BoardMockReturning(0));
+
+        await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
+
+        milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.OfficialPumbilityRank)),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task APoolBelowTheBoardIsNotRankedAtAll()
+    {
+        // Outside the top N is not a seat at N+1, and a player who was never on the board
+        // has nothing to have improved.
+        var userId = Guid.NewGuid();
+        var stats = StatsMockWithRank(userId, null);
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(Array.Empty<Chart>()),
+            scores: ScoresMockReturning(userId, Array.Empty<RecordedPhoenixScore>()),
+            stats: stats, milestones: milestones,
+            officialBoards: BoardMockReturning(900, 800, 700));
+
+        await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
+
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix, userId,
+            It.Is<PlayerStatsRecord>(r => r.EstimatedPumbilityRank == null), It.IsAny<CancellationToken>()),
+            Times.Once);
+        milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<PlayerMilestoneWrite>>(w => w.Any(x =>
+                x.Kind == MilestoneKind.OfficialPumbilityRank)),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AnUnreachableBoardLeavesTheStatsAlone()
+    {
+        var userId = Guid.NewGuid();
+        var stats = StatsMockWithRank(userId, 40);
+        var boards = new Mock<IOfficialPlacementReader>();
+        boards.Setup(b => b.GetPumbilityBoard(It.IsAny<MixEnum>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("mirror unavailable"));
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(Array.Empty<Chart>()),
+            scores: ScoresMockReturning(userId, Array.Empty<RecordedPhoenixScore>()),
+            stats: stats, officialBoards: boards);
+
+        await saga.Handle(new RecalculateStatsCommand(userId), CancellationToken.None);
+
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix, userId, It.IsAny<PlayerStatsRecord>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static Mock<IPlayerStatsRepository> StatsMockWithRank(Guid userId, int? storedRank)
+    {
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1,
+                EstimatedPumbilityRank: storedRank));
+        return stats;
+    }
+
+    private static Mock<IOfficialPlacementReader> BoardMockReturning(params decimal[] descendingValues)
+    {
+        var boards = new Mock<IOfficialPlacementReader>();
+        boards.Setup(b => b.GetPumbilityBoard(It.IsAny<MixEnum>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialBoardReading(Now, descendingValues));
+        return boards;
     }
 
     [Fact]
@@ -585,7 +693,8 @@ public sealed class PlayerRatingSagaTests
         Mock<IMediator>? mediator = null,
         Mock<IPhoenixRecordStatsRepository>? recordStats = null,
         Mock<IScoreHighlightRepository>? highlights = null,
-        Mock<IPlayerMilestoneRepository>? milestones = null)
+        Mock<IPlayerMilestoneRepository>? milestones = null,
+        Mock<IOfficialPlacementReader>? officialBoards = null)
     {
         scores ??= new Mock<IScoreReader>();
         charts ??= new Mock<IChartRepository>();
@@ -595,8 +704,10 @@ public sealed class PlayerRatingSagaTests
         recordStats ??= new Mock<IPhoenixRecordStatsRepository>();
         highlights ??= new Mock<IScoreHighlightRepository>();
         milestones ??= new Mock<IPlayerMilestoneRepository>();
+        officialBoards ??= new Mock<IOfficialPlacementReader>();
         return new PlayerRatingSaga(scores.Object, recordStats.Object, charts.Object, stats.Object,
-            highlights.Object, milestones.Object, FakeDateTime.At(Now).Object, bus.Object, mediator.Object);
+            highlights.Object, milestones.Object, FakeDateTime.At(Now).Object, bus.Object, mediator.Object,
+            officialBoards.Object, NullLogger<PlayerRatingSaga>.Instance);
     }
 
     private static Mock<IChartRepository> ChartsMockReturning(IEnumerable<Chart> result,

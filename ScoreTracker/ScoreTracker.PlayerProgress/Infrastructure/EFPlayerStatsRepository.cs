@@ -70,7 +70,11 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                     ClearCount = newStats.ClearCount,
                     CompetitiveLevel = newStats.CompetitiveLevel,
                     SinglesCompetitiveLevel = newStats.SinglesCompetitiveLevel,
-                    DoublesCompetitiveLevel = newStats.DoublesCompetitiveLevel
+                    DoublesCompetitiveLevel = newStats.DoublesCompetitiveLevel,
+                    EstimatedPumbilityRank = newStats.EstimatedPumbilityRank,
+                    EstimatedSinglesPumbilityRank = newStats.EstimatedSinglesPumbilityRank,
+                    EstimatedDoublesPumbilityRank = newStats.EstimatedDoublesPumbilityRank,
+                    PumbilityBoardAsOf = newStats.PumbilityBoardAsOf
                 }, cancellationToken);
             }
             else
@@ -92,6 +96,10 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 entity.CompetitiveLevel = newStats.CompetitiveLevel;
                 entity.SinglesCompetitiveLevel = newStats.SinglesCompetitiveLevel;
                 entity.DoublesCompetitiveLevel = newStats.DoublesCompetitiveLevel;
+                entity.EstimatedPumbilityRank = newStats.EstimatedPumbilityRank;
+                entity.EstimatedSinglesPumbilityRank = newStats.EstimatedSinglesPumbilityRank;
+                entity.EstimatedDoublesPumbilityRank = newStats.EstimatedDoublesPumbilityRank;
+                entity.PumbilityBoardAsOf = newStats.PumbilityBoardAsOf;
             }
 
             await database.SaveChangesAsync(cancellationToken);
@@ -118,7 +126,9 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                     entity.SinglesRating,
                     entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
                     entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
-                    entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel);
+                    entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel,
+                    entity.EstimatedPumbilityRank, entity.EstimatedSinglesPumbilityRank,
+                    entity.EstimatedDoublesPumbilityRank, entity.PumbilityBoardAsOf);
             });
         }
 
@@ -135,7 +145,10 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                         entity.SinglesRating,
                         entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
                         entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
-                        entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel)).ToArrayAsync(cancellationToken);
+                        entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel,
+                        entity.EstimatedPumbilityRank, entity.EstimatedSinglesPumbilityRank,
+                        entity.EstimatedDoublesPumbilityRank, entity.PumbilityBoardAsOf))
+                .ToArrayAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<Guid>> GetPlayersByCompetitiveRange(MixEnum mix, ChartType? chartType,

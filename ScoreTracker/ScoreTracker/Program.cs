@@ -263,6 +263,7 @@ builder.Services.AddScoped<ChartScoringLevels>();
 builder.Services.AddScoped<PageDockService>();
 builder.Services.AddScoped<ShellContext>();
 builder.Services.AddScoped<ShellModelFactory>();
+builder.Services.AddScoped<ScoreTracker.Web.Services.SessionBreakdownBuilder>();
 builder.Services.AddScoped<ChartUrlResolver>();
 builder.Services.AddScoped<StaticHeadResolver>();
 builder.Services.AddScoped<IImportCredentialClientStore, ImportCredentialClientStore>();

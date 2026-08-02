@@ -82,4 +82,16 @@ internal sealed class EFScoreSessionRepository : IScoreSessionRepository
         return new ScoreSessionRecord(e.Id, e.UserId, MixIds.ToEnum(e.MixId), e.Source, e.AccountTag, e.CardId,
             e.StartedAt, e.LastActivityAt, e.ScoreCount, e.NewCount, e.UpscoreCount);
     }
+
+    public async Task<IReadOnlyList<ScoreSessionRecord>> ListLatestPerUser(
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreSessionEntity>()
+                .GroupBy(s => s.UserId)
+                .Select(g => g.OrderByDescending(s => s.LastActivityAt).First())
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
+    }
 }

@@ -34,8 +34,8 @@ public sealed class SessionFeedHandlerTests
 
         Assert.Equal(0, page.TotalGroups);
         Assert.Empty(page.Groups);
-        ctx.Journal.Verify(j => j.GetSessionGroups(It.IsAny<Guid>(), It.IsAny<int>(),
-            It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Journal.Verify(j => j.GetSessionGroups(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<int>(),
+            It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -48,8 +48,8 @@ public sealed class SessionFeedHandlerTests
 
         Assert.Equal(0, page.TotalGroups);
         Assert.Empty(page.Groups);
-        ctx.Journal.Verify(j => j.GetSessionGroups(It.IsAny<Guid>(), It.IsAny<int>(),
-            It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Journal.Verify(j => j.GetSessionGroups(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<int>(),
+            It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -247,7 +247,7 @@ public sealed class SessionFeedHandlerTests
 
         public void GivenGroups(params JournalSessionRows[] groups)
         {
-            Journal.Setup(j => j.GetSessionGroups(UserId, It.IsAny<int>(), It.IsAny<int>(),
+            Journal.Setup(j => j.GetSessionGroups(UserId, It.IsAny<int>(), It.IsAny<int>(), It.IsAny<DateTimeOffset?>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((groups.Length, groups));
         }

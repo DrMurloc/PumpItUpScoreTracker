@@ -1,0 +1,144 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* Every session as a card. The jackets and counts come from the journal, so they exist for
+   every session ever recorded; the footer only exists where capture ran. That asymmetry is
+   the whole design — a card that leaned on its headline would look broken on the majority of
+   a real history, so the art carries it and the headline is a bonus. *@
+<div class="sbd-history" data-testid="session-history">
+    <div class="sbd-section-head">
+        <span class="sbd-eyebrow">@L["Session history"]</span>
+        <div class="sbd-history-filter">
+            <MudDatePicker Label="@L["Before"]" Date="Before" DateChanged="OnBeforeChanged"
+                           Clearable="true" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           MaxDate="DateTime.Today" Class="sbd-datepicker"
+                           data-testid="session-before-picker"></MudDatePicker>
+        </div>
+    </div>
+
+    @if (Rows.Count == 0)
+    {
+        <div class="sbd-empty" data-testid="session-history-empty">
+            <b>@L["No sessions here"]</b>
+            <span>@L["Nothing was recorded before that date."]</span>
+        </div>
+    }
+    else
+    {
+        <div class="sbd-cards">
+            @foreach (var row in Rows)
+            {
+                var selected = row.SessionId != null && row.SessionId == SelectedSessionId;
+                <div class="sbd-card @(selected ? "sbd-card-now" : null)" data-testid="session-card"
+                     style="@($"border-top-color:#{row.Mix.GetAccentColor():X6}")"
+                     role="button" tabindex="0"
+                     @onclick="() => View(row)" @onkeypress="e => OnKey(e, row)">
+                    <div class="sbd-card-head">
+                        <div class="sbd-card-when">@row.End.ToLocalTime().ToString("ddd d MMM · h:mm tt")</div>
+                        <div class="sbd-card-meta">
+                            <span class="sbd-mixdot" style="@($"background:#{row.Mix.GetAccentColor():X6}")"></span>
+                            @row.Mix.GetName() · @SourceLabel(row.Source)@Suffix(row)
+                        </div>
+                    </div>
+
+                    <div class="sbd-card-art">
+                        @foreach (var chart in row.TopCharts)
+                        {
+                            <SongImage Song="chart.Song" Small="true"></SongImage>
+                        }
+                        @if (row.MoreCharts > 0)
+                        {
+                            <span class="sbd-card-more">+@row.MoreCharts</span>
+                        }
+                    </div>
+
+                    <div class="sbd-card-counts">
+                        <span class="sbd-card-k"><span class="sbd-card-v sbd-pass">@row.Passes</span><span class="sbd-card-l">@L["Pass"]</span></span>
+                        <span class="sbd-card-k"><span class="sbd-card-v sbd-up">@row.Upscores</span><span class="sbd-card-l">@L["Up"]</span></span>
+                        <span class="sbd-card-k"><span class="sbd-card-v">@row.Plays</span><span class="sbd-card-l">@L["Plays"]</span></span>
+                        <span class="sbd-card-span">@row.LevelSpan</span>
+                    </div>
+
+                    <div class="sbd-card-foot">
+                        @if (row.Headline.Count > 0)
+                        {
+                            @foreach (var milestone in row.Headline)
+                            {
+                                <span class="sbd-card-tag">@Headline(milestone)</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="sbd-card-quiet">@L["Recorded before session capture"]</span>
+                        }
+                        @if (selected)
+                        {
+                            <span class="sbd-card-now-tag">@L["Showing"]</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (PageCount > 1)
+        {
+            <div class="d-flex justify-center my-3">
+                <MudPagination Count="PageCount" Selected="Page" SelectedChanged="OnPageChanged"
+                               data-testid="session-pagination"></MudPagination>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<SessionHistoryRow> Rows { get; set; } = Array.Empty<SessionHistoryRow>();
+    [Parameter] public Guid? SelectedSessionId { get; set; }
+    [Parameter] public int Page { get; set; } = 1;
+    [Parameter] public int PageCount { get; set; } = 1;
+    [Parameter] public DateTime? Before { get; set; }
+    [Parameter] public EventCallback<Guid> OnView { get; set; }
+    [Parameter] public EventCallback<int> OnPage { get; set; }
+    [Parameter] public EventCallback<DateTime?> OnBefore { get; set; }
+
+    private Task View(SessionHistoryRow row)
+    {
+        return row.SessionId == null ? Task.CompletedTask : OnView.InvokeAsync(row.SessionId.Value);
+    }
+
+    // The whole card is the target, so it owes keyboard users the same two keys a button has.
+    private Task OnKey(KeyboardEventArgs e, SessionHistoryRow row)
+    {
+        return e.Key is "Enter" or " " ? View(row) : Task.CompletedTask;
+    }
+
+    private Task OnPageChanged(int page) => OnPage.InvokeAsync(page);
+
+    private Task OnBeforeChanged(DateTime? date) => OnBefore.InvokeAsync(date);
+
+    private string SourceLabel(string source) => source switch
+    {
+        "officialImport" => L["Official Import"],
+        "csv" => L["CSV Upload"],
+        "backfill" => L["Backfill"],
+        _ => L["Play Session"]
+    };
+
+    // The game tag when an import carried one, the duration when the session ran long enough
+    // for it to mean anything, and nothing at all otherwise.
+    private string Suffix(SessionHistoryRow row)
+    {
+        if (row.AccountTag != null) return $" · {row.AccountTag}";
+        return row.Duration.TotalMinutes < 5 ? string.Empty : $" · {L["{0} min", (int)row.Duration.TotalMinutes]}";
+    }
+
+    private string Headline(PlayerMilestoneRecord milestone) => milestone.Kind switch
+    {
+        MilestoneKind.TitleCompleted => $"🏆 {milestone.Title}",
+        MilestoneKind.PumbilityGain => $"📈 +{milestone.NewValue - milestone.OldValue:N0}",
+        MilestoneKind.FolderPassLamp => $"🎉 {milestone.Detail}",
+        _ => $"🏆 {milestone.Detail}"
+    };
+}

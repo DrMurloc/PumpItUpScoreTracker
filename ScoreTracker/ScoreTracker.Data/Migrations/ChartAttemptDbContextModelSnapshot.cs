@@ -2114,8 +2114,20 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("DoublesRating")
                         .HasColumnType("int");
 
+                    b.Property<int?>("EstimatedDoublesPumbilityRank")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EstimatedPumbilityRank")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EstimatedSinglesPumbilityRank")
+                        .HasColumnType("int");
+
                     b.Property<int>("HighestLevel")
                         .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("PumbilityBoardAsOf")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<double>("SinglesCompetitiveLevel")
                         .HasColumnType("float");
@@ -2140,6 +2152,9 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("AttemptsBeforeClear")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2158,11 +2173,23 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset?>("OfficialAsOf")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("OfficialBoardDepth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OfficialPlace")
+                        .HasColumnType("int");
+
                     b.Property<int?>("PeerBetterCount")
                         .HasColumnType("int");
 
                     b.Property<int?>("PeerCount")
                         .HasColumnType("int");
+
+                    b.Property<double?>("PeerPercentile")
+                        .HasColumnType("float");
 
                     b.Property<int?>("PeerPgCount")
                         .HasColumnType("int");

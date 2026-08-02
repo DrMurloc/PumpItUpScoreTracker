@@ -48,5 +48,23 @@ public enum MilestoneKind
     SinglesPumbilityGain,
 
     /// <summary>Doubles PUMBILITY pool went up. OldValue → NewValue. Phoenix 2 only.</summary>
-    DoublesPumbilityGain
+    DoublesPumbilityGain,
+
+    /// <summary>
+    ///     A not-yet-complete title moved. OldValue → NewValue are percents, Title is the
+    ///     title, Detail is "S21|3120|4000" (folder | current | required). Several fire per
+    ///     batch by design — the Sessions page renders these as progress bars, NOT as
+    ///     milestone strips, which is what the earlier "no deltas as milestones" call was
+    ///     protecting against (docs/design/session-breakdown.md §2.2).
+    /// </summary>
+    TitleProgress,
+
+    /// <summary>
+    ///     The player's estimated place on the official PUMBILITY board improved.
+    ///     OldValue → NewValue, Detail is the board name. Estimated by ranking our own pool
+    ///     against the last sealed board, so it moves per import rather than per sweep.
+    ///     Mints on improvement only — an undo recomputes stats downward and must not
+    ///     announce the rank it just cost.
+    /// </summary>
+    OfficialPumbilityRank
 }

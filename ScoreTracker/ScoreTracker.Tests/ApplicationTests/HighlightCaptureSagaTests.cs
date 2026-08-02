@@ -112,6 +112,99 @@ public sealed class HighlightCaptureSagaTests
     }
 
     [Fact]
+    public async Task AMidPackScoreStillRecordsWhereItStoodAmongPeers()
+    {
+        // The flag has a 90th-percentile bar; the percentile itself does not. The page
+        // colours every row by it, and a row with no number reads as a bad score rather
+        // than an unmeasured one.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 910000);
+        ctx.GivenCohort(chart, Enumerable.Range(0, 10)
+            .Select(i => (PhoenixScore)(905000 + i * 10000)).ToArray());
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id
+                && !x.Flags.HasFlag(HighlightFlags.ScoreQuality90)
+                && x.Detail!.PeerPercentile != null
+                && x.Detail.PeerCount == 10)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ACoOpChartCarriesNoPeerStanding()
+    {
+        // Competitive cohorts have no co-op side, so there is nothing to measure this
+        // against. The row still exists — folder flags are type-agnostic and this one is a
+        // folder debut — but it carries no percentile, and the page renders it in plain ink
+        // rather than inventing a band for it.
+        var chart = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(18).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 910000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id
+                && x.Detail!.PeerPercentile == null
+                && !x.Flags.HasFlag(HighlightFlags.ScoreQuality90))),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task APlacementInsideTheOfficialBoardIsFlaggedWithItsDate()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var asOf = new DateTimeOffset(2026, 7, 27, 10, 30, 0, TimeSpan.Zero);
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 982140);
+        ctx.OfficialPlacements.Setup(o => o.EstimatePlacements(It.IsAny<MixEnum>(), UserId,
+                It.IsAny<IReadOnlyList<(Guid, int)>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, OfficialPlacementReading>
+                { [chart.Id] = new(42, 100, asOf) });
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id
+                && x.Flags.HasFlag(HighlightFlags.OfficialBoardPlacement)
+                && x.Detail!.OfficialPlace == 42
+                && x.Detail.OfficialBoardDepth == 100
+                && x.Detail.OfficialAsOf == asOf)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailedPlacementReadStillLetsTheCaptureShip()
+    {
+        // The mirror is a different vertical on a weekly cadence — a bad snapshot read costs
+        // this caption, never the capture around it.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 982140);
+        ctx.GivenCohort(chart, new[] { (PhoenixScore)900000, (PhoenixScore)910000 });
+        ctx.OfficialPlacements.Setup(o => o.EstimatePlacements(It.IsAny<MixEnum>(), UserId,
+                It.IsAny<IReadOnlyList<(Guid, int)>>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("snapshot unavailable"));
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id && x.Detail!.OfficialPlace == null)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task ScoreQualityDoesNotFlagAPerfectGameMostPeersAlsoHold()
     {
         // A PG is 100th percentile tie-inclusive, but a PG most of the cohort also holds
@@ -530,6 +623,8 @@ public sealed class HighlightCaptureSagaTests
         public Mock<IScoreHighlightRepository> Highlights { get; } = new();
         public Mock<IPlayerMilestoneRepository> Milestones { get; } = new();
         public Mock<IPlayerFolderLevelRepository> FolderLevels { get; } = new();
+        public Mock<IScoreAttemptReader> Attempts { get; } = new();
+        public Mock<IOfficialPlacementReader> OfficialPlacements { get; } = new();
         public Mock<IMediator> Mediator { get; } = new();
         public HighlightCaptureSaga Saga { get; }
 
@@ -551,9 +646,16 @@ public sealed class HighlightCaptureSagaTests
                 .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
             FolderLevels.Setup(f => f.GetFolderLevels(It.IsAny<MixEnum>(), UserId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<FolderLevelRecord>());
+            Attempts.Setup(a => a.GetSessionAttemptCounts(UserId, It.IsAny<Guid>(),
+                    It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<Guid, int>());
+            OfficialPlacements.Setup(o => o.EstimatePlacements(It.IsAny<MixEnum>(), UserId,
+                    It.IsAny<IReadOnlyList<(Guid, int)>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<Guid, OfficialPlacementReading>());
             Saga = new HighlightCaptureSaga(Charts.Object, Scores.Object, PlayerStats.Object,
                 Highlights.Object, Milestones.Object, FolderLevels.Object, Mediator.Object,
                 new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(Now).Object,
+                Attempts.Object, OfficialPlacements.Object,
                 NullLogger<HighlightCaptureSaga>.Instance);
         }
 

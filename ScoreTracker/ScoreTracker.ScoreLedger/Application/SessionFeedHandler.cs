@@ -43,7 +43,7 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
             return new RecentSessionsPage(0, Array.Empty<RecentSessionsPage.SessionGroup>());
 
         var (total, groups) = await _journal.GetSessionGroups(request.UserId,
-            Math.Max(1, request.Page), Math.Clamp(request.PageSize, 1, 50), cancellationToken);
+            Math.Max(1, request.Page), Math.Clamp(request.PageSize, 1, 50), request.Before, cancellationToken);
         var chartIds = groups.SelectMany(g => g.Rows).Select(r => r.ChartId).Distinct().ToArray();
         var histories = (await _journal.GetChartHistories(request.UserId, chartIds,
                 cancellationToken))

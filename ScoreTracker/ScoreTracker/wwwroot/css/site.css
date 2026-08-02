@@ -10937,3 +10937,810 @@ button.chart-card-art {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* ===== ChartLeaderboardDialog =====================================================
+   The scope rail is the only new furniture here; rows, glows and place colouring are
+   LeaderboardDialog's .weekly-lb-* vocabulary so the two boards read as one system. */
+
+.cld-scopes {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.cld-sub {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.cld-chip {
+    font-size: .74rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: color-mix(in srgb, var(--mix-ink) 4%, transparent);
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.cld-chip:hover:not(:disabled) {
+    color: var(--mix-ink);
+}
+
+.cld-chip-on {
+    background: color-mix(in srgb, var(--mix-primary) 16%, transparent);
+    border-color: color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+/* A scope with nothing behind it greys and explains nothing — a disabled control already
+   reads as "not here", and a sentence about cohorts costs more than it buys. */
+.cld-chip-off {
+    opacity: .4;
+    cursor: default;
+}
+
+.cld-standing {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    padding: 10px 0 8px;
+}
+
+.cld-standing-place {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.35rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.cld-standing-scope {
+    font-size: .72rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.cld-body {
+    max-height: 46vh;
+    overflow-y: auto;
+}
+
+.cld-empty {
+    padding: 18px 4px;
+    text-align: center;
+    font-size: .85rem;
+    color: var(--mix-ink-muted);
+}
+
+/* ===== Session breakdown (/Player/{id}/Sessions) ==================================
+   The hero's own vocabulary. Score rows are the page's own; the peer boards borrow
+   .weekly-lb-* so every ranked list on the site reads the same way. */
+
+.sbd-hero {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.sbd-hero-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.sbd-hero-who {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.sbd-hero-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+.sbd-hero-when {
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+}
+
+.sbd-hero-tag {
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .14);
+}
+
+.sbd-tally {
+    margin-left: auto;
+    display: flex;
+    gap: 18px;
+}
+
+.sbd-tally div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.sbd-tally-v {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-pass {
+    color: var(--mud-palette-success);
+}
+
+.sbd-up {
+    color: var(--mix-primary);
+}
+
+.sbd-tally-k {
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.sbd-eyebrow {
+    font-family: var(--font-display);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+/* --- the answer, above the fold --------------------------------------------- */
+.sbd-ceremony {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.sbd-pumb {
+    padding: 20px 18px 18px;
+    border-right: 1px solid rgba(255, 255, 255, .07);
+}
+
+.sbd-pumb-lead {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sbd-pumb-big {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 3.6rem;
+    line-height: .86;
+    letter-spacing: -.015em;
+    font-variant-numeric: tabular-nums;
+    color: var(--rarity-prism);
+    text-shadow: 0 0 14px var(--mix-glow);
+}
+
+.sbd-delta {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--mud-palette-success);
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-from {
+    margin-top: 8px;
+    font-size: .76rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-rank {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, .07);
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+.sbd-rank-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.35rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--rarity-sapphire);
+}
+
+.sbd-asof {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+}
+
+.sbd-compet {
+    padding: 20px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sbd-compet-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.sbd-compet-label {
+    font-size: .76rem;
+    color: var(--mix-ink-muted);
+    width: 62px;
+    flex: none;
+}
+
+.sbd-compet-value {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- sections ---------------------------------------------------------------- */
+.sbd-section {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+
+.sbd-section:last-child {
+    border-bottom: 0;
+}
+
+.sbd-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.sbd-section-note {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    margin-left: auto;
+}
+
+/* --- title bars -------------------------------------------------------------- */
+.sbd-tbar {
+    margin-bottom: 14px;
+}
+
+.sbd-tbar:last-child {
+    margin-bottom: 0;
+}
+
+.sbd-tbar-meta {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.sbd-tbar-scope {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+    min-width: 28px;
+}
+
+.sbd-tbar-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.sbd-tbar-pct {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-tbar-was {
+    color: var(--mix-ink-muted);
+    font-weight: 400;
+}
+
+.sbd-tbar-cap {
+    margin-top: 5px;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-track {
+    position: relative;
+    height: 11px;
+    border-radius: 6px;
+    background: var(--mix-surface-muted);
+    border: 1px solid rgba(255, 255, 255, .07);
+    overflow: hidden;
+}
+
+.sbd-track-held {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: color-mix(in srgb, var(--mix-primary) 34%, transparent);
+}
+
+/* The travelled segment is the point of the bar, so it is the only part that glows. */
+.sbd-track-gain {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, var(--mix-primary), var(--rarity-prism));
+    box-shadow: 0 0 12px var(--mix-glow);
+}
+
+/* --- score rows --------------------------------------------------------------- */
+.sbd-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 2px;
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
+}
+
+.sbd-row:last-child {
+    border-bottom: 0;
+}
+
+.sbd-row-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.sbd-row-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sbd-badge {
+    font-size: .74rem;
+}
+
+.sbd-peerpct {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-row-tail {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.sbd-lbbtn {
+    flex: none;
+}
+
+/* --- community peers ---------------------------------------------------------- */
+.sbd-peerboard {
+    margin-bottom: 14px;
+}
+
+.sbd-peerboard:last-child {
+    margin-bottom: 0;
+}
+
+.sbd-peerboard-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.sbd-peerboard-name {
+    font-weight: 600;
+    font-size: .86rem;
+}
+
+.sbd-peer-club {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    margin-left: 6px;
+}
+
+/* Empty states name the action that fills them (UX rule 9). */
+.sbd-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 3px;
+    padding: 18px;
+    border: 1px dashed rgba(255, 255, 255, .14);
+    border-radius: 6px;
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+}
+
+/* --- history table ------------------------------------------------------------ */
+.sbd-history {
+    margin-top: 8px;
+}
+
+.sbd-history-table .sbd-num {
+    text-align: right;
+}
+
+.sbd-history-current td {
+    background: color-mix(in srgb, var(--mix-primary) 8%, transparent);
+}
+
+.sbd-mixdot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.sbd-viewing {
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+/* The width ladder stacks the ceremony below the shell's own 960 switch. */
+@media (max-width: 959.98px) {
+    .sbd-ceremony {
+        grid-template-columns: 1fr;
+    }
+
+    .sbd-pumb {
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, .07);
+    }
+
+    .sbd-tally {
+        width: 100%;
+        margin-left: 0;
+        justify-content: space-between;
+    }
+}
+
+/* Height, not aspect: a landscape phone is 844 WIDE and 390 TALL, so the width rule above
+   would stack the ceremony exactly when the scarce axis is vertical. A fold unfolded and a
+   landscape tablet are both squarish but have height to spare and must not compress. */
+@media (max-height: 520px) {
+    .sbd-ceremony {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .sbd-pumb {
+        border-right: 1px solid rgba(255, 255, 255, .07);
+        border-bottom: 0;
+        padding: 12px 16px;
+    }
+
+    .sbd-pumb-big {
+        font-size: 2.4rem;
+    }
+
+    .sbd-from {
+        display: none;
+    }
+
+    .sbd-compet {
+        padding: 12px 16px;
+        gap: 8px;
+    }
+
+    .sbd-tbar-cap {
+        display: none;
+    }
+}
+
+/* ===== Session history cards =======================================================
+   Replaces the table. Jackets and counts come from the journal so every session has
+   them; the footer only exists where capture ran, which is why the art carries the
+   card and the headline is a bonus. */
+
+.sbd-history-filter {
+    margin-left: auto;
+}
+
+.sbd-datepicker {
+    max-width: 170px;
+}
+
+/* Four across the 1132px content column at the 268px floor — the page size is two full
+   rows, because a page ending mid-row reads as a rendering fault. */
+.sbd-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+    gap: 14px;
+}
+
+.sbd-card {
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-top: 2px solid var(--mix-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: border-color .12s, box-shadow .12s;
+}
+
+.sbd-card:hover {
+    border-color: color-mix(in srgb, var(--mix-primary) 45%, transparent);
+}
+
+.sbd-card:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+.sbd-card-now {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mix-primary) 45%, transparent),
+    0 0 22px color-mix(in srgb, var(--mix-primary) 13%, transparent);
+}
+
+.sbd-card-head {
+    padding: 10px 13px 8px;
+}
+
+.sbd-card-when {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.15;
+}
+
+.sbd-card-meta {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    margin-top: 1px;
+}
+
+.sbd-card-art {
+    display: flex;
+    gap: 4px;
+    padding: 0 13px 10px;
+    align-items: center;
+}
+
+.sbd-card-more {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    margin-left: 2px;
+}
+
+.sbd-card-counts {
+    display: flex;
+    gap: 14px;
+    padding: 0 13px 9px;
+    align-items: baseline;
+}
+
+.sbd-card-k {
+    display: flex;
+    flex-direction: column;
+}
+
+.sbd-card-v {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-card-l {
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.sbd-card-span {
+    margin-left: auto;
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+
+/* Pinned to the bottom so cards of different heights still line their footers up. */
+.sbd-card-foot {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+    padding: 8px 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-height: 37px;
+}
+
+.sbd-card-tag {
+    font-size: .75rem;
+    white-space: nowrap;
+    color: var(--mix-accent);
+}
+
+.sbd-card-quiet {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-style: italic;
+}
+
+.sbd-card-now-tag {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-size: .64rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-primary);
+}
+
+@media (max-width: 599.98px) {
+    .sbd-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .sbd-history-filter {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .sbd-datepicker {
+        max-width: none;
+    }
+}
+
+/* A targeted rebuild, not a page load: the content stays put and softens while it swaps.
+   Skeletons belong to the first load only. */
+.sbd-busy {
+    opacity: .55;
+    transition: opacity .12s ease-out;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sbd-busy {
+        transition: none;
+    }
+}
+
+/* ===== Leaderboard row trimmings ===================================================
+   Flags come from UserLabel, which owns its own narrow-width behaviour: the flag is
+   pinned and only the name shrinks. */
+
+/* Stacking the grade over the plate buys back enough width that the avatar fits at
+   every size, so it is no longer the thing that gets dropped. */
+.sbd-avatar {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+}
+
+/* The avatar's 24px is the row's height, and everything else here stays under it. These
+   read at a glance by colour — the letter itself is confirmation, not the message — so
+   they can run well below the type beside them without costing anything. */
+.sbd-score-stack {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    line-height: 1.1;
+}
+
+.sbd-score-stack > img {
+    height: 14px !important;
+}
+
+/* margin:0 is load-bearing, not tidiness. Nothing resets <p> — not the UA sheet, not
+   MudBlazor, not this file — so the score arrives with a 1em block margin that pushes the
+   stack past the row it sits in and leaves the number floating off the icons beside it. */
+.sbd-score-stack > p {
+    font-size: .82rem;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+    align-self: center;
+}
+
+/* Portrait and square: grade above plate in one column, score beside them. Keyed on aspect
+   rather than width because that is the axis that decides whether a row has horizontal room —
+   a portrait tablet is wide in pixels and still short of it.
+
+   These rows pass Tooltip="false" to ScoreBreakdown, so the icons and the score are direct
+   children here and the grid can simply place them. Two earlier attempts tried to lay out
+   through MudTooltip's wrapper instead, and neither worked: display:contents only flattened
+   one level, and nth-of-type counts within each element's own parent, so images in separate
+   wrappers both read as the first. */
+@media (max-aspect-ratio: 1/1), (max-width: 599.98px) {
+    /* The two rows are declared rather than left to auto-flow, because the score spans them
+       with 1 / -1 and -1 counts back from the end of the EXPLICIT grid. Against implicit
+       rows it resolves to line 1, the span collapses to a single row, and the score centres
+       on the grade alone instead of on the pair. A broken score has no plate, and the second
+       row is then an empty auto track, which is zero tall. */
+    .sbd-score-stack {
+        display: inline-grid;
+        grid-auto-flow: row;
+        grid-template-columns: auto auto;
+        grid-template-rows: repeat(2, auto);
+        align-items: center;
+        column-gap: 4px;
+        row-gap: 0;
+        line-height: 1.05;
+    }
+
+    /* Both icons claim column 1; auto-flow drops them into successive rows. Two of them
+       at 11px fit inside the avatar's 24px, so stacking costs the row no height over
+       sitting side by side. */
+    .sbd-score-stack > img {
+        grid-column: 1;
+        height: 11px !important;
+    }
+
+    .sbd-score-stack > p {
+        grid-column: 2;
+        grid-row: 1 / -1;
+        align-self: center;
+        margin: 0;
+        padding-left: 0 !important;
+    }
+}
+
+/* The club name is hidden on narrow screens only — a portrait tablet has the width for it,
+   and it is width that was truncating it to a letter or two. */
+@media (max-width: 599.98px) {
+    .sbd-peer-club {
+        display: none;
+    }
+}
+
+.sbd-peer-level {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+}

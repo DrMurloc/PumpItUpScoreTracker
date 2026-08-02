@@ -526,6 +526,12 @@ header text; the footer carries the `#MIX|…#` emoji token.
 
 ## The Recent Scores page (the card's link target)
 
+> ⚠ **Superseded for the page itself by [session-breakdown.md](session-breakdown.md)**
+> (2026-08-01). The section below is the as-built record of what shipped — a paged grid of
+> equal-weight session cards. The overhaul makes the most recent session a full-page hero and
+> collapses the rest to a table; the ⭐ Of-Note filter and the page-size selector retire with
+> it. The **card's deep link (`?session=`) is unchanged** and still lands on that session.
+
 A public, anonymous-viewable feed of a player's recent score activity — the first delivery of
 the score-progression-history feature the journal was built for, trialed here as the Discord
 card's CTA before it gets linked from other UI surfaces.

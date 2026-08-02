@@ -29,7 +29,7 @@ internal interface IScoreJournalRepository
     ///     capture. Rows ride along; each group carries its mix.
     /// </summary>
     Task<(int TotalGroups, IReadOnlyList<JournalSessionRows> Groups)> GetSessionGroups(Guid userId,
-        int page, int pageSize, CancellationToken cancellationToken);
+        int page, int pageSize, DateTimeOffset? before, CancellationToken cancellationToken);
 
     /// <summary>
     ///     Full journal history for the given charts, oldest first — classification
