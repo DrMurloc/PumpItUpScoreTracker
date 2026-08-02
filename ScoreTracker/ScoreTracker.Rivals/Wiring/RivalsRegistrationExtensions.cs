@@ -1,6 +1,9 @@
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Rivals.Application;
+using ScoreTracker.Rivals.Domain;
+using ScoreTracker.Rivals.Infrastructure;
 
 namespace ScoreTracker.Rivals.Wiring;
 
@@ -14,6 +17,9 @@ public static class RivalsRegistrationExtensions
     /// </summary>
     public static IServiceCollection AddRivals(this IServiceCollection services)
     {
+        services.AddTransient<IRivalRepository, EFRivalRepository>();
+        services.AddTransient<IRivalInviteCodeRepository, EFRivalInviteCodeRepository>();
+        services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, RivalsModelContribution>();
         return services;
     }
@@ -25,5 +31,6 @@ public static class RivalsRegistrationExtensions
     /// </summary>
     public static void AddRivalsConsumers(this IRegistrationConfigurator configurator)
     {
+        configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

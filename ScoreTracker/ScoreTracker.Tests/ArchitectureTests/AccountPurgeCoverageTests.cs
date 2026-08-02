@@ -149,6 +149,7 @@ public sealed class AccountPurgeCoverageTests
             x.AddIdentityConsumers();
             x.AddRandomizerConsumers();
             x.AddHomePageConsumers();
+            x.AddRivalsConsumers();
             x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
         });
 
