@@ -11654,25 +11654,16 @@ button.chart-card-art {
    pinned and only the name shrinks. */
 
 /* Stacking the grade over the plate buys back enough width that the avatar fits at
-   every size, so it is no longer the thing that gets dropped.
-
-   20px is the row's content height, and every piece here is cut to it: a Small MudAvatar
-   is 24px and would otherwise set the floor on its own, which is how shrinking the icons
-   alone bought nothing. */
+   every size, so it is no longer the thing that gets dropped. */
 .sbd-avatar {
     display: inline-flex;
     align-items: center;
     flex: none;
 }
 
-.sbd-avatar .mud-avatar {
-    width: 20px;
-    height: 20px;
-    font-size: .62rem;
-}
-
-/* These read at a glance by colour — the letter itself is confirmation, not the message —
-   so they can run well under the type beside them without costing anything. */
+/* The avatar's 24px is the row's height, and everything else here stays under it. These
+   read at a glance by colour — the letter itself is confirmation, not the message — so
+   they can run well below the type beside them without costing anything. */
 .sbd-score-stack {
     flex: none;
     display: inline-flex;
@@ -11710,11 +11701,11 @@ button.chart-card-art {
     }
 
     /* Both icons claim column 1; auto-flow drops them into successive rows. Two of them
-       at 10px land on the same 20px the avatar and the type occupy, so stacking costs the
-       row no height over sitting side by side. */
+       at 11px fit inside the avatar's 24px, so stacking costs the row no height over
+       sitting side by side. */
     .sbd-score-stack > img {
         grid-column: 1;
-        height: 10px !important;
+        height: 11px !important;
     }
 
     /* Spans whatever rows the icons produced, so it centres against the stack rather than
