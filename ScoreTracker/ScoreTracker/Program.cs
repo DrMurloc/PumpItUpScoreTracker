@@ -236,22 +236,15 @@ builder.Services.AddBlazorApplicationInsights()
         // settings save visible on the very next request.
         o.AddRequestPostProcessor<IRequestPostProcessor<SaveUserUiSettingCommand, Unit>,
             UiSettingSavedCacheEviction>();
+        // Application + Web, then every vertical. The vertical list is NOT written out here: it
+        // used to be, and CommunityTools was left off it — 33 handlers silently unregistered, found
+        // by a page throwing at runtime. VerticalAssemblies.All() is the one place, and a ratchet
+        // checks it against the assemblies that actually contain handlers.
+        // Data no longer holds MediatR handlers — its last two (player stats/history) moved into
+        // the PlayerProgress vertical at C50.
         o.RegisterServicesFromAssemblies(
-            // Data no longer holds MediatR handlers — its last two (player stats/history)
-            // moved into the PlayerProgress vertical at C50.
-            typeof(GetSavedChartsHandler).Assembly
-            , typeof(MainLayout).Assembly,
-            typeof(PlayerProgressRegistrationExtensions).Assembly,
-            typeof(IdentityRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.Catalog.Wiring.CatalogRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.Randomizer.Wiring.RandomizerRegistrationExtensions).Assembly,
-            typeof(ChartIntelligenceRegistrationExtensions).Assembly,
-            typeof(WeeklyChallengeRegistrationExtensions).Assembly,
-            typeof(EventCompetitionRegistrationExtensions).Assembly,
-            typeof(CommunitiesRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.HomePage.Wiring.HomePageRegistrationExtensions).Assembly);
+            new[] { typeof(GetSavedChartsHandler).Assembly, typeof(MainLayout).Assembly }
+                .Concat(VerticalAssemblies.All()).ToArray());
     })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IBulkChartJsonParser, BulkChartJsonParser>()
