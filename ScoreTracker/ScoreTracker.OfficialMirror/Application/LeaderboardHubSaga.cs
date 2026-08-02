@@ -23,6 +23,7 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialPlayerStandingQuery, OfficialPlayerStandingRecord?>,
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
     IRequestHandler<ResolveOfficialPlayerQuery, OfficialPlayerResolution?>,
+    IRequestHandler<ResolveOfficialPlayersQuery, IReadOnlyList<OfficialPlayerResolution>>,
     IRequestHandler<GetOfficialScoresForTagsQuery, OfficialTagScores>,
     IRequestHandler<GetOfficialPopularityQuery, IReadOnlyList<OfficialPopularityRecord>>,
     IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>,
@@ -368,18 +369,30 @@ internal sealed class LeaderboardHubSaga :
     public async Task<OfficialPlayerResolution?> Handle(ResolveOfficialPlayerQuery request,
         CancellationToken cancellationToken)
     {
-        var player = await _snapshots.GetPlayerByUsername(request.Mix, request.Tag, cancellationToken);
-        if (player == null) return null;
+        var resolved = await Handle(new ResolveOfficialPlayersQuery(request.Mix, new[] { request.Tag }),
+            cancellationToken);
+        return resolved.FirstOrDefault();
+    }
+
+    public async Task<IReadOnlyList<OfficialPlayerResolution>> Handle(ResolveOfficialPlayersQuery request,
+        CancellationToken cancellationToken)
+    {
+        var players = await _snapshots.GetPlayersByUsernames(request.Mix, request.Tags, cancellationToken);
+        if (players.Count == 0) return Array.Empty<OfficialPlayerResolution>();
 
         // "Known" and "currently on the boards" are different facts, and a picker needs the
         // second while an existing rivalry only needs the first — a tag that dropped off this
         // week still names the person somebody chose.
         var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
-        var current = latest != null &&
-                      (await _snapshots.GetPlayerNamesInSnapshot(latest.Id, cancellationToken))
-                      .Contains(player.Username, StringComparer.OrdinalIgnoreCase);
+        var current = latest == null
+            ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            : (await _snapshots.GetPlayerNamesInSnapshot(latest.Id, cancellationToken))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        return new OfficialPlayerResolution(player.Username, player.UserId, player.Avatar, current);
+        return players
+            .Select(p => new OfficialPlayerResolution(p.Username, p.UserId, p.Avatar,
+                current.Contains(p.Username)))
+            .ToArray();
     }
 
     public async Task<OfficialTagScores> Handle(GetOfficialScoresForTagsQuery request,

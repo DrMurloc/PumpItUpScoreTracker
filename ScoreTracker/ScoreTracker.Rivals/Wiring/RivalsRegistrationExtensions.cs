@@ -20,6 +20,7 @@ public static class RivalsRegistrationExtensions
         services.AddTransient<IRivalRepository, EFRivalRepository>();
         services.AddTransient<IRivalInviteCodeRepository, EFRivalInviteCodeRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        services.AddTransient<RivalSubjectResolver>();
         services.AddSingleton<IDbModelContribution, RivalsModelContribution>();
         return services;
     }
@@ -32,5 +33,9 @@ public static class RivalsRegistrationExtensions
     public static void AddRivalsConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<AccountPurgeConsumer>();
+        // Without these two a stored board tag rots: it never becomes the account it
+        // belongs to, and it never follows an accepted rename.
+        configurator.AddConsumer<OfficialPlayerLinkSaga>();
+        configurator.AddConsumer<OfficialPlayerRenameSaga>();
     }
 }
