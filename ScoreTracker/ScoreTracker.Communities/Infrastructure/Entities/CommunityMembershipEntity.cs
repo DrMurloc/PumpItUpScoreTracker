@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using ScoreTracker.Data.Persistence;
 
 namespace ScoreTracker.Communities.Infrastructure.Entities
 {
@@ -7,6 +8,9 @@ namespace ScoreTracker.Communities.Infrastructure.Entities
     // same seat. Unique so a concurrent join cannot double-insert.
     [Index(nameof(CommunityId), nameof(UserId), IsUnique = true)]
     [Index(nameof(CommunityId), nameof(Role))]
+    // UserId is whose seat this is. GrantedByUserId is another member entirely, so a purge keyed
+    // on it would revoke a surviving admin because whoever promoted them left.
+    [PurgeKey(nameof(UserId))]
     internal sealed class CommunityMembershipEntity
     {
         [Key] public Guid Id { get; set; }
