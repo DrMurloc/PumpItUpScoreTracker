@@ -1,4 +1,4 @@
-@namespace ScoreTracker.Web.Components.CommunityTools
+﻿@namespace ScoreTracker.Web.Components.CommunityTools
 @using MediatR
 @using ScoreTracker.CommunityTools.Contracts
 @using ScoreTracker.CommunityTools.Contracts.Commands
@@ -100,21 +100,12 @@
     {
         if (Tool is null) return;
 
-        try
-        {
-            // What the player was shown, not what the tool is asking for now. If a maker moved the
-            // tool into session mode while this dialog was open, the handler refuses rather than
-            // reading this dialog's silence as consent.
-            await Mediator.Send(new ConnectToolCommand(Tool.Id, Tool.RequiresPiuGameSession));
-        }
-        catch (Exception e)
-        {
-            // A domain exception's message is written for the person who tripped it.
-            Snackbar.Add(e.Message, Severity.Error);
-            await Close();
-            await OnConnected.InvokeAsync();
-            return;
-        }
+        // What the player was shown, not what the tool is asking for now. If a maker moved the tool
+        // into session mode while this dialog was open, the handler throws and the page breaks —
+        // deliberately unhandled (owner, 2026-08-02). The race needs a tool at zero players, a maker
+        // flipping mode, and a player mid-dialog simultaneously; carrying polished recovery for that
+        // costs more than it saves. What matters is that no share is granted.
+        await Mediator.Send(new ConnectToolCommand(Tool.Id, Tool.RequiresPiuGameSession));
 
         Snackbar.Add(L["{0} can now read your scores", Tool.Name].Value, Severity.Success);
         await Close();
