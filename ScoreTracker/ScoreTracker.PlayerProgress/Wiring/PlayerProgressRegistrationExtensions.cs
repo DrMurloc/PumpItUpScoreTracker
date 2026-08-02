@@ -32,6 +32,7 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<IPlayerSeasonRecapRepository, EFPlayerSeasonRecapRepository>();
         services.AddTransient<IPlayerFolderLevelRepository, EFPlayerFolderLevelRepository>();
         services.AddTransient<IPlayerHighlightRepository, EFPlayerHighlightRepository>();
+        services.AddTransient<IPlayerHighlightCapturer, PlayerHighlightCapturer>();
         services.AddTransient<CohortScoreProvider>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
@@ -60,5 +61,10 @@ public static class PlayerProgressRegistrationExtensions
         configurator.AddConsumer<HighlightCaptureSaga>();
         // Season recaps: recomputed per player off the session snapshot.
         configurator.AddConsumer<RecapSaga>();
+        // The significant-win ledger every highlights feed reads, and its weekly retention
+        // purge. Both moved here from Communities when the payload stopped being
+        // community-scoped (docs/design/rivals.md D32).
+        configurator.AddConsumer<PlayerHighlightSaga>();
+        configurator.AddConsumer<PlayerHighlightPurgeConsumer>();
     }
 }

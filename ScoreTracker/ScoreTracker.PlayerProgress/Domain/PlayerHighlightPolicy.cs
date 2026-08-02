@@ -1,4 +1,3 @@
-using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Records;
@@ -7,18 +6,26 @@ using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 
-namespace ScoreTracker.Communities.Domain;
+namespace ScoreTracker.PlayerProgress.Domain;
 
 /// <summary>
-///     Decides which of a score batch's changes/milestones are community-scoped BIG wins
-///     (docs/design/home-page-widgets.md §7). Pure — the saga loads the population snapshots
+///     Decides which of a score batch's changes/milestones are BIG wins
+///     (docs/design/home-page-widgets.md §7). Pure — the capturer loads the population snapshots
 ///     (cached) and passes them in, so every cutoff is pinned by DomainTest and tunable without
-///     touching plumbing. Significance is a COMMUNITY judgment (fork b): this lives in Communities,
-///     not in the PlayerProgress highlight engine.
+///     touching plumbing.
+///     <para>
+///         This used to live in Communities on the reasoning that significance was a community
+///         judgment. Every input below says otherwise: a site-wide rarity snapshot and the
+///         player's own stats, with no community anywhere. The audience is what varies — a
+///         community's members, or somebody's rival list — so the bar itself belongs here, once
+///         (docs/design/rivals.md D31).
+///     </para>
 /// </summary>
-internal static class CommunityHighlightPolicy
+internal static class PlayerHighlightPolicy
 {
-    // ── Cutoffs (owner 2026-07-12). Higher bars than the per-player highlight flags. ──
+    // ── Cutoffs (owner 2026-07-12). Higher bars than the per-player highlight flags: those
+    //    are tier one, the Sessions page's own material; these are tier two, what a feed shows
+    //    other people. ──
     /// <summary>A PG fewer than this fraction of active players hold is notable.</summary>
     public const double PgRarityThreshold = 0.01;
 
@@ -220,7 +227,7 @@ internal static class CommunityHighlightPolicy
 
 /// <summary>
 ///     The slow-moving population aggregates the policy needs, snapshotted so the busy import path
-///     doesn't recompute them per event. Loaded by the saga behind a per-mix memory cache.
+///     doesn't recompute them per event. Loaded by the capturer behind a per-mix memory cache.
 /// </summary>
 internal sealed record RaritySnapshot(
     IReadOnlyDictionary<Guid, int> PgHoldersByChart,

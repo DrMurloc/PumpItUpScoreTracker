@@ -1,11 +1,11 @@
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.Catalog.Contracts.Messages;
-using ScoreTracker.Communities.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
 using ScoreTracker.EventCompetition.Contracts.Messages;
 using ScoreTracker.Identity.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
+using ScoreTracker.PlayerProgress.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.SharedKernel.Enums;
 
@@ -69,6 +69,8 @@ public sealed class RecurringJobRunner
     public Task PublishCrawlPiuCenter() =>
         _bus.Publish(new CrawlPiuCenterCommand());
 
-    public Task PublishPurgeCommunityHighlights() =>
-        _bus.Publish(new PurgeCommunityHighlightsCommand());
+    // One command, two consumers: PlayerProgress drops the win payloads, Communities drops its
+    // audience index rows over them (docs/design/rivals.md D33).
+    public Task PublishPurgePlayerHighlights() =>
+        _bus.Publish(new PurgePlayerHighlightsCommand());
 }

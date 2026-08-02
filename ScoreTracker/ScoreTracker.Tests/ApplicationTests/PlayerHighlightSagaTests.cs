@@ -7,9 +7,8 @@ using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using ScoreTracker.Communities.Application;
-using ScoreTracker.Communities.Contracts;
-using ScoreTracker.Communities.Domain;
+using ScoreTracker.PlayerProgress.Application;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -22,23 +21,28 @@ using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
-public sealed class CommunityHighlightSagaTests
+public sealed class PlayerHighlightSagaTests
 {
     private static readonly DateTimeOffset When = new(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
 
     private readonly Mock<IChartRepository> _charts = new();
-    private readonly Mock<ICommunityHighlightRepository> _highlights = new();
+    private readonly Mock<IPlayerHighlightRepository> _highlights = new();
     private readonly Mock<IPlayerStatsReader> _playerStats = new();
     private readonly Mock<IScoreReader> _scores = new();
     private readonly Mock<ITitleRepository> _titles = new();
+    private readonly Mock<IBus> _bus = new();
 
     // The capture logic lives in the capturer now; the saga just delegates + isolates failures.
-    private CommunityHighlightCapturer Capturer()
+    private PlayerHighlightCapturer Capturer()
     {
         _playerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PlayerStatsRecord(Guid.NewGuid(), 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0));
+        _highlights.Setup(h => h.Add(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         return new(_charts.Object, _scores.Object, _titles.Object, _highlights.Object, _playerStats.Object,
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()), _bus.Object);
     }
 
     private void SetupPopulation(Chart chart, int pgHolders, int activePlayers)
@@ -72,7 +76,7 @@ public sealed class CommunityHighlightSagaTests
     }
 
     [Fact]
-    public async Task CapturerPersistsANotablePgToTheWinnersCommunities()
+    public async Task CapturerPersistsANotablePgAndAnnouncesIt()
     {
         var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Double).WithSongName("Bee").Build();
         SetupPopulation(chart, pgHolders: 5, activePlayers: 1000);
@@ -81,9 +85,12 @@ public sealed class CommunityHighlightSagaTests
 
         await Capturer().Capture(e, CancellationToken.None);
 
-        _highlights.Verify(h => h.AddForUserCommunities(e.EventId, userId, MixEnum.Phoenix, When, null,
+        _highlights.Verify(h => h.Add(e.EventId, userId, MixEnum.Phoenix, When, null,
             It.Is<IReadOnlyList<SignificantWin>>(w => w.Any(x => x.Kind == WinKind.NotablePg && x.ChartId == chart.Id)),
             It.IsAny<CancellationToken>()), Times.Once);
+        // The announcement is what every audience acts on, so it rides with the write.
+        _bus.Verify(b => b.Publish(It.Is<PlayerHighlightsStoredEvent>(p => p.EventId == e.EventId
+            && p.UserId == userId && p.Mix == MixEnum.Phoenix), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -94,7 +101,7 @@ public sealed class CommunityHighlightSagaTests
 
         await Capturer().Capture(PgEvent(Guid.NewGuid(), chart.Id, plate: null), CancellationToken.None);
 
-        _highlights.Verify(h => h.AddForUserCommunities(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+        _highlights.Verify(h => h.Add(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
             It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -109,18 +116,39 @@ public sealed class CommunityHighlightSagaTests
 
         _charts.Verify(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
             It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()), Times.Never);
-        _highlights.Verify(h => h.AddForUserCommunities(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+        _highlights.Verify(h => h.Add(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
             It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     A redelivered event finds the row already there. Re-announcing it would have every
+    ///     audience re-index the same win.
+    /// </summary>
+    [Fact]
+    public async Task CapturerDoesNotAnnounceAnEventItHadAlreadyStored()
+    {
+        var chart = new ChartBuilder().WithLevel(24).WithType(ChartType.Double).WithSongName("Bee").Build();
+        SetupPopulation(chart, pgHolders: 5, activePlayers: 1000);
+        var capturer = Capturer();
+        _highlights.Setup(h => h.Add(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+                It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        await capturer.Capture(PgEvent(Guid.NewGuid(), chart.Id), CancellationToken.None);
+
+        _bus.Verify(b => b.Publish(It.IsAny<PlayerHighlightsStoredEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
     public async Task SagaSwallowsCapturerFailuresSoImportsAreNeverDisrupted()
     {
-        var capturer = new Mock<ICommunityHighlightCapturer>();
+        var capturer = new Mock<IPlayerHighlightCapturer>();
         capturer.Setup(c => c.Capture(It.IsAny<ScoreHighlightsCapturedEvent>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("db down"));
-        var saga = new CommunityHighlightSaga(capturer.Object, NullLogger<CommunityHighlightSaga>.Instance);
+        var saga = new PlayerHighlightSaga(capturer.Object, NullLogger<PlayerHighlightSaga>.Instance);
 
         var thrown = await Record.ExceptionAsync(() => saga.Consume(Context(PgEvent(Guid.NewGuid(), Guid.NewGuid()))));
 

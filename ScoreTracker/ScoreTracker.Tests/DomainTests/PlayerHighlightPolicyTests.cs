@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Xunit;
-using ScoreTracker.Communities.Contracts;
-using ScoreTracker.Communities.Domain;
+using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
@@ -15,7 +14,7 @@ using ScoreTracker.Tests.TestData;
 namespace ScoreTracker.Tests.DomainTests;
 
 [ExcludeFromCodeCoverage]
-public sealed class CommunityHighlightPolicyTests
+public sealed class PlayerHighlightPolicyTests
 {
     private static readonly DateTimeOffset When = new(2026, 7, 12, 0, 0, 0, TimeSpan.Zero);
 
@@ -65,7 +64,7 @@ public sealed class CommunityHighlightPolicyTests
 
     private static IReadOnlyList<SignificantWin> Classify(ScoreHighlightsCapturedEvent e,
         IReadOnlyDictionary<Guid, Chart> charts, RaritySnapshot snapshot, PlayerStatsRecord? stats = null) =>
-        CommunityHighlightPolicy.Classify(e, charts, snapshot, stats ?? Stats());
+        PlayerHighlightPolicy.Classify(e, charts, snapshot, stats ?? Stats());
 
     [Fact]
     public void ADeepCompletionTierIsACommunityWin()
@@ -359,7 +358,7 @@ public sealed class CommunityHighlightPolicyTests
                 TitleCompleted("Expert Lv. 4"), TitleCompleted("Expert Lv. 5")),
             new Dictionary<Guid, Chart>(), Snapshot());
 
-        Assert.Equal(CommunityHighlightPolicy.MaxWinsPerEvent, wins.Count);
+        Assert.Equal(PlayerHighlightPolicy.MaxWinsPerEvent, wins.Count);
     }
 
     [Fact]

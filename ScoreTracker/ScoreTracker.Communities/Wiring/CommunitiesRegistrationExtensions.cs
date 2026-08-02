@@ -25,7 +25,6 @@ public static class CommunitiesRegistrationExtensions
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<IContributionDeletionRepository, EFContributionDeletionRepository>();
         services.AddTransient<ICommunityHighlightRepository, EFCommunityHighlightRepository>();
-        services.AddTransient<ICommunityHighlightCapturer, CommunityHighlightCapturer>();
         services.AddSingleton<IDbModelContribution, CommunitiesModelContribution>();
         return services;
     }
@@ -44,7 +43,8 @@ public static class CommunitiesRegistrationExtensions
         configurator.AddConsumer<CommunitySaga>();
         configurator.AddConsumer<DiscordFeedSaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
-        configurator.AddConsumer<CommunityHighlightSaga>();
+        // The capture moved to PlayerProgress; what stays here is the audience index over it.
+        configurator.AddConsumer<CommunityHighlightIndexSaga>();
         configurator.AddConsumer<CommunityHighlightPurgeConsumer>();
     }
 }

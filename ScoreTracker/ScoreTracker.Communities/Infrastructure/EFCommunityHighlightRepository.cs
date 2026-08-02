@@ -1,8 +1,5 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Communities.Domain;
-using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.Communities.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.SharedKernel.Enums;
@@ -12,12 +9,6 @@ namespace ScoreTracker.Communities.Infrastructure;
 
 internal sealed class EFCommunityHighlightRepository : ICommunityHighlightRepository
 {
-    // Enums ride as strings so a reordered WinKind can't silently reshuffle stored payloads.
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        Converters = { new JsonStringEnumConverter() }
-    };
-
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFCommunityHighlightRepository(IDbContextFactory<ChartAttemptDbContext> factory)
@@ -26,9 +17,8 @@ internal sealed class EFCommunityHighlightRepository : ICommunityHighlightReposi
     }
 
     public async Task AddForUserCommunities(Guid eventId, Guid userId, MixEnum mix, DateTimeOffset occurredAt,
-        Guid? sessionId, IReadOnlyList<SignificantWin> wins, CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        if (wins.Count == 0) return;
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         // Idempotent by event: a redelivered bus event, or a re-run backfill, writes nothing new.
         if (await database.Set<CommunityHighlightEntity>().AnyAsync(h => h.EventId == eventId, cancellationToken))
@@ -41,7 +31,6 @@ internal sealed class EFCommunityHighlightRepository : ICommunityHighlightReposi
         if (communityIds.Length == 0) return;
 
         var mixId = MixIds.For(mix);
-        var payload = JsonSerializer.Serialize(wins, SerializerOptions);
         var rows = communityIds.Select(communityId => new CommunityHighlightEntity
         {
             Id = Guid.NewGuid(),
@@ -49,48 +38,38 @@ internal sealed class EFCommunityHighlightRepository : ICommunityHighlightReposi
             CommunityId = communityId,
             UserId = userId,
             MixId = mixId,
-            OccurredAt = occurredAt,
-            SessionId = sessionId,
-            Payload = payload,
-            SchemaVersion = PlayerHighlightSchema.CurrentVersion
+            OccurredAt = occurredAt
         });
         await database.Set<CommunityHighlightEntity>().AddRangeAsync(rows, cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<CommunityHighlightEntry>> GetForUser(Guid requestingUserId,
+    public async Task<IReadOnlyList<Guid>> GetVisibleEventIds(Guid requestingUserId,
         IReadOnlyCollection<Name> communityNames, MixEnum mix, int take, CancellationToken cancellationToken)
     {
-        if (communityNames.Count == 0 || take <= 0) return Array.Empty<CommunityHighlightEntry>();
+        if (communityNames.Count == 0 || take <= 0) return Array.Empty<Guid>();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixIds.For(mix);
         var nameStrings = communityNames.Select(n => n.ToString()).ToArray();
 
         // Rows in the requested communities where the requester is themselves a member (the consent
         // gate, CH2). One row per (event × community), so a win in several of the requester's shared
-        // crews returns several rows — deduped by EventId below. Over-fetch a bounded multiple, then
-        // dedupe and take: keeps a World-scoped feed from pulling the whole 30-day table.
+        // crews returns several rows — deduped below. Over-fetch a bounded multiple, then dedupe
+        // and take: keeps a World-scoped feed from pulling the whole 30-day table.
         var fetched = await (
                 from highlight in database.Set<CommunityHighlightEntity>()
-                where highlight.MixId == mixId && highlight.SchemaVersion == PlayerHighlightSchema.CurrentVersion
+                where highlight.MixId == mixId
                 join community in database.Set<CommunityEntity>() on highlight.CommunityId equals community.Id
                 where nameStrings.Contains(community.Name)
                 join requesterMembership in database.Set<CommunityMembershipEntity>()
                     on new { highlight.CommunityId, UserId = requestingUserId }
                     equals new { requesterMembership.CommunityId, requesterMembership.UserId }
                 orderby highlight.OccurredAt descending
-                select new { highlight.EventId, highlight.UserId, highlight.OccurredAt, highlight.SessionId, highlight.Payload })
+                select highlight.EventId)
             .Take(Math.Max(take * 5, 100))
             .ToArrayAsync(cancellationToken);
 
-        return fetched
-            .GroupBy(r => r.EventId)
-            .Select(g => g.First())
-            .Take(take)
-            .Select(r => new CommunityHighlightEntry(r.UserId, mix, r.OccurredAt, r.SessionId,
-                JsonSerializer.Deserialize<List<SignificantWin>>(r.Payload, SerializerOptions)
-                ?? new List<SignificantWin>()))
-            .ToArray();
+        return fetched.Distinct().Take(take).ToArray();
     }
 
     public async Task<int> PurgeBefore(DateTimeOffset cutoff, CancellationToken cancellationToken)

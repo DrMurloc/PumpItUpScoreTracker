@@ -166,7 +166,7 @@ else
 
     private bool _loaded;
     private string? _loadedFor;
-    private IReadOnlyList<CommunityHighlightRecord> _records = Array.Empty<CommunityHighlightRecord>();
+    private IReadOnlyList<PlayerHighlightRecord> _records = Array.Empty<PlayerHighlightRecord>();
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private MixEnum _mix = MixEnum.Phoenix;
 
@@ -189,7 +189,7 @@ else
 
         if (communities.Count == 0)
         {
-            _records = Array.Empty<CommunityHighlightRecord>();
+            _records = Array.Empty<PlayerHighlightRecord>();
             _charts = new Dictionary<Guid, Chart>();
             _loaded = true;
             return;
@@ -201,7 +201,7 @@ else
         _loaded = true;
     }
 
-    private static string SessionsLink(CommunityHighlightRecord r) =>
+    private static string SessionsLink(PlayerHighlightRecord r) =>
         r.SessionId == null ? $"/Player/{r.UserId}/Sessions" : $"/Player/{r.UserId}/Sessions?session={r.SessionId}";
 
     private string Relative(DateTimeOffset when)
@@ -253,7 +253,7 @@ else
         return (null, null);
     }
 
-    private bool IsMe(CommunityHighlightRecord record) =>
+    private bool IsMe(PlayerHighlightRecord record) =>
         CurrentUser.IsLoggedIn && CurrentUser.User.Id == record.UserId;
 
     // "80% of S22" when the completion tier is the news, "D21 now S" when the grade is. The
