@@ -31,6 +31,13 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
     /// <summary>How many charts get a community-peer board. Every flagged chart qualifies (D9).</summary>
     private const int MaxPeerBoards = 8;
 
+    /// <summary>
+    ///     Names per board. A big club puts dozens of people on a popular chart, and a list that
+    ///     long stops being a comparison and starts being a directory — the nearest few are the
+    ///     ones the section is actually about. The full board is one tap away in the dialog.
+    /// </summary>
+    private const int MaxPeersPerBoard = 5;
+
     public async Task<SessionsPageModel> Build(Guid userId, Guid? selectedSessionId, int page, int pageSize,
         CancellationToken cancellationToken)
     {
@@ -112,7 +119,7 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
                                          && m.Detail == OfficialPumbilityBoardNames.Combined)
             .OrderBy(m => m.OccurredAt).ToArray();
 
-        return new SessionCeremony(pumbility.Old, pumbility.New,
+        return new SessionCeremony(stats.SkillRating, pumbility.Old, pumbility.New,
             singles.Old, singles.New, doubles.Old, doubles.New,
             stats.SinglesCompetitiveLevel, stats.DoublesCompetitiveLevel,
             stats.EstimatedPumbilityRank,
@@ -174,6 +181,7 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
                 // which is how Communities computed theirs.
                 .OrderBy(p => Math.Abs(p.CompetitiveLevel - MyCompetitiveLevel(charts[id], stats)))
                 .ThenByDescending(p => (int)p.Score)
+                .Take(MaxPeersPerBoard)
                 .ToArray()))
             .ToArray();
     }

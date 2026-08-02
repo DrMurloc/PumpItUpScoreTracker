@@ -61,7 +61,7 @@ public sealed class SessionHeroTests : ComponentTestBase
         // collapsing into an empty hero.
         var quiet = FullBreakdown() with
         {
-            Ceremony = new SessionCeremony(null, null, null, null, null, null, 22.6, 23.4, null, null, null),
+            Ceremony = new SessionCeremony(64612, null, null, null, null, null, null, 22.6, 23.4, null, null, null),
             TitleBars = Array.Empty<SessionTitleBarModel>(),
             Milestones = Array.Empty<PlayerMilestoneRecord>(),
             PeerBoards = Array.Empty<SessionPeerBoard>()
@@ -102,7 +102,7 @@ public sealed class SessionHeroTests : ComponentTestBase
             new ScoreSessionRecord(Session, Guid.NewGuid(), MixEnum.Phoenix, "officialImport",
                 "DRMURLOC #7251", "01", Start, Start.AddMinutes(9), 2, 2, 0),
             charts, scores,
-            new SessionCeremony(64466, 64612, 22.62, 22.68, null, null, 22.68, 23.4, 131, 148,
+            new SessionCeremony(64612, 64466, 64612, 22.62, 22.68, null, null, 22.68, 23.4, 131, 148,
                 Start.AddDays(-6)),
             new[]
             {

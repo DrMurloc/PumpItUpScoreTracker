@@ -7,7 +7,7 @@
     <div class="sbd-pumb">
         <div class="sbd-eyebrow">PUMBILITY</div>
         <div class="sbd-pumb-lead">
-            <span class="sbd-pumb-big">@PumbilityNow.ToString("N0")</span>
+            <span class="sbd-pumb-big">@Ceremony.HeadlinePumbility.ToString("N0")</span>
             @if (Ceremony.PumbilityGain is > 0)
             {
                 <span class="sbd-delta">+@Ceremony.PumbilityGain!.Value.ToString("N0")</span>
@@ -62,5 +62,4 @@
 @code {
     [Parameter] [EditorRequired] public SessionCeremony Ceremony { get; set; } = null!;
 
-    private double PumbilityNow => Ceremony.PumbilityNew ?? Ceremony.PumbilityOld ?? 0;
 }

@@ -134,6 +134,7 @@
     private IReadOnlyList<Name> _myCommunities = Array.Empty<Name>();
     private IReadOnlySet<Name> _regionalCommunities = new HashSet<Name>();
     private UserPhoenixScore[] _world = Array.Empty<UserPhoenixScore>();
+    private IReadOnlySet<Guid> _clubmates = new HashSet<Guid>();
     private IReadOnlySet<Guid> _communityUserIds = new HashSet<Guid>();
     private List<Row> _rows = new();
     private int? _myPlace;
@@ -166,6 +167,12 @@
                 .Select(c => c.CommunityName).ToArray();
             _regionalCommunities = communities.Where(c => c.IsRegional).Select(c => c.CommunityName).ToHashSet();
             _community = _myCommunities.FirstOrDefault();
+
+            // Who to glow green on the scopes that mix clubmates in with everyone else.
+            var clubmates = new HashSet<Guid>();
+            foreach (var community in _myCommunities)
+                clubmates.UnionWith(await Mediator.Send(new GetCommunityMembersQuery(community)));
+            _clubmates = clubmates;
         }
 
         if (!IsAvailable(_scope)) _scope = LeaderboardScope.World;
@@ -214,6 +221,7 @@
             {
                 if (_chart == null) return Array.Empty<UserPhoenixScore>();
                 var peers = (await Mediator.Send(new GetCompetitivePlayersQuery(_chart.Type, Mix))).ToHashSet();
+                _communityUserIds = _clubmates;
                 return _world.Where(s => peers.Contains(s.UserId)).ToArray();
             }
             case LeaderboardScope.Region:
@@ -226,18 +234,17 @@
                     ? Array.Empty<UserPhoenixScore>()
                     : await CommunityScoresAsync(_community.Value);
             default:
-                _communityUserIds = new HashSet<Guid>();
+                _communityUserIds = _clubmates;
                 return _world;
         }
     }
 
     private async Task<IReadOnlyList<UserPhoenixScore>> CommunityScoresAsync(Name community)
     {
-        var scores = (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(community, ChartId, Mix)))
-            .ToArray();
-        // Inside a community board every row IS a clubmate, so the glow would say nothing.
+        // Inside a community board every row IS a clubmate, so the glow would mark everything
+        // and therefore nothing. The world-facing scopes are where it earns its keep.
         _communityUserIds = new HashSet<Guid>();
-        return scores;
+        return (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(community, ChartId, Mix))).ToArray();
     }
 
     private const string WorldCommunity = "World";

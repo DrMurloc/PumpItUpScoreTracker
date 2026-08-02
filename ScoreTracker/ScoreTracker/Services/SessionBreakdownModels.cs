@@ -61,6 +61,7 @@ public sealed record SessionScore(
 /// <summary>The band above the fold: what moved, and how far.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record SessionCeremony(
+    double CurrentPumbility,
     double? PumbilityOld,
     double? PumbilityNew,
     double? SinglesCompetitiveOld,
@@ -74,6 +75,14 @@ public sealed record SessionCeremony(
     DateTimeOffset? OfficialRankAsOf)
 {
     public double? PumbilityGain => PumbilityNew - PumbilityOld;
+
+    /// <summary>
+    ///     What the band leads with. The pool is a standing value the player always has, so a
+    ///     session that did not move it still shows the real number — only the delta and the
+    ///     "from" line are session-scoped. Reading the milestone alone printed 0 for every
+    ///     session that predates capture, which is most of them.
+    /// </summary>
+    public double HeadlinePumbility => PumbilityNew ?? CurrentPumbility;
 
     /// <summary>
     ///     True once there is a headline worth the space. A session that moved nothing still
