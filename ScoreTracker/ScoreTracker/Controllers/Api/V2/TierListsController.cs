@@ -17,13 +17,25 @@ namespace ScoreTracker.Web.Controllers.Api.V2;
 [Route(RoutePrefix + "/tier-lists")]
 public sealed class TierListsController : ApiV2ControllerBase
 {
-    /// <summary>Route value to the stored tier list name.</summary>
+    /// <summary>
+    ///     Route value to the stored tier list name.
+    ///     <para>
+    ///         All seven, including the three that are inputs to the personalized blend rather than
+    ///         standalone pages. They are already public — every one of them is visible on
+    ///         /TierLists — and leaving them out meant an integrator (or the local-dev harness)
+    ///         could reproduce four sevenths of what the site shows.
+    ///     </para>
+    /// </summary>
     private static readonly Dictionary<string, string> Lists = new(StringComparer.OrdinalIgnoreCase)
     {
         ["scores"] = "Scores",
         ["official-scores"] = "Official Scores",
         ["pass-count"] = "Pass Count",
-        ["popularity"] = "Popularity"
+        ["popularity"] = "Popularity",
+        // The community vote list. Not "how hard is this to score" — how hard players say it is.
+        ["difficulty"] = "Difficulty",
+        ["pg"] = "PG",
+        ["chabala"] = "Chabala"
     };
 
     private readonly IMediator _mediator;
