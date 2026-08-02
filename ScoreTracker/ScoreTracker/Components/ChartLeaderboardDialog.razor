@@ -225,15 +225,27 @@
         var scores = await ScoresForScopeAsync();
         var myId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : (Guid?)null;
 
-        _rows = scores
-            .OrderByDescending(s => (int)s.Score)
-            .Select((s, i) => new Row(i + 1,
-                scores.Count == 0 ? 0 : (scores.Count - i) / (double)scores.Count,
-                s, s.UserId == myId, _communityUserIds.Contains(s.UserId)))
-            .ToList();
-        // UserLabel needs the whole user for its flag, and the avatar comes off the same read.
-        _users = (await Users.GetUsers(_rows.Select(r => r.Score.UserId).Distinct()))
-            .ToDictionary(u => u.Id);
+        // Olympic placement: everyone on the same score shares a place and the next place
+        // skips the tie block, so five perfect games are five #1s and the best score under
+        // them is #6. Within a tie the oldest record leads — whoever got there first reads
+        // first, which is the only ordering a tie has any claim to.
+        _rows = new List<Row>();
+        var total = scores.Count;
+        var place = 1;
+        foreach (var tie in scores
+                     .GroupBy(s => (int)s.Score)
+                     .OrderByDescending(g => g.Key))
+        {
+            var tiePlace = place;
+            foreach (var score in tie.OrderBy(s => s.RecordedAt ?? DateTimeOffset.MaxValue))
+            {
+                _rows.Add(new Row(tiePlace,
+                    total == 0 ? 0 : (total - tiePlace + 1) / (double)total,
+                    score, score.UserId == myId, _communityUserIds.Contains(score.UserId)));
+                place++;
+            }
+        }
+
         _myPlace = _rows.FirstOrDefault(r => r.IsMe)?.Place;
         _loading = false;
     }

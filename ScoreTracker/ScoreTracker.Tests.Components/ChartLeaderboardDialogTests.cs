@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bunit;
@@ -74,6 +75,47 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
     }
 
     [Fact]
+    public void TiedScoresShareAPlaceAndTheNextPlaceSkipsTheTieBlock()
+    {
+        // Five perfect games are five #1s, and the best score under them is #6 — not #2.
+        var perfect = Enumerable.Range(0, 5)
+            .Select(i => Score(1_000_000, When.AddDays(-i)))
+            .ToArray();
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(perfect.Append(Score(994_000, When)).ToArray());
+
+        var dialog = RenderDialog();
+
+        dialog.WaitForAssertion(() =>
+        {
+            var places = dialog.FindAll(".weekly-lb-place").Select(e => e.TextContent.Trim()).ToArray();
+            Assert.Equal(new[] { "#1", "#1", "#1", "#1", "#1", "#6" }, places);
+        });
+    }
+
+    [Fact]
+    public void ATieOrdersOldestFirst()
+    {
+        // Whoever got there first reads first — the only ordering a tie has a claim to.
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Score(1_000_000, When, "LATEST"),
+                Score(1_000_000, When.AddYears(-2), "EARLIEST")
+            });
+
+        var dialog = RenderDialog();
+
+        dialog.WaitForAssertion(() =>
+        {
+            var names = dialog.FindAll(".weekly-lb-user").Select(e => e.TextContent.Trim()).ToArray();
+            Assert.StartsWith("EARLIEST", names.First());
+        });
+    }
+
+    [Fact]
     public void TheCommunityPickerStaysHiddenWithoutTwoCommunities()
     {
         // A control with one choice is furniture, not a control (D19). Signed out here, so
@@ -100,6 +142,14 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
             builder.CloseComponent();
         });
     }
+
+    private static UserPhoenixScore Score(int score, DateTimeOffset recordedAt, string name = "PLAYER")
+    {
+        return new UserPhoenixScore(Guid.NewGuid(), Guid.NewGuid(), Name.From(name),
+            PhoenixScore.From(score), PhoenixPlate.PerfectGame, false, true, recordedAt);
+    }
+
+    private static readonly DateTimeOffset When = new(2026, 8, 1, 12, 0, 0, TimeSpan.Zero);
 
     private static Chart TestChart()
     {

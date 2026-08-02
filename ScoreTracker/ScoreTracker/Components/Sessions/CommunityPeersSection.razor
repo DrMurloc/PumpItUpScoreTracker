@@ -40,10 +40,12 @@
                                    aria-label="@L["Leaderboard"]" Class="sbd-lbbtn ml-auto"
                                    OnClick="() => OnOpenLeaderboard.InvokeAsync(board.Chart.Id)"></MudIconButton>
                 </div>
-                @foreach (var (peer, place) in board.Peers.Select((p, i) => (p, i + 1)))
+                @* No place numbers: these rows are sorted by how close the player sits to you,
+                   not by score, so a "#1" here would name a rank that does not exist. The
+                   ranked view is the leaderboard dialog, one tap away. *@
+                @foreach (var peer in board.Peers)
                 {
                     <div class="weekly-lb-row">
-                        <span class="weekly-lb-place">#@place</span>
                         @if (Peers.TryGetValue(peer.UserId, out var user))
                         {
                             <span class="sbd-avatar"><MudAvatar Size="Size.Small">
