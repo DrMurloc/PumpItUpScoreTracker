@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -88,7 +89,7 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
             BuildCeremony(milestones, stats),
             milestones.Where(m => m.Kind != MilestoneKind.TitleProgress).ToArray(),
             BuildTitleBars(milestones),
-            await BuildPeerBoards(userId, group, scores, charts, cancellationToken));
+            await BuildPeerBoards(userId, group, scores, charts, stats, cancellationToken));
     }
 
     /// <summary>
@@ -146,37 +147,45 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
 
     private async Task<IReadOnlyList<SessionPeerBoard>> BuildPeerBoards(Guid userId,
         RecentSessionsPage.SessionGroup group, IReadOnlyList<SessionScore> scores,
-        IReadOnlyDictionary<Guid, Chart> charts, CancellationToken cancellationToken)
+        IReadOnlyDictionary<Guid, Chart> charts, PlayerStatsRecord stats,
+        CancellationToken cancellationToken)
     {
-        // Every flagged chart gets a board, best first — the cap only bites on a session that
-        // flagged more than a screen's worth.
+        // Distinct FIRST: `scores` is one entry per journal row, and a chart played several
+        // times in a session has several. That is not an edge case — it is exactly what a
+        // session with attempts looks like, which is the feature this section sits next to.
         var wanted = scores
             .Where(s => s.IsFlagged && s.Chart != null)
-            .OrderByDescending(s => (int)s.Chart!.Level)
-            .Select(s => s.Row.ChartId)
-            .Distinct()
+            .GroupBy(s => s.Row.ChartId)
+            .OrderByDescending(g => (int)g.First().Chart!.Level)
+            .Select(g => g.Key)
             .Take(MaxPeerBoards)
             .ToArray();
         if (wanted.Length == 0) return Array.Empty<SessionPeerBoard>();
 
         var peers = await mediator.Send(new GetCommunityPeerScoresQuery(userId, group.Mix, wanted),
             cancellationToken);
-        var mine = scores.ToDictionary(s => s.Row.ChartId);
 
         return wanted
             .Where(id => peers.ContainsKey(id) && charts.ContainsKey(id))
             .Select(id => new SessionPeerBoard(charts[id], peers[id]
                 // Closeness sorts, it never filters — a clubmate three levels away is still a
-                // clubmate (D8).
-                .OrderBy(p => Math.Abs(p.CompetitiveLevel - MyLevel(mine, id)))
+                // clubmate (D8). Both sides of this subtraction have to be the same quantity:
+                // the peer's competitive level against MINE, read for the chart's own type,
+                // which is how Communities computed theirs.
+                .OrderBy(p => Math.Abs(p.CompetitiveLevel - MyCompetitiveLevel(charts[id], stats)))
                 .ThenByDescending(p => (int)p.Score)
                 .ToArray()))
             .ToArray();
     }
 
-    private static double MyLevel(IReadOnlyDictionary<Guid, SessionScore> mine, Guid chartId)
+    private static double MyCompetitiveLevel(Chart chart, PlayerStatsRecord stats)
     {
-        return mine.TryGetValue(chartId, out var score) && score.Chart != null ? (int)score.Chart.Level : 0;
+        return chart.Type switch
+        {
+            ChartType.Single => stats.SinglesCompetitiveLevel,
+            ChartType.Double => stats.DoublesCompetitiveLevel,
+            _ => stats.CompetitiveLevel
+        };
     }
 
     private static SessionHistoryRow ToHistoryRow(RecentSessionsPage.SessionGroup group,
