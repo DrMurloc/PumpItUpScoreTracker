@@ -15,7 +15,7 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
         _factory = factory;
     }
 
-    public async Task LinkPlayer(MixEnum mix, string username, Guid userId, DateTimeOffset seenAt,
+    public async Task<string> LinkPlayer(MixEnum mix, string username, Guid userId, DateTimeOffset seenAt,
         CancellationToken ct)
     {
         // The account page renders the tag with a space ("TAG #1234"); boards render it
@@ -39,6 +39,7 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
         entity.UserId = userId;
         entity.UserIdSource = "Import";
         await database.SaveChangesAsync(ct);
+        return username;
     }
 
     public async Task RelinkUser(Guid fromUserId, Guid toUserId, CancellationToken ct)
@@ -90,18 +91,26 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
             .Where(p => p.MixId == mixId && p.Status == status)
             .OrderByDescending(p => p.Id)
             .Select(p => new RenameProposal(p.Id, p.OldPlayerId, p.NewPlayerId, p.OldUsername, p.NewUsername,
-                p.AvatarMatched, p.Top50Overlap, p.Status, p.CreatedSnapshotId))
+                p.AvatarMatched, p.Top50Overlap, p.Status, p.CreatedSnapshotId, mix))
             .ToArrayAsync(ct);
     }
 
     public async Task<RenameProposal?> GetProposal(int id, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
-        return await database.Set<OfficialPlayerRenameProposalEntity>()
+        var row = await database.Set<OfficialPlayerRenameProposalEntity>()
             .Where(p => p.Id == id)
-            .Select(p => new RenameProposal(p.Id, p.OldPlayerId, p.NewPlayerId, p.OldUsername, p.NewUsername,
-                p.AvatarMatched, p.Top50Overlap, p.Status, p.CreatedSnapshotId))
+            .Select(p => new
+            {
+                p.Id, p.MixId, p.OldPlayerId, p.NewPlayerId, p.OldUsername, p.NewUsername, p.AvatarMatched,
+                p.Top50Overlap, p.Status, p.CreatedSnapshotId
+            })
             .FirstOrDefaultAsync(ct);
+        return row == null
+            ? null
+            : new RenameProposal(row.Id, row.OldPlayerId, row.NewPlayerId, row.OldUsername, row.NewUsername,
+                row.AvatarMatched, row.Top50Overlap, row.Status, row.CreatedSnapshotId,
+                MixIds.ToEnum(row.MixId));
     }
 
     public async Task SetProposalStatus(int id, string status, CancellationToken ct)

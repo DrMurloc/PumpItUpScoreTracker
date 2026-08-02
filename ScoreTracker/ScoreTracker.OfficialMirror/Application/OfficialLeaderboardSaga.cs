@@ -3,6 +3,7 @@ using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Domain;
 using System.Text.RegularExpressions;
 using MassTransit;
@@ -144,7 +145,11 @@ namespace ScoreTracker.OfficialMirror.Application
             // The import learns the account's game tag authoritatively — the strongest
             // possible tag-to-account signal, so it always wins (most recent import takes a
             // contested tag, per the same-tag policy).
-            await _identity.LinkPlayer(mix, accountData.AccountName, userId, _dateTime.Now, cancellationToken);
+            var linkedTag =
+                await _identity.LinkPlayer(mix, accountData.AccountName, userId, _dateTime.Now, cancellationToken);
+            // Announced with the STORED spelling, not the one the account page rendered: a
+            // consumer matching on the tag has to match the row this just wrote.
+            await _bus.Publish(new OfficialPlayerLinkedEvent(mix, linkedTag, userId), cancellationToken);
 
             if (mix == MixEnum.Phoenix2)
                 await BackfillCardAliases(userId, mix, sid, cancellationToken);
