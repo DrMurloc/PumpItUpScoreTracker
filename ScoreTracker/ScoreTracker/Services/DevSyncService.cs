@@ -89,7 +89,7 @@ public sealed class DevSyncService
                     entry.Category, entry.Order));
 
             foreach (var level in await Page<ScoringLevelWire>(client,
-                         $"api/v2/chart-analysis/chart-scoring-levels?mix={wire.Name}", cancellationToken))
+                         $"api/v2/chart-scoring-levels?mix={wire.Name}", cancellationToken))
                 scoringLevels.Add(new DevScoringLevelRow(mix, level.ChartId, level.ScoringLevel));
         }
 
