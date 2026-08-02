@@ -25,8 +25,18 @@ internal interface IWebhookDeliveryRepository
         string? remoteBodySnippet, int? latencyMs, DateTimeOffset? nextAttemptAt,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Takes the deliveries whose backoff has elapsed <b>and claims them</b> — the same call
+    ///     pushes their next attempt past the claim window, so a sweep that overlaps the previous one
+    ///     finds nothing rather than re-POSTing the same rows.
+    ///     <para>
+    ///         The overlap is the common case, not the rare one: the queue only fills when endpoints
+    ///         are down, and a sweep of dead endpoints runs at ten seconds each. Without a claim, 200
+    ///         dead rows means a half-hour sweep with six more starting on top of it.
+    ///     </para>
+    /// </summary>
     Task<IReadOnlyList<WebhookDeliveryRecord>> GetDue(DateTimeOffset now, int limit,
-        CancellationToken cancellationToken = default);
+        DateTimeOffset claimUntil, CancellationToken cancellationToken = default);
 
     Task<WebhookDeliveryRecord?> Get(Guid id, CancellationToken cancellationToken = default);
 

@@ -478,14 +478,18 @@ credential, and an endpoint with no way to tell our call from anyone else's has 
 receiving one.
 
 > **Superseded 2026-08-02.** This section previously specified HMAC-SHA256 signing alongside the
-> header, justified as "sending both costs nothing." That was wrong twice over. It was not in the
-> brief — the ask was *"webhooks prob need optional API keys too so that toolmakers can secure their
-> own tools by verifying the call comes from me"*, which is the header. And it was not free: it cost
-> a signing module, a recoverably-stored secret, a column, a debug panel, ~600 words of integration
-> docs about re-serialization pitfalls, nine locales of copy, and a shipped defect — the secret was
-> never surfaced anywhere, so no maker could have verified a signature even if they wanted to.
-> TLS already authenticates the transport; the marginal gain was replay protection against an
-> attacker already inside the maker's TLS, who could equally forge the header. Removed at D1.
+> header, justified as "sending both costs nothing."
+>
+> **The owner removed it because he did not want to maintain that layer** — bespoke crypto on both
+> sides of the wire, owned forever, for a benefit TLS already covers. That is the reason, and it
+> stands on its own.
+>
+> It was also never in the brief: the ask was *"webhooks prob need optional API keys too so that
+> toolmakers can secure their own tools by verifying the call comes from me"*, which is the header.
+> And "costs nothing" was false — it cost a signing module, a recoverably-stored secret, a column, a
+> debug panel, ~600 words of integration docs about re-serialization pitfalls, and nine locales of
+> copy. A defect surfaced while removing it (the secret had no UI, so no maker could have verified a
+> signature) but that was found during the removal, not the cause of it.
 
 `X-PIU-Delivery-Id` is the `EventId`. Retrying sends the same id; tools dedupe on it.
 

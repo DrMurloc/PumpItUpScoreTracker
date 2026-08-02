@@ -1,4 +1,4 @@
-@using ScoreTracker.CommunityTools.Contracts.Commands
+﻿@using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
 @using System.Globalization
 @using System.Web
@@ -272,9 +272,12 @@
         // grant. Direct connections to a named tool survive either way — that is a deliberate
         // grant, not public visibility.
         _shareWithAllTools = _isPublic;
+        // Profile visibility first. The all-tools pool is not joined on IsPublic, so committing the
+        // preference first leaves the account shared-with-everyone while still private for as long as
+        // the second call takes — and permanently if it throws.
+        await UpdateUser();
         await Mediator.Send(new SetShareWithAllToolsCommand(_shareWithAllTools));
         await RefreshToolCount();
-        await UpdateUser();
 
         var message = _isPublic ? "Public" : "Private";
         Snackbar.Add($"Account made {message}", Severity.Success);
@@ -286,8 +289,8 @@
         await Mediator.Send(new SetShareWithAllToolsCommand(share));
         await RefreshToolCount();
         Snackbar.Add(share
-            ? "Community tools can read your scores"
-            : "Community tools can no longer read your scores", Severity.Success);
+            ? L["Community tools can read your scores"].Value
+            : L["Community tools can no longer read your scores"].Value, Severity.Success);
     }
 
     private async Task RefreshToolCount()

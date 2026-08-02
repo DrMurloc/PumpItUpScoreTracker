@@ -126,6 +126,9 @@
   <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
     <value>&quot;{0}&quot; non corrisponde a nessun chart al momento.</value>
   </data>
+  <data name="&quot;{0}&quot; isn't a valid link. Include https://" xml:space="preserve">
+    <value>"{0}" non è un link valido. Includi https://</value>
+  </data>
   <data name="#1 of all peers" xml:space="preserve">
     <value>#1 tra tutti i pari</value>
   </data>
@@ -317,6 +320,9 @@
   </data>
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>Un Great con il moltiplicatore al tetto.</value>
+  </data>
+  <data name="A header value needs a header name." xml:space="preserve">
+    <value>Un valore di intestazione richiede un nome di intestazione.</value>
   </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>Una home page tutta tua</value>
@@ -1217,8 +1223,14 @@
   <data name="Community tools awaiting review" xml:space="preserve">
     <value>Strumenti della community in attesa di revisione</value>
   </data>
+  <data name="Community tools can no longer read your scores" xml:space="preserve">
+    <value>Gli strumenti della community non possono più leggere i tuoi punteggi</value>
+  </data>
   <data name="Community tools can now use your scores" xml:space="preserve">
     <value>Gli strumenti della community ora possono usare i tuoi punteggi</value>
+  </data>
+  <data name="Community tools can read your scores" xml:space="preserve">
+    <value>Gli strumenti della community possono leggere i tuoi punteggi</value>
   </data>
   <data name="Community Vote" xml:space="preserve">
     <value>Voto della community</value>
@@ -2234,6 +2246,9 @@
   <data name="Have an invite link?" xml:space="preserve">
     <value>Hai un link d'invito?</value>
   </data>
+  <data name="Header name" xml:space="preserve">
+    <value>Nome intestazione</value>
+  </data>
   <data name="held" xml:space="preserve">
     <value>mantenuto</value>
   </data>
@@ -2347,6 +2362,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>Come si calcola il punteggio</value>
+  </data>
+  <data name="How your server knows it's us" xml:space="preserve">
+    <value>Come il tuo server sa che siamo noi</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>Non posso ancora pubblicare in questo canale — dammi i permessi Visualizzare il canale e Inviare messaggi qui, poi riesegui il comando.</value>
@@ -3929,6 +3947,9 @@
   <data name="Pick two different mixes." xml:space="preserve">
     <value>Scegli due mix diversi.</value>
   </data>
+  <data name="Pick where to deliver, or choose Nothing." xml:space="preserve">
+    <value>Scegli dove consegnare, oppure seleziona Niente.</value>
+  </data>
   <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
     <value>Scegli i tuoi widget — proiezioni, la classifica settimanale, il tuo passo del giorno — e componi la tua dashboard. La tua home page, decidi tu.</value>
   </data>
@@ -4942,6 +4963,9 @@
   </data>
   <data name="Sessions per page" xml:space="preserve">
     <value>Sessioni per pagina</value>
+  </data>
+  <data name="Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key." xml:space="preserve">
+    <value>Imposta un'intestazione prima di passare alla modalità sessione PIUGame: quella modalità consegna al tuo server una chiave piugame.com attiva.</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
     <value>Imposta i chart</value>
@@ -6140,6 +6164,12 @@
   <data name="Username" xml:space="preserve">
     <value>Nome utente</value>
   </data>
+  <data name="Value" xml:space="preserve">
+    <value>Valore</value>
+  </data>
+  <data name="Value (set — type to replace)" xml:space="preserve">
+    <value>Valore (impostato — digita per sostituirlo)</value>
+  </data>
   <data name="Verification" xml:space="preserve">
     <value>Verifica</value>
   </data>
@@ -6262,6 +6292,9 @@
   </data>
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Mandiamo solo le importazioni dei mix che scegli. I mix più vecchi si valutano a lettere e non sulla scala del milione — il payload dice quale modello usa.</value>
+  </data>
+  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it." xml:space="preserve">
+    <value>Inviamo questa intestazione così com'è a ogni consegna e alla chiamata di verifica. Controllala nel tuo handler e rifiuta ciò che non la porta.</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>Salviamo un hash, non la chiave. Se la perdi creane un'altra — puoi tenere due chiavi insieme, quindi sostituirne una non costa tempo di fermo.</value>

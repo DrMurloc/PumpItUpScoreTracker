@@ -126,6 +126,9 @@
   <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
     <value>&quot;{0}&quot; mrglblgrl romagl ro murgl rogro magl.</value>
   </data>
+  <data name="&quot;{0}&quot; isn't a valid link. Include https://" xml:space="preserve">
+    <value>"{0}" alla marogl. Glub HTTPS.</value>
+  </data>
   <data name="#1 of all peers" xml:space="preserve">
     <value>#1 mrgl rgl maglmurp</value>
   </data>
@@ -317,6 +320,9 @@
   </data>
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>GRO mrpargl mr gro rglgro glmurmargl.</value>
+  </data>
+  <data name="A header value needs a header name." xml:space="preserve">
+    <value>Grumb mo pragl marogl pragl marogl.</value>
   </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>GRO blargplgl urggrgl grorpgrgl glmagl</value>
@@ -1217,8 +1223,14 @@
   <data name="Community tools awaiting review" xml:space="preserve">
     <value>Blurgl bo marogl grumba</value>
   </data>
+  <data name="Community tools can no longer read your scores" xml:space="preserve">
+    <value>Blurgl marogl alla bloop am olo</value>
+  </data>
   <data name="Community tools can now use your scores" xml:space="preserve">
     <value>Plglmurgblub Rorgl blorm murp murgm gromurp Mgrlgmrg</value>
+  </data>
+  <data name="Community tools can read your scores" xml:space="preserve">
+    <value>Blurgl marogl bloop am olo</value>
   </data>
   <data name="Community Vote" xml:space="preserve">
     <value>Plglmurgblub Glorgmagl</value>
@@ -2234,6 +2246,9 @@
   <data name="Have an invite link?" xml:space="preserve">
     <value>Murpgrogl grabla?</value>
   </data>
+  <data name="Header name" xml:space="preserve">
+    <value>Pragl marogl</value>
+  </data>
   <data name="held" xml:space="preserve">
     <value>glorgblgrl</value>
   </data>
@@ -2347,6 +2362,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>Groga mrglrgl blurg</value>
+  </data>
+  <data name="How your server knows it's us" xml:space="preserve">
+    <value>Grumba bloop marogl alla</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>GRRGL blargmr grogrgl mrp grglmrp glmurmblarg argl — blgrlgro argl mrp Murmblub Glmurmblarg ro Mrmr Murgroblarg urgmurpmrpmagl blubmorg, mrplurg plgl mrp plglgroargl morgro.</value>
@@ -3929,6 +3947,9 @@
   <data name="Pick two different mixes." xml:space="preserve">
     <value>Rglgro grrgl roplglblgrl mrgrgl.</value>
   </data>
+  <data name="Pick where to deliver, or choose Nothing." xml:space="preserve">
+    <value>Marogl bo grumba, opa Alla.</value>
+  </data>
   <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
     <value>Rglgro gromurp mrpgrrglgrrgl — glorgglorgglplgl, mrp murmmr mrglblarg, gromurp gromorg glorgmagl — ro blargmrplurg gromurp grrgl groglrgl. Gromurp blargplgl urggrgl, gromurp romrgl.</value>
   </data>
@@ -4942,6 +4963,9 @@
   </data>
   <data name="Sessions per page" xml:space="preserve">
     <value>Glorgmaglgro morg urggrgl</value>
+  </data>
+  <data name="Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key." xml:space="preserve">
+    <value>Marogl pragl opa PIUGAME grumba — mo marogl bloop am pragl olo.</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
 	  <value>Gro Murgl</value>
@@ -6140,6 +6164,12 @@
   <data name="Username" xml:space="preserve">
     <value>Grrmrrgl</value>
   </data>
+  <data name="Value" xml:space="preserve">
+    <value>Grumb</value>
+  </data>
+  <data name="Value (set — type to replace)" xml:space="preserve">
+    <value>Grumb (olo — blurgl mo golba)</value>
+  </data>
   <data name="Verification" xml:space="preserve">
 	  <value>Morgmrglblubmagl</value>
   </data>
@@ -6262,6 +6292,9 @@
   </data>
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Bam murpo murgblub blu murgl gromurp murgargl. Murgl murmo murgm blarglurp murm bo 1M murgloo — murpo murgm murgblarg murmo.</value>
+  </data>
+  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it." xml:space="preserve">
+    <value>Grumba mo pragl olo blurgl mo marogl. Bloop am glub, opa blorp alla pragl.</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>Bam murgloo murgblarg, bo blarglurp. Gromurp murgloo murgm, murpmurp blorm — gromurp murp murgm blomurp blarglurp murgm, murgloo murmo bam grorp.</value>

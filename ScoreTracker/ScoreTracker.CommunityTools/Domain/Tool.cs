@@ -175,7 +175,10 @@ internal sealed class Tool
                 $"Switching to PIUGame session mode needs no connected players — {connectedPlayerCount} " +
                 "already agreed to something else. They would each have to accept the new terms.");
 
-        if (mode == Contracts.WebhookMode.PiuGameSession && !hasOutboundHeader)
+        // Entry-only, exactly like the zero-players rule above it. A tool already in session mode
+        // can still be edited — PIU Tracker was seeded straight into this mode by migration and
+        // would otherwise be uneditable by its own maker, including to fix a typo.
+        if (enteringSessionMode && !hasOutboundHeader)
             throw new ToolWebhookModeException(
                 "PIUGame session mode needs an outbound header first. It is the only way your server " +
                 "can tell our call from anyone else's, and this mode hands over a live piugame.com key.");

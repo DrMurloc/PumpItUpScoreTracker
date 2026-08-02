@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.CommunityTools.Application;
 using ScoreTracker.CommunityTools.Domain;
@@ -30,6 +30,8 @@ public static class CommunityToolsRegistrationExtensions
         // than by the CompositionRoot's reflection pass, which only scans ScoreTracker.Data.
         services.AddTransient<ISessionDeliveryClient, SessionDeliveryClient>();
         services.AddSingleton<IDbModelContribution, CommunityToolsModelContribution>();
+        // Bound by the host; the defaults are the safe ones, so a missing section is not a hole.
+        services.AddOptions<CommunityToolsConfiguration>();
         return services;
     }
 

@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Models;
+﻿using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.ScoreLedger.Contracts;
@@ -18,7 +18,7 @@ namespace ScoreTracker.Web.Dtos.ApiV2;
 /// </summary>
 public sealed class PlayerV2Dto
 {
-    public PlayerV2Dto(User user, string? gameTag, DateTimeOffset? gameTagSeenAt)
+    public PlayerV2Dto(User user, string? gameTag)
     {
         UserId = user.Id;
         Username = user.Name.ToString();
@@ -26,7 +26,6 @@ public sealed class PlayerV2Dto
         AvatarUrl = user.ProfileImage.ToString();
         IsPublic = user.IsPublic;
         GameTag = gameTag;
-        GameTagSeenAt = gameTagSeenAt;
     }
 
     public Guid UserId { get; set; }
@@ -41,9 +40,6 @@ public sealed class PlayerV2Dto
     ///     snapshots taken by different scrapes rather than distinct identities.
     /// </summary>
     public string? GameTag { get; set; }
-
-    /// <summary>When that tag was last observed, so a caller can judge staleness for itself.</summary>
-    public DateTimeOffset? GameTagSeenAt { get; set; }
 }
 
 public sealed class JudgmentsDto

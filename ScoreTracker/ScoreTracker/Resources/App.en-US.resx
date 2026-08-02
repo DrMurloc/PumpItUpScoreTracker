@@ -126,6 +126,9 @@
   <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
     <value>&quot;{0}&quot; didn't match any charts right now.</value>
   </data>
+  <data name="&quot;{0}&quot; isn't a valid link. Include https://" xml:space="preserve">
+    <value>"{0}" isn't a valid link. Include https://</value>
+  </data>
   <data name="#1 of all peers" xml:space="preserve">
     <value>#1 of all peers</value>
   </data>
@@ -317,6 +320,9 @@
   </data>
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>A great at a capped multiplier.</value>
+  </data>
+  <data name="A header value needs a header name." xml:space="preserve">
+    <value>A header value needs a header name.</value>
   </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>A home page that's yours</value>
@@ -1217,8 +1223,14 @@
   <data name="Community tools awaiting review" xml:space="preserve">
     <value>Community tools awaiting review</value>
   </data>
+  <data name="Community tools can no longer read your scores" xml:space="preserve">
+    <value>Community tools can no longer read your scores</value>
+  </data>
   <data name="Community tools can now use your scores" xml:space="preserve">
     <value>Community tools can now use your scores</value>
+  </data>
+  <data name="Community tools can read your scores" xml:space="preserve">
+    <value>Community tools can read your scores</value>
   </data>
   <data name="Community Vote" xml:space="preserve">
     <value>Community Vote</value>
@@ -2234,6 +2246,9 @@
   <data name="Have an invite link?" xml:space="preserve">
     <value>Have an invite link?</value>
   </data>
+  <data name="Header name" xml:space="preserve">
+    <value>Header name</value>
+  </data>
   <data name="held" xml:space="preserve">
     <value>held</value>
   </data>
@@ -2347,6 +2362,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>How this is scored</value>
+  </data>
+  <data name="How your server knows it's us" xml:space="preserve">
+    <value>How your server knows it's us</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again.</value>
@@ -3929,6 +3947,9 @@
   <data name="Pick two different mixes." xml:space="preserve">
     <value>Pick two different mixes.</value>
   </data>
+  <data name="Pick where to deliver, or choose Nothing." xml:space="preserve">
+    <value>Pick where to deliver, or choose Nothing.</value>
+  </data>
   <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
     <value>Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call.</value>
   </data>
@@ -4942,6 +4963,9 @@
   </data>
   <data name="Sessions per page" xml:space="preserve">
     <value>Sessions per page</value>
+  </data>
+  <data name="Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key." xml:space="preserve">
+    <value>Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key.</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
 	  <value>Set Charts</value>
@@ -6140,6 +6164,12 @@
   <data name="Username" xml:space="preserve">
     <value>Username</value>
   </data>
+  <data name="Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Value (set — type to replace)" xml:space="preserve">
+    <value>Value (set — type to replace)</value>
+  </data>
   <data name="Verification" xml:space="preserve">
 	  <value>Verification</value>
   </data>
@@ -6262,6 +6292,9 @@
   </data>
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using.</value>
+  </data>
+  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it." xml:space="preserve">
+    <value>We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it.</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime.</value>

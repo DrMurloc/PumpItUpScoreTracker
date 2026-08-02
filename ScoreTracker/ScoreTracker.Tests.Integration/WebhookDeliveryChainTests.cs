@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging.Abstractions;
+﻿using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.CommunityTools.Application;
 using ScoreTracker.CommunityTools.Contracts;
@@ -157,7 +157,7 @@ public sealed class WebhookDeliveryChainTests : IAsyncLifetime, IDisposable
         _maker.Given(Request.Create().WithPath("/hook").UsingPost())
             .RespondWith(Response.Create().WithStatusCode(200));
 
-        var due = await Deliveries.GetDue(Now.AddHours(1), 50);
+        var due = await Deliveries.GetDue(Now.AddHours(1), 50, Now.AddHours(2));
         var delivery = Assert.Single(due);
         Assert.True(await Dispatcher().Attempt(delivery.Id, CancellationToken.None));
 
@@ -183,7 +183,7 @@ public sealed class WebhookDeliveryChainTests : IAsyncLifetime, IDisposable
             hasOutboundHeader: true);
         await Tools.Save(tool);
 
-        var delivery = Assert.Single(await Deliveries.GetDue(Now.AddHours(1), 50));
+        var delivery = Assert.Single(await Deliveries.GetDue(Now.AddHours(1), 50, Now.AddHours(2)));
         Assert.False(await Dispatcher().Attempt(delivery.Id, CancellationToken.None));
     }
 
@@ -216,5 +216,27 @@ public sealed class WebhookDeliveryChainTests : IAsyncLifetime, IDisposable
         Assert.Contains("sid-live-abc", _maker.LogEntries.Single().RequestMessage.Body);
         // And nothing about it is in the queue — no row, so no body, so nothing to leak.
         Assert.Empty(await Deliveries.GetForTool(ToolId, 10));
+    }
+
+    /// <summary>
+    ///     The sweep claims what it takes. Without it, a sweep that runs longer than its 5-minute
+    ///     cadence — which is exactly what happens when endpoints are dead and each burns the ten
+    ///     second timeout — overlaps the next one on the same rows and we generate the duplicates
+    ///     ourselves.
+    /// </summary>
+    [Fact]
+    public async Task ASecondSweepFindsNothingWhileTheFirstStillHoldsTheRows()
+    {
+        _maker.Given(Request.Create().WithPath("/hook").UsingPost())
+            .RespondWith(Response.Create().WithStatusCode(500));
+        var tool = await GivenAConnectedTool();
+        await Dispatcher().Dispatch(tool, Player(), null, OneChange(), false, false,
+            CancellationToken.None);
+
+        var first = await Deliveries.GetDue(Now.AddHours(1), 50, Now.AddHours(2));
+        Assert.Single(first);
+
+        var second = await Deliveries.GetDue(Now.AddHours(1), 50, Now.AddHours(2));
+        Assert.Empty(second);
     }
 }

@@ -11,6 +11,8 @@ using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.CommunityTools.Domain;
 using ScoreTracker.CommunityTools.Infrastructure;
+using ScoreTracker.CommunityTools.Wiring;
+using Microsoft.Extensions.Options;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts;
 using ScoreTracker.Identity.Contracts.Queries;
@@ -221,7 +223,8 @@ public sealed class ToolKeyAndShareHandlerTests
     private ToolManagementSaga ManagementSaga()
     {
         return new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
-            FakeDateTime.At(Now).Object, _mediator.Object, _secrets.Object, _webhooks.Object);
+            FakeDateTime.At(Now).Object, _mediator.Object, _secrets.Object, _webhooks.Object,
+            Options.Create(new CommunityToolsConfiguration()));
     }
 
     // Same guard owning a community carries. Without it: request deletion owning nothing, register

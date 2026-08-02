@@ -126,6 +126,9 @@
   <data name="&quot;{0}&quot; didn't match any charts right now." xml:space="preserve">
     <value>「{0}」に一致する譜面は現在ありません。</value>
   </data>
+  <data name="&quot;{0}&quot; isn't a valid link. Include https://" xml:space="preserve">
+    <value>"{0}" は有効なリンクではありません。https:// を含めてください</value>
+  </data>
   <data name="#1 of all peers" xml:space="preserve">
     <value>同格プレイヤー中 #1</value>
   </data>
@@ -317,6 +320,9 @@
   </data>
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>倍率上限での Great。</value>
+  </data>
+  <data name="A header value needs a header name." xml:space="preserve">
+    <value>ヘッダーの値にはヘッダー名が必要です。</value>
   </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>自分だけのホームページ</value>
@@ -1217,8 +1223,14 @@
   <data name="Community tools awaiting review" xml:space="preserve">
     <value>審査待ちのコミュニティツール</value>
   </data>
+  <data name="Community tools can no longer read your scores" xml:space="preserve">
+    <value>コミュニティツールはあなたのスコアを読めなくなりました</value>
+  </data>
   <data name="Community tools can now use your scores" xml:space="preserve">
     <value>コミュニティツールがあなたのスコアを使えるようになりました</value>
+  </data>
+  <data name="Community tools can read your scores" xml:space="preserve">
+    <value>コミュニティツールがあなたのスコアを読めます</value>
   </data>
   <data name="Community Vote" xml:space="preserve">
     <value>コミュニティ投票</value>
@@ -2234,6 +2246,9 @@
   <data name="Have an invite link?" xml:space="preserve">
     <value>招待リンクをお持ちですか？</value>
   </data>
+  <data name="Header name" xml:space="preserve">
+    <value>ヘッダー名</value>
+  </data>
   <data name="held" xml:space="preserve">
     <value>維持</value>
   </data>
@@ -2347,6 +2362,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>採点方法</value>
+  </data>
+  <data name="How your server knows it's us" xml:space="preserve">
+    <value>サーバーが当方を識別する方法</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>まだこのチャンネルに投稿できません。「チャンネルを見る」と「メッセージを送信」の権限を付与してから、もう一度コマンドを実行してください。</value>
@@ -3929,6 +3947,9 @@
   <data name="Pick two different mixes." xml:space="preserve">
     <value>異なる2つのバージョンを選んでください。</value>
   </data>
+  <data name="Pick where to deliver, or choose Nothing." xml:space="preserve">
+    <value>配信先を選ぶか、「なし」を選択してください。</value>
+  </data>
   <data name="Pick your widgets — projections, the weekly board, your daily step — and arrange your own dashboard. Your home page, your call." xml:space="preserve">
     <value>ウィジェットを選んで — 予測、週間ボード、今日の一歩 — 自分のダッシュボードを組み立てよう。ホームページはあなたが決める。</value>
   </data>
@@ -4942,6 +4963,9 @@
   </data>
   <data name="Sessions per page" xml:space="preserve">
     <value>ページあたりのセッション数</value>
+  </data>
+  <data name="Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key." xml:space="preserve">
+    <value>PIUGame セッションモードに切り替える前にヘッダーを設定してください — このモードは有効な piugame.com のキーをサーバーに渡します。</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
 	  <value>セット譜面</value>
@@ -6140,6 +6164,12 @@
   <data name="Username" xml:space="preserve">
     <value>ユーザー名</value>
   </data>
+  <data name="Value" xml:space="preserve">
+    <value>値</value>
+  </data>
+  <data name="Value (set — type to replace)" xml:space="preserve">
+    <value>値 (設定済み — 変更するには入力)</value>
+  </data>
   <data name="Verification" xml:space="preserve">
 	  <value>確認</value>
   </data>
@@ -6262,6 +6292,9 @@
   </data>
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>選んだバージョンのインポートだけを送ります。古いバージョンは1Mスケールではなく グレードで採点され、ペイロードがどちらのモデルかを示します。</value>
+  </data>
+  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it." xml:space="preserve">
+    <value>このヘッダーをすべての配信と確認呼び出しにそのまま送ります。ハンドラーで確認し、ヘッダーのないリクエストは拒否してください。</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>保存しているのはキーではなくハッシュです。失くしたら新しく作ってください — キーは同時に2つ使えるので、入れ替えに停止時間はかかりません。</value>

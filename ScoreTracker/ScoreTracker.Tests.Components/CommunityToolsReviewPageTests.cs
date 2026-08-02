@@ -55,7 +55,7 @@ public sealed class CommunityToolsReviewPageTests : ComponentTestBase
     {
         return new ToolRecord(ToolId, Guid.NewGuid(), "TUSA", "Planner", "Plans your sessions.",
             "https://planner.example/", ToolVisibility.PendingApproval, false, mode,
-            "https://planner.example/hook", Array.Empty<MixEnum>(), 3, Now, null, rejection, Now);
+            "https://planner.example/hook", Array.Empty<MixEnum>(), 3, Now, null, rejection, Now, "X-Planner-Token", true);
     }
 
     private IRenderedFragment Render()

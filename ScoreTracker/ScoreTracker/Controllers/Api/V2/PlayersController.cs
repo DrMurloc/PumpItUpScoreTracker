@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -6,6 +6,7 @@ using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -114,8 +115,7 @@ public sealed class PlayersController : ApiV2ControllerBase
             var user = await _mediator.Send(new GetUserByIdQuery(id));
             if (user is null) continue;
 
-            var (tag, seenAt) = await ResolveGameTag(id);
-            rows.Add(new PlayerV2Dto(user, tag, seenAt));
+            rows.Add(new PlayerV2Dto(user, await ResolveGameTag(id)));
         }
 
         var next = offset + page.Length < userIds.Length
@@ -136,8 +136,7 @@ public sealed class PlayersController : ApiV2ControllerBase
         var user = await _mediator.Send(new GetUserByIdQuery(userId));
         if (user is null) return NotFoundProblem("No player with that id is readable with this credential.");
 
-        var (tag, seenAt) = await ResolveGameTag(userId);
-        return Json(new PlayerV2Dto(user, tag, seenAt));
+        return Json(new PlayerV2Dto(user, await ResolveGameTag(userId)));
     }
 
     /// <summary>
@@ -199,9 +198,17 @@ public sealed class PlayersController : ApiV2ControllerBase
             .ThenByDescending(r => r.ChartId)
             .ToArray();
 
-        if (from?.Key is not null && DateTimeOffset.TryParse(from.Value.Key, out var afterDate))
+        // Both halves or neither. TryDecode sets Id to null on an unparseable segment, and the
+        // fingerprint is a plain hash inside the payload rather than a MAC — so a caller can take a
+        // real cursor, blank the id segment and keep the fingerprint, and it decodes fine. That used
+        // to dereference null and 500.
+        if (from is not null && (from.Value.Key is null) != (from.Value.Id is null))
+            return InvalidCursorProblem();
+
+        if (from?.Key is not null && from.Value.Id is not null
+                                  && DateTimeOffset.TryParse(from.Value.Key, out var afterDate))
             rows = rows.Where(r => r.RecordedDate < afterDate
-                                   || (r.RecordedDate == afterDate && r.ChartId.CompareTo(from.Value.Id!.Value) < 0))
+                                   || (r.RecordedDate == afterDate && r.ChartId.CompareTo(from.Value.Id.Value) < 0))
                 .ToArray();
 
         var page = rows.Take(pageSize).ToArray();
@@ -244,16 +251,30 @@ public sealed class PlayersController : ApiV2ControllerBase
             offset = token.Offset;
         }
 
-        // The session read pages across every mix, so the page is filtered after the fact; the
-        // groups are few enough per player that reading a generous window and filtering is honest.
-        var sessions = await _mediator.Send(new GetRecentSessionsQuery(userId, 1, MaxLimit));
-        var filtered = sessions.Groups.Where(g => g.Mix == mix).ToArray();
+        // The session read pages across every mix, so this walks it until the requested mix has
+        // filled the window. It used to take one 500-group slice and filter that, which put a
+        // silent ceiling on a heavy player: the tail vanished and the reported total was the count
+        // within the slice rather than the real one.
+        //
+        // Total is null rather than wrong. Counting a player's sessions in one mix means walking
+        // every page to the end, which is the second full pass the envelope documents null for.
+        var wanted = offset + pageSize + 1;
+        var filtered = new List<RecentSessionsPage.SessionGroup>();
+        for (var page = 1; filtered.Count < wanted; page++)
+        {
+            var batch = await _mediator.Send(new GetRecentSessionsQuery(userId, page, MaxLimit));
+            if (batch.Groups.Count == 0) break;
+
+            filtered.AddRange(batch.Groups.Where(g => g.Mix == mix));
+            if (page * MaxLimit >= batch.TotalGroups) break;
+        }
+
         var rows = filtered.Skip(offset).Take(pageSize).Select(g => new SessionDto(g)).ToArray();
-        var next = offset + rows.Length < filtered.Length
+        var next = filtered.Count > offset + rows.Length
             ? ContinuationToken.FromOffset(offset + rows.Length, fingerprint)
             : (ContinuationToken?)null;
 
-        return Json(Page(rows, pageSize, filtered.Length, next));
+        return Json(Page(rows, pageSize, null, next));
     }
 
     /// <summary>
@@ -303,14 +324,23 @@ public sealed class PlayersController : ApiV2ControllerBase
     ///     AM Pass account setting shared across the Phoenix mixes, and the per-mix rows are snapshots
     ///     taken by scrapes that ran on different days, not distinct identities.
     /// </summary>
-    private async Task<(string? Tag, DateTimeOffset? SeenAt)> ResolveGameTag(Guid userId)
+    /// <summary>
+    ///     The player's game tag, newest mix first — a player on both Phoenix and Phoenix 2 has one
+    ///     AM Pass tag, and the newer mix's row is the more recently confirmed snapshot of it.
+    /// </summary>
+    /// <remarks>
+    ///     This used to return a "seen at" date alongside, which was null on every path and shipped
+    ///     as a permanently-null wire field. Populating it honestly would mean a new OfficialMirror
+    ///     contract query for a field nobody asked for, so the field went instead.
+    /// </remarks>
+    private async Task<string?> ResolveGameTag(Guid userId)
     {
         foreach (var mix in new[] { MixEnum.Phoenix2, MixEnum.Phoenix })
         {
             var tag = await _mediator.Send(new GetLinkedOfficialPlayerTagQuery(mix, userId));
-            if (!string.IsNullOrWhiteSpace(tag)) return (tag, null);
+            if (!string.IsNullOrWhiteSpace(tag)) return tag;
         }
 
-        return (null, null);
+        return null;
     }
 }

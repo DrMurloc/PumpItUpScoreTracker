@@ -79,6 +79,9 @@ builder.Services.AddCors(o =>
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
 builder.Services.Configure<ProdSyncConfiguration>(builder.Configuration.GetSection("ProdSync"));
+builder.Services.Configure<ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration>(
+    builder.Configuration.GetSection(
+        ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration.SectionName));
 builder.Services.Configure<PiuGameConfiguration>(builder.Configuration.GetSection("PiuGame"));
 builder.Services.Configure<PiuCenterConfiguration>(builder.Configuration.GetSection("PiuCenter"));
 builder.Services.Configure<GoogleConfiguration>(builder.Configuration.GetSection("Google"));

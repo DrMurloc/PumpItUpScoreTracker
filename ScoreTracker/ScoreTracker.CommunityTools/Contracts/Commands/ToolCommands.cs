@@ -18,6 +18,14 @@ public sealed record SetToolWebhookCommand(Guid ToolId, WebhookMode Mode, string
     IReadOnlyList<MixEnum> Mixes) : IRequest;
 
 /// <summary>
+///     Sets the header we send verbatim on every delivery, which is how a maker's server knows a
+///     call is ours. A null or blank <paramref name="Value" /> keeps whatever is stored — the field
+///     is a secret the maker chose, and a blank box on a settings form must not erase one.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record SetToolOutboundHeaderCommand(Guid ToolId, string? Name, string? Value) : IRequest;
+
+/// <summary>
 ///     Proves the maker controls their webhook URL by POSTing a challenge they must echo back.
 ///     Nothing is delivered anywhere until this succeeds.
 /// </summary>

@@ -154,6 +154,29 @@ else
                 </div>
             }
 
+                @* The only thing telling a maker's server that a call is ours. Optional for the
+                   read modes — a spoofed call there writes junk into their own database — and
+                   required to enter session mode, which hands over a live piugame key. *@
+                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@L["How your server knows it's us"]</MudText>
+                <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
+                    @L["We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it."]
+                </MudText>
+                <div class="d-flex gap-3 flex-wrap">
+                    <MudTextField T="string" @bind-Value="_editHeaderName" Label=@L["Header name"]
+                                  Placeholder="X-My-Tool-Token" MaxLength="64"
+                                  Style="max-width:260px;"></MudTextField>
+                    <MudTextField T="string" @bind-Value="_editHeaderValue" Label=@HeaderValueLabel
+                                  MaxLength="128" InputType="InputType.Password"
+                                  Style="max-width:260px;"></MudTextField>
+                </div>
+                @if (_editMode == WebhookMode.PiuGameSession
+                     && string.IsNullOrWhiteSpace(_selected.OutboundHeaderName))
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                        @L["Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key."]
+                    </MudAlert>
+                }
+
             <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@L["Mixes"]</MudText>
             <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
                 @L["We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using."]
@@ -261,6 +284,13 @@ else
     private WebhookMode _editMode = WebhookMode.None;
     private bool _verifying;
     private string? _verifyResult;
+    private string _editHeaderName = string.Empty;
+    // Never populated from the record — the value does not travel. Blank means "keep what's stored".
+    private string _editHeaderValue = string.Empty;
+
+    private string HeaderValueLabel => _selected?.HasOutboundHeaderValue == true
+        ? L["Value (set — type to replace)"].Value
+        : L["Value"].Value;
     private HashSet<MixEnum> _editMixes = new();
 
     private IReadOnlyList<(string Name, int DaysLeft)> _expiringSoon = Array.Empty<(string, int)>();
@@ -292,6 +322,8 @@ else
         _editWebhookUrl = tool.WebhookUrl ?? string.Empty;
         _editAcceptsAllTools = tool.AcceptsAllToolsShare;
         _editMode = tool.WebhookMode;
+        _editHeaderName = tool.OutboundHeaderName ?? string.Empty;
+        _editHeaderValue = string.Empty;
         _editMixes = tool.Mixes.ToHashSet();
     }
 
@@ -341,19 +373,81 @@ else
         }
     }
 
+    /// <summary>
+    ///     Validates everything before sending anything.
+    ///     <para>
+    ///         These are four separate commands, so a throw partway through leaves the earlier ones
+    ///         committed — and the first of them is <c>UpdateToolCommand</c>, which returns an
+    ///         approved tool to PendingApproval when its identity changes. A failed save used to
+    ///         de-list a listed tool and show the maker nothing but a dead circuit.
+    ///     </para>
+    ///     <para>
+    ///         The catch is still there for what validation cannot see (a domain rule, a race). Its
+    ///         message is a domain exception's, written for the person who tripped it.
+    ///     </para>
+    /// </summary>
     private async Task Save()
     {
         if (_selected is null) return;
 
-        await Mediator.Send(new UpdateToolCommand(_selected.Id, _editName,
-            string.IsNullOrWhiteSpace(_editDescription) ? null : _editDescription,
-            string.IsNullOrWhiteSpace(_editUrl) ? null : _editUrl));
-        await Mediator.Send(new SetToolAllToolsShareCommand(_selected.Id, _editAcceptsAllTools));
-        await Mediator.Send(new SetToolWebhookCommand(_selected.Id, _editMode,
-            string.IsNullOrWhiteSpace(_editWebhookUrl) ? null : _editWebhookUrl, _editMixes.ToArray()));
+        var problem = ValidationProblem();
+        if (problem is not null)
+        {
+            Snackbar.Add(problem, Severity.Error);
+            return;
+        }
+
+        try
+        {
+            await Mediator.Send(new UpdateToolCommand(_selected.Id, _editName,
+                string.IsNullOrWhiteSpace(_editDescription) ? null : _editDescription,
+                string.IsNullOrWhiteSpace(_editUrl) ? null : _editUrl));
+            await Mediator.Send(new SetToolAllToolsShareCommand(_selected.Id, _editAcceptsAllTools));
+            // Before the webhook command, so entering session mode can see the header it requires.
+            await Mediator.Send(new SetToolOutboundHeaderCommand(_selected.Id,
+                _editHeaderName, _editHeaderValue));
+            await Mediator.Send(new SetToolWebhookCommand(_selected.Id, _editMode,
+                string.IsNullOrWhiteSpace(_editWebhookUrl) ? null : _editWebhookUrl, _editMixes.ToArray()));
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+            await Reload();
+            return;
+        }
 
         Snackbar.Add(L["Saved"].Value, Severity.Success);
         await Reload();
+    }
+
+    /// <summary>
+    ///     What we can catch before touching the database. A bare host like "planner.example" is the
+    ///     one people actually type, and it parses as nothing useful.
+    /// </summary>
+    private string? ValidationProblem()
+    {
+        if (!string.IsNullOrWhiteSpace(_editUrl) && !IsBrowsableUrl(_editUrl))
+            return L["\"{0}\" isn't a valid link. Include https://", _editUrl].Value;
+
+        if (_editMode != WebhookMode.None)
+        {
+            if (string.IsNullOrWhiteSpace(_editWebhookUrl))
+                return L["Pick where to deliver, or choose Nothing."].Value;
+
+            if (!IsBrowsableUrl(_editWebhookUrl))
+                return L["\"{0}\" isn't a valid link. Include https://", _editWebhookUrl].Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_editHeaderValue) && string.IsNullOrWhiteSpace(_editHeaderName))
+            return L["A header value needs a header name."].Value;
+
+        return null;
+    }
+
+    private static bool IsBrowsableUrl(string value)
+    {
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+               && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
     }
 
     private async Task RequestListing()

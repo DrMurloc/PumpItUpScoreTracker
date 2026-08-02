@@ -97,9 +97,18 @@ internal sealed class EFToolRepository : IToolRepository
         await database.Set<ToolEntity>().Where(t => t.Id == toolId).ExecuteDeleteAsync(cancellationToken);
     }
 
+    /// <summary>
+    ///     How many <b>other</b> people this tool can read. The maker is auto-granted a share when
+    ///     they create it, so counting themselves would mean a brand-new tool reports one connected
+    ///     player and its own maker is blocked from entering session mode by their own consent.
+    /// </summary>
     public async Task<int> CountConnectedPlayers(Guid toolId, CancellationToken cancellationToken = default)
     {
-        return (await GetReadablePlayerIds(toolId, cancellationToken)).Count;
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var ownerId = await database.Set<ToolEntity>().Where(t => t.Id == toolId)
+            .Select(t => t.OwnerUserId).FirstOrDefaultAsync(cancellationToken);
+
+        return (await GetReadablePlayerIds(toolId, cancellationToken)).Count(id => id != ownerId);
     }
 
     public async Task<IReadOnlyList<ToolShareRecord>> GetSharesForTool(Guid toolId,

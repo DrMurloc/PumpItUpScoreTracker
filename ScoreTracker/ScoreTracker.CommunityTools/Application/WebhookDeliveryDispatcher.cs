@@ -81,7 +81,8 @@ internal sealed class WebhookDeliveryDispatcher : IWebhookDeliveryDispatcher
         if (tool is null || !tool.CanDeliver) return false;
 
         var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
-        var outcome = await _client.Post(tool.WebhookUrl, delivery.Body, delivery.DeliveryId,
+        // CanDeliver above guarantees a URL; the compiler cannot see through the property.
+        var outcome = await _client.Post(tool.WebhookUrl!, delivery.Body, delivery.DeliveryId,
             headerName, headerValue, cancellationToken);
 
         if (outcome.Succeeded)

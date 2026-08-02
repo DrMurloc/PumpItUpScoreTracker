@@ -3,7 +3,10 @@ using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
+using System.Net;
+using Microsoft.Extensions.Options;
 using ScoreTracker.CommunityTools.Domain;
+using ScoreTracker.CommunityTools.Wiring;
 using ScoreTracker.CommunityTools.Infrastructure;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -22,6 +25,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<UpdateToolCommand>,
     IRequestHandler<SetToolAllToolsShareCommand>,
     IRequestHandler<SetToolWebhookCommand>,
+    IRequestHandler<SetToolOutboundHeaderCommand>,
     IRequestHandler<VerifyToolWebhookCommand, WebhookVerificationResult>,
     IRequestHandler<RequestToolListingCommand>,
     IRequestHandler<ApproveToolCommand>,
@@ -32,6 +36,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<GetToolsAwaitingReviewQuery, IReadOnlyList<ToolRecord>>
 {
     private readonly IWebhookDeliveryClient _client;
+    private readonly IOptions<CommunityToolsConfiguration> _configuration;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IMediator _mediator;
@@ -41,8 +46,9 @@ internal sealed class ToolManagementSaga :
 
     public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor dateTime, IMediator mediator, IToolSecretReader secrets,
-        IWebhookDeliveryClient client)
+        IWebhookDeliveryClient client, IOptions<CommunityToolsConfiguration> configuration)
     {
+        _configuration = configuration;
         _tools = tools;
         _users = users;
         _currentUser = currentUser;
@@ -50,6 +56,24 @@ internal sealed class ToolManagementSaga :
         _mediator = mediator;
         _secrets = secrets;
         _client = client;
+    }
+
+    /// <summary>
+    ///     Stores the header a maker's server checks. Blank value keeps the stored one, so editing
+    ///     the name — or saving the page at all — does not silently wipe the secret.
+    /// </summary>
+    public async Task Handle(SetToolOutboundHeaderCommand request, CancellationToken cancellationToken)
+    {
+        await Owned(request.ToolId, cancellationToken);
+
+        var name = string.IsNullOrWhiteSpace(request.Name) ? null : request.Name.Trim();
+        var (_, existing) = await _secrets.GetOutboundHeader(request.ToolId, cancellationToken);
+        var value = string.IsNullOrWhiteSpace(request.Value) ? existing : request.Value;
+
+        // Clearing the name clears the pair: a value with nothing to send it under is dead weight
+        // that would come back the moment someone typed a name again.
+        await _secrets.SetOutboundHeader(request.ToolId, name, name is null ? null : value,
+            cancellationToken);
     }
 
     /// <summary>
@@ -63,6 +87,10 @@ internal sealed class ToolManagementSaga :
         var tool = await Owned(request.ToolId, cancellationToken);
         if (tool.WebhookUrl is null)
             throw new ToolWebhookModeException("Set a webhook URL before verifying it.");
+
+        // Re-checked rather than trusted: this URL may predate the rule, and verification is the
+        // request that actually leaves our network.
+        await CheckedTarget(tool.WebhookUrl.ToString(), cancellationToken);
 
         var challenge = WebhookChallenge.Mint();
         var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
@@ -120,7 +148,7 @@ internal sealed class ToolManagementSaga :
         var tool = await Owned(request.ToolId, cancellationToken);
         var connected = await _tools.CountConnectedPlayers(request.ToolId, cancellationToken);
         tool.SetWebhook(request.Mode,
-            string.IsNullOrWhiteSpace(request.Url) ? null : new Uri(request.Url), connected,
+            await CheckedTarget(request.Url, cancellationToken), connected,
             hasOutboundHeader: !string.IsNullOrWhiteSpace(
                 (await _secrets.GetOutboundHeader(request.ToolId, cancellationToken)).Name));
         tool.SetMixes(request.Mixes);
@@ -184,13 +212,61 @@ internal sealed class ToolManagementSaga :
         // Who registered it is the review queue's main signal, so it travels with the record
         // rather than being looked up per row on the page.
         var owner = await _users.GetUser(tool.OwnerUserId, cancellationToken);
+        // The name travels; the value never does. A maker who forgets theirs sets a new one.
+        var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
         return new ToolRecord(tool.Id, tool.OwnerUserId, owner?.Name.ToString() ?? string.Empty,
             tool.Name.ToString(), tool.Description,
             tool.Url?.ToString(), tool.Visibility, tool.AcceptsAllToolsShare, tool.WebhookMode,
             tool.WebhookUrl?.ToString(), tool.Mixes.ToArray(),
             await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
-            tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason, tool.WebhookUrlVerifiedAt);
+            tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason, tool.WebhookUrlVerifiedAt,
+            headerName, !string.IsNullOrWhiteSpace(headerValue));
     }
+
+    /// <summary>
+    ///     Parses and vets a webhook URL before it is stored, so a bad one is a refusal the maker can
+    ///     read rather than an exception from inside HttpClient later.
+    ///     <para>
+    ///         The private-address check is on the <b>resolved</b> address: a hostname allowlist
+    ///         proves nothing, because <c>tool.example</c> can resolve to 10.0.0.5.
+    ///     </para>
+    /// </summary>
+    private async Task<Uri?> CheckedTarget(string? url, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return null;
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var parsed) || !WebhookTarget.HasUsableScheme(parsed))
+            throw new ToolWebhookModeException(
+                "A webhook URL has to start with https:// (or http://). Other schemes cannot be " +
+                "delivered to.");
+
+        if (_configuration.Value.AllowPrivateWebhookTargets) return parsed;
+
+        if (WebhookTarget.HasPrivateHostname(parsed))
+            throw new ToolWebhookModeException(PrivateTargetMessage);
+
+        IPAddress[] addresses;
+        try
+        {
+            addresses = await Dns.GetHostAddressesAsync(parsed.Host, cancellationToken);
+        }
+        catch (Exception)
+        {
+            // A name that will not resolve is not a private-network probe; let verification report
+            // DnsFailure in its own vocabulary rather than failing the save with a guess.
+            return parsed;
+        }
+
+        if (addresses.Any(WebhookTarget.IsPrivate))
+            throw new ToolWebhookModeException(PrivateTargetMessage);
+
+        return parsed;
+    }
+
+    private const string PrivateTargetMessage =
+        "That address is on a private network, so we won't deliver to it — from our servers it " +
+        "would point at our own infrastructure rather than yours. Use a public hostname, or run " +
+        "PIU Scores locally to develop against localhost.";
 
     private async Task<Tool> Owned(Guid toolId, CancellationToken cancellationToken)
     {

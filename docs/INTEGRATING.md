@@ -158,9 +158,13 @@ and swapping to anything would make the whole exercise decorative.
 Why this exists: a typo in that box would otherwise mean we post a player's scores, on a schedule,
 to whoever happens to own the host you mistyped. This turns that into a failed save.
 
-If verification fails you get the reason and your server's own status code and response body — a
-`200` that does not echo is the interesting one, and usually means the URL is alive but it is not
-your handler.
+If verification fails you get the reason and your server's own status code. A `200` that does not
+echo is the interesting one, and usually means the URL is alive but it is not your handler.
+
+**The webhook URL has to be public.** We refuse loopback and private-network addresses, checked
+against what the host actually resolves to — from our servers those point at our infrastructure, not
+yours. To develop against `localhost`, run PIU Scores locally ([HOW-TO-RUN.md](HOW-TO-RUN.md)); the
+local run allows them.
 
 ### Verifying it came from us
 

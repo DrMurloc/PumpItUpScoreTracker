@@ -296,4 +296,17 @@ public sealed class ToolTests
     {
         Assert.Throws<ToolWebhookModeException>(() => NewTool().MarkWebhookVerified(Now));
     }
+
+    // Entry-only, like the zero-players rule. PIU Tracker was seeded straight into session mode by
+    // migration and has no header; without this its own maker cannot edit its description.
+    [Fact]
+    public void AToolAlreadyInSessionModeCanStillBeEditedWithoutAHeader()
+    {
+        var tool = NewTool();
+        tool.SetWebhook(WebhookMode.PiuGameSession, Hook, 0, hasOutboundHeader: true);
+
+        tool.SetWebhook(WebhookMode.PiuGameSession, Hook, 0, hasOutboundHeader: false);
+
+        Assert.Equal(WebhookMode.PiuGameSession, tool.WebhookMode);
+    }
 }

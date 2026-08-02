@@ -88,15 +88,25 @@ internal sealed class EFWebhookDeliveryRepository : IWebhookDeliveryRepository
     }
 
     public async Task<IReadOnlyList<WebhookDeliveryRecord>> GetDue(DateTimeOffset now, int limit,
-        CancellationToken cancellationToken = default)
+        DateTimeOffset claimUntil, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return (await database.Set<WebhookDeliveryEntity>()
-                .Where(d => d.NextAttemptAt != null && d.NextAttemptAt <= now)
-                .OrderBy(d => d.NextAttemptAt)
-                .Take(limit)
-                .ToArrayAsync(cancellationToken))
-            .Select(Map).ToArray();
+        var due = await database.Set<WebhookDeliveryEntity>()
+            .Where(d => d.NextAttemptAt != null && d.NextAttemptAt <= now)
+            .OrderBy(d => d.NextAttemptAt)
+            .Take(limit)
+            .ToArrayAsync(cancellationToken);
+        if (due.Length == 0) return Array.Empty<WebhookDeliveryRecord>();
+
+        // Claimed by pushing the next attempt out. Not a lease table and not a status column: this
+        // is one UPDATE on rows we already selected, and a claim that expires on its own means a
+        // process dying mid-sweep costs one delayed retry rather than a stuck row.
+        var ids = due.Select(d => d.Id).ToArray();
+        await database.Set<WebhookDeliveryEntity>()
+            .Where(d => ids.Contains(d.Id))
+            .ExecuteUpdateAsync(s => s.SetProperty(d => d.NextAttemptAt, claimUntil), cancellationToken);
+
+        return due.Select(Map).ToArray();
     }
 
     public async Task<WebhookDeliveryRecord?> Get(Guid id, CancellationToken cancellationToken = default)

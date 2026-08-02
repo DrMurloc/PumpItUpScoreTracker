@@ -1,4 +1,5 @@
-﻿using ScoreTracker.CommunityTools.Domain;
+﻿using System;
+using ScoreTracker.CommunityTools.Domain;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
@@ -43,5 +44,64 @@ public sealed class WebhookChallengeTests
 
         Assert.StartsWith("vfy_", first);
         Assert.NotEqual(first, second);
+    }
+}
+
+/// <summary>
+///     Where a webhook may point. Verification POSTs from our server, inside our network, so an
+///     unguarded target turns the feature into an internal-network probe with a status-code oracle.
+/// </summary>
+public sealed class WebhookTargetTests
+{
+    [Theory]
+    [InlineData("https://planner.example/hook", true)]
+    [InlineData("http://planner.example/hook", true)]
+    [InlineData("ftp://planner.example/hook", false)]
+    [InlineData("file:///etc/passwd", false)]
+    public void OnlyHttpSchemesAreUsable(string url, bool expected)
+    {
+        Assert.Equal(expected, WebhookTarget.HasUsableScheme(new Uri(url)));
+    }
+
+    [Theory]
+    [InlineData("127.0.0.1")]
+    [InlineData("10.1.2.3")]
+    [InlineData("172.16.0.1")]
+    [InlineData("172.31.255.254")]
+    [InlineData("192.168.1.1")]
+    // The cloud metadata range. On some providers this hands out credentials.
+    [InlineData("169.254.169.254")]
+    [InlineData("::1")]
+    [InlineData("fd00::1")]
+    public void PrivateAddressesAreRefused(string address)
+    {
+        Assert.True(WebhookTarget.IsPrivate(System.Net.IPAddress.Parse(address)));
+    }
+
+    [Theory]
+    [InlineData("8.8.8.8")]
+    [InlineData("172.15.0.1")]
+    [InlineData("172.32.0.1")]
+    [InlineData("192.169.0.1")]
+    [InlineData("2001:4860:4860::8888")]
+    public void PublicAddressesAreFine(string address)
+    {
+        Assert.False(WebhookTarget.IsPrivate(System.Net.IPAddress.Parse(address)));
+    }
+
+    [Theory]
+    [InlineData("http://localhost:5000/hook")]
+    [InlineData("http://api.localhost/hook")]
+    [InlineData("http://box.local/hook")]
+    [InlineData("http://svc.internal/hook")]
+    public void PrivateSoundingNamesAreRefusedWithoutResolving(string url)
+    {
+        Assert.True(WebhookTarget.HasPrivateHostname(new Uri(url)));
+    }
+
+    [Fact]
+    public void AnOrdinaryHostnameIsNotRefusedByName()
+    {
+        Assert.False(WebhookTarget.HasPrivateHostname(new Uri("https://planner.example/hook")));
     }
 }

@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.CommunityTools.Contracts.Messages;
 using ScoreTracker.CommunityTools.Domain;
@@ -37,7 +37,12 @@ internal sealed class WebhookMaintenanceSaga :
 
     public async Task Consume(ConsumeContext<RetryDueWebhookDeliveriesCommand> context)
     {
-        var due = await _deliveries.GetDue(_dateTime.Now, BatchSize, context.CancellationToken);
+        // Claimed for long enough to outlast the worst case: BatchSize endpoints each burning the
+        // client's ten-second timeout. A sweep that overruns its 5-minute cadence therefore does not
+        // find its own in-flight rows waiting for it.
+        var now = _dateTime.Now;
+        var claimUntil = now + TimeSpan.FromSeconds(BatchSize * 10 + 60);
+        var due = await _deliveries.GetDue(now, BatchSize, claimUntil, context.CancellationToken);
         foreach (var delivery in due)
             try
             {

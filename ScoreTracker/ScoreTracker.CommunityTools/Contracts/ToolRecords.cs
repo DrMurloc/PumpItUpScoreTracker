@@ -20,7 +20,9 @@ public sealed record ToolRecord(
     DateTimeOffset CreatedAt,
     DateTimeOffset? ApprovedAt,
     string? RejectionReason,
-    DateTimeOffset? WebhookUrlVerifiedAt);
+    DateTimeOffset? WebhookUrlVerifiedAt,
+    string? OutboundHeaderName,
+    bool HasOutboundHeaderValue);
 
 /// <summary>A tool as a player browsing the directory sees it — no delivery configuration.</summary>
 [ExcludeFromCodeCoverage]
