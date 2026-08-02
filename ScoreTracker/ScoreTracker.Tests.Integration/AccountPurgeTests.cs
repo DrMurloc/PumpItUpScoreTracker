@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
@@ -74,6 +75,178 @@ public sealed class AccountPurgeTests : IAsyncLifetime
     {
         var userId = await new TestDataSeeder(_fixture.DbContextFactory).SeedUserAsync();
 
+        var failures = await RunEveryPurge(userId);
+
+        Assert.True(failures.Count == 0,
+            "These purges throw against a real database, so a deleted account keeps the data they " +
+            "were supposed to remove — and every suite that only checks the manifests stays green: " +
+            string.Join(" | ", failures));
+    }
+
+    /// <summary>
+    ///     The row-level half. Every suite above this one runs on mocked ports, and a mock cannot
+    ///     over-delete: it records that the handler asked for the right scope, never that the SQL
+    ///     honoured it. A repository whose WHERE clause is missing, or keyed to the wrong column,
+    ///     passes all of them.
+    ///     One probe row per manifest type is planted for a decoy account, with every *other* user
+    ///     column on that row pointed at a bystander. Purging two accounts that own none of it must
+    ///     move nothing — that is the generic form of the CommunityMembership bug, where the purge
+    ///     resolved to a column naming somebody else. Purging the decoy must then take all of it,
+    ///     which is the under-deletion half in the same fixture. No per-entity test code, so a new
+    ///     table is covered the moment it joins a manifest.
+    /// </summary>
+    [Fact]
+    public async Task APurgeTakesEveryRowItOwnsAndNoRowItDoesNot()
+    {
+        var seeder = new TestDataSeeder(_fixture.DbContextFactory);
+        var decoy = await seeder.SeedUserAsync();
+        var bystander = await seeder.SeedUserAsync();
+        var stranger = await seeder.SeedUserAsync();
+
+        var chartId = await seeder.SeedPhoenixChartAsync();
+
+        var manifest = ManifestTypes();
+        var unplantable = new List<string>();
+        foreach (var type in manifest)
+        {
+            var failure = await TryPlant(type, decoy, bystander, chartId);
+            if (failure is not null) unplantable.Add(failure);
+        }
+
+        // A type nobody can plant is a type this test silently stops covering, so it fails here
+        // rather than quietly shrinking to the empty sweep.
+        Assert.True(unplantable.Count == 0,
+            "These manifest types could not be given a probe row, so nothing below asserts anything " +
+            $"about them: {string.Join(" | ", unplantable)}");
+
+        var planted = await CountRows(manifest);
+        var missing = planted.Where(p => p.Value == 0).Select(p => p.Key.Name).ToArray();
+        Assert.True(missing.Length == 0, $"Probe rows did not land for: {string.Join(", ", missing)}");
+
+        // The stranger owns nothing at all; the bystander appears only in columns that are not the
+        // owning key. Neither purge may move a row.
+        foreach (var innocent in new[] { stranger, bystander })
+        {
+            Assert.Empty(await RunEveryPurge(innocent));
+            var after = await CountRows(manifest);
+            var lost = after.Where(a => a.Value < planted[a.Key])
+                .Select(a => $"{a.Key.Name} {planted[a.Key]}->{a.Value}").ToArray();
+            Assert.True(lost.Length == 0,
+                "Purging an account that does not own these rows deleted them anyway — the delete is " +
+                "keyed to the wrong column, or to no column at all: " + string.Join(", ", lost));
+        }
+
+        Assert.Empty(await RunEveryPurge(decoy));
+
+        var remaining = (await CountRows(manifest)).Where(r => r.Value > 0)
+            .Select(r => $"{r.Key.Name} ({r.Value})").ToArray();
+        Assert.True(remaining.Length == 0,
+            "These rows belonged to the purged account and survived, so a deleted account keeps " +
+            $"data it was promised would go: {string.Join(", ", remaining)}");
+    }
+
+    /// <summary>Every distinct type any vertical declares user-owned.</summary>
+    private static IReadOnlyList<Type> ManifestTypes()
+    {
+        var declared = new List<Type>();
+        foreach (var (name, assembly) in Verticals)
+        {
+            var repository = assembly.GetType($"ScoreTracker.{name}.Infrastructure.EFAccountPurgeRepository");
+            var manifest = repository?.GetField("UserOwned", BindingFlags.NonPublic | BindingFlags.Static);
+            if (manifest is null) continue;
+            declared.AddRange((Type[])manifest.GetValue(null)!);
+        }
+
+        return declared.Distinct().ToArray();
+    }
+
+    /// <summary>
+    ///     One row, owned by <paramref name="ownerId" />, with every other user column set to
+    ///     <paramref name="bystanderId" />. Keys get fresh values and non-nullable columns get the
+    ///     smallest thing that satisfies them — the row only has to exist and be attributable.
+    ///     Values are written through the CLR properties <em>before</em> the entity is tracked: a
+    ///     string primary key still null at Add throws there, before any of this could fix it.
+    /// </summary>
+    private async Task<string?> TryPlant(Type type, Guid ownerId, Guid bystanderId, Guid chartId)
+    {
+        try
+        {
+            await using var database = await _fixture.DbContextFactory.CreateDbContextAsync();
+            var mapped = database.Model.FindEntityType(type)!;
+            var owningColumn = OwningColumn(type, mapped);
+            var instance = Activator.CreateInstance(type)!;
+
+            foreach (var property in mapped.GetProperties())
+            {
+                if (property.PropertyInfo is not { CanWrite: true } slot) continue;
+                var clr = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;
+                var current = slot.GetValue(instance);
+
+                // Foreign keys have to point at something real, so the two the manifests actually
+                // reference are seeded once and shared by every probe row.
+                if (property.Name == owningColumn) slot.SetValue(instance, ownerId);
+                else if (clr == typeof(Guid) && property.Name.EndsWith("UserId", StringComparison.Ordinal))
+                    slot.SetValue(instance, bystanderId);
+                else if (clr == typeof(Guid) && property.Name == "ChartId") slot.SetValue(instance, chartId);
+                else if (clr == typeof(Guid) && property.Name == "MixId")
+                    slot.SetValue(instance, TestDataSeeder.PhoenixMixId);
+                else if (property.IsPrimaryKey() && clr == typeof(Guid) &&
+                         property.ValueGenerated == ValueGenerated.Never)
+                    slot.SetValue(instance, Guid.NewGuid());
+                // An initializer can hold a value the column will not take — UserTournamentSession
+                // seeds RestTime with TimeSpan.MinValue, which `time` rejects — and default(DateTime)
+                // underflows a `datetime` column's 1753 floor. Only touched where one already sits,
+                // so a nullable column stays null.
+                else if (clr == typeof(TimeSpan) && current is not null) slot.SetValue(instance, TimeSpan.Zero);
+                else if (clr == typeof(DateTime) && current is not null) slot.SetValue(instance, Now.UtcDateTime);
+                else if (clr == typeof(DateTimeOffset) && current is not null) slot.SetValue(instance, Now);
+                else if (property.IsNullable || current is not null) continue;
+                else if (clr == typeof(string)) slot.SetValue(instance, "t");
+                else if (clr == typeof(byte[])) slot.SetValue(instance, new byte[] { 1 });
+            }
+
+            database.Add(instance);
+            await database.SaveChangesAsync();
+            return null;
+        }
+        catch (Exception exception)
+        {
+            return $"{type.Name}: {(exception.InnerException ?? exception).Message}";
+        }
+    }
+
+    /// <summary>
+    ///     The same resolution UserDataPurge performs. Replicated rather than shared on purpose: if
+    ///     the two ever disagree the bystander columns above catch it, because a purge keyed to a
+    ///     column this says is not the owner deletes a row it was told to leave.
+    /// </summary>
+    private static string OwningColumn(Type type, IEntityType mapped)
+    {
+        var declared = type.GetCustomAttribute<PurgeKeyAttribute>()?.PropertyName;
+        if (declared is not null) return declared;
+        return mapped.GetProperties().Single(p =>
+            (p.ClrType == typeof(Guid) || p.ClrType == typeof(Guid?)) &&
+            p.Name.EndsWith("UserId", StringComparison.Ordinal)).Name;
+    }
+
+    private async Task<Dictionary<Type, int>> CountRows(IEnumerable<Type> types)
+    {
+        await using var database = await _fixture.DbContextFactory.CreateDbContextAsync();
+        var counts = new Dictionary<Type, int>();
+        foreach (var type in types)
+        {
+            var mapped = database.Model.FindEntityType(type)!;
+            var table = $"[{mapped.GetSchema() ?? "scores"}].[{mapped.GetTableName()}]";
+            counts[type] = await database.Database
+                .SqlQueryRaw<int>($"SELECT COUNT(*) AS Value FROM {table}").SingleAsync();
+        }
+
+        return counts;
+    }
+
+    /// <summary>Runs every vertical's purge for one user; returns the ones that threw.</summary>
+    private async Task<List<string>> RunEveryPurge(Guid userId)
+    {
         var failures = new List<string>();
         foreach (var (name, assembly) in Verticals)
         {
@@ -93,10 +266,7 @@ public sealed class AccountPurgeTests : IAsyncLifetime
                 }
         }
 
-        Assert.True(failures.Count == 0,
-            "These purges throw against a real database, so a deleted account keeps the data they " +
-            "were supposed to remove — and every suite that only checks the manifests stays green: " +
-            string.Join(" | ", failures));
+        return failures;
     }
 
     /// <summary>
