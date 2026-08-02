@@ -31,6 +31,7 @@ namespace ScoreTracker.Tests.Components;
 public sealed class ChartLeaderboardDialogTests : ComponentTestBase
 {
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IUserReader> _readers = new();
 
     public ChartLeaderboardDialogTests()
     {
@@ -52,10 +53,14 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
             .ReturnsAsync((IDictionary<Guid, double>)new Dictionary<Guid, double>());
         Services.AddSingleton(_mediator.Object);
         // UserLabel needs the whole user for its flag, so the rows resolve them through here.
-        var readers = new Mock<IUserReader>();
-        readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+        _readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<User>());
-        Services.AddSingleton(readers.Object);
+        Services.AddSingleton(_readers.Object);
+        // UserLabel resolves its country image through this.
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetCountryImage(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Uri("https://example.invalid/flag.png"));
+        Services.AddSingleton(repo.Object);
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(false);
         ChartId = chart.Id;
         SetRendererInfo(new Microsoft.AspNetCore.Components.RendererInfo("Server", true));
@@ -113,6 +118,29 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
             var names = dialog.FindAll(".weekly-lb-user").Select(e => e.TextContent.Trim()).ToArray();
             Assert.StartsWith("EARLIEST", names.First());
         });
+    }
+
+    [Fact]
+    public void RowsRenderTheAvatarAndTheFlagWhenTheUserResolves()
+    {
+        // Every other fact here mocks zero users, so an empty map reads as correct and a
+        // dropped assignment looks exactly like a board of players with no country set.
+        var score = Score(994_000, When, "MIDNIGHT");
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { score });
+        _readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new User(score.UserId, Name.From("MIDNIGHT"), true, null,
+                    new Uri("https://example.invalid/avatar.png"), Name.From("United States of America"),
+                    false, When)
+            });
+
+        var dialog = RenderDialog();
+
+        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll(".sbd-avatar")));
+        Assert.NotEmpty(dialog.FindAll(".user-label"));
     }
 
     [Fact]

@@ -246,6 +246,9 @@
             }
         }
 
+        // UserLabel needs the whole user for its flag, and the avatar comes off the same read.
+        _users = (await Users.GetUsers(_rows.Select(r => r.Score.UserId).Distinct()))
+            .ToDictionary(u => u.Id);
         _myPlace = _rows.FirstOrDefault(r => r.IsMe)?.Place;
         _loading = false;
     }
