@@ -1,0 +1,29 @@
+using MassTransit;
+using Microsoft.Extensions.DependencyInjection;
+using ScoreTracker.Data.Persistence;
+
+namespace ScoreTracker.Rivals.Wiring;
+
+public static class RivalsRegistrationExtensions
+{
+    /// <summary>
+    ///     Wires the Rivals vertical (docs/design/rivals.md §4). Every port here is
+    ///     vertical-internal — nothing outside reads a rival edge except through the
+    ///     published contract queries. Handlers are discovered by the host's MediatR
+    ///     assembly scan; bus consumers are NOT — see <see cref="AddRivalsConsumers" />.
+    /// </summary>
+    public static IServiceCollection AddRivals(this IServiceCollection services)
+    {
+        services.AddSingleton<IDbModelContribution, RivalsModelContribution>();
+        return services;
+    }
+
+    /// <summary>
+    ///     MassTransit's AddConsumers assembly scan skips internal types, so the vertical
+    ///     registers its internal consumers explicitly through this hook — call it inside
+    ///     the host's AddMassTransit block. Guarded by the tripwire in VerticalBoundaryTests.
+    /// </summary>
+    public static void AddRivalsConsumers(this IRegistrationConfigurator configurator)
+    {
+    }
+}

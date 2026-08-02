@@ -14,6 +14,7 @@ using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
+using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using Xunit;
@@ -40,7 +41,8 @@ public sealed class AccountPurgeCoverageTests
         ("HomePage", typeof(HomePageModelContribution).Assembly),
         ("Identity", typeof(IdentityModelContribution).Assembly),
         ("Catalog", typeof(CatalogModelContribution).Assembly),
-        ("OfficialMirror", typeof(OfficialMirrorModelContribution).Assembly)
+        ("OfficialMirror", typeof(OfficialMirrorModelContribution).Assembly),
+        ("Rivals", typeof(RivalsModelContribution).Assembly)
     };
 
     /// <summary>

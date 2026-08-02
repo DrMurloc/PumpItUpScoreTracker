@@ -26,6 +26,7 @@ using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
+using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
@@ -99,6 +100,7 @@ builder.Services.AddMassTransit(o =>
     o.AddIdentityConsumers();
     o.AddRandomizerConsumers();
     o.AddHomePageConsumers();
+    o.AddRivalsConsumers();
 
     o.AddDelayedMessageScheduler();
 
@@ -245,6 +247,7 @@ builder.Services.AddBlazorApplicationInsights()
             typeof(WeeklyChallengeRegistrationExtensions).Assembly,
             typeof(EventCompetitionRegistrationExtensions).Assembly,
             typeof(CommunitiesRegistrationExtensions).Assembly,
+            typeof(RivalsRegistrationExtensions).Assembly,
             typeof(ScoreTracker.HomePage.Wiring.HomePageRegistrationExtensions).Assembly);
     })
     .AddTransient<IUserAccessService, UserAccessService>()
