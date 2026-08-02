@@ -115,9 +115,9 @@ public sealed class SessionHeroTests : ComponentTestBase
             {
                 new SessionPeerBoard(single, new[]
                 {
-                    new CommunityPeerScore(Guid.NewGuid(), Name.From("MIDNIGHT"),
+                    new SessionPeer(2, new CommunityPeerScore(Guid.NewGuid(), Name.From("MIDNIGHT"),
                         new[] { Name.From("Arrow Eclipse") }, 22.4, PhoenixScore.From(930000),
-                        PhoenixPlate.TalentedGame, false)
+                        PhoenixPlate.TalentedGame, false))
                 })
             },
             new Dictionary<Guid, User>());

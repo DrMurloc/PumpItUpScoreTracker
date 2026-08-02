@@ -40,12 +40,13 @@
                                    aria-label="@L["Leaderboard"]" Class="sbd-lbbtn ml-auto"
                                    OnClick="() => OnOpenLeaderboard.InvokeAsync(board.Chart.Id)"></MudIconButton>
                 </div>
-                @* No place numbers: these rows are sorted by how close the player sits to you,
-                   not by score, so a "#1" here would name a rank that does not exist. The
-                   ranked view is the leaderboard dialog, one tap away. *@
-                @foreach (var peer in board.Peers)
+                @* Places are real standings across the whole club, so they skip: only the
+                   clubmates nearest your competitive level are shown. *@
+                @foreach (var entry in board.Peers)
                 {
+                    var peer = entry.Score;
                     <div class="weekly-lb-row">
+                        <span class="weekly-lb-place">#@entry.Place</span>
                         @if (Peers.TryGetValue(peer.UserId, out var user))
                         {
                             <span class="sbd-avatar"><MudAvatar Size="Size.Small">
@@ -64,6 +65,9 @@
                             @* Rarely more than a letter or two of it survives a phone width,
                                so it is hidden there rather than truncated to noise. *@
                             <span class="sbd-peer-club">@string.Join(" · ", peer.CommunityNames)</span>
+                            @* Shown, not sorted on — it says who you are looking at rather than
+                               deciding the order. *@
+                            <span class="sbd-peer-level">@peer.CompetitiveLevel.ToString("0.00")</span>
                         </span>
                         <span class="sbd-score-stack">
                             <ScoreBreakdown Score="peer.Score" Plate="peer.Plate" Mix="board.Chart.Mix"

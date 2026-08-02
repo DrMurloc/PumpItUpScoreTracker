@@ -48,23 +48,50 @@ public sealed class SessionBreakdownBuilderTests
         Assert.Single(model.Hero.PeerBoards);
     }
 
-    [Fact]
-    public async Task PeersSortByClosenessToMyCompetitiveLevelForTheChartsType()
+    /// <summary>
+    ///     Six clubmates against a board that shows five, so the cap actually bites. FAR holds
+    ///     the top score and sits nearly three levels off; everyone else is within reach.
+    /// </summary>
+    private static CommunityPeerScore[] SixClubmates()
     {
-        // Both sides of the comparison have to be competitive levels. Sorting against the
-        // chart's difficulty instead put whoever happened to sit near "21" on top.
+        return new[]
+        {
+            Peer("FAR", 19.8, 998000),
+            Peer("A", 22.5, 901000),
+            Peer("B", 22.7, 950000),
+            Peer("C", 22.4, 930000),
+            Peer("D", 22.8, 910000),
+            Peer("E", 22.3, 940000)
+        };
+    }
+
+    [Fact]
+    public async Task ClosenessPicksWhoAppearsAndScoreOrdersThem()
+    {
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
 
-        // Mine is 22.6 singles. NEAR is a fifth of a level away, FAR is nearly three.
-        var model = await Build(chart, rows, peers: new[]
-        {
-            Peer("FAR", 19.8, 998000),
-            Peer("NEAR", 22.4, 901000)
-        });
+        var model = await Build(chart, rows, SixClubmates());
 
         var board = Assert.Single(model.Hero!.PeerBoards);
-        Assert.Equal("NEAR", board.Peers.First().PlayerName.ToString());
+        // FAR is dropped for distance despite the best score; the rest read high to low.
+        Assert.Equal(new[] { "B", "E", "C", "D", "A" },
+            board.Peers.Select(p => p.Score.PlayerName.ToString()));
+    }
+
+    [Fact]
+    public async Task PeerPlacesAreRealStandingsAcrossTheWholeClub()
+    {
+        // FAR is #1 on the chart and is not shown, so the five that are keep places 2..6 rather
+        // than being renumbered from one. A place counting only the visible rows would be a
+        // different claim entirely.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
+
+        var model = await Build(chart, rows, SixClubmates());
+
+        var board = Assert.Single(model.Hero!.PeerBoards);
+        Assert.Equal(new[] { 2, 3, 4, 5, 6 }, board.Peers.Select(p => p.Place));
     }
 
     [Fact]

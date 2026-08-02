@@ -5,6 +5,7 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -33,8 +34,9 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
 
     /// <summary>
     ///     Names per board. A big club puts dozens of people on a popular chart, and a list that
-    ///     long stops being a comparison and starts being a directory — the nearest few are the
-    ///     ones the section is actually about. The full board is one tap away in the dialog.
+    ///     long stops being a comparison and starts being a directory — the nearest few by
+    ///     competitive level are the ones the section is actually about. The full board is one
+    ///     tap away in the dialog.
     /// </summary>
     private const int MaxPeersPerBoard = 5;
 
@@ -153,7 +155,7 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
             milestones.Where(m => m.Kind != MilestoneKind.TitleProgress).ToArray(),
             BuildTitleBars(milestones),
             boards,
-            (await users.GetUsers(boards.SelectMany(b => b.Peers).Select(p => p.UserId).Distinct(),
+            (await users.GetUsers(boards.SelectMany(b => b.Peers).Select(p => p.Score.UserId).Distinct(),
                 cancellationToken)).ToDictionary(u => u.Id));
     }
 
@@ -241,15 +243,39 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
 
         return wanted
             .Where(id => peers.ContainsKey(id) && charts.ContainsKey(id))
-            .Select(id => new SessionPeerBoard(charts[id], peers[id]
-                // Closeness sorts, it never filters — a clubmate three levels away is still a
-                // clubmate (D8). Both sides of this subtraction have to be the same quantity:
-                // the peer's competitive level against MINE, read for the chart's own type,
-                // which is how Communities computed theirs.
-                .OrderBy(p => Math.Abs(p.CompetitiveLevel - MyCompetitiveLevel(charts[id], stats)))
-                .ThenByDescending(p => (int)p.Score)
-                .Take(MaxPeersPerBoard)
-                .ToArray()))
+            .Select(id => new SessionPeerBoard(charts[id], NearestFew(peers[id], charts[id], stats)))
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     A leaderboard, trimmed to the people it is about. Places are Olympic and computed
+    ///     over the WHOLE club — so what you see is where a clubmate actually stands, not where
+    ///     they stand among the five that happened to be shown. That makes the places
+    ///     deliberately non-contiguous, which is the honest shape: closeness decides who
+    ///     appears, score decides the order, and competitive level is shown rather than
+    ///     encoded in the ordering.
+    /// </summary>
+    private static IReadOnlyList<SessionPeer> NearestFew(IReadOnlyList<CommunityPeerScore> peers, Chart chart,
+        PlayerStatsRecord stats)
+    {
+        var ranked = new List<SessionPeer>();
+        var place = 1;
+        foreach (var tie in peers.GroupBy(p => (int)p.Score).OrderByDescending(g => g.Key))
+        {
+            var tiePlace = place;
+            // Same tie rule as the leaderboard dialog: whoever got there first reads first.
+            foreach (var peer in tie.OrderBy(p => p.RecordedAt ?? DateTimeOffset.MaxValue))
+            {
+                ranked.Add(new SessionPeer(tiePlace, peer));
+                place++;
+            }
+        }
+
+        var mine = MyCompetitiveLevel(chart, stats);
+        return ranked
+            .OrderBy(p => Math.Abs(p.Score.CompetitiveLevel - mine))
+            .Take(MaxPeersPerBoard)
+            .OrderBy(p => p.Place)
             .ToArray();
     }
 

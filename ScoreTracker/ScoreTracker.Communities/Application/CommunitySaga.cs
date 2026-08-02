@@ -1035,7 +1035,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             .ToDictionary(g => g.Key, g => (IReadOnlyList<CommunityPeerScore>)g
                 .Select(s => new CommunityPeerScore(s.UserId, s.UserName,
                     clubsByMember.TryGetValue(s.UserId, out var names) ? names : Array.Empty<Name>(),
-                    LevelFor(s.UserId, s.ChartId), s.Score, s.Plate, s.IsBroken))
+                    LevelFor(s.UserId, s.ChartId), s.Score, s.Plate, s.IsBroken, s.RecordedAt))
                 .ToArray());
     }
 

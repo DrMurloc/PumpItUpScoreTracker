@@ -18,4 +18,5 @@ public sealed record CommunityPeerScore(
     double CompetitiveLevel,
     PhoenixScore Score,
     PhoenixPlate? Plate,
-    bool IsBroken);
+    bool IsBroken,
+    DateTimeOffset? RecordedAt = null);

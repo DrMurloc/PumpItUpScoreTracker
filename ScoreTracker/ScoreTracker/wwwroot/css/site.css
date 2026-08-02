@@ -11715,3 +11715,10 @@ button.chart-card-art {
         display: none;
     }
 }
+
+.sbd-peer-level {
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    margin-left: 6px;
+    font-variant-numeric: tabular-nums;
+}

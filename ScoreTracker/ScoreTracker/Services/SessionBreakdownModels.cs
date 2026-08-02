@@ -109,9 +109,17 @@ public sealed record SessionTitleBarModel(
     int Current,
     int Required);
 
-/// <summary>Your clubmates on one chart, nearest competitive level first.</summary>
+/// <summary>
+///     Your clubmates on one chart. It is a leaderboard — ordered by score, with real places
+///     over the whole club — but only the few nearest your competitive level are shown, so the
+///     places are deliberately non-contiguous. Closeness picks WHO appears; score orders them.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record SessionPeerBoard(Chart Chart, IReadOnlyList<CommunityPeerScore> Peers);
+public sealed record SessionPeerBoard(Chart Chart, IReadOnlyList<SessionPeer> Peers);
+
+/// <summary>One clubmate with the place they actually hold on that chart among your clubs.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record SessionPeer(int Place, CommunityPeerScore Score);
 
 /// <summary>
 ///     One session as the grid shows it. <c>TopCharts</c> and the counts come from the journal,
