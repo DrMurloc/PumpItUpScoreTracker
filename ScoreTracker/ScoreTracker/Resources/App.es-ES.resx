@@ -675,6 +675,9 @@
   <data name="Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank." xml:space="preserve">
     <value>Como en este dispositivo hay una copia cifrada de tu contraseña, asegúrate de que tu contraseña de Pump It Up sea una que uses solo aquí, no la que también abre tu correo o tu banco.</value>
   </data>
+  <data name="Before" xml:space="preserve">
+    <value>Antes de</value>
+  </data>
   <data name="Before we remember your password" xml:space="preserve">
     <value>Antes de recordar tu contraseña</value>
   </data>
@@ -3018,6 +3021,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>Aún no hay puntuaciones: Pumbility comienza con tu primera importación.</value>
   </data>
+  <data name="No sessions here" xml:space="preserve">
+    <value>No hay sesiones aquí</value>
+  </data>
   <data name="No sessions recorded yet." xml:space="preserve">
     <value>Aún no hay sesiones grabadas.</value>
   </data>
@@ -3164,6 +3170,9 @@
   </data>
   <data name="Nothing to undo yet" xml:space="preserve">
     <value>Aún no hay nada que deshacer</value>
+  </data>
+  <data name="Nothing was recorded before that date." xml:space="preserve">
+    <value>No se registró nada antes de esa fecha.</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>ahora</value>
@@ -4043,6 +4052,9 @@
   </data>
   <data name="Recorded" xml:space="preserve">
     <value>Registrado</value>
+  </data>
+  <data name="Recorded before session capture" xml:space="preserve">
+    <value>Registrado antes de la captura de sesiones</value>
   </data>
   <data name="Recorded from" xml:space="preserve">
     <value>Registrado desde</value>
@@ -5486,6 +5498,9 @@
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>Hasta entonces tu perfil está oculto y tu game tag se borra.</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>Mejoras</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
     <value>Actualizar chart</value>

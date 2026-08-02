@@ -93,7 +93,7 @@ public sealed class SessionBreakdownBuilderTests
                 new Dictionary<Guid, IReadOnlyList<CommunityPeerScore>> { [chart.Id] = peers });
 
         return await new SessionBreakdownBuilder(mediator.Object)
-            .Build(User, null, 1, 20, CancellationToken.None);
+            .Build(User, null, 1, 20, null, CancellationToken.None);
     }
 
     private static void Setup<T>(Mock<IMediator> mediator, IRequest<T> request, T result)

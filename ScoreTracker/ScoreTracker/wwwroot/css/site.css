@@ -11471,3 +11471,166 @@ button.chart-card-art {
         display: none;
     }
 }
+
+/* ===== Session history cards =======================================================
+   Replaces the table. Jackets and counts come from the journal so every session has
+   them; the footer only exists where capture ran, which is why the art carries the
+   card and the headline is a bonus. */
+
+.sbd-history-filter {
+    margin-left: auto;
+}
+
+.sbd-datepicker {
+    max-width: 170px;
+}
+
+/* Four across the 1132px content column at the 268px floor — the page size is two full
+   rows, because a page ending mid-row reads as a rendering fault. */
+.sbd-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+    gap: 14px;
+}
+
+.sbd-card {
+    background: var(--mix-surface);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-top: 2px solid var(--mix-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: border-color .12s, box-shadow .12s;
+}
+
+.sbd-card:hover {
+    border-color: color-mix(in srgb, var(--mix-primary) 45%, transparent);
+}
+
+.sbd-card:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+.sbd-card-now {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mix-primary) 45%, transparent),
+    0 0 22px color-mix(in srgb, var(--mix-primary) 13%, transparent);
+}
+
+.sbd-card-head {
+    padding: 10px 13px 8px;
+}
+
+.sbd-card-when {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.15;
+}
+
+.sbd-card-meta {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    margin-top: 1px;
+}
+
+.sbd-card-art {
+    display: flex;
+    gap: 4px;
+    padding: 0 13px 10px;
+    align-items: center;
+}
+
+.sbd-card-more {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    margin-left: 2px;
+}
+
+.sbd-card-counts {
+    display: flex;
+    gap: 14px;
+    padding: 0 13px 9px;
+    align-items: baseline;
+}
+
+.sbd-card-k {
+    display: flex;
+    flex-direction: column;
+}
+
+.sbd-card-v {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.sbd-card-l {
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.sbd-card-span {
+    margin-left: auto;
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+
+/* Pinned to the bottom so cards of different heights still line their footers up. */
+.sbd-card-foot {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, .06);
+    padding: 8px 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-height: 37px;
+}
+
+.sbd-card-tag {
+    font-size: .75rem;
+    white-space: nowrap;
+    color: var(--mix-accent);
+}
+
+.sbd-card-quiet {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    font-style: italic;
+}
+
+.sbd-card-now-tag {
+    margin-left: auto;
+    font-family: var(--font-display);
+    font-size: .64rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-primary);
+}
+
+@media (max-width: 599.98px) {
+    .sbd-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .sbd-history-filter {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .sbd-datepicker {
+        max-width: none;
+    }
+}

@@ -111,14 +111,27 @@ public sealed record SessionTitleBarModel(
 [ExcludeFromCodeCoverage]
 public sealed record SessionPeerBoard(Chart Chart, IReadOnlyList<CommunityPeerScore> Peers);
 
-/// <summary>A row of the history table under the hero.</summary>
+/// <summary>
+///     One session as the grid shows it. <c>TopCharts</c> and the counts come from the journal,
+///     so every session ever recorded has them; <c>Headline</c> only exists where capture ran,
+///     which is why the card is built to read without it.
+/// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record SessionHistoryRow(
     Guid? SessionId,
     DateOnly? Day,
     MixEnum Mix,
     string Source,
+    DateTimeOffset Start,
     DateTimeOffset End,
     int Passes,
     int Upscores,
-    int Plays);
+    int Plays,
+    IReadOnlyList<Chart> TopCharts,
+    int MoreCharts,
+    string LevelSpan,
+    IReadOnlyList<PlayerMilestoneRecord> Headline,
+    string? AccountTag)
+{
+    public TimeSpan Duration => End - Start;
+}

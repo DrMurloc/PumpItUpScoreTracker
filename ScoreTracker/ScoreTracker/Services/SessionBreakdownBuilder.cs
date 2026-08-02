@@ -38,10 +38,14 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
     /// </summary>
     private const int MaxPeersPerBoard = 5;
 
+    /// <summary>Jackets per card before the "+N" count takes over.</summary>
+    private const int TopChartsPerCard = 3;
+
     public async Task<SessionsPageModel> Build(Guid userId, Guid? selectedSessionId, int page, int pageSize,
-        CancellationToken cancellationToken)
+        DateTimeOffset? before, CancellationToken cancellationToken)
     {
-        var feed = await mediator.Send(new GetRecentSessionsQuery(userId, page, pageSize), cancellationToken);
+        var feed = await mediator.Send(new GetRecentSessionsQuery(userId, page, pageSize, before),
+            cancellationToken);
         if (feed.Groups.Count == 0)
             return new SessionsPageModel(null, Array.Empty<SessionHistoryRow>(), 0, false);
 
@@ -54,7 +58,7 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
         selected ??= feed.Groups[0];
 
         var sessions = await mediator.Send(new GetScoreSessionsQuery(userId), cancellationToken);
-        var history = feed.Groups.Select(g => ToHistoryRow(g, sessions)).ToArray();
+        var history = await BuildHistory(userId, feed.Groups, sessions, cancellationToken);
         var breakdown = await BuildOne(userId, selected, sessions, cancellationToken);
         return new SessionsPageModel(breakdown, history, feed.TotalGroups, undone);
     }
@@ -196,16 +200,97 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
         };
     }
 
+    /// <summary>
+    ///     The grid's rows. Charts and milestones load once for the whole page rather than per
+    ///     card — a card that fetched its own art would put a query per session on every page
+    ///     turn.
+    /// </summary>
+    private async Task<IReadOnlyList<SessionHistoryRow>> BuildHistory(Guid userId,
+        IReadOnlyList<RecentSessionsPage.SessionGroup> groups, IReadOnlyList<ScoreSessionRecord> sessions,
+        CancellationToken cancellationToken)
+    {
+        var charts = new Dictionary<Guid, Chart>();
+        foreach (var byMix in groups.GroupBy(g => g.Mix))
+        {
+            var ids = byMix.SelectMany(g => g.Rows).Select(r => r.ChartId).Distinct().ToArray();
+            if (ids.Length == 0) continue;
+            foreach (var chart in await mediator.Send(new GetChartsQuery(byMix.Key, ChartIds: ids),
+                         cancellationToken))
+                charts[chart.Id] = chart;
+        }
+
+        var sessionIds = groups.Where(g => g.SessionId != null).Select(g => g.SessionId!.Value).ToArray();
+        var milestones = sessionIds.Length == 0
+            ? Array.Empty<PlayerMilestoneRecord>()
+            : (await mediator.Send(new GetPlayerMilestonesForSessionsQuery(userId, sessionIds), cancellationToken))
+                .ToArray();
+
+        return groups.Select(g => ToHistoryRow(g, sessions, charts, milestones)).ToArray();
+    }
+
+    /// <summary>
+    ///     The headline is what answers "was anything good in there" without opening the card.
+    ///     Titles earned lead, then a PUMBILITY gain, then folder lamps — and there is
+    ///     deliberately no filler when a session has none, because most sessions predate
+    ///     capture and a card that insists on a headline would look broken on all of them.
+    /// </summary>
+    private static readonly MilestoneKind[] HeadlineOrder =
+    {
+        MilestoneKind.TitleCompleted, MilestoneKind.PumbilityGain, MilestoneKind.FolderPassLamp,
+        MilestoneKind.FolderGradeLamp, MilestoneKind.FolderPlateLamp
+    };
+
+    private const int HeadlineCap = 2;
+
     private static SessionHistoryRow ToHistoryRow(RecentSessionsPage.SessionGroup group,
-        IReadOnlyList<ScoreSessionRecord> sessions)
+        IReadOnlyList<ScoreSessionRecord> sessions, IReadOnlyDictionary<Guid, Chart> charts,
+        IReadOnlyList<PlayerMilestoneRecord> milestones)
     {
         // Counts come denormalized off the session row where one exists and off the journal
         // where it does not — sessions predate that table and the page keeps them all.
         var session = sessions.FirstOrDefault(s => s.Id == group.SessionId);
-        return new SessionHistoryRow(group.SessionId, group.Day, group.Mix, group.Source, group.End,
+        var played = group.Rows
+            .Select(r => charts.GetValueOrDefault(r.ChartId))
+            .Where(c => c != null)
+            .Select(c => c!)
+            .DistinctBy(c => c.Id)
+            .OrderByDescending(c => (int)c.Level)
+            .ToArray();
+
+        var headline = milestones
+            .Where(m => m.SessionId == group.SessionId && Array.IndexOf(HeadlineOrder, m.Kind) >= 0)
+            .OrderBy(m => Array.IndexOf(HeadlineOrder, m.Kind))
+            .Take(HeadlineCap)
+            .ToArray();
+
+        return new SessionHistoryRow(group.SessionId, group.Day, group.Mix, group.Source,
+            group.Start, group.End,
             session?.NewCount ?? group.Rows.Count(r => r.Classification == ScoreEventClassification.NewPass),
             session?.UpscoreCount ?? group.Rows.Count(r => r.Classification == ScoreEventClassification.Upscore),
-            session?.ScoreCount ?? group.Rows.Count);
+            session?.ScoreCount ?? group.Rows.Count,
+            played.Take(TopChartsPerCard).ToArray(),
+            Math.Max(0, played.Length - TopChartsPerCard),
+            LevelSpan(played),
+            headline,
+            session?.AccountTag);
+    }
+
+    /// <summary>
+    ///     "S17–S22 · D19–D23". What separates a warm-up from a session at the player's
+    ///     ceiling — two sessions of forty plays are not the same session.
+    /// </summary>
+    private static string LevelSpan(IReadOnlyList<Chart> played)
+    {
+        return string.Join(" · ", played
+            .GroupBy(c => c.Type)
+            .OrderBy(g => g.Key)
+            .Select(g =>
+            {
+                var low = g.Min(c => (int)c.Level);
+                var high = g.Max(c => (int)c.Level);
+                var tag = g.Key.GetShortHand();
+                return low == high ? $"{tag}{low}" : $"{tag}{low}–{tag}{high}";
+            }));
     }
 
     private static int DetailFields(HighlightDetail? detail)

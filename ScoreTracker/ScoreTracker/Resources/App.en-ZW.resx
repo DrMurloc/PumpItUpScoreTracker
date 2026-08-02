@@ -682,6 +682,9 @@
   <data name="Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank." xml:space="preserve">
     <value>Grrglmurpurg gro urgrgl morgmurg mrgl gromurp glorgmrpmurm grglro lurg grglmrp grglgrgl, blgrlro glorggrorp blargro gromurp Pump It Up glorgmrpmurm urg argl blub murg mrpmurg blubmorg — murm mrp argl blubgrrgl morgglorg maglgl gromurp mrgrgl argl gromurp rorgl.</value>
   </data>
+  <data name="Before" xml:space="preserve">
+    <value>Arg</value>
+  </data>
   <data name="Before we remember your password" xml:space="preserve">
     <value>Glorggro mrgl roblgrlargl gromurp glorgmrpmurm</value>
   </data>
@@ -3048,6 +3051,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>Mrp mgrlgmrg argl — Pumbility rglmagl glgrgl gromurp murpargl glorggl.</value>
   </data>
+  <data name="No sessions here" xml:space="preserve">
+    <value>Mo orgab</value>
+  </data>
   <data name="No sessions recorded yet." xml:space="preserve">
     <value>Mrp glorgmaglgro murmgrglurg argl.</value>
   </data>
@@ -3195,6 +3201,9 @@
   </data>
   <data name="Nothing to undo yet" xml:space="preserve">
     <value>Gorb glopa muru</value>
+  </data>
+  <data name="Nothing was recorded before that date." xml:space="preserve">
+    <value>Mo lorg arg.</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>magl</value>
@@ -4084,6 +4093,9 @@
   </data>
   <data name="Recorded" xml:space="preserve">
     <value>Murmgrglurg</value>
+  </data>
+  <data name="Recorded before session capture" xml:space="preserve">
+    <value>Lorg arg orgab</value>
   </data>
   <data name="Recorded from" xml:space="preserve">
     <value>Murmgrglurg romurg</value>
@@ -5549,6 +5561,9 @@
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>Golu marbul plumo, gorbam glarb.</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>Bagl</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
 	  <value>Plglmrgl Murgl</value>

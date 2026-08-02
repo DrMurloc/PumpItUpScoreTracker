@@ -682,6 +682,9 @@
   <data name="Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank." xml:space="preserve">
     <value>このデバイスにはパスワードの暗号化されたコピーが残るため、Pump It Up のパスワードはここだけで使うものにしてください。メールや銀行にも使うパスワードは避けてください。</value>
   </data>
+  <data name="Before" xml:space="preserve">
+    <value>これより前</value>
+  </data>
   <data name="Before we remember your password" xml:space="preserve">
     <value>パスワードを記憶する前に</value>
   </data>
@@ -3048,6 +3051,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>まだスコアがありません。PUMBILITYは最初のインポートから始まります。</value>
   </data>
+  <data name="No sessions here" xml:space="preserve">
+    <value>セッションはありません</value>
+  </data>
   <data name="No sessions recorded yet." xml:space="preserve">
     <value>まだセッションが記録されていません。</value>
   </data>
@@ -3195,6 +3201,9 @@
   </data>
   <data name="Nothing to undo yet" xml:space="preserve">
     <value>取り消せるものはまだありません</value>
+  </data>
+  <data name="Nothing was recorded before that date." xml:space="preserve">
+    <value>その日付より前の記録はありません。</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>たった今</value>
@@ -4084,6 +4093,9 @@
   </data>
   <data name="Recorded" xml:space="preserve">
     <value>記録しました</value>
+  </data>
+  <data name="Recorded before session capture" xml:space="preserve">
+    <value>セッション記録の開始前</value>
   </data>
   <data name="Recorded from" xml:space="preserve">
     <value>記録日（から）</value>
@@ -5549,6 +5561,9 @@
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>それまではプロフィールは非表示になり、ゲームタグは消えます。</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>更新</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
 	  <value>譜面更新</value>

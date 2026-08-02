@@ -682,6 +682,9 @@
   <data name="Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank." xml:space="preserve">
     <value>Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank.</value>
   </data>
+  <data name="Before" xml:space="preserve">
+    <value>Before</value>
+  </data>
   <data name="Before we remember your password" xml:space="preserve">
     <value>Before we remember your password</value>
   </data>
@@ -3048,6 +3051,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>No scores yet — Pumbility starts with your first import.</value>
   </data>
+  <data name="No sessions here" xml:space="preserve">
+    <value>No sessions here</value>
+  </data>
   <data name="No sessions recorded yet." xml:space="preserve">
     <value>No sessions recorded yet.</value>
   </data>
@@ -3195,6 +3201,9 @@
   </data>
   <data name="Nothing to undo yet" xml:space="preserve">
     <value>Nothing to undo yet</value>
+  </data>
+  <data name="Nothing was recorded before that date." xml:space="preserve">
+    <value>Nothing was recorded before that date.</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>now</value>
@@ -4084,6 +4093,9 @@
   </data>
   <data name="Recorded" xml:space="preserve">
     <value>Recorded</value>
+  </data>
+  <data name="Recorded before session capture" xml:space="preserve">
+    <value>Recorded before session capture</value>
   </data>
   <data name="Recorded from" xml:space="preserve">
     <value>Recorded from</value>
@@ -5549,6 +5561,9 @@
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>Until then your profile is hidden and your game tag is cleared.</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>Up</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
 	  <value>Update Chart</value>

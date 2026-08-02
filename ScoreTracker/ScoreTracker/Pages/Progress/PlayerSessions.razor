@@ -45,8 +45,10 @@
         <SessionHero Breakdown="_model.Hero" OnOpenLeaderboard="OpenLeaderboard"></SessionHero>
 
         <div class="mt-4">
-            <SessionHistoryTable Rows="_model.History" SelectedSessionId="_model.Hero.Group.SessionId"
-                                 OnView="ViewSession"></SessionHistoryTable>
+            <SessionHistoryCards Rows="_model.History" SelectedSessionId="_model.Hero.Group.SessionId"
+                                 Page="_page" PageCount="PageCount" Before="_before"
+                                 OnView="ViewSession" OnPage="ChangePage" OnBefore="ChangeBefore">
+            </SessionHistoryCards>
         </div>
 
         <MudText Typo="Typo.caption" Class="mt-2 d-block">
@@ -66,7 +68,10 @@
 @inject SessionBreakdownBuilder Breakdowns
 @inject IJSRuntime JS
 @code {
-    private const int HistoryPageSize = 20;
+    // Two full rows of the desktop grid. The cards are 268px minimum inside a 1132px content
+    // column, so four fit a row — a page that ends mid-row reads as a rendering fault rather
+    // than the end of a page.
+    private const int HistoryPageSize = 8;
 
     [Parameter] public Guid UserIdParam { get; set; }
 
@@ -74,6 +79,8 @@
     private bool _loading = true;
     private Guid? _selectedSessionId;
     private bool _leaderboardOpen;
+    private int _page = 1;
+    private DateTime? _before;
     private Guid _leaderboardChartId;
     private SessionsPageModel _model = new(null, Array.Empty<SessionHistoryRow>(), 0, false);
 
@@ -99,7 +106,10 @@
     private async Task LoadAsync()
     {
         _loading = true;
-        _model = await Breakdowns.Build(UserIdParam, _selectedSessionId, 1, HistoryPageSize, CancellationToken.None);
+        _model = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page, HistoryPageSize,
+            // The picker is a date; the filter is an instant. Take the START of the chosen day
+            // so "before the 5th" excludes the 5th rather than half of it.
+            _before?.ToUniversalTime(), CancellationToken.None);
         _loading = false;
     }
 
@@ -115,6 +125,23 @@
         await LoadAsync();
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri).GetLeftPart(UriPartial.Path);
         await JS.InvokeVoidAsync("history.replaceState", null, string.Empty, $"{uri}?session={sessionId}");
+    }
+
+    private int PageCount => Math.Max(1, (int)Math.Ceiling(_model.TotalGroups / (double)HistoryPageSize));
+
+    private async Task ChangePage(int page)
+    {
+        _page = page;
+        await LoadAsync();
+    }
+
+    private async Task ChangeBefore(DateTime? before)
+    {
+        _before = before;
+        // A filter change invalidates the page number — page 3 of the old list is not page 3
+        // of the new one.
+        _page = 1;
+        await LoadAsync();
     }
 
     private void OpenLeaderboard(Guid chartId)

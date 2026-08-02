@@ -682,6 +682,9 @@
   <data name="Because a coded copy of your password lives on this device, please make sure your Pump It Up password is one you use only here — not the one that also opens your email or your bank." xml:space="preserve">
     <value>Poiché su questo dispositivo c'è una copia in codice della tua password, assicurati che la tua password di Pump It Up sia una che usi solo qui, non quella che apre anche la tua email o la tua banca.</value>
   </data>
+  <data name="Before" xml:space="preserve">
+    <value>Prima di</value>
+  </data>
   <data name="Before we remember your password" xml:space="preserve">
     <value>Prima di ricordare la tua password</value>
   </data>
@@ -3048,6 +3051,9 @@
   <data name="No scores yet — Pumbility starts with your first import." xml:space="preserve">
     <value>Ancora nessun punteggio: Pumbility inizia con la tua prima importazione.</value>
   </data>
+  <data name="No sessions here" xml:space="preserve">
+    <value>Nessuna sessione qui</value>
+  </data>
   <data name="No sessions recorded yet." xml:space="preserve">
     <value>Nessuna sessione registrata finora.</value>
   </data>
@@ -3195,6 +3201,9 @@
   </data>
   <data name="Nothing to undo yet" xml:space="preserve">
     <value>Non c'è ancora nulla da annullare</value>
+  </data>
+  <data name="Nothing was recorded before that date." xml:space="preserve">
+    <value>Non è stato registrato nulla prima di quella data.</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>ora</value>
@@ -4084,6 +4093,9 @@
   </data>
   <data name="Recorded" xml:space="preserve">
     <value>Registrato</value>
+  </data>
+  <data name="Recorded before session capture" xml:space="preserve">
+    <value>Registrato prima della cattura delle sessioni</value>
   </data>
   <data name="Recorded from" xml:space="preserve">
     <value>Registrato dal</value>
@@ -5549,6 +5561,9 @@
   </data>
   <data name="Until then your profile is hidden and your game tag is cleared." xml:space="preserve">
     <value>Fino ad allora il profilo è nascosto e il game tag viene rimosso.</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>Migliorate</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
     <value>Aggiorna chart</value>
