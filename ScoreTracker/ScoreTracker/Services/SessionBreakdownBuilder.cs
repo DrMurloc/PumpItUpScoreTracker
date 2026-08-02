@@ -26,7 +26,7 @@ namespace ScoreTracker.Web.Services;
 ///         anything a vertical should own.
 ///     </para>
 /// </summary>
-public sealed class SessionBreakdownBuilder(IMediator mediator)
+public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader users)
 {
     /// <summary>How many charts get a community-peer board. Every flagged chart qualifies (D9).</summary>
     private const int MaxPeerBoards = 8;
@@ -147,11 +147,14 @@ public sealed class SessionBreakdownBuilder(IMediator mediator)
             .ToArray();
 
         var stats = await mediator.Send(new GetPlayerStatsQuery(userId, group.Mix), cancellationToken);
+        var boards = await BuildPeerBoards(userId, group, scores, charts, stats, cancellationToken);
         return new SessionBreakdown(group, sessions.FirstOrDefault(s => s.Id == group.SessionId), charts, scores,
             BuildCeremony(milestones, stats),
             milestones.Where(m => m.Kind != MilestoneKind.TitleProgress).ToArray(),
             BuildTitleBars(milestones),
-            await BuildPeerBoards(userId, group, scores, charts, stats, cancellationToken));
+            boards,
+            (await users.GetUsers(boards.SelectMany(b => b.Peers).Select(p => p.UserId).Distinct(),
+                cancellationToken)).ToDictionary(u => u.Id));
     }
 
     /// <summary>

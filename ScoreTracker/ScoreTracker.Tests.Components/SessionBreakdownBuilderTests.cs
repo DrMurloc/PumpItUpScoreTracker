@@ -8,7 +8,9 @@ using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Queries;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts;
@@ -125,7 +127,10 @@ public sealed class SessionBreakdownBuilderTests
             .ReturnsAsync((IReadOnlyDictionary<Guid, IReadOnlyList<CommunityPeerScore>>)
                 new Dictionary<Guid, IReadOnlyList<CommunityPeerScore>> { [chart.Id] = peers });
 
-        var builder = new SessionBreakdownBuilder(mediator.Object);
+        var readers = new Mock<IUserReader>();
+        readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<User>());
+        var builder = new SessionBreakdownBuilder(mediator.Object, readers.Object);
         return (builder, await builder.Build(User, null, 1, 20, null, CancellationToken.None));
     }
 

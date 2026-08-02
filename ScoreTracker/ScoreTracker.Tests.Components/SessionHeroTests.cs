@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Bunit;
 using ScoreTracker.Communities.Contracts;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.SharedKernel.Enums;
@@ -118,7 +119,8 @@ public sealed class SessionHeroTests : ComponentTestBase
                         new[] { Name.From("Arrow Eclipse") }, 22.4, PhoenixScore.From(930000),
                         PhoenixPlate.TalentedGame, false)
                 })
-            });
+            },
+            new Dictionary<Guid, User>());
     }
 
     private static Chart ChartAt(ChartType type, int level)

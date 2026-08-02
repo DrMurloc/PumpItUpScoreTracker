@@ -11648,3 +11648,52 @@ button.chart-card-art {
         transition: none;
     }
 }
+
+/* ===== Leaderboard row trimmings ===================================================
+   Flags come from UserLabel, which owns its own narrow-width behaviour: the flag is
+   pinned and only the name shrinks. */
+
+/* Avatars are the first thing to go when the row is short of width. The rule is the
+   shell's own squarish test — aspect at 1:1 or 700px of width — so a fold unfolded and
+   a portrait tablet both get them and an ordinary phone does not. */
+.sbd-avatar {
+    display: none;
+    flex: none;
+}
+
+@media (min-aspect-ratio: 1/1), (min-width: 700px) {
+    .sbd-avatar {
+        display: inline-flex;
+        align-items: center;
+    }
+}
+
+.sbd-score-stack {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* Phone: the grade and plate stack instead of sitting side by side, which hands the row
+   an icon's worth of width back to the name — the part that was actually being cut off.
+   Descendant selectors on purpose: MudTooltip wraps this content in a circuit and does
+   not in static SSR, so nothing here may depend on being a direct child. */
+@media (max-width: 599.98px) {
+    .sbd-score-stack {
+        text-align: right;
+        line-height: 1.05;
+    }
+
+    .sbd-score-stack img {
+        display: block;
+        margin-left: auto;
+        height: 13px !important;
+    }
+
+    /* Rarely more than a letter or two survives here, and a truncated club name is noise
+       rather than information. */
+    .sbd-peer-club {
+        display: none;
+    }
+}

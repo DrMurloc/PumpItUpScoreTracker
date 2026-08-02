@@ -1,4 +1,6 @@
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Web.Services
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.Web.Services.Theming
 @namespace ScoreTracker.Web.Components
 
@@ -42,12 +44,30 @@
                 {
                     <div class="weekly-lb-row">
                         <span class="weekly-lb-place">#@place</span>
+                        @if (Peers.TryGetValue(peer.UserId, out var user))
+                        {
+                            <span class="sbd-avatar"><MudAvatar Size="Size.Small">
+                                <MudImage Src="@user.ProfileImage.ToString()" Alt="@user.Name.ToString()"></MudImage>
+                            </MudAvatar></span>
+                        }
                         <span class="weekly-lb-user">
-                            @peer.PlayerName
+                            @if (Peers.TryGetValue(peer.UserId, out var labelled))
+                            {
+                                <UserLabel User="labelled"></UserLabel>
+                            }
+                            else
+                            {
+                                @peer.PlayerName
+                            }
+                            @* Rarely more than a letter or two of it survives a phone width,
+                               so it is hidden there rather than truncated to noise. *@
                             <span class="sbd-peer-club">@string.Join(" · ", peer.CommunityNames)</span>
                         </span>
-                        <ScoreBreakdown Score="peer.Score" Plate="peer.Plate" Mix="board.Chart.Mix"
-                                        IsBroken="peer.IsBroken" OneLine="true" ShowScore="true"></ScoreBreakdown>
+                        <span class="sbd-score-stack">
+                            <ScoreBreakdown Score="peer.Score" Plate="peer.Plate" Mix="board.Chart.Mix"
+                                            IsBroken="peer.IsBroken" OneLine="true" ShowScore="true">
+                            </ScoreBreakdown>
+                        </span>
                     </div>
                 }
             </div>
@@ -57,5 +77,8 @@
 
 @code {
     [Parameter] public IReadOnlyList<SessionPeerBoard> Boards { get; set; } = Array.Empty<SessionPeerBoard>();
+
+    /// <summary>Resolved once for the page — UserLabel needs the whole user for its flag.</summary>
+    [Parameter] public IReadOnlyDictionary<Guid, User> Peers { get; set; } = new Dictionary<Guid, User>();
     [Parameter] public EventCallback<Guid> OnOpenLeaderboard { get; set; }
 }

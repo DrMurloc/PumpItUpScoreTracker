@@ -9,7 +9,9 @@ using Moq;
 using MudBlazor;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Communities.Contracts.Queries;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -34,7 +36,9 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
         var chart = TestChart();
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
-        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixScoresForChartQuery>(), It.IsAny<CancellationToken>()))
+        // The world board reads the World COMMUNITY now, not every score on the chart.
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<UserPhoenixScore>());
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
@@ -46,6 +50,11 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((IDictionary<Guid, double>)new Dictionary<Guid, double>());
         Services.AddSingleton(_mediator.Object);
+        // UserLabel needs the whole user for its flag, so the rows resolve them through here.
+        var readers = new Mock<IUserReader>();
+        readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<User>());
+        Services.AddSingleton(readers.Object);
         CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(false);
         ChartId = chart.Id;
         SetRendererInfo(new Microsoft.AspNetCore.Components.RendererInfo("Server", true));

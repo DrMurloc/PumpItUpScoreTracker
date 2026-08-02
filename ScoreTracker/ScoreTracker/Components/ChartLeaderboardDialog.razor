@@ -6,6 +6,7 @@
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.Theming
@@ -77,10 +78,28 @@
                         <span class="weekly-lb-place" style="@ThemeScales.RarityStyle(row.Percentile)">
                             #@row.Place
                         </span>
-                        <span class="weekly-lb-user">@(row.IsMe ? L["You"] : row.Score.UserName.ToString())</span>
-                        <ScoreBreakdown Score="row.Score.Score" Plate="row.Score.Plate" Mix="Mix"
-                                        IsBroken="row.Score.IsBroken" OneLine="true" ShowScore="true">
-                        </ScoreBreakdown>
+                        @if (_users.TryGetValue(row.Score.UserId, out var avatar))
+                        {
+                            <span class="sbd-avatar"><MudAvatar Size="Size.Small">
+                                <MudImage Src="@avatar.ProfileImage.ToString()" Alt="@avatar.Name.ToString()">
+                                </MudImage>
+                            </MudAvatar></span>
+                        }
+                        <span class="weekly-lb-user">
+                            @if (_users.TryGetValue(row.Score.UserId, out var labelled))
+                            {
+                                <UserLabel User="labelled"></UserLabel>
+                            }
+                            else
+                            {
+                                @row.Score.UserName
+                            }
+                        </span>
+                        <span class="sbd-score-stack">
+                            <ScoreBreakdown Score="row.Score.Score" Plate="row.Score.Plate" Mix="Mix"
+                                            IsBroken="row.Score.IsBroken" OneLine="true" ShowScore="true">
+                            </ScoreBreakdown>
+                        </span>
                     </div>
                 }
             </div>
@@ -94,6 +113,7 @@
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
+@inject IUserReader Users
 @code {
     public enum LeaderboardScope
     {
@@ -137,6 +157,7 @@
     private IReadOnlySet<Guid> _clubmates = new HashSet<Guid>();
     private IReadOnlySet<Guid> _communityUserIds = new HashSet<Guid>();
     private List<Row> _rows = new();
+    private IReadOnlyDictionary<Guid, User> _users = new Dictionary<Guid, User>();
     private int? _myPlace;
 
     protected override async Task OnParametersSetAsync()
@@ -210,6 +231,9 @@
                 scores.Count == 0 ? 0 : (scores.Count - i) / (double)scores.Count,
                 s, s.UserId == myId, _communityUserIds.Contains(s.UserId)))
             .ToList();
+        // UserLabel needs the whole user for its flag, and the avatar comes off the same read.
+        _users = (await Users.GetUsers(_rows.Select(r => r.Score.UserId).Distinct()))
+            .ToDictionary(u => u.Id);
         _myPlace = _rows.FirstOrDefault(r => r.IsMe)?.Place;
         _loading = false;
     }

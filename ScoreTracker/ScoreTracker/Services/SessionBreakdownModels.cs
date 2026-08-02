@@ -4,6 +4,7 @@ using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.ScoreLedger.Contracts;
+using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.Services;
@@ -21,7 +22,8 @@ public sealed record SessionBreakdown(
     SessionCeremony Ceremony,
     IReadOnlyList<PlayerMilestoneRecord> Milestones,
     IReadOnlyList<SessionTitleBarModel> TitleBars,
-    IReadOnlyList<SessionPeerBoard> PeerBoards)
+    IReadOnlyList<SessionPeerBoard> PeerBoards,
+    IReadOnlyDictionary<Guid, User> Peers)
 {
     /// <summary>
     ///     The import's game tag, when this session came from one. The wrong-card case is
