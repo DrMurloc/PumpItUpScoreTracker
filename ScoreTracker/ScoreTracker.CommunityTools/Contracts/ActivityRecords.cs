@@ -47,8 +47,3 @@ public sealed record ToolActivitySummary(
     int Failures,
     int RateLimited,
     int ConnectedPlayers);
-
-/// <summary>One delivery as the pull feed reports it. Body is null once it has aged out.</summary>
-[ExcludeFromCodeCoverage]
-public sealed record DeliveryFeedRecord(string DeliveryId, DateTimeOffset SentAt, string Mode,
-    Guid UserId, string Mix, string? Body);

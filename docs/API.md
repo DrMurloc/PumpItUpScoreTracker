@@ -55,7 +55,6 @@ send `If-None-Match` and expect `304`.
 | Official | `api/v2/official/*` | The piugame mirror: rankings, players, per-chart boards, popularity, what-it-takes, weekly highlights. Public data — no sharing needed, and no PIU Scores `userId` on these rows |
 | Players | `api/v2/players` | Who shared with you; `{id}`, `{id}/scores`, `{id}/sessions`, `{id}/journal`. `me` works with a personal token |
 | Weekly charts | `api/v2/weekly-charts` | The current board and scores on it |
-| Tool | `api/v2/tool`, `api/v2/events` | Your tool's own registration and its activity log |
 
 ## The frozen surface — `api/*`
 

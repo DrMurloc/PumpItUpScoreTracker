@@ -98,7 +98,8 @@ never exception text (`DiagnosticExposureTests`). `mix` is **required** on mix-s
 400 listing valid values, no silent Phoenix default. `ETag`/`If-None-Match` on catalog reads.
 
 Full shapes: [the scope artifact](https://claude.ai/code/artifact/6b1ad685-034b-42f7-876e-29a593ab8bc0).
-**24 endpoints, 18 of them new capability.**
+**22 endpoints, 17 of them new capability** (24 as first designed; the tool self-view and the pull
+feed were removed 2026-08-02, see below).
 
 ### Catalog — a key, no share required
 
@@ -191,15 +192,23 @@ disagree with every other tool. Observed range 0.4–17.0.
 ⚠ **`ChartSkillMetric` has no `MixId`.** Skills are a property of the chart, not of its expression in
 a mix, so this is the one catalog endpoint with **no `mix` parameter**.
 
-### The tool's own view
+### The tool's own view — removed 2026-08-02
 
-| Route | Notes |
-|---|---|
-| `GET /api/v2/tool` | Who am I, which mode, which mixes, current limits and remaining quota |
-| `GET /api/v2/events?after=` | The delivery feed as a **pull** — the same rows the webhook queue writes. A tool that never configures a webhook can integrate entirely by polling this |
+Both routes are gone.
 
-`/api/v2/events` is not an extra feature; it is the delivery table with a route on it. Building it
-costs nothing and it is the honest answer for a maker on a laptop with no public URL.
+`GET /api/v2/tool` returned a tool its own registration. Overkill: a maker configured that tool on
+`/Developers` and can read it there. It also promised "current limits and remaining quota" and never
+carried either.
+
+`GET /api/v2/events` was justified as the pull-based alternative for a maker with no public URL —
+and **it never worked for that maker**. The fan-out skips `WebhookMode.None`, so a tool without a
+webhook writes no delivery rows and the feed returns an empty array forever. It only ever served
+tools that already had a working webhook, where replay on the debug page covers the same ground. The
+gap survived because the endpoint (C22) and the fan-out (C20) landed in different commits and
+nothing exercised the pair.
+
+A maker with no public URL polls `GET /api/v2/players/{id}/scores`, which is honest about being a
+poll and works today (owner, 2026-08-02).
 
 ---
 
@@ -216,7 +225,7 @@ actual weight is here.
 
 ### 4.1 What v2 needs that does not exist
 
-Of the 24 endpoints, the great majority already have a query behind them: `GetChartsQuery`,
+Of the endpoints, the great majority already have a query behind them: `GetChartsQuery`,
 `GetChartQuery`, `GetRandomChartsQuery`, `GetFilteredSimilarChartsQuery`, `GetTierListQuery`,
 `GetChartScoringLevelsQuery`, `GetPhoenixRecordsQuery`, `GetRecentSessionsQuery`,
 `GetWeeklyBoardQuery`, `GetUserByIdQuery`, and **all six** OfficialMirror leaderboard queries.
