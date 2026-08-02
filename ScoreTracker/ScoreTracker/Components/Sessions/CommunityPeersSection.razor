@@ -9,14 +9,19 @@
    Deliberately no "#X of Y" here: on a seven-person board a place is a fact about who has
    played the chart, not about standing, so the number lives in the dialog where it can name
    the scope it counted. *@
-<div class="sbd-section" data-testid="community-peers">
-    <div class="sbd-section-head">
-        <span class="sbd-eyebrow">@L["Community Peers"]</span>
-        @if (Boards.Count > 0)
-        {
-            <span class="sbd-section-note">@L["Nearest competitive level first"]</span>
-        }
-    </div>
+@* Headless when the Rivals toggle wraps it: that host owns the heading, because the heading is
+   what the toggle switches. *@
+<div class="@(Headless ? "" : "sbd-section")" data-testid="community-peers">
+    @if (!Headless)
+    {
+        <div class="sbd-section-head">
+            <span class="sbd-eyebrow">@L["Community Peers"]</span>
+            @if (Boards.Count > 0)
+            {
+                <span class="sbd-section-note">@L["Nearest competitive level first"]</span>
+            }
+        </div>
+    }
 
     @if (Boards.Count == 0)
     {
@@ -87,4 +92,5 @@
     /// <summary>Resolved once for the page — UserLabel needs the whole user for its flag.</summary>
     [Parameter] public IReadOnlyDictionary<Guid, User> Peers { get; set; } = new Dictionary<Guid, User>();
     [Parameter] public EventCallback<Guid> OnOpenLeaderboard { get; set; }
+    [Parameter] public bool Headless { get; set; }
 }
