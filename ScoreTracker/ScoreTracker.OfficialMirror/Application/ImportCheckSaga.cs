@@ -5,52 +5,49 @@ using MediatR;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
-using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.OfficialMirror.Application;
 
 /// <summary>
 ///     The completeness check: import, count what piugame says the account holds, subtract what we
-///     hold, and store the verdict.
+///     hold, and hand the verdict to the page that asked for it.
 ///     <para>
-///         Feature-grouped like the rest of the mirror's sagas — the circuit-side start, the
-///         background body, and the page's read all share the same dependencies.
+///         Nothing is stored. The result lives in the page for as long as the player stays on it,
+///         which is what the panel's "stay on this page" line is buying — a table, a migration and
+///         a purge manifest was a great deal of machinery for remembering a sentence.
 ///     </para>
 /// </summary>
 internal sealed class ImportCheckSaga :
     IRequestHandler<StartImportCheckCommand, ImportCheckStartResult>,
-    IRequestHandler<ExecuteImportCheckCommand>,
-    IRequestHandler<GetLastImportCheckQuery, LastImportCheck>
+    IRequestHandler<ExecuteImportCheckCommand>
 {
     private readonly IBus _bus;
     private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
-    private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IImportConcurrencyGuard _guard;
     private readonly IMediator _mediator;
     private readonly IOfficialSiteClient _officialSite;
-    private readonly IImportCheckRepository _runs;
     private readonly IScoreReader _scores;
 
     public ImportCheckSaga(IBus bus, IChartRepository charts, ICurrentUserAccessor currentUser,
-        IDateTimeOffsetAccessor dateTime, IImportConcurrencyGuard guard, IMediator mediator,
-        IOfficialSiteClient officialSite, IImportCheckRepository runs, IScoreReader scores)
+        IImportConcurrencyGuard guard, IMediator mediator, IOfficialSiteClient officialSite, IScoreReader scores)
     {
         _bus = bus;
         _charts = charts;
         _currentUser = currentUser;
-        _dateTime = dateTime;
         _guard = guard;
         _mediator = mediator;
         _officialSite = officialSite;
-        _runs = runs;
         _scores = scores;
     }
 
@@ -58,8 +55,7 @@ internal sealed class ImportCheckSaga :
         CancellationToken cancellationToken)
     {
         var userId = _currentUser.User.Id;
-        var spent = await _runs.CountDeepScansInMonth(userId, _dateTime.Now, cancellationToken);
-        var left = DeepScanPolicy.Remaining(spent);
+        var left = await _mediator.Send(new GetDeepScansRemainingQuery(userId), cancellationToken);
 
         if (request.DeepScan && left == 0)
             return new ImportCheckStartResult(ImportCheckStartOutcome.NoDeepScansLeft, 0);
@@ -86,11 +82,20 @@ internal sealed class ImportCheckSaga :
                 return new ImportCheckStartResult(ImportCheckStartOutcome.InvalidCredentials, left);
             }
 
+            // Spent only once the run is certain to start, so a mistyped password costs nothing.
+            // The decrement is atomic in the database, which is what stops a second tab spending
+            // the same last scan.
+            if (request.DeepScan)
+            {
+                if (!await _mediator.Send(new SpendDeepScanCommand(userId), cancellationToken))
+                    return new ImportCheckStartResult(ImportCheckStartOutcome.NoDeepScansLeft, 0);
+                left--;
+            }
+
             await _bus.Publish(new RunImportCheckCommand(userId, request.Mix, sid, request.CardId,
-                request.ExpectedGameTag, request.DeepScan, request.Repair), cancellationToken);
+                request.ExpectedGameTag, request.DeepScan, request.RepairBuckets), cancellationToken);
             handedOff = true;
-            return new ImportCheckStartResult(ImportCheckStartOutcome.Started,
-                request.DeepScan ? left - 1 : left);
+            return new ImportCheckStartResult(ImportCheckStartOutcome.Started, left);
         }
         finally
         {
@@ -135,32 +140,26 @@ internal sealed class ImportCheckSaga :
                 }
             }
 
-            // Broken bests are always fetched here: the census counts passes on both sides, so an
-            // opted-out player's stage breaks change nothing it measures, while fetching them keeps
-            // the repair from leaving a chart behind.
+            await Status(request, CheckStatuses.Importing, cancellationToken);
             await _mediator.Send(new ExecuteImportCommand(request.UserId, request.Mix, request.Sid,
                 request.CardId, request.ExpectedGameTag, true), cancellationToken);
-            await Repair(request, cancellationToken);
+            var repaired = await Repair(request, cancellationToken);
 
             var official = await _officialSite.GetOfficialCensus(request.Mix, request.UserId, request.Sid,
                 cancellationToken);
-            await Status(request, "Comparing your scores", cancellationToken);
 
             var charts = (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
                 .ToDictionary(c => c.Id);
             var records = (await _scores.GetBestScores(request.Mix, request.UserId, cancellationToken)).ToArray();
-            var local = LocalCensusBuilder.Build(request.Mix, records, charts,
-                official.Buckets.Keys.ToArray());
+            var local = LocalCensusBuilder.Build(request.Mix, records, charts, official.Buckets.Keys.ToArray());
 
             var findings = await Name(request, CensusDiff.Compare(official, local), records, cancellationToken);
-            await _runs.Save(new ImportCheckRun(Guid.NewGuid(), request.UserId, request.Mix, _dateTime.Now,
-                request.DeepScan ? ImportCheckKind.Deep : ImportCheckKind.Census,
-                official.Pumbility, LocalCensusBuilder.Pumbility(request.Mix, records, charts),
-                official.TotalPasses, local.TotalPasses, findings), cancellationToken);
+            var report = Report(request.Mix, official, local, records, charts, findings);
 
-            // The panel watches for this exact status and re-reads the stored verdict, the same way
-            // the upload page detects a finished import.
-            await Status(request, CheckStatuses.Finished, cancellationToken);
+            // No storage: the panel is listening and holds this for as long as the player stays.
+            await _mediator.Publish(
+                new ImportCheckCompletedEvent(request.UserId, request.Mix, report, repaired),
+                cancellationToken);
         }
         finally
         {
@@ -168,15 +167,35 @@ internal sealed class ImportCheckSaga :
         }
     }
 
+    private ImportCheckReport Report(MixEnum mix, AccountCensus official, AccountCensus local,
+        IReadOnlyList<RecordedPhoenixScore> records, IReadOnlyDictionary<Guid, Chart> charts,
+        IReadOnlyList<CensusFinding> findings)
+    {
+        var differences = findings.Select(f => new ImportCheckDifference(f.Bucket,
+                int.TryParse(f.Bucket, NumberStyles.Integer, CultureInfo.InvariantCulture, out var level)
+                    ? level
+                    : null,
+                f.Kind switch
+                {
+                    CensusFindingKind.Missing => ImportCheckDifferenceKind.Missing,
+                    CensusFindingKind.OutOfDate => ImportCheckDifferenceKind.OutOfDate,
+                    _ => ImportCheckDifferenceKind.Extra
+                }, f.Count,
+                (f.Charts ?? Array.Empty<NamedChart>())
+                .Select(c => new ImportCheckChart(c.ChartId, c.Score, c.CurrentScore)).ToArray()))
+            .ToArray();
+
+        return new ImportCheckReport(mix,
+            CensusDiff.Headline(findings) == null ? ImportCheckVerdict.InSync : ImportCheckVerdict.NeedsAttention,
+            official.Pumbility, LocalCensusBuilder.Pumbility(mix, records, charts),
+            official.TotalPasses, local.TotalPasses, differences);
+    }
+
     /// <summary>
     ///     Reads the levels that disagree and says WHICH charts they are. A count alone is a
-    ///     support ticket; a song, a chart and a score is an answer, and it is what the player is
-    ///     agreeing to when they press the repair.
-    ///     <para>
-    ///         Costs one walk of each disagreeing level, so it only runs when something is wrong —
-    ///         a clean census never pays it. Levels we hold MORE of than piugame are never named:
-    ///         there is nothing there to fetch.
-    ///     </para>
+    ///     support ticket; a song and a score is an answer, and it is what the player is agreeing
+    ///     to when they press the repair. Costs one walk of each disagreeing level, so a clean
+    ///     census never pays for it.
     /// </summary>
     private async Task<IReadOnlyList<CensusFinding>> Name(ExecuteImportCheckCommand request,
         IReadOnlyList<CensusFinding> findings, IReadOnlyList<RecordedPhoenixScore> records,
@@ -190,16 +209,17 @@ internal sealed class ImportCheckSaga :
             false, cancellationToken);
         var held = records.Where(r => !r.IsBroken && r.Score != null).ToDictionary(r => r.ChartId);
 
-        // Same rule the repair will apply, so the list a player sees is exactly what pressing the
+        // Same rule the repair applies, so the list a player sees is exactly what pressing the
         // button would save — nothing extra, nothing missing.
         var namedByBucket = official
             .Where(s => BestAttemptPolicy.Beats(held.GetValueOrDefault(s.Chart.Id), s.Score,
                 BestAttemptPolicy.PlateFor(s.IsBroken, s.Plate), s.IsBroken))
             .GroupBy(s => CensusBuckets.For(s.Chart.Type, s.Chart.Level, buckets.Append(CensusBuckets.CoOp).ToArray()))
             .ToDictionary(g => g.Key, g => (IReadOnlyList<NamedChart>)g
-                .Select(s => new NamedChart(s.Chart.Id, s.Chart.Song.Name.ToString(), s.Chart.Type,
-                    (int)s.Chart.Level, (int)s.Score))
-                .OrderByDescending(c => c.Level)
+                .Select(s => new NamedChart(s.Chart.Id, (int)s.Score,
+                    // A score we already hold is what makes a row read as "behind" rather than
+                    // "never imported" — the panel needs no other flag.
+                    held.TryGetValue(s.Chart.Id, out var mine) ? (int)mine.Score!.Value : null))
                 .ToArray(), StringComparer.Ordinal);
 
         return findings
@@ -208,74 +228,21 @@ internal sealed class ImportCheckSaga :
     }
 
     /// <summary>
-    ///     Re-reads what the last check found short, then lets the census below re-measure — so
-    ///     the run always ends on a fresh verdict rather than the stale one that triggered it.
+    ///     Re-reads the levels the panel asked for, then lets the census below re-measure — so a
+    ///     run always ends on a fresh verdict rather than the stale one that triggered it.
     ///     <para>
     ///         A deep scan passes no buckets at all, which walks the whole best list: the only way
     ///         to catch a score that improved without changing grade or plate, and the only repair
     ///         for a sub-10 residual, since Phoenix will not filter its best list below level 10.
     ///     </para>
     /// </summary>
-    private async Task Repair(ExecuteImportCheckCommand request, CancellationToken cancellationToken)
+    private async Task<int> Repair(ExecuteImportCheckCommand request, CancellationToken cancellationToken)
     {
-        if (!request.Repair && !request.DeepScan) return;
+        if (!request.DeepScan && request.RepairBuckets.Count == 0) return 0;
 
-        IReadOnlyCollection<string> buckets = Array.Empty<string>();
-        if (!request.DeepScan)
-        {
-            var previous = await _runs.GetLatest(request.UserId, request.Mix, cancellationToken);
-            buckets = previous == null
-                ? Array.Empty<string>()
-                : CensusDiff.BucketsToRepair(previous.Findings);
-            // Nothing localised to re-read. Falling through to an empty bucket list here would
-            // silently turn a free repair into a full walk.
-            if (buckets.Count == 0) return;
-        }
-
-        await _mediator.Send(new RepairScoresCommand(request.UserId, request.Mix, request.Sid, request.CardId,
-            request.ExpectedGameTag, buckets, true), cancellationToken);
-    }
-
-    public async Task<LastImportCheck> Handle(GetLastImportCheckQuery request, CancellationToken cancellationToken)
-    {
-        var now = _dateTime.Now;
-        var spent = await _runs.CountDeepScansInMonth(request.UserId, now, cancellationToken);
-        var run = await _runs.GetLatest(request.UserId, request.Mix, cancellationToken);
-        return new LastImportCheck(run == null ? null : ToReport(run),
-            DeepScanPolicy.Remaining(spent), DeepScanPolicy.NextUnlock(now));
-    }
-
-    /// <summary>
-    ///     Turns the stored findings into the page's shape. A bucket that is a single level gets
-    ///     one; CO-OP, 27-and-over and the sub-10 residual do not, and the panel words those
-    ///     differently.
-    /// </summary>
-    private static ImportCheckReport ToReport(ImportCheckRun run)
-    {
-        var differences = run.Findings.Select(f => new ImportCheckDifference(f.Bucket,
-            int.TryParse(f.Bucket, NumberStyles.Integer, CultureInfo.InvariantCulture, out var level)
-                ? level
-                : null,
-            f.Kind switch
-            {
-                CensusFindingKind.Missing => ImportCheckDifferenceKind.Missing,
-                CensusFindingKind.OutOfDate => ImportCheckDifferenceKind.OutOfDate,
-                _ => ImportCheckDifferenceKind.Extra
-            }, f.Count,
-            (f.Charts ?? Array.Empty<NamedChart>())
-            .Select(c => new ImportCheckChart(c.ChartId, c.Song, c.Type, c.Level, c.Score)).ToArray()))
-            .ToArray();
-
-        var verdict = CensusDiff.Headline(run.Findings) switch
-        {
-            CensusFindingKind.Missing => ImportCheckVerdict.MissingScores,
-            CensusFindingKind.OutOfDate => ImportCheckVerdict.OutOfDateScores,
-            CensusFindingKind.Extra => ImportCheckVerdict.AheadOfSite,
-            _ => ImportCheckVerdict.InSync
-        };
-
-        return new ImportCheckReport(run.Mix, run.RanAt, verdict, run.OfficialPumbility, run.LocalPumbility,
-            run.OfficialPasses, run.LocalPasses, differences);
+        var buckets = request.DeepScan ? Array.Empty<string>() : request.RepairBuckets.ToArray();
+        return await _mediator.Send(new RepairScoresCommand(request.UserId, request.Mix, request.Sid,
+            request.CardId, request.ExpectedGameTag, buckets, true), cancellationToken);
     }
 
     private Task Status(ExecuteImportCheckCommand request, string status, CancellationToken cancellationToken)
@@ -287,10 +254,11 @@ internal sealed class ImportCheckSaga :
 }
 
 /// <summary>
-///     Status strings the panel keys on. The check reuses the import's status channel — it is the
-///     same kind of work from the player's side, and the nav pulse should light for both.
+///     Status strings the panel keys on to tell the import phase from the counting phase. The
+///     check reuses the import's status channel — it is the same kind of work from the player's
+///     side, and the nav pulse should light for both.
 /// </summary>
 internal static class CheckStatuses
 {
-    public const string Finished = "Score check finished";
+    public const string Importing = "Importing your scores";
 }

@@ -22,11 +22,6 @@ public sealed class OfficialMirrorModelContribution : IDbModelContribution
         player.HasIndex(e => new { e.MixId, e.Username }).IsUnique();
         player.HasIndex(e => e.UserId);
 
-        var importCheck = modelBuilder.Entity<ImportCheckRunEntity>().ToTable("ImportCheckRun");
-        // Both reads are "this user's runs, newest first" — the panel scoped to a mix, the
-        // deep-scan ledger to a month across mixes.
-        importCheck.HasIndex(e => new { e.UserId, e.MixId, e.RanAt });
-        importCheck.HasIndex(e => new { e.UserId, e.Kind, e.RanAt });
 
         var snapshot = modelBuilder.Entity<OfficialLeaderboardSnapshotEntity>()
             .ToTable("OfficialLeaderboardSnapshot");

@@ -8,11 +8,15 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
-using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services.UiNotifications;
 using Xunit;
@@ -20,16 +24,17 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     The Score check panel on /UploadPhoenixScores. What matters at this level: it names what
-///     it found, it only offers a repair when there is something to repair, the deep scan is
-///     gated on the month's allowance, and every action is blocked while no credential is
-///     available or an import is already running.
+///     The Score check panel. What matters here: it starts with no verdict (nothing is stored), it
+///     names charts rather than counts, missing and out-of-date share ONE list, and the deep scan
+///     is gated on the month's balance.
 /// </summary>
 public sealed class ScoreCheckPanelTests : ComponentTestBase
 {
-    private static readonly DateTimeOffset RanAt = new(2026, 8, 3, 10, 0, 0, TimeSpan.Zero);
     private readonly Mock<IMediator> _mediator = new();
     private readonly Guid _me = Guid.NewGuid();
+    private readonly Guid _missingChart = Guid.NewGuid();
+    private readonly Guid _staleChart = Guid.NewGuid();
+    private readonly UiNotificationHub _hub = new();
 
     public ScoreCheckPanelTests()
     {
@@ -37,170 +42,191 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
         CurrentUser.SetupGet(c => c.User)
             .Returns(new User(_me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
         Services.AddSingleton(_mediator.Object);
-        Services.AddSingleton<IUiNotificationHub>(new UiNotificationHub());
+        Services.AddSingleton<IUiNotificationHub>(_hub);
         Services.AddSingleton(Mock.Of<ISnackbar>());
+
+        _mediator.Setup(m => m.Send(It.IsAny<GetDeepScansRemainingQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3);
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Chart(_missingChart, "Ugly duck Toccata", 17),
+                Chart(_staleChart, "The End of the World", 20)
+            });
     }
 
-    private void Answer(ImportCheckReport? report, int deepScansLeft = 3)
+    private static Chart Chart(Guid id, string song, int level)
     {
-        _mediator.Setup(m => m.Send(It.IsAny<GetLastImportCheckQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LastImportCheck(report, deepScansLeft,
-                new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero)));
+        return new Chart(id, MixEnum.Phoenix,
+            new Song(Name.From(song), SongType.Arcade, new Uri("https://example.invalid/song.png"),
+                TimeSpan.FromMinutes(2), Name.From("Artist"), null),
+            ScoreTracker.SharedKernel.Enums.ChartType.Single, DifficultyLevel.From(level), MixEnum.Phoenix,
+            null, null, new HashSet<Skill>());
     }
 
     private IRenderedComponent<ScoreCheckPanel> Render(bool credentials = true, bool busy = false)
     {
-        // A named finding renders a DifficultyBubble, which branches on RendererInfo.
+        // Named findings render a DifficultyBubble and a SongImage, both of which branch on
+        // RendererInfo.
         this.RenderInteractive();
         return RenderComponent<ScoreCheckPanel>(p => p
             .Add(c => c.Mix, MixEnum.Phoenix)
             .Add(c => c.CardId, "card")
             .Add(c => c.GameTag, "TAG #1")
             .Add(c => c.Busy, busy)
-            .Add(c => c.Credentials, () => credentials
-                ? new TypedCredentialSource("user", "pass")
-                : null));
+            .Add(c => c.Credentials, () => credentials ? new TypedCredentialSource("user", "pass") : null));
     }
 
-    private static ImportCheckReport Report(ImportCheckVerdict verdict,
-        params ImportCheckDifference[] differences)
+    /// <summary>Delivers a finished check the way the saga does — over the hub, never from storage.</summary>
+    private async Task Complete(IRenderedComponent<ScoreCheckPanel> panel, ImportCheckReport report,
+        int repaired = 0)
     {
-        return new ImportCheckReport(MixEnum.Phoenix, RanAt, verdict, 64466, 63420, 2851, 2848, differences);
+        await panel.InvokeAsync(() => _hub.PublishAsync(UiTopics.User(_me),
+            new ImportCheckCompletedEvent(_me, MixEnum.Phoenix, report, repaired)));
     }
 
-    /// <summary>A difference the check could not name — it still has to say how much it is short by.</summary>
-    private static ImportCheckDifference Unnamed(string bucket, int? level, ImportCheckDifferenceKind kind,
-        int count)
+    private static ImportCheckReport Report(params ImportCheckDifference[] differences)
     {
-        return new ImportCheckDifference(bucket, level, kind, count, Array.Empty<ImportCheckChart>());
+        return new ImportCheckReport(MixEnum.Phoenix,
+            differences.Any(d => d.Kind != ImportCheckDifferenceKind.Extra)
+                ? ImportCheckVerdict.NeedsAttention
+                : ImportCheckVerdict.InSync,
+            64466, 63420, 2851, 2848, differences);
     }
 
-    private static ImportCheckDifference Named(string bucket, int level, ImportCheckDifferenceKind kind,
-        params (string Song, int Score)[] charts)
+    private ImportCheckDifference Missing(int level, Guid chartId, int score)
     {
-        return new ImportCheckDifference(bucket, level, kind, charts.Length,
-            charts.Select(c => new ImportCheckChart(Guid.NewGuid(), c.Song,
-                    SharedKernel.Enums.ChartType.Single, level, c.Score))
-                .ToArray());
+        return new ImportCheckDifference(level.ToString(), level, ImportCheckDifferenceKind.Missing, 1,
+            new[] { new ImportCheckChart(chartId, score, null) });
     }
 
-    [Fact]
-    public void AnInSyncAccountSaysSoAndOffersNoRepair()
+    private ImportCheckDifference Stale(int level, Guid chartId, int score, int currentScore)
     {
-        Answer(Report(ImportCheckVerdict.InSync));
-
-        var markup = Render().Markup;
-
-        Assert.Contains("In sync", markup);
-        Assert.DoesNotContain("Add these scores", markup);
+        return new ImportCheckDifference(level.ToString(), level, ImportCheckDifferenceKind.OutOfDate, 1,
+            new[] { new ImportCheckChart(chartId, score, currentScore) });
     }
 
     [Fact]
-    public void MissingScoresAreCountedAndTheirLevelsNamed()
+    public void ItStartsWithNoVerdictBecauseNothingIsStored()
     {
-        Answer(Report(ImportCheckVerdict.MissingScores,
-            Unnamed("18", 18, ImportCheckDifferenceKind.Missing, 1),
-            Unnamed("21", 21, ImportCheckDifferenceKind.Missing, 2)));
-
         var markup = Render().Markup;
 
-        Assert.Contains("PIUGAME has 3 scores that aren't here.", markup);
-        Assert.Contains("Level 18", markup);
-        Assert.Contains("Level 21", markup);
-        Assert.Contains("Add these scores", markup);
+        Assert.Contains("Check every score", markup);
+        Assert.DoesNotContain("Everything matches", markup);
+        Assert.DoesNotContain("Add these", markup);
     }
 
     [Fact]
-    public void ANamedFindingShowsTheSongAndTheScorePiuGameHolds()
+    public async Task MissingAndOutOfDateSharUneList()
     {
-        Answer(Report(ImportCheckVerdict.MissingScores,
-            Named("17", 17, ImportCheckDifferenceKind.Missing, ("Ugly duck Toccata", 996408))));
+        var panel = Render();
 
-        var markup = Render().Markup;
+        await Complete(panel, Report(
+            Missing(17, _missingChart, 996408),
+            Stale(20, _staleChart, 992223, 966204)));
 
-        // A count alone is a support ticket; this is the answer.
+        // An account can be short a chart and behind on another at once; two views would make the
+        // player fix the same account twice.
+        var markup = panel.Markup;
+        Assert.Contains("2 scores here don't match PIUGAME.", markup);
         Assert.Contains("Ugly duck Toccata", markup);
-        Assert.Contains("996,408", markup);
-        Assert.Contains("Never imported", markup);
+        Assert.Contains("The End of the World", markup);
+        Assert.Contains("Add these 2 scores", markup);
     }
 
     [Fact]
-    public void AnOutOfDateChartSaysItIsBehindRatherThanMissing()
+    public async Task OnlyAnOutOfDateRowCarriesTheScoreWeAlreadyHold()
     {
-        Answer(Report(ImportCheckVerdict.OutOfDateScores,
-            Named("20", 20, ImportCheckDifferenceKind.OutOfDate, ("The End of the World ft. Skizzo", 992223))));
+        var panel = Render();
 
-        var markup = Render().Markup;
+        await Complete(panel, Report(
+            Missing(17, _missingChart, 996408),
+            Stale(20, _staleChart, 992223, 966204)));
 
-        Assert.Contains("Behind PIUGAME", markup);
-        Assert.DoesNotContain("Never imported", markup);
+        // The "was" IS the distinction between the two kinds — no extra label needed.
+        Assert.Contains("996,408", panel.Markup);
+        Assert.Contains("was 966,204", panel.Markup);
+        Assert.DoesNotContain("was 996,408", panel.Markup);
     }
 
     [Fact]
-    public void TheImportItRunsFirstIsStatedBeforeTheButtonNotAfter()
+    public async Task AnInSyncAccountSaysSoAndOffersTheDeepScan()
     {
-        Answer(Report(ImportCheckVerdict.InSync));
+        var panel = Render();
 
-        // A field tester was surprised by session charts appearing: the check imports first.
-        Assert.Contains("Runs a fresh import first", Render().Markup);
+        await Complete(panel, Report());
+
+        Assert.Contains("Everything matches", panel.Markup);
+        Assert.Contains("Run a deep scan", panel.Markup);
+        Assert.DoesNotContain("Add these", panel.Markup);
     }
 
     [Fact]
-    public void BucketsThatAreNotASingleLevelAreNamedAsThemselves()
+    public async Task WithSomethingToFixTheExpensiveBlindWalkIsNotOffered()
     {
-        Answer(Report(ImportCheckVerdict.MissingScores,
-            Unnamed("coop", null, ImportCheckDifferenceKind.Missing, 1),
-            Unnamed("27over", null, ImportCheckDifferenceKind.Missing, 1),
-            Unnamed("sub10", null, ImportCheckDifferenceKind.Missing, 1)));
+        var panel = Render();
 
-        var markup = Render().Markup;
+        await Complete(panel, Report(Missing(17, _missingChart, 996408)));
 
-        Assert.Contains("CO-OP", markup);
-        Assert.Contains("Level 27 and above", markup);
-        Assert.Contains("Below level 10", markup);
+        Assert.DoesNotContain("Run a deep scan", panel.Markup);
     }
 
     [Fact]
-    public void HoldingMoreThanPiuGameIsNeverOfferedAsSomethingToFix()
+    public async Task AnExhaustedAllowanceNamesTheUnlockInsteadOfOfferingTheButton()
     {
-        Answer(Report(ImportCheckVerdict.AheadOfSite,
-            Unnamed("sub10", null, ImportCheckDifferenceKind.Extra, 1)));
+        _mediator.Setup(m => m.Send(It.IsAny<GetDeepScansRemainingQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+        var panel = Render();
 
-        var markup = Render().Markup;
+        await Complete(panel, Report());
+
+        Assert.DoesNotContain("Run a deep scan", panel.Markup);
+        Assert.Contains("used all your deep scans", panel.Markup);
+    }
+
+    [Fact]
+    public async Task HoldingMoreThanPiuGameIsNeverOfferedAsSomethingToFix()
+    {
+        var panel = Render();
+
+        await Complete(panel, Report(new ImportCheckDifference("sub10", null,
+            ImportCheckDifferenceKind.Extra, 1, Array.Empty<ImportCheckChart>())));
 
         // A CSV import or a retired chart is not a repair — there is nothing to fetch.
-        Assert.DoesNotContain("Add these scores", markup);
+        Assert.DoesNotContain("Add these", panel.Markup);
     }
 
     [Fact]
-    public void TheDeepScanIsOfferedOnlyWhenTheCensusFoundNothing()
+    public async Task ARepairThatFixedEverythingSaysWhatItDid()
     {
-        Answer(Report(ImportCheckVerdict.InSync));
-        Assert.Contains("Run a deep scan", Render().Markup);
+        var panel = Render();
 
-        Answer(Report(ImportCheckVerdict.MissingScores,
-            Unnamed("18", 18, ImportCheckDifferenceKind.Missing, 1)));
-        // With something localised to repair, the expensive blind walk is not the next step.
-        Assert.DoesNotContain("Run a deep scan", Render().Markup);
+        await Complete(panel, Report(), 5);
+
+        Assert.Contains("Added 5 scores", panel.Markup);
     }
 
     [Fact]
-    public void AnExhaustedAllowanceNamesTheDateInsteadOfOfferingTheButton()
+    public async Task TheRepairAsksForExactlyTheLevelsThisVerdictNamed()
     {
-        Answer(Report(ImportCheckVerdict.InSync), 0);
+        var started = new List<StartImportCheckCommand>();
+        _mediator.Setup(m => m.Send(It.IsAny<StartImportCheckCommand>(), It.IsAny<CancellationToken>()))
+            .Callback((object c, CancellationToken _) => started.Add((StartImportCheckCommand)c))
+            .ReturnsAsync(new ImportCheckStartResult(ImportCheckStartOutcome.Started, 3));
+        var panel = Render();
+        await Complete(panel, Report(Missing(17, _missingChart, 996408), Stale(20, _staleChart, 992223, 966204)));
 
-        var markup = Render().Markup;
+        panel.FindAll("button").First(b => b.TextContent.Contains("Add these")).Click();
 
-        Assert.DoesNotContain("Run a deep scan", markup);
-        Assert.Contains("used all 3 deep scans", markup);
+        // The panel holds the findings — nothing on the server remembers the last run.
+        var command = Assert.Single(started);
+        Assert.Equal(new[] { "17", "20" }, command.RepairBuckets);
+        Assert.False(command.DeepScan);
     }
 
     [Fact]
     public void EveryActionIsBlockedWithoutACredential()
     {
-        Answer(Report(ImportCheckVerdict.MissingScores,
-            Unnamed("18", 18, ImportCheckDifferenceKind.Missing, 1)));
-
         var buttons = Render(credentials: false).FindAll("button");
 
         Assert.NotEmpty(buttons);
@@ -210,8 +236,6 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
     [Fact]
     public void EveryActionIsBlockedWhileTheImportItselfIsRunning()
     {
-        Answer(Report(ImportCheckVerdict.InSync));
-
         var buttons = Render(busy: true).FindAll("button");
 
         Assert.NotEmpty(buttons);
@@ -219,32 +243,9 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void PressingCheckStartsOneAndTheRepairButtonAsksForARepair()
+    public void TheImportItRunsFirstIsStatedBeforeTheButtonIsPressed()
     {
-        Answer(Report(ImportCheckVerdict.MissingScores,
-            Unnamed("18", 18, ImportCheckDifferenceKind.Missing, 1)));
-        var started = new List<StartImportCheckCommand>();
-        _mediator.Setup(m => m.Send(It.IsAny<StartImportCheckCommand>(), It.IsAny<CancellationToken>()))
-            .Callback((object c, CancellationToken _) => started.Add((StartImportCheckCommand)c))
-            .ReturnsAsync(new ImportCheckStartResult(ImportCheckStartOutcome.Started, 3));
-        var panel = Render();
-
-        panel.FindAll("button").First(b => b.TextContent.Contains("Add these scores")).Click();
-
-        var command = Assert.Single(started);
-        Assert.True(command.Repair);
-        Assert.False(command.DeepScan);
-        Assert.Equal(MixEnum.Phoenix, command.Mix);
-    }
-
-    [Fact]
-    public void ANeverCheckedAccountExplainsWhatTheCheckDoes()
-    {
-        Answer(null);
-
-        var markup = Render().Markup;
-
-        Assert.Contains("level by level", markup);
-        Assert.DoesNotContain("Add these scores", markup);
+        // A field tester was surprised by session charts appearing: the check imports first.
+        Assert.Contains("Imports first", Render().Markup);
     }
 }

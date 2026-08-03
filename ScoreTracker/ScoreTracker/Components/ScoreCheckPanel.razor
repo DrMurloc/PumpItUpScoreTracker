@@ -1,149 +1,120 @@
 @using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Events
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Commands
-@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.OfficialMirror.Contracts.Events
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services.UiNotifications
 
-@* Tells a player whether every score piugame has actually reached us, and repairs the levels that
-   disagree. It is pressed, never automatic: a check is ~20 extra requests at piugame and making
-   every import pay that permanently is the wrong default for a problem a minority hit. *@
+@* Tells a player whether every score PIUGAME has actually reached us, and repairs what disagrees.
+   Nothing is persisted: the verdict lives here until they navigate away, which is why the running
+   states say so out loud (docs/design/import-completeness-check.md §6). *@
 
-@if (_last != null)
-{
-    <MudPaper Class="pa-4 mt-4" Outlined="true">
-        <div class="d-flex align-center flex-wrap gap-2 mb-2">
-            <MudText Typo="Typo.subtitle1">@L["Score check"]</MudText>
-            @if (_report != null)
+<MudPaper Class="pa-4 mt-4" Outlined="true">
+    <MudText Typo="Typo.overline">@L["Score check"]</MudText>
+
+    @if (_running)
+    {
+        <div class="d-flex align-center gap-3 mt-1">
+            <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+            <MudText Typo="Typo.body1">@(_status ?? L["Checking your scores"])</MudText>
+        </div>
+        <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block mt-2">
+            @L["Stay on this page — leaving loses the result."]
+        </MudText>
+    }
+    else if (_report == null)
+    {
+        <MudText Typo="Typo.body1" Class="mt-1">
+            @(_repaired > 0
+                ? L["Added {0} scores. Everything matches now.", _repaired]
+                : L["Check every score PIUGAME has against what's here."])
+        </MudText>
+        @if (_repaired == 0)
+        {
+            <div class="d-flex flex-wrap gap-2 align-center mt-3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Disabled"
+                           OnClick="@(() => Run())">
+                    @L["Import and check"]
+                </MudButton>
+            </div>
+            <MudText Typo="Typo.caption" Class="d-block mt-1">
+                @L["Imports first, then compares. A few minutes."]
+            </MudText>
+        }
+    }
+    else
+    {
+        <MudText Typo="Typo.body1" Class="mt-1">@Headline</MudText>
+
+        @* Missing and out-of-date share ONE list — an account can be short a chart and behind on
+           another at once, and two views would make the player fix it twice. A row with a "was"
+           is one they have beaten since their last import. *@
+        @foreach (var chart in Found)
+        {
+            <div class="d-flex align-center gap-3 my-2">
+                @if (_charts.TryGetValue(chart.ChartId, out var known))
+                {
+                    <SongImage Song="known.Song" Small="true"/>
+                    <DifficultyBubble Chart="known" Small="true"/>
+                    <MudText Typo="Typo.body2" Class="flex-grow-1 text-truncate">@known.Song.Name</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Class="flex-grow-1">@L["Unknown chart"]</MudText>
+                }
+                <div class="text-right">
+                    <MudText Typo="Typo.body2">@chart.Score.ToString("N0")</MudText>
+                    @if (chart.CurrentScore != null)
+                    {
+                        <MudText Typo="Typo.caption">@L["was {0}", chart.CurrentScore.Value.ToString("N0")]</MudText>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap gap-2 align-center mt-3">
+            @if (Found.Any())
             {
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@VerdictColor">
-                    @VerdictChip
-                </MudChip>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Disabled"
+                           OnClick="Repair">
+                    @L["Add these {0} scores", Found.Count]
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Disabled="Disabled" OnClick="Dismiss">@L["Not now"]</MudButton>
             }
-            <MudSpacer/>
-            @if (_report != null)
+            else if (_report.Verdict == ImportCheckVerdict.InSync && _deepScansLeft > 0)
             {
-                <MudText Typo="Typo.caption">@L["Last checked {0}", _report.RanAt.ToLocalTime().ToString("g")]</MudText>
+                <MudLink Component="button" Disabled="Disabled" @onclick="@(() => Run(deepScan: true))">
+                    @L["Still wrong? Run a deep scan"]
+                </MudLink>
             }
         </div>
 
-        @if (_running)
+        @if (Found.Any())
         {
-            <div class="d-flex align-center gap-3">
-                <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
-                <MudText Typo="Typo.body2">@(_status ?? L["Checking your scores"])</MudText>
-            </div>
-            <MudText Typo="Typo.caption">@L["You can leave this page."]</MudText>
-        }
-        else
-        {
-            @if (_report == null)
-            {
-                <MudText Typo="Typo.body2">
-                    @L["Compares your scores against PIUGAME, level by level, and tells you if anything is missing."]
-                </MudText>
-            }
-            else
-            {
-                <MudText Typo="Typo.body2">@Headline</MudText>
-
-                @if (_report.OfficialPumbility > 0)
-                {
-                    <div class="d-flex flex-wrap gap-2 my-2">
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
-                            @L["PUMBILITY on PIUGAME"]: @_report.OfficialPumbility.ToString("N0")
-                        </MudChip>
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
-                            @L["PUMBILITY here"]: @_report.LocalPumbility.ToString("N0")
-                        </MudChip>
-                    </div>
-                }
-
-                @* Named charts, not just counts: "1 score missing" is a support ticket, a song and
-                   a score is an answer — and it is what pressing the button will actually save. *@
-                @foreach (var difference in Repairable)
-                {
-                    @foreach (var chart in difference.Charts)
-                    {
-                        <div class="d-flex align-center gap-3 my-2">
-                            <DifficultyBubble Type="chart.Type" Level="DifficultyLevel.From(chart.Level)"
-                                              Mix="Mix" Small="true"/>
-                            <div style="min-width:0;flex:1;">
-                                <MudText Typo="Typo.body2" Class="text-truncate">@chart.Song</MudText>
-                                <MudText Typo="Typo.caption">
-                                    @(difference.Kind == ImportCheckDifferenceKind.Missing
-                                        ? L["Never imported"]
-                                        : L["Behind PIUGAME"])
-                                </MudText>
-                            </div>
-                            <MudText Typo="Typo.body2">@chart.Score.ToString("N0")</MudText>
-                        </div>
-                    }
-                    @* A level the check could not enumerate still says how much it is short by. *@
-                    @if (!difference.Charts.Any())
-                    {
-                        <MudText Typo="Typo.body2" Class="my-2">
-                            @BucketName(difference):
-                            @(difference.Kind == ImportCheckDifferenceKind.Missing
-                                ? L["{0} missing", difference.Count]
-                                : L["{0} out of date", difference.Count])
-                        </MudText>
-                    }
-                }
-            }
-
-            <div class="d-flex align-center flex-wrap gap-2 mt-3">
-                @if (Repairable.Any())
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Disabled"
-                               OnClick="@(() => Run(repair: true))">
-                        @L["Add these scores"]
-                    </MudButton>
-                }
-                <MudButton Variant="Variant.Outlined" Disabled="Disabled" OnClick="@(() => Run())">
-                    @L["Import and check"]
-                </MudButton>
-
-                @if (_report is { Verdict: ImportCheckVerdict.InSync })
-                {
-                    @if (_last.DeepScansLeft > 0)
-                    {
-                        <MudButton Variant="Variant.Text" Disabled="Disabled"
-                                   OnClick="@(() => Run(deepScan: true))">
-                            @L["Run a deep scan"]
-                        </MudButton>
-                        <MudText Typo="Typo.caption">
-                            @L["{0} of 3 left this month", _last.DeepScansLeft]
-                        </MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.caption">
-                            @L["You've used all 3 deep scans this month. The next one unlocks {0}.",
-                                _last.NextScanUnlocksAt.ToLocalTime().ToString("d")]
-                        </MudText>
-                    }
-                }
-            </div>
-
-            @* The import surprised a field tester: session charts appeared before any counting
-               happened. Say it before the button, not after. *@
             <MudText Typo="Typo.caption" Class="d-block mt-1">
-                @L["Runs a fresh import first, then checks PIUGAME for anything missing."]
+                @if (_report.PumbilityGap != null)
+                {
+                    @L["Worth {0} PUMBILITY.", ((int)_report.PumbilityGap.Value).ToString("N0")]
+                    <text> </text>
+                }
+                @L["A row with a \"was\" is one you've beaten since your last import; the rest were never imported at all."]
             </MudText>
-
-            @if (_report is { Verdict: ImportCheckVerdict.InSync })
-            {
-                <MudText Typo="Typo.caption" Class="d-block">
-                    @L["Still looks wrong? A deep scan reads every page of your best scores instead of counting them."]
-                </MudText>
-            }
         }
-    </MudPaper>
-}
+        else if (_report.Verdict == ImportCheckVerdict.InSync)
+        {
+            <MudText Typo="Typo.caption" Class="d-block mt-1">
+                @(_deepScansLeft > 0
+                    ? L["Deep scan reads every page instead of counting. {0} left this month.", _deepScansLeft]
+                    : L["You've used all your deep scans this month. The next unlock is {0}.", NextUnlock])
+            </MudText>
+        }
+    }
+</MudPaper>
 
 @code {
     /// <summary>The mix the page is importing. A check is per mix — Phoenix 2 titles read Phoenix 2
@@ -151,64 +122,35 @@
     [Parameter] public MixEnum Mix { get; set; }
 
     /// <summary>Resolved by the page: the stored blob when there is one, otherwise what was typed.
-    /// Null disables the panel's buttons rather than hiding them — the page explains why.</summary>
+    /// Null disables the buttons rather than hiding them — the page explains why.</summary>
     [Parameter] public Func<ImportCredentialSource?>? Credentials { get; set; }
 
     [Parameter] public string CardId { get; set; } = "";
     [Parameter] public string GameTag { get; set; } = "";
 
-    /// <summary>True while the page's own import is running, so the two cannot be started at once.</summary>
+    /// <summary>True while the page's own import runs, so the two cannot start at once.</summary>
     [Parameter] public bool Busy { get; set; }
 
-    private LastImportCheck? _last;
-    private ImportCheckReport? _report;
     private readonly List<IDisposable> _subscriptions = new();
+    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private int _deepScansLeft;
+    private int _repaired;
+    private ImportCheckReport? _report;
     private bool _running;
     private string? _status;
     private Guid _userId;
 
     private bool Disabled => Busy || _running || Credentials?.Invoke() == null;
 
-    private IReadOnlyList<ImportCheckDifference> Repairable =>
-        _report?.Differences.Where(d => d.Kind != ImportCheckDifferenceKind.Extra).ToArray()
-        ?? Array.Empty<ImportCheckDifference>();
+    private IReadOnlyList<ImportCheckChart> Found =>
+        _report?.Repairable.SelectMany(d => d.Charts).ToArray() ?? Array.Empty<ImportCheckChart>();
 
-    private Color VerdictColor => _report?.Verdict switch
-    {
-        ImportCheckVerdict.MissingScores => Color.Warning,
-        ImportCheckVerdict.OutOfDateScores => Color.Warning,
-        _ => Color.Success
-    };
+    private string NextUnlock => new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)
+        .AddMonths(1).ToString("d");
 
-    private string VerdictChip => _report?.Verdict switch
-    {
-        ImportCheckVerdict.MissingScores => L["{0} missing", _report.MissingCount],
-        ImportCheckVerdict.OutOfDateScores => L["{0} out of date", _report.OutOfDateCount],
-        _ => L["In sync"]
-    };
-
-    private string Headline => _report?.Verdict switch
-    {
-        ImportCheckVerdict.MissingScores =>
-            L["PIUGAME has {0} scores that aren't here.", _report.MissingCount],
-        ImportCheckVerdict.OutOfDateScores =>
-            L["{0} scores here are behind PIUGAME.", _report.OutOfDateCount],
-        _ => L["Everything matches. All {0} of your scores are here.", _report?.LocalPasses ?? 0]
-    };
-
-    // CO-OP, 27-and-over and the sub-10 residual are buckets rather than levels, and the site
-    // names them that way too.
-    private string BucketName(ImportCheckDifference difference)
-    {
-        return difference.Level != null
-            ? L["Level {0}", difference.Level.Value]
-            : difference.Bucket switch
-            {
-                "coop" => L["CO-OP"],
-                "27over" => L["Level 27 and above"],
-                _ => L["Below level 10"]
-            };
-    }
+    private string Headline => _report?.Verdict == ImportCheckVerdict.InSync
+        ? L["Everything matches — all {0} scores are here.", _report.LocalPasses.ToString("N0")]
+        : L["{0} scores here don't match PIUGAME.", _report?.RepairableCount ?? 0];
 
     protected override async Task OnInitializedAsync()
     {
@@ -216,18 +158,32 @@
         _userId = CurrentUser.User.Id;
         _subscriptions.Add(UiHub.Subscribe<ImportStatusUpdatedEvent>(UiTopics.User(_userId), OnStatus));
         _subscriptions.Add(UiHub.Subscribe<ImportStatusErrorEvent>(UiTopics.User(_userId), OnError));
-        await Reload();
+        _subscriptions.Add(UiHub.Subscribe<ImportCheckCompletedEvent>(UiTopics.User(_userId), OnCompleted));
+        _deepScansLeft = await Mediator.Send(new GetDeepScansRemainingQuery(_userId));
     }
 
-    // A null answer means "nothing to say" and renders nothing, rather than taking the whole
-    // import page down with it — this panel is an addition to that page, not a prerequisite.
-    private async Task Reload()
+    private Task Run(bool deepScan = false)
     {
-        _last = await Mediator.Send(new GetLastImportCheckQuery(_userId, Mix));
-        _report = _last?.Report;
+        return Start(deepScan, Array.Empty<string>());
     }
 
-    private async Task Run(bool deepScan = false, bool repair = false)
+    /// <summary>
+    ///     Re-reads only the levels this verdict named. The panel holds the findings, so the client
+    ///     says what it wants fixed — nothing on the server remembers the last run.
+    /// </summary>
+    private Task Repair()
+    {
+        return Start(false, _report?.Repairable.Select(d => d.Bucket).Distinct().ToArray()
+                            ?? Array.Empty<string>());
+    }
+
+    private void Dismiss()
+    {
+        _report = null;
+        _repaired = 0;
+    }
+
+    private async Task Start(bool deepScan, IReadOnlyCollection<string> repairBuckets)
     {
         var source = Credentials?.Invoke();
         if (source == null) return;
@@ -236,10 +192,12 @@
         // its synchronous portion, so flipping this afterwards leaves the button inert for seconds.
         _running = true;
         _status = null;
+        _repaired = 0;
         StateHasChanged();
 
         var result = await Mediator.Send(new StartImportCheckCommand(source, Mix, CardId, GameTag,
-            deepScan, repair));
+            deepScan, repairBuckets));
+        _deepScansLeft = result.DeepScansLeft;
         if (result.Outcome == ImportCheckStartOutcome.Started) return;
 
         _running = false;
@@ -249,26 +207,40 @@
             ImportCheckStartOutcome.CredentialUnlockFailed => L["Saved credentials could not be unlocked."],
             ImportCheckStartOutcome.AlreadyRunning => L["An import is already running."],
             ImportCheckStartOutcome.NoDeepScansLeft =>
-                L["You've used all 3 deep scans this month. The next one unlocks {0}.",
-                    _last?.NextScanUnlocksAt.ToLocalTime().ToString("d") ?? ""],
+                L["You've used all your deep scans this month. The next unlock is {0}.", NextUnlock],
             _ => L["Something went wrong."]
         }, Severity.Warning);
-        await Reload();
     }
 
-    private async Task OnStatus(ImportStatusUpdatedEvent update)
+    private Task OnStatus(ImportStatusUpdatedEvent update)
     {
-        if (update.Mix != Mix) return;
-        await InvokeAsync(async () =>
+        if (update.Mix != Mix || !_running) return Task.CompletedTask;
+        return InvokeAsync(() =>
         {
             _status = update.Status;
-            // The saga announces this exact status last; the stored verdict is written by then.
-            if (update.Status == "Score check finished")
-            {
-                _running = false;
-                await Reload();
-            }
+            StateHasChanged();
+        });
+    }
 
+    private async Task OnCompleted(ImportCheckCompletedEvent completed)
+    {
+        if (completed.Mix != Mix) return;
+        // Resolved once so the rows can carry real song art and a proper difficulty bubble; the
+        // report itself only carries chart ids.
+        var ids = completed.Report.Repairable.SelectMany(d => d.Charts).Select(c => c.ChartId).Distinct().ToArray();
+        var charts = ids.Length == 0
+            ? Array.Empty<Chart>()
+            : (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: ids))).ToArray();
+
+        await InvokeAsync(() =>
+        {
+            _charts = charts.ToDictionary(c => c.Id);
+            _repaired = completed.Repaired;
+            // A repair that fixed everything shows its own acknowledgement instead of an empty list.
+            _report = completed.Repaired > 0 && completed.Report.Verdict == ImportCheckVerdict.InSync
+                ? null
+                : completed.Report;
+            _running = false;
             StateHasChanged();
         });
     }

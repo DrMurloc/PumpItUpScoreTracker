@@ -19,6 +19,6 @@ public sealed record StartImportCheckCommand(
     string CardId,
     string ExpectedGameTag,
     bool DeepScan,
-    /// <summary>Re-read the levels the last check found short before measuring again — the
-    /// "Add these scores" button. Free: it reads only what the census localised.</summary>
-    bool Repair = false) : IRequest<ImportCheckStartResult>;
+    /// <summary>Levels the panel asked to re-read before measuring again — the "Add these scores"
+    /// button. Free: it reads only what the last check localised. Empty means no repair.</summary>
+    IReadOnlyCollection<string> RepairBuckets) : IRequest<ImportCheckStartResult>;

@@ -10,30 +10,32 @@ using Moq;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
-using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
-using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
 /// <summary>
-///     The completeness check end to end over mocked ports: what the circuit-side start refuses,
-///     that the background body imports before it counts, and each verdict the panel renders.
+///     The completeness check over mocked ports: what the circuit-side start refuses, that the
+///     background body imports before it counts, and that the verdict is published rather than
+///     stored — nothing here writes a row, because nothing remembers a check.
 /// </summary>
 public sealed class ImportCheckSagaTests
 {
-    private static readonly DateTimeOffset Now = new(2026, 8, 3, 10, 0, 0, TimeSpan.Zero);
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly Guid ChartId = Guid.NewGuid();
+    private static readonly Guid OtherChartId = Guid.NewGuid();
 
     // ---- starting ----
 
@@ -41,37 +43,37 @@ public sealed class ImportCheckSagaTests
     public async Task StartingHandsTheScrapeToTheBusAndKeepsThePasswordOnTheCircuit()
     {
         var bus = new Mock<IBus>();
-        var site = Site();
-        var saga = Build(bus: bus, site: site);
 
-        var result = await saga.Handle(Start(), CancellationToken.None);
+        var result = await Build(bus: bus).Handle(Start(), CancellationToken.None);
 
         Assert.Equal(ImportCheckStartOutcome.Started, result.Outcome);
         bus.Verify(b => b.Publish(
-            It.Is<RunImportCheckCommand>(c => c.UserId == UserId && c.Mix == MixEnum.Phoenix && !c.DeepScan),
+            It.Is<RunImportCheckCommand>(c => c.UserId == UserId && !c.DeepScan && c.RepairBuckets.Count == 0),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ABadPasswordIsCaughtOnTheCircuitBeforeAnythingIsQueued()
+    public async Task ABadPasswordIsCaughtOnTheCircuitBeforeAnythingIsQueuedOrSpent()
     {
         var bus = new Mock<IBus>();
+        var mediator = Mediator();
         var site = new Mock<IOfficialSiteClient>();
         site.Setup(s => s.SignIn(It.IsAny<MixEnum>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidCredentialException());
 
-        var result = await Build(bus: bus, site: site).Handle(Start(), CancellationToken.None);
+        var result = await Build(bus: bus, mediator: mediator, site: site)
+            .Handle(Start(deepScan: true), CancellationToken.None);
 
         Assert.Equal(ImportCheckStartOutcome.InvalidCredentials, result.Outcome);
         bus.Verify(b => b.Publish(It.IsAny<RunImportCheckCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+        // A mistyped password must not cost one of the month's three scans.
+        mediator.Verify(m => m.Send(It.IsAny<SpendDeepScanCommand>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task ASecondCheckIsRefusedWhileOneIsInFlight()
     {
-        var guard = Guard(userSlot: false);
-
-        var result = await Build(guard: guard).Handle(Start(), CancellationToken.None);
+        var result = await Build(guard: Guard(userSlot: false)).Handle(Start(), CancellationToken.None);
 
         Assert.Equal(ImportCheckStartOutcome.AlreadyRunning, result.Outcome);
     }
@@ -91,20 +93,43 @@ public sealed class ImportCheckSagaTests
     }
 
     [Fact]
-    public async Task AFourthDeepScanInAMonthIsRefusedButTheCensusIsNot()
+    public async Task ADeepScanSpendsOneOfTheMonthsAllowanceAndAPlainCheckSpendsNothing()
     {
-        var runs = new Mock<IImportCheckRepository>();
-        runs.Setup(r => r.CountDeepScansInMonth(UserId, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(3);
-        var saga = Build(runs: runs);
+        var mediator = Mediator();
+        var saga = Build(mediator: mediator);
+
+        var deep = await saga.Handle(Start(deepScan: true), CancellationToken.None);
+        await saga.Handle(Start(), CancellationToken.None);
+
+        Assert.Equal(ImportCheckStartOutcome.Started, deep.Outcome);
+        Assert.Equal(2, deep.DeepScansLeft);
+        mediator.Verify(m => m.Send(It.Is<SpendDeepScanCommand>(c => c.UserId == UserId),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnEmptyAllowanceRefusesTheDeepScanButNotTheCensus()
+    {
+        var mediator = Mediator(scansLeft: 0);
+        var saga = Build(mediator: mediator);
 
         var deep = await saga.Handle(Start(deepScan: true), CancellationToken.None);
         var census = await saga.Handle(Start(), CancellationToken.None);
 
         Assert.Equal(ImportCheckStartOutcome.NoDeepScansLeft, deep.Outcome);
-        Assert.Equal(0, deep.DeepScansLeft);
         // The allowance rations "walk everything", never the cheap per-level check.
         Assert.Equal(ImportCheckStartOutcome.Started, census.Outcome);
+    }
+
+    [Fact]
+    public async Task LosingTheAllowanceRaceRefusesRatherThanRunningForFree()
+    {
+        // The balance read said one was left, but another tab spent it before this one asked.
+        var mediator = Mediator(scansLeft: 1, spendGranted: false);
+
+        var result = await Build(mediator: mediator).Handle(Start(deepScan: true), CancellationToken.None);
+
+        Assert.Equal(ImportCheckStartOutcome.NoDeepScansLeft, result.Outcome);
     }
 
     // ---- running ----
@@ -116,13 +141,13 @@ public sealed class ImportCheckSagaTests
         var order = new List<string>();
         mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
             .Callback(() => order.Add("import")).Returns(Task.CompletedTask);
-        var site = Site();
+        var site = Site(Census(("18", 1)));
         site.Setup(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
-            .Callback(() => order.Add("census"))
-            .ReturnsAsync(Census(("18", 1)));
+            .Callback(() => order.Add("census")).ReturnsAsync(Census(("18", 1)));
 
-        await Build(mediator: mediator, site: site).Handle(Execute(), CancellationToken.None);
+        await Build(mediator: mediator, site: site, records: Records(1))
+            .Handle(Execute(), CancellationToken.None);
 
         // Counting an account that played twenty minutes ago against scores we have not fetched
         // yet reports charts that are simply not imported yet.
@@ -130,58 +155,105 @@ public sealed class ImportCheckSagaTests
     }
 
     [Fact]
-    public async Task AMissingChartIsStoredAsAMissingVerdict()
+    public async Task TheVerdictIsPublishedNotStored()
     {
-        var runs = new Mock<IImportCheckRepository>();
-        var site = Site(Census(("18", 2)));
+        var mediator = Mediator();
 
-        await Build(runs: runs, site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
-
-        runs.Verify(r => r.Save(It.Is<ImportCheckRun>(run =>
-            run.UserId == UserId &&
-            run.Kind == ImportCheckKind.Census &&
-            run.Findings.Count == 1 &&
-            run.Findings.Single().Kind == CensusFindingKind.Missing &&
-            run.Findings.Single().Bucket == "18" &&
-            run.Findings.Single().Count == 1), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task AnAgreeingCensusStoresARunWithNoFindings()
-    {
-        var runs = new Mock<IImportCheckRepository>();
-
-        await Build(runs: runs, site: Site(Census(("18", 1))), records: Records(1))
+        await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
             .Handle(Execute(), CancellationToken.None);
 
-        runs.Verify(r => r.Save(It.Is<ImportCheckRun>(run => run.Findings.Count == 0),
+        // Nothing persists a check: this notification IS the result, and a page that navigated
+        // away simply never receives it.
+        mediator.Verify(m => m.Publish(
+            It.Is<ImportCheckCompletedEvent>(e => e.UserId == UserId
+                                                  && e.Report.Verdict == ImportCheckVerdict.InSync),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ADeepScanIsRecordedAsOneSoItSpendsTheAllowance()
+    public async Task AShortLevelIsReadSoTheVerdictCanNameTheChartAndItsScore()
     {
-        var runs = new Mock<IImportCheckRepository>();
+        var mediator = Mediator();
+        var site = Site(Census(("18", 2)));
+        site.Setup(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<OfficialRecordedScore>)new[]
+            {
+                new OfficialRecordedScore(Chart(ChartId), PhoenixScore.From(990000), PhoenixPlate.MarvelousGame),
+                new OfficialRecordedScore(Chart(OtherChartId), PhoenixScore.From(996408), PhoenixPlate.MarvelousGame)
+            });
 
-        await Build(runs: runs, site: Site(Census(("18", 1))), records: Records(1))
-            .Handle(Execute(deepScan: true), CancellationToken.None);
+        await Build(mediator: mediator, site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
 
-        runs.Verify(r => r.Save(It.Is<ImportCheckRun>(run => run.Kind == ImportCheckKind.Deep),
+        mediator.Verify(m => m.Publish(It.Is<ImportCheckCompletedEvent>(e =>
+                e.Report.Repairable.Single().Charts.Single().ChartId == OtherChartId &&
+                e.Report.Repairable.Single().Charts.Single().Score == 996408 &&
+                // Never imported, so there is no score of ours to show beside it.
+                e.Report.Repairable.Single().Charts.Single().CurrentScore == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ACleanCensusNeverPaysForANamingWalk()
+    {
+        var site = Site(Census(("18", 1)));
+
+        await Build(site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
+
+        site.Verify(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // ---- repairing ----
+
+    [Fact]
+    public async Task ARepairReReadsExactlyTheLevelsThePanelAskedFor()
+    {
+        var mediator = Mediator();
+
+        await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
+            .Handle(Execute(repairBuckets: new[] { "18", "21" }), CancellationToken.None);
+
+        // The panel holds the findings and says what it wants fixed — nothing on the server
+        // remembers the last run.
+        mediator.Verify(m => m.Send(It.Is<RepairScoresCommand>(c =>
+            c.Buckets.SequenceEqual(new[] { "18", "21" })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task APlainCheckRepairsNothing()
+    {
+        var mediator = Mediator();
+
+        await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
+            .Handle(Execute(), CancellationToken.None);
+
+        mediator.Verify(m => m.Send(It.IsAny<RepairScoresCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ADeepScanWalksTheWholeListRegardlessOfWhatThePanelAskedFor()
+    {
+        var mediator = Mediator();
+
+        await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
+            .Handle(Execute(deepScan: true, repairBuckets: new[] { "18" }), CancellationToken.None);
+
+        // No buckets: the only way to catch a score that improved without changing grade or plate.
+        mediator.Verify(m => m.Send(It.Is<RepairScoresCommand>(c => c.Buckets.Count == 0),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task ADeepScanWaitsRatherThanPilingOntoTheOnesAlreadyWalkingTheSite()
     {
-        var guard = Guard(deepSlot: false);
-        var runs = new Mock<IImportCheckRepository>();
         var site = Site(Census(("18", 1)));
 
-        await Build(guard: guard, runs: runs, site: site).Handle(Execute(deepScan: true), CancellationToken.None);
+        await Build(guard: Guard(deepSlot: false), site: site)
+            .Handle(Execute(deepScan: true), CancellationToken.None);
 
         site.Verify(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
             It.IsAny<CancellationToken>()), Times.Never);
-        runs.Verify(r => r.Save(It.IsAny<ImportCheckRun>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -199,176 +271,23 @@ public sealed class ImportCheckSagaTests
         guard.Verify(g => g.EndDeepScan(), Times.Once);
     }
 
-    // ---- naming what it found ----
-
-    [Fact]
-    public async Task AShortLevelIsReadSoTheFindingCanNameTheChart()
-    {
-        var runs = new Mock<IImportCheckRepository>();
-        var site = Site(Census(("18", 2)));
-        site.Setup(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IReadOnlyList<OfficialRecordedScore>)new[]
-            {
-                // One we already hold at the same score, one we have never seen.
-                new OfficialRecordedScore(Chart(ChartId, "Held Song"), PhoenixScore.From(990000),
-                    PhoenixPlate.MarvelousGame),
-                new OfficialRecordedScore(Chart(OtherChartId, "Ugly duck Toccata"), PhoenixScore.From(996408),
-                    PhoenixPlate.MarvelousGame)
-            });
-
-        await Build(runs: runs, site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
-
-        // "1 score missing" is a support ticket; the song and the score are an answer.
-        runs.Verify(r => r.Save(It.Is<ImportCheckRun>(run =>
-            run.Findings.Single().Charts!.Single().Song == "Ugly duck Toccata" &&
-            run.Findings.Single().Charts!.Single().Score == 996408), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task ACleanCensusNeverPaysForANamingWalk()
-    {
-        var site = Site(Census(("18", 1)));
-
-        await Build(site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
-
-        site.Verify(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
-            It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    // ---- repairing ----
-
-    [Fact]
-    public async Task ARepairReReadsOnlyTheLevelsTheLastCheckFoundShort()
-    {
-        var mediator = Mediator();
-        var runs = Runs(new CensusFinding("18", CensusFindingKind.Missing, 1),
-            new CensusFinding("21", CensusFindingKind.OutOfDate, 1, "AA", true),
-            new CensusFinding("24", CensusFindingKind.Extra, 2));
-
-        await Build(mediator: mediator, runs: runs, site: Site(Census(("18", 1))), records: Records(1))
-            .Handle(Execute(repair: true), CancellationToken.None);
-
-        mediator.Verify(m => m.Send(It.Is<RepairScoresCommand>(c =>
-            c.Buckets.SequenceEqual(new[] { "18", "21" })), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task ARepairWithNothingLocalisedDoesNotQuietlyBecomeAFullWalk()
-    {
-        var mediator = Mediator();
-
-        await Build(mediator: mediator, runs: Runs(), site: Site(Census(("18", 1))), records: Records(1))
-            .Handle(Execute(repair: true), CancellationToken.None);
-
-        // An empty bucket list means "walk everything" downstream, which is the one thing a free
-        // repair must never turn into.
-        mediator.Verify(m => m.Send(It.IsAny<RepairScoresCommand>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task ADeepScanWalksTheWholeListRegardlessOfWhatTheLastCheckFound()
-    {
-        var mediator = Mediator();
-        var runs = Runs(new CensusFinding("18", CensusFindingKind.Missing, 1));
-
-        await Build(mediator: mediator, runs: runs, site: Site(Census(("18", 1))), records: Records(1))
-            .Handle(Execute(deepScan: true), CancellationToken.None);
-
-        // No buckets: the only way to catch a score that improved without changing grade or
-        // plate, and the only repair for a sub-10 residual.
-        mediator.Verify(m => m.Send(It.Is<RepairScoresCommand>(c => c.Buckets.Count == 0),
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task APlainCheckRepairsNothing()
-    {
-        var mediator = Mediator();
-
-        await Build(mediator: mediator, runs: Runs(new CensusFinding("18", CensusFindingKind.Missing, 1)),
-                site: Site(Census(("18", 1))), records: Records(1))
-            .Handle(Execute(), CancellationToken.None);
-
-        mediator.Verify(m => m.Send(It.IsAny<RepairScoresCommand>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    // ---- reading it back ----
-
-    [Fact]
-    public async Task ThePanelReadsTheStoredVerdictAndTheAllowanceWithoutTouchingPiuGame()
-    {
-        var runs = new Mock<IImportCheckRepository>();
-        runs.Setup(r => r.CountDeepScansInMonth(UserId, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(1);
-        runs.Setup(r => r.GetLatest(UserId, MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImportCheckRun(Guid.NewGuid(), UserId, MixEnum.Phoenix, Now, ImportCheckKind.Census,
-                64466, 63420, 2851, 2848, new[]
-                {
-                    new CensusFinding("18", CensusFindingKind.Missing, 2),
-                    new CensusFinding("coop", CensusFindingKind.Missing, 1)
-                }));
-        var site = new Mock<IOfficialSiteClient>(MockBehavior.Strict);
-
-        var result = await Build(runs: runs, site: site)
-            .Handle(new GetLastImportCheckQuery(UserId, MixEnum.Phoenix), CancellationToken.None);
-
-        Assert.Equal(ImportCheckVerdict.MissingScores, result.Report!.Verdict);
-        Assert.Equal(3, result.Report.MissingCount);
-        Assert.Equal(2, result.DeepScansLeft);
-        Assert.Equal(new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero), result.NextScanUnlocksAt);
-        // A numeric bucket carries its level; CO-OP is not a level and the panel words it differently.
-        Assert.Equal(18, result.Report.Differences.Single(d => d.Bucket == "18").Level);
-        Assert.Null(result.Report.Differences.Single(d => d.Bucket == "coop").Level);
-        site.VerifyNoOtherCalls();
-    }
-
-    [Fact]
-    public async Task HoldingMoreThanPiuGameReadsAsAheadOfSiteNotAsAProblem()
-    {
-        var runs = new Mock<IImportCheckRepository>();
-        runs.Setup(r => r.GetLatest(UserId, MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImportCheckRun(Guid.NewGuid(), UserId, MixEnum.Phoenix, Now, ImportCheckKind.Census,
-                64466, 64500, 2851, 2852, new[] { new CensusFinding("sub10", CensusFindingKind.Extra, 1) }));
-
-        var result = await Build(runs: runs)
-            .Handle(new GetLastImportCheckQuery(UserId, MixEnum.Phoenix), CancellationToken.None);
-
-        Assert.Equal(ImportCheckVerdict.AheadOfSite, result.Report!.Verdict);
-        Assert.Equal(0, result.Report.MissingCount);
-    }
-
-    [Fact]
-    public async Task NeverCheckedReadsAsNoReportWithAFullAllowance()
-    {
-        var result = await Build().Handle(new GetLastImportCheckQuery(UserId, MixEnum.Phoenix),
-            CancellationToken.None);
-
-        Assert.Null(result.Report);
-        Assert.Equal(3, result.DeepScansLeft);
-    }
-
     // ---- builders ----
 
     private static StartImportCheckCommand Start(bool deepScan = false)
     {
         return new StartImportCheckCommand(new TypedCredentialSource("user", "pass"), MixEnum.Phoenix,
-            "card", "TAG #1", deepScan);
+            "card", "TAG #1", deepScan, Array.Empty<string>());
     }
 
-    private static ExecuteImportCheckCommand Execute(bool deepScan = false, bool repair = false)
+    private static ExecuteImportCheckCommand Execute(bool deepScan = false, string[]? repairBuckets = null)
     {
-        return new ExecuteImportCheckCommand(UserId, MixEnum.Phoenix, "sid", "card", "TAG #1", deepScan, repair);
+        return new ExecuteImportCheckCommand(UserId, MixEnum.Phoenix, "sid", "card", "TAG #1", deepScan,
+            repairBuckets ?? Array.Empty<string>());
     }
 
-    /// <summary>A repository whose stored verdict already carries these findings.</summary>
-    private static Mock<IImportCheckRepository> Runs(params CensusFinding[] findings)
+    private static Chart Chart(Guid id)
     {
-        var runs = new Mock<IImportCheckRepository>();
-        runs.Setup(r => r.GetLatest(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ImportCheckRun(Guid.NewGuid(), UserId, MixEnum.Phoenix, Now, ImportCheckKind.Census,
-                64466, 63420, 2851, 2848, findings));
-        return runs;
+        return new ChartBuilder().WithId(id).WithType(ChartType.Single).WithLevel(18).Build();
     }
 
     private static AccountCensus Census(params (string Bucket, int Passes)[] buckets)
@@ -379,23 +298,14 @@ public sealed class ImportCheckSagaTests
                     new Dictionary<string, int>()), StringComparer.Ordinal), 64466);
     }
 
-    private static readonly Guid OtherChartId = Guid.NewGuid();
-
-    private static Chart Chart(Guid id, string song)
-    {
-        return new ChartBuilder().WithId(id).WithSongName(song).WithType(ChartType.Single).WithLevel(18).Build();
-    }
-
     private static RecordedPhoenixScore[] Records(int count)
     {
         return Enumerable.Range(0, count)
-            .Select(_ => new RecordedPhoenixScore(ChartId, PhoenixScore.From(990000),
-                PhoenixPlate.MarvelousGame, false, Now))
+            .Select(_ => new RecordedPhoenixScore(ChartId, PhoenixScore.From(990000), PhoenixPlate.MarvelousGame,
+                false, DateTimeOffset.UnixEpoch))
             .ToArray();
     }
 
-    /// <summary>Both slots free unless a test says otherwise — the per-user one and the site-wide
-    /// deep-scan one are independent refusals with different copy.</summary>
     private static Mock<IImportConcurrencyGuard> Guard(bool userSlot = true, bool deepSlot = true)
     {
         var guard = new Mock<IImportConcurrencyGuard>();
@@ -411,38 +321,34 @@ public sealed class ImportCheckSagaTests
             It.IsAny<CancellationToken>())).ReturnsAsync("sid");
         site.Setup(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
             It.IsAny<CancellationToken>())).ReturnsAsync(census ?? Census());
-        // The naming pass reads the levels that disagree; tests that care about which charts come
-        // back override this.
         site.Setup(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
                 It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<OfficialRecordedScore>)Array.Empty<OfficialRecordedScore>());
         return site;
     }
 
-    private static Mock<IMediator> Mediator()
+    private static Mock<IMediator> Mediator(int scansLeft = 3, bool spendGranted = true)
     {
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         mediator.Setup(m => m.Send(It.IsAny<RepairScoresCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
+        mediator.Setup(m => m.Send(It.IsAny<GetDeepScansRemainingQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(scansLeft);
+        mediator.Setup(m => m.Send(It.IsAny<SpendDeepScanCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(spendGranted);
         return mediator;
     }
 
     private static ImportCheckSaga Build(Mock<IBus>? bus = null, Mock<IImportConcurrencyGuard>? guard = null,
         Mock<IMediator>? mediator = null, Mock<IOfficialSiteClient>? site = null,
-        Mock<IImportCheckRepository>? runs = null, RecordedPhoenixScore[]? records = null)
+        RecordedPhoenixScore[]? records = null)
     {
-        guard ??= Guard();
-
         var charts = new Mock<IChartRepository>();
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
                 It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new ChartBuilder().WithId(ChartId).WithType(ChartType.Single).WithLevel(18).Build(),
-                new ChartBuilder().WithId(OtherChartId).WithType(ChartType.Single).WithLevel(18).Build()
-            });
+            .ReturnsAsync(new[] { Chart(ChartId), Chart(OtherChartId) });
 
         var scores = new Mock<IScoreReader>();
         scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -455,11 +361,9 @@ public sealed class ImportCheckSagaTests
             (bus ?? new Mock<IBus>()).Object,
             charts.Object,
             currentUser.Object,
-            FakeDateTime.At(Now).Object,
-            guard.Object,
+            (guard ?? Guard()).Object,
             (mediator ?? Mediator()).Object,
             (site ?? Site()).Object,
-            (runs ?? new Mock<IImportCheckRepository>()).Object,
             scores.Object);
     }
 }

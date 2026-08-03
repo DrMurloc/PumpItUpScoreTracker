@@ -73,4 +73,4 @@ internal sealed record CensusFinding(
 ///     One chart a check found, with the score piugame holds for it. "1 score missing" is a
 ///     support ticket; "Ugly duck Toccata S17, 996,408" is an answer.
 /// </summary>
-internal sealed record NamedChart(Guid ChartId, string Song, ChartType Type, int Level, int Score);
+internal sealed record NamedChart(Guid ChartId, int Score, int? CurrentScore);
