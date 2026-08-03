@@ -32,6 +32,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<ApproveToolCommand>,
     IRequestHandler<RejectToolCommand>,
     IRequestHandler<DeleteToolCommand>,
+    IRequestHandler<CheckToolRepositoryCommand, RepositoryCheckResult>,
     IRequestHandler<GetMyToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetAllToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetToolQuery, ToolRecord?>,
@@ -43,13 +44,16 @@ internal sealed class ToolManagementSaga :
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IMediator _mediator;
     private readonly IToolSecretReader _secrets;
+    private readonly IRepositoryReachabilityClient _repositories;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor dateTime, IMediator mediator, IToolSecretReader secrets,
-        IWebhookDeliveryClient client, IOptions<CommunityToolsConfiguration> configuration)
+        IWebhookDeliveryClient client, IOptions<CommunityToolsConfiguration> configuration,
+        IRepositoryReachabilityClient repositories)
     {
+        _repositories = repositories;
         _configuration = configuration;
         _tools = tools;
         _users = users;
@@ -162,6 +166,32 @@ internal sealed class ToolManagementSaga :
         await _tools.GrantShare(tool.Id, _currentUser.User.Id, ShareSource.Direct, _dateTime.Now,
             cancellationToken);
         return tool.Id;
+    }
+
+    /// <summary>
+    ///     Fetches the source repository anonymously and records whether it answered.
+    ///     <para>
+    ///         A failed check clears the previous proof rather than leaving it standing. A repository
+    ///         that has gone private is exactly the case this exists to catch, and a stale tick
+    ///         beside a dead link is worse than no tick at all.
+    ///     </para>
+    /// </summary>
+    public async Task<RepositoryCheckResult> Handle(CheckToolRepositoryCommand request,
+        CancellationToken cancellationToken)
+    {
+        var tool = await Manageable(request.ToolId, cancellationToken);
+        if (tool.RepositoryUrl is null)
+            throw ToolRepositoryRequiredException.ForMaker();
+
+        var outcome = await _repositories.Check(tool.RepositoryUrl, cancellationToken);
+
+        if (outcome.Reachable) tool.MarkRepositoryReachable(_dateTime.Now);
+        else tool.ClearRepositoryCheck();
+
+        await _tools.Save(tool, cancellationToken);
+
+        return new RepositoryCheckResult(outcome.Reachable,
+            outcome.Reachable ? null : outcome.Reason.ToString(), outcome.StatusCode);
     }
 
     public async Task Handle(UpdateToolCommand request, CancellationToken cancellationToken)

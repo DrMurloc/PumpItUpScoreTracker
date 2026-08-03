@@ -309,4 +309,132 @@ public sealed class ToolTests
 
         Assert.Equal(WebhookMode.PiuGameSession, tool.WebhookMode);
     }
+
+    private static readonly Uri Repository = new("https://github.com/errlena/pumbility-planner");
+
+    /// <summary>The three things that must be true before another player's scores are involved.</summary>
+    private static Tool ShareableTool()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumbility Planner"), Now,
+            Repository, "errlena", Now);
+        tool.MarkRepositoryReachable(Now);
+        return tool;
+    }
+
+    [Fact]
+    public void ANewToolCannotBeSharedWithAnyoneButItsMaker()
+    {
+        Assert.False(NewTool().CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void ARepositoryAndAHandleAndACheckTogetherOpenTheGate()
+    {
+        Assert.True(ShareableTool().CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void AnUncheckedRepositoryIsNotEnough()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
+            Repository, "errlena", Now);
+
+        Assert.False(tool.CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void ARepositoryWithoutAHandleIsNotEnough()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
+            Repository, null, Now);
+        tool.MarkRepositoryReachable(Now);
+
+        Assert.False(tool.CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void ABlankHandleDoesNotCountAsAHandle()
+    {
+        var tool = ShareableTool();
+        tool.SetDiscordHandle("   ");
+
+        Assert.False(tool.CanBeSharedWithOthers);
+    }
+
+    // Otherwise: check once, swap to anything. Same rule as the webhook proof, same reason.
+    [Fact]
+    public void ChangingTheRepositoryWithdrawsItsCheck()
+    {
+        var tool = ShareableTool();
+
+        tool.Describe(tool.Name, tool.Description, tool.Url,
+            new Uri("https://github.com/someone-else/a-different-thing"));
+
+        Assert.Null(tool.RepositoryCheckedAt);
+        Assert.False(tool.CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void SavingTheSameRepositoryAgainKeepsItsCheck()
+    {
+        var tool = ShareableTool();
+
+        tool.Describe(tool.Name, tool.Description, tool.Url, Repository);
+
+        Assert.Equal(Now, tool.RepositoryCheckedAt);
+    }
+
+    // The repository is printed beside the tool in the directory, so swapping it after approval is
+    // renaming wearing a different hat.
+    [Fact]
+    public void ChangingTheRepositoryOfAListedToolReturnsItToReview()
+    {
+        var tool = ListedTool();
+
+        tool.Describe(tool.Name, tool.Description, tool.Url, Repository);
+
+        Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
+        Assert.Null(tool.ApprovedAt);
+    }
+
+    [Theory]
+    [InlineData("https://github.com/errlena/planner", "errlena")]
+    [InlineData("https://gitlab.com/errlena/planner", "errlena")]
+    [InlineData("https://codeberg.org/errlena/planner/", "errlena")]
+    [InlineData("https://git.example.test/errlena", "errlena")]
+    public void TheRepositoryOwnerIsTheFirstPathSegment(string url, string expected)
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
+            new Uri(url), "errlena", Now);
+
+        Assert.Equal(expected, tool.RepositoryOwner);
+    }
+
+    [Fact]
+    public void ARepositoryHostWithNoPathHasNoOwner()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
+            new Uri("https://git.example.test/"), "errlena", Now);
+
+        Assert.Null(tool.RepositoryOwner);
+    }
+
+    // PIU Tracker arrived Public with 653 migrated players before the rule existed. Gating it would
+    // take a working integration away from them to enforce something written afterwards.
+    [Fact]
+    public void TheGrandfatheredToolIsShareableWithNothingSet()
+    {
+        var tool = Tool.Create(GrandfatheredTools.PiuTracker, Guid.NewGuid(),
+            Name.From("PIU Tracker"), Now);
+
+        Assert.True(tool.CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void AListedToolStillNeedsADescription()
+    {
+        var tool = ShareableTool();
+
+        Assert.Throws<ToolListingException>(() => tool.RequestListing());
+    }
 }

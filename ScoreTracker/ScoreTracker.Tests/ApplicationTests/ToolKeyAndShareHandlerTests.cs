@@ -31,6 +31,7 @@ public sealed class ToolKeyAndShareHandlerTests
 
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IToolSecretReader> _secrets = new();
+    private readonly Mock<IRepositoryReachabilityClient> _repositories = new();
     private readonly Mock<IWebhookDeliveryClient> _webhooks = new();
     private readonly Mock<IToolKeyRepository> _keys = new();
     private readonly Mock<IToolRepository> _tools = new();
@@ -224,7 +225,7 @@ public sealed class ToolKeyAndShareHandlerTests
     {
         return new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
             FakeDateTime.At(Now).Object, _mediator.Object, _secrets.Object, _webhooks.Object,
-            Options.Create(new CommunityToolsConfiguration()));
+            Options.Create(new CommunityToolsConfiguration()), _repositories.Object);
     }
 
     // Same guard owning a community carries. Without it: request deletion owning nothing, register
@@ -250,5 +251,55 @@ public sealed class ToolKeyAndShareHandlerTests
         await ManagementSaga().Handle(new CreateToolCommand("Planner"), CancellationToken.None);
 
         _tools.Verify(t => t.Save(It.IsAny<Tool>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private void ToolWithRepository(bool alreadyChecked)
+    {
+        var tool = Tool.Create(ToolId, MakerId, Name.From("Planner"), Now,
+            new Uri("https://github.com/errlena/planner"), "errlena", Now);
+        if (alreadyChecked) tool.MarkRepositoryReachable(Now);
+        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(tool);
+    }
+
+    [Fact]
+    public async Task ARepositoryThatAnswersIsRecordedAsChecked()
+    {
+        ToolWithRepository(alreadyChecked: false);
+        _repositories.Setup(r => r.Check(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryReachability.Ok(200));
+
+        var result = await ManagementSaga()
+            .Handle(new CheckToolRepositoryCommand(ToolId), CancellationToken.None);
+
+        Assert.True(result.Reachable);
+        _tools.Verify(t => t.Save(It.Is<Tool>(x => x.RepositoryCheckedAt == Now && x.CanBeSharedWithOthers),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // A repository that has gone private is the case this exists to catch, so a failing check has
+    // to withdraw the previous proof. A stale tick beside a dead link is worse than no tick.
+    [Fact]
+    public async Task ARepositoryThatStoppedAnsweringLosesItsCheck()
+    {
+        ToolWithRepository(alreadyChecked: true);
+        _repositories.Setup(r => r.Check(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryReachability.Failed(WebhookFailureReason.ClientError, 404));
+
+        var result = await ManagementSaga()
+            .Handle(new CheckToolRepositoryCommand(ToolId), CancellationToken.None);
+
+        Assert.False(result.Reachable);
+        Assert.Equal(404, result.StatusCode);
+        _tools.Verify(t => t.Save(It.Is<Tool>(x => x.RepositoryCheckedAt == null && !x.CanBeSharedWithOthers),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CheckingAToolWithNoRepositoryTellsTheMakerWhatToAdd()
+    {
+        await Assert.ThrowsAsync<ToolRepositoryRequiredException>(() => ManagementSaga()
+            .Handle(new CheckToolRepositoryCommand(ToolId), CancellationToken.None));
+
+        _repositories.Verify(r => r.Check(It.IsAny<Uri>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

@@ -26,6 +26,9 @@ public static class CommunityToolsRegistrationExtensions
         services.AddTransient<IWebhookDeliveryDispatcher, WebhookDeliveryDispatcher>();
         // A typed client, so the vertical owns its own outbound policy rather than borrowing one.
         services.AddHttpClient<IWebhookDeliveryClient, WebhookDeliveryClient>();
+        // Its own client rather than sharing the delivery one: this call must carry no credential
+        // of any kind, because proving a repository is publicly readable is the whole job.
+        services.AddHttpClient<IRepositoryReachabilityClient, RepositoryReachabilityClient>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         // The Domain port OfficialMirror hands a live piugame session to. Registered here rather
         // than by the CompositionRoot's reflection pass, which only scans ScoreTracker.Data.
