@@ -1,0 +1,278 @@
+@page "/Developers/{ToolId:guid}/code"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components.CommunityTools
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Developers"]</PageTitle>
+
+@* What replaced the integration guide.
+
+   On-site rather than in a repository because the snippets carry this tool's own values — the key
+   tail it actually holds, the URL it actually delivers to, the header it actually sends. A markdown
+   file can only ever show placeholders and hope the reader substitutes correctly.
+
+   Four languages, two groups. A maker arrives here either to call the API or to answer a delivery,
+   and those are different code. *@
+
+<ToolConsoleFrame Section="code" ToolId="ToolId" Context="tool">
+    <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
+        @L["Your key tail, your URL and your mixes are already filled in. Copy and run."]
+    </MudText>
+
+    <div class="d-flex gap-2 mb-3 flex-wrap">
+        @foreach (var group in new[] { (Key: "api", Label: L["API"].Value), (Key: "webhook", Label: L["Webhook"].Value) })
+        {
+            <MudButton Size="Size.Small" Color="Color.Primary"
+                       Variant="@(_group == group.Key ? Variant.Filled : Variant.Outlined)"
+                       OnClick="() => _group = group.Key">@group.Label</MudButton>
+        }
+    </div>
+
+    <div class="d-flex gap-1 mb-2 flex-wrap">
+        @foreach (var language in Languages)
+        {
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                     Color="@(_language == language.Key ? Color.Info : Color.Default)"
+                     OnClick="() => _language = language.Key">@language.Label</MudChip>
+        }
+    </div>
+
+    <div class="ct-secret ct-secret-wrap">
+        <pre>@Snippet()</pre>
+        <MudIconButton Class="ct-secret-copy" Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                       Color="Color.Default" aria-label=@L["Copy"] OnClick="Copy"></MudIconButton>
+    </div>
+
+    @if (_group == "webhook" && string.IsNullOrWhiteSpace(_context.WebhookUrl))
+    {
+        <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mt-2">
+            @L["Set a delivery URL on the Webhooks section and this fills in with yours."]
+        </MudText>
+    }
+
+    <div class="d-flex gap-2 mt-3 flex-wrap">
+        <MudButton Size="Size.Small" Variant="Variant.Outlined" Href="/swagger" Target="_blank"
+                   EndIcon="@Icons.Material.Filled.OpenInNew">@L["Swagger"]</MudButton>
+        <MudButton Size="Size.Small" Variant="Variant.Text" Target="_blank"
+                   Href="https://discord.gg/AvS5PxnvSN"
+                   EndIcon="@Icons.Material.Filled.OpenInNew">@L["Ask on Discord"]</MudButton>
+    </div>
+</ToolConsoleFrame>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavManager
+@code {
+    [Parameter] public Guid ToolId { get; set; }
+
+    private static readonly (string Key, string Label)[] Languages =
+    {
+        ("cs", "C#"), ("java", "Java"), ("py", "Python"), ("ts", "TypeScript")
+    };
+
+    private string _group = "api";
+    private string _language = "cs";
+    private ToolCodeContext _context = new(string.Empty, null, null, Array.Empty<MixEnum>());
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _context = await Mediator.Send(new GetToolCodeSamplesQuery(ToolId));
+    }
+
+    private string Base => NavManager.BaseUri.TrimEnd('/') + "/";
+
+    /// <summary>The tail, never a key — a snippet on screen is a snippet in a screenshot.</summary>
+    private string KeyText => string.IsNullOrWhiteSpace(_context.KeyTail)
+        ? "piu_scores_live_…"
+        : $"piu_scores_live_…{_context.KeyTail}";
+
+    private string Mix => _context.Mixes.Any() ? _context.Mixes[0].ToString() : "Phoenix2";
+
+    private string Header => string.IsNullOrWhiteSpace(_context.OutboundHeaderName)
+        ? "X-Your-Tool-Token"
+        : _context.OutboundHeaderName;
+
+    private string Route
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_context.WebhookUrl)) return "/hooks/piu";
+            return Uri.TryCreate(_context.WebhookUrl, UriKind.Absolute, out var uri)
+                ? uri.AbsolutePath
+                : "/hooks/piu";
+        }
+    }
+
+    private async Task Copy()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Snippet());
+        Snackbar.Add(L["Copied"].Value, Severity.Success);
+    }
+
+    private string Snippet() => (_group, _language) switch
+    {
+        ("api", "cs") => $$"""
+            var http = new HttpClient { BaseAddress = new("{{Base}}") };
+            http.DefaultRequestHeaders.Authorization = new("Bearer", "{{KeyText}}");
+
+            var page = await http.GetFromJsonAsync<ScorePage>(
+                "api/v2/players/me/scores?mix={{Mix}}");
+
+            // 100 per page. Follow `next` until it is null.
+            while (page!.Next is not null)
+                page = await http.GetFromJsonAsync<ScorePage>(page.Next);
+            """,
+
+        ("api", "java") => $$"""
+            var http = HttpClient.newHttpClient();
+            var mapper = new ObjectMapper();
+            String base = "{{Base}}";
+            String auth = "Bearer {{KeyText}}";
+
+            var request = HttpRequest.newBuilder()
+                    .uri(URI.create(base + "api/v2/players/me/scores?mix={{Mix}}"))
+                    .header("Authorization", auth)
+                    .build();
+
+            JsonNode page = mapper.readTree(http.send(request, BodyHandlers.ofString()).body());
+
+            // 100 per page. Follow `next` until it is null.
+            while (!page.path("next").isNull()) {
+                var more = HttpRequest.newBuilder()
+                        .uri(URI.create(base + page.get("next").asText()))
+                        .header("Authorization", auth)
+                        .build();
+                page = mapper.readTree(http.send(more, BodyHandlers.ofString()).body());
+            }
+            """,
+
+        ("api", "py") => $$"""
+            s = requests.Session()
+            s.headers["Authorization"] = "Bearer {{KeyText}}"
+            base = "{{Base}}"
+
+            page = s.get(base + "api/v2/players/me/scores", params={"mix": "{{Mix}}"}).json()
+
+            # 100 per page. Follow `next` until it is None.
+            while page["next"]:
+                page = s.get(base + page["next"]).json()
+            """,
+
+        ("api", "ts") => $$"""
+            const base = "{{Base}}";
+            const headers = { Authorization: "Bearer {{KeyText}}" };
+
+            let page = await (await fetch(
+              `${base}api/v2/players/me/scores?mix={{Mix}}`, { headers })).json();
+
+            // 100 per page. Follow `next` until it is null.
+            while (page.next)
+              page = await (await fetch(base + page.next, { headers })).json();
+            """,
+
+        ("webhook", "cs") => $$"""
+            [ApiController]
+            [Route("{{Route.TrimStart('/')}}")]
+            public sealed class PiuScoresController : ControllerBase
+            {
+                [HttpPost]
+                public async Task<IActionResult> Receive([FromBody] JsonElement body)
+                {
+                    if (Request.Headers["{{Header}}"] != _config.Token)
+                        return Unauthorized();
+
+                    // The verification call. Answer with your secret, nothing else.
+                    if (body.TryGetProperty("type", out var type)
+                        && type.GetString() == "url_verification")
+                        return Content(_config.VerificationSecret);
+
+                    // X-PIU-Delivery-Id is stable across retries — dedupe on it.
+                    if (!await _seen.Add(Request.Headers["X-PIU-Delivery-Id"]!))
+                        return Ok();
+
+                    foreach (var score in body.GetProperty("scores").EnumerateArray())
+                        await _store.Upsert(score);
+
+                    return Ok();
+                }
+            }
+            """,
+
+        ("webhook", "java") => $$"""
+            @RestController
+            public class PiuScoresController {
+
+                @PostMapping("{{Route}}")
+                public ResponseEntity<String> receive(
+                        @RequestHeader("{{Header}}") String token,
+                        @RequestHeader("X-PIU-Delivery-Id") String deliveryId,
+                        @RequestBody JsonNode body) {
+
+                    if (!config.token().equals(token))
+                        return ResponseEntity.status(401).build();
+
+                    // The verification call. Answer with your secret, nothing else.
+                    if ("url_verification".equals(body.path("type").asText()))
+                        return ResponseEntity.ok(config.verificationSecret());
+
+                    // X-PIU-Delivery-Id is stable across retries — dedupe on it.
+                    if (!seen.add(deliveryId))
+                        return ResponseEntity.ok().build();
+
+                    for (JsonNode score : body.path("scores"))
+                        store.upsert(score);
+
+                    return ResponseEntity.ok().build();
+                }
+            }
+            """,
+
+        ("webhook", "py") => $$"""
+            @app.post("{{Route}}")
+            async def piu(request: Request):
+                if request.headers.get("{{Header}}") != PIU_TOKEN:
+                    raise HTTPException(401)
+
+                body = await request.json()
+
+                # The verification call. Answer with your secret, nothing else.
+                if body.get("type") == "url_verification":
+                    return PlainTextResponse(PIU_VERIFICATION_SECRET)
+
+                # X-PIU-Delivery-Id is stable across retries — dedupe on it.
+                delivery_id = request.headers["X-PIU-Delivery-Id"]
+                if delivery_id in seen:
+                    return {"ok": True}
+                seen.add(delivery_id)
+
+                for score in body["scores"]:
+                    upsert(score)
+
+                return {"ok": True}
+            """,
+
+        _ => $$"""
+            app.post("{{Route}}", express.json(), (req, res) => {
+              if (req.header("{{Header}}") !== process.env.PIU_TOKEN)
+                return res.sendStatus(401);
+
+              // The verification call. Answer with your secret, nothing else.
+              if (req.body.type === "url_verification")
+                return res.type("text/plain").send(process.env.PIU_VERIFICATION_SECRET);
+
+              // X-PIU-Delivery-Id is stable across retries — dedupe on it.
+              const id = req.header("X-PIU-Delivery-Id")!;
+              if (seen.has(id)) return res.sendStatus(200);
+              seen.add(id);
+
+              for (const score of req.body.scores) upsert(score);
+
+              res.sendStatus(200);
+            });
+            """
+    };
+}

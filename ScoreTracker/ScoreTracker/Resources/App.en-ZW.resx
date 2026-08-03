@@ -5204,6 +5204,9 @@
   <data name="Sessions per page" xml:space="preserve">
     <value>Glorgmaglgro morg urggrgl</value>
   </data>
+  <data name="Set a delivery URL on the Webhooks section and this fills in with yours." xml:space="preserve">
+    <value>Blorp murpo URL la Bloop grog, opa mo murgloo murgm.</value>
+  </data>
   <data name="Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key." xml:space="preserve">
     <value>Marogl pragl opa PIUGAME grumba — mo marogl bloop am pragl olo.</value>
   </data>
@@ -6605,6 +6608,9 @@
   <data name="weaker" xml:space="preserve">
     <value>morgmrgl</value>
   </data>
+  <data name="Webhook" xml:space="preserve">
+    <value>Bloop</value>
+  </data>
   <data name="Webhooks" xml:space="preserve">
     <value>Grumba blorp</value>
   </data>
@@ -6989,6 +6995,9 @@
   </data>
   <data name="Your key" xml:space="preserve">
     <value>Grumb am olo</value>
+  </data>
+  <data name="Your key tail, your URL and your mixes are already filled in. Copy and run." xml:space="preserve">
+    <value>Murgm blarglurp, murgm URL opa murgm Mrgrgl murgloo blorp. Blorp opa murp.</value>
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>Gromurp grorpmurm lurgmrmorg rglmagl grrglgroplgl glgrgl gromurp grorpglorg glorggl.</value>

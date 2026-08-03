@@ -5156,6 +5156,9 @@
   <data name="Sessions per page" xml:space="preserve">
     <value>Sesiones por página</value>
   </data>
+  <data name="Set a delivery URL on the Webhooks section and this fills in with yours." xml:space="preserve">
+    <value>Pon una URL de entrega en la sección Webhooks y esto se rellenará con la tuya.</value>
+  </data>
   <data name="Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key." xml:space="preserve">
     <value>Define una cabecera antes de pasar al modo sesión de PIUGame: ese modo entrega a tu servidor una llave activa de piugame.com.</value>
   </data>
@@ -6542,6 +6545,9 @@
   <data name="weaker" xml:space="preserve">
     <value>más débil</value>
   </data>
+  <data name="Webhook" xml:space="preserve">
+    <value>Webhook</value>
+  </data>
   <data name="Webhooks" xml:space="preserve">
     <value>Webhooks</value>
   </data>
@@ -6919,6 +6925,9 @@
   </data>
   <data name="Your key" xml:space="preserve">
     <value>Tu llave</value>
+  </data>
+  <data name="Your key tail, your URL and your mixes are already filled in. Copy and run." xml:space="preserve">
+    <value>Tu final de llave, tu URL y tus versiones ya están puestos. Copia y ejecuta.</value>
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>Tu historial de nivel comenzará a registrarse con tu próxima importación.</value>
