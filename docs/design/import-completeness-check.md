@@ -1,9 +1,15 @@
 # Import Completeness Check
 
-Status: **built** on `claude/pumbility-mismatch-detector-378a55`, not yet PR'd. Fast suites green
-(1941 / 65 / 538); integration green. **Deferred: the nine-locale sweep** — the panel's strings
-render English by key-fallback and the locale-parity ratchet stays green because no locale carries
-the keys yet.
+Status: **built** on `claude/pumbility-mismatch-detector-378a55`, not yet PR'd. Suites green
+(2053 / 148 / 560 / 209). **Deferred: the nine-locale sweep** — the panel's strings render English
+by key-fallback and the locale-parity ratchet stays green because no locale carries the keys yet.
+
+> **Nothing about a check is persisted** (owner call, 2026-08-03, after field-testing a verdict
+> that survived an app restart). A table, a migration, a repository and the vertical's first purge
+> manifest were disproportionate machinery for remembering a sentence for a few minutes. The
+> result rides `ImportCheckCompletedEvent` to whichever circuit is still listening and lives in
+> the page until the player navigates away — which is what the panel's "stay on this page" line is
+> buying. The one thing that genuinely outlives a session is the deep-scan allowance (§5).
 
 ## 1. The problem
 
@@ -147,11 +153,16 @@ Exactly five, and the UI says which one it is.
 
 | Outcome | Meaning | Action offered |
 |---|---|---|
-| **In sync** | every level and cell agrees | none |
-| **Missing scores** | the site has passes we do not | named list + *Add these scores* |
-| **Out-of-date scores** | histogram disagrees at matching totals | named list + *Update these scores* |
-| **Unrecognised charts** | the site lists charts our catalog lacks | reported to the admin inbox automatically |
-| **Nothing found** | census clean, player still disagrees | *Deep scan* (credited, §5) |
+| **In sync** | every level and cell agrees | *Deep scan* (credited, §5) |
+| **Needs attention** | the site has passes we do not, and/or we hold a score it has beaten | **one named list**, both kinds together + *Add these N scores* |
+| **Unrecognised charts** | the site lists charts our catalog lacks | not built — see §11 |
+
+Missing and out-of-date are **one verdict and one list**, never two views: an account can be short
+a chart and behind on another at the same time, and splitting them would make the player fix the
+same account twice. A row that carries the score we already hold is one they have beaten since
+their last import — that "was" is the entire distinction, so the rows need no other label.
+
+There is no *check again* button. Re-running an unchanged account returns the same verdict.
 
 A level where **we** hold more than the site is not an error — it is a CSV import, a manual entry,
 or a chart the site retired. It never triggers a repair and is not shown by default.
@@ -162,6 +173,10 @@ A full walk of `my_best_score.php` ignoring the up-score window: `ceil(total / 1
 for a 2,851-chart account. This is the escape hatch for "the census says clean and I still
 disagree", and the only repair for a same-band stale score.
 
+- **A balance on the user row**, not a dated usage count: `User.DeepScansRemaining`, refilled to
+  `DeepScanAllowance.PerMonth` by the `reset-deep-scans` Hangfire job on the 1st. Granting someone
+  extra scans is then a single UPDATE that survives until the next reset. The spend is one guarded
+  UPDATE, so two tabs racing the last scan produce one grant and one refusal.
 - **3 per calendar month per user.** Admins exempt.
 - **Only a blind deep scan burns a credit.** A repair the census localised is bounded and
   evidence-driven, so it is free — credits govern "walk everything", not "fix what we found".
@@ -210,7 +225,8 @@ Everything scraping-side is **OfficialMirror** — it is the PiuGame anti-corrup
 | Census normalisation (cumulative→exact, bucket→level) | `OfficialMirror/Domain`, pure and unit-testable |
 | `StartImportCheckCommand` → `RunImportCheckCommand` (bus) → consumer → saga | mirrors `StartOfficialImportCommand` exactly, including `SetScopedUser` |
 | `GetLastImportCheckQuery`, `ImportCheckReport` record | `OfficialMirror/Contracts` |
-| `ImportCheckRun` entity (UserId, MixId, RanAt, Kind, OfficialTotal, OurTotal, FindingsJson) | `OfficialMirror/Infrastructure/Entities`, registered via its `IDbModelContribution` |
+| `ImportCheckCompletedEvent` (the verdict itself — nothing stores it) | `OfficialMirror/Contracts/Events`, bridged to `UiTopics.User` |
+| `User.DeepScansRemaining` + `SpendDeepScanCommand` / `GetDeepScansRemainingQuery` / `ResetDeepScansCommand` | `ScoreTracker.Data` entity; Identity owns the operations |
 | Progress + completion to the UI | the existing `IUiNotificationHub` user topic, via a bridge |
 
 The new table carries a `UserId`, so it must be named in OfficialMirror's `UserOwned` purge
@@ -228,7 +244,7 @@ the catalog reader) — no new cross-vertical reference.
 - **Component** (`ApplicationTests`): the saga against mocked ports — each of the five outcomes,
   the credit ledger, and that a localised repair does not burn a credit.
 - **Component** (`Tests.Components`): the panel's five states.
-- **Integration**: `ImportCheckRun` round-trip and the purge.
+- **Integration**: the deep-scan balance — an atomic spend that never oversells, and a reset that refills every row.
 - **Exploration**: `OfficialCensusProbeTests` stays as the grammar canary. The build should extend
   it once to assert the census agrees with our stored counts **at every level** on a real account,
   not just in aggregate — that is the check §3.2 exists because of.
@@ -253,12 +269,12 @@ with **no new project reference and no new cross-vertical port**. Nothing is add
 
 | Layer | Location | New types |
 |---|---|---|
-| Contracts *(public)* | `OfficialMirror/Contracts` | `StartImportCheckCommand`, `StartDeepScanCommand`, `GetLastImportCheckQuery`, `ImportCheckReport` + findings, `Messages/RunImportCheckCommand`, `Events/ImportCheckCompletedEvent` |
-| Domain *(internal)* | `OfficialMirror/Domain` | `OfficialCensus`/`LevelCensus`, `CensusNormalizer`, `CensusDiff`, `IImportCheckRepository`, `IOfficialSiteClient` additions |
+| Contracts *(public)* | `OfficialMirror/Contracts` | `StartImportCheckCommand`, `ImportCheckReport` + findings, `Messages/RunImportCheckCommand`, `Events/ImportCheckCompletedEvent` |
+| Domain *(internal)* | `OfficialMirror/Domain` | `AccountCensus`/`CensusBucket`, `CensusBuckets`, `LocalCensusBuilder`, `CensusDiff`, `IOfficialSiteClient` additions |
 | Application *(internal)* | `OfficialMirror/Application` | `ImportCheckSaga`, `StartImportCheckHandler`, `RunImportCheckConsumer`, `ExecuteImportCheckCommand` |
-| Infrastructure *(internal)* | `OfficialMirror/Infrastructure` | `PiuGameApi` parsers + DTOs, `OfficialSiteClient.GetOfficialCensus`, `ImportCheckRunEntity`, `EFImportCheckRepository`, `EFAccountPurgeRepository.UserOwned` |
+| Infrastructure *(internal)* | `OfficialMirror/Infrastructure` | `PiuGameApi` parsers + DTOs, `OfficialSiteClient.GetOfficialCensus` and `GetBestScoresIn` |
 | Wiring *(public)* | `OfficialMirror/Wiring` | model-contribution row, DI, consumer registration |
-| Data | `ScoreTracker.Data/Migrations` | `AddImportCheckRun` |
+| Data | `ScoreTracker.Data` | `UserEntity.DeepScansRemaining` + `AddUserDeepScansRemaining`; `IUserRepository` gains the spend/read/reset trio |
 | Web | `Pages/UploadPhoenixScores.razor`, `Components/ScoreCheckPanel.razor` | the panel |
 
 **Infrastructure scrapes, Domain compares, Application orchestrates.** `GetOfficialCensus` returns
@@ -267,10 +283,10 @@ function under unit test. The `Start*` (circuit) → `Run*` (bus) → `Execute*`
 triplet is copied from the import path verbatim, including **`SetScopedUser`, never
 `SetCurrentUser`**.
 
-⚠ **OfficialMirror has no `UserOwned` purge manifest today** — its purge only *unlinks*
-`OfficialPlayerEntity`, which sits in `AccountPurgeCoverageTests.Exempt` with a written reason.
-`ImportCheckRun` carries a `UserId`, so this feature introduces that vertical's first manifest and
-delete loop, covered by the decoy-account integration test.
+**OfficialMirror still has no `UserOwned` purge manifest**, and that is now a feature of the
+design rather than a gap in it: the vertical owns no user-keyed table, so its purge stays the
+one-line unlink of `OfficialPlayerEntity` it has always been. The allowance lives on the `User`
+row, which the account purge already removes.
 
 ### Commit order
 
@@ -279,15 +295,18 @@ delete loop, covered by the decoy-account integration test.
 | C1 | ✅ ACL parsers + captured fixtures | 11 approval tests, both mixes |
 | C2 | ✅ census normalisation + diff; probe reconciles per level | 21 `DomainTests` + the probe |
 | C3 | ✅ `GetOfficialCensus` scrape orchestration | 7 component tests |
-| C4 | ✅ entity, migration, repository, purge manifest, schema doc | 10 integration tests |
-| C5 | ✅ Start/Run/Execute triplet + saga + credit ledger | 14 component tests |
+| C4 | ⛔ **reverted** — the run table and its purge manifest | replaced by "nothing is stored" |
+| C5 | ✅ Start/Run/Execute triplet + saga | 14 component tests |
 | C6 | ✅ repair path and deep scan (one walk, buckets or none) | folded into C5's suite |
-| C7 | ✅ UI panel + hub subscription | 10 bUnit tests |
-| C8 | ⛔ l10n ×9 | deferred — English by key-fallback |
+| C7 | ✅ UI panel + hub subscription | 12 bUnit tests |
+| D1 | ✅ allowance as a balance on `User` + monthly Hangfire reset | 5 integration tests, incl. an 8-way spend race |
+| D2 | ✅ persistence out; one findings list; song art | the suites above |
+| D3 | ⛔ l10n ×9 | deferred — English by key-fallback |
 
-Two things were scoped and then dropped, both recorded above rather than silently: an automatic
-check at the tail of every import (§6, owner call) and the drill-in enumeration-cost choice (§2.4,
-the modal carries no score so there was never a choice).
+Four things were scoped and then dropped, recorded here rather than silently: an automatic check
+at the tail of every import (§6, owner call); the drill-in enumeration-cost choice (§2.4 — the
+modal carries no score, so there was never a choice); persisting the verdict (the header note);
+and a *check again* button (§4 — an unchanged account returns the same verdict).
 
 **Not yet built**: unmappable sightings from a check do not yet reach the `OfficialMissingChart`
 admin inbox (§3.4). The census reports the level as short; the catalog gap behind it still needs
