@@ -111,6 +111,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.OfficialFolderRecord` | Record book per folder (mix + type + level): all-time high score across the folder's boards |
 | `scores.OfficialWeeklyHighlight` | Editorial weekly highlights computed at import (movers, boards climbed, new #1s, grade firsts, plus the This Week hero's playerless summary rows: pulse, gainers, debuts, floor marks); rebuildable from snapshots |
 | `scores.OfficialPlayerRenameProposal` | Detected likely renames awaiting admin accept/dismiss; survives merges as the audit trail |
+| `scores.ImportCheckRun` | One completeness check per row (census or deep scan): official-vs-local pass counts, PUMBILITY, and the findings as JSON. Serves the panel's standing verdict, the 3-a-month deep-scan ledger, and the summary a player copies to Discord. The mirror's only user-owned table — purged with the account, where the rest of the vertical is merely unlinked |
 
 ## Weekly Challenge (vertical: `ScoreTracker.WeeklyChallenge`)
 

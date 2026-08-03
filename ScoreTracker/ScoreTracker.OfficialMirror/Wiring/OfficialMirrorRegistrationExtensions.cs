@@ -37,6 +37,7 @@ public static class OfficialMirrorRegistrationExtensions
         services.AddTransient<IOfficialRecordRepository, EFOfficialRecordRepository>();
         services.AddTransient<IOfficialPlayerIdentityRepository, EFOfficialPlayerIdentityRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
+        services.AddTransient<IImportCheckRepository, EFImportCheckRepository>();
         // Singleton: the in-flight-import set is shared across every request and the bus consumer.
         services.AddSingleton<IImportConcurrencyGuard, ImportConcurrencyGuard>();
         services.AddSingleton<IDbModelContribution, OfficialMirrorModelContribution>();
