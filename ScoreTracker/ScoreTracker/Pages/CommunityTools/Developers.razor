@@ -119,6 +119,22 @@ else
                 }
             </div>
 
+            @* Nothing is notified when this is pressed — no email, no bot, no queue anybody
+               watches. Saying so, and naming the step that actually moves it, is the difference
+               between a maker waiting a week and a maker getting listed. *@
+            @if (_selected.Visibility == ToolVisibility.PendingApproval)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                    <MudText Typo="Typo.body2"><b>@L["Waiting on a human — give them a nudge"]</b></MudText>
+                    <MudText Typo="Typo.body2">
+                        @L["Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime."]
+                    </MudText>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Class="mt-1"
+                               Target="_blank" Href="https://discord.gg/AvS5PxnvSN"
+                               EndIcon="@Icons.Material.Filled.OpenInNew">@L["Ask on Discord"]</MudButton>
+                </MudAlert>
+            }
+
             @if (_selected.Visibility == ToolVisibility.Rejected
                  && !string.IsNullOrWhiteSpace(_selected.RejectionReason))
             {
@@ -332,7 +348,7 @@ else
             return;
         }
 
-        Snackbar.Add(L["Sent for review"].Value, Severity.Success);
+        Snackbar.Add(L["Marked for review — now go ask on Discord"].Value, Severity.Success);
         await Reload();
     }
 

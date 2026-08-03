@@ -330,8 +330,8 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>만료가 없는 키는 직접 취소할 때까지 유효합니다 — 노트북을 잃어버리거나 저장소가 공개된 뒤에도요. 특별한 이유가 없다면 날짜를 정하세요.</value>
   </data>
-  <data name="A listed tool appears in the directory and can accept players who share with all tools. You keep working while it's reviewed." xml:space="preserve">
-    <value>등록된 도구는 목록에 표시되고 모든 도구와 공유하는 플레이어를 받을 수 있습니다. 검토 중에도 계속 작업할 수 있습니다.</value>
+  <data name="A listed tool appears in the directory and can accept players who share with all tools. Ask on Discord once you've marked it — nothing is sent automatically." xml:space="preserve">
+    <value>목록에 오른 도구는 디렉터리에 표시되며 '모든 도구와 공유'를 켠 플레이어도 받을 수 있습니다. 표시한 뒤 디스코드에 알려 주세요 — 자동으로 전달되지 않습니다.</value>
   </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>라이프 100에서의 Miss. 라이프가 줄수록 Miss는 싸집니다.</value>
@@ -2898,6 +2898,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>수동 가져오기 — 콘솔 스크립트 + CSV</value>
   </data>
+  <data name="Marked for review — now go ask on Discord" xml:space="preserve">
+    <value>검토 대기로 표시됨 — 이제 디스코드에 알려 주세요</value>
+  </data>
   <data name="Match Current Mix" xml:space="preserve">
     <value>현재 시리즈에 맞추기</value>
   </data>
@@ -3497,6 +3500,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>이 폴더의 채보는 인기 보드에 없습니다.</value>
+  </data>
+  <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
+    <value>요청해도 자동으로 전달되는 알림은 없습니다. PIU Scores 디스코드에 글을 남기면 누군가 확인합니다. 그동안에도 도구는 계속 작동합니다.</value>
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>아직 기록이 없습니다</value>
@@ -4919,9 +4925,6 @@
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>PIU Tracker 등 커뮤니티 도구로 점수를 보내는 설정은 다음에서 관리합니다:</value>
   </data>
-  <data name="Sent for review" xml:space="preserve">
-    <value>검토 요청됨</value>
-  </data>
   <data name="Sent — check the activity log for the result." xml:space="preserve">
     <value>전송했습니다 — 결과는 활동 기록에서 확인하세요.</value>
   </data>
@@ -6247,6 +6250,9 @@
   </data>
   <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
     <value>또래 대비: 비슷한 경쟁 레벨 플레이어 대비 내 스코어 순위를, 이 폴더에서 해당 스킬이 있는 채보들로 평균한 값입니다. 회색 스킬은 아직 투표할 만큼 근거가 없습니다.</value>
+  </data>
+  <data name="Waiting on a human — give them a nudge" xml:space="preserve">
+    <value>사람이 확인해야 합니다 — 한 번 알려 주세요</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>성장하는 자신을 지켜보세요</value>

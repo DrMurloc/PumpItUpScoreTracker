@@ -330,8 +330,8 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to.</value>
   </data>
-  <data name="A listed tool appears in the directory and can accept players who share with all tools. You keep working while it's reviewed." xml:space="preserve">
-    <value>A listed tool appears in the directory and can accept players who share with all tools. You keep working while it's reviewed.</value>
+  <data name="A listed tool appears in the directory and can accept players who share with all tools. Ask on Discord once you've marked it — nothing is sent automatically." xml:space="preserve">
+    <value>A listed tool appears in the directory and can accept players who share with all tools. Ask on Discord once you've marked it — nothing is sent automatically.</value>
   </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>A miss at 100 life. Misses get cheaper as you drain.</value>
@@ -2920,6 +2920,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Manual import — console script + CSV</value>
   </data>
+  <data name="Marked for review — now go ask on Discord" xml:space="preserve">
+    <value>Marked for review — now go ask on Discord</value>
+  </data>
   <data name="Match Current Mix" xml:space="preserve">
     <value>Match Current Mix</value>
   </data>
@@ -3528,6 +3531,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Nothing from this folder is on the popularity board.</value>
+  </data>
+  <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
+    <value>Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime.</value>
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>Nothing here yet</value>
@@ -4967,9 +4973,6 @@
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>Sending your scores to PIU Tracker or another community tool is managed from</value>
   </data>
-  <data name="Sent for review" xml:space="preserve">
-    <value>Sent for review</value>
-  </data>
   <data name="Sent — check the activity log for the result." xml:space="preserve">
     <value>Sent — check the activity log for the result.</value>
   </data>
@@ -6310,6 +6313,9 @@
   </data>
   <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
     <value>Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet.</value>
+  </data>
+  <data name="Waiting on a human — give them a nudge" xml:space="preserve">
+    <value>Waiting on a human — give them a nudge</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Watch yourself climb</value>

@@ -90,7 +90,7 @@
             Tool is not null && Tool.ConnectedPlayers > 1);
 
         yield return new Step(L["Ask to be listed"].Value,
-            L["A listed tool appears in the directory and can accept players who share with all tools. You keep working while it's reviewed."].Value,
+            L["A listed tool appears in the directory and can accept players who share with all tools. Ask on Discord once you've marked it — nothing is sent automatically."].Value,
             Tool is { Visibility: ToolVisibility.Public });
     }
 }

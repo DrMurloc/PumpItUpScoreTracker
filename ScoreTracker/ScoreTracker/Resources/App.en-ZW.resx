@@ -330,8 +330,8 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>Blarglurp murm bo murgloo murmo mublu murgm gromurp murgloo blu blomurp — murm blorm murgblarg murmo arplo mrpgrogl murgm Mrglrgll. Murgargl murgl murgm gromurp bam murgblub.</value>
   </data>
-  <data name="A listed tool appears in the directory and can accept players who share with all tools. You keep working while it's reviewed." xml:space="preserve">
-    <value>Rorgl mrpgrogl murgl blu grog murm murp argla Morp murgblub blu argla Rorgl. Gromurp murmo murpmurp murgloo murgm murgargl.</value>
+  <data name="A listed tool appears in the directory and can accept players who share with all tools. Ask on Discord once you've marked it — nothing is sent automatically." xml:space="preserve">
+    <value>Blurgl marogl bloop am pragl opa golba grumba la marogl. Golba la Discord opa marogl bo — alla blorp mo.</value>
   </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>GRO murpblarg mr 100 glorgrgl. Blubgl blarg mrarglmurm lurg blub murpgl.</value>
@@ -2920,6 +2920,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Murggrgl glorggl — blubmrmr blubblgrl + CSV</value>
   </data>
+  <data name="Marked for review — now go ask on Discord" xml:space="preserve">
+    <value>Marogl bo grumba — opa golba la Discord</value>
+  </data>
   <data name="Match Current Mix" xml:space="preserve">
     <value>Romagl Grglblargblarg Mrg</value>
   </data>
@@ -3528,6 +3531,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Blarggllurg romurg grglmrp grrgllurg urg lurg mrp grorpmorgmurm mrglblarg.</value>
+  </data>
+  <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
+    <value>Alla blorp mo golba, opa marogl la piuscores Discord opa bloop am olo. Grumb blurgl pragl.</value>
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>Bam murgm blorm</value>
@@ -4967,9 +4973,6 @@
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>Grumba PIU Tracker olo maglub bloop, roggl argla:</value>
   </data>
-  <data name="Sent for review" xml:space="preserve">
-    <value>Murpo blu murgargl</value>
-  </data>
   <data name="Sent — check the activity log for the result." xml:space="preserve">
     <value>Murpo blorm — argla murgblarg blu murmo.</value>
   </data>
@@ -6310,6 +6313,9 @@
   </data>
   <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
     <value>Grrgl. Maglmurp: gro gromurp mgrlgmrg glorgplgl murmlurgmurp morp mrgl maglarglblgrl arglrglmrmurm grorpmurm, blubrorgmagl grglglorg grglmrp blargblgrlmurp murgl arglplglblub mrp morgmurm. Glgrorp blarglurg glorggrrgl mrglro mrpgl grrglgrorpblarg grgl glorgmagl argl.</value>
+  </data>
+  <data name="Waiting on a human — give them a nudge" xml:space="preserve">
+    <value>Marogl bloop grumba — golba la</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Grorplurg lurgblgrlmurm rglmagl</value>

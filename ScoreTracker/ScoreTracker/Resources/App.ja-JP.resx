@@ -330,8 +330,8 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>期限のないキーは、手動で取り消すまで有効です — ノートPCを失くした後も、リポジトリが公開された後も。理由がなければ日付を選んでください。</value>
   </data>
-  <data name="A listed tool appears in the directory and can accept players who share with all tools. You keep working while it's reviewed." xml:space="preserve">
-    <value>掲載されたツールは一覧に表示され、すべてのツールと共有するプレイヤーを受け入れられます。審査中も作業は続けられます。</value>
+  <data name="A listed tool appears in the directory and can accept players who share with all tools. Ask on Discord once you've marked it — nothing is sent automatically." xml:space="preserve">
+    <value>掲載されたツールはディレクトリに並び、「すべてのツールと共有」を選んだプレイヤーも受け取れます。印を付けたら Discord で声をかけてください — 自動では届きません。</value>
   </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>体力100での Miss。減るほど Miss は安くなります。</value>
@@ -2920,6 +2920,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>手動インポート — コンソールスクリプト + CSV</value>
   </data>
+  <data name="Marked for review — now go ask on Discord" xml:space="preserve">
+    <value>確認待ちにしました — Discord で声をかけてください</value>
+  </data>
   <data name="Match Current Mix" xml:space="preserve">
     <value>現在のバージョンに合わせる</value>
   </data>
@@ -3528,6 +3531,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>このフォルダーの譜面は人気ボードに入っていません。</value>
+  </data>
+  <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
+    <value>申請しても自動で通知は飛びません。PIU Scores の Discord に書き込めば誰かが見ます。その間もツールは動き続けます。</value>
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>まだ記録はありません</value>
@@ -4967,9 +4973,6 @@
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>PIU Tracker などのコミュニティツールへのスコア送信は、こちらで管理します:</value>
   </data>
-  <data name="Sent for review" xml:space="preserve">
-    <value>審査に送信しました</value>
-  </data>
   <data name="Sent — check the activity log for the result." xml:space="preserve">
     <value>送信しました — 結果はアクティビティで確認してください。</value>
   </data>
@@ -6310,6 +6313,9 @@
   </data>
   <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
     <value>同レベル比: 競技レベルが近いプレイヤーに対するあなたのスコアの位置を、このフォルダでそのスキルを持つ譜面で平均したものです。グレーのスキルはまだ投票に足るデータがありません。</value>
+  </data>
+  <data name="Waiting on a human — give them a nudge" xml:space="preserve">
+    <value>人の確認待ちです — ひと声かけてください</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>自分の成長を見よう</value>

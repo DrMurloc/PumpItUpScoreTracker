@@ -330,8 +330,8 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>Una chiave senza scadenza resta valida finché non la revochi a mano — anche dopo aver perso un portatile o dopo che un repository diventa pubblico. Scegli una data, se non hai un motivo per non farlo.</value>
   </data>
-  <data name="A listed tool appears in the directory and can accept players who share with all tools. You keep working while it's reviewed." xml:space="preserve">
-    <value>Uno strumento in elenco compare nel catalogo e può accettare i giocatori che condividono con tutti gli strumenti. Continui a lavorare mentre viene rivisto.</value>
+  <data name="A listed tool appears in the directory and can accept players who share with all tools. Ask on Discord once you've marked it — nothing is sent automatically." xml:space="preserve">
+    <value>Uno strumento elencato compare nella directory e può accettare i giocatori che condividono con tutti. Fatti sentire su Discord dopo averlo segnato: non viene inviato niente in automatico.</value>
   </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>Un Miss a 100 di vita. I Miss costano meno man mano che ti svuoti.</value>
@@ -2920,6 +2920,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Importazione manuale — script da console + CSV</value>
   </data>
+  <data name="Marked for review — now go ask on Discord" xml:space="preserve">
+    <value>Segnato per la revisione — ora fatti sentire su Discord</value>
+  </data>
   <data name="Match Current Mix" xml:space="preserve">
     <value>Segui il Mix attuale</value>
   </data>
@@ -3528,6 +3531,9 @@
   </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Niente di questa cartella è nella classifica di popolarità.</value>
+  </data>
+  <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
+    <value>Chiederlo non invia niente, quindi scrivi sul Discord di PIU Scores e qualcuno darà un'occhiata. Nel frattempo il tuo strumento continua a funzionare.</value>
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>Ancora niente qui</value>
@@ -4967,9 +4973,6 @@
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>L'invio dei tuoi punteggi a PIU Tracker o a un altro strumento della community si gestisce da</value>
   </data>
-  <data name="Sent for review" xml:space="preserve">
-    <value>Inviato in revisione</value>
-  </data>
   <data name="Sent — check the activity log for the result." xml:space="preserve">
     <value>Mandata — guarda il risultato nell'attività.</value>
   </data>
@@ -6310,6 +6313,9 @@
   </data>
   <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
     <value>Vs. pari: come si piazzano i tuoi punteggi rispetto a giocatori di livello competitivo simile, in media sui chart di questa cartella con quell'abilità. Le abilità in grigio non hanno ancora dati sufficienti per votare.</value>
+  </data>
+  <data name="Waiting on a human — give them a nudge" xml:space="preserve">
+    <value>Serve che ci guardi una persona — fatti sentire</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Guardati salire</value>
