@@ -22,6 +22,7 @@ public sealed class OfficialMirrorModelContribution : IDbModelContribution
         player.HasIndex(e => new { e.MixId, e.Username }).IsUnique();
         player.HasIndex(e => e.UserId);
 
+
         var snapshot = modelBuilder.Entity<OfficialLeaderboardSnapshotEntity>()
             .ToTable("OfficialLeaderboardSnapshot");
         snapshot.HasIndex(e => new { e.MixId, e.CompletedAt });

@@ -176,6 +176,62 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
     }
 
     /// <summary>
+    ///     A region we ship no catalogue for still gets its language. Chile, Peru and Argentina
+    ///     are a large share of the playerbase and none of their tags match es-MX or es-ES on
+    ///     their own — request localization only falls back upward, so before the downward
+    ///     mapping these visitors read an English front door.
+    /// </summary>
+    [Theory]
+    [InlineData("es-CL")]
+    [InlineData("es-PE,es;q=0.9,en;q=0.8")]
+    [InlineData("es")]
+    public async Task TheFrontDoorSpeaksSpanishToSpanishBrowsersWeHaveNoCatalogueFor(string acceptLanguage)
+    {
+        var body = await GetFrontDoorWithLanguage(acceptLanguage);
+
+        // The encoder escapes non-ASCII, so the assert stops before the accent in "sesión".
+        Assert.Contains("Iniciar sesi", body);
+    }
+
+    /// <summary>
+    ///     The owner's requirement, stated plainly: no error page on a culture nobody tested a
+    ///     browser in. These headers are unplaceable, wildcard, or outright malformed — every
+    ///     one has to render the English front door rather than throw on the request path.
+    /// </summary>
+    [Theory]
+    [InlineData("zz-ZZ")]
+    [InlineData("de-DE,de;q=0.9")]
+    [InlineData("zh-Hans-CN")]
+    [InlineData("*")]
+    [InlineData("")]
+    [InlineData("---")]
+    [InlineData("!!!;q=notanumber")]
+    [InlineData("en-US;q=0.9,,,;;;")]
+    public async Task AnUnplaceableAcceptLanguageStillRendersTheFrontDoor(string acceptLanguage)
+    {
+        var body = await GetFrontDoorWithLanguage(acceptLanguage);
+
+        Assert.Contains(">Sign in<", body);
+    }
+
+    // "an exactly-supported tag is never re-regioned" is deliberately NOT an E2E fact: es-MX and
+    // es-ES render the same string for every key on this page, so the assertion could not fail
+    // for the reason it claimed. SupportedCulturesTests pins it where it is actually visible.
+
+    private async Task<string> GetFrontDoorWithLanguage(string acceptLanguage)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/Welcome");
+        // Without validation on purpose — half these headers are deliberately malformed, and
+        // HttpClient would refuse to send what a real browser can absolutely put on the wire.
+        request.Headers.TryAddWithoutValidation("Accept-Language", acceptLanguage);
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return await response.Content.ReadAsStringAsync();
+    }
+
+    /// <summary>
     ///     A chart with siblings renders their DifficultyBubbles statically — and those wrap a
     ///     MudTooltip, which must survive static SSR. The lone-chart head fact above never
     ///     exercises this path (one difficulty, no sibling row), so a chart that has siblings

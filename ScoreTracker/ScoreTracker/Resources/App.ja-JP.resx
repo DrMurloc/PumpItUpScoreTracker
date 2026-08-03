@@ -312,6 +312,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>この名前のコミュニティは既に存在します。</value>
   </data>
+  <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
+    <value>最初に決めておくとよい項目です。この後のすべてがこれに合わせて調整されます。</value>
+  </data>
   <data name="A good is a dead note" xml:space="preserve">
     <value>Good は死にノート</value>
   </data>
@@ -499,6 +502,9 @@
   </data>
   <data name="All mixes" xml:space="preserve">
     <value>全バージョン</value>
+  </data>
+  <data name="All of it is changeable later in your account." xml:space="preserve">
+    <value>すべて後からアカウントで変更できます。</value>
   </data>
   <data name="all permissions" xml:space="preserve">
     <value>全権限</value>
@@ -913,6 +919,9 @@
   </data>
   <data name="Build the first one, or connect to a private tool with an invite link." xml:space="preserve">
     <value>最初の1つを作るか、招待リンクで非公開ツールに接続してください。</value>
+  </data>
+  <data name="Build your home page" xml:space="preserve">
+    <value>ホームページを作る</value>
   </data>
   <data name="Build your home page from widgets you choose." xml:space="preserve">
     <value>ウィジェットを選んで自分だけのホームページを作ろう。</value>
@@ -1489,6 +1498,12 @@
 	  <value>国</value>
 	  
   <comment>国</comment></data>
+  <data name="Country cleared" xml:space="preserve">
+    <value>国をクリアしました</value>
+  </data>
+  <data name="Country saved" xml:space="preserve">
+    <value>国を保存しました</value>
+  </data>
   <data name="Counts toward a title" xml:space="preserve">
     <value>称号の進捗に加算</value>
   </data>
@@ -1542,6 +1557,9 @@
   </data>
   <data name="Current life" xml:space="preserve">
     <value>現在の体力</value>
+  </data>
+  <data name="Current mix" xml:space="preserve">
+    <value>現在のバージョン</value>
   </data>
   <data name="Current Username" xml:space="preserve">
 	  <value>現在のユーザー名</value>
@@ -1874,6 +1892,9 @@
   <data name="Enter A Score" xml:space="preserve">
     <value>スコアを入力</value>
   </data>
+  <data name="Enter a username" xml:space="preserve">
+    <value>ユーザー名を入力してください</value>
+  </data>
   <data name="Enter Judgements" xml:space="preserve">
     <value>判定を入力</value>
   </data>
@@ -2049,6 +2070,9 @@
   </data>
   <data name="Fill to max" xml:space="preserve">
     <value>最大まで回復</value>
+  </data>
+  <data name="filled in from {0}" xml:space="preserve">
+    <value>{0} から取得</value>
   </data>
   <data name="Filter" xml:space="preserve">
     <value>フィルター</value>
@@ -3199,6 +3223,9 @@
   <data name="Mix scope" xml:space="preserve">
     <value>バージョン範囲</value>
   </data>
+  <data name="Mix set to {0}" xml:space="preserve">
+    <value>バージョンを {0} に設定しました</value>
+  </data>
   <data name="Mixes" xml:space="preserve">
     <value>バージョン</value>
   </data>
@@ -3429,6 +3456,9 @@
   <data name="Next title" xml:space="preserve">
     <value>次のタイトル</value>
   </data>
+  <data name="Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there." xml:space="preserve">
+    <value>次はホームページです。自分で選んだウィジェットのボードで、まずは既定の構成から始めて、あとから並べ替えられます。</value>
+  </data>
   <data name="No account needed to look around" xml:space="preserve">
     <value>見て回るのにアカウントは不要</value>
   </data>
@@ -3648,6 +3678,9 @@
   <data name="Not Relevant to Category" xml:space="preserve">
 	  <value>このカテゴリーに無関係</value>
   </data>
+  <data name="Not set" xml:space="preserve">
+    <value>未設定</value>
+  </data>
   <data name="Not Tagged" xml:space="preserve">
     <value>タグなし</value>
   </data>
@@ -3784,6 +3817,9 @@
   <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
     <value>オフにすると、招待から直接接続したプレイヤーだけになります。特定の仲間向けのツールで、見知らぬ千人がノイズになるならオフに。</value>
   </data>
+  <data name="Off — only you can see your scores" xml:space="preserve">
+    <value>オフ — スコアは自分だけが見られます</value>
+  </data>
   <data name="official" xml:space="preserve">
     <value>公式</value>
   </data>
@@ -3835,11 +3871,17 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>ToDoリスト登録済み</value>
   </data>
+  <data name="On — your scores show on leaderboards and in communities" xml:space="preserve">
+    <value>オン — スコアがランキングと地域ランキングに表示されます</value>
+  </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>Nノートごとに1回の失敗</value>
   </data>
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>スコア・グレード・プレート・クリアをレベル別に表示する設定可能なグラフ。</value>
+  </data>
+  <data name="One minute, then you're in" xml:space="preserve">
+    <value>1分で完了します</value>
   </data>
   <data name="One miss from out" xml:space="preserve">
     <value>Miss 1回で終了</value>
@@ -3916,6 +3958,9 @@
   </data>
   <data name="Open {0}" xml:space="preserve">
     <value>{0} を開く</value>
+  </data>
+  <data name="Opening your home page…" xml:space="preserve">
+    <value>ホームページを開いています…</value>
   </data>
   <data name="optional" xml:space="preserve">
     <value>任意</value>
@@ -4471,6 +4516,9 @@
     <value>公開</value>
     
   <comment>(on/offもしアカウントが公開が設定された)</comment></data>
+  <data name="Public profile" xml:space="preserve">
+    <value>公開プロフィール</value>
+  </data>
   <data name="Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
     <value>公開プロフィールは既定で共有がオンなので、オフにするまでツールはあなたのスコアを読めます — アカウントページでいつでもオフにできます。</value>
   </data>
@@ -5240,11 +5288,17 @@
   <data name="Set up another tool" xml:space="preserve">
     <value>もう一つ設定する</value>
   </data>
+  <data name="Set up your account" xml:space="preserve">
+    <value>アカウントの設定</value>
+  </data>
   <data name="Set up your tool" xml:space="preserve">
     <value>ツールのセットアップ</value>
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>アカウントページで国を設定すると地域に参加できます。</value>
+  </data>
+  <data name="Sets what the whole site shows you." xml:space="preserve">
+    <value>サイト全体の表示内容が変わります。</value>
   </data>
   <data name="Settings" xml:space="preserve">
 	  <value>設定</value>
@@ -5727,6 +5781,9 @@
   <data name="swept Sunday" xml:space="preserve">
     <value>日曜集計</value>
   </data>
+  <data name="Switch it any time from the mix pill in the top bar." xml:space="preserve">
+    <value>上部バーからいつでも切り替えられます。</value>
+  </data>
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>フィルターをオンにすると、この譜面の比較対象を絞り込めます。</value>
   </data>
@@ -6018,6 +6075,9 @@
   </data>
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>これはゼロ知識ではありません。ログインは私たちのサーバーで実行されるため、あなたがインポートする瞬間には技術的には認証情報を復号できます。私たちはそれを記録も保持もしませんが、手動インポートのたびに既に持っているのと同じアクセスを、あなたは私たちに委ねていることになります。</value>
+  </data>
+  <data name="This is the name other players see — on leaderboards, in communities, and on tier lists. Most people use their game tag." xml:space="preserve">
+    <value>他のプレイヤーに表示される名前です。ランキング、地域ランキング、ティアリストに表示されます。多くの人はゲーム内のニックネームを使います。</value>
   </data>
   <data name="This is the only time you'll see it." xml:space="preserve">
     <value>キーを表示するのはこの一度だけです。</value>
@@ -6509,6 +6569,9 @@
   <data name="Username" xml:space="preserve">
     <value>ユーザー名</value>
   </data>
+  <data name="Username saved" xml:space="preserve">
+    <value>ユーザー名を保存しました</value>
+  </data>
   <data name="Value" xml:space="preserve">
     <value>値</value>
   </data>
@@ -6686,6 +6749,9 @@
   </data>
   <data name="Welcome" xml:space="preserve">
 	  <value>ようこそ</value>
+  </data>
+  <data name="Welcome to PIU Scores" xml:space="preserve">
+    <value>PIU Scores へようこそ</value>
   </data>
   <data name="Welcome to PIUScores" xml:space="preserve">
     <value>PIUScoresへようこそ</value>
@@ -7062,11 +7128,17 @@
   <data name="Your Points per Second" xml:space="preserve">
 	  <value>自己秒間ポイント</value>
   </data>
+  <data name="Your profile is private" xml:space="preserve">
+    <value>プロフィールを非公開にしました</value>
+  </data>
   <data name="Your profile is private, so nothing is shared." xml:space="preserve">
     <value>プロフィールが非公開なので、何も共有されていません。</value>
   </data>
   <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
     <value>プロフィールは非公開です。このコミュニティに参加すると、ランキング、プレーヤーページ、比較画面でコミュニティの全員にスコアが公開されます。他の場所では非公開のままです。</value>
+  </data>
+  <data name="Your profile is public" xml:space="preserve">
+    <value>プロフィールを公開にしました</value>
   </data>
   <data name="Your profile is public, so sharing is on." xml:space="preserve">
     <value>プロフィールが公開なので、共有はオンです。</value>
@@ -7538,6 +7610,9 @@
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>このフォルダーであと約{0}譜面</value>
+  </data>
+  <data name="— optional" xml:space="preserve">
+    <value>— 任意</value>
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Zelllooo</value>

@@ -1341,6 +1341,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<string>("CountryName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("DeepScansRemaining")
+                        .HasColumnType("int");
+
                     b.Property<string>("GameTag")
                         .HasColumnType("nvarchar(max)");
 

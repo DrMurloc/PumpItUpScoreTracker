@@ -312,6 +312,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>Une communauté avec ce nom existe déjà.</value>
   </data>
+  <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
+    <value>Quelques réglages à faire dès maintenant : tout le reste s'y adapte.</value>
+  </data>
   <data name="A good is a dead note" xml:space="preserve">
     <value>Un Good est une note morte</value>
   </data>
@@ -499,6 +502,9 @@
   </data>
   <data name="All mixes" xml:space="preserve">
     <value>Tous les Mix</value>
+  </data>
+  <data name="All of it is changeable later in your account." xml:space="preserve">
+    <value>Tout est modifiable plus tard dans votre compte.</value>
   </data>
   <data name="all permissions" xml:space="preserve">
     <value>toutes les permissions</value>
@@ -913,6 +919,9 @@
   </data>
   <data name="Build the first one, or connect to a private tool with an invite link." xml:space="preserve">
     <value>Créez le premier, ou connectez-vous à un outil privé avec un lien d'invitation.</value>
+  </data>
+  <data name="Build your home page" xml:space="preserve">
+    <value>Créez votre page d'accueil</value>
   </data>
   <data name="Build your home page from widgets you choose." xml:space="preserve">
     <value>Construisez votre page d'accueil avec les widgets de votre choix.</value>
@@ -1488,6 +1497,12 @@
 	  <value>Pays</value>
 	  <comment>Pays</comment>
   </data>
+  <data name="Country cleared" xml:space="preserve">
+    <value>Pays effacé</value>
+  </data>
+  <data name="Country saved" xml:space="preserve">
+    <value>Pays enregistré</value>
+  </data>
   <data name="Counts toward a title" xml:space="preserve">
     <value>Compte pour un titre</value>
   </data>
@@ -1541,6 +1556,9 @@
   </data>
   <data name="Current life" xml:space="preserve">
     <value>Vie actuelle</value>
+  </data>
+  <data name="Current mix" xml:space="preserve">
+    <value>Mix actuel</value>
   </data>
   <data name="Current Username" xml:space="preserve">
     <value>Nom d'utilisateur actuel</value>
@@ -1873,6 +1891,9 @@
   <data name="Enter A Score" xml:space="preserve">
     <value>Saisissez un score</value>
   </data>
+  <data name="Enter a username" xml:space="preserve">
+    <value>Saisissez un nom d'utilisateur</value>
+  </data>
   <data name="Enter Judgements" xml:space="preserve">
     <value>Saisir les jugements</value>
   </data>
@@ -2048,6 +2069,9 @@
   </data>
   <data name="Fill to max" xml:space="preserve">
     <value>Remplir au maximum</value>
+  </data>
+  <data name="filled in from {0}" xml:space="preserve">
+    <value>rempli depuis {0}</value>
   </data>
   <data name="Filter" xml:space="preserve">
     <value>Filtrer</value>
@@ -3198,6 +3222,9 @@
   <data name="Mix scope" xml:space="preserve">
     <value>Portée des Mix</value>
   </data>
+  <data name="Mix set to {0}" xml:space="preserve">
+    <value>Mix réglé sur {0}</value>
+  </data>
   <data name="Mixes" xml:space="preserve">
     <value>Mix</value>
   </data>
@@ -3428,6 +3455,9 @@
   <data name="Next title" xml:space="preserve">
     <value>Titre suivant</value>
   </data>
+  <data name="Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there." xml:space="preserve">
+    <value>Ensuite, votre page d'accueil : un tableau de widgets que vous choisissez. On démarre avec une configuration par défaut, puis vous réorganisez.</value>
+  </data>
   <data name="No account needed to look around" xml:space="preserve">
     <value>Pas besoin de compte pour regarder</value>
   </data>
@@ -3647,6 +3677,9 @@
   <data name="Not Relevant to Category" xml:space="preserve">
     <value>Non pertinent pour la catégorie</value>
   </data>
+  <data name="Not set" xml:space="preserve">
+    <value>Non défini</value>
+  </data>
   <data name="Not Tagged" xml:space="preserve">
     <value>Non étiqueté</value>
   </data>
@@ -3783,6 +3816,9 @@
   <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
     <value>Désactivé signifie uniquement les joueurs qui se connectent directement, par invitation. Désactivez-le si votre outil vise un groupe précis et que mille inconnus seraient du bruit.</value>
   </data>
+  <data name="Off — only you can see your scores" xml:space="preserve">
+    <value>Désactivé : vous seul pouvez voir vos scores</value>
+  </data>
   <data name="official" xml:space="preserve">
     <value>officiel</value>
   </data>
@@ -3834,11 +3870,17 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>Dans la liste ToDo</value>
   </data>
+  <data name="On — your scores show on leaderboards and in communities" xml:space="preserve">
+    <value>Activé : vos scores apparaissent dans les leaderboards et les communautés</value>
+  </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>Une cassure toutes les N notes</value>
   </data>
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>Un graphique configurable de vos scores, notes, plates ou pass par niveau.</value>
+  </data>
+  <data name="One minute, then you're in" xml:space="preserve">
+    <value>Une minute, et c'est parti</value>
   </data>
   <data name="One miss from out" xml:space="preserve">
     <value>À un Miss de la sortie</value>
@@ -3915,6 +3957,9 @@
   </data>
   <data name="Open {0}" xml:space="preserve">
     <value>Ouvrir {0}</value>
+  </data>
+  <data name="Opening your home page…" xml:space="preserve">
+    <value>Ouverture de votre page d'accueil…</value>
   </data>
   <data name="optional" xml:space="preserve">
     <value>facultatif</value>
@@ -4469,6 +4514,9 @@
   <data name="Public" xml:space="preserve">
     <value>Publique</value>
     <comment>(on/off, si le compte est configuré en tant que publique)</comment>
+  </data>
+  <data name="Public profile" xml:space="preserve">
+    <value>Profil public</value>
   </data>
   <data name="Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
     <value>Les profils publics partagent par défaut, donc les outils peuvent lire vos scores jusqu'à ce que vous le désactiviez — ce que vous pouvez faire à tout moment depuis votre page Compte.</value>
@@ -5239,11 +5287,17 @@
   <data name="Set up another tool" xml:space="preserve">
     <value>Configurer un autre outil</value>
   </data>
+  <data name="Set up your account" xml:space="preserve">
+    <value>Configurez votre compte</value>
+  </data>
   <data name="Set up your tool" xml:space="preserve">
     <value>Configurez votre outil</value>
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>Définissez votre pays sur votre page de compte pour rejoindre une région.</value>
+  </data>
+  <data name="Sets what the whole site shows you." xml:space="preserve">
+    <value>Détermine ce que tout le site vous montre.</value>
   </data>
   <data name="Settings" xml:space="preserve">
 	  <value>Réglages</value>
@@ -5726,6 +5780,9 @@
   <data name="swept Sunday" xml:space="preserve">
     <value>balayage du dimanche</value>
   </data>
+  <data name="Switch it any time from the mix pill in the top bar." xml:space="preserve">
+    <value>Vous pouvez en changer à tout moment depuis la barre du haut.</value>
+  </data>
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>Activez un filtre pour restreindre ce à quoi ce chart est comparé.</value>
   </data>
@@ -6017,6 +6074,9 @@
   </data>
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>Ce n'est pas du zéro-connaissance : comme la connexion s'exécute sur notre serveur, nous pouvons techniquement déchiffrer votre identifiant au moment de l'import. Nous ne le journalisons ni ne le conservons — mais vous nous confiez le même accès que nous avons déjà à chaque import manuel.</value>
+  </data>
+  <data name="This is the name other players see — on leaderboards, in communities, and on tier lists. Most people use their game tag." xml:space="preserve">
+    <value>C'est le nom que les autres joueurs voient : dans les leaderboards, les communautés et les tier lists. La plupart utilisent leur pseudo en jeu.</value>
   </data>
   <data name="This is the only time you'll see it." xml:space="preserve">
     <value>C'est la seule fois où vous la verrez.</value>
@@ -6508,6 +6568,9 @@
   <data name="Username" xml:space="preserve">
     <value>Nom d'utilisateur</value>
   </data>
+  <data name="Username saved" xml:space="preserve">
+    <value>Nom d'utilisateur enregistré</value>
+  </data>
   <data name="Value" xml:space="preserve">
     <value>Valeur</value>
   </data>
@@ -6685,6 +6748,9 @@
   </data>
   <data name="Welcome" xml:space="preserve">
     <value>Bienvenue</value>
+  </data>
+  <data name="Welcome to PIU Scores" xml:space="preserve">
+    <value>Bienvenue sur PIU Scores</value>
   </data>
   <data name="Welcome to PIUScores" xml:space="preserve">
     <value>Bienvenue sur PIUScores</value>
@@ -7061,11 +7127,17 @@
   <data name="Your Points per Second" xml:space="preserve">
     <value>Vos points par seconde</value>
   </data>
+  <data name="Your profile is private" xml:space="preserve">
+    <value>Votre profil est privé</value>
+  </data>
   <data name="Your profile is private, so nothing is shared." xml:space="preserve">
     <value>Votre profil est privé, donc rien n'est partagé.</value>
   </data>
   <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
     <value>Votre profil est privé. En rejoignant cette communauté, vos scores seront visibles par tous ses membres — sur ses leaderboards, pages de joueur et comparaisons. Vous resterez masqué partout ailleurs.</value>
+  </data>
+  <data name="Your profile is public" xml:space="preserve">
+    <value>Votre profil est public</value>
   </data>
   <data name="Your profile is public, so sharing is on." xml:space="preserve">
     <value>Votre profil est public, donc le partage est activé.</value>
@@ -7537,6 +7609,9 @@
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>~{0} charts de plus dans ce dossier</value>
+  </data>
+  <data name="— optional" xml:space="preserve">
+    <value>— facultatif</value>
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Zelllooo</value>

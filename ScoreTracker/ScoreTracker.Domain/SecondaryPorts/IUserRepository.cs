@@ -22,6 +22,18 @@ public interface IUserRepository
     Task<IEnumerable<User>> GetUsersByGameTag(Name gameTag, CancellationToken cancellationToken = default);
     Task<User?> GetUser(Guid userId, CancellationToken cancellationToken = default);
     Task<DateTimeOffset> GetClaimsInvalidatedAt(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Takes one deep scan from this account's balance, or returns false when none are left.
+    ///     The read and the decrement are ONE statement: a check-then-write would let two tabs, or
+    ///     one impatient double-click, both pass the same last scan.
+    /// </summary>
+    Task<bool> TrySpendDeepScan(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<int> GetDeepScansRemaining(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Sets every account's balance back to the monthly allowance.</summary>
+    Task ResetDeepScans(int allowance, CancellationToken cancellationToken = default);
     Task<IEnumerable<User>> GetUsers(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
 
     Task<User?> GetUserByExternalLogin(string loginProviderName, string externalId,

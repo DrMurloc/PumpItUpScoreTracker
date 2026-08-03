@@ -86,6 +86,12 @@
 
         if (await UiSettings.GetSetting(SeenKey) is not null) return;
 
+        // Not while they are still setting the account up. This is a "what's new" notice, and a
+        // brand-new player has no "before" to compare it to — meanwhile it is a modal, so on
+        // /Setup it covers the one screen they have to use. Deliberately not marked seen: they
+        // meet it on the dashboard a moment later, which is where it always used to fire.
+        if (await UiSettings.GetSetting(IUiSettingsAccessor.SetupCompletedSettingKey) is null) return;
+
         _isPublic = CurrentUser.User.IsPublic;
         // Reading the preference rather than assuming it: a player who already found the toggle
         // and turned it off should not be told it is on.

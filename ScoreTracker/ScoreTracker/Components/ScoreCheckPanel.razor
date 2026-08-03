@@ -1,0 +1,181 @@
+@using MediatR
+@using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Commands
+@using ScoreTracker.OfficialMirror.Contracts.Events
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.UiNotifications
+
+@* Finds scores PIUGAME has that never reached us and adds them, as a normal import. Nothing is
+   stored and nothing needs approving, so the panel is a line and two buttons
+   (docs/design/import-completeness-check.md §4). *@
+
+<MudPaper Class="pa-4 mt-4" Outlined="true">
+    <MudText Typo="Typo.overline">@L["Score check"]</MudText>
+
+    @if (_running)
+    {
+        <div class="d-flex align-center gap-3 mt-1">
+            <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+            <MudText Typo="Typo.body1">@(_status ?? L["Checking your scores"])</MudText>
+        </div>
+        <MudText Typo="Typo.caption" Class="d-block mt-2">
+            @L["You can leave — anything found is added to your scores."]
+        </MudText>
+    }
+    else
+    {
+        @if (_finished != null)
+        {
+            <MudText Typo="Typo.body1" Class="mt-1">
+                @(_finished.Added > 0
+                    ? L["Added {0} scores PIUGAME had that we didn't.", _finished.Added]
+                    : L["Nothing missing — all {0} scores match PIUGAME.", _finished.Checked.ToString("N0")])
+            </MudText>
+            @if (_finished.Added > 0)
+            {
+                <MudLink Href="@($"/Player/{_userId}/Sessions")" Class="d-block mt-1">
+                    @L["See them on your sessions page"]
+                </MudLink>
+            }
+        }
+        else
+        {
+            <MudText Typo="Typo.body1" Class="mt-1">
+                @L["Find scores PIUGAME has that never made it here, and add them."]
+            </MudText>
+        }
+
+        @* Two peer actions. The deep scan carries its own budget, so the limit sits on the control
+           it limits rather than in a sentence that only appeared in one state. *@
+        <div class="d-flex flex-wrap gap-4 align-start mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Disabled"
+                       OnClick="@(() => Run())">
+                @L["Import and check"]
+            </MudButton>
+            <div>
+                <MudButton Variant="Variant.Outlined" Disabled="@(Disabled || _deepScansLeft == 0)"
+                           OnClick="@(() => Run(deepScan: true))">
+                    @L["Deep scan"]
+                </MudButton>
+                <MudText Typo="Typo.caption" Class="d-block">
+                    @(_deepScansLeft > 0
+                        ? L["{0} left this month", _deepScansLeft]
+                        : L["None left — next on {0}", NextUnlock])
+                </MudText>
+            </div>
+        </div>
+
+        <MudText Typo="Typo.caption" Class="d-block mt-2">
+            @L["A check counts your scores level by level. A deep scan reads every page instead — slower, and the only way to find a score you improved without changing grade or plate."]
+        </MudText>
+    }
+</MudPaper>
+
+@code {
+    /// <summary>The mix the page is importing. A check is per mix — Phoenix 2 titles read Phoenix 2
+    /// scores only, and so does its census.</summary>
+    [Parameter] public MixEnum Mix { get; set; }
+
+    /// <summary>Resolved by the page: the stored blob when there is one, otherwise what was typed.
+    /// Null disables the buttons rather than hiding them — the page explains why.</summary>
+    [Parameter] public Func<ImportCredentialSource?>? Credentials { get; set; }
+
+    [Parameter] public string CardId { get; set; } = "";
+    [Parameter] public string GameTag { get; set; } = "";
+
+    /// <summary>True while the page's own import runs, so the two cannot start at once.</summary>
+    [Parameter] public bool Busy { get; set; }
+
+    private readonly List<IDisposable> _subscriptions = new();
+    private int _deepScansLeft;
+    private ImportCheckCompletedEvent? _finished;
+    private bool _running;
+    private string? _status;
+    private Guid _userId;
+
+    private bool Disabled => Busy || _running || Credentials?.Invoke() == null;
+
+    private string NextUnlock => new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)
+        .AddMonths(1).ToString("d");
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        _userId = CurrentUser.User.Id;
+        _subscriptions.Add(UiHub.Subscribe<ImportStatusUpdatedEvent>(UiTopics.User(_userId), OnStatus));
+        _subscriptions.Add(UiHub.Subscribe<ImportStatusErrorEvent>(UiTopics.User(_userId), OnError));
+        _subscriptions.Add(UiHub.Subscribe<ImportCheckCompletedEvent>(UiTopics.User(_userId), OnCompleted));
+        _deepScansLeft = await Mediator.Send(new GetDeepScansRemainingQuery(_userId));
+    }
+
+    private async Task Run(bool deepScan = false)
+    {
+        var source = Credentials?.Invoke();
+        if (source == null) return;
+
+        // Paint the spinner before the slow sign-in: Blazor renders an async handler only after
+        // its synchronous portion, so flipping this afterwards leaves the button inert for seconds.
+        _running = true;
+        _status = null;
+        _finished = null;
+        StateHasChanged();
+
+        var result = await Mediator.Send(new StartImportCheckCommand(source, Mix, CardId, GameTag, deepScan));
+        _deepScansLeft = result.DeepScansLeft;
+        if (result.Outcome == ImportCheckStartOutcome.Started) return;
+
+        _running = false;
+        Snackbar.Add(result.Outcome switch
+        {
+            ImportCheckStartOutcome.InvalidCredentials => L["Invalid Login Information"],
+            ImportCheckStartOutcome.CredentialUnlockFailed => L["Saved credentials could not be unlocked."],
+            ImportCheckStartOutcome.AlreadyRunning => L["An import is already running."],
+            ImportCheckStartOutcome.NoDeepScansLeft => L["None left — next on {0}", NextUnlock],
+            _ => L["Something went wrong."]
+        }, Severity.Warning);
+    }
+
+    private Task OnStatus(ImportStatusUpdatedEvent update)
+    {
+        if (update.Mix != Mix || !_running) return Task.CompletedTask;
+        return InvokeAsync(() =>
+        {
+            _status = update.Status;
+            StateHasChanged();
+        });
+    }
+
+    private Task OnCompleted(ImportCheckCompletedEvent completed)
+    {
+        if (completed.Mix != Mix) return Task.CompletedTask;
+        return InvokeAsync(() =>
+        {
+            _finished = completed;
+            _running = false;
+            StateHasChanged();
+        });
+    }
+
+    private Task OnError(ImportStatusErrorEvent error)
+    {
+        return InvokeAsync(() =>
+        {
+            _running = false;
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        foreach (var subscription in _subscriptions) subscription.Dispose();
+    }
+}
+
+@inject IMediator Mediator;
+@inject ICurrentUserAccessor CurrentUser;
+@inject IUiNotificationHub UiHub;
+@inject ISnackbar Snackbar;
+@implements IDisposable

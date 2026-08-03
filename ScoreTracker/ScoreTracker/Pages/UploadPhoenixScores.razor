@@ -54,6 +54,21 @@
                     <MudTextField Label="@L["PIUGame.com Username"]" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
                     <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="@L["PIUGame.com Password"]"
                                   HelperText="@L["Import Password Helper"]" @bind-Value="_password"></MudTextField>
+                    @* Remembering is its own action, sitting with the fields it acts on — as a
+                       checkbox in the options column it read as an import option and left people
+                       unsure which of the page's two credential surfaces it belonged to. *@
+                    <MudButton Class="mt-2" Size="Size.Small" Variant="Variant.Outlined"
+                               StartIcon="@(_savingCredential ? null : Icons.Material.Filled.Lock)"
+                               Disabled="@(_isImporting || _savingCredential
+                                           || string.IsNullOrWhiteSpace(_username)
+                                           || string.IsNullOrWhiteSpace(_password))"
+                               OnClick="SaveCredentials">
+                        @if (_savingCredential)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2"/>
+                        }
+                        @L["Remember my password on this device"]
+                    </MudButton>
                 }
                 @if (_cards.Any())
                 {
@@ -76,13 +91,6 @@
             <MudItem xs="12" sm="6">
                 <MudCheckBox T="bool" Label="@L["Record broken scores as your best"]" @bind-Value="_includeBroken" Disabled="_isImporting"></MudCheckBox>
                 <MudText Typo="Typo.caption" Class="ml-10 d-block">@L["Import Broken Helper"]</MudText>
-                @* A saved credential already says so in the alert — the checkbox only offers
-                   the choice while there is a typed password to remember. *@
-                @if (!_hasStoredCredential)
-                {
-                    <MudCheckBox T="bool" Value="_rememberPassword" ValueChanged="OnRememberChanged" Disabled="_isImporting"
-                                 Label="@L["Remember my password on this device"]"></MudCheckBox>
-                }
                 @* Sending your session to another site is a consent decision, not an import
                    option, so it lives with every other tool rather than as a checkbox here. *@
                 <MudText Typo="Typo.caption" Class="d-block mt-1" Style="opacity:.75;">
@@ -201,6 +209,11 @@
         </MudButton>
     </MudCardActions>
 </MudCard>
+
+@* Sits below the import controls because it needs the same session and the same credential;
+   pressed, never automatic (docs/design/import-completeness-check.md §6). *@
+<ScoreCheckPanel Mix="_currentMix" CardId="@_selectedId" GameTag="@_selectedGameTag"
+                 Busy="_isImporting" Credentials="ResolveCheckCredentials"/>
 
 @* The technical fallback (design doc D3): everything the script/CSV flow could do, collapsed. *@
 <MudExpansionPanels Class="mt-4">
@@ -341,13 +354,29 @@
     private string _username = "";
     private string _password = "";
     private bool _includeBroken = false;
-    private bool _rememberPassword = false;
     private bool _hasStoredCredential = false;
     private const string RememberConsentKey = "RememberPasswordConsent";
     private const string RememberConsentVersion = "1";
 
     private bool ImportDisabled =>
         _isImporting || (!_hasStoredCredential && (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)));
+
+    // The blob is read once on load so the Score check panel can offer its buttons without a
+    // round trip on every render; the saved path never re-types a password either way.
+    private StoredCredentialBlob? _storedBlob;
+
+    /// <summary>
+    ///     Which credential the Score check should use: the saved blob when this device has one,
+    ///     otherwise whatever is typed above. Null while neither exists, which leaves the panel's
+    ///     buttons disabled rather than failing at the site.
+    /// </summary>
+    private ImportCredentialSource? ResolveCheckCredentials()
+    {
+        if (_storedBlob != null) return new StoredCredentialSource(_storedBlob.KeyId, _storedBlob.Ciphertext);
+        return string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)
+            ? null
+            : new TypedCredentialSource(_username, _password);
+    }
 
     // Import using the credential saved on this device — the Import button routes here when one is
     // stored. Reuses the background path (StoredCredentialSource), so the password is never re-typed
@@ -397,16 +426,18 @@
     {
         await ClientStore.Clear();
         _hasStoredCredential = false;
-        _rememberPassword = false;
     }
 
-    private async Task OnRememberChanged(bool value)
+    private bool _savingCredential;
+
+    /// <summary>
+    ///     Consent, then validate at piugame, then store — one press. Storing a password we have
+    ///     not proved works would leave the player with a saved credential that fails on their
+    ///     next import and no idea why, so the sign-in is not optional.
+    /// </summary>
+    private async Task SaveCredentials()
     {
-        if (!value)
-        {
-            _rememberPassword = false;
-            return;
-        }
+        if (_savingCredential) return;
 
         var consent = await UiSettings.GetSetting(RememberConsentKey);
         if (consent != RememberConsentVersion)
@@ -414,16 +445,41 @@
             var dialog = await DialogService.ShowAsync<RememberPasswordDisclaimerDialog>(
                 L["Before we remember your password"].Value);
             var result = await dialog.Result;
-            if (result is null || result.Canceled)
-            {
-                _rememberPassword = false;
-                return;
-            }
+            if (result is null || result.Canceled) return;
 
             await UiSettings.SetSetting(RememberConsentKey, RememberConsentVersion);
         }
 
-        _rememberPassword = true;
+        // Paint the spinner before the slow sign-in: Blazor renders an async handler only after
+        // its synchronous portion, so flipping this afterwards leaves the button inert.
+        _savingCredential = true;
+        StateHasChanged();
+        try
+        {
+            // Signs in as a side effect of listing the cards, so a bad password is caught here —
+            // and the card picker fills in, which the player needed anyway.
+            _cards = await Mediator.Send(new GetGameCardsQuery(_username, _password, _currentMix));
+            if (_cards.Any() && string.IsNullOrWhiteSpace(_selectedId)) await SelectId(_cards.First().Id);
+
+            var stored = await Mediator.Send(new StoreImportCredentialCommand(_username, _password));
+            await ClientStore.Write(new StoredCredentialBlob(stored.KeyId, stored.Ciphertext, 0));
+            _storedBlob = await ClientStore.Read();
+            _hasStoredCredential = true;
+            Snackbar.Add(L["Saved on this device"].Value, Severity.Success);
+        }
+        catch (InvalidCredentialException)
+        {
+            Snackbar.Add(L["Password Incorrect"].Value, Severity.Error);
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Storing a remembered credential failed");
+            Snackbar.Add(L["Could not save your password"].Value, Severity.Error);
+        }
+        finally
+        {
+            _savingCredential = false;
+        }
     }
     private string _selectedGameTag = "";
     private string _selectedId = "";
@@ -522,22 +578,9 @@
             switch (result.Outcome)
             {
                 case ImportStartOutcome.Started:
-                    // SignIn succeeded, so the credentials authenticated — safe to remember now.
-                    // A storage failure is isolated so it can't read as an import failure.
-                    if (_rememberPassword)
-                    {
-                        try
-                        {
-                            var stored = await Mediator.Send(new StoreImportCredentialCommand(_username, _password));
-                            await ClientStore.Write(new StoredCredentialBlob(stored.KeyId, stored.Ciphertext, 0));
-                            _hasStoredCredential = true;
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.LogError(e, "Import started but storing the remembered credential failed");
-                            Snackbar.Add(L["Could not save your password"].Value, Severity.Error);
-                        }
-                    }
+                    // Remembering is the "Remember my password" button's job alone. Importing used
+                    // to store as a side effect of a checkbox, which is what made two parts of this
+                    // page look like they both owned the saved credential.
                     break;
                 case ImportStartOutcome.InvalidCredentials:
                 case ImportStartOutcome.CredentialUnlockFailed:
@@ -599,8 +642,8 @@
         _selectedGameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
         // Detect a credential already saved on this device so we can offer a one-click import
         // instead of asking for the password again; the checkbox reflects the saved state.
-        _hasStoredCredential = await ClientStore.Read() != null;
-        _rememberPassword = _hasStoredCredential;
+        _storedBlob = await ClientStore.Read();
+        _hasStoredCredential = _storedBlob != null;
     }
 
     private List<string> _errors = new List<string>();

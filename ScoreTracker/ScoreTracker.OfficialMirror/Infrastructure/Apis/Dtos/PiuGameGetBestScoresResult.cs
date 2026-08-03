@@ -24,5 +24,12 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Dtos
         }
 
         public int MaxPage { get; set; }
+
+        /// <summary>
+        ///     The page's own "Total." — every chart the list holds, not just this page. Phoenix
+        ///     counts passes; Phoenix 2's redesigned list also counts stage breaks. Null when the
+        ///     header is absent.
+        /// </summary>
+        public int? TotalCharts { get; set; }
     }
 }

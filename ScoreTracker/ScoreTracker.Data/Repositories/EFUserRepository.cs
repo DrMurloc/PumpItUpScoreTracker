@@ -77,6 +77,38 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
     private static string ClaimsInvalidatedAtCacheKey(Guid userId) =>
         $"{nameof(EFUserRepository)}_ClaimsInvalidatedAt_{userId}";
 
+    /// <summary>
+    ///     One UPDATE guarded by the balance itself, so concurrency is the database's problem
+    ///     rather than ours: two requests racing the last scan produce one row affected and one
+    ///     zero. Reading then writing would hand both of them a scan.
+    /// </summary>
+    public async Task<bool> TrySpendDeepScan(Guid userId, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var spent = await database.User
+            .Where(u => u.Id == userId && u.DeepScansRemaining > 0)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.DeepScansRemaining, u => u.DeepScansRemaining - 1),
+                cancellationToken);
+        return spent > 0;
+    }
+
+    public async Task<int> GetDeepScansRemaining(Guid userId, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.User.Where(u => u.Id == userId)
+            .Select(u => u.DeepScansRemaining)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    // Set, not incremented: an unused allowance does not roll over into next month.
+    public async Task ResetDeepScans(int allowance, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.User
+            .Where(u => u.DeepScansRemaining != allowance)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.DeepScansRemaining, allowance), cancellationToken);
+    }
+
     public async Task<DateTimeOffset> GetClaimsInvalidatedAt(Guid userId,
         CancellationToken cancellationToken = default)
     {

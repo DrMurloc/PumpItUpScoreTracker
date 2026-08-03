@@ -53,6 +53,7 @@ public static class OfficialMirrorRegistrationExtensions
         configurator.AddConsumer<OfficialDigestFeedSaga>();
         configurator.AddConsumer<PlayerIdentitySaga>();
         configurator.AddConsumer<RunOfficialImportConsumer>();
+        configurator.AddConsumer<RunImportCheckConsumer>();
         configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

@@ -232,9 +232,11 @@ Checkpoint commits, suites green at each. FT = owner field-test checkpoint.
 
 ## Open questions
 
-- **`/Welcome` fate** — the post-first-login page is the same era as the old `/Login`.
-  Likely folds into a first-login step of the home dashboard rather than this work; owner to
-  decide.
+- ~~**`/Welcome` fate**~~ — **settled 2026-08-03**: the post-first-login page comes back as its
+  own route, `/Setup`, rather than a step folded into the home dashboard — a dialog raised by the
+  dashboard's "Create" button was considered and rejected. See
+  [new-user-setup.md](new-user-setup.md). `/Welcome` itself stays what this doc made it: the
+  canonical front-door URL.
 - ~~**Logged-out theme at Phoenix 2 launch**~~ — settled for this page by D12: the front
   door is pinned to Phoenix 2. Still open for the *rest* of the anonymous site, where
   `ShellModelFactory.ResolveMix` falls through to Phoenix when there is no cookie — so a

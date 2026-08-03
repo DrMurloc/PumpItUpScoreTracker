@@ -35,8 +35,8 @@ public sealed class PiuGameLoginTests : IAsyncLifetime
     {
         await PiuGameLoginFlow.LogInAsNewUserAsync(_page);
 
-        // A brand-new PIU identity lands on the dashboard — and "/" bounces anyone without an
-        // account to the front door, so staying here is itself proof the sign-in took.
+        // A brand-new PIU identity walks setup and lands on the dashboard — and neither "/Setup"
+        // nor "/" resolves without an account, so arriving here is itself proof the sign-in took.
         Assert.Equal("/", new Uri(_page.Url).AbsolutePath);
 
         // …with an account created from the stubbed PIU profile (name = game tag)…
@@ -47,6 +47,34 @@ public sealed class PiuGameLoginTests : IAsyncLifetime
         // …and a real session cookie in the browser, so the next page load is authenticated.
         var cookies = await _browser.CookiesAsync();
         Assert.Contains(cookies, c => c.Name.Contains("DefaultAuthentication"));
+    }
+
+    /// <summary>
+    ///     The three-beat opening: sign in, set up, build. This pins the middle beat — that a new
+    ///     account is actually taken there, that the page renders live rather than as an empty
+    ///     circuit, and that the field that only exists because OAuth fills it in badly arrives
+    ///     carrying its own provenance.
+    /// </summary>
+    [Fact]
+    public async Task ANewAccountIsTakenToSetupBeforeTheDashboard()
+    {
+        await PiuGameLoginFlow.SignUpAsync(_page);
+
+        var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
+        await Expect(_page.Locator("button.setup-continue")).ToBeVisibleAsync(timeout);
+        // PIUGAME is the one provider that hands over a usable name — the game tag itself.
+        await Expect(_page.Locator("#setup-username")).ToHaveValueAsync(PiuGameStubs.GameTag, new()
+        {
+            Timeout = 60_000
+        });
+        await Expect(_page.GetByText("filled in from PIUGAME")).ToBeVisibleAsync(timeout);
+
+        // Public ships off, and the mix opens on the current game.
+        Assert.Equal("false", await _page.Locator("button.setup-switch").GetAttributeAsync("aria-checked"));
+        await Expect(_page.Locator("button.setup-gbtn[aria-pressed='true']")).ToHaveTextAsync("Phoenix 2", new()
+        {
+            Timeout = 60_000
+        });
     }
 
     [Fact]

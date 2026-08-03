@@ -33,7 +33,9 @@ public sealed class ScoreImportTests : IAsyncLifetime
     [Fact]
     public async Task ImportingFromPiuGameStreamsProgressAndPersistsTheSnapshotScores()
     {
-        await PiuGameLoginFlow.LogInAsNewUserAsync(_page);
+        // The seeded charts and the captured snapshot are Phoenix, and the import runs against
+        // the account's current mix — so setup picks Phoenix rather than its Phoenix 2 default.
+        await PiuGameLoginFlow.LogInAsNewUserAsync(_page, "Phoenix");
 
         await _page.GotoAsync("/UploadPhoenixScores");
         await FillMudFieldAsync("PIUGame.com Username", PiuGameLoginFlow.Username);

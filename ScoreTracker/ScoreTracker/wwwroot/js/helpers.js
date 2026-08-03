@@ -13,6 +13,14 @@ export async function downloadFileFromStream(fileName, contentStreamReference) {
     URL.revokeObjectURL(url);
 }
 
+// The per-mix atmosphere gradients are body-class rules with hardcoded hues (site.css), so a
+// page that re-themes itself by re-emitting --mix-* has to move the class too — otherwise the
+// ground keeps the previous mix's glow over the new mix's background.
+export function setThemeClass(className) {
+    document.body.classList.remove('theme-xx', 'theme-phoenix', 'theme-phoenix2');
+    document.body.classList.add(className);
+}
+
 export function triggerFileDownload(fileName, url) {
     const anchorElement = document.createElement('a');
     anchorElement.href = url;

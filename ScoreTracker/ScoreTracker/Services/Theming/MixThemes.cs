@@ -1,4 +1,4 @@
-using MudBlazor;
+﻿using MudBlazor;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
@@ -39,6 +39,11 @@ public sealed record MixPalette(
     public const string Error = "#C72020";
     public const string Success = "#6EDE7F";
     public const string Warning = "#FFC433";
+
+    // Success and Warning are light enough that MudBlazor's default white label lands around
+    // 1.6:1 on them. Both carry ink instead. Error is dark and keeps the white default.
+    public const string SuccessContrast = "#08260E";
+    public const string WarningContrast = "#2B1D00";
 
     // Matches MudBlazor's default Info blue — the To-Do border reads var(--mud-palette-info),
     // and render targets that can't read CSS vars (the share card) read this.
@@ -515,7 +520,9 @@ public static class MixThemes
                 Tertiary = p.Accent,
                 Error = MixPalette.Error,
                 Success = MixPalette.Success,
+                SuccessContrastText = MixPalette.SuccessContrast,
                 Warning = MixPalette.Warning,
+                WarningContrastText = MixPalette.WarningContrast,
                 TextPrimary = p.Ink,
                 TextSecondary = p.InkMuted,
                 ActionDefault = p.Ink,
@@ -539,7 +546,9 @@ public static class MixThemes
                 Tertiary = p.Accent,
                 Error = MixPalette.Error,
                 Success = MixPalette.Success,
+                SuccessContrastText = MixPalette.SuccessContrast,
                 Warning = MixPalette.Warning,
+                WarningContrastText = MixPalette.WarningContrast,
                 TextPrimary = p.Ink,
                 TextSecondary = p.InkMuted,
                 ActionDefault = p.Ink,
