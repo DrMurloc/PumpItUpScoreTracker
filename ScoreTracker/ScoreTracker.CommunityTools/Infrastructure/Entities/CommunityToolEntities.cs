@@ -16,6 +16,11 @@ internal sealed class ToolEntity
     [MaxLength(20)]
     public string Visibility { get; set; } = string.Empty;
 
+    /// <summary>Integrated or ListingOnly, by name for the same reason Visibility is.</summary>
+    [Required]
+    [MaxLength(20)]
+    public string Kind { get; set; } = string.Empty;
+
     public bool AcceptsAllToolsShare { get; set; }
     [Required] [MaxLength(20)] public string WebhookMode { get; set; } = string.Empty;
     [MaxLength(500)] public string? WebhookUrl { get; set; }
@@ -48,6 +53,27 @@ internal sealed class ToolEntity
     ///     every delivery — a configured URL is a claim, this is the proof.
     /// </summary>
     public DateTimeOffset? WebhookUrlVerifiedAt { get; set; }
+
+    /// <summary>
+    ///     Where players read this tool's source. Nullable because PIU Tracker predates the
+    ///     requirement — the gate is what enforces it, not the column.
+    /// </summary>
+    [MaxLength(500)]
+    public string? RepositoryUrl { get; set; }
+
+    /// <summary>The account the repository sits under, parsed from the URL for the admin list.</summary>
+    [MaxLength(100)]
+    public string? RepositoryOwner { get; set; }
+
+    /// <summary>When <see cref="RepositoryUrl" /> last answered anonymously.</summary>
+    public DateTimeOffset? RepositoryCheckedAt { get; set; }
+
+    /// <summary>The maker's, for the owner to reach them on. Never leaves an admin surface.</summary>
+    [MaxLength(64)]
+    public string? DiscordHandle { get; set; }
+
+    /// <summary>When the maker accepted the rules, recorded once at registration.</summary>
+    public DateTimeOffset? AgreedToRulesAt { get; set; }
 }
 
 /// <summary>Which mixes' imports trigger a delivery for this tool.</summary>
@@ -190,4 +216,24 @@ internal sealed class ToolActivityEntity
 
     public int Count { get; set; }
     [MaxLength(200)] public string? Detail { get; set; }
+}
+
+/// <summary>
+///     A maker barred from making tools.
+///     <para>
+///         Every effect is computed from this row rather than written into the tools themselves —
+///         their shares, keys and listings are left exactly as they were, so lifting a ban restores
+///         a working tool instead of an empty shell. It also means the activity log and delivery
+///         history survive the ban that a dispute would be argued over.
+///     </para>
+/// </summary>
+internal sealed class ToolMakerBanEntity
+{
+    [Key] public Guid UserId { get; set; }
+    public DateTimeOffset BannedAt { get; set; }
+    public Guid BannedByUserId { get; set; }
+
+    /// <summary>The owner's own note. Freeform, editable afterwards, seen by nobody else.</summary>
+    [MaxLength(1000)]
+    public string? Notes { get; set; }
 }

@@ -16,7 +16,7 @@
 
 <MudPaper Outlined="true" Class="pa-0 mb-4">
     <nav class="ct-wiz-crumbs" aria-label="@L["Set up your tool"]">
-        @foreach (var crumb in Crumbs)
+        @foreach (var crumb in Rail)
         {
             var state = StateOf(crumb.Key);
             <button type="button" class="ct-wiz-crumb" data-state="@state"
@@ -36,14 +36,48 @@
     <div class="ct-wiz-body">
         @switch (_step)
         {
+            case Step.Rules:
+                @* The rules alone. A maker decides whether to build this at all from them, so
+                   meeting them after naming the thing is backwards. *@
+                <ToolRulesCard ShowAgreement="true" @bind-Agreed="_agreed"></ToolRulesCard>
+                break;
+
             case Step.Name:
-                <MudText Typo="Typo.h5" Class="mb-2">@L["Name your tool"]</MudText>
+                <MudText Typo="Typo.h5" Class="mb-1">@L["Create your tool"]</MudText>
                 <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
-                    @L["It starts private and fully working. Being listed in the directory is optional and comes at the end."]
+                    @L["It starts private and fully working. You can change any of this later."]
                 </MudText>
                 <MudTextField T="string" @bind-Value="_name" Label=@L["Name"] MaxLength="64" Immediate="true"
                               HelperText='@L["This is what a player sees when they are asked whether to let it read their scores. You can change it later."].Value'
                               Style="max-width:420px;"></MudTextField>
+                <MudTextField T="string" @bind-Value="_repositoryUrl" Class="mt-3" MaxLength="500"
+                              Label=@L["Public source repository"] Placeholder="https://github.com/you/your-tool"
+                              HelperText='@L["Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it."].Value'
+                              Style="max-width:420px;"></MudTextField>
+                <MudTextField T="string" @bind-Value="_discordHandle" Class="mt-3" MaxLength="64"
+                              Label=@L["Your Discord handle"]
+                              HelperText='@L["Only DrMurloc sees this. It is how you get a message if something goes wrong with your tool."].Value'
+                              Style="max-width:420px;"></MudTextField>
+
+                @* The fork. It changes the crumb rail, not just the next screen. *@
+                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@L["What is this tool?"]</MudText>
+                <MudRadioGroup T="ToolKind" @bind-Value="_kind" Class="d-flex flex-column">
+                    <MudRadio T="ToolKind" Value="ToolKind.Integrated" Color="Color.Primary">
+                        <b>@L["It reads player scores"]</b>
+                        <span class="ct-choice-sub">@L["Needs an API key. You call the API, or PIU Scores calls you."]</span>
+                    </MudRadio>
+                    <MudRadio T="ToolKind" Value="ToolKind.ListingOnly" Color="Color.Primary">
+                        <b>@L["Listing only"]</b>
+                        <span class="ct-choice-sub">@L["Just a directory entry pointing at your site. No key, no API, no webhooks."]</span>
+                    </MudRadio>
+                </MudRadioGroup>
+
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-4">
+                    <MudText Typo="Typo.body2">
+                        <b>@L["Both are needed before anyone else can use your tool."]</b>
+                        @L["Without them it still works — for you, on your own scores."]
+                    </MudText>
+                </MudAlert>
                 break;
 
             case Step.CreateKey:
@@ -64,9 +98,9 @@
                     }
                 </div>
                 <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-4">
-                    <MudText Typo="Typo.body2"><b>@L["We show it once."]</b></MudText>
+                    <MudText Typo="Typo.body2"><b>@L["Shown once."]</b></MudText>
                     <MudText Typo="Typo.body2">
-                        @L["We store a hash, not the key. You can hold two live keys at a time, so replacing one later costs no downtime."]
+                        @L["I store a hash, not the key. You can hold two live keys at a time, so replacing one later costs no downtime."]
                     </MudText>
                 </MudAlert>
                 break;
@@ -123,23 +157,23 @@
             case Step.Webhook:
                 <MudText Typo="Typo.h5" Class="mb-2">@L["Get told when someone plays"]</MudText>
                 <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
-                    @L["Optional. By default you ask us for scores whenever you like. Instead we can call you: when one of your players imports, we send an HTTP POST to a URL you give us and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook."]
+                    @L["Optional. By default you ask PIU Scores for scores whenever you like. Instead it can call you: when one of your players imports, an HTTP POST goes to a URL you supply and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook."]
                 </MudText>
                 @* One mode per line — see the note in ToolWebhookPanel. *@
                 <MudRadioGroup T="WebhookMode" @bind-Value="_mode" Class="d-flex flex-column">
                     <MudRadio T="WebhookMode" Value="WebhookMode.None" Color="Color.Primary">
-                        <b>@L["Nothing"]</b> — @L["You call our API when you want it. Skip this screen."]
+                        <b>@L["Nothing"]</b> — @L["You call the API when you want it. Skip this screen."]
                     </MudRadio>
                     <MudRadio T="WebhookMode" Value="WebhookMode.ScorePush" Color="Color.Primary">
-                        <b>@L["Score Push"]</b> — @L["We POST the scores themselves, 100 per delivery, with a next link when there are more."]
+                        <b>@L["Score Push"]</b> — @L["The scores themselves arrive, 100 per delivery, with a next link when there are more."]
                     </MudRadio>
                     <MudRadio T="WebhookMode" Value="WebhookMode.PlayerPing" Color="Color.Primary">
-                        <b>@L["Player ping"]</b> — @L["We POST only \"this player imported\". You come and fetch what you need."]
+                        <b>@L["Player ping"]</b> — @L["The POST says only \"this player imported\". You come and fetch what you need."]
                     </MudRadio>
                     @* Offered here, with the console's rules. A brand-new tool has no connected
                        players, which makes this the one moment session mode is freely choosable. *@
                     <MudRadio T="WebhookMode" Value="WebhookMode.PiuGameSession" Color="Color.Warning">
-                        <b>@L["PIUGame session"]</b> — @L["We forward the piugame.com session key so you run your own import."]
+                        <b>@L["PIUGame session"]</b> — @L["The piugame.com session key is forwarded so you run your own import."]
                     </MudRadio>
                 </MudRadioGroup>
 
@@ -155,18 +189,15 @@
 
                 @if (_mode != WebhookMode.None)
                 {
-                    <MudTextField T="string" @bind-Value="_webhookUrl" Label=@L["Deliver to"] Class="mt-3"
+                    <MudTextField T="string" @bind-Value="_webhookUrl" Label=@L["Your API"] Class="mt-3" Placeholder="https://example.piutool.com/score"
                                   MaxLength="500" Style="max-width:520px;"></MudTextField>
                     <div class="d-flex gap-3 flex-wrap mt-1">
-                        <MudTextField T="string" @bind-Value="_headerName" Label=@L["Header name"]
-                                      Placeholder="X-My-Tool-Token" MaxLength="64"
-                                      Style="max-width:260px;"></MudTextField>
                         <MudTextField T="string" @bind-Value="_headerValue" Label=@L["Value"]
                                       MaxLength="128" InputType="InputType.Password"
                                       Style="max-width:260px;"></MudTextField>
                     </div>
                     <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mt-1">
-                        @L["We send this header verbatim on every delivery, so your server can reject anything that is not us."]
+                        @L["This header is sent verbatim on every delivery, so your server can reject anything that is not PIU Scores."]
                     </MudText>
                     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
                         <MudText Typo="Typo.body2"><b>@L["Nothing is delivered until you verify the URL."]</b></MudText>
@@ -180,7 +211,7 @@
             case Step.Listing:
                 <MudText Typo="Typo.h5" Class="mb-2">@L["Ask to be listed"]</MudText>
                 <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
-                    @L["Optional, and the only step that involves us. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way."]
+                    @L["Optional, and the only step that involves me. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way."]
                 </MudText>
                 <MudTextField T="string" @bind-Value="_description" Label=@L["Description"] MaxLength="500"
                               Lines="3" Immediate="true" Disabled="_submitted"
@@ -229,9 +260,6 @@
                     <MudButton Size="Size.Small" Variant="Variant.Outlined" Href="/swagger" Target="_blank"
                                EndIcon="@Icons.Material.Filled.OpenInNew">@L["Swagger"]</MudButton>
                     <MudButton Size="Size.Small" Variant="Variant.Text" Target="_blank"
-                               Href="https://github.com/DrMurloc/PumpItUpScoreTracker/blob/main/docs/INTEGRATING.md"
-                               EndIcon="@Icons.Material.Filled.OpenInNew">@L["Full reference"]</MudButton>
-                    <MudButton Size="Size.Small" Variant="Variant.Text" Target="_blank"
                                Href="https://discord.gg/AvS5PxnvSN"
                                EndIcon="@Icons.Material.Filled.OpenInNew">@L["Ask on Discord"]</MudButton>
                 </div>
@@ -240,11 +268,17 @@
     </div>
 
     <div class="ct-wiz-foot">
-        @if (!CanLeave)
+        @* Two things now disable Create, so the greyed button says which one is missing rather than
+           leaving a maker to guess between them. *@
+        @if (_step == Step.Rules && !_agreed)
+        {
+            <span class="ct-wiz-note">@L["Accept the rules above to continue."]</span>
+        }
+        else if (!CanLeave)
         {
             <span class="ct-wiz-note">@L["You can leave once your key exists."]</span>
         }
-        @if (_step != Step.Name)
+        @if (_step != Step.Rules)
         {
             <MudButton Variant="Variant.Text" Disabled="_busy" OnClick="Back">@L["Back"]</MudButton>
         }
@@ -264,6 +298,7 @@
 @code {
     private enum Step
     {
+        Rules,
         Name,
         CreateKey,
         ShowKey,
@@ -279,11 +314,24 @@
 
     private static readonly Crumb[] Crumbs =
     {
-        new("name", l => l["Name Tool"].Value, false),
+        new("name", l => l["Register"].Value, false),
         new("key", l => l["API Key"].Value, false),
         new("invite", l => l["Invite Players"].Value, true),
         new("advanced", l => l["Advanced"].Value, true)
     };
+
+    /// <summary>
+    ///     A listing-only tool has no key and nobody to invite, so those crumbs are not
+    ///     "skipped" — they do not exist. The rail is built from the fork rather than greying
+    ///     entries a maker can never reach.
+    /// </summary>
+    private static readonly Crumb[] ListingCrumbs =
+    {
+        new("name", l => l["Register"].Value, false),
+        new("advanced", l => l["Listing"].Value, false)
+    };
+
+    private Crumb[] Rail => _kind == ToolKind.ListingOnly ? ListingCrumbs : Crumbs;
 
     private static readonly Lifetime[] Lifetimes =
     {
@@ -294,12 +342,19 @@
         new(null, l => l["Never"].Value)
     };
 
-    private Step _step = Step.Name;
+    private Step _step = Step.Rules;
     private bool _busy;
 
     private Guid? _toolId;
     private string _name = string.Empty;
     private string _description = string.Empty;
+    private string _repositoryUrl = string.Empty;
+    private string _discordHandle = string.Empty;
+
+    /// <summary>The rules are free and instant to accept, unlike having a repository ready.</summary>
+    private bool _agreed;
+
+    private ToolKind _kind = ToolKind.Integrated;
 
     private string _keyName = string.Empty;
     private int? _lifetimeDays = 182;
@@ -310,7 +365,6 @@
 
     private WebhookMode _mode = WebhookMode.None;
     private string _webhookUrl = string.Empty;
-    private string _headerName = string.Empty;
     private string _headerValue = string.Empty;
 
     private bool _submitted;
@@ -324,7 +378,7 @@
     /// </summary>
     private static string CrumbOf(Step step) => step switch
     {
-        Step.Name => "name",
+        Step.Rules or Step.Name => "name",
         Step.CreateKey or Step.ShowKey => "key",
         Step.Invite => "invite",
         Step.Webhook or Step.Listing => "advanced",
@@ -336,7 +390,7 @@
         var current = CrumbOf(_step);
         if (crumb == current) return "current";
 
-        var order = Crumbs.Select(c => c.Key).ToArray();
+        var order = Rail.Select(c => c.Key).ToArray();
         // Everything is behind you on the closing screen.
         if (current == "done") return "done";
         return Array.IndexOf(order, crumb) < Array.IndexOf(order, current) ? "done" : "todo";
@@ -350,6 +404,7 @@
 
     private bool CanAdvance => _step switch
     {
+        Step.Rules => _agreed,
         Step.Name => !string.IsNullOrWhiteSpace(_name),
         Step.CreateKey => !string.IsNullOrWhiteSpace(_keyName),
         _ => true
@@ -357,6 +412,7 @@
 
     private string NextLabel => _step switch
     {
+        Step.Rules => L["Continue"].Value,
         Step.Name => L["Create"].Value,
         Step.CreateKey => L["Create key"].Value,
         Step.Done => L["Go to the console"].Value,
@@ -373,6 +429,8 @@
         _ => false
     };
 
+    private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     private string InviteUrl(Guid code) => $"{NavManager.BaseUri.TrimEnd('/')}/CommunityTools/Invite/{code}";
 
     private void JumpTo(string crumb)
@@ -381,12 +439,12 @@
 
         _step = crumb switch
         {
-            "name" => Step.Name,
+            "name" => Step.Rules,
             // Back to the creation screen, never the reveal: the key is gone from memory the moment
             // we leave it, so returning would show an empty box where a secret used to be.
             "key" => Step.CreateKey,
             "invite" => Step.Invite,
-            _ => Step.Webhook
+            _ => _kind == ToolKind.ListingOnly ? Step.Listing : Step.Webhook
         };
     }
 
@@ -394,14 +452,15 @@
     {
         _step = _step switch
         {
+            Step.Name => Step.Rules,
             Step.CreateKey => Step.Name,
             // Same reason: there is nothing to go back to on the reveal.
             Step.ShowKey => Step.ShowKey,
             Step.Invite => Step.ShowKey,
             Step.Webhook => Step.Invite,
-            Step.Listing => Step.Webhook,
+            Step.Listing => _kind == ToolKind.ListingOnly ? Step.Name : Step.Webhook,
             Step.Done => Step.Listing,
-            _ => Step.Name
+            _ => Step.Rules
         };
     }
 
@@ -416,9 +475,16 @@
         {
             switch (_step)
             {
+                case Step.Rules:
+                    _step = Step.Name;
+                    break;
+
                 case Step.Name:
-                    _toolId ??= await Mediator.Send(new CreateToolCommand(_name));
-                    _step = Step.CreateKey;
+                    _toolId ??= await Mediator.Send(new CreateToolCommand(_name,
+                        Blank(_repositoryUrl), Blank(_discordHandle), _kind));
+                    // Nothing to mint and nobody to invite, so straight to the one thing a
+                    // listing-only tool is for.
+                    _step = _kind == ToolKind.ListingOnly ? Step.Listing : Step.CreateKey;
                     break;
 
                 case Step.CreateKey:
@@ -479,7 +545,7 @@
         }
 
         // Before the webhook command, so entering session mode can see the header it requires.
-        await Mediator.Send(new SetToolOutboundHeaderCommand(_toolId!.Value, _headerName, _headerValue));
+        await Mediator.Send(new SetToolOutboundHeaderCommand(_toolId!.Value, _headerValue));
         await Mediator.Send(new SetToolWebhookCommand(_toolId.Value, _mode, _webhookUrl,
             Array.Empty<MixEnum>()));
     }

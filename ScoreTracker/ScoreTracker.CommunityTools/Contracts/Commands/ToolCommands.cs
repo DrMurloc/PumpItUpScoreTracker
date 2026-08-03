@@ -3,12 +3,32 @@ using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.CommunityTools.Contracts.Commands;
 
+/// <summary>
+///     Registers a tool. <paramref name="RepositoryUrl" /> and <paramref name="DiscordHandle" /> may
+///     be blank — a maker building against their own scores needs neither — but without both the
+///     tool can never reach a second player.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record CreateToolCommand(string Name) : IRequest<Guid>;
+public sealed record CreateToolCommand(string Name, string? RepositoryUrl = null,
+    string? DiscordHandle = null, ToolKind Kind = ToolKind.Integrated) : IRequest<Guid>;
 
 [ExcludeFromCodeCoverage]
-public sealed record UpdateToolCommand(Guid ToolId, string Name, string? Description, string? Url)
-    : IRequest;
+public sealed record UpdateToolCommand(Guid ToolId, string Name, string? Description, string? Url,
+    string? RepositoryUrl = null, string? DiscordHandle = null) : IRequest;
+
+/// <summary>
+///     Fetches the repository link anonymously and records whether it answered. A private repository
+///     404s to exactly the players it is meant to be readable by, and looks identical to a typo.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record CheckToolRepositoryCommand(Guid ToolId) : IRequest<RepositoryCheckResult>;
+
+/// <summary>
+///     The outcome, in the console's closed vocabulary plus whatever the remote actually said —
+///     the same rule the webhook console follows, for the same reason.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record RepositoryCheckResult(bool Reachable, string? Reason, int? StatusCode);
 
 [ExcludeFromCodeCoverage]
 public sealed record SetToolAllToolsShareCommand(Guid ToolId, bool Accepts) : IRequest;
@@ -18,12 +38,16 @@ public sealed record SetToolWebhookCommand(Guid ToolId, WebhookMode Mode, string
     IReadOnlyList<MixEnum> Mixes) : IRequest;
 
 /// <summary>
-///     Sets the header we send verbatim on every delivery, which is how a maker's server knows a
-///     call is ours. A null or blank <paramref name="Value" /> keeps whatever is stored — the field
-///     is a secret the maker chose, and a blank box on a settings form must not erase one.
+///     Sets the value of the header sent verbatim on every delivery, which is how a maker's server
+///     knows a call is ours. The header's <b>name</b> is fixed — naming it was a decision with no
+///     right answer standing between a maker and the one that matters.
+///     <para>
+///         A null or blank value keeps whatever is stored: the field is a secret the maker chose,
+///         and a blank box on a settings form must not erase one.
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record SetToolOutboundHeaderCommand(Guid ToolId, string? Name, string? Value) : IRequest;
+public sealed record SetToolOutboundHeaderCommand(Guid ToolId, string? Value) : IRequest;
 
 /// <summary>
 ///     Sets the secret a maker's endpoint must answer a verification request with. Stored as a hash
@@ -121,3 +145,32 @@ public sealed record SendTestDeliveryCommand(Guid ToolId, MixEnum Mix, bool UseM
 /// <summary>Re-sends a past delivery whose body we still hold.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record ReplayDeliveryCommand(Guid ToolId, Guid DeliveryRowId) : IRequest<bool>;
+
+/// <summary>
+///     Bars a maker from making tools, and stops the ones they have.
+///     <para>
+///         Disables, never deletes. Their tools keep their shares, keys, activity log and delivery
+///         history exactly as they are and simply read nobody — so a ban can be looked at afterwards,
+///         and lifted, which a hard delete makes impossible. <see cref="Notes" /> is the admin's own
+///         scratch space and is seen by nobody else.
+///     </para>
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record BanToolMakerCommand(Guid UserId, string? Notes) : IRequest;
+
+[ExcludeFromCodeCoverage]
+public sealed record LiftToolMakerBanCommand(Guid UserId) : IRequest;
+
+/// <summary>Editable afterwards, so a ban can record how it ended as well as why it started.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record SetToolMakerBanNotesCommand(Guid UserId, string? Notes) : IRequest;
+
+/// <summary>
+///     A player opened a listed tool's site or source from the directory.
+///     <para>
+///         Rolled up hourly like <c>KeyUsed</c> — never a row per click. This is the only number a
+///         listing-only tool ever gets, since it has no players to count.
+///     </para>
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record RecordToolClickCommand(Guid ToolId) : IRequest;

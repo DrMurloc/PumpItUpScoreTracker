@@ -1,0 +1,735 @@
+@page "/Setup"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.Theming
+
+@* The step between signing in and having a home page (docs/design/new-user-setup.md).
+
+   Hand-styled against --mix-* with no MudBlazor components on purpose (D9): the mix picker
+   re-themes the page live by re-emitting the token block below, and --mud-palette-* comes from
+   MudThemeProvider in a different root, which this page cannot re-parameterize. A Mud control
+   here would keep the previous mix's colours while everything around it flipped. ISnackbar is
+   fine — it renders in the providers' root, and Severity.Success is mix-invariant.
+
+   Every field writes through on change (D6). Continue means "I'm done", not "save", so a
+   reload — which the language field deliberately causes — can never cost the player a field. *@
+
+<PageTitle>@L["Set up your account"]</PageTitle>
+
+@* Later in the document than App.razor's copy, so it wins at equal specificity, and it
+   re-renders whenever _mix changes. Same generator, no duplicated CSS (D9). *@
+<style>@((MarkupString)MixThemes.CssVariablesFor(_mix))</style>
+
+@* Page-scoped: every class below is used only here. The ground comes from the body's
+   per-mix atmosphere rules, so nothing here paints a page background. *@
+<style>
+    .setup-page {
+        max-width: 660px;
+        margin: 0 auto;
+        padding: 16px 0 48px;
+    }
+
+    /* A real sequence — sign in, set up, build — so it is numbered. */
+    .setup-steps {
+        list-style: none;
+        margin: 0 0 24px;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .setup-steps li {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 13.5px;
+        color: var(--mix-ink-muted);
+    }
+
+    .setup-step-n {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+        font-weight: 700;
+        border: 1px solid color-mix(in srgb, var(--mix-ink-muted) 38%, transparent);
+        flex: none;
+    }
+
+    .setup-steps .done .setup-step-n {
+        border-color: transparent;
+        background: color-mix(in srgb, var(--mix-primary) 22%, transparent);
+        color: var(--mix-primary);
+    }
+
+    .setup-steps .now {
+        color: var(--mix-ink);
+        font-weight: 600;
+    }
+
+    .setup-steps .now .setup-step-n {
+        border-color: transparent;
+        background: var(--mix-primary);
+        color: var(--mix-primary-contrast);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--mix-primary) 16%, transparent);
+    }
+
+    .setup-step-sep {
+        flex: 1 1 20px;
+        min-width: 12px;
+        max-width: 40px;
+        height: 1px;
+        background: color-mix(in srgb, var(--mix-ink-muted) 26%, transparent);
+    }
+
+    .setup-card {
+        position: relative;
+        background: var(--mix-surface);
+        border: 1px solid color-mix(in srgb, var(--mix-primary) 28%, transparent);
+        border-radius: 14px;
+        box-shadow: 0 18px 50px color-mix(in srgb, var(--mix-bg) 50%, transparent),
+                    0 0 40px color-mix(in srgb, var(--mix-primary) 10%, transparent);
+        padding: 34px 34px 28px;
+        overflow: hidden;
+        transition: border-color .38s ease, box-shadow .38s ease, background-color .38s ease;
+    }
+
+    /* The card carries the theme it is currently set to. */
+    .setup-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 2px;
+        background: linear-gradient(90deg, var(--mix-primary), var(--mix-secondary) 62%, transparent);
+        transition: background .38s ease;
+    }
+
+    /* Mirrors MixThemes.DisplayFontStack — raw h1/spans don't inherit MudBlazor's
+       heading typography, and this page renders none of its own Mud components. */
+    .setup-title,
+    .setup-eyebrow,
+    .setup-step-n,
+    .setup-continue {
+        font-family: "Barlow Condensed", "Malgun Gothic", "Yu Gothic UI", "Apple SD Gothic Neo",
+                     "Hiragino Sans", "Arial Narrow", sans-serif;
+    }
+
+    .setup-eyebrow {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        color: var(--mix-primary);
+        margin: 0 0 10px;
+        transition: color .38s ease;
+    }
+
+    .setup-title {
+        font-weight: 700;
+        font-size: clamp(30px, 5.2vw, 44px);
+        line-height: 1.03;
+        letter-spacing: .015em;
+        text-transform: uppercase;
+        text-wrap: balance;
+        margin: 0 0 12px;
+    }
+
+    .setup-lede {
+        font-size: 15.5px;
+        color: var(--mix-ink-muted);
+        margin: 0 0 30px;
+    }
+
+    .setup-lede b {
+        color: var(--mix-ink);
+        font-weight: 600;
+    }
+
+    .setup-fields {
+        display: grid;
+        gap: 24px;
+        min-width: 0;
+    }
+
+    .setup-pair {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    }
+
+    .setup-field {
+        display: grid;
+        gap: 7px;
+        min-width: 0;
+    }
+
+    .setup-label {
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--mix-ink-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .setup-optional {
+        letter-spacing: 0;
+        text-transform: none;
+        font-weight: 400;
+        opacity: .7;
+        font-size: 12px;
+    }
+
+    .setup-help {
+        font-size: 13px;
+        color: var(--mix-ink-muted);
+        margin: 0;
+    }
+
+    .setup-help b {
+        color: var(--mix-ink);
+        font-weight: 600;
+    }
+
+    .setup-input {
+        width: 100%;
+        padding: 11px 13px;
+        font: inherit;
+        font-size: 15.5px;
+        color: var(--mix-ink);
+        background: var(--mix-surface-muted);
+        border: 1px solid color-mix(in srgb, var(--mix-ink-muted) 24%, transparent);
+        border-radius: 9px;
+        transition: border-color .14s ease;
+    }
+
+    .setup-input:hover:not(:disabled) {
+        border-color: color-mix(in srgb, var(--mix-primary) 42%, transparent);
+    }
+
+    .setup-input:disabled {
+        opacity: .6;
+    }
+
+    select.setup-input {
+        appearance: none;
+        cursor: pointer;
+        padding-right: 34px;
+        background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                          linear-gradient(135deg, currentColor 50%, transparent 50%);
+        background-position: calc(100% - 17px) 51%, calc(100% - 12px) 51%;
+        background-size: 5px 5px, 5px 5px;
+        background-repeat: no-repeat;
+    }
+
+    select.setup-input option {
+        background: var(--mix-surface-muted);
+        color: var(--mix-ink);
+    }
+
+    .setup-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: .04em;
+        text-transform: none;
+        color: var(--mix-ink-muted);
+        background: color-mix(in srgb, var(--mix-ink-muted) 14%, transparent);
+        border: 1px solid color-mix(in srgb, var(--mix-ink-muted) 20%, transparent);
+    }
+
+    /* The tier-list view switch: joined buttons, selected Filled, rest Outlined. */
+    .setup-group {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .setup-gbtn {
+        flex: 1 1 auto;
+        padding: 9px 16px;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        background: transparent;
+        color: var(--mix-primary);
+        border: 1px solid var(--mix-primary);
+        border-radius: 0;
+        margin-left: -1px;
+        transition: background-color .14s ease, color .14s ease, border-color .38s ease;
+    }
+
+    .setup-gbtn:first-child {
+        border-radius: 6px 0 0 6px;
+        margin-left: 0;
+    }
+
+    .setup-gbtn:last-child {
+        border-radius: 0 6px 6px 0;
+    }
+
+    .setup-gbtn:hover:not(:disabled) {
+        background: color-mix(in srgb, var(--mix-primary) 12%, transparent);
+    }
+
+    .setup-gbtn[aria-pressed="true"] {
+        background: var(--mix-primary);
+        color: var(--mix-primary-contrast);
+        position: relative;
+        z-index: 1;
+    }
+
+    .setup-visibility {
+        border: 1px solid color-mix(in srgb, var(--mix-ink-muted) 22%, transparent);
+        border-radius: 11px;
+        padding: 15px 16px;
+        background: color-mix(in srgb, var(--mix-surface-muted) 60%, transparent);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: border-color .2s ease, background-color .2s ease;
+    }
+
+    .setup-visibility.on {
+        border-color: color-mix(in srgb, var(--mix-primary) 46%, transparent);
+        background: color-mix(in srgb, var(--mix-primary) 7%, transparent);
+    }
+
+    .setup-vis-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .setup-vis-title {
+        font-size: 15.5px;
+        font-weight: 600;
+        display: block;
+    }
+
+    .setup-vis-sub {
+        font-size: 13px;
+        color: var(--mix-ink-muted);
+    }
+
+    .setup-switch {
+        flex: none;
+        width: 46px;
+        height: 26px;
+        padding: 0;
+        border-radius: 999px;
+        cursor: pointer;
+        border: 1px solid color-mix(in srgb, var(--mix-ink-muted) 34%, transparent);
+        background: color-mix(in srgb, var(--mix-ink-muted) 20%, transparent);
+        position: relative;
+        transition: background-color .18s ease, border-color .18s ease;
+    }
+
+    .setup-switch::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        transform: translateY(-50%);
+        background: var(--mix-ink-muted);
+        transition: transform .18s ease, background-color .18s ease;
+    }
+
+    .setup-switch[aria-checked="true"] {
+        background: var(--mix-primary);
+        border-color: var(--mix-primary);
+    }
+
+    .setup-switch[aria-checked="true"]::after {
+        transform: translate(20px, -50%);
+        background: var(--mix-primary-contrast);
+    }
+
+    .setup-actions {
+        margin-top: 30px;
+        border-top: 1px solid color-mix(in srgb, var(--mix-ink-muted) 16%, transparent);
+        padding-top: 24px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+    }
+
+    .setup-continue {
+        padding: 13px 26px;
+        border: 0;
+        border-radius: 10px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        background: var(--mix-primary);
+        color: var(--mix-primary-contrast);
+        box-shadow: 0 0 26px color-mix(in srgb, var(--mix-primary) 26%, transparent);
+        transition: transform .12s ease, box-shadow .14s ease, background-color .38s ease;
+    }
+
+    .setup-continue:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 0 34px color-mix(in srgb, var(--mix-primary) 38%, transparent);
+    }
+
+    .setup-continue:disabled {
+        opacity: .65;
+        cursor: default;
+    }
+
+    .setup-after {
+        flex: 1 1 240px;
+        font-size: 13px;
+        color: var(--mix-ink-muted);
+        margin: 0;
+    }
+
+    .setup-page :focus-visible {
+        outline: 2px solid var(--mix-primary);
+        outline-offset: 2px;
+    }
+
+    @@media (max-width: 620px) {
+        .setup-card {
+            padding: 26px 20px 22px;
+        }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .setup-page * {
+            transition: none !important;
+        }
+    }
+</style>
+
+<div class="setup-page">
+
+    <ol class="setup-steps">
+        <li class="done">
+            <span class="setup-step-n" aria-hidden="true">&#10003;</span> @L["Sign in"]
+        </li>
+        <li class="setup-step-sep" aria-hidden="true"></li>
+        <li class="now" aria-current="step">
+            <span class="setup-step-n">2</span> @L["Set up your account"]
+        </li>
+        <li class="setup-step-sep" aria-hidden="true"></li>
+        <li>
+            <span class="setup-step-n">3</span> @L["Build your home page"]
+        </li>
+    </ol>
+
+    <section class="setup-card">
+
+        <p class="setup-eyebrow">@L["One minute, then you're in"]</p>
+        <h1 class="setup-title">@L["Welcome to PIU Scores"]</h1>
+        <p class="setup-lede">
+            @L["A few things worth getting right up front — everything after this is tuned to them."]
+            <b>@L["All of it is changeable later in your account."]</b>
+        </p>
+
+        <div class="setup-fields">
+
+            <div class="setup-field">
+                <label class="setup-label" for="setup-username">
+                    @L["Username"]
+                    @if (ProviderLabel != null)
+                    {
+                        <span class="setup-chip">@L["filled in from {0}", ProviderLabel]</span>
+                    }
+                </label>
+                <input type="text" id="setup-username" class="setup-input" maxlength="100"
+                       autocomplete="off" spellcheck="false" disabled="@_isSaving"
+                       value="@_name" @onchange="OnNameChanged"/>
+                <p class="setup-help">
+                    @L["This is the name other players see — on leaderboards, in communities, and on tier lists. Most people use their game tag."]
+                </p>
+            </div>
+
+            <div class="setup-pair">
+                <div class="setup-field">
+                    <label class="setup-label" for="setup-language">@L["Language"]</label>
+                    <select id="setup-language" class="setup-input" disabled="@_isSaving"
+                            value="@_culture" @onchange="OnCultureChanged">
+                        @foreach (var culture in SupportedCultures.All)
+                        {
+                            <option value="@culture.Code" selected="@(culture.Code == _culture)">
+                                @culture.NativeName
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="setup-field">
+                    <label class="setup-label" for="setup-country">
+                        @L["Country"] <span class="setup-optional">@L["— optional"]</span>
+                    </label>
+                    <select id="setup-country" class="setup-input" disabled="@_isSaving"
+                            value="@_country" @onchange="OnCountryChanged">
+                        <option value="" selected="@(string.IsNullOrEmpty(_country))">@L["Not set"]</option>
+                        @foreach (var country in _countries)
+                        {
+                            var name = country.Name.ToString();
+                            <option value="@name" selected="@(name == _country)">@name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="setup-field">
+                <span class="setup-label" id="setup-mix-label">@L["Current mix"]</span>
+                @* The tier-list view switch, hand-rolled: MudButtonGroup with the selected one
+                   Filled and the rest Outlined in Color.Primary. Mix names are proper nouns and
+                   are never localized. *@
+                <div class="setup-group" role="group" aria-labelledby="setup-mix-label">
+                    @foreach (var mix in MixThemes.ThemedMixes)
+                    {
+                        var m = mix;
+                        <button type="button" class="setup-gbtn" disabled="@_isSaving"
+                                aria-pressed="@((m == _mix).ToString().ToLowerInvariant())"
+                                @onclick="() => ChangeMix(m)">
+                            @m.GetName()
+                        </button>
+                    }
+                </div>
+                <p class="setup-help">
+                    @L["Sets what the whole site shows you."]
+                    <b>@L["Switch it any time from the mix pill in the top bar."]</b>
+                </p>
+            </div>
+
+            <div class="setup-visibility @(_isPublic ? "on" : "")">
+                <span class="setup-vis-text">
+                    <span class="setup-vis-title">@L["Public profile"]</span>
+                    <span class="setup-vis-sub">
+                        @(_isPublic
+                            ? L["On — your scores show on leaderboards and in communities"]
+                            : L["Off — only you can see your scores"])
+                    </span>
+                </span>
+                <button type="button" class="setup-switch" role="switch" disabled="@_isSaving"
+                        aria-checked="@(_isPublic.ToString().ToLowerInvariant())"
+                        aria-label="@L["Public profile"]" @onclick="TogglePublic"></button>
+            </div>
+
+        </div>
+
+        <div class="setup-actions">
+            <button type="button" class="setup-continue" disabled="@_isSaving" @onclick="Continue">
+                @(_isFinishing ? L["Opening your home page…"] : L["Continue"])
+            </button>
+            <p class="setup-after">
+                @L["Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there."]
+            </p>
+        </div>
+
+    </section>
+</div>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject IUserRepository Users
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+@code {
+
+    /// <summary>
+    ///     Which sign-in the account came through, so the username field can say where its
+    ///     prefilled value came from. Whitelisted below rather than echoed — it arrives on the
+    ///     query string, which the player controls.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = "from")]
+    public string? From { get; set; }
+
+    private static readonly IReadOnlyDictionary<string, string> ProviderLabels =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Discord"] = "Discord",
+            ["Google"] = "Google",
+            ["Facebook"] = "Facebook",
+            ["PiuGame"] = "PIUGAME"
+        };
+
+    private string? ProviderLabel =>
+        From != null && ProviderLabels.TryGetValue(From, out var label) ? label : null;
+
+    private string _name = string.Empty;
+    private string _country = string.Empty;
+    private string _culture = SupportedCultures.Default;
+    private bool _isPublic;
+    private MixEnum _mix = MixEnum.Phoenix2;
+    private IReadOnlyList<CountryRecord> _countries = Array.Empty<CountryRecord>();
+
+    private bool _isSaving;
+    private bool _isFinishing;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/Login");
+            return;
+        }
+
+        _name = CurrentUser.User.Name;
+        _country = CurrentUser.User.Country?.ToString() ?? string.Empty;
+        _isPublic = CurrentUser.User.IsPublic;
+        // Whatever a reload left behind — the language field causes one on purpose, and every
+        // field is already persisted by then, so the page rebuilds itself exactly (D6/D8).
+        _culture = await UiSettings.GetSetting("Culture") ?? SupportedCultures.Normalize(
+            System.Globalization.CultureInfo.CurrentUICulture.Name);
+        // Phoenix 2 unless they already chose — GetSelectedMix answers Phoenix for "unset",
+        // and a new account pointed at the previous game is the wrong opening move (D5).
+        var savedMix = await UiSettings.GetSetting(IUiSettingsAccessor.MixSettingKey);
+        _mix = Enum.TryParse<MixEnum>(savedMix, out var chosen) && MixThemes.ThemedMixes.Contains(chosen)
+            ? chosen
+            : MixEnum.Phoenix2;
+
+        _countries = (await Users.GetCountries()).OrderBy(c => c.Name).ToArray();
+    }
+
+    private async Task OnNameChanged(ChangeEventArgs args)
+    {
+        var value = (args.Value as string ?? string.Empty).Trim();
+
+        if (!Name.TryParse(value, out var parsed) || value.Length > 100)
+        {
+            // Put the last good value back rather than leaving the field in a state that
+            // cannot be saved — there is no submit step here to validate against.
+            _name = CurrentUser.User.Name;
+            Snackbar.Add(L["Enter a username"], Severity.Error);
+            return;
+        }
+
+        if (parsed.ToString() == _name) return;
+
+        _name = parsed;
+        await SaveProfile();
+        Snackbar.Add(L["Username saved"], Severity.Success);
+    }
+
+    private async Task OnCountryChanged(ChangeEventArgs args)
+    {
+        var value = (args.Value as string ?? string.Empty).Trim();
+        if (value == _country) return;
+
+        _country = value;
+        await SaveProfile();
+        Snackbar.Add(string.IsNullOrEmpty(_country)
+            ? L["Country cleared"]
+            : L["Country saved"], Severity.Success);
+    }
+
+    private async Task TogglePublic()
+    {
+        _isPublic = !_isPublic;
+        await SaveProfile();
+        Snackbar.Add(_isPublic
+            ? L["Your profile is public"]
+            : L["Your profile is private"], Severity.Success);
+    }
+
+    /// <summary>
+    ///     Name, country and visibility are one command, and the name lives in the auth cookie's
+    ///     claims — which a circuit cannot rewrite. The fetch reissues them, exactly as
+    ///     ProfilePanel does; it is a request, not a navigation, so the page stays put.
+    /// </summary>
+    private async Task SaveProfile()
+    {
+        _isSaving = true;
+        try
+        {
+            await Mediator.Send(new UpdateUserCommand(_name, _isPublic,
+                string.IsNullOrWhiteSpace(_country) ? null : _country));
+
+            var module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+            await module.InvokeVoidAsync("refreshLogin");
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    /// <summary>
+    ///     A live circuit cannot change its own culture — IStringLocalizer resolves off
+    ///     CultureInfo.CurrentUICulture, which the localization middleware sets per request. So
+    ///     this is a real navigation, and the page comes back in the new language. Nothing is
+    ///     lost because nothing was unsaved (D8).
+    /// </summary>
+    private async Task OnCultureChanged(ChangeEventArgs args)
+    {
+        var value = args.Value as string ?? SupportedCultures.Default;
+        if (!SupportedCultures.IsSupported(value) || value == _culture) return;
+
+        _culture = SupportedCultures.Normalize(value);
+        await UiSettings.SetSetting("Culture", _culture);
+
+        var from = From;
+        var returnTo = ProviderLabel == null || from == null
+            ? "/Setup"
+            : $"/Setup?from={Uri.EscapeDataString(from)}";
+        NavManager.NavigateTo(
+            $"/Culture/Set?culture={_culture}&redirectUrl={Uri.EscapeDataString(returnTo)}",
+            true);
+    }
+
+    /// <summary>
+    ///     Persisted on click so abandoning the page keeps the choice; the anonymous-fallback
+    ///     cookie needs an HTTP response and lands on Continue instead (D10). The theme flips
+    ///     here with no reload — the style block above re-renders, and the body class moves with
+    ///     it because the atmosphere gradients are per-theme rules.
+    /// </summary>
+    private async Task ChangeMix(MixEnum mix)
+    {
+        if (mix == _mix) return;
+
+        _mix = mix;
+        await UiSettings.SetSelectedMix(mix);
+
+        var module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await module.InvokeVoidAsync("setThemeClass", MixThemes.CssClassFor(mix));
+
+        Snackbar.Add(L["Mix set to {0}", mix.GetName()], Severity.Success);
+    }
+
+    /// <summary>
+    ///     Not a save — everything already is. This marks setup done and hands off to step 3,
+    ///     routed through /Mix/Set so the anonymous-fallback cookie lands on the way home.
+    /// </summary>
+    private async Task Continue()
+    {
+        _isSaving = true;
+        _isFinishing = true;
+
+        await UiSettings.SetSetting(IUiSettingsAccessor.SetupCompletedSettingKey, "true");
+        NavManager.NavigateTo(
+            $"/Mix/Set?mix={_mix}&redirectUrl={Uri.EscapeDataString("/")}", true);
+    }
+
+}

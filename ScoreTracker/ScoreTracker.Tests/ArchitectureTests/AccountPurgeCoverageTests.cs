@@ -64,6 +64,10 @@ public sealed class AccountPurgeCoverageTests
             "user keys by design (survivor and retired).",
         ["UserEntity"] =
             "Deleted by IAccountPurgeRepository.DeleteUser, last, a week after the purge began.",
+        ["ToolMakerBanEntity"] =
+            "Deliberately outlives the account it bans. Purging it would mean delete-and-recreate " +
+            "clears a ban, which is the one outcome the ban exists to prevent. It also carries a " +
+            "second user key — BannedByUserId, the admin who issued it, not its subject.",
         ["ToolEntity"] =
             "Deleted whole by EFAccountPurgeRepository before the row-level purge runs. Purging it " +
             "by OwnerUserId alone would orphan the tool's keys, shares, deliveries and invite codes.",

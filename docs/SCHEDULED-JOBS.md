@@ -22,6 +22,7 @@ All cron expressions are **UTC**.
 | `purge-player-highlights` | Sundays 09:00 | `PurgePlayerHighlightsCommand` | PlayerHighlightPurgeConsumer (PlayerProgress) **and** CommunityHighlightPurgeConsumer (Communities) | Weekly purge of the significant-wins feed: deletes `scores.PlayerHighlight` payloads and the `scores.CommunityHighlight` audience-index rows over them, both older than 30 days (CH7 — home-page-widgets §7). One command with two consumers so the pair can't drift and leave an index pointing at wins that no longer exist. Idempotent, deletes by timestamp. |
 | `retry-webhook-deliveries` | `*/5 * * * *` | Re-attempts community-tool webhook deliveries whose backoff has elapsed. The queue is a SQL table, so a delivery survives a restart; this is what picks it back up. |
 | `prune-webhook-deliveries` | `0 8 * * *` | Drops delivery bodies past 7 days and activity rows past 14. Two horizons: a body stops being useful once nobody can replay it, the log stays readable longer. |
+| `reset-deep-scans` | `0 0 1 * *` | Refills every account's `User.DeepScansRemaining` to the monthly allowance (`DeepScanAllowanceHandlers.MonthlyAllowance`), so the Score check's full-account walks stay rationed. One `ExecuteUpdate` across the User table; an unused allowance does not roll over, and a hand-granted extra balance survives only until this fires. |
 
 ## Operational notes
 

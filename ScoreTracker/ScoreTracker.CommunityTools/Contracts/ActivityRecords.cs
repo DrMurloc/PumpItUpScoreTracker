@@ -23,7 +23,13 @@ public enum ToolActivityKind
 
     KeyExpired,
     PlayerConnected,
-    PlayerDisconnected
+    PlayerDisconnected,
+
+    /// <summary>
+    ///     Hourly roll-up of players opening this tool's site or source from the directory. The only
+    ///     number a listing-only tool ever gets — it has no players to count.
+    /// </summary>
+    DirectoryClicked
 }
 
 /// <summary>One row of the activity log.</summary>
@@ -46,4 +52,7 @@ public sealed record ToolActivitySummary(
     int Deliveries,
     int Failures,
     int RateLimited,
-    int ConnectedPlayers);
+    int ConnectedPlayers,
+    /// <summary>Successful API calls, summed from the hourly roll-ups. Tool-wide, not per key.</summary>
+    int Calls,
+    int Clicks);

@@ -22,5 +22,11 @@ internal interface IToolActivityRepository
     Task<IReadOnlyList<ToolActivityRecord>> GetRecent(Guid toolId, int limit,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Every roll-up of one kind, summed over the tool's whole life. The recent-activity read
+    ///     cannot answer this — it takes the last few hundred rows, which is a window, not a total.
+    /// </summary>
+    Task<int> SumAllTime(Guid toolId, ToolActivityKind kind, CancellationToken cancellationToken = default);
+
     Task Prune(DateTimeOffset before, CancellationToken cancellationToken = default);
 }

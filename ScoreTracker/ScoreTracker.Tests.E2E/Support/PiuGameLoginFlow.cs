@@ -11,15 +11,35 @@ internal static class PiuGameLoginFlow
     public const string Username = "e2euser";
     public const string Password = "correct-horse-battery";
 
-    /// <summary>Signs in as a brand-new account; lands on the dashboard.</summary>
-    public static async Task LogInAsNewUserAsync(IPage page)
+    /// <summary>Signs in as a brand-new account and stops on the setup step.</summary>
+    public static async Task SignUpAsync(IPage page)
     {
         await OpenFormAsync(page);
         await page.Locator("input[name='username']").FillAsync(Username);
         await page.Locator("input[name='password']").FillAsync(Password);
         await page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Log In" }).ClickAsync();
-        // The dashboard's own empty state is the new-account landing now; "/" only resolves for
-        // someone signed in, so arriving here at all is the proof the account exists.
+        // A new account lands on setup (docs/design/new-user-setup.md). Both "/Setup" and "/"
+        // resolve only for someone signed in, so arriving at all proves the account exists.
+        await page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/Setup",
+            new PageWaitForURLOptions { Timeout = 60_000 });
+    }
+
+    /// <summary>
+    ///     Signs in as a brand-new account and walks setup through to the dashboard, picking a
+    ///     mix on the way. The mix is not incidental: setup opens on Phoenix 2, so a test that
+    ///     works in Phoenix has to say so here or the whole site answers in the wrong mix.
+    /// </summary>
+    public static async Task LogInAsNewUserAsync(IPage page, string mix = "Phoenix 2")
+    {
+        await SignUpAsync(page);
+
+        await page.Locator("button.setup-gbtn")
+            .Filter(new LocatorFilterOptions { HasTextString = mix })
+            .First
+            .ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
+
+        await page.Locator("button.setup-continue")
+            .ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
         await page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/",
             new PageWaitForURLOptions { Timeout = 60_000 });
 

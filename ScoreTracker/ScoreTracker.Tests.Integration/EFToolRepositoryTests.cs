@@ -53,10 +53,19 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
 
     private static void PublicAndPooled(Tool tool)
     {
-        tool.Describe(Name.From(tool.Name.ToString()), "A tool", new Uri("https://example.com"));
+        Sourced(tool);
         tool.RequestListing();
         tool.Approve(Now);
         tool.SetAcceptsAllToolsShare(true);
+    }
+
+    /// <summary>Everything the source-and-maker gate asks for, so listing is allowed.</summary>
+    private static void Sourced(Tool tool)
+    {
+        tool.Describe(Name.From(tool.Name.ToString()), "A tool", new Uri("https://example.com"),
+            new Uri("https://github.com/errlena/a-tool"));
+        tool.SetDiscordHandle("errlena");
+        tool.MarkRepositoryReachable(Now);
     }
 
     /// <summary>
@@ -88,6 +97,91 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
         Assert.DoesNotContain(session.Id, reading);
         Assert.False(await repository.CanRead(session.Id, player));
         Assert.DoesNotContain(player, await repository.GetReadablePlayerIds(session.Id));
+    }
+
+    /// <summary>
+    ///     The source-and-maker gate, asserted where it is actually enforced.
+    ///     <para>
+    ///         Effective access is three sets combined in SQL against the entity, and nothing routes
+    ///         through a handler to grant the pool — so the handler-level refusal produces a good
+    ///         error message over a pool that would still be wide open. Only a real query can catch
+    ///         an over-permissive predicate, which is the same reason <c>AccountPurgeTests</c> exists.
+    ///     </para>
+    /// </summary>
+    [Fact]
+    public async Task AToolWithNoCheckedSourceIsNeverReachedByBlanketConsent()
+    {
+        var repository = BuildRepository();
+        var player = Guid.NewGuid();
+        await repository.SetShareWithAllTools(player, true, Now);
+
+        var sourced = await SaveTool(repository, "Planner", PublicAndPooled);
+        var unsourced = await SaveTool(repository, "Digger", t =>
+        {
+            PublicAndPooled(t);
+            // Approved, pooled, and then the source link changed — which withdraws its check.
+            t.Describe(Name.From("Digger"), "A tool", new Uri("https://example.com"),
+                new Uri("https://github.com/errlena/moved-somewhere-else"));
+        });
+
+        Assert.Contains(sourced.Id, await repository.GetToolIdsReading(player));
+        Assert.DoesNotContain(unsourced.Id, await repository.GetToolIdsReading(player));
+        Assert.False(await repository.CanRead(unsourced.Id, player));
+        Assert.DoesNotContain(player, await repository.GetReadablePlayerIds(unsourced.Id));
+    }
+
+    /// <summary>
+    ///     A ban disables rather than deletes, so its effect has to be computed at read time — which
+    ///     means only a real query can prove it happened. The shares stay in the table untouched,
+    ///     which is what makes the ban liftable.
+    /// </summary>
+    [Fact]
+    public async Task ABannedMakersToolReadsNobody()
+    {
+        var repository = BuildRepository();
+        var bans = new EFToolMakerBanRepository(_fixture.DbContextFactory);
+        var player = Guid.NewGuid();
+        await repository.SetShareWithAllTools(player, true, Now);
+
+        var tool = await SaveTool(repository, "Digger", PublicAndPooled);
+        var deliberate = Guid.NewGuid();
+        await repository.GrantShare(tool.Id, deliberate, ShareSource.Direct, Now);
+
+        Assert.True(await repository.CanRead(tool.Id, deliberate));
+
+        await bans.Ban(new ToolMakerBan(tool.OwnerUserId, Now, Guid.NewGuid(), "ads on the site"));
+
+        Assert.Empty(await repository.GetReadablePlayerIds(tool.Id));
+        Assert.False(await repository.CanRead(tool.Id, deliberate));
+        Assert.DoesNotContain(tool.Id, await repository.GetToolIdsReading(player));
+
+        // And the grant was never touched, so lifting restores a working tool.
+        await bans.Lift(tool.OwnerUserId);
+
+        Assert.True(await repository.CanRead(tool.Id, deliberate));
+        Assert.Contains(tool.Id, await repository.GetToolIdsReading(player));
+    }
+
+    /// <summary>
+    ///     The other half, and the site's own rule: going private blocks the blanket grant and never
+    ///     a deliberate named one. Cutting off players who chose a tool because its maker mistyped a
+    ///     URL would punish the wrong people.
+    /// </summary>
+    [Fact]
+    public async Task ADeliberateGrantSurvivesTheSourceGate()
+    {
+        var repository = BuildRepository();
+        var player = Guid.NewGuid();
+
+        var tool = await SaveTool(repository, "Digger", PublicAndPooled);
+        await repository.GrantShare(tool.Id, player, ShareSource.Direct, Now);
+
+        tool.Describe(Name.From("Digger"), "A tool", new Uri("https://example.com"),
+            new Uri("https://github.com/errlena/moved-somewhere-else"));
+        await repository.Save(tool);
+
+        Assert.True(await repository.CanRead(tool.Id, player));
+        Assert.Contains(player, await repository.GetReadablePlayerIds(tool.Id));
     }
 
     /// <summary>

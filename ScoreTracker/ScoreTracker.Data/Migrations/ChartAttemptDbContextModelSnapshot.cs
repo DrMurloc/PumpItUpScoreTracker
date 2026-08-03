@@ -801,6 +801,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<bool>("AcceptsAllToolsShare")
                         .HasColumnType("bit");
 
+                    b.Property<DateTimeOffset?>("AgreedToRulesAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<DateTimeOffset?>("ApprovedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -810,6 +813,15 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DiscordHandle")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -828,6 +840,17 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("RepositoryCheckedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("RepositoryOwner")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("RepositoryUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -883,6 +906,27 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("InviteCode");
 
                     b.ToTable("ToolInviteCode", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.CommunityTools.Infrastructure.Entities.ToolMakerBanEntity", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("BannedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("BannedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("ToolMakerBan", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.CommunityTools.Infrastructure.Entities.ToolMixSubscriptionEntity", b =>
@@ -1296,6 +1340,9 @@ namespace ScoreTracker.Data.Migrations
 
                     b.Property<string>("CountryName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DeepScansRemaining")
+                        .HasColumnType("int");
 
                     b.Property<string>("GameTag")
                         .HasColumnType("nvarchar(max)");

@@ -21,6 +21,7 @@ public sealed class CommunityToolsModelContribution : IDbModelContribution
         modelBuilder.Entity<ToolApiKeyEntity>().ToTable("ToolApiKey");
         modelBuilder.Entity<WebhookDeliveryEntity>().ToTable("WebhookDelivery");
         modelBuilder.Entity<ToolActivityEntity>().ToTable("ToolActivity");
+        modelBuilder.Entity<ToolMakerBanEntity>().ToTable("ToolMakerBan");
 
         // The lookups that run on every authenticated api/v2 call and every import fan-out.
         modelBuilder.Entity<ToolApiKeyEntity>().HasIndex(k => k.KeyHash).IsUnique();

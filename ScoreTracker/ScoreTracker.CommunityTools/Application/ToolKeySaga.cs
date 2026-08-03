@@ -119,7 +119,8 @@ internal sealed class ToolKeySaga :
         return new ToolInvitePreview(tool.Id, tool.Name.ToString(), tool.Description,
             tool.Url?.ToString(), owner?.Name.ToString() ?? string.Empty,
             tool.Visibility == ToolVisibility.Public, tool.RequiresExplicitShare,
-            await _tools.CountConnectedPlayers(tool.Id, cancellationToken));
+            await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
+            tool.RepositoryUrl?.ToString(), tool.Kind);
     }
 
     public async Task<Guid?> Handle(GetToolByApiKeyQuery request, CancellationToken cancellationToken)

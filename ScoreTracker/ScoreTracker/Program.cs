@@ -5,6 +5,7 @@ using MassTransit;
 using MediatR;
 using MediatR.Pipeline;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Localization;
 using Microsoft.OpenApi;
 using MudBlazor.Services;
@@ -312,10 +313,28 @@ app.Use(async (context, next) =>
 await app.Services.ApplyOrReportMigrationsAsync(builder.Configuration["AutoMigrate"] == "true");
 
 
-app.UseRequestLocalization(new RequestLocalizationOptions()
+var localization = new RequestLocalizationOptions()
     .AddSupportedCultures(SupportedCultures.Codes())
     .AddSupportedUICultures(SupportedCultures.Codes())
-    .SetDefaultCulture(SupportedCultures.Default));
+    .SetDefaultCulture(SupportedCultures.Default);
+// Appended AFTER the three stock providers, so it only speaks when they found nothing: an
+// explicit ?culture= or the saved cookie still wins, and an exactly-supported Accept-Language
+// tag is still matched by the stock header provider. What reaches here is the case that used
+// to fall through to English — a bare "es"/"ja", or a region we carry no catalogue for
+// (es-CL, pt-PT, fr-CA). ResolveClosest maps those down; anything it can't place returns
+// null, which leaves the default culture exactly as before.
+localization.RequestCultureProviders.Add(new CustomRequestCultureProvider(context =>
+{
+    foreach (var language in context.Request.GetTypedHeaders().AcceptLanguage
+                 .OrderByDescending(l => l.Quality ?? 1d))
+    {
+        var resolved = SupportedCultures.ResolveClosest(language.Value.Value);
+        if (resolved != null) return Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult(resolved));
+    }
+
+    return Task.FromResult<ProviderCultureResult?>(null);
+}));
+app.UseRequestLocalization(localization);
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -431,7 +450,10 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     // The webhook queue lives in SQL, so a delivery survives a restart and this is what picks it
     // back up. Five minutes is well inside the first backoff step, so nothing waits on the sweep.
     ("retry-webhook-deliveries",         r => r.PublishRetryDueWebhookDeliveries(),       "*/5 * * * *"),
-    ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *")   // 08:00 UTC — 7-day bodies, 14-day activity log
+    ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *"),  // 08:00 UTC — 7-day bodies, 14-day activity log
+    // Refills every account's deep-scan balance on the 1st. One UPDATE across the User table; an
+    // unused allowance does not roll over.
+    ("reset-deep-scans",                 r => r.PublishResetDeepScans(),                 "0 0 1 * *")
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {
@@ -452,6 +474,10 @@ else
 // Retired jobs come out of Hangfire's SQL storage too — an orphaned row would fail on
 // every fire once its runner method is gone.
 RecurringJob.RemoveIfExists("refresh-folder-share-cards");
+// "purge-community-highlights" became "purge-player-highlights" when the payload moved to
+// PlayerProgress and the job grew a second consumer. AddOrUpdate registers the new id; it
+// cannot know the old one, which stays in storage pointing at a runner method that is gone.
+RecurringJob.RemoveIfExists("purge-community-highlights");
 
 app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 

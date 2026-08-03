@@ -29,9 +29,52 @@ public static class SupportedCultures
         new("en-ZW", "Murloc")
     };
 
+    /// <summary>
+    ///     The locale a bare language subtag translates into. Every catalogue we ship is a
+    ///     <em>specific</em> culture (es-MX, ja-JP, …) and ASP.NET's request localization only
+    ///     falls back <em>upward</em> — es-CL resolves to es, which is not a catalogue, so an
+    ///     anonymous visitor sending anything but one of our exact nine tags lands on English.
+    ///     This table is the downward half. Murloc is deliberately absent: en-ZW is reachable
+    ///     only by asking for it exactly, never as a fallback for "en".
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, string> PrimaryLanguageDefaults =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["en"] = "en-US",
+            // es → Spain, not Mexico (owner, 2026-08-03).
+            ["es"] = "es-ES",
+            ["pt"] = "pt-BR",
+            ["ko"] = "ko-KR",
+            ["ja"] = "ja-JP",
+            ["fr"] = "fr-FR",
+            ["it"] = "it-IT"
+        };
+
     public static string[] Codes()
     {
         return All.Select(c => c.Code).ToArray();
+    }
+
+    /// <summary>
+    ///     The closest supported locale for one browser language tag, or null when there is no
+    ///     sensible match. An exactly-supported tag wins and is never re-regioned (es-MX stays
+    ///     es-MX); otherwise the primary subtag picks the catalogue. Pure string work — no
+    ///     <see cref="System.Globalization.CultureInfo" /> is constructed, so a malformed,
+    ///     unknown, or wildcard tag returns null rather than throwing.
+    /// </summary>
+    public static string? ResolveClosest(string? languageTag)
+    {
+        if (string.IsNullOrWhiteSpace(languageTag)) return null;
+
+        var tag = languageTag.Trim();
+
+        var exact = NormalizeOrNull(tag);
+        if (exact != null) return exact;
+
+        var separator = tag.IndexOf('-');
+        var primary = separator < 0 ? tag : tag[..separator];
+
+        return PrimaryLanguageDefaults.TryGetValue(primary, out var code) ? code : null;
     }
 
     public static bool IsSupported(string? code)

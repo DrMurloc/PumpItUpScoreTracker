@@ -27,6 +27,9 @@ public sealed class RecurringJobRunner
     public Task PublishPruneWebhookDeliveries() =>
         _bus.Publish(new PruneWebhookDeliveriesCommand());
 
+    public Task PublishResetDeepScans() =>
+        _bus.Publish(new ResetDeepScansCommand());
+
     public Task PublishProcessScoresTiersList() =>
         _bus.Publish(new ProcessScoresTiersListCommand());
 

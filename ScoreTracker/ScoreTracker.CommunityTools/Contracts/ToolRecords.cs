@@ -27,7 +27,26 @@ public sealed record ToolRecord(
     ///     Whether a verification secret is registered. Only ever the flag — the secret is stored as
     ///     a hash and the plaintext exists nowhere after the maker saves it.
     /// </summary>
-    bool HasVerificationSecret);
+    bool HasVerificationSecret,
+    string? RepositoryUrl,
+    /// <summary>The account the repository sits under. Displayed for a human, never decided on.</summary>
+    string? RepositoryOwner,
+    DateTimeOffset? RepositoryCheckedAt,
+    /// <summary>The maker's own, or an admin's view of it. Never reaches a player-facing surface.</summary>
+    string? DiscordHandle,
+    DateTimeOffset? AgreedToRulesAt,
+    /// <summary>
+    ///     Whether this tool may reach anyone but its maker. Mirrors the domain rule so the console
+    ///     can say why a tool is stuck without guessing at it.
+    /// </summary>
+    bool CanBeSharedWithOthers,
+    ToolKind Kind,
+    /// <summary>
+    ///     Whether the console shows an API group at all. A listing-only tool has none and is not
+    ///     unfinished, so the section it would live in simply is not there.
+    /// </summary>
+    bool HasKeys,
+    bool WebhookConfigured);
 
 /// <summary>A tool as a player browsing the directory sees it — no delivery configuration.</summary>
 [ExcludeFromCodeCoverage]
@@ -39,7 +58,14 @@ public sealed record PublicToolRecord(
     string OwnerName,
     bool RequiresPiuGameSession,
     int ConnectedPlayers,
-    DateTimeOffset? ApprovedAt);
+    DateTimeOffset? ApprovedAt,
+    /// <summary>
+    ///     Where to read the source. Null only for a grandfathered tool, and the row simply carries
+    ///     no Source link — there is no claim made about every listed tool that one absence breaks.
+    /// </summary>
+    string? RepositoryUrl,
+    /// <summary>Decides the row's shape: Connect for a score-reader, Visit for a listing.</summary>
+    ToolKind Kind);
 
 /// <summary>One of a player's connections, for the "who can read my scores" list.</summary>
 [ExcludeFromCodeCoverage]
@@ -91,6 +117,19 @@ public sealed record MintedApiKey(Guid Id, string Key, DateTimeOffset? ExpiresAt
 ///         difference between an endpoint proving itself and merely answering.
 ///     </para>
 /// </summary>
+public static class WebhookContract
+{
+    /// <summary>
+    ///     The header a maker's own secret rides in on every delivery, and the one their handler
+    ///     checks. Fixed rather than chosen: naming it was a decision with no right answer standing
+    ///     between a maker and the one that matters, which is the value.
+    /// </summary>
+    public const string OutboundHeader = "X-PIU-Scores-Token";
+
+    /// <summary>Stable across retries — the dedupe key.</summary>
+    public const string DeliveryIdHeader = "X-PIU-Delivery-Id";
+}
+
 public static class WebhookVerificationSecret
 {
     public const string Prefix = "vfy_";
@@ -119,4 +158,29 @@ public sealed record ToolInvitePreview(
     string OwnerName,
     bool IsPublic,
     bool RequiresPiuGameSession,
-    int ConnectedPlayers);
+    int ConnectedPlayers,
+    /// <summary>
+    ///     Where to read the source. The invite landing page is the one logged-out screen in the
+    ///     feature, so it is also the one place a stranger can check the tool before signing in.
+    /// </summary>
+    string? RepositoryUrl,
+    ToolKind Kind);
+
+/// <summary>
+///     A maker's ban, as the admin list shows it. Notes are the owner's own and reach no other
+///     surface.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ToolMakerBanRecord(Guid UserId, string UserName, DateTimeOffset BannedAt,
+    string? Notes);
+
+/// <summary>
+///     The values a code sample needs filled in. Assembled here rather than in Web so a page never
+///     has to know which of them is a secret — the key is a tail, never the key.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ToolCodeContext(
+    string KeyTail,
+    string? WebhookUrl,
+    string? OutboundHeaderName,
+    IReadOnlyList<MixEnum> Mixes);

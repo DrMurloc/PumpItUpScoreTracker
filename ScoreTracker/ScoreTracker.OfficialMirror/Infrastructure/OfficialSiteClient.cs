@@ -1,4 +1,5 @@
 using ScoreTracker.OfficialMirror.Domain;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Security.Authentication;
 using ScoreTracker.Domain.Exceptions;
@@ -283,6 +284,110 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         var sessionId = _piuGame.ClientForSid(mix, sid);
         var response = await _piuGame.GetBestScores(mix, sessionId, 0, cancellationToken);
         return response.MaxPage;
+    }
+
+    public async Task<AccountCensus> GetOfficialCensus(MixEnum mix, Guid userId, string sid,
+        CancellationToken cancellationToken)
+    {
+        var client = _piuGame.ClientForSid(mix, sid);
+        await Status(userId, mix, "Reading your play data", cancellationToken);
+
+        // The landing page states which buckets this mix offers; assuming a set the site did not
+        // serve is how a census silently compares different denominators.
+        var landing = await _piuGame.GetPlayData(mix, client, CensusBuckets.All, cancellationToken);
+        var buckets = new Dictionary<string, CensusBucket>(StringComparer.Ordinal);
+        var offered = CensusBuckets.Partitioning(landing.Buckets);
+
+        var read = 0;
+        foreach (var bucket in offered)
+        {
+            var page = await _piuGame.GetPlayData(mix, client, bucket, cancellationToken);
+            buckets[bucket] = new CensusBucket(bucket, page.Passes, page.GradeCounts, page.PlateCounts,
+                page.CatalogTotal);
+            await Status(userId, mix, $"Reading your play data ({++read} of {offered.Count})", cancellationToken);
+        }
+
+        await AddSubTenResidual(mix, client, landing, buckets, cancellationToken);
+
+        // The pool page is live; the ranking board is a daily 01:00 KST batch and would report a
+        // player who played today as mismatched against their own scores.
+        var pumbility = await _piuGame.GetPumbility(mix, client, cancellationToken);
+        return new AccountCensus(mix, buckets, pumbility.Total);
+    }
+
+    // A repair walks a level to its end rather than stopping on an up-score window: the window is
+    // what let the chart go missing, and a level is small enough to read whole. The clamp only
+    // catches a runaway — the site re-serves its last page for an out-of-range number, and a page
+    // that adds nothing new ends the walk.
+    private const int MaxRepairPagesPerBucket = 400;
+
+    public async Task<IReadOnlyList<OfficialRecordedScore>> GetBestScoresIn(MixEnum mix, Guid userId, string sid,
+        IReadOnlyCollection<string> buckets, bool includeBroken, CancellationToken cancellationToken)
+    {
+        var client = _piuGame.ClientForSid(mix, sid);
+        var cards = new List<PiuGameGetBestScoresResult.ScoreDto>();
+        var walked = buckets.Count == 0 ? new[] { CensusBuckets.All } : buckets.ToArray();
+
+        foreach (var bucket in walked)
+        {
+            var seen = new HashSet<(string, ChartType, int, int, DateTimeOffset?)>();
+            for (var page = 1; page <= MaxRepairPagesPerBucket; page++)
+            {
+                await Status(userId, mix, PageStatus(bucket, page), cancellationToken);
+                var result = await _piuGame.GetBestScores(mix, client, page, cancellationToken, bucket);
+                var added = 0;
+                foreach (var card in result.Scores)
+                {
+                    if (!seen.Add((card.SongName.ToString(), card.ChartType, (int)card.Level, (int)card.Score,
+                            card.RecordedAt))) continue;
+                    cards.Add(card);
+                    added++;
+                }
+
+                if (added == 0 || result.Scores.Length == 0) break;
+            }
+        }
+
+        return (await MapBestList(mix, cards, includeBroken, cancellationToken)).Values.ToArray();
+    }
+
+    private static string PageStatus(string bucket, int page)
+    {
+        return bucket == CensusBuckets.All
+            ? $"Reading every page of your best scores (page {page})"
+            : $"Re-reading level {bucket} (page {page})";
+    }
+
+    /// <summary>
+    ///     Phoenix's play-data page starts at level 10 and says so, so its sub-10 clears exist only
+    ///     inside the best-score list's total. Phoenix 2 offers a bucket for every level from 1 and
+    ///     needs neither the request nor the arithmetic — and its best list counts stage breaks,
+    ///     which would make the same subtraction wrong there.
+    /// </summary>
+    private async Task AddSubTenResidual(MixEnum mix, HttpClient client, PiuGameGetPlayDataResult landing,
+        IDictionary<string, CensusBucket> buckets, CancellationToken cancellationToken)
+    {
+        var lowest = landing.Buckets
+            .Where(b => int.TryParse(b, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+            .Select(b => int.Parse(b, CultureInfo.InvariantCulture))
+            .DefaultIfEmpty(1)
+            .Min();
+        if (lowest <= 1) return;
+
+        var best = await _piuGame.GetBestScores(mix, client, 1, cancellationToken);
+        if (best.TotalCharts == null) return;
+
+        var residual = best.TotalCharts.Value - buckets.Values.Sum(b => b.Passes);
+        if (residual <= 0) return;
+
+        buckets[CensusBuckets.SubTen] = CensusBucket.Empty(CensusBuckets.SubTen) with { Passes = residual };
+    }
+
+    private Task Status(Guid userId, MixEnum mix, string status, CancellationToken cancellationToken)
+    {
+        return _mediator.Publish(
+            new ImportStatusUpdatedEvent(userId, status, Array.Empty<RecordedPhoenixScore>(), mix),
+            cancellationToken);
     }
 
     /// <summary>
