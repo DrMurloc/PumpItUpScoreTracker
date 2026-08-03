@@ -1,6 +1,9 @@
 # Import Completeness Check
 
-Status: **designed, not built.** Branch `claude/pumbility-mismatch-detector-378a55`.
+Status: **built** on `claude/pumbility-mismatch-detector-378a55`, not yet PR'd. Fast suites green
+(1941 / 65 / 538); integration green. **Deferred: the nine-locale sweep** — the panel's strings
+render English by key-fallback and the locale-parity ratchet stays green because no locale carries
+the keys yet.
 
 ## 1. The problem
 
@@ -63,11 +66,15 @@ KST batch and must not be used).
 
 Two hops. `POST /ajax/user_play_log.php {lv, type, division}` returns a stub that GETs
 `/ajax/user_play_log_detail.php` (Phoenix / plate) or `…detail2.php` (Phoenix 2 / grade), paged
-`?lv=&type=&page=N` at **6 rows per page** — half of `my_best_score.php`'s 12. It is worth using
-only when the histogram has localised the gap to a small cell; for anything larger, page the
-best-score list, whose parser is already approval-pinned.
+`?lv=&type=&page=N` at **6 rows per page** — half of `my_best_score.php`'s 12. The POST is a read:
+it returns modal HTML and changes nothing on the account.
 
-The POST is a read — it returns modal HTML and changes nothing on the account.
+**It is not on the repair path**, and the enumeration-cost choice this section originally scoped
+does not exist. Its rows carry chart identity and a grade image but **no score and no plate**, so
+nothing there can be saved. The best-score list is the only surface that can, and it filters by
+level and nothing finer — which is why a repair always re-reads whole levels. The parser stays in
+the ACL (approval-pinned) because it is how the gap was diagnosed by hand, and it names charts
+inside a cell in one request when a human is looking.
 
 ## 3. Detectors
 
@@ -110,15 +117,20 @@ wrong.
 
 **The comparison is per level. There is no cheaper correct version of it.**
 
-### 3.3 Localise, then name
+### 3.3 Localise, then re-read
 
-For each level where the site has more passes than we do, pick the cheaper enumeration:
+For each level that is short a chart or holding a stale one, page `my_best_score.php?lv=N` to the
+end and save anything that beats what we hold, through the import's own save loop (extracted, not
+copied — a scrape may only ever RAISE a record, and a second hand-written copy of that rule is
+what let plate improvements drag scores down). The repair opens a real score session, so Undo and
+the journal see it as one more official run.
 
-- `ceil(cellCount / 6)` — the drill-in, when the histogram narrows it to one grade/plate cell.
-- `ceil(levelTotal / 12)` — `my_best_score.php?lv=N`, otherwise.
+Whole levels, never the band the finding localised to — §2.4. And a repair that localised nothing
+returns early rather than passing an empty bucket list, which downstream means "walk everything":
+the one thing a free repair must never quietly become.
 
-Then diff the enumerated charts against our records and repair through the saga's existing save
-path.
+The Phoenix sub-10 residual is **not repairable this way** — that mix will not filter its best list
+below level 10 either, so those charts are reachable only by a deep scan.
 
 ### 3.4 Charts we cannot map
 
@@ -264,14 +276,19 @@ delete loop, covered by the decoy-account integration test.
 
 | # | Commit | Proof |
 |---|---|---|
-| C1 | ACL parsers + captured fixtures | approval tests, both mixes |
-| C2 | `CensusNormalizer` + `CensusDiff`; probe asserts per-level agreement | `DomainTests` + exploration probe |
-| C3 | `GetOfficialCensus` scrape orchestration | component tests, mocked `IPiuGameApi` |
-| C4 | Entity, migration, repository, purge manifest, schema doc | integration round-trip + purge |
-| C5 | Start/Run/Execute triplet + saga | component tests, all five outcomes |
-| C6 | Repair path + unmappables to the admin inbox | component tests |
-| C7 | Deep scan, credit ledger, global concurrency slot | component tests |
-| C8 | UI panel + hub subscription | bUnit, the nine states |
-| C9 | l10n ×9 + docs | ratchets |
+| C1 | ✅ ACL parsers + captured fixtures | 11 approval tests, both mixes |
+| C2 | ✅ census normalisation + diff; probe reconciles per level | 21 `DomainTests` + the probe |
+| C3 | ✅ `GetOfficialCensus` scrape orchestration | 7 component tests |
+| C4 | ✅ entity, migration, repository, purge manifest, schema doc | 10 integration tests |
+| C5 | ✅ Start/Run/Execute triplet + saga + credit ledger | 14 component tests |
+| C6 | ✅ repair path and deep scan (one walk, buckets or none) | folded into C5's suite |
+| C7 | ✅ UI panel + hub subscription | 10 bUnit tests |
+| C8 | ⛔ l10n ×9 | deferred — English by key-fallback |
 
-An automatic check at the tail of every import was scoped and then **cut** (§6).
+Two things were scoped and then dropped, both recorded above rather than silently: an automatic
+check at the tail of every import (§6, owner call) and the drill-in enumeration-cost choice (§2.4,
+the modal carries no score so there was never a choice).
+
+**Not yet built**: unmappable sightings from a check do not yet reach the `OfficialMissingChart`
+admin inbox (§3.4). The census reports the level as short; the catalog gap behind it still needs
+the wiring.
