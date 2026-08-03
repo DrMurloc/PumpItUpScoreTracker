@@ -38,7 +38,7 @@ internal sealed class RunImportCheckConsumer : IConsumer<RunImportCheckCommand>
             if (user != null) _currentUser.SetScopedUser(user);
 
             await _mediator.Send(new ExecuteImportCheckCommand(message.UserId, message.Mix, message.Sid,
-                message.CardId, message.ExpectedGameTag, message.DeepScan, message.RepairBuckets),
+                message.CardId, message.ExpectedGameTag, message.DeepScan),
                 context.CancellationToken);
         }
         catch (InvalidCredentialException)

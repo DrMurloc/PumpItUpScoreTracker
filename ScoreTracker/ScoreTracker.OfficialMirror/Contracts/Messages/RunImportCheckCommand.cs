@@ -7,4 +7,4 @@ namespace ScoreTracker.OfficialMirror.Contracts.Messages;
 // sid, never a password.
 [ExcludeFromCodeCoverage]
 public sealed record RunImportCheckCommand(Guid UserId, MixEnum Mix, RedactedString Sid, string CardId,
-    string ExpectedGameTag, bool DeepScan, IReadOnlyCollection<string> RepairBuckets);
+    string ExpectedGameTag, bool DeepScan);

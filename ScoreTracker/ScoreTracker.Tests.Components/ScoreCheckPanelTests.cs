@@ -8,15 +8,13 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
-using ScoreTracker.Catalog.Contracts.Queries;
+using AngleSharp.Dom;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.SharedKernel.Models;
-using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services.UiNotifications;
 using Xunit;
@@ -24,17 +22,15 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     The Score check panel. What matters here: it starts with no verdict (nothing is stored), it
-///     names charts rather than counts, missing and out-of-date share ONE list, and the deep scan
-///     is gated on the month's balance.
+///     The Score check panel: a line and two peer buttons. Anything a run finds is already saved,
+///     so there is nothing to approve, nothing to remember between visits, and the deep scan's
+///     budget lives on the deep scan button.
 /// </summary>
 public sealed class ScoreCheckPanelTests : ComponentTestBase
 {
+    private readonly UiNotificationHub _hub = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Guid _me = Guid.NewGuid();
-    private readonly Guid _missingChart = Guid.NewGuid();
-    private readonly Guid _staleChart = Guid.NewGuid();
-    private readonly UiNotificationHub _hub = new();
 
     public ScoreCheckPanelTests()
     {
@@ -44,31 +40,17 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton<IUiNotificationHub>(_hub);
         Services.AddSingleton(Mock.Of<ISnackbar>());
-
-        _mediator.Setup(m => m.Send(It.IsAny<GetDeepScansRemainingQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(3);
-        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                Chart(_missingChart, "Ugly duck Toccata", 17),
-                Chart(_staleChart, "The End of the World", 20)
-            });
+        Scans(3);
     }
 
-    private static Chart Chart(Guid id, string song, int level)
+    private void Scans(int left)
     {
-        return new Chart(id, MixEnum.Phoenix,
-            new Song(Name.From(song), SongType.Arcade, new Uri("https://example.invalid/song.png"),
-                TimeSpan.FromMinutes(2), Name.From("Artist"), null),
-            ScoreTracker.SharedKernel.Enums.ChartType.Single, DifficultyLevel.From(level), MixEnum.Phoenix,
-            null, null, new HashSet<Skill>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetDeepScansRemainingQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(left);
     }
 
     private IRenderedComponent<ScoreCheckPanel> Render(bool credentials = true, bool busy = false)
     {
-        // Named findings render a DifficultyBubble and a SongImage, both of which branch on
-        // RendererInfo.
-        this.RenderInteractive();
         return RenderComponent<ScoreCheckPanel>(p => p
             .Add(c => c.Mix, MixEnum.Phoenix)
             .Add(c => c.CardId, "card")
@@ -77,151 +59,104 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
             .Add(c => c.Credentials, () => credentials ? new TypedCredentialSource("user", "pass") : null));
     }
 
-    /// <summary>Delivers a finished check the way the saga does — over the hub, never from storage.</summary>
-    private async Task Complete(IRenderedComponent<ScoreCheckPanel> panel, ImportCheckReport report,
-        int repaired = 0)
+    /// <summary>Delivers a finished run the way the saga does — over the hub, never from storage.</summary>
+    private Task Finish(IRenderedComponent<ScoreCheckPanel> panel, int added, int checkedCount = 2851)
     {
-        await panel.InvokeAsync(() => _hub.PublishAsync(UiTopics.User(_me),
-            new ImportCheckCompletedEvent(_me, MixEnum.Phoenix, report, repaired)));
+        return panel.InvokeAsync(() => _hub.PublishAsync(UiTopics.User(_me),
+            new ImportCheckCompletedEvent(_me, MixEnum.Phoenix, added, checkedCount)));
     }
 
-    private static ImportCheckReport Report(params ImportCheckDifference[] differences)
+    private static IElement Button(IRenderedComponent<ScoreCheckPanel> panel, string text)
     {
-        return new ImportCheckReport(MixEnum.Phoenix,
-            differences.Any(d => d.Kind != ImportCheckDifferenceKind.Extra)
-                ? ImportCheckVerdict.NeedsAttention
-                : ImportCheckVerdict.InSync,
-            64466, 63420, 2851, 2848, differences);
-    }
-
-    private ImportCheckDifference Missing(int level, Guid chartId, int score)
-    {
-        return new ImportCheckDifference(level.ToString(), level, ImportCheckDifferenceKind.Missing, 1,
-            new[] { new ImportCheckChart(chartId, score, null) });
-    }
-
-    private ImportCheckDifference Stale(int level, Guid chartId, int score, int currentScore)
-    {
-        return new ImportCheckDifference(level.ToString(), level, ImportCheckDifferenceKind.OutOfDate, 1,
-            new[] { new ImportCheckChart(chartId, score, currentScore) });
+        return panel.FindAll("button").First(b => b.TextContent.Contains(text));
     }
 
     [Fact]
-    public void ItStartsWithNoVerdictBecauseNothingIsStored()
+    public void BothActionsAreOfferedFromTheStartWithTheDeepScanBudgetOnItsOwnButton()
     {
         var markup = Render().Markup;
 
-        Assert.Contains("Check every score", markup);
-        Assert.DoesNotContain("Everything matches", markup);
-        Assert.DoesNotContain("Add these", markup);
+        Assert.Contains("Import and check", markup);
+        Assert.Contains("Deep scan", markup);
+        // The limit belongs on the control it limits, not in a sentence that only appears when the
+        // census happens to come back clean.
+        Assert.Contains("3 left this month", markup);
     }
 
     [Fact]
-    public async Task MissingAndOutOfDateSharUneList()
+    public async Task AFinishedRunReportsWhatItAddedAndPointsAtTheSession()
     {
         var panel = Render();
 
-        await Complete(panel, Report(
-            Missing(17, _missingChart, 996408),
-            Stale(20, _staleChart, 992223, 966204)));
+        await Finish(panel, added: 3);
 
-        // An account can be short a chart and behind on another at once; two views would make the
-        // player fix the same account twice.
-        var markup = panel.Markup;
-        Assert.Contains("2 scores here don't match PIUGAME.", markup);
-        Assert.Contains("Ugly duck Toccata", markup);
-        Assert.Contains("The End of the World", markup);
-        Assert.Contains("Add these 2 scores", markup);
-    }
-
-    [Fact]
-    public async Task OnlyAnOutOfDateRowCarriesTheScoreWeAlreadyHold()
-    {
-        var panel = Render();
-
-        await Complete(panel, Report(
-            Missing(17, _missingChart, 996408),
-            Stale(20, _staleChart, 992223, 966204)));
-
-        // The "was" IS the distinction between the two kinds — no extra label needed.
-        Assert.Contains("996,408", panel.Markup);
-        Assert.Contains("was 966,204", panel.Markup);
-        Assert.DoesNotContain("was 996,408", panel.Markup);
-    }
-
-    [Fact]
-    public async Task AnInSyncAccountSaysSoAndOffersTheDeepScan()
-    {
-        var panel = Render();
-
-        await Complete(panel, Report());
-
-        Assert.Contains("Everything matches", panel.Markup);
-        Assert.Contains("Run a deep scan", panel.Markup);
+        Assert.Contains("Added 3 scores", panel.Markup);
+        Assert.Contains("sessions page", panel.Markup);
+        // Nothing to approve — the scores are already saved.
         Assert.DoesNotContain("Add these", panel.Markup);
     }
 
     [Fact]
-    public async Task WithSomethingToFixTheExpensiveBlindWalkIsNotOffered()
+    public async Task ACleanAccountSaysSoAndOffersNoSessionLink()
     {
         var panel = Render();
 
-        await Complete(panel, Report(Missing(17, _missingChart, 996408)));
+        await Finish(panel, added: 0);
 
-        Assert.DoesNotContain("Run a deep scan", panel.Markup);
+        Assert.Contains("Nothing missing", panel.Markup);
+        Assert.Contains("2,851", panel.Markup);
+        Assert.DoesNotContain("sessions page", panel.Markup);
     }
 
     [Fact]
-    public async Task AnExhaustedAllowanceNamesTheUnlockInsteadOfOfferingTheButton()
-    {
-        _mediator.Setup(m => m.Send(It.IsAny<GetDeepScansRemainingQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(0);
-        var panel = Render();
-
-        await Complete(panel, Report());
-
-        Assert.DoesNotContain("Run a deep scan", panel.Markup);
-        Assert.Contains("used all your deep scans", panel.Markup);
-    }
-
-    [Fact]
-    public async Task HoldingMoreThanPiuGameIsNeverOfferedAsSomethingToFix()
+    public async Task BothButtonsStayAvailableAfterARun()
     {
         var panel = Render();
 
-        await Complete(panel, Report(new ImportCheckDifference("sub10", null,
-            ImportCheckDifferenceKind.Extra, 1, Array.Empty<ImportCheckChart>())));
+        await Finish(panel, added: 0);
 
-        // A CSV import or a retired chart is not a repair — there is nothing to fetch.
-        Assert.DoesNotContain("Add these", panel.Markup);
+        // Wanting a deep scan does not depend on what the last check said.
+        Assert.Contains("Import and check", panel.Markup);
+        Assert.Contains("Deep scan", panel.Markup);
     }
 
     [Fact]
-    public async Task ARepairThatFixedEverythingSaysWhatItDid()
+    public void AnExhaustedAllowanceDisablesTheDeepScanAndNamesTheUnlock()
     {
+        Scans(0);
+
         var panel = Render();
 
-        await Complete(panel, Report(), 5);
-
-        Assert.Contains("Added 5 scores", panel.Markup);
+        Assert.True(Button(panel, "Deep scan").HasAttribute("disabled"));
+        Assert.False(Button(panel, "Import and check").HasAttribute("disabled"));
+        Assert.Contains("None left", panel.Markup);
     }
 
     [Fact]
-    public async Task TheRepairAsksForExactlyTheLevelsThisVerdictNamed()
+    public void TheRunningStateSaysLeavingIsFine()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<StartImportCheckCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportCheckStartResult(ImportCheckStartOutcome.Started, 3));
+        var panel = Render();
+
+        Button(panel, "Import and check").Click();
+
+        // Nothing is held in the page any more, so leaving costs nothing.
+        Assert.Contains("You can leave", panel.Markup);
+    }
+
+    [Fact]
+    public void TheDeepScanButtonAsksForADeepScan()
     {
         var started = new List<StartImportCheckCommand>();
         _mediator.Setup(m => m.Send(It.IsAny<StartImportCheckCommand>(), It.IsAny<CancellationToken>()))
             .Callback((object c, CancellationToken _) => started.Add((StartImportCheckCommand)c))
-            .ReturnsAsync(new ImportCheckStartResult(ImportCheckStartOutcome.Started, 3));
+            .ReturnsAsync(new ImportCheckStartResult(ImportCheckStartOutcome.Started, 2));
         var panel = Render();
-        await Complete(panel, Report(Missing(17, _missingChart, 996408), Stale(20, _staleChart, 992223, 966204)));
 
-        panel.FindAll("button").First(b => b.TextContent.Contains("Add these")).Click();
+        Button(panel, "Deep scan").Click();
 
-        // The panel holds the findings — nothing on the server remembers the last run.
-        var command = Assert.Single(started);
-        Assert.Equal(new[] { "17", "20" }, command.RepairBuckets);
-        Assert.False(command.DeepScan);
+        Assert.True(Assert.Single(started).DeepScan);
     }
 
     [Fact]
@@ -240,12 +175,5 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
 
         Assert.NotEmpty(buttons);
         Assert.All(buttons, b => Assert.True(b.HasAttribute("disabled")));
-    }
-
-    [Fact]
-    public void TheImportItRunsFirstIsStatedBeforeTheButtonIsPressed()
-    {
-        // A field tester was surprised by session charts appearing: the check imports first.
-        Assert.Contains("Imports first", Render().Markup);
     }
 }

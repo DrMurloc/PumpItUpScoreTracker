@@ -119,8 +119,8 @@ public sealed class CensusDiffTests
         var finding = Assert.Single(findings);
         Assert.Equal(CensusFindingKind.Extra, finding.Kind);
         Assert.Equal(2, finding.Count);
-        // A CSV import or a retired chart never leads the panel.
-        Assert.Equal(CensusFindingKind.Extra, CensusDiff.Headline(findings));
+        // A CSV import or a retired chart is never re-read: there is nothing to fetch.
+        Assert.Empty(CensusDiff.BucketsToRepair(findings));
     }
 
     [Fact]
@@ -179,28 +179,12 @@ public sealed class CensusDiffTests
     }
 
     [Fact]
-    public void MissingOutranksOutOfDateWhichOutranksExtra()
-    {
-        var findings = new[]
-        {
-            new CensusFinding("1", CensusFindingKind.Extra, 1),
-            new CensusFinding("2", CensusFindingKind.OutOfDate, 1, "AA", true),
-            new CensusFinding("3", CensusFindingKind.Missing, 1)
-        };
-
-        Assert.Equal(CensusFindingKind.Missing, CensusDiff.Headline(findings));
-        Assert.Equal(CensusFindingKind.OutOfDate, CensusDiff.Headline(findings.Take(2).ToArray()));
-        Assert.Equal(CensusFindingKind.Extra, CensusDiff.Headline(findings.Take(1).ToArray()));
-        Assert.Null(CensusDiff.Headline(Array.Empty<CensusFinding>()));
-    }
-
-    [Fact]
     public void AnAgreeingCensusFindsNothing()
     {
         var census = Census(("18", 366, Grades(("AA", 366))));
 
         Assert.Empty(CensusDiff.Compare(census, census));
-        Assert.Null(CensusDiff.Headline(CensusDiff.Compare(census, census)));
+        Assert.Empty(CensusDiff.BucketsToRepair(CensusDiff.Compare(census, census)));
     }
 
     // ---- what a repair re-reads ----

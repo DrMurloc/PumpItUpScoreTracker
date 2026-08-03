@@ -104,19 +104,21 @@ namespace ScoreTracker.OfficialMirror.Application
         public Task Handle(ExecuteImportCommand request, CancellationToken cancellationToken)
         {
             return RunImport(request.UserId, request.Mix, request.Sid, request.CardId, request.ExpectedGameTag,
-                request.IncludeBroken, cancellationToken);
+                request.IncludeBroken, cancellationToken, request.SessionId);
         }
 
         // Runs the scrape+save for one import off a pre-minted session id and an explicit user id,
         // so the same body serves the synchronous API path and the background consumer (which has
         // no circuit user). One import = one session id for the Session Batcher.
         internal async Task RunImport(Guid userId, MixEnum mix, string sid, string cardId, string expectedGameTag,
-            bool includeBroken, CancellationToken cancellationToken)
+            bool includeBroken, CancellationToken cancellationToken, Guid? sessionId = null)
         {
             // Opened through the Ledger rather than minted here, so the session row carries the
             // game tag and card this run pulled from — the answer to "I imported the wrong card",
-            // which is the phrasing the Undo page exists for.
-            var importSessionId = await _mediator.Send(
+            // which is the phrasing the Undo page exists for. A caller that already opened one
+            // (the completeness check, which saves through two passes) hands it in, so a single
+            // button press produces a single session.
+            var importSessionId = sessionId ?? await _mediator.Send(
                 new BeginScoreSessionCommand(userId, mix, ScoreJournalEntry.OfficialImportSource,
                     expectedGameTag, cardId), cancellationToken);
 
@@ -266,18 +268,14 @@ namespace ScoreTracker.OfficialMirror.Application
         }
 
         /// <summary>
-        ///     The completeness check's repair: re-read the levels a census said disagree and save
-        ///     anything that beats what we hold. Same session bookkeeping and the same save rules
-        ///     as an import, so Undo and the journal see it as one more official run.
+        ///     Puts scores the completeness check scraped through the import's own save path, into
+        ///     the session it opened — so a recovered chart obeys the same raise-only rule and Undo,
+        ///     the journal and the rating sweep see it as part of one official run.
         /// </summary>
-        public async Task<int> Handle(RepairScoresCommand request, CancellationToken cancellationToken)
+        public async Task<int> Handle(SaveOfficialScoresCommand request, CancellationToken cancellationToken)
         {
-            var sessionId = await _mediator.Send(
-                new BeginScoreSessionCommand(request.UserId, request.Mix, ScoreJournalEntry.OfficialImportSource,
-                    request.ExpectedGameTag, request.CardId), cancellationToken);
-            var found = await _officialSite.GetBestScoresIn(request.Mix, request.UserId, request.Sid,
-                request.Buckets, request.IncludeBroken, cancellationToken);
-            var saved = await SaveBests(request.UserId, request.Mix, sessionId, found.ToArray(), cancellationToken);
+            var saved = await SaveBests(request.UserId, request.Mix, request.SessionId,
+                request.Scores.ToArray(), cancellationToken);
             return saved.Length;
         }
 

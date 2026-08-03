@@ -71,18 +71,6 @@ internal static class CensusDiff
     }
 
     /// <summary>
-    ///     What the panel leads with. Missing beats out-of-date beats extra: a player who is short
-    ///     charts wants to hear that first, and "you have more than piugame" is never the headline.
-    /// </summary>
-    public static CensusFindingKind? Headline(IReadOnlyCollection<CensusFinding> findings)
-    {
-        if (findings.Any(f => f.Kind == CensusFindingKind.Missing)) return CensusFindingKind.Missing;
-        if (findings.Any(f => f.Kind == CensusFindingKind.OutOfDate)) return CensusFindingKind.OutOfDate;
-        if (findings.Any(f => f.Kind == CensusFindingKind.Extra)) return CensusFindingKind.Extra;
-        return null;
-    }
-
-    /// <summary>
     ///     The buckets a repair has to re-read: every one that is short a chart or holding a stale
     ///     one. "We have more than piugame" is never repaired — there is nothing to fetch.
     ///     <para>

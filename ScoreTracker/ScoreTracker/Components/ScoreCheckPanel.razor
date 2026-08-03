@@ -1,5 +1,4 @@
 @using MediatR
-@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.Events
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Queries
@@ -7,12 +6,11 @@
 @using ScoreTracker.OfficialMirror.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts.Events
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services.UiNotifications
 
-@* Tells a player whether every score PIUGAME has actually reached us, and repairs what disagrees.
-   Nothing is persisted: the verdict lives here until they navigate away, which is why the running
-   states say so out loud (docs/design/import-completeness-check.md §6). *@
+@* Finds scores PIUGAME has that never reached us and adds them, as a normal import. Nothing is
+   stored and nothing needs approving, so the panel is a line and two buttons
+   (docs/design/import-completeness-check.md §4). *@
 
 <MudPaper Class="pa-4 mt-4" Outlined="true">
     <MudText Typo="Typo.overline">@L["Score check"]</MudText>
@@ -23,96 +21,56 @@
             <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
             <MudText Typo="Typo.body1">@(_status ?? L["Checking your scores"])</MudText>
         </div>
-        <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block mt-2">
-            @L["Stay on this page — leaving loses the result."]
+        <MudText Typo="Typo.caption" Class="d-block mt-2">
+            @L["You can leave — anything found is added to your scores."]
         </MudText>
-    }
-    else if (_report == null)
-    {
-        <MudText Typo="Typo.body1" Class="mt-1">
-            @(_repaired > 0
-                ? L["Added {0} scores. Everything matches now.", _repaired]
-                : L["Check every score PIUGAME has against what's here."])
-        </MudText>
-        @if (_repaired == 0)
-        {
-            <div class="d-flex flex-wrap gap-2 align-center mt-3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Disabled"
-                           OnClick="@(() => Run())">
-                    @L["Import and check"]
-                </MudButton>
-            </div>
-            <MudText Typo="Typo.caption" Class="d-block mt-1">
-                @L["Imports first, then compares. A few minutes."]
-            </MudText>
-        }
     }
     else
     {
-        <MudText Typo="Typo.body1" Class="mt-1">@Headline</MudText>
-
-        @* Missing and out-of-date share ONE list — an account can be short a chart and behind on
-           another at once, and two views would make the player fix it twice. A row with a "was"
-           is one they have beaten since their last import. *@
-        @foreach (var chart in Found)
+        @if (_finished != null)
         {
-            <div class="d-flex align-center gap-3 my-2">
-                @if (_charts.TryGetValue(chart.ChartId, out var known))
-                {
-                    <SongImage Song="known.Song" Small="true"/>
-                    <DifficultyBubble Chart="known" Small="true"/>
-                    <MudText Typo="Typo.body2" Class="flex-grow-1 text-truncate">@known.Song.Name</MudText>
-                }
-                else
-                {
-                    <MudText Typo="Typo.body2" Class="flex-grow-1">@L["Unknown chart"]</MudText>
-                }
-                <div class="text-right">
-                    <MudText Typo="Typo.body2">@chart.Score.ToString("N0")</MudText>
-                    @if (chart.CurrentScore != null)
-                    {
-                        <MudText Typo="Typo.caption">@L["was {0}", chart.CurrentScore.Value.ToString("N0")]</MudText>
-                    }
-                </div>
-            </div>
-        }
-
-        <div class="d-flex flex-wrap gap-2 align-center mt-3">
-            @if (Found.Any())
+            <MudText Typo="Typo.body1" Class="mt-1">
+                @(_finished.Added > 0
+                    ? L["Added {0} scores PIUGAME had that we didn't.", _finished.Added]
+                    : L["Nothing missing — all {0} scores match PIUGAME.", _finished.Checked.ToString("N0")])
+            </MudText>
+            @if (_finished.Added > 0)
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Disabled"
-                           OnClick="Repair">
-                    @L["Add these {0} scores", Found.Count]
-                </MudButton>
-                <MudButton Variant="Variant.Outlined" Disabled="Disabled" OnClick="Dismiss">@L["Not now"]</MudButton>
-            }
-            else if (_report.Verdict == ImportCheckVerdict.InSync && _deepScansLeft > 0)
-            {
-                <MudLink Component="button" Disabled="Disabled" @onclick="@(() => Run(deepScan: true))">
-                    @L["Still wrong? Run a deep scan"]
+                <MudLink Href="@($"/Player/{_userId}/Sessions")" Class="d-block mt-1">
+                    @L["See them on your sessions page"]
                 </MudLink>
             }
+        }
+        else
+        {
+            <MudText Typo="Typo.body1" Class="mt-1">
+                @L["Find scores PIUGAME has that never made it here, and add them."]
+            </MudText>
+        }
+
+        @* Two peer actions. The deep scan carries its own budget, so the limit sits on the control
+           it limits rather than in a sentence that only appeared in one state. *@
+        <div class="d-flex flex-wrap gap-4 align-start mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Disabled"
+                       OnClick="@(() => Run())">
+                @L["Import and check"]
+            </MudButton>
+            <div>
+                <MudButton Variant="Variant.Outlined" Disabled="@(Disabled || _deepScansLeft == 0)"
+                           OnClick="@(() => Run(deepScan: true))">
+                    @L["Deep scan"]
+                </MudButton>
+                <MudText Typo="Typo.caption" Class="d-block">
+                    @(_deepScansLeft > 0
+                        ? L["{0} left this month", _deepScansLeft]
+                        : L["None left — next on {0}", NextUnlock])
+                </MudText>
+            </div>
         </div>
 
-        @if (Found.Any())
-        {
-            <MudText Typo="Typo.caption" Class="d-block mt-1">
-                @if (_report.PumbilityGap != null)
-                {
-                    @L["Worth {0} PUMBILITY.", ((int)_report.PumbilityGap.Value).ToString("N0")]
-                    <text> </text>
-                }
-                @L["A row with a \"was\" is one you've beaten since your last import; the rest were never imported at all."]
-            </MudText>
-        }
-        else if (_report.Verdict == ImportCheckVerdict.InSync)
-        {
-            <MudText Typo="Typo.caption" Class="d-block mt-1">
-                @(_deepScansLeft > 0
-                    ? L["Deep scan reads every page instead of counting. {0} left this month.", _deepScansLeft]
-                    : L["You've used all your deep scans this month. The next unlock is {0}.", NextUnlock])
-            </MudText>
-        }
+        <MudText Typo="Typo.caption" Class="d-block mt-2">
+            @L["A check counts your scores level by level. A deep scan reads every page instead — slower, and the only way to find a score you improved without changing grade or plate."]
+        </MudText>
     }
 </MudPaper>
 
@@ -132,25 +90,16 @@
     [Parameter] public bool Busy { get; set; }
 
     private readonly List<IDisposable> _subscriptions = new();
-    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private int _deepScansLeft;
-    private int _repaired;
-    private ImportCheckReport? _report;
+    private ImportCheckCompletedEvent? _finished;
     private bool _running;
     private string? _status;
     private Guid _userId;
 
     private bool Disabled => Busy || _running || Credentials?.Invoke() == null;
 
-    private IReadOnlyList<ImportCheckChart> Found =>
-        _report?.Repairable.SelectMany(d => d.Charts).ToArray() ?? Array.Empty<ImportCheckChart>();
-
     private string NextUnlock => new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1)
         .AddMonths(1).ToString("d");
-
-    private string Headline => _report?.Verdict == ImportCheckVerdict.InSync
-        ? L["Everything matches — all {0} scores are here.", _report.LocalPasses.ToString("N0")]
-        : L["{0} scores here don't match PIUGAME.", _report?.RepairableCount ?? 0];
 
     protected override async Task OnInitializedAsync()
     {
@@ -162,28 +111,7 @@
         _deepScansLeft = await Mediator.Send(new GetDeepScansRemainingQuery(_userId));
     }
 
-    private Task Run(bool deepScan = false)
-    {
-        return Start(deepScan, Array.Empty<string>());
-    }
-
-    /// <summary>
-    ///     Re-reads only the levels this verdict named. The panel holds the findings, so the client
-    ///     says what it wants fixed — nothing on the server remembers the last run.
-    /// </summary>
-    private Task Repair()
-    {
-        return Start(false, _report?.Repairable.Select(d => d.Bucket).Distinct().ToArray()
-                            ?? Array.Empty<string>());
-    }
-
-    private void Dismiss()
-    {
-        _report = null;
-        _repaired = 0;
-    }
-
-    private async Task Start(bool deepScan, IReadOnlyCollection<string> repairBuckets)
+    private async Task Run(bool deepScan = false)
     {
         var source = Credentials?.Invoke();
         if (source == null) return;
@@ -192,11 +120,10 @@
         // its synchronous portion, so flipping this afterwards leaves the button inert for seconds.
         _running = true;
         _status = null;
-        _repaired = 0;
+        _finished = null;
         StateHasChanged();
 
-        var result = await Mediator.Send(new StartImportCheckCommand(source, Mix, CardId, GameTag,
-            deepScan, repairBuckets));
+        var result = await Mediator.Send(new StartImportCheckCommand(source, Mix, CardId, GameTag, deepScan));
         _deepScansLeft = result.DeepScansLeft;
         if (result.Outcome == ImportCheckStartOutcome.Started) return;
 
@@ -206,8 +133,7 @@
             ImportCheckStartOutcome.InvalidCredentials => L["Invalid Login Information"],
             ImportCheckStartOutcome.CredentialUnlockFailed => L["Saved credentials could not be unlocked."],
             ImportCheckStartOutcome.AlreadyRunning => L["An import is already running."],
-            ImportCheckStartOutcome.NoDeepScansLeft =>
-                L["You've used all your deep scans this month. The next unlock is {0}.", NextUnlock],
+            ImportCheckStartOutcome.NoDeepScansLeft => L["None left — next on {0}", NextUnlock],
             _ => L["Something went wrong."]
         }, Severity.Warning);
     }
@@ -222,24 +148,12 @@
         });
     }
 
-    private async Task OnCompleted(ImportCheckCompletedEvent completed)
+    private Task OnCompleted(ImportCheckCompletedEvent completed)
     {
-        if (completed.Mix != Mix) return;
-        // Resolved once so the rows can carry real song art and a proper difficulty bubble; the
-        // report itself only carries chart ids.
-        var ids = completed.Report.Repairable.SelectMany(d => d.Charts).Select(c => c.ChartId).Distinct().ToArray();
-        var charts = ids.Length == 0
-            ? Array.Empty<Chart>()
-            : (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: ids))).ToArray();
-
-        await InvokeAsync(() =>
+        if (completed.Mix != Mix) return Task.CompletedTask;
+        return InvokeAsync(() =>
         {
-            _charts = charts.ToDictionary(c => c.Id);
-            _repaired = completed.Repaired;
-            // A repair that fixed everything shows its own acknowledgement instead of an empty list.
-            _report = completed.Repaired > 0 && completed.Report.Verdict == ImportCheckVerdict.InSync
-                ? null
-                : completed.Report;
+            _finished = completed;
             _running = false;
             StateHasChanged();
         });

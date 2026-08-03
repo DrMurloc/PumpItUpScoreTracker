@@ -19,6 +19,7 @@ using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
@@ -48,7 +49,7 @@ public sealed class ImportCheckSagaTests
 
         Assert.Equal(ImportCheckStartOutcome.Started, result.Outcome);
         bus.Verify(b => b.Publish(
-            It.Is<RunImportCheckCommand>(c => c.UserId == UserId && !c.DeepScan && c.RepairBuckets.Count == 0),
+            It.Is<RunImportCheckCommand>(c => c.UserId == UserId && !c.DeepScan),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -155,23 +156,24 @@ public sealed class ImportCheckSagaTests
     }
 
     [Fact]
-    public async Task TheVerdictIsPublishedNotStored()
+    public async Task ACleanAccountReportsNothingAddedAndSavesNothing()
     {
         var mediator = Mediator();
 
         await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
             .Handle(Execute(), CancellationToken.None);
 
-        // Nothing persists a check: this notification IS the result, and a page that navigated
-        // away simply never receives it.
+        // Nothing persists a check: this notification IS the result, and it carries a count
+        // because the scores themselves are the answer.
         mediator.Verify(m => m.Publish(
-            It.Is<ImportCheckCompletedEvent>(e => e.UserId == UserId
-                                                  && e.Report.Verdict == ImportCheckVerdict.InSync),
+            It.Is<ImportCheckCompletedEvent>(e => e.UserId == UserId && e.Added == 0 && e.Checked == 1),
             It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Send(It.IsAny<SaveOfficialScoresCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
-    public async Task AShortLevelIsReadSoTheVerdictCanNameTheChartAndItsScore()
+    public async Task AShortLevelIsReReadAndWhateverItYieldsIsSavedImmediately()
     {
         var mediator = Mediator();
         var site = Site(Census(("18", 2)));
@@ -179,22 +181,23 @@ public sealed class ImportCheckSagaTests
                 It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<OfficialRecordedScore>)new[]
             {
-                new OfficialRecordedScore(Chart(ChartId), PhoenixScore.From(990000), PhoenixPlate.MarvelousGame),
-                new OfficialRecordedScore(Chart(OtherChartId), PhoenixScore.From(996408), PhoenixPlate.MarvelousGame)
+                new OfficialRecordedScore(Chart(OtherChartId), PhoenixScore.From(996408),
+                    PhoenixPlate.MarvelousGame)
             });
+        mediator.Setup(m => m.Send(It.IsAny<SaveOfficialScoresCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
 
         await Build(mediator: mediator, site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
 
-        mediator.Verify(m => m.Publish(It.Is<ImportCheckCompletedEvent>(e =>
-                e.Report.Repairable.Single().Charts.Single().ChartId == OtherChartId &&
-                e.Report.Repairable.Single().Charts.Single().Score == 996408 &&
-                // Never imported, so there is no score of ours to show beside it.
-                e.Report.Repairable.Single().Charts.Single().CurrentScore == null),
+        // Nobody is asked to approve their own score from the official site — it just lands.
+        mediator.Verify(m => m.Send(It.Is<SaveOfficialScoresCommand>(c => c.Scores.Count == 1),
+            It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Publish(It.Is<ImportCheckCompletedEvent>(e => e.Added == 1),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ACleanCensusNeverPaysForANamingWalk()
+    public async Task ACleanCensusNeverPaysForAnExtraRead()
     {
         var site = Site(Census(("18", 1)));
 
@@ -204,43 +207,49 @@ public sealed class ImportCheckSagaTests
             It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // ---- repairing ----
+    // ---- the deep scan ----
 
     [Fact]
-    public async Task ARepairReReadsExactlyTheLevelsThePanelAskedFor()
+    public async Task ADeepScanWalksEverythingWithoutCountingFirst()
     {
         var mediator = Mediator();
+        var site = Site(Census(("18", 1)));
 
-        await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
-            .Handle(Execute(repairBuckets: new[] { "18", "21" }), CancellationToken.None);
+        await Build(mediator: mediator, site: site, records: Records(1))
+            .Handle(Execute(deepScan: true), CancellationToken.None);
 
-        // The panel holds the findings and says what it wants fixed — nothing on the server
-        // remembers the last run.
-        mediator.Verify(m => m.Send(It.Is<RepairScoresCommand>(c =>
-            c.Buckets.SequenceEqual(new[] { "18", "21" })), It.IsAny<CancellationToken>()), Times.Once);
+        // The walk finds everything a count would have pointed at, so the census is wasted work.
+        site.Verify(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        site.Verify(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.Is<IReadOnlyCollection<string>>(b => b.Count == 0), It.IsAny<bool>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task APlainCheckRepairsNothing()
+    public async Task TheImportAndTheDeeperReadShareOneSession()
     {
         var mediator = Mediator();
+        var sessionId = Guid.NewGuid();
+        mediator.Setup(m => m.Send(It.IsAny<BeginScoreSessionCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sessionId);
+        var site = Site(Census(("18", 2)));
+        site.Setup(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<OfficialRecordedScore>)new[]
+            {
+                new OfficialRecordedScore(Chart(OtherChartId), PhoenixScore.From(996408),
+                    PhoenixPlate.MarvelousGame)
+            });
 
-        await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
-            .Handle(Execute(), CancellationToken.None);
+        await Build(mediator: mediator, site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
 
-        mediator.Verify(m => m.Send(It.IsAny<RepairScoresCommand>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task ADeepScanWalksTheWholeListRegardlessOfWhatThePanelAskedFor()
-    {
-        var mediator = Mediator();
-
-        await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
-            .Handle(Execute(deepScan: true, repairBuckets: new[] { "18" }), CancellationToken.None);
-
-        // No buckets: the only way to catch a score that improved without changing grade or plate.
-        mediator.Verify(m => m.Send(It.Is<RepairScoresCommand>(c => c.Buckets.Count == 0),
+        // One button press must not put two rows seconds apart in the sessions list.
+        mediator.Verify(m => m.Send(It.IsAny<BeginScoreSessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        mediator.Verify(m => m.Send(It.Is<ExecuteImportCommand>(c => c.SessionId == sessionId),
+            It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Send(It.Is<SaveOfficialScoresCommand>(c => c.SessionId == sessionId),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -261,8 +270,9 @@ public sealed class ImportCheckSagaTests
     {
         var guard = Guard();
         var site = Site();
-        site.Setup(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
-            It.IsAny<CancellationToken>())).ThrowsAsync(new TimeoutException("piugame fell over"));
+        site.Setup(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new TimeoutException("piugame fell over"));
 
         await Assert.ThrowsAsync<TimeoutException>(() =>
             Build(guard: guard, site: site).Handle(Execute(deepScan: true), CancellationToken.None));
@@ -276,13 +286,12 @@ public sealed class ImportCheckSagaTests
     private static StartImportCheckCommand Start(bool deepScan = false)
     {
         return new StartImportCheckCommand(new TypedCredentialSource("user", "pass"), MixEnum.Phoenix,
-            "card", "TAG #1", deepScan, Array.Empty<string>());
+            "card", "TAG #1", deepScan);
     }
 
-    private static ExecuteImportCheckCommand Execute(bool deepScan = false, string[]? repairBuckets = null)
+    private static ExecuteImportCheckCommand Execute(bool deepScan = false)
     {
-        return new ExecuteImportCheckCommand(UserId, MixEnum.Phoenix, "sid", "card", "TAG #1", deepScan,
-            repairBuckets ?? Array.Empty<string>());
+        return new ExecuteImportCheckCommand(UserId, MixEnum.Phoenix, "sid", "card", "TAG #1", deepScan);
     }
 
     private static Chart Chart(Guid id)
@@ -332,8 +341,10 @@ public sealed class ImportCheckSagaTests
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        mediator.Setup(m => m.Send(It.IsAny<RepairScoresCommand>(), It.IsAny<CancellationToken>()))
+        mediator.Setup(m => m.Send(It.IsAny<SaveOfficialScoresCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
+        mediator.Setup(m => m.Send(It.IsAny<BeginScoreSessionCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Guid.NewGuid());
         mediator.Setup(m => m.Send(It.IsAny<GetDeepScansRemainingQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(scansLeft);
         mediator.Setup(m => m.Send(It.IsAny<SpendDeepScanCommand>(), It.IsAny<CancellationToken>()))
