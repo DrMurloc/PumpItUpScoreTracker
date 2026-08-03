@@ -50,6 +50,8 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
 
     private IRenderedComponent<ScoreCheckPanel> Render(bool credentials = true, bool busy = false)
     {
+        // A named finding renders a DifficultyBubble, which branches on RendererInfo.
+        this.RenderInteractive();
         return RenderComponent<ScoreCheckPanel>(p => p
             .Add(c => c.Mix, MixEnum.Phoenix)
             .Add(c => c.CardId, "card")
