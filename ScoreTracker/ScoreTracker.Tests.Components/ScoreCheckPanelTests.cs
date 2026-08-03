@@ -77,7 +77,8 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
         params (string Song, int Score)[] charts)
     {
         return new ImportCheckDifference(bucket, level, kind, charts.Length,
-            charts.Select(c => new ImportCheckChart(Guid.NewGuid(), c.Song, ChartType.Single, level, c.Score))
+            charts.Select(c => new ImportCheckChart(Guid.NewGuid(), c.Song,
+                    SharedKernel.Enums.ChartType.Single, level, c.Score))
                 .ToArray());
     }
 
