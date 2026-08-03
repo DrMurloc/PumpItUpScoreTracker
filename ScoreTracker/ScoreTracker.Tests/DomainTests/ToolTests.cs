@@ -438,6 +438,51 @@ public sealed class ToolTests
         Assert.True(tool.CanBeSharedWithOthers);
     }
 
+    // A listing-only tool is nothing but a pointer, so the pointer has to point somewhere.
+    [Fact]
+    public void AListingOnlyToolCannotBeListedWithoutALink()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumpout"), Now,
+            Repository, "errlena", Now, ToolKind.ListingOnly);
+        tool.MarkRepositoryReachable(Now);
+        tool.Describe(Name.From("Pumpout"), "A chart database.", null, Repository);
+
+        Assert.Throws<ToolListingException>(() => tool.RequestListing());
+    }
+
+    [Fact]
+    public void AListingOnlyToolWithALinkCanBeListed()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumpout"), Now,
+            Repository, "errlena", Now, ToolKind.ListingOnly);
+        tool.MarkRepositoryReachable(Now);
+        tool.Describe(Name.From("Pumpout"), "A chart database.",
+            new Uri("https://pumpout.example"), Repository);
+
+        tool.RequestListing();
+
+        Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
+    }
+
+    // An integrated tool is reached through Connect, not through a link, so it needs no Url.
+    [Fact]
+    public void AnIntegratedToolNeedsNoLinkToBeListed()
+    {
+        var tool = ShareableTool();
+        tool.Describe(Name.From("Planner"), "Plans what to push next.", null, Repository);
+        tool.MarkRepositoryReachable(Now);
+
+        tool.RequestListing();
+
+        Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
+    }
+
+    [Fact]
+    public void AToolDefaultsToReadingScores()
+    {
+        Assert.Equal(ToolKind.Integrated, NewTool().Kind);
+    }
+
     [Fact]
     public void AListedToolStillNeedsADescription()
     {

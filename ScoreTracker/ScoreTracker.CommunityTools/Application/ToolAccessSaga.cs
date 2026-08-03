@@ -120,7 +120,7 @@ internal sealed class ToolAccessSaga :
                 tool.Url?.ToString(), await OwnerName(tool.OwnerUserId, cancellationToken),
                 tool.RequiresExplicitShare,
                 await _tools.CountConnectedPlayers(tool.Id, cancellationToken), tool.ApprovedAt,
-                tool.RepositoryUrl?.ToString()));
+                tool.RepositoryUrl?.ToString(), tool.Kind));
 
         return result.OrderByDescending(r => r.ConnectedPlayers).ToArray();
     }

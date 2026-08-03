@@ -39,7 +39,14 @@ public sealed record ToolRecord(
     ///     Whether this tool may reach anyone but its maker. Mirrors the domain rule so the console
     ///     can say why a tool is stuck without guessing at it.
     /// </summary>
-    bool CanBeSharedWithOthers);
+    bool CanBeSharedWithOthers,
+    ToolKind Kind,
+    /// <summary>
+    ///     Whether the console shows an API group at all. A listing-only tool has none and is not
+    ///     unfinished, so the section it would live in simply is not there.
+    /// </summary>
+    bool HasKeys,
+    bool WebhookConfigured);
 
 /// <summary>A tool as a player browsing the directory sees it — no delivery configuration.</summary>
 [ExcludeFromCodeCoverage]
@@ -56,7 +63,9 @@ public sealed record PublicToolRecord(
     ///     Where to read the source. Null only for a grandfathered tool, and the row simply carries
     ///     no Source link — there is no claim made about every listed tool that one absence breaks.
     /// </summary>
-    string? RepositoryUrl);
+    string? RepositoryUrl,
+    /// <summary>Decides the row's shape: Connect for a score-reader, Visit for a listing.</summary>
+    ToolKind Kind);
 
 /// <summary>One of a player's connections, for the "who can read my scores" list.</summary>
 [ExcludeFromCodeCoverage]
@@ -141,7 +150,8 @@ public sealed record ToolInvitePreview(
     ///     Where to read the source. The invite landing page is the one logged-out screen in the
     ///     feature, so it is also the one place a stranger can check the tool before signing in.
     /// </summary>
-    string? RepositoryUrl);
+    string? RepositoryUrl,
+    ToolKind Kind);
 
 /// <summary>
 ///     A maker's ban, as the admin list shows it. Notes are the owner's own and reach no other
@@ -150,3 +160,14 @@ public sealed record ToolInvitePreview(
 [ExcludeFromCodeCoverage]
 public sealed record ToolMakerBanRecord(Guid UserId, string UserName, DateTimeOffset BannedAt,
     string? Notes);
+
+/// <summary>
+///     The values a code sample needs filled in. Assembled here rather than in Web so a page never
+///     has to know which of them is a secret — the key is a tail, never the key.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ToolCodeContext(
+    string KeyTail,
+    string? WebhookUrl,
+    string? OutboundHeaderName,
+    IReadOnlyList<MixEnum> Mixes);

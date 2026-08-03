@@ -149,7 +149,7 @@ else
         if (_preview is not null)
             _asPublicRecord = new PublicToolRecord(_preview.ToolId, _preview.Name, _preview.Description,
                 _preview.Url, _preview.OwnerName, _preview.RequiresPiuGameSession,
-                _preview.ConnectedPlayers, null, _preview.RepositoryUrl);
+                _preview.ConnectedPlayers, null, _preview.RepositoryUrl, _preview.Kind);
 
         if (CurrentUser.IsLoggedIn && _preview is not null)
             _connected = (await Mediator.Send(new GetMyToolConnectionsQuery()))

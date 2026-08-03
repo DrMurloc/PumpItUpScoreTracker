@@ -10,7 +10,7 @@ namespace ScoreTracker.CommunityTools.Contracts.Commands;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record CreateToolCommand(string Name, string? RepositoryUrl = null,
-    string? DiscordHandle = null) : IRequest<Guid>;
+    string? DiscordHandle = null, ToolKind Kind = ToolKind.Integrated) : IRequest<Guid>;
 
 [ExcludeFromCodeCoverage]
 public sealed record UpdateToolCommand(Guid ToolId, string Name, string? Description, string? Url,
@@ -160,3 +160,13 @@ public sealed record LiftToolMakerBanCommand(Guid UserId) : IRequest;
 /// <summary>Editable afterwards, so a ban can record how it ended as well as why it started.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record SetToolMakerBanNotesCommand(Guid UserId, string? Notes) : IRequest;
+
+/// <summary>
+///     A player opened a listed tool's site or source from the directory.
+///     <para>
+///         Rolled up hourly like <c>KeyUsed</c> — never a row per click. This is the only number a
+///         listing-only tool ever gets, since it has no players to count.
+///     </para>
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record RecordToolClickCommand(Guid ToolId) : IRequest;

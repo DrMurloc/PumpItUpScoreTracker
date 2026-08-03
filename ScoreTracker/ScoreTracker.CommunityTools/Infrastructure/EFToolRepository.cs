@@ -60,6 +60,7 @@ internal sealed class EFToolRepository : IToolRepository
         entity.Description = tool.Description;
         entity.Url = tool.Url?.ToString();
         entity.Visibility = tool.Visibility.ToString();
+        entity.Kind = tool.Kind.ToString();
         entity.AcceptsAllToolsShare = tool.AcceptsAllToolsShare;
         entity.WebhookMode = tool.WebhookMode.ToString();
         entity.WebhookUrl = tool.WebhookUrl?.ToString();
@@ -302,6 +303,20 @@ internal sealed class EFToolRepository : IToolRepository
         return (await GetReadablePlayerIds(toolId, cancellationToken)).Contains(userId);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, int>> CountKeysFor(IReadOnlyCollection<Guid> toolIds,
+        DateTimeOffset asOf, CancellationToken cancellationToken = default)
+    {
+        if (toolIds.Count == 0) return new Dictionary<Guid, int>();
+
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ToolApiKeyEntity>()
+            .Where(k => toolIds.Contains(k.ToolId))
+            // Live only. A revoked or expired key is not a reason to show a maker an API section.
+            .Where(k => k.RevokedAt == null && (k.ExpiresAt == null || k.ExpiresAt > asOf))
+            .GroupBy(k => k.ToolId)
+            .ToDictionaryAsync(g => g.Key, g => g.Count(), cancellationToken);
+    }
+
     private static async Task<IReadOnlySet<Guid>> BannedOwners(ChartAttemptDbContext database,
         IEnumerable<Guid> ownerUserIds, CancellationToken cancellationToken)
     {
@@ -356,6 +371,8 @@ internal sealed class EFToolRepository : IToolRepository
             entity.CreatedAt, entity.ApprovedAt, entity.RejectionReason, entity.WebhookUrlVerifiedAt,
             entity.RepositoryUrl is null ? null : new Uri(entity.RepositoryUrl),
             entity.RepositoryOwner, entity.RepositoryCheckedAt, entity.DiscordHandle,
-            entity.AgreedToRulesAt);
+            entity.AgreedToRulesAt,
+            // Rows written before the column existed are all score-readers.
+            string.IsNullOrEmpty(entity.Kind) ? ToolKind.Integrated : Enum.Parse<ToolKind>(entity.Kind));
     }
 }

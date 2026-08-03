@@ -22,8 +22,9 @@ internal sealed class Tool
         IEnumerable<MixEnum> mixes, DateTimeOffset createdAt, DateTimeOffset? approvedAt,
         string? rejectionReason, DateTimeOffset? webhookUrlVerifiedAt, Uri? repositoryUrl,
         string? repositoryOwner, DateTimeOffset? repositoryCheckedAt, string? discordHandle,
-        DateTimeOffset? agreedToRulesAt)
+        DateTimeOffset? agreedToRulesAt, ToolKind kind)
     {
+        Kind = kind;
         Id = id;
         OwnerUserId = ownerUserId;
         Name = name;
@@ -47,6 +48,9 @@ internal sealed class Tool
 
     public Guid Id { get; }
     public Guid OwnerUserId { get; }
+
+    /// <summary>Whether this tool reads scores at all. Stated at registration, never derived.</summary>
+    public ToolKind Kind { get; }
     public Name Name { get; private set; }
     public string? Description { get; private set; }
     public Uri? Url { get; private set; }
@@ -142,11 +146,12 @@ internal sealed class Tool
     ///     holds the line once anyone else's data is involved.
     /// </summary>
     public static Tool Create(Guid id, Guid ownerUserId, Name name, DateTimeOffset createdAt,
-        Uri? repositoryUrl = null, string? discordHandle = null, DateTimeOffset? agreedToRulesAt = null)
+        Uri? repositoryUrl = null, string? discordHandle = null, DateTimeOffset? agreedToRulesAt = null,
+        ToolKind kind = ToolKind.Integrated)
     {
         return new Tool(id, ownerUserId, name, null, null, ToolVisibility.Private, true,
             WebhookMode.None, null, Array.Empty<MixEnum>(), createdAt, null, null, null,
-            repositoryUrl, OwnerOf(repositoryUrl), null, Blank(discordHandle), agreedToRulesAt);
+            repositoryUrl, OwnerOf(repositoryUrl), null, Blank(discordHandle), agreedToRulesAt, kind);
     }
 
     public static Tool Rehydrate(Guid id, Guid ownerUserId, Name name, string? description, Uri? url,
@@ -154,11 +159,11 @@ internal sealed class Tool
         IEnumerable<MixEnum> mixes, DateTimeOffset createdAt, DateTimeOffset? approvedAt,
         string? rejectionReason, DateTimeOffset? webhookUrlVerifiedAt, Uri? repositoryUrl,
         string? repositoryOwner, DateTimeOffset? repositoryCheckedAt, string? discordHandle,
-        DateTimeOffset? agreedToRulesAt)
+        DateTimeOffset? agreedToRulesAt, ToolKind kind)
     {
         return new Tool(id, ownerUserId, name, description, url, visibility, acceptsAllToolsShare,
             webhookMode, webhookUrl, mixes, createdAt, approvedAt, rejectionReason, webhookUrlVerifiedAt,
-            repositoryUrl, repositoryOwner, repositoryCheckedAt, discordHandle, agreedToRulesAt);
+            repositoryUrl, repositoryOwner, repositoryCheckedAt, discordHandle, agreedToRulesAt, kind);
     }
 
     /// <summary>
@@ -247,6 +252,11 @@ internal sealed class Tool
         if (string.IsNullOrWhiteSpace(Description))
             throw new ToolListingException("A listed tool needs a description — it is what players read " +
                                            "before they decide to connect.");
+
+        // A listing-only tool is nothing but a pointer, so the pointer has to point somewhere.
+        if (Kind == ToolKind.ListingOnly && Url is null)
+            throw new ToolListingException("A listing-only tool needs a link — it is the whole " +
+                                           "thing a player is being sent to.");
 
         // Being listed is an invitation to every player on the site. The source they are invited to
         // read has to actually be readable, and someone has to be reachable when it goes wrong.

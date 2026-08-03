@@ -62,3 +62,7 @@ public sealed record GetToolMakerBansQuery : IQuery<IReadOnlyList<ToolMakerBanRe
 
 [ExcludeFromCodeCoverage]
 public sealed record IsToolMakerBannedQuery(Guid UserId) : IQuery<bool>;
+
+/// <summary>Everything a code sample needs substituted into it, for one tool.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetToolCodeSamplesQuery(Guid ToolId) : IQuery<ToolCodeContext>;

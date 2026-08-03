@@ -16,6 +16,11 @@ internal sealed class ToolEntity
     [MaxLength(20)]
     public string Visibility { get; set; } = string.Empty;
 
+    /// <summary>Integrated or ListingOnly, by name for the same reason Visibility is.</summary>
+    [Required]
+    [MaxLength(20)]
+    public string Kind { get; set; } = string.Empty;
+
     public bool AcceptsAllToolsShare { get; set; }
     [Required] [MaxLength(20)] public string WebhookMode { get; set; } = string.Empty;
     [MaxLength(500)] public string? WebhookUrl { get; set; }

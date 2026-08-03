@@ -166,7 +166,8 @@ internal sealed class ToolManagementSaga :
                 "You can't register a tool. If you think that's wrong, ask in the PIU Scores Discord.");
 
         var tool = Tool.Create(Guid.NewGuid(), _currentUser.User.Id, Name.From(request.Name),
-            _dateTime.Now, Link(request.RepositoryUrl), request.DiscordHandle, _dateTime.Now);
+            _dateTime.Now, Link(request.RepositoryUrl), request.DiscordHandle, _dateTime.Now,
+            request.Kind);
         await _tools.Save(tool, cancellationToken);
 
         // The maker is player one. Without this they cannot test their own tool against a real
@@ -266,7 +267,7 @@ internal sealed class ToolManagementSaga :
         CancellationToken cancellationToken)
     {
         var tools = await _tools.GetToolsOwnedBy(_currentUser.User.Id, cancellationToken);
-        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken)));
+        return await ProjectAll(tools, cancellationToken);
     }
 
     /// <summary>
@@ -280,7 +281,7 @@ internal sealed class ToolManagementSaga :
         if (!_currentUser.User.IsAdmin) return Array.Empty<ToolRecord>();
 
         var tools = await _tools.GetAllTools(cancellationToken);
-        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken)));
+        return await ProjectAll(tools, cancellationToken);
     }
 
     public async Task<ToolRecord?> Handle(GetToolQuery request, CancellationToken cancellationToken)
@@ -301,8 +302,25 @@ internal sealed class ToolManagementSaga :
         return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken)));
     }
 
-    private async Task<ToolRecord> Project(Tool tool, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<ToolRecord>> ProjectAll(IReadOnlyList<Tool> tools,
+        CancellationToken cancellationToken)
     {
+        var keyCounts = await _tools.CountKeysFor(tools.Select(t => t.Id).ToArray(), _dateTime.Now,
+            cancellationToken);
+        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken, keyCounts)));
+    }
+
+    private async Task<ToolRecord> Project(Tool tool, CancellationToken cancellationToken,
+        IReadOnlyDictionary<Guid, int>? keyCounts = null)
+    {
+        // Batched by the list handlers; a single-tool read pays for one extra query.
+        var keyCount = keyCounts is not null && keyCounts.TryGetValue(tool.Id, out var n)
+            ? n
+            : keyCounts is not null
+                ? 0
+                : (await _tools.CountKeysFor(new[] { tool.Id }, _dateTime.Now, cancellationToken))
+                .GetValueOrDefault(tool.Id);
+
         // Who registered it is the review queue's main signal, so it travels with the record
         // rather than being looked up per row on the page.
         var owner = await _users.GetUser(tool.OwnerUserId, cancellationToken);
@@ -318,7 +336,8 @@ internal sealed class ToolManagementSaga :
             headerName, !string.IsNullOrWhiteSpace(headerValue),
             !string.IsNullOrWhiteSpace(verificationHash),
             tool.RepositoryUrl?.ToString(), tool.RepositoryOwner, tool.RepositoryCheckedAt,
-            tool.DiscordHandle, tool.AgreedToRulesAt, tool.CanBeSharedWithOthers);
+            tool.DiscordHandle, tool.AgreedToRulesAt, tool.CanBeSharedWithOthers, tool.Kind,
+            keyCount > 0, tool.WebhookMode != WebhookMode.None);
     }
 
     /// <summary>

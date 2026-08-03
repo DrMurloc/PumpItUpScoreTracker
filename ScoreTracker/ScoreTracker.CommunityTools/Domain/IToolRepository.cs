@@ -50,6 +50,13 @@ internal interface IToolRepository
     Task<IReadOnlyList<Guid>> GetReadablePlayerIds(Guid toolId, CancellationToken cancellationToken = default);
 
     Task<bool> CanRead(Guid toolId, Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     How many live keys each of these tools holds. Batched because the console and the
+    ///     directory both need it for a page of rows, and a query per row is a query per row.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> CountKeysFor(IReadOnlyCollection<Guid> toolIds,
+        DateTimeOffset asOf, CancellationToken cancellationToken = default);
 }
 
 /// <summary>A player's grant to a tool, as a reader sees it.</summary>

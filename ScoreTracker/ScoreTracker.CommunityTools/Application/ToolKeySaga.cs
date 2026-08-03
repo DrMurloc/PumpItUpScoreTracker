@@ -120,7 +120,7 @@ internal sealed class ToolKeySaga :
             tool.Url?.ToString(), owner?.Name.ToString() ?? string.Empty,
             tool.Visibility == ToolVisibility.Public, tool.RequiresExplicitShare,
             await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
-            tool.RepositoryUrl?.ToString());
+            tool.RepositoryUrl?.ToString(), tool.Kind);
     }
 
     public async Task<Guid?> Handle(GetToolByApiKeyQuery request, CancellationToken cancellationToken)
