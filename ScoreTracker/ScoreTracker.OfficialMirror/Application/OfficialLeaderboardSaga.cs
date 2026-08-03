@@ -27,6 +27,7 @@ namespace ScoreTracker.OfficialMirror.Application
 {
     internal sealed class OfficialLeaderboardSaga : IRequestHandler<ImportOfficialPlayerScoresCommand>,
         IRequestHandler<ExecuteImportCommand>,
+        IRequestHandler<SaveOfficialScoresCommand, int>,
         IRequestHandler<UpdateSongImagesCommand>,
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
         IRequestHandler<GetOfficialUcsEntryQuery, PiuGameUcsEntry?>,
