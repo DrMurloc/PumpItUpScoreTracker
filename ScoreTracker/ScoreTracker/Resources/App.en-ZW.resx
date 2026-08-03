@@ -321,9 +321,6 @@
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>GRO mrpargl mr gro rglgro glmurmargl.</value>
   </data>
-  <data name="A header value needs a header name." xml:space="preserve">
-    <value>Grumb mo pragl marogl pragl marogl.</value>
-  </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>GRO blargplgl urggrgl grorpgrgl glmagl</value>
   </data>
@@ -1192,6 +1189,9 @@
   </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
+  </data>
+  <data name="Code" xml:space="preserve">
+    <value>Murgblub</value>
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>Rglmrglblub Murgl</value>
@@ -2647,6 +2647,9 @@
   </data>
   <data name="Input Json" xml:space="preserve">
 	  <value>Murpgro Glorgmurg</value>
+  </data>
+  <data name="Insights" xml:space="preserve">
+    <value>Murgblarg</value>
   </data>
   <data name="Into overflow" xml:space="preserve">
     <value>Murpgrrgl magllurgmurg</value>
@@ -5746,8 +5749,8 @@
   <data name="Test Scores" xml:space="preserve">
 	  <value>Rglgrgl Mgrlgmrg</value>
   </data>
-  <data name="Test sent — the result is in the log below." xml:space="preserve">
-    <value>Murgm murpo — murgblarg mo blomurp.</value>
+  <data name="Test sent — what came back is on Insights." xml:space="preserve">
+    <value>Blorp murgloo — murgm grabla mo Murgblarg.</value>
   </data>
   <data name="Test With Player Data" xml:space="preserve">
 	  <value>Rglgrgl Glgrgl Morp Gromurm</value>
@@ -6187,6 +6190,9 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>Maglrgl Glorgmagl urgmurg mr gromorgblub.</value>
   </data>
+  <data name="Tool" xml:space="preserve">
+    <value>Rorgl</value>
+  </data>
   <data name="Tool Review" xml:space="preserve">
     <value>Blurgl Marogl</value>
   </data>
@@ -6506,17 +6512,8 @@
   <data name="Value" xml:space="preserve">
     <value>Grumb</value>
   </data>
-  <data name="Value (set — type to replace)" xml:space="preserve">
-    <value>Grumb (olo — blurgl mo golba)</value>
-  </data>
   <data name="Verification" xml:space="preserve">
 	  <value>Morgmrglblubmagl</value>
-  </data>
-  <data name="Verification secret" xml:space="preserve">
-    <value>Grumb marogl</value>
-  </data>
-  <data name="Verification secret (set — type to replace)" xml:space="preserve">
-    <value>Grumb marogl (olo — blurgl mo golba)</value>
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Murplurgmagl romurg urgmrmurg glorggl</value>

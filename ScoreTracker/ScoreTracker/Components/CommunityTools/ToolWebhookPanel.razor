@@ -191,7 +191,6 @@
 
     private WebhookMode _mode = WebhookMode.None;
     private string _url = string.Empty;
-    private string _headerName = string.Empty;
 
     // Never populated from the record — neither secret's value travels. Blank means "keep stored".
     private string _headerValue = string.Empty;
@@ -209,13 +208,30 @@
 
     private bool _changingSecret;
 
-    private bool HasUnsavedUrl => (Tool.WebhookUrl ?? string.Empty) != (_url ?? string.Empty);
+    /// <summary>
+    ///     Whether the box holds something the server has not been told about. Compared as URLs
+    ///     rather than as text: the saved value has been through <see cref="Uri" />, which gives a
+    ///     bare host the trailing slash the maker didn't type — and reading that back as an unsaved
+    ///     edit would leave Verify permanently disabled for anyone whose endpoint is a bare host.
+    /// </summary>
+    private bool HasUnsavedUrl => !SameTarget(Tool.WebhookUrl, _url);
 
     /// <summary>Everything the request needs, on the server's side of the save.</summary>
     private bool CanVerify => !_verifying
                               && Tool.HasVerificationSecret
                               && !string.IsNullOrWhiteSpace(Tool.WebhookUrl)
                               && !HasUnsavedUrl;
+
+    private static bool SameTarget(string? saved, string? typed)
+    {
+        saved = saved?.Trim() ?? string.Empty;
+        typed = typed?.Trim() ?? string.Empty;
+        if (string.Equals(saved, typed, StringComparison.OrdinalIgnoreCase)) return true;
+
+        return Uri.TryCreate(saved, UriKind.Absolute, out var savedUri)
+               && Uri.TryCreate(typed, UriKind.Absolute, out var typedUri)
+               && savedUri == typedUri;
+    }
 
     private static readonly WebhookMode[] Modes =
     {
@@ -250,17 +266,12 @@
     private bool SessionModeLocked =>
         Tool.ConnectedPlayers > 0 && Tool.WebhookMode != WebhookMode.PiuGameSession;
 
-    private string HeaderValueLabel => Tool.HasOutboundHeaderValue
-        ? L["Value (set — type to replace)"].Value
-        : L["Value"].Value;
-
-    private string VerificationSecretLabel => Tool.HasVerificationSecret
-        ? L["Verification secret (set — type to replace)"].Value
-        : L["Verification secret"].Value;
-
     /// <summary>
-    ///     Reloads the boxes only when the tool changes, not on every re-render: the parent reloads
-    ///     after each save, and re-seeding on that would throw away anything typed since.
+    ///     Reloads the boxes from the record when the tool changes and after each save, not on every
+    ///     re-render — re-seeding on every render would throw away anything typed since.
+    ///     What it deliberately leaves alone is the two things on screen that came from a button
+    ///     rather than from the record: the verify outcome and the generated secret. Both are shown
+    ///     once, and both arrive alongside a save, so clearing them here erased them on sight.
     /// </summary>
     protected override void OnParametersSet()
     {
@@ -269,12 +280,9 @@
         _loadedFor = Tool.Id;
         _mode = Tool.WebhookMode;
         _url = Tool.WebhookUrl ?? string.Empty;
-        _headerName = Tool.OutboundHeaderName ?? string.Empty;
         _headerValue = string.Empty;
         _verificationSecret = string.Empty;
-        _generated = null;
         _mixes = Tool.Mixes.ToHashSet();
-        _verifyResult = null;
     }
 
     /// <summary>
@@ -312,6 +320,10 @@
             Snackbar.Add(problem, Severity.Error);
             return;
         }
+
+        // A save can withdraw the proof — changing the URL or the secret clears it — so last time's
+        // "Verified" must not survive the thing that invalidated it.
+        _verifyResult = null;
 
         try
         {
@@ -351,9 +363,7 @@
                 return L["\"{0}\" isn't a valid link. Include https://", _url].Value;
         }
 
-        if (!string.IsNullOrWhiteSpace(_headerValue) && string.IsNullOrWhiteSpace(_headerName))
-            return L["A header value needs a header name."].Value;
-
+        // Nothing to say about the header: its name is ours now, so a value can never be missing one.
         return null;
     }
 

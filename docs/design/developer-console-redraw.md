@@ -69,15 +69,25 @@ returning maker wants.
 | Route | Now | After |
 |---|---|---|
 | `/Developers` | The whole console + admin list | Tool picker / empty state; redirects to your first tool |
-| `/Developers/{toolId}` | — | **Overview** |
-| `/Developers/{toolId}/tool` | — | Identity, source, handle, listing, delete |
-| `/Developers/{toolId}/api` | — | Keys + usage |
+| `/Developers/{toolId}` | — | **Tool** — identity, source, handle, listing, delete |
+| `/Developers/{toolId}/api` | — | Keys |
 | `/Developers/{toolId}/players` | — | Invite links + connected |
-| `/Developers/{toolId}/webhooks` | — | Mode, URL, header, verify, recent deliveries, test |
+| `/Developers/{toolId}/webhooks` | — | Mode, URL, header, secret, verify, test |
 | `/Developers/{toolId}/code` | — | API + Webhook snippets, four languages |
-| `/Developers/{id}/Console` | Activity log | **301** → `/Developers/{id}/webhooks` |
+| `/Developers/{toolId}/insights` | — | Directory / API / webhook figures, recent deliveries, latest |
+| `/Developers/{id}/Console` | Activity log | **301** → `/Developers/{id}/insights` |
 | `/Developers/{id}/Debug` | Test + replay | **301** → `/Developers/{id}/webhooks` |
 | `/Admin/CommunityTools` | Review queue | Review queue **+ All tools** |
+
+Nav order is **Tool · API · Players · Webhooks · Code · Insights**. Tool holds the root route
+because a maker opening their console is nearly always here to change something; Insights is last
+because checking on a number is not what brings anyone here the first time. A listing-only tool
+shows only Tool and Insights — it has no key and no endpoint, and that is not a half-built state.
+
+The two retired routes split rather than both landing on Webhooks: `/Console` *was* the activity
+log, and the log now lives on Insights, so sending an old bookmark to Webhooks would land it on a
+page that no longer holds what it pointed at. `/Debug` still goes to Webhooks, where the test
+button is.
 
 ⚠ **This forces an authorization decision.** `ToolConsoleSaga` (activity log) and `ToolDebugSaga`
 (test delivery, replay) are **owner-only today** — neither consults `IsAdmin`, unlike
@@ -126,11 +136,11 @@ default for every row that exists.
 |---|---|
 | `Components/CommunityTools/ToolConsoleFrame.razor` | **new** — the shared chrome: tool switcher, section nav, admin banner. Mirrors `OfficialSectionFrame` |
 | `Pages/CommunityTools/Developers.razor` | Guts it: picker + empty state, redirect to first tool |
-| `Pages/CommunityTools/ConsoleOverview.razor` | **new** — conditional stat groups, attention strip, latest |
-| `Pages/CommunityTools/ConsoleTool.razor` | **new** — identity, source, handle, listing, delete |
-| `Pages/CommunityTools/ConsoleApi.razor` | **new** — keys + usage (was `ToolKeyPanel`) |
+| `Pages/CommunityTools/ConsoleTool.razor` | **new** — the landing route: identity, source, handle, listing, delete |
+| `Pages/CommunityTools/ConsoleApi.razor` | **new** — keys, live ones only (was `ToolKeyPanel`) |
 | `Pages/CommunityTools/ConsolePlayers.razor` | **new** — invite codes + copy + connected (was `ToolInvitePanel`) |
-| `Pages/CommunityTools/ConsoleWebhooks.razor` | **new** — config + verify + deliveries + test (was `ToolWebhookPanel` + `ToolConsole` + `ToolDebug`) |
+| `Pages/CommunityTools/ConsoleWebhooks.razor` | **new** — config + verify + test (was `ToolWebhookPanel` + `ToolDebug`) |
+| `Pages/CommunityTools/ConsoleInsights.razor` | **new** — conditional stat groups, recent deliveries, latest (was `ToolConsole`) |
 | `Pages/CommunityTools/ConsoleCode.razor` | **new** — API/Webhook segmented, C#/Java/Python/TypeScript |
 | `Components/CommunityTools/CodeSample.razor` | **new** — one snippet: language tabs, copy, token substitution |
 | `Components/CommunityTools/ToolSetupWizard.razor` | Screen split; the kind fork; the crumb rail becomes kind-dependent |
@@ -158,9 +168,31 @@ default for every row that exists.
 |---|---|
 | `DomainTests/ToolTests` | a listing-only tool cannot request listing without a `Url`; `Kind` survives rehydrate |
 | `ApplicationTests` | `Project` reports `HasKeys`/`WebhookConfigured`; summary sums `Calls`/`Clicks`; a click records one roll-up row not one per call |
-| `Tests.Components` | **the load-bearing suite here.** Wizard: rules gate Continue, the fork changes the crumb rail, listing-only skips the key. Console: groups hidden when absent, nav renders per kind. Directory: `Visit` vs `Connect` by kind |
+| `Tests.Components` | **the load-bearing suite here.** Wizard: rules gate Continue, the fork changes the crumb rail, listing-only skips the key. Console: groups hidden when absent, nav renders per kind. Directory: `Visit` vs `Connect` by kind. Webhooks: the record-reload seam below, at both panel and page level |
 | `Tests.E2E` | none new — no critical whole-workflow path changes |
 | `ArchitectureTests` | `RenderModeDeclarationTests` covers the six new pages automatically; `UiColorTokenTests` covers the new CSS |
+
+### The record-reload seam
+
+Sections save one of two ways, and the split is not cosmetic. Most save and let `NavManager.Refresh()`
+reload the document. **Webhooks cannot**: Verify puts a result on screen — a remote's status code, a
+failure reason — and a document reload throws away the thing the maker pressed the button for. So it
+saves through commands and asks the frame to re-read the record in place (`ToolConsoleFrame.Reload`,
+wired through the panel's `OnChanged`).
+
+That callback is load-bearing and silently optional, which is how it shipped unwired: the panel
+behaved perfectly on its own, and every control gated on the *saved* record — Verify above all —
+stayed gated on the record it replaced. Nothing failed, nothing said why, and no suite noticed,
+because no suite rendered the page and the panel together. `ConsoleWebhooksPageTests` now does.
+
+Two rules follow for anything that saves without a page load:
+
+- **The record is the parent's, so the parent has to be told.** A panel that mutates through commands
+  and renders from a `ToolRecord` parameter is reading a snapshot, and it goes stale the moment it
+  saves.
+- **The URL is compared as a URL.** The saved value round-trips through `Uri`, which gives a bare host
+  the trailing slash the maker never typed. Compared as text that reads as a pending edit, and Verify
+  is disabled forever for anyone whose endpoint is a bare host.
 
 ---
 

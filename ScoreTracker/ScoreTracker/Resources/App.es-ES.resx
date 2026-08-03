@@ -321,9 +321,6 @@
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>Un Great con el multiplicador al tope.</value>
   </data>
-  <data name="A header value needs a header name." xml:space="preserve">
-    <value>Un valor de cabecera necesita un nombre de cabecera.</value>
-  </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>Una página de inicio que es tuya</value>
   </data>
@@ -1181,6 +1178,9 @@
   </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
+  </data>
+  <data name="Code" xml:space="preserve">
+    <value>Código</value>
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>Charts menos populares</value>
@@ -2630,6 +2630,9 @@
   </data>
   <data name="Input Json" xml:space="preserve">
     <value>JSON de entrada</value>
+  </data>
+  <data name="Insights" xml:space="preserve">
+    <value>Estadísticas</value>
   </data>
   <data name="Into overflow" xml:space="preserve">
     <value>En desbordamiento</value>
@@ -5685,8 +5688,8 @@
   <data name="Test Scores" xml:space="preserve">
     <value>Scores de prueba</value>
   </data>
-  <data name="Test sent — the result is in the log below." xml:space="preserve">
-    <value>Prueba enviada — el resultado está en el registro de abajo.</value>
+  <data name="Test sent — what came back is on Insights." xml:space="preserve">
+    <value>Prueba enviada — lo que respondieron está en Estadísticas.</value>
   </data>
   <data name="Test With Player Data" xml:space="preserve">
     <value>Probar con datos de jugador</value>
@@ -6126,6 +6129,9 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>El Paso de hoy se publica a medianoche.</value>
   </data>
+  <data name="Tool" xml:space="preserve">
+    <value>Herramienta</value>
+  </data>
   <data name="Tool Review" xml:space="preserve">
     <value>Revisión de herramientas</value>
   </data>
@@ -6441,17 +6447,8 @@
   <data name="Value" xml:space="preserve">
     <value>Valor</value>
   </data>
-  <data name="Value (set — type to replace)" xml:space="preserve">
-    <value>Valor (definido: escribe para reemplazarlo)</value>
-  </data>
   <data name="Verification" xml:space="preserve">
     <value>Verificación</value>
-  </data>
-  <data name="Verification secret" xml:space="preserve">
-    <value>Secreto de verificación</value>
-  </data>
-  <data name="Verification secret (set — type to replace)" xml:space="preserve">
-    <value>Secreto de verificación (definido: escribe para reemplazarlo)</value>
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Verificado por importación oficial</value>

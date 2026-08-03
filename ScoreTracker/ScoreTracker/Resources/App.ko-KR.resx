@@ -321,9 +321,6 @@
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>배율 상한에서의 Great.</value>
   </data>
-  <data name="A header value needs a header name." xml:space="preserve">
-    <value>헤더 값에는 헤더 이름이 필요합니다.</value>
-  </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>온전히 내 것인 홈 화면</value>
   </data>
@@ -1181,6 +1178,9 @@
   </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
+  </data>
+  <data name="Code" xml:space="preserve">
+    <value>코드</value>
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>최저 인기 채보</value>
@@ -2630,6 +2630,9 @@
   </data>
   <data name="Input Json" xml:space="preserve">
     <value>JSON 입력</value>
+  </data>
+  <data name="Insights" xml:space="preserve">
+    <value>인사이트</value>
   </data>
   <data name="Into overflow" xml:space="preserve">
     <value>오버플로우 진입</value>
@@ -5687,8 +5690,8 @@
   <data name="Test Scores" xml:space="preserve">
     <value>점수 테스트</value>
   </data>
-  <data name="Test sent — the result is in the log below." xml:space="preserve">
-    <value>테스트를 보냈습니다 — 결과는 아래 로그에 있습니다.</value>
+  <data name="Test sent — what came back is on Insights." xml:space="preserve">
+    <value>테스트를 보냈습니다 — 응답은 인사이트에 있습니다.</value>
   </data>
   <data name="Test With Player Data" xml:space="preserve">
     <value>플레이어 데이터로 테스트</value>
@@ -6128,6 +6131,9 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>오늘의 스텝은 자정에 공개됩니다.</value>
   </data>
+  <data name="Tool" xml:space="preserve">
+    <value>도구</value>
+  </data>
   <data name="Tool Review" xml:space="preserve">
     <value>도구 검토</value>
   </data>
@@ -6443,17 +6449,8 @@
   <data name="Value" xml:space="preserve">
     <value>값</value>
   </data>
-  <data name="Value (set — type to replace)" xml:space="preserve">
-    <value>값 (설정됨 — 바꾸려면 입력)</value>
-  </data>
   <data name="Verification" xml:space="preserve">
     <value>인증</value>
-  </data>
-  <data name="Verification secret" xml:space="preserve">
-    <value>확인용 비밀 값</value>
-  </data>
-  <data name="Verification secret (set — type to replace)" xml:space="preserve">
-    <value>확인용 비밀 값 (설정됨 — 바꾸려면 입력)</value>
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>공식 가져오기로 확인됨</value>

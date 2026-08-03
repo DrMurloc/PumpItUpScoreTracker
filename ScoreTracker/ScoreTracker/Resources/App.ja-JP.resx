@@ -321,9 +321,6 @@
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>倍率上限での Great。</value>
   </data>
-  <data name="A header value needs a header name." xml:space="preserve">
-    <value>ヘッダーの値にはヘッダー名が必要です。</value>
-  </data>
   <data name="A home page that's yours" xml:space="preserve">
     <value>自分だけのホームページ</value>
   </data>
@@ -1192,6 +1189,9 @@
   </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
+  </data>
+  <data name="Code" xml:space="preserve">
+    <value>コード</value>
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>人気ワースト譜面</value>
@@ -2647,6 +2647,9 @@
   </data>
   <data name="Input Json" xml:space="preserve">
 	  <value>JSON入力</value>
+  </data>
+  <data name="Insights" xml:space="preserve">
+    <value>インサイト</value>
   </data>
   <data name="Into overflow" xml:space="preserve">
     <value>オーバーフロー突入</value>
@@ -5746,8 +5749,8 @@
   <data name="Test Scores" xml:space="preserve">
 	  <value>テストスコア</value>
   </data>
-  <data name="Test sent — the result is in the log below." xml:space="preserve">
-    <value>テストを送りました — 結果は下のログにあります。</value>
+  <data name="Test sent — what came back is on Insights." xml:space="preserve">
+    <value>テストを送信しました — 返答はインサイトにあります。</value>
   </data>
   <data name="Test With Player Data" xml:space="preserve">
 	  <value>プレーヤーデータでテスト</value>
@@ -6187,6 +6190,9 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>今日のステップは深夜に公開されます。</value>
   </data>
+  <data name="Tool" xml:space="preserve">
+    <value>ツール</value>
+  </data>
   <data name="Tool Review" xml:space="preserve">
     <value>ツール審査</value>
   </data>
@@ -6506,17 +6512,8 @@
   <data name="Value" xml:space="preserve">
     <value>値</value>
   </data>
-  <data name="Value (set — type to replace)" xml:space="preserve">
-    <value>値 (設定済み — 変更するには入力)</value>
-  </data>
   <data name="Verification" xml:space="preserve">
 	  <value>確認</value>
-  </data>
-  <data name="Verification secret" xml:space="preserve">
-    <value>確認用の秘密の値</value>
-  </data>
-  <data name="Verification secret (set — type to replace)" xml:space="preserve">
-    <value>確認用の秘密の値 (設定済み — 変更するには入力)</value>
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>公式インポートで確認済み</value>

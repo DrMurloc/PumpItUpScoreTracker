@@ -14,8 +14,10 @@
    be two more pages; a maker looking at a failed delivery and a maker deciding whether to replay it
    are the same person at the same moment. *@
 
-<ToolConsoleFrame Section="webhooks" ToolId="ToolId" Context="tool">
-    <ToolWebhookPanel Tool="tool"></ToolWebhookPanel>
+@* The panel saves through commands rather than a page load, so the frame has to re-read the record
+   for it — without that, everything gated on what was just saved stays gated on what it replaced. *@
+<ToolConsoleFrame @ref="_frame" Section="webhooks" ToolId="ToolId" Context="tool">
+    <ToolWebhookPanel Tool="tool" OnChanged="Reload"></ToolWebhookPanel>
 
     @* Test lives with the thing it tests. The log moved to Insights — a maker reading delivery
        history and a maker changing delivery config are two errands. *@
@@ -31,12 +33,15 @@
 
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
-@inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser
 @code {
     [Parameter] public Guid ToolId { get; set; }
 
+    private ToolConsoleFrame? _frame;
     private bool _busy;
+
+    private Task Reload() => _frame?.Reload() ?? Task.CompletedTask;
+
     /// <summary>
     ///     Synthetic rather than the maker's last import: a test that carries real scores into
     ///     someone's production database is not a test. The mix is whichever they subscribed to.
@@ -48,8 +53,7 @@
         {
             await Mediator.Send(new SendTestDeliveryCommand(tool.Id,
                 tool.Mixes.Any() ? tool.Mixes[0] : MixEnum.Phoenix2, UseMyLastImport: false));
-            Snackbar.Add(L["Test sent — the result is in the log below."].Value, Severity.Success);
-            NavManager.Refresh();
+            Snackbar.Add(L["Test sent — what came back is on Insights."].Value, Severity.Success);
         }
         catch (Exception e)
         {

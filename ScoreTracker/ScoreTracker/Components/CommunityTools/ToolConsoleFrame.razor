@@ -87,6 +87,22 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        await Load();
+    }
+
+    /// <summary>
+    ///     Re-reads the tool without leaving the page. Most sections save and let the page reload
+    ///     carry the new values, but a section with a result on screen — a verify outcome, a failure
+    ///     reason — cannot: reloading the document throws away the very thing the maker pressed for.
+    /// </summary>
+    public async Task Reload()
+    {
+        await Load();
+        StateHasChanged();
+    }
+
+    private async Task Load()
+    {
         _tools = await Mediator.Send(new GetMyToolsQuery());
         _tool = _tools.FirstOrDefault(t => t.Id == ToolId);
 
