@@ -1,4 +1,4 @@
-@page "/Dev/Populate"
+﻿@page "/Dev/Populate"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using Microsoft.Extensions.Options
@@ -7,6 +7,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Data.DevTooling
 @using ScoreTracker.Web.Configuration
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Data.Configuration
@@ -125,7 +126,7 @@
 @inject IOptions<GoogleConfiguration> Google
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
-@inject ScoreTracker.Web.Services.DevSyncService Sync
+@inject ScoreTracker.Domain.SecondaryPorts.IDevEnvironmentSeeder Seeder
 @code {
     private const string TokenSettingKey = "DevHarness__ProdApiToken";
     private string _token = string.Empty;
@@ -172,7 +173,7 @@
         try
         {
             await UiSettings.SetSetting(TokenSettingKey, _token);
-            await Sync.Sync(_token, CurrentUser.User.Id,
+            await Seeder.PopulateFromApi(_token, CurrentUser.User.Id,
                 message => InvokeAsync(() =>
                 {
                     _progress = message;

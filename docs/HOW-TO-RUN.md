@@ -47,7 +47,12 @@ Click through to the **web** resource in the dashboard (or go to `https://localh
 
 1. **Sign in** — click *Create Dev User & Sign In* (no credentials needed; this is the dev backdoor, disabled outside local runs). On later runs you can sign back in as the same user.
 2. **Paste your API token** — from your [Account page](https://piuscores.arroweclip.se/Account) on the live site (create a free account there if you don't have one). The token is used read-only and stored in your local database.
-3. **Populate** — pulls the full chart/song catalog, tier lists, scoring levels, and *your own scores* from the live site into your local database. Takes a minute or two.
+3. **Populate** — pulls the full chart/song catalog, the published tier lists, scoring levels, and *your own scores* from the live site into your local database. Takes a minute or two.
+
+The harness reads the live site's public `api/v2/*` with your token, exactly as a community tool
+would. That is deliberate: if it can rebuild a working database from the published surface then the
+published surface is complete, and if it cannot we find out here rather than from someone building
+a tool. There is no longer a separate raw-table export — `dev/export/*` is gone.
 
 That's it — you have a working local copy of the site with real data.
 

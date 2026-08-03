@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.Web.Components.HomeWidgets;
 
@@ -13,9 +13,6 @@ public sealed record ImportScoresConfig
 
     // On: use the saved game tag and import immediately. Off: pick a card after sign-in.
     public bool SkipGameTag { get; set; } = true;
-
-    // Also push imported scores to the community PIU Tracker site (the /UploadPhoenixScores option).
-    public bool SyncPiuTracker { get; set; }
 
     // On a chart you've never passed, save your best broken attempt as the record. NULL follows
     // the mix (on for Phoenix 2, whose best list carries broken attempts; off for Phoenix), which

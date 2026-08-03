@@ -127,8 +127,18 @@ public sealed class E2ESeedData
         return chartId;
     }
 
+    /// <summary>
+    ///     A signed-in player who has already seen the one-time notices.
+    ///     <para>
+    ///         <paramref name="seenAnnouncements" /> exists because a seeded user is brand new, and a
+    ///         brand-new user is exactly who a rollout announcement fires at. Those are modal, so
+    ///         their scrim sits over whatever page the test just opened and swallows every click —
+    ///         which surfaces as a thirty-second timeout waiting for a button that is right there.
+    ///         Every test but the announcement's own wants a returning player.
+    ///     </para>
+    /// </summary>
     public async Task<Guid> SeedUserAsync(string name, bool isPublic = true,
-        CancellationToken cancellationToken = default)
+        bool seenAnnouncements = true, CancellationToken cancellationToken = default)
     {
         var userId = Guid.NewGuid();
         await using var context = await _factory.CreateDbContextAsync(cancellationToken);
@@ -142,8 +152,20 @@ public sealed class E2ESeedData
             ClaimsInvalidatedAt = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero)
         });
         await context.SaveChangesAsync(cancellationToken);
+
+        if (seenAnnouncements)
+            await context.Database.ExecuteSqlInterpolatedAsync(
+                $"INSERT INTO [scores].[UserSettings] ([UserId], [UiSettings]) VALUES ({userId}, {SeenAnnouncements})",
+                cancellationToken);
+
         return userId;
     }
+
+    /// <summary>
+    ///     The UiSettings blob is one JSON object of string to string per user. Adding a notice
+    ///     means adding its key here, or every E2E test starts timing out on a covered page.
+    /// </summary>
+    private const string SeenAnnouncements = """{"CommunityToolsAnnouncementSeen":"true"}""";
 
     /// <summary>A Phoenix best-score row (ScoreLedger-internal entity) — seeded with SQL.</summary>
     public async Task SeedPhoenixScoreAsync(Guid userId, Guid chartId, int score, bool isBroken = false,

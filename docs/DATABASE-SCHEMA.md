@@ -161,6 +161,20 @@ model references them, and no code reads them. Their PKs and indexes keep their 
 | `scores.CommunityHighlight` | Community big-wins feed: one summary row per (score-event × community the winner belongs to), `Payload` a JSON list of `SignificantWin`, `EventId` dedupes across shared communities. Written by the highlight saga off `ScoreHighlightsCapturedEvent`, purged weekly after 30 days ([home-page-widgets §7](design/home-page-widgets.md)) |
 | `scores.DiscordFeedSubscription` | A channel's subscription to a broadcast feed, independent of any community: `ChannelId`, `FeedKind` (WeeklyCharts/DailyStep/OfficialLeaderboards), `Mix` (per-mix), `RegisteredByDiscordUserId`, `Culture` (nullable, null = English — the language its posts render in; re-registering updates it). Unique on (ChannelId, FeedKind, Mix); registered via `/piu register` ([discord-overhaul](design/discord-overhaul.md)) |
 
+## Community Tools (vertical: `ScoreTracker.CommunityTools`)
+
+| Table | Purpose |
+|---|---|
+| `scores.Tool` | A registered community tool: `Name`/`Description`/`Url` (what an approved listing shows), `Visibility` (Private/PendingApproval/Public/Rejected, stored as the enum **name** so a reordered enum cannot relabel every row), `AcceptsAllToolsShare`, `WebhookMode` (None/PlayerPing/ScorePush/PiuGameSession), `WebhookUrl`, `OutboundHeaderName`/`OutboundHeaderValue` (the header a maker authenticates us by — **plaintext by necessity**, since we send it verbatim on every delivery; the name says so, because the obvious "fix" for a name implying otherwise would break every delivery), `ApprovedAt`, `RejectionReason`, `WebhookUrlVerifiedAt` (when the maker last echoed our challenge back from `WebhookUrl` — null blocks every delivery, and changing the URL nulls it) |
+| `scores.ToolMixSubscription` | Which mixes' imports trigger a delivery for one tool. Empty = every mix |
+| `scores.ToolInviteCode` | A private tool's recruiting link, keyed by the code itself as `CommunityInviteCode` is. `Note` is the maker's own reminder of where they shared it — never shown to the player who follows the link |
+| `scores.ToolShare` | A player's grant to one tool: `Source` (Direct/AllTools — what a revoke means differs), `GrantedAt`, `RevokedAt` |
+| `scores.ToolBlock` | An all-tools player's "not this one". Without it the only way to refuse a single tool would be to turn off sharing entirely |
+| `scores.ToolSharePreference` | One row per player: `ShareWithAllTools`. Seeded from `IsPublic` once at rollout by the `SeedToolSharePreference` migration — a one-time seed, not a rule; public and all-tools stay separate concepts and are never joined in a query |
+| `scores.ToolApiKey` | Hashed tool keys (`piu_scores_live_` prefix, SHA-256; the older `pst_live_` prefix still validates). `scores.Tool` carries the two webhook secrets, stored oppositely: `OutboundHeaderValue` is AES-GCM encrypted under a `IKeyEnvelope`-wrapped data key because we resend it, `WebhookVerificationSecretHash` is SHA-256 because we only compare. Two live per tool, six-month default lifetime; `LastUsedAt`, `RevokedAt`. The plaintext exists only in the response that mints it |
+| `scores.WebhookDelivery` | One outbound delivery: `QueuedAt`, status, attempt count, next attempt, the remote's status code and a 500-char body snippet, and `Body` — kept **only** for a pending/failed/abandoned delivery and only for 7 days, so a maker can replay. Never written at all in PIUGame-session mode, because that body carries a live piugame credential (`SessionModeNeverPersistsBody`) |
+| `scores.ToolActivity` | The maker-facing console feed. Point events (delivery succeeded/rejected, key created/revoked) plus hourly rollups for the high-volume ones — at 600 requests a minute a per-call row would put tens of thousands of rows in front of someone who wants one line saying "you hit the limit 212 times this hour" |
+
 ## Archived
 
 Tables whose feature was deleted. They carry no EF entity and no `ToTable` registration — the rows

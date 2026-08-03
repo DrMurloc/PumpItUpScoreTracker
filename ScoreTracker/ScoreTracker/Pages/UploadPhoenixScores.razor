@@ -1,4 +1,4 @@
-@page "/UploadPhoenixScores"
+﻿@page "/UploadPhoenixScores"
 @rendermode RenderModes.Interactive
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
@@ -83,12 +83,12 @@
                     <MudCheckBox T="bool" Value="_rememberPassword" ValueChanged="OnRememberChanged" Disabled="_isImporting"
                                  Label="@L["Remember my password on this device"]"></MudCheckBox>
                 }
-                <MudCheckBox T="bool" Label="@L["Also send scores to piutracker.app"]" Disabled="_isImporting"
-                             Value="_alsoImportPiuTracker" ValueChanged="d=>SetPiuTrackerImport(d)"></MudCheckBox>
-                @if (_alsoImportPiuTracker && !_isPublic)
-                {
-                    <MudText Typo="Typo.caption" Class="ml-10 d-block" Color="Color.Warning">@L["PIU Tracker is fully public — scores you send there are public even if your profile isn't."]</MudText>
-                }
+                @* Sending your session to another site is a consent decision, not an import
+                   option, so it lives with every other tool rather than as a checkbox here. *@
+                <MudText Typo="Typo.caption" Class="d-block mt-1" Style="opacity:.75;">
+                    @L["Sending your scores to PIU Tracker or another community tool is managed from"]
+                    <MudLink Href="/CommunityTools">@L["Community Tools"]</MudLink>.
+                </MudText>
             </MudItem>
             @if (_mergeInviteUserId != null)
             {
@@ -343,7 +343,6 @@
     private int _maxSaving = 0;
     private int _currentSaved = 0;
     private int _startPage = 1;
-    private bool _isPublic = false;
     private string _username = "";
     private string _password = "";
     private bool _includeBroken = false;
@@ -392,7 +391,7 @@
         _importStatus = L["Starting Import..."].Value;
         var result = await Mediator.Send(new StartOfficialImportCommand(
             new StoredCredentialSource(blob.KeyId, blob.Ciphertext), _currentMix, _selectedId, _selectedGameTag,
-            _includeBroken, _alsoImportPiuTracker));
+            _includeBroken));
         switch (result.Outcome)
         {
             case ImportStartOutcome.Started:
@@ -447,13 +446,6 @@
         }
 
         _rememberPassword = true;
-    }
-    private bool _alsoImportPiuTracker  = false;
-    private const string PiuTrackerKey = "UploadPhoenixScores__ImportPiuTracker";
-    public async Task SetPiuTrackerImport(bool newValue)
-    {
-        _alsoImportPiuTracker = newValue;
-        await UiSettings.SetSetting(PiuTrackerKey, newValue.ToString());
     }
     private string _selectedGameTag = "";
     private string _selectedId = "";
@@ -548,7 +540,7 @@
             // usable — the user can leave. Terminal state is flipped by StatusUpdate/ImportError.
             var result = await Mediator.Send(new StartOfficialImportCommand(
                 new TypedCredentialSource(_username, _password), _currentMix, _selectedId, _selectedGameTag,
-                _includeBroken, _alsoImportPiuTracker));
+                _includeBroken));
             switch (result.Outcome)
             {
                 case ImportStartOutcome.Started:
@@ -621,14 +613,12 @@
             NavManager.NavigateTo("/Login");
             return;
         }
-        _isPublic = CurrentUser.User.IsPublic;
         _userId = CurrentUser.User.Id;
         // This user's import feed, routed by user topic (no cross-user status/culture leak).
         _subscriptions.Add(UiHub.Subscribe<ImportStatusUpdatedEvent>(UiTopics.User(_userId), StatusUpdate));
         _subscriptions.Add(UiHub.Subscribe<ImportStatusErrorEvent>(UiTopics.User(_userId), ImportError));
         _selectedId = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameId") ?? "";
         _selectedGameTag = await UiSettings.GetSetting("PhoenixScoreUpload__LastGameTag") ?? "";
-        _alsoImportPiuTracker = bool.TryParse(await UiSettings.GetSetting(PiuTrackerKey), out var v) && v;
         // Detect a credential already saved on this device so we can offer a one-click import
         // instead of asking for the password again; the checkbox reflects the saved state.
         _storedBlob = await ClientStore.Read();

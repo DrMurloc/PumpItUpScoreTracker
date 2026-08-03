@@ -39,6 +39,7 @@ That provisions a local SQL Server container, applies migrations, and opens the 
 | [UX-GUIDELINES.md](docs/UX-GUIDELINES.md) | The design system: per-mix themes, color tokens, the two semantic ramps, and the UX rules |
 | [DATABASE-SCHEMA.md](docs/DATABASE-SCHEMA.md) | Every table, grouped by owning vertical |
 | [API.md](docs/API.md) | The API surface at a glance; Swagger is the source of truth |
+| [INTEGRATING.md](docs/INTEGRATING.md) | The tool maker's manual: what the data means, sharing, API keys, webhooks |
 | [SCHEDULED-JOBS.md](docs/SCHEDULED-JOBS.md) | The Hangfire recurring jobs: what they do and when |
 | [TECHNOLOGIES.md](docs/TECHNOLOGIES.md) | The stack: what each technology contributes and how it's integrated |
 | [CONTRIBUTING.md](docs/CONTRIBUTING.md) | Contribution policies — read before opening a PR |
@@ -53,7 +54,7 @@ Contributions are welcome — including AI-assisted ones, with a human firmly in
 - **CI**: [Azure Pipelines](https://dev.azure.com/joneccker/ScoreTracker) — build + all test suites on every PR, approval-gated deploy from `main`
 - **Discord**: <https://discord.gg/AvS5PxnvSN> — where changes get discussed
 
-**Building a PIU tool?** Don't build your own importer — the tracker exposes token-authenticated APIs and score-import webhooks. See [API.md](docs/API.md) and ask on Discord.
+**Building a PIU tool?** Don't build your own importer — register your tool, and players who connect to it push their scores to you on every import. Start with **[INTEGRATING.md](docs/INTEGRATING.md)**, then `#tool-makers` on Discord.
 
 ## License
 

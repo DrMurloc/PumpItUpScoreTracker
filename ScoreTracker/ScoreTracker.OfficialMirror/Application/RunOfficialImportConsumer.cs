@@ -1,4 +1,4 @@
-using System.Security.Authentication;
+﻿using System.Security.Authentication;
 using MassTransit;
 using MediatR;
 using ScoreTracker.Domain.Events;
@@ -41,7 +41,7 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
             if (user != null) _currentUser.SetScopedUser(user);
 
             await _mediator.Send(new ExecuteImportCommand(message.UserId, message.Mix, message.Sid, message.CardId,
-                message.ExpectedGameTag, message.IncludeBroken, message.SyncPiuTracker), context.CancellationToken);
+                message.ExpectedGameTag, message.IncludeBroken), context.CancellationToken);
         }
         catch (InvalidCredentialException)
         {

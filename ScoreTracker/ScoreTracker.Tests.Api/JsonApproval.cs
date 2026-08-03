@@ -13,18 +13,29 @@ internal static class JsonApproval
 
     public static void AssertWireShape(string expectedJson, IActionResult result)
     {
-        var payload = result switch
+        // api/v2's catalog reads serialize themselves so the ETag can hash the body in one pass, so
+        // they arrive as a ContentResult carrying finished JSON rather than an object to serialize.
+        var actual = result switch
         {
-            JsonResult j => j.Value,
-            ObjectResult o => o.Value,
+            ContentResult c => Reindent(c.Content ?? string.Empty),
+            JsonResult j => JsonSerializer.Serialize(j.Value, Wire),
+            ObjectResult o => JsonSerializer.Serialize(o.Value, Wire),
             _ => throw new InvalidOperationException($"Unexpected action result type {result.GetType().Name}")
         };
-        var actual = JsonSerializer.Serialize(payload, Wire);
         Assert.Equal(Normalize(expectedJson), Normalize(actual));
     }
 
     private static string Normalize(string json)
     {
         return json.Replace("\r\n", "\n").Trim();
+    }
+
+    /// <summary>
+    ///     Round-trips compact JSON through the same indented options the goldens are written in, so a
+    ///     self-serialized body is compared on content rather than on whitespace.
+    /// </summary>
+    private static string Reindent(string json)
+    {
+        return JsonSerializer.Serialize(JsonSerializer.Deserialize<JsonElement>(json), Wire);
     }
 }

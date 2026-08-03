@@ -203,6 +203,69 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         return Entry(userId, chartId, at, score) with { IsBest = false };
     }
 
+    // The partner API's read. Keyset rather than offset because the journal is appended to while a
+    // caller walks it — these tests pin the page boundary, which is where an offset would repeat or
+    // skip a row.
+    [Fact]
+    public async Task JournalPageWalksNewestFirstWithoutRepeatingAcrossTheBoundary()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        for (var i = 0; i < 5; i++)
+            await repo.Append(Entry(userId, chart, Now.AddMinutes(-i), 900000 + i), CancellationToken.None);
+
+        var first = await repo.GetJournalPage(userId, MixEnum.Phoenix, null, null, null, 2,
+            CancellationToken.None);
+        var last = first[^1];
+        var second = await repo.GetJournalPage(userId, MixEnum.Phoenix, last.OccurredAt, last.ChartId, null, 2,
+            CancellationToken.None);
+
+        Assert.Equal(2, first.Count);
+        Assert.Equal(Now, first[0].OccurredAt);
+        Assert.Equal(2, second.Count);
+        Assert.All(second, e => Assert.True(e.OccurredAt < last.OccurredAt));
+        Assert.Empty(first.Select(e => e.OccurredAt).Intersect(second.Select(e => e.OccurredAt)));
+    }
+
+    // Two plays can share an instant across charts; without the chart-id tiebreaker the cursor
+    // would either drop one or loop on it forever.
+    [Fact]
+    public async Task RowsSharingAnInstantAreSeparatedByTheChartIdTiebreaker()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chartA = await _seed.SeedChartAsync();
+        var chartB = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chartA, Now, 900000), CancellationToken.None);
+        await repo.Append(Entry(userId, chartB, Now, 910000), CancellationToken.None);
+
+        var first = await repo.GetJournalPage(userId, MixEnum.Phoenix, null, null, null, 1,
+            CancellationToken.None);
+        var second = await repo.GetJournalPage(userId, MixEnum.Phoenix, first[0].OccurredAt, first[0].ChartId,
+            null, 5, CancellationToken.None);
+
+        Assert.Single(second);
+        Assert.NotEqual(first[0].ChartId, second[0].ChartId);
+    }
+
+    [Fact]
+    public async Task JournalPageIsScopedToOneMixAndHonoursSince()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        await repo.Append(Entry(userId, chart, Now.AddDays(-10), 900000), CancellationToken.None);
+        await repo.Append(Entry(userId, chart, Now, 950000), CancellationToken.None);
+        await repo.Append(Entry(userId, chart, Now, 960000, mix: MixEnum.Phoenix2), CancellationToken.None);
+
+        var phoenix = await repo.GetJournalPage(userId, MixEnum.Phoenix, null, null, Now.AddDays(-1), 50,
+            CancellationToken.None);
+
+        Assert.Single(phoenix);
+        Assert.All(phoenix, e => Assert.Equal(MixEnum.Phoenix, e.Mix));
+    }
+
     private static ScoreJournalEntry Entry(Guid userId, Guid chartId, DateTimeOffset at, int score,
         Guid? sessionId = null, MixEnum mix = MixEnum.Phoenix)
     {

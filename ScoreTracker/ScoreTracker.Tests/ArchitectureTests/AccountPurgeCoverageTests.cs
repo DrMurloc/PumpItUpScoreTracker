@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
+using ScoreTracker.CommunityTools.Wiring;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.EventCompetition.Wiring;
 using ScoreTracker.HomePage.Wiring;
@@ -36,6 +37,7 @@ public sealed class AccountPurgeCoverageTests
         ("WeeklyChallenge", typeof(WeeklyChallengeModelContribution).Assembly),
         ("EventCompetition", typeof(EventCompetitionModelContribution).Assembly),
         ("Communities", typeof(CommunitiesModelContribution).Assembly),
+        ("CommunityTools", typeof(CommunityToolsModelContribution).Assembly),
         ("Randomizer", typeof(RandomizerModelContribution).Assembly),
         ("HomePage", typeof(HomePageModelContribution).Assembly),
         ("Identity", typeof(IdentityModelContribution).Assembly),
@@ -60,6 +62,11 @@ public sealed class AccountPurgeCoverageTests
             "user keys by design (survivor and retired).",
         ["UserEntity"] =
             "Deleted by IAccountPurgeRepository.DeleteUser, last, a week after the purge began.",
+        ["ToolEntity"] =
+            "Deleted whole by EFAccountPurgeRepository before the row-level purge runs. Purging it " +
+            "by OwnerUserId alone would orphan the tool's keys, shares, deliveries and invite codes.",
+        ["ToolApiKeyEntity"] =
+            "Keyed to a tool, not a user — it goes with the tool, in the same sweep.",
         ["AccountDeletionRequestEntity"] =
             "The deletion's own audit trail, retained past the purge it drives — the same standing " +
             "as MergeRequest. The game-tag snapshot it carried is nulled when the purge completes, " +
@@ -147,6 +154,7 @@ public sealed class AccountPurgeCoverageTests
             x.AddIdentityConsumers();
             x.AddRandomizerConsumers();
             x.AddHomePageConsumers();
+            x.AddCommunityToolsConsumers();
             x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
         });
 

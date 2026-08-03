@@ -61,6 +61,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.Catalog", "Sco
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.ChartIntelligence", "ScoreTracker.ChartIntelligence\ScoreTracker.ChartIntelligence.csproj", "{E2F62ED2-11F5-4049-8614-9AA4C8275EC1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreTracker.CommunityTools", "ScoreTracker.CommunityTools\ScoreTracker.CommunityTools.csproj", "{820B0377-8966-4E02-817A-592272966756}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -371,6 +373,18 @@ Global
 		{E2F62ED2-11F5-4049-8614-9AA4C8275EC1}.Release|x64.Build.0 = Release|Any CPU
 		{E2F62ED2-11F5-4049-8614-9AA4C8275EC1}.Release|x86.ActiveCfg = Release|Any CPU
 		{E2F62ED2-11F5-4049-8614-9AA4C8275EC1}.Release|x86.Build.0 = Release|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Debug|x64.Build.0 = Debug|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Debug|x86.Build.0 = Debug|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Release|Any CPU.Build.0 = Release|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Release|x64.ActiveCfg = Release|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Release|x64.Build.0 = Release|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Release|x86.ActiveCfg = Release|Any CPU
+		{820B0377-8966-4E02-817A-592272966756}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

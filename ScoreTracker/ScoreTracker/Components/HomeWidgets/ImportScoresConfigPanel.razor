@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.Identity.Contracts.Commands
@@ -44,21 +44,12 @@
     @L["Import Broken Helper"]
 </MudText>
 
-<MudCheckBox T="bool" @bind-Value="_syncPiuTracker" Label="@L["Also send scores to piutracker.app"]" Dense="true"/>
-<MudText Typo="Typo.caption" Class="d-block">
-    @L["Also send imported scores to PIU Tracker, a community score site."]
-    <MudLink Target="_blank" Href="https://piutracker.app/">piutracker.app</MudLink>
+@* Sending your session to another site is a consent decision, not an import option, so it
+   lives with every other tool rather than as a checkbox here. *@
+<MudText Typo="Typo.caption" Class="d-block mb-3" Style="opacity:.75;">
+    @L["Sending your scores to PIU Tracker or another community tool is managed from"]
+    <MudLink Href="/CommunityTools">@L["Community Tools"]</MudLink>.
 </MudText>
-@if (_syncPiuTracker && !_isPublic)
-{
-    <MudText Typo="Typo.caption" Color="Color.Warning" Class="d-block mb-3">
-        @L["PIU Tracker is fully public — scores you send there are public even if your profile isn't."]
-    </MudText>
-}
-else
-{
-    <div class="mb-3"></div>
-}
 
 <MudCheckBox T="bool" Value="_remember" ValueChanged="OnRememberChanged"
              Label="@L["Remember my password on this device"]" Dense="true"/>
@@ -124,9 +115,7 @@ else if (_hasStoredCredential)
 
     private MixMode _mode;
     private bool _skipGameTag = true;
-    private bool _syncPiuTracker;
     private BrokenMode _recordBroken;
-    private bool _isPublic;
     private bool _remember;
     private bool _showStoreForm;
     private bool _hasStoredCredential;
@@ -146,14 +135,12 @@ else if (_hasStoredCredential)
                 _ => MixMode.Follow
             };
         _skipGameTag = config.SkipGameTag;
-        _syncPiuTracker = config.SyncPiuTracker;
         _recordBroken = config.RecordBrokenAsBest switch
         {
             true => BrokenMode.Always,
             false => BrokenMode.Never,
             null => BrokenMode.FollowMix
         };
-        _isPublic = CurrentUser.IsLoggedIn && CurrentUser.User.IsPublic;
         _hasStoredCredential = await ClientStore.Read() != null;
         _remember = _hasStoredCredential;
     }
@@ -246,13 +233,12 @@ else if (_hasStoredCredential)
         };
         var config = _mode switch
         {
-            MixMode.All => new ImportScoresConfig
-                { AllMixes = true, SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker },
+            MixMode.All => new ImportScoresConfig { AllMixes = true, SkipGameTag = _skipGameTag },
             MixMode.Phoenix => new ImportScoresConfig
-                { Mix = MixEnum.Phoenix, SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker },
+                { Mix = MixEnum.Phoenix, SkipGameTag = _skipGameTag },
             MixMode.Phoenix2 => new ImportScoresConfig
-                { Mix = MixEnum.Phoenix2, SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker },
-            _ => new ImportScoresConfig { SkipGameTag = _skipGameTag, SyncPiuTracker = _syncPiuTracker }
+                { Mix = MixEnum.Phoenix2, SkipGameTag = _skipGameTag },
+            _ => new ImportScoresConfig { SkipGameTag = _skipGameTag }
         };
         config.RecordBrokenAsBest = recordBroken;
         await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));

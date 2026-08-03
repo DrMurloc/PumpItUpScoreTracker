@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Services;
+﻿using ScoreTracker.Domain.Services;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
@@ -42,7 +42,7 @@ namespace ScoreTracker.OfficialMirror.Application
         private readonly IBus _bus;
         private readonly IFileUploadClient _files;
         private readonly IChartRepository _charts;
-        private readonly IPiuTrackerClient _piuTracker;
+        private readonly ISessionDeliveryClient _sessionDelivery;
         private readonly ILogger _logger;
         private readonly IDateTimeOffsetAccessor _dateTime;
 
@@ -50,12 +50,12 @@ namespace ScoreTracker.OfficialMirror.Application
             IOfficialPlayerIdentityRepository identity,
             ICurrentUserAccessor currentUser,
             IMediator mediator,
-            IPiuTrackerClient piuTracker,
+            ISessionDeliveryClient sessionDelivery,
             ILogger<OfficialLeaderboardSaga> logger,
             IBus bus, IFileUploadClient files, IChartRepository charts,
             IDateTimeOffsetAccessor dateTime)
         {
-            _piuTracker = piuTracker;
+            _sessionDelivery = sessionDelivery;
             _officialSite = officialSite;
             _identity = identity;
             _currentUser = currentUser;
@@ -98,20 +98,20 @@ namespace ScoreTracker.OfficialMirror.Application
         {
             var sid = await _officialSite.SignIn(request.Mix, request.Username, request.Password, cancellationToken);
             await RunImport(_currentUser.User.Id, request.Mix, sid, request.Id, request.ExpectedGameTag,
-                request.IncludeBroken, request.SyncPiuTracker, cancellationToken);
+                request.IncludeBroken, cancellationToken);
         }
 
         public Task Handle(ExecuteImportCommand request, CancellationToken cancellationToken)
         {
             return RunImport(request.UserId, request.Mix, request.Sid, request.CardId, request.ExpectedGameTag,
-                request.IncludeBroken, request.SyncPiuTracker, cancellationToken);
+                request.IncludeBroken, cancellationToken);
         }
 
         // Runs the scrape+save for one import off a pre-minted session id and an explicit user id,
         // so the same body serves the synchronous API path and the background consumer (which has
         // no circuit user). One import = one session id for the Session Batcher.
         internal async Task RunImport(Guid userId, MixEnum mix, string sid, string cardId, string expectedGameTag,
-            bool includeBroken, bool syncPiuTracker, CancellationToken cancellationToken)
+            bool includeBroken, CancellationToken cancellationToken)
         {
             // Opened through the Ledger rather than minted here, so the session row carries the
             // game tag and card this run pulled from — the answer to "I imported the wrong card",
@@ -149,31 +149,22 @@ namespace ScoreTracker.OfficialMirror.Application
             if (mix == MixEnum.Phoenix2)
                 await BackfillCardAliases(userId, mix, sid, cancellationToken);
 
-            if (syncPiuTracker)
+            // Hand the session to whichever tools this player granted it to — PIU Tracker is one of
+            // them now rather than a hardcoded branch with its own checkbox. Whether it fires is a
+            // share, not a per-import flag, and a tool's failure is the maker's problem: it lands in
+            // their console, never in the player's import status.
+            //
+            // The port promises not to throw and the catch is here anyway. This runs before the
+            // scrape, so anything escaping would take the player's whole import with it — too
+            // expensive to stake on an implementation keeping a promise.
+            try
             {
-                await _mediator.Publish(new ImportStatusUpdatedEvent(userId,
-                    "Syncing PIU Tracker... (Can take a while if it's your first time)",
-                    Array.Empty<RecordedPhoenixScore>(), mix));
-                try
-                {
-                    await _piuTracker.SyncData(accountData.AccountName, accountData.Sid, cancellationToken);
-                }
-                catch (PiuTrackerUsedTooRecentException)
-                {
-                    await _mediator.Publish(
-                        new ImportStatusErrorEvent(userId,
-                            "PIU Tracker sync failed, you've imported too recently.", mix),
-                        cancellationToken);
-                }
-                catch (Exception e)
-                {
-                    await _mediator.Publish(
-                        new ImportStatusErrorEvent(userId,
-                            "PIU Tracker sync failed. Check with DrMurloc or Tusa if this persists",
-                            mix),
-                        cancellationToken);
-                    _logger.LogWarning(e, "PIU Tracker sync failed");
-                }
+                await _sessionDelivery.DeliverSession(userId, mix, RedactedString.From(accountData.Sid),
+                    accountData.AccountName, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, "Session delivery threw during import for {UserId}", userId);
             }
 
             // A scrape that yielded no recognizable avatar keeps the player's existing
