@@ -88,8 +88,13 @@ else
             </MudText>
             @foreach (var tool in _otherTools)
             {
-                <div class="olb-rank-card" style="cursor:pointer;" @onclick="() => Select(tool)">
-                    <div class="flex-grow-1" style="min-width:0;">
+                @* The click sits on the identity block rather than the whole row, because the row
+                   now has buttons in its tail. A Blazor click bubbles, so a row-level handler would
+                   mean pressing Ban also selects that tool — quietly swapping the settings panel
+                   behind the dialog to someone else's tool, which the next Save would write to. *@
+                <div class="olb-rank-card">
+                    <div class="flex-grow-1" style="min-width:0; cursor:pointer;"
+                         @onclick="() => Select(tool)">
                         <MudText Typo="Typo.body1">
                             <b>@tool.Name</b>
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
