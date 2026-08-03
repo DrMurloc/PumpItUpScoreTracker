@@ -1,0 +1,141 @@
+@page "/Developers/{ToolId:guid}/insights"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Web.Components.CommunityTools
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Developers"]</PageTitle>
+
+@* What this tool is doing. Last in the nav, because checking on something is not what brings a
+   maker here the first time.
+
+   Every card is conditional on the thing it measures existing. A listing-only tool has no key and
+   no endpoint and is not unfinished; an unlisted tool has no directory numbers because it is not in
+   the directory. A card that would read zero forever is a card that should not be drawn. *@
+
+<ToolConsoleFrame Section="insights" ToolId="ToolId" Context="tool">
+    <div class="ct-cards">
+        @* Only when it is actually listed — directory numbers for a tool nobody can browse to are
+           zeroes that look like failure. *@
+        @if (tool.Visibility == ToolVisibility.Public)
+        {
+            <ConsoleCard Title=@L["Directory"].Value
+                         Hint='@L["Players opening your site or your source from the directory, counted since the tool was listed."].Value'>
+                <div class="ct-stats">
+                    @if (tool.Kind == ToolKind.Integrated)
+                    {
+                        <Stat N="@tool.ConnectedPlayers.ToString()" K="@L["Players"].Value"></Stat>
+                    }
+                    <Stat N="@_summary.Clicks.ToString("N0")" K="@L["Clicks"].Value"></Stat>
+                    <Stat Small="true" K="@L["Listed since"].Value"
+                          N="@(tool.ApprovedAt?.LocalDateTime.ToString("d MMM") ?? string.Empty)"></Stat>
+                </div>
+            </ConsoleCard>
+        }
+
+        @if (tool.HasKeys)
+        {
+            <ConsoleCard Title=@L["API"].Value
+                         Hint='@L["Recent activity, counted across the whole tool rather than per key."].Value'>
+                <div class="ct-stats">
+                    <Stat N="@_summary.Calls.ToString("N0")" K="@L["Calls"].Value"></Stat>
+                    <Stat N="@_summary.RateLimited.ToString("N0")" K="@L["Rate limited"].Value"></Stat>
+                </div>
+            </ConsoleCard>
+        }
+
+        @if (tool.WebhookConfigured)
+        {
+            <ConsoleCard Title=@L["Webhooks"].Value>
+                <div class="ct-stats">
+                    <Stat N="@_summary.Deliveries.ToString("N0")" K="@L["Delivered"].Value"></Stat>
+                    <Stat N="@_summary.Failures.ToString("N0")" K="@L["Failed"].Value"></Stat>
+                </div>
+            </ConsoleCard>
+
+            <ConsoleCard Title=@L["Recent deliveries"].Value Class="ct-card-wide">
+                @if (!_deliveries.Any())
+                {
+                    <MudText Typo="Typo.body2" Style="opacity:.7;">@L["Nothing yet."]</MudText>
+                }
+                else
+                {
+                    @foreach (var row in _deliveries)
+                    {
+                        <div class="olb-rank-card">
+                            <MudText Typo="Typo.caption" Style="opacity:.7;min-width:96px;">
+                                @row.OccurredAt.LocalDateTime.ToString("d MMM HH:mm")
+                            </MudText>
+                            <MudText Typo="Typo.body2" Class="flex-grow-1">@ActivityLabel(row)</MudText>
+                            <div class="olb-rank-tail">
+                                @if (row.RemoteStatusCode is not null)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                             Color="@(row.RemoteStatusCode < 300 ? Color.Success : Color.Error)">
+                                        @row.RemoteStatusCode
+                                    </MudChip>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </ConsoleCard>
+        }
+
+        <ConsoleCard Title=@L["Latest"].Value Class="ct-card-wide">
+            @if (!_activity.Any())
+            {
+                <MudText Typo="Typo.body2" Style="opacity:.7;">@L["Nothing yet."]</MudText>
+            }
+            else
+            {
+                @foreach (var row in _activity.Take(10))
+                {
+                    <div class="olb-rank-card">
+                        <MudText Typo="Typo.caption" Style="opacity:.7;min-width:96px;">
+                            @row.OccurredAt.LocalDateTime.ToString("d MMM HH:mm")
+                        </MudText>
+                        <MudText Typo="Typo.body2" Class="flex-grow-1">@ActivityLabel(row)</MudText>
+                    </div>
+                }
+            }
+        </ConsoleCard>
+    </div>
+</ToolConsoleFrame>
+
+@inject IMediator Mediator
+@code {
+    [Parameter] public Guid ToolId { get; set; }
+
+    private ToolActivitySummary _summary = new(0, 0, 0, 0, 0, 0);
+    private IReadOnlyList<ToolActivityRecord> _activity = Array.Empty<ToolActivityRecord>();
+    private IReadOnlyList<ToolActivityRecord> _deliveries = Array.Empty<ToolActivityRecord>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _summary = await Mediator.Send(new GetToolActivitySummaryQuery(ToolId));
+        _activity = await Mediator.Send(new GetToolActivityQuery(ToolId, 50));
+        _deliveries = _activity.Where(IsDelivery).Take(15).ToArray();
+    }
+
+    private static bool IsDelivery(ToolActivityRecord row) => row.Kind
+        is ToolActivityKind.DeliverySucceeded or ToolActivityKind.DeliveryTimedOut
+        or ToolActivityKind.DeliveryRejected or ToolActivityKind.DeliveryUnreachable;
+
+    /// <summary>The console's closed vocabulary — never a framework string, never an exception.</summary>
+    private string ActivityLabel(ToolActivityRecord row) => row.Kind switch
+    {
+        ToolActivityKind.DeliverySucceeded => L["Delivered"].Value,
+        ToolActivityKind.DeliveryTimedOut => L["Delivery timed out"].Value,
+        ToolActivityKind.DeliveryRejected => L["Delivery rejected"].Value,
+        ToolActivityKind.DeliveryUnreachable => L["Couldn't reach your server"].Value,
+        ToolActivityKind.RateLimited => L["Rate limited {0} times", row.Count].Value,
+        ToolActivityKind.KeyUsed => L["{0} API calls", row.Count].Value,
+        ToolActivityKind.KeyExpired => L["A key expired"].Value,
+        ToolActivityKind.PlayerConnected => L["A player connected"].Value,
+        ToolActivityKind.PlayerDisconnected => L["A player disconnected"].Value,
+        ToolActivityKind.DirectoryClicked => L["{0} directory clicks", row.Count].Value,
+        _ => string.Empty
+    };
+}

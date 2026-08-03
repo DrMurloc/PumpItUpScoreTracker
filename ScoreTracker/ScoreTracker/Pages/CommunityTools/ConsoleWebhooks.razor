@@ -17,46 +17,15 @@
 <ToolConsoleFrame Section="webhooks" ToolId="ToolId" Context="tool">
     <ToolWebhookPanel Tool="tool"></ToolWebhookPanel>
 
-    <div class="d-flex align-baseline gap-3 flex-wrap mt-4 mb-2">
-        <MudText Typo="Typo.subtitle2">@L["Recent deliveries"]</MudText>
-        <MudButton Size="Size.Small" Variant="Variant.Text"
-                   Href="@($"/Developers/{tool.Id}/code")">@L["See a handler"]</MudButton>
-        @* Owner-only, deliberately: this fires a real delivery at the maker's own endpoint about
-           the maker's own account, which is not something an admin should do on their behalf. *@
-        @if (tool.OwnerUserId == CurrentUser.User.Id
-                     && tool.WebhookMode != WebhookMode.None && tool.WebhookUrlVerifiedAt is not null)
-        {
+    @* Test lives with the thing it tests. The log moved to Insights — a maker reading delivery
+       history and a maker changing delivery config are two errands. *@
+    @if (tool.OwnerUserId == CurrentUser.User.Id
+         && tool.WebhookMode != WebhookMode.None && tool.WebhookUrlVerifiedAt is not null)
+    {
+        <div class="d-flex gap-2 mt-4 flex-wrap">
             <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_busy"
                        OnClick="() => SendTest(tool)">@L["Send a test"]</MudButton>
-        }
-    </div>
-
-    @if (!_activity.Any())
-    {
-        <MudText Typo="Typo.body2" Style="opacity:.7;">@L["Nothing yet."]</MudText>
-    }
-    else
-    {
-        <MudPaper Outlined="true" Class="pa-2">
-            @foreach (var row in _activity)
-            {
-                <div class="olb-rank-card">
-                    <MudText Typo="Typo.caption" Style="opacity:.7;min-width:96px;">
-                        @row.OccurredAt.LocalDateTime.ToString("d MMM HH:mm")
-                    </MudText>
-                    <MudText Typo="Typo.body2" Class="flex-grow-1">@row.Detail</MudText>
-                    <div class="olb-rank-tail">
-                        @if (row.RemoteStatusCode is not null)
-                        {
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                                     Color="@(row.RemoteStatusCode < 300 ? Color.Success : Color.Error)">
-                                @row.RemoteStatusCode
-                            </MudChip>
-                        }
-                    </div>
-                </div>
-            }
-        </MudPaper>
+        </div>
     }
 </ToolConsoleFrame>
 
@@ -68,8 +37,6 @@
     [Parameter] public Guid ToolId { get; set; }
 
     private bool _busy;
-    private IReadOnlyList<ToolActivityRecord> _activity = Array.Empty<ToolActivityRecord>();
-
     /// <summary>
     ///     Synthetic rather than the maker's last import: a test that carries real scores into
     ///     someone's production database is not a test. The mix is whichever they subscribed to.
@@ -94,8 +61,4 @@
         }
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        _activity = await Mediator.Send(new GetToolActivityQuery(ToolId, 50));
-    }
 }

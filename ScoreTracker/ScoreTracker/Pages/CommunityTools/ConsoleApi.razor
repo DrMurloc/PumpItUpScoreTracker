@@ -1,47 +1,22 @@
 @page "/Developers/{ToolId:guid}/api"
 @rendermode RenderModes.Interactive
-@using MediatR
-@using ScoreTracker.CommunityTools.Contracts
-@using ScoreTracker.CommunityTools.Contracts.Queries
 @using ScoreTracker.Web.Components.CommunityTools
 @using ScoreTracker.Web.Services
 <PageTitle>@L["Developers"]</PageTitle>
 
-@* Keys, and what they are carrying. Usage is tool-wide because the roll-ups are keyed to the tool
-   rather than to the key that made the call — each key's last-used stamp is what tells a maker an
-   old one is safe to revoke. *@
+@* Keys, and nothing else. What they are carrying is on Insights — a maker managing a key and a
+   maker checking traffic are two errands, and putting the numbers here meant every visit to revoke
+   something scrolled past them. *@
 
 <ToolConsoleFrame Section="api" ToolId="ToolId" Context="tool">
-    <ToolKeyPanel ToolId="tool.Id"></ToolKeyPanel>
-
-    <MudText Typo="Typo.subtitle2" Class="mt-4 mb-2">@L["Usage"]</MudText>
-    <div class="ct-stats">
-        <Stat N="@_summary.Calls.ToString("N0")" K="@L["Calls"].Value"></Stat>
-        <Stat N="@_summary.RateLimited.ToString("N0")" K="@L["Rate limited"].Value"></Stat>
-    </div>
-
-    <details class="ct-why mt-3">
-        <summary>@L["Why usage isn't broken down per key"]</summary>
-        <p>@L["Calls are rolled up hourly against the tool, not the key that made them — at 600 a minute a row per request would bury the log. Each key carries its own last-used stamp, which is what tells you an old one is safe to revoke."]</p>
-    </details>
-
-    <div class="d-flex gap-2 flex-wrap">
-        <MudButton Size="Size.Small" Variant="Variant.Text" Href="@($"/Developers/{tool.Id}/code")">
-            @L["See the code"]
-        </MudButton>
-        <MudButton Size="Size.Small" Variant="Variant.Text" Href="/swagger" Target="_blank"
-                   EndIcon="@Icons.Material.Filled.OpenInNew">@L["Swagger"]</MudButton>
+    <div class="ct-cards">
+        <ConsoleCard Title=@L["API keys"].Value Class="ct-card-wide"
+                     Hint='@L["Two can be active at once, so rotating one costs no downtime. No email goes out when one expires — this page is the whole warning."].Value'>
+            <ToolKeyPanel ToolId="tool.Id"></ToolKeyPanel>
+        </ConsoleCard>
     </div>
 </ToolConsoleFrame>
 
-@inject IMediator Mediator
 @code {
     [Parameter] public Guid ToolId { get; set; }
-
-    private ToolActivitySummary _summary = new(0, 0, 0, 0, 0, 0);
-
-    protected override async Task OnParametersSetAsync()
-    {
-        _summary = await Mediator.Send(new GetToolActivitySummaryQuery(ToolId));
-    }
 }

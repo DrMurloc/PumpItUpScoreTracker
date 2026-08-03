@@ -98,7 +98,9 @@ else
 
     private static string Link(Guid toolId, string section)
     {
-        return section == "overview" ? $"/Developers/{toolId}" : $"/Developers/{toolId}/{section}";
+        // Tool is the landing page: a maker arriving at their console is nearly always here to
+        // change something about the tool, not to read numbers about it.
+        return section == "tool" ? $"/Developers/{toolId}" : $"/Developers/{toolId}/{section}";
     }
 
     /// <summary>
@@ -108,12 +110,14 @@ else
     private static (string Key, string Label)[] Sections(ToolRecord tool)
     {
         if (tool.Kind == ToolKind.ListingOnly)
-            return new[] { ("overview", "Overview"), ("tool", "Tool") };
+            return new[] { ("tool", "Tool"), ("insights", "Insights") };
 
+        // Insights is last: it is where you go to check on something, which is not what brings
+        // anyone here the first time.
         return new[]
         {
-            ("overview", "Overview"), ("tool", "Tool"), ("api", "API"),
-            ("players", "Players"), ("webhooks", "Webhooks"), ("code", "Code")
+            ("tool", "Tool"), ("api", "API"), ("players", "Players"),
+            ("webhooks", "Webhooks"), ("code", "Code"), ("insights", "Insights")
         };
     }
 

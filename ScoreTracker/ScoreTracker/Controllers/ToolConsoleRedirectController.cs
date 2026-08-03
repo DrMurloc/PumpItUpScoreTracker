@@ -15,7 +15,7 @@ namespace ScoreTracker.Web.Controllers
         [HttpGet("/Developers/{toolId:guid}/Console")]
         public IActionResult ConsoleToWebhooks(Guid toolId)
         {
-            return RedirectPermanent($"/Developers/{toolId}/webhooks");
+            return RedirectPermanent($"/Developers/{toolId}/insights");
         }
 
         [HttpGet("/Developers/{toolId:guid}/Debug")]

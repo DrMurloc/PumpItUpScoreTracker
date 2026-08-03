@@ -591,6 +591,9 @@
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>Qualquer pessoa com um link de convite pode conectar, com perfil público ou privado.</value>
   </data>
+  <data name="Anyone with an invite link can connect, whether their profile is public or private. The note is yours alone — the player who follows the link never sees it." xml:space="preserve">
+    <value>Qualquer pessoa com um link de convite pode se conectar, com perfil público ou privado. A nota é só sua — quem segue o link nunca a vê.</value>
+  </data>
   <data name="Anything still using this key starts getting 401 the moment you confirm, and it cannot be un-revoked — you would create a new one." xml:space="preserve">
     <value>Assim que você confirmar, tudo que ainda usa esta chave passa a receber 401, e não dá para desfazer — você criaria uma nova.</value>
   </data>
@@ -947,9 +950,6 @@
   </data>
   <data name="Calls" xml:space="preserve">
     <value>Chamadas</value>
-  </data>
-  <data name="Calls are rolled up hourly against the tool, not the key that made them — at 600 a minute a row per request would bury the log. Each key carries its own last-used stamp, which is what tells you an old one is safe to revoke." xml:space="preserve">
-    <value>As chamadas são agregadas por hora na ferramenta, não na chave que as fez — a 600 por minuto, uma linha por requisição soterraria o log. Cada chave carrega a própria marca de último uso, que é o que diz se uma antiga pode ser revogada com segurança.</value>
   </data>
   <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
     <value>Calorias queimadas (opcional — estima as setas)</value>
@@ -1848,9 +1848,6 @@
   <data name="Edit" xml:space="preserve">
     <value>Editar</value>
   </data>
-  <data name="Edit listing" xml:space="preserve">
-    <value>Editar a ficha</value>
-  </data>
   <data name="Edit Permissions" xml:space="preserve">
     <value>Editar permissões</value>
   </data>
@@ -2082,9 +2079,6 @@
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>primeira aparição em um placar de charts</value>
   </data>
-  <data name="Fix it" xml:space="preserve">
-    <value>Corrigir</value>
-  </data>
   <data name="Folder" xml:space="preserve">
     <value>Pasta</value>
   </data>
@@ -2186,9 +2180,6 @@
   </data>
   <data name="Full ladder" xml:space="preserve">
     <value>Escada completa</value>
-  </data>
-  <data name="Full log" xml:space="preserve">
-    <value>Log completo</value>
   </data>
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>Política de privacidade completa</value>
@@ -2495,6 +2486,9 @@
   </data>
   <data name="I've saved it" xml:space="preserve">
     <value>Guardei</value>
+  </data>
+  <data name="Identity" xml:space="preserve">
+    <value>Identidade</value>
   </data>
   <data name="If you leave this page or cancel, the upload will stop but you will not lose any scores that have already been recorded from your upload." xml:space="preserve">
     <value>Se você sair desta página ou cancelar, o upload será interrompido, mas você não perderá nenhuma pontuação que já tenha sido registrada no upload.</value>
@@ -3023,9 +3017,6 @@
   </data>
   <data name="Manage invite links" xml:space="preserve">
     <value>Gerenciar links de convite</value>
-  </data>
-  <data name="Manage keys" xml:space="preserve">
-    <value>Gerenciar chaves</value>
   </data>
   <data name="Manage opens their console, with a banner saying whose tool it is. The maker is not told." xml:space="preserve">
     <value>Gerenciar abre o console da pessoa, com um aviso dizendo de quem é a ferramenta. Quem a fez não é avisado.</value>
@@ -3684,9 +3675,6 @@
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>Nada é apagado. As ferramentas, a atividade delas e o histórico de entregas ficam como estão, então você pode ver o que aconteceu — ou desfazer isto.</value>
   </data>
-  <data name="Nothing is delivered until it does." xml:space="preserve">
-    <value>Nada é entregue até isso acontecer.</value>
-  </data>
   <data name="Nothing is delivered until you verify the URL." xml:space="preserve">
     <value>Nada é entregue até você verificar a URL.</value>
   </data>
@@ -4308,6 +4296,9 @@
   <data name="Players Like You" xml:space="preserve">
     <value>Jogadores como você</value>
   </data>
+  <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
+    <value>Jogadores que abrem o seu site ou o seu código pelo diretório, contados desde que a ferramenta foi listada.</value>
+  </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>Jogadores a um nível competitivo do seu — os mais próximos contam mais, assim como os que avaliam as pastas parecido com você.</value>
   </data>
@@ -4643,6 +4634,9 @@
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Recalculado a cada poucas horas</value>
   </data>
+  <data name="Recent activity, counted across the whole tool rather than per key." xml:space="preserve">
+    <value>Atividade recente, contada na ferramenta inteira e não por chave.</value>
+  </data>
   <data name="Recent big wins from the communities you pick." xml:space="preserve">
     <value>Grandes conquistas recentes das comunidades que você escolher.</value>
   </data>
@@ -4913,6 +4907,9 @@
   <data name="Save a verification secret first." xml:space="preserve">
     <value>Salve um segredo de verificação primeiro.</value>
   </data>
+  <data name="Save first." xml:space="preserve">
+    <value>Salve primeiro.</value>
+  </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Salvar pontuações</value>
   </data>
@@ -5087,9 +5084,6 @@
   <data name="Secret" xml:space="preserve">
     <value>Segredo</value>
   </data>
-  <data name="See a handler" xml:space="preserve">
-    <value>Ver um handler</value>
-  </data>
   <data name="see and manage what this channel is registered for" xml:space="preserve">
     <value>veja e gerencie os registros deste canal</value>
   </data>
@@ -5098,9 +5092,6 @@
   </data>
   <data name="See more" xml:space="preserve">
     <value>Ver mais</value>
-  </data>
-  <data name="See the code" xml:space="preserve">
-    <value>Ver o código</value>
   </data>
   <data name="See the full board" xml:space="preserve">
     <value>Ver o quadro completo</value>
@@ -5194,9 +5185,6 @@
   </data>
   <data name="Set Charts" xml:space="preserve">
     <value>Definir charts</value>
-  </data>
-  <data name="Set it up" xml:space="preserve">
-    <value>Configurar</value>
   </data>
   <data name="Set up another tool" xml:space="preserve">
     <value>Configurar outra ferramenta</value>
@@ -5494,6 +5482,9 @@
   </data>
   <data name="Source" xml:space="preserve">
     <value>Fonte</value>
+  </data>
+  <data name="Source &amp; contact" xml:space="preserve">
+    <value>Código e contato</value>
   </data>
   <data name="Source Code" xml:space="preserve">
     <value>Código-fonte</value>
@@ -6278,6 +6269,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
     <value>Duas podem ficar ativas ao mesmo tempo, então trocar uma não custa tempo fora do ar.</value>
   </data>
+  <data name="Two can be active at once, so rotating one costs no downtime. No email goes out when one expires — this page is the whole warning." xml:space="preserve">
+    <value>Duas podem ficar ativas ao mesmo tempo, então trocar uma não custa tempo fora do ar. Nenhum e-mail sai quando uma expira — esta página é todo o aviso.</value>
+  </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Duas visões das mesmas habilidades. A da esquerda alimenta a mistura acima; a da direita é esta pasta como as estatísticas da pasta mostram.</value>
   </data>
@@ -6433,9 +6427,6 @@
   </data>
   <data name="Upscores" xml:space="preserve">
     <value>Upscores</value>
-  </data>
-  <data name="Usage" xml:space="preserve">
-    <value>Uso</value>
   </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>Usado principalmente para depuração</value>
@@ -6641,6 +6632,9 @@
   <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
     <value>O que um Miss realmente custa, e quanto combo limpo é preciso para recuperá-lo.</value>
   </data>
+  <data name="What a player reads in the directory before deciding whether to connect." xml:space="preserve">
+    <value>O que um jogador lê no diretório antes de decidir se conecta.</value>
+  </data>
   <data name="What arrives when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
     <value>O que chega quando um dos seus jogadores importa. Nada é uma resposta válida — muitas ferramentas só consultam a API.</value>
   </data>
@@ -6721,12 +6715,6 @@
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
-  </data>
-  <data name="Why the source has to resolve" xml:space="preserve">
-    <value>Por que o código precisa responder</value>
-  </data>
-  <data name="Why usage isn't broken down per key" xml:space="preserve">
-    <value>Por que o uso não é detalhado por chave</value>
   </data>
   <data name="Widget schema" xml:space="preserve">
     <value>Esquema de widgets</value>
@@ -6964,9 +6952,6 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>O seu endpoint responde a uma requisição de verificação com isto. Isso não é enviado a lugar nenhum — é por isso que responder com ele é prova, e por isso um DNS sequestrado não passa. Só um hash é guardado, então anote em algum lugar que você ache depois.</value>
-  </data>
-  <data name="Your endpoint hasn't answered yet." xml:space="preserve">
-    <value>Seu endpoint ainda não respondeu.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Seu arquivo passava de 10MB, reduza-o e tente novamente.</value>

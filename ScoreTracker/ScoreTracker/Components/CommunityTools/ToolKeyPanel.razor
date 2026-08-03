@@ -16,7 +16,9 @@
         @L["Two can be active at once, so rotating one costs no downtime."]
     </MudText>
 
-    @foreach (var key in _keys)
+    @* Revoked keys are gone, not history. A maker looking at this page is deciding which live
+       key to use or replace, and a dead one in the list is one more thing to read past. *@
+    @foreach (var key in _keys.Where(k => !k.IsRevoked))
     {
         <div class="olb-rank-card">
             <div class="flex-grow-1" style="min-width:0;">

@@ -41,9 +41,14 @@
             @if (!string.IsNullOrWhiteSpace(_url))
             {
                 <div class="d-flex align-center gap-3 mt-3 flex-wrap">
+                    @* Verify uses the SAVED url, so an unsaved edit would check the old one and
+                       report a pass for an endpoint the maker is no longer pointing at. *@
                     <MudButton Variant="Variant.Outlined" Size="Size.Small"
-                               Disabled="@(_verifying || !Tool.HasVerificationSecret)"
-                               OnClick="VerifyWebhook">@L["Verify"]</MudButton>
+                               Disabled="@(!CanVerify)" OnClick="VerifyWebhook">@L["Verify"]</MudButton>
+                    @if (!CanVerify && Tool.HasVerificationSecret && HasUnsavedUrl)
+                    {
+                        <MudText Typo="Typo.caption" Style="opacity:.7;">@L["Save first."]</MudText>
+                    }
                     @if (Tool.WebhookUrlVerifiedAt is null)
                     {
                         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">
@@ -203,6 +208,14 @@
     private bool _changingHeader;
 
     private bool _changingSecret;
+
+    private bool HasUnsavedUrl => (Tool.WebhookUrl ?? string.Empty) != (_url ?? string.Empty);
+
+    /// <summary>Everything the request needs, on the server's side of the save.</summary>
+    private bool CanVerify => !_verifying
+                              && Tool.HasVerificationSecret
+                              && !string.IsNullOrWhiteSpace(Tool.WebhookUrl)
+                              && !HasUnsavedUrl;
 
     private static readonly WebhookMode[] Modes =
     {
