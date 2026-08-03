@@ -320,6 +320,45 @@ public sealed class ToolKeyAndShareHandlerTests
         _bans.Verify(b => b.Ban(It.IsAny<ToolMakerBan>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    private readonly Mock<IToolActivityRepository> _activity = new();
+
+    private ToolMetricsSaga MetricsSaga()
+    {
+        return new ToolMetricsSaga(_activity.Object, _tools.Object, FakeDateTime.At(Now).Object);
+    }
+
+    // Incremented into the hour's tally, never a row per click — a maker's own feed must not be
+    // buried under traffic they did not generate.
+    [Fact]
+    public async Task AClickOnAListedToolIncrementsTheHourlyTally()
+    {
+        var listed = Tool.Create(ToolId, MakerId, Name.From("Pumpout"), Now,
+            new Uri("https://github.com/errlena/pumpout"), "errlena", Now, ToolKind.ListingOnly);
+        listed.MarkRepositoryReachable(Now);
+        listed.Describe(Name.From("Pumpout"), "A chart database.",
+            new Uri("https://pumpout.example"), new Uri("https://github.com/errlena/pumpout"));
+        listed.MarkRepositoryReachable(Now);
+        listed.RequestListing();
+        listed.Approve(Now);
+        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(listed);
+
+        await MetricsSaga().Handle(new RecordToolClickCommand(ToolId), CancellationToken.None);
+
+        _activity.Verify(a => a.Increment(ToolId, ToolActivityKind.DirectoryClicked, Now, null,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // A click can only have come from the directory, so an unlisted tool accruing directory traffic
+    // would mean something else is calling this.
+    [Fact]
+    public async Task AClickOnAnUnlistedToolIsNotCounted()
+    {
+        await MetricsSaga().Handle(new RecordToolClickCommand(ToolId), CancellationToken.None);
+
+        _activity.Verify(a => a.Increment(It.IsAny<Guid>(), It.IsAny<ToolActivityKind>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private void ToolWithRepository(bool alreadyChecked)
     {
         var tool = Tool.Create(ToolId, MakerId, Name.From("Planner"), Now,

@@ -38,7 +38,7 @@ internal sealed class ToolConsoleSaga :
         CancellationToken cancellationToken)
     {
         if (!await Owns(request.ToolId, cancellationToken))
-            return new ToolActivitySummary(0, 0, 0, 0);
+            return new ToolActivitySummary(0, 0, 0, 0, 0, 0);
 
         var rows = await _activity.GetRecent(request.ToolId, 500, cancellationToken);
         return new ToolActivitySummary(
@@ -46,12 +46,26 @@ internal sealed class ToolConsoleSaga :
             rows.Count(r => r.Kind is ToolActivityKind.DeliveryTimedOut
                 or ToolActivityKind.DeliveryRejected or ToolActivityKind.DeliveryUnreachable),
             rows.Where(r => r.Kind == ToolActivityKind.RateLimited).Sum(r => r.Count),
-            await _tools.CountConnectedPlayers(request.ToolId, cancellationToken));
+            await _tools.CountConnectedPlayers(request.ToolId, cancellationToken),
+            // Roll-ups carry a count per hour, so these are sums rather than row counts.
+            rows.Where(r => r.Kind == ToolActivityKind.KeyUsed).Sum(r => r.Count),
+            rows.Where(r => r.Kind == ToolActivityKind.DirectoryClicked).Sum(r => r.Count));
     }
 
+    /// <summary>
+    ///     The maker, or an admin — the same grant <c>ToolManagementSaga.Manageable</c> carries.
+    ///     <para>
+    ///         Widened when the activity log moved into the console proper: an admin reaching a tool
+    ///         through Manage would otherwise land on a section that renders empty, and the ban
+    ///         dialog promises "you can look at what happened". Reading a log is inspection.
+    ///         <c>ToolDebugSaga</c> stays owner-only, because firing a real delivery at someone's
+    ///         production endpoint is not.
+    ///     </para>
+    /// </summary>
     private async Task<bool> Owns(Guid toolId, CancellationToken cancellationToken)
     {
         var tool = await _tools.GetTool(toolId, cancellationToken);
-        return tool is not null && tool.OwnerUserId == _currentUser.User.Id;
+        return tool is not null
+               && (tool.OwnerUserId == _currentUser.User.Id || _currentUser.User.IsAdmin);
     }
 }
