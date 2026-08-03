@@ -26,6 +26,9 @@ namespace ScoreTracker.Web.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public sealed class LoginController : Controller
 {
+    /// <summary>The credential-based provider's name, as stored on external logins and routed.</summary>
+    private const string PiuGameProvider = "PiuGame";
+
     private static readonly ISet<string> AllowedProviders =
         new HashSet<string>(new[] { "Discord", "Google", "Facebook" }, StringComparer.OrdinalIgnoreCase);
 
@@ -160,7 +163,7 @@ public sealed class LoginController : Controller
             return LocalRedirect(AppendError(backToForm, "Unavailable"));
         }
 
-        var resolution = await _mediator.Send(new ResolveExternalUserCommand("PiuGame",
+        var resolution = await _mediator.Send(new ResolveExternalUserCommand(PiuGameProvider,
                 identity.GetLoginAliases().ToArray(), identity.GameTag, identity.GameTag, identity.ProfileImage),
             HttpContext.RequestAborted);
 
@@ -177,7 +180,7 @@ public sealed class LoginController : Controller
         // that so a drifted-identifier merge is friction-free.
         foreach (var alias in identity.GetLoginAliases())
         {
-            var aliasOwner = await _mediator.Send(new GetUserByExternalLoginQuery(alias, "PiuGame"),
+            var aliasOwner = await _mediator.Send(new GetUserByExternalLoginQuery(alias, PiuGameProvider),
                 HttpContext.RequestAborted);
             if (aliasOwner != null && aliasOwner.Id != resolution.User.Id)
                 _proofs.RecordProof(resolution.User.Id, aliasOwner.Id);
@@ -192,14 +195,12 @@ public sealed class LoginController : Controller
                 .FirstOrDefault(u => u.Id != resolution.User.Id);
             if (tagMatch != null)
                 return LocalRedirect(
-                    $"/Account/Merge?with={tagMatch.Id}&returnUrl={Uri.EscapeDataString(SetupUrl("PiuGame"))}");
+                    $"/Account/Merge?with={tagMatch.Id}&returnUrl={Uri.EscapeDataString(SetupUrl(PiuGameProvider))}");
         }
 
-        return LocalRedirect(resolution.IsNew
-            ? SetupUrl("PiuGame")
-            : string.IsNullOrWhiteSpace(returnUrl)
-                ? "/"
-                : returnUrl);
+        if (resolution.IsNew) return LocalRedirect(SetupUrl(PiuGameProvider));
+
+        return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
     }
 
     private static string AppendError(string url, string error)

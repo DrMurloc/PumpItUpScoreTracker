@@ -690,7 +690,10 @@
         _culture = SupportedCultures.Normalize(value);
         await UiSettings.SetSetting("Culture", _culture);
 
-        var returnTo = ProviderLabel == null ? "/Setup" : $"/Setup?from={Uri.EscapeDataString(From!)}";
+        var from = From;
+        var returnTo = ProviderLabel == null || from == null
+            ? "/Setup"
+            : $"/Setup?from={Uri.EscapeDataString(from)}";
         NavManager.NavigateTo(
             $"/Culture/Set?culture={_culture}&redirectUrl={Uri.EscapeDataString(returnTo)}",
             true);
