@@ -55,3 +55,10 @@ public sealed record GetToolActivityQuery(Guid ToolId, int Limit = 100)
 
 [ExcludeFromCodeCoverage]
 public sealed record GetToolActivitySummaryQuery(Guid ToolId) : IQuery<ToolActivitySummary>;
+
+/// <summary>Every maker currently barred from making tools. Admin surfaces only.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetToolMakerBansQuery : IQuery<IReadOnlyList<ToolMakerBanRecord>>;
+
+[ExcludeFromCodeCoverage]
+public sealed record IsToolMakerBannedQuery(Guid UserId) : IQuery<bool>;

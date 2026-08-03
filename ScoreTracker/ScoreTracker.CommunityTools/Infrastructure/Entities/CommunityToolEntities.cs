@@ -212,3 +212,23 @@ internal sealed class ToolActivityEntity
     public int Count { get; set; }
     [MaxLength(200)] public string? Detail { get; set; }
 }
+
+/// <summary>
+///     A maker barred from making tools.
+///     <para>
+///         Every effect is computed from this row rather than written into the tools themselves —
+///         their shares, keys and listings are left exactly as they were, so lifting a ban restores
+///         a working tool instead of an empty shell. It also means the activity log and delivery
+///         history survive the ban that a dispute would be argued over.
+///     </para>
+/// </summary>
+internal sealed class ToolMakerBanEntity
+{
+    [Key] public Guid UserId { get; set; }
+    public DateTimeOffset BannedAt { get; set; }
+    public Guid BannedByUserId { get; set; }
+
+    /// <summary>The owner's own note. Freeform, editable afterwards, seen by nobody else.</summary>
+    [MaxLength(1000)]
+    public string? Notes { get; set; }
+}

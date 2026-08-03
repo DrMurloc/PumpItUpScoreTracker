@@ -754,6 +754,12 @@
   <data name="Ban" xml:space="preserve">
     <value>Ban</value>
   </data>
+  <data name="Ban maker" xml:space="preserve">
+    <value>Ban maker</value>
+  </data>
+  <data name="Ban {0} from making tools" xml:space="preserve">
+    <value>Ban {0} from making tools</value>
+  </data>
   <data name="Banned" xml:space="preserve">
     <value>Banned</value>
   </data>
@@ -1855,6 +1861,9 @@
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more.</value>
   </data>
+  <data name="Every connected player loses access, API keys stop working, and their tools leave the directory." xml:space="preserve">
+    <value>Every connected player loses access, API keys stop working, and their tools leave the directory.</value>
+  </data>
   <data name="Every eligible chart has been featured." xml:space="preserve">
     <value>Every eligible chart has been featured.</value>
   </data>
@@ -2855,6 +2864,9 @@
 	  <value>Lifebars are weird.</value>
 	  <comment>Quote attributed to Zelllooo on the Life Calculator page.</comment>
   </data>
+  <data name="Lift ban" xml:space="preserve">
+    <value>Lift ban</value>
+  </data>
   <data name="Like {0}" xml:space="preserve">
     <value>Like {0}</value>
   </data>
@@ -3462,6 +3474,9 @@
   <data name="No sorting" xml:space="preserve">
     <value>No sorting</value>
   </data>
+  <data name="No source published" xml:space="preserve">
+    <value>No source published</value>
+  </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>No suggestions right now — try a different goal, or import more scores first.</value>
   </data>
@@ -3524,6 +3539,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Not available in Compact view</value>
+  </data>
+  <data name="Not checked" xml:space="preserve">
+    <value>Not checked</value>
   </data>
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>Not checked yet. Save first, then check.</value>
@@ -3624,6 +3642,9 @@
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>Nothing here yet</value>
+  </data>
+  <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
+    <value>Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this.</value>
   </data>
   <data name="Nothing is delivered until you verify the URL." xml:space="preserve">
     <value>Nothing is delivered until you verify the URL.</value>
@@ -5809,6 +5830,9 @@
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture.</value>
   </data>
+  <data name="Their tools stop working immediately." xml:space="preserve">
+    <value>Their tools stop working immediately.</value>
+  </data>
   <data name="There was an error uploading the snapshot" xml:space="preserve">
     <value>There was an error uploading the snapshot</value>
   </data>
@@ -5835,6 +5859,9 @@
   </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values.</value>
+  </data>
+  <data name="They can't create a new tool until you lift this." xml:space="preserve">
+    <value>They can't create a new tool until you lift this.</value>
   </data>
   <data name="Third" xml:space="preserve">
     <value>Third</value>
@@ -7023,6 +7050,9 @@
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Your username and password are sent directly to piugame.com and are never stored</value>
   </data>
+  <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
+    <value>Yours only. Editable afterwards from the tool list.</value>
+  </data>
   <data name="Yours only. The player who follows the link never sees it." xml:space="preserve">
     <value>Yours only. The player who follows the link never sees it.</value>
   </data>
@@ -7067,6 +7097,12 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} can make tools again." xml:space="preserve">
+    <value>{0} can make tools again.</value>
+  </data>
+  <data name="{0} can no longer make tools." xml:space="preserve">
+    <value>{0} can no longer make tools.</value>
   </data>
   <data name="{0} can no longer read your scores" xml:space="preserve">
     <value>{0} can no longer read your scores</value>

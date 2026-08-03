@@ -97,13 +97,52 @@ else
                         </MudText>
                         <MudText Typo="Typo.caption" Style="opacity:.7;">
                             @L["by {0}", tool.OwnerName]
+                            @if (!string.IsNullOrWhiteSpace(tool.DiscordHandle))
+                            {
+                                @($" · {tool.DiscordHandle}")
+                            }
                             · @WebhookLabel(tool.WebhookMode)
                             · @L["{0} Players", tool.ConnectedPlayers]
                         </MudText>
+                        @* The parsed owner beside the link is the whole reason it is stored: a maker
+                           who pasted a repository they did not write is visible at a glance, and
+                           that is a judgement only a human makes. *@
+                        <MudText Typo="Typo.caption" Style="opacity:.7;">
+                            @if (string.IsNullOrWhiteSpace(tool.RepositoryUrl))
+                            {
+                                @L["No source published"]
+                            }
+                            else
+                            {
+                                @tool.RepositoryUrl
+                                @if (!string.IsNullOrWhiteSpace(tool.RepositoryOwner))
+                                {
+                                    @($" · {tool.RepositoryOwner}")
+                                }
+                                @(tool.RepositoryCheckedAt is null
+                                    ? $" · {L["Not checked"]}"
+                                    : $" · {L["Reachable"]}")
+                            }
+                        </MudText>
+                    </div>
+                    <div class="olb-rank-tail">
+                        @if (_bannedMakers.Contains(tool.OwnerUserId))
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Text"
+                                       OnClick="@(() => LiftBan(tool))">@L["Lift ban"]</MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error"
+                                       OnClick="@(() => OpenBan(tool))">@L["Ban maker"]</MudButton>
+                        }
                     </div>
                 </div>
             }
         </MudPaper>
+
+        <ToolMakerBanDialog @bind-Visible="_showBan" MakerUserId="_banTargetId" MakerName="_banTargetName"
+                            OnBanned="Reload"></ToolMakerBanDialog>
     }
 
     @if (_selected is not null && _selected.OwnerUserId != CurrentUser.User.Id)
@@ -331,6 +370,10 @@ else
     private string _editDiscord = string.Empty;
     private bool _editAcceptsAllTools = true;
     private bool _checking;
+    private bool _showBan;
+    private Guid _banTargetId;
+    private string _banTargetName = string.Empty;
+    private IReadOnlySet<Guid> _bannedMakers = new HashSet<Guid>();
 
     private bool HasRepository => !string.IsNullOrWhiteSpace(_selected?.RepositoryUrl);
 
@@ -387,6 +430,12 @@ else
         _tools = await Mediator.Send(new GetMyToolsQuery());
         _otherTools = (await Mediator.Send(new GetAllToolsQuery()))
             .Where(t => t.OwnerUserId != CurrentUser.User.Id).ToArray();
+
+        // Admin-only, and the query refuses anyone else — so it is only asked when there is an
+        // admin list to decorate.
+        _bannedMakers = _otherTools.Any()
+            ? (await Mediator.Send(new GetToolMakerBansQuery())).Select(b => b.UserId).ToHashSet()
+            : new HashSet<Guid>();
         if (_selected is not null)
             _selected = _tools.Concat(_otherTools).FirstOrDefault(t => t.Id == _selected.Id);
         if (_selected is null && _tools.Any()) Select(_tools[0]);
@@ -482,6 +531,20 @@ else
     ///     Fetches the repository anonymously and records the result. Reports the remote's own status
     ///     code, which is what a maker can act on — 404 usually means the repository is private.
     /// </summary>
+    private void OpenBan(ToolRecord tool)
+    {
+        _banTargetId = tool.OwnerUserId;
+        _banTargetName = tool.OwnerName;
+        _showBan = true;
+    }
+
+    private async Task LiftBan(ToolRecord tool)
+    {
+        await Mediator.Send(new LiftToolMakerBanCommand(tool.OwnerUserId));
+        Snackbar.Add(L["{0} can make tools again.", tool.OwnerName].Value, Severity.Success);
+        await Reload();
+    }
+
     private async Task CheckRepository()
     {
         if (_selected is null) return;

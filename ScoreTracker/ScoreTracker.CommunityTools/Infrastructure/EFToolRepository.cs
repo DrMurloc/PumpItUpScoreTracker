@@ -236,11 +236,27 @@ internal sealed class EFToolRepository : IToolRepository
 
         var blocked = await database.Set<ToolBlockEntity>()
             .Where(b => b.UserId == userId).Select(b => b.ToolId).ToArrayAsync(cancellationToken);
-        var pool = await database.Set<ToolEntity>()
+
+        // The source gate and the maker ban are resolved in memory against the same predicates the
+        // per-tool query uses. The candidate set is every listed pooled tool — tens of rows — and
+        // one rule expressed twice is one rule that can drift into disagreeing with itself about
+        // who may read a player's scores.
+        var candidates = await database.Set<ToolEntity>()
             .Where(t => t.Visibility == nameof(ToolVisibility.Public) && t.AcceptsAllToolsShare)
             // Session mode never arrives by blanket consent — it needs a moment the player saw.
             .Where(t => t.WebhookMode != nameof(WebhookMode.PiuGameSession))
-            .Select(t => t.Id).ToArrayAsync(cancellationToken);
+            .Select(t => new
+            {
+                t.Id, t.OwnerUserId, t.RepositoryUrl, t.RepositoryCheckedAt, t.DiscordHandle
+            })
+            .ToArrayAsync(cancellationToken);
+
+        var banned = await BannedOwners(database, candidates.Select(t => t.OwnerUserId), cancellationToken);
+        var pool = candidates
+            .Where(t => !banned.Contains(t.OwnerUserId))
+            .Where(t => Tool.Shareable(t.Id, t.RepositoryUrl, t.RepositoryCheckedAt, t.DiscordHandle))
+            .Select(t => t.Id)
+            .ToArray();
 
         return direct.Union(pool.Except(blocked)).Distinct().ToArray();
     }
@@ -251,6 +267,12 @@ internal sealed class EFToolRepository : IToolRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var tool = await database.Set<ToolEntity>().FirstOrDefaultAsync(t => t.Id == toolId, cancellationToken);
         if (tool is null) return Array.Empty<Guid>();
+
+        // A banned maker's tools read nobody at all, not even their own maker. Computed from the ban
+        // row rather than written into the shares, so lifting the ban restores a working tool
+        // instead of an empty shell — and the activity log a dispute is argued over survives.
+        if ((await BannedOwners(database, new[] { tool.OwnerUserId }, cancellationToken)).Count > 0)
+            return Array.Empty<Guid>();
 
         var direct = await database.Set<ToolShareEntity>()
             .Where(s => s.ToolId == toolId && s.RevokedAt == null)
@@ -278,6 +300,18 @@ internal sealed class EFToolRepository : IToolRepository
     public async Task<bool> CanRead(Guid toolId, Guid userId, CancellationToken cancellationToken = default)
     {
         return (await GetReadablePlayerIds(toolId, cancellationToken)).Contains(userId);
+    }
+
+    private static async Task<IReadOnlySet<Guid>> BannedOwners(ChartAttemptDbContext database,
+        IEnumerable<Guid> ownerUserIds, CancellationToken cancellationToken)
+    {
+        var ids = ownerUserIds.Distinct().ToArray();
+        if (ids.Length == 0) return new HashSet<Guid>();
+
+        return (await database.Set<ToolMakerBanEntity>()
+            .Where(b => ids.Contains(b.UserId))
+            .Select(b => b.UserId)
+            .ToArrayAsync(cancellationToken)).ToHashSet();
     }
 
     private static async Task<bool> ShareWithAllTools(ChartAttemptDbContext database, Guid userId,

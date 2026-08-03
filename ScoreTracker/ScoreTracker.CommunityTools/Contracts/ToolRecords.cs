@@ -142,3 +142,11 @@ public sealed record ToolInvitePreview(
     ///     feature, so it is also the one place a stranger can check the tool before signing in.
     /// </summary>
     string? RepositoryUrl);
+
+/// <summary>
+///     A maker's ban, as the admin list shows it. Notes are the owner's own and reach no other
+///     surface.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ToolMakerBanRecord(Guid UserId, string UserName, DateTimeOffset BannedAt,
+    string? Notes);

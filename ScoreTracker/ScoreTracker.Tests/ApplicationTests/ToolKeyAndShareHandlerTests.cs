@@ -29,8 +29,15 @@ public sealed class ToolKeyAndShareHandlerTests
     private static readonly Guid ToolId = Guid.Parse("aaaaaaaa-1111-1111-1111-111111111111");
     private static readonly Guid MakerId = Guid.Parse("bbbbbbbb-2222-2222-2222-222222222222");
 
+    /// <summary>
+    ///     User.IsAdmin is computed from this id rather than stored, so an admin test has to be
+    ///     this person — a bool on the constructor would be IsPublic, which is a different thing.
+    /// </summary>
+    private static readonly Guid AdminId = Guid.Parse("E38954C4-B1B1-418A-93F6-C4B25C98B713");
+
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IToolSecretReader> _secrets = new();
+    private readonly Mock<IToolMakerBanRepository> _bans = new();
     private readonly Mock<IRepositoryReachabilityClient> _repositories = new();
     private readonly Mock<IWebhookDeliveryClient> _webhooks = new();
     private readonly Mock<IToolKeyRepository> _keys = new();
@@ -40,6 +47,7 @@ public sealed class ToolKeyAndShareHandlerTests
 
     public ToolKeyAndShareHandlerTests()
     {
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
         _currentUser.SetupGet(c => c.User).Returns(new ScoreTracker.Domain.Models.User(
             MakerId, Name.From("DrMurloc"), true, null, new Uri("https://example.com/a.png"), null));
         _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>()))
@@ -225,7 +233,7 @@ public sealed class ToolKeyAndShareHandlerTests
     {
         return new ToolManagementSaga(_tools.Object, _users.Object, _currentUser.Object,
             FakeDateTime.At(Now).Object, _mediator.Object, _secrets.Object, _webhooks.Object,
-            Options.Create(new CommunityToolsConfiguration()), _repositories.Object);
+            Options.Create(new CommunityToolsConfiguration()), _repositories.Object, _bans.Object);
     }
 
     // Same guard owning a community carries. Without it: request deletion owning nothing, register
@@ -251,6 +259,65 @@ public sealed class ToolKeyAndShareHandlerTests
         await ManagementSaga().Handle(new CreateToolCommand("Planner"), CancellationToken.None);
 
         _tools.Verify(t => t.Save(It.IsAny<Tool>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // Rule 2's sanction. Deleting a tool never stopped its maker registering another thirty
+    // seconds later, which is the entire reason the ban exists.
+    [Fact]
+    public async Task ABannedMakerCannotRegisterATool()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetPendingAccountDeletionQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PendingAccountDeletion?)null);
+        _bans.Setup(b => b.GetBan(MakerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ToolMakerBan(MakerId, Now, Guid.NewGuid(), null));
+
+        await Assert.ThrowsAsync<ToolListingException>(() => ManagementSaga()
+            .Handle(new CreateToolCommand("Planner"), CancellationToken.None));
+
+        _tools.Verify(t => t.Save(It.IsAny<Tool>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private ToolMakerBanSaga BanSaga(bool asAdmin = true)
+    {
+        _currentUser.SetupGet(c => c.User).Returns(new ScoreTracker.Domain.Models.User(
+            asAdmin ? AdminId : MakerId, Name.From("DrMurloc"), true, null,
+            new Uri("https://example.com/a.png"), null));
+
+        return new ToolMakerBanSaga(_bans.Object, _currentUser.Object, FakeDateTime.At(Now).Object,
+            _users.Object);
+    }
+
+    // Banning yourself would lock the only account that can lift it.
+    [Fact]
+    public async Task AnAdminCannotBanThemselves()
+    {
+        await Assert.ThrowsAsync<ToolListingException>(() => BanSaga()
+            .Handle(new BanToolMakerCommand(AdminId, null), CancellationToken.None));
+
+        _bans.Verify(b => b.Ban(It.IsAny<ToolMakerBan>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ABanRecordsWhoIssuedItAndWhen()
+    {
+        var target = Guid.NewGuid();
+
+        await BanSaga().Handle(new BanToolMakerCommand(target, "  ads on the site  "),
+            CancellationToken.None);
+
+        _bans.Verify(b => b.Ban(It.Is<ToolMakerBan>(x =>
+                x.UserId == target && x.BannedByUserId == AdminId && x.BannedAt == Now
+                && x.Notes == "ads on the site"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task BanningIsAdminOnly()
+    {
+        await Assert.ThrowsAsync<ToolNotFoundException>(() => BanSaga(asAdmin: false)
+            .Handle(new BanToolMakerCommand(Guid.NewGuid(), null), CancellationToken.None));
+
+        _bans.Verify(b => b.Ban(It.IsAny<ToolMakerBan>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private void ToolWithRepository(bool alreadyChecked)

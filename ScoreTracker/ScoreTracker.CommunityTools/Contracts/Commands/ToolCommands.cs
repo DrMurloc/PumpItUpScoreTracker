@@ -141,3 +141,22 @@ public sealed record SendTestDeliveryCommand(Guid ToolId, MixEnum Mix, bool UseM
 /// <summary>Re-sends a past delivery whose body we still hold.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record ReplayDeliveryCommand(Guid ToolId, Guid DeliveryRowId) : IRequest<bool>;
+
+/// <summary>
+///     Bars a maker from making tools, and stops the ones they have.
+///     <para>
+///         Disables, never deletes. Their tools keep their shares, keys, activity log and delivery
+///         history exactly as they are and simply read nobody — so a ban can be looked at afterwards,
+///         and lifted, which a hard delete makes impossible. <see cref="Notes" /> is the admin's own
+///         scratch space and is seen by nobody else.
+///     </para>
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record BanToolMakerCommand(Guid UserId, string? Notes) : IRequest;
+
+[ExcludeFromCodeCoverage]
+public sealed record LiftToolMakerBanCommand(Guid UserId) : IRequest;
+
+/// <summary>Editable afterwards, so a ban can record how it ended as well as why it started.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record SetToolMakerBanNotesCommand(Guid UserId, string? Notes) : IRequest;

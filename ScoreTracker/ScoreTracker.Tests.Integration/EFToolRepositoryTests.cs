@@ -131,6 +131,38 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
     }
 
     /// <summary>
+    ///     A ban disables rather than deletes, so its effect has to be computed at read time — which
+    ///     means only a real query can prove it happened. The shares stay in the table untouched,
+    ///     which is what makes the ban liftable.
+    /// </summary>
+    [Fact]
+    public async Task ABannedMakersToolReadsNobody()
+    {
+        var repository = BuildRepository();
+        var bans = new EFToolMakerBanRepository(_fixture.DbContextFactory);
+        var player = Guid.NewGuid();
+        await repository.SetShareWithAllTools(player, true, Now);
+
+        var tool = await SaveTool(repository, "Digger", PublicAndPooled);
+        var deliberate = Guid.NewGuid();
+        await repository.GrantShare(tool.Id, deliberate, ShareSource.Direct, Now);
+
+        Assert.True(await repository.CanRead(tool.Id, deliberate));
+
+        await bans.Ban(new ToolMakerBan(tool.OwnerUserId, Now, Guid.NewGuid(), "ads on the site"));
+
+        Assert.Empty(await repository.GetReadablePlayerIds(tool.Id));
+        Assert.False(await repository.CanRead(tool.Id, deliberate));
+        Assert.DoesNotContain(tool.Id, await repository.GetToolIdsReading(player));
+
+        // And the grant was never touched, so lifting restores a working tool.
+        await bans.Lift(tool.OwnerUserId);
+
+        Assert.True(await repository.CanRead(tool.Id, deliberate));
+        Assert.Contains(tool.Id, await repository.GetToolIdsReading(player));
+    }
+
+    /// <summary>
     ///     The other half, and the site's own rule: going private blocks the blanket grant and never
     ///     a deliberate named one. Cutting off players who chose a tool because its maker mistyped a
     ///     URL would punish the wrong people.

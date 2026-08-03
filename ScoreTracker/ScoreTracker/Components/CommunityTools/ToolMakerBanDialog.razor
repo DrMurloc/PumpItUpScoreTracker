@@ -1,0 +1,93 @@
+@namespace ScoreTracker.Web.Components.CommunityTools
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts.Commands
+
+@* Deliberately plain — the owner asked for a guard against a misclick, not a workflow.
+
+   The copy is careful about one thing: nothing is deleted. A hard delete would take the activity
+   log and every delivery record with it, which is exactly the evidence a disputed ban needs, so the
+   dialog says what actually happens and that it can be undone. *@
+
+<MudDialog @bind-Visible="Visible" Options="_options">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Ban {0} from making tools", MakerName]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+            <MudText Typo="Typo.body2">
+                <b>@L["Their tools stop working immediately."]</b>
+            </MudText>
+            <MudText Typo="Typo.body2">
+                @L["Every connected player loses access, API keys stop working, and their tools leave the directory."]
+            </MudText>
+        </MudAlert>
+
+        <MudText Typo="Typo.body2" Class="mt-3">
+            @L["They can't create a new tool until you lift this."]
+        </MudText>
+
+        <MudText Typo="Typo.body2" Class="mt-2" Style="opacity:.75;">
+            @L["Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this."]
+        </MudText>
+
+        <MudTextField T="string" @bind-Value="_notes" Lines="3" Class="mt-3" MaxLength="1000"
+                      Label=@L["Notes"]
+                      HelperText='@L["Yours only. Editable afterwards from the tool list."].Value'></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="Close">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="_busy"
+                   OnClick="Confirm">@L["Ban maker"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@code {
+    // MaxWidth.Small is defeated site-wide by charts.scss, so the cap has to be ours.
+    private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.False, FullWidth = true };
+
+    private string _notes = string.Empty;
+    private bool _busy;
+
+    [Parameter] public bool Visible { get; set; }
+
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter] public Guid MakerUserId { get; set; }
+
+    [Parameter] public string MakerName { get; set; } = string.Empty;
+
+    /// <summary>Raised after a successful ban so the host can reload what it is showing.</summary>
+    [Parameter] public EventCallback OnBanned { get; set; }
+
+    private async Task Close()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task Confirm()
+    {
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new BanToolMakerCommand(MakerUserId,
+                string.IsNullOrWhiteSpace(_notes) ? null : _notes));
+            Snackbar.Add(L["{0} can no longer make tools.", MakerName].Value, Severity.Success);
+            _notes = string.Empty;
+            await Close();
+            await OnBanned.InvokeAsync();
+        }
+        catch (Exception e)
+        {
+            // A domain exception's message is written for the person who tripped it.
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

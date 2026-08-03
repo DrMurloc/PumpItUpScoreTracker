@@ -754,6 +754,12 @@
   <data name="Ban" xml:space="preserve">
     <value>Mrgl</value>
   </data>
+  <data name="Ban maker" xml:space="preserve">
+    <value>Blorm murgblub</value>
+  </data>
+  <data name="Ban {0} from making tools" xml:space="preserve">
+    <value>Blorm {0} bam murgblub rorgl</value>
+  </data>
   <data name="Banned" xml:space="preserve">
     <value>Morgmrgl</value>
   </data>
@@ -1855,6 +1861,9 @@
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>Murgglorg murgl plglgrrgl blubmagl arglblgrl 3 blargblgrlmurp urgmurm lurg gromurp blarglurg — grorgl blargblgrlmurp ro mrpblarg morgmurm morgmrblub glorgmurp mrrgl.</value>
   </data>
+  <data name="Every connected player loses access, API keys stop working, and their tools leave the directory." xml:space="preserve">
+    <value>Alla morp golba blorm murp, API murgargl blorm, opa murgm rorgl blorm murgblub.</value>
+  </data>
   <data name="Every eligible chart has been featured." xml:space="preserve">
     <value>Murgglorg urggrglmagl murgl rgl murmmrp glmurgmurg.</value>
   </data>
@@ -2855,6 +2864,9 @@
 	  <value>Mrpmrrgl mrp lurggl.</value>
 	  <comment>Quote attributed to Zelllooo on the Life Calculator page.</comment>
   </data>
+  <data name="Lift ban" xml:space="preserve">
+    <value>Blorp blorm</value>
+  </data>
   <data name="Like {0}" xml:space="preserve">
     <value>Plglro {0}</value>
   </data>
@@ -3462,6 +3474,9 @@
   <data name="No sorting" xml:space="preserve">
     <value>Mrp lurgblarggrgl</value>
   </data>
+  <data name="No source published" xml:space="preserve">
+    <value>Bam murgblub grumba</value>
+  </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>Mrp glrglmurpmrp rogro magl — lurg gro roplglblgrl mrpmrp, argl glorggl mrrgl mgrlgmrg murpargl.</value>
   </data>
@@ -3524,6 +3539,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Murm blargromrp mrp Murmgrrglblub murmblub</value>
+  </data>
+  <data name="Not checked" xml:space="preserve">
+    <value>Bam murgl</value>
   </data>
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>Bam murgl mo. Blorp blomurp, opa murgl.</value>
@@ -3624,6 +3642,9 @@
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>Bam murgm blorm</value>
+  </data>
+  <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
+    <value>Alla bam blorm. Murgm rorgl, murgm murgblarg opa murgm murpo murgloo blomurp murp, murgloo murgm murgl argla blorm — blu blorp mo.</value>
   </data>
   <data name="Nothing is delivered until you verify the URL." xml:space="preserve">
     <value>Alla blurgl la bloop golba URL.</value>
@@ -5809,6 +5830,9 @@
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>Mrp mrpgrrgl grog, maglmrpplgl, ro mrpmrglmurpgl mrp mrprgl — mrpmurp mrp mrpgrrgl blub mrlurg gromurp grrgl mgrlgmrg mrp mrp blgrlmrpplgl.</value>
   </data>
+  <data name="Their tools stop working immediately." xml:space="preserve">
+    <value>Murgm rorgl blorm murgloo argla.</value>
+  </data>
   <data name="There was an error uploading the snapshot" xml:space="preserve">
     <value>Blgrlgrrgl ro blgrl blargurg glorgmrblarg mrp mrpmaglmurp</value>
   </data>
@@ -5835,6 +5859,9 @@
   </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>Blgrlmrp glorgglorgargl glmagl gromurm-murpmurp romurg NX2 ro Grorpmrp murm Rglmrgl Murgmrmrpmagl. Urggro rgl gl-murplurgmagl gllurg murmlurgmurp Phoenix argl Phoenix 2, blarg morgblgrl mrp mrpblargro lurg mrp murggrgl mrgl mrp blubmorg groblgrl grogrgl murmblub mrglglmorg morggro.</value>
+  </data>
+  <data name="They can't create a new tool until you lift this." xml:space="preserve">
+    <value>Murgm bam murgblub blomurp rorgl blarg murgm blorp mo.</value>
   </data>
   <data name="Third" xml:space="preserve">
     <value>Grogl</value>
@@ -7023,6 +7050,9 @@
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Gromurp grrmrrgl ro glorgmrpmurm mrp mrpmurg grorpmrglblgrl grgl piugame.com ro mrp glargl morgro</value>
   </data>
+  <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
+    <value>Murgm bo. Murp blorp murmo la rorgl grog.</value>
+  </data>
   <data name="Yours only. The player who follows the link never sees it." xml:space="preserve">
     <value>Am olo bo. Bloop mo golba pragl alla marogl.</value>
   </data>
@@ -7067,6 +7097,12 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} can make tools again." xml:space="preserve">
+    <value>{0} murp murgblub rorgl blomurp.</value>
+  </data>
+  <data name="{0} can no longer make tools." xml:space="preserve">
+    <value>{0} bam murgblub rorgl argla.</value>
   </data>
   <data name="{0} can no longer read your scores" xml:space="preserve">
     <value>{0} bo murp blurgl gromurp Mgrlgmrg</value>

@@ -754,6 +754,12 @@
   <data name="Ban" xml:space="preserve">
     <value>BAN</value>
   </data>
+  <data name="Ban maker" xml:space="preserve">
+    <value>作者を禁止</value>
+  </data>
+  <data name="Ban {0} from making tools" xml:space="preserve">
+    <value>{0} のツール作成を禁止</value>
+  </data>
   <data name="Banned" xml:space="preserve">
     <value>BAN済み</value>
   </data>
@@ -1855,6 +1861,9 @@
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>3フォルダ以内でスコアを記録した譜面すべてがあなたのスキルに投票します — 近いフォルダとスキルの占有率が高い譜面ほど重く数えられます。</value>
   </data>
+  <data name="Every connected player loses access, API keys stop working, and their tools leave the directory." xml:space="preserve">
+    <value>接続していたプレイヤーは全員アクセスを失い、API キーは使えなくなり、ツールはディレクトリから外れます。</value>
+  </data>
   <data name="Every eligible chart has been featured." xml:space="preserve">
     <value>出題可能なすべての譜面が使用済みです。</value>
   </data>
@@ -2855,6 +2864,9 @@
 	  <value>ライフバーは奇妙です。</value>
 	  
   </data>
+  <data name="Lift ban" xml:space="preserve">
+    <value>禁止を解除</value>
+  </data>
   <data name="Like {0}" xml:space="preserve">
     <value>{0} に似た譜面</value>
   </data>
@@ -3462,6 +3474,9 @@
   <data name="No sorting" xml:space="preserve">
     <value>並び替えなし</value>
   </data>
+  <data name="No source published" xml:space="preserve">
+    <value>ソース未公開</value>
+  </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>現在提案はありません。別の目標を試すか、先にスコアをインポートしてください。</value>
   </data>
@@ -3524,6 +3539,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>コンパクト表示では利用できません</value>
+  </data>
+  <data name="Not checked" xml:space="preserve">
+    <value>未確認</value>
   </data>
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>まだ確認していません。先に保存してから確認してください。</value>
@@ -3624,6 +3642,9 @@
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>まだ記録はありません</value>
+  </data>
+  <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
+    <value>何も削除されません。ツールも、アクティビティも、配信履歴もそのまま残るので、何が起きたか確認できますし、取り消すこともできます。</value>
   </data>
   <data name="Nothing is delivered until you verify the URL." xml:space="preserve">
     <value>URL を確認するまで何も配信されません。</value>
@@ -5809,6 +5830,9 @@
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>ティアリスト、ランキング、計算機は誰でも見られます — 自分のスコアを重ねたくなったらログインを。</value>
   </data>
+  <data name="Their tools stop working immediately." xml:space="preserve">
+    <value>その人のツールはただちに動かなくなります。</value>
+  </data>
   <data name="There was an error uploading the snapshot" xml:space="preserve">
     <value>スナップショットのアップロード中にエラーが発生しました</value>
   </data>
@@ -5835,6 +5859,9 @@
   </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>これらの計算式は Team Infinitesimal が NX2 と Prime からデータマインしたものです。Phoenix や Phoenix 2 での再検証は誰も行っていないため、数値は正確な筐体値ではなく仕組みの形として捉えてください。</value>
+  </data>
+  <data name="They can't create a new tool until you lift this." xml:space="preserve">
+    <value>解除するまで、新しいツールは作れません。</value>
   </data>
   <data name="Third" xml:space="preserve">
     <value>3 枚目</value>
@@ -7023,6 +7050,9 @@
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>ユーザー名とパスワードはpiugame.comへ直接送信され、保存されることはありません</value>
   </data>
+  <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
+    <value>あなた専用です。あとからツール一覧で編集できます。</value>
+  </data>
   <data name="Yours only. The player who follows the link never sees it." xml:space="preserve">
     <value>あなただけのメモです。リンクをたどったプレイヤーには見えません。</value>
   </data>
@@ -7067,6 +7097,12 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} can make tools again." xml:space="preserve">
+    <value>{0} はまたツールを作れます。</value>
+  </data>
+  <data name="{0} can no longer make tools." xml:space="preserve">
+    <value>{0} はもうツールを作れません。</value>
   </data>
   <data name="{0} can no longer read your scores" xml:space="preserve">
     <value>{0}はもうあなたのスコアを読み取れません</value>

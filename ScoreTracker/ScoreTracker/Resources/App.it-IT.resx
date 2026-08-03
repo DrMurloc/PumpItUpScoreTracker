@@ -754,6 +754,12 @@
   <data name="Ban" xml:space="preserve">
     <value>Banna</value>
   </data>
+  <data name="Ban maker" xml:space="preserve">
+    <value>Vieta al creatore</value>
+  </data>
+  <data name="Ban {0} from making tools" xml:space="preserve">
+    <value>Vieta a {0} di fare strumenti</value>
+  </data>
   <data name="Banned" xml:space="preserve">
     <value>Bannato</value>
   </data>
@@ -1855,6 +1861,9 @@
   <data name="Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more." xml:space="preserve">
     <value>Ogni chart con punteggio entro 3 cartelle vota sulle tue abilità — le cartelle più vicine e una copertura maggiore dell'abilità contano di più.</value>
   </data>
+  <data name="Every connected player loses access, API keys stop working, and their tools leave the directory." xml:space="preserve">
+    <value>Ogni giocatore collegato perde l'accesso, le chiavi API smettono di funzionare e i loro strumenti escono dalla directory.</value>
+  </data>
   <data name="Every eligible chart has been featured." xml:space="preserve">
     <value>Tutti i chart idonei sono già stati proposti.</value>
   </data>
@@ -2855,6 +2864,9 @@
     <value>Le lifebar sono strane.</value>
     <comment>Quote attributed to Zelllooo on the Life Calculator page.</comment>
   </data>
+  <data name="Lift ban" xml:space="preserve">
+    <value>Revoca il divieto</value>
+  </data>
   <data name="Like {0}" xml:space="preserve">
     <value>Simili a {0}</value>
   </data>
@@ -3462,6 +3474,9 @@
   <data name="No sorting" xml:space="preserve">
     <value>Senza ordinamento</value>
   </data>
+  <data name="No source published" xml:space="preserve">
+    <value>Nessun codice pubblicato</value>
+  </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>Nessun suggerimento al momento — prova un altro obiettivo o importa prima più punteggi.</value>
   </data>
@@ -3524,6 +3539,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Non disponibile nella vista compatta</value>
+  </data>
+  <data name="Not checked" xml:space="preserve">
+    <value>Non controllato</value>
   </data>
   <data name="Not checked yet. Save first, then check." xml:space="preserve">
     <value>Non ancora controllato. Salva prima, poi controlla.</value>
@@ -3624,6 +3642,9 @@
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>Ancora niente qui</value>
+  </data>
+  <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
+    <value>Non viene cancellato nulla. Gli strumenti, la loro attività e lo storico delle consegne restano com'erano, così puoi vedere cos'è successo — o annullare.</value>
   </data>
   <data name="Nothing is delivered until you verify the URL." xml:space="preserve">
     <value>Non consegniamo niente finché non verifichi l'URL.</value>
@@ -5809,6 +5830,9 @@
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>Tier list, classifiche e calcolatori sono aperti — accedi quando vorrai vederci i tuoi punteggi.</value>
   </data>
+  <data name="Their tools stop working immediately." xml:space="preserve">
+    <value>I loro strumenti smettono di funzionare subito.</value>
+  </data>
   <data name="There was an error uploading the snapshot" xml:space="preserve">
     <value>Si è verificato un errore durante il caricamento dello snapshot</value>
   </data>
@@ -5835,6 +5859,9 @@
   </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>Team Infinitesimal ha estratto queste formule dal codice di NX2 e Prime. Nessuno le ha riverificate su Phoenix o Phoenix 2, quindi considera i numeri come la forma del sistema e non come valori esatti del cabinato.</value>
+  </data>
+  <data name="They can't create a new tool until you lift this." xml:space="preserve">
+    <value>Non potrà creare un nuovo strumento finché non lo revochi.</value>
   </data>
   <data name="Third" xml:space="preserve">
     <value>Terzo</value>
@@ -7023,6 +7050,9 @@
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Il tuo nome utente e la tua password vengono inviati direttamente a piugame.com e non vengono mai memorizzati</value>
   </data>
+  <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
+    <value>Solo per te. Modificabile poi dalla lista degli strumenti.</value>
+  </data>
   <data name="Yours only. The player who follows the link never sees it." xml:space="preserve">
     <value>Solo per te. Il giocatore che segue il link non la vede mai.</value>
   </data>
@@ -7067,6 +7097,12 @@
   </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
+  </data>
+  <data name="{0} can make tools again." xml:space="preserve">
+    <value>{0} può di nuovo fare strumenti.</value>
+  </data>
+  <data name="{0} can no longer make tools." xml:space="preserve">
+    <value>{0} non può più fare strumenti.</value>
   </data>
   <data name="{0} can no longer read your scores" xml:space="preserve">
     <value>{0} non può più leggere i tuoi punteggi</value>

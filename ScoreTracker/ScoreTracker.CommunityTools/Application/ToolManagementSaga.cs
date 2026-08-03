@@ -44,6 +44,7 @@ internal sealed class ToolManagementSaga :
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IMediator _mediator;
     private readonly IToolSecretReader _secrets;
+    private readonly IToolMakerBanRepository _bans;
     private readonly IRepositoryReachabilityClient _repositories;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
@@ -51,8 +52,9 @@ internal sealed class ToolManagementSaga :
     public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor dateTime, IMediator mediator, IToolSecretReader secrets,
         IWebhookDeliveryClient client, IOptions<CommunityToolsConfiguration> configuration,
-        IRepositoryReachabilityClient repositories)
+        IRepositoryReachabilityClient repositories, IToolMakerBanRepository bans)
     {
+        _bans = bans;
         _repositories = repositories;
         _configuration = configuration;
         _tools = tools;
@@ -156,6 +158,12 @@ internal sealed class ToolManagementSaga :
             throw new ToolListingException(
                 "Your account is scheduled for deletion, so you can't register a tool right now. " +
                 "Cancel the deletion first if you've changed your mind.");
+
+        // Rule 2's sanction. Deleting a tool never stopped its maker registering another thirty
+        // seconds later, which is the entire reason the ban exists.
+        if (await _bans.GetBan(_currentUser.User.Id, cancellationToken) is not null)
+            throw new ToolListingException(
+                "You can't register a tool. If you think that's wrong, ask in the PIU Scores Discord.");
 
         var tool = Tool.Create(Guid.NewGuid(), _currentUser.User.Id, Name.From(request.Name),
             _dateTime.Now, Link(request.RepositoryUrl), request.DiscordHandle, _dateTime.Now);
