@@ -354,8 +354,8 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>문서가 완비된 공개 API가 커뮤니티 툴을 움직입니다 — 봇, 오버레이, 통계 사이트. 계정에서 토큰을 받아 우리와 같은 데이터 위에 만들어 보세요.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>세션 전달에는 살아 있는 piugame.com 키가 담기므로 저희는 그것을 저장하지 않습니다 — 재전송할 것도, 서버가 꺼져 있을 때의 재시도도 없습니다. 임포트로 본인 계정에서 테스트하세요.</value>
+  <data name="A session delivery carries a live piugame.com key, so it is never written down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>세션 전달에는 살아 있는 piugame.com 키가 담기므로 저장되지 않습니다 — 재전송할 것도, 서버가 꺼져 있을 때의 재시도도 없습니다. 임포트로 본인 계정에서 테스트하세요.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
@@ -1359,8 +1359,8 @@
   <data name="Copy" xml:space="preserve">
     <value>복사</value>
   </data>
-  <data name="Copy it into your handler and press Save. We keep only a hash, so this is the last time you'll see it here." xml:space="preserve">
-    <value>핸들러에 넣고 저장을 누르세요. 저희는 해시만 보관하므로 여기서 보는 건 이번이 마지막입니다.</value>
+  <data name="Copy it into your handler and press Save. Only a hash is kept, so this is the last time you'll see it here." xml:space="preserve">
+    <value>핸들러에 넣고 저장을 누르세요. 해시만 보관되므로 여기서 보는 건 이번이 마지막입니다.</value>
   </data>
   <data name="Copy link" xml:space="preserve">
     <value>링크 복사</value>
@@ -1833,7 +1833,7 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>이번 주에는 모든 기록이 유지되었습니다.</value>
   </data>
-  <data name="Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
+  <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>임포트할 때마다 piugame.com에 여러분으로 로그인하는 데 사용하는 세션 키를 이 도구에 전달합니다. 그 키가 살아 있는 동안에는 여러분이 그곳에서 할 수 있는 모든 것 — 카드 변경, 설정 변경, PIUGame 계정 삭제까지 — 을 할 수 있습니다.</value>
   </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
@@ -1890,7 +1890,7 @@
   <data name="Expires {0}" xml:space="preserve">
     <value>{0} 만료</value>
   </data>
-  <data name="Expires {0}. Put it in your calendar — we don't send reminder emails." xml:space="preserve">
+  <data name="Expires {0}. Put it in your calendar — I don't send reminder emails." xml:space="preserve">
     <value>{0}에 만료됩니다. 캘린더에 적어 두세요 — 리마인더 메일은 보내지 않습니다.</value>
   </data>
   <data name="Explore" xml:space="preserve">
@@ -2334,6 +2334,9 @@
   <data name="How each skill runs against your own average" xml:space="preserve">
     <value>각 스킬이 내 평균 대비 어떤지</value>
   </data>
+  <data name="How I know your server is yours" xml:space="preserve">
+    <value>서버가 본인 것임을 확인하는 방법</value>
+  </data>
   <data name="How is this personalized?" xml:space="preserve">
     <value>어떻게 개인화되나요?</value>
   </data>
@@ -2370,14 +2373,14 @@
   <data name="How This Is Scored" xml:space="preserve">
     <value>점수 산정 방식</value>
   </data>
-  <data name="How we know your server is yours" xml:space="preserve">
-    <value>서버가 본인 것임을 확인하는 방법</value>
-  </data>
-  <data name="How your server knows it's us" xml:space="preserve">
-    <value>서버가 우리를 알아보는 방법</value>
+  <data name="How your server knows it's PIU Scores" xml:space="preserve">
+    <value>서버가 PIU Scores를 알아보는 방법</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>아직 이 채널에 게시할 수 없습니다. 채널 보기와 메시지 보내기 권한을 부여한 뒤 명령어를 다시 실행해주세요.</value>
+  </data>
+  <data name="I don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over." xml:space="preserve">
+    <value>리마인더 메일은 보내지 않으므로 이 배너가 알림입니다. 지금 교체용 키를 만들고 전환이 끝날 때까지 둘 다 사용하세요.</value>
   </data>
   <data name="I Don't Like The Chart" xml:space="preserve">
     <value>이 채보를 좋아하지 않음</value>
@@ -2387,6 +2390,12 @@
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>그냥 채보를 숨기고 싶음</value>
+  </data>
+  <data name="I store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
+    <value>저는 키가 아니라 해시를 저장합니다. 잃어버리면 새로 만드세요 — 키를 두 개까지 동시에 쓸 수 있으므로 교체에 중단 시간이 없습니다.</value>
+  </data>
+  <data name="I store a hash, not the key. You can hold two live keys at a time, so replacing one later costs no downtime." xml:space="preserve">
+    <value>저는 키가 아니라 해시를 저장합니다. 키를 두 개까지 동시에 둘 수 있으므로 나중에 교체해도 중단 시간이 없습니다.</value>
   </data>
   <data name="I trust {0} — connect" xml:space="preserve">
     <value>{0}을(를) 신뢰합니다 — 연결</value>
@@ -2592,8 +2601,8 @@
   <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
     <value>도구를 검토 대상으로 표시할 뿐입니다 — 그다음 디스코드에 글을 남기면 누군가 확인합니다. 지켜보는 대기열은 없습니다.</value>
   </data>
-  <data name="It is not limited to reading scores, and we cannot limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
-    <value>점수 읽기로 제한되지 않으며, 저희가 제한할 수도 없습니다. 키는 piugame.com이 만료시킬 때까지 유효합니다.</value>
+  <data name="It is not limited to reading scores, and I can't limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
+    <value>점수 읽기로 제한되지 않으며, 제가 제한할 수도 없습니다. 키는 piugame.com이 만료시킬 때까지 유효합니다.</value>
   </data>
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>취소되었거나 도구가 삭제되었을 수 있습니다. 보낸 사람에게 새 링크를 요청하세요.</value>
@@ -3699,6 +3708,9 @@
   <data name="One-offs" xml:space="preserve">
     <value>개별 칭호</value>
   </data>
+  <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
+    <value>선택한 시리즈의 임포트만 전송됩니다. 옛 시리즈는 1M 척도가 아니라 등급으로 채점되며, 페이로드가 어떤 모델인지 알려줍니다.</value>
+  </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>변경된 채보가 있는 노래만 표시됩니다.</value>
   </data>
@@ -3744,11 +3756,11 @@
   <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
     <value>선택 사항 — 점수의 정당성에 이의가 제기될 경우 사진이 증빙이 됩니다.</value>
   </data>
-  <data name="Optional, and the only step that involves us. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way." xml:space="preserve">
-    <value>선택 사항이며, 저희가 관여하는 유일한 단계입니다. 목록에 오른 도구는 모든 플레이어가 둘러보는 디렉터리에 표시되고, '모든 도구와 공유'를 선택한 플레이어도 받을 수 있습니다. 등록하지 않아도 도구는 잘 작동합니다.</value>
+  <data name="Optional, and the only step that involves me. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way." xml:space="preserve">
+    <value>선택 사항이며, 제가 관여하는 유일한 단계입니다. 목록에 오른 도구는 모든 플레이어가 둘러보는 디렉터리에 표시되고, '모든 도구와 공유'를 선택한 플레이어도 받을 수 있습니다. 등록하지 않아도 도구는 잘 작동합니다.</value>
   </data>
-  <data name="Optional. By default you ask us for scores whenever you like. Instead we can call you: when one of your players imports, we send an HTTP POST to a URL you give us and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook." xml:space="preserve">
-    <value>선택 사항입니다. 기본적으로는 원할 때 저희에게 점수를 요청합니다. 대신 저희가 호출할 수도 있습니다: 플레이어가 기록을 가져오면 여러분이 알려 준 주소로 HTTP POST를 보내고, 서버가 알아서 처리합니다. 전에 설정해 본 적이 있다면 흔한 웹훅입니다.</value>
+  <data name="Optional. By default you ask PIU Scores for scores whenever you like. Instead it can call you: when one of your players imports, an HTTP POST goes to a URL you supply and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook." xml:space="preserve">
+    <value>선택 사항입니다. 기본적으로는 원할 때 PIU Scores에 점수를 요청합니다. 대신 PIU Scores가 호출할 수도 있습니다: 플레이어가 기록을 가져오면 여러분이 알려 준 주소로 HTTP POST를 보내고, 서버가 알아서 처리합니다. 전에 설정해 본 적이 있다면 흔한 웹훅입니다.</value>
   </data>
   <data name="Order by" xml:space="preserve">
     <value>정렬 기준</value>
@@ -4742,8 +4754,8 @@
   <data name="Save Scores" xml:space="preserve">
     <value>점수 저장</value>
   </data>
-  <data name="Save the URL and a verification secret, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
-    <value>URL과 확인용 비밀 값을 저장한 뒤 확인을 누르세요. 저희가 {"type":"url_verification"} 를 POST하면, 여러분의 엔드포인트는 10초 안에 200과 함께 그 비밀 값을 본문에 담아 응답해야 합니다.</value>
+  <data name="Save the URL and a verification secret, then press Verify. PIU Scores POSTs {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
+    <value>URL과 확인용 비밀 값을 저장한 뒤 확인을 누르세요. PIU Scores가 {"type":"url_verification"} 를 POST하면, 여러분의 엔드포인트는 10초 안에 200과 함께 그 비밀 값을 본문에 담아 응답해야 합니다.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>저장된 로그인 정보를 불러왔습니다</value>
@@ -5134,6 +5146,9 @@
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>도구 목록에 표시됩니다. 플레이어가 연결 전에 읽습니다.</value>
+  </data>
+  <data name="Shown once." xml:space="preserve">
+    <value>한 번만 표시됩니다.</value>
   </data>
   <data name="Shuffle suggestions" xml:space="preserve">
     <value>추천 섞기</value>
@@ -5549,6 +5564,9 @@
   <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
     <value>본문에는 "test": true가 있고 전달 ID는 test-로 시작합니다. 플레이어는 항상 본인 계정이며, 테스트가 다른 플레이어의 점수를 보내는 일은 없습니다.</value>
   </data>
+  <data name="The body of a failed delivery is kept for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
+    <value>실패한 전달의 본문은 재전송할 수 있도록 7일간 보관됩니다. 그 이후에도 활동 기록에는 무슨 일이 있었는지 남지만 페이로드는 사라집니다.</value>
+  </data>
   <data name="The cabinet" xml:space="preserve">
     <value>진열장</value>
   </data>
@@ -5621,6 +5639,12 @@
   <data name="The PIU Scores bot" xml:space="preserve">
     <value>PIU Scores 봇</value>
   </data>
+  <data name="The piugame.com session key is forwarded so you run your own import." xml:space="preserve">
+    <value>piugame.com 세션 키가 전달되어 직접 임포트를 실행할 수 있습니다.</value>
+  </data>
+  <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
+    <value>POST에는 "이 플레이어가 기록을 가져왔다"만 담깁니다. 필요한 것은 직접 가져가세요.</value>
+  </data>
   <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
     <value>레인보우 바는 1레벨에서도 29레벨에서도 라이프 1000입니다. 어려운 채보가 주는 것은 바 뒤에 숨은 라이프, 즉 기체에는 보이지 않으면서 레벨에 따라 달라지는 유일한 값입니다. Miss 하나당 필요한 콤보는 끝까지 동일합니다.</value>
   </data>
@@ -5635,6 +5659,9 @@
   </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>같은 Perfect라도 콤보 전, 곡 시작 시점.</value>
+  </data>
+  <data name="The scores themselves arrive, 100 per delivery, with a next link when there are more." xml:space="preserve">
+    <value>점수 자체가 전달당 100개씩 오고, 더 있으면 다음 링크가 함께 옵니다.</value>
   </data>
   <data name="The scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
     <value>점수 자체를 전달당 100개씩, 더 있으면 next 링크와 함께 보냅니다.</value>
@@ -5726,6 +5753,12 @@
   <data name="This has nothing to do with your PIU Scores account, which stays under your control. Only connect if you trust the person who runs this tool." xml:space="preserve">
     <value>이는 여러분이 계속 통제하는 PIU Scores 계정과는 무관합니다. 이 도구를 운영하는 사람을 신뢰하는 경우에만 연결하세요.</value>
   </data>
+  <data name="This header is sent verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because it has to be sent." xml:space="preserve">
+    <value>이 헤더는 모든 전달과 확인 호출에 그대로 전송됩니다. 핸들러에서 확인하고 헤더가 없는 요청은 거부하세요. 보내야 하므로 암호화해서 보관됩니다.</value>
+  </data>
+  <data name="This header is sent verbatim on every delivery, so your server can reject anything that is not PIU Scores." xml:space="preserve">
+    <value>이 헤더는 모든 전달에 그대로 전송되므로, 서버에서 PIU Scores가 아닌 요청을 거부할 수 있습니다.</value>
+  </data>
   <data name="This import will replace this page's widgets." xml:space="preserve">
     <value>가져오기를 실행하면 이 페이지의 위젯이 교체됩니다.</value>
   </data>
@@ -5744,8 +5777,8 @@
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>이것은 영지식이 아닙니다. 로그인은 우리 서버에서 실행되므로, 당신이 가져오는 순간에는 기술적으로 자격 증명을 복호화할 수 있습니다. 우리는 그것을 기록하거나 보관하지 않지만, 매번 수동 가져오기에서 이미 가진 것과 동일한 접근 권한을 당신은 우리에게 맡기는 것입니다.</value>
   </data>
-  <data name="This is the only time we'll show it." xml:space="preserve">
-    <value>키를 보여 드리는 것은 이번 한 번뿐입니다.</value>
+  <data name="This is the only time you'll see it." xml:space="preserve">
+    <value>키를 볼 수 있는 것은 이번 한 번뿐입니다.</value>
   </data>
   <data name="This is what a player sees when they are asked whether to let it read their scores. You can change it later." xml:space="preserve">
     <value>플레이어가 내 점수를 읽도록 허용할지 정할 때 보게 되는 이름입니다. 나중에 바꿀 수 있습니다.</value>
@@ -6338,41 +6371,11 @@
   <data name="Watch {0}" xml:space="preserve">
     <value>{0} 영상 보기</value>
   </data>
-  <data name="We don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over." xml:space="preserve">
-    <value>리마인더 메일은 보내지 않으므로 이 배너가 알림입니다. 지금 교체용 키를 만들고 전환이 끝날 때까지 둘 다 사용하세요.</value>
-  </data>
-  <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
-    <value>piugame.com 세션 키를 전달해 직접 임포트를 실행할 수 있게 합니다.</value>
-  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>우리는 봉인된 키를 보관합니다</value>
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>우리는 마스터 키를 보관합니다</value>
-  </data>
-  <data name="We keep the body of a failed delivery for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
-    <value>실패한 전달의 본문은 재전송할 수 있도록 7일간 보관합니다. 그 이후에도 활동 기록에는 무슨 일이 있었는지 남지만 페이로드는 사라집니다.</value>
-  </data>
-  <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
-    <value>선택한 시리즈의 임포트만 보냅니다. 옛 시리즈는 1M 척도가 아니라 등급으로 채점되며, 페이로드가 어떤 모델인지 알려줍니다.</value>
-  </data>
-  <data name="We POST only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
-    <value>"이 플레이어가 기록을 가져왔다"만 보냅니다. 필요한 것은 직접 가져가세요.</value>
-  </data>
-  <data name="We POST the scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
-    <value>점수 자체를 전달당 100개씩 보내며, 더 있으면 다음 링크를 함께 보냅니다.</value>
-  </data>
-  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it." xml:space="preserve">
-    <value>이 헤더를 모든 전달과 확인 호출에 그대로 보냅니다. 핸들러에서 확인하고 헤더가 없는 요청은 거부하세요. 저희가 보내야 하므로 암호화해서 보관합니다.</value>
-  </data>
-  <data name="We send this header verbatim on every delivery, so your server can reject anything that is not us." xml:space="preserve">
-    <value>이 헤더를 모든 전달에 그대로 보내므로, 서버에서 저희가 아닌 요청을 거부할 수 있습니다.</value>
-  </data>
-  <data name="We show it once." xml:space="preserve">
-    <value>한 번만 보여 드립니다.</value>
-  </data>
-  <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
-    <value>저희는 키가 아니라 해시를 저장합니다. 잃어버리면 새로 만드세요 — 키를 두 개까지 동시에 쓸 수 있으므로 교체에 중단 시간이 없습니다.</value>
   </data>
   <data name="weaker" xml:space="preserve">
     <value>약함</value>
@@ -6437,6 +6440,9 @@
   <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
     <value>Miss가 실제로 얼마나 손해인지, 그리고 그것을 되찾는 데 필요한 클린 콤보는 얼마인지.</value>
   </data>
+  <data name="What arrives when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
+    <value>플레이어가 기록을 가져올 때 도착하는 내용입니다. "없음"도 좋은 선택이에요 — 많은 도구가 그냥 API를 조회합니다.</value>
+  </data>
   <data name="What can it do?" xml:space="preserve">
     <value>어떤 기능이 있나요?</value>
   </data>
@@ -6457,9 +6463,6 @@
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>목표 (기본 칭호 사냥)</value>
-  </data>
-  <data name="What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
-    <value>플레이어가 기록을 가져올 때 보내 드리는 내용입니다. "없음"도 좋은 선택이에요 — 많은 도구가 그냥 API를 조회합니다.</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>일시</value>
@@ -6590,8 +6593,8 @@
   <data name="You beat {0}% of Peers on this." xml:space="preserve">
     <value>이 채보에서 동급 플레이어의 {0}%를 이겼습니다.</value>
   </data>
-  <data name="You call our API when you want it. Skip this screen." xml:space="preserve">
-    <value>원할 때 저희 API를 호출합니다. 이 화면은 건너뛰세요.</value>
+  <data name="You call the API when you want it. Skip this screen." xml:space="preserve">
+    <value>원할 때 API를 호출합니다. 이 화면은 건너뛰세요.</value>
   </data>
   <data name="You can leave once your key exists." xml:space="preserve">
     <value>키가 만들어지면 나갈 수 있습니다.</value>
@@ -6719,8 +6722,8 @@
   <data name="Your data is yours" xml:space="preserve">
     <value>데이터는 당신의 것</value>
   </data>
-  <data name="Your endpoint answers a verification request with this. We never send it anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
-    <value>확인 요청에 이 값으로 응답하면 됩니다. 저희는 이 값을 어디에도 보내지 않습니다 — 그래서 이 값으로 응답하는 것이 증명이 되고, 탈취된 DNS로는 통과할 수 없습니다. 해시로만 보관하니 찾을 수 있는 곳에 적어 두세요.</value>
+  <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
+    <value>확인 요청에 이 값으로 응답하면 됩니다. 이 값은 어디에도 전송되지 않습니다 — 그래서 이 값으로 응답하는 것이 증명이 되고, 탈취된 DNS로는 통과할 수 없습니다. 해시로만 보관되니 찾을 수 있는 곳에 적어 두세요.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>파일이 10MB를 초과했습니다. 크기를 줄여 다시 시도해 주세요.</value>

@@ -26,7 +26,7 @@
     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
         <MudText Typo="Typo.body2"><b>@L["None of this works in PIUGame session mode"]</b></MudText>
         <MudText Typo="Typo.body2">
-            @L["A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing."]
+            @L["A session delivery carries a live piugame.com key, so it is never written down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing."]
         </MudText>
     </MudAlert>
 }
@@ -103,7 +103,7 @@ else
             </div>
         }
         <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="opacity:.7;">
-            @L["We keep the body of a failed delivery for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone."]
+            @L["The body of a failed delivery is kept for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone."]
         </MudText>
     </MudPaper>
 }

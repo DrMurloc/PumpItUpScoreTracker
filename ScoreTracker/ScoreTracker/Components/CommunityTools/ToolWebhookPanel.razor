@@ -15,7 +15,7 @@
 <MudPaper Outlined="true" Class="pa-4 mb-4">
     <MudText Typo="Typo.subtitle2">@L["Webhooks"]</MudText>
     <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-        @L["What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll."]
+        @L["What arrives when one of your players imports. Nothing is a fine answer — plenty of tools just poll."]
     </MudText>
 
     @* One mode per line. MudRadio is inline-flex, so short options pair up on a wide viewport and
@@ -39,7 +39,7 @@
             }
             else
             {
-                <span> — @L["We forward the piugame.com session key so you run your own import."]</span>
+                <span> — @L["The piugame.com session key is forwarded so you run your own import."]</span>
             }
         </MudRadio>
     </MudRadioGroup>
@@ -57,7 +57,7 @@
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
                 <MudText Typo="Typo.body2"><b>@L["Not verified — nothing is being sent"]</b></MudText>
                 <MudText Typo="Typo.body2">
-                    @L["Save the URL and a verification secret, then press Verify. We POST {\"type\":\"url_verification\"} and your endpoint has ten seconds to answer 200 with your secret in the body."]
+                    @L["Save the URL and a verification secret, then press Verify. PIU Scores POSTs {\"type\":\"url_verification\"} and your endpoint has ten seconds to answer 200 with your secret in the body."]
                 </MudText>
             </MudAlert>
         }
@@ -91,9 +91,9 @@
            header to their server on every call, so anyone who receives a delivery has read it. *@
         <MudText Typo="Typo.subtitle2" Class="mb-1">@L["Two secrets, one each way"]</MudText>
 
-        <MudText Typo="Typo.body2" Class="mt-2"><b>@L["How your server knows it's us"]</b></MudText>
+        <MudText Typo="Typo.body2" Class="mt-2"><b>@L["How your server knows it's PIU Scores"]</b></MudText>
         <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-            @L["We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it."]
+            @L["This header is sent verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because it has to be sent."]
         </MudText>
         <div class="d-flex gap-3 flex-wrap">
             <MudTextField T="string" @bind-Value="_headerName" Label=@L["Header name"]
@@ -110,9 +110,9 @@
             </MudAlert>
         }
 
-        <MudText Typo="Typo.body2" Class="mt-4"><b>@L["How we know your server is yours"]</b></MudText>
+        <MudText Typo="Typo.body2" Class="mt-4"><b>@L["How I know your server is yours"]</b></MudText>
         <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-            @L["Your endpoint answers a verification request with this. We never send it anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it."]
+            @L["Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it."]
         </MudText>
         <div class="d-flex gap-3 flex-wrap align-center">
             <MudTextField T="string" @bind-Value="_verificationSecret" Label=@VerificationSecretLabel
@@ -131,7 +131,7 @@
                                OnClick="CopyGenerated"></MudIconButton>
             </div>
             <MudText Typo="Typo.caption" Class="d-block mt-1" Style="opacity:.7;">
-                @L["Copy it into your handler and press Save. We keep only a hash, so this is the last time you'll see it here."]
+                @L["Copy it into your handler and press Save. Only a hash is kept, so this is the last time you'll see it here."]
             </MudText>
         }
 
@@ -139,7 +139,7 @@
 
         <MudText Typo="Typo.subtitle2" Class="mb-1">@L["Mixes"]</MudText>
         <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-            @L["We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using."]
+            @L["Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using."]
         </MudText>
         <div class="d-flex gap-2 flex-wrap">
             @foreach (var mix in PrimaryMixes)

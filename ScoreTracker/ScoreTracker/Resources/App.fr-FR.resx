@@ -354,8 +354,8 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Une API publique entièrement documentée alimente les outils de la communauté — bots, overlays, sites de stats. Récupérez un jeton depuis votre compte et construisez sur les mêmes données que nous.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so we never write it down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>Une livraison de session transporte une clé piugame.com active, nous ne l'écrivons donc jamais : il n'y a rien à rejouer ni de nouvelle tentative si votre serveur est hors service au moment du déclenchement. Testez sur votre propre compte en important.</value>
+  <data name="A session delivery carries a live piugame.com key, so it is never written down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
+    <value>Une livraison de session transporte une clé piugame.com active, elle n'est donc jamais écrite : il n'y a rien à rejouer ni de nouvelle tentative si votre serveur est hors service au moment du déclenchement. Testez sur votre propre compte en important.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Un zip de snapshot importe directement une version de données déjà récupérée : même traitement que l'exploration, sans téléchargement</value>
@@ -1370,8 +1370,8 @@
   <data name="Copy" xml:space="preserve">
     <value>Copier</value>
   </data>
-  <data name="Copy it into your handler and press Save. We keep only a hash, so this is the last time you'll see it here." xml:space="preserve">
-    <value>Copiez-le dans votre handler et appuyez sur Enregistrer. Nous n'en gardons qu'une empreinte : c'est la dernière fois que vous le voyez ici.</value>
+  <data name="Copy it into your handler and press Save. Only a hash is kept, so this is the last time you'll see it here." xml:space="preserve">
+    <value>Copiez-le dans votre handler et appuyez sur Enregistrer. Seule une empreinte est gardée : c'est la dernière fois que vous le voyez ici.</value>
   </data>
   <data name="Copy link" xml:space="preserve">
     <value>Copier le lien</value>
@@ -1848,8 +1848,8 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>Tous les records ont tenu cette semaine.</value>
   </data>
-  <data name="Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
-    <value>À chaque import, nous transmettons à cet outil la clé de session qui nous sert à nous connecter à piugame.com en votre nom. Tant que cette clé est valide, il peut y faire tout ce que vous pouvez y faire — changer votre carte, changer vos réglages, supprimer votre compte PIUGame.</value>
+  <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
+    <value>À chaque import, PIU Scores transmet à cet outil la clé de session qui lui sert à se connecter à piugame.com en votre nom. Tant que cette clé est valide, il peut y faire tout ce que vous pouvez y faire — changer votre carte, changer vos réglages, supprimer votre compte PIUGame.</value>
   </data>
   <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
     <value>Ceux des autres. Vous pouvez les gérer, et leur auteur n'en est pas informé.</value>
@@ -1905,8 +1905,8 @@
   <data name="Expires {0}" xml:space="preserve">
     <value>Expire le {0}</value>
   </data>
-  <data name="Expires {0}. Put it in your calendar — we don't send reminder emails." xml:space="preserve">
-    <value>Expire le {0}. Notez-le dans votre agenda — nous n'envoyons pas de rappel par e-mail.</value>
+  <data name="Expires {0}. Put it in your calendar — I don't send reminder emails." xml:space="preserve">
+    <value>Expire le {0}. Notez-le dans votre agenda — je n'envoie pas de rappel par e-mail.</value>
   </data>
   <data name="Explore" xml:space="preserve">
     <value>Explorer</value>
@@ -2350,6 +2350,9 @@
   <data name="How each skill runs against your own average" xml:space="preserve">
     <value>Comment chaque compétence se situe par rapport à votre propre moyenne</value>
   </data>
+  <data name="How I know your server is yours" xml:space="preserve">
+    <value>Comment je sais que votre serveur est le vôtre</value>
+  </data>
   <data name="How is this personalized?" xml:space="preserve">
     <value>Comment est-ce personnalisé ?</value>
   </data>
@@ -2386,14 +2389,14 @@
   <data name="How This Is Scored" xml:space="preserve">
     <value>Comment le score est calculé</value>
   </data>
-  <data name="How we know your server is yours" xml:space="preserve">
-    <value>Comment nous savons que votre serveur est le vôtre</value>
-  </data>
-  <data name="How your server knows it's us" xml:space="preserve">
-    <value>Comment votre serveur sait que c'est nous</value>
+  <data name="How your server knows it's PIU Scores" xml:space="preserve">
+    <value>Comment votre serveur sait que c'est PIU Scores</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>Je ne peux pas encore publier dans ce salon — accordez-moi les permissions Voir le salon et Envoyer des messages ici, puis relancez la commande.</value>
+  </data>
+  <data name="I don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over." xml:space="preserve">
+    <value>Je n'envoie pas de rappel par e-mail, donc cette bannière est le rappel. Créez un remplacement maintenant et faites tourner les deux le temps de basculer.</value>
   </data>
   <data name="I Don't Like The Chart" xml:space="preserve">
     <value>Je n'aime pas ce chart</value>
@@ -2403,6 +2406,12 @@
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>Je veux juste masquer ce chart</value>
+  </data>
+  <data name="I store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
+    <value>Je stocke une empreinte, pas la clé. Si vous la perdez, créez-en une autre — vous pouvez avoir deux clés à la fois, donc remplacer l'une ne coûte aucune interruption.</value>
+  </data>
+  <data name="I store a hash, not the key. You can hold two live keys at a time, so replacing one later costs no downtime." xml:space="preserve">
+    <value>Je stocke une empreinte, pas la clé. Vous pouvez avoir deux clés actives à la fois, donc en remplacer une plus tard ne coûte aucune interruption.</value>
   </data>
   <data name="I trust {0} — connect" xml:space="preserve">
     <value>Je fais confiance à {0} — connecter</value>
@@ -2609,8 +2618,8 @@
   <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
     <value>Cela marque votre outil pour relecture — ensuite, écrivez sur le Discord et quelqu'un y jettera un œil. Aucune file d'attente n'est surveillée.</value>
   </data>
-  <data name="It is not limited to reading scores, and we cannot limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
-    <value>Ce n'est pas limité à la lecture des scores, et nous ne pouvons pas le limiter. La clé reste valide jusqu'à ce que piugame.com l'expire.</value>
+  <data name="It is not limited to reading scores, and I can't limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
+    <value>Ce n'est pas limité à la lecture des scores, et je ne peux pas le limiter. La clé reste valide jusqu'à ce que piugame.com l'expire.</value>
   </data>
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>Il a peut-être été révoqué, ou l'outil n'existe plus. Demandez un nouveau lien à la personne qui vous l'a envoyé.</value>
@@ -3729,6 +3738,9 @@
   <data name="One-offs" xml:space="preserve">
     <value>Titres isolés</value>
   </data>
+  <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
+    <value>Seuls les imports des mix que vous choisissez sont envoyés. Les mix anciens sont notés en lettres et non sur l'échelle du million — le payload indique quel modèle est utilisé.</value>
+  </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Seules les chansons dont un chart a changé sont listées.</value>
   </data>
@@ -3775,11 +3787,11 @@
   <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
     <value>Facultatif — une photo est ta preuve si la légitimité d'un score est contestée.</value>
   </data>
-  <data name="Optional, and the only step that involves us. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way." xml:space="preserve">
-    <value>Facultatif, et la seule étape qui nous implique. Un outil listé apparaît dans l'annuaire que tout joueur parcourt, et peut accepter ceux qui ont choisi de partager avec tous les outils. Votre outil fonctionne dans les deux cas.</value>
+  <data name="Optional, and the only step that involves me. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way." xml:space="preserve">
+    <value>Facultatif, et la seule étape qui m'implique. Un outil listé apparaît dans l'annuaire que tout joueur parcourt, et peut accepter ceux qui ont choisi de partager avec tous les outils. Votre outil fonctionne dans les deux cas.</value>
   </data>
-  <data name="Optional. By default you ask us for scores whenever you like. Instead we can call you: when one of your players imports, we send an HTTP POST to a URL you give us and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook." xml:space="preserve">
-    <value>Facultatif. Par défaut, vous nous demandez les scores quand vous voulez. À la place, nous pouvons vous appeler : quand l'un de vos joueurs importe, nous envoyons un POST HTTP à une URL que vous nous donnez et votre serveur fait ce qu'il a à faire. Si vous en avez déjà mis un en place, c'est un webhook ordinaire.</value>
+  <data name="Optional. By default you ask PIU Scores for scores whenever you like. Instead it can call you: when one of your players imports, an HTTP POST goes to a URL you supply and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook." xml:space="preserve">
+    <value>Facultatif. Par défaut, vous demandez les scores à PIU Scores quand vous voulez. À la place, il peut vous appeler : quand l'un de vos joueurs importe, un POST HTTP part vers une URL que vous indiquez et votre serveur fait ce qu'il a à faire. Si vous en avez déjà mis un en place, c'est un webhook ordinaire.</value>
   </data>
   <data name="Order by" xml:space="preserve">
     <value>Trier par</value>
@@ -4785,8 +4797,8 @@
   <data name="Save Scores" xml:space="preserve">
     <value>Sauvegarder les Scores</value>
   </data>
-  <data name="Save the URL and a verification secret, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
-    <value>Enregistrez l'URL et un secret de vérification, puis appuyez sur Vérifier. Nous envoyons en POST {"type":"url_verification"} et votre endpoint a dix secondes pour répondre 200 avec votre secret dans le corps.</value>
+  <data name="Save the URL and a verification secret, then press Verify. PIU Scores POSTs {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
+    <value>Enregistrez l'URL et un secret de vérification, puis appuyez sur Vérifier. PIU Scores envoie en POST {"type":"url_verification"} et votre endpoint a dix secondes pour répondre 200 avec votre secret dans le corps.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>Identifiants enregistrés chargés</value>
@@ -5186,6 +5198,9 @@
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>Affiché dans l'annuaire. Les joueurs le lisent avant de se connecter.</value>
+  </data>
+  <data name="Shown once." xml:space="preserve">
+    <value>Affichée une seule fois.</value>
   </data>
   <data name="Shuffle suggestions" xml:space="preserve">
     <value>Mélanger les suggestions</value>
@@ -5607,6 +5622,9 @@
   <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
     <value>Le corps porte "test": true et l'id de livraison commence par test-. Le joueur est toujours votre propre compte — un test ne peut jamais vous envoyer les scores de quelqu'un d'autre.</value>
   </data>
+  <data name="The body of a failed delivery is kept for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
+    <value>Le corps d'une livraison échouée est gardé 7 jours pour que vous puissiez la rejouer. Ensuite l'activité montre toujours ce qui s'est passé, mais le payload a disparu.</value>
+  </data>
   <data name="The cabinet" xml:space="preserve">
     <value>La vitrine</value>
   </data>
@@ -5679,6 +5697,12 @@
   <data name="The PIU Scores bot" xml:space="preserve">
     <value>Le bot PIU Scores</value>
   </data>
+  <data name="The piugame.com session key is forwarded so you run your own import." xml:space="preserve">
+    <value>La clé de session piugame.com est transmise pour que vous fassiez votre propre import.</value>
+  </data>
+  <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
+    <value>Le POST dit seulement « ce joueur a importé ». Vous venez chercher ce dont vous avez besoin.</value>
+  </data>
   <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
     <value>La barre Rainbow, c'est 1000 de vie sur un 1 comme sur un 29. Ce qu'un chart plus difficile vous donne, c'est de la vie derrière la barre : invisible sur la borne, et la seule chose qui change avec le niveau. Le combo nécessaire par Miss est identique jusqu'en haut.</value>
   </data>
@@ -5693,6 +5717,9 @@
   </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>Le même Perfect au début de la chanson, avant tout combo.</value>
+  </data>
+  <data name="The scores themselves arrive, 100 per delivery, with a next link when there are more." xml:space="preserve">
+    <value>Les scores eux-mêmes arrivent, 100 par livraison, avec un lien suivant s'il y en a davantage.</value>
   </data>
   <data name="The scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
     <value>Les scores eux-mêmes, 100 par envoi, avec un lien next s'il y en a plus.</value>
@@ -5784,6 +5811,12 @@
   <data name="This has nothing to do with your PIU Scores account, which stays under your control. Only connect if you trust the person who runs this tool." xml:space="preserve">
     <value>Cela n'a rien à voir avec votre compte PIU Scores, qui reste sous votre contrôle. Ne connectez que si vous faites confiance à la personne qui gère cet outil.</value>
   </data>
+  <data name="This header is sent verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because it has to be sent." xml:space="preserve">
+    <value>Cet en-tête est envoyé tel quel à chaque livraison et lors de l'appel de vérification. Vérifiez-le dans votre handler et refusez tout ce qui ne le porte pas. Conservé chiffré, puisqu'il doit être envoyé.</value>
+  </data>
+  <data name="This header is sent verbatim on every delivery, so your server can reject anything that is not PIU Scores." xml:space="preserve">
+    <value>Cet en-tête est envoyé tel quel à chaque livraison, pour que votre serveur puisse refuser ce qui ne vient pas de PIU Scores.</value>
+  </data>
   <data name="This import will replace this page's widgets." xml:space="preserve">
     <value>Cette importation remplacera les widgets de cette page.</value>
   </data>
@@ -5802,8 +5835,8 @@
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>Ce n'est pas du zéro-connaissance : comme la connexion s'exécute sur notre serveur, nous pouvons techniquement déchiffrer votre identifiant au moment de l'import. Nous ne le journalisons ni ne le conservons — mais vous nous confiez le même accès que nous avons déjà à chaque import manuel.</value>
   </data>
-  <data name="This is the only time we'll show it." xml:space="preserve">
-    <value>C'est la seule fois où nous vous la montrons.</value>
+  <data name="This is the only time you'll see it." xml:space="preserve">
+    <value>C'est la seule fois où vous la verrez.</value>
   </data>
   <data name="This is what a player sees when they are asked whether to let it read their scores. You can change it later." xml:space="preserve">
     <value>C'est ce qu'un joueur voit quand on lui demande s'il autorise la lecture de ses scores. Vous pourrez le changer.</value>
@@ -6400,41 +6433,11 @@
   <data name="Watch {0}" xml:space="preserve">
     <value>Regarder {0}</value>
   </data>
-  <data name="We don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over." xml:space="preserve">
-    <value>Nous n'envoyons pas de rappel par e-mail, donc cette bannière est le rappel. Créez un remplacement maintenant et faites tourner les deux le temps de basculer.</value>
-  </data>
-  <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
-    <value>Nous transmettons la clé de session piugame.com pour que vous fassiez votre propre import.</value>
-  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>Nous détenons une clé scellée</value>
   </data>
   <data name="We hold the master key" xml:space="preserve">
     <value>Nous détenons la clé maîtresse</value>
-  </data>
-  <data name="We keep the body of a failed delivery for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
-    <value>Nous gardons le corps d'une livraison échouée 7 jours pour que vous puissiez la rejouer. Ensuite l'activité montre toujours ce qui s'est passé, mais le payload a disparu.</value>
-  </data>
-  <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
-    <value>Nous n'envoyons que les imports des mix que vous choisissez. Les mix anciens sont notés en lettres et non sur l'échelle du million — le payload indique quel modèle est utilisé.</value>
-  </data>
-  <data name="We POST only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
-    <value>Nous envoyons seulement « ce joueur a importé ». Vous venez chercher ce dont vous avez besoin.</value>
-  </data>
-  <data name="We POST the scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
-    <value>Nous envoyons les scores eux-mêmes, 100 par livraison, avec un lien suivant s'il y en a davantage.</value>
-  </data>
-  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it." xml:space="preserve">
-    <value>Nous envoyons cet en-tête tel quel à chaque livraison et lors de l'appel de vérification. Vérifiez-le dans votre handler et refusez tout ce qui ne le porte pas. Conservé chiffré, puisque nous devons l'envoyer.</value>
-  </data>
-  <data name="We send this header verbatim on every delivery, so your server can reject anything that is not us." xml:space="preserve">
-    <value>Nous envoyons cet en-tête tel quel à chaque livraison, pour que votre serveur puisse refuser ce qui ne vient pas de nous.</value>
-  </data>
-  <data name="We show it once." xml:space="preserve">
-    <value>Nous ne l'affichons qu'une fois.</value>
-  </data>
-  <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
-    <value>Nous stockons une empreinte, pas la clé. Si vous la perdez, créez-en une autre — vous pouvez avoir deux clés à la fois, donc remplacer l'une ne coûte aucune interruption.</value>
   </data>
   <data name="weaker" xml:space="preserve">
     <value>plus faible</value>
@@ -6500,6 +6503,9 @@
   <data name="What a miss actually costs you, and how much clean combo it takes to earn it back." xml:space="preserve">
     <value>Ce qu'un Miss vous coûte réellement, et combien de combo propre il faut pour le regagner.</value>
   </data>
+  <data name="What arrives when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
+    <value>Ce qui arrive quand l'un de vos joueurs importe. Rien est une réponse valable — beaucoup d'outils interrogent simplement l'API.</value>
+  </data>
   <data name="What can it do?" xml:space="preserve">
     <value>Que sait-il faire ?</value>
   </data>
@@ -6520,9 +6526,6 @@
   </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>Sur quoi travailler (par défaut Title Hunt)</value>
-  </data>
-  <data name="What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
-    <value>Ce que nous vous envoyons quand l'un de vos joueurs importe. Rien est une réponse valable — beaucoup d'outils interrogent simplement l'API.</value>
   </data>
   <data name="When" xml:space="preserve">
     <value>Quand</value>
@@ -6659,8 +6662,8 @@
   <data name="You beat {0}% of Peers on this." xml:space="preserve">
     <value>Vous avez battu {0}% de vos pairs sur ce chart.</value>
   </data>
-  <data name="You call our API when you want it. Skip this screen." xml:space="preserve">
-    <value>Vous appelez notre API quand vous voulez. Passez cet écran.</value>
+  <data name="You call the API when you want it. Skip this screen." xml:space="preserve">
+    <value>Vous appelez l'API quand vous voulez. Passez cet écran.</value>
   </data>
   <data name="You can leave once your key exists." xml:space="preserve">
     <value>Vous pourrez partir dès que votre clé existera.</value>
@@ -6788,8 +6791,8 @@
   <data name="Your data is yours" xml:space="preserve">
     <value>Vos données vous appartiennent</value>
   </data>
-  <data name="Your endpoint answers a verification request with this. We never send it anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
-    <value>Votre endpoint répond à une demande de vérification avec ceci. Nous ne l'envoyons nulle part : c'est ce qui fait qu'y répondre est une preuve, et pourquoi un DNS détourné ne passe pas. Nous n'en gardons qu'une empreinte, alors notez-le quelque part.</value>
+  <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
+    <value>Votre endpoint répond à une demande de vérification avec ceci. Il n'est envoyé nulle part : c'est ce qui fait qu'y répondre est une preuve, et pourquoi un DNS détourné ne passe pas. Seule une empreinte en est gardée, alors notez-le quelque part.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Ton fichier dépassait 10 Mo, réduis-le et réessaie.</value>

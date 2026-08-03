@@ -64,9 +64,9 @@
                     }
                 </div>
                 <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-4">
-                    <MudText Typo="Typo.body2"><b>@L["We show it once."]</b></MudText>
+                    <MudText Typo="Typo.body2"><b>@L["Shown once."]</b></MudText>
                     <MudText Typo="Typo.body2">
-                        @L["We store a hash, not the key. You can hold two live keys at a time, so replacing one later costs no downtime."]
+                        @L["I store a hash, not the key. You can hold two live keys at a time, so replacing one later costs no downtime."]
                     </MudText>
                 </MudAlert>
                 break;
@@ -123,23 +123,23 @@
             case Step.Webhook:
                 <MudText Typo="Typo.h5" Class="mb-2">@L["Get told when someone plays"]</MudText>
                 <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
-                    @L["Optional. By default you ask us for scores whenever you like. Instead we can call you: when one of your players imports, we send an HTTP POST to a URL you give us and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook."]
+                    @L["Optional. By default you ask PIU Scores for scores whenever you like. Instead it can call you: when one of your players imports, an HTTP POST goes to a URL you supply and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook."]
                 </MudText>
                 @* One mode per line — see the note in ToolWebhookPanel. *@
                 <MudRadioGroup T="WebhookMode" @bind-Value="_mode" Class="d-flex flex-column">
                     <MudRadio T="WebhookMode" Value="WebhookMode.None" Color="Color.Primary">
-                        <b>@L["Nothing"]</b> — @L["You call our API when you want it. Skip this screen."]
+                        <b>@L["Nothing"]</b> — @L["You call the API when you want it. Skip this screen."]
                     </MudRadio>
                     <MudRadio T="WebhookMode" Value="WebhookMode.ScorePush" Color="Color.Primary">
-                        <b>@L["Score Push"]</b> — @L["We POST the scores themselves, 100 per delivery, with a next link when there are more."]
+                        <b>@L["Score Push"]</b> — @L["The scores themselves arrive, 100 per delivery, with a next link when there are more."]
                     </MudRadio>
                     <MudRadio T="WebhookMode" Value="WebhookMode.PlayerPing" Color="Color.Primary">
-                        <b>@L["Player ping"]</b> — @L["We POST only \"this player imported\". You come and fetch what you need."]
+                        <b>@L["Player ping"]</b> — @L["The POST says only \"this player imported\". You come and fetch what you need."]
                     </MudRadio>
                     @* Offered here, with the console's rules. A brand-new tool has no connected
                        players, which makes this the one moment session mode is freely choosable. *@
                     <MudRadio T="WebhookMode" Value="WebhookMode.PiuGameSession" Color="Color.Warning">
-                        <b>@L["PIUGame session"]</b> — @L["We forward the piugame.com session key so you run your own import."]
+                        <b>@L["PIUGame session"]</b> — @L["The piugame.com session key is forwarded so you run your own import."]
                     </MudRadio>
                 </MudRadioGroup>
 
@@ -166,7 +166,7 @@
                                       Style="max-width:260px;"></MudTextField>
                     </div>
                     <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mt-1">
-                        @L["We send this header verbatim on every delivery, so your server can reject anything that is not us."]
+                        @L["This header is sent verbatim on every delivery, so your server can reject anything that is not PIU Scores."]
                     </MudText>
                     <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
                         <MudText Typo="Typo.body2"><b>@L["Nothing is delivered until you verify the URL."]</b></MudText>
@@ -180,7 +180,7 @@
             case Step.Listing:
                 <MudText Typo="Typo.h5" Class="mb-2">@L["Ask to be listed"]</MudText>
                 <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
-                    @L["Optional, and the only step that involves us. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way."]
+                    @L["Optional, and the only step that involves me. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way."]
                 </MudText>
                 <MudTextField T="string" @bind-Value="_description" Label=@L["Description"] MaxLength="500"
                               Lines="3" Immediate="true" Disabled="_submitted"

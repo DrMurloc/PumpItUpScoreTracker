@@ -105,9 +105,9 @@
                            OnClick="CopyKey"></MudIconButton>
         </div>
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
-            <MudText Typo="Typo.body2"><b>@L["This is the only time we'll show it."]</b></MudText>
+            <MudText Typo="Typo.body2"><b>@L["This is the only time you'll see it."]</b></MudText>
             <MudText Typo="Typo.body2">
-                @L["We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime."]
+                @L["I store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime."]
             </MudText>
         </MudAlert>
         <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@L["Send it like this"]</MudText>
@@ -123,7 +123,7 @@
         <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="opacity:.7;">
             @(_minted?.ExpiresAt is null
                 ? L["This key never expires."]
-                : L["Expires {0}. Put it in your calendar — we don't send reminder emails.", _minted!.ExpiresAt!.Value.LocalDateTime.ToString("d")])
+                : L["Expires {0}. Put it in your calendar — I don't send reminder emails.", _minted!.ExpiresAt!.Value.LocalDateTime.ToString("d")])
         </MudText>
     </DialogContent>
     <DialogActions>
