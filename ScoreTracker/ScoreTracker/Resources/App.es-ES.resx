@@ -330,9 +330,6 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>Una clave sin caducidad sigue siendo válida hasta que la revoques a mano — incluso después de perder un portátil o de que un repositorio se haga público. Elige una fecha salvo que tengas un motivo.</value>
   </data>
-  <data name="A listed tool appears in the directory and can accept players who share with all tools. Ask on Discord once you've marked it — nothing is sent automatically." xml:space="preserve">
-    <value>Una herramienta listada aparece en el directorio y puede aceptar jugadores que comparten con todas. Avisa por Discord cuando la marques: no se envía nada automáticamente.</value>
-  </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>Un Miss con 100 de vida. Los Miss salen más baratos según te vacías.</value>
   </data>
@@ -879,9 +876,6 @@
   <data name="Browse tools" xml:space="preserve">
     <value>Explorar herramientas</value>
   </data>
-  <data name="Build a tool" xml:space="preserve">
-    <value>Crear una herramienta</value>
-  </data>
   <data name="Build Session" xml:space="preserve">
     <value>Crear sesión</value>
   </data>
@@ -1329,6 +1323,9 @@
   <data name="Connect {0}" xml:space="preserve">
     <value>Conectar {0}</value>
   </data>
+  <data name="Connected Tools · {0}" xml:space="preserve">
+    <value>Herramientas conectadas · {0}</value>
+  </data>
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>Conectar una herramienta en la que confías funciona bien con un perfil privado — es una conexión directa, no uso compartido público. Tu perfil sigue siendo privado y ninguna otra herramienta obtiene acceso.</value>
   </data>
@@ -1445,9 +1442,6 @@
   </data>
   <data name="Create Song" xml:space="preserve">
     <value>Crear canción</value>
-  </data>
-  <data name="Create your tool" xml:space="preserve">
-    <value>Crea tu herramienta</value>
   </data>
   <data name="Created" xml:space="preserve">
     <value>Creado</value>
@@ -1676,9 +1670,6 @@
   </data>
   <data name="Done" xml:space="preserve">
     <value>Hecho</value>
-  </data>
-  <data name="Done automatically when you created it, so you always have one real player to test against — yourself." xml:space="preserve">
-    <value>Se hace al crearla, así que siempre tienes un jugador real con el que probar — tú.</value>
   </data>
   <data name="Done — this channel is registered for that community." xml:space="preserve">
     <value>Hecho — este canal está registrado para esa comunidad.</value>
@@ -2565,9 +2556,6 @@
   <data name="Invite" xml:space="preserve">
     <value>Invitar</value>
   </data>
-  <data name="Invite a friend" xml:space="preserve">
-    <value>Invita a alguien</value>
-  </data>
   <data name="Invite code (private communities only)" xml:space="preserve">
     <value>Código de invitación (solo comunidades privadas)</value>
   </data>
@@ -2612,9 +2600,6 @@
   </data>
   <data name="It starts private and fully working. Being listed in the directory is optional and comes at the end." xml:space="preserve">
     <value>Empieza privada y funcionando del todo. Aparecer en el directorio es opcional y viene al final.</value>
-  </data>
-  <data name="It starts private and fully working. Listing only puts you in the directory." xml:space="preserve">
-    <value>Empieza privada y funcionando del todo. Publicarla solo la mete en el directorio.</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Podrá leer</value>
@@ -2663,6 +2648,9 @@
   </data>
   <data name="Key" xml:space="preserve">
     <value>Clave</value>
+  </data>
+  <data name="Key Name" xml:space="preserve">
+    <value>Nombre de la clave</value>
   </data>
   <data name="Key used {0} times" xml:space="preserve">
     <value>Clave usada {0} veces</value>
@@ -2931,6 +2919,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Importación manual — script de consola + CSV</value>
   </data>
+  <data name="Marked for review" xml:space="preserve">
+    <value>Marcada para revisión</value>
+  </data>
   <data name="Marked for review — now go ask on Discord" xml:space="preserve">
     <value>Marcada para revisión — ahora avisa por Discord</value>
   </data>
@@ -3182,6 +3173,9 @@
   </data>
   <data name="My Sessions" xml:space="preserve">
     <value>Mis sesiones</value>
+  </data>
+  <data name="My Tools · {0}" xml:space="preserve">
+    <value>Mis herramientas · {0}</value>
   </data>
   <data name="N Charts" xml:space="preserve">
     <value>{0} tablas</value>
@@ -3573,6 +3567,9 @@
   <data name="Nothing was recorded before that date." xml:space="preserve">
     <value>No se registró nada antes de esa fecha.</value>
   </data>
+  <data name="Nothing was sent — post in the Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
+    <value>No se envió nada: escribe en el Discord y alguien lo mirará. Mientras tanto tu herramienta sigue funcionando.</value>
+  </data>
   <data name="now" xml:space="preserve">
     <value>ahora</value>
   </data>
@@ -3731,9 +3728,6 @@
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>Abrir charts sugeridos</value>
-  </data>
-  <data name="Open Swagger, press Authorize, paste your key, then try GET /api/v2/players/me/scores?mix=Phoenix." xml:space="preserve">
-    <value>Abre Swagger, pulsa Authorize, pega tu clave y prueba GET /api/v2/players/me/scores?mix=Phoenix.</value>
   </data>
   <data name="Open Video" xml:space="preserve">
     <value>Abrir vídeo</value>
@@ -4179,9 +4173,6 @@
   <data name="Point it at your PIUGAME account once — grades, plates, and history land intact." xml:space="preserve">
     <value>Apúntala a tu cuenta de PIUGAME una vez: llegan intactos grados, placas e historial.</value>
   </data>
-  <data name="Point us at a URL and we'll POST there whenever one of your players imports." xml:space="preserve">
-    <value>Danos una URL y haremos POST ahí cada vez que uno de tus jugadores importe.</value>
-  </data>
   <data name="Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in." xml:space="preserve">
     <value>Apunta el canal de tu comunidad al bot y las posiciones, los hitos y lo más destacado de cada sesión llegan a tu servidor en cuanto entran las puntuaciones.</value>
   </data>
@@ -4304,9 +4295,6 @@
   </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>consulta las estadísticas de un chart y sus charts similares, con enlaces a sus páginas</value>
-  </data>
-  <data name="Pull your scores" xml:space="preserve">
-    <value>Consulta tus puntuaciones</value>
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
@@ -4470,9 +4458,6 @@
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Leerla requiere tres cosas a la vez, guardadas en tres lugares distintos:</value>
   </data>
-  <data name="Reading your scores · {0}" xml:space="preserve">
-    <value>Leyendo tus puntuaciones · {0}</value>
-  </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>Eso equivale a {0}.</value>
   </data>
@@ -4496,9 +4481,6 @@
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Se recalcula cada pocas horas</value>
-  </data>
-  <data name="Receive imports" xml:space="preserve">
-    <value>Recibe las importaciones</value>
   </data>
   <data name="Recent big wins from the communities you pick." xml:space="preserve">
     <value>Grandes logros recientes de las comunidades que elijas.</value>
@@ -4974,9 +4956,6 @@
   <data name="Send it" xml:space="preserve">
     <value>Enviar</value>
   </data>
-  <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
-    <value>Envíala como Authorization: Bearer. Se muestra una vez — guardamos un hash.</value>
-  </data>
   <data name="Send it like this" xml:space="preserve">
     <value>Envíalo así</value>
   </data>
@@ -5046,9 +5025,6 @@
   <data name="Setup" xml:space="preserve">
     <value>Configuración</value>
   </data>
-  <data name="Seven steps from nothing to a listed tool." xml:space="preserve">
-    <value>Siete pasos desde cero hasta aparecer en el directorio.</value>
-  </data>
   <data name="Shade band" xml:space="preserve">
     <value>Banda sombreada</value>
   </data>
@@ -5060,9 +5036,6 @@
   </data>
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Shaded range: ±1σ</value>
-  </data>
-  <data name="Share an invite link. Anyone with it can connect, public profile or not." xml:space="preserve">
-    <value>Comparte un enlace de invitación. Cualquiera con él puede conectarse, con perfil público o no.</value>
   </data>
   <data name="Share my scores with community tools" xml:space="preserve">
     <value>Compartir mis puntuaciones con herramientas de la comunidad</value>
@@ -5432,6 +5405,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>Enviar</value>
+  </data>
+  <data name="Submit for approval" xml:space="preserve">
+    <value>Enviar para aprobación</value>
   </data>
   <data name="Submit Qualifier" xml:space="preserve">
     <value>Enviar clasificación</value>
@@ -6480,9 +6456,6 @@
   <data name="What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
     <value>Lo que te enviamos cuando uno de tus jugadores importa. Nada es una respuesta válida — muchas herramientas simplemente consultan la API.</value>
   </data>
-  <data name="What's it for" xml:space="preserve">
-    <value>Para qué es</value>
-  </data>
   <data name="When" xml:space="preserve">
     <value>Cuándo</value>
   </data>
@@ -6560,6 +6533,9 @@
   </data>
   <data name="Wouldn't You Like To Know" xml:space="preserve">
     <value>¿No te gustaría saberlo?</value>
+  </data>
+  <data name="Write a description to enable this." xml:space="preserve">
+    <value>Escribe una descripción para habilitarlo.</value>
   </data>
   <data name="X Charts" xml:space="preserve">
     <value>{0} charts</value>
@@ -6677,9 +6653,6 @@
   </data>
   <data name="You're connected to every listed tool" xml:space="preserve">
     <value>Estás conectado a todas las herramientas listadas</value>
-  </data>
-  <data name="You're connected to your own tool" xml:space="preserve">
-    <value>Ya estás conectado a tu propia herramienta</value>
   </data>
   <data name="You're set up" xml:space="preserve">
     <value>Ya está todo listo</value>

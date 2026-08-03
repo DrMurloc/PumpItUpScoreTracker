@@ -330,9 +330,6 @@
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>期限のないキーは、手動で取り消すまで有効です — ノートPCを失くした後も、リポジトリが公開された後も。理由がなければ日付を選んでください。</value>
   </data>
-  <data name="A listed tool appears in the directory and can accept players who share with all tools. Ask on Discord once you've marked it — nothing is sent automatically." xml:space="preserve">
-    <value>掲載されたツールはディレクトリに並び、「すべてのツールと共有」を選んだプレイヤーも受け取れます。印を付けたら Discord で声をかけてください — 自動では届きません。</value>
-  </data>
   <data name="A miss at 100 life. Misses get cheaper as you drain." xml:space="preserve">
     <value>体力100での Miss。減るほど Miss は安くなります。</value>
   </data>
@@ -887,9 +884,6 @@
   <data name="Browse tools" xml:space="preserve">
     <value>ツールを見る</value>
   </data>
-  <data name="Build a tool" xml:space="preserve">
-    <value>ツールを作る</value>
-  </data>
   <data name="Build Session" xml:space="preserve">
 	  <value>セッション構築</value>
   </data>
@@ -1340,6 +1334,9 @@
   <data name="Connect {0}" xml:space="preserve">
     <value>{0}に接続</value>
   </data>
+  <data name="Connected Tools · {0}" xml:space="preserve">
+    <value>接続中のツール · {0}</value>
+  </data>
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>信頼できるツール1つに接続するのは非公開プロフィールでも問題ありません — 公開共有ではなく直接接続だからです。プロフィールは非公開のままで、ほかのツールがアクセスすることはありません。</value>
   </data>
@@ -1458,9 +1455,6 @@
   </data>
   <data name="Create Song" xml:space="preserve">
 	  <value>曲作成</value>
-  </data>
-  <data name="Create your tool" xml:space="preserve">
-    <value>ツールを作成</value>
   </data>
   <data name="Created" xml:space="preserve">
     <value>作成済み</value>
@@ -1690,9 +1684,6 @@
   </data>
   <data name="Done" xml:space="preserve">
 	  <value>完了</value>
-  </data>
-  <data name="Done automatically when you created it, so you always have one real player to test against — yourself." xml:space="preserve">
-    <value>作成時に自動で行われるので、テストできる実在のプレイヤーが常に1人 — あなた自身 — います。</value>
   </data>
   <data name="Done — this channel is registered for that community." xml:space="preserve">
     <value>完了 — このチャンネルはそのコミュニティに登録されました。</value>
@@ -2582,9 +2573,6 @@
   <data name="Invite" xml:space="preserve">
     <value>招待</value>
   </data>
-  <data name="Invite a friend" xml:space="preserve">
-    <value>友達を招待</value>
-  </data>
   <data name="Invite code (private communities only)" xml:space="preserve">
     <value>招待コード（非公開コミュニティのみ）</value>
   </data>
@@ -2630,9 +2618,6 @@
   </data>
   <data name="It starts private and fully working. Being listed in the directory is optional and comes at the end." xml:space="preserve">
     <value>最初は非公開ですが、機能はすべて動きます。ディレクトリへの掲載は任意で、最後の手順です。</value>
-  </data>
-  <data name="It starts private and fully working. Listing only puts you in the directory." xml:space="preserve">
-    <value>非公開で始まりますが完全に動作します。掲載は一覧に載るだけです。</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>読み取れる情報</value>
@@ -2681,6 +2666,9 @@
   </data>
   <data name="Key" xml:space="preserve">
     <value>キー</value>
+  </data>
+  <data name="Key Name" xml:space="preserve">
+    <value>キーの名前</value>
   </data>
   <data name="Key used {0} times" xml:space="preserve">
     <value>キーを{0}回使用</value>
@@ -2953,6 +2941,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>手動インポート — コンソールスクリプト + CSV</value>
   </data>
+  <data name="Marked for review" xml:space="preserve">
+    <value>確認待ちにしました</value>
+  </data>
   <data name="Marked for review — now go ask on Discord" xml:space="preserve">
     <value>確認待ちにしました — Discord で声をかけてください</value>
   </data>
@@ -3210,6 +3201,9 @@
   </data>
   <data name="My Sessions" xml:space="preserve">
     <value>マイセッション</value>
+  </data>
+  <data name="My Tools · {0}" xml:space="preserve">
+    <value>自分のツール · {0}</value>
   </data>
   <data name="N Charts" xml:space="preserve">
     <value>{0}譜面</value>
@@ -3604,6 +3598,9 @@
   <data name="Nothing was recorded before that date." xml:space="preserve">
     <value>その日付より前の記録はありません。</value>
   </data>
+  <data name="Nothing was sent — post in the Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
+    <value>自動では何も送られていません — Discord に書き込めば誰かが見ます。その間もツールは動き続けます。</value>
+  </data>
   <data name="now" xml:space="preserve">
     <value>たった今</value>
   </data>
@@ -3763,9 +3760,6 @@
   </data>
   <data name="Open Suggested Charts" xml:space="preserve">
     <value>おすすめ譜面を開く</value>
-  </data>
-  <data name="Open Swagger, press Authorize, paste your key, then try GET /api/v2/players/me/scores?mix=Phoenix." xml:space="preserve">
-    <value>Swaggerを開き、Authorizeを押してキーを貼り、GET /api/v2/players/me/scores?mix=Phoenix を試してください。</value>
   </data>
   <data name="Open Video" xml:space="preserve">
     <value>ビデオリンク開く</value>
@@ -4215,9 +4209,6 @@
   <data name="Point it at your PIUGAME account once — grades, plates, and history land intact." xml:space="preserve">
     <value>PIUGAME アカウントに一度つなぐだけ — グレード、プレート、履歴がそのまま届きます。</value>
   </data>
-  <data name="Point us at a URL and we'll POST there whenever one of your players imports." xml:space="preserve">
-    <value>URLを教えてくれれば、プレイヤーがインポートするたびにそこへPOSTします。</value>
-  </data>
   <data name="Point your community's channel at the bot and placements, milestones, and session highlights land in your server the moment scores come in." xml:space="preserve">
     <value>コミュニティのチャンネルをボットにつなげば、スコアが入った瞬間に順位、マイルストーン、セッションハイライトがサーバーに届きます。</value>
   </data>
@@ -4341,9 +4332,6 @@
   </data>
   <data name="pull up a chart's stats and similar charts, with links to its pages" xml:space="preserve">
     <value>譜面のステータスと類似譜面を表示、ページへのリンク付き</value>
-  </data>
-  <data name="Pull your scores" xml:space="preserve">
-    <value>自分のスコアを取得</value>
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
@@ -4511,9 +4499,6 @@
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>読み解くには、3つの異なる場所に保管された3つのものが同時に必要です：</value>
   </data>
-  <data name="Reading your scores · {0}" xml:space="preserve">
-    <value>スコアを読み取り中 · {0}</value>
-  </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>{0} 判定になります。</value>
   </data>
@@ -4537,9 +4522,6 @@
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>数時間ごとに再計算されます</value>
-  </data>
-  <data name="Receive imports" xml:space="preserve">
-    <value>インポートを受け取る</value>
   </data>
   <data name="Recent big wins from the communities you pick." xml:space="preserve">
     <value>選んだコミュニティの最近の大きな記録。</value>
@@ -5024,9 +5006,6 @@
   <data name="Send it" xml:space="preserve">
     <value>送信</value>
   </data>
-  <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
-    <value>Authorization: Bearer で送ってください。表示は一度きりで、保存するのはハッシュです。</value>
-  </data>
   <data name="Send it like this" xml:space="preserve">
     <value>こう送ります</value>
   </data>
@@ -5097,9 +5076,6 @@
   <data name="Setup" xml:space="preserve">
     <value>設定</value>
   </data>
-  <data name="Seven steps from nothing to a listed tool." xml:space="preserve">
-    <value>何もない状態から掲載されるまで7ステップ。</value>
-  </data>
   <data name="Shade band" xml:space="preserve">
     <value>帯を表示</value>
   </data>
@@ -5111,9 +5087,6 @@
   </data>
   <data name="Shaded range: ±1σ" xml:space="preserve">
     <value>Shaded range: ±1σ</value>
-  </data>
-  <data name="Share an invite link. Anyone with it can connect, public profile or not." xml:space="preserve">
-    <value>招待リンクを共有してください。リンクがあれば公開・非公開を問わず接続できます。</value>
   </data>
   <data name="Share my scores with community tools" xml:space="preserve">
     <value>コミュニティツールとスコアを共有する</value>
@@ -5492,6 +5465,9 @@
   </data>
   <data name="Submit" xml:space="preserve">
     <value>登録</value>
+  </data>
+  <data name="Submit for approval" xml:space="preserve">
+    <value>承認を申請する</value>
   </data>
   <data name="Submit Qualifier" xml:space="preserve">
     <value>予選を提出</value>
@@ -6546,9 +6522,6 @@
   <data name="What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
     <value>あなたのプレイヤーが取り込んだときに送る内容です。「なし」も立派な選択です — 多くのツールは API を見に行くだけです。</value>
   </data>
-  <data name="What's it for" xml:space="preserve">
-    <value>用途</value>
-  </data>
   <data name="When" xml:space="preserve">
     <value>日時</value>
   </data>
@@ -6627,6 +6600,9 @@
   <data name="Wouldn't You Like To Know" xml:space="preserve">
 	  <value>知りたいかい</value>
 	  
+  </data>
+  <data name="Write a description to enable this." xml:space="preserve">
+    <value>説明を書くと押せるようになります。</value>
   </data>
   <data name="X Charts" xml:space="preserve">
 	  <value>{0}譜面</value>
@@ -6749,9 +6725,6 @@
   </data>
   <data name="You're connected to every listed tool" xml:space="preserve">
     <value>掲載されているすべてのツールに接続済みです</value>
-  </data>
-  <data name="You're connected to your own tool" xml:space="preserve">
-    <value>自分のツールに接続済み</value>
   </data>
   <data name="You're set up" xml:space="preserve">
     <value>準備できました</value>

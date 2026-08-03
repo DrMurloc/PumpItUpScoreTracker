@@ -194,6 +194,56 @@ public sealed class ToolSetupWizardTests : ComponentTestBase
         Assert.Contains("You're set up", page.Markup);
     }
 
+    /// <summary>
+    ///     Describing your tool and asking to be listed are two decisions. Coupling them submitted
+    ///     people who were only writing, so the request now needs its own button.
+    /// </summary>
+    [Fact]
+    public void ADescriptionAloneDoesNotAskToBeListed()
+    {
+        var page = AtListingScreen();
+        page.FindAll("textarea").First().Input("Plans your sessions.");
+
+        PrimaryButton(page).Click();
+
+        _mediator.Verify(m => m.Send(It.IsAny<RequestToolListingCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        // Kept even so: it is worth having whether or not they asked.
+        _mediator.Verify(m => m.Send(It.Is<UpdateToolCommand>(c => c.Description == "Plans your sessions."),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void PressingSubmitForApprovalAsks()
+    {
+        var page = AtListingScreen();
+        page.FindAll("textarea").First().Input("Plans your sessions.");
+
+        page.FindAll("button").First(b => b.TextContent.Contains("Submit for approval")).Click();
+
+        _mediator.Verify(m => m.Send(It.IsAny<RequestToolListingCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.Contains("Marked for review", page.Markup);
+    }
+
+    [Fact]
+    public void SubmitForApprovalIsDisabledWithoutADescription()
+    {
+        var page = AtListingScreen();
+
+        var submit = page.FindAll("button").First(b => b.TextContent.Contains("Submit for approval"));
+
+        Assert.True(submit.HasAttribute("disabled"));
+        Assert.Contains("Write a description to enable this.", page.Markup);
+    }
+
+    private IRenderedComponent<ToolSetupWizard> AtListingScreen()
+    {
+        var page = AtWebhookScreen();
+        PrimaryButton(page).Click();
+        return page;
+    }
+
     private IRenderedComponent<ToolSetupWizard> AtWebhookScreen()
     {
         var page = Render();

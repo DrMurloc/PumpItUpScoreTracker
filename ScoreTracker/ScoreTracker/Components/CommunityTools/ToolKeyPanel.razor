@@ -64,7 +64,7 @@
 <MudDialog @bind-Visible="_showCreate" Options="_options">
     <TitleContent><MudText Typo="Typo.h6">@L["Create API key"]</MudText></TitleContent>
     <DialogContent>
-        <MudTextField T="string" @bind-Value="_newKeyName" Label=@L["What's it for"] MaxLength="64"
+        <MudTextField T="string" @bind-Value="_newKeyName" Label=@L["Key Name"] MaxLength="64"
                       Immediate="true"
                       HelperText='@L["Just for you — \"Production\", \"my laptop\", \"the test box\". Nobody else sees it."].Value'></MudTextField>
         <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@L["Expires"]</MudText>

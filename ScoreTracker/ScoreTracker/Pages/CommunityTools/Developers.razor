@@ -1,6 +1,7 @@
 @page "/Developers"
 @rendermode RenderModes.Interactive
 @using MediatR
+@using Microsoft.AspNetCore.WebUtilities
 @using ScoreTracker.CommunityTools.Contracts
 @using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
@@ -77,8 +78,6 @@ else
 
     @if (_selected is not null)
     {
-        <ToolIntegrationChecklist Tool="_selected"></ToolIntegrationChecklist>
-
         @* 1. Who this tool is. *@
         <MudPaper Outlined="true" Class="pa-4 mb-4">
             <MudText Typo="Typo.subtitle2" Class="mb-3">@L["{0} — settings", _selected.Name]</MudText>
@@ -170,8 +169,6 @@ else
                 <MudButton Size="Size.Small" Variant="Variant.Text"
                            Href="@($"/Developers/{_selected.Id}/Console")">@L["Activity log"]</MudButton>
                 <MudButton Size="Size.Small" Variant="Variant.Text"
-                           Href="@($"/Developers/{_selected.Id}/Debug")">@L["Test delivery"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Text"
                            OnClick="() => _wizard = true">@L["Set up another tool"]</MudButton>
             </div>
         </MudPaper>
@@ -230,6 +227,7 @@ else
 
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject NavigationManager NavManager
 @code {
     private IReadOnlyList<ToolRecord> _tools = Array.Empty<ToolRecord>();
     private ToolRecord? _selected;
@@ -263,6 +261,19 @@ else
     {
         await Reload();
         _wizard = !_tools.Any();
+
+        // ?tool= is how Manage arrives from the directory. An id that is not yours simply does not
+        // match — GetMyToolsQuery only ever returns your own.
+        var query = QueryHelpers.ParseQuery(new Uri(NavManager.Uri).Query);
+        if (query.TryGetValue("tool", out var raw) && Guid.TryParse(raw, out var requested))
+        {
+            var wanted = _tools.FirstOrDefault(t => t.Id == requested);
+            if (wanted is not null)
+            {
+                Select(wanted);
+                _wizard = false;
+            }
+        }
     }
 
     /// <summary>
@@ -388,6 +399,10 @@ else
         _showDelete = false;
         _selected = null;
         await Reload();
+
+        // Deleting the last one puts you back where a maker with no tools belongs, rather than on
+        // an empty console with a New tool button and nothing else.
+        _wizard = !_tools.Any();
     }
 
     private string VisibilityLabel(ToolVisibility visibility) => visibility switch

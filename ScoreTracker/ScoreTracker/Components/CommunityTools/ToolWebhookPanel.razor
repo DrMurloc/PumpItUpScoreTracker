@@ -160,7 +160,16 @@
         </MudExpansionPanels>
     }
 
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="Save">@L["Save"]</MudButton>
+    <div class="d-flex gap-2 align-center flex-wrap mt-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">@L["Save"]</MudButton>
+        @* Lives here rather than under Help: it is a thing you do to a webhook, and a tool with no
+           webhook has nothing to test. *@
+        @if (Tool.WebhookMode != WebhookMode.None)
+        {
+            <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                       Href="@($"/Developers/{Tool.Id}/Debug")">@L["Test delivery"]</MudButton>
+        }
+    </div>
 </MudPaper>
 
 @inject IMediator Mediator

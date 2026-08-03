@@ -90,11 +90,7 @@ public sealed class ChartsController : ApiV2ControllerBase
     ///     PIU Center's step analysis for one chart: NPS, difficulty prediction, sustain, and
     ///     per-skill coverage.
     /// </summary>
-    /// <remarks>
-    ///     No <c>mix</c> parameter, and that is not an oversight — the analysis describes the steps,
-    ///     which do not change when a chart's listed level does. The same chart id returns the same
-    ///     answer on every mix it appears in.
-    /// </remarks>
+    /// <remarks>Mix-invariant — it describes the steps, so no <c>mix</c> parameter.</remarks>
     [HttpGet("{chartId:guid}/skills")]
     public async Task<IActionResult> GetChartSkills([FromRoute] Guid chartId)
     {
@@ -111,20 +107,15 @@ public sealed class ChartsController : ApiV2ControllerBase
         return CatalogJson(new ChartSkillProfileDto(profile));
     }
 
-    /// <summary>
-    ///     Step analysis in bulk, taking the same filters as <c>GET /api/v2/charts</c>, so a tool can
-    ///     pull the analysis for one mix's charts in one sweep rather than a call per chart.
-    ///     <para>
-    ///         Written out rather than a <c>see cref</c>: Swashbuckle renders a cref as its display
-    ///         name, and for a method the display name is the whole signature — the reader would get
-    ///         a wall of <c>System.Nullable{System.Int32}</c> in the endpoint description.
-    ///     </para>
-    /// </summary>
+    /// <summary>Step analysis in bulk, taking the same filters as <c>GET /api/v2/charts</c>.</summary>
     /// <remarks>
-    ///     <c>mix</c> is required because the <b>filters</b> are per-mix — a chart's level differs
-    ///     between mixes, so "level 20 in Phoenix" and "level 20 in XX" select different charts. The
-    ///     analysis itself is still mix-invariant: it describes the steps. Do not cache these per mix.
+    ///     <c>mix</c> is required because the filters are per-mix. The analysis itself is
+    ///     mix-invariant, so do not cache it per mix.
     /// </remarks>
+    // Written out rather than a see cref: Swashbuckle renders a cref as its display name, and for a
+    // method that is the whole signature — the reader would get System.Nullable{System.Int32} in
+    // the endpoint description. XML doc reaches Swagger; a line comment does not, which is why the
+    // rationale lives down here.
     [HttpGet("skills")]
     public async Task<IActionResult> GetSkills(
         [FromQuery(Name = "mix")] string? mixValue = null,
@@ -187,20 +178,16 @@ public sealed class ChartsController : ApiV2ControllerBase
             scoringLevels.TryGetValue(chart.Id, out var scoringLevel) ? scoringLevel : null));
     }
 
-    /// <summary>
-    ///     Charts that play like this one, best first (docs/design/chart-similarity.md).
-    ///     <para>
-    ///         Filters narrow what the anchor is compared against and the scores are recomputed —
-    ///         they never sieve a precalculated list, which would return nothing for any filter narrow
-    ///         enough to be interesting. That also makes this the out-of-window path: asking what D23s
-    ///         play like a D18 is a real question and deliberately outside the ±1 the nightly job
-    ///         precalculates.
-    ///     </para>
-    ///     <para>
-    ///         The result is not filtered by quality. Rows below <c>matchFloor</c> are near-misses, not
-    ///         absences, and where the bar falls is the reader's decision.
-    ///     </para>
-    /// </summary>
+    /// <summary>Charts that play like this one, best first.</summary>
+    /// <remarks>
+    ///     Rows below <c>matchFloor</c> are near-misses rather than absences — nothing is filtered
+    ///     out by quality, so where the bar falls is yours to decide.
+    /// </remarks>
+    // Filters narrow what the anchor is compared against and the scores are recomputed; they never
+    // sieve a precalculated list, which would return nothing for any filter narrow enough to be
+    // interesting. That also makes this the out-of-window path — what D23s play like a D18 is a real
+    // question and deliberately outside the ±1 the nightly job precalculates. See
+    // docs/design/chart-similarity.md; a line comment keeps it out of the Swagger description.
     [HttpGet("{chartId:guid}/similar")]
     public async Task<IActionResult> GetSimilar([FromRoute] Guid chartId,
         [FromQuery(Name = "mix")] string? mixValue = null,

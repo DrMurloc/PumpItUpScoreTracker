@@ -51,7 +51,7 @@
                 <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
                     @L["The key is how your code proves it is your tool."]
                 </MudText>
-                <MudTextField T="string" @bind-Value="_keyName" Label=@L["What's it for"] MaxLength="64"
+                <MudTextField T="string" @bind-Value="_keyName" Label=@L["Key Name"] MaxLength="64"
                               Immediate="true" Style="max-width:420px;"
                               HelperText='@L["Just for you — \"Production\", \"my laptop\", \"the test box\". Nobody else sees it."].Value'></MudTextField>
                 <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@L["Expires"]</MudText>
@@ -182,14 +182,41 @@
                     @L["Optional, and the only step that involves us. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way."]
                 </MudText>
                 <MudTextField T="string" @bind-Value="_description" Label=@L["Description"] MaxLength="500"
-                              Lines="3" Immediate="true"
+                              Lines="3" Immediate="true" Disabled="_submitted"
                               HelperText='@L["Required to be listed — it is what a player reads before deciding."].Value'></MudTextField>
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
-                    <MudText Typo="Typo.body2"><b>@L["This does not send anything."]</b></MudText>
-                    <MudText Typo="Typo.body2">
-                        @L["It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches."]
-                    </MudText>
-                </MudAlert>
+
+                @* An explicit act, not a side effect of filling in a box. Typing a description is
+                   how you describe your tool; asking to be listed is a different decision, and
+                   coupling them submitted people who were only writing. *@
+                @if (_submitted)
+                {
+                    <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                        <MudText Typo="Typo.body2"><b>@L["Marked for review"]</b></MudText>
+                        <MudText Typo="Typo.body2">
+                            @L["Nothing was sent — post in the Discord and someone will look. Your tool keeps working in the meantime."]
+                        </MudText>
+                    </MudAlert>
+                }
+                else
+                {
+                    <div class="d-flex gap-3 align-center flex-wrap mt-3">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                   Disabled="@(_busy || string.IsNullOrWhiteSpace(_description))"
+                                   OnClick="SubmitForApproval">@L["Submit for approval"]</MudButton>
+                        @if (string.IsNullOrWhiteSpace(_description))
+                        {
+                            <MudText Typo="Typo.caption" Style="opacity:.7;">
+                                @L["Write a description to enable this."]
+                            </MudText>
+                        }
+                    </div>
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                        <MudText Typo="Typo.body2"><b>@L["This does not send anything."]</b></MudText>
+                        <MudText Typo="Typo.body2">
+                            @L["It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches."]
+                        </MudText>
+                    </MudAlert>
+                }
                 break;
 
             case Step.Done:
@@ -285,6 +312,8 @@
     private string _headerName = string.Empty;
     private string _headerValue = string.Empty;
 
+    private bool _submitted;
+
     /// <summary>Raised when the maker leaves the wizard, so the host can show the console.</summary>
     [Parameter] public EventCallback OnFinished { get; set; }
 
@@ -339,7 +368,7 @@
     {
         Step.Invite => _inviteCode is null,
         Step.Webhook => _mode == WebhookMode.None,
-        Step.Listing => string.IsNullOrWhiteSpace(_description),
+        Step.Listing => !_submitted,
         _ => false
     };
 
@@ -416,7 +445,9 @@
                     break;
 
                 case Step.Listing:
-                    await SaveListing();
+                    // The description is saved either way — it is worth keeping whether or not they
+                    // asked to be listed. Only the asking needs the button.
+                    await SaveDescription();
                     _step = Step.Done;
                     break;
 
@@ -452,12 +483,34 @@
             Array.Empty<MixEnum>()));
     }
 
-    private async Task SaveListing()
+    private async Task SaveDescription()
     {
         if (string.IsNullOrWhiteSpace(_description)) return;
 
         await Mediator.Send(new UpdateToolCommand(_toolId!.Value, _name, _description, null));
-        await Mediator.Send(new RequestToolListingCommand(_toolId.Value));
+    }
+
+    /// <summary>
+    ///     The listing request, on its own button. Saves the description first, because the request
+    ///     is refused without one and the maker has only typed it into a box so far.
+    /// </summary>
+    private async Task SubmitForApproval()
+    {
+        _busy = true;
+        try
+        {
+            await SaveDescription();
+            await Mediator.Send(new RequestToolListingCommand(_toolId!.Value));
+            _submitted = true;
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
     }
 
     private async Task CreateInvite()
