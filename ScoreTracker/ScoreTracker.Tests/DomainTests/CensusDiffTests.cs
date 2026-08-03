@@ -95,6 +95,44 @@ public sealed class CensusDiffTests
             phoenix2.For("18").Grades.Single().Key);
     }
 
+    [Fact]
+    public void OurPumbilityIsTheMergedTopFiftyWithBreaksAndCoOpExcluded()
+    {
+        var charts = Charts(("a", ChartType.Single, 20), ("b", ChartType.Double, 20),
+            ("c", ChartType.CoOp, 20), ("d", ChartType.Single, 20));
+        var records = new[]
+        {
+            Record(charts, "a", 990000, PhoenixPlate.MarvelousGame),
+            Record(charts, "b", 990000, PhoenixPlate.MarvelousGame),
+            Record(charts, "c", 990000, PhoenixPlate.MarvelousGame),
+            Record(charts, "d", 990000, PhoenixPlate.MarvelousGame, broken: true)
+        };
+
+        var all = LocalCensusBuilder.Pumbility(MixEnum.Phoenix, records, charts);
+        var singleOnly = LocalCensusBuilder.Pumbility(MixEnum.Phoenix,
+            new[] { records[0] }, charts);
+
+        // CO-OP and broken plays never rate, so four records price as two — mirroring
+        // PlayerRatingSaga, which is why the panel's number agrees with the PUMBILITY page.
+        Assert.Equal(singleOnly * 2, all, 3);
+    }
+
+    [Fact]
+    public void OurPumbilityIgnoresRecordsForChartsTheMixDoesNotHave()
+    {
+        var charts = Charts(("a", ChartType.Single, 20));
+        var records = new[]
+        {
+            Record(charts, "a", 990000, PhoenixPlate.MarvelousGame),
+            // A record whose chart is not in this mix's catalog — a cross-mix row, not a zero.
+            new RecordedPhoenixScore(Id("ff"), PhoenixScore.From(999000), PhoenixPlate.PerfectGame, false,
+                DateTimeOffset.UnixEpoch)
+        };
+
+        Assert.Equal(LocalCensusBuilder.Pumbility(MixEnum.Phoenix, new[] { records[0] }, charts),
+            LocalCensusBuilder.Pumbility(MixEnum.Phoenix, records, charts), 3);
+    }
+
     // ---- the diff ----
 
     [Fact]

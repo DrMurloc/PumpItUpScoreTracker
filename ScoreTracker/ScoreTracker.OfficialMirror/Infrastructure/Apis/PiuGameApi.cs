@@ -866,9 +866,31 @@ internal sealed class PiuGameApi : IPiuGameApi
 
     // A count tile renders "129" on Phoenix and "2 / 4,476" on Phoenix 2 — the first number is
     // the count, the second (when present) the mix's chart total for the bucket.
-    private static readonly Regex CountRegex = new(@"\d[\d,]*", RegexOptions.Compiled);
+    // Every pattern below runs against a whole page of markup we do not control, so each carries a
+    // match timeout: a page that changes shape must fail this parse, not hang the thread on
+    // backtracking.
+    private static readonly TimeSpan RegexTimeout = TimeSpan.FromSeconds(2);
 
-    private static readonly Regex DecimalRegex = new(@"\d[\d,]*(?:\.\d+)?", RegexOptions.Compiled);
+    private static readonly Regex CountRegex = new(@"\d[\d,]*", RegexOptions.Compiled, RegexTimeout);
+
+    private static readonly Regex DecimalRegex =
+        new(@"\d[\d,]*(?:\.\d+)?", RegexOptions.Compiled, RegexTimeout);
+
+    // "354<span class="pumbility-point-sub">.24</span>" — the lazy .*? spans arbitrary markup
+    // between the class and the value, which is exactly the shape that backtracks badly.
+    private static readonly Regex PumbilityValueRegex = new(
+        @"(?s)class=""in score"".*?>\s*([0-9,]+)<span class=""pumbility-point-sub"">\.(\d+)</span>",
+        RegexOptions.Compiled, RegexTimeout);
+
+    private static readonly Regex PageNumberRegex = new(@"page=(\d+)", RegexOptions.Compiled, RegexTimeout);
+
+    private static readonly Regex GradeImageRegex =
+        new(@"\/grade\/([a-z_]+)\.png", RegexOptions.Compiled | RegexOptions.IgnoreCase, RegexTimeout);
+
+    // The breakdown page prefixes its plate art "s_" (s_mg.png) where the rest of the site serves
+    // it bare, so this accepts either.
+    private static readonly Regex PlateImageRegex =
+        new(@"\/plate\/(?:s_)?([a-zA-Z]+)\.png", RegexOptions.Compiled, RegexTimeout);
 
     /// <summary>
     ///     One bucket of <c>my_page/play_data.php</c> — the cheapest complete statement the site
@@ -1016,8 +1038,7 @@ internal sealed class PiuGameApi : IPiuGameApi
                 var type = ShortChartType(inner);
                 if (type == null) continue;
 
-                var value = Regex.Match(inner,
-                    @"(?s)class=""in score"".*?>\s*([0-9,]+)<span class=""pumbility-point-sub"">\.(\d+)</span>");
+                var value = PumbilityValueRegex.Match(inner);
                 if (!value.Success) continue;
 
                 entries.Add(new PiuGameGetPumbilityResult.Entry
@@ -1111,7 +1132,7 @@ internal sealed class PiuGameApi : IPiuGameApi
 
         // The pager rewrites each button's onclick into "?lv=&type=X&&page=N"; the highest N it
         // offers is the last page (the window always includes it via the last-page button).
-        var maxPage = Regex.Matches(response, @"page=(\d+)")
+        var maxPage = PageNumberRegex.Matches(response)
             .Select(m => int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture))
             .DefaultIfEmpty(1).Max();
 
@@ -1157,7 +1178,7 @@ internal sealed class PiuGameApi : IPiuGameApi
 
     private static PhoenixLetterGrade? GradeFrom(string html)
     {
-        var match = Regex.Match(html, @"\/grade\/([a-z_]+)\.png", RegexOptions.IgnoreCase);
+        var match = GradeImageRegex.Match(html);
         if (!match.Success) return null;
         return match.Groups[1].Value.ToLowerInvariant() switch
         {
@@ -1185,7 +1206,7 @@ internal sealed class PiuGameApi : IPiuGameApi
     // serves it bare, so this accepts either.
     private static PhoenixPlate? PlateFrom(string html)
     {
-        var match = Regex.Match(html, @"\/plate\/(?:s_)?([a-zA-Z]+)\.png");
+        var match = PlateImageRegex.Match(html);
         if (!match.Success) return null;
         try
         {
