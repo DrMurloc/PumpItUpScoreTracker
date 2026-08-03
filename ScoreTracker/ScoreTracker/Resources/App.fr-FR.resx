@@ -2353,9 +2353,6 @@
   <data name="Have an invite link?" xml:space="preserve">
     <value>Vous avez un lien d'invitation ?</value>
   </data>
-  <data name="Header name" xml:space="preserve">
-    <value>Nom de l'en-tête</value>
-  </data>
   <data name="Header required for PIUGame session, so your server knows it is you receiving user sessions." xml:space="preserve">
     <value>L'en-tête est obligatoire pour le mode session PIUGame, afin que votre serveur sache que c'est bien vous qui recevez les sessions des joueurs.</value>
   </data>
@@ -5134,6 +5131,9 @@
   <data name="Seconds of Rest Per Chart" xml:space="preserve">
     <value>Secondes de repos par chart</value>
   </data>
+  <data name="Secret" xml:space="preserve">
+    <value>Secret</value>
+  </data>
   <data name="See a handler" xml:space="preserve">
     <value>Voir un handler</value>
   </data>
@@ -5230,8 +5230,14 @@
   <data name="Sessions per page" xml:space="preserve">
     <value>Sessions par page</value>
   </data>
+  <data name="Set" xml:space="preserve">
+    <value>Défini</value>
+  </data>
   <data name="Set a delivery URL on the Webhooks section and this fills in with yours." xml:space="preserve">
     <value>Indiquez une URL de livraison dans la section Webhooks et ceci se remplira avec la vôtre.</value>
+  </data>
+  <data name="Set a new one" xml:space="preserve">
+    <value>En définir un nouveau</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
     <value>Définir les charts</value>

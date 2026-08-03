@@ -74,14 +74,14 @@ internal sealed class ToolManagementSaga :
     {
         await Manageable(request.ToolId, cancellationToken);
 
-        var name = string.IsNullOrWhiteSpace(request.Name) ? null : request.Name.Trim();
         var (_, existing) = await _secrets.GetOutboundHeader(request.ToolId, cancellationToken);
         var value = string.IsNullOrWhiteSpace(request.Value) ? existing : request.Value;
 
-        // Clearing the name clears the pair: a value with nothing to send it under is dead weight
-        // that would come back the moment someone typed a name again.
-        await _secrets.SetOutboundHeader(request.ToolId, name, name is null ? null : value,
-            cancellationToken);
+        // The name is ours. Stored alongside anyway so a delivery reads one row rather than a row
+        // and a constant, and so an older tool's chosen name is migrated on its next save.
+        await _secrets.SetOutboundHeader(request.ToolId,
+            string.IsNullOrWhiteSpace(value) ? null : WebhookHeaders.Outbound,
+            string.IsNullOrWhiteSpace(value) ? null : value, cancellationToken);
     }
 
     /// <summary>

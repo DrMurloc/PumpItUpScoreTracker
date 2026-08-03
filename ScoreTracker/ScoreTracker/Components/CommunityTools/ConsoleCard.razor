@@ -1,0 +1,49 @@
+@namespace ScoreTracker.Web.Components.CommunityTools
+
+@* One responsibility, one card.
+
+   The console used horizontal rules to separate concerns, which is the weakest grouping there is —
+   a rule says "something changed" without saying what belongs to what, and a page of them reads as
+   one long strip. A card has edges, so a maker can see where a job starts and ends without reading
+   the headings.
+
+   Cards flow in a responsive grid: side by side where there is room, stacked where there is not. *@
+
+<section class="ct-card @Class">
+    <header class="ct-card-head">
+        <MudText Typo="Typo.subtitle2">@Title</MudText>
+        @if (Hint is not null)
+        {
+            <MudTooltip Text="@Hint" Arrow="true" Placement="Placement.Top">
+                <MudIcon Icon="@Icons.Material.Filled.HelpOutline" Size="Size.Small"
+                         Style="opacity:.6;"></MudIcon>
+            </MudTooltip>
+        }
+        @if (Action is not null)
+        {
+            <div class="ct-card-action">@Action</div>
+        }
+    </header>
+    <div class="ct-card-body">
+        @ChildContent
+    </div>
+</section>
+
+@code {
+    [Parameter] [EditorRequired] public string Title { get; set; } = string.Empty;
+
+    /// <summary>ct-card-wide for a card that should span the grid.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>
+    ///     The explanation that used to sit inline as a paragraph. A tooltip rather than a toggle:
+    ///     opening a disclosure reflowed the form under it, which is worse than the sentence it
+    ///     was hiding.
+    /// </summary>
+    [Parameter] public string? Hint { get; set; }
+
+    /// <summary>Top-right of the card — a link to the section that owns this, usually.</summary>
+    [Parameter] public RenderFragment? Action { get; set; }
+
+    [Parameter] [EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+}

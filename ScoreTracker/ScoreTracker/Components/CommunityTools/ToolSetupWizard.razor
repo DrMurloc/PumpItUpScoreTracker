@@ -192,9 +192,6 @@
                     <MudTextField T="string" @bind-Value="_webhookUrl" Label=@L["Your API"] Class="mt-3" Placeholder="https://example.piutool.com/score"
                                   MaxLength="500" Style="max-width:520px;"></MudTextField>
                     <div class="d-flex gap-3 flex-wrap mt-1">
-                        <MudTextField T="string" @bind-Value="_headerName" Label=@L["Header name"]
-                                      Placeholder="X-My-Tool-Token" MaxLength="64"
-                                      Style="max-width:260px;"></MudTextField>
                         <MudTextField T="string" @bind-Value="_headerValue" Label=@L["Value"]
                                       MaxLength="128" InputType="InputType.Password"
                                       Style="max-width:260px;"></MudTextField>
@@ -549,7 +546,7 @@
         }
 
         // Before the webhook command, so entering session mode can see the header it requires.
-        await Mediator.Send(new SetToolOutboundHeaderCommand(_toolId!.Value, _headerName, _headerValue));
+        await Mediator.Send(new SetToolOutboundHeaderCommand(_toolId!.Value, _headerValue));
         await Mediator.Send(new SetToolWebhookCommand(_toolId.Value, _mode, _webhookUrl,
             Array.Empty<MixEnum>()));
     }

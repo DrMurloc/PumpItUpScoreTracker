@@ -12152,3 +12152,43 @@ span.ct-console-pick { cursor: default; }
    already the boundary, and a paper inside a paper is what made the old console
    read as a stack of equally-loud panels. */
 .ct-section { display: block; }
+
+/* ---------------------------------------------------------------------------
+   Console cards. One responsibility per card, replacing the horizontal rules
+   the sections used to separate concerns — a rule says "something changed"
+   without saying what belongs to what, and a page of them reads as one strip.
+   --------------------------------------------------------------------------- */
+
+.ct-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+
+/* A card that owns a form wide enough to need the row, or a list. */
+.ct-cards > .ct-card-wide { grid-column: 1 / -1; }
+
+.ct-card {
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--mix-surface) 45%, transparent);
+    overflow: hidden;
+}
+
+.ct-card-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 16px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+    background: color-mix(in srgb, var(--mix-nav) 45%, transparent);
+}
+
+.ct-card-head .ct-card-action { margin-left: auto; }
+
+.ct-card-body { padding: 16px; }
+
+/* A revealed secret box: shown only after "Set new token", because an empty
+   password field beside a value that already exists reads as "it is gone". */
+.ct-reveal { max-width: 320px; }

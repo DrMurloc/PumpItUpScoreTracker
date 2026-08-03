@@ -38,12 +38,16 @@ public sealed record SetToolWebhookCommand(Guid ToolId, WebhookMode Mode, string
     IReadOnlyList<MixEnum> Mixes) : IRequest;
 
 /// <summary>
-///     Sets the header we send verbatim on every delivery, which is how a maker's server knows a
-///     call is ours. A null or blank <paramref name="Value" /> keeps whatever is stored — the field
-///     is a secret the maker chose, and a blank box on a settings form must not erase one.
+///     Sets the value of the header sent verbatim on every delivery, which is how a maker's server
+///     knows a call is ours. The header's <b>name</b> is fixed — naming it was a decision with no
+///     right answer standing between a maker and the one that matters.
+///     <para>
+///         A null or blank value keeps whatever is stored: the field is a secret the maker chose,
+///         and a blank box on a settings form must not erase one.
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record SetToolOutboundHeaderCommand(Guid ToolId, string? Name, string? Value) : IRequest;
+public sealed record SetToolOutboundHeaderCommand(Guid ToolId, string? Value) : IRequest;
 
 /// <summary>
 ///     Sets the secret a maker's endpoint must answer a verification request with. Stored as a hash

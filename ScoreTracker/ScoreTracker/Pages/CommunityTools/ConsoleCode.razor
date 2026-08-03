@@ -92,9 +92,7 @@
 
     private string Mix => _context.Mixes.Any() ? _context.Mixes[0].ToString() : "Phoenix2";
 
-    private string Header => string.IsNullOrWhiteSpace(_context.OutboundHeaderName)
-        ? "X-Your-Tool-Token"
-        : _context.OutboundHeaderName;
+    private static string Header => WebhookContract.OutboundHeader;
 
     private string Route
     {

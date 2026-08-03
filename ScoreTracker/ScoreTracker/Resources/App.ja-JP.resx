@@ -2354,9 +2354,6 @@
   <data name="Have an invite link?" xml:space="preserve">
     <value>招待リンクをお持ちですか？</value>
   </data>
-  <data name="Header name" xml:space="preserve">
-    <value>ヘッダー名</value>
-  </data>
   <data name="Header required for PIUGame session, so your server knows it is you receiving user sessions." xml:space="preserve">
     <value>PIUGame セッションモードではヘッダーが必須です。ユーザーのセッションを受け取っているのがあなただと、サーバー側で分かるようにするためです。</value>
   </data>
@@ -5135,6 +5132,9 @@
   <data name="Seconds of Rest Per Chart" xml:space="preserve">
 	  <value>譜面ごとの休憩秒数</value>
   </data>
+  <data name="Secret" xml:space="preserve">
+    <value>シークレット</value>
+  </data>
   <data name="See a handler" xml:space="preserve">
     <value>ハンドラーを見る</value>
   </data>
@@ -5231,8 +5231,14 @@
   <data name="Sessions per page" xml:space="preserve">
     <value>ページあたりのセッション数</value>
   </data>
+  <data name="Set" xml:space="preserve">
+    <value>設定済み</value>
+  </data>
   <data name="Set a delivery URL on the Webhooks section and this fills in with yours." xml:space="preserve">
     <value>Webhooks セクションで配信先 URL を設定すると、ここがあなたのものに置き換わります。</value>
+  </data>
+  <data name="Set a new one" xml:space="preserve">
+    <value>新しく設定</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
 	  <value>セット譜面</value>

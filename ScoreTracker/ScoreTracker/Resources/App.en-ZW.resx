@@ -2354,9 +2354,6 @@
   <data name="Have an invite link?" xml:space="preserve">
     <value>Murpgrogl grabla?</value>
   </data>
-  <data name="Header name" xml:space="preserve">
-    <value>Pragl marogl</value>
-  </data>
   <data name="Header required for PIUGame session, so your server knows it is you receiving user sessions." xml:space="preserve">
     <value>Murgm grumba murgloo PIUGame murgloborg, murgloo murgm bloop marogl mo murgm blurgl morp murgloborg.</value>
   </data>
@@ -5135,6 +5132,9 @@
   <data name="Seconds of Rest Per Chart" xml:space="preserve">
 	  <value>Murmarglmurp mrgl Morggl Morg Murgl</value>
   </data>
+  <data name="Secret" xml:space="preserve">
+    <value>Grumb</value>
+  </data>
   <data name="See a handler" xml:space="preserve">
     <value>Murgl murgm glub</value>
   </data>
@@ -5231,8 +5231,14 @@
   <data name="Sessions per page" xml:space="preserve">
     <value>Glorgmaglgro morg urggrgl</value>
   </data>
+  <data name="Set" xml:space="preserve">
+    <value>Blorp</value>
+  </data>
   <data name="Set a delivery URL on the Webhooks section and this fills in with yours." xml:space="preserve">
     <value>Blorp murpo URL la Bloop grog, opa mo murgloo murgm.</value>
+  </data>
+  <data name="Set a new one" xml:space="preserve">
+    <value>Blorp blomurp</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
 	  <value>Gro Murgl</value>

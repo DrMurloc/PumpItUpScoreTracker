@@ -117,6 +117,19 @@ public sealed record MintedApiKey(Guid Id, string Key, DateTimeOffset? ExpiresAt
 ///         difference between an endpoint proving itself and merely answering.
 ///     </para>
 /// </summary>
+public static class WebhookContract
+{
+    /// <summary>
+    ///     The header a maker's own secret rides in on every delivery, and the one their handler
+    ///     checks. Fixed rather than chosen: naming it was a decision with no right answer standing
+    ///     between a maker and the one that matters, which is the value.
+    /// </summary>
+    public const string OutboundHeader = "X-PIU-Scores-Token";
+
+    /// <summary>Stable across retries — the dedupe key.</summary>
+    public const string DeliveryIdHeader = "X-PIU-Delivery-Id";
+}
+
 public static class WebhookVerificationSecret
 {
     public const string Prefix = "vfy_";
