@@ -2604,8 +2604,8 @@
   <data name="It will be able to read" xml:space="preserve">
     <value>読み取れる情報</value>
   </data>
-  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone." xml:space="preserve">
-    <value>キーは動かなくなり、Webhookは止まり、接続中の{0}人のプレイヤーがアクセスを失います。ツールは引き継げません — あなたのものか、消えるかです。</value>
+  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
+    <value>キーは無効になり、Webhook の送信も止まり、接続している {0} 人のプレイヤーがアクセスを失います。</value>
   </data>
   <data name="Jacks" xml:space="preserve">
     <value>ジャック</value>

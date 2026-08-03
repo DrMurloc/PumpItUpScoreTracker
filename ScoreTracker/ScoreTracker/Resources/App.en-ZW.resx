@@ -2604,8 +2604,8 @@
   <data name="It will be able to read" xml:space="preserve">
     <value>Murp blurgl</value>
   </data>
-  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone." xml:space="preserve">
-    <value>Blarglurp grorp murpmurp, murgm grorp murpo, murm {0} Morp galmoo murgloo argla. Bo morp murp murgm Rorgl — murgm gromurp arplo murgm blorm.</value>
+  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
+    <value>Grumb alla golba, blurgl alla golba, opa {0} marogl bloop am olo.</value>
   </data>
   <data name="Jacks" xml:space="preserve">
     <value>Plglmurm</value>

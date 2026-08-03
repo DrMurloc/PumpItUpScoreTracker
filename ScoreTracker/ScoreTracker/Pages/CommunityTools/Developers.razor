@@ -166,7 +166,7 @@ else
                 <div class="flex-grow-1" style="min-width:240px;">
                     <MudText Typo="Typo.body2"><b>@L["Delete {0}", _selected.Name]</b></MudText>
                     <MudText Typo="Typo.body2" Style="opacity:.7;">
-                        @L["Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone.", _selected.ConnectedPlayers]
+                        @L["Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access.", _selected.ConnectedPlayers]
                     </MudText>
                 </div>
                 <MudButton Variant="Variant.Outlined" Color="Color.Error"
@@ -197,7 +197,7 @@ else
     <DialogContent>
         <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
             <MudText Typo="Typo.body2">
-                @L["Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone.", _selected?.ConnectedPlayers ?? 0]
+                @L["Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access.", _selected?.ConnectedPlayers ?? 0]
             </MudText>
         </MudAlert>
     </DialogContent>

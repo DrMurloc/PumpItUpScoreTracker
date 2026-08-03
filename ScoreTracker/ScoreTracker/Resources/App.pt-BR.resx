@@ -2586,8 +2586,8 @@
   <data name="It will be able to read" xml:space="preserve">
     <value>Ela poderá ler</value>
   </data>
-  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone." xml:space="preserve">
-    <value>As chaves param de funcionar, os webhooks param de disparar, e os {0} jogadores conectados perdem o acesso. Ninguém pode assumir uma ferramenta — ela é sua ou some.</value>
+  <data name="Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access." xml:space="preserve">
+    <value>As chaves param de funcionar, os webhooks param de disparar e os {0} jogadores conectados perdem o acesso.</value>
   </data>
   <data name="Jacks" xml:space="preserve">
     <value>Jacks</value>
