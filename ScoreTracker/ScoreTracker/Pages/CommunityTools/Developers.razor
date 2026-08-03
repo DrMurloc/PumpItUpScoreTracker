@@ -47,9 +47,11 @@
 {
     <MudSkeleton Height="180px"></MudSkeleton>
 }
-else if (!_tools.Any())
+else if (_wizard)
 {
-    <ToolIntegrationChecklist Tool="null"></ToolIntegrationChecklist>
+    @* Mandatory the first time: a maker with no tools met an empty console and a checklist of
+       things to go find. Re-enterable afterwards from Help. *@
+    <ToolSetupWizard OnFinished="LeaveWizard"></ToolSetupWizard>
 }
 else
 {
@@ -169,6 +171,8 @@ else
                            Href="@($"/Developers/{_selected.Id}/Console")">@L["Activity log"]</MudButton>
                 <MudButton Size="Size.Small" Variant="Variant.Text"
                            Href="@($"/Developers/{_selected.Id}/Debug")">@L["Test delivery"]</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Text"
+                           OnClick="() => _wizard = true">@L["Set up another tool"]</MudButton>
             </div>
         </MudPaper>
 
@@ -242,13 +246,37 @@ else
     private IReadOnlyList<(string Name, int DaysLeft)> _expiringSoon = Array.Empty<(string, int)>();
 
     /// <summary>
+    ///     Derived rather than remembered. "Has no tools" is the state the wizard exists for, so
+    ///     there is no flag to set, nothing to get out of step, and no way to be stuck in it — the
+    ///     first tool it creates is also what ends it.
+    /// </summary>
+    private bool _wizard;
+
+    /// <summary>
     ///     Mirrors the domain rule on <c>Tool.RequestListing</c>. Reads the box rather than the
     ///     saved record, so writing a description enables the button without a round trip — and the
     ///     Save above it is what commits either way.
     /// </summary>
     private bool CanRequestListing => !string.IsNullOrWhiteSpace(_editDescription);
 
-    protected override async Task OnInitializedAsync() => await Reload();
+    protected override async Task OnInitializedAsync()
+    {
+        await Reload();
+        _wizard = !_tools.Any();
+    }
+
+    /// <summary>
+    ///     Leaves the wizard and selects whatever it just built, so the maker lands on their own
+    ///     tool rather than on a list they have to pick out of.
+    /// </summary>
+    private async Task LeaveWizard()
+    {
+        _wizard = false;
+        var before = _tools.Select(t => t.Id).ToHashSet();
+        await Reload();
+        var created = _tools.FirstOrDefault(t => !before.Contains(t.Id));
+        if (created is not null) Select(created);
+    }
 
     private async Task Reload()
     {

@@ -591,6 +591,9 @@
   <data name="API for tool makers" xml:space="preserve">
     <value>ツール開発者向け API</value>
   </data>
+  <data name="API Key" xml:space="preserve">
+    <value>API キー</value>
+  </data>
   <data name="API keys" xml:space="preserve">
     <value>APIキー</value>
   </data>
@@ -1997,6 +2000,9 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>次のパスを見つけよう。</value>
   </data>
+  <data name="Finish later" xml:space="preserve">
+    <value>あとで仕上げる</value>
+  </data>
   <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
     <value>自分のエンドポイントに配信を送り、失敗したものを再送します。</value>
   </data>
@@ -2147,6 +2153,9 @@
   <data name="generous to score once you're through" xml:space="preserve">
     <value>クリアさえすればスコアは伸びやすい</value>
   </data>
+  <data name="Get told when someone plays" xml:space="preserve">
+    <value>誰かがプレイしたら知らせる</value>
+  </data>
   <data name="Giant Slayer moments" xml:space="preserve">
     <value>ジャイアントスレイヤーの瞬間</value>
   </data>
@@ -2167,6 +2176,9 @@
   </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>削除へ</value>
+  </data>
+  <data name="Go to the console" xml:space="preserve">
+    <value>コンソールへ</value>
   </data>
   <data name="Goal" xml:space="preserve">
     <value>目標</value>
@@ -2582,8 +2594,14 @@
   <data name="Invite Links" xml:space="preserve">
     <value>招待リンク</value>
   </data>
+  <data name="Invite Players" xml:space="preserve">
+    <value>プレイヤーを招待</value>
+  </data>
   <data name="Invite Required" xml:space="preserve">
     <value>招待が必要</value>
+  </data>
+  <data name="Invite someone" xml:space="preserve">
+    <value>誰かを招待する</value>
   </data>
   <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
     <value>ボットを招待してから、任意のチャンネルで /piu register を実行するとフィードとコマンドが有効になります。</value>
@@ -2598,6 +2616,9 @@
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>スコアの記録やアカウントの変更はできません。コミュニティツールからいつでも接続を解除できます。</value>
   </data>
+  <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
+    <value>ツールに確認待ちの印を付けるだけです — そのあと Discord に書き込めば誰かが見ます。誰かが見張っている待ち行列はありません。</value>
+  </data>
   <data name="It is not limited to reading scores, and we cannot limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
     <value>スコアの読み取りに限定されておらず、こちらで制限することもできません。キーはpiugame.comが失効させるまで有効です。</value>
   </data>
@@ -2606,6 +2627,9 @@
   </data>
   <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
     <value>非公開で始まりますが完全に動作します — 招待リンク、キー、Webhookはすべて機能します。掲載は一覧に載るだけです。</value>
+  </data>
+  <data name="It starts private and fully working. Being listed in the directory is optional and comes at the end." xml:space="preserve">
+    <value>最初は非公開ですが、機能はすべて動きます。ディレクトリへの掲載は任意で、最後の手順です。</value>
   </data>
   <data name="It starts private and fully working. Listing only puts you in the directory." xml:space="preserve">
     <value>非公開で始まりますが完全に動作します。掲載は一覧に載るだけです。</value>
@@ -3197,6 +3221,12 @@
 	  <value>名前</value>
 	  
   <comment>名</comment></data>
+  <data name="Name Tool" xml:space="preserve">
+    <value>ツール名</value>
+  </data>
+  <data name="Name your tool" xml:space="preserve">
+    <value>ツールに名前を付ける</value>
+  </data>
   <data name="Name, or shorthand like S18" xml:space="preserve">
     <value>曲名、または S18 のような略記</value>
   </data>
@@ -3498,6 +3528,9 @@
   <data name="Not yet" xml:space="preserve">
     <value>未獲得</value>
   </data>
+  <data name="Note (optional)" xml:space="preserve">
+    <value>メモ (任意)</value>
+  </data>
   <data name="Note Count" xml:space="preserve">
 	  <value>ノーツ数</value>
 	  
@@ -3546,6 +3579,9 @@
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>まだ記録はありません</value>
+  </data>
+  <data name="Nothing is delivered until you verify the URL." xml:space="preserve">
+    <value>URL を確認するまで何も配信されません。</value>
   </data>
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>ツールと共有しているものはありません</value>
@@ -3737,8 +3773,17 @@
   <data name="Open {0}" xml:space="preserve">
     <value>{0} を開く</value>
   </data>
+  <data name="optional" xml:space="preserve">
+    <value>任意</value>
+  </data>
   <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
     <value>任意 — スコアの正当性が問われた場合、写真が証明になります。</value>
+  </data>
+  <data name="Optional, and the only step that involves us. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way." xml:space="preserve">
+    <value>任意で、こちらが関わる唯一の手順です。掲載されたツールは全プレイヤーが見られるディレクトリに並び、「すべてのツールと共有」を選んだプレイヤーも受け取れます。掲載しなくてもツールは動きます。</value>
+  </data>
+  <data name="Optional. By default you ask us for scores whenever you like. Instead we can call you: when one of your players imports, we send an HTTP POST to a URL you give us and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook." xml:space="preserve">
+    <value>任意です。既定では、欲しいときにこちらへスコアを取りに来てもらいます。代わりにこちらから呼ぶこともできます: プレイヤーが取り込むと、指定された URL に HTTP POST を送り、あとはサーバーの好きなように処理してください。設定した経験があれば、ごく普通の Webhook です。</value>
   </data>
   <data name="Order by" xml:space="preserve">
     <value>並び替え</value>
@@ -4640,6 +4685,9 @@
   <data name="Report Video Tooltip" xml:space="preserve">
     <value>間違いとか壊れたビデオを報告</value>
   </data>
+  <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
+    <value>掲載には必要です — プレイヤーが決める前に読む文章です。</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>{0}に改定</value>
   </data>
@@ -5003,6 +5051,9 @@
   <data name="Session history" xml:space="preserve">
     <value>セッション履歴</value>
   </data>
+  <data name="Session mode hands your server a live piugame.com key, so every player agrees to it individually — nobody arrives through &quot;share with all tools&quot;. It can only be switched on while no player is connected, and a header is required." xml:space="preserve">
+    <value>セッションモードは有効な piugame.com のキーをサーバーに渡すため、プレイヤーごとの同意が必要です — 「すべてのツールと共有」からは入ってきません。接続中のプレイヤーがいないときだけ有効にでき、ヘッダーが必須です。</value>
+  </data>
   <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
     <value>インポート時にセッションのまとめを記録 — 新しい UG プレート、自己ベスト2件、フォルダーランプ1件。</value>
   </data>
@@ -5023,6 +5074,12 @@
   </data>
   <data name="Set Charts" xml:space="preserve">
 	  <value>セット譜面</value>
+  </data>
+  <data name="Set up another tool" xml:space="preserve">
+    <value>もう一つ設定する</value>
+  </data>
+  <data name="Set up your tool" xml:space="preserve">
+    <value>ツールのセットアップ</value>
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>アカウントページで国を設定すると地域に参加できます。</value>
@@ -5257,6 +5314,9 @@
   </data>
   <data name="Skills" xml:space="preserve">
     <value>スキル</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>スキップ</value>
   </data>
   <data name="Skip the game-tag step" xml:space="preserve">
     <value>ゲームタグの手順をスキップ</value>
@@ -5539,6 +5599,9 @@
   <data name="That is control of your PIUGame account, not just your scores. You'll see the full warning before anything is shared." xml:space="preserve">
     <value>スコアだけでなく、PIUGameアカウントそのものを操作できる権限です。共有する前に完全な警告を表示します。</value>
   </data>
+  <data name="That needs a verification secret your endpoint answers with, which you can set on the console once your handler is up." xml:space="preserve">
+    <value>確認にはエンドポイントが返す秘密の値が必要です。ハンドラーを用意したあと、コンソールで設定できます。</value>
+  </data>
   <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
     <value>そのPIUGAMEアカウントは選択したアカウントに連携されていません</value>
   </data>
@@ -5608,6 +5671,9 @@
   <data name="The intro is the danger zone" xml:space="preserve">
     <value>序盤が危険地帯</value>
   </data>
+  <data name="The key is how your code proves it is your tool." xml:space="preserve">
+    <value>キーは、あなたのコードがこのツールであることを示すためのものです。</value>
+  </data>
   <data name="The level printed on the chart." xml:space="preserve">
     <value>譜面に表記されたレベル。</value>
   </data>
@@ -5625,6 +5691,9 @@
   </data>
   <data name="The ones worth framing" xml:space="preserve">
     <value>額に入れて飾りたい記録</value>
+  </data>
+  <data name="The only time this is readable. Copy it somewhere safe now." xml:space="preserve">
+    <value>読めるのはこのときだけです。今すぐ安全な場所にコピーしてください。</value>
   </data>
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>対極は対象範囲全体から選ばれるため、範囲指定は適用されません</value>
@@ -5725,6 +5794,9 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>この譜面には{0}のデータがありません</value>
   </data>
+  <data name="This does not send anything." xml:space="preserve">
+    <value>これは何も送りません。</value>
+  </data>
   <data name="This folder serves {0}" xml:space="preserve">
     <value>このフォルダーは{0}向け</value>
   </data>
@@ -5755,6 +5827,9 @@
   <data name="This is the only time we'll show it." xml:space="preserve">
     <value>キーを表示するのはこの一度だけです。</value>
   </data>
+  <data name="This is what a player sees when they are asked whether to let it read their scores. You can change it later." xml:space="preserve">
+    <value>プレイヤーがスコアの読み取りを許可するか決めるときに見る名前です。あとから変更できます。</value>
+  </data>
   <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
     <value>唯一のログイン方法のため連携解除できません</value>
   </data>
@@ -5766,6 +5841,9 @@
   </data>
   <data name="this mix only" xml:space="preserve">
     <value>このバージョンのみ</value>
+  </data>
+  <data name="This one is different." xml:space="preserve">
+    <value>これだけは別物です。</value>
   </data>
   <data name="This page is full." xml:space="preserve">
     <value>このページは満杯です。</value>
@@ -6362,8 +6440,20 @@
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>選んだバージョンのインポートだけを送ります。古いバージョンは1Mスケールではなく グレードで採点され、ペイロードがどちらのモデルかを示します。</value>
   </data>
+  <data name="We POST only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
+    <value>「このプレイヤーが取り込んだ」だけを送ります。必要なものは取りに来てください。</value>
+  </data>
+  <data name="We POST the scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
+    <value>スコアそのものを 1 回 100 件ずつ送り、続きがあれば次のリンクも添えます。</value>
+  </data>
   <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it." xml:space="preserve">
     <value>このヘッダーをすべての配信と確認呼び出しにそのまま送ります。ハンドラーで確認し、ヘッダーのないリクエストは拒否してください。送る必要があるため暗号化して保管します。</value>
+  </data>
+  <data name="We send this header verbatim on every delivery, so your server can reject anything that is not us." xml:space="preserve">
+    <value>このヘッダーをすべての配信にそのまま送るので、サーバー側で当方以外のリクエストを拒否できます。</value>
+  </data>
+  <data name="We show it once." xml:space="preserve">
+    <value>表示は一度だけです。</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>保存しているのはキーではなくハッシュです。失くしたら新しく作ってください — キーは同時に2つ使えるので、入れ替えに停止時間はかかりません。</value>
@@ -6582,11 +6672,20 @@
   <data name="You" xml:space="preserve">
     <value>あなた</value>
   </data>
+  <data name="You are already connected to your own tool, so you have one real player to build against — yourself. An invite link adds anyone else, public profile or not." xml:space="preserve">
+    <value>あなたはすでに自分のツールに接続しているので、試せる実在のプレイヤーが一人います — あなた自身です。招待リンクを使えば、公開プロフィールでなくても他の人を追加できます。</value>
+  </data>
   <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
     <value>あなたは作成者です。コミュニティの譲渡、削除、公開設定の変更、デフォルト管理者権限と通知言語の設定は作成者だけができます。</value>
   </data>
   <data name="You beat {0}% of Peers on this." xml:space="preserve">
     <value>この譜面で同レベル帯の{0}%に勝っています。</value>
+  </data>
+  <data name="You call our API when you want it. Skip this screen." xml:space="preserve">
+    <value>必要なときに API を呼んでください。この画面は飛ばして構いません。</value>
+  </data>
+  <data name="You can leave once your key exists." xml:space="preserve">
+    <value>キーができたら離れられます。</value>
   </data>
   <data name="You can leave this page." xml:space="preserve">
     <value>このページを離れても大丈夫です。</value>
@@ -6654,6 +6753,9 @@
   <data name="You're connected to your own tool" xml:space="preserve">
     <value>自分のツールに接続済み</value>
   </data>
+  <data name="You're set up" xml:space="preserve">
+    <value>準備できました</value>
+  </data>
   <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
     <value>あなたは {0} 個のコミュニティの作成者です。誰かが引き継ぐ必要があるので、それぞれに新しい作成者を選ぶか、あなただけなら削除してください。</value>
   </data>
@@ -6719,6 +6821,9 @@
   </data>
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>あなたのグループ、あなたの地域、そして世界。</value>
+  </data>
+  <data name="Your key" xml:space="preserve">
+    <value>あなたのキー</value>
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>レベル履歴は次回のインポートから記録されます。</value>
@@ -6843,6 +6948,9 @@
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>ユーザー名とパスワードはpiugame.comへ直接送信され、保存されることはありません</value>
   </data>
+  <data name="Yours only. The player who follows the link never sees it." xml:space="preserve">
+    <value>あなただけのメモです。リンクをたどったプレイヤーには見えません。</value>
+  </data>
   <data name="\* = reclears" xml:space="preserve">
     <value>\* = 再クリア</value>
   </data>
@@ -6965,6 +7073,9 @@
   </data>
   <data name="{0} easier for you — mostly {1}" xml:space="preserve">
     <value>あなたに易しいのは{0}譜面 — 主に{1}</value>
+  </data>
+  <data name="{0} exists, it has a key, and you are connected to it. Everything from here lives on the console." xml:space="preserve">
+    <value>{0} ができ、キーがあり、あなたが接続しています。ここから先はコンソールで行います。</value>
   </data>
   <data name="{0} expires in {1} days" xml:space="preserve">
     <value>{0}は{1}日後に期限切れになります</value>

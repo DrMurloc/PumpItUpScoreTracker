@@ -588,6 +588,9 @@
   <data name="API for tool makers" xml:space="preserve">
     <value>툴 제작자용 API</value>
   </data>
+  <data name="API Key" xml:space="preserve">
+    <value>API 키</value>
+  </data>
   <data name="API keys" xml:space="preserve">
     <value>API 키</value>
   </data>
@@ -1980,6 +1983,9 @@
   <data name="Find your next pass." xml:space="preserve">
     <value>다음 패스를 찾으세요.</value>
   </data>
+  <data name="Finish later" xml:space="preserve">
+    <value>나중에 마무리</value>
+  </data>
   <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
     <value>내 엔드포인트로 전달을 보내고, 실패한 것을 재전송하세요.</value>
   </data>
@@ -2130,6 +2136,9 @@
   <data name="generous to score once you're through" xml:space="preserve">
     <value>클리어만 하면 점수는 후하게 나옵니다</value>
   </data>
+  <data name="Get told when someone plays" xml:space="preserve">
+    <value>플레이 소식 받기</value>
+  </data>
   <data name="Giant Slayer moments" xml:space="preserve">
     <value>자이언트 슬레이어 순간</value>
   </data>
@@ -2150,6 +2159,9 @@
   </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>삭제로 이동</value>
+  </data>
+  <data name="Go to the console" xml:space="preserve">
+    <value>콘솔로 가기</value>
   </data>
   <data name="Goal" xml:space="preserve">
     <value>목표</value>
@@ -2565,8 +2577,14 @@
   <data name="Invite Links" xml:space="preserve">
     <value>초대 링크</value>
   </data>
+  <data name="Invite Players" xml:space="preserve">
+    <value>플레이어 초대</value>
+  </data>
   <data name="Invite Required" xml:space="preserve">
     <value>초대 필요</value>
+  </data>
+  <data name="Invite someone" xml:space="preserve">
+    <value>누군가 초대하기</value>
   </data>
   <data name="Invite the bot, then run /piu register in any channel to start its feeds and commands." xml:space="preserve">
     <value>봇을 초대한 다음 아무 채널에서나 /piu register 를 실행하면 피드와 명령어가 활성화됩니다.</value>
@@ -2580,6 +2598,9 @@
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>점수를 기록하거나 계정을 변경할 수는 없습니다. 커뮤니티 도구에서 언제든 연결을 해제할 수 있습니다.</value>
   </data>
+  <data name="It flags your tool for review — then post in the Discord and someone will look. There is no queue anybody watches." xml:space="preserve">
+    <value>도구를 검토 대상으로 표시할 뿐입니다 — 그다음 디스코드에 글을 남기면 누군가 확인합니다. 지켜보는 대기열은 없습니다.</value>
+  </data>
   <data name="It is not limited to reading scores, and we cannot limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
     <value>점수 읽기로 제한되지 않으며, 저희가 제한할 수도 없습니다. 키는 piugame.com이 만료시킬 때까지 유효합니다.</value>
   </data>
@@ -2588,6 +2609,9 @@
   </data>
   <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
     <value>비공개로 시작하지만 완전히 동작합니다 — 초대 링크, 키, 웹훅 모두 작동합니다. 등록은 목록에 올리는 것뿐입니다.</value>
+  </data>
+  <data name="It starts private and fully working. Being listed in the directory is optional and comes at the end." xml:space="preserve">
+    <value>처음에는 비공개이지만 기능은 모두 작동합니다. 디렉터리 등록은 선택이며 마지막 단계입니다.</value>
   </data>
   <data name="It starts private and fully working. Listing only puts you in the directory." xml:space="preserve">
     <value>비공개로 시작하지만 완전히 동작합니다. 등록은 목록에 올리는 것뿐입니다.</value>
@@ -3168,6 +3192,12 @@
   <data name="Name" xml:space="preserve">
     <value>이름</value>
   </data>
+  <data name="Name Tool" xml:space="preserve">
+    <value>도구 이름</value>
+  </data>
+  <data name="Name your tool" xml:space="preserve">
+    <value>도구 이름 정하기</value>
+  </data>
   <data name="Name, or shorthand like S18" xml:space="preserve">
     <value>곡명 또는 S18 같은 약어</value>
   </data>
@@ -3468,6 +3498,9 @@
   <data name="Not yet" xml:space="preserve">
     <value>미획득</value>
   </data>
+  <data name="Note (optional)" xml:space="preserve">
+    <value>메모 (선택)</value>
+  </data>
   <data name="Note Count" xml:space="preserve">
     <value>노트 수</value>
   </data>
@@ -3515,6 +3548,9 @@
   </data>
   <data name="Nothing here yet" xml:space="preserve">
     <value>아직 기록이 없습니다</value>
+  </data>
+  <data name="Nothing is delivered until you verify the URL." xml:space="preserve">
+    <value>URL을 확인하기 전까지는 아무것도 전달되지 않습니다.</value>
   </data>
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>도구와 공유된 것이 없습니다</value>
@@ -3705,8 +3741,17 @@
   <data name="Open {0}" xml:space="preserve">
     <value>{0} 열기</value>
   </data>
+  <data name="optional" xml:space="preserve">
+    <value>선택</value>
+  </data>
   <data name="Optional — a photo is your proof if a score's legitimacy is ever disputed." xml:space="preserve">
     <value>선택 사항 — 점수의 정당성에 이의가 제기될 경우 사진이 증빙이 됩니다.</value>
+  </data>
+  <data name="Optional, and the only step that involves us. A listed tool appears in the directory every player can browse, and can accept players who chose to share with all tools. Your tool works either way." xml:space="preserve">
+    <value>선택 사항이며, 저희가 관여하는 유일한 단계입니다. 목록에 오른 도구는 모든 플레이어가 둘러보는 디렉터리에 표시되고, '모든 도구와 공유'를 선택한 플레이어도 받을 수 있습니다. 등록하지 않아도 도구는 잘 작동합니다.</value>
+  </data>
+  <data name="Optional. By default you ask us for scores whenever you like. Instead we can call you: when one of your players imports, we send an HTTP POST to a URL you give us and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook." xml:space="preserve">
+    <value>선택 사항입니다. 기본적으로는 원할 때 저희에게 점수를 요청합니다. 대신 저희가 호출할 수도 있습니다: 플레이어가 기록을 가져오면 여러분이 알려 준 주소로 HTTP POST를 보내고, 서버가 알아서 처리합니다. 전에 설정해 본 적이 있다면 흔한 웹훅입니다.</value>
   </data>
   <data name="Order by" xml:space="preserve">
     <value>정렬 기준</value>
@@ -4598,6 +4643,9 @@
   <data name="Report Video Tooltip" xml:space="preserve">
     <value>저화질, 깨짐, 관련없는 동영상 신고</value>
   </data>
+  <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
+    <value>목록에 오르려면 필요합니다 — 플레이어가 결정하기 전에 읽는 내용입니다.</value>
+  </data>
   <data name="rerated {0}" xml:space="preserve">
     <value>{0}로 조정됨</value>
   </data>
@@ -4955,6 +5003,9 @@
   <data name="Session history" xml:space="preserve">
     <value>세션 기록</value>
   </data>
+  <data name="Session mode hands your server a live piugame.com key, so every player agrees to it individually — nobody arrives through &quot;share with all tools&quot;. It can only be switched on while no player is connected, and a header is required." xml:space="preserve">
+    <value>세션 모드는 살아 있는 piugame.com 키를 서버에 전달하므로 플레이어마다 개별 동의가 필요합니다 — '모든 도구와 공유'로는 들어오지 않습니다. 연결된 플레이어가 없을 때만 켤 수 있고 헤더가 필요합니다.</value>
+  </data>
   <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
     <value>임포트하는 동안 세션 요약이 기록됩니다 — 새 UG 플레이트, 개인 기록 2개, 폴더 램프 1개.</value>
   </data>
@@ -4975,6 +5026,12 @@
   </data>
   <data name="Set Charts" xml:space="preserve">
     <value>채보 설정</value>
+  </data>
+  <data name="Set up another tool" xml:space="preserve">
+    <value>도구 하나 더 설정</value>
+  </data>
+  <data name="Set up your tool" xml:space="preserve">
+    <value>도구 설정</value>
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>계정 페이지에서 국가를 설정하면 지역에 가입됩니다.</value>
@@ -5203,6 +5260,9 @@
   </data>
   <data name="Skills" xml:space="preserve">
     <value>스킬</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>건너뛰기</value>
   </data>
   <data name="Skip the game-tag step" xml:space="preserve">
     <value>게임 태그 단계 건너뛰기</value>
@@ -5480,6 +5540,9 @@
   <data name="That is control of your PIUGame account, not just your scores. You'll see the full warning before anything is shared." xml:space="preserve">
     <value>점수만이 아니라 PIUGame 계정 전체에 대한 제어 권한입니다. 공유하기 전에 전체 경고를 보여 드립니다.</value>
   </data>
+  <data name="That needs a verification secret your endpoint answers with, which you can set on the console once your handler is up." xml:space="preserve">
+    <value>확인에는 엔드포인트가 응답할 비밀 값이 필요하며, 핸들러를 올린 뒤 콘솔에서 설정할 수 있습니다.</value>
+  </data>
   <data name="That PIUGAME account is not connected to the selected account" xml:space="preserve">
     <value>해당 PIUGAME 계정은 선택한 계정에 연결되어 있지 않습니다</value>
   </data>
@@ -5549,6 +5612,9 @@
   <data name="The intro is the danger zone" xml:space="preserve">
     <value>도입부가 위험 구간</value>
   </data>
+  <data name="The key is how your code proves it is your tool." xml:space="preserve">
+    <value>키는 여러분의 코드가 이 도구임을 증명하는 수단입니다.</value>
+  </data>
   <data name="The level printed on the chart." xml:space="preserve">
     <value>채보에 표기된 레벨.</value>
   </data>
@@ -5566,6 +5632,9 @@
   </data>
   <data name="The ones worth framing" xml:space="preserve">
     <value>액자에 걸어둘 기록들</value>
+  </data>
+  <data name="The only time this is readable. Copy it somewhere safe now." xml:space="preserve">
+    <value>지금 이 순간에만 볼 수 있습니다. 안전한 곳에 복사해 두세요.</value>
   </data>
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>정반대 채보는 비교 범위 전체에서 뽑히므로 범위 설정이 적용되지 않습니다</value>
@@ -5666,6 +5735,9 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>이 채보에는 {0} 데이터가 없습니다</value>
   </data>
+  <data name="This does not send anything." xml:space="preserve">
+    <value>이 버튼은 아무것도 보내지 않습니다.</value>
+  </data>
   <data name="This folder serves {0}" xml:space="preserve">
     <value>이 폴더는 {0}용</value>
   </data>
@@ -5696,6 +5768,9 @@
   <data name="This is the only time we'll show it." xml:space="preserve">
     <value>키를 보여 드리는 것은 이번 한 번뿐입니다.</value>
   </data>
+  <data name="This is what a player sees when they are asked whether to let it read their scores. You can change it later." xml:space="preserve">
+    <value>플레이어가 내 점수를 읽도록 허용할지 정할 때 보게 되는 이름입니다. 나중에 바꿀 수 있습니다.</value>
+  </data>
   <data name="This is your only sign-in method and cannot be disconnected" xml:space="preserve">
     <value>유일한 로그인 방법이므로 연결 해제할 수 없습니다</value>
   </data>
@@ -5707,6 +5782,9 @@
   </data>
   <data name="this mix only" xml:space="preserve">
     <value>이 시리즈만</value>
+  </data>
+  <data name="This one is different." xml:space="preserve">
+    <value>이 모드는 다릅니다.</value>
   </data>
   <data name="This page is full." xml:space="preserve">
     <value>이 페이지는 가득 찼습니다.</value>
@@ -6299,8 +6377,20 @@
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>선택한 시리즈의 임포트만 보냅니다. 옛 시리즈는 1M 척도가 아니라 등급으로 채점되며, 페이로드가 어떤 모델인지 알려줍니다.</value>
   </data>
+  <data name="We POST only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
+    <value>"이 플레이어가 기록을 가져왔다"만 보냅니다. 필요한 것은 직접 가져가세요.</value>
+  </data>
+  <data name="We POST the scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
+    <value>점수 자체를 전달당 100개씩 보내며, 더 있으면 다음 링크를 함께 보냅니다.</value>
+  </data>
   <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it." xml:space="preserve">
     <value>이 헤더를 모든 전달과 확인 호출에 그대로 보냅니다. 핸들러에서 확인하고 헤더가 없는 요청은 거부하세요. 저희가 보내야 하므로 암호화해서 보관합니다.</value>
+  </data>
+  <data name="We send this header verbatim on every delivery, so your server can reject anything that is not us." xml:space="preserve">
+    <value>이 헤더를 모든 전달에 그대로 보내므로, 서버에서 저희가 아닌 요청을 거부할 수 있습니다.</value>
+  </data>
+  <data name="We show it once." xml:space="preserve">
+    <value>한 번만 보여 드립니다.</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>저희는 키가 아니라 해시를 저장합니다. 잃어버리면 새로 만드세요 — 키를 두 개까지 동시에 쓸 수 있으므로 교체에 중단 시간이 없습니다.</value>
@@ -6512,11 +6602,20 @@
   <data name="You" xml:space="preserve">
     <value>나</value>
   </data>
+  <data name="You are already connected to your own tool, so you have one real player to build against — yourself. An invite link adds anyone else, public profile or not." xml:space="preserve">
+    <value>이미 본인 도구에 연결되어 있으므로 시험해 볼 실제 플레이어가 한 명 있습니다 — 바로 본인입니다. 초대 링크로 다른 사람도 추가할 수 있으며, 공개 프로필이 아니어도 됩니다.</value>
+  </data>
   <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
     <value>당신은 개설자입니다. 커뮤니티 양도, 삭제, 공개 설정 변경, 기본 관리자 권한 및 알림 언어 설정은 개설자만 할 수 있습니다.</value>
   </data>
   <data name="You beat {0}% of Peers on this." xml:space="preserve">
     <value>이 채보에서 동급 플레이어의 {0}%를 이겼습니다.</value>
+  </data>
+  <data name="You call our API when you want it. Skip this screen." xml:space="preserve">
+    <value>원할 때 저희 API를 호출합니다. 이 화면은 건너뛰세요.</value>
+  </data>
+  <data name="You can leave once your key exists." xml:space="preserve">
+    <value>키가 만들어지면 나갈 수 있습니다.</value>
   </data>
   <data name="You can leave this page." xml:space="preserve">
     <value>이 페이지를 떠나도 됩니다.</value>
@@ -6584,6 +6683,9 @@
   <data name="You're connected to your own tool" xml:space="preserve">
     <value>내 도구에 이미 연결되어 있습니다</value>
   </data>
+  <data name="You're set up" xml:space="preserve">
+    <value>준비 완료</value>
+  </data>
   <data name="You're the creator of {0} communities. Someone has to own them, so pick a new creator for each — or delete it, if you're the only one left." xml:space="preserve">
     <value>{0}개 커뮤니티의 개설자입니다. 누군가는 맡아야 하니 각각 새 개설자를 정하거나, 혼자뿐이라면 삭제하세요.</value>
   </data>
@@ -6649,6 +6751,9 @@
   </data>
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>나의 그룹, 나의 지역, 그리고 전 세계까지.</value>
+  </data>
+  <data name="Your key" xml:space="preserve">
+    <value>발급된 키</value>
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>레벨 기록은 다음 가져오기부터 기록됩니다.</value>
@@ -6773,6 +6878,9 @@
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>아이디와 비밀번호는 piugame.com으로 직접 전송되며 절대 저장되지 않습니다</value>
   </data>
+  <data name="Yours only. The player who follows the link never sees it." xml:space="preserve">
+    <value>본인만 보는 메모입니다. 링크를 따라온 플레이어에게는 보이지 않습니다.</value>
+  </data>
   <data name="\* = reclears" xml:space="preserve">
     <value>\* = 재클리어</value>
   </data>
@@ -6895,6 +7003,9 @@
   </data>
   <data name="{0} easier for you — mostly {1}" xml:space="preserve">
     <value>{0}개가 나에게 더 쉬움 — 주로 {1}</value>
+  </data>
+  <data name="{0} exists, it has a key, and you are connected to it. Everything from here lives on the console." xml:space="preserve">
+    <value>{0} 이(가) 만들어졌고, 키가 있으며, 본인이 연결되어 있습니다. 이후 작업은 콘솔에서 하시면 됩니다.</value>
   </data>
   <data name="{0} expires in {1} days" xml:space="preserve">
     <value>{0}이(가) {1}일 후 만료됩니다</value>
