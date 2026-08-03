@@ -312,6 +312,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>이미 같은 이름의 커뮤니티가 있습니다.</value>
   </data>
+  <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
+    <value>먼저 정해두면 좋은 몇 가지입니다. 이후의 모든 것이 여기에 맞춰집니다.</value>
+  </data>
   <data name="A good is a dead note" xml:space="preserve">
     <value>Good은 죽은 노트</value>
   </data>
@@ -482,6 +485,9 @@
   </data>
   <data name="All mixes" xml:space="preserve">
     <value>모든 시리즈</value>
+  </data>
+  <data name="All of it is changeable later in your account." xml:space="preserve">
+    <value>모두 나중에 계정에서 변경할 수 있습니다.</value>
   </data>
   <data name="all permissions" xml:space="preserve">
     <value>모든 권한</value>
@@ -881,6 +887,9 @@
   </data>
   <data name="Build the first one, or connect to a private tool with an invite link." xml:space="preserve">
     <value>첫 번째 도구를 만들거나, 초대 링크로 비공개 도구에 연결하세요.</value>
+  </data>
+  <data name="Build your home page" xml:space="preserve">
+    <value>메인 페이지 만들기</value>
   </data>
   <data name="Build your home page from widgets you choose." xml:space="preserve">
     <value>위젯을 선택해 나만의 홈 페이지를 만들어 보세요.</value>
@@ -1419,6 +1428,12 @@
   <data name="Country" xml:space="preserve">
     <value>국가</value>
   </data>
+  <data name="Country cleared" xml:space="preserve">
+    <value>국가를 지웠습니다</value>
+  </data>
+  <data name="Country saved" xml:space="preserve">
+    <value>국가를 저장했습니다</value>
+  </data>
   <data name="Counts toward a title" xml:space="preserve">
     <value>칭호 진행에 반영됨</value>
   </data>
@@ -1466,6 +1481,9 @@
   </data>
   <data name="Current life" xml:space="preserve">
     <value>현재 라이프</value>
+  </data>
+  <data name="Current mix" xml:space="preserve">
+    <value>현재 시리즈</value>
   </data>
   <data name="Current Username" xml:space="preserve">
     <value>현재 아이디</value>
@@ -1782,6 +1800,9 @@
   <data name="Enter A Score" xml:space="preserve">
     <value>점수를 입력하세요</value>
   </data>
+  <data name="Enter a username" xml:space="preserve">
+    <value>아이디를 입력하세요</value>
+  </data>
   <data name="Enter Judgements" xml:space="preserve">
     <value>판정 입력</value>
   </data>
@@ -1952,6 +1973,9 @@
   </data>
   <data name="Fill to max" xml:space="preserve">
     <value>최대까지 채우기</value>
+  </data>
+  <data name="filled in from {0}" xml:space="preserve">
+    <value>{0}에서 가져옴</value>
   </data>
   <data name="Filter" xml:space="preserve">
     <value>필터</value>
@@ -3054,6 +3078,9 @@
   <data name="Mix scope" xml:space="preserve">
     <value>시리즈 범위</value>
   </data>
+  <data name="Mix set to {0}" xml:space="preserve">
+    <value>시리즈를 {0}(으)로 설정했습니다</value>
+  </data>
   <data name="Mixes" xml:space="preserve">
     <value>시리즈</value>
   </data>
@@ -3282,6 +3309,9 @@
   <data name="Next title" xml:space="preserve">
     <value>다음 칭호</value>
   </data>
+  <data name="Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there." xml:space="preserve">
+    <value>다음은 메인 페이지입니다. 직접 고른 위젯으로 구성되며, 기본 구성으로 시작한 뒤 자유롭게 재배치할 수 있습니다.</value>
+  </data>
   <data name="No account needed to look around" xml:space="preserve">
     <value>둘러보는 데 계정은 필요 없습니다</value>
   </data>
@@ -3486,6 +3516,9 @@
   <data name="Not Relevant to Category" xml:space="preserve">
     <value>카테고리에 해당없음</value>
   </data>
+  <data name="Not set" xml:space="preserve">
+    <value>설정 안 함</value>
+  </data>
   <data name="Not Tagged" xml:space="preserve">
     <value>태그 없음</value>
   </data>
@@ -3615,6 +3648,9 @@
   <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
     <value>끄면 초대를 통해 직접 연결한 플레이어만 받습니다. 특정 그룹을 위한 도구여서 낯선 사람 수천 명이 방해가 된다면 끄세요.</value>
   </data>
+  <data name="Off — only you can see your scores" xml:space="preserve">
+    <value>꺼짐 — 나만 내 점수를 볼 수 있습니다</value>
+  </data>
   <data name="official" xml:space="preserve">
     <value>공식</value>
   </data>
@@ -3666,11 +3702,17 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>ToDo 목록에 있음</value>
   </data>
+  <data name="On — your scores show on leaderboards and in communities" xml:space="preserve">
+    <value>켜짐 — 점수가 리더보드와 커뮤니티에 표시됩니다</value>
+  </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>N노트마다 브레이크 한 번</value>
   </data>
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>점수, 등급, 플레이트 또는 클리어를 레벨별로 보여주는 구성 가능한 그래프.</value>
+  </data>
+  <data name="One minute, then you're in" xml:space="preserve">
+    <value>1분이면 끝납니다</value>
   </data>
   <data name="One miss from out" xml:space="preserve">
     <value>Miss 하나면 끝</value>
@@ -3737,6 +3779,9 @@
   </data>
   <data name="Open {0}" xml:space="preserve">
     <value>{0} 열기</value>
+  </data>
+  <data name="Opening your home page…" xml:space="preserve">
+    <value>메인 페이지를 여는 중…</value>
   </data>
   <data name="optional" xml:space="preserve">
     <value>선택</value>
@@ -4286,6 +4331,9 @@
   </data>
   <data name="Public" xml:space="preserve">
     <value>공개</value>
+  </data>
+  <data name="Public profile" xml:space="preserve">
+    <value>공개 프로필</value>
   </data>
   <data name="Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
     <value>공개 프로필은 기본적으로 공유가 켜져 있어, 끄기 전까지 도구가 내 점수를 읽을 수 있습니다 — 계정 페이지에서 언제든 끌 수 있습니다.</value>
@@ -5012,11 +5060,17 @@
   <data name="Set up another tool" xml:space="preserve">
     <value>도구 하나 더 설정</value>
   </data>
+  <data name="Set up your account" xml:space="preserve">
+    <value>계정 설정</value>
+  </data>
   <data name="Set up your tool" xml:space="preserve">
     <value>도구 설정</value>
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>계정 페이지에서 국가를 설정하면 지역에 가입됩니다.</value>
+  </data>
+  <data name="Sets what the whole site shows you." xml:space="preserve">
+    <value>사이트 전체에 표시되는 내용을 결정합니다.</value>
   </data>
   <data name="Settings" xml:space="preserve">
     <value>설정</value>
@@ -5477,6 +5531,9 @@
   <data name="swept Sunday" xml:space="preserve">
     <value>일요일 집계</value>
   </data>
+  <data name="Switch it any time from the mix pill in the top bar." xml:space="preserve">
+    <value>상단 바에서 언제든지 바꿀 수 있습니다.</value>
+  </data>
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>필터를 켜면 이 채보의 비교 대상을 좁힐 수 있습니다.</value>
   </data>
@@ -5743,6 +5800,9 @@
   </data>
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>이것은 영지식이 아닙니다. 로그인은 우리 서버에서 실행되므로, 당신이 가져오는 순간에는 기술적으로 자격 증명을 복호화할 수 있습니다. 우리는 그것을 기록하거나 보관하지 않지만, 매번 수동 가져오기에서 이미 가진 것과 동일한 접근 권한을 당신은 우리에게 맡기는 것입니다.</value>
+  </data>
+  <data name="This is the name other players see — on leaderboards, in communities, and on tier lists. Most people use their game tag." xml:space="preserve">
+    <value>다른 플레이어에게 보이는 이름입니다. 리더보드, 커뮤니티, 티어 리스트에 표시됩니다. 보통 게임 닉네임을 사용합니다.</value>
   </data>
   <data name="This is the only time we'll show it." xml:space="preserve">
     <value>키를 보여 드리는 것은 이번 한 번뿐입니다.</value>
@@ -6218,6 +6278,9 @@
   <data name="Username" xml:space="preserve">
     <value>아이디</value>
   </data>
+  <data name="Username saved" xml:space="preserve">
+    <value>아이디를 저장했습니다</value>
+  </data>
   <data name="Value" xml:space="preserve">
     <value>값</value>
   </data>
@@ -6430,6 +6493,9 @@
   </data>
   <data name="Welcome" xml:space="preserve">
     <value>환영합니다</value>
+  </data>
+  <data name="Welcome to PIU Scores" xml:space="preserve">
+    <value>PIU Scores에 오신 것을 환영합니다</value>
   </data>
   <data name="Welcome to PIUScores" xml:space="preserve">
     <value>PIUScores에 오신 것을 환영합니다</value>
@@ -6761,11 +6827,17 @@
   <data name="Your Points per Second" xml:space="preserve">
     <value>본인 초당 포인트</value>
   </data>
+  <data name="Your profile is private" xml:space="preserve">
+    <value>프로필이 비공개로 설정되었습니다</value>
+  </data>
   <data name="Your profile is private, so nothing is shared." xml:space="preserve">
     <value>프로필이 비공개 상태여서 공유되는 것이 없습니다.</value>
   </data>
   <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
     <value>프로필이 비공개입니다. 이 커뮤니티에 가입하면 리더보드, 유저 페이지, 비교 화면에서 커뮤니티의 모든 멤버에게 점수가 공개됩니다. 다른 곳에서는 계속 비공개로 유지됩니다.</value>
+  </data>
+  <data name="Your profile is public" xml:space="preserve">
+    <value>프로필이 공개로 설정되었습니다</value>
   </data>
   <data name="Your profile is public, so sharing is on." xml:space="preserve">
     <value>프로필이 공개 상태여서 공유가 켜져 있습니다.</value>
@@ -7219,6 +7291,9 @@
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>이 폴더에서 약 {0}개 더</value>
+  </data>
+  <data name="— optional" xml:space="preserve">
+    <value>— 선택</value>
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Zelllooo</value>

@@ -5,6 +5,7 @@ using MassTransit;
 using MediatR;
 using MediatR.Pipeline;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Localization;
 using Microsoft.OpenApi;
 using MudBlazor.Services;
@@ -310,10 +311,28 @@ app.Use(async (context, next) =>
 await app.Services.ApplyOrReportMigrationsAsync(builder.Configuration["AutoMigrate"] == "true");
 
 
-app.UseRequestLocalization(new RequestLocalizationOptions()
+var localization = new RequestLocalizationOptions()
     .AddSupportedCultures(SupportedCultures.Codes())
     .AddSupportedUICultures(SupportedCultures.Codes())
-    .SetDefaultCulture(SupportedCultures.Default));
+    .SetDefaultCulture(SupportedCultures.Default);
+// Appended AFTER the three stock providers, so it only speaks when they found nothing: an
+// explicit ?culture= or the saved cookie still wins, and an exactly-supported Accept-Language
+// tag is still matched by the stock header provider. What reaches here is the case that used
+// to fall through to English — a bare "es"/"ja", or a region we carry no catalogue for
+// (es-CL, pt-PT, fr-CA). ResolveClosest maps those down; anything it can't place returns
+// null, which leaves the default culture exactly as before.
+localization.RequestCultureProviders.Add(new CustomRequestCultureProvider(context =>
+{
+    foreach (var language in context.Request.GetTypedHeaders().AcceptLanguage
+                 .OrderByDescending(l => l.Quality ?? 1d))
+    {
+        var resolved = SupportedCultures.ResolveClosest(language.Value.Value);
+        if (resolved != null) return Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult(resolved));
+    }
+
+    return Task.FromResult<ProviderCultureResult?>(null);
+}));
+app.UseRequestLocalization(localization);
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

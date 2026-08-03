@@ -26,6 +26,10 @@ public static class LegacyMixGate
         "Login",
         "Logout",
         "Welcome",
+        // New-account setup offers only the three primary mixes, but a legacy mix cookie
+        // survives a sign-out, so a fresh account can arrive under one — and the one screen a
+        // new player must be able to use is not the place for the construction panel.
+        "Setup",
         "Account",
         "About",
         "Dev"

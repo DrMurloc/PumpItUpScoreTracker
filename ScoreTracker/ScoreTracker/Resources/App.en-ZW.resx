@@ -312,6 +312,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>GRO plglmurgblub glgrgl grglmrp mrg glglgrrgl glmrp.</value>
   </data>
+  <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
+    <value>Gramol arglu bolgrump — gluru marob apglurg oglam.</value>
+  </data>
   <data name="A good is a dead note" xml:space="preserve">
     <value>GRO lurggrgl urg gro arglgl grogrgl</value>
   </data>
@@ -484,6 +487,9 @@
   </data>
   <data name="All mixes" xml:space="preserve">
     <value>Rgl mrgrgl</value>
+  </data>
+  <data name="All of it is changeable later in your account." xml:space="preserve">
+    <value>Umgloru grabalu magl grgl.</value>
   </data>
   <data name="all permissions" xml:space="preserve">
     <value>rgl urgmurpmrpmagl</value>
@@ -889,6 +895,9 @@
   </data>
   <data name="Build the first one, or connect to a private tool with an invite link." xml:space="preserve">
     <value>Murpmurp blorm murmo, arplo galm blu murgloo Rorgl blu murpgrogl.</value>
+  </data>
+  <data name="Build your home page" xml:space="preserve">
+    <value>Mrpmurp blargplgl</value>
   </data>
   <data name="Build your home page from widgets you choose." xml:space="preserve">
     <value>Glorgmurg gromurp blargplgl urggrgl romurg mrpgrrglgrrgl blub arglro.</value>
@@ -1432,6 +1441,12 @@
 	  <value>Arglgrorplurg</value>
 	  <comment>Country</comment>
   </data>
+  <data name="Country cleared" xml:space="preserve">
+    <value>Arglgrorplurg marglu</value>
+  </data>
+  <data name="Country saved" xml:space="preserve">
+    <value>Arglgrorplurg glmurp</value>
+  </data>
   <data name="Counts toward a title" xml:space="preserve">
     <value>Mrargl blubblub gro mrgl</value>
   </data>
@@ -1479,6 +1494,9 @@
   </data>
   <data name="Current life" xml:space="preserve">
     <value>Grglblargblarg glorgrgl</value>
+  </data>
+  <data name="Current mix" xml:space="preserve">
+    <value>Mrg opal</value>
   </data>
   <data name="Current Username" xml:space="preserve">
 	  <value>Grglblargblarg Grrmrrgl</value>
@@ -1796,6 +1814,9 @@
   <data name="Enter A Score" xml:space="preserve">
     <value>Grapl Mrglrgl</value>
   </data>
+  <data name="Enter a username" xml:space="preserve">
+    <value>Ugrapl grrmrrgl</value>
+  </data>
   <data name="Enter Judgements" xml:space="preserve">
     <value>Grapl Murmgl</value>
   </data>
@@ -1968,6 +1989,9 @@
   </data>
   <data name="Fill to max" xml:space="preserve">
     <value>Arglmr grgl gro</value>
+  </data>
+  <data name="filled in from {0}" xml:space="preserve">
+    <value>grubal {0}</value>
   </data>
   <data name="Filter" xml:space="preserve">
     <value>Grglmurg</value>
@@ -3082,6 +3106,9 @@
   <data name="Mix scope" xml:space="preserve">
     <value>Mrg grorpplgl</value>
   </data>
+  <data name="Mix set to {0}" xml:space="preserve">
+    <value>Mrg opalurg {0}</value>
+  </data>
   <data name="Mixes" xml:space="preserve">
     <value>Mrgrgl</value>
   </data>
@@ -3312,6 +3339,9 @@
   <data name="Next title" xml:space="preserve">
     <value>Grorpglorg mrgl</value>
   </data>
+  <data name="Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there." xml:space="preserve">
+    <value>Bloru blargplgl — up gralamurb up marub. Bagl umgloru muraglu, agl grabalu.</value>
+  </data>
   <data name="No account needed to look around" xml:space="preserve">
     <value>Mrp grgl mrgro grgl glmurp blubmurm</value>
   </data>
@@ -3516,6 +3546,9 @@
   <data name="Not Relevant to Category" xml:space="preserve">
 	  <value>Murm Blubrolurg grgl Murmgrglgrgl</value>
   </data>
+  <data name="Not set" xml:space="preserve">
+    <value>Marglu</value>
+  </data>
   <data name="Not Tagged" xml:space="preserve">
     <value>Murm Grrglurg</value>
   </data>
@@ -3646,6 +3679,9 @@
   <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
     <value>Grorp murgm murmo Morp galm murgargl, blu murpgrogl. Grorp murgm Rorgl murmo blu murmo mrgloo murm murpmurp Morp murgm murgblarg.</value>
   </data>
+  <data name="Off — only you can see your scores" xml:space="preserve">
+    <value>Marg — orgu blargl grumal</value>
+  </data>
   <data name="official" xml:space="preserve">
     <value>urgmrmurg</value>
   </data>
@@ -3697,11 +3733,17 @@
   <data name="On ToDo List" xml:space="preserve">
     <value>Lurg Blargmurm Grog</value>
   </data>
+  <data name="On — your scores show on leaderboards and in communities" xml:space="preserve">
+    <value>Blub — grumal oglurp mrglrmrglrgl agl marmurg</value>
+  </data>
   <data name="One break every N notes" xml:space="preserve">
     <value>Argl arglglorg murgglorg GRRGL roblub</value>
   </data>
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>Argl grorprogrogrrgl groblgrl mrgl gromurp mgrlgmrg, urglurg, murp, argl lurgmrgl murm grorpmurm.</value>
+  </data>
+  <data name="One minute, then you're in" xml:space="preserve">
+    <value>Gropa marglu, agl blub</value>
   </data>
   <data name="One miss from out" xml:space="preserve">
     <value>Argl murpblarg romurg argl</value>
@@ -3769,6 +3811,9 @@
   </data>
   <data name="Open {0}" xml:space="preserve">
     <value>Mrprgl {0}</value>
+  </data>
+  <data name="Opening your home page…" xml:space="preserve">
+    <value>Oblurgum blargplgl…</value>
   </data>
   <data name="optional" xml:space="preserve">
     <value>opa</value>
@@ -4323,6 +4368,9 @@
   <data name="Public" xml:space="preserve">
     <value>Mrglrgll</value>
     <comment>(on/off, if account is set to public)</comment>
+  </data>
+  <data name="Public profile" xml:space="preserve">
+    <value>Mrglrgll grubalgl</value>
   </data>
   <data name="Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
     <value>Blurgl marogl bloop am olo, opa grumba pragl am olo — blorp la marogl golba.</value>
@@ -5060,11 +5108,17 @@
   <data name="Set up another tool" xml:space="preserve">
     <value>Marogl grumb bo</value>
   </data>
+  <data name="Set up your account" xml:space="preserve">
+    <value>Rogrrglgrrgl grgl</value>
+  </data>
   <data name="Set up your tool" xml:space="preserve">
     <value>Marogl grumb blurgl</value>
   </data>
   <data name="Set your country on your account page to join a region." xml:space="preserve">
     <value>Gro gromurp arglgrorplurg lurg gromurp grgl urggrgl grgl grorpblgrl gro rglargl.</value>
+  </data>
+  <data name="Sets what the whole site shows you." xml:space="preserve">
+    <value>Ograbalu gluma balurgl marob.</value>
   </data>
   <data name="Settings" xml:space="preserve">
 	  <value>Rogrrglgrrgl</value>
@@ -5535,6 +5589,9 @@
   <data name="swept Sunday" xml:space="preserve">
     <value>mrmorg Lurglurg</value>
   </data>
+  <data name="Switch it any time from the mix pill in the top bar." xml:space="preserve">
+    <value>Grabalu mrg umglop bragl opalurg.</value>
+  </data>
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>Murmgrgl lurg gro grglmurg grgl arglurg rglmorg grglmrp murgl urg glorgmurplurg murmlurgmurp.</value>
   </data>
@@ -5802,6 +5859,9 @@
   </data>
   <data name="This is not zero-knowledge: because the login runs on our server, we can technically decrypt your credential at the moment you import. We don't log or keep it — but you are trusting us with the same access we already have on every manual import." xml:space="preserve">
     <value>Grglmrp urg murm romurg-roplglgl: grrglmurpurg mrp mrglmrp morgplgl lurg magl blargmrp, mrgl grorp plglgrglurgmagl mrmorgmorg gromurp glglmurm mr mrp rglblgrl blub glorggl. Mrgl glorggrrgl ro argl murgro gl — glorg blub mrp blgrlmrglro blarg glgrgl mrp blubmurm lurgmorg mrgl glglgrrgl mrglro lurg murgglorg murggrgl glorggl.</value>
+  </data>
+  <data name="This is the name other players see — on leaderboards, in communities, and on tier lists. Most people use their game tag." xml:space="preserve">
+    <value>Blargl marub oglurp mrglrmrglrgl, marmurg, agl bograluma. Groluma umal grrmrrgl.</value>
   </data>
   <data name="This is the only time we'll show it." xml:space="preserve">
     <value>Murgm murmo blomurp bam murgl blu murgm.</value>
@@ -6281,6 +6341,9 @@
   <data name="Username" xml:space="preserve">
     <value>Grrmrrgl</value>
   </data>
+  <data name="Username saved" xml:space="preserve">
+    <value>Grrmrrgl glmurp</value>
+  </data>
   <data name="Value" xml:space="preserve">
     <value>Grumb</value>
   </data>
@@ -6494,6 +6557,9 @@
   </data>
   <data name="Welcome" xml:space="preserve">
 	  <value>Arglgllurg</value>
+  </data>
+  <data name="Welcome to PIU Scores" xml:space="preserve">
+    <value>Arglgllurg PIU</value>
   </data>
   <data name="Welcome to PIUScores" xml:space="preserve">
     <value>Arglgllurg grgl Urgrogrgl</value>
@@ -6831,11 +6897,17 @@
   <data name="Your Points per Second" xml:space="preserve">
 	  <value>Gromurp Blargro morg Rogro</value>
   </data>
+  <data name="Your profile is private" xml:space="preserve">
+    <value>Grubalgl marglurgl</value>
+  </data>
   <data name="Your profile is private, so nothing is shared." xml:space="preserve">
     <value>Gromurp mrpgrogl murgm murmo, murgloo bo murgblub.</value>
   </data>
   <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
     <value>Gromurp mrglarglrgl urg glblgrlmagl. Mrparglmurm grglmrp plglmurgblub mrpmrp gromurp mgrlgmrg grorpblgrlblarg grgl lurgblargmurg mrp gl — lurg argl mrglrmrglrgl, morp gromagl, ro groblargblubgl. Murgglorg mrpro mrpmr groblubgrgl rourg.</value>
+  </data>
+  <data name="Your profile is public" xml:space="preserve">
+    <value>Grubalgl mrglrgll</value>
   </data>
   <data name="Your profile is public, so sharing is on." xml:space="preserve">
     <value>Gromurp mrpgrogl murgm Mrglrgll, murgloo murgblub murgm mublu.</value>
@@ -7289,6 +7361,9 @@
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>~{0} mrrgl murgl mrp grglmrp grrgllurg</value>
+  </data>
+  <data name="— optional" xml:space="preserve">
+    <value>— murgal</value>
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Maglplglmrp</value>
