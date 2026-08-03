@@ -2,6 +2,10 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Web;
 using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore;
+using ScoreTracker.CompositionRoot;
+using ScoreTracker.Data.Persistence;
+using ScoreTracker.ExplorationTests.Catalog;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit.Abstractions;
 
@@ -260,7 +264,84 @@ public sealed class OfficialCensusProbeTests : IClassFixture<PiuGameSessionFixtu
 
         await BestScoreCensus(client, baseUrl, tag, ct);
         await PlayDataGrammar(client, baseUrl, tag, ct);
+        await ReconcileAgainstOurRecords(client, mix, account.AccountName.ToString(), ct);
     }
+
+    /// <summary>
+    ///     The check the whole feature rests on: does the official per-level census agree with what
+    ///     we actually store, **level by level**? A matching whole-account total proves nothing —
+    ///     the owner's own Phoenix account matched exactly on 2,851 while being short one chart at
+    ///     level 18 and long one below level 10.
+    ///     <para>
+    ///         Needs a populated database, so it is skipped unless
+    ///         <c>CatalogProbe:ConnectionString</c> is configured (the same prod-synced local
+    ///         Aspire container the catalog probes read).
+    ///     </para>
+    /// </summary>
+    private async Task ReconcileAgainstOurRecords(HttpClient client, MixEnum mix, string gameTag,
+        CancellationToken ct)
+    {
+        _output.WriteLine("");
+        _output.WriteLine("--- census vs our records, per level ---");
+        if (!CatalogProbeConfiguration.ConnectionConfigured)
+        {
+            _output.WriteLine("skipped: set CatalogProbe:ConnectionString to reconcile against a real database.");
+            return;
+        }
+
+        await using var database = new ChartAttemptDbContext(
+            new DbContextOptionsBuilder<ChartAttemptDbContext>()
+                .UseSqlServer(CatalogProbeConfiguration.ConnectionString).Options,
+            VerticalModelContributions.All());
+
+        var userId = await database.Database
+            .SqlQuery<Guid>($"SELECT TOP 1 Id AS Value FROM scores.[User] WHERE GameTag = {gameTag}")
+            .FirstOrDefaultAsync(ct);
+        if (userId == Guid.Empty)
+        {
+            _output.WriteLine($"skipped: no piuscores account carries the game tag '{gameTag}'.");
+            return;
+        }
+
+        var mixId = await database.Database
+            .SqlQuery<Guid>($"SELECT Id AS Value FROM scores.Mix WHERE Name = {mix.ToString()}")
+            .FirstAsync(ct);
+
+        // Same denominator the detector uses: passes only, bucketed by the MIX's level.
+        var ours = await database.Database.SqlQuery<LevelCount>(
+                $@"SELECT CASE WHEN c.Type = 'CoOp' THEN 'coop' ELSE CAST(cm.Level AS varchar(8)) END AS Bucket,
+                          COUNT(*) AS Count
+                   FROM scores.PhoenixRecord r
+                   JOIN scores.Chart c ON c.Id = r.ChartId
+                   JOIN scores.ChartMix cm ON cm.ChartId = c.Id AND cm.MixId = {mixId}
+                   WHERE r.UserId = {userId} AND r.MixId = {mixId}
+                     AND r.IsBroken = 0 AND r.Score IS NOT NULL
+                   GROUP BY CASE WHEN c.Type = 'CoOp' THEN 'coop' ELSE CAST(cm.Level AS varchar(8)) END")
+            .ToDictionaryAsync(r => r.Bucket, r => r.Count, StringComparer.Ordinal, ct);
+
+        var landing = await _fixture.Api.GetPlayData(mix, client, "", ct);
+        var mismatches = 0;
+        foreach (var bucket in landing.Buckets.Where(b => b is not ("" or "10over")))
+        {
+            await Task.Delay(Politeness, ct);
+            var theirs = await _fixture.Api.GetPlayData(mix, client, bucket, ct);
+            // "27over" collapses every level above the numbered buckets; sum our side to match.
+            var mine = bucket == "27over"
+                ? ours.Where(kv => int.TryParse(kv.Key, out var l) && l >= 27).Sum(kv => kv.Value)
+                : ours.GetValueOrDefault(bucket);
+            if (theirs.Passes == mine) continue;
+
+            mismatches++;
+            _output.WriteLine($"  {bucket,-8} piugame {theirs.Passes,6:N0}   ours {mine,6:N0}   " +
+                              $"{(theirs.Passes > mine ? "SHORT" : "OVER")} {Math.Abs(theirs.Passes - mine)}");
+        }
+
+        _output.WriteLine(mismatches == 0
+            ? "  every level agrees"
+            : $"  {mismatches} level(s) disagree — each is a chart the detector would name");
+    }
+
+    private sealed record LevelCount(string Bucket, int Count);
 
     // ---------- candidate 1: my_best_score.php Total. per ?lv= bucket ----------
 
