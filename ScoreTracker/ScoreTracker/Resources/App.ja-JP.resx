@@ -914,6 +914,9 @@
   <data name="Build your home page from widgets you choose." xml:space="preserve">
     <value>ウィジェットを選んで自分だけのホームページを作ろう。</value>
   </data>
+  <data name="Built by players, on your scores. You choose who gets access." xml:space="preserve">
+    <value>プレイヤーが作り、あなたのスコアを使います。誰に許可するかはあなたが決めます。</value>
+  </data>
   <data name="Built for the community." xml:space="preserve">
     <value>コミュニティのために作る。</value>
   </data>
@@ -1367,11 +1370,17 @@
   <data name="Connect" xml:space="preserve">
     <value>連携</value>
   </data>
+  <data name="Connect one below, or turn on sharing with all tools on your Account page." xml:space="preserve">
+    <value>下から接続するか、アカウントページで「すべてのツールと共有」を有効にしてください。</value>
+  </data>
   <data name="Connect one from the list below, or turn on sharing with all tools on your Account page." xml:space="preserve">
     <value>下の一覧から接続するか、アカウントページですべてのツールとの共有をオンにしてください。</value>
   </data>
   <data name="Connect {0}" xml:space="preserve">
     <value>{0}に接続</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>接続済み</value>
   </data>
   <data name="Connected Tools · {0}" xml:space="preserve">
     <value>接続中のツール · {0}</value>
@@ -1485,6 +1494,9 @@
   </data>
   <data name="Create" xml:space="preserve">
 	  <value>作成</value>
+  </data>
+  <data name="Create a tool" xml:space="preserve">
+    <value>ツールを作る</value>
   </data>
   <data name="Create an API key" xml:space="preserve">
     <value>APIキーを作成</value>
@@ -1683,6 +1695,9 @@
   </data>
   <data name="dethroned" xml:space="preserve">
     <value>前王者:</value>
+  </data>
+  <data name="Dev Console" xml:space="preserve">
+    <value>開発コンソール</value>
   </data>
   <data name="Developers" xml:space="preserve">
     <value>開発者</value>
@@ -3561,6 +3576,9 @@
   <data name="No tools can read your scores" xml:space="preserve">
     <value>スコアを読み取れるツールはありません</value>
   </data>
+  <data name="No tools can read your scores." xml:space="preserve">
+    <value>あなたのスコアを読めるツールはありません。</value>
+  </data>
   <data name="No unmatched keys" xml:space="preserve">
     <value>未マッチのキーはありません</value>
   </data>
@@ -4875,6 +4893,9 @@
   <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
     <value>毎週月曜のボード更新時に、結果と新しいラインナップが投稿されます。</value>
   </data>
+  <data name="Review access" xml:space="preserve">
+    <value>アクセスを確認</value>
+  </data>
   <data name="Review and merge" xml:space="preserve">
     <value>確認して統合</value>
   </data>
@@ -5445,6 +5466,9 @@
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
 	  <value>サイト製作・運営：DrMurloc</value>
+  </data>
+  <data name="Site only" xml:space="preserve">
+    <value>サイトのみ</value>
   </data>
   <data name="Site Theme" xml:space="preserve">
     <value>サイトテーマ</value>
@@ -6590,6 +6614,9 @@
   <data name="Visible bar — always 1000" xml:space="preserve">
     <value>視覚バー — 常に1000</value>
   </data>
+  <data name="Visit" xml:space="preserve">
+    <value>開く</value>
+  </data>
   <data name="Visit site" xml:space="preserve">
     <value>サイトを見る</value>
   </data>
@@ -6756,6 +6783,9 @@
   <data name="Who can find it" xml:space="preserve">
     <value>誰が見つけられるか</value>
   </data>
+  <data name="Who can read your scores" xml:space="preserve">
+    <value>誰があなたのスコアを読めるか</value>
+  </data>
   <data name="Who has it" xml:space="preserve">
     <value>保持者</value>
   </data>
@@ -6881,6 +6911,9 @@
   </data>
   <data name="You can sign in to your account with any connected method" xml:space="preserve">
     <value>連携済みのどの方法でもアカウントにログインできます</value>
+  </data>
+  <data name="You can take that back at any time." xml:space="preserve">
+    <value>いつでも取り消せます。</value>
   </data>
   <data name="You connected directly" xml:space="preserve">
     <value>自分で接続しました</value>
@@ -7466,6 +7499,9 @@
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>PGまで{0}</value>
+  </data>
+  <data name="{0} tools can read your scores." xml:space="preserve">
+    <value>{0} 個のツールがあなたのスコアを読めます。</value>
   </data>
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0}個のツールが読み取り中</value>

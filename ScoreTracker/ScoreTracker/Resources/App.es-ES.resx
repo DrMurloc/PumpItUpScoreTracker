@@ -906,6 +906,9 @@
   <data name="Build your home page from widgets you choose." xml:space="preserve">
     <value>Construye tu página de inicio con los widgets que elijas.</value>
   </data>
+  <data name="Built by players, on your scores. You choose who gets access." xml:space="preserve">
+    <value>Hechas por jugadores, sobre tus puntuaciones. Tú eliges quién tiene acceso.</value>
+  </data>
   <data name="Built for the community." xml:space="preserve">
     <value>Hecho para la comunidad.</value>
   </data>
@@ -1356,11 +1359,17 @@
   <data name="Connect" xml:space="preserve">
     <value>Conectar</value>
   </data>
+  <data name="Connect one below, or turn on sharing with all tools on your Account page." xml:space="preserve">
+    <value>Conecta una abajo, o activa el compartir con todas las herramientas en tu página de Cuenta.</value>
+  </data>
   <data name="Connect one from the list below, or turn on sharing with all tools on your Account page." xml:space="preserve">
     <value>Conecta una de la lista de abajo, o activa el uso compartido con todas las herramientas en tu página de Cuenta.</value>
   </data>
   <data name="Connect {0}" xml:space="preserve">
     <value>Conectar {0}</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>Conectada</value>
   </data>
   <data name="Connected Tools · {0}" xml:space="preserve">
     <value>Herramientas conectadas · {0}</value>
@@ -1472,6 +1481,9 @@
   </data>
   <data name="Create" xml:space="preserve">
     <value>Crear</value>
+  </data>
+  <data name="Create a tool" xml:space="preserve">
+    <value>Crear una herramienta</value>
   </data>
   <data name="Create an API key" xml:space="preserve">
     <value>Crea una clave de API</value>
@@ -1670,6 +1682,9 @@
   </data>
   <data name="dethroned" xml:space="preserve">
     <value>destronó a</value>
+  </data>
+  <data name="Dev Console" xml:space="preserve">
+    <value>Consola de desarrollo</value>
   </data>
   <data name="Developers" xml:space="preserve">
     <value>Desarrolladores</value>
@@ -3531,6 +3546,9 @@
   <data name="No tools can read your scores" xml:space="preserve">
     <value>Ninguna herramienta puede leer tus puntuaciones</value>
   </data>
+  <data name="No tools can read your scores." xml:space="preserve">
+    <value>Ninguna herramienta puede leer tus puntuaciones.</value>
+  </data>
   <data name="No unmatched keys" xml:space="preserve">
     <value>No hay claves sin emparejar</value>
   </data>
@@ -4830,6 +4848,9 @@
   <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
     <value>Los resultados y los nuevos charts se publican cuando el leaderboard rota cada lunes.</value>
   </data>
+  <data name="Review access" xml:space="preserve">
+    <value>Revisar el acceso</value>
+  </data>
   <data name="Review and merge" xml:space="preserve">
     <value>Revisar y fusionar</value>
   </data>
@@ -5390,6 +5411,9 @@
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
     <value>Sitio construido y mantenido por DrMurloc</value>
+  </data>
+  <data name="Site only" xml:space="preserve">
+    <value>Solo sitio</value>
   </data>
   <data name="Site Theme" xml:space="preserve">
     <value>Tema del sitio</value>
@@ -6525,6 +6549,9 @@
   <data name="Visible bar — always 1000" xml:space="preserve">
     <value>Barra visible: siempre 1000</value>
   </data>
+  <data name="Visit" xml:space="preserve">
+    <value>Visitar</value>
+  </data>
   <data name="Visit site" xml:space="preserve">
     <value>Visitar el sitio</value>
   </data>
@@ -6690,6 +6717,9 @@
   <data name="Who can find it" xml:space="preserve">
     <value>Quién puede encontrarla</value>
   </data>
+  <data name="Who can read your scores" xml:space="preserve">
+    <value>Quién puede leer tus puntuaciones</value>
+  </data>
   <data name="Who has it" xml:space="preserve">
     <value>Quién lo tiene</value>
   </data>
@@ -6809,6 +6839,9 @@
   </data>
   <data name="You can sign in to your account with any connected method" xml:space="preserve">
     <value>Puedes iniciar sesión en tu cuenta con cualquier método conectado</value>
+  </data>
+  <data name="You can take that back at any time." xml:space="preserve">
+    <value>Puedes retirarlo cuando quieras.</value>
   </data>
   <data name="You connected directly" xml:space="preserve">
     <value>Te conectaste directamente</value>
@@ -7394,6 +7427,9 @@
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} para el PG</value>
+  </data>
+  <data name="{0} tools can read your scores." xml:space="preserve">
+    <value>{0} herramientas pueden leer tus puntuaciones.</value>
   </data>
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0} herramientas leyendo ahora</value>
