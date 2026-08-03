@@ -156,8 +156,46 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
         Assert.Empty(dialog.FindAll("[data-testid='cld-community-picker']"));
     }
 
+    [Fact]
+    public void EveryBoardReadCarriesTheMixItWasGiven()
+    {
+        // Phoenix and Phoenix 2 share chart ids, so a board that drops the mix reads as a
+        // full, plausible leaderboard — of the wrong game.
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers);
+
+        dialog.WaitForAssertion(() => VerifyWorldBoardRead(MixEnum.Phoenix2));
+        _mediator.Verify(m => m.Send(It.Is<GetChartsQuery>(q => q.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+        _mediator.Verify(m => m.Send(It.Is<GetCompetitivePlayersQuery>(q => q.Mix == MixEnum.Phoenix2),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public void ChangingMixOnTheSameChartRebuildsTheBoard()
+    {
+        // The sessions page keeps one dialog and swaps its mix as the hero session changes,
+        // so a load keyed on the chart alone serves the previous mix's board back.
+        RenderComponent<MudDialogProvider>();
+        var dialog = RenderComponent<ChartLeaderboardDialog>(p => p
+            .Add(c => c.Visible, true)
+            .Add(c => c.ChartId, ChartId)
+            .Add(c => c.Mix, MixEnum.Phoenix));
+        dialog.WaitForAssertion(() => VerifyWorldBoardRead(MixEnum.Phoenix));
+
+        dialog.SetParametersAndRender(p => p.Add(c => c.Mix, MixEnum.Phoenix2));
+
+        dialog.WaitForAssertion(() => VerifyWorldBoardRead(MixEnum.Phoenix2));
+    }
+
+    private void VerifyWorldBoardRead(MixEnum mix)
+    {
+        _mediator.Verify(m => m.Send(It.Is<GetPhoenixRecordsForCommunityQuery>(q => q.Mix == mix),
+            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+    }
+
     /// <summary>Inline MudDialogs render through the provider, so the fragment hosts both.</summary>
-    private IRenderedFragment RenderDialog()
+    private IRenderedFragment RenderDialog(MixEnum mix = MixEnum.Phoenix,
+        ChartLeaderboardScopes.LeaderboardScope scope = ChartLeaderboardScopes.LeaderboardScope.World)
     {
         return Render(builder =>
         {
@@ -166,7 +204,8 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
             builder.OpenComponent<ChartLeaderboardDialog>(1);
             builder.AddAttribute(2, nameof(ChartLeaderboardDialog.Visible), true);
             builder.AddAttribute(3, nameof(ChartLeaderboardDialog.ChartId), ChartId);
-            builder.AddAttribute(4, nameof(ChartLeaderboardDialog.Mix), MixEnum.Phoenix);
+            builder.AddAttribute(4, nameof(ChartLeaderboardDialog.Mix), mix);
+            builder.AddAttribute(5, nameof(ChartLeaderboardDialog.InitialScope), scope);
             builder.CloseComponent();
         });
     }

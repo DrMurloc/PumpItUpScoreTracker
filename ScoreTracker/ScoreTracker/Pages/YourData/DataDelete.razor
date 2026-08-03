@@ -1,4 +1,4 @@
-@page "/Account/Data/Delete"
+﻿@page "/Account/Data/Delete"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.Domain.Records
@@ -151,7 +151,7 @@
 </YourDataFrame>
 
 <DeleteAccountDialog @bind-Visible="_showAccountDialog" Blockers="_blockers" PurgeAfter="_purgeAfter"
-                     OnConfirmed="ConfirmAccountDeletion"/>
+                     Tools="_ownedTools" OnConfirmed="ConfirmAccountDeletion"/>
 
 <style>
     .undo-banner { border-color: var(--mud-palette-primary); border-left-width: 3px; }
@@ -198,6 +198,8 @@
     private ContributionDeletionItems _contributionItems = ContributionDeletionItems.None;
     private IReadOnlyList<OwnedCommunityRecord> _blockers = Array.Empty<OwnedCommunityRecord>();
     private DateTimeOffset? _purgeAfter;
+    private IReadOnlyList<ScoreTracker.CommunityTools.Contracts.ToolRecord> _ownedTools =
+        Array.Empty<ScoreTracker.CommunityTools.Contracts.ToolRecord>();
 
 
     protected override async Task OnInitializedAsync()
@@ -296,6 +298,10 @@
             // Blockers are read before anything is typed: nobody should confirm a username only
             // to be told they cannot. The dialog renders them instead of a confirm box.
             _blockers = await Mediator.Send(new GetAccountDeletionBlockersQuery(CurrentUser.User.Id));
+            // Read alongside the blockers, for the same reason: a consequence belongs on the
+            // screen before a username is typed, not after.
+            _ownedTools = await Mediator.Send(
+                new ScoreTracker.CommunityTools.Contracts.Queries.GetMyToolsQuery());
             _purgeAfter = null;
             _showAccountDialog = true;
         }

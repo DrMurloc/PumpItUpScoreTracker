@@ -990,9 +990,6 @@
           "skipGameTag": {
             "type": "boolean"
           },
-          "syncPiuTracker": {
-            "type": "boolean"
-          },
           "recordBrokenAsBest": {
             "type": "boolean",
             "nullable": true

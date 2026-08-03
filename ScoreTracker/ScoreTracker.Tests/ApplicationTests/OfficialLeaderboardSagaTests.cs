@@ -1,4 +1,4 @@
-using ScoreTracker.Identity.Contracts.Commands;
+﻿using ScoreTracker.Identity.Contracts.Commands;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
@@ -10,6 +10,7 @@ using ScoreTracker.OfficialMirror.Application;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
@@ -62,17 +63,16 @@ public sealed class OfficialLeaderboardSagaTests
     private static readonly Guid ImportUserId = Guid.Parse("99999999-9999-9999-9999-999999999999");
     private static readonly Uri NewAvatar = new("https://example.invalid/new-avatar.png");
 
-    private static ImportOfficialPlayerScoresCommand ImportCommand(bool syncPiuTracker = false,
-        MixEnum mix = MixEnum.Phoenix)
+    private static ImportOfficialPlayerScoresCommand ImportCommand(MixEnum mix = MixEnum.Phoenix)
     {
-        return new ImportOfficialPlayerScoresCommand("user", "pass", "card1", "NEWTAG", false, syncPiuTracker, mix);
+        return new ImportOfficialPlayerScoresCommand("user", "pass", "card1", "NEWTAG", false, mix);
     }
 
     private sealed record ImportFixture(
         Mock<IOfficialSiteClient> Site,
         Mock<IMediator> Mediator,
         Mock<ICurrentUserAccessor> CurrentUser,
-        Mock<IPiuTrackerClient> PiuTracker,
+        Mock<ISessionDeliveryClient> SessionDelivery,
         Mock<IBus> Bus,
         Dictionary<string, string> UiSettings,
         User ExistingUser);
@@ -115,14 +115,14 @@ public sealed class OfficialLeaderboardSagaTests
         mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(settings);
 
-        return new ImportFixture(site, mediator, currentUser, new Mock<IPiuTrackerClient>(),
+        return new ImportFixture(site, mediator, currentUser, new Mock<ISessionDeliveryClient>(),
             new Mock<IBus>(), settings, existingUser);
     }
 
     private static OfficialLeaderboardSaga BuildImportSaga(ImportFixture f)
     {
         return BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser,
-            mediator: f.Mediator, piuTracker: f.PiuTracker, bus: f.Bus);
+            mediator: f.Mediator, sessionDelivery: f.SessionDelivery, bus: f.Bus);
     }
 
     [Fact]
@@ -232,7 +232,7 @@ public sealed class OfficialLeaderboardSagaTests
         var f = ArrangeImport(mix: MixEnum.Phoenix2);
         var identity = new Mock<IOfficialPlayerIdentityRepository>();
         var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
-            piuTracker: f.PiuTracker, bus: f.Bus, identity: identity);
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, identity: identity);
 
         await saga.Handle(ImportCommand(mix: MixEnum.Phoenix2), CancellationToken.None);
 
@@ -246,7 +246,7 @@ public sealed class OfficialLeaderboardSagaTests
         var f = ArrangeImport(accountName: "INVALID");
         var identity = new Mock<IOfficialPlayerIdentityRepository>();
         var saga = BuildSaga(officialSite: f.Site, currentUser: f.CurrentUser, mediator: f.Mediator,
-            piuTracker: f.PiuTracker, bus: f.Bus, identity: identity);
+            sessionDelivery: f.SessionDelivery, bus: f.Bus, identity: identity);
 
         await saga.Handle(ImportCommand(), CancellationToken.None);
 
@@ -268,19 +268,35 @@ public sealed class OfficialLeaderboardSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    // Every import offers the session; who actually receives it is a share, resolved inside the
+    // port. There is no per-import flag left to pass.
     [Fact]
-    public async Task ImportContinuesAfterPiuTrackerRateLimitAndReportsError()
+    public async Task ImportOffersTheSessionToTheToolsThePlayerGrantedIt()
     {
         var f = ArrangeImport();
-        f.PiuTracker.Setup(p => p.SyncData(It.IsAny<Name>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new PiuTrackerUsedTooRecentException());
         var saga = BuildImportSaga(f);
 
-        await saga.Handle(ImportCommand(syncPiuTracker: true), CancellationToken.None);
+        await saga.Handle(ImportCommand(), CancellationToken.None);
 
-        f.Mediator.Verify(m => m.Publish(It.Is<ImportStatusErrorEvent>(e => e.UserId == ImportUserId),
-            It.IsAny<CancellationToken>()), Times.Once);
-        // The sync failure does not abort the import — profile save still happens.
+        f.SessionDelivery.Verify(d => d.DeliverSession(ImportUserId, MixEnum.Phoenix,
+            It.IsAny<RedactedString>(), "NEWTAG", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // A maker's endpoint being down is the maker's problem. It must not become the player's
+    // failed import, and it must not stop the scores landing.
+    [Fact]
+    public async Task AFailedSessionDeliveryNeitherAbortsTheImportNorSurfacesToThePlayer()
+    {
+        var f = ArrangeImport();
+        f.SessionDelivery.Setup(d => d.DeliverSession(It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+                It.IsAny<RedactedString>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("their server is down"));
+        var saga = BuildImportSaga(f);
+
+        await saga.Handle(ImportCommand(), CancellationToken.None);
+
+        f.Mediator.Verify(m => m.Publish(It.IsAny<ImportStatusErrorEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
         f.Mediator.Verify(m => m.Send(It.IsAny<UpdateUserGameProfileCommand>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -456,7 +472,7 @@ public sealed class OfficialLeaderboardSagaTests
         Mock<IOfficialPlayerIdentityRepository>? identity = null,
         Mock<ICurrentUserAccessor>? currentUser = null,
         Mock<IMediator>? mediator = null,
-        Mock<IPiuTrackerClient>? piuTracker = null,
+        Mock<ISessionDeliveryClient>? sessionDelivery = null,
         Mock<IBus>? bus = null,
         Mock<IFileUploadClient>? files = null,
         Mock<IChartRepository>? charts = null,
@@ -466,13 +482,13 @@ public sealed class OfficialLeaderboardSagaTests
         identity ??= new Mock<IOfficialPlayerIdentityRepository>();
         currentUser ??= new Mock<ICurrentUserAccessor>();
         mediator ??= new Mock<IMediator>();
-        piuTracker ??= new Mock<IPiuTrackerClient>();
+        sessionDelivery ??= new Mock<ISessionDeliveryClient>();
         bus ??= new Mock<IBus>();
         files ??= new Mock<IFileUploadClient>();
         charts ??= new Mock<IChartRepository>();
         dateTime ??= FakeDateTime.At(Now);
         return new OfficialLeaderboardSaga(officialSite.Object,
-            identity.Object, currentUser.Object, mediator.Object, piuTracker.Object,
+            identity.Object, currentUser.Object, mediator.Object, sessionDelivery.Object,
             NullLogger<OfficialLeaderboardSaga>.Instance, bus.Object, files.Object, charts.Object,
             dateTime.Object);
     }

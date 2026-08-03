@@ -1,0 +1,187 @@
+﻿@page "/Admin/CommunityTools"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Commands
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Tool Review"]</PageTitle>
+
+@* The queue is short by design — a tool only lands here when its maker asks to be listed, or when
+   an already-listed one changes its name, description or URL. That second case is the reason this
+   page exists at all: approval is of an identity players will read, not of a maker. *@
+
+@if (!_isAdmin)
+{
+    <MudText Typo="Typo.h6">@L["Admins only"]</MudText>
+}
+else
+{
+    <MudText Typo="Typo.h5" Class="mt-2">@L["Community tools awaiting review"]</MudText>
+    <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-4">
+        @L["Approving a tool puts its name, description and link in front of every player. Everything else about it — webhooks, keys, who it can read — is the maker's business and is not reviewed here."]
+    </MudText>
+
+    @if (_pending.Count == 0)
+    {
+        <MudPaper Outlined="true" Class="pa-6 d-flex flex-column align-center">
+            <MudText Typo="Typo.body1">@L["Nothing waiting."]</MudText>
+            <MudText Typo="Typo.body2" Style="opacity:.7;">
+                @L["Tools appear here when a maker asks to be listed publicly."]
+            </MudText>
+        </MudPaper>
+    }
+
+    @foreach (var tool in _pending)
+    {
+        <MudPaper Outlined="true" Class="pa-4 mb-3">
+            <div class="d-flex align-start gap-3 flex-wrap">
+                <div class="flex-grow-1" style="min-width:240px;">
+                    <MudText Typo="Typo.subtitle1">@tool.Name</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity:.75;">
+                        @L["by {0}", tool.OwnerName] · @L["{0} connected", tool.ConnectedPlayers]
+                    </MudText>
+                </div>
+                <div class="d-flex gap-2">
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success"
+                               OnClick="() => Approve(tool.Id)">@L["Approve"]</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error"
+                               OnClick="() => OpenReject(tool)">@L["Reject"]</MudButton>
+                </div>
+            </div>
+
+            <MudDivider Class="my-3"></MudDivider>
+
+            @* The three fields players actually see, shown exactly as they will render. *@
+            <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Description"]</MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">@tool.Description</MudText>
+
+            <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Link"]</MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                @if (string.IsNullOrWhiteSpace(tool.Url))
+                {
+                    <span style="opacity:.6;">@L["None given"]</span>
+                }
+                else
+                {
+                    @* rel=nofollow: an unapproved link must not borrow the site's ranking, and
+                       noopener because it is a stranger's page. *@
+                    <MudLink Href="@tool.Url" Target="_blank" rel="nofollow noopener">@tool.Url</MudLink>
+                }
+            </MudText>
+
+            <div class="d-flex gap-4 flex-wrap mt-2">
+                <div>
+                    <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Delivery"]</MudText>
+                    <MudText Typo="Typo.body2">@WebhookLabel(tool.WebhookMode)</MudText>
+                </div>
+                <div>
+                    <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Registered"]</MudText>
+                    <MudText Typo="Typo.body2">@tool.CreatedAt.LocalDateTime.ToString("dd MMM yyyy")</MudText>
+                </div>
+            </div>
+
+            @if (tool.WebhookMode == WebhookMode.PiuGameSession)
+            {
+                @* Worth saying out loud on the one screen where a listing decision is made: a
+                   public session-mode tool is offered to everyone, and each player still has to
+                   accept the warning individually. *@
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                    @L["This tool asks players for their PIUGame session, not just their scores. Listing it puts that request in front of everyone — each player still has to accept the warning, but only approve this if you know who runs it."]
+                </MudAlert>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(tool.RejectionReason))
+            {
+                <MudText Typo="Typo.caption" Class="d-block mt-3" Style="opacity:.7;">
+                    @L["Previously rejected: {0}", tool.RejectionReason]
+                </MudText>
+            }
+        </MudPaper>
+    }
+
+    <MudDialog @bind-Visible="_rejecting" Options="_dialogOptions">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Reject {0}", _rejectTarget?.Name ?? string.Empty]</MudText>
+        </TitleContent>
+        <DialogContent>
+            @* Required, because the maker sees it on their own page and it is the only thing
+               telling them what to change. "No" with no reason produces a second submission
+               identical to the first. *@
+            <MudTextField T="string" @bind-Value="_rejectReason" Lines="3" Immediate="true"
+                          Label=@L["What should they change?"]
+                          HelperText=@L["The maker sees this on their tool page."]></MudTextField>
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Text" OnClick="CloseReject">@L["Cancel"]</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error"
+                       Disabled="@string.IsNullOrWhiteSpace(_rejectReason)"
+                       OnClick="ConfirmReject">@L["Reject"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+@code {
+    // MaxWidth.Small is defeated site-wide by charts.scss, so the cap has to be ours.
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.False, FullWidth = true };
+
+    private bool _isAdmin;
+    private IReadOnlyList<ToolRecord> _pending = Array.Empty<ToolRecord>();
+    private bool _rejecting;
+    private ToolRecord? _rejectTarget;
+    private string _rejectReason = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isAdmin = CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin;
+        if (_isAdmin) await Reload();
+    }
+
+    private async Task Reload()
+    {
+        _pending = await Mediator.Send(new GetToolsAwaitingReviewQuery());
+    }
+
+    private async Task Approve(Guid toolId)
+    {
+        await Mediator.Send(new ApproveToolCommand(toolId));
+        Snackbar.Add(L["Approved"].Value, Severity.Success);
+        await Reload();
+    }
+
+    private void OpenReject(ToolRecord tool)
+    {
+        _rejectTarget = tool;
+        _rejectReason = string.Empty;
+        _rejecting = true;
+    }
+
+    private void CloseReject()
+    {
+        _rejecting = false;
+        _rejectTarget = null;
+    }
+
+    private async Task ConfirmReject()
+    {
+        if (_rejectTarget is null) return;
+
+        await Mediator.Send(new RejectToolCommand(_rejectTarget.Id, _rejectReason));
+        Snackbar.Add(L["Rejected"].Value, Severity.Success);
+        CloseReject();
+        await Reload();
+    }
+
+    private string WebhookLabel(WebhookMode mode) => mode switch
+    {
+        WebhookMode.ScorePush => L["Score Push"].Value,
+        WebhookMode.PlayerPing => L["Player ping"].Value,
+        WebhookMode.PiuGameSession => L["PIUGame session"].Value,
+        _ => L["None"].Value
+    };
+}

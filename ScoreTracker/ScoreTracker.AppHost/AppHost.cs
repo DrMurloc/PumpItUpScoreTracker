@@ -1,4 +1,4 @@
-// Local-dev orchestration (2026-07 workshop): AppHost is the single config authority for
+﻿// Local-dev orchestration (2026-07 workshop): AppHost is the single config authority for
 // running the site locally. Non-secret local defaults (SQL container password/port) live in
 // this project's appsettings.json; secrets live in THIS project's user-secrets and flow
 // through to the Web app as environment variables - the Web app's configuration code is
@@ -34,6 +34,10 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
     // DevAuth login backdoor lights up. Plain `dotnet run` gets neither.
     .WithEnvironment("AutoMigrate", "true")
     .WithEnvironment("DevAuth__Enabled", "true")
+    // ...and a webhook may point at localhost, so a maker running the site locally can
+    // develop against their own machine. Refused anywhere else: from our servers a private
+    // address points at our infrastructure, not theirs.
+    .WithEnvironment("CommunityTools__AllowPrivateWebhookTargets", "true")
     .WaitFor(database);
 
 // Copy-paste secret flow-through: any values set in AppHost user-secrets under these

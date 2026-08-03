@@ -1,0 +1,114 @@
+﻿@namespace ScoreTracker.Web.Components.CommunityTools
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Commands
+
+@* Two dialogs in one, because the decision a player is making is not the same in both cases.
+   An ordinary connect grants score reads. A PIUGame-session tool is handed the key we sign in to
+   piugame.com with — that is their PIUGame account, not their PIU Scores one, and it is worse than
+   it sounds. It gets an acknowledgement checkbox, matching the Delete-All-Scores pattern. *@
+
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options">
+    <TitleContent>
+        @if (Tool?.RequiresPiuGameSession == true)
+        {
+            <MudText Typo="Typo.h6" Color="Color.Warning">
+                @L["{0} needs your PIUGame session", Tool.Name]
+            </MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.h6">@L["Connect {0}", Tool?.Name ?? string.Empty]</MudText>
+        }
+    </TitleContent>
+    <DialogContent>
+        @if (Tool is null)
+        {
+            <MudText Typo="Typo.body2">@L["Loading..."]</MudText>
+        }
+        else if (Tool.RequiresPiuGameSession)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                <MudText Typo="Typo.body2">
+                    <b>@L["This gives {0} control of your PIUGame account.", Tool.Name]</b>
+                </MudText>
+                <MudText Typo="Typo.body2">
+                    @L["Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account."]
+                </MudText>
+            </MudAlert>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                @L["It is not limited to reading scores, and we cannot limit it. The key stays valid until piugame.com expires it."]
+            </MudText>
+            <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
+                @L["This has nothing to do with your PIU Scores account, which stays under your control. Only connect if you trust the person who runs this tool."]
+            </MudText>
+            <MudCheckBox T="bool" @bind-Value="_acknowledged" Color="Color.Error">
+                @L["I understand {0} will be able to act as me on piugame.com, including deleting my account there.", Tool.Name]
+            </MudCheckBox>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+                <MudText Typo="Typo.body2"><b>@L["It will be able to read"]</b></MudText>
+                <MudText Typo="Typo.body2">
+                    @L["Your scores, plates and player profile, on every mix you've played."]
+                </MudText>
+            </MudAlert>
+            <MudText Typo="Typo.body2" Style="opacity:.75;">
+                @L["It cannot record scores or change anything on your account. You can disconnect any time from Community Tools."]
+            </MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="Close">@L["Cancel"]</MudButton>
+        @if (Tool?.RequiresPiuGameSession == true)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="@(!_acknowledged)"
+                       OnClick="Connect">@L["I trust {0} — connect", Tool.OwnerName]</MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Connect">@L["Connect"]</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@code {
+    // MaxWidth.Small is defeated site-wide by charts.scss, so the cap has to be ours.
+    private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.False, FullWidth = true };
+
+    private bool _acknowledged;
+
+    [Parameter] public bool Visible { get; set; }
+
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter] public PublicToolRecord? Tool { get; set; }
+
+    [Parameter] public EventCallback OnConnected { get; set; }
+
+    private async Task Close()
+    {
+        _acknowledged = false;
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    private async Task Connect()
+    {
+        if (Tool is null) return;
+
+        // What the player was shown, not what the tool is asking for now. If a maker moved the tool
+        // into session mode while this dialog was open, the handler throws and the page breaks —
+        // deliberately unhandled (owner, 2026-08-02). The race needs a tool at zero players, a maker
+        // flipping mode, and a player mid-dialog simultaneously; carrying polished recovery for that
+        // costs more than it saves. What matters is that no share is granted.
+        await Mediator.Send(new ConnectToolCommand(Tool.Id, Tool.RequiresPiuGameSession));
+
+        Snackbar.Add(L["{0} can now read your scores", Tool.Name].Value, Severity.Success);
+        await Close();
+        await OnConnected.InvokeAsync();
+    }
+}

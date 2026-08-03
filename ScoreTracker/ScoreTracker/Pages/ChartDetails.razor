@@ -34,8 +34,8 @@
            key values only, so two keyed siblings sharing a chart id collide even when
            they are different component types. *@
         <div class="chart-hero-jacket-col">
-            <ChartVideoPlayer @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="(_chart.Id, nameof(ChartVideoPlayer))"></ChartVideoPlayer>
-            <ChartRecordPanel @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
+            <ChartVideoPlayer @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="(_chart.Id, nameof(ChartVideoPlayer))"></ChartVideoPlayer>
+            <ChartRecordPanel @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="(_chart.Id, nameof(ChartRecordPanel))"></ChartRecordPanel>
         </div>
         <div class="chart-hero-id">
             <h1 class="chart-hero-title">@_chart.Song.Name</h1>
@@ -116,7 +116,7 @@
         <div class="chart-section-head">
             <MudText Typo="Typo.h5">@L["Chart Stats"]</MudText>
         </div>
-        <ChartEvidenceSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></ChartEvidenceSection>
+        <ChartEvidenceSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></ChartEvidenceSection>
     </section>
 
     @if (_skillChips.Any() || _analysis != null)
@@ -157,7 +157,7 @@
         <div class="chart-section-head">
             <MudText Typo="Typo.h5">@L["Leaderboard"]</MudText>
         </div>
-        <ChartLeaderboardSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></ChartLeaderboardSection>
+        <ChartLeaderboardSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></ChartLeaderboardSection>
     </section>
 
     <section class="chart-section">
@@ -169,9 +169,9 @@
            the island, and its data-island-ready hides this copy on connect. *@
         <div class="chart-shelf-wrap">
             <div class="chart-shelf-static">
-                <SimilarChartsStaticGrid ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></SimilarChartsStaticGrid>
+                <SimilarChartsStaticGrid ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></SimilarChartsStaticGrid>
             </div>
-            <SimilarChartsShelf @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_mix" @key="_chart.Id"></SimilarChartsShelf>
+            <SimilarChartsShelf @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></SimilarChartsShelf>
         </div>
         <p class="chart-section-credit">
             @L["Chart analysis made possible by"]
@@ -201,7 +201,11 @@
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
 
-    private MixEnum _mix = MixEnum.Phoenix;
+    // The viewer's preference decides WHICH chart the URL resolves to, and nothing beyond
+    // that: every per-mix read — leaderboard, record panel, evidence, similar charts —
+    // follows the resolved chart's own mix instead, so a chart the viewer's mix dropped
+    // shows its own era's board rather than a board from a mix it isn't in.
+    private MixEnum _viewerMix = MixEnum.Phoenix;
     private bool _initialized;
     private Chart? _chart;
     private IReadOnlyList<ChartVerdictFacet> _facets = Array.Empty<ChartVerdictFacet>();
@@ -225,7 +229,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _mix = await UiSettings.GetSelectedMix();
+        _viewerMix = await UiSettings.GetSelectedMix();
         _initialized = true;
     }
 
@@ -262,7 +266,7 @@
         // every legacy-only chart, for one — renders from the mix the URL names rather than
         // 404ing; the URL resolved, so the chart exists. After the 301 that mix IS the
         // canonical one, so the page's content and its canonical URL always agree.
-        var chart = await UrlResolver.FindInMixOrUrlMix(resolution.ChartId, _mix, resolution.Mix,
+        var chart = await UrlResolver.FindInMixOrUrlMix(resolution.ChartId, _viewerMix, resolution.Mix,
             HttpContext?.RequestAborted ?? default);
         if (chart == null)
         {

@@ -151,7 +151,13 @@ else
 
     private Chart? _chart;
     private bool _loading = true;
-    private Guid? _loadedFor;
+    /// <summary>
+    ///     The chart AND the mix: Phoenix and Phoenix 2 share chart ids, and the sessions page
+    ///     keeps one board whose mix follows the hero session. Keyed on the chart alone, the same
+    ///     song opened under the other mix serves the previous mix's board back — a full,
+    ///     plausible leaderboard of the wrong game (origin/main f00dd27e).
+    /// </summary>
+    private (Guid Chart, MixEnum Mix)? _loadedFor;
     private LeaderboardScope _scope;
     private Name? _community;
     private IReadOnlyList<Name> _myCommunities = Array.Empty<Name>();
@@ -169,8 +175,8 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!Active || _loadedFor == ChartId) return;
-        _loadedFor = ChartId;
+        if (!Active || _loadedFor == (ChartId, Mix)) return;
+        _loadedFor = (ChartId, Mix);
         _scope = InitialScope;
         await LoadChartAsync();
     }

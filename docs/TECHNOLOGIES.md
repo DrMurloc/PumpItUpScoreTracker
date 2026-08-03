@@ -75,7 +75,7 @@ Spreadsheet parsing for the bulk score-upload page (`PhoenixScoreFileExtractor` 
 Cookie-based auth (`DefaultAuthentication`, 30-day sliding) with three OAuth challenge providers, plus a custom **ApiToken** Basic-auth scheme for API callers. All wired in `Program.cs`.
 
 ### Swashbuckle (Swagger)
-OpenAPI generation for the partner API — `/swagger/ui`. The source of truth for API shapes ([API.md](API.md)).
+OpenAPI generation for the partner API — `/swagger`. The source of truth for API shapes ([API.md](API.md)).
 
 ### Application Insights (Blazor)
 Client-side telemetry; no-ops without an instrumentation key.

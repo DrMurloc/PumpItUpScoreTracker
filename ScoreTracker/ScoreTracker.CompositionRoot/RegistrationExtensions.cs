@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
+using ScoreTracker.CommunityTools.Wiring;
 using ScoreTracker.Data.Clients;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Data.Persistence;
@@ -54,6 +55,7 @@ public static class RegistrationExtensions
         builder.AddRivals();
         builder.AddScoreLedger();
         builder.AddWeeklyChallenge();
+        builder.AddCommunityTools();
 
         // Not pooled: pooling requires an options-only constructor, and the context takes
         // the verticals' IDbModelContribution set from DI (ADR-001 D4).

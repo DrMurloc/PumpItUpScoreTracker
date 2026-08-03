@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Text.Json;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit;
 
@@ -82,5 +83,39 @@ public sealed class ContractEventSerializationTests
         using var doc = JsonDocument.Parse(json);
         Assert.True(doc.RootElement.TryGetProperty("mix", out var mix));
         Assert.Equal((int)MixEnum.Phoenix2, mix.GetInt32());
+    }
+
+    /// <summary>
+    ///     The webhook envelope is a published contract, not an internal DTO — a maker's parser
+    ///     breaks when it changes. Round-tripping is the cheap half of pinning it: a field that
+    ///     serializes but does not deserialize is a shape nobody can consume.
+    /// </summary>
+    [Fact]
+    public void TheDeliveryEnvelopeRoundTripsJson()
+    {
+        AssertRoundTrips(new DeliveryPayload(
+            "d-4f819c", DeliveryPayload.CurrentSchemaVersion,
+            new DateTimeOffset(2026, 8, 2, 14, 21, 55, TimeSpan.Zero), false,
+            new DeliveryPayload.PlayerBlock("Phoenix", "phoenix",
+                Guid.Parse("44444444-4444-4444-4444-444444444444"), "DrMurloc", "MURLOC#1"),
+            null,
+            new[]
+            {
+                new DeliveryPayload.Change(Guid.Parse("55555555-5555-5555-5555-555555555555"),
+                    true, 990_000, 999_231, null, null, "PerfectGame", false)
+            },
+            null));
+    }
+
+    /// <summary>
+    ///     The legacy half of the same envelope: letter grades set, scores null. A tool branching on
+    ///     scoringModel has to survive both, and nulls are the whole point of the discriminator.
+    /// </summary>
+    [Fact]
+    public void ALegacyChangeRoundTripsWithItsNulls()
+    {
+        AssertRoundTrips(new DeliveryPayload.Change(
+            Guid.Parse("55555555-5555-5555-5555-555555555555"),
+            false, null, null, "A", "AA", null, true));
     }
 }
