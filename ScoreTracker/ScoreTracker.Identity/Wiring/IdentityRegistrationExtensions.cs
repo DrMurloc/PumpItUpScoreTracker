@@ -35,5 +35,6 @@ public static class IdentityRegistrationExtensions
     public static void AddIdentityConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<AccountPurgeSaga>();
+        configurator.AddConsumer<DeepScanAllowanceHandlers>();
     }
 }

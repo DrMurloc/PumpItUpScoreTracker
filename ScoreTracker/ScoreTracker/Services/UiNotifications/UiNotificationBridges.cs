@@ -1,3 +1,4 @@
+using ScoreTracker.OfficialMirror.Contracts.Events;
 using MediatR;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Randomizer.Contracts.Events;
@@ -25,6 +26,25 @@ internal sealed class ImportStatusUiBridge :
     }
 
     public Task Handle(ImportStatusErrorEvent notification, CancellationToken cancellationToken)
+    {
+        return _hub.PublishAsync(UiTopics.User(notification.UserId), notification);
+    }
+}
+
+/// <summary>
+///     Carries a finished Score check to whichever circuit is still watching. Nothing stores the
+///     verdict, so this hop IS the delivery — a player who navigated away simply never receives it.
+/// </summary>
+internal sealed class ImportCheckUiBridge : INotificationHandler<ImportCheckCompletedEvent>
+{
+    private readonly IUiNotificationHub _hub;
+
+    public ImportCheckUiBridge(IUiNotificationHub hub)
+    {
+        _hub = hub;
+    }
+
+    public Task Handle(ImportCheckCompletedEvent notification, CancellationToken cancellationToken)
     {
         return _hub.PublishAsync(UiTopics.User(notification.UserId), notification);
     }
