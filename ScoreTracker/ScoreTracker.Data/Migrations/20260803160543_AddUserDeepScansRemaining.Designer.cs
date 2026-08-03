@@ -1900,51 +1900,6 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserImportCredentialKey", "scores");
                 });
 
-            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.ImportCheckRunEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Findings")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Kind")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("LocalPasses")
-                        .HasColumnType("int");
-
-                    b.Property<double>("LocalPumbility")
-                        .HasColumnType("float");
-
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("OfficialPasses")
-                        .HasColumnType("int");
-
-                    b.Property<double>("OfficialPumbility")
-                        .HasColumnType("float");
-
-                    b.Property<DateTimeOffset>("RanAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "Kind", "RanAt");
-
-                    b.HasIndex("UserId", "MixId", "RanAt");
-
-                    b.ToTable("ImportCheckRun", "scores");
-                });
-
             modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialBoardRecordEntity", b =>
                 {
                     b.Property<int>("LeaderboardId")

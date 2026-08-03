@@ -230,7 +230,7 @@ Everything scraping-side is **OfficialMirror** — it is the PiuGame anti-corrup
 | `GetPlayDataCensus(mix, sid, ct)`, `GetPumbilityTotal(mix, sid, ct)`, `GetPlayLogPage(...)` | `IPiuGameApi` (internal) + `PiuGameApi` |
 | Census normalisation (cumulative→exact, bucket→level) | `OfficialMirror/Domain`, pure and unit-testable |
 | `StartImportCheckCommand` → `RunImportCheckCommand` (bus) → consumer → saga | mirrors `StartOfficialImportCommand` exactly, including `SetScopedUser` |
-| `GetLastImportCheckQuery`, `ImportCheckReport` record | `OfficialMirror/Contracts` |
+| `ImportCheckCompletedEvent` (a count, not a verdict) | `OfficialMirror/Contracts/Events` |
 | `ImportCheckCompletedEvent` (the verdict itself — nothing stores it) | `OfficialMirror/Contracts/Events`, bridged to `UiTopics.User` |
 | `User.DeepScansRemaining` + `SpendDeepScanCommand` / `GetDeepScansRemainingQuery` / `ResetDeepScansCommand` | `ScoreTracker.Data` entity; Identity owns the operations |
 | Progress + completion to the UI | the existing `IUiNotificationHub` user topic, via a bridge |
@@ -275,7 +275,7 @@ with **no new project reference and no new cross-vertical port**. Nothing is add
 
 | Layer | Location | New types |
 |---|---|---|
-| Contracts *(public)* | `OfficialMirror/Contracts` | `StartImportCheckCommand`, `ImportCheckReport` + findings, `Messages/RunImportCheckCommand`, `Events/ImportCheckCompletedEvent` |
+| Contracts *(public)* | `OfficialMirror/Contracts` | `StartImportCheckCommand`, `ImportCheckStartResult`, `Messages/RunImportCheckCommand`, `Events/ImportCheckCompletedEvent` |
 | Domain *(internal)* | `OfficialMirror/Domain` | `AccountCensus`/`CensusBucket`, `CensusBuckets`, `LocalCensusBuilder`, `CensusDiff`, `IOfficialSiteClient` additions |
 | Application *(internal)* | `OfficialMirror/Application` | `ImportCheckSaga`, `StartImportCheckHandler`, `RunImportCheckConsumer`, `ExecuteImportCheckCommand` |
 | Infrastructure *(internal)* | `OfficialMirror/Infrastructure` | `PiuGameApi` parsers + DTOs, `OfficialSiteClient.GetOfficialCensus` and `GetBestScoresIn` |
