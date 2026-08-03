@@ -71,6 +71,29 @@ else
                 }
             </MudText>
 
+            @* The source, and who it sits under. The owner is the one thing worth a second look
+               before approving: a repository under an account that is not the maker's is a maker
+               who pasted someone else's work, and that is a judgement only a human makes. *@
+            <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Public source repository"]</MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                @if (string.IsNullOrWhiteSpace(tool.RepositoryUrl))
+                {
+                    <span style="opacity:.6;">@L["No source published"]</span>
+                }
+                else
+                {
+                    <MudLink Href="@tool.RepositoryUrl" Target="_blank" rel="nofollow noopener">@tool.RepositoryUrl</MudLink>
+                    @if (!string.IsNullOrWhiteSpace(tool.RepositoryOwner))
+                    {
+                        <span style="opacity:.7;">@($" · {tool.RepositoryOwner}")</span>
+                    }
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                             Color="@(tool.RepositoryCheckedAt is null ? Color.Warning : Color.Success)">
+                        @(tool.RepositoryCheckedAt is null ? L["Not checked"] : L["Reachable"])
+                    </MudChip>
+                }
+            </MudText>
+
             <div class="d-flex gap-4 flex-wrap mt-2">
                 <div>
                     <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Delivery"]</MudText>
@@ -79,6 +102,13 @@ else
                 <div>
                     <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Registered"]</MudText>
                     <MudText Typo="Typo.body2">@tool.CreatedAt.LocalDateTime.ToString("dd MMM yyyy")</MudText>
+                </div>
+                <div>
+                    @* Yours alone, and the reason rule 3 exists — a way to reach the maker. *@
+                    <MudText Typo="Typo.caption" Style="opacity:.6;">@L["Your Discord handle"]</MudText>
+                    <MudText Typo="Typo.body2">
+                        @(string.IsNullOrWhiteSpace(tool.DiscordHandle) ? L["None given"] : tool.DiscordHandle)
+                    </MudText>
                 </div>
             </div>
 

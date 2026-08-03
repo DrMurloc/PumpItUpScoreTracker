@@ -54,6 +54,14 @@ else
                 {
                     <MudLink Href="@_preview.Url" Target="_blank">@L["Visit site"]</MudLink>
                 }
+                @* This is the one logged-out screen in the feature, so it is also the only place a
+                   stranger can read the tool before signing in to decide about it. *@
+                @if (!string.IsNullOrWhiteSpace(_preview.RepositoryUrl))
+                {
+                    <MudLink Href="@_preview.RepositoryUrl" Target="_blank" rel="nofollow noopener">
+                        @L["Read the source"]
+                    </MudLink>
+                }
             </div>
         </div>
 

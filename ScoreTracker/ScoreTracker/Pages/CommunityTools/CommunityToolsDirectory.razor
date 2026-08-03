@@ -134,6 +134,15 @@ else
                 <MudText Typo="Typo.caption" Style="opacity:.7;">
                     @tool.Description · @L["by {0}", tool.OwnerName]
                 </MudText>
+                @* The payoff for the whole source requirement: a player who wants to know what
+                   they are connecting to can go and read it. Shown per row rather than claimed
+                   once at the top of the page — one grandfathered tool has none, and a blanket
+                   "every listed tool is open source" would be false the day it shipped. *@
+                @if (!string.IsNullOrWhiteSpace(tool.RepositoryUrl))
+                {
+                    <MudLink Href="@tool.RepositoryUrl" Target="_blank" rel="nofollow noopener"
+                             Typo="Typo.caption">@L["Read the source"]</MudLink>
+                }
             </div>
             <div class="olb-rank-tail">
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">

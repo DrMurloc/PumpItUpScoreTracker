@@ -4547,6 +4547,9 @@
   <data name="Read it" xml:space="preserve">
     <value>읽기</value>
   </data>
+  <data name="Read the source" xml:space="preserve">
+    <value>소스 읽기</value>
+  </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>이를 읽으려면 세 곳에 나뉘어 보관된 세 가지가 동시에 필요합니다:</value>
   </data>

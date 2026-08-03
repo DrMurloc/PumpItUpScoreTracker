@@ -4585,6 +4585,9 @@
   <data name="Read it" xml:space="preserve">
     <value>La lire</value>
   </data>
+  <data name="Read the source" xml:space="preserve">
+    <value>Lire le code</value>
+  </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Le lire nécessite trois choses à la fois, conservées à trois endroits différents :</value>
   </data>
