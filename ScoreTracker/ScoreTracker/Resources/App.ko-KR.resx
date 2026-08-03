@@ -366,9 +366,6 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>문서가 완비된 공개 API가 커뮤니티 툴을 움직입니다 — 봇, 오버레이, 통계 사이트. 계정에서 토큰을 받아 우리와 같은 데이터 위에 만들어 보세요.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so it is never written down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>세션 전달에는 살아 있는 piugame.com 키가 담기므로 저장되지 않습니다 — 재전송할 것도, 서버가 꺼져 있을 때의 재시도도 없습니다. 임포트로 본인 계정에서 테스트하세요.</value>
-  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
   </data>
@@ -407,9 +404,6 @@
   </data>
   <data name="Activity" xml:space="preserve">
     <value>활동</value>
-  </data>
-  <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
-    <value>플레이어가 연결하고 임포트하면 기록이 나타납니다. 초대 링크를 보내 시작하세요.</value>
   </data>
   <data name="Activity log" xml:space="preserve">
     <value>활동 기록</value>
@@ -548,9 +542,6 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>항상</value>
-  </data>
-  <data name="Always a test, always you" xml:space="preserve">
-    <value>항상 테스트이고 항상 본인입니다</value>
   </data>
   <data name="always all mixes" xml:space="preserve">
     <value>항상 모든 시리즈</value>
@@ -735,9 +726,6 @@
   <data name="Back to Tier List" xml:space="preserve">
     <value>티어리스트로 돌아가기</value>
   </data>
-  <data name="Back to tool" xml:space="preserve">
-    <value>도구로 돌아가기</value>
-  </data>
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Weekly Charts로 돌아가기</value>
   </data>
@@ -857,9 +845,6 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>보드</value>
-  </data>
-  <data name="Body expired" xml:space="preserve">
-    <value>본문 만료됨</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>보스 브레이커</value>
@@ -2067,9 +2052,6 @@
   <data name="Finish later" xml:space="preserve">
     <value>나중에 마무리</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
-    <value>내 엔드포인트로 전달을 보내고, 실패한 것을 재전송하세요.</value>
-  </data>
   <data name="First" xml:space="preserve">
     <value>첫</value>
   </data>
@@ -2258,9 +2240,6 @@
   </data>
   <data name="Goal" xml:space="preserve">
     <value>목표</value>
-  </data>
-  <data name="Goes to your configured URL, signed exactly like a real one." xml:space="preserve">
-    <value>설정한 URL로, 실제와 똑같이 서명되어 전송됩니다.</value>
   </data>
   <data name="Good" xml:space="preserve">
     <value>좋음</value>
@@ -2769,9 +2748,6 @@
   <data name="Key Name" xml:space="preserve">
     <value>키 이름</value>
   </data>
-  <data name="Key used {0} times" xml:space="preserve">
-    <value>키 {0}회 사용</value>
-  </data>
   <data name="Korean Name" xml:space="preserve">
     <value>한국어 이름</value>
   </data>
@@ -2786,9 +2762,6 @@
   </data>
   <data name="last 14 days" xml:space="preserve">
     <value>최근 14일</value>
-  </data>
-  <data name="Last 14 days. Older entries are removed automatically." xml:space="preserve">
-    <value>최근 14일. 이전 기록은 자동으로 삭제됩니다.</value>
   </data>
   <data name="Last 30 days" xml:space="preserve">
     <value>최근 30일</value>
@@ -3002,9 +2975,6 @@
   </data>
   <data name="Lv {0}" xml:space="preserve">
     <value>Lv {0}</value>
-  </data>
-  <data name="Made-up scores" xml:space="preserve">
-    <value>가상 점수</value>
   </data>
   <data name="Make a tool" xml:space="preserve">
     <value>도구 만들기</value>
@@ -3275,9 +3245,6 @@
   </data>
   <data name="My grade" xml:space="preserve">
     <value>내 등급</value>
-  </data>
-  <data name="My last import" xml:space="preserve">
-    <value>내 마지막 임포트</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>내 레거시 등급</value>
@@ -3576,9 +3543,6 @@
   <data name="None given" xml:space="preserve">
     <value>없음</value>
   </data>
-  <data name="None of this works in PIUGame session mode" xml:space="preserve">
-    <value>PIUGame 세션 모드에서는 아무것도 동작하지 않습니다</value>
-  </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>100%로 정규화</value>
   </data>
@@ -3692,9 +3656,6 @@
   </data>
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>요청해도 자동으로 전달되는 알림은 없습니다. PIU Scores 디스코드에 글을 남기면 누군가 확인합니다. 그동안에도 도구는 계속 작동합니다.</value>
-  </data>
-  <data name="Nothing here yet" xml:space="preserve">
-    <value>아직 기록이 없습니다</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>아무것도 삭제되지 않습니다. 도구도, 활동 기록도, 전달 이력도 그대로 남으므로 무슨 일이 있었는지 확인할 수 있고 되돌릴 수도 있습니다.</value>
@@ -4299,12 +4260,6 @@
   <data name="Player" xml:space="preserve">
     <value>플레이어</value>
   </data>
-  <data name="Player connected" xml:space="preserve">
-    <value>플레이어 연결됨</value>
-  </data>
-  <data name="Player disconnected" xml:space="preserve">
-    <value>플레이어 연결 해제됨</value>
-  </data>
   <data name="Player Page" xml:space="preserve">
     <value>참가자 화면</value>
   </data>
@@ -4613,9 +4568,6 @@
   <data name="Rarest titles" xml:space="preserve">
     <value>가장 희귀한 타이틀</value>
   </data>
-  <data name="Rate limit hit {0} times" xml:space="preserve">
-    <value>속도 제한 {0}회 발생</value>
-  </data>
   <data name="Rate limited" xml:space="preserve">
     <value>속도 제한</value>
   </data>
@@ -4657,9 +4609,6 @@
   </data>
   <data name="Ready" xml:space="preserve">
     <value>준비됨</value>
-  </data>
-  <data name="Real scores from your own account. What a live delivery actually looks like." xml:space="preserve">
-    <value>내 계정의 실제 점수. 실제 전달이 어떤 모습인지 그대로 보여 줍니다.</value>
   </data>
   <data name="Reason" xml:space="preserve">
     <value>사유</value>
@@ -4754,9 +4703,6 @@
   <data name="Rejected" xml:space="preserve">
     <value>거절됨</value>
   </data>
-  <data name="Rejected: key expired" xml:space="preserve">
-    <value>거부됨: 키 만료</value>
-  </data>
   <data name="Reload the page" xml:space="preserve">
     <value>페이지 새로 고침</value>
   </data>
@@ -4819,9 +4765,6 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>재전송</value>
-  </data>
-  <data name="Replay a delivery" xml:space="preserve">
-    <value>전달 재전송</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>동영상 신고</value>
@@ -5171,9 +5114,6 @@
   <data name="Send a test" xml:space="preserve">
     <value>테스트 보내기</value>
   </data>
-  <data name="Send a test delivery" xml:space="preserve">
-    <value>테스트 전달 보내기</value>
-  </data>
   <data name="Send it" xml:space="preserve">
     <value>보내기</value>
   </data>
@@ -5182,9 +5122,6 @@
   </data>
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>PIU Tracker 등 커뮤니티 도구로 점수를 보내는 설정은 다음에서 관리합니다:</value>
-  </data>
-  <data name="Sent — check the activity log for the result." xml:space="preserve">
-    <value>전송했습니다 — 결과는 활동 기록에서 확인하세요.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>계열</value>
@@ -5615,9 +5552,6 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>스텝: {0}</value>
   </data>
-  <data name="Still failing — check the activity log." xml:space="preserve">
-    <value>여전히 실패합니다 — 활동 기록을 확인하세요.</value>
-  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>클리어해도 점수는 짜게 나옵니다</value>
   </data>
@@ -5708,9 +5642,6 @@
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>필터를 켜면 이 채보의 비교 대상을 좁힐 수 있습니다.</value>
   </data>
-  <data name="Synthetic charts and scores, if you'd rather not use your own or want a specific size." xml:space="preserve">
-    <value>내 데이터를 쓰고 싶지 않거나 특정 크기를 원할 때 쓰는 가상 차트와 점수.</value>
-  </data>
   <data name="Table" xml:space="preserve">
     <value>테이블</value>
   </data>
@@ -5776,12 +5707,6 @@
   </data>
   <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
     <value>보드가 아직 가득 차지 않았습니다 - 상위 50개만 있으면 오를 수 있습니다.</value>
-  </data>
-  <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
-    <value>본문에는 "test": true가 있고 전달 ID는 test-로 시작합니다. 플레이어는 항상 본인 계정이며, 테스트가 다른 플레이어의 점수를 보내는 일은 없습니다.</value>
-  </data>
-  <data name="The body of a failed delivery is kept for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
-    <value>실패한 전달의 본문은 재전송할 수 있도록 7일간 보관됩니다. 그 이후에도 활동 기록에는 무슨 일이 있었는지 남지만 페이로드는 사라집니다.</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>진열장</value>
@@ -6617,9 +6542,6 @@
   <data name="weaker" xml:space="preserve">
     <value>약함</value>
   </data>
-  <data name="Webhook timed out" xml:space="preserve">
-    <value>웹훅 시간 초과</value>
-  </data>
   <data name="Webhooks" xml:space="preserve">
     <value>웹훅</value>
   </data>
@@ -7085,9 +7007,6 @@
   <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
     <value>플레이한 모든 시리즈의 점수, 플레이트, 플레이어 프로필. 점수를 기록하거나 무언가를 변경하거나 나를 대신해 행동할 수는 없습니다.</value>
   </data>
-  <data name="Your server returned an error" xml:space="preserve">
-    <value>서버가 오류를 반환했습니다</value>
-  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>세션이 종료되었습니다.</value>
   </data>
@@ -7465,12 +7384,6 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · 레벨 {1}–{2} · {3}</value>
-  </data>
-  <data name="{0} — activity" xml:space="preserve">
-    <value>{0} — 활동</value>
-  </data>
-  <data name="{0} — debug" xml:space="preserve">
-    <value>{0} — 디버그</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — 설정</value>

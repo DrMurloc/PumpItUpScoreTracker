@@ -12147,3 +12147,8 @@ span.ct-console-pick { cursor: default; }
     .ct-dir-mark { display: none; }
     .ct-dir-tail { margin-left: 0; width: 100%; }
 }
+
+/* A console section's content. No card, no border — the section nav above it is
+   already the boundary, and a paper inside a paper is what made the old console
+   read as a stack of equally-loud panels. */
+.ct-section { display: block; }

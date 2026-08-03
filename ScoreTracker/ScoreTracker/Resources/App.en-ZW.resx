@@ -366,9 +366,6 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>GRO mrglrgll API glgrgl mrglmr blargplgl lurgrgl plglmurgblub-grglgrrgl rorgl — arglmr, glorgblarggrrgl, lurglurg mrmagl. Glorgmagl gro murpblgrl romurg gromurp grgl ro glorgmurg lurg mrp blubmurm gromurm mrgl murg.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so it is never written down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>Bloop grumba mo alla PIUGAME pragl - alla marogl, alla roggl, alla grumbla opa mogul bo. Blurgl am golba burgla.</value>
-  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>GRO mrpmaglmurp ro murgmrblarg gro groblgrlmagl gromurm grrglurgmurp grorpmrglblgrl - blubmurm blubgrrglmurm lurg mrp morgmurg, mrp maglplglblub</value>
   </data>
@@ -407,9 +404,6 @@
   </data>
   <data name="Activity" xml:space="preserve">
     <value>Murgblarg</value>
-  </data>
-  <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
-    <value>Murgblarg murgl blorm Morp galm murm murpmurp. Murpo murpgrogl grabla blu morp blu murgargl.</value>
   </data>
   <data name="Activity log" xml:space="preserve">
     <value>Olo marogl</value>
@@ -550,9 +544,6 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>Mrgmurg</value>
-  </data>
-  <data name="Always a test, always you" xml:space="preserve">
-    <value>Bam murpo, bam gromurp</value>
   </data>
   <data name="always all mixes" xml:space="preserve">
     <value>arba molu mulgo</value>
@@ -742,9 +733,6 @@
   <data name="Back to Tier List" xml:space="preserve">
     <value>Arglblgrl grgl Mrpgrrgl Grog</value>
   </data>
-  <data name="Back to tool" xml:space="preserve">
-    <value>Blurgl blu Rorgl</value>
-  </data>
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Arglblgrl grgl Murmmr Murgl</value>
   </data>
@@ -864,9 +852,6 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Grrglplgl</value>
-  </data>
-  <data name="Body expired" xml:space="preserve">
-    <value>Murgm murgloo</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Blubblgrl rglmurpmurp</value>
@@ -2084,9 +2069,6 @@
   <data name="Finish later" xml:space="preserve">
     <value>Golba pragl</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
-    <value>Grumba blurp mo bloop, roggl argla mogul.</value>
-  </data>
   <data name="First" xml:space="preserve">
     <value>Murpargl</value>
   </data>
@@ -2275,9 +2257,6 @@
   </data>
   <data name="Goal" xml:space="preserve">
     <value>Mrpmrp</value>
-  </data>
-  <data name="Goes to your configured URL, signed exactly like a real one." xml:space="preserve">
-    <value>Murgm blu gromurp grabla, murgblub murgm murgl murmo.</value>
   </data>
   <data name="Good" xml:space="preserve">
     <value>Lurggrgl</value>
@@ -2787,9 +2766,6 @@
   <data name="Key Name" xml:space="preserve">
     <value>Grumb Marogl</value>
   </data>
-  <data name="Key used {0} times" xml:space="preserve">
-    <value>Blarglurp murgm {0} murgl</value>
-  </data>
   <data name="Korean Name" xml:space="preserve">
 	  <value>Urgglorg Mrg</value>
   </data>
@@ -2804,9 +2780,6 @@
   </data>
   <data name="last 14 days" xml:space="preserve">
     <value>blgrlmrgl 14 grrglmrgl</value>
-  </data>
-  <data name="Last 14 days. Older entries are removed automatically." xml:space="preserve">
-    <value>Blomurp 14 murgl. Murmo murgm murgloo murgargl.</value>
   </data>
   <data name="Last 30 days" xml:space="preserve">
     <value>Blgrlmrgl 30 grrglmrgl</value>
@@ -3024,9 +2997,6 @@
   </data>
   <data name="Lv {0}" xml:space="preserve">
     <value>Morg {0}</value>
-  </data>
-  <data name="Made-up scores" xml:space="preserve">
-    <value>Bam Mgrlgmrg</value>
   </data>
   <data name="Make a tool" xml:space="preserve">
     <value>Murpmurp Rorgl</value>
@@ -3303,9 +3273,6 @@
   </data>
   <data name="My grade" xml:space="preserve">
     <value>Blgrl rorgl</value>
-  </data>
-  <data name="My last import" xml:space="preserve">
-    <value>Gromurp blomurp murpmurp</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>Blgrl rogrrgl rorgl</value>
@@ -3606,9 +3573,6 @@
   <data name="None given" xml:space="preserve">
     <value>Alla</value>
   </data>
-  <data name="None of this works in PIUGame session mode" xml:space="preserve">
-    <value>Bam murgm murpmurp blu PIUGame murgloborg</value>
-  </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Grglblgrlurg grgl 100%</value>
   </data>
@@ -3723,9 +3687,6 @@
   </data>
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>Alla blorp mo golba, opa marogl la piuscores Discord opa bloop am olo. Grumb blurgl pragl.</value>
-  </data>
-  <data name="Nothing here yet" xml:space="preserve">
-    <value>Bam murgm blorm</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>Alla bam blorm. Murgm rorgl, murgm murgblarg opa murgm murpo murgloo blomurp murp, murgloo murgm murgl argla blorm — blu blorp mo.</value>
@@ -4335,12 +4296,6 @@
   <data name="Player" xml:space="preserve">
 	  <value>Morp</value>
   </data>
-  <data name="Player connected" xml:space="preserve">
-    <value>Morp galmoo</value>
-  </data>
-  <data name="Player disconnected" xml:space="preserve">
-    <value>Morp blugrorp</value>
-  </data>
   <data name="Player Page" xml:space="preserve">
     <value>Morp Murgla</value>
   </data>
@@ -4651,9 +4606,6 @@
   <data name="Rarest titles" xml:space="preserve">
     <value>Urgblgrl mrgl</value>
   </data>
-  <data name="Rate limit hit {0} times" xml:space="preserve">
-    <value>Murgm murmo {0} murgl</value>
-  </data>
   <data name="Rate limited" xml:space="preserve">
     <value>Murgm murmo</value>
   </data>
@@ -4696,9 +4648,6 @@
   </data>
   <data name="Ready" xml:space="preserve">
     <value>Blargblgrl</value>
-  </data>
-  <data name="Real scores from your own account. What a live delivery actually looks like." xml:space="preserve">
-    <value>Murgl Mgrlgmrg blu gromurp Grgl. Murgm murpo murgm murgargl.</value>
   </data>
   <data name="Reason" xml:space="preserve">
 	  <value>Groglorg</value>
@@ -4794,9 +4743,6 @@
   <data name="Rejected" xml:space="preserve">
     <value>Blorp</value>
   </data>
-  <data name="Rejected: key expired" xml:space="preserve">
-    <value>Murgloo: blarglurp murgloo</value>
-  </data>
   <data name="Reload the page" xml:space="preserve">
     <value>Mrglmurg mrp urggrgl</value>
   </data>
@@ -4861,9 +4807,6 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>Murpmurp</value>
-  </data>
-  <data name="Replay a delivery" xml:space="preserve">
-    <value>Murpmurp murpo</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>Mrglmurp Grrrgl</value>
@@ -5219,9 +5162,6 @@
   <data name="Send a test" xml:space="preserve">
     <value>Murpo murgm</value>
   </data>
-  <data name="Send a test delivery" xml:space="preserve">
-    <value>Murpo murgm murpo</value>
-  </data>
   <data name="Send it" xml:space="preserve">
     <value>Murpo</value>
   </data>
@@ -5230,9 +5170,6 @@
   </data>
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>Grumba PIU Tracker olo maglub bloop, roggl argla:</value>
-  </data>
-  <data name="Sent — check the activity log for the result." xml:space="preserve">
-    <value>Murpo blorm — argla murgblarg blu murmo.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Morggrorp</value>
@@ -5673,9 +5610,6 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>plglmrgl murm {0}</value>
   </data>
-  <data name="Still failing — check the activity log." xml:space="preserve">
-    <value>Murgloo murmo — argla murgblarg.</value>
-  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>murpmurp grgl mrglrgl mrpplgl mrpgrrgl rglplgl</value>
   </data>
@@ -5766,9 +5700,6 @@
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>Murmgrgl lurg gro grglmurg grgl arglurg rglmorg grglmrp murgl urg glorgmurplurg murmlurgmurp.</value>
   </data>
-  <data name="Synthetic charts and scores, if you'd rather not use your own or want a specific size." xml:space="preserve">
-    <value>Murmo Murgl murm Mgrlgmrg, murgloo gromurp bam murgm gromurp arplo murgargl murmo.</value>
-  </data>
   <data name="Table" xml:space="preserve">
     <value>Mrpblarg</value>
   </data>
@@ -5835,12 +5766,6 @@
   </data>
   <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
     <value>Mrp mrglblarg blgrlro mrglmr - ro blarg 50 rglblgrl blub lurg gl.</value>
-  </data>
-  <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
-    <value>Murgm murpo murgblarg murm murpo murgm murgargl blu murgblarg. Morp murgm gromurp Grgl — murpo bam murp murpo gromurp murmo Morp Mgrlgmrg.</value>
-  </data>
-  <data name="The body of a failed delivery is kept for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
-    <value>Bam murgloo murgm blu murgloo murpo blu 7 murgl murgloo gromurp murp murpmurp. Murmo murgblarg murgl murgm murpmurp, murm murgm murpo blorm.</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>Mrp mrglglmorg</value>
@@ -6680,9 +6605,6 @@
   <data name="weaker" xml:space="preserve">
     <value>morgmrgl</value>
   </data>
-  <data name="Webhook timed out" xml:space="preserve">
-    <value>Murgm murgloo blu murgl</value>
-  </data>
   <data name="Webhooks" xml:space="preserve">
     <value>Grumba blorp</value>
   </data>
@@ -7155,9 +7077,6 @@
   <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
     <value>Gromurp Mgrlgmrg, gromurp blarglurp murm gromurp Morp mrpgrogl, blu argla murgl gromurp murpmurp. Murp bo murpmurp Mgrlgmrg, murgloo bam, arplo murpmurp blu gromurp.</value>
   </data>
-  <data name="Your server returned an error" xml:space="preserve">
-    <value>Gromurp murgblub murpo murgloo</value>
-  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>Gromurp grrglgrrglgl lurgblub.</value>
   </data>
@@ -7535,12 +7454,6 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · plglgrrgl {1}–{2} · {3}</value>
-  </data>
-  <data name="{0} — activity" xml:space="preserve">
-    <value>{0} — murgblarg</value>
-  </data>
-  <data name="{0} — debug" xml:space="preserve">
-    <value>{0} — murgblub</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — mrpgrogl</value>

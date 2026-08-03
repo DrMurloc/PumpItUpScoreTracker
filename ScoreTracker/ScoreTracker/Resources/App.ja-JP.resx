@@ -366,9 +366,6 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>ドキュメント完備の公開 API がコミュニティ製ツールを支えます — ボット、オーバーレイ、統計サイト。アカウントからトークンを取得して、私たちと同じデータの上に作ってください。</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so it is never written down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>セッション配信には有効な piugame.com のキーが含まれるため、保存されません — 再送するものはなく、サーバーが停止していたときの再試行もありません。インポートでご自分のアカウントを使ってテストしてください。</value>
-  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
   </data>
@@ -407,9 +404,6 @@
   </data>
   <data name="Activity" xml:space="preserve">
     <value>アクティビティ</value>
-  </data>
-  <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
-    <value>プレイヤーが接続してインポートすると記録が表示されます。招待リンクを送って始めましょう。</value>
   </data>
   <data name="Activity log" xml:space="preserve">
     <value>アクティビティログ</value>
@@ -550,9 +544,6 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>常に</value>
-  </data>
-  <data name="Always a test, always you" xml:space="preserve">
-    <value>常にテストで、常にあなた自身です</value>
   </data>
   <data name="always all mixes" xml:space="preserve">
     <value>常にすべてのバージョン</value>
@@ -742,9 +733,6 @@
   <data name="Back to Tier List" xml:space="preserve">
     <value>ティアリストに戻る</value>
   </data>
-  <data name="Back to tool" xml:space="preserve">
-    <value>ツールに戻る</value>
-  </data>
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Weekly Charts に戻る</value>
   </data>
@@ -864,9 +852,6 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>ボード</value>
-  </data>
-  <data name="Body expired" xml:space="preserve">
-    <value>本文は期限切れ</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>ボスブレイカー</value>
@@ -2084,9 +2069,6 @@
   <data name="Finish later" xml:space="preserve">
     <value>あとで仕上げる</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
-    <value>自分のエンドポイントに配信を送り、失敗したものを再送します。</value>
-  </data>
   <data name="First" xml:space="preserve">
     <value>初</value>
   </data>
@@ -2275,9 +2257,6 @@
   </data>
   <data name="Goal" xml:space="preserve">
     <value>目標</value>
-  </data>
-  <data name="Goes to your configured URL, signed exactly like a real one." xml:space="preserve">
-    <value>設定したURLへ、本物とまったく同じ署名で送ります。</value>
   </data>
   <data name="Good" xml:space="preserve">
     <value>良い</value>
@@ -2787,9 +2766,6 @@
   <data name="Key Name" xml:space="preserve">
     <value>キーの名前</value>
   </data>
-  <data name="Key used {0} times" xml:space="preserve">
-    <value>キーを{0}回使用</value>
-  </data>
   <data name="Korean Name" xml:space="preserve">
 	  <value>韓国語名</value>
   </data>
@@ -2804,9 +2780,6 @@
   </data>
   <data name="last 14 days" xml:space="preserve">
     <value>過去14日</value>
-  </data>
-  <data name="Last 14 days. Older entries are removed automatically." xml:space="preserve">
-    <value>直近14日間。それより古い記録は自動的に削除されます。</value>
   </data>
   <data name="Last 30 days" xml:space="preserve">
     <value>過去30日</value>
@@ -3024,9 +2997,6 @@
   </data>
   <data name="Lv {0}" xml:space="preserve">
     <value>Lv {0}</value>
-  </data>
-  <data name="Made-up scores" xml:space="preserve">
-    <value>ダミーのスコア</value>
   </data>
   <data name="Make a tool" xml:space="preserve">
     <value>ツールを作る</value>
@@ -3303,9 +3273,6 @@
   </data>
   <data name="My grade" xml:space="preserve">
     <value>自分のランク</value>
-  </data>
-  <data name="My last import" xml:space="preserve">
-    <value>自分の直近のインポート</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>自分のレガシーランク</value>
@@ -3606,9 +3573,6 @@
   <data name="None given" xml:space="preserve">
     <value>指定なし</value>
   </data>
-  <data name="None of this works in PIUGame session mode" xml:space="preserve">
-    <value>PIUGameセッションモードでは何も動きません</value>
-  </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>100%に正規化</value>
   </data>
@@ -3723,9 +3687,6 @@
   </data>
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>申請しても自動で通知は飛びません。PIU Scores の Discord に書き込めば誰かが見ます。その間もツールは動き続けます。</value>
-  </data>
-  <data name="Nothing here yet" xml:space="preserve">
-    <value>まだ記録はありません</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>何も削除されません。ツールも、アクティビティも、配信履歴もそのまま残るので、何が起きたか確認できますし、取り消すこともできます。</value>
@@ -4335,12 +4296,6 @@
   <data name="Player" xml:space="preserve">
 	  <value>プレーヤー</value>
   </data>
-  <data name="Player connected" xml:space="preserve">
-    <value>プレイヤーが接続</value>
-  </data>
-  <data name="Player disconnected" xml:space="preserve">
-    <value>プレイヤーが接続解除</value>
-  </data>
   <data name="Player Page" xml:space="preserve">
     <value>プレイヤー画面</value>
   </data>
@@ -4651,9 +4606,6 @@
   <data name="Rarest titles" xml:space="preserve">
     <value>最もレアな称号</value>
   </data>
-  <data name="Rate limit hit {0} times" xml:space="preserve">
-    <value>レート制限に{0}回到達</value>
-  </data>
   <data name="Rate limited" xml:space="preserve">
     <value>レート制限</value>
   </data>
@@ -4696,9 +4648,6 @@
   </data>
   <data name="Ready" xml:space="preserve">
     <value>準備完了</value>
-  </data>
-  <data name="Real scores from your own account. What a live delivery actually looks like." xml:space="preserve">
-    <value>自分のアカウントの実データ。実際の配信そのものの姿です。</value>
   </data>
   <data name="Reason" xml:space="preserve">
 	  <value>理由</value>
@@ -4794,9 +4743,6 @@
   <data name="Rejected" xml:space="preserve">
     <value>却下しました</value>
   </data>
-  <data name="Rejected: key expired" xml:space="preserve">
-    <value>拒否: キーの期限切れ</value>
-  </data>
   <data name="Reload the page" xml:space="preserve">
     <value>ページを再読み込み</value>
   </data>
@@ -4861,9 +4807,6 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>再送</value>
-  </data>
-  <data name="Replay a delivery" xml:space="preserve">
-    <value>配信を再送</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>ビデオを報告</value>
@@ -5219,9 +5162,6 @@
   <data name="Send a test" xml:space="preserve">
     <value>テストを送る</value>
   </data>
-  <data name="Send a test delivery" xml:space="preserve">
-    <value>テスト配信を送る</value>
-  </data>
   <data name="Send it" xml:space="preserve">
     <value>送信</value>
   </data>
@@ -5230,9 +5170,6 @@
   </data>
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>PIU Tracker などのコミュニティツールへのスコア送信は、こちらで管理します:</value>
-  </data>
-  <data name="Sent — check the activity log for the result." xml:space="preserve">
-    <value>送信しました — 結果はアクティビティで確認してください。</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>系列</value>
@@ -5673,9 +5610,6 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>ステップ：{0}</value>
   </data>
-  <data name="Still failing — check the activity log." xml:space="preserve">
-    <value>まだ失敗しています — アクティビティを確認してください。</value>
-  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>クリアしてもスコアは渋い</value>
   </data>
@@ -5766,9 +5700,6 @@
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>フィルターをオンにすると、この譜面の比較対象を絞り込めます。</value>
   </data>
-  <data name="Synthetic charts and scores, if you'd rather not use your own or want a specific size." xml:space="preserve">
-    <value>自分のデータを使いたくないとき、あるいは特定の件数を試したいときのダミー譜面とスコア。</value>
-  </data>
   <data name="Table" xml:space="preserve">
     <value>テーブル</value>
   </data>
@@ -5835,12 +5766,6 @@
   </data>
   <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
     <value>ボードはまだ満員ではありません - トップ50があれば載れます。</value>
-  </data>
-  <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
-    <value>本文には "test": true が入り、配信IDは test- で始まります。プレイヤーは常にあなた自身のアカウントで、テストが他人のスコアを送ることはありません。</value>
-  </data>
-  <data name="The body of a failed delivery is kept for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
-    <value>失敗した配信の本文は再送できるよう7日間保持されます。それ以降もアクティビティには何が起きたか残りますが、ペイロードは消えます。</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>ショーケース</value>
@@ -6680,9 +6605,6 @@
   <data name="weaker" xml:space="preserve">
     <value>弱い</value>
   </data>
-  <data name="Webhook timed out" xml:space="preserve">
-    <value>Webhookがタイムアウトしました</value>
-  </data>
   <data name="Webhooks" xml:space="preserve">
     <value>Webhook</value>
   </data>
@@ -7155,9 +7077,6 @@
   <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
     <value>プレイしたすべてのバージョンのスコア、プレート、プレイヤープロフィール。スコアの記録や変更、あなたとして振る舞うことはできません。</value>
   </data>
-  <data name="Your server returned an error" xml:space="preserve">
-    <value>サーバーがエラーを返しました</value>
-  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>セッションが終了しました。</value>
   </data>
@@ -7535,12 +7454,6 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0}・レベル {1}–{2}・{3}</value>
-  </data>
-  <data name="{0} — activity" xml:space="preserve">
-    <value>{0} — アクティビティ</value>
-  </data>
-  <data name="{0} — debug" xml:space="preserve">
-    <value>{0} — デバッグ</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — 設定</value>

@@ -11,8 +11,7 @@
    default" never registers — and the key is readable exactly once, so the reveal needs a moment of
    its own rather than a line in a table. *@
 
-<MudPaper Outlined="true" Class="pa-4 mb-4">
-    <MudText Typo="Typo.subtitle2">@L["API keys"]</MudText>
+<div class="ct-section">
     <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
         @L["Two can be active at once, so rotating one costs no downtime."]
     </MudText>
@@ -58,8 +57,7 @@
 
     <MudButton Size="Size.Small" Class="mt-3" Variant="Variant.Outlined" Color="Color.Primary"
                OnClick="OpenCreate">@L["Create key"]</MudButton>
-</MudPaper>
-
+</div>
 @* Step 1: expiry is chosen before the key exists. *@
 <MudDialog @bind-Visible="_showCreate" Options="_options">
     <TitleContent><MudText Typo="Typo.h6">@L["Create API key"]</MudText></TitleContent>

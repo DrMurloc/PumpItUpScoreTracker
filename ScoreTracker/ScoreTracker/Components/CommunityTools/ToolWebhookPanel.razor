@@ -12,7 +12,7 @@
    URL, no header, and no mixes to pick — showing those anyway asks the maker to decide things that
    do not apply to them. *@
 
-<MudPaper Outlined="true" Class="pa-4 mb-4">
+<div class="ct-section">
     <MudText Typo="Typo.subtitle2">@L["Webhooks"]</MudText>
     <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
         @L["What arrives when one of your players imports. Nothing is a fine answer — plenty of tools just poll."]
@@ -170,8 +170,7 @@
         {
         }
     </div>
-</MudPaper>
-
+</div>
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime

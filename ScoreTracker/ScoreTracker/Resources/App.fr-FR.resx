@@ -366,9 +366,6 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Une API publique entièrement documentée alimente les outils de la communauté — bots, overlays, sites de stats. Récupérez un jeton depuis votre compte et construisez sur les mêmes données que nous.</value>
   </data>
-  <data name="A session delivery carries a live piugame.com key, so it is never written down — there's nothing to replay and no retry if your server is down when it fires. Test against your own account by importing." xml:space="preserve">
-    <value>Une livraison de session transporte une clé piugame.com active, elle n'est donc jamais écrite : il n'y a rien à rejouer ni de nouvelle tentative si votre serveur est hors service au moment du déclenchement. Testez sur votre propre compte en important.</value>
-  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Un zip de snapshot importe directement une version de données déjà récupérée : même traitement que l'exploration, sans téléchargement</value>
   </data>
@@ -407,9 +404,6 @@
   </data>
   <data name="Activity" xml:space="preserve">
     <value>Activité</value>
-  </data>
-  <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
-    <value>L'activité apparaît dès qu'un joueur se connecte et importe. Envoyez votre lien d'invitation à quelqu'un pour commencer.</value>
   </data>
   <data name="Activity log" xml:space="preserve">
     <value>Journal d'activité</value>
@@ -550,9 +544,6 @@
   </data>
   <data name="Always" xml:space="preserve">
     <value>Toujours</value>
-  </data>
-  <data name="Always a test, always you" xml:space="preserve">
-    <value>Toujours un test, toujours vous</value>
   </data>
   <data name="always all mixes" xml:space="preserve">
     <value>toujours tous les Mix</value>
@@ -742,9 +733,6 @@
   <data name="Back to Tier List" xml:space="preserve">
     <value>Retour à la Tier List</value>
   </data>
-  <data name="Back to tool" xml:space="preserve">
-    <value>Retour à l'outil</value>
-  </data>
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Retour à Weekly Charts</value>
   </data>
@@ -864,9 +852,6 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Leaderboards</value>
-  </data>
-  <data name="Body expired" xml:space="preserve">
-    <value>Corps expiré</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
@@ -2083,9 +2068,6 @@
   <data name="Finish later" xml:space="preserve">
     <value>Terminer plus tard</value>
   </data>
-  <data name="Fire a delivery at your own endpoint, and replay what failed." xml:space="preserve">
-    <value>Envoyez une livraison vers votre propre endpoint, et rejouez ce qui a échoué.</value>
-  </data>
   <data name="First" xml:space="preserve">
     <value>Premier</value>
   </data>
@@ -2274,9 +2256,6 @@
   </data>
   <data name="Goal" xml:space="preserve">
     <value>Objectif</value>
-  </data>
-  <data name="Goes to your configured URL, signed exactly like a real one." xml:space="preserve">
-    <value>Part vers l'URL que vous avez configurée, signée exactement comme une vraie.</value>
   </data>
   <data name="Good" xml:space="preserve">
     <value>Bon</value>
@@ -2786,9 +2765,6 @@
   <data name="Key Name" xml:space="preserve">
     <value>Nom de la clé</value>
   </data>
-  <data name="Key used {0} times" xml:space="preserve">
-    <value>Clé utilisée {0} fois</value>
-  </data>
   <data name="Korean Name" xml:space="preserve">
     <value>Nom coréen</value>
   </data>
@@ -2803,9 +2779,6 @@
   </data>
   <data name="last 14 days" xml:space="preserve">
     <value>14 derniers jours</value>
-  </data>
-  <data name="Last 14 days. Older entries are removed automatically." xml:space="preserve">
-    <value>14 derniers jours. Les entrées plus anciennes sont supprimées automatiquement.</value>
   </data>
   <data name="Last 30 days" xml:space="preserve">
     <value>30 derniers jours</value>
@@ -3023,9 +2996,6 @@
   </data>
   <data name="Lv {0}" xml:space="preserve">
     <value>Nv {0}</value>
-  </data>
-  <data name="Made-up scores" xml:space="preserve">
-    <value>Scores inventés</value>
   </data>
   <data name="Make a tool" xml:space="preserve">
     <value>Créer un outil</value>
@@ -3302,9 +3272,6 @@
   </data>
   <data name="My grade" xml:space="preserve">
     <value>Mon grade</value>
-  </data>
-  <data name="My last import" xml:space="preserve">
-    <value>Mon dernier import</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>Mon grade legacy</value>
@@ -3605,9 +3572,6 @@
   <data name="None given" xml:space="preserve">
     <value>Non renseigné</value>
   </data>
-  <data name="None of this works in PIUGame session mode" xml:space="preserve">
-    <value>Rien de tout ça ne fonctionne en mode session PIUGame</value>
-  </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Normaliser à 100 %</value>
   </data>
@@ -3722,9 +3686,6 @@
   </data>
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>La demande n'envoie rien, alors écrivez sur le Discord PIU Scores et quelqu'un y jettera un œil. Votre outil continue de fonctionner entre-temps.</value>
-  </data>
-  <data name="Nothing here yet" xml:space="preserve">
-    <value>Rien ici pour l'instant</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>Rien n'est supprimé. Les outils, leur activité et leur historique de livraisons restent tels quels, vous pouvez donc voir ce qui s'est passé — ou revenir en arrière.</value>
@@ -4334,12 +4295,6 @@
   <data name="Player" xml:space="preserve">
     <value>Joueur</value>
   </data>
-  <data name="Player connected" xml:space="preserve">
-    <value>Joueur connecté</value>
-  </data>
-  <data name="Player disconnected" xml:space="preserve">
-    <value>Joueur déconnecté</value>
-  </data>
   <data name="Player Page" xml:space="preserve">
     <value>Page joueur</value>
   </data>
@@ -4650,9 +4605,6 @@
   <data name="Rarest titles" xml:space="preserve">
     <value>Titres les plus rares</value>
   </data>
-  <data name="Rate limit hit {0} times" xml:space="preserve">
-    <value>Limite atteinte {0} fois</value>
-  </data>
   <data name="Rate limited" xml:space="preserve">
     <value>Limités</value>
   </data>
@@ -4695,9 +4647,6 @@
   </data>
   <data name="Ready" xml:space="preserve">
     <value>Prêt</value>
-  </data>
-  <data name="Real scores from your own account. What a live delivery actually looks like." xml:space="preserve">
-    <value>Des scores réels de votre compte. Exactement ce à quoi ressemble une vraie livraison.</value>
   </data>
   <data name="Reason" xml:space="preserve">
     <value>Raison</value>
@@ -4793,9 +4742,6 @@
   <data name="Rejected" xml:space="preserve">
     <value>Refusé</value>
   </data>
-  <data name="Rejected: key expired" xml:space="preserve">
-    <value>Refusée : clé expirée</value>
-  </data>
   <data name="Reload the page" xml:space="preserve">
     <value>Recharger la page</value>
   </data>
@@ -4860,9 +4806,6 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>Rejouer</value>
-  </data>
-  <data name="Replay a delivery" xml:space="preserve">
-    <value>Rejouer une livraison</value>
   </data>
   <data name="Report Video" xml:space="preserve">
     <value>Signaler vidéo</value>
@@ -5218,9 +5161,6 @@
   <data name="Send a test" xml:space="preserve">
     <value>Envoyer un test</value>
   </data>
-  <data name="Send a test delivery" xml:space="preserve">
-    <value>Envoyer une livraison de test</value>
-  </data>
   <data name="Send it" xml:space="preserve">
     <value>Envoyer</value>
   </data>
@@ -5229,9 +5169,6 @@
   </data>
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>L'envoi de vos scores vers PIU Tracker ou un autre outil communautaire se gère depuis</value>
-  </data>
-  <data name="Sent — check the activity log for the result." xml:space="preserve">
-    <value>Envoyé — voyez le résultat dans l'activité.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Séries</value>
@@ -5672,9 +5609,6 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>steps de {0}</value>
   </data>
-  <data name="Still failing — check the activity log." xml:space="preserve">
-    <value>Toujours en échec — voyez l'activité.</value>
-  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>avare en score même une fois passé</value>
   </data>
@@ -5765,9 +5699,6 @@
   <data name="Switch on a filter to narrow what this chart is compared against." xml:space="preserve">
     <value>Activez un filtre pour restreindre ce à quoi ce chart est comparé.</value>
   </data>
-  <data name="Synthetic charts and scores, if you'd rather not use your own or want a specific size." xml:space="preserve">
-    <value>Charts et scores synthétiques, si vous préférez ne pas utiliser les vôtres ou voulez une taille précise.</value>
-  </data>
   <data name="Table" xml:space="preserve">
     <value>Tableau</value>
   </data>
@@ -5834,12 +5765,6 @@
   </data>
   <data name="The board isn't full - any top 50 gets you on it." xml:space="preserve">
     <value>Le classement n'est pas plein - n'importe quel top 50 vous y place.</value>
-  </data>
-  <data name="The body carries &quot;test&quot;: true and the delivery id starts with test-. The player is always your own account — a test can never send you another player's scores." xml:space="preserve">
-    <value>Le corps porte "test": true et l'id de livraison commence par test-. Le joueur est toujours votre propre compte — un test ne peut jamais vous envoyer les scores de quelqu'un d'autre.</value>
-  </data>
-  <data name="The body of a failed delivery is kept for 7 days so you can replay it. After that the activity log still shows what happened, but the payload is gone." xml:space="preserve">
-    <value>Le corps d'une livraison échouée est gardé 7 jours pour que vous puissiez la rejouer. Ensuite l'activité montre toujours ce qui s'est passé, mais le payload a disparu.</value>
   </data>
   <data name="The cabinet" xml:space="preserve">
     <value>La vitrine</value>
@@ -6679,9 +6604,6 @@
   <data name="weaker" xml:space="preserve">
     <value>plus faible</value>
   </data>
-  <data name="Webhook timed out" xml:space="preserve">
-    <value>Le webhook a expiré</value>
-  </data>
   <data name="Webhooks" xml:space="preserve">
     <value>Webhooks</value>
   </data>
@@ -7154,9 +7076,6 @@
   <data name="Your scores, your plates and your player profile, on every mix you've played. It cannot record scores, change anything, or act as you." xml:space="preserve">
     <value>Vos scores, vos plates et votre profil de joueur, sur tous les mix auxquels vous avez joué. Il ne peut pas enregistrer de scores, rien modifier, ni agir en votre nom.</value>
   </data>
-  <data name="Your server returned an error" xml:space="preserve">
-    <value>Votre serveur a renvoyé une erreur</value>
-  </data>
   <data name="Your session ended." xml:space="preserve">
     <value>Votre session est terminée.</value>
   </data>
@@ -7534,12 +7453,6 @@
   </data>
   <data name="{0} · levels {1}–{2} · {3}" xml:space="preserve">
     <value>{0} · niveaux {1}–{2} · {3}</value>
-  </data>
-  <data name="{0} — activity" xml:space="preserve">
-    <value>{0} — activité</value>
-  </data>
-  <data name="{0} — debug" xml:space="preserve">
-    <value>{0} — débogage</value>
   </data>
   <data name="{0} — settings" xml:space="preserve">
     <value>{0} — réglages</value>
