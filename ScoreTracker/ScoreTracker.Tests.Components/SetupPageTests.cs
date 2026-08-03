@@ -249,7 +249,7 @@ public sealed class SetupPageTests : ComponentTestBase
 
         await page.Find("button.setup-continue").ClickAsync(new());
 
-        _uiSettings.Verify(u => u.SetSetting(Setup.CompletedSettingKey, "true", It.IsAny<CancellationToken>()),
+        _uiSettings.Verify(u => u.SetSetting(IUiSettingsAccessor.SetupCompletedSettingKey, "true", It.IsAny<CancellationToken>()),
             Times.Once);
         Assert.True(NavigatedTo("/Mix/Set?mix=Phoenix2"), Navigations);
     }

@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.Events
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
@@ -147,7 +147,6 @@ else
     private string? _loadedFor;
     private bool _allMixes;
     private bool _skipGameTag = true;
-    private bool _syncPiuTracker;
     private bool? _recordBrokenAsBest;
     private MixEnum? _mix;
 
@@ -195,12 +194,11 @@ else
         var config = WidgetConfigJson.Read<ImportScoresConfig>(Widget.ConfigJson);
         var allMixes = config.AllMixes;
         var pinned = allMixes ? (MixEnum?)null : config.Mix ?? EffectiveMix;
-        var signature = $"{Widget.Id}|{allMixes}|{pinned}|{config.SkipGameTag}|{config.SyncPiuTracker}|{config.RecordBrokenAsBest}";
+        var signature = $"{Widget.Id}|{allMixes}|{pinned}|{config.SkipGameTag}|{config.RecordBrokenAsBest}";
         if (signature == _loadedFor) return;
         _loadedFor = signature;
         _allMixes = allMixes;
         _skipGameTag = config.SkipGameTag;
-        _syncPiuTracker = config.SyncPiuTracker;
         _recordBrokenAsBest = config.RecordBrokenAsBest;
         _mix = pinned;
         _state = ImportUiState.Idle;
@@ -280,7 +278,7 @@ else
         var recordBroken = new ImportScoresConfig { RecordBrokenAsBest = _recordBrokenAsBest }
             .RecordsBrokenFor(_mix.Value);
         var result = await Mediator.Send(new StartOfficialImportCommand(source, _mix!.Value, cardId, gameTag,
-            recordBroken, _syncPiuTracker));
+            recordBroken));
 
         switch (result.Outcome)
         {

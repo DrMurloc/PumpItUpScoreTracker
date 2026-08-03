@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The dev-harness writer is internal to Data/DevTooling; its real-database tests are the
+         acceptance test for retiring dev/export, so they need to see it. -->
+    <InternalsVisibleTo Include="ScoreTracker.Tests.Integration" />
+    <InternalsVisibleTo Include="ScoreTracker.Tests.Api" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.14.2" />
     <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.7.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.27.0" />
@@ -19,6 +26,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.2" />
+    <!-- The local-dev harness rebuilds a database by reading the live site's public api/v2 with a
+         personal token, exactly as an integrator would. Data already does plenty of HTTP through
+         vendor SDKs; this is the one place it needs a plain typed client. -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="SendGrid" Version="9.29.3" />
     <PackageReference Include="SkiaSharp" Version="2.88.9" />

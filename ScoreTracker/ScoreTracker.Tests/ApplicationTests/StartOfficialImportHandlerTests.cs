@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,7 +46,7 @@ public sealed class StartOfficialImportHandlerTests
             .ReturnsAsync("sid123");
 
         var result = await handler.Handle(new StartOfficialImportCommand(
-            new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix, "card1", "TAG", false, false),
+            new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix, "card1", "TAG", false),
             CancellationToken.None);
 
         Assert.Equal(ImportStartOutcome.Started, result.Outcome);
@@ -63,7 +63,7 @@ public sealed class StartOfficialImportHandlerTests
             .ReturnsAsync("sid123");
 
         await handler.Handle(new StartOfficialImportCommand(
-            new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix, "card1", "TAG", false, false),
+            new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix, "card1", "TAG", false),
             CancellationToken.None);
 
         // The consumer releases it when the scrape finishes — the Start handler must not.
@@ -77,7 +77,7 @@ public sealed class StartOfficialImportHandlerTests
         guard.Setup(g => g.TryBegin(It.IsAny<Guid>())).Returns(false);
 
         var result = await handler.Handle(new StartOfficialImportCommand(
-            new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix, "card1", "TAG", false, false),
+            new TypedCredentialSource("player1", "hunter2"), MixEnum.Phoenix, "card1", "TAG", false),
             CancellationToken.None);
 
         Assert.Equal(ImportStartOutcome.AlreadyRunning, result.Outcome);
@@ -96,7 +96,7 @@ public sealed class StartOfficialImportHandlerTests
             .ReturnsAsync((RevealedImportCredential?)null);
 
         var result = await handler.Handle(new StartOfficialImportCommand(
-            new StoredCredentialSource(keyId, "cipher"), MixEnum.Phoenix, "card1", "TAG", false, false),
+            new StoredCredentialSource(keyId, "cipher"), MixEnum.Phoenix, "card1", "TAG", false),
             CancellationToken.None);
 
         Assert.Equal(ImportStartOutcome.CredentialUnlockFailed, result.Outcome);
@@ -117,7 +117,7 @@ public sealed class StartOfficialImportHandlerTests
             .ReturnsAsync("sid123");
 
         var result = await handler.Handle(new StartOfficialImportCommand(
-            new StoredCredentialSource(keyId, "cipher"), MixEnum.Phoenix, "card1", "TAG", false, false),
+            new StoredCredentialSource(keyId, "cipher"), MixEnum.Phoenix, "card1", "TAG", false),
             CancellationToken.None);
 
         Assert.Equal(ImportStartOutcome.Started, result.Outcome);
@@ -134,7 +134,7 @@ public sealed class StartOfficialImportHandlerTests
             .ThrowsAsync(new InvalidCredentialException("no"));
 
         var result = await handler.Handle(new StartOfficialImportCommand(
-            new TypedCredentialSource("player1", "wrong"), MixEnum.Phoenix, "card1", "TAG", false, false),
+            new TypedCredentialSource("player1", "wrong"), MixEnum.Phoenix, "card1", "TAG", false),
             CancellationToken.None);
 
         Assert.Equal(ImportStartOutcome.InvalidCredentials, result.Outcome);

@@ -11,6 +11,13 @@ public interface IUiSettingsAccessor
     /// </summary>
     const string MixSettingKey = "Universal__CurrentMix";
 
+    /// <summary>
+    ///     Set when a new account finishes <c>/Setup</c>. Its presence is the whole "this account
+    ///     is past onboarding" test — <c>LoginController</c> reads it to stop sending them back,
+    ///     and anything that would interrupt a first-run player reads it to stay quiet.
+    /// </summary>
+    const string SetupCompletedSettingKey = "Universal__SetupCompleted";
+
     Task<MixEnum> GetSelectedMix(CancellationToken cancellationToken = default);
 
     /// <summary>

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Contracts.Commands;
@@ -7,4 +7,4 @@ namespace ScoreTracker.OfficialMirror.Contracts.Commands;
 // a background job. The password never leaves this handler.
 [ExcludeFromCodeCoverage]
 public sealed record StartOfficialImportCommand(ImportCredentialSource Source, MixEnum Mix, string CardId,
-    string ExpectedGameTag, bool IncludeBroken, bool SyncPiuTracker) : IRequest<ImportStartResult>;
+    string ExpectedGameTag, bool IncludeBroken) : IRequest<ImportStartResult>;

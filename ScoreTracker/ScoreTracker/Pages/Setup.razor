@@ -578,9 +578,6 @@
     private string? ProviderLabel =>
         From != null && ProviderLabels.TryGetValue(From, out var label) ? label : null;
 
-    /// <summary>Marks setup as done so <c>LoginController</c> only ever sends a player here once.</summary>
-    public const string CompletedSettingKey = "Universal__SetupCompleted";
-
     private string _name = string.Empty;
     private string _country = string.Empty;
     private string _culture = SupportedCultures.Default;
@@ -727,7 +724,7 @@
         _isSaving = true;
         _isFinishing = true;
 
-        await UiSettings.SetSetting(CompletedSettingKey, "true");
+        await UiSettings.SetSetting(IUiSettingsAccessor.SetupCompletedSettingKey, "true");
         NavManager.NavigateTo(
             $"/Mix/Set?mix={_mix}&redirectUrl={Uri.EscapeDataString("/")}", true);
     }

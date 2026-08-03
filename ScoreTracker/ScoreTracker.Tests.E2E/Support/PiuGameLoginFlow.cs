@@ -42,6 +42,37 @@ internal static class PiuGameLoginFlow
             .ClickAsync(new LocatorClickOptions { Timeout = 60_000 });
         await page.WaitForURLAsync(u => new Uri(u).AbsolutePath == "/",
             new PageWaitForURLOptions { Timeout = 60_000 });
+
+        await DismissAnnouncementsAsync(page);
+    }
+
+    /// <summary>
+    ///     Clicks away any one-time rollout notice, the way the player who meets it does.
+    ///     <para>
+    ///         An account created through this flow is brand new, which is exactly who those notices
+    ///         fire at. They are modal, so the scrim sits over the page the test is about and eats
+    ///         every click — surfacing as a timeout waiting for a button that is plainly visible in
+    ///         the trace. Seeded users get the same treatment from
+    ///         <see cref="E2ESeedData.SeedUserAsync" />; this is the path that cannot be seeded,
+    ///         because the account does not exist until the form is submitted.
+    ///     </para>
+    ///     <para>Tolerant by design: no notice pending is the normal case and not a failure.</para>
+    /// </summary>
+    public static async Task DismissAnnouncementsAsync(IPage page)
+    {
+        var acknowledge = page.GetByRole(AriaRole.Button, new PageGetByRoleOptions { Name = "Got it" });
+        try
+        {
+            await acknowledge.WaitForAsync(new LocatorWaitForOptions { Timeout = 5_000 });
+        }
+        catch (TimeoutException)
+        {
+            return;
+        }
+
+        await acknowledge.ClickAsync();
+        await page.Locator("div.mud-overlay-scrim")
+            .WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Hidden, Timeout = 10_000 });
     }
 
     /// <summary>Navigates to the form and fails with the served HTML if it never renders.</summary>

@@ -1,0 +1,132 @@
+@page "/Developers/{ToolId:guid}/Console"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Activity"]</PageTitle>
+
+@* Every row is a curated phrase plus the remote's own status code — no stack traces, no framework
+   strings — so DiagnosticExposureTests never has to be touched for this page. Each severity carries
+   an icon and a word, never colour alone (UX rule 8). *@
+
+<div class="d-flex align-end gap-3 flex-wrap mt-2 mb-4">
+    <div class="flex-grow-1">
+        <MudText Typo="Typo.h5">@L["{0} — activity", _tool?.Name ?? string.Empty]</MudText>
+        <MudText Typo="Typo.body2" Style="opacity:.75;">
+            @L["Last 14 days. Older entries are removed automatically."]
+        </MudText>
+    </div>
+    <MudButton Variant="Variant.Text" Href="/Developers">@L["Back to tool"]</MudButton>
+</div>
+
+<MudGrid Class="mb-4">
+    <MudItem xs="6" sm="3"><MudPaper Outlined="true" Class="pa-3">
+        <MudText Typo="Typo.caption" Style="opacity:.7;">@L["Deliveries"]</MudText>
+        <MudText Typo="Typo.h5">@_summary.Deliveries</MudText>
+    </MudPaper></MudItem>
+    <MudItem xs="6" sm="3"><MudPaper Outlined="true" Class="pa-3">
+        <MudText Typo="Typo.caption" Style="opacity:.7;">@L["Failed"]</MudText>
+        <MudText Typo="Typo.h5" Color="@(_summary.Failures > 0 ? Color.Error : Color.Default)">@_summary.Failures</MudText>
+    </MudPaper></MudItem>
+    <MudItem xs="6" sm="3"><MudPaper Outlined="true" Class="pa-3">
+        <MudText Typo="Typo.caption" Style="opacity:.7;">@L["Rate limited"]</MudText>
+        <MudText Typo="Typo.h5" Color="@(_summary.RateLimited > 0 ? Color.Warning : Color.Default)">@_summary.RateLimited</MudText>
+    </MudPaper></MudItem>
+    <MudItem xs="6" sm="3"><MudPaper Outlined="true" Class="pa-3">
+        <MudText Typo="Typo.caption" Style="opacity:.7;">@L["Players"]</MudText>
+        <MudText Typo="Typo.h5">@_summary.ConnectedPlayers</MudText>
+    </MudPaper></MudItem>
+</MudGrid>
+
+<MudPaper Outlined="true" Class="pa-3">
+    @if (!_activity.Any())
+    {
+        <div class="pa-6 text-center">
+            <MudText Typo="Typo.subtitle1">@L["Nothing here yet"]</MudText>
+            <MudText Typo="Typo.body2" Style="opacity:.75;">
+                @L["Activity appears once a player connects and imports. Send someone your invite link to get started."]
+            </MudText>
+        </div>
+    }
+    @foreach (var row in _activity)
+    {
+        <div class="olb-rank-card">
+            <MudText Typo="Typo.caption" Style="opacity:.6; min-width:130px;">
+                @row.OccurredAt.LocalDateTime.ToString("dd MMM HH:mm")
+            </MudText>
+            <div class="flex-grow-1" style="min-width:0;">
+                <MudText Typo="Typo.body2">
+                    <span style="color:@SeverityColor(row.Kind);">@SeverityMark(row.Kind)</span>
+                    <b>@Headline(row)</b>
+                </MudText>
+                @if (!string.IsNullOrWhiteSpace(row.Detail))
+                {
+                    <MudText Typo="Typo.caption" Style="opacity:.7;">@row.Detail</MudText>
+                }
+            </div>
+            <div class="olb-rank-tail">
+                @if (row.RemoteStatusCode is not null)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@row.RemoteStatusCode</MudChip>
+                }
+                @if (row.DeliveryId is not null)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@row.DeliveryId</MudChip>
+                }
+            </div>
+        </div>
+    }
+</MudPaper>
+
+@inject IMediator Mediator
+@code {
+    [Parameter] public Guid ToolId { get; set; }
+
+    private ToolRecord? _tool;
+    private IReadOnlyList<ToolActivityRecord> _activity = Array.Empty<ToolActivityRecord>();
+    private ToolActivitySummary _summary = new(0, 0, 0, 0);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _tool = await Mediator.Send(new GetToolQuery(ToolId));
+        _activity = await Mediator.Send(new GetToolActivityQuery(ToolId));
+        _summary = await Mediator.Send(new GetToolActivitySummaryQuery(ToolId));
+    }
+
+    /// <summary>
+    ///     The curated vocabulary. A roll-up row says how many times and over which hour, because
+    ///     "212 times between 13:00 and 14:00" is what a maker can act on — a per-request log of the
+    ///     same thing is noise they have to count themselves.
+    /// </summary>
+    private string Headline(ToolActivityRecord row) => row.Kind switch
+    {
+        ToolActivityKind.DeliverySucceeded => L["Delivered"].Value,
+        ToolActivityKind.DeliveryTimedOut => L["Webhook timed out"].Value,
+        ToolActivityKind.DeliveryRejected => L["Your server returned an error"].Value,
+        ToolActivityKind.DeliveryUnreachable => L["Couldn't reach your server"].Value,
+        ToolActivityKind.RateLimited => L["Rate limit hit {0} times", row.Count].Value,
+        ToolActivityKind.KeyUsed => L["Key used {0} times", row.Count].Value,
+        ToolActivityKind.KeyExpired => L["Rejected: key expired"].Value,
+        ToolActivityKind.PlayerConnected => L["Player connected"].Value,
+        _ => L["Player disconnected"].Value
+    };
+
+    private static string SeverityMark(ToolActivityKind kind) => kind switch
+    {
+        ToolActivityKind.DeliverySucceeded => "✓",
+        ToolActivityKind.DeliveryTimedOut or ToolActivityKind.DeliveryRejected
+            or ToolActivityKind.KeyExpired => "✕",
+        ToolActivityKind.DeliveryUnreachable or ToolActivityKind.RateLimited => "▲",
+        _ => "·"
+    };
+
+    private static string SeverityColor(ToolActivityKind kind) => kind switch
+    {
+        ToolActivityKind.DeliverySucceeded => "var(--mud-palette-success)",
+        ToolActivityKind.DeliveryTimedOut or ToolActivityKind.DeliveryRejected
+            or ToolActivityKind.KeyExpired => "var(--mud-palette-error)",
+        ToolActivityKind.DeliveryUnreachable or ToolActivityKind.RateLimited => "var(--mud-palette-warning)",
+        _ => "inherit"
+    };
+}
