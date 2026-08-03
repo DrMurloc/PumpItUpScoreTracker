@@ -51,12 +51,14 @@ public sealed class CommunityToolsReviewPageTests : ComponentTestBase
     }
 
     private static ToolRecord Pending(WebhookMode mode = WebhookMode.ScorePush,
-        string? rejection = null)
+        string? rejection = null, string? repository = "https://github.com/tusa/planner")
     {
         return new ToolRecord(ToolId, Guid.NewGuid(), "TUSA", "Planner", "Plans your sessions.",
             "https://planner.example/", ToolVisibility.PendingApproval, false, mode,
             "https://planner.example/hook", Array.Empty<MixEnum>(), 3, Now, null, rejection, Now,
-            "X-Planner-Token", true, true);
+            "X-Planner-Token", true, true,
+            repository, repository is null ? null : "tusa", repository is null ? null : Now,
+            "tusa.piu", Now, repository is not null);
     }
 
     private IRenderedFragment Render()

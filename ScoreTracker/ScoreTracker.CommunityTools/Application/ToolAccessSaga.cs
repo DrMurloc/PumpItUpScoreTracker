@@ -111,7 +111,8 @@ internal sealed class ToolAccessSaga :
             result.Add(new PublicToolRecord(tool.Id, tool.Name.ToString(), tool.Description,
                 tool.Url?.ToString(), await OwnerName(tool.OwnerUserId, cancellationToken),
                 tool.RequiresExplicitShare,
-                await _tools.CountConnectedPlayers(tool.Id, cancellationToken), tool.ApprovedAt));
+                await _tools.CountConnectedPlayers(tool.Id, cancellationToken), tool.ApprovedAt,
+                tool.RepositoryUrl?.ToString()));
 
         return result.OrderByDescending(r => r.ConnectedPlayers).ToArray();
     }

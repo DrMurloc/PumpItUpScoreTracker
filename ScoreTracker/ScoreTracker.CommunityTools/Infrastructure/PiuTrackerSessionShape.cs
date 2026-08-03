@@ -24,9 +24,11 @@ internal static class PiuTrackerSessionShape
 {
     /// <summary>
     ///     Must match the id seeded by the <c>SeedPiuTrackerTool</c> migration.
-    ///     <c>PiuTrackerSessionShapeTests</c> pins them together.
+    ///     <c>PiuTrackerSessionShapeTests</c> pins them together. Held in
+    ///     <see cref="Domain.GrandfatheredTools" /> because the source-repository gate needs the same
+    ///     id and a second copy of a well-known guid is a second thing to keep in step.
     /// </summary>
-    public static readonly Guid ToolId = Guid.Parse("7b1b7f8e-6f1e-4c4b-9f3e-2c0d5a9e4b10");
+    public static readonly Guid ToolId = Domain.GrandfatheredTools.PiuTracker;
 
     public static bool Applies(Guid toolId)
     {

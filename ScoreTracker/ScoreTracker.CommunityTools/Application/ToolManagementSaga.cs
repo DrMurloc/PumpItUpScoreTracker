@@ -153,7 +153,8 @@ internal sealed class ToolManagementSaga :
                 "Your account is scheduled for deletion, so you can't register a tool right now. " +
                 "Cancel the deletion first if you've changed your mind.");
 
-        var tool = Tool.Create(Guid.NewGuid(), _currentUser.User.Id, Name.From(request.Name), _dateTime.Now);
+        var tool = Tool.Create(Guid.NewGuid(), _currentUser.User.Id, Name.From(request.Name),
+            _dateTime.Now, Link(request.RepositoryUrl), request.DiscordHandle, _dateTime.Now);
         await _tools.Save(tool, cancellationToken);
 
         // The maker is player one. Without this they cannot test their own tool against a real
@@ -166,9 +167,15 @@ internal sealed class ToolManagementSaga :
     public async Task Handle(UpdateToolCommand request, CancellationToken cancellationToken)
     {
         var tool = await Manageable(request.ToolId, cancellationToken);
-        tool.Describe(Name.From(request.Name), request.Description,
-            string.IsNullOrWhiteSpace(request.Url) ? null : new Uri(request.Url));
+        tool.Describe(Name.From(request.Name), request.Description, Link(request.Url),
+            Link(request.RepositoryUrl));
+        tool.SetDiscordHandle(request.DiscordHandle);
         await _tools.Save(tool, cancellationToken);
+    }
+
+    private static Uri? Link(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : new Uri(value);
     }
 
     public async Task Handle(SetToolAllToolsShareCommand request, CancellationToken cancellationToken)
@@ -271,7 +278,9 @@ internal sealed class ToolManagementSaga :
             await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
             tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason, tool.WebhookUrlVerifiedAt,
             headerName, !string.IsNullOrWhiteSpace(headerValue),
-            !string.IsNullOrWhiteSpace(verificationHash));
+            !string.IsNullOrWhiteSpace(verificationHash),
+            tool.RepositoryUrl?.ToString(), tool.RepositoryOwner, tool.RepositoryCheckedAt,
+            tool.DiscordHandle, tool.AgreedToRulesAt, tool.CanBeSharedWithOthers);
     }
 
     /// <summary>

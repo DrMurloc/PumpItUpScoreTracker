@@ -3,12 +3,32 @@ using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.CommunityTools.Contracts.Commands;
 
+/// <summary>
+///     Registers a tool. <paramref name="RepositoryUrl" /> and <paramref name="DiscordHandle" /> may
+///     be blank — a maker building against their own scores needs neither — but without both the
+///     tool can never reach a second player.
+/// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record CreateToolCommand(string Name) : IRequest<Guid>;
+public sealed record CreateToolCommand(string Name, string? RepositoryUrl = null,
+    string? DiscordHandle = null) : IRequest<Guid>;
 
 [ExcludeFromCodeCoverage]
-public sealed record UpdateToolCommand(Guid ToolId, string Name, string? Description, string? Url)
-    : IRequest;
+public sealed record UpdateToolCommand(Guid ToolId, string Name, string? Description, string? Url,
+    string? RepositoryUrl = null, string? DiscordHandle = null) : IRequest;
+
+/// <summary>
+///     Fetches the repository link anonymously and records whether it answered. A private repository
+///     404s to exactly the players it is meant to be readable by, and looks identical to a typo.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record CheckToolRepositoryCommand(Guid ToolId) : IRequest<RepositoryCheckResult>;
+
+/// <summary>
+///     The outcome, in the console's closed vocabulary plus whatever the remote actually said —
+///     the same rule the webhook console follows, for the same reason.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record RepositoryCheckResult(bool Reachable, string? Reason, int? StatusCode);
 
 [ExcludeFromCodeCoverage]
 public sealed record SetToolAllToolsShareCommand(Guid ToolId, bool Accepts) : IRequest;

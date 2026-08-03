@@ -25,7 +25,7 @@ public sealed class ToolTests
     private static Tool ListedTool()
     {
         var tool = NewTool();
-        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null);
+        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null, null);
         tool.RequestListing();
         tool.Approve(Now);
         return tool;
@@ -55,7 +55,7 @@ public sealed class ToolTests
     public void ApprovalMovesAToolIntoTheDirectoryAndClearsAnyPriorRejection()
     {
         var tool = NewTool();
-        tool.Describe(Name.From("Planner"), "Plans things.", null);
+        tool.Describe(Name.From("Planner"), "Plans things.", null, null);
         tool.RequestListing();
         tool.Reject("Needs a link.");
         tool.RequestListing();
@@ -70,7 +70,7 @@ public sealed class ToolTests
     public void RejectionNeedsAReasonTheMakerCanActOn()
     {
         var tool = NewTool();
-        tool.Describe(Name.From("Planner"), "Plans things.", null);
+        tool.Describe(Name.From("Planner"), "Plans things.", null, null);
         tool.RequestListing();
 
         Assert.Throws<ToolListingException>(() => tool.Reject("  "));
@@ -89,7 +89,7 @@ public sealed class ToolTests
     {
         var tool = ListedTool();
 
-        tool.Describe(Name.From("Something Else"), "Plans what to push next.", null);
+        tool.Describe(Name.From("Something Else"), "Plans what to push next.", null, null);
 
         Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
         Assert.Null(tool.ApprovedAt);
@@ -100,7 +100,7 @@ public sealed class ToolTests
     {
         var tool = ListedTool();
 
-        tool.Describe(Name.From("Pumbility Planner"), "Actually it does something else now.", null);
+        tool.Describe(Name.From("Pumbility Planner"), "Actually it does something else now.", null, null);
 
         Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
     }
@@ -110,7 +110,7 @@ public sealed class ToolTests
     {
         var tool = ListedTool();
 
-        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null);
+        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null, null);
 
         Assert.Equal(ToolVisibility.Public, tool.Visibility);
     }

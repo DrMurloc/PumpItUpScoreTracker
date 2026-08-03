@@ -53,7 +53,7 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
 
     private static void PublicAndPooled(Tool tool)
     {
-        tool.Describe(Name.From(tool.Name.ToString()), "A tool", new Uri("https://example.com"));
+        tool.Describe(Name.From(tool.Name.ToString()), "A tool", new Uri("https://example.com"), null);
         tool.RequestListing();
         tool.Approve(Now);
         tool.SetAcceptsAllToolsShare(true);

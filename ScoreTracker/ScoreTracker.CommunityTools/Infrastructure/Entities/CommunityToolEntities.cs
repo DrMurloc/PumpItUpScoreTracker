@@ -48,6 +48,27 @@ internal sealed class ToolEntity
     ///     every delivery — a configured URL is a claim, this is the proof.
     /// </summary>
     public DateTimeOffset? WebhookUrlVerifiedAt { get; set; }
+
+    /// <summary>
+    ///     Where players read this tool's source. Nullable because PIU Tracker predates the
+    ///     requirement — the gate is what enforces it, not the column.
+    /// </summary>
+    [MaxLength(500)]
+    public string? RepositoryUrl { get; set; }
+
+    /// <summary>The account the repository sits under, parsed from the URL for the admin list.</summary>
+    [MaxLength(100)]
+    public string? RepositoryOwner { get; set; }
+
+    /// <summary>When <see cref="RepositoryUrl" /> last answered anonymously.</summary>
+    public DateTimeOffset? RepositoryCheckedAt { get; set; }
+
+    /// <summary>The maker's, for the owner to reach them on. Never leaves an admin surface.</summary>
+    [MaxLength(64)]
+    public string? DiscordHandle { get; set; }
+
+    /// <summary>When the maker accepted the rules, recorded once at registration.</summary>
+    public DateTimeOffset? AgreedToRulesAt { get; set; }
 }
 
 /// <summary>Which mixes' imports trigger a delivery for this tool.</summary>

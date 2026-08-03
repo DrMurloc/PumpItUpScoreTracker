@@ -27,7 +27,19 @@ public sealed record ToolRecord(
     ///     Whether a verification secret is registered. Only ever the flag — the secret is stored as
     ///     a hash and the plaintext exists nowhere after the maker saves it.
     /// </summary>
-    bool HasVerificationSecret);
+    bool HasVerificationSecret,
+    string? RepositoryUrl,
+    /// <summary>The account the repository sits under. Displayed for a human, never decided on.</summary>
+    string? RepositoryOwner,
+    DateTimeOffset? RepositoryCheckedAt,
+    /// <summary>The maker's own, or an admin's view of it. Never reaches a player-facing surface.</summary>
+    string? DiscordHandle,
+    DateTimeOffset? AgreedToRulesAt,
+    /// <summary>
+    ///     Whether this tool may reach anyone but its maker. Mirrors the domain rule so the console
+    ///     can say why a tool is stuck without guessing at it.
+    /// </summary>
+    bool CanBeSharedWithOthers);
 
 /// <summary>A tool as a player browsing the directory sees it — no delivery configuration.</summary>
 [ExcludeFromCodeCoverage]
@@ -39,7 +51,12 @@ public sealed record PublicToolRecord(
     string OwnerName,
     bool RequiresPiuGameSession,
     int ConnectedPlayers,
-    DateTimeOffset? ApprovedAt);
+    DateTimeOffset? ApprovedAt,
+    /// <summary>
+    ///     Where to read the source. Null only for a grandfathered tool, and the row simply carries
+    ///     no Source link — there is no claim made about every listed tool that one absence breaks.
+    /// </summary>
+    string? RepositoryUrl);
 
 /// <summary>One of a player's connections, for the "who can read my scores" list.</summary>
 [ExcludeFromCodeCoverage]
@@ -119,4 +136,9 @@ public sealed record ToolInvitePreview(
     string OwnerName,
     bool IsPublic,
     bool RequiresPiuGameSession,
-    int ConnectedPlayers);
+    int ConnectedPlayers,
+    /// <summary>
+    ///     Where to read the source. The invite landing page is the one logged-out screen in the
+    ///     feature, so it is also the one place a stranger can check the tool before signing in.
+    /// </summary>
+    string? RepositoryUrl);

@@ -66,6 +66,11 @@ internal sealed class EFToolRepository : IToolRepository
         entity.ApprovedAt = tool.ApprovedAt;
         entity.RejectionReason = tool.RejectionReason;
         entity.WebhookUrlVerifiedAt = tool.WebhookUrlVerifiedAt;
+        entity.RepositoryUrl = tool.RepositoryUrl?.ToString();
+        entity.RepositoryOwner = tool.RepositoryOwner;
+        entity.RepositoryCheckedAt = tool.RepositoryCheckedAt;
+        entity.DiscordHandle = tool.DiscordHandle;
+        entity.AgreedToRulesAt = tool.AgreedToRulesAt;
 
         // Mix subscriptions are replaced wholesale: the set is tiny and a diff would be more code
         // than it saves.
@@ -307,6 +312,9 @@ internal sealed class EFToolRepository : IToolRepository
             Enum.Parse<WebhookMode>(entity.WebhookMode),
             entity.WebhookUrl is null ? null : new Uri(entity.WebhookUrl),
             mixIds.Where(MixIds.IsKnown).Select(MixIds.ToEnum),
-            entity.CreatedAt, entity.ApprovedAt, entity.RejectionReason, entity.WebhookUrlVerifiedAt);
+            entity.CreatedAt, entity.ApprovedAt, entity.RejectionReason, entity.WebhookUrlVerifiedAt,
+            entity.RepositoryUrl is null ? null : new Uri(entity.RepositoryUrl),
+            entity.RepositoryOwner, entity.RepositoryCheckedAt, entity.DiscordHandle,
+            entity.AgreedToRulesAt);
     }
 }
