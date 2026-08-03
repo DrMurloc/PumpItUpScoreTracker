@@ -13,7 +13,11 @@
 
    A render-nothing-until-relevant island, modelled on DeletionNoticeHost: MainLayout renders
    statically, so this cannot be a plain dialog sitting in it. *@
-@if (_show)
+@* Gated on _relevant, never on _show — the flag bound to Visible must not also decide whether the
+   dialog is rendered at all. Removing a MudDialog from the tree skips its close path and leaves the
+   scrim behind, so "Got it" dismissed the notice onto a page that stayed dimmed and unclickable
+   until the player reloaded. Same shape as DeletionNoticeHost, which gates on its own payload. *@
+@if (_relevant)
 {
     <MudDialog @bind-Visible="_show" Options="_options">
         <TitleContent>
@@ -70,6 +74,9 @@
 
     private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.False, FullWidth = true };
 
+    /// <summary>Whether this player has a notice at all. Set once and never cleared.</summary>
+    private bool _relevant;
+
     private bool _show;
     private bool _isPublic;
 
@@ -84,6 +91,7 @@
         // and turned it off should not be told it is on.
         if (_isPublic) _isPublic = await Mediator.Send(new GetShareWithAllToolsQuery());
 
+        _relevant = true;
         _show = true;
     }
 
