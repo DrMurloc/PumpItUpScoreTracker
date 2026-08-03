@@ -4,8 +4,19 @@ A follow-on pass to [api-v2-community-tools.md](api-v2-community-tools.md), land
 feature's first release. It adds three things a tool must carry before it touches anyone else's
 data, the published rules for being listed, and a way to stop a maker who breaks them.
 
-> **Status, 2026-08-03:** designed, owner-approved, not built. The rules copy is signed off verbatim
-> (§3) — it is the thing that triggers nine translations, so it is settled before any code moves.
+> **Status, 2026-08-03: built.** Nine commits, all four suites green at each. Three things landed
+> differently from the plan below and the reasons are worth keeping:
+>
+> - **The ban disables rather than deletes, and its effect is computed.** §4 planned a ban that
+>   revoked shares. Writing the effect into the tools would have made Lift restore an empty shell,
+>   so the ban is one row and every read resolves against it. The tests bans, asserts nobody can
+>   read, lifts, and asserts the deliberate grant came back.
+> - **`GetToolIdsReading` needed the gate too.** §2 named `GetReadablePlayerIds` as the one
+>   enforcement point. There is a second query building the same pool from its own SQL, and the
+>   first integration assertion passed only because re-review had de-listed the tool. Both now run
+>   `Tool.Shareable`.
+> - **One string in the voice sweep had no resx entry in any locale**, including `en-US`, so it fell
+>   back to its key and rendered English everywhere since #212. Fixed in passing.
 
 ---
 
@@ -43,6 +54,7 @@ That covers four entry points, and the distinction between them matters:
 | Invite redemption | Application | Same throw — an invite is a connect with a code |
 | `RequestListing()` | Domain | Refuses, alongside the existing description rule |
 | `GetReadablePlayerIds` | Infrastructure | **Excludes the tool from the all-tools pool** |
+| `GetToolIdsReading` | Infrastructure | The same pool, built by a second query — both run `Tool.Shareable` |
 
 The last one is the enforcement; the first three are the error messages. `EFToolRepository`
 ([EFToolRepository.cs:243](../../ScoreTracker/ScoreTracker.CommunityTools/Infrastructure/EFToolRepository.cs))
@@ -119,8 +131,10 @@ That decision is not confined to this card — see §6.
 A user-level block, reached from the admin tool list on `/Developers`.
 
 - **Disables, never deletes.** `DeleteTool` hard-deletes across eight tables including the activity
-  log and every delivery record — the exact evidence a disputed ban needs. Banning revokes every
-  share, delists, and stops keys and webhooks; the rows stay. Delete remains its own button.
+  log and every delivery record — the exact evidence a disputed ban needs. So the ban is one row and
+  every effect is **computed from it at read time**: their tools read nobody, leave the directory and
+  stop minting, while shares, keys and history stay untouched. That is what makes Lift restore a
+  working tool rather than an empty shell. Delete remains its own button.
 - **Blocks `CreateToolCommand`** for that user id.
 - **Confirmation dialog**, deliberately plain, plus a freeform **notes** field that is editable
   afterwards from the tool list. Nobody but an admin ever sees it.

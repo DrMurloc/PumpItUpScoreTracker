@@ -11,23 +11,66 @@ values *mean*, and which mistakes are easy to make.
 
 ---
 
-## 1. Seven steps
+## 1. The rules
+
+These are canonical. The site renders them in nine languages on the registration screen; this
+English version is the one that governs where a translation and it disagree.
+
+> ### DrMurloc's Rules for Integrated Toolmakers
+>
+> *PIU Scores was built on the principle that we, Pump It Up players, are all one community, divided
+> only by physical distance. Aim to connect that community.*
+>
+> **1. No money in it.** Free to use and free of ads. A tip jar or community fund covering your
+> hosting is fine — a supporter tier that unlocks features is not. Anything built to turn a profit
+> gets removed.
+>
+> **2. Built for the community.** Tools that help players understand the game — score distributions,
+> progress, analysis anyone can use. A tool built for one person's edge, like scouting opponents
+> before a tournament, gets removed, and its maker does not get to make more.
+>
+> **3. Stay reachable.** Toolmakers stay in the PIU Scores Discord, so I can message you when
+> something goes wrong.
+>
+> **4. Stay in good standing.** The server rule is "Don't Be An Asshole", and it covers toolmakers
+> too. I can remove a tool for any reason — including anything discriminatory, or aimed at excluding
+> or antagonising any Pump It Up community members.
+
+### What registration asks for
+
+Two fields, neither required to *create* a tool, both required before it can reach anyone but you:
+
+- **A public source repository.** GitHub, GitLab, Codeberg, your own gitea — anywhere a player can
+  read it without an account. A listed tool links straight to it. The link is fetched anonymously
+  and has to answer, because a private repository answers fine to *your* browser and 404s to every
+  player being invited to read it.
+- **Your Discord handle.** Only DrMurloc sees it. It is how you get told when your tool breaks.
+
+Until both are in place your tool still works completely — keys, webhooks, the API, all of it — but
+only against your own scores. Invite links and listing are closed until then. The console says so
+and names what is missing.
+
+Changing the repository on a listed tool sends it back for review, the same as changing its name.
+Passing review with one repository and swapping it afterwards is the thing review exists to catch.
+
+---
+
+## 2. Seven steps
 
 1. **Create your tool.** It starts private and fully working — invite links, keys and webhooks all
    function. Listing only puts you in the public directory.
-2. **Create an API key.** Send it as `Authorization: Bearer piu_scores_live_…`. It is shown once; we store
-   a hash. Two can be live at a time so you can rotate without downtime.
+2. **Create an API key.** Send it as `Authorization: Bearer piu_scores_live_…`. It is shown once; only a hash is stored. Two can be live at a time so you can rotate without downtime.
 3. **You are player one.** Creating a tool connects your own account to it, so you always have a real
    player to test against.
 4. **Pull your own scores.** `GET /api/v2/players/me/scores?mix=Phoenix`.
-5. **Receive imports.** Point us at a URL, then send yourself a test delivery.
+5. **Receive imports.** Point PIU Scores at a URL, then send yourself a test delivery.
 6. **Invite a friend.** Share an invite link. Anyone with it can connect, public profile or not.
 7. **Ask to be listed.** A listed tool appears in the directory and can accept players who share
    with all tools. You keep working while it is reviewed.
 
 ---
 
-## 2. Authentication
+## 3. Authentication
 
 ```
 Authorization: Bearer piu_scores_live_8Kd2Qm4xV7pR1nZaL9cE6yTb3WsHfJ0u
@@ -48,9 +91,9 @@ their credential there and it is not worth a 401 to be strict about.
 
 ---
 
-## 3. The five things that trip people up
+## 4. The five things that trip people up
 
-### 3.1 `mix` is required, and there are thirty of them
+### 4.1 `mix` is required, and there are thirty of them
 
 Every mix-scoped endpoint needs it. There is no default — v1 defaults to Phoenix forever because it
 promised byte-identical responses to integrations that predate Phoenix 2, and repeating that in a new
@@ -58,7 +101,7 @@ version would plant the same rot for whatever comes next.
 
 Call `GET /api/v2/mixes` first. Use the `name` field verbatim (`Phoenix2`, not `Phoenix 2`).
 
-### 3.2 Half the mixes score differently
+### 4.2 Half the mixes score differently
 
 `scoringModel` on the mix, and on every score page, is `phoenix` or `legacy`.
 
@@ -69,26 +112,26 @@ Call `GET /api/v2/mixes` first. Use the `name` field verbatim (`Phoenix2`, not `
 Reading a Fiesta EX record as a Phoenix score gives you a plausible, wrong answer. Branch on
 `scoringModel` before you touch `score`.
 
-### 3.3 A null is not a zero
+### 4.3 A null is not a zero
 
 - `plate` is `null` when `isBroken` — the game awards no plate for a failed stage.
 - `judgments` is `null` when the source never carried a breakdown (a CSV import, a hand-entered
   score). Zeros there would read as a perfect game.
 - `pumbility` is `null` on legacy mixes, which have no PUMBILITY formula.
 
-### 3.4 `recordedAt` is when *we* wrote the row
+### 4.4 `recordedAt` is when the row was *written*
 
-Not when the play happened. We do not know when the play happened — the official site does not tell
-us reliably. There is exactly one date on a score and this is it.
+Not when the play happened. Nobody here knows when the play happened — the official site does not
+report it reliably. There is exactly one date on a score and this is it.
 
-### 3.5 Cursors belong to their filters
+### 4.5 Cursors belong to their filters
 
 Follow the `next` link; do not build a cursor. A cursor carries a fingerprint of the filters it was
 issued under, and replaying it against different filters is a `400` rather than quietly shifted rows.
 
 ---
 
-## 4. Reading scores
+## 5. Reading scores
 
 ```
 GET /api/v2/players                       → who shared with you
@@ -108,7 +151,7 @@ confirm the account exists, which would make this an enumeration oracle.
 
 ---
 
-## 5. Receiving imports
+## 6. Receiving imports
 
 Three modes, set on `/Developers`:
 
@@ -141,13 +184,13 @@ Three modes, set on `/Developers`:
 
 ### Verifying your endpoint (do this first)
 
-**We send nothing to a URL you have not proven is yours.** There are two steps, and the order
+**Nothing is sent to a URL you have not proven is yours.** There are two steps, and the order
 matters.
 
 **1. Register a verification secret** on `/Developers` — type one or press Generate — and put the
-same string in your handler. We store only a SHA-256 hash of it, so keep your copy.
+same string in your handler. Only a SHA-256 hash of it is stored, so keep your copy.
 
-**2. Press Verify.** We POST:
+**2. Press Verify.** PIU Scores POSTs:
 
 ```
 POST <your url>
@@ -165,36 +208,36 @@ vfy_8f2a91c04e
 Note what the request does **not** contain: your secret. That is the entire point. An earlier
 revision sent a challenge for you to echo, which anything able to receive the request could satisfy
 — including whatever a hijacked DNS record happened to point at. Now answering correctly requires
-already knowing something we never transmitted.
+already knowing something that was never transmitted.
 
 Only then do deliveries start. **Changing the URL or the secret clears verification** — a proof that
 outlives the thing it was a proof of is worse than no proof.
 
-Why this exists at all: a typo in that box would otherwise mean we post a player's scores, on a
+Why this exists at all: a typo in that box would otherwise post a player's scores, on a
 schedule, to whoever happens to own the host you mistyped. This turns that into a failed save.
 
 If verification fails you get the reason and your server's own status code. A `200` without the
 secret is the interesting one: the URL is alive, but whatever answered does not hold your secret.
 
-**The webhook URL has to be public.** We refuse loopback and private-network addresses, checked
-against what the host actually resolves to — from our servers those point at our infrastructure, not
+**The webhook URL has to be public.** Loopback and private-network addresses are refused, checked
+against what the host actually resolves to — from PIU Scores' servers those point at its own infrastructure, not
 yours. To develop against `localhost`, run PIU Scores locally ([HOW-TO-RUN.md](HOW-TO-RUN.md)); the
 local run allows them.
 
-### Verifying it came from us
+### Verifying it came from PIU Scores
 
-**Set a header on `/Developers`** — any name, any value — and we send it verbatim on every delivery
+**Set a header on `/Developers`** — any name, any value — and it is sent verbatim on every delivery
 over TLS. Check it in your handler and reject anything without it. That is one `if`, and it is the
-whole mechanism. We store it encrypted rather than hashed, because unlike your verification secret
-we have to be able to send it.
+whole mechanism. It is stored encrypted rather than hashed, because unlike your verification secret
+it has to be sendable.
 
 **These are two different values and must stay that way.** The header travels to your server on
 every call, so anyone who receives one delivery has read it — handing it back at verification time
-would prove nothing. The verification secret goes the other way and never leaves our side.
+would prove nothing. The verification secret goes the other way and never leaves PIU Scores.
 
 Optional for score push and player ping — if someone guesses your URL the worst they do is write
 junk into your own database, which is yours to guard. **Required for PIUGame session mode**, where
-the thing arriving is a live piugame.com credential and an endpoint that cannot tell our call from
+the thing arriving is a live piugame.com credential and an endpoint that cannot tell a PIU Scores call from
 anyone else's has no business receiving one.
 
 The header is sent on the verification POST too, so your handler can check it from the very first
@@ -206,7 +249,7 @@ crypto layer on both sides of the wire.
 
 ### Retries and duplicates
 
-`X-PIU-Delivery-Id` is stable across retries — **dedupe on it**. We attempt five times with
+`X-PIU-Delivery-Id` is stable across retries — **dedupe on it**. There are five attempts, with
 exponential backoff over roughly an hour, then give up and leave the failure in your activity log.
 
 ### PIUGame session mode is different
@@ -215,15 +258,15 @@ It hands over a live credential, so:
 
 - Every player must agree to it individually. It is never available through "share with all tools",
   and you can only switch a tool into it while no players are connected.
-- We never write the body down. There is **no retry and no replay** for a session delivery — if your
+- The body is never written down. There is **no retry and no replay** for a session delivery — if your
   server is down when it fires, it is gone. Your activity log shows delivered or failed and nothing
   behind it.
-- Your header is **required** in this mode, not optional. We will not hand a live credential to an
-  endpoint that has no way of telling our call from anyone else's.
+- Your header is **required** in this mode, not optional. A live credential is not handed to an
+  endpoint that has no way of telling a PIU Scores call from anyone else's.
 
 ---
 
-## 6. Limits, and how not to hit them
+## 7. Limits, and how not to hit them
 
 | | |
 |---|---|
@@ -234,13 +277,13 @@ It hands over a live credential, so:
 Two habits that matter more than the numbers:
 
 - **Cache the catalog.** Charts and songs change a few times a year. Send `If-None-Match` with the
-  `ETag` we gave you and a 304 costs neither of us anything.
+  `ETag` you were given, and a 304 costs nobody anything.
 - **Do not poll if you have webhooks.** A delivery already tells you who imported and what changed.
   Re-pulling every player on a timer is the one pattern that will get a tool throttled.
 
 ---
 
-## 7. Errors
+## 8. Errors
 
 `application/problem+json`, RFC 9457:
 
@@ -259,7 +302,7 @@ reworded.
 
 ---
 
-## 8. Running the site locally
+## 9. Running the site locally
 
 If you are building something substantial, you can run PIU Scores on your own machine and point
 webhooks at `localhost` — see [HOW-TO-RUN.md](HOW-TO-RUN.md). It needs Docker.
@@ -269,7 +312,7 @@ reasons to reach for a local instance are already covered.
 
 ---
 
-## 9. What is not here
+## 10. What is not here
 
 - **Writes.** Every mutation stays on v1 with a personal token. There is no way for a tool to record
   a score or change anything on a player's account, and that is not an oversight.
@@ -279,7 +322,7 @@ reasons to reach for a local instance are already covered.
 
 ---
 
-## 10. Asking
+## 11. Asking
 
 `#tool-makers` on [Discord](https://discord.gg/AvS5PxnvSN). It is the fastest way to get unstuck, and
 where breaking changes are announced first.
