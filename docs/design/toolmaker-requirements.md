@@ -131,8 +131,8 @@ The quoted server rule stays English everywhere, the way the Murloc glossary exe
 > too. I can remove a tool for any reason — including anything discriminatory, or aimed at excluding
 > or antagonising any Pump It Up community members.
 
-148 words. The canonical copy is [INTEGRATING.md](../INTEGRATING.md), in English, and governs where
-a translation and it disagree — stated in the card's footer.
+148 words. ⚠ **Superseded 2026-08-03**: the "canonical English governs" footer is gone, and so is
+the guide it pointed at. Owner: the rules in the wizard are the rules.
 
 **Voice.** First person throughout: these are one person's rules, and the site is a one-person team.
 That decision is not confined to this card — see §6.
@@ -256,8 +256,8 @@ the gate's own machinery.
 - **This file** — new.
 - [api-v2-community-tools.md](api-v2-community-tools.md) — cross-link, and a line in §16 recording
   that registration grew requirements after that pass was settled.
-- [INTEGRATING.md](../INTEGRATING.md) — the rules verbatim as canonical English, the registration
-  requirements, and the same voice sweep (23 instances, English-only, no translation cost).
+- ~~INTEGRATING.md~~ — deleted 2026-08-03, see
+  [developer-console-redraw.md](developer-console-redraw.md).
 - [DATABASE-SCHEMA.md](../DATABASE-SCHEMA.md) — `ToolMakerBan` row; `Tool`'s new columns.
 - [CLAUDE.md](../../CLAUDE.md) — untouched. No new package, no new layer rule, no new ratchet
   category; the purge exemption is an entry in a list that already exists.

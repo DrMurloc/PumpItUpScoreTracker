@@ -692,7 +692,10 @@ player browsing Fiesta EX must not lose access to their own privacy controls.
 `/CommunityTools` leads with *who can read my scores*, not the catalogue: the page's job is the
 answer, and browsing is secondary (rule 1). Rows wear the board skin (`.olb-rank-card`), never cards.
 
-**Documentation splits by what needs to be live.** Prose goes to `docs/INTEGRATING.md` on GitHub —
+**Documentation splits by what needs to be live.** ⚠ Superseded 2026-08-03 — the guide was deleted
+and replaced by an on-site Code section, see
+[developer-console-redraw.md](developer-console-redraw.md). The original reasoning follows.
+Prose goes to `docs/INTEGRATING.md` on GitHub —
 zero localisation cost, versioned with the code it documents, and makers already live there. What
 stays on-site is the part needing *your* keys and *your* tool: a seven-step checklist with live
 state, which doubles as the `/Developers` empty state.

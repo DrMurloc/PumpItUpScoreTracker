@@ -2202,9 +2202,6 @@
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>개인정보 방침</value>
   </data>
-  <data name="Full reference" xml:space="preserve">
-    <value>전체 문서</value>
-  </data>
   <data name="Full Song" xml:space="preserve">
     <value>풀 송</value>
   </data>
@@ -4637,9 +4634,6 @@
   <data name="reached by {0} players" xml:space="preserve">
     <value>{0}명 도달</value>
   </data>
-  <data name="Read it" xml:space="preserve">
-    <value>읽기</value>
-  </data>
   <data name="Read the source" xml:space="preserve">
     <value>소스 읽기</value>
   </data>
@@ -5791,9 +5785,6 @@
   </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>첫 주간 스냅샷이 아직 없습니다 - 다음 일요일 가져오기 후 하이라이트가 표시됩니다.</value>
-  </data>
-  <data name="The full version lives in the integration guide, in English, and is the one that governs." xml:space="preserve">
-    <value>전문은 연동 가이드에 영어로 있으며, 효력을 갖는 것은 그쪽입니다.</value>
   </data>
   <data name="The grind" xml:space="preserve">
     <value>그라인드</value>

@@ -2,7 +2,9 @@
 
 High-level map of the HTTP surface. **Swagger is the source of truth for request/response shapes**: browse `/swagger` on the live site (or locally while running the app) — the OpenAPI document lives at `/swagger/v1/swagger.json`.
 
-**Building a tool? Start with [INTEGRATING.md](INTEGRATING.md)**, not this page. That is the maker's
+**Building a tool? Start with the Code section of your tool's console** (`/Developers/{tool}/code`),
+not this page. That carries runnable snippets with your own key, URL and mixes already filled in —
+which is the maker's
 manual — what the data means, what trips people up, how sharing and webhooks work. This page is the
 map.
 
@@ -39,7 +41,7 @@ Authorization: Bearer piu_scores_live_...
 
 Issued on the **Developers page** and shown once. Read-only. Also accepted in the password position
 of Basic auth, because that is where v1 taught everyone to put a credential. See
-[INTEGRATING.md](INTEGRATING.md).
+the console's Code section.
 
 ## `api/v2/*`
 
@@ -95,4 +97,4 @@ Mix-aware endpoints take an **optional `Mix` parameter** — a query parameter o
 - Controllers are thin: every action dispatches a MediatR query/command — no business logic lives in the controller layer.
 - CORS: partner endpoints allow cross-origin calls via the `API` policy.
 - Rate limits on v2: 600 requests a minute for a tool key, 60 for a personal token. A `429` carries `Retry-After`.
-- Building a PIU tool? You don't need to build your own importer — register the tool and let the webhooks push to you. [INTEGRATING.md](INTEGRATING.md), then `#tool-makers` on [Discord](https://discord.gg/AvS5PxnvSN).
+- Building a PIU tool? You don't need to build your own importer — register the tool and let the webhooks push to you. See the Code section of your tool's console, then `#tool-makers` on [Discord](https://discord.gg/AvS5PxnvSN).

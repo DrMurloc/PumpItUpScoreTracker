@@ -10,7 +10,18 @@ Mocks: [wizard](https://claude.ai/code/artifact/fe22de59-e22c-4491-9ef2-d451e70c
 [console](https://claude.ai/code/artifact/36e61ac8-e9b4-4367-bbcc-d20ad9683717) ·
 [directory + admin](https://claude.ai/code/artifact/5c605c5c-86b3-49ab-a64f-0adc9aed7395)
 
-> **Status, 2026-08-03:** mocks approved, not built.
+> **Status, 2026-08-03: built.** Ten commits, all suites green at each. Three things landed
+> differently from the plan below:
+>
+> - **ToolKeyPanel and ToolWebhookPanel kept their files.** §3 had them folded into their sections.
+>   Transcribing six hundred correct, tested lines by hand is a slip waiting to happen with no
+>   behavioural gain; they lost their card wrapper and their own heading instead, which is what made
+>   the console read as a stack of equally-loud panels.
+> - **51 keys had a call site and no resx entry at all**, five of them predating this pass — the
+>   ratchets check that every locale covers en-US and nothing checks that en-US covers the call
+>   sites. All added.
+> - **Two Murloc coinages** were needed and are in the glossary: `grogl` (hour) and `Grglmrg`
+>   (GameTag).
 
 ---
 

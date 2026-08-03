@@ -2202,9 +2202,6 @@
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>Política de privacidade completa</value>
   </data>
-  <data name="Full reference" xml:space="preserve">
-    <value>Referência completa</value>
-  </data>
   <data name="Full Song" xml:space="preserve">
     <value>Full Song</value>
   </data>
@@ -4637,9 +4634,6 @@
   <data name="reached by {0} players" xml:space="preserve">
     <value>alcançado por {0} jogadores</value>
   </data>
-  <data name="Read it" xml:space="preserve">
-    <value>Ler</value>
-  </data>
   <data name="Read the source" xml:space="preserve">
     <value>Ler o código</value>
   </data>
@@ -5791,9 +5785,6 @@
   </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>A primeira captura semanal ainda não chegou - os destaques acendem após a importação do próximo domingo.</value>
-  </data>
-  <data name="The full version lives in the integration guide, in English, and is the one that governs." xml:space="preserve">
-    <value>A versão completa está no guia de integração, em inglês, e é a que vale.</value>
   </data>
   <data name="The grind" xml:space="preserve">
     <value>A jornada</value>

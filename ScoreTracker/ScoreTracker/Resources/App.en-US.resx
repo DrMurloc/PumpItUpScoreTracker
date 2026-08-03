@@ -2219,9 +2219,6 @@
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>Full Privacy Policy</value>
   </data>
-  <data name="Full reference" xml:space="preserve">
-    <value>Full reference</value>
-  </data>
   <data name="Full Song" xml:space="preserve">
     <value>Full Song</value>
   </data>
@@ -4676,9 +4673,6 @@
   <data name="reached by {0} players" xml:space="preserve">
     <value>reached by {0} players</value>
   </data>
-  <data name="Read it" xml:space="preserve">
-    <value>Read it</value>
-  </data>
   <data name="Read the source" xml:space="preserve">
     <value>Read the source</value>
   </data>
@@ -5850,9 +5844,6 @@
   </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>The first weekly snapshot has not landed yet - highlights light up after the next Sunday import.</value>
-  </data>
-  <data name="The full version lives in the integration guide, in English, and is the one that governs." xml:space="preserve">
-    <value>The full version lives in the integration guide, in English, and is the one that governs.</value>
   </data>
   <data name="The grind" xml:space="preserve">
     <value>The grind</value>

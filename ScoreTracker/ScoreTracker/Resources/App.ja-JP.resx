@@ -2219,9 +2219,6 @@
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>個人情報保護方針</value>
   </data>
-  <data name="Full reference" xml:space="preserve">
-    <value>詳細ドキュメント</value>
-  </data>
   <data name="Full Song" xml:space="preserve">
     <value>フルソング</value>
   </data>
@@ -4676,9 +4673,6 @@
   <data name="reached by {0} players" xml:space="preserve">
     <value>{0}人が到達</value>
   </data>
-  <data name="Read it" xml:space="preserve">
-    <value>読む</value>
-  </data>
   <data name="Read the source" xml:space="preserve">
     <value>ソースを読む</value>
   </data>
@@ -5850,9 +5844,6 @@
   </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>最初の週次スナップショットはまだありません - 次の日曜のインポート後にハイライトが表示されます。</value>
-  </data>
-  <data name="The full version lives in the integration guide, in English, and is the one that governs." xml:space="preserve">
-    <value>全文は連携ガイドに英語で載っていて、効力を持つのはそちらです。</value>
   </data>
   <data name="The grind" xml:space="preserve">
     <value>グラインド</value>
