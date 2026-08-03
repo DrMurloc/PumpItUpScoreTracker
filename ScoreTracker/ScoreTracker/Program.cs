@@ -1,4 +1,4 @@
-using BlazorApplicationInsights;
+﻿using BlazorApplicationInsights;
 using Hangfire;
 using Hangfire.SqlServer;
 using MassTransit;
@@ -12,6 +12,7 @@ using ScoreTracker.Application.Handlers;
 using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
+using ScoreTracker.CommunityTools.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Configuration;
 using ScoreTracker.Domain.Records;
@@ -30,6 +31,7 @@ using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
+using ScoreTracker.Data.DevTooling;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.HostedServices;
 using ScoreTracker.Web.Security;
@@ -77,6 +79,9 @@ builder.Services.AddCors(o =>
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
 builder.Services.Configure<ProdSyncConfiguration>(builder.Configuration.GetSection("ProdSync"));
+builder.Services.Configure<ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration>(
+    builder.Configuration.GetSection(
+        ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration.SectionName));
 builder.Services.Configure<PiuGameConfiguration>(builder.Configuration.GetSection("PiuGame"));
 builder.Services.Configure<PiuCenterConfiguration>(builder.Configuration.GetSection("PiuCenter"));
 builder.Services.Configure<GoogleConfiguration>(builder.Configuration.GetSection("Google"));
@@ -93,6 +98,7 @@ builder.Services.AddMassTransit(o =>
     o.AddOfficialMirrorConsumers();
     o.AddChartIntelligenceConsumers();
     o.AddWeeklyChallengeConsumers();
+    o.AddCommunityToolsConsumers();
     o.AddEventCompetitionConsumers();
     o.AddCommunitiesConsumers();
     o.AddCatalogConsumers();
@@ -173,8 +179,11 @@ builder.Services.AddAuthentication("DefaultAuthentication")
         o.AppSecret = facebookConfig.AppSecret;
         o.SignInScheme = "ExternalAuthentication";
     })
-    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationScheme>("ApiToken", o => { });
+    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationScheme>("ApiToken", o => { })
+    .AddScheme<AuthenticationSchemeOptions, ToolKeyAuthenticationScheme>(
+        ToolKeyAuthenticationScheme.SchemeName, o => { });
 
+builder.Services.AddRateLimiter(o => o.AddApiV2Policy());
 builder.Services.AddSwaggerExamplesFromAssemblyOf<RecordPhoenixScoreDtoExample>();
 builder.Services.AddSwaggerGen(o =>
 {
@@ -184,6 +193,7 @@ builder.Services.AddSwaggerGen(o =>
     var path = Path.Combine(AppContext.BaseDirectory, xml);
     o.IncludeXmlComments(path);
     const string schemeId = "basic";
+    const string toolSchemeId = "toolKey";
 
     o.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
     {
@@ -191,14 +201,28 @@ builder.Services.AddSwaggerGen(o =>
         Type = SecuritySchemeType.Http,
         In = ParameterLocation.Header,
         Scheme = "basic",
-        Description = "ApiToken from Account page. Put anything in for username."
+        Description = "Personal API token from your Account page. Put anything in for username. " +
+                      "A tool API key also works here."
+    });
+
+    // The other kind of caller. Without this the Authorize dialog offers only Basic, so a tool key
+    // pasted into the one box on offer comes back 401 with nothing on screen saying why.
+    o.AddSecurityDefinition(toolSchemeId, new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        In = ParameterLocation.Header,
+        Scheme = "bearer",
+        Description = "Tool API key from /Developers, e.g. piu_scores_live_… — paste the key itself, " +
+                      "without the word Bearer. Authenticates the tool across the players who " +
+                      "granted it access."
     });
 
     // Swashbuckle v10 / .NET 10 style
     o.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference(schemeId, document)] = new List<string>()
-        // or just [] if you're on C# 12+
+        [new OpenApiSecuritySchemeReference(schemeId, document)] = new List<string>(),
+        [new OpenApiSecuritySchemeReference(toolSchemeId, document)] = new List<string>()
     });
     o.SchemaFilter<EnumSchemaFilter>();
 });
@@ -206,6 +230,7 @@ builder.Services.AddSwaggerGen(o =>
 builder.Services.AddAuthorization(o =>
     {
         o.AddPolicy(nameof(ApiTokenAttribute), p => p.RequireAssertion(ApiTokenAttribute.AuthPolicy));
+        o.AddPolicy(nameof(ApiV2Attribute), p => p.RequireAssertion(ApiV2Attribute.AuthPolicy));
     });
 builder.Services.AddBlazorApplicationInsights()
     .AddTransient<IPhoenixScoreFileExtractor, PhoenixScoreFileExtractor>()
@@ -218,7 +243,6 @@ builder.Services.AddBlazorApplicationInsights()
     .AddSingleton<IUiNotificationHub, UiNotificationHub>()
     .AddTransient<IUiSettingsAccessor, UiSettingsAccessor>()
     .AddSingleton<AccountProofService>()
-    .AddTransient<DevSyncService>()
     .AddHttpContextAccessor()
     .AddHttpClient()
     .AddHostedService<BotHostedService>()
@@ -230,22 +254,15 @@ builder.Services.AddBlazorApplicationInsights()
         // settings save visible on the very next request.
         o.AddRequestPostProcessor<IRequestPostProcessor<SaveUserUiSettingCommand, Unit>,
             UiSettingSavedCacheEviction>();
+        // Application + Web, then every vertical. The vertical list is NOT written out here: it
+        // used to be, and CommunityTools was left off it — 33 handlers silently unregistered, found
+        // by a page throwing at runtime. VerticalAssemblies.All() is the one place, and a ratchet
+        // checks it against the assemblies that actually contain handlers.
+        // Data no longer holds MediatR handlers — its last two (player stats/history) moved into
+        // the PlayerProgress vertical at C50.
         o.RegisterServicesFromAssemblies(
-            // Data no longer holds MediatR handlers — its last two (player stats/history)
-            // moved into the PlayerProgress vertical at C50.
-            typeof(GetSavedChartsHandler).Assembly
-            , typeof(MainLayout).Assembly,
-            typeof(PlayerProgressRegistrationExtensions).Assembly,
-            typeof(IdentityRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.ScoreLedger.Wiring.ScoreLedgerRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.OfficialMirror.Wiring.OfficialMirrorRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.Catalog.Wiring.CatalogRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.Randomizer.Wiring.RandomizerRegistrationExtensions).Assembly,
-            typeof(ChartIntelligenceRegistrationExtensions).Assembly,
-            typeof(WeeklyChallengeRegistrationExtensions).Assembly,
-            typeof(EventCompetitionRegistrationExtensions).Assembly,
-            typeof(CommunitiesRegistrationExtensions).Assembly,
-            typeof(ScoreTracker.HomePage.Wiring.HomePageRegistrationExtensions).Assembly);
+            new[] { typeof(GetSavedChartsHandler).Assembly, typeof(MainLayout).Assembly }
+                .Concat(VerticalAssemblies.All()).ToArray());
     })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IBulkChartJsonParser, BulkChartJsonParser>()
@@ -358,6 +375,7 @@ app.UseRouting();
 
 app.UseCors();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 // Required by MapRazorComponents: a static-rendered form posts back to its own endpoint, so the
 // endpoint carries an antiforgery requirement and the middleware is what satisfies it. Without
@@ -407,7 +425,11 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
     ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1"),  // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
-    ("purge-community-highlights",       r => r.PublishPurgeCommunityHighlights(),        "0 9 * * 0")   // Sundays 09:00 UTC — 30-day community-highlights retention
+    ("purge-community-highlights",       r => r.PublishPurgeCommunityHighlights(),        "0 9 * * 0"),  // Sundays 09:00 UTC — 30-day community-highlights retention
+    // The webhook queue lives in SQL, so a delivery survives a restart and this is what picks it
+    // back up. Five minutes is well inside the first backoff step, so nothing waits on the sweep.
+    ("retry-webhook-deliveries",         r => r.PublishRetryDueWebhookDeliveries(),       "*/5 * * * *"),
+    ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *")   // 08:00 UTC — 7-day bodies, 14-day activity log
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {

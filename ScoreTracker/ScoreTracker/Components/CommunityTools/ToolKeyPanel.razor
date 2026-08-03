@@ -1,0 +1,254 @@
+@namespace ScoreTracker.Web.Components.CommunityTools
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Commands
+@using ScoreTracker.CommunityTools.Contracts.Queries
+
+@* Keys only — invite links moved to their own panel, because "how my code authenticates" and "how I
+   recruit players" are different jobs a maker does at different times.
+
+   Creation is two steps on purpose: expiry has to be chosen BEFORE the key exists, or "6 months by
+   default" never registers — and the key is readable exactly once, so the reveal needs a moment of
+   its own rather than a line in a table. *@
+
+<MudPaper Outlined="true" Class="pa-4 mb-4">
+    <MudText Typo="Typo.subtitle2">@L["API keys"]</MudText>
+    <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
+        @L["Two can be active at once, so rotating one costs no downtime."]
+    </MudText>
+
+    @foreach (var key in _keys)
+    {
+        <div class="olb-rank-card">
+            <div class="flex-grow-1" style="min-width:0;">
+                <MudText Typo="Typo.body1">
+                    <b>@key.Name</b>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">…@key.Last4</MudChip>
+                    @if (key.IsRevoked)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">@L["Revoked"]</MudChip>
+                    }
+                    else if (key.IsExpired(DateTimeOffset.Now))
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">@L["Expired"]</MudChip>
+                    }
+                    else if (key.IsExpiringSoon(DateTimeOffset.Now))
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">
+                            @L["Expires in {0} days", (int)(key.ExpiresAt!.Value - DateTimeOffset.Now).TotalDays]
+                        </MudChip>
+                    }
+                </MudText>
+                <MudText Typo="Typo.caption" Style="opacity:.7;">
+                    @(key.ExpiresAt is null
+                        ? L["Never expires"]
+                        : L["Expires {0}", key.ExpiresAt.Value.LocalDateTime.ToString("d")])
+                    ·
+                    @(key.LastUsedAt is null ? L["Never used"] : L["Last used {0}", key.LastUsedAt.Value.LocalDateTime.ToString("g")])
+                </MudText>
+            </div>
+            <div class="olb-rank-tail">
+                @if (!key.IsRevoked)
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => AskRevoke(key)">@L["Revoke"]</MudButton>
+                }
+            </div>
+        </div>
+    }
+
+    <MudButton Size="Size.Small" Class="mt-3" Variant="Variant.Outlined" Color="Color.Primary"
+               OnClick="OpenCreate">@L["Create key"]</MudButton>
+</MudPaper>
+
+@* Step 1: expiry is chosen before the key exists. *@
+<MudDialog @bind-Visible="_showCreate" Options="_options">
+    <TitleContent><MudText Typo="Typo.h6">@L["Create API key"]</MudText></TitleContent>
+    <DialogContent>
+        <MudTextField T="string" @bind-Value="_newKeyName" Label=@L["Key Name"] MaxLength="64"
+                      Immediate="true"
+                      HelperText='@L["Just for you — \"Production\", \"my laptop\", \"the test box\". Nobody else sees it."].Value'></MudTextField>
+        <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@L["Expires"]</MudText>
+        <div class="d-flex gap-2 flex-wrap">
+            @foreach (var option in Lifetimes)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                         Color="@(_lifetimeDays == option.Days ? Color.Info : Color.Default)"
+                         OnClick="() => _lifetimeDays = option.Days">@option.Label(L)</MudChip>
+            }
+        </div>
+        @if (_lifetimeDays is null)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                <MudText Typo="Typo.body2"><b>@L["\"Never\" means never"]</b></MudText>
+                <MudText Typo="Typo.body2">
+                    @L["A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to."]
+                </MudText>
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="() => _showCreate = false">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="@(string.IsNullOrWhiteSpace(_newKeyName))" OnClick="Create">@L["Create key"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Step 2: the only time the key is readable. *@
+<MudDialog @bind-Visible="_showReveal" Options="_options">
+    <TitleContent><MudText Typo="Typo.h6">@L["Copy your key now"]</MudText></TitleContent>
+    <DialogContent>
+        <div class="ct-secret">
+            <pre>@_minted?.Key</pre>
+            <MudIconButton Class="ct-secret-copy" Icon="@Icons.Material.Filled.ContentCopy"
+                           Size="Size.Small" Color="Color.Default" aria-label=@L["Copy"]
+                           OnClick="CopyKey"></MudIconButton>
+        </div>
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+            <MudText Typo="Typo.body2"><b>@L["This is the only time we'll show it."]</b></MudText>
+            <MudText Typo="Typo.body2">
+                @L["We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime."]
+            </MudText>
+        </MudAlert>
+        <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@L["Send it like this"]</MudText>
+        <div class="ct-secret ct-secret-wrap">
+            <pre>Authorization: Bearer @(_minted?.Key)</pre>
+            <MudIconButton Class="ct-secret-copy" Icon="@Icons.Material.Filled.ContentCopy"
+                           Size="Size.Small" Color="Color.Default" aria-label=@L["Copy"]
+                           OnClick="CopyHeader"></MudIconButton>
+        </div>
+        <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="opacity:.7;">
+            @L["In Swagger: press Authorize and paste the key into toolKey — the key on its own, without the word Bearer."]
+        </MudText>
+        <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="opacity:.7;">
+            @(_minted?.ExpiresAt is null
+                ? L["This key never expires."]
+                : L["Expires {0}. Put it in your calendar — we don't send reminder emails.", _minted!.ExpiresAt!.Value.LocalDateTime.ToString("d")])
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseReveal">@L["I've saved it"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Revoking is instant and irreversible, and the button sits one row from Copy. *@
+<MudDialog @bind-Visible="_showRevoke">
+    <TitleContent><MudText Typo="Typo.h6">@L["Revoke {0}?", _revoking?.Name ?? string.Empty]</MudText></TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+            <MudText Typo="Typo.body2">
+                @L["Anything still using this key starts getting 401 the moment you confirm, and it cannot be un-revoked — you would create a new one."]
+            </MudText>
+        </MudAlert>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="() => _showRevoke = false">@L["Keep it"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Revoke">@L["Revoke key"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@code {
+    private sealed record Lifetime(int? Days, Func<IStringLocalizer<App>, string> Label);
+
+    private static readonly Lifetime[] Lifetimes =
+    {
+        new(30, l => l["30 days"].Value),
+        new(90, l => l["90 days"].Value),
+        new(182, l => l["6 months"].Value),
+        new(365, l => l["1 year"].Value),
+        new(null, l => l["Never"].Value)
+    };
+
+    private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.False, FullWidth = true };
+
+    private IReadOnlyList<ApiKeyRecord> _keys = Array.Empty<ApiKeyRecord>();
+    private bool _showCreate;
+    private bool _showReveal;
+    private bool _showRevoke;
+    private ApiKeyRecord? _revoking;
+    private string _newKeyName = string.Empty;
+    private int? _lifetimeDays = 182;
+    private MintedApiKey? _minted;
+
+    [Parameter] public Guid ToolId { get; set; }
+
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    protected override async Task OnParametersSetAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        _keys = await Mediator.Send(new GetToolApiKeysQuery(ToolId));
+    }
+
+    private void OpenCreate()
+    {
+        _newKeyName = string.Empty;
+        _lifetimeDays = 182;
+        _showCreate = true;
+    }
+
+    private async Task Create()
+    {
+        try
+        {
+            _minted = await Mediator.Send(new CreateToolApiKeyCommand(ToolId, _newKeyName,
+                _lifetimeDays is null ? null : DateTimeOffset.Now.AddDays(_lifetimeDays.Value)));
+            _showCreate = false;
+            _showReveal = true;
+            await Reload();
+            await OnChanged.InvokeAsync();
+        }
+        catch (Exception e)
+        {
+            // A domain exception's message is written for the person who tripped it — the one
+            // category DiagnosticExposureTests allows onto a screen.
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+    }
+
+    private async Task CopyKey()
+    {
+        if (_minted is null) return;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _minted.Key);
+        Snackbar.Add(L["Copied"].Value, Severity.Success);
+    }
+
+    private async Task CopyHeader()
+    {
+        if (_minted is null) return;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"Authorization: Bearer {_minted.Key}");
+        Snackbar.Add(L["Copied"].Value, Severity.Success);
+    }
+
+    private void CloseReveal()
+    {
+        // Dropped rather than kept: nothing should be able to re-render it after this point.
+        _minted = null;
+        _showReveal = false;
+    }
+
+    private void AskRevoke(ApiKeyRecord key)
+    {
+        _revoking = key;
+        _showRevoke = true;
+    }
+
+    private async Task Revoke()
+    {
+        if (_revoking is null) return;
+
+        await Mediator.Send(new RevokeToolApiKeyCommand(ToolId, _revoking.Id));
+        _showRevoke = false;
+        _revoking = null;
+        await Reload();
+        await OnChanged.InvokeAsync();
+    }
+}

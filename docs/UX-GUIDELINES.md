@@ -197,3 +197,27 @@ generalizes to any progression the game already models as a ladder:
 - **Rarity of a thing is the percentile of people who lack it**, so it rides the shipped rarity
   ramp (`ThemeScales.BandFor(1 - share)`) instead of a second inverted set of cutoffs, and the
   percentage always prints beside the colour (rule 8).
+
+## 7. Maker-facing surfaces (Community Tools)
+
+`/Developers` and its console and debug pages are the site's first screens whose audience is not a
+player ([design](design/api-v2-community-tools.md)). Two rules follow, and they bind anything
+maker-facing that comes after.
+
+- **A maker-facing surface may use maker vocabulary; player-facing copy never says "webhook."**
+  On `/Developers` the word is correct, precise and shorter than any paraphrase. On
+  `/CommunityTools` — the directory a player browses — the same mechanism is "this tool gets your
+  scores when you import." Vocabulary follows the reader, not the implementation. The one place
+  this bites is the session-mode warning, which is player-facing and must describe the *consequence*
+  ("it can act as you on piugame.com, including deleting your account there"), never the mechanism.
+- **A secret is shown once, and the screen says so before it is generated.** The reveal panel
+  carries the copy button, the warning that this is the only time, and no way back to it. Blurring
+  a value that is still in the DOM, or a "reveal" toggle on a stored secret, is worse than useless:
+  it implies the secret is retrievable and teaches makers not to save it. What is stored is a hash,
+  the UI shows a four-character suffix so a maker can tell two keys apart, and losing a key means
+  minting a new one.
+
+Two existing rules do most of the rest of the work here. Rule 8 (a colour never carries meaning
+alone) is why a delivery's status is a word next to its chip. Rule 4 (say what you cannot compute)
+is why a delivery whose body has aged out of the 7-day window renders **"Body expired"** rather
+than a disabled button with no explanation.

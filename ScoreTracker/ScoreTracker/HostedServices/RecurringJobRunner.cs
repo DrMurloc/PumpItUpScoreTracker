@@ -1,6 +1,7 @@
 using ScoreTracker.WeeklyChallenge.Contracts.Messages;
 using ScoreTracker.Catalog.Contracts.Messages;
 using ScoreTracker.Communities.Contracts.Messages;
+using ScoreTracker.CommunityTools.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using MassTransit;
 using ScoreTracker.EventCompetition.Contracts.Messages;
@@ -19,6 +20,12 @@ public sealed class RecurringJobRunner
     {
         _bus = bus;
     }
+
+    public Task PublishRetryDueWebhookDeliveries() =>
+        _bus.Publish(new RetryDueWebhookDeliveriesCommand());
+
+    public Task PublishPruneWebhookDeliveries() =>
+        _bus.Publish(new PruneWebhookDeliveriesCommand());
 
     public Task PublishProcessScoresTiersList() =>
         _bus.Publish(new ProcessScoresTiersListCommand());

@@ -1,6 +1,7 @@
 using ScoreTracker.Catalog.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
+using ScoreTracker.CommunityTools.Wiring;
 using ScoreTracker.CompositionRoot;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.EventCompetition.Wiring;
@@ -34,6 +35,7 @@ public sealed class ModelContributionRegistrationTests
             typeof(WeeklyChallengeModelContribution).Assembly,
             typeof(EventCompetitionModelContribution).Assembly,
             typeof(CommunitiesModelContribution).Assembly,
+            typeof(CommunityToolsModelContribution).Assembly,
             typeof(RandomizerModelContribution).Assembly,
             typeof(HomePageModelContribution).Assembly,
             typeof(IdentityModelContribution).Assembly,

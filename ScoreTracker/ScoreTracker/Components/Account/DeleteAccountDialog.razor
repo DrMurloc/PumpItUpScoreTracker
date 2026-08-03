@@ -1,4 +1,5 @@
-@namespace ScoreTracker.Web.Components.Account
+﻿@namespace ScoreTracker.Web.Components.Account
+@using ScoreTracker.CommunityTools.Contracts
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 
@@ -53,6 +54,24 @@
                         @L["Your account is hidden right away and permanently deleted on {0}. Sign in before then to cancel.", PurgeAfter.Value.LocalDateTime.ToString("D")]
                     </MudText>
                 }
+                @* Tools cascade rather than block (delete-my-data §8.3) — a tool's value is the
+                   maker's server, which is leaving anyway, so there is nobody to hand it to. What
+                   the player still needs is the number: "1,204 players lose access" lands where
+                   "3 tools" does not. *@
+                @if (Tools.Any())
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                        <MudText Typo="Typo.body2" Class="mb-1">
+                            <b>@L["Your community tools stop working"]</b>
+                        </MudText>
+                        @foreach (var tool in Tools)
+                        {
+                            <MudText Typo="Typo.body2">
+                                @tool.Name — @L["{0} players lose access", tool.ConnectedPlayers]
+                            </MudText>
+                        }
+                    </MudAlert>
+                }
                 <MudTextField T="string" @bind-Value="_typed" Immediate="true"
                               Label="@L["Type {0} to confirm", CurrentUser.User.Name.ToString()]"
                               autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false"/>
@@ -88,6 +107,9 @@
     [Parameter] public IReadOnlyList<OwnedCommunityRecord> Blockers { get; set; } = Array.Empty<OwnedCommunityRecord>();
 
     [Parameter] public DateTimeOffset? PurgeAfter { get; set; }
+
+    /// <summary>Tools this account owns. Named with their player counts, never a bare total.</summary>
+    [Parameter] public IReadOnlyList<ToolRecord> Tools { get; set; } = Array.Empty<ToolRecord>();
 
     [Parameter] public EventCallback OnConfirmed { get; set; }
 

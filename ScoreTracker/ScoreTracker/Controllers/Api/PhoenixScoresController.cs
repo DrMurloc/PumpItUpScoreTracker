@@ -56,8 +56,10 @@ public sealed class PhoenixScoresController : Controller
                 gameTag = match;
             }
 
+            // body.SyncScoreTracker is accepted and ignored — see the DTO. Session delivery is
+            // decided by the player's shares now, so the flag has nowhere to go.
             await _mediator.Send(new ImportOfficialPlayerScoresCommand(body.Username, body.Password, gameTag.Id,
-                gameTag.GameTag, body.IncludeBroken, body.SyncScoreTracker));
+                gameTag.GameTag, body.IncludeBroken));
             return Ok();
         }
         catch (InvalidCredentialException)
