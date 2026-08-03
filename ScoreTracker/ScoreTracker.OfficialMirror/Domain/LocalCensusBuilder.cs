@@ -41,6 +41,33 @@ internal static class LocalCensusBuilder
             0);
     }
 
+    /// <summary>
+    ///     Our PUMBILITY for the same records the census just read. Mirrors
+    ///     <c>PlayerRatingSaga.RecalculateCore</c> — one merged top-50 across both types, breaks
+    ///     and CO-OP excluded, Phoenix 2 pricing the plate — deliberately rather than reading the
+    ///     stored PlayerStats value: the rating sweep runs asynchronously after an import, so the
+    ///     stored number can still be the pre-import one at the moment a check reports.
+    /// </summary>
+    public static double Pumbility(MixEnum mix, IEnumerable<RecordedPhoenixScore> records,
+        IReadOnlyDictionary<Guid, Chart> charts)
+    {
+        var scoring = ScoringConfiguration.PumbilityScoring(mix, true);
+        var rated = new List<double>();
+        foreach (var record in records)
+        {
+            if (record.IsBroken || record.Score == null) continue;
+            if (!charts.TryGetValue(record.ChartId, out var chart)) continue;
+            if (chart.Type == ChartType.CoOp) continue;
+
+            rated.Add(mix == MixEnum.Phoenix2
+                ? scoring.GetScore(chart.Type, chart.Level, record.Score.Value,
+                    record.Plate ?? PhoenixPlate.RoughGame, record.IsBroken)
+                : scoring.GetScore(chart.Type, chart.Level, record.Score.Value));
+        }
+
+        return rated.OrderByDescending(r => r).Take(50).Sum();
+    }
+
     private sealed class Accumulator
     {
         public int Passes { get; set; }

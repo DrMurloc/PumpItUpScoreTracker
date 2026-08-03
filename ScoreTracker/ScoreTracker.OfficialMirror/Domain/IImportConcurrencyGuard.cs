@@ -10,4 +10,14 @@ internal interface IImportConcurrencyGuard
 
     // Releases the slot. Safe to call for a user that never held one.
     void End(Guid userId);
+
+    /// <summary>
+    ///     A deep scan reads every page of a best-score list — around 240 requests for a large
+    ///     account — so the site is protected GLOBALLY as well as per user. Three players walking
+    ///     their whole history at once is a rude amount of traffic to point at piugame, and the
+    ///     per-user slot above says nothing about that.
+    /// </summary>
+    bool TryBeginDeepScan();
+
+    void EndDeepScan();
 }
