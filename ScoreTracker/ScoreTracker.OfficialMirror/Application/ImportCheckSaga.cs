@@ -134,8 +134,11 @@ internal sealed class ImportCheckSaga :
                 }
             }
 
+            // Broken bests are always fetched here: the census counts passes on both sides, so an
+            // opted-out player's stage breaks change nothing it measures, while fetching them keeps
+            // the repair from leaving a chart behind.
             await _mediator.Send(new ExecuteImportCommand(request.UserId, request.Mix, request.Sid,
-                request.CardId, request.ExpectedGameTag, true, false), cancellationToken);
+                request.CardId, request.ExpectedGameTag, true), cancellationToken);
             await Repair(request, cancellationToken);
 
             var official = await _officialSite.GetOfficialCensus(request.Mix, request.UserId, request.Sid,
