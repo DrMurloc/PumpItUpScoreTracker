@@ -503,6 +503,9 @@
   <data name="All time" xml:space="preserve">
     <value>All time</value>
   </data>
+  <data name="All tools (admin)" xml:space="preserve">
+    <value>All tools (admin)</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>All {0} at {1} or better</value>
   </data>
@@ -1848,6 +1851,9 @@
   </data>
   <data name="Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account.</value>
+  </data>
+  <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
+    <value>Everyone else's. You can manage these, and the maker is not told.</value>
   </data>
   <data name="Everyone who has gone public" xml:space="preserve">
     <value>Everyone who has gone public</value>
@@ -4707,6 +4713,9 @@
   <data name="Review and merge" xml:space="preserve">
     <value>Review and merge</value>
   </data>
+  <data name="Review queue" xml:space="preserve">
+    <value>Review queue</value>
+  </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Revisit Old Scores</value>
   </data>
@@ -6716,6 +6725,9 @@
   </data>
   <data name="You're connected to every listed tool" xml:space="preserve">
     <value>You're connected to every listed tool</value>
+  </data>
+  <data name="You're editing {0}'s tool as an admin." xml:space="preserve">
+    <value>You're editing {0}'s tool as an admin.</value>
   </data>
   <data name="You're set up" xml:space="preserve">
     <value>You're set up</value>

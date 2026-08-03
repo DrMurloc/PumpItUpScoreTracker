@@ -33,6 +33,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<RejectToolCommand>,
     IRequestHandler<DeleteToolCommand>,
     IRequestHandler<GetMyToolsQuery, IReadOnlyList<ToolRecord>>,
+    IRequestHandler<GetAllToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetToolQuery, ToolRecord?>,
     IRequestHandler<GetToolsAwaitingReviewQuery, IReadOnlyList<ToolRecord>>
 {
@@ -65,7 +66,7 @@ internal sealed class ToolManagementSaga :
     /// </summary>
     public async Task Handle(SetToolOutboundHeaderCommand request, CancellationToken cancellationToken)
     {
-        await Owned(request.ToolId, cancellationToken);
+        await Manageable(request.ToolId, cancellationToken);
 
         var name = string.IsNullOrWhiteSpace(request.Name) ? null : request.Name.Trim();
         var (_, existing) = await _secrets.GetOutboundHeader(request.ToolId, cancellationToken);
@@ -78,18 +79,13 @@ internal sealed class ToolManagementSaga :
     }
 
     /// <summary>
-    ///     POSTs a challenge to the configured URL and records the echo. Uses the same client, the
-    ///     same timeout and the same outbound header a real delivery would — verifying under gentler
-    ///     conditions than we deliver under proves nothing.
-    /// </summary>
-    /// <summary>
     ///     Stores the hash of the secret a maker's endpoint answers with. Clearing it un-verifies
     ///     the URL: without a secret there is nothing the endpoint could say that would prove
     ///     anything, so leaving deliveries flowing would be resting on a check we can no longer run.
     /// </summary>
     public async Task Handle(SetToolVerificationSecretCommand request, CancellationToken cancellationToken)
     {
-        var tool = await Owned(request.ToolId, cancellationToken);
+        var tool = await Manageable(request.ToolId, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(request.Secret))
         {
@@ -108,10 +104,15 @@ internal sealed class ToolManagementSaga :
         await _tools.Save(tool, cancellationToken);
     }
 
+    /// <summary>
+    ///     Asks the endpoint to answer with the maker's registered secret. Uses the same client, the
+    ///     same timeout and the same outbound header a real delivery would — verifying under gentler
+    ///     conditions than we deliver under proves nothing.
+    /// </summary>
     public async Task<WebhookVerificationResult> Handle(VerifyToolWebhookCommand request,
         CancellationToken cancellationToken)
     {
-        var tool = await Owned(request.ToolId, cancellationToken);
+        var tool = await Manageable(request.ToolId, cancellationToken);
         if (tool.WebhookUrl is null)
             throw new ToolWebhookModeException("Set a webhook URL before verifying it.");
 
@@ -164,7 +165,7 @@ internal sealed class ToolManagementSaga :
 
     public async Task Handle(UpdateToolCommand request, CancellationToken cancellationToken)
     {
-        var tool = await Owned(request.ToolId, cancellationToken);
+        var tool = await Manageable(request.ToolId, cancellationToken);
         tool.Describe(Name.From(request.Name), request.Description,
             string.IsNullOrWhiteSpace(request.Url) ? null : new Uri(request.Url));
         await _tools.Save(tool, cancellationToken);
@@ -172,14 +173,14 @@ internal sealed class ToolManagementSaga :
 
     public async Task Handle(SetToolAllToolsShareCommand request, CancellationToken cancellationToken)
     {
-        var tool = await Owned(request.ToolId, cancellationToken);
+        var tool = await Manageable(request.ToolId, cancellationToken);
         tool.SetAcceptsAllToolsShare(request.Accepts);
         await _tools.Save(tool, cancellationToken);
     }
 
     public async Task Handle(SetToolWebhookCommand request, CancellationToken cancellationToken)
     {
-        var tool = await Owned(request.ToolId, cancellationToken);
+        var tool = await Manageable(request.ToolId, cancellationToken);
         var connected = await _tools.CountConnectedPlayers(request.ToolId, cancellationToken);
         tool.SetWebhook(request.Mode,
             await CheckedTarget(request.Url, cancellationToken), connected,
@@ -191,7 +192,7 @@ internal sealed class ToolManagementSaga :
 
     public async Task Handle(RequestToolListingCommand request, CancellationToken cancellationToken)
     {
-        var tool = await Owned(request.ToolId, cancellationToken);
+        var tool = await Manageable(request.ToolId, cancellationToken);
         tool.RequestListing();
         await _tools.Save(tool, cancellationToken);
     }
@@ -212,7 +213,7 @@ internal sealed class ToolManagementSaga :
 
     public async Task Handle(DeleteToolCommand request, CancellationToken cancellationToken)
     {
-        await Owned(request.ToolId, cancellationToken);
+        await Manageable(request.ToolId, cancellationToken);
         await _tools.DeleteTool(request.ToolId, cancellationToken);
     }
 
@@ -220,6 +221,20 @@ internal sealed class ToolManagementSaga :
         CancellationToken cancellationToken)
     {
         var tools = await _tools.GetToolsOwnedBy(_currentUser.User.Id, cancellationToken);
+        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken)));
+    }
+
+    /// <summary>
+    ///     Every tool, for the admin console. Kept separate from <see cref="GetMyToolsQuery" />
+    ///     rather than widening it: "mine" has to keep meaning mine, or the player-facing My Tools
+    ///     section would list the whole site back to the one person who is also an admin.
+    /// </summary>
+    public async Task<IReadOnlyList<ToolRecord>> Handle(GetAllToolsQuery request,
+        CancellationToken cancellationToken)
+    {
+        if (!_currentUser.User.IsAdmin) return Array.Empty<ToolRecord>();
+
+        var tools = await _tools.GetAllTools(cancellationToken);
         return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken)));
     }
 
@@ -304,11 +319,25 @@ internal sealed class ToolManagementSaga :
         "would point at our own infrastructure rather than yours. Use a public hostname, or run " +
         "PIU Scores locally to develop against localhost.";
 
-    private async Task<Tool> Owned(Guid toolId, CancellationToken cancellationToken)
+    /// <summary>
+    ///     The tool, if the caller may act on it: its owner, or an admin.
+    ///     <para>
+    ///         Admins pass because the site's operator has to be able to fix a maker's tool without
+    ///         asking them to — and could reach the row directly anyway. Worth being clear about what
+    ///         that includes: minting a key for someone else's tool, which is a key that reads that
+    ///         tool's players. Neither secret becomes readable, because neither is ever returned.
+    ///     </para>
+    ///     <para>
+    ///         Not-yours and not-found deliberately answer the same way: a stranger probing ids
+    ///         learns nothing about which ones exist.
+    ///     </para>
+    /// </summary>
+    private async Task<Tool> Manageable(Guid toolId, CancellationToken cancellationToken)
     {
         var tool = await _tools.GetTool(toolId, cancellationToken)
                    ?? throw new ToolNotFoundException();
-        if (tool.OwnerUserId != _currentUser.User.Id) throw new ToolNotFoundException();
+        if (tool.OwnerUserId != _currentUser.User.Id && !_currentUser.User.IsAdmin)
+            throw new ToolNotFoundException();
 
         return tool;
     }

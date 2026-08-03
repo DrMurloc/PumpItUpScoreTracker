@@ -501,6 +501,9 @@
   <data name="All time" xml:space="preserve">
     <value>Todo o histórico</value>
   </data>
+  <data name="All tools (admin)" xml:space="preserve">
+    <value>Todas as ferramentas (admin)</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>Todas as {0} em {1} ou melhor</value>
   </data>
@@ -1832,6 +1835,9 @@
   </data>
   <data name="Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>Toda vez que você importa, entregamos a esta ferramenta a chave de sessão que usamos para entrar no piugame.com como você. Enquanto essa chave estiver viva, ela pode fazer tudo o que você faz lá — trocar seu cartão, mudar suas configurações, apagar sua conta do PIUGame.</value>
+  </data>
+  <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
+    <value>As dos outros. Você pode gerenciá-las, e quem as fez não é avisado.</value>
   </data>
   <data name="Everyone who has gone public" xml:space="preserve">
     <value>Todos que se tornaram públicos</value>
@@ -4664,6 +4670,9 @@
   <data name="Review and merge" xml:space="preserve">
     <value>Revisar e mesclar</value>
   </data>
+  <data name="Review queue" xml:space="preserve">
+    <value>Fila de revisão</value>
+  </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Revisite pontuações antigas</value>
   </data>
@@ -6646,6 +6655,9 @@
   </data>
   <data name="You're connected to every listed tool" xml:space="preserve">
     <value>Você está conectado a todas as ferramentas listadas</value>
+  </data>
+  <data name="You're editing {0}'s tool as an admin." xml:space="preserve">
+    <value>Você está editando a ferramenta de {0} como administrador.</value>
   </data>
   <data name="You're set up" xml:space="preserve">
     <value>Tudo pronto</value>

@@ -501,6 +501,9 @@
   <data name="All time" xml:space="preserve">
     <value>전체 기간</value>
   </data>
+  <data name="All tools (admin)" xml:space="preserve">
+    <value>모든 도구 (관리자)</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>{0} 모두 {1} 이상</value>
   </data>
@@ -1832,6 +1835,9 @@
   </data>
   <data name="Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>임포트할 때마다 piugame.com에 여러분으로 로그인하는 데 사용하는 세션 키를 이 도구에 전달합니다. 그 키가 살아 있는 동안에는 여러분이 그곳에서 할 수 있는 모든 것 — 카드 변경, 설정 변경, PIUGame 계정 삭제까지 — 을 할 수 있습니다.</value>
+  </data>
+  <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
+    <value>다른 사람들의 도구입니다. 관리할 수 있으며, 제작자에게는 알리지 않습니다.</value>
   </data>
   <data name="Everyone who has gone public" xml:space="preserve">
     <value>프로필을 공개한 모든 유저</value>
@@ -4664,6 +4670,9 @@
   <data name="Review and merge" xml:space="preserve">
     <value>검토 후 병합</value>
   </data>
+  <data name="Review queue" xml:space="preserve">
+    <value>검토 대기열</value>
+  </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>오래된 점수 다시 보기</value>
   </data>
@@ -6646,6 +6655,9 @@
   </data>
   <data name="You're connected to every listed tool" xml:space="preserve">
     <value>목록에 있는 모든 도구와 연결되어 있습니다</value>
+  </data>
+  <data name="You're editing {0}'s tool as an admin." xml:space="preserve">
+    <value>{0} 님의 도구를 관리자 권한으로 편집하고 있습니다.</value>
   </data>
   <data name="You're set up" xml:space="preserve">
     <value>준비 완료</value>

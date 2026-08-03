@@ -8,6 +8,14 @@ public sealed record GetMyToolsQuery : IQuery<IReadOnlyList<ToolRecord>>;
 [ExcludeFromCodeCoverage]
 public sealed record GetToolQuery(Guid ToolId) : IQuery<ToolRecord?>;
 
+/// <summary>
+///     Every tool on the site, for the admin console. Returns empty for everyone else rather than
+///     throwing — the caller is a page deciding whether to render a section, not a maker who did
+///     something wrong.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetAllToolsQuery : IQuery<IReadOnlyList<ToolRecord>>;
+
 [ExcludeFromCodeCoverage]
 public sealed record GetPublicToolsQuery : IQuery<IReadOnlyList<PublicToolRecord>>;
 

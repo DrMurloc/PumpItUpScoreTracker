@@ -18,7 +18,9 @@
         @L["What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll."]
     </MudText>
 
-    <MudRadioGroup T="WebhookMode" @bind-Value="_mode">
+    @* One mode per line. MudRadio is inline-flex, so short options pair up on a wide viewport and
+       the list reads as two columns of unrelated things. *@
+    <MudRadioGroup T="WebhookMode" @bind-Value="_mode" Class="d-flex flex-column">
         <MudRadio T="WebhookMode" Value="WebhookMode.None" Color="Color.Primary">
             <b>@L["Nothing"]</b> — @L["Poll the API instead."]
         </MudRadio>

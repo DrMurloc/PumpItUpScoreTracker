@@ -125,7 +125,8 @@
                 <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
                     @L["Optional. By default you ask us for scores whenever you like. Instead we can call you: when one of your players imports, we send an HTTP POST to a URL you give us and your server does whatever it does. If you have set one of these up before, it is an ordinary webhook."]
                 </MudText>
-                <MudRadioGroup T="WebhookMode" @bind-Value="_mode">
+                @* One mode per line — see the note in ToolWebhookPanel. *@
+                <MudRadioGroup T="WebhookMode" @bind-Value="_mode" Class="d-flex flex-column">
                     <MudRadio T="WebhookMode" Value="WebhookMode.None" Color="Color.Primary">
                         <b>@L["Nothing"]</b> — @L["You call our API when you want it. Skip this screen."]
                     </MudRadio>

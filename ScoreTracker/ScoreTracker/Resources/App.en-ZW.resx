@@ -503,6 +503,9 @@
   <data name="All time" xml:space="preserve">
     <value>Rgl grglmrgl</value>
   </data>
+  <data name="All tools (admin)" xml:space="preserve">
+    <value>Marogl grumba (mo)</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>Rgl {0} mr {1} argl morgmrp</value>
   </data>
@@ -1848,6 +1851,9 @@
   </data>
   <data name="Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>Argla murgm gromurp murpo, murm murgargl blu Rorgl murgloborg grabla murm murpmurp blu piugame.com blu gromurp. Grabla mrgloo, murgm murp murpmurp argla gromurp murp — murgloo grglm, murgloo mrpgrogl, murgloo PIUGame Grgl.</value>
+  </data>
+  <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
+    <value>Blurgl bloop am olo. Golba marogl, opa grumb alla pragl.</value>
   </data>
   <data name="Everyone who has gone public" xml:space="preserve">
     <value>Lurgblargmurg lurg rgl glrgl mrglrgll</value>
@@ -4707,6 +4713,9 @@
   <data name="Review and merge" xml:space="preserve">
     <value>Murprgl ro murmplgl</value>
   </data>
+  <data name="Review queue" xml:space="preserve">
+    <value>Blorp marogl</value>
+  </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Grorpmrglgrorp Rgl Mgrlgmrg</value>
   </data>
@@ -6716,6 +6725,9 @@
   </data>
   <data name="You're connected to every listed tool" xml:space="preserve">
     <value>Bloop am blurgl marogl golba</value>
+  </data>
+  <data name="You're editing {0}'s tool as an admin." xml:space="preserve">
+    <value>Bloop golba {0} grumba marogl mo.</value>
   </data>
   <data name="You're set up" xml:space="preserve">
     <value>Bloop am olo</value>

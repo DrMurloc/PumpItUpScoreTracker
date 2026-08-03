@@ -503,6 +503,9 @@
   <data name="All time" xml:space="preserve">
     <value>Tout l'historique</value>
   </data>
+  <data name="All tools (admin)" xml:space="preserve">
+    <value>Tous les outils (admin)</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>Toutes les {0} à {1} ou mieux</value>
   </data>
@@ -1847,6 +1850,9 @@
   </data>
   <data name="Every time you import, we hand this tool the session key we use to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>À chaque import, nous transmettons à cet outil la clé de session qui nous sert à nous connecter à piugame.com en votre nom. Tant que cette clé est valide, il peut y faire tout ce que vous pouvez y faire — changer votre carte, changer vos réglages, supprimer votre compte PIUGame.</value>
+  </data>
+  <data name="Everyone else's. You can manage these, and the maker is not told." xml:space="preserve">
+    <value>Ceux des autres. Vous pouvez les gérer, et leur auteur n'en est pas informé.</value>
   </data>
   <data name="Everyone who has gone public" xml:space="preserve">
     <value>Tous ceux qui sont passés en public</value>
@@ -4706,6 +4712,9 @@
   <data name="Review and merge" xml:space="preserve">
     <value>Examiner et fusionner</value>
   </data>
+  <data name="Review queue" xml:space="preserve">
+    <value>File de relecture</value>
+  </data>
   <data name="Revisit Old Scores" xml:space="preserve">
     <value>Revisitez vos vieux scores</value>
   </data>
@@ -6715,6 +6724,9 @@
   </data>
   <data name="You're connected to every listed tool" xml:space="preserve">
     <value>Vous êtes connecté à tous les outils listés</value>
+  </data>
+  <data name="You're editing {0}'s tool as an admin." xml:space="preserve">
+    <value>Vous modifiez l'outil de {0} en tant qu'administrateur.</value>
   </data>
   <data name="You're set up" xml:space="preserve">
     <value>Tout est prêt</value>

@@ -9,6 +9,9 @@ internal interface IToolRepository
 
     Task<IReadOnlyList<Tool>> GetToolsOwnedBy(Guid ownerUserId, CancellationToken cancellationToken = default);
 
+    /// <summary>Every registered tool. Admin surfaces only — nothing player-facing reads this.</summary>
+    Task<IReadOnlyList<Tool>> GetAllTools(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Tool>> GetToolsByVisibility(ToolVisibility visibility,
         CancellationToken cancellationToken = default);
 

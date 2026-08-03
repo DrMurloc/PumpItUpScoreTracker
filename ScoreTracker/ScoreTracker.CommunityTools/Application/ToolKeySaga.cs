@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.CommunityTools.Contracts.Queries;
@@ -38,7 +38,7 @@ internal sealed class ToolKeySaga :
     public async Task<MintedApiKey> Handle(CreateToolApiKeyCommand request,
         CancellationToken cancellationToken)
     {
-        await AssertOwned(request.ToolId, cancellationToken);
+        await AssertManageable(request.ToolId, cancellationToken);
 
         var live = (await _keys.GetKeys(request.ToolId, cancellationToken))
             .Count(k => k.RevokedAt is null && (k.ExpiresAt is null || k.ExpiresAt > _dateTime.Now));
@@ -58,13 +58,13 @@ internal sealed class ToolKeySaga :
 
     public async Task Handle(RevokeToolApiKeyCommand request, CancellationToken cancellationToken)
     {
-        await AssertOwned(request.ToolId, cancellationToken);
+        await AssertManageable(request.ToolId, cancellationToken);
         await _keys.RevokeKey(request.ToolId, request.KeyId, _dateTime.Now, cancellationToken);
     }
 
     public async Task<Guid> Handle(CreateToolInviteLinkCommand request, CancellationToken cancellationToken)
     {
-        await AssertOwned(request.ToolId, cancellationToken);
+        await AssertManageable(request.ToolId, cancellationToken);
         var code = Guid.NewGuid();
         await _keys.AddInviteCode(request.ToolId, code, _dateTime.Now, cancellationToken);
         return code;
@@ -72,13 +72,13 @@ internal sealed class ToolKeySaga :
 
     public async Task Handle(RevokeToolInviteLinkCommand request, CancellationToken cancellationToken)
     {
-        await AssertOwned(request.ToolId, cancellationToken);
+        await AssertManageable(request.ToolId, cancellationToken);
         await _keys.RevokeInviteCode(request.ToolId, request.Code, _dateTime.Now, cancellationToken);
     }
 
     public async Task Handle(SetToolInviteLinkNoteCommand request, CancellationToken cancellationToken)
     {
-        await AssertOwned(request.ToolId, cancellationToken);
+        await AssertManageable(request.ToolId, cancellationToken);
         var note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
         await _keys.SetInviteCodeNote(request.ToolId, request.Code, note, cancellationToken);
     }
@@ -86,7 +86,7 @@ internal sealed class ToolKeySaga :
     public async Task<IReadOnlyList<ApiKeyRecord>> Handle(GetToolApiKeysQuery request,
         CancellationToken cancellationToken)
     {
-        await AssertOwned(request.ToolId, cancellationToken);
+        await AssertManageable(request.ToolId, cancellationToken);
         return (await _keys.GetKeys(request.ToolId, cancellationToken))
             .Select(k => new ApiKeyRecord(k.Id, k.Name, k.Last4, k.CreatedAt, k.ExpiresAt,
                 k.LastUsedAt, k.RevokedAt is not null))
@@ -96,7 +96,7 @@ internal sealed class ToolKeySaga :
     public async Task<IReadOnlyList<ToolInviteLinkRecord>> Handle(GetToolInviteLinksQuery request,
         CancellationToken cancellationToken)
     {
-        await AssertOwned(request.ToolId, cancellationToken);
+        await AssertManageable(request.ToolId, cancellationToken);
         return (await _keys.GetInviteCodes(request.ToolId, cancellationToken))
             .Select(i => new ToolInviteLinkRecord(i.Code, i.Note, i.CreatedAt))
             .ToArray();
@@ -131,9 +131,14 @@ internal sealed class ToolKeySaga :
             cancellationToken);
     }
 
-    private async Task AssertOwned(Guid toolId, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Keys and invite links belong to the tool's owner, and to an admin — see
+    ///     <c>ToolManagementSaga.Manageable</c> for what that grant covers and why.
+    /// </summary>
+    private async Task AssertManageable(Guid toolId, CancellationToken cancellationToken)
     {
         var tool = await _tools.GetTool(toolId, cancellationToken);
-        if (tool is null || tool.OwnerUserId != _currentUser.User.Id) throw new ToolNotFoundException();
+        if (tool is null || (tool.OwnerUserId != _currentUser.User.Id && !_currentUser.User.IsAdmin))
+            throw new ToolNotFoundException();
     }
 }

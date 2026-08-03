@@ -34,6 +34,11 @@ internal sealed class EFToolRepository : IToolRepository
         return await LoadTools(t => t.OwnerUserId == ownerUserId, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Tool>> GetAllTools(CancellationToken cancellationToken = default)
+    {
+        return await LoadTools(_ => true, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Tool>> GetToolsByVisibility(ToolVisibility visibility,
         CancellationToken cancellationToken = default)
     {

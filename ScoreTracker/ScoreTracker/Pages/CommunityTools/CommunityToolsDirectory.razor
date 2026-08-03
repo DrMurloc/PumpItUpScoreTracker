@@ -12,10 +12,19 @@
 @* This page's job is "who can read my scores", not "browse the catalogue" — so connections come
    first and the directory second (UX rule 1). Rows wear the board skin rather than cards. *@
 
-<MudText Typo="Typo.h4" Class="mt-2">@L["Community Tools"]</MudText>
-<MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
-    @L["Tools built by players, on your scores. You choose who gets access."]
-</MudText>
+<div class="d-flex align-start gap-3 flex-wrap mt-2 mb-3">
+    <div class="flex-grow-1" style="min-width:200px;">
+        <MudText Typo="Typo.h4">@L["Community Tools"]</MudText>
+        <MudText Typo="Typo.body2" Style="opacity:.75;">
+            @L["Tools built by players, on your scores. You choose who gets access."]
+        </MudText>
+    </div>
+    @if (CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Warning" Href="/Admin/CommunityTools"
+                   StartIcon="@Icons.Material.Filled.FactCheck">@L["Review queue"]</MudButton>
+    }
+</div>
 
 <div class="d-flex gap-2 mb-4 flex-wrap">
     <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => _showInviteEntry = true"
@@ -158,6 +167,7 @@ else
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
 @code {
     private IReadOnlyList<PlayerToolConnectionRecord> _connections = Array.Empty<PlayerToolConnectionRecord>();
     private IReadOnlyList<PublicToolRecord> _publicTools = Array.Empty<PublicToolRecord>();

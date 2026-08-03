@@ -1,4 +1,4 @@
-@page "/Developers"
+﻿@page "/Developers"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using Microsoft.AspNetCore.WebUtilities
@@ -75,6 +75,43 @@ else
             </div>
         }
     </MudPaper>
+
+    @* Everyone else's, for the operator. A separate list rather than folded into "Your tools",
+       because the difference between a tool you own and one you are administering is exactly the
+       thing you want to be sure of before pressing Delete. Empty for everyone but an admin. *@
+    @if (_otherTools.Any())
+    {
+        <MudPaper Outlined="true" Class="pa-3 mb-4">
+            <MudText Typo="Typo.subtitle2">@L["All tools (admin)"]</MudText>
+            <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
+                @L["Everyone else's. You can manage these, and the maker is not told."]
+            </MudText>
+            @foreach (var tool in _otherTools)
+            {
+                <div class="olb-rank-card" style="cursor:pointer;" @onclick="() => Select(tool)">
+                    <div class="flex-grow-1" style="min-width:0;">
+                        <MudText Typo="Typo.body1">
+                            <b>@tool.Name</b>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                     Color="@VisibilityColor(tool.Visibility)">@VisibilityLabel(tool.Visibility)</MudChip>
+                        </MudText>
+                        <MudText Typo="Typo.caption" Style="opacity:.7;">
+                            @L["by {0}", tool.OwnerName]
+                            · @WebhookLabel(tool.WebhookMode)
+                            · @L["{0} Players", tool.ConnectedPlayers]
+                        </MudText>
+                    </div>
+                </div>
+            }
+        </MudPaper>
+    }
+
+    @if (_selected is not null && _selected.OwnerUserId != CurrentUser.User.Id)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-4">
+            @L["You're editing {0}'s tool as an admin.", _selected.OwnerName]
+        </MudAlert>
+    }
 
     @if (_selected is not null)
     {
@@ -228,8 +265,12 @@ else
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
 @code {
     private IReadOnlyList<ToolRecord> _tools = Array.Empty<ToolRecord>();
+
+    /// <summary>Tools belonging to other people. Only ever populated for an admin.</summary>
+    private IReadOnlyList<ToolRecord> _otherTools = Array.Empty<ToolRecord>();
     private ToolRecord? _selected;
     private bool _loading = true;
     private bool _showCreate;
@@ -267,7 +308,7 @@ else
         var query = QueryHelpers.ParseQuery(new Uri(NavManager.Uri).Query);
         if (query.TryGetValue("tool", out var raw) && Guid.TryParse(raw, out var requested))
         {
-            var wanted = _tools.FirstOrDefault(t => t.Id == requested);
+            var wanted = _tools.Concat(_otherTools).FirstOrDefault(t => t.Id == requested);
             if (wanted is not null)
             {
                 Select(wanted);
@@ -292,7 +333,10 @@ else
     private async Task Reload()
     {
         _tools = await Mediator.Send(new GetMyToolsQuery());
-        if (_selected is not null) _selected = _tools.FirstOrDefault(t => t.Id == _selected.Id);
+        _otherTools = (await Mediator.Send(new GetAllToolsQuery()))
+            .Where(t => t.OwnerUserId != CurrentUser.User.Id).ToArray();
+        if (_selected is not null)
+            _selected = _tools.Concat(_otherTools).FirstOrDefault(t => t.Id == _selected.Id);
         if (_selected is null && _tools.Any()) Select(_tools[0]);
 
         var expiring = new List<(string, int)>();
