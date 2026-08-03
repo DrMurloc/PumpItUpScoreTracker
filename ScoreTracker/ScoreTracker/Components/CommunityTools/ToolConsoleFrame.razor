@@ -1,0 +1,135 @@
+@namespace ScoreTracker.Web.Components.CommunityTools
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+
+@* The console's chrome, shared by every section: which tool, the section nav, and the banner
+   saying whose tool you are editing.
+
+   Modelled on OfficialSectionFrame — each section is its own route and its own circuit, so the nav
+   is real document loads, which is the site's navigation model anyway. It also means every section
+   is a URL: "how do I hook up the webhook" is a link you can paste at someone rather than a scroll
+   position you have to describe.
+
+   The nav is built from the tool, not from a constant. A listing-only tool has no key and no
+   endpoint and is not unfinished, so it simply has no API or Webhooks tab. *@
+
+@if (_tool is null)
+{
+    <MudSkeleton Height="160px"></MudSkeleton>
+}
+else
+{
+    <div class="ct-console-head">
+        @if (_tools.Count > 1)
+        {
+            <MudMenu Dense="true" ActivationEvent="MouseEvent.LeftClick">
+                <ActivatorContent>
+                    <button type="button" class="ct-console-pick">
+                        @_tool.Name
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowDropDown" Size="Size.Small"></MudIcon>
+                    </button>
+                </ActivatorContent>
+                <ChildContent>
+                    @foreach (var option in _tools)
+                    {
+                        <MudMenuItem Href="@Link(option.Id, Section)">@option.Name</MudMenuItem>
+                    }
+                </ChildContent>
+            </MudMenu>
+        }
+        else
+        {
+            <span class="ct-console-pick">@_tool.Name</span>
+        }
+
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                 Color="@VisibilityColor(_tool.Visibility)">@VisibilityLabel(_tool.Visibility)</MudChip>
+    </div>
+
+    @if (_tool.OwnerUserId != CurrentUser.User.Id)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-3">
+            @L["You're editing {0}'s tool as an admin.", _tool.OwnerName]
+        </MudAlert>
+    }
+
+    <nav class="ct-console-nav" aria-label="@L["Developers"]">
+        @foreach (var (key, label) in Sections(_tool))
+        {
+            <MudButton Href="@Link(_tool.Id, key)" Size="Size.Small" Color="Color.Primary"
+                       Variant="@(key == Section ? Variant.Filled : Variant.Outlined)">@L[label]</MudButton>
+        }
+    </nav>
+
+    <div class="pt-4">
+        @ChildContent(_tool)
+    </div>
+}
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@code {
+    /// <summary>Which nav entry is lit. Matches the route segment.</summary>
+    [Parameter] [EditorRequired] public string Section { get; set; } = "overview";
+
+    [Parameter] [EditorRequired] public Guid ToolId { get; set; }
+
+    /// <summary>
+    ///     The section's own content, handed the tool so it never re-fetches it. Named ChildContent
+    ///     rather than Body so <c>Context="tool"</c> binds on the component tag itself.
+    /// </summary>
+    [Parameter] [EditorRequired] public RenderFragment<ToolRecord> ChildContent { get; set; } = default!;
+
+    private ToolRecord? _tool;
+    private IReadOnlyList<ToolRecord> _tools = Array.Empty<ToolRecord>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _tools = await Mediator.Send(new GetMyToolsQuery());
+        _tool = _tools.FirstOrDefault(t => t.Id == ToolId);
+
+        // An admin reaching someone else's tool through Manage. Kept out of the switcher's own list
+        // above — "your tools" has to keep meaning yours — but resolvable here so the console opens.
+        if (_tool is null && CurrentUser.User.IsAdmin)
+            _tool = await Mediator.Send(new GetToolQuery(ToolId));
+    }
+
+    private static string Link(Guid toolId, string section)
+    {
+        return section == "overview" ? $"/Developers/{toolId}" : $"/Developers/{toolId}/{section}";
+    }
+
+    /// <summary>
+    ///     Which tabs this tool has. A listing-only tool has no key and no endpoint, so it has no
+    ///     API, Webhooks or Code — and no Players either, since there is nothing to grant it.
+    /// </summary>
+    private static (string Key, string Label)[] Sections(ToolRecord tool)
+    {
+        if (tool.Kind == ToolKind.ListingOnly)
+            return new[] { ("overview", "Overview"), ("tool", "Tool") };
+
+        return new[]
+        {
+            ("overview", "Overview"), ("tool", "Tool"), ("api", "API"),
+            ("players", "Players"), ("webhooks", "Webhooks"), ("code", "Code")
+        };
+    }
+
+    private string VisibilityLabel(ToolVisibility visibility) => visibility switch
+    {
+        ToolVisibility.Public => L["Public"].Value,
+        ToolVisibility.PendingApproval => L["Awaiting review"].Value,
+        ToolVisibility.Rejected => L["Listing was turned down"].Value,
+        _ => L["Private"].Value
+    };
+
+    private static Color VisibilityColor(ToolVisibility visibility) => visibility switch
+    {
+        ToolVisibility.Public => Color.Success,
+        ToolVisibility.PendingApproval => Color.Warning,
+        ToolVisibility.Rejected => Color.Error,
+        _ => Color.Default
+    };
+}

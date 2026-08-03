@@ -1,0 +1,20 @@
+@page "/Developers/{ToolId:guid}/players"
+@rendermode RenderModes.Interactive
+@using ScoreTracker.Web.Components.CommunityTools
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Developers"]</PageTitle>
+
+@* How a maker recruits, and who turned up. *@
+
+<ToolConsoleFrame Section="players" ToolId="ToolId" Context="tool">
+    <ToolInvitePanel ToolId="tool.Id"></ToolInvitePanel>
+
+    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["Connected · {0}", tool.ConnectedPlayers]</MudText>
+    <MudText Typo="Typo.body2" Style="opacity:.7;">
+        @L["You are connected to your own tool, so you always have one real player to build against."]
+    </MudText>
+</ToolConsoleFrame>
+
+@code {
+    [Parameter] public Guid ToolId { get; set; }
+}

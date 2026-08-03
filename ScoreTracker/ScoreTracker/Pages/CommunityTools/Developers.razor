@@ -1,48 +1,20 @@
-﻿@page "/Developers"
+@page "/Developers"
 @rendermode RenderModes.Interactive
 @using MediatR
-@using Microsoft.AspNetCore.WebUtilities
 @using ScoreTracker.CommunityTools.Contracts
-@using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
-@using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components.CommunityTools
 @using ScoreTracker.Web.Services
 <PageTitle>@L["Developers"]</PageTitle>
 
-@* Maker-facing, so the jargon is allowed here — webhook, API key, rate limit. Player-facing
-   screens never use those words.
+@* The way in, and nothing else.
 
-   Section order is the order a maker needs them: identity, then the credential their code uses,
-   then how they recruit players, then delivery. Help sits at the bottom because it is a place you
-   go looking, not a thing you trip over — and Delete sits below Help so nothing above it is a
-   destructive control. *@
+   Everything that used to live here is a section under /Developers/{tool} now. What is left is the
+   question this page can actually answer without a tool in hand: which of yours, or your first one.
 
-<div class="d-flex align-end gap-3 flex-wrap mt-2 mb-4">
-    <div class="flex-grow-1">
-        <MudText Typo="Typo.h4">@L["Developers"]</MudText>
-        <MudText Typo="Typo.body2" Style="opacity:.75;">
-            @L["Your tools, their keys, and how they hear about new scores."]
-        </MudText>
-    </div>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-               OnClick="() => _showCreate = true">@L["New tool"]</MudButton>
-</div>
-
-@if (_expiringSoon.Any())
-{
-    @* There are no expiry emails, so this banner is the whole warning. It has to be loud rather
-       than precise — a key that dies unannounced breaks a tool at 2am. *@
-    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
-        <MudText Typo="Typo.body2">
-            <b>@L["{0} expires in {1} days", _expiringSoon[0].Name, _expiringSoon[0].DaysLeft]</b>
-        </MudText>
-        <MudText Typo="Typo.body2">
-            @L["I don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over."]
-        </MudText>
-    </MudAlert>
-}
+   The admin list moved to /Admin/CommunityTools. A personal console with everyone else's tools
+   bolted to the top was two pages stapled together, and it is what made the switcher below
+   ambiguous — "your tools" has to keep meaning yours. *@
 
 @if (_loading)
 {
@@ -51,16 +23,40 @@
 else if (_wizard)
 {
     @* Mandatory the first time: a maker with no tools met an empty console and a checklist of
-       things to go find. Re-enterable afterwards from Help. *@
+       things to go find. Re-enterable afterwards from here. *@
     <ToolSetupWizard OnFinished="LeaveWizard"></ToolSetupWizard>
 }
 else
 {
-    <MudPaper Outlined="true" Class="pa-3 mb-4">
-        <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Your tools"]</MudText>
+    <div class="d-flex align-end gap-3 flex-wrap mt-2 mb-4">
+        <div class="flex-grow-1">
+            <MudText Typo="Typo.h4">@L["Developers"]</MudText>
+            <MudText Typo="Typo.body2" Style="opacity:.75;">
+                @L["Your tools, their keys, and how they hear about new scores."]
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="() => _wizard = true">@L["New tool"]</MudButton>
+    </div>
+
+    @if (_expiringSoon.Any())
+    {
+        @* There are no expiry emails, so this banner is the whole warning. It is here rather than on
+           a section because a maker with a key about to die may never open that section. *@
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+            <MudText Typo="Typo.body2">
+                <b>@L["{0} expires in {1} days", _expiringSoon[0].Name, _expiringSoon[0].DaysLeft]</b>
+            </MudText>
+            <MudText Typo="Typo.body2">
+                @L["I don't email reminders, so this banner is the reminder. Create a replacement now and run both until you've swapped it over."]
+            </MudText>
+        </MudAlert>
+    }
+
+    <MudPaper Outlined="true" Class="pa-3">
         @foreach (var tool in _tools)
         {
-            <div class="olb-rank-card" style="cursor:pointer;" @onclick="() => Select(tool)">
+            <div class="olb-rank-card">
                 <div class="flex-grow-1" style="min-width:0;">
                     <MudText Typo="Typo.body1">
                         <b>@tool.Name</b>
@@ -68,382 +64,56 @@ else
                                  Color="@VisibilityColor(tool.Visibility)">@VisibilityLabel(tool.Visibility)</MudChip>
                     </MudText>
                     <MudText Typo="Typo.caption" Style="opacity:.7;">
-                        @WebhookLabel(tool.WebhookMode)
-                        · @L["{0} Players", tool.ConnectedPlayers]
+                        @(tool.Kind == ToolKind.ListingOnly
+                            ? L["Listing only"]
+                            : L["{0} Players", tool.ConnectedPlayers])
                     </MudText>
+                </div>
+                <div class="olb-rank-tail">
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                               Href="@($"/Developers/{tool.Id}")">@L["Open"]</MudButton>
                 </div>
             </div>
         }
     </MudPaper>
-
-    @* Everyone else's, for the operator. A separate list rather than folded into "Your tools",
-       because the difference between a tool you own and one you are administering is exactly the
-       thing you want to be sure of before pressing Delete. Empty for everyone but an admin. *@
-    @if (_otherTools.Any())
-    {
-        <MudPaper Outlined="true" Class="pa-3 mb-4">
-            <MudText Typo="Typo.subtitle2">@L["All tools (admin)"]</MudText>
-            <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-                @L["Everyone else's. You can manage these, and the maker is not told."]
-            </MudText>
-            @foreach (var tool in _otherTools)
-            {
-                @* The click sits on the identity block rather than the whole row, because the row
-                   now has buttons in its tail. A Blazor click bubbles, so a row-level handler would
-                   mean pressing Ban also selects that tool — quietly swapping the settings panel
-                   behind the dialog to someone else's tool, which the next Save would write to. *@
-                <div class="olb-rank-card">
-                    <div class="flex-grow-1" style="min-width:0; cursor:pointer;"
-                         @onclick="() => Select(tool)">
-                        <MudText Typo="Typo.body1">
-                            <b>@tool.Name</b>
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                                     Color="@VisibilityColor(tool.Visibility)">@VisibilityLabel(tool.Visibility)</MudChip>
-                        </MudText>
-                        <MudText Typo="Typo.caption" Style="opacity:.7;">
-                            @L["by {0}", tool.OwnerName]
-                            @if (!string.IsNullOrWhiteSpace(tool.DiscordHandle))
-                            {
-                                @($" · {tool.DiscordHandle}")
-                            }
-                            · @WebhookLabel(tool.WebhookMode)
-                            · @L["{0} Players", tool.ConnectedPlayers]
-                        </MudText>
-                        @* The parsed owner beside the link is the whole reason it is stored: a maker
-                           who pasted a repository they did not write is visible at a glance, and
-                           that is a judgement only a human makes. *@
-                        <MudText Typo="Typo.caption" Style="opacity:.7;">
-                            @if (string.IsNullOrWhiteSpace(tool.RepositoryUrl))
-                            {
-                                @L["No source published"]
-                            }
-                            else
-                            {
-                                @tool.RepositoryUrl
-                                @if (!string.IsNullOrWhiteSpace(tool.RepositoryOwner))
-                                {
-                                    @($" · {tool.RepositoryOwner}")
-                                }
-                                @(tool.RepositoryCheckedAt is null
-                                    ? $" · {L["Not checked"]}"
-                                    : $" · {L["Reachable"]}")
-                            }
-                        </MudText>
-                    </div>
-                    <div class="olb-rank-tail">
-                        @if (_bannedMakers.Contains(tool.OwnerUserId))
-                        {
-                            <MudButton Size="Size.Small" Variant="Variant.Text"
-                                       OnClick="@(() => LiftBan(tool))">@L["Lift ban"]</MudButton>
-                        }
-                        else
-                        {
-                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error"
-                                       OnClick="@(() => OpenBan(tool))">@L["Ban maker"]</MudButton>
-                        }
-                    </div>
-                </div>
-            }
-        </MudPaper>
-
-        <ToolMakerBanDialog @bind-Visible="_showBan" MakerUserId="_banTargetId" MakerName="_banTargetName"
-                            OnBanned="Reload"></ToolMakerBanDialog>
-    }
-
-    @if (_selected is not null && _selected.OwnerUserId != CurrentUser.User.Id)
-    {
-        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mb-4">
-            @L["You're editing {0}'s tool as an admin.", _selected.OwnerName]
-        </MudAlert>
-    }
-
-    @if (_selected is not null)
-    {
-        @* 1. Who this tool is. *@
-        <MudPaper Outlined="true" Class="pa-4 mb-4">
-            <MudText Typo="Typo.subtitle2" Class="mb-3">@L["{0} — settings", _selected.Name]</MudText>
-            <MudGrid>
-                <MudItem xs="12" sm="6">
-                    <MudTextField T="string" @bind-Value="_editName" Label=@L["Name"] MaxLength="64"></MudTextField>
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudTextField T="string" @bind-Value="_editUrl" Label=@L["Link"] MaxLength="500"
-                                  HelperText='@L["Leave blank if no hosted URL."].Value'></MudTextField>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudTextField T="string" @bind-Value="_editDescription" Label=@L["Description"] MaxLength="500"
-                                  Lines="2"
-                                  HelperText='@L["Shown in the tool directory. Players read this before they connect."].Value'></MudTextField>
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudTextField T="string" @bind-Value="_editRepository" MaxLength="500"
-                                  Label=@L["Public source repository"] Placeholder="https://github.com/you/your-tool"
-                                  HelperText='@L["Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it."].Value'></MudTextField>
-                </MudItem>
-                <MudItem xs="12" sm="6">
-                    <MudTextField T="string" @bind-Value="_editDiscord" MaxLength="64"
-                                  Label=@L["Your Discord handle"]
-                                  HelperText='@L["Only DrMurloc sees this. It is how you get a message if something goes wrong with your tool."].Value'></MudTextField>
-                </MudItem>
-            </MudGrid>
-
-            @* The check is its own button rather than part of Save: it leaves the network, takes a
-               moment, and a maker who is only fixing a typo in their description should not wait on
-               someone else's git host. *@
-            <div class="ct-check-state mt-3">
-                <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@(_checking || !HasRepository)"
-                           OnClick="CheckRepository">@L["Check the link"]</MudButton>
-                @if (_selected.RepositoryCheckedAt is not null)
-                {
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
-                        @L["Reachable"]
-                    </MudChip>
-                    <MudText Typo="Typo.caption" Style="opacity:.7;">
-                        @L["Checked {0}", _selected.RepositoryCheckedAt.Value.LocalDateTime.ToString("d")]
-                        @if (!string.IsNullOrWhiteSpace(_selected.RepositoryOwner))
-                        {
-                            @($" · {_selected.RepositoryOwner}")
-                        }
-                    </MudText>
-                }
-                else if (HasRepository)
-                {
-                    <MudText Typo="Typo.caption" Style="opacity:.7;">
-                        @L["Not checked yet. Save first, then check."]
-                    </MudText>
-                }
-            </div>
-
-            @if (!_selected.CanBeSharedWithOthers)
-            {
-                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
-                    <MudText Typo="Typo.body2">
-                        <b>@L["Only you can use this tool right now."]</b>
-                        @L["Add a public source repository and your Discord handle, then check the link. Until then invite links and listing are closed."]
-                    </MudText>
-                </MudAlert>
-            }
-
-            <MudSwitch T="bool" @bind-Value="_editAcceptsAllTools" Color="Color.Success" Class="mt-3"
-                       Label=@L["Accept players who share with all tools"]></MudSwitch>
-            <MudText Typo="Typo.body2" Style="opacity:.7;" Class="ml-11">
-                @L["Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise."]
-            </MudText>
-
-            <div class="d-flex gap-2 mt-4 flex-wrap align-center">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">@L["Save"]</MudButton>
-                @if (_selected.Visibility != ToolVisibility.Public
-                     && _selected.Visibility != ToolVisibility.PendingApproval)
-                {
-                    @* Disabled rather than throwing on click: a listing needs a description, and the
-                       rule is worth stating where it is broken instead of after the attempt. *@
-                    <MudButton Variant="Variant.Outlined" Disabled="@(!CanRequestListing)"
-                               OnClick="RequestListing">@L["Ask to be listed"]</MudButton>
-                    @if (!CanRequestListing)
-                    {
-                        <MudText Typo="Typo.caption" Style="opacity:.7;">
-                            @L["Add a description first — it is what a player reads before deciding whether to connect."]
-                        </MudText>
-                    }
-                }
-            </div>
-
-            @* Nothing is notified when this is pressed — no email, no bot, no queue anybody
-               watches. Saying so, and naming the step that actually moves it, is the difference
-               between a maker waiting a week and a maker getting listed. *@
-            @if (_selected.Visibility == ToolVisibility.PendingApproval)
-            {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
-                    <MudText Typo="Typo.body2"><b>@L["Waiting on a human — give them a nudge"]</b></MudText>
-                    <MudText Typo="Typo.body2">
-                        @L["Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime."]
-                    </MudText>
-                    <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" Class="mt-1"
-                               Target="_blank" Href="https://discord.gg/AvS5PxnvSN"
-                               EndIcon="@Icons.Material.Filled.OpenInNew">@L["Ask on Discord"]</MudButton>
-                </MudAlert>
-            }
-
-            @if (_selected.Visibility == ToolVisibility.Rejected
-                 && !string.IsNullOrWhiteSpace(_selected.RejectionReason))
-            {
-                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
-                    <MudText Typo="Typo.body2"><b>@L["Listing was turned down"]</b></MudText>
-                    <MudText Typo="Typo.body2">@_selected.RejectionReason</MudText>
-                </MudAlert>
-            }
-        </MudPaper>
-
-        @* 2, 3, 4. *@
-        <ToolKeyPanel ToolId="_selected.Id" OnChanged="Reload"></ToolKeyPanel>
-        <ToolInvitePanel ToolId="_selected.Id"></ToolInvitePanel>
-        <ToolWebhookPanel Tool="_selected" OnChanged="Reload"></ToolWebhookPanel>
-
-        @* 5. Reference material, gathered here rather than scattered up the page. *@
-        <MudPaper Outlined="true" Class="pa-4 mb-4">
-            <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Help"]</MudText>
-            <div class="d-flex gap-2 flex-wrap">
-                <MudButton Size="Size.Small" Variant="Variant.Outlined" Href="/swagger" Target="_blank"
-                           EndIcon="@Icons.Material.Filled.OpenInNew">@L["Swagger"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Text" Target="_blank"
-                           Href="https://github.com/DrMurloc/PumpItUpScoreTracker/blob/main/docs/INTEGRATING.md"
-                           EndIcon="@Icons.Material.Filled.OpenInNew">@L["Full reference"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Text" Target="_blank"
-                           Href="https://github.com/DrMurloc/PumpItUpScoreTracker/blob/main/docs/HOW-TO-RUN.md"
-                           EndIcon="@Icons.Material.Filled.OpenInNew">@L["Run PIU Scores locally"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Text" Target="_blank"
-                           Href="https://discord.gg/AvS5PxnvSN"
-                           EndIcon="@Icons.Material.Filled.OpenInNew">@L["Ask on Discord"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Text"
-                           Href="@($"/Developers/{_selected.Id}/Console")">@L["Activity log"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Text"
-                           OnClick="() => _wizard = true">@L["Set up another tool"]</MudButton>
-            </div>
-        </MudPaper>
-
-        @* 6. Last, and the only destructive control on the page. *@
-        <MudPaper Outlined="true" Class="pa-4 mb-4"
-                  Style="border-color:color-mix(in srgb, var(--mud-palette-error) 45%, transparent);">
-            @* "Danger Zone" — the existing casing. A second key differing only by case is dropped
-               from every compiled satellite, so both spellings would render English. *@
-            <MudText Typo="Typo.subtitle2" Color="Color.Error" Class="mb-1">@L["Danger Zone"]</MudText>
-            <div class="d-flex gap-3 flex-wrap align-center">
-                <div class="flex-grow-1" style="min-width:240px;">
-                    <MudText Typo="Typo.body2"><b>@L["Delete {0}", _selected.Name]</b></MudText>
-                    <MudText Typo="Typo.body2" Style="opacity:.7;">
-                        @L["Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access.", _selected.ConnectedPlayers]
-                    </MudText>
-                </div>
-                <MudButton Variant="Variant.Outlined" Color="Color.Error"
-                           OnClick="() => _showDelete = true">@L["Delete tool"]</MudButton>
-            </div>
-        </MudPaper>
-    }
 }
 
-<MudDialog @bind-Visible="_showCreate">
-    <TitleContent><MudText Typo="Typo.h6">@L["New tool"]</MudText></TitleContent>
-    <DialogContent>
-        <MudTextField T="string" @bind-Value="_newName" Label=@L["Name"] MaxLength="64" Immediate="true"></MudTextField>
-        <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mt-2">
-            @L["It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory."]
-        </MudText>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" OnClick="() => _showCreate = false">@L["Cancel"]</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                   Disabled="@(string.IsNullOrWhiteSpace(_newName))" OnClick="Create">@L["Create"]</MudButton>
-    </DialogActions>
-</MudDialog>
-
-<MudDialog @bind-Visible="_showDelete">
-    <TitleContent><MudText Typo="Typo.h6">@L["Delete {0}", _selected?.Name ?? string.Empty]</MudText></TitleContent>
-    <DialogContent>
-        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
-            <MudText Typo="Typo.body2">
-                @L["Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access.", _selected?.ConnectedPlayers ?? 0]
-            </MudText>
-        </MudAlert>
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" OnClick="() => _showDelete = false">@L["Cancel"]</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Delete">@L["Delete tool"]</MudButton>
-    </DialogActions>
-</MudDialog>
-
 @inject IMediator Mediator
-@inject ISnackbar Snackbar
 @inject NavigationManager NavManager
-@inject ICurrentUserAccessor CurrentUser
 @code {
     private IReadOnlyList<ToolRecord> _tools = Array.Empty<ToolRecord>();
-
-    /// <summary>Tools belonging to other people. Only ever populated for an admin.</summary>
-    private IReadOnlyList<ToolRecord> _otherTools = Array.Empty<ToolRecord>();
-    private ToolRecord? _selected;
     private bool _loading = true;
-    private bool _showCreate;
-    private bool _showDelete;
-    private string _newName = string.Empty;
-
-    private string _editName = string.Empty;
-    private string _editDescription = string.Empty;
-    private string _editUrl = string.Empty;
-    private string _editRepository = string.Empty;
-    private string _editDiscord = string.Empty;
-    private bool _editAcceptsAllTools = true;
-    private bool _checking;
-    private bool _showBan;
-    private Guid _banTargetId;
-    private string _banTargetName = string.Empty;
-    private IReadOnlySet<Guid> _bannedMakers = new HashSet<Guid>();
-
-    private bool HasRepository => !string.IsNullOrWhiteSpace(_selected?.RepositoryUrl);
-
-    private IReadOnlyList<(string Name, int DaysLeft)> _expiringSoon = Array.Empty<(string, int)>();
-
-    /// <summary>
-    ///     Derived rather than remembered. "Has no tools" is the state the wizard exists for, so
-    ///     there is no flag to set, nothing to get out of step, and no way to be stuck in it — the
-    ///     first tool it creates is also what ends it.
-    /// </summary>
     private bool _wizard;
 
-    /// <summary>
-    ///     Mirrors the domain rule on <c>Tool.RequestListing</c>. Reads the box rather than the
-    ///     saved record, so writing a description enables the button without a round trip — and the
-    ///     Save above it is what commits either way.
-    /// </summary>
-    private bool CanRequestListing => !string.IsNullOrWhiteSpace(_editDescription);
+    private IReadOnlyList<(string Name, int DaysLeft)> _expiringSoon = Array.Empty<(string, int)>();
 
     protected override async Task OnInitializedAsync()
     {
         await Reload();
-        _wizard = !_tools.Any();
 
-        // ?tool= is how Manage arrives from the directory. An id that is not yours simply does not
-        // match — GetMyToolsQuery only ever returns your own.
-        var query = QueryHelpers.ParseQuery(new Uri(NavManager.Uri).Query);
-        if (query.TryGetValue("tool", out var raw) && Guid.TryParse(raw, out var requested))
+        // One tool is the common case, and a list of one is a page you have to click through for no
+        // reason. Straight in.
+        if (_tools.Count == 1)
         {
-            var wanted = _tools.Concat(_otherTools).FirstOrDefault(t => t.Id == requested);
-            if (wanted is not null)
-            {
-                Select(wanted);
-                _wizard = false;
-            }
+            NavManager.NavigateTo($"/Developers/{_tools[0].Id}");
+            return;
         }
+
+        _wizard = !_tools.Any();
     }
 
-    /// <summary>
-    ///     Leaves the wizard and selects whatever it just built, so the maker lands on their own
-    ///     tool rather than on a list they have to pick out of.
-    /// </summary>
     private async Task LeaveWizard()
     {
         _wizard = false;
         var before = _tools.Select(t => t.Id).ToHashSet();
         await Reload();
         var created = _tools.FirstOrDefault(t => !before.Contains(t.Id));
-        if (created is not null) Select(created);
+        if (created is not null) NavManager.NavigateTo($"/Developers/{created.Id}");
     }
 
     private async Task Reload()
     {
         _tools = await Mediator.Send(new GetMyToolsQuery());
-        _otherTools = (await Mediator.Send(new GetAllToolsQuery()))
-            .Where(t => t.OwnerUserId != CurrentUser.User.Id).ToArray();
-
-        // Admin-only, and the query refuses anyone else — so it is only asked when there is an
-        // admin list to decorate.
-        _bannedMakers = _otherTools.Any()
-            ? (await Mediator.Send(new GetToolMakerBansQuery())).Select(b => b.UserId).ToHashSet()
-            : new HashSet<Guid>();
-        if (_selected is not null)
-            _selected = _tools.Concat(_otherTools).FirstOrDefault(t => t.Id == _selected.Id);
-        if (_selected is null && _tools.Any()) Select(_tools[0]);
 
         var expiring = new List<(string, int)>();
         foreach (var tool in _tools)
@@ -453,162 +123,6 @@ else
 
         _expiringSoon = expiring;
         _loading = false;
-    }
-
-    private void Select(ToolRecord tool)
-    {
-        _selected = tool;
-        _editName = tool.Name;
-        _editDescription = tool.Description ?? string.Empty;
-        _editUrl = tool.Url ?? string.Empty;
-        _editRepository = tool.RepositoryUrl ?? string.Empty;
-        _editDiscord = tool.DiscordHandle ?? string.Empty;
-        _editAcceptsAllTools = tool.AcceptsAllToolsShare;
-    }
-
-    private async Task Create()
-    {
-        var id = await Mediator.Send(new CreateToolCommand(_newName));
-        _newName = string.Empty;
-        _showCreate = false;
-        await Reload();
-        var created = _tools.FirstOrDefault(t => t.Id == id);
-        if (created is not null) Select(created);
-    }
-
-    /// <summary>
-    ///     Validates everything before sending anything.
-    ///     <para>
-    ///         These are two commands, so a throw partway through leaves the first committed — and
-    ///         the first is <c>UpdateToolCommand</c>, which returns an approved tool to
-    ///         PendingApproval when its identity changes. A failed save used to de-list a listed tool
-    ///         and show the maker nothing but a dead circuit.
-    ///     </para>
-    /// </summary>
-    private async Task Save()
-    {
-        if (_selected is null) return;
-
-        if (!string.IsNullOrWhiteSpace(_editUrl) && !IsBrowsableUrl(_editUrl))
-        {
-            Snackbar.Add(L["\"{0}\" isn't a valid link. Include https://", _editUrl].Value, Severity.Error);
-            return;
-        }
-
-        if (!string.IsNullOrWhiteSpace(_editRepository) && !IsBrowsableUrl(_editRepository))
-        {
-            Snackbar.Add(L["\"{0}\" isn't a valid link. Include https://", _editRepository].Value, Severity.Error);
-            return;
-        }
-
-        try
-        {
-            await Mediator.Send(new UpdateToolCommand(_selected.Id, _editName,
-                string.IsNullOrWhiteSpace(_editDescription) ? null : _editDescription,
-                string.IsNullOrWhiteSpace(_editUrl) ? null : _editUrl,
-                string.IsNullOrWhiteSpace(_editRepository) ? null : _editRepository,
-                string.IsNullOrWhiteSpace(_editDiscord) ? null : _editDiscord));
-            await Mediator.Send(new SetToolAllToolsShareCommand(_selected.Id, _editAcceptsAllTools));
-        }
-        catch (Exception e)
-        {
-            // A domain exception's message is written for the person who tripped it.
-            Snackbar.Add(e.Message, Severity.Error);
-            await Reload();
-            return;
-        }
-
-        Snackbar.Add(L["Saved"].Value, Severity.Success);
-        await Reload();
-    }
-
-    /// <summary>
-    ///     What we can catch before touching the database. A bare host like "planner.example" is the
-    ///     one people actually type, and it parses as nothing useful.
-    /// </summary>
-    private static bool IsBrowsableUrl(string value)
-    {
-        return Uri.TryCreate(value, UriKind.Absolute, out var uri)
-               && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
-    }
-
-    /// <summary>
-    ///     Fetches the repository anonymously and records the result. Reports the remote's own status
-    ///     code, which is what a maker can act on — 404 usually means the repository is private.
-    /// </summary>
-    private void OpenBan(ToolRecord tool)
-    {
-        _banTargetId = tool.OwnerUserId;
-        _banTargetName = tool.OwnerName;
-        _showBan = true;
-    }
-
-    private async Task LiftBan(ToolRecord tool)
-    {
-        await Mediator.Send(new LiftToolMakerBanCommand(tool.OwnerUserId));
-        Snackbar.Add(L["{0} can make tools again.", tool.OwnerName].Value, Severity.Success);
-        await Reload();
-    }
-
-    private async Task CheckRepository()
-    {
-        if (_selected is null) return;
-
-        _checking = true;
-        try
-        {
-            var result = await Mediator.Send(new CheckToolRepositoryCommand(_selected.Id));
-            if (result.Reachable)
-                Snackbar.Add(L["Your repository is reachable."].Value, Severity.Success);
-            else
-                Snackbar.Add(result.StatusCode is null
-                    ? L["Couldn't reach your repository ({0}).", result.Reason ?? string.Empty].Value
-                    : L["Your repository answered {0}. If it is private, players can't read it either.",
-                        result.StatusCode.Value].Value, Severity.Error);
-        }
-        catch (Exception e)
-        {
-            Snackbar.Add(e.Message, Severity.Error);
-        }
-        finally
-        {
-            _checking = false;
-        }
-
-        await Reload();
-    }
-
-    private async Task RequestListing()
-    {
-        if (_selected is null) return;
-
-        try
-        {
-            await Mediator.Send(new RequestToolListingCommand(_selected.Id));
-        }
-        catch (Exception e)
-        {
-            Snackbar.Add(e.Message, Severity.Error);
-            await Reload();
-            return;
-        }
-
-        Snackbar.Add(L["Marked for review — now go ask on Discord"].Value, Severity.Success);
-        await Reload();
-    }
-
-    private async Task Delete()
-    {
-        if (_selected is null) return;
-
-        await Mediator.Send(new DeleteToolCommand(_selected.Id));
-        _showDelete = false;
-        _selected = null;
-        await Reload();
-
-        // Deleting the last one puts you back where a maker with no tools belongs, rather than on
-        // an empty console with a New tool button and nothing else.
-        _wizard = !_tools.Any();
     }
 
     private string VisibilityLabel(ToolVisibility visibility) => visibility switch
@@ -625,13 +139,5 @@ else
         ToolVisibility.PendingApproval => Color.Warning,
         ToolVisibility.Rejected => Color.Error,
         _ => Color.Default
-    };
-
-    private string WebhookLabel(WebhookMode mode) => mode switch
-    {
-        WebhookMode.ScorePush => L["Score Push"].Value,
-        WebhookMode.PlayerPing => L["Player ping"].Value,
-        WebhookMode.PiuGameSession => L["PIUGame session"].Value,
-        _ => L["No webhook"].Value
     };
 }

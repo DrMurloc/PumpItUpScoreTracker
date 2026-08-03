@@ -1,0 +1,101 @@
+@page "/Developers/{ToolId:guid}/webhooks"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Commands
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components.CommunityTools
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Developers"]</PageTitle>
+
+@* Delivery configuration, and the log of what it did. The activity log and the debug tools used to
+   be two more pages; a maker looking at a failed delivery and a maker deciding whether to replay it
+   are the same person at the same moment. *@
+
+<ToolConsoleFrame Section="webhooks" ToolId="ToolId" Context="tool">
+    <ToolWebhookPanel Tool="tool"></ToolWebhookPanel>
+
+    <div class="d-flex align-baseline gap-3 flex-wrap mt-4 mb-2">
+        <MudText Typo="Typo.subtitle2">@L["Recent deliveries"]</MudText>
+        <MudButton Size="Size.Small" Variant="Variant.Text"
+                   Href="@($"/Developers/{tool.Id}/code")">@L["See a handler"]</MudButton>
+        @* Owner-only, deliberately: this fires a real delivery at the maker's own endpoint about
+           the maker's own account, which is not something an admin should do on their behalf. *@
+        @if (tool.OwnerUserId == CurrentUser.User.Id
+                     && tool.WebhookMode != WebhookMode.None && tool.WebhookUrlVerifiedAt is not null)
+        {
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_busy"
+                       OnClick="() => SendTest(tool)">@L["Send a test"]</MudButton>
+        }
+    </div>
+
+    @if (!_activity.Any())
+    {
+        <MudText Typo="Typo.body2" Style="opacity:.7;">@L["Nothing yet."]</MudText>
+    }
+    else
+    {
+        <MudPaper Outlined="true" Class="pa-2">
+            @foreach (var row in _activity)
+            {
+                <div class="olb-rank-card">
+                    <MudText Typo="Typo.caption" Style="opacity:.7;min-width:96px;">
+                        @row.OccurredAt.LocalDateTime.ToString("d MMM HH:mm")
+                    </MudText>
+                    <MudText Typo="Typo.body2" Class="flex-grow-1">@row.Detail</MudText>
+                    <div class="olb-rank-tail">
+                        @if (row.RemoteStatusCode is not null)
+                        {
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                     Color="@(row.RemoteStatusCode < 300 ? Color.Success : Color.Error)">
+                                @row.RemoteStatusCode
+                            </MudChip>
+                        }
+                    </div>
+                </div>
+            }
+        </MudPaper>
+    }
+</ToolConsoleFrame>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
+@code {
+    [Parameter] public Guid ToolId { get; set; }
+
+    private bool _busy;
+    private IReadOnlyList<ToolActivityRecord> _activity = Array.Empty<ToolActivityRecord>();
+
+    /// <summary>
+    ///     Synthetic rather than the maker's last import: a test that carries real scores into
+    ///     someone's production database is not a test. The mix is whichever they subscribed to.
+    /// </summary>
+    private async Task SendTest(ToolRecord tool)
+    {
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new SendTestDeliveryCommand(tool.Id,
+                tool.Mixes.Any() ? tool.Mixes[0] : MixEnum.Phoenix2, UseMyLastImport: false));
+            Snackbar.Add(L["Test sent — the result is in the log below."].Value, Severity.Success);
+            NavManager.Refresh();
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _activity = await Mediator.Send(new GetToolActivityQuery(ToolId, 50));
+    }
+}

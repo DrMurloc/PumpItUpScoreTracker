@@ -101,6 +101,8 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Type | Morg | |
 | Username | Grrmrrgl | |
 | Video | Grrrgl | |
+| Hour / Hours | grogl | Coined 2026-08-03 for the console's `· 24 grogl` stat labels. |
+| GameTag | Grglmrg | `Grgl` (account) + `Mrg` (name). |
 
 ### PIU domain
 

@@ -1,0 +1,264 @@
+@page "/Developers/{ToolId:guid}/tool"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Commands
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Web.Components.CommunityTools
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Developers"]</PageTitle>
+
+@* Identity, source, reach, and the one destructive control on the whole console. *@
+
+<ToolConsoleFrame Section="tool" ToolId="ToolId" Context="tool">
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudTextField T="string" @bind-Value="_name" Label=@L["Name"] MaxLength="64"></MudTextField>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudTextField T="string" @bind-Value="_url" Label=@L["Where players use it"] MaxLength="500"></MudTextField>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField T="string" @bind-Value="_description" Label=@L["Description"] MaxLength="500"
+                          Lines="2"></MudTextField>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudTextField T="string" @bind-Value="_repository" MaxLength="500"
+                          Label=@L["Public source repository"]
+                          Placeholder="https://github.com/you/your-tool"></MudTextField>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudTextField T="string" @bind-Value="_discord" MaxLength="64"
+                          Label=@L["Your Discord handle"]></MudTextField>
+        </MudItem>
+    </MudGrid>
+
+    @* Its own button rather than part of Save: it leaves the network, and a maker fixing a typo in
+       their description should not wait on someone else's git host. *@
+    <div class="d-flex align-center gap-2 flex-wrap mt-3">
+        <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                   Disabled="@(_busy || string.IsNullOrWhiteSpace(_repository))"
+                   OnClick="() => Check(tool)">@L["Check the link"]</MudButton>
+        @if (tool.RepositoryCheckedAt is not null)
+        {
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                @L["Reachable"]
+            </MudChip>
+            @if (!string.IsNullOrWhiteSpace(tool.RepositoryOwner))
+            {
+                <MudText Typo="Typo.caption" Style="opacity:.7;">@tool.RepositoryOwner</MudText>
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(tool.RepositoryUrl))
+        {
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">
+                @L["Not checked"]
+            </MudChip>
+        }
+    </div>
+
+    <details class="ct-why">
+        <summary>@L["Why the source has to resolve"]</summary>
+        <p>@L["A private repository answers fine to your browser and 404s to every player invited to read it — identical to a typo. Until the link answers anonymously, only you can use the tool."]</p>
+    </details>
+
+    <MudDivider Class="my-4"></MudDivider>
+
+    <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Who can find it"]</MudText>
+    @if (tool.Visibility == ToolVisibility.Public)
+    {
+        <MudText Typo="Typo.body2" Style="opacity:.75;">@L["Listed in the directory."]</MudText>
+    }
+    else if (tool.Visibility == ToolVisibility.PendingApproval)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+            <MudText Typo="Typo.body2"><b>@L["Waiting on a human — give them a nudge"]</b></MudText>
+            <MudText Typo="Typo.body2">
+                @L["Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime."]
+            </MudText>
+        </MudAlert>
+    }
+    else
+    {
+        <div class="d-flex gap-2 align-center flex-wrap">
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_busy"
+                       OnClick="() => RequestListing(tool)">@L["Ask to be listed"]</MudButton>
+            @if (tool.Visibility == ToolVisibility.Rejected
+                 && !string.IsNullOrWhiteSpace(tool.RejectionReason))
+            {
+                <MudText Typo="Typo.caption" Color="Color.Warning">
+                    @L["Listing was turned down"]: @tool.RejectionReason
+                </MudText>
+            }
+        </div>
+    }
+
+    @if (tool.Kind == ToolKind.Integrated)
+    {
+        <MudSwitch T="bool" @bind-Value="_acceptsAllTools" Color="Color.Success" Class="mt-3"
+                   Label=@L["Accept players who share with all tools"]></MudSwitch>
+        <MudText Typo="Typo.body2" Style="opacity:.7;" Class="ml-11">
+            @L["Off means only people who connect to you directly."]
+        </MudText>
+    }
+
+    <div class="d-flex gap-2 mt-4 flex-wrap">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_busy"
+                   OnClick="() => Save(tool)">@L["Save"]</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Error"
+                   OnClick="() => _showDelete = true">@L["Delete tool"]</MudButton>
+    </div>
+
+    <MudDialog @bind-Visible="_showDelete">
+        <TitleContent><MudText Typo="Typo.h6">@L["Delete {0}", tool.Name]</MudText></TitleContent>
+        <DialogContent>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+                <MudText Typo="Typo.body2">
+                    @L["Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access.", tool.ConnectedPlayers]
+                </MudText>
+            </MudAlert>
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer></MudSpacer>
+            <MudButton Variant="Variant.Text" OnClick="() => _showDelete = false">@L["Cancel"]</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error"
+                       OnClick="() => Delete(tool)">@L["Delete tool"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+</ToolConsoleFrame>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+@code {
+    [Parameter] public Guid ToolId { get; set; }
+
+    private bool _busy;
+    private bool _showDelete;
+    private bool _loaded;
+
+    private string _name = string.Empty;
+    private string _description = string.Empty;
+    private string _url = string.Empty;
+    private string _repository = string.Empty;
+    private string _discord = string.Empty;
+    private bool _acceptsAllTools = true;
+
+    /// <summary>
+    ///     The page seeds its own fields rather than reading them off the frame. One extra read, and
+    ///     it keeps the frame a layout component instead of something pages reach into — and seeding
+    ///     once rather than per render is what stops a save overwriting what is half typed.
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loaded) return;
+
+        var tool = await Mediator.Send(new GetToolQuery(ToolId));
+        if (tool is null) return;
+
+        _name = tool.Name;
+        _description = tool.Description ?? string.Empty;
+        _url = tool.Url ?? string.Empty;
+        _repository = tool.RepositoryUrl ?? string.Empty;
+        _discord = tool.DiscordHandle ?? string.Empty;
+        _acceptsAllTools = tool.AcceptsAllToolsShare;
+        _loaded = true;
+    }
+
+    /// <summary>
+    ///     Validates everything before sending anything: these are two commands, and a throw partway
+    ///     leaves the first committed — which is the one that returns a listed tool to review.
+    /// </summary>
+    private async Task Save(ToolRecord tool)
+    {
+        foreach (var link in new[] { _url, _repository })
+            if (!string.IsNullOrWhiteSpace(link) && !IsBrowsableUrl(link))
+            {
+                Snackbar.Add(L["\"{0}\" isn't a valid link. Include https://", link].Value, Severity.Error);
+                return;
+            }
+
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new UpdateToolCommand(tool.Id, _name, Blank(_description), Blank(_url),
+                Blank(_repository), Blank(_discord)));
+            await Mediator.Send(new SetToolAllToolsShareCommand(tool.Id, _acceptsAllTools));
+            Snackbar.Add(L["Saved"].Value, Severity.Success);
+            NavManager.Refresh();
+        }
+        catch (Exception e)
+        {
+            // A domain exception's message is written for the person who tripped it.
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task Check(ToolRecord tool)
+    {
+        _busy = true;
+        try
+        {
+            var result = await Mediator.Send(new CheckToolRepositoryCommand(tool.Id));
+            if (result.Reachable)
+            {
+                Snackbar.Add(L["Your repository is reachable."].Value, Severity.Success);
+                NavManager.Refresh();
+            }
+            else
+            {
+                Snackbar.Add(result.StatusCode is null
+                    ? L["Couldn't reach your repository ({0}).", result.Reason ?? string.Empty].Value
+                    : L["Your repository answered {0}. If it is private, players can't read it either.",
+                        result.StatusCode.Value].Value, Severity.Error);
+            }
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task RequestListing(ToolRecord tool)
+    {
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new RequestToolListingCommand(tool.Id));
+            Snackbar.Add(L["Marked for review — now go ask on Discord"].Value, Severity.Success);
+            NavManager.Refresh();
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task Delete(ToolRecord tool)
+    {
+        await Mediator.Send(new DeleteToolCommand(tool.Id));
+        _showDelete = false;
+        NavManager.NavigateTo("/Developers", true);
+    }
+
+    private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    /// <summary>A bare host like "planner.example" is the one people type, and it parses as nothing.</summary>
+    private static bool IsBrowsableUrl(string value)
+    {
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+               && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
+    }
+}

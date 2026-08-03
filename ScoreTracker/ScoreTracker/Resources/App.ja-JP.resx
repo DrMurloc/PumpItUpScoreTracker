@@ -327,6 +327,9 @@
   <data name="A home page that's yours" xml:space="preserve">
     <value>自分だけのホームページ</value>
   </data>
+  <data name="A key expired" xml:space="preserve">
+    <value>キーが期限切れになりました</value>
+  </data>
   <data name="A key with no expiry stays valid until you revoke it by hand — including after a laptop is lost or a repo goes public. Pick a date unless you have a reason not to." xml:space="preserve">
     <value>期限のないキーは、手動で取り消すまで有効です — ノートPCを失くした後も、リポジトリが公開された後も。理由がなければ日付を選んでください。</value>
   </data>
@@ -347,6 +350,15 @@
   </data>
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>倍率上限での Perfect。</value>
+  </data>
+  <data name="A player connected" xml:space="preserve">
+    <value>プレイヤーが接続しました</value>
+  </data>
+  <data name="A player disconnected" xml:space="preserve">
+    <value>プレイヤーが接続を解除しました</value>
+  </data>
+  <data name="A private repository answers fine to your browser and 404s to every player invited to read it — identical to a typo. Until the link answers anonymously, only you can use the tool." xml:space="preserve">
+    <value>非公開のリポジトリはあなたのブラウザーには問題なく応答し、読むよう案内された全プレイヤーには 404 を返します — 打ち間違いと見分けがつきません。リンクが匿名で応答するまで、このツールを使えるのはあなただけです。</value>
   </data>
   <data name="A private tool can still reach you through an invite link from its maker." xml:space="preserve">
     <value>非公開のツールは、作者からの招待リンクで今も接続できます。</value>
@@ -465,6 +477,9 @@
   </data>
   <data name="Admin Settings" xml:space="preserve">
 	  <value>管理設定</value>
+  </data>
+  <data name="Admins only" xml:space="preserve">
+    <value>管理者のみ</value>
   </data>
   <data name="Advanced" xml:space="preserve">
     <value>詳細設定</value>
@@ -614,6 +629,9 @@
   </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>自分のレベル前後の、まだクリアしていない取り組みやすい譜面。</value>
+  </data>
+  <data name="Approve" xml:space="preserve">
+    <value>承認</value>
   </data>
   <data name="Approved" xml:space="preserve">
     <value>承認しました</value>
@@ -944,6 +962,12 @@
   <data name="Calculators" xml:space="preserve">
     <value>計算機</value>
   </data>
+  <data name="Calls are rolled up hourly against the tool, not the key that made them — at 600 a minute a row per request would bury the log. Each key carries its own last-used stamp, which is what tells you an old one is safe to revoke." xml:space="preserve">
+    <value>呼び出しはキー単位ではなくツール単位で 1 時間ごとに集計されます — 毎分 600 件でリクエストごとに 1 行あればログが埋もれてしまうためです。各キーには最終使用日時が付いており、古いキーを取り消してよいかはそれで判断します。</value>
+  </data>
+  <data name="Calls · 24h" xml:space="preserve">
+    <value>呼び出し · 24時間</value>
+  </data>
   <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
     <value>消費カロリー（任意 — アロー数を推定）</value>
   </data>
@@ -1128,6 +1152,9 @@
   </data>
   <data name="Clearly Has Friends" xml:space="preserve">
     <value>Clearly Has Friends</value>
+  </data>
+  <data name="Clicks · 24h" xml:space="preserve">
+    <value>クリック · 24時間</value>
   </data>
   <data name="Close" xml:space="preserve">
     <value>閉じる</value>
@@ -1363,6 +1390,9 @@
   </data>
   <data name="Connected Tools · {0}" xml:space="preserve">
     <value>接続中のツール · {0}</value>
+  </data>
+  <data name="Connected · {0}" xml:space="preserve">
+    <value>接続中 · {0}</value>
   </data>
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>信頼できるツール1つに接続するのは非公開プロフィールでも問題ありません — 公開共有ではなく直接接続だからです。プロフィールは非公開のままで、ほかのツールがアクセスすることはありません。</value>
@@ -1636,8 +1666,20 @@
   <data name="Delivered" xml:space="preserve">
     <value>配信済み</value>
   </data>
+  <data name="Delivered · 24h" xml:space="preserve">
+    <value>配信 · 24時間</value>
+  </data>
   <data name="Deliveries" xml:space="preserve">
     <value>配信</value>
+  </data>
+  <data name="Delivery" xml:space="preserve">
+    <value>配信</value>
+  </data>
+  <data name="Delivery rejected" xml:space="preserve">
+    <value>配信が拒否されました</value>
+  </data>
+  <data name="Delivery timed out" xml:space="preserve">
+    <value>配信がタイムアウトしました</value>
   </data>
   <data name="Demote" xml:space="preserve">
     <value>降格</value>
@@ -1677,6 +1719,9 @@
   </data>
   <data name="Difficulty Range" xml:space="preserve">
 	  <value>難度範囲</value>
+  </data>
+  <data name="Directory" xml:space="preserve">
+    <value>ディレクトリ</value>
   </data>
   <data name="Disconnect" xml:space="preserve">
     <value>連携解除</value>
@@ -1816,6 +1861,9 @@
   </data>
   <data name="Edit" xml:space="preserve">
 	  <value>編集</value>
+  </data>
+  <data name="Edit listing" xml:space="preserve">
+    <value>掲載を編集</value>
   </data>
   <data name="Edit Permissions" xml:space="preserve">
     <value>権限を編集</value>
@@ -1966,6 +2014,9 @@
   <data name="Failed" xml:space="preserve">
     <value>失敗</value>
   </data>
+  <data name="Failed · 24h" xml:space="preserve">
+    <value>失敗 · 24時間</value>
+  </data>
   <data name="Failed: {0}{1}" xml:space="preserve">
     <value>失敗: {0}{1}</value>
   </data>
@@ -2053,6 +2104,9 @@
   </data>
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>譜面ボード初登場</value>
+  </data>
+  <data name="Fix it" xml:space="preserve">
+    <value>直す</value>
   </data>
   <data name="Folder" xml:space="preserve">
     <value>フォルダ</value>
@@ -2156,6 +2210,9 @@
   <data name="Full ladder" xml:space="preserve">
     <value>全段階</value>
   </data>
+  <data name="Full log" xml:space="preserve">
+    <value>全ログ</value>
+  </data>
   <data name="Full Privacy Policy" xml:space="preserve">
     <value>個人情報保護方針</value>
   </data>
@@ -2175,6 +2232,9 @@
     <value>ゲームカード</value>
   </data>
   <data name="Game tag" xml:space="preserve">
+    <value>ゲームタグ</value>
+  </data>
+  <data name="GameTag" xml:space="preserve">
     <value>ゲームタグ</value>
   </data>
   <data name="Generate one" xml:space="preserve">
@@ -2615,6 +2675,9 @@
   <data name="Into overflow" xml:space="preserve">
     <value>オーバーフロー突入</value>
   </data>
+  <data name="Invalid Name" xml:space="preserve">
+    <value>名前が正しくありません</value>
+  </data>
   <data name="Invalid username or password" xml:space="preserve">
     <value>ユーザー名またはパスワードが正しくありません</value>
   </data>
@@ -2769,6 +2832,9 @@
   <data name="Last year" xml:space="preserve">
     <value>過去1年</value>
   </data>
+  <data name="Latest" xml:space="preserve">
+    <value>最新</value>
+  </data>
   <data name="leader" xml:space="preserve">
     <value>リーダー</value>
   </data>
@@ -2889,11 +2955,23 @@
   <data name="Linked to a site account" xml:space="preserve">
     <value>サイトアカウントと連携済み</value>
   </data>
+  <data name="Listed in the directory." xml:space="preserve">
+    <value>ディレクトリに掲載されています。</value>
+  </data>
+  <data name="Listed since" xml:space="preserve">
+    <value>掲載開始</value>
+  </data>
+  <data name="Listing only" xml:space="preserve">
+    <value>掲載のみ</value>
+  </data>
   <data name="Listing was turned down" xml:space="preserve">
     <value>掲載が却下されました</value>
   </data>
   <data name="LIVE" xml:space="preserve">
     <value>LIVE</value>
+  </data>
+  <data name="Loading..." xml:space="preserve">
+    <value>読み込み中...</value>
   </data>
   <data name="Location" xml:space="preserve">
 	  <value>場所</value>
@@ -2982,6 +3060,9 @@
   </data>
   <data name="Manage invite links" xml:space="preserve">
     <value>招待リンクの管理</value>
+  </data>
+  <data name="Manage keys" xml:space="preserve">
+    <value>キーを管理</value>
   </data>
   <data name="Manage or delete my data" xml:space="preserve">
     <value>データの管理・削除</value>
@@ -3567,6 +3648,9 @@
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>{0} には収録なし — {1} 譜面すべてが曲ごと削除されました。</value>
   </data>
+  <data name="Not listed" xml:space="preserve">
+    <value>未掲載</value>
+  </data>
   <data name="Not now" xml:space="preserve">
     <value>あとで</value>
   </data>
@@ -3646,6 +3730,9 @@
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>何も削除されません。ツールも、アクティビティも、配信履歴もそのまま残るので、何が起きたか確認できますし、取り消すこともできます。</value>
   </data>
+  <data name="Nothing is delivered until it does." xml:space="preserve">
+    <value>応答するまで何も配信されません。</value>
+  </data>
   <data name="Nothing is delivered until you verify the URL." xml:space="preserve">
     <value>URL を確認するまで何も配信されません。</value>
   </data>
@@ -3672,6 +3759,9 @@
   </data>
   <data name="Nothing was sent — post in the Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>自動では何も送られていません — Discord に書き込めば誰かが見ます。その間もツールは動き続けます。</value>
+  </data>
+  <data name="Nothing yet." xml:space="preserve">
+    <value>まだ何もありません。</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>たった今</value>
@@ -3711,6 +3801,9 @@
   </data>
   <data name="Off" xml:space="preserve">
     <value>オフ</value>
+  </data>
+  <data name="Off means only people who connect to you directly." xml:space="preserve">
+    <value>オフにすると、直接つないだ人だけになります。</value>
   </data>
   <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
     <value>オフにすると、招待から直接接続したプレイヤーだけになります。特定の仲間向けのツールで、見知らぬ千人がノイズになるならオフに。</value>
@@ -4564,6 +4657,12 @@
   <data name="Rate limited" xml:space="preserve">
     <value>レート制限</value>
   </data>
+  <data name="Rate limited {0} times" xml:space="preserve">
+    <value>{0} 回レート制限</value>
+  </data>
+  <data name="Rate limited · 24h" xml:space="preserve">
+    <value>レート制限 · 24時間</value>
+  </data>
   <data name="Rating" xml:space="preserve">
     <value>評定</value>
     
@@ -4618,6 +4717,9 @@
   </data>
   <data name="Recent big wins from the communities you pick." xml:space="preserve">
     <value>選んだコミュニティの最近の大きな記録。</value>
+  </data>
+  <data name="Recent deliveries" xml:space="preserve">
+    <value>最近の配信</value>
   </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>再接続中…</value>
@@ -4682,6 +4784,9 @@
   </data>
   <data name="Registered No Score" xml:space="preserve">
     <value>登録済み — スコア未提出</value>
+  </data>
+  <data name="Reject" xml:space="preserve">
+    <value>却下</value>
   </data>
   <data name="Reject {0}" xml:space="preserve">
     <value>{0} を却下</value>
@@ -4888,6 +4993,9 @@
   <data name="Save the URL and a verification secret, then press Verify. PIU Scores POSTs {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
     <value>URL と確認用の秘密の値を保存してから確認を押してください。PIU Scores が {"type":"url_verification"} を POST するので、エンドポイントは 10 秒以内に 200 と、その秘密の値を本文に含めて返してください。</value>
   </data>
+  <data name="Saved" xml:space="preserve">
+    <value>保存しました</value>
+  </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>保存済みの認証情報を読み込みました</value>
   </data>
@@ -5057,6 +5165,9 @@
   <data name="Seconds of Rest Per Chart" xml:space="preserve">
 	  <value>譜面ごとの休憩秒数</value>
   </data>
+  <data name="See a handler" xml:space="preserve">
+    <value>ハンドラーを見る</value>
+  </data>
   <data name="see and manage what this channel is registered for" xml:space="preserve">
     <value>このチャンネルの登録状況を確認・管理</value>
   </data>
@@ -5065,6 +5176,9 @@
   </data>
   <data name="See more" xml:space="preserve">
     <value>もっと見る</value>
+  </data>
+  <data name="See the code" xml:space="preserve">
+    <value>コードを見る</value>
   </data>
   <data name="See the full board" xml:space="preserve">
     <value>ボード全体を見る</value>
@@ -5101,6 +5215,9 @@
   </data>
   <data name="selected mixes only" xml:space="preserve">
     <value>選んだバージョンのみ</value>
+  </data>
+  <data name="Send a test" xml:space="preserve">
+    <value>テストを送る</value>
   </data>
   <data name="Send a test delivery" xml:space="preserve">
     <value>テスト配信を送る</value>
@@ -5155,6 +5272,9 @@
   </data>
   <data name="Set Charts" xml:space="preserve">
 	  <value>セット譜面</value>
+  </data>
+  <data name="Set it up" xml:space="preserve">
+    <value>設定する</value>
   </data>
   <data name="Set up another tool" xml:space="preserve">
     <value>もう一つ設定する</value>
@@ -5667,6 +5787,9 @@
   </data>
   <data name="Test Scores" xml:space="preserve">
 	  <value>テストスコア</value>
+  </data>
+  <data name="Test sent — the result is in the log below." xml:space="preserve">
+    <value>テストを送りました — 結果は下のログにあります。</value>
   </data>
   <data name="Test With Player Data" xml:space="preserve">
 	  <value>プレーヤーデータでテスト</value>
@@ -6413,6 +6536,9 @@
   <data name="Upscores" xml:space="preserve">
     <value>スコア更新</value>
   </data>
+  <data name="Usage" xml:space="preserve">
+    <value>利用状況</value>
+  </data>
   <data name="Used Primarily for debugging" xml:space="preserve">
     <value>デバッグ用</value>
   </data>
@@ -6654,6 +6780,9 @@
   <data name="Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it." xml:space="preserve">
     <value>プレイヤーがあなたのコードを読む場所です — GitHub、GitLab、Codeberg、公開されていればどこでも。掲載されたツールはここへ直接リンクします。</value>
   </data>
+  <data name="Where players use it" xml:space="preserve">
+    <value>プレイヤーが使う場所</value>
+  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>この譜面のクリアがどの競技レベルにあるかを示します。</value>
   </data>
@@ -6675,11 +6804,20 @@
   <data name="Which registration to remove" xml:space="preserve">
     <value>解除する登録</value>
   </data>
+  <data name="Who can find it" xml:space="preserve">
+    <value>誰が見つけられるか</value>
+  </data>
   <data name="Who has it" xml:space="preserve">
     <value>保持者</value>
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
+  </data>
+  <data name="Why the source has to resolve" xml:space="preserve">
+    <value>なぜソースが応答しなければならないのか</value>
+  </data>
+  <data name="Why usage isn't broken down per key" xml:space="preserve">
+    <value>なぜ利用状況をキーごとに分けないのか</value>
   </data>
   <data name="Widget schema" xml:space="preserve">
     <value>ウィジェットスキーマ</value>
@@ -6773,6 +6911,9 @@
   </data>
   <data name="You are already connected to your own tool, so you have one real player to build against — yourself. An invite link adds anyone else, public profile or not." xml:space="preserve">
     <value>あなたはすでに自分のツールに接続しているので、試せる実在のプレイヤーが一人います — あなた自身です。招待リンクを使えば、公開プロフィールでなくても他の人を追加できます。</value>
+  </data>
+  <data name="You are connected to your own tool, so you always have one real player to build against." xml:space="preserve">
+    <value>自分のツールには自分が接続しているので、開発に使える本物のプレイヤーが常に一人います。</value>
   </data>
   <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
     <value>あなたは作成者です。コミュニティの譲渡、削除、公開設定の変更、デフォルト管理者権限と通知言語の設定は作成者だけができます。</value>
@@ -6914,6 +7055,9 @@
   </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>確認リクエストにはこの値で応答してください。どこにも送られません — だからこそこの値で応答できることが証明になり、乗っ取られた DNS では通りません。保管されるのはハッシュだけなので、見つけられる場所に控えておいてください。</value>
+  </data>
+  <data name="Your endpoint hasn't answered yet." xml:space="preserve">
+    <value>エンドポイントがまだ応答していません。</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>ファイルが10MBを超えています。サイズを小さくして再試行してください。</value>
@@ -7092,6 +7236,9 @@
   <data name="{0} admins" xml:space="preserve">
     <value>管理者 {0} 人</value>
   </data>
+  <data name="{0} API calls" xml:space="preserve">
+    <value>{0} 件の API 呼び出し</value>
+  </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} 件が入った</value>
   </data>
@@ -7164,6 +7311,9 @@
   <data name="{0} columns" xml:space="preserve">
     <value>{0}列</value>
   </data>
+  <data name="{0} connected" xml:space="preserve">
+    <value>{0} 人が接続</value>
+  </data>
   <data name="{0} days ago" xml:space="preserve">
     <value>{0}日前</value>
   </data>
@@ -7175,6 +7325,9 @@
   </data>
   <data name="{0} didn't move." xml:space="preserve">
     <value>{0} は変わっていません。</value>
+  </data>
+  <data name="{0} directory clicks" xml:space="preserve">
+    <value>ディレクトリのクリック {0} 件</value>
   </data>
   <data name="{0} don't have enough data to move" xml:space="preserve">
     <value>{0}譜面はデータ不足で動きません</value>
