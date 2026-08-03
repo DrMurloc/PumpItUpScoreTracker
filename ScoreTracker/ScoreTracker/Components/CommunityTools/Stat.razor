@@ -1,0 +1,18 @@
+@namespace ScoreTracker.Web.Components.CommunityTools
+
+@* One figure and what it is. Used across the console's groups so a number never arrives as a
+   sentence — the console's whole problem was that everything did. *@
+
+<div class="ct-stat">
+    <div class="ct-stat-n @(Small ? "ct-stat-sm" : string.Empty)">@N</div>
+    <div class="ct-stat-k">@K</div>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public string N { get; set; } = string.Empty;
+
+    [Parameter] [EditorRequired] public string K { get; set; } = string.Empty;
+
+    /// <summary>For a value that is a date or a phrase rather than a count.</summary>
+    [Parameter] public bool Small { get; set; }
+}

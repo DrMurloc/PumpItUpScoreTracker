@@ -89,6 +89,17 @@ internal sealed class EFToolActivityRepository : IToolActivityRepository
             .ToArray();
     }
 
+    public async Task<int> SumAllTime(Guid toolId, ToolActivityKind kind,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Summed in SQL rather than read and added up: this is every row of one kind for the tool's
+        // whole life, and the point of a roll-up is not to carry them all back.
+        return await database.Set<ToolActivityEntity>()
+            .Where(a => a.ToolId == toolId && a.EventType == kind.ToString())
+            .SumAsync(a => a.Count, cancellationToken);
+    }
+
     public async Task Prune(DateTimeOffset before, CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);

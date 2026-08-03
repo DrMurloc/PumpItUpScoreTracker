@@ -31,6 +31,14 @@ public sealed class CommunityToolsReviewPageTests : ComponentTestBase
     public CommunityToolsReviewPageTests()
     {
         Services.AddSingleton(_mediator.Object);
+
+        // The page also renders the all-tools list and decorates it with who is banned. Both are
+        // admin-only queries; an unstubbed IMediator returns null and the page throws before it
+        // renders anything the queue tests are looking at.
+        _mediator.Setup(m => m.Send(It.IsAny<GetAllToolsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ToolRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetToolMakerBansQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ToolMakerBanRecord>());
     }
 
     /// <summary>User.IsAdmin is derived from the id, so an admin is made by being that id.</summary>
@@ -51,12 +59,14 @@ public sealed class CommunityToolsReviewPageTests : ComponentTestBase
     }
 
     private static ToolRecord Pending(WebhookMode mode = WebhookMode.ScorePush,
-        string? rejection = null)
+        string? rejection = null, string? repository = "https://github.com/tusa/planner")
     {
         return new ToolRecord(ToolId, Guid.NewGuid(), "TUSA", "Planner", "Plans your sessions.",
             "https://planner.example/", ToolVisibility.PendingApproval, false, mode,
             "https://planner.example/hook", Array.Empty<MixEnum>(), 3, Now, null, rejection, Now,
-            "X-Planner-Token", true, true);
+            "X-Planner-Token", true, true,
+            repository, repository is null ? null : "tusa", repository is null ? null : Now,
+            "tusa.piu", Now, repository is not null, ToolKind.Integrated, true, true);
     }
 
     private IRenderedFragment Render()

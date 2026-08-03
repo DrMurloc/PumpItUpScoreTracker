@@ -1,0 +1,22 @@
+@page "/Developers/{ToolId:guid}/api"
+@rendermode RenderModes.Interactive
+@using ScoreTracker.Web.Components.CommunityTools
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Developers"]</PageTitle>
+
+@* Keys, and nothing else. What they are carrying is on Insights — a maker managing a key and a
+   maker checking traffic are two errands, and putting the numbers here meant every visit to revoke
+   something scrolled past them. *@
+
+<ToolConsoleFrame Section="api" ToolId="ToolId" Context="tool">
+    <div class="ct-cards">
+        <ConsoleCard Title=@L["API keys"].Value Class="ct-card-wide"
+                     Hint='@L["Two can be active at once, so rotating one costs no downtime. No email goes out when one expires — this page is the whole warning."].Value'>
+            <ToolKeyPanel ToolId="tool.Id"></ToolKeyPanel>
+        </ConsoleCard>
+    </div>
+</ToolConsoleFrame>
+
+@code {
+    [Parameter] public Guid ToolId { get; set; }
+}

@@ -60,12 +60,18 @@ internal sealed class EFToolRepository : IToolRepository
         entity.Description = tool.Description;
         entity.Url = tool.Url?.ToString();
         entity.Visibility = tool.Visibility.ToString();
+        entity.Kind = tool.Kind.ToString();
         entity.AcceptsAllToolsShare = tool.AcceptsAllToolsShare;
         entity.WebhookMode = tool.WebhookMode.ToString();
         entity.WebhookUrl = tool.WebhookUrl?.ToString();
         entity.ApprovedAt = tool.ApprovedAt;
         entity.RejectionReason = tool.RejectionReason;
         entity.WebhookUrlVerifiedAt = tool.WebhookUrlVerifiedAt;
+        entity.RepositoryUrl = tool.RepositoryUrl?.ToString();
+        entity.RepositoryOwner = tool.RepositoryOwner;
+        entity.RepositoryCheckedAt = tool.RepositoryCheckedAt;
+        entity.DiscordHandle = tool.DiscordHandle;
+        entity.AgreedToRulesAt = tool.AgreedToRulesAt;
 
         // Mix subscriptions are replaced wholesale: the set is tiny and a diff would be more code
         // than it saves.
@@ -231,11 +237,27 @@ internal sealed class EFToolRepository : IToolRepository
 
         var blocked = await database.Set<ToolBlockEntity>()
             .Where(b => b.UserId == userId).Select(b => b.ToolId).ToArrayAsync(cancellationToken);
-        var pool = await database.Set<ToolEntity>()
+
+        // The source gate and the maker ban are resolved in memory against the same predicates the
+        // per-tool query uses. The candidate set is every listed pooled tool — tens of rows — and
+        // one rule expressed twice is one rule that can drift into disagreeing with itself about
+        // who may read a player's scores.
+        var candidates = await database.Set<ToolEntity>()
             .Where(t => t.Visibility == nameof(ToolVisibility.Public) && t.AcceptsAllToolsShare)
             // Session mode never arrives by blanket consent — it needs a moment the player saw.
             .Where(t => t.WebhookMode != nameof(WebhookMode.PiuGameSession))
-            .Select(t => t.Id).ToArrayAsync(cancellationToken);
+            .Select(t => new
+            {
+                t.Id, t.OwnerUserId, t.RepositoryUrl, t.RepositoryCheckedAt, t.DiscordHandle
+            })
+            .ToArrayAsync(cancellationToken);
+
+        var banned = await BannedOwners(database, candidates.Select(t => t.OwnerUserId), cancellationToken);
+        var pool = candidates
+            .Where(t => !banned.Contains(t.OwnerUserId))
+            .Where(t => Tool.Shareable(t.Id, t.RepositoryUrl, t.RepositoryCheckedAt, t.DiscordHandle))
+            .Select(t => t.Id)
+            .ToArray();
 
         return direct.Union(pool.Except(blocked)).Distinct().ToArray();
     }
@@ -247,12 +269,25 @@ internal sealed class EFToolRepository : IToolRepository
         var tool = await database.Set<ToolEntity>().FirstOrDefaultAsync(t => t.Id == toolId, cancellationToken);
         if (tool is null) return Array.Empty<Guid>();
 
+        // A banned maker's tools read nobody at all, not even their own maker. Computed from the ban
+        // row rather than written into the shares, so lifting the ban restores a working tool
+        // instead of an empty shell — and the activity log a dispute is argued over survives.
+        if ((await BannedOwners(database, new[] { tool.OwnerUserId }, cancellationToken)).Count > 0)
+            return Array.Empty<Guid>();
+
         var direct = await database.Set<ToolShareEntity>()
             .Where(s => s.ToolId == toolId && s.RevokedAt == null)
             .Select(s => s.UserId).ToArrayAsync(cancellationToken);
 
+        // A tool without a readable source and a reachable maker is excluded from the blanket pool,
+        // exactly as a private or session-mode tool is. Deliberate grants already given survive it:
+        // the site's own rule is that going private blocks the blanket grant and never a named one
+        // (api-v2-community-tools.md §5), and cutting off players who chose a tool because its
+        // maker mistyped a URL would punish the wrong people.
         if (tool.Visibility != nameof(ToolVisibility.Public) || !tool.AcceptsAllToolsShare
-                                                             || tool.WebhookMode == nameof(WebhookMode.PiuGameSession))
+                                                             || tool.WebhookMode == nameof(WebhookMode.PiuGameSession)
+                                                             || !Tool.Shareable(tool.Id, tool.RepositoryUrl,
+                                                                 tool.RepositoryCheckedAt, tool.DiscordHandle))
             return direct.Distinct().ToArray();
 
         var blocked = await database.Set<ToolBlockEntity>()
@@ -266,6 +301,32 @@ internal sealed class EFToolRepository : IToolRepository
     public async Task<bool> CanRead(Guid toolId, Guid userId, CancellationToken cancellationToken = default)
     {
         return (await GetReadablePlayerIds(toolId, cancellationToken)).Contains(userId);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, int>> CountKeysFor(IReadOnlyCollection<Guid> toolIds,
+        DateTimeOffset asOf, CancellationToken cancellationToken = default)
+    {
+        if (toolIds.Count == 0) return new Dictionary<Guid, int>();
+
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ToolApiKeyEntity>()
+            .Where(k => toolIds.Contains(k.ToolId))
+            // Live only. A revoked or expired key is not a reason to show a maker an API section.
+            .Where(k => k.RevokedAt == null && (k.ExpiresAt == null || k.ExpiresAt > asOf))
+            .GroupBy(k => k.ToolId)
+            .ToDictionaryAsync(g => g.Key, g => g.Count(), cancellationToken);
+    }
+
+    private static async Task<IReadOnlySet<Guid>> BannedOwners(ChartAttemptDbContext database,
+        IEnumerable<Guid> ownerUserIds, CancellationToken cancellationToken)
+    {
+        var ids = ownerUserIds.Distinct().ToArray();
+        if (ids.Length == 0) return new HashSet<Guid>();
+
+        return (await database.Set<ToolMakerBanEntity>()
+            .Where(b => ids.Contains(b.UserId))
+            .Select(b => b.UserId)
+            .ToArrayAsync(cancellationToken)).ToHashSet();
     }
 
     private static async Task<bool> ShareWithAllTools(ChartAttemptDbContext database, Guid userId,
@@ -307,6 +368,11 @@ internal sealed class EFToolRepository : IToolRepository
             Enum.Parse<WebhookMode>(entity.WebhookMode),
             entity.WebhookUrl is null ? null : new Uri(entity.WebhookUrl),
             mixIds.Where(MixIds.IsKnown).Select(MixIds.ToEnum),
-            entity.CreatedAt, entity.ApprovedAt, entity.RejectionReason, entity.WebhookUrlVerifiedAt);
+            entity.CreatedAt, entity.ApprovedAt, entity.RejectionReason, entity.WebhookUrlVerifiedAt,
+            entity.RepositoryUrl is null ? null : new Uri(entity.RepositoryUrl),
+            entity.RepositoryOwner, entity.RepositoryCheckedAt, entity.DiscordHandle,
+            entity.AgreedToRulesAt,
+            // Rows written before the column existed are all score-readers.
+            string.IsNullOrEmpty(entity.Kind) ? ToolKind.Integrated : Enum.Parse<ToolKind>(entity.Kind));
     }
 }

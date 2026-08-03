@@ -1,5 +1,25 @@
 namespace ScoreTracker.CommunityTools.Contracts;
 
+/// <summary>
+///     Whether a tool touches player scores at all.
+///     <para>
+///         Stated by the maker at registration rather than derived from whether keys exist: a
+///         brand-new integrated tool has none either, for the thirty seconds before its maker mints
+///         one, and the directory would offer players a Visit button for a tool that reads scores.
+///     </para>
+/// </summary>
+public enum ToolKind
+{
+    /// <summary>Reads scores. Has an API key, and may receive deliveries.</summary>
+    Integrated,
+
+    /// <summary>
+    ///     A directory entry pointing at a site. No key, no API, no webhooks, and nothing for a
+    ///     player to grant — which is why its row offers Visit rather than Connect.
+    /// </summary>
+    ListingOnly
+}
+
 /// <summary>Where a tool sits in the listing flow.</summary>
 public enum ToolVisibility
 {

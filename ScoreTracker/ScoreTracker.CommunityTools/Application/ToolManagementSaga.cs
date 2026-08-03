@@ -32,6 +32,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<ApproveToolCommand>,
     IRequestHandler<RejectToolCommand>,
     IRequestHandler<DeleteToolCommand>,
+    IRequestHandler<CheckToolRepositoryCommand, RepositoryCheckResult>,
     IRequestHandler<GetMyToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetAllToolsQuery, IReadOnlyList<ToolRecord>>,
     IRequestHandler<GetToolQuery, ToolRecord?>,
@@ -43,13 +44,18 @@ internal sealed class ToolManagementSaga :
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IMediator _mediator;
     private readonly IToolSecretReader _secrets;
+    private readonly IToolMakerBanRepository _bans;
+    private readonly IRepositoryReachabilityClient _repositories;
     private readonly IToolRepository _tools;
     private readonly IUserReader _users;
 
     public ToolManagementSaga(IToolRepository tools, IUserReader users, ICurrentUserAccessor currentUser,
         IDateTimeOffsetAccessor dateTime, IMediator mediator, IToolSecretReader secrets,
-        IWebhookDeliveryClient client, IOptions<CommunityToolsConfiguration> configuration)
+        IWebhookDeliveryClient client, IOptions<CommunityToolsConfiguration> configuration,
+        IRepositoryReachabilityClient repositories, IToolMakerBanRepository bans)
     {
+        _bans = bans;
+        _repositories = repositories;
         _configuration = configuration;
         _tools = tools;
         _users = users;
@@ -68,14 +74,14 @@ internal sealed class ToolManagementSaga :
     {
         await Manageable(request.ToolId, cancellationToken);
 
-        var name = string.IsNullOrWhiteSpace(request.Name) ? null : request.Name.Trim();
         var (_, existing) = await _secrets.GetOutboundHeader(request.ToolId, cancellationToken);
         var value = string.IsNullOrWhiteSpace(request.Value) ? existing : request.Value;
 
-        // Clearing the name clears the pair: a value with nothing to send it under is dead weight
-        // that would come back the moment someone typed a name again.
-        await _secrets.SetOutboundHeader(request.ToolId, name, name is null ? null : value,
-            cancellationToken);
+        // The name is ours. Stored alongside anyway so a delivery reads one row rather than a row
+        // and a constant, and so an older tool's chosen name is migrated on its next save.
+        await _secrets.SetOutboundHeader(request.ToolId,
+            string.IsNullOrWhiteSpace(value) ? null : WebhookHeaders.Outbound,
+            string.IsNullOrWhiteSpace(value) ? null : value, cancellationToken);
     }
 
     /// <summary>
@@ -153,7 +159,15 @@ internal sealed class ToolManagementSaga :
                 "Your account is scheduled for deletion, so you can't register a tool right now. " +
                 "Cancel the deletion first if you've changed your mind.");
 
-        var tool = Tool.Create(Guid.NewGuid(), _currentUser.User.Id, Name.From(request.Name), _dateTime.Now);
+        // Rule 2's sanction. Deleting a tool never stopped its maker registering another thirty
+        // seconds later, which is the entire reason the ban exists.
+        if (await _bans.GetBan(_currentUser.User.Id, cancellationToken) is not null)
+            throw new ToolListingException(
+                "You can't register a tool. If you think that's wrong, ask in the PIU Scores Discord.");
+
+        var tool = Tool.Create(Guid.NewGuid(), _currentUser.User.Id, Name.From(request.Name),
+            _dateTime.Now, Link(request.RepositoryUrl), request.DiscordHandle, _dateTime.Now,
+            request.Kind);
         await _tools.Save(tool, cancellationToken);
 
         // The maker is player one. Without this they cannot test their own tool against a real
@@ -163,12 +177,44 @@ internal sealed class ToolManagementSaga :
         return tool.Id;
     }
 
+    /// <summary>
+    ///     Fetches the source repository anonymously and records whether it answered.
+    ///     <para>
+    ///         A failed check clears the previous proof rather than leaving it standing. A repository
+    ///         that has gone private is exactly the case this exists to catch, and a stale tick
+    ///         beside a dead link is worse than no tick at all.
+    ///     </para>
+    /// </summary>
+    public async Task<RepositoryCheckResult> Handle(CheckToolRepositoryCommand request,
+        CancellationToken cancellationToken)
+    {
+        var tool = await Manageable(request.ToolId, cancellationToken);
+        if (tool.RepositoryUrl is null)
+            throw ToolRepositoryRequiredException.ForMaker();
+
+        var outcome = await _repositories.Check(tool.RepositoryUrl, cancellationToken);
+
+        if (outcome.Reachable) tool.MarkRepositoryReachable(_dateTime.Now);
+        else tool.ClearRepositoryCheck();
+
+        await _tools.Save(tool, cancellationToken);
+
+        return new RepositoryCheckResult(outcome.Reachable,
+            outcome.Reachable ? null : outcome.Reason.ToString(), outcome.StatusCode);
+    }
+
     public async Task Handle(UpdateToolCommand request, CancellationToken cancellationToken)
     {
         var tool = await Manageable(request.ToolId, cancellationToken);
-        tool.Describe(Name.From(request.Name), request.Description,
-            string.IsNullOrWhiteSpace(request.Url) ? null : new Uri(request.Url));
+        tool.Describe(Name.From(request.Name), request.Description, Link(request.Url),
+            Link(request.RepositoryUrl));
+        tool.SetDiscordHandle(request.DiscordHandle);
         await _tools.Save(tool, cancellationToken);
+    }
+
+    private static Uri? Link(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : new Uri(value);
     }
 
     public async Task Handle(SetToolAllToolsShareCommand request, CancellationToken cancellationToken)
@@ -221,7 +267,7 @@ internal sealed class ToolManagementSaga :
         CancellationToken cancellationToken)
     {
         var tools = await _tools.GetToolsOwnedBy(_currentUser.User.Id, cancellationToken);
-        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken)));
+        return await ProjectAll(tools, cancellationToken);
     }
 
     /// <summary>
@@ -235,7 +281,7 @@ internal sealed class ToolManagementSaga :
         if (!_currentUser.User.IsAdmin) return Array.Empty<ToolRecord>();
 
         var tools = await _tools.GetAllTools(cancellationToken);
-        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken)));
+        return await ProjectAll(tools, cancellationToken);
     }
 
     public async Task<ToolRecord?> Handle(GetToolQuery request, CancellationToken cancellationToken)
@@ -256,8 +302,25 @@ internal sealed class ToolManagementSaga :
         return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken)));
     }
 
-    private async Task<ToolRecord> Project(Tool tool, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<ToolRecord>> ProjectAll(IReadOnlyList<Tool> tools,
+        CancellationToken cancellationToken)
     {
+        var keyCounts = await _tools.CountKeysFor(tools.Select(t => t.Id).ToArray(), _dateTime.Now,
+            cancellationToken);
+        return await Task.WhenAll(tools.Select(t => Project(t, cancellationToken, keyCounts)));
+    }
+
+    private async Task<ToolRecord> Project(Tool tool, CancellationToken cancellationToken,
+        IReadOnlyDictionary<Guid, int>? keyCounts = null)
+    {
+        // Batched by the list handlers; a single-tool read pays for one extra query.
+        var keyCount = keyCounts is not null && keyCounts.TryGetValue(tool.Id, out var n)
+            ? n
+            : keyCounts is not null
+                ? 0
+                : (await _tools.CountKeysFor(new[] { tool.Id }, _dateTime.Now, cancellationToken))
+                .GetValueOrDefault(tool.Id);
+
         // Who registered it is the review queue's main signal, so it travels with the record
         // rather than being looked up per row on the page.
         var owner = await _users.GetUser(tool.OwnerUserId, cancellationToken);
@@ -271,7 +334,10 @@ internal sealed class ToolManagementSaga :
             await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
             tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason, tool.WebhookUrlVerifiedAt,
             headerName, !string.IsNullOrWhiteSpace(headerValue),
-            !string.IsNullOrWhiteSpace(verificationHash));
+            !string.IsNullOrWhiteSpace(verificationHash),
+            tool.RepositoryUrl?.ToString(), tool.RepositoryOwner, tool.RepositoryCheckedAt,
+            tool.DiscordHandle, tool.AgreedToRulesAt, tool.CanBeSharedWithOthers, tool.Kind,
+            keyCount > 0, tool.WebhookMode != WebhookMode.None);
     }
 
     /// <summary>

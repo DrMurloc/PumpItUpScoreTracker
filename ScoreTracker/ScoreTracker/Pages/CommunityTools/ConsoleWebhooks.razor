@@ -1,0 +1,68 @@
+@page "/Developers/{ToolId:guid}/webhooks"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Commands
+@using ScoreTracker.CommunityTools.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components.CommunityTools
+@using ScoreTracker.Web.Services
+<PageTitle>@L["Developers"]</PageTitle>
+
+@* Delivery configuration, and the log of what it did. The activity log and the debug tools used to
+   be two more pages; a maker looking at a failed delivery and a maker deciding whether to replay it
+   are the same person at the same moment. *@
+
+@* The panel saves through commands rather than a page load, so the frame has to re-read the record
+   for it — without that, everything gated on what was just saved stays gated on what it replaced. *@
+<ToolConsoleFrame @ref="_frame" Section="webhooks" ToolId="ToolId" Context="tool">
+    <ToolWebhookPanel Tool="tool" OnChanged="Reload"></ToolWebhookPanel>
+
+    @* Test lives with the thing it tests. The log moved to Insights — a maker reading delivery
+       history and a maker changing delivery config are two errands. *@
+    @if (tool.OwnerUserId == CurrentUser.User.Id
+         && tool.WebhookMode != WebhookMode.None && tool.WebhookUrlVerifiedAt is not null)
+    {
+        <div class="d-flex gap-2 mt-4 flex-wrap">
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_busy"
+                       OnClick="() => SendTest(tool)">@L["Send a test"]</MudButton>
+        </div>
+    }
+</ToolConsoleFrame>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ICurrentUserAccessor CurrentUser
+@code {
+    [Parameter] public Guid ToolId { get; set; }
+
+    private ToolConsoleFrame? _frame;
+    private bool _busy;
+
+    private Task Reload() => _frame?.Reload() ?? Task.CompletedTask;
+
+    /// <summary>
+    ///     Synthetic rather than the maker's last import: a test that carries real scores into
+    ///     someone's production database is not a test. The mix is whichever they subscribed to.
+    /// </summary>
+    private async Task SendTest(ToolRecord tool)
+    {
+        _busy = true;
+        try
+        {
+            await Mediator.Send(new SendTestDeliveryCommand(tool.Id,
+                tool.Mixes.Any() ? tool.Mixes[0] : MixEnum.Phoenix2, UseMyLastImport: false));
+            Snackbar.Add(L["Test sent — what came back is on Insights."].Value, Severity.Success);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+}

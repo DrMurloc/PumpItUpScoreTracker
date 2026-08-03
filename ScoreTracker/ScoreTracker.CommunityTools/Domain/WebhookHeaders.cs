@@ -14,5 +14,12 @@
 /// </summary>
 internal static class WebhookHeaders
 {
-    public const string DeliveryId = "X-PIU-Delivery-Id";
+    public const string DeliveryId = Contracts.WebhookContract.DeliveryIdHeader;
+
+    /// <summary>
+    ///     The header a maker's own secret rides in. Fixed rather than chosen: naming it was a
+    ///     decision with no right answer that every maker had to make before they could get to the
+    ///     one that matters, which is the value.
+    /// </summary>
+    public const string Outbound = Contracts.WebhookContract.OutboundHeader;
 }

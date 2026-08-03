@@ -7,6 +7,10 @@ keys, webhooks, an activity console, and admin approval.
 
 Mocks: [the twelve screens](https://claude.ai/code/artifact/bb7bd2f0-6c46-4b99-a0b0-459ae1fb9038).
 
+**Followed by [toolmaker-requirements.md](toolmaker-requirements.md)** — registration grew a required
+source repository, a maker's Discord handle, the published rules for being listed, and a maker ban,
+after this pass was settled but before it shipped. Read it alongside §5 and §12 here.
+
 Companion specs: [delete-my-data.md](delete-my-data.md) (the purge ecosystem this must join),
 [score-truth-model.md](score-truth-model.md) (what a score record means),
 [legacy-mixes.md](legacy-mixes.md) (why a Fiesta EX score is not a number),
@@ -688,7 +692,10 @@ player browsing Fiesta EX must not lose access to their own privacy controls.
 `/CommunityTools` leads with *who can read my scores*, not the catalogue: the page's job is the
 answer, and browsing is secondary (rule 1). Rows wear the board skin (`.olb-rank-card`), never cards.
 
-**Documentation splits by what needs to be live.** Prose goes to `docs/INTEGRATING.md` on GitHub —
+**Documentation splits by what needs to be live.** ⚠ Superseded 2026-08-03 — the guide was deleted
+and replaced by an on-site Code section, see
+[developer-console-redraw.md](developer-console-redraw.md). The original reasoning follows.
+Prose goes to `docs/INTEGRATING.md` on GitHub —
 zero localisation cost, versioned with the code it documents, and makers already live there. What
 stays on-site is the part needing *your* keys and *your* tool: a seven-step checklist with live
 state, which doubles as the `/Developers` empty state.
@@ -888,6 +895,12 @@ All done at C30 except the two the deletion forced earlier (API.md and CLAUDE.md
 - **Official leaderboards are public** (no share) but **never carry `userId`** — join on `gameTag`.
 - **Chart similarity is published** with sub-scores, shared badges, `chartsCompared` and `matchFloor`.
 - **No survey of existing makers** — the owner guides the shape directly.
+
+**Superseded in part, 2026-08-03.** Registration is no longer a name alone: a tool now carries a
+public source repository and its maker's Discord handle, and without both it can read only its own
+maker. Four published rules gate being listed, and a maker who breaks them can be banned from making
+tools at all. PIU Tracker is grandfathered by id. See
+[toolmaker-requirements.md](toolmaker-requirements.md).
 
 ## 17. Unverified
 

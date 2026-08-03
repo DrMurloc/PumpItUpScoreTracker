@@ -12,167 +12,172 @@
    URL, no header, and no mixes to pick — showing those anyway asks the maker to decide things that
    do not apply to them. *@
 
-<MudPaper Outlined="true" Class="pa-4 mb-4">
-    <MudText Typo="Typo.subtitle2">@L["Webhooks"]</MudText>
-    <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-        @L["What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll."]
-    </MudText>
-
-    @* One mode per line. MudRadio is inline-flex, so short options pair up on a wide viewport and
-       the list reads as two columns of unrelated things. *@
-    <MudRadioGroup T="WebhookMode" @bind-Value="_mode" Class="d-flex flex-column">
-        <MudRadio T="WebhookMode" Value="WebhookMode.None" Color="Color.Primary">
-            <b>@L["Nothing"]</b> — @L["Poll the API instead."]
-        </MudRadio>
-        <MudRadio T="WebhookMode" Value="WebhookMode.ScorePush" Color="Color.Primary">
-            <b>@L["Score Push"]</b> — @L["The scores themselves, 100 per delivery, with a next link when there are more."]
-        </MudRadio>
-        <MudRadio T="WebhookMode" Value="WebhookMode.PlayerPing" Color="Color.Primary">
-            <b>@L["Player ping"]</b> — @L["Just \"this player imported\". You pull what you need from the API."]
-        </MudRadio>
-        <MudRadio T="WebhookMode" Value="WebhookMode.PiuGameSession" Color="Color.Warning"
-                  Disabled="@SessionModeLocked">
-            <b>@L["PIUGame session"]</b>
-            @if (SessionModeLocked)
+<div class="ct-cards">
+    <ConsoleCard Title=@L["Delivery"].Value Class="ct-card-wide"
+                 Hint='@L["What arrives when one of your players imports. Nothing is a fine answer — plenty of tools just poll."].Value'>
+        @* A button group with one line under it, the way the tier list picks its type. Four radios
+           each carrying a sentence made the mode choice the loudest thing on the page. *@
+        <MudButtonGroup OverrideStyles="false" Class="mb-2">
+            @foreach (var option in Modes)
             {
-                <span> — @L["Locked: every connected player must agree to it individually, so this can only be turned on while no one is connected."]</span>
+                <MudButton Size="Size.Small" Color="@(option == WebhookMode.PiuGameSession ? Color.Warning : Color.Primary)"
+                           Variant="@(_mode == option ? Variant.Filled : Variant.Outlined)"
+                           Disabled="@(option == WebhookMode.PiuGameSession && SessionModeLocked)"
+                           OnClick="() => _mode = option">@ModeName(option)</MudButton>
             }
-            else
-            {
-                <span> — @L["We forward the piugame.com session key so you run your own import."]</span>
-            }
-        </MudRadio>
-    </MudRadioGroup>
+        </MudButtonGroup>
+        <MudText Typo="Typo.body2" Style="opacity:.75;">@ModeDescription(_mode)</MudText>
+    </ConsoleCard>
 
     @if (_mode != WebhookMode.None)
     {
-        <MudDivider Class="my-4"></MudDivider>
+        @* Everything past this is about where a delivery goes, so none of it appears until there is
+           somewhere for it to go. *@
+        <ConsoleCard Title=@L["Your API"].Value Class="ct-card-wide"
+                     Hint='@L["The endpoint PIU Scores POSTs to when one of your players imports."].Value'>
+            <MudTextField T="string" @bind-Value="_url" Label=@L["Your API"] MaxLength="500"
+                          Immediate="true" Placeholder="https://example.piutool.com/score"></MudTextField>
 
-        <MudTextField T="string" @bind-Value="_url" Label=@L["Deliver to"] MaxLength="500"></MudTextField>
-
-        @* A configured URL is a claim; a verified one is a proof. Until we have the proof we would be
-           one typo away from posting a player's scores to a stranger. *@
-        @if (Tool.WebhookUrlVerifiedAt is null)
-        {
-            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
-                <MudText Typo="Typo.body2"><b>@L["Not verified — nothing is being sent"]</b></MudText>
-                <MudText Typo="Typo.body2">
-                    @L["Save the URL and a verification secret, then press Verify. We POST {\"type\":\"url_verification\"} and your endpoint has ten seconds to answer 200 with your secret in the body."]
-                </MudText>
-            </MudAlert>
-        }
-        else
-        {
-            <MudText Typo="Typo.caption" Class="d-block mt-2" Style="opacity:.75;">
-                @L["Verified {0}", Tool.WebhookUrlVerifiedAt.Value.LocalDateTime.ToString("dd MMM yyyy")]
-                · @L["Changing the URL or the secret clears this."]
-            </MudText>
-        }
-
-        <div class="d-flex align-center gap-3 mt-2 flex-wrap">
-            <MudButton Variant="Variant.Outlined" Size="Size.Small"
-                       Disabled="@(_verifying || !Tool.HasVerificationSecret)"
-                       OnClick="VerifyWebhook">@L["Verify"]</MudButton>
-            @if (!Tool.HasVerificationSecret)
+            @if (!string.IsNullOrWhiteSpace(_url))
             {
-                <MudText Typo="Typo.caption" Style="opacity:.7;">
-                    @L["Save a verification secret first."]
-                </MudText>
-            }
-            @if (_verifyResult is not null)
-            {
-                <MudText Typo="Typo.body2">@_verifyResult</MudText>
-            }
-        </div>
-
-        <MudDivider Class="my-4"></MudDivider>
-
-        @* Two secrets, opposite directions, and the reason they can never be one value: we hand the
-           header to their server on every call, so anyone who receives a delivery has read it. *@
-        <MudText Typo="Typo.subtitle2" Class="mb-1">@L["Two secrets, one each way"]</MudText>
-
-        <MudText Typo="Typo.body2" Class="mt-2"><b>@L["How your server knows it's us"]</b></MudText>
-        <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-            @L["We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it."]
-        </MudText>
-        <div class="d-flex gap-3 flex-wrap">
-            <MudTextField T="string" @bind-Value="_headerName" Label=@L["Header name"]
-                          Placeholder="X-My-Tool-Token" MaxLength="64"
-                          Style="max-width:260px;"></MudTextField>
-            <MudTextField T="string" @bind-Value="_headerValue" Label=@HeaderValueLabel
-                          MaxLength="128" InputType="InputType.Password"
-                          Style="max-width:260px;"></MudTextField>
-        </div>
-        @if (_mode == WebhookMode.PiuGameSession && string.IsNullOrWhiteSpace(Tool.OutboundHeaderName))
-        {
-            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mt-2">
-                @L["Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key."]
-            </MudAlert>
-        }
-
-        <MudText Typo="Typo.body2" Class="mt-4"><b>@L["How we know your server is yours"]</b></MudText>
-        <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-            @L["Your endpoint answers a verification request with this. We never send it anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it."]
-        </MudText>
-        <div class="d-flex gap-3 flex-wrap align-center">
-            <MudTextField T="string" @bind-Value="_verificationSecret" Label=@VerificationSecretLabel
-                          MaxLength="128" InputType="InputType.Password"
-                          Style="max-width:260px;"></MudTextField>
-            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="GenerateSecret">
-                @L["Generate one"]
-            </MudButton>
-        </div>
-        @if (_generated is not null)
-        {
-            <div class="ct-secret ct-secret-wrap mt-2" style="max-width:520px;">
-                <pre>@_generated</pre>
-                <MudIconButton Class="ct-secret-copy" Icon="@Icons.Material.Filled.ContentCopy"
-                               Size="Size.Small" Color="Color.Default" aria-label=@L["Copy"]
-                               OnClick="CopyGenerated"></MudIconButton>
-            </div>
-            <MudText Typo="Typo.caption" Class="d-block mt-1" Style="opacity:.7;">
-                @L["Copy it into your handler and press Save. We keep only a hash, so this is the last time you'll see it here."]
-            </MudText>
-        }
-
-        <MudDivider Class="my-4"></MudDivider>
-
-        <MudText Typo="Typo.subtitle2" Class="mb-1">@L["Mixes"]</MudText>
-        <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-            @L["We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using."]
-        </MudText>
-        <div class="d-flex gap-2 flex-wrap">
-            @foreach (var mix in PrimaryMixes)
-            {
-                <MudChip T="string" Size="Size.Small" Color="@(_mixes.Contains(mix) ? Color.Info : Color.Default)"
-                         Variant="Variant.Outlined" OnClick="() => ToggleMix(mix)">@mix.GetName()</MudChip>
-            }
-        </div>
-        <MudExpansionPanels Class="mt-2" Elevation="0">
-            <MudExpansionPanel Text='@L["Older mixes ({0})", OlderMixes.Length].Value'>
-                <div class="d-flex gap-2 flex-wrap">
-                    @foreach (var mix in OlderMixes)
+                <div class="d-flex align-center gap-3 mt-3 flex-wrap">
+                    @* Verify uses the SAVED url, so an unsaved edit would check the old one and
+                       report a pass for an endpoint the maker is no longer pointing at. *@
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                               Disabled="@(!CanVerify)" OnClick="VerifyWebhook">@L["Verify"]</MudButton>
+                    @if (!CanVerify && Tool.HasVerificationSecret && HasUnsavedUrl)
                     {
-                        <MudChip T="string" Size="Size.Small"
-                                 Color="@(_mixes.Contains(mix) ? Color.Info : Color.Default)"
-                                 Variant="Variant.Outlined" OnClick="() => ToggleMix(mix)">@mix.GetName()</MudChip>
+                        <MudText Typo="Typo.caption" Style="opacity:.7;">@L["Save first."]</MudText>
+                    }
+                    @if (Tool.WebhookUrlVerifiedAt is null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Warning">
+                            @L["Not verified — nothing is being sent"]
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                            @L["Verified {0}", Tool.WebhookUrlVerifiedAt.Value.LocalDateTime.ToString("dd MMM yyyy")]
+                        </MudChip>
+                    }
+                    @if (!Tool.HasVerificationSecret)
+                    {
+                        <MudText Typo="Typo.caption" Style="opacity:.7;">
+                            @L["Save a verification secret first."]
+                        </MudText>
+                    }
+                    @if (_verifyResult is not null)
+                    {
+                        <MudText Typo="Typo.body2">@_verifyResult</MudText>
                     }
                 </div>
-            </MudExpansionPanel>
-        </MudExpansionPanels>
+            }
+        </ConsoleCard>
     }
 
-    <div class="d-flex gap-2 align-center flex-wrap mt-4">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">@L["Save"]</MudButton>
-        @* Lives here rather than under Help: it is a thing you do to a webhook, and a tool with no
-           webhook has nothing to test. *@
-        @if (Tool.WebhookMode != WebhookMode.None)
-        {
-            <MudButton Variant="Variant.Outlined" Size="Size.Small"
-                       Href="@($"/Developers/{Tool.Id}/Debug")">@L["Test delivery"]</MudButton>
-        }
-    </div>
-</MudPaper>
+    @if (_mode != WebhookMode.None && !string.IsNullOrWhiteSpace(_url))
+    {
+        @* Two secrets, opposite directions, and the reason they can never be one value: the header
+           goes to their server on every call, so anyone who receives a delivery has read it. *@
+        <ConsoleCard Title=@L["Request Header"].Value
+                     Hint='@L["This header is sent verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because it has to be sent."].Value'>
+            @* The name is ours. A maker choosing it was a decision with no right answer standing
+               between them and the one that matters. *@
+            <MudText Typo="Typo.body2" Class="mb-2">
+                <code>@WebhookContract.OutboundHeader</code>
+            </MudText>
+
+            @if (Tool.HasOutboundHeaderValue && !_changingHeader)
+            {
+                <div class="d-flex align-center gap-2 flex-wrap">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                        @L["Set"]
+                    </MudChip>
+                    <MudButton Size="Size.Small" Variant="Variant.Text"
+                               OnClick="() => _changingHeader = true">@L["Set a new one"]</MudButton>
+                </div>
+            }
+            else
+            {
+                <div class="ct-reveal">
+                    <MudTextField T="string" @bind-Value="_headerValue" Label=@L["Value"]
+                                  MaxLength="128" InputType="InputType.Password"></MudTextField>
+                </div>
+            }
+
+            @if (_mode == WebhookMode.PiuGameSession && !Tool.HasOutboundHeaderValue)
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                    @L["Header required for PIUGame session, so your server knows it is you receiving user sessions."]
+                </MudAlert>
+            }
+        </ConsoleCard>
+
+        <ConsoleCard Title=@L["Response Secret"].Value
+                     Hint='@L["Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it."].Value'>
+            @if (Tool.HasVerificationSecret && !_changingSecret)
+            {
+                <div class="d-flex align-center gap-2 flex-wrap">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                        @L["Set"]
+                    </MudChip>
+                    <MudButton Size="Size.Small" Variant="Variant.Text"
+                               OnClick="() => _changingSecret = true">@L["Set a new one"]</MudButton>
+                </div>
+            }
+            else
+            {
+                <div class="ct-reveal">
+                    <MudTextField T="string" @bind-Value="_verificationSecret" Label=@L["Secret"]
+                                  MaxLength="128" InputType="InputType.Password"></MudTextField>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Class="mt-1"
+                               OnClick="GenerateSecret">@L["Generate one"]</MudButton>
+                </div>
+            }
+
+            @if (_generated is not null)
+            {
+                <div class="ct-secret ct-secret-wrap mt-2">
+                    <pre>@_generated</pre>
+                    <MudIconButton Class="ct-secret-copy" Icon="@Icons.Material.Filled.ContentCopy"
+                                   Size="Size.Small" Color="Color.Default" aria-label=@L["Copy"]
+                                   OnClick="CopyGenerated"></MudIconButton>
+                </div>
+                <MudText Typo="Typo.caption" Class="d-block mt-1" Style="opacity:.7;">
+                    @L["Copy it into your handler and press Save. Only a hash is kept, so this is the last time you'll see it here."]
+                </MudText>
+            }
+        </ConsoleCard>
+
+        <ConsoleCard Title=@L["Mixes"].Value Class="ct-card-wide"
+                     Hint='@L["Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using."].Value'>
+            <div class="d-flex gap-2 flex-wrap">
+                @foreach (var mix in PrimaryMixes)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="@(_mixes.Contains(mix) ? Color.Info : Color.Default)"
+                             Variant="Variant.Outlined" OnClick="() => ToggleMix(mix)">@mix.GetName()</MudChip>
+                }
+            </div>
+            <MudExpansionPanels Class="mt-2" Elevation="0">
+                <MudExpansionPanel Text='@L["Older mixes ({0})", OlderMixes.Length].Value'>
+                    <div class="d-flex gap-2 flex-wrap">
+                        @foreach (var mix in OlderMixes)
+                        {
+                            <MudChip T="string" Size="Size.Small"
+                                     Color="@(_mixes.Contains(mix) ? Color.Info : Color.Default)"
+                                     Variant="Variant.Outlined" OnClick="() => ToggleMix(mix)">@mix.GetName()</MudChip>
+                        }
+                    </div>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        </ConsoleCard>
+    }
+</div>
+
+<div class="d-flex gap-2 align-center flex-wrap mt-4">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">@L["Save"]</MudButton>
+</div>
 
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
@@ -186,7 +191,6 @@
 
     private WebhookMode _mode = WebhookMode.None;
     private string _url = string.Empty;
-    private string _headerName = string.Empty;
 
     // Never populated from the record — neither secret's value travels. Blank means "keep stored".
     private string _headerValue = string.Empty;
@@ -196,6 +200,62 @@
     private string? _generated;
     private HashSet<MixEnum> _mixes = new();
     private bool _verifying;
+    /// <summary>
+    ///     A password box standing empty beside a value that already exists reads as "it is gone".
+    ///     So a set secret shows as set, and changing it is a decision you make first.
+    /// </summary>
+    private bool _changingHeader;
+
+    private bool _changingSecret;
+
+    /// <summary>
+    ///     Whether the box holds something the server has not been told about. Compared as URLs
+    ///     rather than as text: the saved value has been through <see cref="Uri" />, which gives a
+    ///     bare host the trailing slash the maker didn't type — and reading that back as an unsaved
+    ///     edit would leave Verify permanently disabled for anyone whose endpoint is a bare host.
+    /// </summary>
+    private bool HasUnsavedUrl => !SameTarget(Tool.WebhookUrl, _url);
+
+    /// <summary>Everything the request needs, on the server's side of the save.</summary>
+    private bool CanVerify => !_verifying
+                              && Tool.HasVerificationSecret
+                              && !string.IsNullOrWhiteSpace(Tool.WebhookUrl)
+                              && !HasUnsavedUrl;
+
+    private static bool SameTarget(string? saved, string? typed)
+    {
+        saved = saved?.Trim() ?? string.Empty;
+        typed = typed?.Trim() ?? string.Empty;
+        if (string.Equals(saved, typed, StringComparison.OrdinalIgnoreCase)) return true;
+
+        return Uri.TryCreate(saved, UriKind.Absolute, out var savedUri)
+               && Uri.TryCreate(typed, UriKind.Absolute, out var typedUri)
+               && savedUri == typedUri;
+    }
+
+    private static readonly WebhookMode[] Modes =
+    {
+        WebhookMode.None, WebhookMode.ScorePush, WebhookMode.PlayerPing, WebhookMode.PiuGameSession
+    };
+
+    private string ModeName(WebhookMode mode) => mode switch
+    {
+        WebhookMode.ScorePush => L["Score Push"].Value,
+        WebhookMode.PlayerPing => L["Player ping"].Value,
+        WebhookMode.PiuGameSession => L["PIUGame session"].Value,
+        _ => L["Nothing"].Value
+    };
+
+    /// <summary>One line, under the group, for whichever is selected.</summary>
+    private string ModeDescription(WebhookMode mode) => mode switch
+    {
+        WebhookMode.ScorePush => L["The scores themselves, 100 per delivery, with a next link when there are more."].Value,
+        WebhookMode.PlayerPing => L["Just \"this player imported\". You pull what you need from the API."].Value,
+        WebhookMode.PiuGameSession => SessionModeLocked
+            ? L["Locked: every connected player must agree to it individually, so this can only be turned on while no one is connected."].Value
+            : L["The piugame.com session key is forwarded so you run your own import."].Value,
+        _ => L["Poll the API instead."].Value
+    };
     private string? _verifyResult;
     private Guid _loadedFor;
 
@@ -206,17 +266,12 @@
     private bool SessionModeLocked =>
         Tool.ConnectedPlayers > 0 && Tool.WebhookMode != WebhookMode.PiuGameSession;
 
-    private string HeaderValueLabel => Tool.HasOutboundHeaderValue
-        ? L["Value (set — type to replace)"].Value
-        : L["Value"].Value;
-
-    private string VerificationSecretLabel => Tool.HasVerificationSecret
-        ? L["Verification secret (set — type to replace)"].Value
-        : L["Verification secret"].Value;
-
     /// <summary>
-    ///     Reloads the boxes only when the tool changes, not on every re-render: the parent reloads
-    ///     after each save, and re-seeding on that would throw away anything typed since.
+    ///     Reloads the boxes from the record when the tool changes and after each save, not on every
+    ///     re-render — re-seeding on every render would throw away anything typed since.
+    ///     What it deliberately leaves alone is the two things on screen that came from a button
+    ///     rather than from the record: the verify outcome and the generated secret. Both are shown
+    ///     once, and both arrive alongside a save, so clearing them here erased them on sight.
     /// </summary>
     protected override void OnParametersSet()
     {
@@ -225,12 +280,9 @@
         _loadedFor = Tool.Id;
         _mode = Tool.WebhookMode;
         _url = Tool.WebhookUrl ?? string.Empty;
-        _headerName = Tool.OutboundHeaderName ?? string.Empty;
         _headerValue = string.Empty;
         _verificationSecret = string.Empty;
-        _generated = null;
         _mixes = Tool.Mixes.ToHashSet();
-        _verifyResult = null;
     }
 
     /// <summary>
@@ -269,10 +321,14 @@
             return;
         }
 
+        // A save can withdraw the proof — changing the URL or the secret clears it — so last time's
+        // "Verified" must not survive the thing that invalidated it.
+        _verifyResult = null;
+
         try
         {
             // Before the webhook command, so entering session mode can see the header it requires.
-            await Mediator.Send(new SetToolOutboundHeaderCommand(Tool.Id, _headerName, _headerValue));
+            await Mediator.Send(new SetToolOutboundHeaderCommand(Tool.Id, _headerValue));
             // Only when they typed one: this command clears verification, and sending it on every
             // save would un-verify a working webhook every time the maker edits a mix chip.
             if (!string.IsNullOrWhiteSpace(_verificationSecret))
@@ -288,6 +344,10 @@
             return;
         }
 
+        _changingHeader = false;
+        _changingSecret = false;
+        _headerValue = string.Empty;
+        _verificationSecret = string.Empty;
         Snackbar.Add(L["Saved"].Value, Severity.Success);
         await Refresh();
     }
@@ -303,9 +363,7 @@
                 return L["\"{0}\" isn't a valid link. Include https://", _url].Value;
         }
 
-        if (!string.IsNullOrWhiteSpace(_headerValue) && string.IsNullOrWhiteSpace(_headerName))
-            return L["A header value needs a header name."].Value;
-
+        // Nothing to say about the header: its name is ours now, so a value can never be missing one.
         return null;
     }
 

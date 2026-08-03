@@ -11881,3 +11881,314 @@ button.chart-card-art {
     .ct-wiz-crumb + .ct-wiz-crumb { padding-left: 16px; }
     .ct-wiz-optional { display: none; }
 }
+
+/* The house rules. Set apart from app chrome because the voice inside is first
+   person and singular — these are one person's rules, not the site talking — so
+   the left rail is the secondary hue rather than the primary one every other
+   panel uses. */
+.ct-rules {
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-left: 3px solid var(--mix-secondary);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mix-surface-muted) 60%, transparent);
+    padding: 18px 20px;
+}
+
+.ct-rules-preamble {
+    margin: 0 0 16px;
+    border-left: 2px solid color-mix(in srgb, var(--mix-accent) 55%, transparent);
+    padding-left: 12px;
+    font-style: italic;
+    max-width: 60ch;
+}
+
+.ct-rules ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: ct-rule;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ct-rules li {
+    counter-increment: ct-rule;
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+}
+
+.ct-rules li::before {
+    content: counter(ct-rule);
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--mix-secondary);
+    font-variant-numeric: tabular-nums;
+    padding-top: 3px;
+}
+
+.ct-rules li > div > b { display: block; margin-bottom: 2px; }
+
+.ct-rules-foot {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+.ct-rules-agree {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+/* Quieter than the rules above it: registration is the ordinary half of the screen. */
+.ct-register {
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 4px;
+    padding: 18px 20px;
+}
+
+/* The repository check state, beside the field it belongs to. */
+.ct-check-state { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------------------------
+   Developer console. The page is a section with routed destinations rather
+   than one scroll, so the chrome here is nav plus grouping — the sections
+   themselves are ordinary forms and board rows.
+   --------------------------------------------------------------------------- */
+
+.ct-console-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.ct-console-pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 1.35rem;
+    font-weight: 500;
+    color: var(--mix-ink);
+    background: none;
+    border: 0;
+    padding: 0;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+span.ct-console-pick { cursor: default; }
+
+.ct-console-nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+/* A group header carries its own escape hatch to the section that owns it. */
+.ct-group {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 26px 0 10px;
+}
+
+.ct-group > :last-child { margin-left: auto; }
+
+.ct-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+    gap: 10px;
+}
+
+.ct-stat {
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 4px;
+    padding: 12px 14px;
+}
+
+.ct-stat .ct-stat-n {
+    font-size: 1.55rem;
+    font-weight: 500;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.ct-stat .ct-stat-n.ct-stat-sm { font-size: 1.1rem; }
+
+.ct-stat .ct-stat-k {
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--mix-ink-muted);
+    margin-top: 3px;
+}
+
+/* Where every inline "why" paragraph went. Opened by the few who want it. */
+.ct-why { margin: 4px 0 14px; max-width: 64ch; }
+
+.ct-why summary {
+    cursor: pointer;
+    font-size: .78rem;
+    color: var(--mix-primary);
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ct-why summary::-webkit-details-marker { display: none; }
+
+.ct-why summary::before {
+    content: "?";
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    font-size: .62rem;
+    display: grid;
+    place-items: center;
+}
+
+.ct-why[open] summary::before { content: "\00d7"; }
+
+.ct-why p {
+    margin: 7px 0 0 19px;
+    font-size: .82rem;
+    color: var(--mix-ink-muted);
+}
+
+/* One delivery mode, or one choice, per line — see the note in ToolWebhookPanel. */
+.ct-choices {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 4px;
+    max-width: 620px;
+}
+
+.ct-choice {
+    padding: 10px 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+.ct-choice:last-child { border-bottom: none; }
+
+.ct-choice .ct-choice-sub {
+    display: block;
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+    margin-left: 32px;
+}
+
+/* ---------------------------------------------------------------------------
+   Tool directory. Browsing is the job, so rows carry enough to choose from and
+   the monogram gives each one something to aim at while scanning.
+   --------------------------------------------------------------------------- */
+
+.ct-dir-row {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    flex-wrap: wrap;
+    padding: 12px 4px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+.ct-dir-row:last-child { border-bottom: none; }
+
+/* Derived from the name — tools have no icon, and a letter is enough to make a
+   list of rows scannable without inventing an image field for them. */
+.ct-dir-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: .9rem;
+    color: var(--mix-bg);
+}
+
+.ct-dir-who { flex: 1 1 300px; min-width: 0; }
+
+.ct-dir-tail {
+    margin-left: auto;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* The page's standing answer to "who can see my stuff", in either direction. */
+.ct-dir-strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-left: 3px solid var(--mix-primary);
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-bottom: 22px;
+}
+
+.ct-dir-strip.ct-dir-strip-empty { border-left-color: var(--mix-ink-muted); }
+
+.ct-dir-strip > :last-child { margin-left: auto; }
+
+@media (max-width: 599.98px) {
+    .ct-dir-mark { display: none; }
+    .ct-dir-tail { margin-left: 0; width: 100%; }
+}
+
+/* A console section's content. No card, no border — the section nav above it is
+   already the boundary, and a paper inside a paper is what made the old console
+   read as a stack of equally-loud panels. */
+.ct-section { display: block; }
+
+/* ---------------------------------------------------------------------------
+   Console cards. One responsibility per card, replacing the horizontal rules
+   the sections used to separate concerns — a rule says "something changed"
+   without saying what belongs to what, and a page of them reads as one strip.
+   --------------------------------------------------------------------------- */
+
+.ct-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+
+/* A card that owns a form wide enough to need the row, or a list. */
+.ct-cards > .ct-card-wide { grid-column: 1 / -1; }
+
+.ct-card {
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--mix-surface) 45%, transparent);
+    overflow: hidden;
+}
+
+.ct-card-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 16px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+    background: color-mix(in srgb, var(--mix-nav) 45%, transparent);
+}
+
+.ct-card-head .ct-card-action { margin-left: auto; }
+
+.ct-card-body { padding: 16px; }
+
+/* A revealed secret box: shown only after "Set new token", because an empty
+   password field beside a value that already exists reads as "it is gone". */
+.ct-reveal { max-width: 320px; }

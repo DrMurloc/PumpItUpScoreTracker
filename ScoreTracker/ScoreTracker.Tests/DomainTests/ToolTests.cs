@@ -22,10 +22,15 @@ public sealed class ToolTests
         return Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumbility Planner"), Now);
     }
 
+    /// <summary>
+    ///     A tool that has cleared everything listing needs: a description, a source players can
+    ///     read, and a maker who can be reached.
+    /// </summary>
     private static Tool ListedTool()
     {
-        var tool = NewTool();
-        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null);
+        var tool = ShareableTool();
+        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null, Repository);
+        tool.MarkRepositoryReachable(Now);
         tool.RequestListing();
         tool.Approve(Now);
         return tool;
@@ -54,8 +59,9 @@ public sealed class ToolTests
     [Fact]
     public void ApprovalMovesAToolIntoTheDirectoryAndClearsAnyPriorRejection()
     {
-        var tool = NewTool();
-        tool.Describe(Name.From("Planner"), "Plans things.", null);
+        var tool = ShareableTool();
+        tool.Describe(Name.From("Planner"), "Plans things.", null, Repository);
+        tool.MarkRepositoryReachable(Now);
         tool.RequestListing();
         tool.Reject("Needs a link.");
         tool.RequestListing();
@@ -69,8 +75,9 @@ public sealed class ToolTests
     [Fact]
     public void RejectionNeedsAReasonTheMakerCanActOn()
     {
-        var tool = NewTool();
-        tool.Describe(Name.From("Planner"), "Plans things.", null);
+        var tool = ShareableTool();
+        tool.Describe(Name.From("Planner"), "Plans things.", null, Repository);
+        tool.MarkRepositoryReachable(Now);
         tool.RequestListing();
 
         Assert.Throws<ToolListingException>(() => tool.Reject("  "));
@@ -89,7 +96,7 @@ public sealed class ToolTests
     {
         var tool = ListedTool();
 
-        tool.Describe(Name.From("Something Else"), "Plans what to push next.", null);
+        tool.Describe(Name.From("Something Else"), "Plans what to push next.", null, null);
 
         Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
         Assert.Null(tool.ApprovedAt);
@@ -100,7 +107,7 @@ public sealed class ToolTests
     {
         var tool = ListedTool();
 
-        tool.Describe(Name.From("Pumbility Planner"), "Actually it does something else now.", null);
+        tool.Describe(Name.From("Pumbility Planner"), "Actually it does something else now.", null, null);
 
         Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
     }
@@ -110,7 +117,7 @@ public sealed class ToolTests
     {
         var tool = ListedTool();
 
-        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null);
+        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null, Repository);
 
         Assert.Equal(ToolVisibility.Public, tool.Visibility);
     }
@@ -308,5 +315,190 @@ public sealed class ToolTests
         tool.SetWebhook(WebhookMode.PiuGameSession, Hook, 0, hasOutboundHeader: false);
 
         Assert.Equal(WebhookMode.PiuGameSession, tool.WebhookMode);
+    }
+
+    private static readonly Uri Repository = new("https://github.com/errlena/pumbility-planner");
+
+    /// <summary>The three things that must be true before another player's scores are involved.</summary>
+    private static Tool ShareableTool()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumbility Planner"), Now,
+            Repository, "errlena", Now);
+        tool.MarkRepositoryReachable(Now);
+        return tool;
+    }
+
+    [Fact]
+    public void ANewToolCannotBeSharedWithAnyoneButItsMaker()
+    {
+        Assert.False(NewTool().CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void ARepositoryAndAHandleAndACheckTogetherOpenTheGate()
+    {
+        Assert.True(ShareableTool().CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void AnUncheckedRepositoryIsNotEnough()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
+            Repository, "errlena", Now);
+
+        Assert.False(tool.CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void ARepositoryWithoutAHandleIsNotEnough()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
+            Repository, null, Now);
+        tool.MarkRepositoryReachable(Now);
+
+        Assert.False(tool.CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void ABlankHandleDoesNotCountAsAHandle()
+    {
+        var tool = ShareableTool();
+        tool.SetDiscordHandle("   ");
+
+        Assert.False(tool.CanBeSharedWithOthers);
+    }
+
+    // Otherwise: check once, swap to anything. Same rule as the webhook proof, same reason.
+    [Fact]
+    public void ChangingTheRepositoryWithdrawsItsCheck()
+    {
+        var tool = ShareableTool();
+
+        tool.Describe(tool.Name, tool.Description, tool.Url,
+            new Uri("https://github.com/someone-else/a-different-thing"));
+
+        Assert.Null(tool.RepositoryCheckedAt);
+        Assert.False(tool.CanBeSharedWithOthers);
+    }
+
+    [Fact]
+    public void SavingTheSameRepositoryAgainKeepsItsCheck()
+    {
+        var tool = ShareableTool();
+
+        tool.Describe(tool.Name, tool.Description, tool.Url, Repository);
+
+        Assert.Equal(Now, tool.RepositoryCheckedAt);
+    }
+
+    // The repository is printed beside the tool in the directory, so swapping it after approval is
+    // renaming wearing a different hat.
+    [Fact]
+    public void ChangingTheRepositoryOfAListedToolReturnsItToReview()
+    {
+        var tool = ListedTool();
+
+        tool.Describe(tool.Name, tool.Description, tool.Url,
+            new Uri("https://github.com/someone-else/a-different-thing"));
+
+        Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
+        Assert.Null(tool.ApprovedAt);
+    }
+
+    [Theory]
+    [InlineData("https://github.com/errlena/planner", "errlena")]
+    [InlineData("https://gitlab.com/errlena/planner", "errlena")]
+    [InlineData("https://codeberg.org/errlena/planner/", "errlena")]
+    [InlineData("https://git.example.test/errlena", "errlena")]
+    public void TheRepositoryOwnerIsTheFirstPathSegment(string url, string expected)
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
+            new Uri(url), "errlena", Now);
+
+        Assert.Equal(expected, tool.RepositoryOwner);
+    }
+
+    [Fact]
+    public void ARepositoryHostWithNoPathHasNoOwner()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Planner"), Now,
+            new Uri("https://git.example.test/"), "errlena", Now);
+
+        Assert.Null(tool.RepositoryOwner);
+    }
+
+    // PIU Tracker arrived Public with 653 migrated players before the rule existed. Gating it would
+    // take a working integration away from them to enforce something written afterwards.
+    [Fact]
+    public void TheGrandfatheredToolIsShareableWithNothingSet()
+    {
+        var tool = Tool.Create(GrandfatheredTools.PiuTracker, Guid.NewGuid(),
+            Name.From("PIU Tracker"), Now);
+
+        Assert.True(tool.CanBeSharedWithOthers);
+    }
+
+    // A listing-only tool is nothing but a pointer, so the pointer has to point somewhere.
+    [Fact]
+    public void AListingOnlyToolCannotBeListedWithoutALink()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumpout"), Now,
+            Repository, "errlena", Now, ToolKind.ListingOnly);
+        tool.MarkRepositoryReachable(Now);
+        tool.Describe(Name.From("Pumpout"), "A chart database.", null, Repository);
+
+        Assert.Throws<ToolListingException>(() => tool.RequestListing());
+    }
+
+    [Fact]
+    public void AListingOnlyToolWithALinkCanBeListed()
+    {
+        var tool = Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumpout"), Now,
+            Repository, "errlena", Now, ToolKind.ListingOnly);
+        tool.MarkRepositoryReachable(Now);
+        tool.Describe(Name.From("Pumpout"), "A chart database.",
+            new Uri("https://pumpout.example"), Repository);
+
+        tool.RequestListing();
+
+        Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
+    }
+
+    // An integrated tool is reached through Connect, not through a link, so it needs no Url.
+    [Fact]
+    public void AnIntegratedToolNeedsNoLinkToBeListed()
+    {
+        var tool = ShareableTool();
+        tool.Describe(Name.From("Planner"), "Plans what to push next.", null, Repository);
+        tool.MarkRepositoryReachable(Now);
+
+        tool.RequestListing();
+
+        Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
+    }
+
+    [Fact]
+    public void AToolDefaultsToReadingScores()
+    {
+        Assert.Equal(ToolKind.Integrated, NewTool().Kind);
+    }
+
+    [Fact]
+    public void AListedToolStillNeedsADescription()
+    {
+        var tool = ShareableTool();
+
+        Assert.Throws<ToolListingException>(() => tool.RequestListing());
+    }
+
+    // Being listed is an invitation to every player on the site, so the source they are invited to
+    // read has to be readable and someone has to be reachable when it goes wrong.
+    [Fact]
+    public void AToolWithNoCheckedSourceCannotAskToBeListed()
+    {
+        var tool = NewTool();
+        tool.Describe(Name.From("Planner"), "Plans what to push next.", null, Repository);
+
+        Assert.Throws<ToolRepositoryRequiredException>(() => tool.RequestListing());
     }
 }
