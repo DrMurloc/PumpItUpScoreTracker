@@ -302,4 +302,33 @@ public sealed class ToolKeyAndShareHandlerTests
 
         _repositories.Verify(r => r.Check(It.IsAny<Uri>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    // The default tool in this fixture has no repository and no handle, and the current user is a
+    // stranger to it.
+    [Fact]
+    public async Task AStrangerCannotConnectToAToolWithNoPublishedSource()
+    {
+        _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Tool.Create(ToolId, Guid.NewGuid(), Name.From("Planner"), Now));
+
+        await Assert.ThrowsAsync<ToolRepositoryRequiredException>(() => AccessSaga()
+            .Handle(new ConnectToolCommand(ToolId), CancellationToken.None));
+
+        _tools.Verify(t => t.GrantShare(ToolId, MakerId, It.IsAny<ShareSource>(),
+            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // ConnectingGrantsADirectShare above is the other half of this: its tool has no repository
+    // either, and it passes because the connecting user is the maker. The gate is on acquiring a
+    // second player, not on the tool working at all.
+    [Fact]
+    public async Task AStrangerConnectsOnceTheSourceIsPublishedAndChecked()
+    {
+        ToolWithRepository(alreadyChecked: true);
+
+        await AccessSaga().Handle(new ConnectToolCommand(ToolId), CancellationToken.None);
+
+        _tools.Verify(t => t.GrantShare(ToolId, MakerId, ShareSource.Direct, Now,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 }

@@ -107,10 +107,25 @@ internal sealed class Tool
     ///         people's scores needs a maker who can be told when it goes wrong.
     ///     </para>
     /// </summary>
-    public bool CanBeSharedWithOthers => GrandfatheredTools.Exempt(Id)
-                                         || (RepositoryUrl is not null
-                                             && RepositoryCheckedAt is not null
-                                             && !string.IsNullOrWhiteSpace(DiscordHandle));
+    public bool CanBeSharedWithOthers =>
+        Shareable(Id, RepositoryUrl?.ToString(), RepositoryCheckedAt, DiscordHandle);
+
+    /// <summary>
+    ///     The same rule, over raw column values.
+    ///     <para>
+    ///         Effective read access is resolved in SQL against the entity, never against a rehydrated
+    ///         aggregate, so without this the gate would have to be written twice — and the copy that
+    ///         drifted would be the one actually deciding who can read a player's scores.
+    ///     </para>
+    /// </summary>
+    public static bool Shareable(Guid id, string? repositoryUrl, DateTimeOffset? repositoryCheckedAt,
+        string? discordHandle)
+    {
+        return GrandfatheredTools.Exempt(id)
+               || (!string.IsNullOrWhiteSpace(repositoryUrl)
+                   && repositoryCheckedAt is not null
+                   && !string.IsNullOrWhiteSpace(discordHandle));
+    }
 
     /// <summary>
     ///     Whether anything may actually be sent. A configured URL is a claim; a verified one is a
@@ -232,6 +247,10 @@ internal sealed class Tool
         if (string.IsNullOrWhiteSpace(Description))
             throw new ToolListingException("A listed tool needs a description — it is what players read " +
                                            "before they decide to connect.");
+
+        // Being listed is an invitation to every player on the site. The source they are invited to
+        // read has to actually be readable, and someone has to be reachable when it goes wrong.
+        if (!CanBeSharedWithOthers) throw ToolRepositoryRequiredException.ForMaker();
 
         Visibility = ToolVisibility.PendingApproval;
         RejectionReason = null;

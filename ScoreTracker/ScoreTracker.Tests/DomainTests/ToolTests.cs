@@ -22,10 +22,15 @@ public sealed class ToolTests
         return Tool.Create(Guid.NewGuid(), Guid.NewGuid(), Name.From("Pumbility Planner"), Now);
     }
 
+    /// <summary>
+    ///     A tool that has cleared everything listing needs: a description, a source players can
+    ///     read, and a maker who can be reached.
+    /// </summary>
     private static Tool ListedTool()
     {
-        var tool = NewTool();
-        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null, null);
+        var tool = ShareableTool();
+        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null, Repository);
+        tool.MarkRepositoryReachable(Now);
         tool.RequestListing();
         tool.Approve(Now);
         return tool;
@@ -54,8 +59,9 @@ public sealed class ToolTests
     [Fact]
     public void ApprovalMovesAToolIntoTheDirectoryAndClearsAnyPriorRejection()
     {
-        var tool = NewTool();
-        tool.Describe(Name.From("Planner"), "Plans things.", null, null);
+        var tool = ShareableTool();
+        tool.Describe(Name.From("Planner"), "Plans things.", null, Repository);
+        tool.MarkRepositoryReachable(Now);
         tool.RequestListing();
         tool.Reject("Needs a link.");
         tool.RequestListing();
@@ -69,8 +75,9 @@ public sealed class ToolTests
     [Fact]
     public void RejectionNeedsAReasonTheMakerCanActOn()
     {
-        var tool = NewTool();
-        tool.Describe(Name.From("Planner"), "Plans things.", null, null);
+        var tool = ShareableTool();
+        tool.Describe(Name.From("Planner"), "Plans things.", null, Repository);
+        tool.MarkRepositoryReachable(Now);
         tool.RequestListing();
 
         Assert.Throws<ToolListingException>(() => tool.Reject("  "));
@@ -110,7 +117,7 @@ public sealed class ToolTests
     {
         var tool = ListedTool();
 
-        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null, null);
+        tool.Describe(Name.From("Pumbility Planner"), "Plans what to push next.", null, Repository);
 
         Assert.Equal(ToolVisibility.Public, tool.Visibility);
     }
@@ -391,7 +398,8 @@ public sealed class ToolTests
     {
         var tool = ListedTool();
 
-        tool.Describe(tool.Name, tool.Description, tool.Url, Repository);
+        tool.Describe(tool.Name, tool.Description, tool.Url,
+            new Uri("https://github.com/someone-else/a-different-thing"));
 
         Assert.Equal(ToolVisibility.PendingApproval, tool.Visibility);
         Assert.Null(tool.ApprovedAt);
@@ -436,5 +444,16 @@ public sealed class ToolTests
         var tool = ShareableTool();
 
         Assert.Throws<ToolListingException>(() => tool.RequestListing());
+    }
+
+    // Being listed is an invitation to every player on the site, so the source they are invited to
+    // read has to be readable and someone has to be reachable when it goes wrong.
+    [Fact]
+    public void AToolWithNoCheckedSourceCannotAskToBeListed()
+    {
+        var tool = NewTool();
+        tool.Describe(Name.From("Planner"), "Plans what to push next.", null, Repository);
+
+        Assert.Throws<ToolRepositoryRequiredException>(() => tool.RequestListing());
     }
 }

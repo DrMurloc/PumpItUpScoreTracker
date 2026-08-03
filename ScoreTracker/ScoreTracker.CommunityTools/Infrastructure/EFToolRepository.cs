@@ -256,8 +256,15 @@ internal sealed class EFToolRepository : IToolRepository
             .Where(s => s.ToolId == toolId && s.RevokedAt == null)
             .Select(s => s.UserId).ToArrayAsync(cancellationToken);
 
+        // A tool without a readable source and a reachable maker is excluded from the blanket pool,
+        // exactly as a private or session-mode tool is. Deliberate grants already given survive it:
+        // the site's own rule is that going private blocks the blanket grant and never a named one
+        // (api-v2-community-tools.md §5), and cutting off players who chose a tool because its
+        // maker mistyped a URL would punish the wrong people.
         if (tool.Visibility != nameof(ToolVisibility.Public) || !tool.AcceptsAllToolsShare
-                                                             || tool.WebhookMode == nameof(WebhookMode.PiuGameSession))
+                                                             || tool.WebhookMode == nameof(WebhookMode.PiuGameSession)
+                                                             || !Tool.Shareable(tool.Id, tool.RepositoryUrl,
+                                                                 tool.RepositoryCheckedAt, tool.DiscordHandle))
             return direct.Distinct().ToArray();
 
         var blocked = await database.Set<ToolBlockEntity>()

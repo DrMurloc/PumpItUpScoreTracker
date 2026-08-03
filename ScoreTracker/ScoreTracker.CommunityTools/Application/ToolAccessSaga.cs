@@ -49,6 +49,11 @@ internal sealed class ToolAccessSaga :
         if (tool.RequiresExplicitShare && !request.AcceptedSessionSharing)
             throw new ToolConsentMismatchException();
 
+        // The maker is connected to their own tool at registration and stays connected — the gate
+        // is on acquiring a second player, not on the tool working at all.
+        if (!tool.CanBeSharedWithOthers && tool.OwnerUserId != _currentUser.User.Id)
+            throw ToolRepositoryRequiredException.ForPlayer(tool.Name.ToString());
+
         await _tools.GrantShare(tool.Id, _currentUser.User.Id, ShareSource.Direct, _dateTime.Now,
             cancellationToken);
     }
@@ -105,7 +110,10 @@ internal sealed class ToolAccessSaga :
     public async Task<IReadOnlyList<PublicToolRecord>> Handle(GetPublicToolsQuery request,
         CancellationToken cancellationToken)
     {
-        var tools = await _tools.GetToolsByVisibility(ToolVisibility.Public, cancellationToken);
+        // A listed tool that has since lost its source or its maker's handle is a row nobody can
+        // connect to, so it leaves the directory rather than sitting there refusing everyone.
+        var tools = (await _tools.GetToolsByVisibility(ToolVisibility.Public, cancellationToken))
+            .Where(t => t.CanBeSharedWithOthers);
         var result = new List<PublicToolRecord>();
         foreach (var tool in tools)
             result.Add(new PublicToolRecord(tool.Id, tool.Name.ToString(), tool.Description,
