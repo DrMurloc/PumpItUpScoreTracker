@@ -202,6 +202,11 @@
     </MudCardActions>
 </MudCard>
 
+@* Sits below the import controls because it needs the same session and the same credential;
+   pressed, never automatic (docs/design/import-completeness-check.md §6). *@
+<ScoreCheckPanel Mix="_currentMix" CardId="@_selectedId" GameTag="@_selectedGameTag"
+                 Busy="_isImporting" Credentials="ResolveCheckCredentials"/>
+
 @* The technical fallback (design doc D3): everything the script/CSV flow could do, collapsed. *@
 <MudExpansionPanels Class="mt-4">
     <MudExpansionPanel Text="@L["Manual import — console script + CSV"]">
@@ -349,6 +354,23 @@
 
     private bool ImportDisabled =>
         _isImporting || (!_hasStoredCredential && (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)));
+
+    // The blob is read once on load so the Score check panel can offer its buttons without a
+    // round trip on every render; the saved path never re-types a password either way.
+    private StoredCredentialBlob? _storedBlob;
+
+    /// <summary>
+    ///     Which credential the Score check should use: the saved blob when this device has one,
+    ///     otherwise whatever is typed above. Null while neither exists, which leaves the panel's
+    ///     buttons disabled rather than failing at the site.
+    /// </summary>
+    private ImportCredentialSource? ResolveCheckCredentials()
+    {
+        if (_storedBlob != null) return new StoredCredentialSource(_storedBlob.KeyId, _storedBlob.Ciphertext);
+        return string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password)
+            ? null
+            : new TypedCredentialSource(_username, _password);
+    }
 
     // Import using the credential saved on this device — the Import button routes here when one is
     // stored. Reuses the background path (StoredCredentialSource), so the password is never re-typed
@@ -609,7 +631,8 @@
         _alsoImportPiuTracker = bool.TryParse(await UiSettings.GetSetting(PiuTrackerKey), out var v) && v;
         // Detect a credential already saved on this device so we can offer a one-click import
         // instead of asking for the password again; the checkbox reflects the saved state.
-        _hasStoredCredential = await ClientStore.Read() != null;
+        _storedBlob = await ClientStore.Read();
+        _hasStoredCredential = _storedBlob != null;
         _rememberPassword = _hasStoredCredential;
     }
 

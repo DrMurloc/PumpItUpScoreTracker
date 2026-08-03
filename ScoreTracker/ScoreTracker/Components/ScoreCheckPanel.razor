@@ -1,0 +1,283 @@
+@using MediatR
+@using ScoreTracker.Domain.Events
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Commands
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.UiNotifications
+
+@* Tells a player whether every score piugame has actually reached us, and repairs the levels that
+   disagree. It is pressed, never automatic: a check is ~20 extra requests at piugame and making
+   every import pay that permanently is the wrong default for a problem a minority hit. *@
+
+@if (_last != null)
+{
+    <MudPaper Class="pa-4 mt-4" Outlined="true">
+        <div class="d-flex align-center flex-wrap gap-2 mb-2">
+            <MudText Typo="Typo.subtitle1">@L["Score check"]</MudText>
+            @if (_report != null)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@VerdictColor">
+                    @VerdictChip
+                </MudChip>
+            }
+            <MudSpacer/>
+            @if (_report != null)
+            {
+                <MudText Typo="Typo.caption">@L["Last checked {0}", _report.RanAt.ToLocalTime().ToString("g")]</MudText>
+            }
+        </div>
+
+        @if (_running)
+        {
+            <div class="d-flex align-center gap-3">
+                <MudProgressCircular Size="Size.Small" Indeterminate="true"/>
+                <MudText Typo="Typo.body2">@(_status ?? L["Checking your scores"])</MudText>
+            </div>
+            <MudText Typo="Typo.caption">@L["You can leave this page."]</MudText>
+        }
+        else
+        {
+            @if (_report == null)
+            {
+                <MudText Typo="Typo.body2">
+                    @L["Compares your scores against PIUGAME, level by level, and tells you if anything is missing."]
+                </MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">@Headline</MudText>
+
+                @if (_report.OfficialPumbility > 0)
+                {
+                    <div class="d-flex flex-wrap gap-2 my-2">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                            @L["PUMBILITY on PIUGAME"]: @_report.OfficialPumbility.ToString("N0")
+                        </MudChip>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                            @L["PUMBILITY here"]: @_report.LocalPumbility.ToString("N0")
+                        </MudChip>
+                    </div>
+                }
+
+                @if (Repairable.Any())
+                {
+                    <MudSimpleTable Dense="true" Striped="false" Class="mt-2">
+                        <thead>
+                        <tr>
+                            <th>@L["Level"]</th>
+                            <th>@L["PIUGAME"]</th>
+                            <th>@L["Here"]</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var difference in Repairable)
+                        {
+                            <tr>
+                                <td>@BucketName(difference)</td>
+                                <td>@(difference.Kind == ImportCheckDifferenceKind.Missing
+                                        ? L["{0} more", difference.Count]
+                                        : L["{0} better", difference.Count])</td>
+                                <td>@(difference.Kind == ImportCheckDifferenceKind.Missing
+                                        ? L["missing"]
+                                        : L["out of date"])</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </MudSimpleTable>
+                }
+            }
+
+            <div class="d-flex align-center flex-wrap gap-2 mt-3">
+                @if (Repairable.Any())
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Disabled"
+                               OnClick="@(() => Run(repair: true))">
+                        @L["Add these scores"]
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Outlined" Disabled="Disabled" OnClick="@(() => Run())">
+                    @L["Import and check"]
+                </MudButton>
+
+                @if (_report is { Verdict: ImportCheckVerdict.InSync })
+                {
+                    @if (_last.DeepScansLeft > 0)
+                    {
+                        <MudButton Variant="Variant.Text" Disabled="Disabled"
+                                   OnClick="@(() => Run(deepScan: true))">
+                            @L["Run a deep scan"]
+                        </MudButton>
+                        <MudText Typo="Typo.caption">
+                            @L["{0} of 3 left this month", _last.DeepScansLeft]
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption">
+                            @L["You've used all 3 deep scans this month. The next one unlocks {0}.",
+                                _last.NextScanUnlocksAt.ToLocalTime().ToString("d")]
+                        </MudText>
+                    }
+                }
+            </div>
+
+            @if (_report is { Verdict: ImportCheckVerdict.InSync })
+            {
+                <MudText Typo="Typo.caption">
+                    @L["Still looks wrong? A deep scan reads every page of your best scores instead of counting them."]
+                </MudText>
+            }
+        }
+    </MudPaper>
+}
+
+@code {
+    /// <summary>The mix the page is importing. A check is per mix — Phoenix 2 titles read Phoenix 2
+    /// scores only, and so does its census.</summary>
+    [Parameter] public MixEnum Mix { get; set; }
+
+    /// <summary>Resolved by the page: the stored blob when there is one, otherwise what was typed.
+    /// Null disables the panel's buttons rather than hiding them — the page explains why.</summary>
+    [Parameter] public Func<ImportCredentialSource?>? Credentials { get; set; }
+
+    [Parameter] public string CardId { get; set; } = "";
+    [Parameter] public string GameTag { get; set; } = "";
+
+    /// <summary>True while the page's own import is running, so the two cannot be started at once.</summary>
+    [Parameter] public bool Busy { get; set; }
+
+    private LastImportCheck? _last;
+    private ImportCheckReport? _report;
+    private readonly List<IDisposable> _subscriptions = new();
+    private bool _running;
+    private string? _status;
+    private Guid _userId;
+
+    private bool Disabled => Busy || _running || Credentials?.Invoke() == null;
+
+    private IReadOnlyList<ImportCheckDifference> Repairable =>
+        _report?.Differences.Where(d => d.Kind != ImportCheckDifferenceKind.Extra).ToArray()
+        ?? Array.Empty<ImportCheckDifference>();
+
+    private Color VerdictColor => _report?.Verdict switch
+    {
+        ImportCheckVerdict.MissingScores => Color.Warning,
+        ImportCheckVerdict.OutOfDateScores => Color.Warning,
+        _ => Color.Success
+    };
+
+    private string VerdictChip => _report?.Verdict switch
+    {
+        ImportCheckVerdict.MissingScores => L["{0} missing", _report.MissingCount],
+        ImportCheckVerdict.OutOfDateScores => L["{0} out of date", _report.OutOfDateCount],
+        _ => L["In sync"]
+    };
+
+    private string Headline => _report?.Verdict switch
+    {
+        ImportCheckVerdict.MissingScores =>
+            L["PIUGAME has {0} scores that aren't here.", _report.MissingCount],
+        ImportCheckVerdict.OutOfDateScores =>
+            L["{0} scores here are behind PIUGAME.", _report.OutOfDateCount],
+        _ => L["Everything matches. All {0} of your scores are here.", _report?.LocalPasses ?? 0]
+    };
+
+    // CO-OP, 27-and-over and the sub-10 residual are buckets rather than levels, and the site
+    // names them that way too.
+    private string BucketName(ImportCheckDifference difference)
+    {
+        return difference.Level != null
+            ? L["Level {0}", difference.Level.Value]
+            : difference.Bucket switch
+            {
+                "coop" => L["CO-OP"],
+                "27over" => L["Level 27 and above"],
+                _ => L["Below level 10"]
+            };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        _userId = CurrentUser.User.Id;
+        _subscriptions.Add(UiHub.Subscribe<ImportStatusUpdatedEvent>(UiTopics.User(_userId), OnStatus));
+        _subscriptions.Add(UiHub.Subscribe<ImportStatusErrorEvent>(UiTopics.User(_userId), OnError));
+        await Reload();
+    }
+
+    // A null answer means "nothing to say" and renders nothing, rather than taking the whole
+    // import page down with it — this panel is an addition to that page, not a prerequisite.
+    private async Task Reload()
+    {
+        _last = await Mediator.Send(new GetLastImportCheckQuery(_userId, Mix));
+        _report = _last?.Report;
+    }
+
+    private async Task Run(bool deepScan = false, bool repair = false)
+    {
+        var source = Credentials?.Invoke();
+        if (source == null) return;
+
+        // Paint the spinner before the slow sign-in: Blazor renders an async handler only after
+        // its synchronous portion, so flipping this afterwards leaves the button inert for seconds.
+        _running = true;
+        _status = null;
+        StateHasChanged();
+
+        var result = await Mediator.Send(new StartImportCheckCommand(source, Mix, CardId, GameTag,
+            deepScan, repair));
+        if (result.Outcome == ImportCheckStartOutcome.Started) return;
+
+        _running = false;
+        Snackbar.Add(result.Outcome switch
+        {
+            ImportCheckStartOutcome.InvalidCredentials => L["Invalid Login Information"],
+            ImportCheckStartOutcome.CredentialUnlockFailed => L["Saved credentials could not be unlocked."],
+            ImportCheckStartOutcome.AlreadyRunning => L["An import is already running."],
+            ImportCheckStartOutcome.NoDeepScansLeft =>
+                L["You've used all 3 deep scans this month. The next one unlocks {0}.",
+                    _last?.NextScanUnlocksAt.ToLocalTime().ToString("d") ?? ""],
+            _ => L["Something went wrong."]
+        }, Severity.Warning);
+        await Reload();
+    }
+
+    private async Task OnStatus(ImportStatusUpdatedEvent update)
+    {
+        if (update.Mix != Mix) return;
+        await InvokeAsync(async () =>
+        {
+            _status = update.Status;
+            // The saga announces this exact status last; the stored verdict is written by then.
+            if (update.Status == "Score check finished")
+            {
+                _running = false;
+                await Reload();
+            }
+
+            StateHasChanged();
+        });
+    }
+
+    private Task OnError(ImportStatusErrorEvent error)
+    {
+        return InvokeAsync(() =>
+        {
+            _running = false;
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        foreach (var subscription in _subscriptions) subscription.Dispose();
+    }
+}
+
+@inject IMediator Mediator;
+@inject ICurrentUserAccessor CurrentUser;
+@inject IUiNotificationHub UiHub;
+@inject ISnackbar Snackbar;
+@implements IDisposable
