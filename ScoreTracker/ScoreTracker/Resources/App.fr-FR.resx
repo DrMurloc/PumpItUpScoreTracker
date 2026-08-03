@@ -953,11 +953,11 @@
   <data name="Calculators" xml:space="preserve">
     <value>Calculateurs</value>
   </data>
+  <data name="Calls" xml:space="preserve">
+    <value>Appels</value>
+  </data>
   <data name="Calls are rolled up hourly against the tool, not the key that made them — at 600 a minute a row per request would bury the log. Each key carries its own last-used stamp, which is what tells you an old one is safe to revoke." xml:space="preserve">
     <value>Les appels sont agrégés par heure sur l'outil, pas sur la clé qui les a faits — à 600 par minute, une ligne par requête enterrerait le journal. Chaque clé porte sa propre date de dernière utilisation, et c'est elle qui vous dit qu'une ancienne peut être révoquée sans risque.</value>
-  </data>
-  <data name="Calls · 24h" xml:space="preserve">
-    <value>Appels · 24 h</value>
   </data>
   <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
     <value>Calories brûlées (facultatif — estime le nombre de pas)</value>
@@ -1144,8 +1144,8 @@
   <data name="Clearly Has Friends" xml:space="preserve">
     <value>Clearly Has Friends</value>
   </data>
-  <data name="Clicks · 24h" xml:space="preserve">
-    <value>Clics · 24 h</value>
+  <data name="Clicks" xml:space="preserve">
+    <value>Clics</value>
   </data>
   <data name="Close" xml:space="preserve">
     <value>Fermer</value>
@@ -1662,14 +1662,8 @@
   <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
     <value>Supprimer vos scores {0} réinitialise votre Pumbility, vos titres et votre progression de dossiers pour ce Mix. Les autres Mix ne changent pas.</value>
   </data>
-  <data name="Deliver to" xml:space="preserve">
-    <value>Envoyer à</value>
-  </data>
   <data name="Delivered" xml:space="preserve">
     <value>Envoyé</value>
-  </data>
-  <data name="Delivered · 24h" xml:space="preserve">
-    <value>Livrées · 24 h</value>
   </data>
   <data name="Deliveries" xml:space="preserve">
     <value>Envois</value>
@@ -2019,9 +2013,6 @@
   <data name="Failed" xml:space="preserve">
     <value>Échec</value>
   </data>
-  <data name="Failed · 24h" xml:space="preserve">
-    <value>Échouées · 24 h</value>
-  </data>
   <data name="Failed: {0}{1}" xml:space="preserve">
     <value>Échec : {0}{1}</value>
   </data>
@@ -2365,6 +2356,9 @@
   <data name="Header name" xml:space="preserve">
     <value>Nom de l'en-tête</value>
   </data>
+  <data name="Header required for PIUGame session, so your server knows it is you receiving user sessions." xml:space="preserve">
+    <value>L'en-tête est obligatoire pour le mode session PIUGame, afin que votre serveur sache que c'est bien vous qui recevez les sessions des joueurs.</value>
+  </data>
   <data name="held" xml:space="preserve">
     <value>maintenu</value>
   </data>
@@ -2446,9 +2440,6 @@
   <data name="How each skill runs against your own average" xml:space="preserve">
     <value>Comment chaque compétence se situe par rapport à votre propre moyenne</value>
   </data>
-  <data name="How I know your server is yours" xml:space="preserve">
-    <value>Comment je sais que votre serveur est le vôtre</value>
-  </data>
   <data name="How is this personalized?" xml:space="preserve">
     <value>Comment est-ce personnalisé ?</value>
   </data>
@@ -2484,9 +2475,6 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>Comment le score est calculé</value>
-  </data>
-  <data name="How your server knows it's PIU Scores" xml:space="preserve">
-    <value>Comment votre serveur sait que c'est PIU Scores</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>Je ne peux pas encore publier dans ce salon — accordez-moi les permissions Voir le salon et Envoyer des messages ici, puis relancez la commande.</value>
@@ -4650,9 +4638,6 @@
   <data name="Rate limited {0} times" xml:space="preserve">
     <value>Limité {0} fois</value>
   </data>
-  <data name="Rate limited · 24h" xml:space="preserve">
-    <value>Limitées · 24 h</value>
-  </data>
   <data name="Rating" xml:space="preserve">
     <value>Rating</value>
     <comment>Rating</comment>
@@ -4849,6 +4834,9 @@
   <data name="Report Video Tooltip" xml:space="preserve">
     <value>Signaler lien endommagé, ou vidéo incorrecte</value>
   </data>
+  <data name="Request Header" xml:space="preserve">
+    <value>En-tête de requête</value>
+  </data>
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>Nécessaire pour être listé — c'est ce qu'un joueur lit avant de décider.</value>
   </data>
@@ -4872,6 +4860,9 @@
   </data>
   <data name="Resolve" xml:space="preserve">
     <value>Résoudre</value>
+  </data>
+  <data name="Response Secret" xml:space="preserve">
+    <value>Secret de réponse</value>
   </data>
   <data name="Rest Time" xml:space="preserve">
     <value>Temps de repos</value>
@@ -4970,9 +4961,6 @@
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Sauvegarder les Scores</value>
-  </data>
-  <data name="Save the URL and a verification secret, then press Verify. PIU Scores POSTs {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
-    <value>Enregistrez l'URL et un secret de vérification, puis appuyez sur Vérifier. PIU Scores envoie en POST {"type":"url_verification"} et votre endpoint a dix secondes pour répondre 200 avec votre secret dans le corps.</value>
   </data>
   <data name="Saved" xml:space="preserve">
     <value>Enregistré</value>
@@ -5244,9 +5232,6 @@
   </data>
   <data name="Set a delivery URL on the Webhooks section and this fills in with yours." xml:space="preserve">
     <value>Indiquez une URL de livraison dans la section Webhooks et ceci se remplira avec la vôtre.</value>
-  </data>
-  <data name="Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key." xml:space="preserve">
-    <value>Définissez un en-tête avant de passer au mode session PIUGame : ce mode confie à votre serveur une clé piugame.com active.</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
     <value>Définir les charts</value>
@@ -5835,6 +5820,9 @@
   <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
     <value>Le récapitulatif est publié après le balayage hebdomadaire du dimanche.</value>
   </data>
+  <data name="The endpoint PIU Scores POSTs to when one of your players imports." xml:space="preserve">
+    <value>L'endpoint auquel PIU Scores envoie un POST quand l'un de vos joueurs importe.</value>
+  </data>
   <data name="The entry bar over time" xml:space="preserve">
     <value>Le seuil d'entrée au fil du temps</value>
   </data>
@@ -6204,6 +6192,9 @@
   <data name="Tool Review" xml:space="preserve">
     <value>Revue des outils</value>
   </data>
+  <data name="Tool's URL" xml:space="preserve">
+    <value>URL de l'outil</value>
+  </data>
   <data name="Toolmakers stay in the PIU Scores Discord, so I can message you when something goes wrong." xml:space="preserve">
     <value>Les créateurs d'outils restent sur le Discord de PIU Scores, pour que je puisse vous écrire quand quelque chose cloche.</value>
   </data>
@@ -6339,9 +6330,6 @@
   </data>
   <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
     <value>Deux peuvent être actives en même temps, donc en remplacer une ne coûte aucune interruption.</value>
-  </data>
-  <data name="Two secrets, one each way" xml:space="preserve">
-    <value>Deux secrets, un dans chaque sens</value>
   </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Deux vues des mêmes compétences. Celle de gauche alimente le mélange ci-dessus ; celle de droite est ce dossier tel que l'affichent les statistiques du dossier.</value>
@@ -6743,6 +6731,9 @@
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>Quand un nouveau Mix arrive, rien ne se réinitialise ici. Chaque score enregistré reste — pour se retourner, comparer et progresser. {0} Mix archivés, côte à côte, de 1999 à aujourd'hui.</value>
   </data>
+  <data name="Where a player lands when they click through from the directory." xml:space="preserve">
+    <value>Là où un joueur arrive quand il clique depuis l'annuaire.</value>
+  </data>
   <data name="Where every song starts you." xml:space="preserve">
     <value>Là où chaque chanson vous place au départ.</value>
   </data>
@@ -6751,9 +6742,6 @@
   </data>
   <data name="Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it." xml:space="preserve">
     <value>Là où les joueurs lisent votre code — GitHub, GitLab, Codeberg, n'importe quel hébergeur public. Un outil listé pointe directement dessus.</value>
-  </data>
-  <data name="Where players use it" xml:space="preserve">
-    <value>Où les joueurs l'utilisent</value>
   </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Où se situent les passes de ce chart, par niveau compétitif.</value>
@@ -6784,6 +6772,9 @@
   </data>
   <data name="Who has it" xml:space="preserve">
     <value>Qui l'a</value>
+  </data>
+  <data name="Why" xml:space="preserve">
+    <value>Pourquoi</value>
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
@@ -7000,6 +6991,9 @@
   </data>
   <data name="Your account will not be deleted" xml:space="preserve">
     <value>Votre compte ne sera pas supprimé</value>
+  </data>
+  <data name="Your API" xml:space="preserve">
+    <value>Votre API</value>
   </data>
   <data name="Your best" xml:space="preserve">
     <value>Votre meilleur</value>

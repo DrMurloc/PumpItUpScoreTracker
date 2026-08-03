@@ -51,7 +51,7 @@
         {
             <Stat N="@tool.ConnectedPlayers.ToString()" K="@L["Players"].Value"></Stat>
         }
-        <Stat N="@_summary.Clicks.ToString()" K="@L["Clicks · 24h"].Value"></Stat>
+        <Stat N="@_summary.Clicks.ToString("N0")" K="@L["Clicks"].Value"></Stat>
         <Stat Small="true" K="@L["Listed since"].Value"
               N="@(tool.ApprovedAt?.LocalDateTime.ToString("d MMM") ?? L["Not listed"].Value)"></Stat>
     </div>
@@ -65,8 +65,8 @@
             <MudLink Href="@($"/Developers/{tool.Id}/api")" Typo="Typo.caption">@L["Manage keys"]</MudLink>
         </div>
         <div class="ct-stats">
-            <Stat N="@_summary.Calls.ToString("N0")" K="@L["Calls · 24h"].Value"></Stat>
-            <Stat N="@_summary.RateLimited.ToString("N0")" K="@L["Rate limited · 24h"].Value"></Stat>
+            <Stat N="@_summary.Calls.ToString("N0")" K="@L["Calls"].Value"></Stat>
+            <Stat N="@_summary.RateLimited.ToString("N0")" K="@L["Rate limited"].Value"></Stat>
         </div>
     }
 
@@ -77,8 +77,8 @@
             <MudLink Href="@($"/Developers/{tool.Id}/webhooks")" Typo="Typo.caption">@L["Configure"]</MudLink>
         </div>
         <div class="ct-stats">
-            <Stat N="@_summary.Deliveries.ToString("N0")" K="@L["Delivered · 24h"].Value"></Stat>
-            <Stat N="@_summary.Failures.ToString("N0")" K="@L["Failed · 24h"].Value"></Stat>
+            <Stat N="@_summary.Deliveries.ToString("N0")" K="@L["Delivered"].Value"></Stat>
+            <Stat N="@_summary.Failures.ToString("N0")" K="@L["Failed"].Value"></Stat>
         </div>
     }
 

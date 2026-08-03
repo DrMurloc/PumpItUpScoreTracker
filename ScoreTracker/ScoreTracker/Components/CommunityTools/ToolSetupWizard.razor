@@ -189,7 +189,7 @@
 
                 @if (_mode != WebhookMode.None)
                 {
-                    <MudTextField T="string" @bind-Value="_webhookUrl" Label=@L["Deliver to"] Class="mt-3"
+                    <MudTextField T="string" @bind-Value="_webhookUrl" Label=@L["Your API"] Class="mt-3" Placeholder="https://example.piutool.com/score"
                                   MaxLength="500" Style="max-width:520px;"></MudTextField>
                     <div class="d-flex gap-3 flex-wrap mt-1">
                         <MudTextField T="string" @bind-Value="_headerName" Label=@L["Header name"]

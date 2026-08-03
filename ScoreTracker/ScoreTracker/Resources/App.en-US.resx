@@ -953,11 +953,11 @@
   <data name="Calculators" xml:space="preserve">
     <value>Calculators</value>
   </data>
+  <data name="Calls" xml:space="preserve">
+    <value>Calls</value>
+  </data>
   <data name="Calls are rolled up hourly against the tool, not the key that made them — at 600 a minute a row per request would bury the log. Each key carries its own last-used stamp, which is what tells you an old one is safe to revoke." xml:space="preserve">
     <value>Calls are rolled up hourly against the tool, not the key that made them — at 600 a minute a row per request would bury the log. Each key carries its own last-used stamp, which is what tells you an old one is safe to revoke.</value>
-  </data>
-  <data name="Calls · 24h" xml:space="preserve">
-    <value>Calls · 24h</value>
   </data>
   <data name="Calories burned (optional — estimates step count)" xml:space="preserve">
     <value>Calories burned (optional — estimates step count)</value>
@@ -1144,8 +1144,8 @@
   <data name="Clearly Has Friends" xml:space="preserve">
     <value>Clearly Has Friends</value>
   </data>
-  <data name="Clicks · 24h" xml:space="preserve">
-    <value>Clicks · 24h</value>
+  <data name="Clicks" xml:space="preserve">
+    <value>Clicks</value>
   </data>
   <data name="Close" xml:space="preserve">
     <value>Close</value>
@@ -1663,14 +1663,8 @@
   <data name="Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched." xml:space="preserve">
     <value>Deleting your {0} scores resets your Pumbility, your titles and your folder progress for that mix. Other mixes are untouched.</value>
   </data>
-  <data name="Deliver to" xml:space="preserve">
-    <value>Deliver to</value>
-  </data>
   <data name="Delivered" xml:space="preserve">
     <value>Delivered</value>
-  </data>
-  <data name="Delivered · 24h" xml:space="preserve">
-    <value>Delivered · 24h</value>
   </data>
   <data name="Deliveries" xml:space="preserve">
     <value>Deliveries</value>
@@ -2020,9 +2014,6 @@
   <data name="Failed" xml:space="preserve">
     <value>Failed</value>
   </data>
-  <data name="Failed · 24h" xml:space="preserve">
-    <value>Failed · 24h</value>
-  </data>
   <data name="Failed: {0}{1}" xml:space="preserve">
     <value>Failed: {0}{1}</value>
   </data>
@@ -2366,6 +2357,9 @@
   <data name="Header name" xml:space="preserve">
     <value>Header name</value>
   </data>
+  <data name="Header required for PIUGame session, so your server knows it is you receiving user sessions." xml:space="preserve">
+    <value>Header required for PIUGame session, so your server knows it is you receiving user sessions.</value>
+  </data>
   <data name="held" xml:space="preserve">
     <value>held</value>
   </data>
@@ -2447,9 +2441,6 @@
   <data name="How each skill runs against your own average" xml:space="preserve">
     <value>How each skill runs against your own average</value>
   </data>
-  <data name="How I know your server is yours" xml:space="preserve">
-    <value>How I know your server is yours</value>
-  </data>
   <data name="How is this personalized?" xml:space="preserve">
     <value>How is this personalized?</value>
   </data>
@@ -2485,9 +2476,6 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>How this is scored</value>
-  </data>
-  <data name="How your server knows it's PIU Scores" xml:space="preserve">
-    <value>How your server knows it's PIU Scores</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again.</value>
@@ -4651,9 +4639,6 @@
   <data name="Rate limited {0} times" xml:space="preserve">
     <value>Rate limited {0} times</value>
   </data>
-  <data name="Rate limited · 24h" xml:space="preserve">
-    <value>Rate limited · 24h</value>
-  </data>
   <data name="Rating" xml:space="preserve">
     <value>Rating</value>
     <comment>Rating</comment>
@@ -4850,6 +4835,9 @@
   <data name="Report Video Tooltip" xml:space="preserve">
     <value>Report Broken, or Incorrect Video</value>
   </data>
+  <data name="Request Header" xml:space="preserve">
+    <value>Request Header</value>
+  </data>
   <data name="Required to be listed — it is what a player reads before deciding." xml:space="preserve">
     <value>Required to be listed — it is what a player reads before deciding.</value>
   </data>
@@ -4873,6 +4861,9 @@
   </data>
   <data name="Resolve" xml:space="preserve">
     <value>Resolve</value>
+  </data>
+  <data name="Response Secret" xml:space="preserve">
+    <value>Response Secret</value>
   </data>
   <data name="Rest Time" xml:space="preserve">
 	  <value>Rest Time</value>
@@ -4971,9 +4962,6 @@
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Save Scores</value>
-  </data>
-  <data name="Save the URL and a verification secret, then press Verify. PIU Scores POSTs {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
-    <value>Save the URL and a verification secret, then press Verify. PIU Scores POSTs {"type":"url_verification"} and your endpoint has ten seconds to answer 200 with your secret in the body.</value>
   </data>
   <data name="Saved" xml:space="preserve">
     <value>Saved</value>
@@ -5245,9 +5233,6 @@
   </data>
   <data name="Set a delivery URL on the Webhooks section and this fills in with yours." xml:space="preserve">
     <value>Set a delivery URL on the Webhooks section and this fills in with yours.</value>
-  </data>
-  <data name="Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key." xml:space="preserve">
-    <value>Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key.</value>
   </data>
   <data name="Set Charts" xml:space="preserve">
 	  <value>Set Charts</value>
@@ -5836,6 +5821,9 @@
   <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
     <value>The digest posts after the weekly Sunday sweep.</value>
   </data>
+  <data name="The endpoint PIU Scores POSTs to when one of your players imports." xml:space="preserve">
+    <value>The endpoint PIU Scores POSTs to when one of your players imports.</value>
+  </data>
   <data name="The entry bar over time" xml:space="preserve">
     <value>The entry bar over time</value>
   </data>
@@ -6205,6 +6193,9 @@
   <data name="Tool Review" xml:space="preserve">
     <value>Tool Review</value>
   </data>
+  <data name="Tool's URL" xml:space="preserve">
+    <value>Tool's URL</value>
+  </data>
   <data name="Toolmakers stay in the PIU Scores Discord, so I can message you when something goes wrong." xml:space="preserve">
     <value>Toolmakers stay in the PIU Scores Discord, so I can message you when something goes wrong.</value>
   </data>
@@ -6340,9 +6331,6 @@
   </data>
   <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
     <value>Two can be active at once, so rotating one costs no downtime.</value>
-  </data>
-  <data name="Two secrets, one each way" xml:space="preserve">
-    <value>Two secrets, one each way</value>
   </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it.</value>
@@ -6744,6 +6732,9 @@
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today.</value>
   </data>
+  <data name="Where a player lands when they click through from the directory." xml:space="preserve">
+    <value>Where a player lands when they click through from the directory.</value>
+  </data>
   <data name="Where every song starts you." xml:space="preserve">
     <value>Where every song starts you.</value>
   </data>
@@ -6752,9 +6743,6 @@
   </data>
   <data name="Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it." xml:space="preserve">
     <value>Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it.</value>
-  </data>
-  <data name="Where players use it" xml:space="preserve">
-    <value>Where players use it</value>
   </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Where this chart's passes sit, by competitive level.</value>
@@ -6785,6 +6773,9 @@
   </data>
   <data name="Who has it" xml:space="preserve">
     <value>Who has it</value>
+  </data>
+  <data name="Why" xml:space="preserve">
+    <value>Why</value>
   </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
@@ -7001,6 +6992,9 @@
   </data>
   <data name="Your account will not be deleted" xml:space="preserve">
     <value>Your account will not be deleted</value>
+  </data>
+  <data name="Your API" xml:space="preserve">
+    <value>Your API</value>
   </data>
   <data name="Your best" xml:space="preserve">
     <value>Your best</value>

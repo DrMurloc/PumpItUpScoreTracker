@@ -16,7 +16,9 @@
             <MudTextField T="string" @bind-Value="_name" Label=@L["Name"] MaxLength="64"></MudTextField>
         </MudItem>
         <MudItem xs="12" sm="6">
-            <MudTextField T="string" @bind-Value="_url" Label=@L["Where players use it"] MaxLength="500"></MudTextField>
+            <MudTextField T="string" @bind-Value="_url" Label=@L["Tool's URL"] MaxLength="500"
+                          Placeholder="https://example.piutool.com"
+                          HelperText='@L["Where a player lands when they click through from the directory."].Value'></MudTextField>
         </MudItem>
         <MudItem xs="12">
             <MudTextField T="string" @bind-Value="_description" Label=@L["Description"] MaxLength="500"

@@ -23,6 +23,10 @@
     @foreach (var link in _links)
     {
         <div class="olb-rank-card" style="align-items:flex-start;">
+            @* Copy leads the row: it is what a maker came to do, and the code beside it is only
+               there so they can tell two links apart. *@
+            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
+                           aria-label=@L["Copy"] OnClick="() => Copy(InviteUrl(link.Code))"></MudIconButton>
             <div class="flex-grow-1" style="min-width:0;">
                 <div class="ct-secret ct-secret-wrap">
                     <pre>@link.Code</pre>
@@ -33,9 +37,6 @@
                               Placeholder='@L["Note — where did you share this?"].Value'></MudTextField>
             </div>
             <div class="olb-rank-tail">
-                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
-                               aria-label=@L["Copy"]
-                               OnClick="() => Copy(InviteUrl(link.Code))"></MudIconButton>
                 <MudButton Size="Size.Small" Variant="Variant.Text"
                            OnClick="() => RevokeInvite(link.Code)">@L["Revoke"]</MudButton>
             </div>

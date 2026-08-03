@@ -47,9 +47,12 @@ internal sealed class ToolConsoleSaga :
                 or ToolActivityKind.DeliveryRejected or ToolActivityKind.DeliveryUnreachable),
             rows.Where(r => r.Kind == ToolActivityKind.RateLimited).Sum(r => r.Count),
             await _tools.CountConnectedPlayers(request.ToolId, cancellationToken),
-            // Roll-ups carry a count per hour, so these are sums rather than row counts.
+            // Roll-ups carry a count per hour, so this is a sum rather than a row count.
             rows.Where(r => r.Kind == ToolActivityKind.KeyUsed).Sum(r => r.Count),
-            rows.Where(r => r.Kind == ToolActivityKind.DirectoryClicked).Sum(r => r.Count));
+            // Clicks are all-time. It is the only number a listing-only tool ever gets, and a
+            // window would show a maker zero on a quiet week for a tool that has done well.
+            await _activity.SumAllTime(request.ToolId, ToolActivityKind.DirectoryClicked,
+                cancellationToken));
     }
 
     /// <summary>
