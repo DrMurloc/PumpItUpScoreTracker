@@ -26,8 +26,20 @@ public sealed record SetToolWebhookCommand(Guid ToolId, WebhookMode Mode, string
 public sealed record SetToolOutboundHeaderCommand(Guid ToolId, string? Name, string? Value) : IRequest;
 
 /// <summary>
-///     Proves the maker controls their webhook URL by POSTing a challenge they must echo back.
-///     Nothing is delivered anywhere until this succeeds.
+///     Sets the secret a maker's endpoint must answer a verification request with. Stored as a hash
+///     and never sent anywhere — a blank value clears it, which also un-verifies the URL.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record SetToolVerificationSecretCommand(Guid ToolId, string? Secret) : IRequest;
+
+/// <summary>
+///     Proves the maker's endpoint is theirs: we POST a bare verification request and it answers
+///     with the secret only they registered. Nothing is delivered anywhere until this succeeds.
+///     <para>
+///         The request deliberately carries no challenge. Echoing a value we just sent proves the
+///         endpoint can read, not that it knows anything — so a hijacked DNS record passed the
+///         earlier version of this by replying with our own bytes.
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record VerifyToolWebhookCommand(Guid ToolId) : IRequest<WebhookVerificationResult>;

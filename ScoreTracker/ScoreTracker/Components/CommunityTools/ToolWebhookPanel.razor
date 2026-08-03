@@ -55,11 +55,7 @@
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
                 <MudText Typo="Typo.body2"><b>@L["Not verified — nothing is being sent"]</b></MudText>
                 <MudText Typo="Typo.body2">
-                    @L["Save the URL, then press Verify. We POST {\"type\":\"url_verification\",\"challenge\":\"...\"} to it and your endpoint has ten seconds to answer 200 with that same challenge string somewhere in the body."]
-                </MudText>
-                @* Asked in review: there is no box for it because it is not the maker's to choose. *@
-                <MudText Typo="Typo.body2">
-                    @L["We generate the challenge and it is different every time, so there is nothing for you to enter here. The fixed secret is the header below."]
+                    @L["Save the URL and a verification secret, then press Verify. We POST {\"type\":\"url_verification\"} and your endpoint has ten seconds to answer 200 with your secret in the body."]
                 </MudText>
             </MudAlert>
         }
@@ -67,13 +63,20 @@
         {
             <MudText Typo="Typo.caption" Class="d-block mt-2" Style="opacity:.75;">
                 @L["Verified {0}", Tool.WebhookUrlVerifiedAt.Value.LocalDateTime.ToString("dd MMM yyyy")]
-                · @L["Changing the URL clears this."]
+                · @L["Changing the URL or the secret clears this."]
             </MudText>
         }
 
         <div class="d-flex align-center gap-3 mt-2 flex-wrap">
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="_verifying"
+            <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                       Disabled="@(_verifying || !Tool.HasVerificationSecret)"
                        OnClick="VerifyWebhook">@L["Verify"]</MudButton>
+            @if (!Tool.HasVerificationSecret)
+            {
+                <MudText Typo="Typo.caption" Style="opacity:.7;">
+                    @L["Save a verification secret first."]
+                </MudText>
+            }
             @if (_verifyResult is not null)
             {
                 <MudText Typo="Typo.body2">@_verifyResult</MudText>
@@ -82,10 +85,13 @@
 
         <MudDivider Class="my-4"></MudDivider>
 
-        @* The only thing telling a maker's server that a call is ours. *@
-        <MudText Typo="Typo.subtitle2" Class="mb-1">@L["How your server knows it's us"]</MudText>
+        @* Two secrets, opposite directions, and the reason they can never be one value: we hand the
+           header to their server on every call, so anyone who receives a delivery has read it. *@
+        <MudText Typo="Typo.subtitle2" Class="mb-1">@L["Two secrets, one each way"]</MudText>
+
+        <MudText Typo="Typo.body2" Class="mt-2"><b>@L["How your server knows it's us"]</b></MudText>
         <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-            @L["We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it."]
+            @L["We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it."]
         </MudText>
         <div class="d-flex gap-3 flex-wrap">
             <MudTextField T="string" @bind-Value="_headerName" Label=@L["Header name"]
@@ -100,6 +106,31 @@
             <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mt-2">
                 @L["Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key."]
             </MudAlert>
+        }
+
+        <MudText Typo="Typo.body2" Class="mt-4"><b>@L["How we know your server is yours"]</b></MudText>
+        <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
+            @L["Your endpoint answers a verification request with this. We never send it anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it."]
+        </MudText>
+        <div class="d-flex gap-3 flex-wrap align-center">
+            <MudTextField T="string" @bind-Value="_verificationSecret" Label=@VerificationSecretLabel
+                          MaxLength="128" InputType="InputType.Password"
+                          Style="max-width:260px;"></MudTextField>
+            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="GenerateSecret">
+                @L["Generate one"]
+            </MudButton>
+        </div>
+        @if (_generated is not null)
+        {
+            <div class="ct-secret ct-secret-wrap mt-2" style="max-width:520px;">
+                <pre>@_generated</pre>
+                <MudIconButton Class="ct-secret-copy" Icon="@Icons.Material.Filled.ContentCopy"
+                               Size="Size.Small" Color="Color.Default" aria-label=@L["Copy"]
+                               OnClick="CopyGenerated"></MudIconButton>
+            </div>
+            <MudText Typo="Typo.caption" Class="d-block mt-1" Style="opacity:.7;">
+                @L["Copy it into your handler and press Save. We keep only a hash, so this is the last time you'll see it here."]
+            </MudText>
         }
 
         <MudDivider Class="my-4"></MudDivider>
@@ -134,6 +165,7 @@
 
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
 @code {
     private static readonly MixEnum[] PrimaryMixes =
         Enum.GetValues<MixEnum>().Where(m => m.IsPrimary()).OrderByDescending(m => m.DisplayOrder()).ToArray();
@@ -145,8 +177,12 @@
     private string _url = string.Empty;
     private string _headerName = string.Empty;
 
-    // Never populated from the record — the value does not travel. Blank means "keep what's stored".
+    // Never populated from the record — neither secret's value travels. Blank means "keep stored".
     private string _headerValue = string.Empty;
+    private string _verificationSecret = string.Empty;
+
+    // Shown once, right after Generate, so it can be copied into a handler. Dropped on save.
+    private string? _generated;
     private HashSet<MixEnum> _mixes = new();
     private bool _verifying;
     private string? _verifyResult;
@@ -163,6 +199,10 @@
         ? L["Value (set — type to replace)"].Value
         : L["Value"].Value;
 
+    private string VerificationSecretLabel => Tool.HasVerificationSecret
+        ? L["Verification secret (set — type to replace)"].Value
+        : L["Verification secret"].Value;
+
     /// <summary>
     ///     Reloads the boxes only when the tool changes, not on every re-render: the parent reloads
     ///     after each save, and re-seeding on that would throw away anything typed since.
@@ -176,8 +216,28 @@
         _url = Tool.WebhookUrl ?? string.Empty;
         _headerName = Tool.OutboundHeaderName ?? string.Empty;
         _headerValue = string.Empty;
+        _verificationSecret = string.Empty;
+        _generated = null;
         _mixes = Tool.Mixes.ToHashSet();
         _verifyResult = null;
+    }
+
+    /// <summary>
+    ///     Fills the box and shows the value once, because a maker cannot put a secret in their
+    ///     handler if they never see it — and we keep only a hash after Save.
+    /// </summary>
+    private void GenerateSecret()
+    {
+        _generated = "vfy_" + Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N")[..16];
+        _verificationSecret = _generated;
+    }
+
+    private async Task CopyGenerated()
+    {
+        if (_generated is null) return;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", _generated);
+        Snackbar.Add(L["Copied"].Value, Severity.Success);
     }
 
     private void ToggleMix(MixEnum mix)
@@ -202,6 +262,10 @@
         {
             // Before the webhook command, so entering session mode can see the header it requires.
             await Mediator.Send(new SetToolOutboundHeaderCommand(Tool.Id, _headerName, _headerValue));
+            // Only when they typed one: this command clears verification, and sending it on every
+            // save would un-verify a working webhook every time the maker edits a mix chip.
+            if (!string.IsNullOrWhiteSpace(_verificationSecret))
+                await Mediator.Send(new SetToolVerificationSecretCommand(Tool.Id, _verificationSecret));
             await Mediator.Send(new SetToolWebhookCommand(Tool.Id, _mode,
                 string.IsNullOrWhiteSpace(_url) ? null : _url, _mixes.ToArray()));
         }

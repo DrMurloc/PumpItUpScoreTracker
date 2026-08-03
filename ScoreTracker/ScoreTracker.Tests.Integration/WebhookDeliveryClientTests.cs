@@ -37,6 +37,15 @@ public sealed class WebhookDeliveryClientTests : IDisposable
         return new WebhookDeliveryClient(new HttpClient());
     }
 
+    /// <summary>
+    ///     The maker's registered secret and what we actually hold. Verification compares against
+    ///     the hash, never the secret — the secret exists here only so the fake endpoint can answer
+    ///     with it, which is the same position a real maker's handler is in.
+    /// </summary>
+    private const string Secret = "vfy_abc123";
+
+    private static readonly string SecretHash = WebhookSecrets.HashOf(Secret);
+
     private Uri Hook(string path)
     {
         return new Uri($"{_maker.Urls[0].TrimEnd('/')}/{path}");
@@ -151,28 +160,29 @@ public sealed class WebhookDeliveryClientTests : IDisposable
     }
 
     [Fact]
-    public async Task AnEndpointThatEchoesTheChallengeVerifies()
+    public async Task AnEndpointThatAnswersWithTheSecretVerifies()
     {
         _maker.Given(Request.Create().WithPath("/verify").UsingPost())
-            .RespondWith(Response.Create().WithStatusCode(200).WithBody("vfy_abc123"));
+            .RespondWith(Response.Create().WithStatusCode(200).WithBody(Secret));
 
-        var outcome = await Build().Verify(Hook("verify"), "vfy_abc123", null, null,
+        var outcome = await Build().Verify(Hook("verify"), SecretHash, null, null,
             CancellationToken.None);
 
         Assert.True(outcome.Succeeded);
     }
 
     /// <summary>
-    ///     The interesting failure: the URL is alive but it is not the maker's handler. Reporting it
-    ///     with the body they actually sent is what turns it from a mystery into a fix.
+    ///     The interesting failure: the URL is alive but whatever answered does not hold the
+    ///     secret. Reporting it with the body they actually sent is what turns it from a mystery
+    ///     into a fix.
     /// </summary>
     [Fact]
-    public async Task A200ThatDoesNotEchoIsAnInvalidResponseWithTheBody()
+    public async Task A200WithoutTheSecretIsAnInvalidResponseWithTheBody()
     {
         _maker.Given(Request.Create().WithPath("/verify").UsingPost())
             .RespondWith(Response.Create().WithStatusCode(200).WithBody("Hello from nginx"));
 
-        var outcome = await Build().Verify(Hook("verify"), "vfy_abc123", null, null,
+        var outcome = await Build().Verify(Hook("verify"), SecretHash, null, null,
             CancellationToken.None);
 
         Assert.False(outcome.Succeeded);
@@ -186,9 +196,9 @@ public sealed class WebhookDeliveryClientTests : IDisposable
     public async Task VerificationCarriesTheOutboundHeader()
     {
         _maker.Given(Request.Create().WithPath("/verify").UsingPost())
-            .RespondWith(Response.Create().WithStatusCode(200).WithBody("vfy_abc123"));
+            .RespondWith(Response.Create().WithStatusCode(200).WithBody(Secret));
 
-        await Build().Verify(Hook("verify"), "vfy_abc123", "X-Planner-Token", "s3cret",
+        await Build().Verify(Hook("verify"), SecretHash, "X-Planner-Token", "s3cret",
             CancellationToken.None);
 
         Assert.Equal("s3cret",
@@ -199,7 +209,7 @@ public sealed class WebhookDeliveryClientTests : IDisposable
     public async Task AVerificationAgainstADeadHostFailsWithoutThrowing()
     {
         var outcome = await Build().Verify(
-            new Uri("https://this-host-does-not-exist.piuscores-test.invalid/verify"), "vfy_abc123",
+            new Uri("https://this-host-does-not-exist.piuscores-test.invalid/verify"), SecretHash,
             null, null, CancellationToken.None);
 
         Assert.False(outcome.Succeeded);

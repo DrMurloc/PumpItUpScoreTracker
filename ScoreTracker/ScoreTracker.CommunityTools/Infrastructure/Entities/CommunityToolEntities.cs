@@ -25,12 +25,20 @@ internal sealed class ToolEntity
     public string? OutboundHeaderName { get; set; }
 
     /// <summary>
-    ///     Plaintext, and named so. We send it verbatim on every delivery, so it cannot be hashed —
-    ///     an earlier name implied otherwise, and the obvious "fix" for that would have broken every
-    ///     delivery a maker authenticates.
+    ///     Encrypted, not hashed. We send it verbatim on every delivery, so it has to be readable
+    ///     back — AES-GCM under a data key wrapped by the master key, so the database alone does not
+    ///     yield it. Long enough for the base64 envelope rather than for the secret.
+    /// </summary>
+    [MaxLength(1024)]
+    public string? OutboundHeaderValue { get; set; }
+
+    /// <summary>
+    ///     SHA-256 of the secret a maker's endpoint answers a verification request with. Hashed
+    ///     rather than encrypted because we only ever compare — and it must never travel to the
+    ///     endpoint, which is the entire reason it proves anything.
     /// </summary>
     [MaxLength(128)]
-    public string? OutboundHeaderValue { get; set; }
+    public string? WebhookVerificationSecretHash { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ApprovedAt { get; set; }
     [MaxLength(500)] public string? RejectionReason { get; set; }

@@ -948,8 +948,8 @@
   <data name="Change mix" xml:space="preserve">
     <value>시리즈 변경</value>
   </data>
-  <data name="Changing the URL clears this." xml:space="preserve">
-    <value>URL을 바꾸면 초기화됩니다.</value>
+  <data name="Changing the URL or the secret clears this." xml:space="preserve">
+    <value>URL이나 비밀 값을 바꾸면 확인이 해제됩니다.</value>
   </data>
   <data name="Channel Name" xml:space="preserve">
     <value>채널 이름</value>
@@ -1358,6 +1358,9 @@
   </data>
   <data name="Copy" xml:space="preserve">
     <value>복사</value>
+  </data>
+  <data name="Copy it into your handler and press Save. We keep only a hash, so this is the last time you'll see it here." xml:space="preserve">
+    <value>핸들러에 넣고 저장을 누르세요. 저희는 해시만 보관하므로 여기서 보는 건 이번이 마지막입니다.</value>
   </data>
   <data name="Copy link" xml:space="preserve">
     <value>링크 복사</value>
@@ -2118,6 +2121,9 @@
   <data name="Game tag" xml:space="preserve">
     <value>게임 태그</value>
   </data>
+  <data name="Generate one" xml:space="preserve">
+    <value>만들어 주기</value>
+  </data>
   <data name="Generating" xml:space="preserve">
     <value>생성 중</value>
   </data>
@@ -2357,6 +2363,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>점수 산정 방식</value>
+  </data>
+  <data name="How we know your server is yours" xml:space="preserve">
+    <value>서버가 본인 것임을 확인하는 방법</value>
   </data>
   <data name="How your server knows it's us" xml:space="preserve">
     <value>서버가 우리를 알아보는 방법</value>
@@ -4694,11 +4703,14 @@
   <data name="Save" xml:space="preserve">
     <value>저장</value>
   </data>
+  <data name="Save a verification secret first." xml:space="preserve">
+    <value>확인용 비밀 값을 먼저 저장하세요.</value>
+  </data>
   <data name="Save Scores" xml:space="preserve">
     <value>점수 저장</value>
   </data>
-  <data name="Save the URL, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} to it and your endpoint has ten seconds to answer 200 with that same challenge string somewhere in the body." xml:space="preserve">
-    <value>URL을 저장한 뒤 확인을 누르세요. 저희가 {"type":"url_verification","challenge":"..."} 를 POST하면, 여러분의 엔드포인트는 10초 안에 200과 함께 같은 challenge 문자열을 본문 어딘가에 담아 응답해야 합니다.</value>
+  <data name="Save the URL and a verification secret, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
+    <value>URL과 확인용 비밀 값을 저장한 뒤 확인을 누르세요. 저희가 {"type":"url_verification"} 를 POST하면, 여러분의 엔드포인트는 10초 안에 200과 함께 그 비밀 값을 본문에 담아 응답해야 합니다.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>저장된 로그인 정보를 불러왔습니다</value>
@@ -5978,6 +5990,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
     <value>한 번에 두 개까지 활성화할 수 있어, 교체할 때 중단 시간이 없습니다.</value>
   </data>
+  <data name="Two secrets, one each way" xml:space="preserve">
+    <value>비밀 값 두 개, 방향 하나씩</value>
+  </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>같은 스킬의 두 가지 보기. 왼쪽은 위 블렌드에 쓰이고, 오른쪽은 폴더 통계와 같은 이 폴더의 수치입니다.</value>
   </data>
@@ -6155,6 +6170,12 @@
   <data name="Verification" xml:space="preserve">
     <value>인증</value>
   </data>
+  <data name="Verification secret" xml:space="preserve">
+    <value>확인용 비밀 값</value>
+  </data>
+  <data name="Verification secret (set — type to replace)" xml:space="preserve">
+    <value>확인용 비밀 값 (설정됨 — 바꾸려면 입력)</value>
+  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>공식 가져오기로 확인됨</value>
   </data>
@@ -6266,9 +6287,6 @@
   <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
     <value>piugame.com 세션 키를 전달해 직접 임포트를 실행할 수 있게 합니다.</value>
   </data>
-  <data name="We generate the challenge and it is different every time, so there is nothing for you to enter here. The fixed secret is the header below." xml:space="preserve">
-    <value>challenge 문자열은 저희가 만들고 매번 달라지므로 여기에 입력할 것은 없습니다. 고정된 비밀 값은 아래의 헤더입니다.</value>
-  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>우리는 봉인된 키를 보관합니다</value>
   </data>
@@ -6281,8 +6299,8 @@
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>선택한 시리즈의 임포트만 보냅니다. 옛 시리즈는 1M 척도가 아니라 등급으로 채점되며, 페이로드가 어떤 모델인지 알려줍니다.</value>
   </data>
-  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it." xml:space="preserve">
-    <value>이 헤더를 모든 전달과 확인 호출에 그대로 보냅니다. 핸들러에서 확인하고 헤더가 없는 요청은 거부하세요.</value>
+  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it." xml:space="preserve">
+    <value>이 헤더를 모든 전달과 확인 호출에 그대로 보냅니다. 핸들러에서 확인하고 헤더가 없는 요청은 거부하세요. 저희가 보내야 하므로 암호화해서 보관합니다.</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>저희는 키가 아니라 해시를 저장합니다. 잃어버리면 새로 만드세요 — 키를 두 개까지 동시에 쓸 수 있으므로 교체에 중단 시간이 없습니다.</value>
@@ -6622,6 +6640,9 @@
   </data>
   <data name="Your data is yours" xml:space="preserve">
     <value>데이터는 당신의 것</value>
+  </data>
+  <data name="Your endpoint answers a verification request with this. We never send it anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
+    <value>확인 요청에 이 값으로 응답하면 됩니다. 저희는 이 값을 어디에도 보내지 않습니다 — 그래서 이 값으로 응답하는 것이 증명이 되고, 탈취된 DNS로는 통과할 수 없습니다. 해시로만 보관하니 찾을 수 있는 곳에 적어 두세요.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>파일이 10MB를 초과했습니다. 크기를 줄여 다시 시도해 주세요.</value>

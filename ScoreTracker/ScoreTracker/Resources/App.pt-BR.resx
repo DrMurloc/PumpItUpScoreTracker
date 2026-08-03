@@ -948,8 +948,8 @@
   <data name="Change mix" xml:space="preserve">
     <value>Trocar versão</value>
   </data>
-  <data name="Changing the URL clears this." xml:space="preserve">
-    <value>Alterar a URL limpa isto.</value>
+  <data name="Changing the URL or the secret clears this." xml:space="preserve">
+    <value>Mudar a URL ou o segredo cancela isto.</value>
   </data>
   <data name="Channel Name" xml:space="preserve">
     <value>Nome do canal</value>
@@ -1358,6 +1358,9 @@
   </data>
   <data name="Copy" xml:space="preserve">
     <value>Copiar</value>
+  </data>
+  <data name="Copy it into your handler and press Save. We keep only a hash, so this is the last time you'll see it here." xml:space="preserve">
+    <value>Copie para o seu handler e clique em Salvar. Guardamos só um hash, então esta é a última vez que você o vê aqui.</value>
   </data>
   <data name="Copy link" xml:space="preserve">
     <value>Copiar link</value>
@@ -2118,6 +2121,9 @@
   <data name="Game tag" xml:space="preserve">
     <value>Etiqueta de jogo</value>
   </data>
+  <data name="Generate one" xml:space="preserve">
+    <value>Gerar um</value>
+  </data>
   <data name="Generating" xml:space="preserve">
     <value>Gerando</value>
   </data>
@@ -2357,6 +2363,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>Como isto é pontuado</value>
+  </data>
+  <data name="How we know your server is yours" xml:space="preserve">
+    <value>Como sabemos que o servidor é seu</value>
   </data>
   <data name="How your server knows it's us" xml:space="preserve">
     <value>Como o seu servidor sabe que somos nós</value>
@@ -4694,11 +4703,14 @@
   <data name="Save" xml:space="preserve">
     <value>Salvar</value>
   </data>
+  <data name="Save a verification secret first." xml:space="preserve">
+    <value>Salve um segredo de verificação primeiro.</value>
+  </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Salvar pontuações</value>
   </data>
-  <data name="Save the URL, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} to it and your endpoint has ten seconds to answer 200 with that same challenge string somewhere in the body." xml:space="preserve">
-    <value>Salve a URL e clique em Verificar. Enviamos um POST com {"type":"url_verification","challenge":"..."} e o seu endpoint tem dez segundos para responder 200 com essa mesma string de challenge em algum lugar do corpo.</value>
+  <data name="Save the URL and a verification secret, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
+    <value>Salve a URL e um segredo de verificação, depois clique em Verificar. Enviamos um POST com {"type":"url_verification"} e o seu endpoint tem dez segundos para responder 200 com o seu segredo no corpo.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>Credenciais salvas carregadas</value>
@@ -5978,6 +5990,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
     <value>Duas podem ficar ativas ao mesmo tempo, então trocar uma não custa tempo fora do ar.</value>
   </data>
+  <data name="Two secrets, one each way" xml:space="preserve">
+    <value>Dois segredos, um para cada direção</value>
+  </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Duas visões das mesmas habilidades. A da esquerda alimenta a mistura acima; a da direita é esta pasta como as estatísticas da pasta mostram.</value>
   </data>
@@ -6155,6 +6170,12 @@
   <data name="Verification" xml:space="preserve">
     <value>Verificação</value>
   </data>
+  <data name="Verification secret" xml:space="preserve">
+    <value>Segredo de verificação</value>
+  </data>
+  <data name="Verification secret (set — type to replace)" xml:space="preserve">
+    <value>Segredo de verificação (definido — digite para substituir)</value>
+  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Verificado pela importação oficial</value>
   </data>
@@ -6266,9 +6287,6 @@
   <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
     <value>Repassamos a chave de sessão do piugame.com para você rodar sua própria importação.</value>
   </data>
-  <data name="We generate the challenge and it is different every time, so there is nothing for you to enter here. The fixed secret is the header below." xml:space="preserve">
-    <value>Nós geramos a string de challenge e ela muda a cada vez, então não há nada para você digitar aqui. O segredo fixo é o cabeçalho abaixo.</value>
-  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>Nós guardamos uma chave selada</value>
   </data>
@@ -6281,8 +6299,8 @@
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Só enviamos importações das versões que você escolher. Versões antigas pontuam por letra em vez da escala de 1M — o payload diz qual modelo está usando.</value>
   </data>
-  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it." xml:space="preserve">
-    <value>Enviamos este cabeçalho literalmente em cada entrega e na chamada de verificação. Confira no seu handler e rejeite o que não o traga.</value>
+  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it." xml:space="preserve">
+    <value>Enviamos este cabeçalho literalmente em cada entrega e na chamada de verificação. Confira no seu handler e rejeite o que não o traga. Guardado criptografado, porque precisamos enviá-lo.</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>Guardamos um hash, não a chave. Se você perder, crie outra — dá para usar duas chaves ao mesmo tempo, então substituir uma não custa tempo fora do ar.</value>
@@ -6622,6 +6640,9 @@
   </data>
   <data name="Your data is yours" xml:space="preserve">
     <value>Seus dados são seus</value>
+  </data>
+  <data name="Your endpoint answers a verification request with this. We never send it anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
+    <value>O seu endpoint responde a uma requisição de verificação com isto. Nós não enviamos isso a lugar nenhum — é por isso que responder com ele é prova, e por isso um DNS sequestrado não passa. Guardamos só um hash, então anote em algum lugar que você ache depois.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Seu arquivo passava de 10MB, reduza-o e tente novamente.</value>

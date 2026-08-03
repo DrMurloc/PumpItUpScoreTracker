@@ -83,10 +83,16 @@ internal sealed class WebhookDeliveryClient : IWebhookDeliveryClient
     ///     timeout, the same failure classification and the same outbound header as a real delivery —
     ///     a verification that succeeds under gentler conditions than a delivery would is worthless.
     /// </summary>
-    public async Task<WebhookVerificationOutcome> Verify(Uri url, string challenge, string? headerName,
-        string? headerValue, CancellationToken cancellationToken)
+    /// <summary>
+    ///     Asks the endpoint to prove it is the maker's, by answering with the secret only the maker
+    ///     registered with us. The request carries no challenge: a body containing the answer would
+    ///     prove the endpoint can read, not that it knows anything, which is what let a hijacked DNS
+    ///     record pass the old version of this.
+    /// </summary>
+    public async Task<WebhookVerificationOutcome> Verify(Uri url, string expectedSecretHash,
+        string? headerName, string? headerValue, CancellationToken cancellationToken)
     {
-        var body = JsonSerializer.Serialize(new { type = WebhookChallenge.Type, challenge });
+        var body = JsonSerializer.Serialize(new { type = WebhookSecrets.VerificationType });
         using var request = new HttpRequestMessage(HttpMethod.Post, url)
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json")
@@ -108,10 +114,11 @@ internal sealed class WebhookDeliveryClient : IWebhookDeliveryClient
                         ? WebhookFailureReason.ServerError
                         : WebhookFailureReason.ClientError, (int)response.StatusCode, snippet);
 
-            // A 200 that does not echo is the interesting case: the URL is alive but it is not the
-            // maker's handler, or their handler ignored us. Reporting that as InvalidResponse with
-            // the body they sent is what makes it fixable.
-            return WebhookChallenge.Echoes(snippet, challenge)
+            // A 200 with the wrong body is the interesting case: the URL is alive but whatever
+            // answered does not hold the secret. Reporting that as InvalidResponse with the body
+            // they sent is what makes it fixable — and it is also what a hijacked record looks
+            // like, which is the point.
+            return WebhookSecrets.Answers(snippet, expectedSecretHash)
                 ? WebhookVerificationOutcome.Verified()
                 : WebhookVerificationOutcome.Failed(WebhookFailureReason.InvalidResponse,
                     (int)response.StatusCode, snippet);
@@ -187,7 +194,7 @@ internal interface IWebhookDeliveryClient
     Task<WebhookDeliveryOutcome> Post(Uri url, string body, string deliveryId,
         string? headerName, string? headerValue, CancellationToken cancellationToken);
 
-    Task<WebhookVerificationOutcome> Verify(Uri url, string challenge, string? headerName,
+    Task<WebhookVerificationOutcome> Verify(Uri url, string expectedSecretHash, string? headerName,
         string? headerValue, CancellationToken cancellationToken);
 }
 

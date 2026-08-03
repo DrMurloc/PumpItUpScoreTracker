@@ -956,8 +956,8 @@
   <data name="Change mix" xml:space="preserve">
     <value>バージョンを変更</value>
   </data>
-  <data name="Changing the URL clears this." xml:space="preserve">
-    <value>URL を変更すると解除されます。</value>
+  <data name="Changing the URL or the secret clears this." xml:space="preserve">
+    <value>URL か秘密の値を変えると確認は解除されます。</value>
   </data>
   <data name="Channel Name" xml:space="preserve">
 	  <value>チャンネル名</value>
@@ -1370,6 +1370,9 @@
   </data>
   <data name="Copy" xml:space="preserve">
     <value>コピー</value>
+  </data>
+  <data name="Copy it into your handler and press Save. We keep only a hash, so this is the last time you'll see it here." xml:space="preserve">
+    <value>ハンドラーに入れて保存を押してください。ハッシュだけを保管するので、ここで見られるのはこれが最後です。</value>
   </data>
   <data name="Copy link" xml:space="preserve">
     <value>リンクをコピー</value>
@@ -2135,6 +2138,9 @@
   <data name="Game tag" xml:space="preserve">
     <value>ゲームタグ</value>
   </data>
+  <data name="Generate one" xml:space="preserve">
+    <value>生成する</value>
+  </data>
   <data name="Generating" xml:space="preserve">
     <value>生成中</value>
   </data>
@@ -2374,6 +2380,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>採点方法</value>
+  </data>
+  <data name="How we know your server is yours" xml:space="preserve">
+    <value>サーバーがあなたのものだと確認する方法</value>
   </data>
   <data name="How your server knows it's us" xml:space="preserve">
     <value>サーバーが当方を識別する方法</value>
@@ -4738,11 +4747,14 @@
   <data name="Save" xml:space="preserve">
 	  <value>保存</value>
   </data>
+  <data name="Save a verification secret first." xml:space="preserve">
+    <value>先に確認用の秘密の値を保存してください。</value>
+  </data>
   <data name="Save Scores" xml:space="preserve">
     <value>スコア保存</value>
   </data>
-  <data name="Save the URL, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} to it and your endpoint has ten seconds to answer 200 with that same challenge string somewhere in the body." xml:space="preserve">
-    <value>URL を保存してから確認を押してください。こちらから {"type":"url_verification","challenge":"..."} を POST するので、エンドポイントは 10 秒以内に 200 と、同じ challenge 文字列を本文のどこかに含めて返してください。</value>
+  <data name="Save the URL and a verification secret, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
+    <value>URL と確認用の秘密の値を保存してから確認を押してください。こちらから {"type":"url_verification"} を POST するので、エンドポイントは 10 秒以内に 200 と、その秘密の値を本文に含めて返してください。</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>保存済みの認証情報を読み込みました</value>
@@ -6038,6 +6050,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
     <value>同時に 2 つまで有効にできるので、入れ替えても停止時間はありません。</value>
   </data>
+  <data name="Two secrets, one each way" xml:space="preserve">
+    <value>秘密の値は 2 つ、向きはそれぞれ 1 つ</value>
+  </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>同じスキルのふたつの表示。左は上のブレンドに使われ、右はフォルダー統計と同じこのフォルダの数値です。</value>
   </data>
@@ -6218,6 +6233,12 @@
   <data name="Verification" xml:space="preserve">
 	  <value>確認</value>
   </data>
+  <data name="Verification secret" xml:space="preserve">
+    <value>確認用の秘密の値</value>
+  </data>
+  <data name="Verification secret (set — type to replace)" xml:space="preserve">
+    <value>確認用の秘密の値 (設定済み — 変更するには入力)</value>
+  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>公式インポートで確認済み</value>
   </data>
@@ -6329,9 +6350,6 @@
   <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
     <value>piugame.comのセッションキーを転送し、自分でインポートを実行できるようにします。</value>
   </data>
-  <data name="We generate the challenge and it is different every time, so there is nothing for you to enter here. The fixed secret is the header below." xml:space="preserve">
-    <value>challenge はこちらで生成し毎回変わるので、ここに入力するものはありません。固定の秘密は下のヘッダーです。</value>
-  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>私たちは封印された鍵を保管しています</value>
   </data>
@@ -6344,8 +6362,8 @@
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>選んだバージョンのインポートだけを送ります。古いバージョンは1Mスケールではなく グレードで採点され、ペイロードがどちらのモデルかを示します。</value>
   </data>
-  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it." xml:space="preserve">
-    <value>このヘッダーをすべての配信と確認呼び出しにそのまま送ります。ハンドラーで確認し、ヘッダーのないリクエストは拒否してください。</value>
+  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it." xml:space="preserve">
+    <value>このヘッダーをすべての配信と確認呼び出しにそのまま送ります。ハンドラーで確認し、ヘッダーのないリクエストは拒否してください。送る必要があるため暗号化して保管します。</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>保存しているのはキーではなくハッシュです。失くしたら新しく作ってください — キーは同時に2つ使えるので、入れ替えに停止時間はかかりません。</value>
@@ -6692,6 +6710,9 @@
   </data>
   <data name="Your data is yours" xml:space="preserve">
     <value>データはあなたのもの</value>
+  </data>
+  <data name="Your endpoint answers a verification request with this. We never send it anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
+    <value>確認リクエストにはこの値で応答してください。こちらからはどこにも送りません — だからこそこの値で応答できることが証明になり、乗っ取られた DNS では通りません。ハッシュだけを保管するので、見つけられる場所に控えておいてください。</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>ファイルが10MBを超えています。サイズを小さくして再試行してください。</value>

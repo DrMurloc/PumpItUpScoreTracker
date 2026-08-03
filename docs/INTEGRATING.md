@@ -141,15 +141,20 @@ Three modes, set on `/Developers`:
 
 ### Verifying your endpoint (do this first)
 
-**We send nothing to a URL you have not proven you control.** Save the URL on `/Developers`, press
-**Verify**, and we POST:
+**We send nothing to a URL you have not proven is yours.** There are two steps, and the order
+matters.
+
+**1. Register a verification secret** on `/Developers` — type one or press Generate — and put the
+same string in your handler. We store only a SHA-256 hash of it, so keep your copy.
+
+**2. Press Verify.** We POST:
 
 ```
 POST <your url>
-{ "type": "url_verification", "challenge": "vfy_8f2a91c04e" }
+{ "type": "url_verification" }
 ```
 
-Answer `200` with that challenge string in the body — bare, quoted, or inside JSON, all fine:
+Answer `200` with your secret in the body — bare, quoted, or inside JSON, all fine:
 
 ```
 200 OK
@@ -157,14 +162,19 @@ Answer `200` with that challenge string in the body — bare, quoted, or inside 
 vfy_8f2a91c04e
 ```
 
-Only then do deliveries start. **Changing the URL clears verification** — otherwise verifying once
-and swapping to anything would make the whole exercise decorative.
+Note what the request does **not** contain: your secret. That is the entire point. An earlier
+revision sent a challenge for you to echo, which anything able to receive the request could satisfy
+— including whatever a hijacked DNS record happened to point at. Now answering correctly requires
+already knowing something we never transmitted.
 
-Why this exists: a typo in that box would otherwise mean we post a player's scores, on a schedule,
-to whoever happens to own the host you mistyped. This turns that into a failed save.
+Only then do deliveries start. **Changing the URL or the secret clears verification** — a proof that
+outlives the thing it was a proof of is worse than no proof.
 
-If verification fails you get the reason and your server's own status code. A `200` that does not
-echo is the interesting one, and usually means the URL is alive but it is not your handler.
+Why this exists at all: a typo in that box would otherwise mean we post a player's scores, on a
+schedule, to whoever happens to own the host you mistyped. This turns that into a failed save.
+
+If verification fails you get the reason and your server's own status code. A `200` without the
+secret is the interesting one: the URL is alive, but whatever answered does not hold your secret.
 
 **The webhook URL has to be public.** We refuse loopback and private-network addresses, checked
 against what the host actually resolves to — from our servers those point at our infrastructure, not
@@ -175,7 +185,12 @@ local run allows them.
 
 **Set a header on `/Developers`** — any name, any value — and we send it verbatim on every delivery
 over TLS. Check it in your handler and reject anything without it. That is one `if`, and it is the
-whole mechanism.
+whole mechanism. We store it encrypted rather than hashed, because unlike your verification secret
+we have to be able to send it.
+
+**These are two different values and must stay that way.** The header travels to your server on
+every call, so anyone who receives one delivery has read it — handing it back at verification time
+would prove nothing. The verification secret goes the other way and never leaves our side.
 
 Optional for score push and player ping — if someone guesses your URL the worst they do is write
 junk into your own database, which is yours to guard. **Required for PIUGame session mode**, where

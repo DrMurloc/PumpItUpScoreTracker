@@ -22,7 +22,12 @@ public sealed record ToolRecord(
     string? RejectionReason,
     DateTimeOffset? WebhookUrlVerifiedAt,
     string? OutboundHeaderName,
-    bool HasOutboundHeaderValue);
+    bool HasOutboundHeaderValue,
+    /// <summary>
+    ///     Whether a verification secret is registered. Only ever the flag — the secret is stored as
+    ///     a hash and the plaintext exists nowhere after the maker saves it.
+    /// </summary>
+    bool HasVerificationSecret);
 
 /// <summary>A tool as a player browsing the directory sees it — no delivery configuration.</summary>
 [ExcludeFromCodeCoverage]

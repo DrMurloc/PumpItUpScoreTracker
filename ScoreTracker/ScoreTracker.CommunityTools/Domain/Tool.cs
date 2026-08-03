@@ -194,8 +194,9 @@ internal sealed class Tool
     }
 
     /// <summary>
-    ///     Records that the endpoint echoed our challenge back. Only meaningful for the URL that is
-    ///     set right now — <see cref="SetWebhook" /> clears it whenever that changes.
+    ///     Records that the endpoint answered with the maker's registered secret. Only meaningful
+    ///     for the URL that is set right now — <see cref="SetWebhook" /> clears it whenever that
+    ///     changes.
     /// </summary>
     public void MarkWebhookVerified(DateTimeOffset at)
     {
@@ -203,5 +204,14 @@ internal sealed class Tool
             throw new ToolWebhookModeException("There is no webhook URL to verify.");
 
         WebhookUrlVerifiedAt = at;
+    }
+
+    /// <summary>
+    ///     Withdraws the proof. Called when the secret it was proved against changes or is removed,
+    ///     because a proof outliving the thing it was a proof of is worse than no proof at all.
+    /// </summary>
+    public void ClearWebhookVerification()
+    {
+        WebhookUrlVerifiedAt = null;
     }
 }

@@ -104,15 +104,37 @@ internal sealed class WebhookDeliveryDispatcher : IWebhookDeliveryDispatcher
 }
 
 /// <summary>
-///     Reads a tool's outbound header. Separate from <see cref="IToolRepository" /> because it is
-///     the one value in the vertical that must never travel with a tool record — a query that
-///     returns a Tool must not double as a way to read the secret a maker authenticates us by.
+///     Reads a tool's webhook secrets. Separate from <see cref="IToolRepository" /> because these
+///     are the values in the vertical that must never travel with a tool record — a query that
+///     returns a Tool must not double as a way to read what a maker authenticates by.
 /// </summary>
 internal interface IToolSecretReader
 {
+    /// <summary>Decrypted, because we send it verbatim on every delivery.</summary>
     Task<(string? Name, string? Value)> GetOutboundHeader(Guid toolId,
         CancellationToken cancellationToken = default);
 
     Task SetOutboundHeader(Guid toolId, string? name, string? value,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     The hash of what a maker's endpoint must answer with. Null means they have not set one,
+    ///     which is what makes a URL unverifiable rather than merely unverified.
+    /// </summary>
+    Task<string?> GetVerificationSecretHash(Guid toolId, CancellationToken cancellationToken = default);
+
+    /// <summary>Stores the hash only. The secret itself is never written down.</summary>
+    Task SetVerificationSecretHash(Guid toolId, string? hash,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+///     Encrypts and decrypts the outbound header at rest. Implemented against the master key in
+///     <c>IKeyEnvelope</c>, so the database on its own does not yield a maker's secret.
+/// </summary>
+internal interface IToolSecretProtector
+{
+    Task<string> Protect(Guid toolId, string plaintext, CancellationToken cancellationToken = default);
+
+    Task<string?> Unprotect(Guid toolId, string? ciphertext, CancellationToken cancellationToken = default);
 }

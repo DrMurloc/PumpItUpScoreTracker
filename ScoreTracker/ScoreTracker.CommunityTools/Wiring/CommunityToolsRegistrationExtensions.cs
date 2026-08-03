@@ -20,6 +20,7 @@ public static class CommunityToolsRegistrationExtensions
         services.AddTransient<IToolRepository, EFToolRepository>();
         services.AddTransient<IToolKeyRepository, EFToolKeyRepository>();
         services.AddTransient<IWebhookDeliveryRepository, EFWebhookDeliveryRepository>();
+        services.AddTransient<IToolSecretProtector, ToolSecretProtector>();
         services.AddTransient<IToolSecretReader, EFToolSecretReader>();
         services.AddTransient<IToolActivityRepository, EFToolActivityRepository>();
         services.AddTransient<IWebhookDeliveryDispatcher, WebhookDeliveryDispatcher>();

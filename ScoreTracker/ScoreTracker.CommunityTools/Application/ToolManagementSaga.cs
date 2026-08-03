@@ -26,6 +26,7 @@ internal sealed class ToolManagementSaga :
     IRequestHandler<SetToolAllToolsShareCommand>,
     IRequestHandler<SetToolWebhookCommand>,
     IRequestHandler<SetToolOutboundHeaderCommand>,
+    IRequestHandler<SetToolVerificationSecretCommand>,
     IRequestHandler<VerifyToolWebhookCommand, WebhookVerificationResult>,
     IRequestHandler<RequestToolListingCommand>,
     IRequestHandler<ApproveToolCommand>,
@@ -81,6 +82,32 @@ internal sealed class ToolManagementSaga :
     ///     same timeout and the same outbound header a real delivery would — verifying under gentler
     ///     conditions than we deliver under proves nothing.
     /// </summary>
+    /// <summary>
+    ///     Stores the hash of the secret a maker's endpoint answers with. Clearing it un-verifies
+    ///     the URL: without a secret there is nothing the endpoint could say that would prove
+    ///     anything, so leaving deliveries flowing would be resting on a check we can no longer run.
+    /// </summary>
+    public async Task Handle(SetToolVerificationSecretCommand request, CancellationToken cancellationToken)
+    {
+        var tool = await Owned(request.ToolId, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(request.Secret))
+        {
+            await _secrets.SetVerificationSecretHash(tool.Id, null, cancellationToken);
+            tool.ClearWebhookVerification();
+            await _tools.Save(tool, cancellationToken);
+            return;
+        }
+
+        await _secrets.SetVerificationSecretHash(tool.Id, WebhookSecrets.HashOf(request.Secret),
+            cancellationToken);
+
+        // A new secret means the endpoint has to prove itself again — the old proof was against a
+        // value their handler no longer returns.
+        tool.ClearWebhookVerification();
+        await _tools.Save(tool, cancellationToken);
+    }
+
     public async Task<WebhookVerificationResult> Handle(VerifyToolWebhookCommand request,
         CancellationToken cancellationToken)
     {
@@ -92,9 +119,16 @@ internal sealed class ToolManagementSaga :
         // request that actually leaves our network.
         await CheckedTarget(tool.WebhookUrl.ToString(), cancellationToken);
 
-        var challenge = WebhookChallenge.Mint();
+        // Without a registered secret there is nothing an endpoint could say that would prove
+        // anything, so this is unverifiable rather than unverified.
+        var expected = await _secrets.GetVerificationSecretHash(tool.Id, cancellationToken);
+        if (string.IsNullOrWhiteSpace(expected))
+            throw new ToolWebhookModeException(
+                "Set a verification secret first, and have your endpoint answer with it. We never " +
+                "send it to your server — that is what makes answering with it proof.");
+
         var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
-        var outcome = await _client.Verify(tool.WebhookUrl, challenge, headerName, headerValue,
+        var outcome = await _client.Verify(tool.WebhookUrl, expected, headerName, headerValue,
             cancellationToken);
 
         if (!outcome.Succeeded)
@@ -212,15 +246,17 @@ internal sealed class ToolManagementSaga :
         // Who registered it is the review queue's main signal, so it travels with the record
         // rather than being looked up per row on the page.
         var owner = await _users.GetUser(tool.OwnerUserId, cancellationToken);
-        // The name travels; the value never does. A maker who forgets theirs sets a new one.
+        // The name travels; neither secret's value ever does. A maker who forgets one sets a new one.
         var (headerName, headerValue) = await _secrets.GetOutboundHeader(tool.Id, cancellationToken);
+        var verificationHash = await _secrets.GetVerificationSecretHash(tool.Id, cancellationToken);
         return new ToolRecord(tool.Id, tool.OwnerUserId, owner?.Name.ToString() ?? string.Empty,
             tool.Name.ToString(), tool.Description,
             tool.Url?.ToString(), tool.Visibility, tool.AcceptsAllToolsShare, tool.WebhookMode,
             tool.WebhookUrl?.ToString(), tool.Mixes.ToArray(),
             await _tools.CountConnectedPlayers(tool.Id, cancellationToken),
             tool.CreatedAt, tool.ApprovedAt, tool.RejectionReason, tool.WebhookUrlVerifiedAt,
-            headerName, !string.IsNullOrWhiteSpace(headerValue));
+            headerName, !string.IsNullOrWhiteSpace(headerValue),
+            !string.IsNullOrWhiteSpace(verificationHash));
     }
 
     /// <summary>

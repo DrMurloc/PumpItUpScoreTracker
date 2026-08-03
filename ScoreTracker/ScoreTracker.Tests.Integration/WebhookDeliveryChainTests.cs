@@ -1,5 +1,9 @@
-﻿using Microsoft.Extensions.Logging.Abstractions;
+﻿using System.Security.Cryptography;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
+using ScoreTracker.Data.Clients;
+using ScoreTracker.Data.Configuration;
 using ScoreTracker.CommunityTools.Application;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
@@ -62,10 +66,24 @@ public sealed class WebhookDeliveryChainTests : IAsyncLifetime, IDisposable
 
     private EFWebhookDeliveryRepository Deliveries => new(_fixture.DbContextFactory);
 
+    /// <summary>
+    ///     The real protector over a local-key envelope, not a stub: the header is written encrypted
+    ///     and read back decrypted, so these tests prove the round trip survives the database as
+    ///     well as the wire. One key for the whole class, because a fresh one per call could not
+    ///     decrypt what the previous one wrote.
+    /// </summary>
+    private readonly ToolSecretProtector _protector = new(new KeyEnvelope(
+        Options.Create(new KeyVaultConfiguration
+        {
+            LocalKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+        })));
+
+    private EFToolSecretReader Secrets => new(_fixture.DbContextFactory, _protector);
+
     private WebhookDeliveryDispatcher Dispatcher()
     {
         return new WebhookDeliveryDispatcher(Deliveries, new WebhookDeliveryClient(new HttpClient()),
-            Tools, new EFToolSecretReader(_fixture.DbContextFactory),
+            Tools, Secrets,
             Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == Now));
     }
 
@@ -76,7 +94,7 @@ public sealed class WebhookDeliveryChainTests : IAsyncLifetime, IDisposable
         tool.SetWebhook(WebhookMode.ScorePush, Hook, 0, hasOutboundHeader: true);
         tool.MarkWebhookVerified(Now);
         await Tools.Save(tool);
-        await new EFToolSecretReader(_fixture.DbContextFactory)
+        await Secrets
             .SetOutboundHeader(ToolId, "X-Planner-Token", "s3cret");
         return tool;
     }
@@ -204,7 +222,7 @@ public sealed class WebhookDeliveryChainTests : IAsyncLifetime, IDisposable
         await Tools.GrantShare(ToolId, PlayerId, ShareSource.Direct, Now);
 
         var client = new SessionDeliveryClient(Tools, new WebhookDeliveryClient(new HttpClient()),
-            new EFToolSecretReader(_fixture.DbContextFactory),
+            Secrets,
             new EFToolActivityRepository(_fixture.DbContextFactory),
             Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == Now),
             NullLogger<SessionDeliveryClient>.Instance);

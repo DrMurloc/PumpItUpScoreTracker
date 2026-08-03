@@ -956,8 +956,8 @@
   <data name="Change mix" xml:space="preserve">
     <value>Blgrlblub mrg</value>
   </data>
-  <data name="Changing the URL clears this." xml:space="preserve">
-    <value>Golba bo alla marogl.</value>
+  <data name="Changing the URL or the secret clears this." xml:space="preserve">
+    <value>Golba URL opa grumb, marogl alla.</value>
   </data>
   <data name="Channel Name" xml:space="preserve">
 	  <value>Glmurmblarg Mrg</value>
@@ -1370,6 +1370,9 @@
   </data>
   <data name="Copy" xml:space="preserve">
     <value>Grabl</value>
+  </data>
+  <data name="Copy it into your handler and press Save. We keep only a hash, so this is the last time you'll see it here." xml:space="preserve">
+    <value>Blorp la bloop opa golba. Marogl grumb am olo, opa mo pragl blurgl la.</value>
   </data>
   <data name="Copy link" xml:space="preserve">
     <value>Morgmurg grorpgl</value>
@@ -2135,6 +2138,9 @@
   <data name="Game tag" xml:space="preserve">
     <value>Glorgargl gro</value>
   </data>
+  <data name="Generate one" xml:space="preserve">
+    <value>Marogl mo</value>
+  </data>
   <data name="Generating" xml:space="preserve">
     <value>Mrglmurpglorg</value>
   </data>
@@ -2374,6 +2380,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>Groga mrglrgl blurg</value>
+  </data>
+  <data name="How we know your server is yours" xml:space="preserve">
+    <value>Marogl bloop am olo grumba</value>
   </data>
   <data name="How your server knows it's us" xml:space="preserve">
     <value>Grumba bloop marogl alla</value>
@@ -4738,11 +4747,14 @@
   <data name="Save" xml:space="preserve">
 	  <value>Glmurp</value>
   </data>
+  <data name="Save a verification secret first." xml:space="preserve">
+    <value>Blorp grumb marogl la.</value>
+  </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Glmurp Mgrlgmrg</value>
   </data>
-  <data name="Save the URL, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} to it and your endpoint has ten seconds to answer 200 with that same challenge string somewhere in the body." xml:space="preserve">
-    <value>Blorp URL, opa golba. Marogl POST {"type":"url_verification","challenge":"..."} am bloop, opa grumba blurgl 200 la mo pragl.</value>
+  <data name="Save the URL and a verification secret, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;} and your endpoint has ten seconds to answer 200 with your secret in the body." xml:space="preserve">
+    <value>Blorp URL opa grumb marogl, opa golba. Marogl POST {"type":"url_verification"} am bloop, opa grumba blurgl 200 la grumb.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>Murpmurm arglmaglmurmgro blubmrgl</value>
@@ -6038,6 +6050,9 @@
   <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
     <value>Alla marogl blurgl, opa golba grumb bo alla.</value>
   </data>
+  <data name="Two secrets, one each way" xml:space="preserve">
+    <value>Alla grumb, mo bo golba</value>
+  </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Grrgl murpmagl mrgl mrp blubmurm blarglurg. Mrp rolurg argl glorgmorg mrp arglmagl mrgllurg; mrp rogro argl urg grglmrp grrgllurg lurg Grrgllurg Grorpmrgl urgblgrl gl.</value>
   </data>
@@ -6218,6 +6233,12 @@
   <data name="Verification" xml:space="preserve">
 	  <value>Morgmrglblubmagl</value>
   </data>
+  <data name="Verification secret" xml:space="preserve">
+    <value>Grumb marogl</value>
+  </data>
+  <data name="Verification secret (set — type to replace)" xml:space="preserve">
+    <value>Grumb marogl (olo — blurgl mo golba)</value>
+  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Murplurgmagl romurg urgmrmurg glorggl</value>
   </data>
@@ -6329,9 +6350,6 @@
   <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
     <value>Bam murpo piugame.com murgloborg blarglurp murgloo gromurp murpmurp murmo murgblub.</value>
   </data>
-  <data name="We generate the challenge and it is different every time, so there is nothing for you to enter here. The fixed secret is the header below." xml:space="preserve">
-    <value>Marogl grumba pragl opa mo bloop, opa alla blurgl am olo. Grumb golba mo blorp la.</value>
-  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>Mrgl rglmr gro urgrgl grrgl</value>
   </data>
@@ -6344,8 +6362,8 @@
   <data name="We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Bam murpo murgblub blu murgl gromurp murgargl. Murgl murmo murgm blarglurp murm bo 1M murgloo — murpo murgm murgblarg murmo.</value>
   </data>
-  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it." xml:space="preserve">
-    <value>Grumba mo pragl olo blurgl mo marogl. Bloop am glub, opa blorp alla pragl.</value>
+  <data name="We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it. Stored encrypted, because we have to send it." xml:space="preserve">
+    <value>Grumba mo pragl olo blurgl mo marogl. Bloop am glub, opa blorp alla pragl. Golba am olo, opa marogl blorp mo.</value>
   </data>
   <data name="We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>Bam murgloo murgblarg, bo blarglurp. Gromurp murgloo murgm, murpmurp blorm — gromurp murp murgm blomurp blarglurp murgm, murgloo murmo bam grorp.</value>
@@ -6692,6 +6710,9 @@
   </data>
   <data name="Your data is yours" xml:space="preserve">
     <value>Gromurp gromurm urg glmagl</value>
+  </data>
+  <data name="Your endpoint answers a verification request with this. We never send it anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
+    <value>Bloop am olo blurgl marogl la grumb. Alla blorp mo — opa mo golba pragl, opa DNS marogl alla bo. Golba am grumb, opa blorp la mo bloop.</value>
   </data>
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Gromurp mrblub ro blarggrorp grogrgl 10LURG, blgrlro murgmurp gl ro lurg morgro.</value>
