@@ -4,7 +4,9 @@ The step between signing in and having a home page: a dedicated `/Setup` card wh
 account picks its username, language, country, visibility and mix. Workshopped with the owner
 2026-08-02/03; visual mock approved.
 
-**Status (2026-08-03).** Designed, not built. This doc is the build spec.
+**Status (2026-08-03).** **Built, C0–C7.** Not yet owner-field-tested. Suites green: Tests 1932,
+Api 65, Components 547 (21 new in `SetupPageTests`), E2E 73 (11 culture facts + the new
+setup-landing fact; `PiuGameLoginFlow` now walks the real three-beat flow).
 
 ## Context
 
@@ -232,30 +234,52 @@ Checkpoint commits, suites green at each. FT = owner field-test checkpoint.
 | # | Commit | Notes |
 |---|---|---|
 | C0 | **Anonymous culture fallback** ✅ **landed** | `SupportedCultures.ResolveClosest` + `CustomRequestCultureProvider` appended after the stock three (D14); 45 unit cases, 11 `/Welcome` E2E facts. Independent of everything below and shippable on its own |
-| C1 | The page, static | `Setup.razor` with all five controls, hand-styled, defaults wired, no persistence yet. Page-scoped `<style>` + live re-theme (D9) |
-| C2 | Save-on-change + snackbars | `UpdateUserCommand` / `SetSetting` per field, claims refresh, `ISnackbar` confirmations (D6/D7); `SuccessContrastText` |
-| C3 | Language + mix navigation | `/Culture/Set` round-trip preserving state (D8), Continue through `/Mix/Set` (D10) |
-| C4 | Entry and exit | `LoginController` redirects ×4, the `Universal__SetupCompleted` flag, once-only behaviour (D11) — **FT1: sign up on a fresh account and walk the three beats** |
-| C5 | Localization | new keys ×9 locales, alphabetical insertion, glossaries, Murloc |
-| C6 | Tests | bUnit suite; E2E seed/flow updates + the new landing fact |
-| C7 | Docs | this doc synced, ARCHITECTURE.md pages table + login-flow paragraph, [front-door.md](front-door.md)'s `/Welcome` fate question closed |
+| C1 | The page, static | `Setup.razor`, hand-styled, live re-theme (D9) |
+| C2 | Save-on-change + snackbars | per-field `UpdateUserCommand` / `SetSetting`, claims refresh, `ISnackbar`; `SuccessContrastText` + `WarningContrastText` (see below) |
+| C3 | Language + mix navigation | `/Culture/Set` round-trip carrying `?from=` (D8), Continue through `/Mix/Set` (D10) |
+| C4 | Entry and exit | four `LoginController` redirects, the `Universal__SetupCompleted` flag, `Setup` added to `LegacyMixGate.ReadySegments` |
+| C5 | Localization | 26 keys × 9 locales, spliced in alphabetical position (`78 0` per file — pure insertions, no rewrite, no BOM churn) |
+| C6 | Tests | `SetupPageTests` (21 bUnit facts); `PiuGameLoginFlow` walks setup; a new landing fact |
+| C7 | Docs | this doc, ARCHITECTURE.md pages table + login-flow paragraph, [front-door.md](front-door.md)'s `/Welcome` question closed |
+
+## What the build changed about the design
+
+- **D5 needed real work.** `IUiSettingsAccessor.GetSelectedMix()` answers Phoenix for "no stored
+  mix", which would have opened a brand-new account on the *previous* game. The page reads the
+  raw setting instead and falls back to Phoenix 2 itself, so "unset" and "chose Phoenix" stay
+  different answers. `MixSettingKey` moved onto the interface to make that possible without a
+  fourth copy of the literal.
+- **The mix choice is load-bearing further than expected.** `/UploadPhoenixScores` imports into
+  the account's *current* mix, so a new account that walks setup on the Phoenix 2 default and
+  then imports Phoenix scores gets nothing — which is exactly how `ScoreImportTests` failed
+  first time. Correct behaviour, but worth knowing: the setup mix is the whole site's mix
+  immediately.
+- **The live re-theme needed one more moving part.** The per-mix atmosphere gradients are
+  `body.theme-*` rules with hardcoded hues, so re-emitting `--mix-*` alone left the previous
+  mix's glow over the new mix's ground. `helpers.js` gained a three-line `setThemeClass`.
+- **`SuccessContrastText` was worth fixing, and `Warning` with it.** Both were unset, so
+  MudBlazor's default white label sat on `#6EDE7F` and `#FFC433` at roughly 1.6:1. This is a
+  site-wide visual change — every success/warning snackbar and alert now carries dark ink —
+  made because this page is the first place those toasts do real work.
+- **`IUserRepository` is injected for the country list**, matching `ProfilePanel` and
+  `Communities`. That is the Web-layer repository rule's existing exception rather than a new
+  one; unifying all three onto a query is a separate cleanup, and doing it for one of three
+  would create drift rather than remove it.
 
 ## Open questions
 
-- **`Severity.Success` contrast.** `MixThemes.Build()` sets `Success = MixPalette.Success`
-  (`#6EDE7F`) but never `SuccessContrastText`, so the snackbar label takes MudBlazor's default.
-  Worth eyeballing before success toasts become first-run furniture — this is the first screen
-  where they carry real weight. One line in `Build()` if it reads badly.
-- **Typography under a long locale — mostly already answered.** The front door is fully localized
-  (88 `L[…]` calls) and `UseRequestLocalization` runs the default provider chain, which ends in
-  `AcceptLanguageHeaderRequestCultureProvider` — so a browser sending an exactly-supported locale
-  already gets `/Welcome` in its own language, cookie or no cookie. Its `<h1>` is the same
-  uppercase display face at a *larger* clamp than this page's, shipping to all nine locales today,
-  which retires the headline risk. What is genuinely new here is the three-label step rail; it
-  wraps by design, so this is a C5 eyeball, not a design constraint.
+- **The whole thing wants a field test.** Nothing here has been driven in a browser — the mock is
+  approved, the suites are green, and the visual call is the owner's.
 
 - **`en-ZW` is reachable by accident.** Murloc is in `SupportedCultures`, so a browser sending
   `en-ZW` has always matched it exactly and rendered the joke locale — that predates C0 and C0
   deliberately did not change it (only exact requests reach Murloc; nothing falls back into it).
   Zimbabwean traffic is presumably nil and the outcome is funny rather than harmful, so this is
   the owner's call, not a defect to fix unasked.
+
+- **The step rail under a long locale.** The headline risk turned out to be already answered —
+  the front door ships the same uppercase display face at a *larger* clamp to all nine locales
+  today. The three-label step rail is the one genuinely new piece of typography; it wraps by
+  design, so this is an eyeball during the field test rather than a design constraint.
+
+- **Nothing to run post-deploy.** No migration, no schema change, no backfill, no job to trigger.

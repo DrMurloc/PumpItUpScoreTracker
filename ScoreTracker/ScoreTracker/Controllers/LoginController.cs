@@ -102,9 +102,20 @@ public sealed class LoginController : Controller
                 CookieRequestCultureProvider.DefaultCookieName,
                 CookieRequestCultureProvider.MakeCookieValue(
                     new RequestCulture(culture, culture)));
-        var url = isNewUser ? "/" : returnUrl;
+        var url = isNewUser ? SetupUrl(providerName) : returnUrl;
 
         return LocalRedirect(url ?? "/");
+    }
+
+    /// <summary>
+    ///     Where a brand-new account lands: the setup step, told which sign-in filled its
+    ///     username in so the field can say so (docs/design/new-user-setup.md). returnUrl is
+    ///     deliberately dropped for new accounts — it already was, and a fresh account has
+    ///     nowhere meaningful to resume to.
+    /// </summary>
+    private static string SetupUrl(string providerName)
+    {
+        return $"/Setup?from={Uri.EscapeDataString(providerName)}";
     }
 
     // PIUGAME is credential-based, not OAuth: the literal routes below win over the
@@ -181,10 +192,14 @@ public sealed class LoginController : Controller
                 .FirstOrDefault(u => u.Id != resolution.User.Id);
             if (tagMatch != null)
                 return LocalRedirect(
-                    $"/Account/Merge?with={tagMatch.Id}&returnUrl={Uri.EscapeDataString("/")}");
+                    $"/Account/Merge?with={tagMatch.Id}&returnUrl={Uri.EscapeDataString(SetupUrl("PiuGame"))}");
         }
 
-        return LocalRedirect(resolution.IsNew ? "/" : string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);
+        return LocalRedirect(resolution.IsNew
+            ? SetupUrl("PiuGame")
+            : string.IsNullOrWhiteSpace(returnUrl)
+                ? "/"
+                : returnUrl);
     }
 
     private static string AppendError(string url, string error)
@@ -306,7 +321,10 @@ public sealed class LoginController : Controller
 
         var user = await _mediator.Send(new CreateUserCommand("Dev User"), HttpContext.RequestAborted);
         await _currentUser.SetCurrentUser(user);
-        return LocalRedirect(await DevLandingPage());
+        // A bootstrapped dev account is a new account, so it walks the real flow — but only
+        // once the catalog exists, since setup is pointless on a database with no charts.
+        var landing = await DevLandingPage();
+        return LocalRedirect(landing == "/" ? SetupUrl("Dev") : landing);
     }
 
     // An empty local catalog means setup isn't finished — land back on the setup page

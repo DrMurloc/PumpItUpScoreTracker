@@ -13,7 +13,7 @@ namespace ScoreTracker.Web.Services;
 
 public sealed class UiSettingsAccessor : IUiSettingsAccessor
 {
-    private const string MixKey = "Universal__CurrentMix";
+    private const string MixKey = IUiSettingsAccessor.MixSettingKey;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
     private readonly ShellContext _shell;
@@ -39,6 +39,11 @@ public sealed class UiSettingsAccessor : IUiSettingsAccessor
         var settings = await _mediator.Send(new GetUserUiSettingsQuery(), cancellationToken);
         if (!settings.ContainsKey(MixKey)) return MixEnum.Phoenix;
         return Enum.TryParse<MixEnum>(settings[MixKey], out var mix) ? mix : MixEnum.Phoenix;
+    }
+
+    public async Task SetSelectedMix(MixEnum mix, CancellationToken cancellationToken = default)
+    {
+        await SetSetting(MixKey, mix.ToString(), cancellationToken);
     }
 
     public async Task<string?> GetSetting(string key, CancellationToken cancellationToken = default,
