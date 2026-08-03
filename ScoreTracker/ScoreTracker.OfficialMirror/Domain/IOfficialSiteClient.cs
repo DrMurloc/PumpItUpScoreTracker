@@ -43,6 +43,18 @@ internal interface IOfficialSiteClient
         CancellationToken cancellationToken);
 
     /// <summary>
+    ///     Every best card at the given <c>?lv=</c> buckets, walked to the end of each — the
+    ///     evidence-driven repair for what a census localised. Pass an empty bucket list to walk
+    ///     the whole account, which is the deep scan.
+    ///     <para>
+    ///         The best list is the only surface carrying a SCORE: the play-log modal behind a
+    ///         count tile names charts and shows a grade, but nothing that could be saved.
+    ///     </para>
+    /// </summary>
+    Task<IReadOnlyList<OfficialRecordedScore>> GetBestScoresIn(MixEnum mix, Guid userId, string sid,
+        IReadOnlyCollection<string> buckets, bool includeBroken, CancellationToken cancellationToken);
+
+    /// <summary>
     ///     <paramref name="maxPages" /> drives the classic (undated) page walk; the dated
     ///     (redesigned) walk ignores it and instead stops on its up-score window. Returns the
     ///     best-list scrape AND the recently-played window it read alongside it, which the

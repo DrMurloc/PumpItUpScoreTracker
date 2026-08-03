@@ -18,4 +18,7 @@ public sealed record StartImportCheckCommand(
     MixEnum Mix,
     string CardId,
     string ExpectedGameTag,
-    bool DeepScan) : IRequest<ImportCheckStartResult>;
+    bool DeepScan,
+    /// <summary>Re-read the levels the last check found short before measuring again — the
+    /// "Add these scores" button. Free: it reads only what the census localised.</summary>
+    bool Repair = false) : IRequest<ImportCheckStartResult>;

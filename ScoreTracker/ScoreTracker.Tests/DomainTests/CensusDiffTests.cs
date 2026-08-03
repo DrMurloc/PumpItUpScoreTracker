@@ -203,47 +203,45 @@ public sealed class CensusDiffTests
         Assert.Null(CensusDiff.Headline(CensusDiff.Compare(census, census)));
     }
 
-    // ---- choosing the cheaper enumeration ----
+    // ---- what a repair re-reads ----
 
     [Fact]
-    public void AGradeCellCostsItsCumulativeRowsNotItsOwnBand()
+    public void OnlyTheBucketsThatCouldGainSomethingAreReRead()
     {
-        // The modal serves "A or better", so asking for the A cell in a bucket holding 2 SSS and
-        // 1 A returns three rows, not one.
-        var bucket = new CensusBucket("18", 3,
-            Grades(("SSS", 2), ("A", 1)), Plates());
+        var findings = new[]
+        {
+            new CensusFinding("18", CensusFindingKind.Missing, 1),
+            new CensusFinding("21", CensusFindingKind.OutOfDate, 1, "AA", true),
+            new CensusFinding("24", CensusFindingKind.Extra, 3)
+        };
 
-        Assert.Equal(3, CensusBands.RowsInCell(bucket, "A", isGrade: true));
-        Assert.Equal(2, CensusBands.RowsInCell(bucket, "SSS", isGrade: true));
+        // There is nothing to fetch for a level where we already hold more than piugame.
+        Assert.Equal(new[] { "18", "21" }, CensusDiff.BucketsToRepair(findings));
     }
 
     [Fact]
-    public void APlateCellCostsOnlyItsOwnBand()
+    public void ABucketWithTwoFindingsIsOnlyReadOnce()
     {
-        var bucket = new CensusBucket("18", 3, Grades(), Plates(("pg", 2), ("mg", 1)));
+        var findings = new[]
+        {
+            new CensusFinding("18", CensusFindingKind.OutOfDate, 1, "AA", true),
+            new CensusFinding("18", CensusFindingKind.OutOfDate, 2, "SS", true)
+        };
 
-        Assert.Equal(1, CensusBands.RowsInCell(bucket, "mg", isGrade: false));
+        // A repair reads a whole level, never a band: the count tile's modal names charts but
+        // carries no score, so the best-score list — which filters by level and nothing finer —
+        // is the only surface a repair can save from.
+        Assert.Equal(new[] { "18" }, CensusDiff.BucketsToRepair(findings));
     }
 
     [Fact]
-    public void TheModalWinsOnlyWhenItsBandIsMuchSmallerThanTheLevel()
+    public void TheSubTenResidualIsNotRepairable()
     {
-        var bucket = new CensusBucket("18", 366, Grades(), Plates(("pg", 4), ("mg", 300)));
-        var narrow = new CensusFinding("18", CensusFindingKind.OutOfDate, 1, "pg");
-        var wide = new CensusFinding("18", CensusFindingKind.OutOfDate, 1, "mg");
+        var findings = new[] { new CensusFinding("sub10", CensusFindingKind.Missing, 1) };
 
-        // 4 rows at six a page beats 373 charts at twelve; 300 rows does not.
-        Assert.True(CensusDiff.PreferPlayLog(narrow, bucket, 373));
-        Assert.False(CensusDiff.PreferPlayLog(wide, bucket, 373));
-    }
-
-    [Fact]
-    public void AFindingWithNoBandCanOnlyBePagedFromTheBestList()
-    {
-        var bucket = new CensusBucket("18", 366, Grades(), Plates(("mg", 1)));
-        var missing = new CensusFinding("18", CensusFindingKind.Missing, 1);
-
-        Assert.False(CensusDiff.PreferPlayLog(missing, bucket, 373));
+        // Phoenix will not filter its best list below level 10 either, so those charts can only
+        // be reached by reading the whole list — a deep scan, not a localised repair.
+        Assert.Empty(CensusDiff.BucketsToRepair(findings));
     }
 
     // ---- builders ----

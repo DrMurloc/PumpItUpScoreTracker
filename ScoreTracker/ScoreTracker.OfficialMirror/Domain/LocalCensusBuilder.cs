@@ -108,13 +108,6 @@ internal static class CensusBands
             [PhoenixLetterGrade.F] = "F"
         };
 
-    /// <summary>Grade tokens best to worst — the order the site renders its tiles in.</summary>
-    public static readonly IReadOnlyList<string> GradeOrder = GradeTokens.Values.ToArray();
-
-    /// <summary>Plate tokens best to worst.</summary>
-    public static readonly IReadOnlyList<string> PlateOrder =
-        new[] { "pg", "ug", "eg", "sg", "mg", "tg", "fg", "rg" };
-
     public static string GradeToken(PhoenixLetterGrade grade)
     {
         return GradeTokens.TryGetValue(grade, out var token) ? token : grade.ToString().ToUpperInvariant();
@@ -123,25 +116,5 @@ internal static class CensusBands
     public static string PlateToken(PhoenixPlate plate)
     {
         return plate.GetShorthand().ToLowerInvariant();
-    }
-
-    /// <summary>
-    ///     How many rows the site's drill-in modal returns for one cell. A GRADE cell is
-    ///     cumulative — asking for "A" lists every chart at A or better — so it is the sum from
-    ///     the top of the ladder down to that band. A plate cell holds only its own band.
-    /// </summary>
-    public static int RowsInCell(CensusBucket bucket, string band, bool isGrade)
-    {
-        var counts = isGrade ? bucket.Grades : bucket.Plates;
-        if (!isGrade) return counts.TryGetValue(band, out var exact) ? exact : 0;
-
-        var total = 0;
-        foreach (var token in GradeOrder)
-        {
-            if (counts.TryGetValue(token, out var count)) total += count;
-            if (string.Equals(token, band, StringComparison.Ordinal)) return total;
-        }
-
-        return total;
     }
 }

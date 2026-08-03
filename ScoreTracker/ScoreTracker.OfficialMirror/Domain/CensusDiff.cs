@@ -83,25 +83,24 @@ internal static class CensusDiff
     }
 
     /// <summary>
-    ///     Whether naming the charts behind a finding is cheaper through the count tile's own
-    ///     modal or by paging the level's best-score list. Only a band-localised finding can use
-    ///     the modal at all, and the modal is the WORSE page size — six rows against twelve — so
-    ///     it wins only when the band it can filter to is much smaller than the level.
+    ///     The buckets a repair has to re-read: every one that is short a chart or holding a stale
+    ///     one. "We have more than piugame" is never repaired — there is nothing to fetch.
     ///     <para>
-    ///         The modal serves a whole GRADE cell cumulatively ("A or better"), not just the band,
-    ///         so the row count is <see cref="CensusBands.RowsInCell" />, never the finding's own
-    ///         count. Plate cells are exact.
+    ///         Always the whole bucket, never the band the finding localised to. The count tile's
+    ///         drill-in modal names charts and shows a grade but carries no SCORE, so a repair
+    ///         cannot save from it; the best-score list is the only surface that can, and it
+    ///         filters by level and nothing finer.
     ///     </para>
     /// </summary>
-    public static bool PreferPlayLog(CensusFinding finding, CensusBucket officialBucket, int bucketChartCount)
+    public static IReadOnlyList<string> BucketsToRepair(IEnumerable<CensusFinding> findings)
     {
-        if (finding.Band == null) return false;
-
-        var rows = CensusBands.RowsInCell(officialBucket, finding.Band, finding.IsGradeBand);
-        if (rows == 0) return false;
-
-        var throughModal = (rows + 5) / 6;
-        var throughBestList = (bucketChartCount + 11) / 12;
-        return throughModal < throughBestList;
+        return findings
+            .Where(f => f.Kind is CensusFindingKind.Missing or CensusFindingKind.OutOfDate)
+            .Select(f => f.Bucket)
+            // Phoenix will not filter its best list below level 10 either, so a sub-10 residual
+            // can only be repaired by reading the whole list — which is the deep scan, not this.
+            .Where(b => b != CensusBuckets.SubTen)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
     }
 }

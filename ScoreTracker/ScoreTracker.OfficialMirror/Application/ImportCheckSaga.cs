@@ -86,7 +86,7 @@ internal sealed class ImportCheckSaga :
             }
 
             await _bus.Publish(new RunImportCheckCommand(userId, request.Mix, sid, request.CardId,
-                request.ExpectedGameTag, request.DeepScan), cancellationToken);
+                request.ExpectedGameTag, request.DeepScan, request.Repair), cancellationToken);
             handedOff = true;
             return new ImportCheckStartResult(ImportCheckStartOutcome.Started,
                 request.DeepScan ? left - 1 : left);
@@ -136,6 +136,7 @@ internal sealed class ImportCheckSaga :
 
             await _mediator.Send(new ExecuteImportCommand(request.UserId, request.Mix, request.Sid,
                 request.CardId, request.ExpectedGameTag, true, false), cancellationToken);
+            await Repair(request, cancellationToken);
 
             var official = await _officialSite.GetOfficialCensus(request.Mix, request.UserId, request.Sid,
                 cancellationToken);
@@ -161,6 +162,35 @@ internal sealed class ImportCheckSaga :
         {
             if (deepScanSlot) _guard.EndDeepScan();
         }
+    }
+
+    /// <summary>
+    ///     Re-reads what the last check found short, then lets the census below re-measure — so
+    ///     the run always ends on a fresh verdict rather than the stale one that triggered it.
+    ///     <para>
+    ///         A deep scan passes no buckets at all, which walks the whole best list: the only way
+    ///         to catch a score that improved without changing grade or plate, and the only repair
+    ///         for a sub-10 residual, since Phoenix will not filter its best list below level 10.
+    ///     </para>
+    /// </summary>
+    private async Task Repair(ExecuteImportCheckCommand request, CancellationToken cancellationToken)
+    {
+        if (!request.Repair && !request.DeepScan) return;
+
+        IReadOnlyCollection<string> buckets = Array.Empty<string>();
+        if (!request.DeepScan)
+        {
+            var previous = await _runs.GetLatest(request.UserId, request.Mix, cancellationToken);
+            buckets = previous == null
+                ? Array.Empty<string>()
+                : CensusDiff.BucketsToRepair(previous.Findings);
+            // Nothing localised to re-read. Falling through to an empty bucket list here would
+            // silently turn a free repair into a full walk.
+            if (buckets.Count == 0) return;
+        }
+
+        await _mediator.Send(new RepairScoresCommand(request.UserId, request.Mix, request.Sid, request.CardId,
+            request.ExpectedGameTag, buckets, true), cancellationToken);
     }
 
     public async Task<LastImportCheck> Handle(GetLastImportCheckQuery request, CancellationToken cancellationToken)

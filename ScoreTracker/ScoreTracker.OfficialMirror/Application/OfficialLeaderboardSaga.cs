@@ -212,50 +212,7 @@ namespace ScoreTracker.OfficialMirror.Application
             // IsBest rather than a second row racing it.
             await _mediator.Send(new RecordObservedPlaysCommand(userId, mix,
                 ScoreJournalEntry.OfficialImportSource, importSessionId, scrape.Plays), cancellationToken);
-            var count = 0;
-            var batch = new List<RecordedPhoenixScore>();
-            var existingScores =
-                (await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix), cancellationToken))
-                .ToDictionary(s =>
-                    s.ChartId);
-            // The import may only ever raise a record, and by the one published rule — a
-            // second, hand-written copy of it here is what let plate improvements drag scores
-            // down (docs/design/score-truth-model.md).
-            var toSave = scores.Where(s =>
-                    BestAttemptPolicy.Beats(existingScores.GetValueOrDefault(s.Chart.Id), s.Score,
-                        BestAttemptPolicy.PlateFor(s.IsBroken, s.Plate), s.IsBroken))
-                .ToArray();
-            foreach (var score in toSave)
-            {
-                await _mediator.Send(
-                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate,
-                        KeepBestStats: true,
-                        Source: ScoreJournalEntry.OfficialImportSource, Mix: mix,
-                        SessionId: importSessionId,
-                        RecordedAt: score.RecordedAt,
-                        Judgements: score.Judgements),
-                    cancellationToken);
-                count++;
-                batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,
-                    score.RecordedAt ?? _dateTime.Now));
-
-                if (count % 10 != 0) continue;
-
-                await _mediator.Publish(
-                    new ImportStatusUpdatedEvent(userId,
-                        $"Saving chart result {count} of {scores.Length}",
-                        batch.ToArray(), mix),
-                    cancellationToken);
-                batch.Clear();
-            }
-
-            await _mediator.Publish(
-                new ImportStatusUpdatedEvent(userId,
-                    "Charts finished saving",
-                    batch.ToArray(), mix),
-                cancellationToken);
-            batch.Clear();
-
+            var toSave = await SaveBests(userId, mix, importSessionId, scores, cancellationToken);
             // Titles are announced last, now that we know whether this run saved any scores.
             // With a score batch, they ride its session snapshot card (SessionId flows to the
             // title path); with none, SessionId stays null and they get their own announcement.
@@ -266,6 +223,71 @@ namespace ScoreTracker.OfficialMirror.Application
             if (maxPages != null)
                 await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.Value.ToString()),
                     cancellationToken);
+        }
+
+        /// <summary>
+        ///     Saves whatever a scrape found that beats what we already hold, announcing progress
+        ///     as it goes. Shared by the import and by the completeness check's repair, so both
+        ///     obey the same rule: a scrape may only ever RAISE a record, and only by the one
+        ///     published policy — a second hand-written copy of that rule is what let plate
+        ///     improvements drag scores down (docs/design/score-truth-model.md).
+        /// </summary>
+        internal async Task<OfficialRecordedScore[]> SaveBests(Guid userId, MixEnum mix, Guid sessionId,
+            OfficialRecordedScore[] scores, CancellationToken cancellationToken)
+        {
+            var existingScores =
+                (await _mediator.Send(new GetPhoenixRecordsQuery(userId, mix), cancellationToken))
+                .ToDictionary(s => s.ChartId);
+            var toSave = scores.Where(s =>
+                    BestAttemptPolicy.Beats(existingScores.GetValueOrDefault(s.Chart.Id), s.Score,
+                        BestAttemptPolicy.PlateFor(s.IsBroken, s.Plate), s.IsBroken))
+                .ToArray();
+
+            var count = 0;
+            var batch = new List<RecordedPhoenixScore>();
+            foreach (var score in toSave)
+            {
+                await _mediator.Send(
+                    new UpdatePhoenixBestAttemptCommand(score.Chart.Id, score.IsBroken, score.Score, score.Plate,
+                        KeepBestStats: true,
+                        Source: ScoreJournalEntry.OfficialImportSource, Mix: mix,
+                        SessionId: sessionId,
+                        RecordedAt: score.RecordedAt,
+                        Judgements: score.Judgements),
+                    cancellationToken);
+                count++;
+                batch.Add(new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken,
+                    score.RecordedAt ?? _dateTime.Now));
+
+                if (count % 10 != 0) continue;
+
+                await _mediator.Publish(
+                    new ImportStatusUpdatedEvent(userId, $"Saving chart result {count} of {toSave.Length}",
+                        batch.ToArray(), mix),
+                    cancellationToken);
+                batch.Clear();
+            }
+
+            await _mediator.Publish(
+                new ImportStatusUpdatedEvent(userId, "Charts finished saving", batch.ToArray(), mix),
+                cancellationToken);
+            return toSave;
+        }
+
+        /// <summary>
+        ///     The completeness check's repair: re-read the levels a census said disagree and save
+        ///     anything that beats what we hold. Same session bookkeeping and the same save rules
+        ///     as an import, so Undo and the journal see it as one more official run.
+        /// </summary>
+        public async Task<int> Handle(RepairScoresCommand request, CancellationToken cancellationToken)
+        {
+            var sessionId = await _mediator.Send(
+                new BeginScoreSessionCommand(request.UserId, request.Mix, ScoreJournalEntry.OfficialImportSource,
+                    request.ExpectedGameTag, request.CardId), cancellationToken);
+            var found = await _officialSite.GetBestScoresIn(request.Mix, request.UserId, request.Sid,
+                request.Buckets, request.IncludeBroken, cancellationToken);
+            var saved = await SaveBests(request.UserId, request.Mix, sessionId, found.ToArray(), cancellationToken);
+            return saved.Length;
         }
 
         /// <summary>

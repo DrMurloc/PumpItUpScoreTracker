@@ -58,8 +58,13 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts
         // only carries the sid.
         HttpClient ClientForSid(MixEnum mix, string sid);
 
-        Task<PiuGameGetBestScoresResult>
-            GetBestScores(MixEnum mix, HttpClient client, int page, CancellationToken cancellationToken);
+        /// <summary>
+        ///     One page of the best-score list. <paramref name="bucket" /> applies the page's own
+        ///     <c>?lv=</c> filter, which is what lets a repair read only the levels a census said
+        ///     disagree instead of walking the whole account.
+        /// </summary>
+        Task<PiuGameGetBestScoresResult> GetBestScores(MixEnum mix, HttpClient client, int page,
+            CancellationToken cancellationToken, string? bucket = null);
 
         /// <summary>
         ///     One <c>?lv=</c> bucket of the play-data page: how many charts the player has PASSED

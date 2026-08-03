@@ -198,6 +198,63 @@ public sealed class ImportCheckSagaTests
         guard.Verify(g => g.EndDeepScan(), Times.Once);
     }
 
+    // ---- repairing ----
+
+    [Fact]
+    public async Task ARepairReReadsOnlyTheLevelsTheLastCheckFoundShort()
+    {
+        var mediator = Mediator();
+        var runs = Runs(new CensusFinding("18", CensusFindingKind.Missing, 1),
+            new CensusFinding("21", CensusFindingKind.OutOfDate, 1, "AA", true),
+            new CensusFinding("24", CensusFindingKind.Extra, 2));
+
+        await Build(mediator: mediator, runs: runs, site: Site(Census(("18", 1))), records: Records(1))
+            .Handle(Execute(repair: true), CancellationToken.None);
+
+        mediator.Verify(m => m.Send(It.Is<RepairScoresCommand>(c =>
+            c.Buckets.SequenceEqual(new[] { "18", "21" })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ARepairWithNothingLocalisedDoesNotQuietlyBecomeAFullWalk()
+    {
+        var mediator = Mediator();
+
+        await Build(mediator: mediator, runs: Runs(), site: Site(Census(("18", 1))), records: Records(1))
+            .Handle(Execute(repair: true), CancellationToken.None);
+
+        // An empty bucket list means "walk everything" downstream, which is the one thing a free
+        // repair must never turn into.
+        mediator.Verify(m => m.Send(It.IsAny<RepairScoresCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ADeepScanWalksTheWholeListRegardlessOfWhatTheLastCheckFound()
+    {
+        var mediator = Mediator();
+        var runs = Runs(new CensusFinding("18", CensusFindingKind.Missing, 1));
+
+        await Build(mediator: mediator, runs: runs, site: Site(Census(("18", 1))), records: Records(1))
+            .Handle(Execute(deepScan: true), CancellationToken.None);
+
+        // No buckets: the only way to catch a score that improved without changing grade or
+        // plate, and the only repair for a sub-10 residual.
+        mediator.Verify(m => m.Send(It.Is<RepairScoresCommand>(c => c.Buckets.Count == 0),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task APlainCheckRepairsNothing()
+    {
+        var mediator = Mediator();
+
+        await Build(mediator: mediator, runs: Runs(new CensusFinding("18", CensusFindingKind.Missing, 1)),
+                site: Site(Census(("18", 1))), records: Records(1))
+            .Handle(Execute(), CancellationToken.None);
+
+        mediator.Verify(m => m.Send(It.IsAny<RepairScoresCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     // ---- reading it back ----
 
     [Fact]
@@ -261,9 +318,19 @@ public sealed class ImportCheckSagaTests
             "card", "TAG #1", deepScan);
     }
 
-    private static ExecuteImportCheckCommand Execute(bool deepScan = false)
+    private static ExecuteImportCheckCommand Execute(bool deepScan = false, bool repair = false)
     {
-        return new ExecuteImportCheckCommand(UserId, MixEnum.Phoenix, "sid", "card", "TAG #1", deepScan);
+        return new ExecuteImportCheckCommand(UserId, MixEnum.Phoenix, "sid", "card", "TAG #1", deepScan, repair);
+    }
+
+    /// <summary>A repository whose stored verdict already carries these findings.</summary>
+    private static Mock<IImportCheckRepository> Runs(params CensusFinding[] findings)
+    {
+        var runs = new Mock<IImportCheckRepository>();
+        runs.Setup(r => r.GetLatest(It.IsAny<Guid>(), It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ImportCheckRun(Guid.NewGuid(), UserId, MixEnum.Phoenix, Now, ImportCheckKind.Census,
+                64466, 63420, 2851, 2848, findings));
+        return runs;
     }
 
     private static AccountCensus Census(params (string Bucket, int Passes)[] buckets)
@@ -307,6 +374,8 @@ public sealed class ImportCheckSagaTests
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        mediator.Setup(m => m.Send(It.IsAny<RepairScoresCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
         return mediator;
     }
 

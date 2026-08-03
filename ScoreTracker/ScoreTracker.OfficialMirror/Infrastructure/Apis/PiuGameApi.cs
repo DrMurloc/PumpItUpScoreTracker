@@ -663,9 +663,11 @@ internal sealed class PiuGameApi : IPiuGameApi
     }
 
     public async Task<PiuGameGetBestScoresResult> GetBestScores(MixEnum mix, HttpClient client, int page,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, string? bucket = null)
     {
-        var response = await GetWithRetries($"{_urls.BaseUrlFor(mix)}/my_page/my_best_score.php?&&page={page}",
+        var filter = string.IsNullOrEmpty(bucket) ? "" : $"lv={HttpUtility.UrlEncode(bucket)}";
+        var response = await GetWithRetries(
+            $"{_urls.BaseUrlFor(mix)}/my_page/my_best_score.php?{filter}&&page={page}",
             cancellationToken, client);
 
         var document = new HtmlDocument();

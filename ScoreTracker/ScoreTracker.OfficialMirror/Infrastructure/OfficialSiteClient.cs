@@ -313,6 +313,49 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         return new AccountCensus(mix, buckets, pumbility.Total);
     }
 
+    // A repair walks a level to its end rather than stopping on an up-score window: the window is
+    // what let the chart go missing, and a level is small enough to read whole. The clamp only
+    // catches a runaway — the site re-serves its last page for an out-of-range number, and a page
+    // that adds nothing new ends the walk.
+    private const int MaxRepairPagesPerBucket = 400;
+
+    public async Task<IReadOnlyList<OfficialRecordedScore>> GetBestScoresIn(MixEnum mix, Guid userId, string sid,
+        IReadOnlyCollection<string> buckets, bool includeBroken, CancellationToken cancellationToken)
+    {
+        var client = _piuGame.ClientForSid(mix, sid);
+        var cards = new List<PiuGameGetBestScoresResult.ScoreDto>();
+        var walked = buckets.Count == 0 ? new[] { CensusBuckets.All } : buckets.ToArray();
+
+        foreach (var bucket in walked)
+        {
+            var seen = new HashSet<(string, ChartType, int, int, DateTimeOffset?)>();
+            for (var page = 1; page <= MaxRepairPagesPerBucket; page++)
+            {
+                await Status(userId, mix, PageStatus(bucket, page), cancellationToken);
+                var result = await _piuGame.GetBestScores(mix, client, page, cancellationToken, bucket);
+                var added = 0;
+                foreach (var card in result.Scores)
+                {
+                    if (!seen.Add((card.SongName.ToString(), card.ChartType, (int)card.Level, (int)card.Score,
+                            card.RecordedAt))) continue;
+                    cards.Add(card);
+                    added++;
+                }
+
+                if (added == 0 || result.Scores.Length == 0) break;
+            }
+        }
+
+        return (await MapBestList(mix, cards, includeBroken, cancellationToken)).Values.ToArray();
+    }
+
+    private static string PageStatus(string bucket, int page)
+    {
+        return bucket == CensusBuckets.All
+            ? $"Reading every page of your best scores (page {page})"
+            : $"Re-reading level {bucket} (page {page})";
+    }
+
     /// <summary>
     ///     Phoenix's play-data page starts at level 10 and says so, so its sub-10 clears exist only
     ///     inside the best-score list's total. Phoenix 2 offers a bucket for every level from 1 and
