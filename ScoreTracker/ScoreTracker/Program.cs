@@ -429,7 +429,10 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     // The webhook queue lives in SQL, so a delivery survives a restart and this is what picks it
     // back up. Five minutes is well inside the first backoff step, so nothing waits on the sweep.
     ("retry-webhook-deliveries",         r => r.PublishRetryDueWebhookDeliveries(),       "*/5 * * * *"),
-    ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *")   // 08:00 UTC — 7-day bodies, 14-day activity log
+    ("prune-webhook-deliveries",         r => r.PublishPruneWebhookDeliveries(),          "0 8 * * *"),  // 08:00 UTC — 7-day bodies, 14-day activity log
+    // Refills every account's deep-scan balance on the 1st. One UPDATE across the User table; an
+    // unused allowance does not roll over.
+    ("reset-deep-scans",                 r => r.PublishResetDeepScans(),                 "0 0 1 * *")
 };
 if (builder.Configuration["PreventRecurringJobs"] == "true")
 {

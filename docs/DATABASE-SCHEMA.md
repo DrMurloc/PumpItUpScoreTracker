@@ -20,7 +20,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.User` | User account: name, profile image, game tag, country, content-lock status |
+| `scores.User` | User account: name, profile image, game tag, country, content-lock status, and `DeepScansRemaining` — the Score check's monthly full-walk balance, refilled by the `reset-deep-scans` job ([SCHEDULED-JOBS.md](SCHEDULED-JOBS.md)). A balance rather than a dated usage count, so granting someone extra is one UPDATE |
 | `scores.ExternalLogin` | Sign-in method mappings to users, many-to-one (Discord/Google/Facebook OAuth ids; namespaced PiuGame aliases `mbid:*`/`card:*`) |
 | `scores.UserApiToken` | API tokens for the partner API, with usage tracking |
 | `scores.UserSettings` | Per-user UI settings key/value store |
