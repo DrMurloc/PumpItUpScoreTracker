@@ -47,14 +47,17 @@ public sealed class RequestHandlerCoverageTests
     /// </summary>
     private static readonly Dictionary<string, string> Exempt = new()
     {
-        // Orphans the randomizer overhaul left in ScoreTracker.Application: nothing constructs
-        // them and nothing handles them, so they are unreachable rather than mis-wired. Listed
-        // rather than deleted here to keep an unrelated cleanup out of the Score check branch —
-        // deleting them is a one-line-each follow-up.
-        ["DrawChartsCommand"] = "Dead since the randomizer overhaul — no sender, no handler.",
-        ["FinishCardDrawCommand"] = "Dead since the randomizer overhaul — no sender, no handler.",
-        ["SaveRandomSettingsCommand"] = "Dead since the randomizer overhaul — no sender, no handler.",
-        ["GetAllRandomSettingsQuery"] = "Dead since the randomizer overhaul — no sender, no handler."
+        // All four were handled by Application/Handlers/MatchSaga.cs, and 406c03e5 "Delete the
+        // Match application layer" removed the saga while leaving the records behind. Their
+        // senders were already gone by then, so nothing constructs or handles them now. Listed
+        // rather than deleted here to keep an unrelated cleanup out of the Score check branch.
+        // (The randomizer overhaul is only where the live replacements landed —
+        // SaveTournamentRandomSettingsCommand, GetTournamentRandomSettingsQuery,
+        // DrawRandomChartsQuery — which is easy to mistake for these being its leftovers.)
+        ["DrawChartsCommand"] = "Orphaned by 406c03e5 (Match layer deleted) — no sender, no handler.",
+        ["FinishCardDrawCommand"] = "Orphaned by 406c03e5 (Match layer deleted) — no sender, no handler.",
+        ["SaveRandomSettingsCommand"] = "Orphaned by 406c03e5 (Match layer deleted) — no sender, no handler.",
+        ["GetAllRandomSettingsQuery"] = "Orphaned by 406c03e5 (Match layer deleted) — no sender, no handler."
     };
 
     private static Type[] AllTypes()
