@@ -5,6 +5,7 @@
 @using ScoreTracker.OfficialMirror.Contracts.Commands
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.UiNotifications
 
 @* Tells a player whether every score piugame has actually reached us, and repairs the levels that
@@ -61,31 +62,36 @@
                     </div>
                 }
 
-                @if (Repairable.Any())
+                @* Named charts, not just counts: "1 score missing" is a support ticket, a song and
+                   a score is an answer — and it is what pressing the button will actually save. *@
+                @foreach (var difference in Repairable)
                 {
-                    <MudSimpleTable Dense="true" Striped="false" Class="mt-2">
-                        <thead>
-                        <tr>
-                            <th>@L["Level"]</th>
-                            <th>@L["PIUGAME"]</th>
-                            <th>@L["Here"]</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var difference in Repairable)
-                        {
-                            <tr>
-                                <td>@BucketName(difference)</td>
-                                <td>@(difference.Kind == ImportCheckDifferenceKind.Missing
-                                        ? L["{0} more", difference.Count]
-                                        : L["{0} better", difference.Count])</td>
-                                <td>@(difference.Kind == ImportCheckDifferenceKind.Missing
-                                        ? L["missing"]
-                                        : L["out of date"])</td>
-                            </tr>
-                        }
-                        </tbody>
-                    </MudSimpleTable>
+                    @foreach (var chart in difference.Charts)
+                    {
+                        <div class="d-flex align-center gap-3 my-2">
+                            <DifficultyBubble Type="chart.Type" Level="DifficultyLevel.From(chart.Level)"
+                                              Mix="Mix" Small="true"/>
+                            <div style="min-width:0;flex:1;">
+                                <MudText Typo="Typo.body2" Class="text-truncate">@chart.Song</MudText>
+                                <MudText Typo="Typo.caption">
+                                    @(difference.Kind == ImportCheckDifferenceKind.Missing
+                                        ? L["Never imported"]
+                                        : L["Behind PIUGAME"])
+                                </MudText>
+                            </div>
+                            <MudText Typo="Typo.body2">@chart.Score.ToString("N0")</MudText>
+                        </div>
+                    }
+                    @* A level the check could not enumerate still says how much it is short by. *@
+                    @if (!difference.Charts.Any())
+                    {
+                        <MudText Typo="Typo.body2" Class="my-2">
+                            @BucketName(difference):
+                            @(difference.Kind == ImportCheckDifferenceKind.Missing
+                                ? L["{0} missing", difference.Count]
+                                : L["{0} out of date", difference.Count])
+                        </MudText>
+                    }
                 }
             }
 
@@ -123,9 +129,15 @@
                 }
             </div>
 
+            @* The import surprised a field tester: session charts appeared before any counting
+               happened. Say it before the button, not after. *@
+            <MudText Typo="Typo.caption" Class="d-block mt-1">
+                @L["Runs a fresh import first, then checks PIUGAME for anything missing."]
+            </MudText>
+
             @if (_report is { Verdict: ImportCheckVerdict.InSync })
             {
-                <MudText Typo="Typo.caption">
+                <MudText Typo="Typo.caption" Class="d-block">
                     @L["Still looks wrong? A deep scan reads every page of your best scores instead of counting them."]
                 </MudText>
             }

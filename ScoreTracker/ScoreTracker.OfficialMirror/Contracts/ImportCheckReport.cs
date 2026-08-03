@@ -34,7 +34,14 @@ public sealed record ImportCheckDifference(
     string Bucket,
     int? Level,
     ImportCheckDifferenceKind Kind,
-    int Count);
+    int Count,
+    /// <summary>The charts behind the count, when the check read the level to find out. Empty for
+    /// an "we hold more" difference, which is never worth naming.</summary>
+    IReadOnlyList<ImportCheckChart> Charts);
+
+/// <summary>One chart a check found, with the score PIUGAME holds for it.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record ImportCheckChart(Guid ChartId, string Song, ChartType Type, int Level, int Score);
 
 public enum ImportCheckDifferenceKind
 {

@@ -61,4 +61,16 @@ internal sealed record CensusFinding(
     CensusFindingKind Kind,
     int Count,
     string? Band = null,
-    bool IsGradeBand = false);
+    bool IsGradeBand = false,
+    /// <summary>
+    ///     The actual charts behind the count, once a naming pass has read the level. Empty when
+    ///     the finding was never named — "we hold more than piugame" never is, and neither is a
+    ///     bucket whose level the site would not enumerate.
+    /// </summary>
+    IReadOnlyList<NamedChart>? Charts = null);
+
+/// <summary>
+///     One chart a check found, with the score piugame holds for it. "1 score missing" is a
+///     support ticket; "Ugly duck Toccata S17, 996,408" is an answer.
+/// </summary>
+internal sealed record NamedChart(Guid ChartId, string Song, ChartType Type, int Level, int Score);

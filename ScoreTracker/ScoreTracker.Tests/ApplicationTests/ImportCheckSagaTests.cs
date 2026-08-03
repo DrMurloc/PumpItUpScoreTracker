@@ -8,6 +8,7 @@ using MassTransit;
 using MediatR;
 using Moq;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Contracts;
@@ -198,6 +199,43 @@ public sealed class ImportCheckSagaTests
         guard.Verify(g => g.EndDeepScan(), Times.Once);
     }
 
+    // ---- naming what it found ----
+
+    [Fact]
+    public async Task AShortLevelIsReadSoTheFindingCanNameTheChart()
+    {
+        var runs = new Mock<IImportCheckRepository>();
+        var site = Site(Census(("18", 2)));
+        site.Setup(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<OfficialRecordedScore>)new[]
+            {
+                // One we already hold at the same score, one we have never seen.
+                new OfficialRecordedScore(Chart(ChartId, "Held Song"), PhoenixScore.From(990000),
+                    PhoenixPlate.MarvelousGame),
+                new OfficialRecordedScore(Chart(OtherChartId, "Ugly duck Toccata"), PhoenixScore.From(996408),
+                    PhoenixPlate.MarvelousGame)
+            });
+
+        await Build(runs: runs, site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
+
+        // "1 score missing" is a support ticket; the song and the score are an answer.
+        runs.Verify(r => r.Save(It.Is<ImportCheckRun>(run =>
+            run.Findings.Single().Charts!.Single().Song == "Ugly duck Toccata" &&
+            run.Findings.Single().Charts!.Single().Score == 996408), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ACleanCensusNeverPaysForANamingWalk()
+    {
+        var site = Site(Census(("18", 1)));
+
+        await Build(site: site, records: Records(1)).Handle(Execute(), CancellationToken.None);
+
+        site.Verify(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     // ---- repairing ----
 
     [Fact]
@@ -341,6 +379,13 @@ public sealed class ImportCheckSagaTests
                     new Dictionary<string, int>()), StringComparer.Ordinal), 64466);
     }
 
+    private static readonly Guid OtherChartId = Guid.NewGuid();
+
+    private static Chart Chart(Guid id, string song)
+    {
+        return new ChartBuilder().WithId(id).WithSongName(song).WithType(ChartType.Single).WithLevel(18).Build();
+    }
+
     private static RecordedPhoenixScore[] Records(int count)
     {
         return Enumerable.Range(0, count)
@@ -366,6 +411,11 @@ public sealed class ImportCheckSagaTests
             It.IsAny<CancellationToken>())).ReturnsAsync("sid");
         site.Setup(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
             It.IsAny<CancellationToken>())).ReturnsAsync(census ?? Census());
+        // The naming pass reads the levels that disagree; tests that care about which charts come
+        // back override this.
+        site.Setup(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+                It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<OfficialRecordedScore>)Array.Empty<OfficialRecordedScore>());
         return site;
     }
 
@@ -389,7 +439,10 @@ public sealed class ImportCheckSagaTests
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),
                 It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
-                { new ChartBuilder().WithId(ChartId).WithType(ChartType.Single).WithLevel(18).Build() });
+            {
+                new ChartBuilder().WithId(ChartId).WithType(ChartType.Single).WithLevel(18).Build(),
+                new ChartBuilder().WithId(OtherChartId).WithType(ChartType.Single).WithLevel(18).Build()
+            });
 
         var scores = new Mock<IScoreReader>();
         scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))

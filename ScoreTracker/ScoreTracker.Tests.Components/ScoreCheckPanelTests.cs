@@ -66,6 +66,21 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
         return new ImportCheckReport(MixEnum.Phoenix, RanAt, verdict, 64466, 63420, 2851, 2848, differences);
     }
 
+    /// <summary>A difference the check could not name — it still has to say how much it is short by.</summary>
+    private static ImportCheckDifference Unnamed(string bucket, int? level, ImportCheckDifferenceKind kind,
+        int count)
+    {
+        return new ImportCheckDifference(bucket, level, kind, count, Array.Empty<ImportCheckChart>());
+    }
+
+    private static ImportCheckDifference Named(string bucket, int level, ImportCheckDifferenceKind kind,
+        params (string Song, int Score)[] charts)
+    {
+        return new ImportCheckDifference(bucket, level, kind, charts.Length,
+            charts.Select(c => new ImportCheckChart(Guid.NewGuid(), c.Song, ChartType.Single, level, c.Score))
+                .ToArray());
+    }
+
     [Fact]
     public void AnInSyncAccountSaysSoAndOffersNoRepair()
     {
@@ -81,8 +96,8 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
     public void MissingScoresAreCountedAndTheirLevelsNamed()
     {
         Answer(Report(ImportCheckVerdict.MissingScores,
-            new ImportCheckDifference("18", 18, ImportCheckDifferenceKind.Missing, 1),
-            new ImportCheckDifference("21", 21, ImportCheckDifferenceKind.Missing, 2)));
+            Unnamed("18", 18, ImportCheckDifferenceKind.Missing, 1),
+            Unnamed("21", 21, ImportCheckDifferenceKind.Missing, 2)));
 
         var markup = Render().Markup;
 
@@ -93,12 +108,47 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
     }
 
     [Fact]
+    public void ANamedFindingShowsTheSongAndTheScorePiuGameHolds()
+    {
+        Answer(Report(ImportCheckVerdict.MissingScores,
+            Named("17", 17, ImportCheckDifferenceKind.Missing, ("Ugly duck Toccata", 996408))));
+
+        var markup = Render().Markup;
+
+        // A count alone is a support ticket; this is the answer.
+        Assert.Contains("Ugly duck Toccata", markup);
+        Assert.Contains("996,408", markup);
+        Assert.Contains("Never imported", markup);
+    }
+
+    [Fact]
+    public void AnOutOfDateChartSaysItIsBehindRatherThanMissing()
+    {
+        Answer(Report(ImportCheckVerdict.OutOfDateScores,
+            Named("20", 20, ImportCheckDifferenceKind.OutOfDate, ("The End of the World ft. Skizzo", 992223))));
+
+        var markup = Render().Markup;
+
+        Assert.Contains("Behind PIUGAME", markup);
+        Assert.DoesNotContain("Never imported", markup);
+    }
+
+    [Fact]
+    public void TheImportItRunsFirstIsStatedBeforeTheButtonNotAfter()
+    {
+        Answer(Report(ImportCheckVerdict.InSync));
+
+        // A field tester was surprised by session charts appearing: the check imports first.
+        Assert.Contains("Runs a fresh import first", Render().Markup);
+    }
+
+    [Fact]
     public void BucketsThatAreNotASingleLevelAreNamedAsThemselves()
     {
         Answer(Report(ImportCheckVerdict.MissingScores,
-            new ImportCheckDifference("coop", null, ImportCheckDifferenceKind.Missing, 1),
-            new ImportCheckDifference("27over", null, ImportCheckDifferenceKind.Missing, 1),
-            new ImportCheckDifference("sub10", null, ImportCheckDifferenceKind.Missing, 1)));
+            Unnamed("coop", null, ImportCheckDifferenceKind.Missing, 1),
+            Unnamed("27over", null, ImportCheckDifferenceKind.Missing, 1),
+            Unnamed("sub10", null, ImportCheckDifferenceKind.Missing, 1)));
 
         var markup = Render().Markup;
 
@@ -111,7 +161,7 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
     public void HoldingMoreThanPiuGameIsNeverOfferedAsSomethingToFix()
     {
         Answer(Report(ImportCheckVerdict.AheadOfSite,
-            new ImportCheckDifference("sub10", null, ImportCheckDifferenceKind.Extra, 1)));
+            Unnamed("sub10", null, ImportCheckDifferenceKind.Extra, 1)));
 
         var markup = Render().Markup;
 
@@ -126,7 +176,7 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
         Assert.Contains("Run a deep scan", Render().Markup);
 
         Answer(Report(ImportCheckVerdict.MissingScores,
-            new ImportCheckDifference("18", 18, ImportCheckDifferenceKind.Missing, 1)));
+            Unnamed("18", 18, ImportCheckDifferenceKind.Missing, 1)));
         // With something localised to repair, the expensive blind walk is not the next step.
         Assert.DoesNotContain("Run a deep scan", Render().Markup);
     }
@@ -146,7 +196,7 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
     public void EveryActionIsBlockedWithoutACredential()
     {
         Answer(Report(ImportCheckVerdict.MissingScores,
-            new ImportCheckDifference("18", 18, ImportCheckDifferenceKind.Missing, 1)));
+            Unnamed("18", 18, ImportCheckDifferenceKind.Missing, 1)));
 
         var buttons = Render(credentials: false).FindAll("button");
 
@@ -169,7 +219,7 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
     public void PressingCheckStartsOneAndTheRepairButtonAsksForARepair()
     {
         Answer(Report(ImportCheckVerdict.MissingScores,
-            new ImportCheckDifference("18", 18, ImportCheckDifferenceKind.Missing, 1)));
+            Unnamed("18", 18, ImportCheckDifferenceKind.Missing, 1)));
         var started = new List<StartImportCheckCommand>();
         _mediator.Setup(m => m.Send(It.IsAny<StartImportCheckCommand>(), It.IsAny<CancellationToken>()))
             .Callback((object c, CancellationToken _) => started.Add((StartImportCheckCommand)c))

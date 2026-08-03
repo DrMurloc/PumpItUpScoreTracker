@@ -11,6 +11,7 @@ using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Application;
@@ -151,7 +152,7 @@ internal sealed class ImportCheckSaga :
             var local = LocalCensusBuilder.Build(request.Mix, records, charts,
                 official.Buckets.Keys.ToArray());
 
-            var findings = CensusDiff.Compare(official, local);
+            var findings = await Name(request, CensusDiff.Compare(official, local), records, cancellationToken);
             await _runs.Save(new ImportCheckRun(Guid.NewGuid(), request.UserId, request.Mix, _dateTime.Now,
                 request.DeepScan ? ImportCheckKind.Deep : ImportCheckKind.Census,
                 official.Pumbility, LocalCensusBuilder.Pumbility(request.Mix, records, charts),
@@ -165,6 +166,45 @@ internal sealed class ImportCheckSaga :
         {
             if (deepScanSlot) _guard.EndDeepScan();
         }
+    }
+
+    /// <summary>
+    ///     Reads the levels that disagree and says WHICH charts they are. A count alone is a
+    ///     support ticket; a song, a chart and a score is an answer, and it is what the player is
+    ///     agreeing to when they press the repair.
+    ///     <para>
+    ///         Costs one walk of each disagreeing level, so it only runs when something is wrong —
+    ///         a clean census never pays it. Levels we hold MORE of than piugame are never named:
+    ///         there is nothing there to fetch.
+    ///     </para>
+    /// </summary>
+    private async Task<IReadOnlyList<CensusFinding>> Name(ExecuteImportCheckCommand request,
+        IReadOnlyList<CensusFinding> findings, IReadOnlyList<RecordedPhoenixScore> records,
+        CancellationToken cancellationToken)
+    {
+        var buckets = CensusDiff.BucketsToRepair(findings);
+        if (buckets.Count == 0) return findings;
+
+        await Status(request, "Finding out which charts", cancellationToken);
+        var official = await _officialSite.GetBestScoresIn(request.Mix, request.UserId, request.Sid, buckets,
+            false, cancellationToken);
+        var held = records.Where(r => !r.IsBroken && r.Score != null).ToDictionary(r => r.ChartId);
+
+        // Same rule the repair will apply, so the list a player sees is exactly what pressing the
+        // button would save — nothing extra, nothing missing.
+        var namedByBucket = official
+            .Where(s => BestAttemptPolicy.Beats(held.GetValueOrDefault(s.Chart.Id), s.Score,
+                BestAttemptPolicy.PlateFor(s.IsBroken, s.Plate), s.IsBroken))
+            .GroupBy(s => CensusBuckets.For(s.Chart.Type, s.Chart.Level, buckets.Append(CensusBuckets.CoOp).ToArray()))
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<NamedChart>)g
+                .Select(s => new NamedChart(s.Chart.Id, s.Chart.Song.Name.ToString(), s.Chart.Type,
+                    (int)s.Chart.Level, (int)s.Score))
+                .OrderByDescending(c => c.Level)
+                .ToArray(), StringComparer.Ordinal);
+
+        return findings
+            .Select(f => namedByBucket.TryGetValue(f.Bucket, out var charts) ? f with { Charts = charts } : f)
+            .ToArray();
     }
 
     /// <summary>
@@ -221,7 +261,10 @@ internal sealed class ImportCheckSaga :
                 CensusFindingKind.Missing => ImportCheckDifferenceKind.Missing,
                 CensusFindingKind.OutOfDate => ImportCheckDifferenceKind.OutOfDate,
                 _ => ImportCheckDifferenceKind.Extra
-            }, f.Count)).ToArray();
+            }, f.Count,
+            (f.Charts ?? Array.Empty<NamedChart>())
+            .Select(c => new ImportCheckChart(c.ChartId, c.Song, c.Type, c.Level, c.Score)).ToArray()))
+            .ToArray();
 
         var verdict = CensusDiff.Headline(run.Findings) switch
         {
