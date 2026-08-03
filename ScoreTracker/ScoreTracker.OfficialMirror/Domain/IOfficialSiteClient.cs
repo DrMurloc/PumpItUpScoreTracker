@@ -30,6 +30,19 @@ internal interface IOfficialSiteClient
     Task<int> GetScorePageCount(MixEnum mix, string sid, CancellationToken cancellationToken);
 
     /// <summary>
+    ///     What piugame says the account holds, level by level, plus the live official PUMBILITY —
+    ///     around twenty requests. Returns the OFFICIAL side only and never reads our records, so
+    ///     the comparison itself stays a pure function (<see cref="CensusDiff" />).
+    ///     <para>
+    ///         Phoenix's play-data page refuses to break down levels 1–9, so those are recovered as
+    ///         a residual against the best-score list's total. Phoenix 2 buckets them properly and
+    ///         the extra request is skipped.
+    ///     </para>
+    /// </summary>
+    Task<AccountCensus> GetOfficialCensus(MixEnum mix, Guid userId, string sid,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     ///     <paramref name="maxPages" /> drives the classic (undated) page walk; the dated
     ///     (redesigned) walk ignores it and instead stops on its up-score window. Returns the
     ///     best-list scrape AND the recently-played window it read alongside it, which the

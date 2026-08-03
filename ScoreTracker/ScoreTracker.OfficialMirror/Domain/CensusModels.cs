@@ -11,7 +11,10 @@ internal sealed record CensusBucket(
     string Bucket,
     int Passes,
     IReadOnlyDictionary<string, int> Grades,
-    IReadOnlyDictionary<string, int> Plates)
+    IReadOnlyDictionary<string, int> Plates,
+    /// <summary>How many charts the mix has in this bucket, when the official side stated it.
+    /// Decides whether paging the level is cheaper than paging a cell; null on our side.</summary>
+    int? CatalogTotal = null)
 {
     public static CensusBucket Empty(string bucket)
     {

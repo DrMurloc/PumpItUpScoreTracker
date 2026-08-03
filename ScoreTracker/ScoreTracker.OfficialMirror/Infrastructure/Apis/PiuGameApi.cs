@@ -675,9 +675,24 @@ internal sealed class PiuGameApi : IPiuGameApi
         // Phoenix 2 redesign that reuses the recently-played card layout with a saved date on
         // every best. Sniff the markup instead of keying on mix, so the redesign reaching the
         // other host changes nothing here.
-        return document.DocumentNode.SelectSingleNode(".//ul[contains(@class,'my_best_scoreList')]") != null
+        var result = document.DocumentNode.SelectSingleNode(".//ul[contains(@class,'my_best_scoreList')]") != null
             ? ParseClassicBestScores(document, page)
             : ParseRedesignedBestScores(document, page);
+        result.TotalCharts = ParseTotalCharts(document);
+        return result;
+    }
+
+    /// <summary>
+    ///     The list's "Total." header. It is the only place the site states how many charts an
+    ///     account holds BELOW level 10, since neither page's level filter offers a bucket for
+    ///     them — the completeness census recovers those as a residual against this number.
+    /// </summary>
+    private static int? ParseTotalCharts(HtmlDocument document)
+    {
+        var wrap = document.DocumentNode.SelectSingleNode("//*[contains(@class,'total_wrap')]");
+        if (wrap == null) return null;
+        var match = CountRegex.Match(HttpUtility.HtmlDecode(wrap.InnerText));
+        return match.Success ? int.Parse(match.Value.Replace(",", ""), CultureInfo.InvariantCulture) : null;
     }
 
     private static int ParseBestScoresMaxPage(HtmlDocument document, int page)
