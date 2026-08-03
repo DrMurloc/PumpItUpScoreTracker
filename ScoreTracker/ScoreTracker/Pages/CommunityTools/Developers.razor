@@ -131,7 +131,54 @@ else
                                   Lines="2"
                                   HelperText='@L["Shown in the tool directory. Players read this before they connect."].Value'></MudTextField>
                 </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" @bind-Value="_editRepository" MaxLength="500"
+                                  Label=@L["Public source repository"] Placeholder="https://github.com/you/your-tool"
+                                  HelperText='@L["Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it."].Value'></MudTextField>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField T="string" @bind-Value="_editDiscord" MaxLength="64"
+                                  Label=@L["Your Discord handle"]
+                                  HelperText='@L["Only DrMurloc sees this. It is how you get a message if something goes wrong with your tool."].Value'></MudTextField>
+                </MudItem>
             </MudGrid>
+
+            @* The check is its own button rather than part of Save: it leaves the network, takes a
+               moment, and a maker who is only fixing a typo in their description should not wait on
+               someone else's git host. *@
+            <div class="ct-check-state mt-3">
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="@(_checking || !HasRepository)"
+                           OnClick="CheckRepository">@L["Check the link"]</MudButton>
+                @if (_selected.RepositoryCheckedAt is not null)
+                {
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Success">
+                        @L["Reachable"]
+                    </MudChip>
+                    <MudText Typo="Typo.caption" Style="opacity:.7;">
+                        @L["Checked {0}", _selected.RepositoryCheckedAt.Value.LocalDateTime.ToString("d")]
+                        @if (!string.IsNullOrWhiteSpace(_selected.RepositoryOwner))
+                        {
+                            @($" · {_selected.RepositoryOwner}")
+                        }
+                    </MudText>
+                }
+                else if (HasRepository)
+                {
+                    <MudText Typo="Typo.caption" Style="opacity:.7;">
+                        @L["Not checked yet. Save first, then check."]
+                    </MudText>
+                }
+            </div>
+
+            @if (!_selected.CanBeSharedWithOthers)
+            {
+                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
+                    <MudText Typo="Typo.body2">
+                        <b>@L["Only you can use this tool right now."]</b>
+                        @L["Add a public source repository and your Discord handle, then check the link. Until then invite links and listing are closed."]
+                    </MudText>
+                </MudAlert>
+            }
 
             <MudSwitch T="bool" @bind-Value="_editAcceptsAllTools" Color="Color.Success" Class="mt-3"
                        Label=@L["Accept players who share with all tools"]></MudSwitch>
@@ -280,7 +327,12 @@ else
     private string _editName = string.Empty;
     private string _editDescription = string.Empty;
     private string _editUrl = string.Empty;
+    private string _editRepository = string.Empty;
+    private string _editDiscord = string.Empty;
     private bool _editAcceptsAllTools = true;
+    private bool _checking;
+
+    private bool HasRepository => !string.IsNullOrWhiteSpace(_selected?.RepositoryUrl);
 
     private IReadOnlyList<(string Name, int DaysLeft)> _expiringSoon = Array.Empty<(string, int)>();
 
@@ -355,6 +407,8 @@ else
         _editName = tool.Name;
         _editDescription = tool.Description ?? string.Empty;
         _editUrl = tool.Url ?? string.Empty;
+        _editRepository = tool.RepositoryUrl ?? string.Empty;
+        _editDiscord = tool.DiscordHandle ?? string.Empty;
         _editAcceptsAllTools = tool.AcceptsAllToolsShare;
     }
 
@@ -387,11 +441,19 @@ else
             return;
         }
 
+        if (!string.IsNullOrWhiteSpace(_editRepository) && !IsBrowsableUrl(_editRepository))
+        {
+            Snackbar.Add(L["\"{0}\" isn't a valid link. Include https://", _editRepository].Value, Severity.Error);
+            return;
+        }
+
         try
         {
             await Mediator.Send(new UpdateToolCommand(_selected.Id, _editName,
                 string.IsNullOrWhiteSpace(_editDescription) ? null : _editDescription,
-                string.IsNullOrWhiteSpace(_editUrl) ? null : _editUrl));
+                string.IsNullOrWhiteSpace(_editUrl) ? null : _editUrl,
+                string.IsNullOrWhiteSpace(_editRepository) ? null : _editRepository,
+                string.IsNullOrWhiteSpace(_editDiscord) ? null : _editDiscord));
             await Mediator.Send(new SetToolAllToolsShareCommand(_selected.Id, _editAcceptsAllTools));
         }
         catch (Exception e)
@@ -414,6 +476,38 @@ else
     {
         return Uri.TryCreate(value, UriKind.Absolute, out var uri)
                && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
+    }
+
+    /// <summary>
+    ///     Fetches the repository anonymously and records the result. Reports the remote's own status
+    ///     code, which is what a maker can act on — 404 usually means the repository is private.
+    /// </summary>
+    private async Task CheckRepository()
+    {
+        if (_selected is null) return;
+
+        _checking = true;
+        try
+        {
+            var result = await Mediator.Send(new CheckToolRepositoryCommand(_selected.Id));
+            if (result.Reachable)
+                Snackbar.Add(L["Your repository is reachable."].Value, Severity.Success);
+            else
+                Snackbar.Add(result.StatusCode is null
+                    ? L["Couldn't reach your repository ({0}).", result.Reason ?? string.Empty].Value
+                    : L["Your repository answered {0}. If it is private, players can't read it either.",
+                        result.StatusCode.Value].Value, Severity.Error);
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+        }
+        finally
+        {
+            _checking = false;
+        }
+
+        await Reload();
     }
 
     private async Task RequestListing()

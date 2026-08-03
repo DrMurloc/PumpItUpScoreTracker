@@ -37,13 +37,39 @@
         @switch (_step)
         {
             case Step.Name:
-                <MudText Typo="Typo.h5" Class="mb-2">@L["Name your tool"]</MudText>
-                <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
-                    @L["It starts private and fully working. Being listed in the directory is optional and comes at the end."]
-                </MudText>
-                <MudTextField T="string" @bind-Value="_name" Label=@L["Name"] MaxLength="64" Immediate="true"
-                              HelperText='@L["This is what a player sees when they are asked whether to let it read their scores. You can change it later."].Value'
-                              Style="max-width:420px;"></MudTextField>
+                @* The rules come before the form. A maker deciding whether to build this at all
+                   should read them first, not discover them after naming the thing. *@
+                <ToolRulesCard ShowAgreement="true" @bind-Agreed="_agreed"></ToolRulesCard>
+
+                <div class="ct-register mt-4">
+                    <MudText Typo="Typo.h5" Class="mb-1">@L["Register your tool"]</MudText>
+                    <MudText Typo="Typo.body2" Style="opacity:.75;" Class="mb-3">
+                        @L["It starts private and fully working. Being listed in the directory is optional and comes at the end."]
+                    </MudText>
+                    <MudTextField T="string" @bind-Value="_name" Label=@L["Name"] MaxLength="64" Immediate="true"
+                                  HelperText='@L["This is what a player sees when they are asked whether to let it read their scores. You can change it later."].Value'
+                                  Style="max-width:420px;"></MudTextField>
+                    <MudTextField T="string" @bind-Value="_repositoryUrl" Class="mt-3" MaxLength="500"
+                                  Label=@L["Public source repository"] Placeholder="https://github.com/you/your-tool"
+                                  HelperText='@L["Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it."].Value'
+                                  Style="max-width:420px;"></MudTextField>
+                    <MudTextField T="string" @bind-Value="_discordHandle" Class="mt-3" MaxLength="64"
+                                  Label=@L["Your Discord handle"]
+                                  HelperText='@L["Only DrMurloc sees this. It is how you get a message if something goes wrong with your tool."].Value'
+                                  Style="max-width:420px;"></MudTextField>
+
+                    @* Stated where it is decided, rather than discovered later when an invite link
+                       refuses to work. *@
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-4">
+                        <MudText Typo="Typo.body2">
+                            <b>@L["Both are needed before anyone else can use your tool."]</b>
+                            @L["Without them it still works — for you, on your own scores."]
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            @L["Add them whenever you are ready, and you can invite players or ask to be listed."]
+                        </MudText>
+                    </MudAlert>
+                </div>
                 break;
 
             case Step.CreateKey:
@@ -240,7 +266,13 @@
     </div>
 
     <div class="ct-wiz-foot">
-        @if (!CanLeave)
+        @* Two things now disable Create, so the greyed button says which one is missing rather than
+           leaving a maker to guess between them. *@
+        @if (_step == Step.Name && !_agreed)
+        {
+            <span class="ct-wiz-note">@L["Accept the rules above to continue."]</span>
+        }
+        else if (!CanLeave)
         {
             <span class="ct-wiz-note">@L["You can leave once your key exists."]</span>
         }
@@ -279,7 +311,7 @@
 
     private static readonly Crumb[] Crumbs =
     {
-        new("name", l => l["Name Tool"].Value, false),
+        new("name", l => l["Register"].Value, false),
         new("key", l => l["API Key"].Value, false),
         new("invite", l => l["Invite Players"].Value, true),
         new("advanced", l => l["Advanced"].Value, true)
@@ -300,6 +332,11 @@
     private Guid? _toolId;
     private string _name = string.Empty;
     private string _description = string.Empty;
+    private string _repositoryUrl = string.Empty;
+    private string _discordHandle = string.Empty;
+
+    /// <summary>The rules are free and instant to accept, unlike having a repository ready.</summary>
+    private bool _agreed;
 
     private string _keyName = string.Empty;
     private int? _lifetimeDays = 182;
@@ -350,7 +387,7 @@
 
     private bool CanAdvance => _step switch
     {
-        Step.Name => !string.IsNullOrWhiteSpace(_name),
+        Step.Name => !string.IsNullOrWhiteSpace(_name) && _agreed,
         Step.CreateKey => !string.IsNullOrWhiteSpace(_keyName),
         _ => true
     };
@@ -372,6 +409,8 @@
         Step.Listing => !_submitted,
         _ => false
     };
+
+    private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private string InviteUrl(Guid code) => $"{NavManager.BaseUri.TrimEnd('/')}/CommunityTools/Invite/{code}";
 
@@ -417,7 +456,8 @@
             switch (_step)
             {
                 case Step.Name:
-                    _toolId ??= await Mediator.Send(new CreateToolCommand(_name));
+                    _toolId ??= await Mediator.Send(new CreateToolCommand(_name,
+                        Blank(_repositoryUrl), Blank(_discordHandle)));
                     _step = Step.CreateKey;
                     break;
 

@@ -11881,3 +11881,73 @@ button.chart-card-art {
     .ct-wiz-crumb + .ct-wiz-crumb { padding-left: 16px; }
     .ct-wiz-optional { display: none; }
 }
+
+/* The house rules. Set apart from app chrome because the voice inside is first
+   person and singular — these are one person's rules, not the site talking — so
+   the left rail is the secondary hue rather than the primary one every other
+   panel uses. */
+.ct-rules {
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-left: 3px solid var(--mix-secondary);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mix-surface-muted) 60%, transparent);
+    padding: 18px 20px;
+}
+
+.ct-rules-preamble {
+    margin: 0 0 16px;
+    border-left: 2px solid color-mix(in srgb, var(--mix-accent) 55%, transparent);
+    padding-left: 12px;
+    font-style: italic;
+    max-width: 60ch;
+}
+
+.ct-rules ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: ct-rule;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.ct-rules li {
+    counter-increment: ct-rule;
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+}
+
+.ct-rules li::before {
+    content: counter(ct-rule);
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--mix-secondary);
+    font-variant-numeric: tabular-nums;
+    padding-top: 3px;
+}
+
+.ct-rules li > div > b { display: block; margin-bottom: 2px; }
+
+.ct-rules-foot {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+.ct-rules-agree {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 8%, transparent);
+}
+
+/* Quieter than the rules above it: registration is the ordinary half of the screen. */
+.ct-register {
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 4px;
+    padding: 18px 20px;
+}
+
+/* The repository check state, beside the field it belongs to. */
+.ct-check-state { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }

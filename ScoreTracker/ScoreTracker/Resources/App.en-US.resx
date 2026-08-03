@@ -375,6 +375,9 @@
   <data name="Accept players who share with all tools" xml:space="preserve">
     <value>Accept players who share with all tools</value>
   </data>
+  <data name="Accept the rules above to continue." xml:space="preserve">
+    <value>Accept the rules above to continue.</value>
+  </data>
   <data name="Account" xml:space="preserve">
     <value>Account</value>
   </data>
@@ -412,6 +415,9 @@
   <data name="Add A Photo To Submit" xml:space="preserve">
     <value>Add a photo to submit</value>
   </data>
+  <data name="Add a public source repository and your Discord handle, then check the link. Until then invite links and listing are closed." xml:space="preserve">
+    <value>Add a public source repository and your Discord handle, then check the link. Until then invite links and listing are closed.</value>
+  </data>
   <data name="Add photo" xml:space="preserve">
     <value>Add photo</value>
   </data>
@@ -420,6 +426,9 @@
   </data>
   <data name="Add the PIU Scores bot to your Discord server" xml:space="preserve">
     <value>Add the PIU Scores bot to your Discord server</value>
+  </data>
+  <data name="Add them whenever you are ready, and you can invite players or ask to be listed." xml:space="preserve">
+    <value>Add them whenever you are ready, and you can invite players or ask to be listed.</value>
   </data>
   <data name="Add to Favorites" xml:space="preserve">
     <value>Add to Favorites</value>
@@ -838,6 +847,9 @@
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
   </data>
+  <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
+    <value>Both are needed before anyone else can use your tool.</value>
+  </data>
   <data name="BP" xml:space="preserve">
     <value>BP</value>
   </data>
@@ -892,6 +904,9 @@
   </data>
   <data name="Build your home page from widgets you choose." xml:space="preserve">
     <value>Build your home page from widgets you choose.</value>
+  </data>
+  <data name="Built for the community." xml:space="preserve">
+    <value>Built for the community.</value>
   </data>
   <data name="Built for toolmakers" xml:space="preserve">
     <value>Built for toolmakers</value>
@@ -1062,6 +1077,12 @@
   <data name="ChartScoring" xml:space="preserve">
 	  <value>ChartScoring</value>
 	  <comment>Page title on /Experiments/ChartScoring; the source has no space between "Chart" and "Scoring".</comment>
+  </data>
+  <data name="Check the link" xml:space="preserve">
+    <value>Check the link</value>
+  </data>
+  <data name="Checked {0}" xml:space="preserve">
+    <value>Checked {0}</value>
   </data>
   <data name="Choose a game card, then press Import again." xml:space="preserve">
     <value>Choose a game card, then press Import again.</value>
@@ -1404,6 +1425,9 @@
   <data name="Couldn't parse JSON" xml:space="preserve">
 	  <value>Couldn't parse JSON</value>
   </data>
+  <data name="Couldn't reach your repository ({0})." xml:space="preserve">
+    <value>Couldn't reach your repository ({0}).</value>
+  </data>
   <data name="Couldn't reach your server" xml:space="preserve">
     <value>Couldn't reach your server</value>
   </data>
@@ -1741,6 +1765,9 @@
   </data>
   <data name="Drills" xml:space="preserve">
     <value>Drills</value>
+  </data>
+  <data name="DrMurloc's Rules for Integrated Toolmakers" xml:space="preserve">
+    <value>DrMurloc's Rules for Integrated Toolmakers</value>
   </data>
   <data name="Duplicate Explainer" xml:space="preserve">
     <value>Two entries under {0}. The older one was posted before they signed in — keep the account entry and drop the loose one.</value>
@@ -2081,6 +2108,9 @@
   <data name="Formulas data-mined from NX2 and Prime by" xml:space="preserve">
     <value>Formulas data-mined from NX2 and Prime by</value>
   </data>
+  <data name="Free to use and free of ads. A tip jar or community fund covering your hosting is fine — a supporter tier that unlocks features is not. Anything built to turn a profit gets removed." xml:space="preserve">
+    <value>Free to use and free of ads. A tip jar or community fund covering your hosting is fine — a supporter tier that unlocks features is not. Anything built to turn a profit gets removed.</value>
+  </data>
   <data name="Free, and built by a player." xml:space="preserve">
     <value>Free, and built by a player.</value>
   </data>
@@ -2401,6 +2431,9 @@
   </data>
   <data name="I Don't Like The Chart" xml:space="preserve">
 	  <value>I Don't Like The Chart</value>
+  </data>
+  <data name="I have read these, and my tool follows them." xml:space="preserve">
+    <value>I have read these, and my tool follows them.</value>
   </data>
   <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
     <value>I Hope You Held Hands on Canon D</value>
@@ -3372,6 +3405,9 @@
   <data name="No missing charts - every scraped board mapped to the catalog." xml:space="preserve">
     <value>No missing charts - every scraped board mapped to the catalog.</value>
   </data>
+  <data name="No money in it." xml:space="preserve">
+    <value>No money in it.</value>
+  </data>
   <data name="No new grade firsts this week." xml:space="preserve">
     <value>No new grade firsts this week.</value>
   </data>
@@ -3488,6 +3524,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Not available in Compact view</value>
+  </data>
+  <data name="Not checked yet. Save first, then check." xml:space="preserve">
+    <value>Not checked yet. Save first, then check.</value>
   </data>
   <data name="not comparable to modern levels" xml:space="preserve">
     <value>not comparable to modern levels</value>
@@ -3739,11 +3778,17 @@
   <data name="One-offs" xml:space="preserve">
     <value>One-offs</value>
   </data>
+  <data name="Only DrMurloc sees this. It is how you get a message if something goes wrong with your tool." xml:space="preserve">
+    <value>Only DrMurloc sees this. It is how you get a message if something goes wrong with your tool.</value>
+  </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using.</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Only songs with a changed chart are listed.</value>
+  </data>
+  <data name="Only you can use this tool right now." xml:space="preserve">
+    <value>Only you can use this tool right now.</value>
   </data>
   <data name="only {0} have it" xml:space="preserve">
     <value>only {0} have it</value>
@@ -4070,6 +4115,9 @@
   <data name="PIU Scores tools" xml:space="preserve">
     <value>PIU Scores tools</value>
   </data>
+  <data name="PIU Scores was built on the principle that we, Pump It Up players, are all one community, divided only by physical distance. Aim to connect that community." xml:space="preserve">
+    <value>PIU Scores was built on the principle that we, Pump It Up players, are all one community, divided only by physical distance. Aim to connect that community.</value>
+  </data>
   <data name="PIU Scores — free, ad-free, built by a player" xml:space="preserve">
     <value>PIU Scores — free, ad-free, built by a player</value>
   </data>
@@ -4339,6 +4387,9 @@
   <data name="Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
     <value>Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page.</value>
   </data>
+  <data name="Public source repository" xml:space="preserve">
+    <value>Public source repository</value>
+  </data>
   <data name="Public tool" xml:space="preserve">
     <value>Public tool</value>
   </data>
@@ -4505,8 +4556,14 @@
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>Re-stepped — {0} notes, was {1}.</value>
   </data>
+  <data name="Reachable" xml:space="preserve">
+    <value>Reachable</value>
+  </data>
   <data name="reached by {0} players" xml:space="preserve">
     <value>reached by {0} players</value>
+  </data>
+  <data name="Read it" xml:space="preserve">
+    <value>Read it</value>
   </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Reading it takes three things at once, held in three different places:</value>
@@ -4587,8 +4644,14 @@
   <data name="Region" xml:space="preserve">
     <value>Region</value>
   </data>
+  <data name="Register" xml:space="preserve">
+    <value>Register</value>
+  </data>
   <data name="Register this channel for a feed" xml:space="preserve">
     <value>Register this channel for a feed</value>
+  </data>
+  <data name="Register your tool" xml:space="preserve">
+    <value>Register your tool</value>
   </data>
   <data name="Registered" xml:space="preserve">
     <value>Registered</value>
@@ -5444,6 +5507,12 @@
   <data name="Status" xml:space="preserve">
     <value>Status</value>
   </data>
+  <data name="Stay in good standing." xml:space="preserve">
+    <value>Stay in good standing.</value>
+  </data>
+  <data name="Stay reachable." xml:space="preserve">
+    <value>Stay reachable.</value>
+  </data>
   <data name="Step analysis data from PIU Center" xml:space="preserve">
     <value>Step analysis data from PIU Center</value>
   </data>
@@ -5659,6 +5728,9 @@
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>The first weekly snapshot has not landed yet - highlights light up after the next Sunday import.</value>
   </data>
+  <data name="The full version lives in the integration guide, in English, and is the one that governs." xml:space="preserve">
+    <value>The full version lives in the integration guide, in English, and is the one that governs.</value>
+  </data>
   <data name="The grind" xml:space="preserve">
     <value>The grind</value>
   </data>
@@ -5724,6 +5796,9 @@
   </data>
   <data name="The scores themselves, 100 per delivery, with a next link when there are more." xml:space="preserve">
     <value>The scores themselves, 100 per delivery, with a next link when there are more.</value>
+  </data>
+  <data name="The server rule is &quot;Don't Be An Asshole&quot;, and it covers toolmakers too. I can remove a tool for any reason — including anything discriminatory, or aimed at excluding or antagonising any Pump It Up community members." xml:space="preserve">
+    <value>The server rule is "Don't Be An Asshole", and it covers toolmakers too. I can remove a tool for any reason — including anything discriminatory, or aimed at excluding or antagonising any Pump It Up community members.</value>
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>The shared tier list for this folder, built from everyone's data.</value>
@@ -6010,6 +6085,9 @@
   <data name="Tool Review" xml:space="preserve">
     <value>Tool Review</value>
   </data>
+  <data name="Toolmakers stay in the PIU Scores Discord, so I can message you when something goes wrong." xml:space="preserve">
+    <value>Toolmakers stay in the PIU Scores Discord, so I can message you when something goes wrong.</value>
+  </data>
   <data name="Tools" xml:space="preserve">
     <value>Tools</value>
   </data>
@@ -6018,6 +6096,9 @@
   </data>
   <data name="Tools built by players, on your scores. You choose who gets access." xml:space="preserve">
     <value>Tools built by players, on your scores. You choose who gets access.</value>
+  </data>
+  <data name="Tools that help players understand the game — score distributions, progress, analysis anyone can use. A tool built for one person's edge, like scouting opponents before a tournament, gets removed, and its maker does not get to make more." xml:space="preserve">
+    <value>Tools that help players understand the game — score distributions, progress, analysis anyone can use. A tool built for one person's edge, like scouting opponents before a tournament, gets removed, and its maker does not get to make more.</value>
   </data>
   <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
     <value>Top 100 · Top 1000 floors — 50× SS</value>
@@ -6540,6 +6621,9 @@
   <data name="Where life settles" xml:space="preserve">
     <value>Where life settles</value>
   </data>
+  <data name="Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it." xml:space="preserve">
+    <value>Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it.</value>
+  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Where this chart's passes sit, by competitive level.</value>
   </data>
@@ -6584,6 +6668,9 @@
   </data>
   <data name="Within days" xml:space="preserve">
     <value>Within days</value>
+  </data>
+  <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
+    <value>Without them it still works — for you, on your own scores.</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>
@@ -6792,6 +6879,9 @@
   <data name="Your data is yours" xml:space="preserve">
     <value>Your data is yours</value>
   </data>
+  <data name="Your Discord handle" xml:space="preserve">
+    <value>Your Discord handle</value>
+  </data>
   <data name="Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it." xml:space="preserve">
     <value>Your endpoint answers a verification request with this. It is never sent anywhere — that is what makes answering with it proof, and why a hijacked DNS record can't pass. Stored as a hash, so put it somewhere you can find it.</value>
   </data>
@@ -6857,6 +6947,12 @@
   </data>
   <data name="Your Region" xml:space="preserve">
     <value>Your Region</value>
+  </data>
+  <data name="Your repository answered {0}. If it is private, players can't read it either." xml:space="preserve">
+    <value>Your repository answered {0}. If it is private, players can't read it either.</value>
+  </data>
+  <data name="Your repository is reachable." xml:space="preserve">
+    <value>Your repository is reachable.</value>
   </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>Your saved randomizer settings</value>

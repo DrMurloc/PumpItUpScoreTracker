@@ -1,0 +1,85 @@
+@namespace ScoreTracker.Web.Components.CommunityTools
+
+@* The rules for being listed, rendered wherever a maker is deciding something.
+
+   First person and singular throughout, and set apart from app chrome, because this is one
+   person's rules rather than the site talking. Nothing here is generated from state — it is copy,
+   and it is the same copy on the wizard, the console and the review queue.
+
+   The canonical version is the integration guide, in English, and the footer says so: these
+   translate into nine locales and a rule is a bad thing to lose an argument about in translation. *@
+
+<div class="ct-rules">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">@L["DrMurloc's Rules for Integrated Toolmakers"]</MudText>
+
+    <MudText Typo="Typo.body2" Class="ct-rules-preamble">
+        @L["PIU Scores was built on the principle that we, Pump It Up players, are all one community, divided only by physical distance. Aim to connect that community."]
+    </MudText>
+
+    <ol>
+        <li>
+            <div>
+                <b>@L["No money in it."]</b>
+                <MudText Typo="Typo.body2">
+                    @L["Free to use and free of ads. A tip jar or community fund covering your hosting is fine — a supporter tier that unlocks features is not. Anything built to turn a profit gets removed."]
+                </MudText>
+            </div>
+        </li>
+        <li>
+            <div>
+                <b>@L["Built for the community."]</b>
+                <MudText Typo="Typo.body2">
+                    @L["Tools that help players understand the game — score distributions, progress, analysis anyone can use. A tool built for one person's edge, like scouting opponents before a tournament, gets removed, and its maker does not get to make more."]
+                </MudText>
+            </div>
+        </li>
+        <li>
+            <div>
+                <b>@L["Stay reachable."]</b>
+                <MudText Typo="Typo.body2">
+                    @L["Toolmakers stay in the PIU Scores Discord, so I can message you when something goes wrong."]
+                </MudText>
+            </div>
+        </li>
+        <li>
+            <div>
+                <b>@L["Stay in good standing."]</b>
+                <MudText Typo="Typo.body2">
+                    @* The quoted server rule stays English in every locale, the way a proper noun does. *@
+                    @L["The server rule is \"Don't Be An Asshole\", and it covers toolmakers too. I can remove a tool for any reason — including anything discriminatory, or aimed at excluding or antagonising any Pump It Up community members."]
+                </MudText>
+            </div>
+        </li>
+    </ol>
+
+    <div class="ct-rules-foot">
+        <MudText Typo="Typo.body2" Style="opacity:.75;">
+            @L["The full version lives in the integration guide, in English, and is the one that governs."]
+            <MudLink Href="https://github.com/DrMurloc/PumpItUpScoreTracker/blob/main/docs/INTEGRATING.md"
+                     Target="_blank" rel="noopener">@L["Read it"]</MudLink>
+        </MudText>
+    </div>
+
+    @if (ShowAgreement)
+    {
+        <div class="ct-rules-agree">
+            <MudCheckBox T="bool" Value="Agreed" ValueChanged="OnAgreedChanged" Color="Color.Primary"
+                         Dense="true" Label=@L["I have read these, and my tool follows them."]></MudCheckBox>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Registration shows the checkbox; the console and review queue show the rules alone.</summary>
+    [Parameter] public bool ShowAgreement { get; set; }
+
+    [Parameter] public bool Agreed { get; set; }
+
+    [Parameter] public EventCallback<bool> AgreedChanged { get; set; }
+
+    private Task OnAgreedChanged(bool value)
+    {
+        Agreed = value;
+        return AgreedChanged.InvokeAsync(value);
+    }
+}

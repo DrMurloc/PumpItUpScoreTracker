@@ -165,7 +165,13 @@ public sealed class LocalizationKeyTests
             // The API docs surface names an external tool by its brand, same standing as Discord.
             "Swagger",
             // A registered community tool, named on the import pages. Same standing as PIU Center.
-            "PIU Tracker"
+            "PIU Tracker",
+            // Git hosts, named on the toolmaker rules so a maker knows where their source may live.
+            // Brands, same standing as Swagger.
+            "GitHub", "GitLab", "Codeberg",
+            // The Discord server rule, quoted verbatim in the toolmaker rules. Translating a quoted
+            // rule would make it a different rule, so it travels as written in every locale.
+            "Don't Be An Asshole"
         ];
 
         var violations = new List<string>();
