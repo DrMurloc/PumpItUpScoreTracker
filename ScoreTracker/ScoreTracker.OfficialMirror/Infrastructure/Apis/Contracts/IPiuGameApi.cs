@@ -61,6 +61,29 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts
         Task<PiuGameGetBestScoresResult>
             GetBestScores(MixEnum mix, HttpClient client, int page, CancellationToken cancellationToken);
 
+        /// <summary>
+        ///     One <c>?lv=</c> bucket of the play-data page: how many charts the player has PASSED
+        ///     there, broken down by grade and plate. Counts exclude stage breaks on both mixes,
+        ///     which is what makes them comparable against our records regardless of whether the
+        ///     player imports breaks. Pass "" for the whole account.
+        /// </summary>
+        Task<PiuGameGetPlayDataResult> GetPlayData(MixEnum mix, HttpClient client, string bucket,
+            CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     The official PUMBILITY pool with the site's own per-chart values, read live — the
+        ///     ranking board is a daily batch and lags a session behind.
+        /// </summary>
+        Task<PiuGameGetPumbilityResult> GetPumbility(MixEnum mix, HttpClient client,
+            CancellationToken cancellationToken);
+
+        /// <summary>
+        ///     The charts behind one play-data count tile, six to a page.
+        ///     <paramref name="isGrade" /> picks the grade cell over the plate one.
+        /// </summary>
+        Task<PiuGameGetPlayLogResult> GetPlayLog(MixEnum mix, HttpClient client, string bucket, string type,
+            bool isGrade, int page, CancellationToken cancellationToken);
+
         Task<PiuGameGetAccountDataResult> GetAccountData(MixEnum mix, HttpClient client,
             CancellationToken cancellationToken);
 

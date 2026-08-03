@@ -729,6 +729,200 @@ public sealed class PiuGameApiTests
         Assert.Equal(2, result.Results.Length);
     }
 
+    // ---- play_data.php: the completeness check's census surface ----
+
+    [Fact]
+    public async Task GetPlayDataReadsPhoenixClearHeadlineAndExactPlateCounts()
+    {
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPlayData_Phoenix.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetPlayData(MixEnum.Phoenix, HttpClientReturning(html), bucket: "",
+            CancellationToken.None);
+
+        // "Clear 2,776/3,646" — passes and the mix's chart count, stated by the page itself.
+        Assert.Equal(2776, result.Passes);
+        Assert.Equal(3646, result.CatalogTotal);
+
+        // Phoenix renders no grade tiles at all, and its plate counts are already exact: they sum
+        // to the clear count rather than accumulating toward it.
+        Assert.Empty(result.GradeCounts);
+        Assert.Equal(1027, result.PlateCounts["mg"]);
+        Assert.Equal(129, result.PlateCounts["pg"]);
+        Assert.Equal(38, result.PlateCounts["rg"]);
+        Assert.Equal(result.Passes, result.PlateCounts.Values.Sum());
+
+        // The level filter starts at 10 on Phoenix — sub-10 has no bucket, which is why the
+        // census derives it as a residual there.
+        Assert.DoesNotContain("9", result.Buckets);
+        Assert.Contains("10", result.Buckets);
+        Assert.Contains("27over", result.Buckets);
+        Assert.Contains("coop", result.Buckets);
+    }
+
+    [Fact]
+    public async Task GetPlayDataReadsPhoenixPerLevelBucket()
+    {
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPlayData_PhoenixLevel.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetPlayData(MixEnum.Phoenix, HttpClientReturning(html), bucket: "25",
+            CancellationToken.None);
+
+        // "Clear 21/68" on the level-25 page.
+        Assert.Equal("25", result.Bucket);
+        Assert.Equal(21, result.Passes);
+        Assert.Equal(68, result.CatalogTotal);
+        Assert.Equal(21, result.PlateCounts.Values.Sum());
+    }
+
+    [Fact]
+    public async Task GetPlayDataDeCumulatesPhoenix2GradeAndPlateTiles()
+    {
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPlayData_Phoenix2.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetPlayData(MixEnum.Phoenix2, HttpClientReturning(html), bucket: "",
+            CancellationToken.None);
+
+        // Phoenix 2 has no clear headline; its worst grade tile IS the pass count, because the
+        // tiles are cumulative ("this grade or better"). Fixture reads 2,9,11,13,…,16.
+        Assert.Equal(16, result.Passes);
+        Assert.Equal(4476, result.CatalogTotal);
+
+        // De-cumulated: SSS+ 2 then SSS 9−2, SS+ 11−9, SS 13−11, S+ 13−13 …
+        Assert.Equal(2, result.GradeCounts["SSS_PLUS"]);
+        Assert.Equal(7, result.GradeCounts["SSS"]);
+        Assert.Equal(2, result.GradeCounts["SS_PLUS"]);
+        Assert.Equal(2, result.GradeCounts["SS"]);
+        Assert.Equal(0, result.GradeCounts["S_PLUS"]);
+        Assert.Equal(result.Passes, result.GradeCounts.Values.Sum());
+        Assert.Equal(result.Passes, result.PlateCounts.Values.Sum());
+
+        // Its level filter reaches level 1, unlike Phoenix's.
+        Assert.Contains("1", result.Buckets);
+        Assert.Contains("9", result.Buckets);
+    }
+
+    [Fact]
+    public async Task GetPlayDataDeCumulatesCorrectlyWhenTheSiteOmitsEmptyTopBands()
+    {
+        // The site drops a tile whose count is zero. Because the counts are cumulative and
+        // monotonic, that can only ever happen at the TOP of the run — this level-17 fixture has
+        // no SSS+ tile, so SSS must de-cumulate against an implicit zero rather than skipping.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPlayData_Phoenix2Level.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetPlayData(MixEnum.Phoenix2, HttpClientReturning(html), bucket: "17",
+            CancellationToken.None);
+
+        Assert.False(result.GradeCounts.ContainsKey("SSS_PLUS"));
+        Assert.Equal(3, result.GradeCounts["SSS"]);
+        Assert.Equal(1, result.GradeCounts["SS_PLUS"]);
+        Assert.Equal(5, result.Passes);
+        Assert.Equal(308, result.CatalogTotal);
+        Assert.Equal(result.Passes, result.GradeCounts.Values.Sum());
+    }
+
+    // ---- pumbility.php: the live official headline, in two grammars ----
+
+    [Fact]
+    public async Task GetPumbilityReadsThePhoenixClassicListAndItsTotal()
+    {
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPumbility_Phoenix.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetPumbility(MixEnum.Phoenix, HttpClientReturning(html), CancellationToken.None);
+
+        Assert.Equal(64466, result.Total);
+        var first = result.Entries.First();
+        Assert.Equal("Doppelganger", first.SongName);
+        Assert.Equal(ChartType.Double, first.ChartType);
+        Assert.Equal(26, first.Level);
+        Assert.Equal(PhoenixLetterGrade.AA, first.Grade);
+        Assert.Equal(1460, first.Value);
+        // Phoenix PUMBILITY is plate-blind and its rows carry no plate art.
+        Assert.Null(first.Plate);
+    }
+
+    [Fact]
+    public async Task GetPumbilityReadsThePhoenix2BreakdownCards()
+    {
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPumbility_Phoenix2.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetPumbility(MixEnum.Phoenix2, HttpClientReturning(html), CancellationToken.None);
+
+        Assert.Equal(4902.05, result.Total);
+        var first = result.Entries.First();
+        Assert.Equal("Caprice of DJ Otada", first.SongName);
+        Assert.Equal(ChartType.Single, first.ChartType);
+        Assert.Equal(21, first.Level);
+        Assert.Equal(PhoenixLetterGrade.SS, first.Grade);
+        Assert.Equal(PhoenixPlate.MarvelousGame, first.Plate);
+        Assert.Equal(354.24, first.Value);
+
+        // A title containing the site's own " - " join survives the split: the page renders
+        // "Exceed2 Opening - SHORT CUT - - BanYa".
+        Assert.Contains(result.Entries, e => e.SongName == "Exceed2 Opening - SHORT CUT -");
+        // Zero-valued rows are meaningful — that is how the page prices sub-10 and broken entries.
+        Assert.Contains(result.Entries, e => e.Value == 0);
+    }
+
+    // ---- user_play_log_detail: naming the charts inside one count tile ----
+
+    [Fact]
+    public async Task GetPlayLogNamesTheChartsBehindAPhoenix2GradeCell()
+    {
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPlayLog_Phoenix2.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetPlayLog(MixEnum.Phoenix2, HttpClientReturning(html), bucket: "17", type: "A",
+            isGrade: true, page: 1, CancellationToken.None);
+
+        // The level-17 A-or-better cell holds five charts and fits on one page.
+        Assert.Equal(5, result.Entries.Length);
+        Assert.Equal(1, result.MaxPage);
+        var first = result.Entries.First();
+        Assert.Equal("Ugly duck Toccata", first.SongName);
+        Assert.Equal(ChartType.Single, first.ChartType);
+        Assert.Equal(17, first.Level);
+    }
+
+    [Fact]
+    public async Task GetPlayLogReadsThePagerDepthOfALargePhoenixPlateCell()
+    {
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPlayLog_Phoenix.html"));
+        var api = BuildApi(html);
+
+        var result = await api.GetPlayLog(MixEnum.Phoenix, HttpClientReturning(html), bucket: "", type: "mg",
+            isGrade: false, page: 1, CancellationToken.None);
+
+        // Six rows a page — half of my_best_score.php — over 1,027 charts is 172 pages, and the
+        // pager states the last one even though it only renders a window of buttons. This is the
+        // number that decides which enumeration the repair picks.
+        Assert.Equal(6, result.Entries.Length);
+        Assert.Equal(172, result.MaxPage);
+    }
+
+    [Fact]
+    public async Task GetPlayLogPicksTheGradeEndpointOnlyForGradeCells()
+    {
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetPlayLog_Phoenix2.html"));
+        var (client, requests) = CapturingHttpClientReturning(html);
+        var api = BuildApi(html);
+
+        await api.GetPlayLog(MixEnum.Phoenix2, client, "17", "A", isGrade: true, 1, CancellationToken.None);
+        await api.GetPlayLog(MixEnum.Phoenix2, client, "17", "mg", isGrade: false, 2, CancellationToken.None);
+
+        // The site serves grade cells from detail2 and plate cells from detail; sending a grade
+        // type to the plate endpoint returns an empty modal rather than an error.
+        Assert.Contains("user_play_log_detail2.php", requests[0].ToString());
+        Assert.Contains("lv=17&type=A&page=1", requests[0].ToString());
+        Assert.DoesNotContain("detail2", requests[1].ToString());
+        Assert.Contains("page=2", requests[1].ToString());
+    }
+
     private static PiuGameApi BuildApi(string responseHtml)
     {
         return new PiuGameApi(

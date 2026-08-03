@@ -106,20 +106,40 @@ public sealed class OfficialCensusProbeTests : IClassFixture<PiuGameSessionFixtu
     }
 
     /// <summary>
-    ///     Does Phoenix render the same per-chart PUMBILITY breakdown Phoenix 2 does? Its nav links
-    ///     to my_page/pumbility.php, but only the Phoenix 2 page has ever been parsed — and the
-    ///     detector wants one headline "official PUMBILITY" source that works on both mixes.
+    ///     Both mixes render a per-chart PUMBILITY breakdown at my_page/pumbility.php, in DIFFERENT
+    ///     grammars — Phoenix 2 uses <c>li > div.top-wrap</c> with a <c>pumbility-point-sub</c>
+    ///     decimal span, Phoenix uses the classic ranking-list markup with the contribution in
+    ///     <c>div.score i.tt.en</c> and a total in <c>div.pumbility_total_wrap p.t2</c>. Both are
+    ///     LIVE, unlike the ranking board's daily batch.
     /// </summary>
     [LiveSiteFact]
     public async Task Phoenix_pumbility_page_probe()
     {
-        var ct = CancellationToken.None;
+        var client = await _fixture.GetAuthenticatedClient(CancellationToken.None);
+        await PumbilityPage(client, "https://phoenix.piugame.com", "p1", CancellationToken.None);
+    }
+
+    [LiveSiteFact]
+    public async Task Phoenix2_pumbility_page_probe()
+    {
+        var client = await _fixture.GetAuthenticatedPhoenix2Client(CancellationToken.None);
+        await PumbilityPage(client, "https://piugame.com", "p2", CancellationToken.None);
+    }
+
+    private async Task PumbilityPage(HttpClient client, string baseUrl, string tag, CancellationToken ct)
+    {
         Directory.CreateDirectory(DumpDir);
-        var client = await _fixture.GetAuthenticatedClient(ct);
-        var html = await Fetch(client, "https://phoenix.piugame.com/my_page/pumbility.php", ct);
-        await Dump("p1_pumbility.html", html, ct);
+        var html = await Fetch(client, $"{baseUrl}/my_page/pumbility.php", ct);
+        await Dump($"{tag}_pumbility.html", html, ct);
         var document = new HtmlDocument();
         document.LoadHtml(html);
+
+        _output.WriteLine($"total (P1 grammar div.pumbility_total_wrap p.t2): " +
+                          (document.DocumentNode
+                               .SelectSingleNode("//div[contains(@class,'pumbility_total_wrap')]//p[contains(@class,'t2')]")
+                               ?.InnerText.Trim() ?? "(absent)"));
+        _output.WriteLine($"classic rows (li with div.score i.tt.en): " +
+                          $"{document.DocumentNode.SelectNodes("//li[.//div[contains(@class,'score')]//i[contains(@class,'tt')]]")?.Count ?? 0}");
 
         var rows = document.DocumentNode.SelectNodes("//li[div[contains(@class,'top-wrap')]]");
         _output.WriteLine($"{html.Length:N0} chars, {rows?.Count ?? 0} breakdown-shaped rows " +

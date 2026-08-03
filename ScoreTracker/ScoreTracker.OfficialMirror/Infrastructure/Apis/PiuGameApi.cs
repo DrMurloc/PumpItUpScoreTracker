@@ -847,6 +847,339 @@ internal sealed class PiuGameApi : IPiuGameApi
         return result;
     }
 
+    // A count tile renders "129" on Phoenix and "2 / 4,476" on Phoenix 2 — the first number is
+    // the count, the second (when present) the mix's chart total for the bucket.
+    private static readonly Regex CountRegex = new(@"\d[\d,]*", RegexOptions.Compiled);
+
+    private static readonly Regex DecimalRegex = new(@"\d[\d,]*(?:\.\d+)?", RegexOptions.Compiled);
+
+    /// <summary>
+    ///     One bucket of <c>my_page/play_data.php</c> — the cheapest complete statement the site
+    ///     makes about an account, since it counts every PASS at a level in a single request.
+    ///     Phoenix 2's grade and plate tiles are cumulative and Phoenix's plate tiles are exact;
+    ///     both leave out a band the player has none of. This normalises the pair to exact counts
+    ///     so nothing downstream has to know which mix it is reading.
+    /// </summary>
+    public async Task<PiuGameGetPlayDataResult> GetPlayData(MixEnum mix, HttpClient client, string bucket,
+        CancellationToken cancellationToken)
+    {
+        var response = await GetWithRetries(
+            $"{_urls.BaseUrlFor(mix)}/my_page/play_data.php?lv={HttpUtility.UrlEncode(bucket)}",
+            cancellationToken, client);
+        var document = new HtmlDocument();
+        document.LoadHtml(response);
+
+        var grades = new List<(string Type, int Count)>();
+        var plates = new List<(string Type, int Count)>();
+        int? catalogTotal = null;
+        var tiles = document.DocumentNode
+            .SelectNodes("//a[contains(@class,'play_log_btn')][.//i[contains(@class,'t_num')]]");
+        foreach (var tile in tiles ?? new HtmlNodeCollection(null))
+        {
+            var text = HttpUtility.HtmlDecode(
+                tile.SelectSingleNode(".//i[contains(@class,'t_num')]")?.InnerText ?? "");
+            var numbers = CountRegex.Matches(text)
+                .Select(m => int.Parse(m.Value.Replace(",", ""), CultureInfo.InvariantCulture)).ToArray();
+            if (numbers.Length == 0) continue;
+            if (numbers.Length > 1) catalogTotal ??= numbers[1];
+
+            var type = tile.GetAttributeValue("data-type", "");
+            if (type.Length == 0) continue;
+            // Phoenix omits data-division entirely and renders plate tiles only.
+            if (tile.GetAttributeValue("data-division", "plate") == "grade") grades.Add((type, numbers[0]));
+            else plates.Add((type, numbers[0]));
+        }
+
+        // Cumulative counts run best-to-worst, so the worst band present carries the total. Phoenix
+        // states its own total instead, in the clear_w headline ("2,776/3,646").
+        var cumulative = mix == MixEnum.Phoenix2;
+        var passes = cumulative
+            ? grades.Concat(plates).Select(t => t.Count).DefaultIfEmpty(0).Max()
+            : 0;
+
+        var clearText = document.DocumentNode
+            .SelectSingleNode("//div[contains(@class,'clear_w')]//div[contains(@class,'t1')]")?.InnerText;
+        if (clearText != null)
+        {
+            var parts = CountRegex.Matches(HttpUtility.HtmlDecode(clearText))
+                .Select(m => int.Parse(m.Value.Replace(",", ""), CultureInfo.InvariantCulture)).ToArray();
+            if (parts.Length > 0) passes = parts[0];
+            if (parts.Length > 1) catalogTotal = parts[1];
+        }
+
+        return new PiuGameGetPlayDataResult
+        {
+            Bucket = bucket,
+            Passes = passes,
+            CatalogTotal = catalogTotal,
+            GradeCounts = cumulative ? DeCumulate(grades) : Exact(grades),
+            PlateCounts = cumulative ? DeCumulate(plates) : Exact(plates),
+            Buckets = LevelBuckets(document)
+        };
+    }
+
+    /// <summary>
+    ///     Turns a best-to-worst cumulative run into per-band counts. A band the player has none of
+    ///     is left out of the page entirely, and because the run is monotonic that can only ever be
+    ///     a leading prefix — so walking what IS present, in document order, is exact.
+    /// </summary>
+    private static IReadOnlyDictionary<string, int> DeCumulate(IReadOnlyList<(string Type, int Count)> tiles)
+    {
+        var result = new Dictionary<string, int>(StringComparer.Ordinal);
+        var previous = 0;
+        foreach (var (type, count) in tiles)
+        {
+            result[type] = count - previous;
+            previous = count;
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, int> Exact(IReadOnlyList<(string Type, int Count)> tiles)
+    {
+        var result = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var (type, count) in tiles) result[type] = count;
+        return result;
+    }
+
+    /// <summary>
+    ///     The <c>?lv=</c> options, read off the page — the two mixes do not offer the same set
+    ///     (Phoenix starts at 10, Phoenix 2 at 1) and assuming either one would silently miss levels.
+    /// </summary>
+    private static string[] LevelBuckets(HtmlDocument document)
+    {
+        var select = document.DocumentNode.SelectNodes("//select")
+            ?.FirstOrDefault(s => s.GetAttributeValue("onchange", "")
+                .Contains("lv=", StringComparison.OrdinalIgnoreCase));
+        return select?.SelectNodes(".//option")
+            ?.Select(o => o.GetAttributeValue("value", ""))
+            .ToArray() ?? Array.Empty<string>();
+    }
+
+    /// <summary>
+    ///     The official PUMBILITY pool. Both mixes serve it live at the same path in different
+    ///     grammars, so the parser branches on the page shape rather than the mix — the same rule
+    ///     the best-score walk follows.
+    /// </summary>
+    public async Task<PiuGameGetPumbilityResult> GetPumbility(MixEnum mix, HttpClient client,
+        CancellationToken cancellationToken)
+    {
+        var response = await GetWithRetries($"{_urls.BaseUrlFor(mix)}/my_page/pumbility.php",
+            cancellationToken, client);
+        var document = new HtmlDocument();
+        document.LoadHtml(response);
+
+        var totalText = HttpUtility.HtmlDecode(document.DocumentNode
+            .SelectSingleNode("//div[contains(@class,'pumbility_total_wrap')]")?.InnerText ?? "");
+        var totalMatch = DecimalRegex.Match(totalText);
+        var total = totalMatch.Success
+            ? double.Parse(totalMatch.Value.Replace(",", ""), NumberStyles.AllowDecimalPoint,
+                CultureInfo.InvariantCulture)
+            : 0;
+
+        var cards = document.DocumentNode.SelectNodes("//li[div[contains(@class,'top-wrap')]]");
+        var entries = cards is { Count: > 0 }
+            ? ParsePumbilityCards(cards)
+            : ParsePumbilityRows(document.DocumentNode.SelectNodes(
+                "//div[contains(@class,'pumblitiySt')]//ul[contains(@class,'list')]/li"));
+
+        return new PiuGameGetPumbilityResult { Total = total, Entries = entries };
+    }
+
+    /// <summary>Phoenix 2's breakdown cards: value in "354&lt;span&gt;.24&lt;/span&gt;", plate art
+    /// prefixed "s_" unlike everywhere else on the site.</summary>
+    private PiuGameGetPumbilityResult.Entry[] ParsePumbilityCards(HtmlNodeCollection cards)
+    {
+        var entries = new List<PiuGameGetPumbilityResult.Entry>();
+        foreach (var card in cards)
+            try
+            {
+                var inner = card.InnerHtml;
+                var type = ShortChartType(inner);
+                if (type == null) continue;
+
+                var value = Regex.Match(inner,
+                    @"(?s)class=""in score"".*?>\s*([0-9,]+)<span class=""pumbility-point-sub"">\.(\d+)</span>");
+                if (!value.Success) continue;
+
+                entries.Add(new PiuGameGetPumbilityResult.Entry
+                {
+                    SongName = SongFromLabel(HttpUtility.HtmlDecode(
+                        card.SelectSingleNode(".//div[contains(@class,'mid-wrap')]")?.InnerText.Trim() ?? "")),
+                    ChartType = type.Value,
+                    Level = ShortLevel(inner),
+                    Grade = GradeFrom(inner),
+                    Plate = PlateFrom(inner),
+                    Value = double.Parse(
+                        value.Groups[1].Value.Replace(",", "") + "." + value.Groups[2].Value,
+                        NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture)
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error parsing Phoenix 2 PUMBILITY card");
+            }
+
+        return entries.ToArray();
+    }
+
+    /// <summary>Phoenix's classic ranking rows: song in .profile_name .t1, contribution in
+    /// .score i.tt, and no plate — Phoenix PUMBILITY never prices one.</summary>
+    private PiuGameGetPumbilityResult.Entry[] ParsePumbilityRows(HtmlNodeCollection? rows)
+    {
+        var entries = new List<PiuGameGetPumbilityResult.Entry>();
+        foreach (var row in rows ?? new HtmlNodeCollection(null))
+            try
+            {
+                var inner = row.InnerHtml;
+                var type = ShortChartType(inner);
+                if (type == null) continue;
+
+                var valueText = row
+                    .SelectSingleNode(".//div[contains(@class,'score')]//i[contains(@class,'tt')]")?.InnerText;
+                if (valueText == null) continue;
+
+                entries.Add(new PiuGameGetPumbilityResult.Entry
+                {
+                    SongName = HttpUtility.HtmlDecode(row
+                        .SelectSingleNode(".//div[contains(@class,'profile_name')]//p[contains(@class,'t1')]")
+                        ?.InnerText.Trim() ?? ""),
+                    ChartType = type.Value,
+                    Level = ShortLevel(inner),
+                    Grade = GradeFrom(inner),
+                    Value = double.Parse(valueText.Replace(",", "").Trim(),
+                        NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture)
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error parsing Phoenix PUMBILITY row");
+            }
+
+        return entries.ToArray();
+    }
+
+    /// <summary>
+    ///     The charts behind one count tile. The site reaches them in two hops — a POST that
+    ///     answers with a stub scripting the real GET — and this goes straight to that GET, which
+    ///     is a read either way. Grade cells live on <c>detail2</c>, plate cells on <c>detail</c>.
+    /// </summary>
+    public async Task<PiuGameGetPlayLogResult> GetPlayLog(MixEnum mix, HttpClient client, string bucket,
+        string type, bool isGrade, int page, CancellationToken cancellationToken)
+    {
+        var endpoint = isGrade ? "user_play_log_detail2.php" : "user_play_log_detail.php";
+        var response = await GetWithRetries(
+            $"{_urls.BaseUrlFor(mix)}/ajax/{endpoint}?lv={HttpUtility.UrlEncode(bucket)}" +
+            $"&type={HttpUtility.UrlEncode(type)}&page={page}", cancellationToken, client);
+        var document = new HtmlDocument();
+        document.LoadHtml(response);
+
+        var entries = new List<PiuGameGetPlayLogResult.Entry>();
+        foreach (var li in document.DocumentNode.SelectNodes("//li[.//div[contains(@class,'song_name')]]")
+                           ?? new HtmlNodeCollection(null))
+        {
+            var chartType = ShortChartType(li.InnerHtml);
+            if (chartType == null) continue;
+
+            entries.Add(new PiuGameGetPlayLogResult.Entry
+            {
+                SongName = HttpUtility.HtmlDecode(
+                    li.SelectSingleNode(".//div[contains(@class,'song_name')]//p")?.InnerText.Trim()
+                    ?? li.SelectSingleNode(".//div[contains(@class,'song_name')]")?.InnerText.Trim() ?? ""),
+                ChartType = chartType.Value,
+                Level = ShortLevel(li.InnerHtml)
+            });
+        }
+
+        // The pager rewrites each button's onclick into "?lv=&type=X&&page=N"; the highest N it
+        // offers is the last page (the window always includes it via the last-page button).
+        var maxPage = Regex.Matches(response, @"page=(\d+)")
+            .Select(m => int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture))
+            .DefaultIfEmpty(1).Max();
+
+        return new PiuGameGetPlayLogResult { Entries = entries.ToArray(), MaxPage = maxPage };
+    }
+
+    /// <summary>
+    ///     Phoenix 2's breakdown card prints title and artist as one text node joined by " - ",
+    ///     with no element between them, so the title has to be recovered by splitting. Titles
+    ///     contain the separator themselves — "Exceed2 Opening - SHORT CUT -" renders as
+    ///     "Exceed2 Opening - SHORT CUT - - BanYa" — so the split is on the LAST occurrence, which
+    ///     is right for every row on the page. An artist containing " - " would mis-split; the
+    ///     charts are matched on type and level as well, so a bad title costs a match, not a wrong one.
+    /// </summary>
+    private static string SongFromLabel(string label)
+    {
+        var separator = label.LastIndexOf(" - ", StringComparison.Ordinal);
+        return separator <= 0 ? label : label[..separator].Trim();
+    }
+
+    private static ChartType? ShortChartType(string html)
+    {
+        var match = ShortTypeRegex.Match(html);
+        if (!match.Success) return null;
+        return match.Groups[1].Value.ToLowerInvariant() switch
+        {
+            "s" => ChartType.Single,
+            "d" => ChartType.Double,
+            "c" => ChartType.CoOp,
+            "sp" => ChartType.SinglePerformance,
+            "dp" => ChartType.DoublePerformance,
+            _ => null
+        };
+    }
+
+    // A missing level reads as 29, matching the best-score parser: the site drops the digits on
+    // its unnumbered top-tier stepballs.
+    private static int ShortLevel(string html)
+    {
+        var digits = string.Join("", ShortLevelRegex.Matches(html).Select(m => m.Groups[1].Value));
+        return digits.Length == 0 ? 29 : int.Parse(digits, CultureInfo.InvariantCulture);
+    }
+
+    private static PhoenixLetterGrade? GradeFrom(string html)
+    {
+        var match = Regex.Match(html, @"\/grade\/([a-z_]+)\.png", RegexOptions.IgnoreCase);
+        if (!match.Success) return null;
+        return match.Groups[1].Value.ToLowerInvariant() switch
+        {
+            "f" => PhoenixLetterGrade.F,
+            "d" => PhoenixLetterGrade.D,
+            "c" => PhoenixLetterGrade.C,
+            "b" => PhoenixLetterGrade.B,
+            "a" => PhoenixLetterGrade.A,
+            "a_p" => PhoenixLetterGrade.APlus,
+            "aa" => PhoenixLetterGrade.AA,
+            "aa_p" => PhoenixLetterGrade.AAPlus,
+            "aaa" => PhoenixLetterGrade.AAA,
+            "aaa_p" => PhoenixLetterGrade.AAAPlus,
+            "s" => PhoenixLetterGrade.S,
+            "s_p" => PhoenixLetterGrade.SPlus,
+            "ss" => PhoenixLetterGrade.SS,
+            "ss_p" => PhoenixLetterGrade.SSPlus,
+            "sss" => PhoenixLetterGrade.SSS,
+            "sss_p" => PhoenixLetterGrade.SSSPlus,
+            _ => null
+        };
+    }
+
+    // The breakdown page prefixes its plate art "s_" (s_mg.png) where the rest of the site
+    // serves it bare, so this accepts either.
+    private static PhoenixPlate? PlateFrom(string html)
+    {
+        var match = Regex.Match(html, @"\/plate\/(?:s_)?([a-zA-Z]+)\.png");
+        if (!match.Success) return null;
+        try
+        {
+            return PhoenixPlateHelperMethods.ParseShorthand(match.Groups[1].Value);
+        }
+        catch (KeyNotFoundException)
+        {
+            return null;
+        }
+    }
+
     // Avatar hosting differs BY LOGIN ERA: Phoenix pages serve /data/avatar_img/, Phoenix 2
     // pages serve /data/avatar_img2/ (verified 2026-07-09). Accept both — narrowing this to
     // one variant is the recurring avatar-import bug; both shapes are pinned by approval

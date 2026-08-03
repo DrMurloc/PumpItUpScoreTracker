@@ -86,10 +86,10 @@ why the deep scan cannot be designed away.
 
 ### 3.1 The census algorithm
 
-1. **Run a normal import first.** The check is always the tail of an import, never a standalone
-   scrape — otherwise a player who played twenty minutes ago reads as "missing 6 charts", which is
-   true and useless. The button on the page is *Import and check*, and the automatic path is the
-   last step of every credentialed import.
+1. **Run a normal import first.** The check imports before it counts, never counts on its own —
+   otherwise a player who played twenty minutes ago reads as "missing 6 charts", which is true and
+   useless. The button on the page is *Import and check*. The reverse is **not** true: a plain
+   import does not run a check (§6).
 2. For each `?lv=` bucket the mix offers, fetch `play_data.php?lv=X` and normalise the tiles into
    `passes[level]` plus `histogram[level][grade|plate]`.
    - Phoenix 2 covers levels 1–26 directly.
@@ -153,9 +153,9 @@ disagree", and the only repair for a same-band stale score.
 - **3 per calendar month per user.** Admins exempt.
 - **Only a blind deep scan burns a credit.** A repair the census localised is bounded and
   evidence-driven, so it is free — credits govern "walk everything", not "fix what we found".
-- **Global concurrency cap** (1–2 at a time, queued) on top of the existing per-user
-  `IImportConcurrencyGuard`. Three simultaneous full walks is a rude amount of traffic to point at
-  piugame.
+- **Global concurrency cap** — the existing per-user `IImportConcurrencyGuard` gains a global slot
+  count rather than growing a second guard beside it; it is the same concern. Three simultaneous
+  full walks is a rude amount of traffic to point at piugame.
 - When credits are exhausted, the panel shows the date the next one unlocks **and the last check's
   summary in a copyable form**, so the message that reaches DrMurloc in Discord arrives with data
   attached.
@@ -163,9 +163,16 @@ disagree", and the only repair for a same-band stale score.
 ## 6. Where it lives
 
 `/UploadPhoenixScores`, below the import controls — it needs a session, and the page already owns
-the saved-credential flow, the background-job handoff and the status hub from PR #150. It also
-runs automatically as the last step of every credentialed import, so the bug class self-reports
-instead of waiting for a screenshot.
+the saved-credential flow, the background-job handoff and the status hub from PR #150.
+
+**A player presses it. It never rides along with a normal import** (owner call, 2026-08-02): a
+check is ~20 extra requests at piugame, and making every import pay that permanently is the wrong
+default for a problem a minority hit. The cost of that choice is honest — discovery now depends on
+the player finding the button, so the bug class does not self-report. Revisit if the button turns
+out to be pressed constantly.
+
+Progress rides the existing `ImportStatusUpdatedEvent`, which means the nav-bar import pulse lights
+during a check too. Accepted: it is the same kind of work from the player's side.
 
 The last result is persisted and rendered on load, so opening the page shows the standing verdict
 without touching piugame.
@@ -224,3 +231,47 @@ the catalog reader) — no new cross-vertical reference.
    informational rather than as a PUMBILITY explanation.
 3. **Half-double / performance charts.** Present in the best list, not yet checked against the
    census denominators.
+
+## 11. Technical scope
+
+Everything is inside **OfficialMirror**. `OfficialSiteClient` already injects `IChartRepository`
+(mix-resolved levels) and `IScoreReader` (our bests), so both sides of the comparison are reachable
+with **no new project reference and no new cross-vertical port**. Nothing is added to core
+`Domain` or `Application`.
+
+| Layer | Location | New types |
+|---|---|---|
+| Contracts *(public)* | `OfficialMirror/Contracts` | `StartImportCheckCommand`, `StartDeepScanCommand`, `GetLastImportCheckQuery`, `ImportCheckReport` + findings, `Messages/RunImportCheckCommand`, `Events/ImportCheckCompletedEvent` |
+| Domain *(internal)* | `OfficialMirror/Domain` | `OfficialCensus`/`LevelCensus`, `CensusNormalizer`, `CensusDiff`, `IImportCheckRepository`, `IOfficialSiteClient` additions |
+| Application *(internal)* | `OfficialMirror/Application` | `ImportCheckSaga`, `StartImportCheckHandler`, `RunImportCheckConsumer`, `ExecuteImportCheckCommand` |
+| Infrastructure *(internal)* | `OfficialMirror/Infrastructure` | `PiuGameApi` parsers + DTOs, `OfficialSiteClient.GetOfficialCensus`, `ImportCheckRunEntity`, `EFImportCheckRepository`, `EFAccountPurgeRepository.UserOwned` |
+| Wiring *(public)* | `OfficialMirror/Wiring` | model-contribution row, DI, consumer registration |
+| Data | `ScoreTracker.Data/Migrations` | `AddImportCheckRun` |
+| Web | `Pages/UploadPhoenixScores.razor`, `Components/ScoreCheckPanel.razor` | the panel |
+
+**Infrastructure scrapes, Domain compares, Application orchestrates.** `GetOfficialCensus` returns
+the official side only and never reads our records, so the whole detection algorithm is a pure
+function under unit test. The `Start*` (circuit) → `Run*` (bus) → `Execute*` (internal MediatR)
+triplet is copied from the import path verbatim, including **`SetScopedUser`, never
+`SetCurrentUser`**.
+
+⚠ **OfficialMirror has no `UserOwned` purge manifest today** — its purge only *unlinks*
+`OfficialPlayerEntity`, which sits in `AccountPurgeCoverageTests.Exempt` with a written reason.
+`ImportCheckRun` carries a `UserId`, so this feature introduces that vertical's first manifest and
+delete loop, covered by the decoy-account integration test.
+
+### Commit order
+
+| # | Commit | Proof |
+|---|---|---|
+| C1 | ACL parsers + captured fixtures | approval tests, both mixes |
+| C2 | `CensusNormalizer` + `CensusDiff`; probe asserts per-level agreement | `DomainTests` + exploration probe |
+| C3 | `GetOfficialCensus` scrape orchestration | component tests, mocked `IPiuGameApi` |
+| C4 | Entity, migration, repository, purge manifest, schema doc | integration round-trip + purge |
+| C5 | Start/Run/Execute triplet + saga | component tests, all five outcomes |
+| C6 | Repair path + unmappables to the admin inbox | component tests |
+| C7 | Deep scan, credit ledger, global concurrency slot | component tests |
+| C8 | UI panel + hub subscription | bUnit, the nine states |
+| C9 | l10n ×9 + docs | ratchets |
+
+An automatic check at the tail of every import was scoped and then **cut** (§6).
