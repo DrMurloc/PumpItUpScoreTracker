@@ -53,31 +53,38 @@ public sealed class ToolSetupWizardTests : ComponentTestBase
     }
 
     /// <summary>
-    ///     Input, not Change: both boxes are Immediate, so they bind on oninput. A Change here
+    ///     Input, not Change: the name box is Immediate, so it binds on oninput. A Change here
     ///     silently does nothing and every assertion after it reads the previous screen.
     ///     <para>
-    ///         Scoped to the register card rather than to the first box on the screen: the rules
-    ///         card renders above it and owns the first input on the page, which is a checkbox.
+    ///         Checkboxes and radios are excluded rather than taking "the first input": the rules
+    ///         card owns a checkbox and the kind fork owns two radios.
     ///     </para>
     /// </summary>
     private static void TypeName(IRenderedComponent<ToolSetupWizard> page, string value)
     {
-        var scope = page.FindAll(".ct-register input:not([type=radio])");
-        (scope.Count > 0 ? scope : page.FindAll("input:not([type=radio])")).First().Input(value);
+        Boxes(page).First().Input(value);
     }
 
-    /// <summary>
-    ///     Registration needs the rules accepted as well as a name. Every test past the first screen
-    ///     goes through here, so the two are ticked together.
-    /// </summary>
+    private static IRefreshableElementCollection<IElement> Boxes(
+        IRenderedComponent<ToolSetupWizard> page)
+    {
+        return page.FindAll("input:not([type=radio]):not([type=checkbox])");
+    }
+
+    /// <summary>Screen one is the rules and nothing else; the checkbox is its only control.</summary>
     private static void AcceptRules(IRenderedComponent<ToolSetupWizard> page)
     {
         page.FindAll(".ct-rules-agree input[type=checkbox]").First().Change(true);
     }
 
+    /// <summary>
+    ///     Through both registration screens: accept, continue, name. Everything past registration
+    ///     goes through here.
+    /// </summary>
     private static void RegisterAs(IRenderedComponent<ToolSetupWizard> page, string name)
     {
         AcceptRules(page);
+        PrimaryButton(page).Click();
         TypeName(page, name);
     }
 
@@ -99,10 +106,11 @@ public sealed class ToolSetupWizardTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheFirstScreenCannotAdvanceWithoutAName()
+    public void TheSecondScreenCannotAdvanceWithoutAName()
     {
         var page = Render();
         AcceptRules(page);
+        PrimaryButton(page).Click();
 
         Assert.True(PrimaryButton(page).HasAttribute("disabled"));
 
@@ -120,7 +128,6 @@ public sealed class ToolSetupWizardTests : ComponentTestBase
     public void TheFirstScreenCannotAdvanceWithoutAcceptingTheRules()
     {
         var page = Render();
-        TypeName(page, "Murloc Planner");
 
         Assert.True(PrimaryButton(page).HasAttribute("disabled"));
         Assert.Contains("Accept the rules above to continue.", page.Markup);
@@ -130,14 +137,23 @@ public sealed class ToolSetupWizardTests : ComponentTestBase
         Assert.False(PrimaryButton(page).HasAttribute("disabled"));
     }
 
+    /// <summary>
+    ///     The rules are the whole first screen. A maker decides whether to build this at all from
+    ///     them, so the form does not share the page with them.
+    /// </summary>
     [Fact]
-    public void TheRulesAreShownBeforeTheRegistrationForm()
+    public void TheFirstScreenIsTheRulesAndNothingElse()
     {
         var page = Render();
 
         Assert.Contains("Rules for Integrated Toolmakers", page.Markup);
-        Assert.True(page.Markup.IndexOf("ct-rules", StringComparison.Ordinal)
-                    < page.Markup.IndexOf("ct-register", StringComparison.Ordinal));
+        Assert.Empty(Boxes(page));
+
+        AcceptRules(page);
+        PrimaryButton(page).Click();
+
+        Assert.DoesNotContain("Rules for Integrated Toolmakers", page.Markup);
+        Assert.NotEmpty(Boxes(page));
     }
 
     /// <summary>
@@ -149,10 +165,11 @@ public sealed class ToolSetupWizardTests : ComponentTestBase
     {
         var page = Render();
         AcceptRules(page);
+        PrimaryButton(page).Click();
 
         // Only the name box is Immediate; the other two bind on change, and an Input on them
         // silently does nothing.
-        var boxes = page.FindAll(".ct-register input:not([type=radio])");
+        var boxes = Boxes(page);
         boxes[0].Input("Murloc Planner");
         boxes[1].Change("https://github.com/errlena/planner");
         boxes[2].Change("errlena");
@@ -193,6 +210,7 @@ public sealed class ToolSetupWizardTests : ComponentTestBase
         Assert.DoesNotContain("Finish later", page.Markup);
 
         AcceptRules(page);
+        PrimaryButton(page).Click();
         Assert.Contains("You can leave once your key exists.", page.Markup);
 
         TypeName(page, "Murloc Planner");

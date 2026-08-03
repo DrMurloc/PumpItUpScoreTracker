@@ -1501,6 +1501,9 @@
   <data name="Create Song" xml:space="preserve">
 	  <value>曲作成</value>
   </data>
+  <data name="Create your tool" xml:space="preserve">
+    <value>ツールを作る</value>
+  </data>
   <data name="Created" xml:space="preserve">
     <value>作成済み</value>
   </data>
@@ -2709,11 +2712,17 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>取り消されたか、ツールが削除された可能性があります。送った人に新しいリンクをもらってください。</value>
   </data>
+  <data name="It reads player scores" xml:space="preserve">
+    <value>プレイヤーのスコアを読む</value>
+  </data>
   <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
     <value>非公開で始まりますが完全に動作します — 招待リンク、キー、Webhookはすべて機能します。掲載は一覧に載るだけです。</value>
   </data>
   <data name="It starts private and fully working. Being listed in the directory is optional and comes at the end." xml:space="preserve">
     <value>最初は非公開ですが、機能はすべて動きます。ディレクトリへの掲載は任意で、最後の手順です。</value>
+  </data>
+  <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
+    <value>非公開の状態で、機能はすべて使える状態から始まります。ここの内容はあとから変更できます。</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>読み取れる情報</value>
@@ -2741,6 +2750,9 @@
   </data>
   <data name="Just &quot;this player imported&quot;. You pull what you need from the API." xml:space="preserve">
     <value>「このプレイヤーがインポートした」だけ。必要なものはAPIから取得してください。</value>
+  </data>
+  <data name="Just a directory entry pointing at your site. No key, no API, no webhooks." xml:space="preserve">
+    <value>あなたのサイトを指すディレクトリの掲載だけです。キーも API も Webhook もありません。</value>
   </data>
   <data name="Just browsing?" xml:space="preserve">
     <value>見るだけですか？</value>
@@ -2933,6 +2945,9 @@
   </data>
   <data name="Listed since" xml:space="preserve">
     <value>掲載開始</value>
+  </data>
+  <data name="Listing" xml:space="preserve">
+    <value>掲載</value>
   </data>
   <data name="Listing only" xml:space="preserve">
     <value>掲載のみ</value>
@@ -3337,6 +3352,9 @@
   </data>
   <data name="Need To Pass" xml:space="preserve">
     <value>{1}を抜くにはあと{0}</value>
+  </data>
+  <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
+    <value>API キーが必要です。あなたが API を呼ぶか、PIU Scores があなたを呼びます。</value>
   </data>
   <data name="net" xml:space="preserve">
     <value>合計</value>
@@ -6677,6 +6695,9 @@
   </data>
   <data name="What goes into your list" xml:space="preserve">
     <value>リストに入るもの</value>
+  </data>
+  <data name="What is this tool?" xml:space="preserve">
+    <value>このツールは何ですか？</value>
   </data>
   <data name="What It Takes" xml:space="preserve">
     <value>必要なもの</value>

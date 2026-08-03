@@ -1501,6 +1501,9 @@
   <data name="Create Song" xml:space="preserve">
 	  <value>Create Song</value>
   </data>
+  <data name="Create your tool" xml:space="preserve">
+    <value>Create your tool</value>
+  </data>
   <data name="Created" xml:space="preserve">
     <value>Created</value>
   </data>
@@ -2709,11 +2712,17 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link.</value>
   </data>
+  <data name="It reads player scores" xml:space="preserve">
+    <value>It reads player scores</value>
+  </data>
   <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
     <value>It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory.</value>
   </data>
   <data name="It starts private and fully working. Being listed in the directory is optional and comes at the end." xml:space="preserve">
     <value>It starts private and fully working. Being listed in the directory is optional and comes at the end.</value>
+  </data>
+  <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
+    <value>It starts private and fully working. You can change any of this later.</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>It will be able to read</value>
@@ -2741,6 +2750,9 @@
   </data>
   <data name="Just &quot;this player imported&quot;. You pull what you need from the API." xml:space="preserve">
     <value>Just "this player imported". You pull what you need from the API.</value>
+  </data>
+  <data name="Just a directory entry pointing at your site. No key, no API, no webhooks." xml:space="preserve">
+    <value>Just a directory entry pointing at your site. No key, no API, no webhooks.</value>
   </data>
   <data name="Just browsing?" xml:space="preserve">
     <value>Just browsing?</value>
@@ -2933,6 +2945,9 @@
   </data>
   <data name="Listed since" xml:space="preserve">
     <value>Listed since</value>
+  </data>
+  <data name="Listing" xml:space="preserve">
+    <value>Listing</value>
   </data>
   <data name="Listing only" xml:space="preserve">
     <value>Listing only</value>
@@ -3337,6 +3352,9 @@
   </data>
   <data name="Need To Pass" xml:space="preserve">
     <value>Need {0} to pass {1}</value>
+  </data>
+  <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
+    <value>Needs an API key. You call the API, or PIU Scores calls you.</value>
   </data>
   <data name="net" xml:space="preserve">
     <value>net</value>
@@ -6677,6 +6695,9 @@
   </data>
   <data name="What goes into your list" xml:space="preserve">
     <value>What goes into your list</value>
+  </data>
+  <data name="What is this tool?" xml:space="preserve">
+    <value>What is this tool?</value>
   </data>
   <data name="What It Takes" xml:space="preserve">
     <value>What It Takes</value>

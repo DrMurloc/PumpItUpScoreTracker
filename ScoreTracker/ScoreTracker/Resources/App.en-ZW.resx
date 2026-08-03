@@ -1501,6 +1501,9 @@
   <data name="Create Song" xml:space="preserve">
 	  <value>Mrpmurp Mrgl</value>
   </data>
+  <data name="Create your tool" xml:space="preserve">
+    <value>Murpmurp murgm rorgl</value>
+  </data>
   <data name="Created" xml:space="preserve">
     <value>Grorpblubgrgl</value>
   </data>
@@ -2709,11 +2712,17 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>Murgloo blorm, arplo Rorgl blorm murgm. Murmargl morp murpmurp blu grabla blorm.</value>
   </data>
+  <data name="It reads player scores" xml:space="preserve">
+    <value>Mo blurgl morp Mgrlgmrg</value>
+  </data>
   <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
     <value>Murgm murmo murm argla murpmurp — murpgrogl grabla, blarglurp murm murgm argla murpmurp. Mrpgrogl murmo murgm gromurp blu grog.</value>
   </data>
   <data name="It starts private and fully working. Being listed in the directory is optional and comes at the end." xml:space="preserve">
     <value>Grumba marogl opa blorp am olo. Blurgl la marogl opa bo pragl.</value>
+  </data>
+  <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
+    <value>Mo blorm murgloo opa alla murp. Murgm murp blorp alla mo murmo.</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Murp blurgl</value>
@@ -2741,6 +2750,9 @@
   </data>
   <data name="Just &quot;this player imported&quot;. You pull what you need from the API." xml:space="preserve">
     <value>Murmo «blu Morp murpmurp». Gromurp murgargl murgm blu API.</value>
+  </data>
+  <data name="Just a directory entry pointing at your site. No key, no API, no webhooks." xml:space="preserve">
+    <value>Bo golba grog murgm murgm bloop. Bam blarglurp, bam API, bam bloop.</value>
   </data>
   <data name="Just browsing?" xml:space="preserve">
     <value>Murgmorg murgurglurg?</value>
@@ -2933,6 +2945,9 @@
   </data>
   <data name="Listed since" xml:space="preserve">
     <value>Grog blarg</value>
+  </data>
+  <data name="Listing" xml:space="preserve">
+    <value>Grog</value>
   </data>
   <data name="Listing only" xml:space="preserve">
     <value>Grog bo</value>
@@ -3337,6 +3352,9 @@
   </data>
   <data name="Need To Pass" xml:space="preserve">
     <value>Ropa {0} ro grubla {1}</value>
+  </data>
+  <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
+    <value>Murgloo API blarglurp. Murgm golba API, blu PIU Mgrlgmrg golba murgm.</value>
   </data>
   <data name="net" xml:space="preserve">
     <value>glorg</value>
@@ -6677,6 +6695,9 @@
   </data>
   <data name="What goes into your list" xml:space="preserve">
     <value>Rglmorg glrgl murpgrrgl gromurp grog</value>
+  </data>
+  <data name="What is this tool?" xml:space="preserve">
+    <value>Murgm rorgl mo?</value>
   </data>
   <data name="What It Takes" xml:space="preserve">
     <value>Rglmorg Gl Mrpplgl</value>

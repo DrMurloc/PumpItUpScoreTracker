@@ -1501,6 +1501,9 @@
   <data name="Create Song" xml:space="preserve">
     <value>Crea canzone</value>
   </data>
+  <data name="Create your tool" xml:space="preserve">
+    <value>Crea il tuo strumento</value>
+  </data>
   <data name="Created" xml:space="preserve">
     <value>Creata</value>
   </data>
@@ -2709,11 +2712,17 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>Potrebbe essere stato revocato, o lo strumento non esiste più. Chiedi un link nuovo a chi te l'ha mandato.</value>
   </data>
+  <data name="It reads player scores" xml:space="preserve">
+    <value>Legge i punteggi dei giocatori</value>
+  </data>
   <data name="It starts private and fully working — invite links, keys and webhooks all function. Listing only puts you in the directory." xml:space="preserve">
     <value>Parte privato e pienamente funzionante — link d'invito, chiavi e webhook funzionano tutti. L'inserimento ti mette solo nell'elenco.</value>
   </data>
   <data name="It starts private and fully working. Being listed in the directory is optional and comes at the end." xml:space="preserve">
     <value>Nasce privato e pienamente funzionante. Comparire nella directory è facoltativo e arriva alla fine.</value>
+  </data>
+  <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
+    <value>Parte privato e pienamente funzionante. Puoi cambiare tutto questo più avanti.</value>
   </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Potrà leggere</value>
@@ -2741,6 +2750,9 @@
   </data>
   <data name="Just &quot;this player imported&quot;. You pull what you need from the API." xml:space="preserve">
     <value>Solo «questo giocatore ha importato». Il resto lo chiedi all'API.</value>
+  </data>
+  <data name="Just a directory entry pointing at your site. No key, no API, no webhooks." xml:space="preserve">
+    <value>Solo una scheda nella directory che punta al tuo sito. Niente chiave, niente API, niente webhook.</value>
   </data>
   <data name="Just browsing?" xml:space="preserve">
     <value>Stai solo dando un'occhiata?</value>
@@ -2933,6 +2945,9 @@
   </data>
   <data name="Listed since" xml:space="preserve">
     <value>Elencato dal</value>
+  </data>
+  <data name="Listing" xml:space="preserve">
+    <value>Scheda</value>
   </data>
   <data name="Listing only" xml:space="preserve">
     <value>Solo scheda</value>
@@ -3337,6 +3352,9 @@
   </data>
   <data name="Need To Pass" xml:space="preserve">
     <value>Ti servono {0} per superare {1}</value>
+  </data>
+  <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
+    <value>Serve una chiave API. Chiami tu l'API, oppure PIU Scores chiama te.</value>
   </data>
   <data name="net" xml:space="preserve">
     <value>totale</value>
@@ -6677,6 +6695,9 @@
   </data>
   <data name="What goes into your list" xml:space="preserve">
     <value>Cosa entra nella tua lista</value>
+  </data>
+  <data name="What is this tool?" xml:space="preserve">
+    <value>Cos'è questo strumento?</value>
   </data>
   <data name="What It Takes" xml:space="preserve">
     <value>Cosa serve</value>
