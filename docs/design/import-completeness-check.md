@@ -1,9 +1,15 @@
 # Import Completeness Check
 
 Status: **built** on `claude/pumbility-mismatch-detector-378a55`, not yet PR'd. Suites green
-(2053 / 148 / 560 / 209). **Deferred: the nine-locale sweep** — the panel's strings render English
+(2051 / 148 / 557 / 209). **Deferred: the nine-locale sweep** — the panel's strings render English
 by key-fallback and the locale-parity ratchet stays green because no locale carries the keys yet.
 
+> **A check saves what it finds** (owner call, 2026-08-03). Nobody looks at a list of their own
+> scores from the official site and declines one, so anything a run recovers is written on the spot
+> as a normal import — same session, same journal, same rating sweep — and lands on the player's
+> sessions page like any other. A run hands back a count, not a verdict, and the panel is a line
+> and two buttons.
+>
 > **Nothing about a check is persisted** (owner call, 2026-08-03, after field-testing a verdict
 > that survived an app restart). A table, a migration, a repository and the vertical's first purge
 > manifest were disproportionate machinery for remembering a sentence for a few minutes. The
