@@ -522,6 +522,9 @@
   <data name="All tools (admin)" xml:space="preserve">
     <value>모든 도구 (관리자)</value>
   </data>
+  <data name="All tools · {0}" xml:space="preserve">
+    <value>모든 도구 · {0}</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>{0} 모두 {1} 이상</value>
   </data>
@@ -3041,6 +3044,9 @@
   </data>
   <data name="Manage keys" xml:space="preserve">
     <value>키 관리</value>
+  </data>
+  <data name="Manage opens their console, with a banner saying whose tool it is. The maker is not told." xml:space="preserve">
+    <value>'관리'는 해당 제작자의 콘솔을 엽니다. 누구의 도구인지 알려 주는 배너가 함께 표시됩니다. 제작자에게는 알리지 않습니다.</value>
   </data>
   <data name="Manage or delete my data" xml:space="preserve">
     <value>내 데이터 관리 또는 삭제</value>

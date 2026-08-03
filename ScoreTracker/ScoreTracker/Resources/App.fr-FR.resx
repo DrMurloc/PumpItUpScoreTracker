@@ -524,6 +524,9 @@
   <data name="All tools (admin)" xml:space="preserve">
     <value>Tous les outils (admin)</value>
   </data>
+  <data name="All tools · {0}" xml:space="preserve">
+    <value>Tous les outils · {0}</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>Toutes les {0} à {1} ou mieux</value>
   </data>
@@ -3062,6 +3065,9 @@
   </data>
   <data name="Manage keys" xml:space="preserve">
     <value>Gérer les clés</value>
+  </data>
+  <data name="Manage opens their console, with a banner saying whose tool it is. The maker is not told." xml:space="preserve">
+    <value>Gérer ouvre leur console, avec un bandeau indiquant à qui appartient l'outil. Le créateur n'en est pas informé.</value>
   </data>
   <data name="Manage or delete my data" xml:space="preserve">
     <value>Gérer ou supprimer mes données</value>
