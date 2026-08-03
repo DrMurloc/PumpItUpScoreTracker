@@ -7,6 +7,8 @@ data, the published rules for being listed, and a way to stop a maker who breaks
 > **Status, 2026-08-03: built.** Nine commits, all four suites green at each. Three things landed
 > differently from the plan below and the reasons are worth keeping:
 >
+> - **PIU Tracker's repository arrived mid-build** and is seeded, but the grandfather stays until
+>   someone presses Check the link — see §2.
 > - **The ban disables rather than deletes, and its effect is computed.** §4 planned a ban that
 >   revoked shares. Writing the effect into the tools would have made Lift restore an empty shell,
 >   so the ban is one row and every read resolves against it. The tests bans, asserts nobody can
@@ -74,8 +76,17 @@ together; it moves to a Domain constant that all three reference, so the exempti
 rule it bends. No column, no admin screen, no player-visible marker — the directory simply shows no
 **Source** link on that row, which is true of any tool without one.
 
-> Owner, 2026-08-03: implicit, not an admin-set exemption flag. We are not planning around TUSA
-> answering in time. When he does, the URL is filled in and the constant goes.
+> Owner, 2026-08-03: implicit, not an admin-set exemption flag. Not planning around TUSA answering
+> in time.
+>
+> **He answered the same day** — `https://github.com/AlanCooper509/phoenix-parser`, seeded by
+> `SeedPiuTrackerRepository`. The exemption still stands, because the gate wants a repository that
+> has been *checked* and a handle to reach the maker on: a migration cannot honestly claim the first
+> (stamping a check date would record a fetch that never happened) and does not know the second.
+> **Post-deploy, one screen:** open PIU Tracker on `/Developers`, press Check the link, add TUSA's
+> Discord handle. Then `GrandfatheredTools` is deleted outright. Note the parsed owner reads
+> `AlanCooper509` against a maker called TUSA — the mismatch is expected, and is exactly why that
+> value is printed for a human rather than enforced on.
 
 ### Reachability
 
