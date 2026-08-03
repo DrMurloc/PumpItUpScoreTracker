@@ -57,6 +57,14 @@ internal sealed class ToolInviteCodeEntity
     public Guid ToolId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? RevokedAt { get; set; }
+
+    /// <summary>
+    ///     The maker's own reminder of where they put this link. Never shown to the player who
+    ///     follows it — a link posted in one discord and a link handed to one friend are the same
+    ///     row otherwise, and revoking the right one is guesswork.
+    /// </summary>
+    [MaxLength(200)]
+    public string? Note { get; set; }
 }
 
 /// <summary>A player's grant to one tool.</summary>

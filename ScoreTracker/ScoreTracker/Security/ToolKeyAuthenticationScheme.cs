@@ -15,8 +15,9 @@ namespace ScoreTracker.Web.Security;
 ///     subject:
 ///     <list type="bullet">
 ///         <item>
-///             a <b>tool key</b> (<c>Authorization: Bearer pst_live_…</c>) authenticates a tool,
-///             which acts across the players who granted it access and is never a player itself;
+///             a <b>tool key</b> (<c>Authorization: Bearer piu_scores_live_…</c>) authenticates a
+///             tool, which acts across the players who granted it access and is never a player
+///             itself;
 ///         </item>
 ///         <item>
 ///             a <b>personal token</b> (Basic, a GUID) authenticates one user, exactly as on v1.
@@ -62,13 +63,8 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
             var toolId = await mediator.Send(new GetToolByApiKeyQuery(header["Bearer ".Length..].Trim()));
             if (toolId is null) return AuthenticateResult.Fail("API key is not valid");
 
-            var identity = new ClaimsIdentity(new[]
-            {
-                new Claim(ToolIdClaim, toolId.Value.ToString()),
-                new Claim(ClaimTypes.Name, toolId.Value.ToString())
-            }, SchemeName);
             return AuthenticateResult.Success(
-                new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName));
+                new AuthenticationTicket(new ClaimsPrincipal(ToolIdentity(toolId.Value)), SchemeName));
         }
 
         if (!header.StartsWith("Basic ", StringComparison.Ordinal))
@@ -87,13 +83,39 @@ public sealed class ToolKeyAuthenticationScheme : AuthenticationHandler<Authenti
         }
 
         var split = decoded.Split(":");
-        if (split.Length != 2 || !Guid.TryParse(split[1], out var apiToken))
-            return AuthenticateResult.Fail("Personal token must be a GUID in the password position");
+        if (split.Length != 2)
+            return AuthenticateResult.Fail("Basic credentials must be username:password");
+
+        // A tool key in the password position resolves as a tool. Bearer is what the docs say and
+        // what Swagger sends, but v1 taught every integrator here that a credential goes in the
+        // Basic password box with junk for the username — so that is the first thing they try, and
+        // failing it teaches them nothing except that their new key is broken. Same key material,
+        // same TLS, same claim: the only thing rejecting it bought was a support question.
+        if (!Guid.TryParse(split[1], out var apiToken))
+        {
+            var toolByBasic = await mediator.Send(new GetToolByApiKeyQuery(split[1]));
+            if (toolByBasic is null)
+                return AuthenticateResult.Fail(
+                    "Password must be a personal token (a GUID) or a tool API key");
+
+            return AuthenticateResult.Success(new AuthenticationTicket(
+                new ClaimsPrincipal(ToolIdentity(toolByBasic.Value)), SchemeName));
+        }
 
         var user = await mediator.Send(new GetUserByApiTokenQuery(apiToken));
         if (user == null) return AuthenticateResult.Fail("No user has that personal token");
 
         return AuthenticateResult.Success(
             new AuthenticationTicket(user.GetClaimsPrincipal(), SchemeName));
+    }
+
+    /// <summary>A tool, whichever header carried its key. Never a user.</summary>
+    private static ClaimsIdentity ToolIdentity(Guid toolId)
+    {
+        return new ClaimsIdentity(new[]
+        {
+            new Claim(ToolIdClaim, toolId.ToString()),
+            new Claim(ClaimTypes.Name, toolId.ToString())
+        }, SchemeName);
     }
 }

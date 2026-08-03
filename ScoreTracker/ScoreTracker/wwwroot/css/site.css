@@ -11744,3 +11744,48 @@ button.chart-card-art {
     margin-left: 6px;
     font-variant-numeric: tabular-nums;
 }
+
+/* ---------------------------------------------------------------------------
+   Community Tools: the secret block.
+   A key or an invite URL is a thing you copy, not a thing you read, so it wears
+   the shape every other developer console uses for one — monospace on a recessed
+   ground with the copy control welded to its edge, rather than body text with a
+   button somewhere nearby.
+   --------------------------------------------------------------------------- */
+.ct-secret {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mix-bg) 60%, transparent);
+    overflow: hidden;
+}
+
+.ct-secret pre {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 10px 12px;
+    font-family: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+    font-size: .82rem;
+    line-height: 1.5;
+    /* The value can be a 64-character key on a 360px phone, so it scrolls inside
+       its own box rather than pushing the dialog sideways. */
+    overflow-x: auto;
+    white-space: pre;
+}
+
+.ct-secret .ct-secret-copy {
+    flex: 0 0 auto;
+    border-left: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
+    border-radius: 0;
+    margin: 0;
+}
+
+/* Wraps instead of scrolling where the value is a URL a maker reads to tell two
+   links apart. */
+.ct-secret.ct-secret-wrap pre {
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: visible;
+}

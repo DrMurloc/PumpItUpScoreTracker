@@ -68,30 +68,31 @@ else
     </div>
 }
 
-<MudText Typo="Typo.subtitle2" Class="mb-1">@L["All public tools · {0}", _publicTools.Count]</MudText>
-@if (!_publicTools.Any())
+@* Tools you are already connected to are listed above and not repeated here — this section is
+   "what else is there", and a row whose only action is Disconnect is not that. *@
+<MudText Typo="Typo.subtitle2" Class="mb-1">@L["More tools · {0}", Available.Count]</MudText>
+@if (!Available.Any())
 {
     <MudAlert Severity="Severity.Normal" Variant="Variant.Outlined" Dense="true">
-        <MudText Typo="Typo.body2"><b>@L["No tools are listed yet"]</b></MudText>
-        <MudText Typo="Typo.body2">@L["Build the first one, or connect to a private tool with an invite link."]</MudText>
+        @if (_publicTools.Any())
+        {
+            <MudText Typo="Typo.body2"><b>@L["You're connected to every listed tool"]</b></MudText>
+            <MudText Typo="Typo.body2">@L["A private tool can still reach you through an invite link from its maker."]</MudText>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2"><b>@L["No tools are listed yet"]</b></MudText>
+            <MudText Typo="Typo.body2">@L["Build the first one, or connect to a private tool with an invite link."]</MudText>
+        }
     </MudAlert>
 }
 else
 {
-    @foreach (var tool in _publicTools)
+    @foreach (var tool in Available)
     {
-        var connected = _connections.Any(c => c.ToolId == tool.Id);
         <div class="olb-rank-card">
             <div class="flex-grow-1" style="min-width:0;">
-                <MudText Typo="Typo.body1">
-                    <b>@tool.Name</b>
-                    @if (connected)
-                    {
-                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
-                            @L["Connected"]
-                        </MudChip>
-                    }
-                </MudText>
+                <MudText Typo="Typo.body1"><b>@tool.Name</b></MudText>
                 <MudText Typo="Typo.caption" Style="opacity:.7;">
                     @tool.Description · @L["by {0}", tool.OwnerName]
                 </MudText>
@@ -100,16 +101,8 @@ else
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
                     @L["{0} Players", tool.ConnectedPlayers]
                 </MudChip>
-                @if (connected)
-                {
-                    <MudButton Size="Size.Small" Variant="Variant.Text"
-                               OnClick="() => DisconnectById(tool.Id)">@L["Disconnect"]</MudButton>
-                }
-                else
-                {
-                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
-                               OnClick="() => OpenConnect(tool)">@L["Connect"]</MudButton>
-                }
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                           OnClick="() => OpenConnect(tool)">@L["Connect"]</MudButton>
             </div>
         </div>
     }
@@ -146,6 +139,10 @@ else
 
     private bool HasInviteCode => TryReadInviteCode(_inviteEntry, out _);
 
+    /// <summary>Listed tools this player has not already connected to.</summary>
+    private IReadOnlyList<PublicToolRecord> Available =>
+        _publicTools.Where(t => _connections.All(c => c.ToolId != t.Id)).ToArray();
+
     protected override async Task OnInitializedAsync() => await Reload();
 
     private async Task Reload()
@@ -171,12 +168,6 @@ else
 
         Snackbar.Add(L["{0} can no longer read your scores", connection.Name].Value, Severity.Success);
         await Reload();
-    }
-
-    private async Task DisconnectById(Guid toolId)
-    {
-        var connection = _connections.FirstOrDefault(c => c.ToolId == toolId);
-        if (connection is not null) await Disconnect(connection);
     }
 
     /// <summary>Accepts a bare code or a whole invite URL — a player will paste whichever they were sent.</summary>

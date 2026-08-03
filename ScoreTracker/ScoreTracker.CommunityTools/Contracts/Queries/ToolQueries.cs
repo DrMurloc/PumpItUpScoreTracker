@@ -25,7 +25,7 @@ public sealed record GetShareWithAllToolsQuery : IQuery<bool>;
 public sealed record GetToolApiKeysQuery(Guid ToolId) : IQuery<IReadOnlyList<ApiKeyRecord>>;
 
 [ExcludeFromCodeCoverage]
-public sealed record GetToolInviteLinksQuery(Guid ToolId) : IQuery<IReadOnlyList<Guid>>;
+public sealed record GetToolInviteLinksQuery(Guid ToolId) : IQuery<IReadOnlyList<ToolInviteLinkRecord>>;
 
 [ExcludeFromCodeCoverage]
 public sealed record GetToolInvitePreviewQuery(Guid Code) : IQuery<ToolInvitePreview?>;

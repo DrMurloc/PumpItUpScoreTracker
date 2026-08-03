@@ -65,14 +65,24 @@ internal sealed class EFToolKeyRepository : IToolKeyRepository
         return key.ToolId;
     }
 
-    public async Task<IReadOnlyList<Guid>> GetInviteCodes(Guid toolId,
+    public async Task<IReadOnlyList<ToolInviteCodeRecord>> GetInviteCodes(Guid toolId,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return await database.Set<ToolInviteCodeEntity>()
             .Where(i => i.ToolId == toolId && i.RevokedAt == null)
-            .Select(i => i.InviteCode)
+            .OrderBy(i => i.CreatedAt)
+            .Select(i => new ToolInviteCodeRecord(i.InviteCode, i.Note, i.CreatedAt))
             .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task SetInviteCodeNote(Guid toolId, Guid code, string? note,
+        CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<ToolInviteCodeEntity>()
+            .Where(i => i.ToolId == toolId && i.InviteCode == code)
+            .ExecuteUpdateAsync(s => s.SetProperty(i => i.Note, note), cancellationToken);
     }
 
     public async Task AddInviteCode(Guid toolId, Guid code, DateTimeOffset at,

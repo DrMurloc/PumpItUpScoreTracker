@@ -351,6 +351,9 @@
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>배율 상한에서의 Perfect.</value>
   </data>
+  <data name="A private tool can still reach you through an invite link from its maker." xml:space="preserve">
+    <value>비공개 도구는 제작자가 보낸 초대 링크로 여전히 연결할 수 있습니다.</value>
+  </data>
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>문서가 완비된 공개 API가 커뮤니티 툴을 움직입니다 — 봇, 오버레이, 통계 사이트. 계정에서 토큰을 받아 우리와 같은 데이터 위에 만들어 보세요.</value>
   </data>
@@ -399,8 +402,14 @@
   <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
     <value>플레이어가 연결하고 임포트하면 기록이 나타납니다. 초대 링크를 보내 시작하세요.</value>
   </data>
+  <data name="Activity log" xml:space="preserve">
+    <value>활동 기록</value>
+  </data>
   <data name="Add" xml:space="preserve">
     <value>추가</value>
+  </data>
+  <data name="Add a description first — it is what a player reads before deciding whether to connect." xml:space="preserve">
+    <value>먼저 설명을 적어 주세요 — 플레이어가 연결 여부를 정하기 전에 읽는 내용입니다.</value>
   </data>
   <data name="Add A Photo" xml:space="preserve">
     <value>사진 추가</value>
@@ -486,9 +495,6 @@
   <data name="All plays" xml:space="preserve">
     <value>전체 플레이</value>
   </data>
-  <data name="All public tools · {0}" xml:space="preserve">
-    <value>모든 공개 도구 · {0}</value>
-  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>저장된 모든 자격 증명이 삭제되었습니다.</value>
   </data>
@@ -569,6 +575,9 @@
   </data>
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>초대 링크가 있으면 프로필이 공개든 비공개든 연결할 수 있습니다.</value>
+  </data>
+  <data name="Anything still using this key starts getting 401 the moment you confirm, and it cannot be un-revoked — you would create a new one." xml:space="preserve">
+    <value>확인하는 즉시 이 키를 쓰고 있던 모든 것이 401을 받게 되며, 되돌릴 수 없습니다 — 새로 만들어야 합니다.</value>
   </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
@@ -1317,9 +1326,6 @@
   <data name="Connect {0}" xml:space="preserve">
     <value>{0} 연결</value>
   </data>
-  <data name="Connected" xml:space="preserve">
-    <value>연결됨</value>
-  </data>
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>신뢰하는 도구 하나에 연결하는 것은 비공개 프로필에서도 문제없습니다 — 공개 공유가 아니라 직접 연결이기 때문입니다. 프로필은 비공개로 유지되며 다른 도구는 접근할 수 없습니다.</value>
   </data>
@@ -1349,6 +1355,9 @@
   </data>
   <data name="Copied to clipboard!" xml:space="preserve">
     <value>클립보드에 복사됨!</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>복사</value>
   </data>
   <data name="Copy link" xml:space="preserve">
     <value>링크 복사</value>
@@ -2238,6 +2247,9 @@
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>타이틀 보유자의 {0}만 보유</value>
   </data>
+  <data name="Help" xml:space="preserve">
+    <value>도움말</value>
+  </data>
   <data name="Hide" xml:space="preserve">
     <value>숨기기</value>
   </data>
@@ -2496,6 +2508,9 @@
   <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
     <value>그러한 경우, 수천 개의 등급을 수동으로 입력하는 대신 스프레드시트를 업로드하는 것이 더 빠를 수 있습니다.</value>
   </data>
+  <data name="In Swagger: press Authorize and paste the key into toolKey — the key on its own, without the word Bearer." xml:space="preserve">
+    <value>Swagger에서: Authorize를 누르고 toolKey 칸에 키를 붙여넣으세요 — Bearer라는 단어 없이 키만 넣습니다.</value>
+  </data>
   <data name="in the top ten" xml:space="preserve">
     <value>개 보드 10위 이내</value>
   </data>
@@ -2598,11 +2613,17 @@
   <data name="Just browsing?" xml:space="preserve">
     <value>구경만 하시나요?</value>
   </data>
+  <data name="Just for you — &quot;Production&quot;, &quot;my laptop&quot;, &quot;the test box&quot;. Nobody else sees it." xml:space="preserve">
+    <value>본인만 보는 이름입니다 — "운영", "내 노트북", "테스트 서버". 다른 사람에게는 보이지 않습니다.</value>
+  </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>그냥 살아남기</value>
   </data>
   <data name="Keep" xml:space="preserve">
     <value>유지</value>
+  </data>
+  <data name="Keep it" xml:space="preserve">
+    <value>그대로 두기</value>
   </data>
   <data name="Keep this account" xml:space="preserve">
     <value>이 계정 유지</value>
@@ -2672,6 +2693,9 @@
   </data>
   <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
     <value>모두 선택 해제하면 지역 외 커뮤니티를 따릅니다.</value>
+  </data>
+  <data name="Leave blank if no hosted URL." xml:space="preserve">
+    <value>호스팅된 주소가 없으면 비워 두세요.</value>
   </data>
   <data name="Leave empty if broken." xml:space="preserve">
     <value>브레이크 오프면 비워 두세요.</value>
@@ -3038,6 +3062,9 @@
   </data>
   <data name="More than a tracker" xml:space="preserve">
     <value>트래커 그 이상</value>
+  </data>
+  <data name="More tools · {0}" xml:space="preserve">
+    <value>다른 도구 · {0}</value>
   </data>
   <data name="Most clears stall below {0} — the steepest step on this board." xml:space="preserve">
     <value>대부분의 클리어가 {0} 아래에서 멈춥니다 — 이 보드에서 가장 가파른 구간입니다.</value>
@@ -3434,6 +3461,9 @@
   </data>
   <data name="Note Counts" xml:space="preserve">
     <value>노트 수</value>
+  </data>
+  <data name="Note — where did you share this?" xml:space="preserve">
+    <value>메모 — 어디에 공유했나요?</value>
   </data>
   <data name="Notes" xml:space="preserve">
     <value>메모</value>
@@ -4206,8 +4236,8 @@
   <data name="Public" xml:space="preserve">
     <value>공개</value>
   </data>
-  <data name="Public profiles were switched on for community tools when this launched. Tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
-    <value>이 기능이 시작될 때 공개 프로필은 커뮤니티 도구에 대해 켜졌습니다. 끄기 전까지 도구가 내 점수를 읽을 수 있으며, 계정 페이지에서 언제든 끌 수 있습니다.</value>
+  <data name="Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
+    <value>공개 프로필은 기본적으로 공유가 켜져 있어, 끄기 전까지 도구가 내 점수를 읽을 수 있습니다 — 계정 페이지에서 언제든 끌 수 있습니다.</value>
   </data>
   <data name="Public tool" xml:space="preserve">
     <value>공개 도구</value>
@@ -4601,6 +4631,12 @@
   <data name="Revoke" xml:space="preserve">
     <value>취소</value>
   </data>
+  <data name="Revoke key" xml:space="preserve">
+    <value>키 해지</value>
+  </data>
+  <data name="Revoke {0}?" xml:space="preserve">
+    <value>{0}을(를) 해지할까요?</value>
+  </data>
   <data name="Revoked" xml:space="preserve">
     <value>취소됨</value>
   </data>
@@ -4628,11 +4664,11 @@
   <data name="Run import now" xml:space="preserve">
     <value>지금 가져오기 실행</value>
   </data>
-  <data name="Run it locally" xml:space="preserve">
-    <value>로컬에서 실행</value>
-  </data>
   <data name="Run PIU Center Crawl" xml:space="preserve">
     <value>PIU Center 크롤 실행</value>
+  </data>
+  <data name="Run PIU Scores locally" xml:space="preserve">
+    <value>PIU Scores 로컬 실행</value>
   </data>
   <data name="Run real events" xml:space="preserve">
     <value>진짜 이벤트를 운영하세요</value>
@@ -4655,8 +4691,8 @@
   <data name="Save Scores" xml:space="preserve">
     <value>점수 저장</value>
   </data>
-  <data name="Save the URL, then press Verify. We'll POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} and your endpoint has to answer 200 with that challenge string in the body." xml:space="preserve">
-    <value>URL을 저장한 뒤 확인을 누르세요. 저희가 {"type":"url_verification","challenge":"..."} 를 POST 하면, 엔드포인트는 본문에 그 challenge 문자열을 담아 200으로 응답해야 합니다.</value>
+  <data name="Save the URL, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} to it and your endpoint has ten seconds to answer 200 with that same challenge string somewhere in the body." xml:space="preserve">
+    <value>URL을 저장한 뒤 확인을 누르세요. 저희가 {"type":"url_verification","challenge":"..."} 를 POST하면, 여러분의 엔드포인트는 10초 안에 200과 함께 같은 challenge 문자열을 본문 어딘가에 담아 응답해야 합니다.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>저장된 로그인 정보를 불러왔습니다</value>
@@ -4876,6 +4912,9 @@
   </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Authorization: Bearer로 보내세요. 한 번만 표시되며 저희는 해시를 저장합니다.</value>
+  </data>
+  <data name="Send it like this" xml:space="preserve">
+    <value>이렇게 보내세요</value>
   </data>
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>PIU Tracker 등 커뮤니티 도구로 점수를 보내는 설정은 다음에서 관리합니다:</value>
@@ -5401,6 +5440,9 @@
   </data>
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
+  </data>
+  <data name="Test delivery" xml:space="preserve">
+    <value>테스트 전송</value>
   </data>
   <data name="Test Scores" xml:space="preserve">
     <value>점수 테스트</value>
@@ -5930,8 +5972,8 @@
   <data name="Twists" xml:space="preserve">
     <value>틀기</value>
   </data>
-  <data name="Two keys can be active at once so you can rotate without downtime." xml:space="preserve">
-    <value>동시에 두 개의 키를 사용할 수 있어 중단 없이 교체할 수 있습니다.</value>
+  <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
+    <value>한 번에 두 개까지 활성화할 수 있어, 교체할 때 중단 시간이 없습니다.</value>
   </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>같은 스킬의 두 가지 보기. 왼쪽은 위 블렌드에 쓰이고, 오른쪽은 폴더 통계와 같은 이 폴더의 수치입니다.</value>
@@ -6218,6 +6260,9 @@
   <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
     <value>piugame.com 세션 키를 전달해 직접 임포트를 실행할 수 있게 합니다.</value>
   </data>
+  <data name="We generate the challenge and it is different every time, so there is nothing for you to enter here. The fixed secret is the header below." xml:space="preserve">
+    <value>challenge 문자열은 저희가 만들고 매번 달라지므로 여기에 입력할 것은 없습니다. 고정된 비밀 값은 아래의 헤더입니다.</value>
+  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>우리는 봉인된 키를 보관합니다</value>
   </data>
@@ -6241,6 +6286,9 @@
   </data>
   <data name="Webhook timed out" xml:space="preserve">
     <value>웹훅 시간 초과</value>
+  </data>
+  <data name="Webhooks" xml:space="preserve">
+    <value>웹훅</value>
   </data>
   <data name="Website" xml:space="preserve">
     <value>웹사이트</value>
@@ -6317,8 +6365,8 @@
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>목표 (기본 칭호 사냥)</value>
   </data>
-  <data name="What we send you" xml:space="preserve">
-    <value>전달 방식</value>
+  <data name="What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
+    <value>플레이어가 기록을 가져올 때 보내 드리는 내용입니다. "없음"도 좋은 선택이에요 — 많은 도구가 그냥 API를 조회합니다.</value>
   </data>
   <data name="What's it for" xml:space="preserve">
     <value>용도</value>
@@ -6505,6 +6553,9 @@
   </data>
   <data name="You're already a member of this community." xml:space="preserve">
     <value>이미 이 커뮤니티의 멤버입니다.</value>
+  </data>
+  <data name="You're connected to every listed tool" xml:space="preserve">
+    <value>목록에 있는 모든 도구와 연결되어 있습니다</value>
   </data>
   <data name="You're connected to your own tool" xml:space="preserve">
     <value>내 도구에 이미 연결되어 있습니다</value>

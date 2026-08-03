@@ -1,6 +1,6 @@
 # API
 
-High-level map of the HTTP surface. **Swagger is the source of truth for request/response shapes**: browse `/swagger/ui` on the live site (or locally while running the app) — the OpenAPI document lives at `/swagger/v1/swagger.json`.
+High-level map of the HTTP surface. **Swagger is the source of truth for request/response shapes**: browse `/swagger` on the live site (or locally while running the app) — the OpenAPI document lives at `/swagger/v1/swagger.json`.
 
 **Building a tool? Start with [INTEGRATING.md](INTEGRATING.md)**, not this page. That is the maker's
 manual — what the data means, what trips people up, how sharing and webhooks work. This page is the
@@ -34,10 +34,11 @@ way to write.
 **Tool key** — Bearer, for a registered community tool reading the players who shared with it:
 
 ```
-Authorization: Bearer pst_live_...
+Authorization: Bearer piu_scores_live_...
 ```
 
-Issued on the **Developers page** and shown once. Read-only. See
+Issued on the **Developers page** and shown once. Read-only. Also accepted in the password position
+of Basic auth, because that is where v1 taught everyone to put a credential. See
 [INTEGRATING.md](INTEGRATING.md).
 
 ## `api/v2/*`

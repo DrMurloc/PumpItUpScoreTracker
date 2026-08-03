@@ -351,6 +351,9 @@
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>A perfect at a capped multiplier.</value>
   </data>
+  <data name="A private tool can still reach you through an invite link from its maker." xml:space="preserve">
+    <value>A private tool can still reach you through an invite link from its maker.</value>
+  </data>
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use.</value>
   </data>
@@ -399,9 +402,15 @@
   <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
     <value>Activity appears once a player connects and imports. Send someone your invite link to get started.</value>
   </data>
+  <data name="Activity log" xml:space="preserve">
+    <value>Activity log</value>
+  </data>
   <data name="Add" xml:space="preserve">
 	  <value>Add</value>
 	  <comment>Add</comment>
+  </data>
+  <data name="Add a description first — it is what a player reads before deciding whether to connect." xml:space="preserve">
+    <value>Add a description first — it is what a player reads before deciding whether to connect.</value>
   </data>
   <data name="Add A Photo" xml:space="preserve">
     <value>Add a photo</value>
@@ -488,9 +497,6 @@
   <data name="All plays" xml:space="preserve">
     <value>All plays</value>
   </data>
-  <data name="All public tools · {0}" xml:space="preserve">
-    <value>All public tools · {0}</value>
-  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>All saved credentials have been cleared.</value>
   </data>
@@ -572,6 +578,9 @@
   </data>
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>Anyone with an invite link can connect, whether their profile is public or private.</value>
+  </data>
+  <data name="Anything still using this key starts getting 401 the moment you confirm, and it cannot be un-revoked — you would create a new one." xml:space="preserve">
+    <value>Anything still using this key starts getting 401 the moment you confirm, and it cannot be un-revoked — you would create a new one.</value>
   </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
@@ -1328,9 +1337,6 @@
   <data name="Connect {0}" xml:space="preserve">
     <value>Connect {0}</value>
   </data>
-  <data name="Connected" xml:space="preserve">
-    <value>Connected</value>
-  </data>
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access.</value>
   </data>
@@ -1361,6 +1367,9 @@
   </data>
   <data name="Copied to clipboard!" xml:space="preserve">
 	  <value>Copied to clipboard!</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Copy</value>
   </data>
   <data name="Copy link" xml:space="preserve">
     <value>Copy link</value>
@@ -2255,6 +2264,9 @@
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>held by {0} of titled players</value>
   </data>
+  <data name="Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
   <data name="Hide" xml:space="preserve">
 	  <value>Hide</value>
   </data>
@@ -2513,6 +2525,9 @@
   <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
 	  <value>In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades.</value>
   </data>
+  <data name="In Swagger: press Authorize and paste the key into toolKey — the key on its own, without the word Bearer." xml:space="preserve">
+    <value>In Swagger: press Authorize and paste the key into toolKey — the key on its own, without the word Bearer.</value>
+  </data>
   <data name="in the top ten" xml:space="preserve">
     <value>in the top ten</value>
   </data>
@@ -2616,11 +2631,17 @@
   <data name="Just browsing?" xml:space="preserve">
     <value>Just browsing?</value>
   </data>
+  <data name="Just for you — &quot;Production&quot;, &quot;my laptop&quot;, &quot;the test box&quot;. Nobody else sees it." xml:space="preserve">
+    <value>Just for you — "Production", "my laptop", "the test box". Nobody else sees it.</value>
+  </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>Just stay alive</value>
   </data>
   <data name="Keep" xml:space="preserve">
     <value>Keep</value>
+  </data>
+  <data name="Keep it" xml:space="preserve">
+    <value>Keep it</value>
   </data>
   <data name="Keep this account" xml:space="preserve">
     <value>Keep this account</value>
@@ -2690,6 +2711,9 @@
   </data>
   <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
     <value>Leave all unchecked to follow your non-regional communities.</value>
+  </data>
+  <data name="Leave blank if no hosted URL." xml:space="preserve">
+    <value>Leave blank if no hosted URL.</value>
   </data>
   <data name="Leave empty if broken." xml:space="preserve">
     <value>Leave empty if broken.</value>
@@ -3066,6 +3090,9 @@
   </data>
   <data name="More than a tracker" xml:space="preserve">
     <value>More than a tracker</value>
+  </data>
+  <data name="More tools · {0}" xml:space="preserve">
+    <value>More tools · {0}</value>
   </data>
   <data name="Most clears stall below {0} — the steepest step on this board." xml:space="preserve">
     <value>Most clears stall below {0} — the steepest step on this board.</value>
@@ -3465,6 +3492,9 @@
   </data>
   <data name="Note Counts" xml:space="preserve">
 	  <value>Note Counts</value>
+  </data>
+  <data name="Note — where did you share this?" xml:space="preserve">
+    <value>Note — where did you share this?</value>
   </data>
   <data name="Notes" xml:space="preserve">
 	  <value>Notes</value>
@@ -4243,8 +4273,8 @@
     <value>Public</value>
     <comment>(on/off, if account is set to public)</comment>
   </data>
-  <data name="Public profiles were switched on for community tools when this launched. Tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
-    <value>Public profiles were switched on for community tools when this launched. Tools can read your scores until you turn it off — which you can do any time from your Account page.</value>
+  <data name="Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
+    <value>Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page.</value>
   </data>
   <data name="Public tool" xml:space="preserve">
     <value>Public tool</value>
@@ -4644,6 +4674,12 @@
   <data name="Revoke" xml:space="preserve">
     <value>Revoke</value>
   </data>
+  <data name="Revoke key" xml:space="preserve">
+    <value>Revoke key</value>
+  </data>
+  <data name="Revoke {0}?" xml:space="preserve">
+    <value>Revoke {0}?</value>
+  </data>
   <data name="Revoked" xml:space="preserve">
     <value>Revoked</value>
   </data>
@@ -4672,11 +4708,11 @@
   <data name="Run import now" xml:space="preserve">
     <value>Run import now</value>
   </data>
-  <data name="Run it locally" xml:space="preserve">
-    <value>Run it locally</value>
-  </data>
   <data name="Run PIU Center Crawl" xml:space="preserve">
     <value>Run PIU Center Crawl</value>
+  </data>
+  <data name="Run PIU Scores locally" xml:space="preserve">
+    <value>Run PIU Scores locally</value>
   </data>
   <data name="Run real events" xml:space="preserve">
     <value>Run real events</value>
@@ -4699,8 +4735,8 @@
   <data name="Save Scores" xml:space="preserve">
     <value>Save Scores</value>
   </data>
-  <data name="Save the URL, then press Verify. We'll POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} and your endpoint has to answer 200 with that challenge string in the body." xml:space="preserve">
-    <value>Save the URL, then press Verify. We'll POST {"type":"url_verification","challenge":"..."} and your endpoint has to answer 200 with that challenge string in the body.</value>
+  <data name="Save the URL, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} to it and your endpoint has ten seconds to answer 200 with that same challenge string somewhere in the body." xml:space="preserve">
+    <value>Save the URL, then press Verify. We POST {"type":"url_verification","challenge":"..."} to it and your endpoint has ten seconds to answer 200 with that same challenge string somewhere in the body.</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>Saved credentials loaded</value>
@@ -4924,6 +4960,9 @@
   </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Send it as Authorization: Bearer. Shown once — we store a hash.</value>
+  </data>
+  <data name="Send it like this" xml:space="preserve">
+    <value>Send it like this</value>
   </data>
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>Sending your scores to PIU Tracker or another community tool is managed from</value>
@@ -5461,6 +5500,9 @@
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
+  <data name="Test delivery" xml:space="preserve">
+    <value>Test delivery</value>
+  </data>
   <data name="Test Scores" xml:space="preserve">
 	  <value>Test Scores</value>
   </data>
@@ -5990,8 +6032,8 @@
   <data name="Twists" xml:space="preserve">
     <value>Twists</value>
   </data>
-  <data name="Two keys can be active at once so you can rotate without downtime." xml:space="preserve">
-    <value>Two keys can be active at once so you can rotate without downtime.</value>
+  <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
+    <value>Two can be active at once, so rotating one costs no downtime.</value>
   </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it.</value>
@@ -6281,6 +6323,9 @@
   <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
     <value>We forward the piugame.com session key so you run your own import.</value>
   </data>
+  <data name="We generate the challenge and it is different every time, so there is nothing for you to enter here. The fixed secret is the header below." xml:space="preserve">
+    <value>We generate the challenge and it is different every time, so there is nothing for you to enter here. The fixed secret is the header below.</value>
+  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>We hold a sealed key</value>
   </data>
@@ -6304,6 +6349,9 @@
   </data>
   <data name="Webhook timed out" xml:space="preserve">
     <value>Webhook timed out</value>
+  </data>
+  <data name="Webhooks" xml:space="preserve">
+    <value>Webhooks</value>
   </data>
   <data name="Website" xml:space="preserve">
     <value>Website</value>
@@ -6381,8 +6429,8 @@
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>What to work on (default Title Hunt)</value>
   </data>
-  <data name="What we send you" xml:space="preserve">
-    <value>What we send you</value>
+  <data name="What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
+    <value>What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll.</value>
   </data>
   <data name="What's it for" xml:space="preserve">
     <value>What's it for</value>
@@ -6575,6 +6623,9 @@
   </data>
   <data name="You're already a member of this community." xml:space="preserve">
     <value>You're already a member of this community.</value>
+  </data>
+  <data name="You're connected to every listed tool" xml:space="preserve">
+    <value>You're connected to every listed tool</value>
   </data>
   <data name="You're connected to your own tool" xml:space="preserve">
     <value>You're connected to your own tool</value>

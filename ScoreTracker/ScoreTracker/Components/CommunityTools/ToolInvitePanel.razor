@@ -1,0 +1,97 @@
+@namespace ScoreTracker.Web.Components.CommunityTools
+@using MediatR
+@using ScoreTracker.CommunityTools.Contracts
+@using ScoreTracker.CommunityTools.Contracts.Commands
+@using ScoreTracker.CommunityTools.Contracts.Queries
+
+@* Invite links, split out of the key panel. A maker who has made four of them cannot tell which one
+   they posted where — hence the note, which is theirs alone and never reaches the player who
+   follows the link. *@
+
+<MudPaper Outlined="true" Class="pa-4 mb-4">
+    <MudText Typo="Typo.subtitle2">@L["Invite Links"]</MudText>
+    <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
+        @L["Anyone with an invite link can connect, whether their profile is public or private."]
+    </MudText>
+
+    @foreach (var link in _links)
+    {
+        <div class="olb-rank-card" style="align-items:flex-start;">
+            <div class="flex-grow-1" style="min-width:0;">
+                <div class="ct-secret ct-secret-wrap">
+                    <pre>@InviteUrl(link.Code)</pre>
+                    <MudIconButton Class="ct-secret-copy" Icon="@Icons.Material.Filled.ContentCopy"
+                                   Size="Size.Small" Color="Color.Default" aria-label=@L["Copy"]
+                                   OnClick="() => Copy(InviteUrl(link.Code))"></MudIconButton>
+                </div>
+                <MudTextField T="string" Class="mt-1" Margin="Margin.Dense" Variant="Variant.Text"
+                              MaxLength="200" Value="@NoteOf(link)"
+                              ValueChanged="@(value => SaveNote(link.Code, value))"
+                              Placeholder='@L["Note — where did you share this?"].Value'></MudTextField>
+            </div>
+            <div class="olb-rank-tail">
+                <MudButton Size="Size.Small" Variant="Variant.Text"
+                           OnClick="() => RevokeInvite(link.Code)">@L["Revoke"]</MudButton>
+            </div>
+        </div>
+    }
+
+    <MudButton Size="Size.Small" Class="mt-3" Variant="Variant.Outlined" Color="Color.Primary"
+               OnClick="CreateInvite">@L["New invite link"]</MudButton>
+</MudPaper>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavManager
+@code {
+    private IReadOnlyList<ToolInviteLinkRecord> _links = Array.Empty<ToolInviteLinkRecord>();
+
+    // Held separately so a half-typed note survives the reload a sibling action triggers.
+    private readonly Dictionary<Guid, string> _edits = new();
+
+    [Parameter] public Guid ToolId { get; set; }
+
+    protected override async Task OnParametersSetAsync() => await Reload();
+
+    private async Task Reload()
+    {
+        _links = await Mediator.Send(new GetToolInviteLinksQuery(ToolId));
+    }
+
+    private string NoteOf(ToolInviteLinkRecord link) =>
+        _edits.TryGetValue(link.Code, out var edited) ? edited : link.Note ?? string.Empty;
+
+    private string InviteUrl(Guid code) => $"{NavManager.BaseUri.TrimEnd('/')}/CommunityTools/Invite/{code}";
+
+    /// <summary>
+    ///     Saved on blur rather than behind a button. There is nothing to validate and nothing to
+    ///     confirm — a note is a note, and a save button next to a text box a maker will edit twice
+    ///     is a step that exists only to be forgotten.
+    /// </summary>
+    private async Task SaveNote(Guid code, string value)
+    {
+        _edits[code] = value;
+        await Mediator.Send(new SetToolInviteLinkNoteCommand(ToolId, code, value));
+        await Reload();
+    }
+
+    private async Task Copy(string text)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        Snackbar.Add(L["Copied"].Value, Severity.Success);
+    }
+
+    private async Task CreateInvite()
+    {
+        await Mediator.Send(new CreateToolInviteLinkCommand(ToolId));
+        await Reload();
+    }
+
+    private async Task RevokeInvite(Guid code)
+    {
+        await Mediator.Send(new RevokeToolInviteLinkCommand(ToolId, code));
+        _edits.Remove(code);
+        await Reload();
+    }
+}

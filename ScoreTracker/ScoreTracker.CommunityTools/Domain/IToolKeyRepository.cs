@@ -17,16 +17,25 @@ internal interface IToolKeyRepository
     Task<Guid?> ResolveToolByKeyHash(string hash, DateTimeOffset now,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<Guid>> GetInviteCodes(Guid toolId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ToolInviteCodeRecord>> GetInviteCodes(Guid toolId,
+        CancellationToken cancellationToken = default);
 
     Task AddInviteCode(Guid toolId, Guid code, DateTimeOffset at, CancellationToken cancellationToken = default);
 
     Task RevokeInviteCode(Guid toolId, Guid code, DateTimeOffset at,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Sets the maker's private note on one link. Blank clears it.</summary>
+    Task SetInviteCodeNote(Guid toolId, Guid code, string? note,
+        CancellationToken cancellationToken = default);
+
     /// <summary>The tool an unrevoked invite code belongs to, or null.</summary>
     Task<Guid?> ResolveToolByInviteCode(Guid code, CancellationToken cancellationToken = default);
 }
+
+/// <summary>A live invite code and the maker's private note about where they shared it.</summary>
+[ExcludeFromCodeCoverage]
+internal sealed record ToolInviteCodeRecord(Guid Code, string? Note, DateTimeOffset CreatedAt);
 
 /// <summary>
 ///     An API key as its maker sees it. Deliberately never carries the key itself — after minting,

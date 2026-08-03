@@ -4,12 +4,18 @@
 @using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.CommunityTools.Contracts.Queries
 
-@* Keys and invite links. Creation is two steps on purpose: expiry has to be chosen BEFORE the key
-   exists, or "6 months by default" never registers — and the key is readable exactly once, so the
-   reveal needs a moment of its own rather than a line in a table. *@
+@* Keys only — invite links moved to their own panel, because "how my code authenticates" and "how I
+   recruit players" are different jobs a maker does at different times.
+
+   Creation is two steps on purpose: expiry has to be chosen BEFORE the key exists, or "6 months by
+   default" never registers — and the key is readable exactly once, so the reveal needs a moment of
+   its own rather than a line in a table. *@
 
 <MudPaper Outlined="true" Class="pa-4 mb-4">
-    <MudText Typo="Typo.subtitle2" Class="mb-2">@L["API keys"]</MudText>
+    <MudText Typo="Typo.subtitle2">@L["API keys"]</MudText>
+    <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
+        @L["Two can be active at once, so rotating one costs no downtime."]
+    </MudText>
 
     @foreach (var key in _keys)
     {
@@ -44,43 +50,14 @@
             <div class="olb-rank-tail">
                 @if (!key.IsRevoked)
                 {
-                    <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => Revoke(key.Id)">@L["Revoke"]</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => AskRevoke(key)">@L["Revoke"]</MudButton>
                 }
             </div>
         </div>
     }
 
-    <div class="d-flex align-center gap-2 mt-3 flex-wrap">
-        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
-                   OnClick="OpenCreate">@L["Create key"]</MudButton>
-        <MudText Typo="Typo.caption" Style="opacity:.7;">
-            @L["Two keys can be active at once so you can rotate without downtime."]
-        </MudText>
-    </div>
-</MudPaper>
-
-<MudPaper Outlined="true" Class="pa-4 mb-4">
-    <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Invite Links"]</MudText>
-    @if (!_inviteCodes.Any())
-    {
-        <MudText Typo="Typo.body2" Style="opacity:.7;">
-            @L["Anyone with an invite link can connect, whether their profile is public or private."]
-        </MudText>
-    }
-    @foreach (var code in _inviteCodes)
-    {
-        <div class="olb-rank-card">
-            <div class="flex-grow-1" style="min-width:0;">
-                <MudText Typo="Typo.body2" Style="word-break:break-all;">@InviteUrl(code)</MudText>
-            </div>
-            <div class="olb-rank-tail">
-                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => Copy(InviteUrl(code))">@L["Copy"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => RevokeInvite(code)">@L["Revoke"]</MudButton>
-            </div>
-        </div>
-    }
     <MudButton Size="Size.Small" Class="mt-3" Variant="Variant.Outlined" Color="Color.Primary"
-               OnClick="CreateInvite">@L["New invite link"]</MudButton>
+               OnClick="OpenCreate">@L["Create key"]</MudButton>
 </MudPaper>
 
 @* Step 1: expiry is chosen before the key exists. *@
@@ -88,7 +65,8 @@
     <TitleContent><MudText Typo="Typo.h6">@L["Create API key"]</MudText></TitleContent>
     <DialogContent>
         <MudTextField T="string" @bind-Value="_newKeyName" Label=@L["What's it for"] MaxLength="64"
-                      Immediate="true"></MudTextField>
+                      Immediate="true"
+                      HelperText='@L["Just for you — \"Production\", \"my laptop\", \"the test box\". Nobody else sees it."].Value'></MudTextField>
         <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@L["Expires"]</MudText>
         <div class="d-flex gap-2 flex-wrap">
             @foreach (var option in Lifetimes)
@@ -120,15 +98,28 @@
 <MudDialog @bind-Visible="_showReveal" Options="_options">
     <TitleContent><MudText Typo="Typo.h6">@L["Copy your key now"]</MudText></TitleContent>
     <DialogContent>
-        <MudPaper Outlined="true" Class="pa-3" Style="word-break:break-all;">
-            <MudText Typo="Typo.body2" Style="font-family:monospace;">@_minted?.Key</MudText>
-        </MudPaper>
+        <div class="ct-secret">
+            <pre>@_minted?.Key</pre>
+            <MudIconButton Class="ct-secret-copy" Icon="@Icons.Material.Filled.ContentCopy"
+                           Size="Size.Small" Color="Color.Default" aria-label=@L["Copy"]
+                           OnClick="CopyKey"></MudIconButton>
+        </div>
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-3">
             <MudText Typo="Typo.body2"><b>@L["This is the only time we'll show it."]</b></MudText>
             <MudText Typo="Typo.body2">
                 @L["We store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime."]
             </MudText>
         </MudAlert>
+        <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">@L["Send it like this"]</MudText>
+        <div class="ct-secret ct-secret-wrap">
+            <pre>Authorization: Bearer @(_minted?.Key)</pre>
+            <MudIconButton Class="ct-secret-copy" Icon="@Icons.Material.Filled.ContentCopy"
+                           Size="Size.Small" Color="Color.Default" aria-label=@L["Copy"]
+                           OnClick="CopyHeader"></MudIconButton>
+        </div>
+        <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="opacity:.7;">
+            @L["In Swagger: press Authorize and paste the key into toolKey — the key on its own, without the word Bearer."]
+        </MudText>
         <MudText Typo="Typo.caption" Class="mt-2 d-block" Style="opacity:.7;">
             @(_minted?.ExpiresAt is null
                 ? L["This key never expires."]
@@ -137,15 +128,30 @@
     </DialogContent>
     <DialogActions>
         <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Outlined" OnClick="CopyKey">@L["Copy"]</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseReveal">@L["I've saved it"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Revoking is instant and irreversible, and the button sits one row from Copy. *@
+<MudDialog @bind-Visible="_showRevoke">
+    <TitleContent><MudText Typo="Typo.h6">@L["Revoke {0}?", _revoking?.Name ?? string.Empty]</MudText></TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+            <MudText Typo="Typo.body2">
+                @L["Anything still using this key starts getting 401 the moment you confirm, and it cannot be un-revoked — you would create a new one."]
+            </MudText>
+        </MudAlert>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="() => _showRevoke = false">@L["Keep it"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Revoke">@L["Revoke key"]</MudButton>
     </DialogActions>
 </MudDialog>
 
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
-@inject NavigationManager NavManager
 @code {
     private sealed record Lifetime(int? Days, Func<IStringLocalizer<App>, string> Label);
 
@@ -161,9 +167,10 @@
     private readonly DialogOptions _options = new() { MaxWidth = MaxWidth.False, FullWidth = true };
 
     private IReadOnlyList<ApiKeyRecord> _keys = Array.Empty<ApiKeyRecord>();
-    private IReadOnlyList<Guid> _inviteCodes = Array.Empty<Guid>();
     private bool _showCreate;
     private bool _showReveal;
+    private bool _showRevoke;
+    private ApiKeyRecord? _revoking;
     private string _newKeyName = string.Empty;
     private int? _lifetimeDays = 182;
     private MintedApiKey? _minted;
@@ -177,10 +184,7 @@
     private async Task Reload()
     {
         _keys = await Mediator.Send(new GetToolApiKeysQuery(ToolId));
-        _inviteCodes = await Mediator.Send(new GetToolInviteLinksQuery(ToolId));
     }
-
-    private string InviteUrl(Guid code) => $"{NavManager.BaseUri.TrimEnd('/')}/CommunityTools/Invite/{code}";
 
     private void OpenCreate()
     {
@@ -216,6 +220,14 @@
         Snackbar.Add(L["Copied"].Value, Severity.Success);
     }
 
+    private async Task CopyHeader()
+    {
+        if (_minted is null) return;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", $"Authorization: Bearer {_minted.Key}");
+        Snackbar.Add(L["Copied"].Value, Severity.Success);
+    }
+
     private void CloseReveal()
     {
         // Dropped rather than kept: nothing should be able to re-render it after this point.
@@ -223,27 +235,20 @@
         _showReveal = false;
     }
 
-    private async Task Revoke(Guid keyId)
+    private void AskRevoke(ApiKeyRecord key)
     {
-        await Mediator.Send(new RevokeToolApiKeyCommand(ToolId, keyId));
-        await Reload();
+        _revoking = key;
+        _showRevoke = true;
     }
 
-    private async Task Copy(string text)
+    private async Task Revoke()
     {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
-        Snackbar.Add(L["Copied"].Value, Severity.Success);
-    }
+        if (_revoking is null) return;
 
-    private async Task CreateInvite()
-    {
-        await Mediator.Send(new CreateToolInviteLinkCommand(ToolId));
+        await Mediator.Send(new RevokeToolApiKeyCommand(ToolId, _revoking.Id));
+        _showRevoke = false;
+        _revoking = null;
         await Reload();
-    }
-
-    private async Task RevokeInvite(Guid code)
-    {
-        await Mediator.Send(new RevokeToolInviteLinkCommand(ToolId, code));
-        await Reload();
+        await OnChanged.InvokeAsync();
     }
 }

@@ -112,8 +112,13 @@ public sealed class ChartsController : ApiV2ControllerBase
     }
 
     /// <summary>
-    ///     Step analysis in bulk, filtered exactly like <see cref="Get" />, so a tool can pull the
-    ///     analysis for one mix's charts in one sweep rather than a call per chart.
+    ///     Step analysis in bulk, taking the same filters as <c>GET /api/v2/charts</c>, so a tool can
+    ///     pull the analysis for one mix's charts in one sweep rather than a call per chart.
+    ///     <para>
+    ///         Written out rather than a <c>see cref</c>: Swashbuckle renders a cref as its display
+    ///         name, and for a method the display name is the whole signature — the reader would get
+    ///         a wall of <c>System.Nullable{System.Int32}</c> in the endpoint description.
+    ///     </para>
     /// </summary>
     /// <remarks>
     ///     <c>mix</c> is required because the <b>filters</b> are per-mix — a chart's level differs

@@ -193,6 +193,7 @@ builder.Services.AddSwaggerGen(o =>
     var path = Path.Combine(AppContext.BaseDirectory, xml);
     o.IncludeXmlComments(path);
     const string schemeId = "basic";
+    const string toolSchemeId = "toolKey";
 
     o.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
     {
@@ -200,14 +201,28 @@ builder.Services.AddSwaggerGen(o =>
         Type = SecuritySchemeType.Http,
         In = ParameterLocation.Header,
         Scheme = "basic",
-        Description = "ApiToken from Account page. Put anything in for username."
+        Description = "Personal API token from your Account page. Put anything in for username. " +
+                      "A tool API key also works here."
+    });
+
+    // The other kind of caller. Without this the Authorize dialog offers only Basic, so a tool key
+    // pasted into the one box on offer comes back 401 with nothing on screen saying why.
+    o.AddSecurityDefinition(toolSchemeId, new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        In = ParameterLocation.Header,
+        Scheme = "bearer",
+        Description = "Tool API key from /Developers, e.g. piu_scores_live_… — paste the key itself, " +
+                      "without the word Bearer. Authenticates the tool across the players who " +
+                      "granted it access."
     });
 
     // Swashbuckle v10 / .NET 10 style
     o.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference(schemeId, document)] = new List<string>()
-        // or just [] if you're on C# 12+
+        [new OpenApiSecuritySchemeReference(schemeId, document)] = new List<string>(),
+        [new OpenApiSecuritySchemeReference(toolSchemeId, document)] = new List<string>()
     });
     o.SchemaFilter<EnumSchemaFilter>();
 });

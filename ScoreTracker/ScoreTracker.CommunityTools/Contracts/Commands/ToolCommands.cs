@@ -66,6 +66,13 @@ public sealed record CreateToolInviteLinkCommand(Guid ToolId) : IRequest<Guid>;
 public sealed record RevokeToolInviteLinkCommand(Guid ToolId, Guid Code) : IRequest;
 
 /// <summary>
+///     The maker's own note about where they shared one link. Blank clears it. Never leaves the
+///     maker's console.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record SetToolInviteLinkNoteCommand(Guid ToolId, Guid Code, string? Note) : IRequest;
+
+/// <summary>
 ///     A player granting one named tool access, whether from the directory or an invite.
 ///     <para>
 ///         <see cref="AcceptedSessionSharing" /> is the consent the player actually gave, carried

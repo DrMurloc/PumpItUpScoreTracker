@@ -5,7 +5,7 @@ on-site string ships in nine locales, and a reference nobody translates does not
 pipeline. What *is* on the site is the part that needs your keys and your tool —
 [/Developers](https://piuscores.arroweclip.se/Developers).
 
-The wire shapes are in Swagger at [`/swagger/ui`](https://piuscores.arroweclip.se/swagger/ui), and
+The wire shapes are in Swagger at [`/swagger`](https://piuscores.arroweclip.se/swagger), and
 Swagger is the source of truth for them. This document is the part Swagger cannot tell you: what the
 values *mean*, and which mistakes are easy to make.
 
@@ -15,7 +15,7 @@ values *mean*, and which mistakes are easy to make.
 
 1. **Create your tool.** It starts private and fully working — invite links, keys and webhooks all
    function. Listing only puts you in the public directory.
-2. **Create an API key.** Send it as `Authorization: Bearer pst_live_…`. It is shown once; we store
+2. **Create an API key.** Send it as `Authorization: Bearer piu_scores_live_…`. It is shown once; we store
    a hash. Two can be live at a time so you can rotate without downtime.
 3. **You are player one.** Creating a tool connects your own account to it, so you always have a real
    player to test against.
@@ -30,7 +30,7 @@ values *mean*, and which mistakes are easy to make.
 ## 2. Authentication
 
 ```
-Authorization: Bearer pst_live_8Kd2Qm4xV7pR1nZaL9cE6yTb3WsHfJ0u
+Authorization: Bearer piu_scores_live_8Kd2Qm4xV7pR1nZaL9cE6yTb3WsHfJ0u
 ```
 
 A **tool key** authenticates the tool. It reaches every player who granted it access, and it is
@@ -39,7 +39,12 @@ never a player itself — `GET /api/v2/players/me` is an error for a tool, becau
 A **personal token** (the GUID from your Account page, sent as HTTP Basic) authenticates one person
 and reaches nobody else. It still works, unchanged, on both v1 and v2.
 
-In Swagger: press **Authorize**, and paste `Bearer pst_live_…` into the value field.
+In Swagger: press **Authorize** and paste the key into **toolKey** — the key itself, without the
+word `Bearer`.
+
+A tool key also works in the **password position of Basic auth**, with anything for the username.
+That is not the documented form and Bearer is what you should ship, but v1 taught everyone to put
+their credential there and it is not worth a 401 to be strict about.
 
 ---
 

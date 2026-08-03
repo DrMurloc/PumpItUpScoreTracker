@@ -1,4 +1,4 @@
-﻿@page "/Developers"
+@page "/Developers"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.CommunityTools.Contracts
@@ -11,7 +11,12 @@
 <PageTitle>@L["Developers"]</PageTitle>
 
 @* Maker-facing, so the jargon is allowed here — webhook, API key, rate limit. Player-facing
-   screens never use those words. *@
+   screens never use those words.
+
+   Section order is the order a maker needs them: identity, then the credential their code uses,
+   then how they recruit players, then delivery. Help sits at the bottom because it is a place you
+   go looking, not a thing you trip over — and Delete sits below Help so nothing above it is a
+   destructive control. *@
 
 <div class="d-flex align-end gap-3 flex-wrap mt-2 mb-4">
     <div class="flex-grow-1">
@@ -72,6 +77,7 @@ else
     {
         <ToolIntegrationChecklist Tool="_selected"></ToolIntegrationChecklist>
 
+        @* 1. Who this tool is. *@
         <MudPaper Outlined="true" Class="pa-4 mb-4">
             <MudText Typo="Typo.subtitle2" Class="mb-3">@L["{0} — settings", _selected.Name]</MudText>
             <MudGrid>
@@ -79,7 +85,8 @@ else
                     <MudTextField T="string" @bind-Value="_editName" Label=@L["Name"] MaxLength="64"></MudTextField>
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTextField T="string" @bind-Value="_editUrl" Label=@L["Link"] MaxLength="500"></MudTextField>
+                    <MudTextField T="string" @bind-Value="_editUrl" Label=@L["Link"] MaxLength="500"
+                                  HelperText='@L["Leave blank if no hosted URL."].Value'></MudTextField>
                 </MudItem>
                 <MudItem xs="12">
                     <MudTextField T="string" @bind-Value="_editDescription" Label=@L["Description"] MaxLength="500"
@@ -94,124 +101,22 @@ else
                 @L["Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise."]
             </MudText>
 
-            <MudDivider Class="my-4"></MudDivider>
-            <MudText Typo="Typo.subtitle2" Class="mb-2">@L["What we send you"]</MudText>
-            <MudRadioGroup T="WebhookMode" @bind-Value="_editMode">
-                <MudRadio T="WebhookMode" Value="WebhookMode.ScorePush" Color="Color.Primary">
-                    <b>@L["Score Push"]</b> — @L["The scores themselves, 100 per delivery, with a next link when there are more."]
-                </MudRadio>
-                <MudRadio T="WebhookMode" Value="WebhookMode.PlayerPing" Color="Color.Primary">
-                    <b>@L["Player ping"]</b> — @L["Just \"this player imported\". You pull what you need from the API."]
-                </MudRadio>
-                <MudRadio T="WebhookMode" Value="WebhookMode.None" Color="Color.Primary">
-                    <b>@L["Nothing"]</b> — @L["Poll the API instead."]
-                </MudRadio>
-                <MudRadio T="WebhookMode" Value="WebhookMode.PiuGameSession" Color="Color.Warning"
-                          Disabled="@(_selected.ConnectedPlayers > 0 && _selected.WebhookMode != WebhookMode.PiuGameSession)">
-                    <b>@L["PIUGame session"]</b>
-                    @if (_selected.ConnectedPlayers > 0 && _selected.WebhookMode != WebhookMode.PiuGameSession)
-                    {
-                        <span> — @L["Locked: every connected player must agree to it individually, so this can only be turned on while no one is connected."]</span>
-                    }
-                    else
-                    {
-                        <span> — @L["We forward the piugame.com session key so you run your own import."]</span>
-                    }
-                </MudRadio>
-            </MudRadioGroup>
-
-            @if (_editMode != WebhookMode.None)
-            {
-                <MudTextField T="string" @bind-Value="_editWebhookUrl" Label=@L["Deliver to"] Class="mt-3"
-                              MaxLength="500"></MudTextField>
-
-                @* A configured URL is a claim; a verified one is a proof. Until we have the proof we
-                   would be one typo away from posting a player's scores to a stranger. *@
-                @if (_selected.WebhookUrlVerifiedAt is null)
-                {
-                    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="mt-2">
-                        <MudText Typo="Typo.body2"><b>@L["Not verified — nothing is being sent"]</b></MudText>
-                        <MudText Typo="Typo.body2">
-                            @L["Save the URL, then press Verify. We'll POST {\"type\":\"url_verification\",\"challenge\":\"...\"} and your endpoint has to answer 200 with that challenge string in the body."]
-                        </MudText>
-                    </MudAlert>
-                }
-                else
-                {
-                    <MudText Typo="Typo.caption" Class="d-block mt-2" Style="opacity:.75;">
-                        @L["Verified {0}", _selected.WebhookUrlVerifiedAt.Value.LocalDateTime.ToString("dd MMM yyyy")]
-                        · @L["Changing the URL clears this."]
-                    </MudText>
-                }
-
-                <div class="d-flex align-center gap-3 mt-2 flex-wrap">
-                    <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="_verifying"
-                               OnClick="VerifyWebhook">@L["Verify"]</MudButton>
-                    @if (_verifyResult is not null)
-                    {
-                        <MudText Typo="Typo.body2">@_verifyResult</MudText>
-                    }
-                </div>
-            }
-
-                @* The only thing telling a maker's server that a call is ours. Optional for the
-                   read modes — a spoofed call there writes junk into their own database — and
-                   required to enter session mode, which hands over a live piugame key. *@
-                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@L["How your server knows it's us"]</MudText>
-                <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-                    @L["We send this header verbatim on every delivery and on the verification call. Check it in your handler and reject anything without it."]
-                </MudText>
-                <div class="d-flex gap-3 flex-wrap">
-                    <MudTextField T="string" @bind-Value="_editHeaderName" Label=@L["Header name"]
-                                  Placeholder="X-My-Tool-Token" MaxLength="64"
-                                  Style="max-width:260px;"></MudTextField>
-                    <MudTextField T="string" @bind-Value="_editHeaderValue" Label=@HeaderValueLabel
-                                  MaxLength="128" InputType="InputType.Password"
-                                  Style="max-width:260px;"></MudTextField>
-                </div>
-                @if (_editMode == WebhookMode.PiuGameSession
-                     && string.IsNullOrWhiteSpace(_selected.OutboundHeaderName))
-                {
-                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="mt-2">
-                        @L["Set a header before switching to PIUGame session mode — that mode hands your server a live piugame.com key."]
-                    </MudAlert>
-                }
-
-            <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">@L["Mixes"]</MudText>
-            <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mb-2">
-                @L["We only send imports for the mixes you pick. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using."]
-            </MudText>
-            <div class="d-flex gap-2 flex-wrap">
-                @foreach (var mix in PrimaryMixes)
-                {
-                    <MudChip T="string" Size="Size.Small" Color="@(_editMixes.Contains(mix) ? Color.Info : Color.Default)"
-                             Variant="Variant.Outlined" OnClick="() => ToggleMix(mix)">@mix.GetName()</MudChip>
-                }
-            </div>
-            <MudExpansionPanels Class="mt-2" Elevation="0">
-                <MudExpansionPanel Text='@L["Older mixes ({0})", OlderMixes.Length].Value'>
-                    <div class="d-flex gap-2 flex-wrap">
-                        @foreach (var mix in OlderMixes)
-                        {
-                            <MudChip T="string" Size="Size.Small"
-                                     Color="@(_editMixes.Contains(mix) ? Color.Info : Color.Default)"
-                                     Variant="Variant.Outlined" OnClick="() => ToggleMix(mix)">@mix.GetName()</MudChip>
-                        }
-                    </div>
-                </MudExpansionPanel>
-            </MudExpansionPanels>
-
-            <div class="d-flex gap-2 mt-4 flex-wrap">
+            <div class="d-flex gap-2 mt-4 flex-wrap align-center">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">@L["Save"]</MudButton>
                 @if (_selected.Visibility != ToolVisibility.Public
                      && _selected.Visibility != ToolVisibility.PendingApproval)
                 {
-                    <MudButton Variant="Variant.Outlined" OnClick="RequestListing">@L["Ask to be listed"]</MudButton>
+                    @* Disabled rather than throwing on click: a listing needs a description, and the
+                       rule is worth stating where it is broken instead of after the attempt. *@
+                    <MudButton Variant="Variant.Outlined" Disabled="@(!CanRequestListing)"
+                               OnClick="RequestListing">@L["Ask to be listed"]</MudButton>
+                    @if (!CanRequestListing)
+                    {
+                        <MudText Typo="Typo.caption" Style="opacity:.7;">
+                            @L["Add a description first — it is what a player reads before deciding whether to connect."]
+                        </MudText>
+                    }
                 }
-                <MudSpacer></MudSpacer>
-                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => _showDelete = true">
-                    @L["Delete tool"]
-                </MudButton>
             </div>
 
             @if (_selected.Visibility == ToolVisibility.Rejected
@@ -224,7 +129,50 @@ else
             }
         </MudPaper>
 
+        @* 2, 3, 4. *@
         <ToolKeyPanel ToolId="_selected.Id" OnChanged="Reload"></ToolKeyPanel>
+        <ToolInvitePanel ToolId="_selected.Id"></ToolInvitePanel>
+        <ToolWebhookPanel Tool="_selected" OnChanged="Reload"></ToolWebhookPanel>
+
+        @* 5. Reference material, gathered here rather than scattered up the page. *@
+        <MudPaper Outlined="true" Class="pa-4 mb-4">
+            <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Help"]</MudText>
+            <div class="d-flex gap-2 flex-wrap">
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Href="/swagger" Target="_blank"
+                           EndIcon="@Icons.Material.Filled.OpenInNew">@L["Swagger"]</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Text" Target="_blank"
+                           Href="https://github.com/DrMurloc/PumpItUpScoreTracker/blob/main/docs/INTEGRATING.md"
+                           EndIcon="@Icons.Material.Filled.OpenInNew">@L["Full reference"]</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Text" Target="_blank"
+                           Href="https://github.com/DrMurloc/PumpItUpScoreTracker/blob/main/docs/HOW-TO-RUN.md"
+                           EndIcon="@Icons.Material.Filled.OpenInNew">@L["Run PIU Scores locally"]</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Text" Target="_blank"
+                           Href="https://discord.gg/AvS5PxnvSN"
+                           EndIcon="@Icons.Material.Filled.OpenInNew">@L["Ask on Discord"]</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Text"
+                           Href="@($"/Developers/{_selected.Id}/Console")">@L["Activity log"]</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Text"
+                           Href="@($"/Developers/{_selected.Id}/Debug")">@L["Test delivery"]</MudButton>
+            </div>
+        </MudPaper>
+
+        @* 6. Last, and the only destructive control on the page. *@
+        <MudPaper Outlined="true" Class="pa-4 mb-4"
+                  Style="border-color:color-mix(in srgb, var(--mud-palette-error) 45%, transparent);">
+            @* "Danger Zone" — the existing casing. A second key differing only by case is dropped
+               from every compiled satellite, so both spellings would render English. *@
+            <MudText Typo="Typo.subtitle2" Color="Color.Error" Class="mb-1">@L["Danger Zone"]</MudText>
+            <div class="d-flex gap-3 flex-wrap align-center">
+                <div class="flex-grow-1" style="min-width:240px;">
+                    <MudText Typo="Typo.body2"><b>@L["Delete {0}", _selected.Name]</b></MudText>
+                    <MudText Typo="Typo.body2" Style="opacity:.7;">
+                        @L["Its keys stop working, its webhooks stop firing, and the {0} players connected to it lose access. Nobody can take a tool over — it's yours or it's gone.", _selected.ConnectedPlayers]
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Outlined" Color="Color.Error"
+                           OnClick="() => _showDelete = true">@L["Delete tool"]</MudButton>
+            </div>
+        </MudPaper>
     }
 }
 
@@ -263,12 +211,6 @@ else
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
 @code {
-    private static readonly MixEnum[] PrimaryMixes =
-        Enum.GetValues<MixEnum>().Where(m => m.IsPrimary()).OrderByDescending(m => m.DisplayOrder()).ToArray();
-
-    private static readonly MixEnum[] OlderMixes =
-        Enum.GetValues<MixEnum>().Where(m => !m.IsPrimary()).OrderByDescending(m => m.DisplayOrder()).ToArray();
-
     private IReadOnlyList<ToolRecord> _tools = Array.Empty<ToolRecord>();
     private ToolRecord? _selected;
     private bool _loading = true;
@@ -279,21 +221,16 @@ else
     private string _editName = string.Empty;
     private string _editDescription = string.Empty;
     private string _editUrl = string.Empty;
-    private string _editWebhookUrl = string.Empty;
     private bool _editAcceptsAllTools = true;
-    private WebhookMode _editMode = WebhookMode.None;
-    private bool _verifying;
-    private string? _verifyResult;
-    private string _editHeaderName = string.Empty;
-    // Never populated from the record — the value does not travel. Blank means "keep what's stored".
-    private string _editHeaderValue = string.Empty;
-
-    private string HeaderValueLabel => _selected?.HasOutboundHeaderValue == true
-        ? L["Value (set — type to replace)"].Value
-        : L["Value"].Value;
-    private HashSet<MixEnum> _editMixes = new();
 
     private IReadOnlyList<(string Name, int DaysLeft)> _expiringSoon = Array.Empty<(string, int)>();
+
+    /// <summary>
+    ///     Mirrors the domain rule on <c>Tool.RequestListing</c>. Reads the box rather than the
+    ///     saved record, so writing a description enables the button without a round trip — and the
+    ///     Save above it is what commits either way.
+    /// </summary>
+    private bool CanRequestListing => !string.IsNullOrWhiteSpace(_editDescription);
 
     protected override async Task OnInitializedAsync() => await Reload();
 
@@ -319,17 +256,7 @@ else
         _editName = tool.Name;
         _editDescription = tool.Description ?? string.Empty;
         _editUrl = tool.Url ?? string.Empty;
-        _editWebhookUrl = tool.WebhookUrl ?? string.Empty;
         _editAcceptsAllTools = tool.AcceptsAllToolsShare;
-        _editMode = tool.WebhookMode;
-        _editHeaderName = tool.OutboundHeaderName ?? string.Empty;
-        _editHeaderValue = string.Empty;
-        _editMixes = tool.Mixes.ToHashSet();
-    }
-
-    private void ToggleMix(MixEnum mix)
-    {
-        if (!_editMixes.Add(mix)) _editMixes.Remove(mix);
     }
 
     private async Task Create()
@@ -343,57 +270,21 @@ else
     }
 
     /// <summary>
-    ///     Verifies the saved URL, not the one in the box — a maker who edits and presses Verify
-    ///     without saving would otherwise get a green tick for a URL we are not going to use.
-    /// </summary>
-    private async Task VerifyWebhook()
-    {
-        if (_selected is null) return;
-
-        _verifying = true;
-        _verifyResult = null;
-        try
-        {
-            var result = await Mediator.Send(new VerifyToolWebhookCommand(_selected.Id));
-            _verifyResult = result.Verified
-                ? L["Verified — deliveries are on."].Value
-                // The remote's own words. Ours would tell them nothing they can act on.
-                : L["Failed: {0}{1}", result.Reason ?? string.Empty,
-                    result.StatusCode is null ? string.Empty : $" ({result.StatusCode})"].Value;
-            await Reload();
-        }
-        catch (Exception e)
-        {
-            // A domain exception's message is written for the person who tripped it.
-            Snackbar.Add(e.Message, Severity.Error);
-        }
-        finally
-        {
-            _verifying = false;
-        }
-    }
-
-    /// <summary>
     ///     Validates everything before sending anything.
     ///     <para>
-    ///         These are four separate commands, so a throw partway through leaves the earlier ones
-    ///         committed — and the first of them is <c>UpdateToolCommand</c>, which returns an
-    ///         approved tool to PendingApproval when its identity changes. A failed save used to
-    ///         de-list a listed tool and show the maker nothing but a dead circuit.
-    ///     </para>
-    ///     <para>
-    ///         The catch is still there for what validation cannot see (a domain rule, a race). Its
-    ///         message is a domain exception's, written for the person who tripped it.
+    ///         These are two commands, so a throw partway through leaves the first committed — and
+    ///         the first is <c>UpdateToolCommand</c>, which returns an approved tool to
+    ///         PendingApproval when its identity changes. A failed save used to de-list a listed tool
+    ///         and show the maker nothing but a dead circuit.
     ///     </para>
     /// </summary>
     private async Task Save()
     {
         if (_selected is null) return;
 
-        var problem = ValidationProblem();
-        if (problem is not null)
+        if (!string.IsNullOrWhiteSpace(_editUrl) && !IsBrowsableUrl(_editUrl))
         {
-            Snackbar.Add(problem, Severity.Error);
+            Snackbar.Add(L["\"{0}\" isn't a valid link. Include https://", _editUrl].Value, Severity.Error);
             return;
         }
 
@@ -403,14 +294,10 @@ else
                 string.IsNullOrWhiteSpace(_editDescription) ? null : _editDescription,
                 string.IsNullOrWhiteSpace(_editUrl) ? null : _editUrl));
             await Mediator.Send(new SetToolAllToolsShareCommand(_selected.Id, _editAcceptsAllTools));
-            // Before the webhook command, so entering session mode can see the header it requires.
-            await Mediator.Send(new SetToolOutboundHeaderCommand(_selected.Id,
-                _editHeaderName, _editHeaderValue));
-            await Mediator.Send(new SetToolWebhookCommand(_selected.Id, _editMode,
-                string.IsNullOrWhiteSpace(_editWebhookUrl) ? null : _editWebhookUrl, _editMixes.ToArray()));
         }
         catch (Exception e)
         {
+            // A domain exception's message is written for the person who tripped it.
             Snackbar.Add(e.Message, Severity.Error);
             await Reload();
             return;
@@ -424,26 +311,6 @@ else
     ///     What we can catch before touching the database. A bare host like "planner.example" is the
     ///     one people actually type, and it parses as nothing useful.
     /// </summary>
-    private string? ValidationProblem()
-    {
-        if (!string.IsNullOrWhiteSpace(_editUrl) && !IsBrowsableUrl(_editUrl))
-            return L["\"{0}\" isn't a valid link. Include https://", _editUrl].Value;
-
-        if (_editMode != WebhookMode.None)
-        {
-            if (string.IsNullOrWhiteSpace(_editWebhookUrl))
-                return L["Pick where to deliver, or choose Nothing."].Value;
-
-            if (!IsBrowsableUrl(_editWebhookUrl))
-                return L["\"{0}\" isn't a valid link. Include https://", _editWebhookUrl].Value;
-        }
-
-        if (!string.IsNullOrWhiteSpace(_editHeaderValue) && string.IsNullOrWhiteSpace(_editHeaderName))
-            return L["A header value needs a header name."].Value;
-
-        return null;
-    }
-
     private static bool IsBrowsableUrl(string value)
     {
         return Uri.TryCreate(value, UriKind.Absolute, out var uri)
@@ -454,7 +321,17 @@ else
     {
         if (_selected is null) return;
 
-        await Mediator.Send(new RequestToolListingCommand(_selected.Id));
+        try
+        {
+            await Mediator.Send(new RequestToolListingCommand(_selected.Id));
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add(e.Message, Severity.Error);
+            await Reload();
+            return;
+        }
+
         Snackbar.Add(L["Sent for review"].Value, Severity.Success);
         await Reload();
     }

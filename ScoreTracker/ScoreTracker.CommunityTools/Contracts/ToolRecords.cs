@@ -77,6 +77,13 @@ public sealed record ApiKeyRecord(
 [ExcludeFromCodeCoverage]
 public sealed record MintedApiKey(Guid Id, string Key, DateTimeOffset? ExpiresAt);
 
+/// <summary>
+///     A live invite link and the maker's private note about it. The note is maker-only — the player
+///     who follows the link is never shown it.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record ToolInviteLinkRecord(Guid Code, string? Note, DateTimeOffset CreatedAt);
+
 /// <summary>What a player is told before connecting through an invite link.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record ToolInvitePreview(

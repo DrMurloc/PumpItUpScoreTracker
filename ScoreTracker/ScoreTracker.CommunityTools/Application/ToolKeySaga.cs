@@ -13,8 +13,9 @@ internal sealed class ToolKeySaga :
     IRequestHandler<RevokeToolApiKeyCommand>,
     IRequestHandler<CreateToolInviteLinkCommand, Guid>,
     IRequestHandler<RevokeToolInviteLinkCommand>,
+    IRequestHandler<SetToolInviteLinkNoteCommand>,
     IRequestHandler<GetToolApiKeysQuery, IReadOnlyList<ApiKeyRecord>>,
-    IRequestHandler<GetToolInviteLinksQuery, IReadOnlyList<Guid>>,
+    IRequestHandler<GetToolInviteLinksQuery, IReadOnlyList<ToolInviteLinkRecord>>,
     IRequestHandler<GetToolInvitePreviewQuery, ToolInvitePreview?>,
     IRequestHandler<GetToolByApiKeyQuery, Guid?>
 {
@@ -75,6 +76,13 @@ internal sealed class ToolKeySaga :
         await _keys.RevokeInviteCode(request.ToolId, request.Code, _dateTime.Now, cancellationToken);
     }
 
+    public async Task Handle(SetToolInviteLinkNoteCommand request, CancellationToken cancellationToken)
+    {
+        await AssertOwned(request.ToolId, cancellationToken);
+        var note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
+        await _keys.SetInviteCodeNote(request.ToolId, request.Code, note, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ApiKeyRecord>> Handle(GetToolApiKeysQuery request,
         CancellationToken cancellationToken)
     {
@@ -85,11 +93,13 @@ internal sealed class ToolKeySaga :
             .ToArray();
     }
 
-    public async Task<IReadOnlyList<Guid>> Handle(GetToolInviteLinksQuery request,
+    public async Task<IReadOnlyList<ToolInviteLinkRecord>> Handle(GetToolInviteLinksQuery request,
         CancellationToken cancellationToken)
     {
         await AssertOwned(request.ToolId, cancellationToken);
-        return await _keys.GetInviteCodes(request.ToolId, cancellationToken);
+        return (await _keys.GetInviteCodes(request.ToolId, cancellationToken))
+            .Select(i => new ToolInviteLinkRecord(i.Code, i.Note, i.CreatedAt))
+            .ToArray();
     }
 
     /// <summary>

@@ -351,6 +351,9 @@
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>倍率上限での Perfect。</value>
   </data>
+  <data name="A private tool can still reach you through an invite link from its maker." xml:space="preserve">
+    <value>非公開のツールは、作者からの招待リンクで今も接続できます。</value>
+  </data>
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>ドキュメント完備の公開 API がコミュニティ製ツールを支えます — ボット、オーバーレイ、統計サイト。アカウントからトークンを取得して、私たちと同じデータの上に作ってください。</value>
   </data>
@@ -399,10 +402,16 @@
   <data name="Activity appears once a player connects and imports. Send someone your invite link to get started." xml:space="preserve">
     <value>プレイヤーが接続してインポートすると記録が表示されます。招待リンクを送って始めましょう。</value>
   </data>
+  <data name="Activity log" xml:space="preserve">
+    <value>アクティビティログ</value>
+  </data>
   <data name="Add" xml:space="preserve">
 	  <value>追加</value>
 	  
   <comment>Add</comment></data>
+  <data name="Add a description first — it is what a player reads before deciding whether to connect." xml:space="preserve">
+    <value>先に説明を書いてください — プレイヤーが接続するか決める前に読む文章です。</value>
+  </data>
   <data name="Add A Photo" xml:space="preserve">
     <value>写真を追加</value>
   </data>
@@ -488,9 +497,6 @@
   <data name="All plays" xml:space="preserve">
     <value>全プレイ</value>
   </data>
-  <data name="All public tools · {0}" xml:space="preserve">
-    <value>公開ツール一覧 · {0}</value>
-  </data>
   <data name="All saved credentials have been cleared." xml:space="preserve">
     <value>保存済みの認証情報をすべて削除しました。</value>
   </data>
@@ -572,6 +578,9 @@
   </data>
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>招待リンクがあれば、プロフィールが公開でも非公開でも接続できます。</value>
+  </data>
+  <data name="Anything still using this key starts getting 401 the moment you confirm, and it cannot be un-revoked — you would create a new one." xml:space="preserve">
+    <value>確定した瞬間から、このキーを使っているものはすべて 401 になります。取り消しは戻せません — 新しく作り直すことになります。</value>
   </data>
   <data name="API" xml:space="preserve">
     <value>API</value>
@@ -1328,9 +1337,6 @@
   <data name="Connect {0}" xml:space="preserve">
     <value>{0}に接続</value>
   </data>
-  <data name="Connected" xml:space="preserve">
-    <value>接続済み</value>
-  </data>
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>信頼できるツール1つに接続するのは非公開プロフィールでも問題ありません — 公開共有ではなく直接接続だからです。プロフィールは非公開のままで、ほかのツールがアクセスすることはありません。</value>
   </data>
@@ -1361,6 +1367,9 @@
   </data>
   <data name="Copied to clipboard!" xml:space="preserve">
 	  <value>クリップボードにコピーしました！</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>コピー</value>
   </data>
   <data name="Copy link" xml:space="preserve">
     <value>リンクをコピー</value>
@@ -2255,6 +2264,9 @@
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>称号持ちプレイヤーの{0}が保有</value>
   </data>
+  <data name="Help" xml:space="preserve">
+    <value>ヘルプ</value>
+  </data>
   <data name="Hide" xml:space="preserve">
 	  <value>隠す</value>
   </data>
@@ -2513,6 +2525,9 @@
   <data name="In some of those cases, it may be faster to upload a Spreadsheet instead of manually inputting thousands of grades." xml:space="preserve">
 	  <value>そのような場合、何千ものランクを手入力するより、スプレッドシートをアップロードする方が早いです。</value>
   </data>
+  <data name="In Swagger: press Authorize and paste the key into toolKey — the key on its own, without the word Bearer." xml:space="preserve">
+    <value>Swagger では: Authorize を押して toolKey にキーを貼り付けてください — Bearer という語は付けず、キーだけです。</value>
+  </data>
   <data name="in the top ten" xml:space="preserve">
     <value>件がトップ10以内</value>
   </data>
@@ -2616,11 +2631,17 @@
   <data name="Just browsing?" xml:space="preserve">
     <value>見るだけですか？</value>
   </data>
+  <data name="Just for you — &quot;Production&quot;, &quot;my laptop&quot;, &quot;the test box&quot;. Nobody else sees it." xml:space="preserve">
+    <value>自分用の名前です — 「本番」「自分のノート」「テスト機」。ほかの人には見えません。</value>
+  </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>とにかく生き残る</value>
   </data>
   <data name="Keep" xml:space="preserve">
     <value>残す</value>
+  </data>
+  <data name="Keep it" xml:space="preserve">
+    <value>そのままにする</value>
   </data>
   <data name="Keep this account" xml:space="preserve">
     <value>このアカウントを残す</value>
@@ -2690,6 +2711,9 @@
   </data>
   <data name="Leave all unchecked to follow your non-regional communities." xml:space="preserve">
     <value>すべて未選択にすると、地域以外のコミュニティに従います。</value>
+  </data>
+  <data name="Leave blank if no hosted URL." xml:space="preserve">
+    <value>公開している URL がなければ空欄のままで。</value>
   </data>
   <data name="Leave empty if broken." xml:space="preserve">
     <value>Break Off の場合は空欄のままにしてください。</value>
@@ -3066,6 +3090,9 @@
   </data>
   <data name="More than a tracker" xml:space="preserve">
     <value>トラッカー以上のもの</value>
+  </data>
+  <data name="More tools · {0}" xml:space="preserve">
+    <value>ほかのツール · {0}</value>
   </data>
   <data name="Most clears stall below {0} — the steepest step on this board." xml:space="preserve">
     <value>ほとんどのクリアは{0}の手前で止まります——このボードで最も急な壁です。</value>
@@ -3465,6 +3492,9 @@
   <comment>Note Count</comment></data>
   <data name="Note Counts" xml:space="preserve">
 	  <value>ノーツ数</value>
+  </data>
+  <data name="Note — where did you share this?" xml:space="preserve">
+    <value>メモ — どこで共有しましたか?</value>
   </data>
   <data name="Notes" xml:space="preserve">
 	  <value>ノーツ</value>
@@ -4243,8 +4273,8 @@
     <value>公開</value>
     
   <comment>(on/offもしアカウントが公開が設定された)</comment></data>
-  <data name="Public profiles were switched on for community tools when this launched. Tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
-    <value>公開プロフィールは、この機能の開始時にコミュニティツール向けにオンになりました。オフにするまでツールはスコアを読み取れます。アカウントページからいつでもオフにできます。</value>
+  <data name="Public profiles default to sharing, so tools can read your scores until you turn it off — which you can do any time from your Account page." xml:space="preserve">
+    <value>公開プロフィールは既定で共有がオンなので、オフにするまでツールはあなたのスコアを読めます — アカウントページでいつでもオフにできます。</value>
   </data>
   <data name="Public tool" xml:space="preserve">
     <value>公開ツール</value>
@@ -4644,6 +4674,12 @@
   <data name="Revoke" xml:space="preserve">
     <value>取り消す</value>
   </data>
+  <data name="Revoke key" xml:space="preserve">
+    <value>キーを無効にする</value>
+  </data>
+  <data name="Revoke {0}?" xml:space="preserve">
+    <value>{0} を無効にしますか?</value>
+  </data>
   <data name="Revoked" xml:space="preserve">
     <value>取り消し済み</value>
   </data>
@@ -4672,11 +4708,11 @@
   <data name="Run import now" xml:space="preserve">
     <value>今すぐインポートを実行</value>
   </data>
-  <data name="Run it locally" xml:space="preserve">
-    <value>ローカルで動かす</value>
-  </data>
   <data name="Run PIU Center Crawl" xml:space="preserve">
     <value>PIU Centerクロールを実行</value>
+  </data>
+  <data name="Run PIU Scores locally" xml:space="preserve">
+    <value>PIU Scores をローカルで実行</value>
   </data>
   <data name="Run real events" xml:space="preserve">
     <value>リアルイベントを運営しよう</value>
@@ -4699,8 +4735,8 @@
   <data name="Save Scores" xml:space="preserve">
     <value>スコア保存</value>
   </data>
-  <data name="Save the URL, then press Verify. We'll POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} and your endpoint has to answer 200 with that challenge string in the body." xml:space="preserve">
-    <value>URL を保存してから「確認」を押してください。こちらから {"type":"url_verification","challenge":"..."} を POST するので、エンドポイントは本文にその challenge 文字列を含めて 200 を返す必要があります。</value>
+  <data name="Save the URL, then press Verify. We POST {&quot;type&quot;:&quot;url_verification&quot;,&quot;challenge&quot;:&quot;...&quot;} to it and your endpoint has ten seconds to answer 200 with that same challenge string somewhere in the body." xml:space="preserve">
+    <value>URL を保存してから確認を押してください。こちらから {"type":"url_verification","challenge":"..."} を POST するので、エンドポイントは 10 秒以内に 200 と、同じ challenge 文字列を本文のどこかに含めて返してください。</value>
   </data>
   <data name="Saved credentials loaded" xml:space="preserve">
     <value>保存済みの認証情報を読み込みました</value>
@@ -4924,6 +4960,9 @@
   </data>
   <data name="Send it as Authorization: Bearer. Shown once — we store a hash." xml:space="preserve">
     <value>Authorization: Bearer で送ってください。表示は一度きりで、保存するのはハッシュです。</value>
+  </data>
+  <data name="Send it like this" xml:space="preserve">
+    <value>こう送ります</value>
   </data>
   <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
     <value>PIU Tracker などのコミュニティツールへのスコア送信は、こちらで管理します:</value>
@@ -5461,6 +5500,9 @@
   <data name="Team Infinitesimal" xml:space="preserve">
     <value>Team Infinitesimal</value>
   </data>
+  <data name="Test delivery" xml:space="preserve">
+    <value>テスト送信</value>
+  </data>
   <data name="Test Scores" xml:space="preserve">
 	  <value>テストスコア</value>
   </data>
@@ -5990,8 +6032,8 @@
   <data name="Twists" xml:space="preserve">
     <value>捻り</value>
   </data>
-  <data name="Two keys can be active at once so you can rotate without downtime." xml:space="preserve">
-    <value>同時に2つのキーを有効にできるので、停止なしで入れ替えられます。</value>
+  <data name="Two can be active at once, so rotating one costs no downtime." xml:space="preserve">
+    <value>同時に 2 つまで有効にできるので、入れ替えても停止時間はありません。</value>
   </data>
   <data name="Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it." xml:space="preserve">
     <value>同じスキルのふたつの表示。左は上のブレンドに使われ、右はフォルダー統計と同じこのフォルダの数値です。</value>
@@ -6281,6 +6323,9 @@
   <data name="We forward the piugame.com session key so you run your own import." xml:space="preserve">
     <value>piugame.comのセッションキーを転送し、自分でインポートを実行できるようにします。</value>
   </data>
+  <data name="We generate the challenge and it is different every time, so there is nothing for you to enter here. The fixed secret is the header below." xml:space="preserve">
+    <value>challenge はこちらで生成し毎回変わるので、ここに入力するものはありません。固定の秘密は下のヘッダーです。</value>
+  </data>
   <data name="We hold a sealed key" xml:space="preserve">
     <value>私たちは封印された鍵を保管しています</value>
   </data>
@@ -6304,6 +6349,9 @@
   </data>
   <data name="Webhook timed out" xml:space="preserve">
     <value>Webhookがタイムアウトしました</value>
+  </data>
+  <data name="Webhooks" xml:space="preserve">
+    <value>Webhook</value>
   </data>
   <data name="Website" xml:space="preserve">
     <value>サイト</value>
@@ -6381,8 +6429,8 @@
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>取り組む目標（既定は称号ハント）</value>
   </data>
-  <data name="What we send you" xml:space="preserve">
-    <value>送る内容</value>
+  <data name="What we send you when one of your players imports. Nothing is a fine answer — plenty of tools just poll." xml:space="preserve">
+    <value>あなたのプレイヤーが取り込んだときに送る内容です。「なし」も立派な選択です — 多くのツールは API を見に行くだけです。</value>
   </data>
   <data name="What's it for" xml:space="preserve">
     <value>用途</value>
@@ -6575,6 +6623,9 @@
   </data>
   <data name="You're already a member of this community." xml:space="preserve">
     <value>すでにこのコミュニティのメンバーです。</value>
+  </data>
+  <data name="You're connected to every listed tool" xml:space="preserve">
+    <value>掲載されているすべてのツールに接続済みです</value>
   </data>
   <data name="You're connected to your own tool" xml:space="preserve">
     <value>自分のツールに接続済み</value>
