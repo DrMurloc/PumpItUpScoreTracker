@@ -360,9 +360,6 @@
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Uno zip di snapshot importa direttamente una versione dei dati già scaricata: stesso processo della scansione, senza download</value>
   </data>
-  <data name="A tool is how a program reads the scores players share with it. Create one to get a key." xml:space="preserve">
-    <value>Uno strumento è il modo in cui un programma legge i punteggi che i giocatori condividono con lui. Creane uno per ottenere una chiave.</value>
-  </data>
   <data name="About" xml:space="preserve">
     <value>Informazioni</value>
   </data>
@@ -4224,9 +4221,6 @@
   <data name="Poll the API instead." xml:space="preserve">
     <value>In alternativa interroga l'API.</value>
   </data>
-  <data name="Poll the API, or read the event feed." xml:space="preserve">
-    <value>Interroga l'API, o leggi il feed degli eventi.</value>
-  </data>
   <data name="Popular" xml:space="preserve">
     <value>Popolare</value>
   </data>
@@ -6686,9 +6680,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>Non ti sei ancora unito a nessuna comunità — trovane una qui sotto o crea la tua.</value>
-  </data>
-  <data name="You haven't made a tool yet" xml:space="preserve">
-    <value>Non hai ancora creato uno strumento</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>Tu hai il biglietto in codice</value>

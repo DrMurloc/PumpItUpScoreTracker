@@ -237,7 +237,7 @@
     /// </summary>
     private void GenerateSecret()
     {
-        _generated = "vfy_" + Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N")[..16];
+        _generated = WebhookVerificationSecret.New();
         _verificationSecret = _generated;
     }
 

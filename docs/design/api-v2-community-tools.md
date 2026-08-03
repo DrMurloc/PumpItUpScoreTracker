@@ -385,7 +385,7 @@ Rules, all non-negotiable:
   persistence. Serialising a session-mode body to a table writes a live credential in plaintext past
   a type that looks like it is protecting you.
 - **Session mode is therefore fire-and-forget, inline, during the import** — exactly what
-  `PiuTrackerClient` does today. No durable queue, no retry, no replay, no signature echo. The
+  `PiuTrackerClient` does today. No durable queue, no retry, no replay. The
   console shows delivered/failed and nothing behind it, and the UI says why rather than looking
   broken.
 
@@ -454,15 +454,31 @@ language, which most of these tools are.
 ### Endpoint verification
 
 **Nothing is delivered to an unverified URL, in any mode** (owner, 2026-08-02: "higher trust for
-people sharing their scores"). We POST `{type: url_verification, challenge}` and the endpoint must
-echo the challenge; `Tool.WebhookUrlVerifiedAt` records it, `Tool.CanDeliver` gates on it, and
-`SetWebhook` clears it whenever the URL changes.
+people sharing their scores"). The maker registers a **verification secret**; we store SHA-256 of
+it, POST `{type: url_verification}` carrying their outbound header, and their endpoint answers with
+the secret. `Tool.WebhookUrlVerifiedAt` records the pass, `Tool.CanDeliver` gates on it, and it is
+cleared whenever the URL *or* the secret changes.
 
 The first framing of this rule was graduated — required for session mode, optional elsewhere — on
 the grounds that an unauthenticated score endpoint is the maker's own risk. That was wrong, and the
 owner corrected it: an *unverified* URL is not the maker's risk at all. It means **we** send **our
 players'** scores to a host nobody proved they own. The header protects the maker's system; the
-handshake protects the player's data, and only one of those is ours to carry.
+verification protects the player's data, and only one of those is ours to carry.
+
+The second framing was also wrong, and the owner caught that one too (2026-08-03). It sent a
+challenge for the endpoint to echo — the Slack shape. Echoing back a value we just transmitted
+proves the endpoint can *receive*, not that it knows anything, so anything in the path satisfies it,
+including whatever a hijacked DNS record points at. Nothing we send is now sufficient to answer.
+
+**The two secrets must never be one value**, and this is the trap to watch for in review. The
+outbound header travels to the maker's server on every delivery, so anyone who receives one has
+read it; handing it back at verification time would collapse the second direction into the first.
+They are stored the two ways their directions demand — header **encrypted** (we resend it),
+verification secret **hashed** (we only compare).
+
+Not covered, deliberately: a hijack that happens *after* verification. We never re-verify, so no
+handshake design catches it; only a re-verification cadence would, and it is not worth the noise for
+three tools. Revisit if that stops being true.
 
 It proves cooperation at that moment, not domain ownership. A DNS TXT record or a `.well-known`
 path would prove more and cost real friction; three tools do not justify it yet.
@@ -504,8 +520,8 @@ Retention, and the arithmetic behind it:
 | | Kept | Why |
 |---|---|---|
 | Metadata (every delivery + activity row) | 14 days | ~1.3 MB / 6,500 rows at current volume |
-| Body — failed or pending | 7 days | replay and signature echo need the exact bytes |
-| Body — last success per tool | until superseded | the signature echo sample |
+| Body — failed or pending | 7 days | replay needs the exact bytes |
+| Body — last success per tool | until superseded | the sample the console shows a maker |
 | Body — other successes | not stored | nobody replays a success |
 | Body — session mode | **never** | it is a live credential |
 
@@ -578,9 +594,9 @@ Three, in order of value per unit of build:
    chart picker using the existing `ChartSelector` is a later nicety. **Always `"test": true`, always
    a `test-` delivery-id prefix, and always the maker's own account** — a test can never carry
    another player's scores.
-2. **Signature echo** — the exact raw bytes signed for the last delivery, next to the computed
-   signature. HMAC mismatches are almost always re-serialisation changing whitespace before hashing,
-   and this turns two days into twenty minutes.
+2. **Last delivery body** — the exact raw bytes we sent, so a maker comparing against what their
+   handler parsed can see the difference rather than guess at it. (This began as a *signature* echo,
+   which went with the HMAC in D1.)
 3. **Replay** — re-send a failed delivery on demand. Nearly free given the durable table. Rows past
    the 7-day body window render **Body expired** with the button disabled, because a maker who hits
    that limit in month two will otherwise file it as a bug.
@@ -854,7 +870,7 @@ All done at C30 except the two the deletion forced earlier (API.md and CLAUDE.md
 - **Grandfather `SyncPiuTracker` users into an explicit share.**
 - **Webhook payload identity**: mix name, PIU Scores user id, PIU Scores username, PIUGame tag.
 - **Makers are auto-connected to their own tool** on creation.
-- **Signature echo and replay both ship.**
+- **Replay ships.** Signature echo did too, and left with the HMAC it echoed (D1).
 - **Prose in the repo, interactive on-site.**
 - **Tools cascade on account deletion** rather than blocking it; no de-listing during the grace
   window and no notification to connected players.

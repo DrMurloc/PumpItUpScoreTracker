@@ -28,12 +28,6 @@ internal static class WebhookSecrets
     /// </summary>
     public const string VerificationType = "url_verification";
 
-    /// <summary>What a generated verification secret looks like. A maker may type their own.</summary>
-    public static string MintVerificationSecret()
-    {
-        return "vfy_" + Convert.ToHexString(RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
-    }
-
     /// <summary>
     ///     A plain SHA-256, for the same reason the API keys use one: we compare against a value the
     ///     maker holds, never derive one, and the input is high-entropy when generated. A maker who

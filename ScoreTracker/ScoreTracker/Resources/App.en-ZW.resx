@@ -360,9 +360,6 @@
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>GRO mrpmaglmurp ro murgmrblarg gro groblgrlmagl gromurm grrglurgmurp grorpmrglblgrl - blubmurm blubgrrglmurm lurg mrp morgmurg, mrp maglplglblub</value>
   </data>
-  <data name="A tool is how a program reads the scores players share with it. Create one to get a key." xml:space="preserve">
-    <value>Rorgl murgm murgargl murp blurgl Mgrlgmrg Morp murgblub. Murpmurp murmo blu murgm blarglurp.</value>
-  </data>
   <data name="About" xml:space="preserve">
     <value>Rrglrmrgl</value>
   </data>
@@ -4224,9 +4221,6 @@
   <data name="Poll the API instead." xml:space="preserve">
     <value>Marogl bo API.</value>
   </data>
-  <data name="Poll the API, or read the event feed." xml:space="preserve">
-    <value>Murgargl API, arplo blurgl murgm blaromurp.</value>
-  </data>
   <data name="Popular" xml:space="preserve">
     <value>Grolurgmrp</value>
   </data>
@@ -6686,9 +6680,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>Blub blubmurm urgmr ro grglrglplglblub argl — blubgl argl blgrlblarg argl mrpmurp gromurp grrgl.</value>
-  </data>
-  <data name="You haven't made a tool yet" xml:space="preserve">
-    <value>Gromurp bo murpmurp Rorgl blorm</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>Blub rglmr mrp urgrgl grogrgl</value>

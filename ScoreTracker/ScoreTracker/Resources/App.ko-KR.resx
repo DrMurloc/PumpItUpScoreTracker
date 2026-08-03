@@ -360,9 +360,6 @@
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
   </data>
-  <data name="A tool is how a program reads the scores players share with it. Create one to get a key." xml:space="preserve">
-    <value>도구는 플레이어가 공유한 점수를 프로그램이 읽는 방법입니다. 하나 만들면 키가 발급됩니다.</value>
-  </data>
   <data name="About" xml:space="preserve">
     <value>Score Tracker 소개</value>
   </data>
@@ -4188,9 +4185,6 @@
   <data name="Poll the API instead." xml:space="preserve">
     <value>대신 API를 폴링하세요.</value>
   </data>
-  <data name="Poll the API, or read the event feed." xml:space="preserve">
-    <value>API를 폴링하거나 이벤트 피드를 읽으세요.</value>
-  </data>
   <data name="Popular" xml:space="preserve">
     <value>인기</value>
   </data>
@@ -6616,9 +6610,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>아직 가입한 커뮤니티가 없습니다 — 아래에서 찾거나 직접 만들어보세요.</value>
-  </data>
-  <data name="You haven't made a tool yet" xml:space="preserve">
-    <value>아직 만든 도구가 없습니다</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>당신은 암호화된 메모를 가지고 있습니다</value>

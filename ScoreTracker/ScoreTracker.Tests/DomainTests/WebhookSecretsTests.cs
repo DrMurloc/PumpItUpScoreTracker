@@ -1,4 +1,5 @@
 ﻿using System;
+using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Domain;
 using Xunit;
 
@@ -59,14 +60,20 @@ public sealed class WebhookSecretsTests
         Assert.False(WebhookSecrets.Answers(body, Hash));
     }
 
+    /// <summary>
+    ///     The console offers to generate one, and it must come from here rather than be assembled
+    ///     at the call site — a secret whose strength nobody reasoned about is the whole failure
+    ///     this scheme exists to avoid.
+    /// </summary>
     [Fact]
-    public void AGeneratedSecretIsPrefixedAndUnique()
+    public void AGeneratedSecretIsPrefixedLongAndUnique()
     {
-        var first = WebhookSecrets.MintVerificationSecret();
-        var second = WebhookSecrets.MintVerificationSecret();
+        var first = WebhookVerificationSecret.New();
+        var second = WebhookVerificationSecret.New();
 
         Assert.StartsWith("vfy_", first);
         Assert.NotEqual(first, second);
+        Assert.Equal(WebhookVerificationSecret.Prefix.Length + 48, first.Length);
     }
 
     /// <summary>

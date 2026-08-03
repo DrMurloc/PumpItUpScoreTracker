@@ -360,9 +360,6 @@
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
   </data>
-  <data name="A tool is how a program reads the scores players share with it. Create one to get a key." xml:space="preserve">
-    <value>ツールは、プレイヤーが共有したスコアをプログラムが読むための仕組みです。作るとキーが発行されます。</value>
-  </data>
   <data name="About" xml:space="preserve">
     <value>概要</value>
   </data>
@@ -4224,9 +4221,6 @@
   <data name="Poll the API instead." xml:space="preserve">
     <value>代わりに API をポーリングしてください。</value>
   </data>
-  <data name="Poll the API, or read the event feed." xml:space="preserve">
-    <value>APIをポーリングするか、イベントフィードを読んでください。</value>
-  </data>
   <data name="Popular" xml:space="preserve">
     <value>人気</value>
   </data>
@@ -6686,9 +6680,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>まだコミュニティに参加していません。下から探すか、自分で作成しましょう。</value>
-  </data>
-  <data name="You haven't made a tool yet" xml:space="preserve">
-    <value>まだツールを作っていません</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>あなたは暗号化されたメモを持っています</value>

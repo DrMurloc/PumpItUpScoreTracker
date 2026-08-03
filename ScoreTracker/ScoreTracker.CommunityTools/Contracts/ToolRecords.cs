@@ -83,6 +83,26 @@ public sealed record ApiKeyRecord(
 public sealed record MintedApiKey(Guid Id, string Key, DateTimeOffset? ExpiresAt);
 
 /// <summary>
+///     Generates the secret a maker's endpoint answers a verification request with.
+///     <para>
+///         Public because the console offers to generate one and the rest of the vertical is
+///         internal. Left as the vertical's own function rather than a page's: a secret assembled
+///         at the call site is a secret whose strength nobody reasoned about, and this one is the
+///         difference between an endpoint proving itself and merely answering.
+///     </para>
+/// </summary>
+public static class WebhookVerificationSecret
+{
+    public const string Prefix = "vfy_";
+
+    public static string New()
+    {
+        return Prefix + Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator
+            .GetBytes(24)).ToLowerInvariant();
+    }
+}
+
+/// <summary>
 ///     A live invite link and the maker's private note about it. The note is maker-only — the player
 ///     who follows the link is never shown it.
 /// </summary>

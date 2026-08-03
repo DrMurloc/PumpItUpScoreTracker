@@ -360,9 +360,6 @@
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching</value>
   </data>
-  <data name="A tool is how a program reads the scores players share with it. Create one to get a key." xml:space="preserve">
-    <value>A tool is how a program reads the scores players share with it. Create one to get a key.</value>
-  </data>
   <data name="About" xml:space="preserve">
     <value>About</value>
   </data>
@@ -4224,9 +4221,6 @@
   <data name="Poll the API instead." xml:space="preserve">
     <value>Poll the API instead.</value>
   </data>
-  <data name="Poll the API, or read the event feed." xml:space="preserve">
-    <value>Poll the API, or read the event feed.</value>
-  </data>
   <data name="Popular" xml:space="preserve">
     <value>Popular</value>
   </data>
@@ -6686,9 +6680,6 @@
   </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>You haven't joined any communities yet — find one below or create your own.</value>
-  </data>
-  <data name="You haven't made a tool yet" xml:space="preserve">
-    <value>You haven't made a tool yet</value>
   </data>
   <data name="You hold the coded note" xml:space="preserve">
     <value>You hold the coded note</value>
