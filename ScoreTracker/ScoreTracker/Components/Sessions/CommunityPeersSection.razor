@@ -9,14 +9,19 @@
    Deliberately no "#X of Y" here: on a seven-person board a place is a fact about who has
    played the chart, not about standing, so the number lives in the dialog where it can name
    the scope it counted. *@
-<div class="sbd-section" data-testid="community-peers">
-    <div class="sbd-section-head">
-        <span class="sbd-eyebrow">@L["Community Peers"]</span>
-        @if (Boards.Count > 0)
-        {
-            <span class="sbd-section-note">@L["Nearest competitive level first"]</span>
-        }
-    </div>
+@* Headless when the Rivals toggle wraps it: that host owns the heading, because the heading is
+   what the toggle switches. *@
+<div class="@(Headless ? "" : "sbd-section")" data-testid="community-peers">
+    @if (!Headless)
+    {
+        <div class="sbd-section-head">
+            <span class="sbd-eyebrow">@L["Community Peers"]</span>
+            @if (Boards.Count > 0)
+            {
+                <span class="sbd-section-note">@L["Nearest competitive level first"]</span>
+            }
+        </div>
+    }
 
     @if (Boards.Count == 0)
     {
@@ -35,10 +40,8 @@
             <div class="sbd-peerboard">
                 <div class="sbd-peerboard-head">
                     <DifficultyBubble Chart="board.Chart" Small="true"></DifficultyBubble>
-                    <span class="sbd-peerboard-name">@board.Chart.Song.Name</span>
-                    <MudIconButton Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small"
-                                   aria-label="@L["Leaderboard"]" Class="sbd-lbbtn ml-auto"
-                                   OnClick="() => OnOpenLeaderboard.InvokeAsync(board.Chart.Id)"></MudIconButton>
+                    <MudLink Href="javascript:void(0)" Class="sbd-peerboard-name"
+                             @onclick="() => OnOpenChart.InvokeAsync(board.Chart)">@board.Chart.Song.Name</MudLink>
                 </div>
                 @* Places are real standings across the whole club, so they skip: only the
                    clubmates nearest your competitive level are shown. *@
@@ -86,5 +89,6 @@
 
     /// <summary>Resolved once for the page — UserLabel needs the whole user for its flag.</summary>
     [Parameter] public IReadOnlyDictionary<Guid, User> Peers { get; set; } = new Dictionary<Guid, User>();
-    [Parameter] public EventCallback<Guid> OnOpenLeaderboard { get; set; }
+    [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
+    [Parameter] public bool Headless { get; set; }
 }

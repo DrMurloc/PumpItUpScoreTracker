@@ -1,0 +1,243 @@
+@using ScoreTracker.Rivals.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using Microsoft.AspNetCore.Components.Web
+@namespace ScoreTracker.Web.Components.Rivals
+
+@* One rival, compared. Takes a RESOLVED SUBJECT rather than a user id, so the sections it can't
+   fill are absent with a reason instead of empty (docs/design/rivals.md D29). A board-only rival
+   is short by construction: the mirror covers level 20+ at roughly 300 deep, so "the charts we're
+   both on" is the honest unit where a folder would be a lie.
+
+   Win/loss reuses the row-glow vocabulary — ahead is the community green, behind is the rival
+   red. One vocabulary, two uses. *@
+@if (Record == null)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2"/>
+}
+else
+{
+    <div class="rvl-h2h-top">
+        <span class="rvl-h2h-who">
+            <MudAvatar Size="Size.Medium">
+                <MudImage Src="@YourAvatar" Alt=""></MudImage>
+            </MudAvatar>
+            <b>@L["You"]</b>
+        </span>
+        <span class="rvl-h2h-vs">@L["vs"]</span>
+        <span class="rvl-h2h-who">
+            <MudAvatar Size="Size.Medium">
+                <MudImage Src="@(Record.Subject.Avatar?.ToString() ?? DefaultAvatar)" Alt=""></MudImage>
+            </MudAvatar>
+            <b>@Record.Subject.DisplayName</b>
+            @if (Record.Subject.IsGhost)
+            {
+                <span class="rvl-tag rvl-tag-ghost">@L["Board only"]</span>
+            }
+        </span>
+    </div>
+
+    <div class="rvl-tiles">
+        <div class="rvl-tile rvl-tile-win">
+            <b>@Record.YouAhead</b><span>@L["You ahead"]</span>
+        </div>
+        <div class="rvl-tile rvl-tile-lose">
+            <b>@Record.TheyAhead</b><span>@L["They ahead"]</span>
+        </div>
+        <div class="rvl-tile">
+            <b>@Record.Shared</b><span>@L["Shared"]</span>
+        </div>
+    </div>
+
+    <MudCard Class="mt-3">
+        <MudCardContent>
+            <div class="sbd-section-head">
+                <span class="sbd-eyebrow">@BoardTitle</span>
+                <span class="sbd-section-note">@L["{0} charts", Record.Rows.Count]</span>
+            </div>
+            @* Only a site rival has folders to pick between. A ghost's unit is "boards we're both
+               on" — the mirror covers a scattering of level 20+ boards, not folders — so a picker
+               there would offer a filter the population cannot honour. *@
+            @if (Record.Subject.Can(RivalCapabilities.FolderCompare))
+            {
+                <div class="rvl-cmp-folder">
+                    <FolderPicker Type="FolderType" Level="FolderLevel" ShowCoOp="false"
+                                  FolderChanged="OnFolder"></FolderPicker>
+                </div>
+            }
+            @if (Record.Rows.Count == 0)
+            {
+                <div class="sbd-empty">
+                    <b>@L["Nothing to compare yet"]</b>
+                    <span>@EmptyReason</span>
+                </div>
+            }
+            else
+            {
+                @* The community folder-compare table, same vocabulary: sortable columns, the
+                   song's art, and the letter grade + plate every other board prints. It was a
+                   bare div list of numbers, which read as a lesser table than the one the
+                   community page shows for the same question. *@
+                <MudTable T="CompareRow" Items="Rows" Breakpoint="Breakpoint.None" Dense="true"
+                          Class="olb-board-table olb-pager-tight rvl-cmp-table" data-testid="rival-compare-table">
+                    <HeaderContent>
+                        <MudTh>
+                            <MudTableSortLabel T="CompareRow" SortBy="@(r => r.SongName)">@L["Chart"]</MudTableSortLabel>
+                        </MudTh>
+                        <MudTh Style="text-align:right">
+                            <MudTableSortLabel T="CompareRow" SortBy="@(r => r.Row.YourScore ?? -1)">@L["You"]</MudTableSortLabel>
+                        </MudTh>
+                        <MudTh Style="text-align:right">
+                            <MudTableSortLabel T="CompareRow" SortBy="@(r => r.Row.TheirScore ?? -1)">@Record.Subject.DisplayName</MudTableSortLabel>
+                        </MudTh>
+                        @* The two scores are right there; the subtraction is the first thing
+                           worth losing when the row runs out of room. *@
+                        <MudTh Style="text-align:right" Class="rvl-cmp-diff-col">
+                            <MudTableSortLabel T="CompareRow" SortBy="@(r => r.Difference ?? int.MinValue)">@L["Difference"]</MudTableSortLabel>
+                        </MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>
+                            @if (context.Chart is { } chart)
+                            {
+                                @* Art, bubble and name are one target, not three: they name one
+                                   chart, so anything less than the whole cell is a hit area you
+                                   have to aim at. *@
+                                <div class="rvl-cmp-chart" role="button" tabindex="0"
+                                     @onclick="() => OnOpenChart.InvokeAsync(chart)"
+                                     @onkeydown="e => OnChartKey(e, chart)">
+                                    <SongImage Song="chart.Song" Small="true"></SongImage>
+                                    <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                                    <span class="rvl-cmp-song olb-hide-mobile" title="@chart.Song.Name">@chart.Song.Name</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="rvl-cmp-chart">
+                                    <span class="rvl-cmp-song">@L["Unknown chart"]</span>
+                                </div>
+                            }
+                        </MudTd>
+                        <MudTd Style="text-align:right">
+                            <span class="@YoursClass(context.Row) sbd-score-stack">
+                                <ScoreBreakdown Score="@(context.Row.YourScore == null ? null : PhoenixScore.From(context.Row.YourScore.Value))"
+                                                Plate="context.Row.YourPlate" IsBroken="context.Row.YourIsBroken"
+                                                Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
+                            </span>
+                        </MudTd>
+                        <MudTd Style="text-align:right">
+                            <span class="@TheirsClass(context.Row) sbd-score-stack">
+                                @* The mirror records no plates, so an official row must not be
+                                   handed an inferred one. *@
+                                <ScoreBreakdown Score="@(context.Row.TheirScore == null ? null : PhoenixScore.From(context.Row.TheirScore.Value))"
+                                                Plate="context.Row.TheirPlate" IsBroken="context.Row.TheirIsBroken"
+                                                InferPlate="@(context.Row.TheirSource != RivalScoreSource.Official)"
+                                                Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
+                                @if (context.Row.TheirSource == RivalScoreSource.Official)
+                                {
+                                    <span class="rival-official-mark" title="@L["Official board data"]">*</span>
+                                }
+                            </span>
+                        </MudTd>
+                        <MudTd Style="text-align:right" Class="rvl-cmp-diff-col">
+                            <span class="@DeltaClass(context.Row)">@Delta(context.Row)</span>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+                @if (Footnote is { Length: > 0 } footnote)
+                {
+                    <p class="cld-footnote">@footnote</p>
+                }
+            }
+        </MudCardContent>
+    </MudCard>
+
+    @if (!Record.Subject.Can(RivalCapabilities.FolderCompare))
+    {
+        @* Absent with a reason, never rendered empty. The sentence is also the promotion
+           promise: it fills itself the day they import. *@
+        <div class="rvl-absent mt-3">
+            @L["Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports.", Record.Subject.DisplayName]
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public RivalHeadToHeadRecord? Record { get; set; }
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    [Parameter] public string YourAvatar { get; set; } = DefaultAvatar;
+
+    /// <summary>The mix the scores belong to — letter-grade floors moved in Phoenix 2.</summary>
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>
+    ///     The folder being compared. A null level is "All folders" — the head-to-head query
+    ///     treats a missing folder as unfiltered, which is every chart you have scored.
+    /// </summary>
+    [Parameter] public ChartType FolderType { get; set; } = ChartType.Double;
+
+    [Parameter] public int? FolderLevel { get; set; }
+
+    [Parameter] public EventCallback<(ChartType Type, int? Level)> FolderChanged { get; set; }
+
+    private Task OnFolder((ChartType Type, int Level) folder) =>
+        FolderChanged.InvokeAsync((folder.Type, folder.Level));
+
+    /// <summary>The cell is a button, so it answers to the keyboard like one.</summary>
+    [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
+
+    private Task OnChartKey(KeyboardEventArgs e, Chart chart) =>
+        e.Key is "Enter" or " " ? OnOpenChart.InvokeAsync(chart) : Task.CompletedTask;
+
+    private const string DefaultAvatar = "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
+
+    // A folder for a site rival, "boards we're both on" for a board-only one. Same table, and the
+    // heading is what says which unit is being counted.
+    private string BoardTitle => Record!.Subject.Can(RivalCapabilities.FolderCompare)
+        ? L["Shared charts"]
+        : L["Boards you're both on"];
+
+    private string EmptyReason => Record!.Subject.Can(RivalCapabilities.FolderCompare)
+        ? L["Neither of you has scores on the same charts yet."]
+        : L["They haven't placed on any board you've played."];
+
+    private string? Footnote => Record!.OfficialAsOf is { } asOf
+        ? L["* Official board data, as of {0}. Boards cover level 20+ only.", asOf.ToString("d MMM")]
+        : null;
+
+    /// <summary>Sortable projection: the chart resolved once, plus the delta the table sorts on.</summary>
+    private sealed record CompareRow(RivalHeadToHeadRow Row, Chart? Chart, string SongName, int? Difference);
+
+    private IEnumerable<CompareRow> Rows => Record!.Rows.Select(r =>
+    {
+        var chart = Charts.TryGetValue(r.ChartId, out var found) ? found : null;
+        return new CompareRow(r, chart, chart?.Song.Name.ToString() ?? string.Empty,
+            r.YourScore != null && r.TheirScore != null ? r.YourScore - r.TheirScore : null);
+    });
+
+    private string YoursClass(RivalHeadToHeadRow row) =>
+        row.YourScore != null && row.TheirScore != null && row.YourScore > row.TheirScore
+            ? "rvl-cmp-score rvl-ahead"
+            : "rvl-cmp-score rvl-muted";
+
+    private string TheirsClass(RivalHeadToHeadRow row) =>
+        row.YourScore != null && row.TheirScore != null && row.TheirScore > row.YourScore
+            ? "rvl-cmp-score rvl-behind"
+            : "rvl-cmp-score rvl-muted";
+
+    private string DeltaClass(RivalHeadToHeadRow row) =>
+        row.YourScore == null || row.TheirScore == null
+            ? "rvl-cmp-delta rvl-muted"
+            : row.YourScore > row.TheirScore
+                ? "rvl-cmp-delta rvl-ahead"
+                : "rvl-cmp-delta rvl-behind";
+
+    private static string Delta(RivalHeadToHeadRow row)
+    {
+        if (row.YourScore == null || row.TheirScore == null) return "";
+        var delta = row.YourScore.Value - row.TheirScore.Value;
+        return delta >= 0 ? $"+{delta:N0}" : $"−{Math.Abs(delta):N0}";
+    }
+}

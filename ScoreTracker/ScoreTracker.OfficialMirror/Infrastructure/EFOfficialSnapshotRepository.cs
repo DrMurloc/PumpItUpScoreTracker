@@ -433,6 +433,69 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArrayAsync(ct);
     }
 
+    public async Task<IReadOnlyList<string>> SearchPlayerNamesInSnapshot(int snapshotId, string term,
+        int take, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(term) || take <= 0) return Array.Empty<string>();
+
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        // Player-first with an EXISTS, not placements-first with a DISTINCT. The placement table
+        // holds every board position in the snapshot and the player dimension holds one row per
+        // tag, so filtering the dimension by name and then testing membership reads orders of
+        // magnitude fewer rows than de-duplicating the join's output.
+        return await database.Set<OfficialPlayerEntity>()
+            .Where(x => x.Username.Contains(term))
+            .Where(x => database.Set<OfficialLeaderboardPlacementEntity>()
+                .Any(p => p.SnapshotId == snapshotId && p.PlayerId == x.Id))
+            .OrderBy(x => x.Username)
+            .Select(x => x.Username)
+            .Take(take)
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<string>> FilterNamesInSnapshot(int snapshotId,
+        IReadOnlyCollection<string> names, CancellationToken ct)
+    {
+        if (names.Count == 0) return Array.Empty<string>();
+
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        return await database.Set<OfficialPlayerEntity>()
+            .Where(x => names.Contains(x.Username))
+            .Where(x => database.Set<OfficialLeaderboardPlacementEntity>()
+                .Any(p => p.SnapshotId == snapshotId && p.PlayerId == x.Id))
+            .Select(x => x.Username)
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<PlayerDimension>> GetPlayersByUsernames(MixEnum mix,
+        IReadOnlyCollection<string> usernames, CancellationToken ct)
+    {
+        if (usernames.Count == 0) return Array.Empty<PlayerDimension>();
+        // Lookups accept either scrape shape — storage holds the normalized tag.
+        var tags = usernames.Select(OfficialPlayerTag.Normalize).Distinct().ToArray();
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        var entities = await database.Set<OfficialPlayerEntity>()
+            .Where(p => p.MixId == mixId && tags.Contains(p.Username))
+            .ToArrayAsync(ct);
+        return entities.Select(ToPlayer).ToArray();
+    }
+
+    public async Task<IReadOnlyList<PlayerChartPlacement>> GetChartPlacementsFor(int snapshotId,
+        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, CancellationToken ct)
+    {
+        if (playerIds.Count == 0 || chartIds.Count == 0) return Array.Empty<PlayerChartPlacement>();
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        return await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.SnapshotId == snapshotId && playerIds.Contains(p.PlayerId))
+            .Join(database.Set<OfficialLeaderboardEntity>()
+                    .Where(b => b.LeaderboardType == LeaderboardTypes.Chart
+                                && b.ChartId != null && chartIds.Contains(b.ChartId.Value)),
+                p => p.LeaderboardId, b => b.Id,
+                (p, b) => new PlayerChartPlacement(p.PlayerId, b.ChartId!.Value, p.Place, p.Score))
+            .ToArrayAsync(ct);
+    }
+
     public async Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId,
         PlacementScope scope, CancellationToken ct)
     {

@@ -338,4 +338,59 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
         Assert.Equal(1, popularity.Single(p => p.ChartId == chartA).Place);
         Assert.Equal(2, popularity.Single(p => p.ChartId == chartB).Place);
     }
+
+    [Fact]
+    public async Task TagSearchMatchesPartOfATagAndCapsWhatItReturns()
+    {
+        var (snapshotId, _, _, _) = await SeedSealedSnapshot(Week1);
+
+        var matched = await Snapshots()
+            .SearchPlayerNamesInSnapshot(snapshotId, "li", 10, CancellationToken.None);
+        var capped = await Snapshots()
+            .SearchPlayerNamesInSnapshot(snapshotId, "b", 1, CancellationToken.None);
+
+        Assert.Equal(new[] { "alice" }, matched);
+        Assert.Single(capped);
+    }
+
+    [Fact]
+    public async Task TagSearchExcludesATagThatLeftTheBoards()
+    {
+        // The dimension keeps every tag ever seen; this snapshot is the population a PICKER may
+        // offer, because a departed tag is a permanently empty rivalry (rivals.md D21).
+        var (snapshotId, _, _, _) = await SeedSealedSnapshot(Week1);
+        await Snapshots().EnsurePlayers(MixEnum.Phoenix2, new[] { ("alistair", (Uri?)null) }, Week1,
+            CancellationToken.None);
+
+        var matched = await Snapshots()
+            .SearchPlayerNamesInSnapshot(snapshotId, "ali", 10, CancellationToken.None);
+
+        Assert.Equal(new[] { "alice" }, matched);
+    }
+
+    [Fact]
+    public async Task FilterNamesKeepsOnlyTheTagsThatPlacedInTheSnapshot()
+    {
+        var (snapshotId, _, _, _) = await SeedSealedSnapshot(Week1);
+        await Snapshots().EnsurePlayers(MixEnum.Phoenix2, new[] { ("departed", (Uri?)null) }, Week1,
+            CancellationToken.None);
+
+        var current = await Snapshots().FilterNamesInSnapshot(snapshotId,
+            new[] { "alice", "departed", "never-existed" }, CancellationToken.None);
+
+        Assert.Equal(new[] { "alice" }, current);
+    }
+
+    [Fact]
+    public async Task TagSearchAsksTheDatabaseForNothingWhenThereIsNothingToAskFor()
+    {
+        var (snapshotId, _, _, _) = await SeedSealedSnapshot(Week1);
+
+        Assert.Empty(await Snapshots().SearchPlayerNamesInSnapshot(snapshotId, "  ", 10,
+            CancellationToken.None));
+        Assert.Empty(await Snapshots().SearchPlayerNamesInSnapshot(snapshotId, "alice", 0,
+            CancellationToken.None));
+        Assert.Empty(await Snapshots().FilterNamesInSnapshot(snapshotId, Array.Empty<string>(),
+            CancellationToken.None));
+    }
 }

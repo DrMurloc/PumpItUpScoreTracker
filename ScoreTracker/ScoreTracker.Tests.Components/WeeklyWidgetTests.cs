@@ -15,6 +15,8 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.HomePage.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.Rivals.Contracts;
+using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -51,9 +53,13 @@ public sealed class WeeklyWidgetTests : ComponentTestBase
             .ReturnsAsync(new Dictionary<Guid, double>());
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { _placed, _alive, _empty });
-        // No communities — the glow reader short-circuits to an empty set.
+        // No communities and no rivals — the glow reader short-circuits to empty sets. Both
+        // halves are needed: the widget asks for each, and an unstubbed query hands the reader
+        // a null to enumerate.
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RivalSubject>());
 
         _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]

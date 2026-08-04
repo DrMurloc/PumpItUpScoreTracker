@@ -279,7 +279,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
                 chart.Song.Name + " " + chart.DifficultyString, chart.Id, chart.Type.ToString(),
                 chart.Level, ct);
             var ids = await players.Resolve(
-                board.Entries.Select(e => (e.Username, (Uri?)e.AvatarUrl)).ToArray(), ct);
+                board.Entries.Select(e => (e.Username, e.AvatarUrl)).ToArray(), ct);
             var rows = Placements.Olympic(board.Entries, e => (int)e.Score)
                 .Select(p => new PlacementRow(dim.Id, ids[p.Item.Username], p.Place, (int)p.Item.Score))
                 .ToArray();

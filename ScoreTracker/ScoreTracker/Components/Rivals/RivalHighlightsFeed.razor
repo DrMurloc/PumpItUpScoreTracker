@@ -1,0 +1,134 @@
+@using System.Globalization
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Models
+@namespace ScoreTracker.Web.Components.Rivals
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+@* The rivals feed. Every row here is a rival by construction, so a red ring would mark the whole
+   list and therefore nothing — the only marker that says anything is GREEN, for a rival who is
+   also a clubmate. The community feed does the mirror image (docs/design/rivals.md D35). *@
+@if (Records.Count == 0)
+{
+    <div class="sbd-empty" data-testid="rival-feed-empty">
+        <b>@L["No wins from your rivals yet"]</b>
+        @* Ghosts never appear here — wins come from imports and a board-only player has none.
+           The empty state has to name what would fill it (D30). *@
+        <span>@L["Rare PGs, big titles and top scores from the piuscores players you rival show up here. Board-only rivals don't post wins."]</span>
+    </div>
+}
+else
+{
+    @* The arrows are the affordance on the rail — the native sideways scrollbar is hidden,
+       because it reads as a stray control rather than a hint. They exist only in rail mode. *@
+    <div class="@(Rail ? "rvl-rail-wrap" : "")">
+        @if (Rail)
+        {
+            <button type="button" class="rvl-rail-arrow prev" aria-label="@L["Scroll left"]"
+                    data-testid="rival-feed-prev" @onclick="() => Scroll(-1)">
+                <MudIcon Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small"></MudIcon>
+            </button>
+            <button type="button" class="rvl-rail-arrow next" aria-label="@L["Scroll right"]"
+                    data-testid="rival-feed-next" @onclick="() => Scroll(1)">
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small"></MudIcon>
+            </button>
+        }
+    <div class="dash-ch-feed @(Rail ? "rvl-feed-rail" : "")" data-testid="rival-feed" @ref="_rail">
+        @foreach (var record in Records)
+        {
+            <div class="@RowClass(record)">
+                <MudAvatar Size="Size.Small" Class="dash-ch-avatar">
+                    <MudImage Src="@record.Avatar.ToString()" Alt="@record.PlayerName"/>
+                </MudAvatar>
+                <div class="dash-ch-body">
+                    <div class="dash-ch-head">
+                        @if (record.IsPublic)
+                        {
+                            <MudLink Href="@SessionsLink(record)" Typo="Typo.body2" Class="dash-ch-name">@record.PlayerName</MudLink>
+                        }
+                        else
+                        {
+                            <span class="dash-ch-name">@record.PlayerName</span>
+                        }
+                        <span class="dash-ch-time dash-muted">@Relative(record.OccurredAt)</span>
+                    </div>
+                    <div class="dash-ch-wins">
+                        @foreach (var win in record.Wins)
+                        {
+                            <div class="dash-ch-win">
+                                @if (win.ChartId is { } chartId && Charts.TryGetValue(chartId, out var chart))
+                                {
+                                    <span class="dash-ch-chart">
+                                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                                        <span class="dash-ch-song">@chart.Song.Name</span>
+                                    </span>
+                                }
+                                <span class="dash-ch-why">@Caption(win)</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    </div>
+    <p class="cld-footnote">@L["Green marks a rival who's also in one of your communities."]</p>
+}
+
+@inject ScoreTracker.Domain.SecondaryPorts.IDateTimeOffsetAccessor Clock
+@code {
+    private ElementReference _rail;
+    private IJSObjectReference? _helpers;
+
+    private async Task Scroll(int direction)
+    {
+        _helpers ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await _helpers.InvokeVoidAsync("scrollRail", _rail, direction);
+    }
+
+    /// <summary>
+    ///     Lay the feed out as a horizontal strip rather than a column. The Rivals page sets it
+    ///     so the feed can sit above the fold without pushing the roster off screen; the home
+    ///     widget leaves it false, because a widget IS a column.
+    /// </summary>
+    [Parameter] public bool Rail { get; set; }
+
+    [Parameter] public IReadOnlyList<PlayerHighlightRecord> Records { get; set; } = Array.Empty<PlayerHighlightRecord>();
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    [Parameter] public IReadOnlySet<Guid> Clubmates { get; set; } = new HashSet<Guid>();
+
+    private string RowClass(PlayerHighlightRecord record) =>
+        Clubmates.Contains(record.UserId) ? "dash-ch-entry is-community" : "dash-ch-entry";
+
+    private static string SessionsLink(PlayerHighlightRecord r) =>
+        r.SessionId == null ? $"/Player/{r.UserId}/Sessions" : $"/Player/{r.UserId}/Sessions?session={r.SessionId}";
+
+    private string Relative(DateTimeOffset when)
+    {
+        var span = Clock.Now - when;
+        if (span.TotalMinutes < 1) return L["now"];
+        if (span.TotalHours < 1) return $"{(int)span.TotalMinutes}m";
+        if (span.TotalDays < 1) return $"{(int)span.TotalHours}h";
+        if (span.TotalDays < 7) return $"{(int)span.TotalDays}d";
+        return $"{(int)(span.TotalDays / 7)}w";
+    }
+
+    private string Caption(SignificantWin win) => win.Kind switch
+    {
+        WinKind.NotablePg => $"💎 {L["only {0} have PG", Pct(win.RarityShare)]}",
+        WinKind.TopPumbility => $"👑 {L["#{0} PUMBILITY", win.Rank ?? 0]}",
+        WinKind.PeerElite => win.Rank == 1
+            ? $"📊 {L["#1 of all peers"]}"
+            : $"📊 {L["top {0}% of peers", Math.Max(1, (int)Math.Ceiling((win.RarityShare ?? 0) * 100))]}",
+        WinKind.FolderFirst => $"🆕 {L["{0} pass in this folder", Ordinal(win.Rank ?? 0)]}",
+        WinKind.FolderComplete => $"🎉 {L["Cleared all of {0}", win.Difficulty ?? ""]}",
+        WinKind.FolderProgress => $"📈 {L["{0}% of {1}", win.Rank ?? 0, win.Difficulty ?? ""]}",
+        WinKind.RareTitle => $"🏅 [{win.TitleName}] · {L["only {0} hold it", Pct(win.RarityShare)]}",
+        _ => $"🏅 [{win.TitleName}]"
+    };
+
+    private static string Ordinal(int n) => n switch { 1 => "1st", 2 => "2nd", 3 => "3rd", _ => $"{n}th" };
+
+    private static string Pct(double? share) =>
+        share == null ? "" : (share.Value * 100).ToString("0.#", CultureInfo.InvariantCulture) + "%";
+}

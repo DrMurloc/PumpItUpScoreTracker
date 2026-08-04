@@ -9,6 +9,7 @@ using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
+using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 
@@ -45,6 +46,7 @@ public static class VerticalAssemblies
             typeof(OfficialMirrorRegistrationExtensions).Assembly,
             typeof(PlayerProgressRegistrationExtensions).Assembly,
             typeof(RandomizerRegistrationExtensions).Assembly,
+            typeof(RivalsRegistrationExtensions).Assembly,
             typeof(ScoreLedgerRegistrationExtensions).Assembly,
             typeof(WeeklyChallengeRegistrationExtensions).Assembly
         };

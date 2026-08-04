@@ -11,6 +11,8 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.Rivals.Contracts;
+using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Pages.OfficialLeaderboards;
 using ScoreTracker.Web.Services.HomeDashboard;
@@ -33,9 +35,11 @@ public sealed class SupplementedReadingTests : ComponentTestBase
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
-        // The glow reader short-circuits when signed out; the signed-in fact below needs this.
+        // The glow reader short-circuits when signed out; the signed-in fact below needs both.
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RivalSubject>());
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton(Mock.Of<IAdminNotificationClient>());
         Services.AddScoped<CommunityGlowReader>();

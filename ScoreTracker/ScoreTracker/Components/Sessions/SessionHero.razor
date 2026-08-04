@@ -1,3 +1,4 @@
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.SharedKernel.Enums
@@ -52,14 +53,14 @@
             </div>
             @foreach (var score in Notable)
             {
-                <SessionScoreRow Score="score" OnOpenLeaderboard="OnOpenLeaderboard"></SessionScoreRow>
+                <SessionScoreRow Score="score" OnOpenChart="OnOpenChart"></SessionScoreRow>
             }
         </div>
     }
 
-    <CommunityPeersSection Boards="Breakdown.PeerBoards" Peers="Breakdown.Peers"
-                           OnOpenLeaderboard="OnOpenLeaderboard">
-    </CommunityPeersSection>
+    <RivalPeersSection Boards="Breakdown.PeerBoards" Peers="Breakdown.Peers" Mix="Breakdown.Group.Mix"
+                       OnOpenChart="OnOpenChart">
+    </RivalPeersSection>
 
     <div class="sbd-section" data-testid="session-all-plays">
         <div class="sbd-section-head">
@@ -70,7 +71,7 @@
            counted anywhere else. *@
         @foreach (var score in Ordered.Take(_visiblePlays))
         {
-            <SessionScoreRow Score="score" OnOpenLeaderboard="OnOpenLeaderboard"></SessionScoreRow>
+            <SessionScoreRow Score="score" OnOpenChart="OnOpenChart"></SessionScoreRow>
         }
         @if (_visiblePlays < Ordered.Count)
         {
@@ -94,7 +95,7 @@
     private const int NotableRows = 6;
 
     [Parameter] [EditorRequired] public SessionBreakdown Breakdown { get; set; } = null!;
-    [Parameter] public EventCallback<Guid> OnOpenLeaderboard { get; set; }
+    [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
 
     private int _visiblePlays = InitialPlays;
     private IReadOnlyList<SessionScore> Notable = Array.Empty<SessionScore>();

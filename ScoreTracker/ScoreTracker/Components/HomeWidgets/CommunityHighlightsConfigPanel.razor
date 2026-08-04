@@ -34,6 +34,9 @@ else
 }
 
 <MudSwitch T="bool" @bind-Value="_includeOwnWins" Label="@L["Include my own wins"]" Color="Color.Primary" Class="mt-2"/>
+@* Off by default and off for every widget that already exists: an absent field on a dashboard
+   somebody configured months ago has to keep behaving exactly as it did. *@
+<MudSwitch T="bool" @bind-Value="_includeRivals" Label="@L["Include my rivals"]" Color="Color.Primary" Class="mt-2"/>
 
 <div class="d-flex justify-end gap-2 mt-4">
     <MudButton OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
@@ -50,6 +53,7 @@ else
 
     private MixEnum? _mix;
     private bool _includeOwnWins = true;
+    private bool _includeRivals;
     private readonly HashSet<string> _selected = new();
     private List<CommunityOverviewRecord>? _myCommunities;
 
@@ -58,6 +62,7 @@ else
         var config = WidgetConfigJson.Read<CommunityHighlightsConfig>(Widget.ConfigJson);
         _mix = config.Mix;
         _includeOwnWins = config.IncludeOwnWins;
+        _includeRivals = config.IncludeRivals;
         foreach (var community in config.Communities) _selected.Add(community);
         _myCommunities = (await Mediator.Send(new GetMyCommunitiesQuery())).ToList();
     }
@@ -74,7 +79,8 @@ else
         {
             Mix = _mix,
             Communities = _selected.ToList(),
-            IncludeOwnWins = _includeOwnWins
+            IncludeOwnWins = _includeOwnWins,
+            IncludeRivals = _includeRivals
         };
         await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
     }

@@ -30,6 +30,7 @@
     <ProjectReference Include="..\ScoreTracker.OfficialMirror\ScoreTracker.OfficialMirror.csproj" />
     <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
     <ProjectReference Include="..\ScoreTracker.HomePage\ScoreTracker.HomePage.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Rivals\ScoreTracker.Rivals.csproj" />
     <ProjectReference Include="..\ScoreTracker.CommunityTools\ScoreTracker.CommunityTools.csproj" />
   </ItemGroup>
 

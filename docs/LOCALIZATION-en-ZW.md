@@ -126,11 +126,21 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Title / Titles | Mrgl | |
 | Tournament(s) | Mrllrlrlrlgl | |
 | Download | Murlg | |
+| Rival / Rivals | Murgmorp | `murg` + `morp` (player) — the player you chase. Number unmarked, like Tool/Tools. Coined 2026-08-04 for the Rivals feature. |
+| Block | Murgloo | Recovered from the existing "Block this tool"; reused across the rivals blocking strings. |
+| Blocked | Murgloogro | |
+| Unblock | Momurgloo | `mo` (negation, as in the existing "Mrp"/"Bo" negatives) + `Murgloo`. |
+| Crew | Grogblub | A community you are in, said casually — distinct from `Plglmurgblub` (Community). |
+| Official | Urgmrmurg | Title-case form of the existing lowercase `urgmrmurg`. |
+| Feed | Glorgmorg | Recovered from the existing "Feeds" entry. |
+| Board | Mrglblarg | Plural `Grrglplgl`. Distinct from `Mrglrmrgl` (Leaderboard). |
+| Shared | Murpro | Recovered from the existing "One shared board" entry. |
 | Supplement / Supplemented | Blurgmorglmrgl | Coined 2026-08-04 for the supplemented leaderboard reading. |
 | Roll up | Mrgloru | Coined 2026-08-04 — the weekly gather, not a rolling motion. |
 | Snapshot | Barglub | Coined 2026-08-04. |
 | Data | Gru | Coined 2026-08-04. |
 | From | Blarg | Coined 2026-08-04. |
+
 
 ### Difficulty and intensity
 

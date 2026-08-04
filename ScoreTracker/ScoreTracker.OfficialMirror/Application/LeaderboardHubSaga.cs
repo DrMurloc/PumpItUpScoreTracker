@@ -22,6 +22,10 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialPlayerProfileQuery, OfficialPlayerProfileRecord?>,
     IRequestHandler<GetOfficialPlayerStandingQuery, OfficialPlayerStandingRecord?>,
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
+    IRequestHandler<SearchOfficialBoardTagsQuery, IReadOnlyList<string>>,
+    IRequestHandler<ResolveOfficialPlayerQuery, OfficialPlayerResolution?>,
+    IRequestHandler<ResolveOfficialPlayersQuery, IReadOnlyList<OfficialPlayerResolution>>,
+    IRequestHandler<GetOfficialScoresForTagsQuery, OfficialTagScores>,
     IRequestHandler<GetOfficialPopularityQuery, IReadOnlyList<OfficialPopularityRecord>>,
     IRequestHandler<GetImportRunsQuery, IReadOnlyList<ImportRunRecord>>,
     IRequestHandler<GetWhatItTakesQuery, WhatItTakesRecord>,
@@ -368,11 +372,72 @@ internal sealed class LeaderboardHubSaga :
     }
 
     public async Task<IReadOnlyList<string>> Handle(GetOfficialPlayerNamesQuery request,
-        CancellationToken cancellationToken)
-    {
-        return await _snapshots.GetPlayerNames(request.Mix,
+        CancellationToken cancellationToken) =>
+        await _snapshots.GetPlayerNames(request.Mix,
             request.Supplemented ? PlacementScope.IncludingSupplemented : PlacementScope.OfficialOnly,
             cancellationToken);
+
+    public async Task<IReadOnlyList<string>> Handle(SearchOfficialBoardTagsQuery request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Term)) return Array.Empty<string>();
+
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        return latest == null
+            ? Array.Empty<string>()
+            : await _snapshots.SearchPlayerNamesInSnapshot(latest.Id, request.Term, request.Take,
+                cancellationToken);
+    }
+
+    public async Task<OfficialPlayerResolution?> Handle(ResolveOfficialPlayerQuery request,
+        CancellationToken cancellationToken)
+    {
+        var resolved = await Handle(new ResolveOfficialPlayersQuery(request.Mix, new[] { request.Tag }),
+            cancellationToken);
+        return resolved.FirstOrDefault();
+    }
+
+    public async Task<IReadOnlyList<OfficialPlayerResolution>> Handle(ResolveOfficialPlayersQuery request,
+        CancellationToken cancellationToken)
+    {
+        var players = await _snapshots.GetPlayersByUsernames(request.Mix, request.Tags, cancellationToken);
+        if (players.Count == 0) return Array.Empty<OfficialPlayerResolution>();
+
+        // "Known" and "currently on the boards" are different facts, and a picker needs the
+        // second while an existing rivalry only needs the first — a tag that dropped off this
+        // week still names the person somebody chose.
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        var current = latest == null
+            ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            : (await _snapshots.FilterNamesInSnapshot(latest.Id,
+                players.Select(p => p.Username).ToArray(), cancellationToken))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return players
+            .Select(p => new OfficialPlayerResolution(p.Username, p.UserId, p.Avatar,
+                current.Contains(p.Username)))
+            .ToArray();
+    }
+
+    public async Task<OfficialTagScores> Handle(GetOfficialScoresForTagsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        if (latest?.CompletedAt == null || request.Tags.Count == 0 || request.ChartIds.Count == 0)
+            return new OfficialTagScores(latest?.CompletedAt, Array.Empty<OfficialTagScore>());
+
+        var players = await _snapshots.GetPlayersByUsernames(request.Mix, request.Tags, cancellationToken);
+        if (players.Count == 0)
+            return new OfficialTagScores(latest.CompletedAt, Array.Empty<OfficialTagScore>());
+
+        var tagById = players.ToDictionary(p => p.Id, p => p.Username);
+        var placements = await _snapshots.GetChartPlacementsFor(latest.Id, tagById.Keys.ToArray(),
+            request.ChartIds, cancellationToken);
+
+        return new OfficialTagScores(latest.CompletedAt, placements
+            .Select(p => new OfficialTagScore(tagById[p.PlayerId], p.ChartId, p.Place, (int)p.Score))
+            .ToArray());
+
     }
 
     public async Task<OfficialChartBoardRecord?> Handle(GetOfficialChartBoardQuery request,

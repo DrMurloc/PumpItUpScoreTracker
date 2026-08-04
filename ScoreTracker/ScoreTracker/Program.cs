@@ -28,6 +28,7 @@ using ScoreTracker.Identity.Wiring;
 using ScoreTracker.OfficialMirror.Wiring;
 using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
+using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
@@ -106,6 +107,7 @@ builder.Services.AddMassTransit(o =>
     o.AddIdentityConsumers();
     o.AddRandomizerConsumers();
     o.AddHomePageConsumers();
+    o.AddRivalsConsumers();
 
     o.AddDelayedMessageScheduler();
 
@@ -444,7 +446,7 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
     ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1"),  // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
-    ("purge-community-highlights",       r => r.PublishPurgeCommunityHighlights(),        "0 9 * * 0"),  // Sundays 09:00 UTC — 30-day community-highlights retention
+    ("purge-player-highlights",          r => r.PublishPurgePlayerHighlights(),           "0 9 * * 0"),  // Sundays 09:00 UTC — 30-day significant-wins retention (payload + community index)
     // The webhook queue lives in SQL, so a delivery survives a restart and this is what picks it
     // back up. Five minutes is well inside the first backoff step, so nothing waits on the sweep.
     ("retry-webhook-deliveries",         r => r.PublishRetryDueWebhookDeliveries(),       "*/5 * * * *"),
@@ -472,6 +474,10 @@ else
 // Retired jobs come out of Hangfire's SQL storage too — an orphaned row would fail on
 // every fire once its runner method is gone.
 RecurringJob.RemoveIfExists("refresh-folder-share-cards");
+// "purge-community-highlights" became "purge-player-highlights" when the payload moved to
+// PlayerProgress and the job grew a second consumer. AddOrUpdate registers the new id; it
+// cannot know the old one, which stays in storage pointing at a runner method that is gone.
+RecurringJob.RemoveIfExists("purge-community-highlights");
 
 app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 

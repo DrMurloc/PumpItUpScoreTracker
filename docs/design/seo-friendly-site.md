@@ -337,7 +337,7 @@ circuit-needing section its own child, so the conversion is mostly render-mode l
 work is caching and the lattice.
 
 - **Page**: delete its `@rendermode` line. Islands: `ChartVideoPlayer`, `ChartRecordPanel`,
-  `ChartEvidenceSection` (Apex), `ChartLeaderboardSection`, `SimilarChartsShelf`'s controls
+  `ChartEvidenceSection` (Apex), `ChartLeaderboardScopes`, `SimilarChartsShelf`'s controls
   (cards are already real `<a href>`s). The finder empty-state (`ChartSelector`) dies with the
   bare `/Chart` + `/Record` routes. Unresolvable chart → 404 status via PR-3's mechanism.
 - **Skeletons**: the settled `data-island-ready` pattern (one wrapper CSS rule,

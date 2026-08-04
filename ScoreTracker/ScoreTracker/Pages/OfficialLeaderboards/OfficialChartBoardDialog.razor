@@ -89,6 +89,8 @@
     private bool _loading;
     private OfficialChartBoardRecord? _board;
     private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _rivalIds = new HashSet<Guid>();
+    private IReadOnlySet<string> _rivalTags = new HashSet<string>();
     private int _visible = InitialPlaces;
     private int _pagesShown;
     private Guid _loadedFor;
@@ -106,6 +108,8 @@
         _pagesShown = 0;
         _board = await Mediator.Send(new GetOfficialChartBoardQuery(Mix, Chart.Id, Supplemented));
         _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+        _rivalIds = await CommunityGlow.GetMyRivalIds(Mix);
+        _rivalTags = await CommunityGlow.GetMyRivalTags(Mix);
         _loading = false;
     }
 
@@ -115,10 +119,14 @@
         _visible = ShowAllNext ? _board!.Entries.Count : Math.Min(_visible + PageSize, _board!.Entries.Count);
     }
 
-    private string GlowClass(OfficialPlayerRecord player)
-    {
-        if (player.UserId == null) return string.Empty;
-        if (CurrentUser.IsLoggedIn && player.UserId == CurrentUser.User.Id) return "olb-row-me";
-        return _communityIds.Contains(player.UserId.Value) ? "olb-row-community" : string.Empty;
-    }
+    // These boards are the one place a rival with no site account is a ROW rather than an
+    // absence, so a ghost is matched on its tag. The old shape returned early on a null UserId,
+    // which meant the rivals these boards exist to show could never light up.
+    private string GlowClass(OfficialPlayerRecord player) =>
+        CommunityGlowReader.RowClass(
+            CurrentUser.IsLoggedIn && player.UserId == CurrentUser.User.Id,
+            (player.UserId != null && _rivalIds.Contains(player.UserId.Value))
+            || _rivalTags.Contains(player.Username),
+            player.UserId != null && _communityIds.Contains(player.UserId.Value),
+            "olb-row-me", "olb-row-community");
 }

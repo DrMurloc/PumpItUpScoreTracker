@@ -5,6 +5,7 @@
 @using ScoreTracker.WeeklyChallenge.Contracts
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Web.Services.HomeDashboard
 
 @* Daily Step as a rail card (weekly-charts-overhaul.md §12.2): the homepage widget's card
    grammar — kicker head with the ⊕/🏆 icon pair (M15), chart identity, the top five, your
@@ -102,10 +103,14 @@
     /// <summary>User ids in a community you share — their rows glow green.</summary>
     [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
 
+    /// <summary>Site-user rivals — their rows glow red, or segmented if they are also clubmates.</summary>
+    [Parameter] public IReadOnlySet<Guid>? RivalUserIds { get; set; }
+
     private double Fraction(int place) => View!.Rows.Count <= 0 ? 0 : 1.0 - (double)place / View.Rows.Count;
 
-    private string RowClass(DailyStepBoardRow row) => row.Player?.Id == UserId ? "mine"
-        : CommunityUserIds?.Contains(row.Player?.Id ?? Guid.Empty) == true ? "community" : "";
+    private string RowClass(DailyStepBoardRow row) =>
+        CommunityGlowReader.RowClass(row.Player?.Id ?? Guid.Empty, UserId, RivalUserIds, CommunityUserIds,
+            "mine", "community");
 
     private RenderFragment LbRow(DailyStepBoardRow row) =>@<div class="challenge-lb-row @RowClass(row)">
         <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</span>
