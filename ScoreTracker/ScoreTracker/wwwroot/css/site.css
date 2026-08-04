@@ -2915,6 +2915,64 @@ html.sheet-open .more-sheet-scrim {
     margin: 14px 0 4px;
 }
 
+.rvl-cmp-folder {
+    margin: 6px 0 10px;
+}
+
+/* The rail and its arrows. The native horizontal scrollbar is hidden on the desktop rail: it
+   is chunky, it steals a row of height under the cards, and it is the only scrollbar on the
+   page that runs sideways, so it reads as a stray control rather than a hint. The arrows
+   replace it — they only render where the rail is actually horizontal. */
+.rvl-rail-wrap {
+    position: relative;
+}
+
+.dash-ch-feed.rvl-feed-rail {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.dash-ch-feed.rvl-feed-rail::-webkit-scrollbar {
+    display: none;
+}
+
+.rvl-rail-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--mix-ink);
+    background: color-mix(in srgb, var(--mix-surface) 88%, transparent);
+    box-shadow: 0 1px 8px -2px rgba(0, 0, 0, .6);
+}
+
+.rvl-rail-arrow:hover {
+    background: var(--mix-surface);
+}
+
+.rvl-rail-arrow.prev {
+    left: -6px;
+}
+
+.rvl-rail-arrow.next {
+    right: -6px;
+}
+
+/* Below the rail's own breakpoint the feed is a plain column, so a sideways arrow would
+   scroll nothing. */
+@media (max-width: 700px) {
+    .rvl-rail-arrow {
+        display: none;
+    }
+}
+
 /* ── The rivals rail ───────────────────────────────────────────────────────────────────
    Same feed component, laid out as a strip. On the Rivals page the feed is the first thing
    above the fold, and a column there pushes the roster off screen to say what a strip says

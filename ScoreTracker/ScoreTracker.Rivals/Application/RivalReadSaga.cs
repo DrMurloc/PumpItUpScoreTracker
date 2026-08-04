@@ -110,7 +110,7 @@ internal sealed class RivalReadSaga :
         // excluding breaks on OUR side only would hand every ghost comparison a free win.
         var mine = (await _scores.GetBestScores(request.Mix, me, cancellationToken))
             .Where(s => s.Score != null && !s.IsBroken)
-            .ToDictionary(s => s.ChartId, s => (int)s.Score!.Value);
+            .ToDictionary(s => s.ChartId, s => s);
 
         // A site rival compares within a folder; a board-only one compares on the charts we are
         // BOTH on, because the mirror covers a scattering of level 20+ boards rather than a
@@ -126,9 +126,11 @@ internal sealed class RivalReadSaga :
         {
             var theirScore = scores.FirstOrDefault(s => !s.IsBroken);
             if (theirScore == null) continue;
-            rows.Add(new RivalHeadToHeadRow(chartId,
-                mine.TryGetValue(chartId, out var myScore) ? myScore : null,
-                theirScore.Score, theirScore.Source));
+            var my = mine.TryGetValue(chartId, out var found) ? found : null;
+            rows.Add(new RivalHeadToHeadRow(chartId, my == null ? null : (int)my.Score!.Value,
+                theirScore.Score, theirScore.Source,
+                my?.Plate, my?.IsBroken ?? false,
+                theirScore.Plate, theirScore.IsBroken));
         }
 
         var shared = rows.Count(r => r.YourScore != null && r.TheirScore != null);

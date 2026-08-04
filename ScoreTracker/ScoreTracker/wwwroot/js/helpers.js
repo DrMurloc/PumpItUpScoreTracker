@@ -28,3 +28,11 @@ export function triggerFileDownload(fileName, url) {
     anchorElement.click();
     anchorElement.remove();
 }
+
+// Scroll a horizontal rail by roughly one card. Fraction of the visible width rather than a
+// fixed pixel step, because the cards are clamp()-sized — a hardcoded step overshoots on a
+// narrow rail and undershoots on a wide one. Snap points do the final alignment.
+export function scrollRail(element, direction) {
+    if (!element) return;
+    element.scrollBy({ left: direction * element.clientWidth * 0.8, behavior: 'smooth' });
+}

@@ -95,4 +95,11 @@ public sealed record RivalHeadToHeadRow(
     Guid ChartId,
     int? YourScore,
     int? TheirScore,
-    RivalScoreSource TheirSource);
+    RivalScoreSource TheirSource,
+    // Both sides carry the plate and the break so the row can render the same score vocabulary
+    // every other board uses. A bare number next to a letter grade elsewhere reads as a
+    // different, lesser table.
+    PhoenixPlate? YourPlate = null,
+    bool YourIsBroken = false,
+    PhoenixPlate? TheirPlate = null,
+    bool TheirIsBroken = false);

@@ -9,7 +9,10 @@
 @using ScoreTracker.Rivals.Contracts.Commands
 @using ScoreTracker.Rivals.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Web.Components.Rivals
 
 <PageTitle>@L["Rivals"]</PageTitle>
@@ -47,7 +50,9 @@ else
             {
                 <MudButton StartIcon="@Icons.Material.Filled.ArrowBack" Size="Size.Small"
                            OnClick="() => _selected = null" Class="mb-2">@L["Back to rivals"]</MudButton>
-                <RivalComparison Record="_headToHead" Charts="_charts" YourAvatar="@MyAvatar"></RivalComparison>
+                <RivalComparison Record="_headToHead" Charts="_charts" YourAvatar="@MyAvatar"
+                                 Mix="CurrentMix" FolderType="_compareType" FolderLevel="_compareLevel"
+                                 FolderChanged="OnFolderChanged"></RivalComparison>
             }
             else
             {
@@ -73,6 +78,9 @@ else
     private const int FeedTake = 30;
 
     [CascadingParameter(Name = "Mix")] public MixEnum CurrentMix { get; set; } = MixEnum.Phoenix;
+
+    private ChartType _compareType = ChartType.Double;
+    private int? _compareLevel;
 
     private IReadOnlyList<RivalSubject> _rivals = Array.Empty<RivalSubject>();
     private IReadOnlyList<RivalOfMeRecord> _rivalsOfMe = Array.Empty<RivalOfMeRecord>();
@@ -110,7 +118,43 @@ else
     {
         _selected = subject;
         _headToHead = null;
-        _headToHead = await Mediator.Send(new GetRivalHeadToHeadQuery(CurrentMix, subject.EdgeId));
+
+        // Open on the folder where the two of you are closest, the way the community compare
+        // does. Without one the table is every chart you have ever scored — thousands of rows
+        // answering a question nobody asked. A ghost has no competitive level and its unit is
+        // "boards we're both on" rather than a folder, so it stays unfiltered.
+        _compareLevel = null;
+        if (subject.Can(RivalCapabilities.FolderCompare) && subject.UserId is { } rivalId)
+        {
+            var mine = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, CurrentMix));
+            var theirs = await Mediator.Send(new GetPlayerStatsQuery(rivalId, CurrentMix));
+            var singlesGap = Math.Abs(mine.SinglesCompetitiveLevel - theirs.SinglesCompetitiveLevel);
+            var doublesGap = Math.Abs(mine.DoublesCompetitiveLevel - theirs.DoublesCompetitiveLevel);
+            var (type, myLevel, theirLevel) = singlesGap <= doublesGap
+                ? (ChartType.Single, mine.SinglesCompetitiveLevel, theirs.SinglesCompetitiveLevel)
+                : (ChartType.Double, mine.DoublesCompetitiveLevel, theirs.DoublesCompetitiveLevel);
+            _compareType = type;
+            _compareLevel = Math.Clamp((int)Math.Round((myLevel + theirLevel) / 2), 1,
+                (int)DifficultyLevel.Max);
+        }
+
+        await LoadHeadToHead();
+    }
+
+    /// <summary>Null level is "All folders" — the query treats a missing folder as unfiltered.</summary>
+    private async Task OnFolderChanged((ChartType Type, int? Level) folder)
+    {
+        _compareType = folder.Type;
+        _compareLevel = folder.Level;
+        await LoadHeadToHead();
+    }
+
+    private async Task LoadHeadToHead()
+    {
+        if (_selected == null) return;
+        _headToHead = await Mediator.Send(new GetRivalHeadToHeadQuery(CurrentMix, _selected.EdgeId,
+            _compareLevel == null ? null : _compareType,
+            _compareLevel == null ? null : DifficultyLevel.From(_compareLevel.Value)));
     }
 
     private async Task RemoveRival(Guid edgeId)

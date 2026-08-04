@@ -16,6 +16,7 @@ using ScoreTracker.Rivals.Contracts;
 using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Rivals.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -65,16 +66,65 @@ public sealed class RivalReadSagaTests
         _scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), _me, It.IsAny<CancellationToken>()))
             .ReturnsAsync(records);
 
+    /// <summary>
+    ///     Honours the chart filter, because the real reader does. A stub that returns everything
+    ///     regardless cannot tell a narrowed comparison from an unnarrowed one — which is exactly
+    ///     the thing the folder test is trying to prove.
+    /// </summary>
     private void TheirBestsAre(params UserPhoenixScore[] records) =>
         _scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(records);
+            .ReturnsAsync((MixEnum _, IEnumerable<Guid> _, IEnumerable<Guid> chartIds, CancellationToken _) =>
+            {
+                var requested = chartIds.ToHashSet();
+                return records.Where(r => requested.Contains(r.ChartId)).ToArray();
+            });
 
-    private static RecordedPhoenixScore Mine(Guid chart, int? score, bool broken = false) =>
-        new(chart, score == null ? null : score.Value, null, broken, Played);
+    /// <summary>
+    ///     Naming a folder narrows the comparison to it. The query has carried ChartType/Level
+    ///     since it was written and nothing ever passed them, so the table rendered every chart
+    ///     the caller had ever scored — thousands of rows, and the folder branch untested.
+    /// </summary>
+    [Fact]
+    public async Task NamingAFolderComparesOnlyThatFolder()
+    {
+        MyBestsAre(Mine(ChartA, 990_000), Mine(ChartB, 900_000));
+        TheirBestsAre(Theirs(_rival, ChartA, 980_000), Theirs(_rival, ChartB, 999_000));
+        // The folder holds ChartA only, so ChartB drops out even though both of you scored it.
+        _scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+                ChartType.Single, It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { (_me, Mine(ChartA, 990_000)) }.AsEnumerable());
 
-    private static UserPhoenixScore Theirs(Guid rival, Guid chart, int score, bool broken = false) =>
-        new(rival, chart, "RIVAL", score, null, broken);
+        var result = await Saga().Handle(
+            new GetRivalHeadToHeadQuery(MixEnum.Phoenix, _edgeId, ChartType.Single,
+                DifficultyLevel.From(21)), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(new[] { ChartA }, result!.Rows.Select(r => r.ChartId));
+        Assert.Equal(1, result.YouAhead);
+    }
+
+    /// <summary>Both sides carry the plate so the row can print the same score vocabulary every other board uses.</summary>
+    [Fact]
+    public async Task ARowCarriesBothPlates()
+    {
+        MyBestsAre(Mine(ChartA, 1_000_000, plate: PhoenixPlate.PerfectGame));
+        TheirBestsAre(Theirs(_rival, ChartA, 995_000, plate: PhoenixPlate.SuperbGame));
+
+        var result = await Compare();
+
+        var row = result!.Rows.Single();
+        Assert.Equal(PhoenixPlate.PerfectGame, row.YourPlate);
+        Assert.Equal(PhoenixPlate.SuperbGame, row.TheirPlate);
+    }
+
+    private static RecordedPhoenixScore Mine(Guid chart, int? score, bool broken = false,
+        PhoenixPlate? plate = null) =>
+        new(chart, score == null ? null : score.Value, plate, broken, Played);
+
+    private static UserPhoenixScore Theirs(Guid rival, Guid chart, int score, bool broken = false,
+        PhoenixPlate? plate = null) =>
+        new(rival, chart, "RIVAL", score, plate, broken);
 
     private Task<RivalHeadToHeadRecord?> Compare() =>
         Saga().Handle(new GetRivalHeadToHeadQuery(MixEnum.Phoenix, _edgeId), CancellationToken.None);
@@ -92,9 +142,10 @@ public sealed class RivalReadSagaTests
         var result = await Compare();
 
         Assert.NotNull(result);
-        // ChartA still lists — their score is real — but with nothing of yours beside it, so it
-        // is not a loss.
-        Assert.Null(result!.Rows.Single(r => r.ChartId == ChartA).YourScore);
+        // The comparison universe is the charts YOU hold a comparable score on, so a chart where
+        // your only record is a scoreless break is never asked about — their score on it is not
+        // fetched and the chart does not appear. It is emphatically not a loss.
+        Assert.DoesNotContain(result!.Rows, r => r.ChartId == ChartA);
         Assert.Equal(1, result.Shared);
         Assert.Equal(1, result.YouAhead);
         Assert.Equal(0, result.TheyAhead);
@@ -114,10 +165,12 @@ public sealed class RivalReadSagaTests
         var result = await Compare();
 
         Assert.NotNull(result);
-        // Your 999k on A broke, so it does not beat their 800k.
-        Assert.Null(result!.Rows.Single(r => r.ChartId == ChartA).YourScore);
-        // Their 999k on B broke, so B drops out entirely rather than counting against you.
+        // Your 999k on A broke, so A is not one of your comparable charts and never enters the
+        // comparison — it cannot beat their 800k, and their 800k cannot beat you either.
+        Assert.DoesNotContain(result!.Rows, r => r.ChartId == ChartA);
+        // Their 999k on B broke, so B drops out too rather than counting against you.
         Assert.DoesNotContain(result.Rows, r => r.ChartId == ChartB);
+        Assert.Empty(result.Rows);
         Assert.Equal(0, result.Shared);
         Assert.Equal(0, result.YouAhead);
         Assert.Equal(0, result.TheyAhead);

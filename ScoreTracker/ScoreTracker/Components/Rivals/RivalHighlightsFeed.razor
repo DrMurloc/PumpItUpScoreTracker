@@ -2,6 +2,8 @@
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Models
 @namespace ScoreTracker.Web.Components.Rivals
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
 
 @* The rivals feed. Every row here is a rival by construction, so a red ring would mark the whole
    list and therefore nothing — the only marker that says anything is GREEN, for a rival who is
@@ -17,7 +19,21 @@
 }
 else
 {
-    <div class="dash-ch-feed @(Rail ? "rvl-feed-rail" : "")" data-testid="rival-feed">
+    @* The arrows are the affordance on the rail — the native sideways scrollbar is hidden,
+       because it reads as a stray control rather than a hint. They exist only in rail mode. *@
+    <div class="@(Rail ? "rvl-rail-wrap" : "")">
+        @if (Rail)
+        {
+            <button type="button" class="rvl-rail-arrow prev" aria-label="@L["Scroll left"]"
+                    data-testid="rival-feed-prev" @onclick="() => Scroll(-1)">
+                <MudIcon Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small"></MudIcon>
+            </button>
+            <button type="button" class="rvl-rail-arrow next" aria-label="@L["Scroll right"]"
+                    data-testid="rival-feed-next" @onclick="() => Scroll(1)">
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small"></MudIcon>
+            </button>
+        }
+    <div class="dash-ch-feed @(Rail ? "rvl-feed-rail" : "")" data-testid="rival-feed" @ref="_rail">
         @foreach (var record in Records)
         {
             <div class="@RowClass(record)">
@@ -55,11 +71,21 @@ else
             </div>
         }
     </div>
+    </div>
     <p class="cld-footnote">@L["Green marks a rival who's also in one of your communities."]</p>
 }
 
 @inject ScoreTracker.Domain.SecondaryPorts.IDateTimeOffsetAccessor Clock
 @code {
+    private ElementReference _rail;
+    private IJSObjectReference? _helpers;
+
+    private async Task Scroll(int direction)
+    {
+        _helpers ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+        await _helpers.InvokeVoidAsync("scrollRail", _rail, direction);
+    }
+
     /// <summary>
     ///     Lay the feed out as a horizontal strip rather than a column. The Rivals page sets it
     ///     so the feed can sit above the fold without pushing the roster off screen; the home
