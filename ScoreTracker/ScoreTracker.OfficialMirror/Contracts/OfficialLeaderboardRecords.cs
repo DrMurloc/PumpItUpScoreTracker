@@ -1,10 +1,16 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Contracts;
 
 /// <summary>A board-visible player: mirrored tag + avatar, plus the site account when import-linked.</summary>
 [ExcludeFromCodeCoverage]
-public sealed record OfficialPlayerRecord(int PlayerId, string Username, Uri? AvatarUrl, Guid? UserId);
+/// <param name="IsSupplemented">
+///     True when this player is on the board only because PIU Scores knows their scores --
+///     they hold no row piugame published in this snapshot. It is a property of the reading,
+///     never of the person, and it is always false in the official reading.
+/// </param>
+public sealed record OfficialPlayerRecord(int PlayerId, string Username, Uri? AvatarUrl, Guid? UserId,
+    bool IsSupplemented = false);
 
 [ExcludeFromCodeCoverage]
 public sealed record WeeklyHighlightsRecord(
@@ -85,7 +91,7 @@ public sealed record OfficialPlayerHistoryPoint(DateTimeOffset At, decimal? Pumb
 /// <summary>One chart on a player's list — mirrored board rows only, every one with a Place.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPlayerChartRecord(Guid ChartId, int? Place, int? PlaceDelta, int Score,
-    int ComputedRating);
+    int ComputedRating, bool IsSupplemented = false);
 
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPopularityRecord(Guid ChartId, int Place, int? PreviousPlace,

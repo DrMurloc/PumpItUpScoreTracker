@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure.Entities;
@@ -402,12 +402,24 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         return entity == null ? null : ToPlayer(entity);
     }
 
-    public async Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct)
+    public async Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, PlacementScope scope,
+        CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
+        var latest = await database.Set<OfficialLeaderboardSnapshotEntity>()
+            .Where(s => s.MixId == mixId && s.CompletedAt != null)
+            .OrderByDescending(s => s.CompletedAt)
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync(ct);
+        if (latest == null) return Array.Empty<string>();
+
+        var placed = Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
+            .Where(p => p.SnapshotId == latest.Value)
+            .Select(p => p.PlayerId);
+
         return await database.Set<OfficialPlayerEntity>()
-            .Where(p => p.MixId == mixId)
+            .Where(p => p.MixId == mixId && placed.Contains(p.Id))
             .OrderBy(p => p.Username)
             .Select(p => p.Username)
             .ToArrayAsync(ct);

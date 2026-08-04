@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Domain;
 
@@ -75,7 +75,12 @@ internal interface IOfficialSnapshotRepository
     /// <summary>The import-linked mirror player for a site account, if the link exists.</summary>
     Task<PlayerDimension?> GetPlayerByUserId(MixEnum mix, Guid userId, CancellationToken ct);
 
-    Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct);
+    /// <summary>
+    ///     Tags the player search offers: those with a placement in the latest sealed snapshot
+    ///     at this reading. Every dim row would include tags an import created but no crawl has
+    ///     ever seen, and picking one of those renders a confident profile full of blanks.
+    /// </summary>
+    Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, PlacementScope scope, CancellationToken ct);
 
     /// <summary>
     ///     Every player id with a placement in any of this mix's snapshots before the given

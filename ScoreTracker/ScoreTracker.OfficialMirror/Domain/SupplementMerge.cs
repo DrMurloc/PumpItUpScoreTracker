@@ -57,6 +57,21 @@ internal static class SupplementMerge
             .ToArray();
 
     /// <summary>
+    ///     The same merge over the hub's joined read shape. Two concrete methods rather than
+    ///     one generic over five accessors — the parallel between them is obvious to read, and
+    ///     the generic was not.
+    /// </summary>
+    public static IReadOnlyList<PlacementDetail> MergedBoards(IEnumerable<PlacementDetail> rows) =>
+        rows.GroupBy(r => r.LeaderboardId)
+            .SelectMany(board => Placements.Olympic(
+                    board.GroupBy(r => r.PlayerId)
+                        .Select(g => g.OrderByDescending(r => r.Score).ThenBy(r => r.IsSupplemented).First())
+                        .OrderBy(r => r.IsSupplemented).ThenBy(r => r.PlayerId),
+                    r => r.Score)
+                .Select(x => x.Item with { Place = x.Place }))
+            .ToArray();
+
+    /// <summary>
     ///     One row per player. A supplemented row only exists where it beat the player's
     ///     official row, so taking the higher score is the same rule read back — but it is
     ///     stated rather than assumed, because the stored rows outlive the run that wrote them
