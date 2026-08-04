@@ -15,6 +15,8 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Communities.Contracts.Queries;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web;
@@ -51,6 +53,14 @@ public sealed class ChartDetailsDialogTests : TestContext
             .ReturnsAsync(new TierListResult(Array.Empty<SongTierListEntry>(), false));
         _mediator.Setup(m => m.Send(It.IsAny<GetChartBadgeChipsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartBadgeChipRecord>>());
+        // The dialog hosts the shared leaderboard now, which resolves the user reader to put
+        // names and avatars on its rows.
+        Services.AddSingleton(Mock.Of<IUserReader>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<UserPhoenixScore>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Chart>());
         var localizer = new Mock<IStringLocalizer<App>>();
         localizer.Setup(l => l[It.IsAny<string>()])
             .Returns((string key) => new LocalizedString(key, key));
@@ -108,5 +118,44 @@ public sealed class ChartDetailsDialogTests : TestContext
         // reporting is the video's action, not the chart's.
         cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-meta")));
         Assert.Empty(cut.FindAll(".chart-details-video-report"));
+    }
+
+    /// <summary>
+    ///     The dialog hosts the shared board rather than growing one of its own. Asserting on
+    ///     the scope rail is what distinguishes the two — a private copy would have no scopes.
+    /// </summary>
+    [Fact]
+    public void TheSharedBoardRendersInsideTheDialog()
+    {
+        var cut = RenderDialog(SetupChart(null));
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.NotEmpty(cut.FindAll(".chart-details-board"));
+            Assert.NotEmpty(cut.FindAll("[data-testid='cld-scope-World']"));
+        });
+    }
+
+    /// <summary>
+    ///     Ten call sites render this dialog, so a closed one must cost nothing. Active follows
+    ///     Visible; with it false the board must not reach for a board nobody asked to see.
+    /// </summary>
+    [Fact]
+    public void AClosedDialogAsksForNoBoard()
+    {
+        var chart = SetupChart(null);
+
+        Render(builder =>
+        {
+            builder.OpenComponent<MudDialogProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<ChartDetailsDialog>(1);
+            builder.AddAttribute(2, nameof(ChartDetailsDialog.Chart), chart);
+            builder.AddAttribute(3, nameof(ChartDetailsDialog.Visible), false);
+            builder.CloseComponent();
+        });
+
+        _mediator.Verify(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 }

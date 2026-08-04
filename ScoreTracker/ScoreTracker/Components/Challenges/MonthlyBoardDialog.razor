@@ -5,6 +5,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using ScoreTracker.Web.Services.HomeDashboard
 
 @* The monthly full board (weekly-charts-overhaul.md §12.4): the depth that left the rail —
    every row, avatar + CL, the top-4 stickers, and the counted-scores expansion in the
@@ -51,7 +52,7 @@
                 <tbody>
                 @foreach (var row in View.Rows)
                 {
-                    <tr class="@(row.Player?.Id == UserId ? "mine" : CommunityUserIds?.Contains(row.Player?.Id ?? Guid.Empty) == true ? "community" : "")">
+                    <tr class="@RowClass(row)">
                         <td class="challenge-mono-place" style="@ThemeScales.RarityStyle(Fraction(row.Place))">@row.Place</td>
                         <td>
                             <span class="challenge-mrow-who">
@@ -110,6 +111,13 @@
 
     /// <summary>User ids in a community you share — their rows glow green.</summary>
     [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
+
+    /// <summary>Site-user rivals — their rows glow red, or segmented if they are also clubmates.</summary>
+    [Parameter] public IReadOnlySet<Guid>? RivalUserIds { get; set; }
+
+    private string RowClass(MonthlyLeaderboardRow row) =>
+        CommunityGlowReader.RowClass(row.Player?.Id ?? Guid.Empty, UserId, RivalUserIds, CommunityUserIds,
+            "mine", "community");
 
     [Parameter] public bool Loading { get; set; }
     [Parameter] public string Subtitle { get; set; } = string.Empty;

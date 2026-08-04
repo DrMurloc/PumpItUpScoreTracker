@@ -1,0 +1,174 @@
+@using ScoreTracker.Domain.Models
+@using MediatR
+@using ScoreTracker.Rivals.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@namespace ScoreTracker.Web.Components
+
+@* Community Peers ⟷ Rivals. The toggle is the Tier Lists button group; it only renders when you
+   have rivals, because a switch with one working position is furniture (docs/design/rivals.md
+   D42).
+
+   Rivals is UNCAPPED but paged: a few hundred rivals cannot all render, so the board shows the
+   top rows plus your own and offers the rest. The tail is counted out loud — silently dropping
+   rivals would make a six-row board look like your whole roster (D43). *@
+<div class="sbd-section" data-testid="rival-peers">
+    <div class="sbd-section-head">
+        <span class="sbd-eyebrow">@(_showRivals ? L["Rivals"] : L["Community Peers"])</span>
+        @* Rivals leads: it is the default whenever you have any, so the switch reads left to
+           right in the order you meet it. A position you cannot use is not offered — with no
+           communities there is nothing to switch TO, and a two-button group with one dead half
+           is worse than no group (D42). The selected half is Filled AND Primary; Outlined vs
+           Filled alone was too quiet to read at this size. *@
+        @if (HasRivals && HasCommunityPeers)
+        {
+            <span class="sbd-section-note ml-auto">
+                <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small" OverrideStyles="false">
+                    <MudButton Variant="@(_showRivals ? Variant.Filled : Variant.Outlined)"
+                               Color="@(_showRivals ? Color.Primary : Color.Default)"
+                               aria-pressed="@_showRivals.ToString().ToLowerInvariant()"
+                               data-testid="peers-toggle-rivals"
+                               OnClick="() => SetMode(true)">@L["Rivals"]</MudButton>
+                    <MudButton Variant="@(_showRivals ? Variant.Outlined : Variant.Filled)"
+                               Color="@(_showRivals ? Color.Default : Color.Primary)"
+                               aria-pressed="@((!_showRivals).ToString().ToLowerInvariant())"
+                               data-testid="peers-toggle-peers"
+                               OnClick="() => SetMode(false)">@L["Community Peers"]</MudButton>
+                </MudButtonGroup>
+            </span>
+        }
+    </div>
+
+    @if (!_showRivals)
+    {
+        <CommunityPeersSection Boards="Boards" Peers="Peers" OnOpenChart="OnOpenChart"
+                               Headless="true"></CommunityPeersSection>
+    }
+    else
+    {
+        @foreach (var board in Boards)
+        {
+            var rows = RowsFor(board.Chart.Id);
+            if (rows.Count == 0) continue;
+            <div class="sbd-peerboard">
+                <div class="sbd-peerboard-head">
+                    <DifficultyBubble Chart="board.Chart" Small="true"></DifficultyBubble>
+                    <MudLink Href="javascript:void(0)" Class="sbd-peerboard-name"
+                             @onclick="() => OnOpenChart.InvokeAsync(board.Chart)">@board.Chart.Song.Name</MudLink>
+                </div>
+                @foreach (var (row, index) in Shown(board.Chart.Id).Select((r, i) => (r, i)))
+                {
+                    <div class="@RowClass(row)">
+                        <span class="weekly-lb-place">#@(index + 1)</span>
+                        <span class="sbd-avatar">
+                            <MudAvatar Size="Size.Small">
+                                <MudImage Src="@(row.Avatar?.ToString() ?? DefaultAvatar)" Alt=""></MudImage>
+                            </MudAvatar>
+                        </span>
+                        <span class="weekly-lb-user">
+                            @row.DisplayName
+                            @if (row.Source == RivalScoreSource.Official)
+                            {
+                                <span class="rival-official-mark" title="@L["Official board data"]">*</span>
+                            }
+                        </span>
+                        <span class="sbd-score-stack">
+                            <ScoreBreakdown Score="row.Score" Plate="row.Plate" Mix="board.Chart.Mix"
+                                            IsBroken="row.IsBroken" OneLine="true" ShowScore="true"
+                                            Tooltip="false"></ScoreBreakdown>
+                        </span>
+                    </div>
+                }
+                <p class="cld-footnote">@Footnote(board.Chart.Id)</p>
+            </div>
+        }
+    }
+</div>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@code {
+    /// <summary>Enough rows to read the standing without scrolling past the section.</summary>
+    private const int VisibleRows = 10;
+
+    private const string ModeSetting = "RivalsPeers__PlayerSessions";
+    private const string DefaultAvatar = "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
+
+    [Parameter] public IReadOnlyList<SessionPeerBoard> Boards { get; set; } = Array.Empty<SessionPeerBoard>();
+    [Parameter] public IReadOnlyDictionary<Guid, ScoreTracker.Domain.Models.User> Peers { get; set; }
+        = new Dictionary<Guid, ScoreTracker.Domain.Models.User>();
+    [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    private bool _showRivals;
+    private int _rivalCount;
+    private RivalChartScores _scores = RivalChartScores.Empty;
+    private readonly Dictionary<Guid, bool> _expanded = new();
+
+    private bool HasRivals => _rivalCount > 0;
+
+    /// <summary>
+    ///     Whether the Community Peers side has anything behind it. The boards are built from
+    ///     your communities, so with none there is no second position to offer.
+    /// </summary>
+    private bool HasCommunityPeers => Boards.Any(b => b.Peers.Any());
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+
+        _rivalCount = (await Mediator.Send(new GetMyRivalsQuery(Mix))).Count;
+        if (!HasRivals) return;
+
+        // Rivals is the default the moment you have any: you chose those people, where community
+        // membership is mostly incidental. The saved preference still wins, so a deliberate
+        // switch to peers survives — but "no preference yet" now lands on Rivals rather than the
+        // side that happened to be built first. With no community peers there is no other side.
+        var saved = await UiSettings.GetSetting(ModeSetting);
+        _showRivals = saved switch
+        {
+            "Rivals" => true,
+            "Peers" => HasCommunityPeers,
+            _ => true
+        };
+        if (_showRivals) await LoadScores();
+    }
+
+    private async Task SetMode(bool rivals)
+    {
+        if (_showRivals == rivals) return;
+        _showRivals = rivals;
+        await UiSettings.SetSetting(ModeSetting, rivals ? "Rivals" : "Peers");
+        if (rivals && _scores.ByChart.Count == 0) await LoadScores();
+    }
+
+    private async Task LoadScores()
+    {
+        var chartIds = Boards.Select(b => b.Chart.Id).ToArray();
+        if (chartIds.Length == 0) return;
+        _scores = await Mediator.Send(new GetRivalScoresForChartsQuery(Mix, chartIds));
+    }
+
+    private IReadOnlyList<RivalChartScore> RowsFor(Guid chartId) =>
+        _scores.ByChart.TryGetValue(chartId, out var rows) ? rows : Array.Empty<RivalChartScore>();
+
+    private IEnumerable<RivalChartScore> Shown(Guid chartId) =>
+        _expanded.GetValueOrDefault(chartId) ? RowsFor(chartId) : RowsFor(chartId).Take(VisibleRows);
+
+    private static string RowClass(RivalChartScore row) => "weekly-lb-row";
+
+    private string Footnote(Guid chartId)
+    {
+        var parts = new List<string>();
+        var rows = RowsFor(chartId);
+        if (rows.Any(r => r.Source == RivalScoreSource.Official) && _scores.OfficialAsOf is { } asOf)
+            parts.Add(L["* Official board data, as of {0}.", asOf.ToString("d MMM")].Value);
+        var missing = _rivalCount - rows.Count;
+        if (missing > 0) parts.Add(L["{0} more rivals have not played this.", missing].Value);
+        return string.Join(" · ", parts);
+    }
+}

@@ -13,6 +13,8 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
+using ScoreTracker.Rivals.Contracts;
+using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -350,6 +352,10 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             .Returns(new User(me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        // These boards read rivals now too — by tag as well as by id, since a board-only rival
+        // is a row here rather than an absence. An unstubbed query hands back a null to enumerate.
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RivalSubject>());
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new OfficialRankingsRecord(Week2, true, new[]
             {
@@ -451,6 +457,10 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
             .Returns(new User(me, "Me", true, null, new Uri("https://piu.test/me.png"), null));
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        // These boards read rivals now too — by tag as well as by id, since a board-only rival
+        // is a row here rather than an absence. An unstubbed query hands back a null to enumerate.
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RivalSubject>());
         var chart = MakeChart("1948", ChartType.Double, 29);
         _mediator.Setup(m => m.Send(It.Is<GetOfficialChartBoardQuery>(q => q.ChartId == chart.Id),
                 It.IsAny<CancellationToken>()))

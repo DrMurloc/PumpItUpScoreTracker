@@ -19,6 +19,10 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
         typeof(ScoreHighlightEntity),
         typeof(PlayerMilestoneEntity),
         typeof(PlayerFolderLevelEntity),
+        // Feed summaries of the player's own wins. They outlive the scores that produced them
+        // by up to the 30-day retention window, so the weekly purge alone would leave a deleted
+        // account showing up in other people's feeds until it expired.
+        typeof(PlayerHighlightEntity),
         typeof(PlayerSeasonRecapEntity),
         typeof(PlayerHistoryEntity),
         // Derived per-mix state. It used to reach this vertical only through the Ledger's

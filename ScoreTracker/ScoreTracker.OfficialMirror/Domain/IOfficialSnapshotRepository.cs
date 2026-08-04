@@ -63,6 +63,41 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct);
 
     /// <summary>
+    ///     Tags that placed in one snapshot and match a search term, capped. A picker offering
+    ///     somebody a departed tag hands them a permanently empty result (docs/design/rivals.md
+    ///     D21), so the snapshot — not the all-time dimension — is the population.
+    ///     <para>
+    ///         Term and cap are the repository's business, not the caller's: a snapshot holds every
+    ///         placement on every chart board, so "read the snapshot's tags and filter in memory"
+    ///         moves the whole board population over the wire to keep ten rows, per keystroke.
+    ///     </para>
+    /// </summary>
+    Task<IReadOnlyList<string>> SearchPlayerNamesInSnapshot(int snapshotId, string term, int take,
+        CancellationToken ct);
+
+    /// <summary>
+    ///     Which of these tags placed in the snapshot. Answers a membership question about a known
+    ///     handful of tags without materializing the population they are being tested against.
+    /// </summary>
+    Task<IReadOnlyList<string>> FilterNamesInSnapshot(int snapshotId, IReadOnlyCollection<string> names,
+        CancellationToken ct);
+
+    /// <summary>
+    ///     The mirror players behind a set of tags, normalized on the way in — a caller outside
+    ///     this vertical must never normalize a tag itself (docs/design/rivals.md D7).
+    /// </summary>
+    Task<IReadOnlyList<PlayerDimension>> GetPlayersByUsernames(MixEnum mix,
+        IReadOnlyCollection<string> usernames, CancellationToken ct);
+
+    /// <summary>
+    ///     Board scores for a set of players across a set of CHARTS in one snapshot. Batched
+    ///     because a rivals board asks about dozens of charts at once, and a query per chart
+    ///     would put a burst on a page render. Charts with no mirrored board are simply absent.
+    /// </summary>
+    Task<IReadOnlyList<PlayerChartPlacement>> GetChartPlacementsFor(int snapshotId,
+        IReadOnlyCollection<int> playerIds, IReadOnlyCollection<Guid> chartIds, CancellationToken ct);
+
+    /// <summary>
     ///     Every player id with a placement in any of this mix's snapshots before the given
     ///     one — the all-history "seen" set that makes a debut a debut.
     /// </summary>

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using ScoreTracker.Identity.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Commands;
+using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
 
@@ -21,13 +22,16 @@ internal sealed class PlayerIdentitySaga :
     IRequestHandler<GetRenameProposalsQuery, IReadOnlyList<RenameProposalRecord>>,
     IConsumer<AccountsMergedEvent>
 {
+    private readonly IBus _bus;
     private readonly IOfficialPlayerIdentityRepository _identity;
     private readonly ILogger _logger;
 
-    public PlayerIdentitySaga(IOfficialPlayerIdentityRepository identity, ILogger<PlayerIdentitySaga> logger)
+    public PlayerIdentitySaga(IOfficialPlayerIdentityRepository identity, ILogger<PlayerIdentitySaga> logger,
+        IBus bus)
     {
         _identity = identity;
         _logger = logger;
+        _bus = bus;
     }
 
     public async Task Handle(AcceptRenameProposalCommand request, CancellationToken cancellationToken)
@@ -42,6 +46,11 @@ internal sealed class PlayerIdentitySaga :
 
         await _identity.MergePlayers(proposal.OldPlayerId, proposal.NewPlayerId, cancellationToken);
         await _identity.SetProposalStatus(proposal.Id, ProposalStatuses.Accepted, cancellationToken);
+        // The merge deletes the old dimension row, so anything that stored the old tag is now
+        // pointing at nothing. Announced after the merge lands, never before.
+        if (proposal.Mix is { } mix)
+            await _bus.Publish(new OfficialPlayerRenamedEvent(mix, proposal.OldUsername, proposal.NewUsername),
+                cancellationToken);
         _logger.LogInformation("Merged {Old} into {New} (proposal {ProposalId})", proposal.OldUsername,
             proposal.NewUsername, proposal.Id);
     }

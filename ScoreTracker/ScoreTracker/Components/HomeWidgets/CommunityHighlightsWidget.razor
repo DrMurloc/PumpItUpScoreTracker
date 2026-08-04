@@ -4,6 +4,8 @@
 @using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
@@ -11,9 +13,12 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.HomeDashboard
 
-@* Community Highlights (docs/design/home-page-widgets.md §7): recent big wins from the
-   communities you pick. Membership is the consent boundary; a row's chart opens the shared
-   ChartDetailsDialog; "See more" deep-links a public player's Sessions page. *@
+@* Highlights feed (docs/design/home-page-widgets.md §7, docs/design/rivals.md D35): recent big
+   wins from the communities you pick and, optionally, the rivals you chose. This is the one place
+   the two audiences MIX, which is why it is the only place all three row states can appear at
+   once — the Rivals page and the community page are each single-audience, so each marks only the
+   other's overlap. Membership is the consent boundary on the community half; a row's chart opens
+   the shared ChartDetailsDialog; "See more" deep-links a public player's Sessions page. *@
 
 @if (!_loaded)
 {
@@ -62,7 +67,7 @@ else
     <div class="dash-ch-feed dash-scroll">
         @foreach (var record in _records)
         {
-            <div class="dash-ch-entry">
+            <div class="@RowClass(record)">
                 <MudAvatar Size="Size.Small" Class="dash-ch-avatar">
                     <MudImage Src="@record.Avatar.ToString()" Alt="@record.PlayerName"/>
                 </MudAvatar>
@@ -165,7 +170,9 @@ else
 
     private bool _loaded;
     private string? _loadedFor;
-    private IReadOnlyList<CommunityHighlightRecord> _records = Array.Empty<CommunityHighlightRecord>();
+    private IReadOnlyList<PlayerHighlightRecord> _records = Array.Empty<PlayerHighlightRecord>();
+    private IReadOnlySet<Guid> _communityUserIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _rivalUserIds = new HashSet<Guid>();
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private MixEnum _mix = MixEnum.Phoenix;
 
@@ -181,26 +188,52 @@ else
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
 
         // Empty config follows your non-regional crews (CH1) — World/country are opt-in.
-        var communities = config.Communities.Count > 0
-            ? config.Communities.Select(Name.From).ToList()
-            : (await Mediator.Send(new GetMyCommunitiesQuery()))
-                .Where(c => !c.IsRegional).Select(c => c.CommunityName).ToList();
+        var communities = !config.IncludeCommunities
+            ? new List<Name>()
+            : config.Communities.Count > 0
+                ? config.Communities.Select(Name.From).ToList()
+                : (await Mediator.Send(new GetMyCommunitiesQuery()))
+                    .Where(c => !c.IsRegional).Select(c => c.CommunityName).ToList();
 
-        if (communities.Count == 0)
+        // Nothing to read from EITHER half is the only empty case now — a rivals-only feed has no
+        // communities by design and must not bail here.
+        if (communities.Count == 0 && !config.IncludeRivals)
         {
-            _records = Array.Empty<CommunityHighlightRecord>();
+            _records = Array.Empty<PlayerHighlightRecord>();
             _charts = new Dictionary<Guid, Chart>();
             _loaded = true;
             return;
         }
 
-        _records = (await Mediator.Send(
-            new GetMyCommunityHighlightsQuery(communities, _mix, config.IncludeOwnWins, FeedTake))).ToList();
+        var community = communities.Count == 0
+            ? Array.Empty<PlayerHighlightRecord>()
+            : (await Mediator.Send(
+                new GetMyCommunityHighlightsQuery(communities, _mix, config.IncludeOwnWins, FeedTake))).ToArray();
+        _communityUserIds = community.Select(r => r.UserId).ToHashSet();
+
+        if (config.IncludeRivals)
+        {
+            var rivals = (await Mediator.Send(new GetMyRivalHighlightsQuery(_mix, FeedTake))).ToArray();
+            _rivalUserIds = rivals.Select(r => r.UserId).ToHashSet();
+            // Deduped by event: somebody who is both a rival and a clubmate produced ONE win, and
+            // the row wears both markers rather than appearing twice.
+            _records = community.Concat(rivals)
+                .GroupBy(r => r.EventId)
+                .Select(g => g.First())
+                .OrderByDescending(r => r.OccurredAt)
+                .Take(FeedTake)
+                .ToList();
+        }
+        else
+        {
+            _rivalUserIds = new HashSet<Guid>();
+            _records = community.ToList();
+        }
         _charts = await ChartCatalog.GetCharts(_mix);
         _loaded = true;
     }
 
-    private static string SessionsLink(CommunityHighlightRecord r) =>
+    private static string SessionsLink(PlayerHighlightRecord r) =>
         r.SessionId == null ? $"/Player/{r.UserId}/Sessions" : $"/Player/{r.UserId}/Sessions?session={r.SessionId}";
 
     private string Relative(DateTimeOffset when)
@@ -252,8 +285,17 @@ else
         return (null, null);
     }
 
-    private bool IsMe(CommunityHighlightRecord record) =>
+    private bool IsMe(PlayerHighlightRecord record) =>
         CurrentUser.IsLoggedIn && CurrentUser.User.Id == record.UserId;
+
+    // The only surface where all three states are meaningful, because it is the only one whose
+    // population is genuinely mixed (docs/design/rivals.md D36).
+    private string RowClass(PlayerHighlightRecord record)
+    {
+        return ("dash-ch-entry " + CommunityGlowReader.RowClass(false,
+            _rivalUserIds.Contains(record.UserId), _communityUserIds.Contains(record.UserId),
+            youClass: string.Empty)).TrimEnd();
+    }
 
     // "80% of S22" when the completion tier is the news, "D21 now S" when the grade is. The
     // policy decides which by whether it sent a grade at all, so this never has to re-derive it.

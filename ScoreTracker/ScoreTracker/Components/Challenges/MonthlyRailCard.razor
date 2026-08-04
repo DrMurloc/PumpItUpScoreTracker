@@ -4,6 +4,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using ScoreTracker.Web.Services.HomeDashboard
 
 @* The monthly leaderboard as a rail card (weekly-charts-overhaul.md §12.2): all four type
    boards render — top 20 each, inactive ones hidden — and the tier-list segment row (M18)
@@ -79,6 +80,9 @@
     /// <summary>User ids in a community you share — their rows glow green.</summary>
     [Parameter] public IReadOnlySet<Guid>? CommunityUserIds { get; set; }
 
+    /// <summary>Site-user rivals — their rows glow red, or segmented if they are also clubmates.</summary>
+    [Parameter] public IReadOnlySet<Guid>? RivalUserIds { get; set; }
+
     private static bool TypesEqual(ChartType? a, ChartType? b) => a == b;
 
     internal static string TypeKey(ChartType? type) => type?.ToString() ?? "Combined";
@@ -97,8 +101,9 @@
 
     private static double Fraction(int place, int total) => total <= 0 ? 0 : 1.0 - (double)place / total;
 
-    private string RowClass(MonthlyLeaderboardRow row) => UserId != null && row.Player?.Id == UserId ? "mine"
-        : CommunityUserIds?.Contains(row.Player?.Id ?? Guid.Empty) == true ? "community" : "";
+    private string RowClass(MonthlyLeaderboardRow row) =>
+        CommunityGlowReader.RowClass(row.Player?.Id ?? Guid.Empty, UserId, RivalUserIds, CommunityUserIds,
+            "mine", "community");
 
     private RenderFragment LbRow(MonthlyLeaderboardRow row, int total) =>@<div class="challenge-lb-row @RowClass(row)">
         <span class="challenge-lb-place" style="@ThemeScales.RarityStyle(Fraction(row.Place, total))">@row.Place</span>

@@ -43,6 +43,28 @@ public sealed class SessionHeroTests : ComponentTestBase
         Assert.NotEmpty(hero.FindAll("[data-testid='session-all-plays']"));
     }
 
+    /// <summary>
+    ///     The trophy is gone and the chart name carries the action. It used to be two controls
+    ///     doing one job — a name that navigated to the chart page and a trophy that opened a
+    ///     board — and the details dialogue now holds the board itself.
+    /// </summary>
+    [Fact]
+    public void TheChartNameOpensTheDetailsDialogueAndNoTrophyRemains()
+    {
+        Chart? opened = null;
+        var hero = RenderComponent<SessionHero>(p => p
+            .Add(h => h.Breakdown, FullBreakdown())
+            .Add(h => h.OnOpenChart, chart => opened = chart));
+
+        Assert.Empty(hero.FindAll("[data-testid='session-row-leaderboard']"));
+        var link = hero.FindAll("[data-testid='session-row-chart']");
+        Assert.NotEmpty(link);
+
+        link[0].Click();
+
+        Assert.NotNull(opened);
+    }
+
     [Fact]
     public void AScoreWithNoCohortRendersWithoutAPercentile()
     {

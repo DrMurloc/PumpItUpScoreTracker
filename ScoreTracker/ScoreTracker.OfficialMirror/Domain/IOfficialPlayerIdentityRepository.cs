@@ -13,8 +13,14 @@ internal interface IOfficialPlayerIdentityRepository
     /// <summary>
     ///     Import-confirmed link: upserts the (mix, username) player and points it at the
     ///     user, overwriting any previous link — the most recent import wins.
+    ///     <para>
+    ///         Returns the NORMALIZED tag it actually stored. Callers announcing the link must
+    ///         quote that rather than what they passed in, or a consumer matching on the tag
+    ///         would be matching a spelling this row never used (docs/design/rivals.md D7).
+    ///     </para>
     /// </summary>
-    Task LinkPlayer(MixEnum mix, string username, Guid userId, DateTimeOffset seenAt, CancellationToken ct);
+    Task<string> LinkPlayer(MixEnum mix, string username, Guid userId, DateTimeOffset seenAt,
+        CancellationToken ct);
 
     /// <summary>Re-points every mirror player linked to one account onto another (account merges).</summary>
     Task RelinkUser(Guid fromUserId, Guid toUserId, CancellationToken ct);

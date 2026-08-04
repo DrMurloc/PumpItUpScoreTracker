@@ -111,13 +111,14 @@
 @* ---- Full board (the shared dialog: full list, trust ladder, relevant filter) ---- *@
 <LeaderboardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Entries="_boardEntries"
                    Ascending="_boardAscending" OfficialUserIds="_boardOfficialIds"
-                   CommunityUserIds="_communityIds" InRangeUserIds="_boardInRangeIds"/>
+                   CommunityUserIds="_communityIds" RivalUserIds="_rivalIds"
+                   InRangeUserIds="_boardInRangeIds"/>
 
 @* ---- The monthly full board (§12.4) ---- *@
 <MonthlyBoardDialog @bind-Visible="_monthlyOpen" View="_monthlyView" Charts="_monthlyCharts"
                     ActiveType="_monthlyType" UserId="@(CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null)"
                     Loading="_monthlyLoading" Subtitle="@_monthlySubtitle"
-                    CommunityUserIds="_communityIds" TypeChanged="LoadMonthly"/>
+                    CommunityUserIds="_communityIds" RivalUserIds="_rivalIds" TypeChanged="LoadMonthly"/>
 
 @* ---- Chart details (the shared dialog, video and all) ---- *@
 <ChartDetailsDialog @bind-Visible="_chartOpen" Chart="_detailsChart" Mix="Mix"/>
@@ -156,6 +157,7 @@
 
     private DotNetObjectReference<ChallengeDialogHost>? _selfRef;
     private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _rivalIds = new HashSet<Guid>();
 
     // Record dialog
     private bool _recordOpen;
@@ -201,7 +203,11 @@
         if (!firstRender) return;
         _selfRef = DotNetObjectReference.Create(this);
         await JS.InvokeVoidAsync("challengeBoard.register", _selfRef);
-        if (CurrentUser.IsLoggedIn) _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+        if (CurrentUser.IsLoggedIn)
+        {
+            _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+            _rivalIds = await CommunityGlow.GetMyRivalIds(Mix);
+        }
     }
 
     [JSInvokable]

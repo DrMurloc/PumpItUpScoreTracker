@@ -258,8 +258,8 @@
     },
     {
       "type": "community-highlights",
-      "name": "Community Highlights",
-      "description": "Recent big wins from the communities you pick.",
+      "name": "Highlights feed",
+      "description": "Recent big wins from the communities you pick, and optionally your rivals.",
       "category": "Compete",
       "supportedSizes": [
         "1x2",
@@ -321,6 +321,12 @@
             "nullable": true
           },
           "includeOwnWins": {
+            "type": "boolean"
+          },
+          "includeRivals": {
+            "type": "boolean"
+          },
+          "includeCommunities": {
             "type": "boolean"
           }
         }

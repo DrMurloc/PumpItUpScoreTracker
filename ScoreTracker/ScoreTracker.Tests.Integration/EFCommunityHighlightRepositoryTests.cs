@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
-using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Infrastructure;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -10,6 +9,11 @@ using ScoreTracker.Tests.Integration.Fixtures;
 
 namespace ScoreTracker.Tests.Integration;
 
+/// <summary>
+///     The community AUDIENCE INDEX, which is all this table is since the win payloads moved to
+///     PlayerProgress (docs/design/rivals.md D33). Everything asserted here is about visibility
+///     and dedupe; what the wins actually said is PlayerHighlight's business.
+/// </summary>
 [Collection(IntegrationTestCollection.Name)]
 [ExcludeFromCodeCoverage]
 public sealed class EFCommunityHighlightRepositoryTests : IAsyncLifetime
@@ -38,28 +42,20 @@ public sealed class EFCommunityHighlightRepositoryTests : IAsyncLifetime
                     members, Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), false),
                 CancellationToken.None);
 
-    private static SignificantWin Pg(string song) =>
-        new(WinKind.NotablePg, ChartId: Guid.NewGuid(), ChartName: song, Difficulty: "S21", RarityShare: 0.004);
-
     [Fact]
-    public async Task PersistsAndReadsBackAWinForACommunityMember()
+    public async Task IndexesAndReadsBackAnEventForACommunityMember()
     {
         var winner = Guid.NewGuid();
         var requester = Guid.NewGuid();
+        var eventId = Guid.NewGuid();
         await SeedCommunity("Crew", winner, requester);
 
-        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now, sessionId: null,
-            new[] { Pg("Bee") }, CancellationToken.None);
+        await Highlights().AddForUserCommunities(eventId, winner, MixEnum.Phoenix, Now, CancellationToken.None);
 
-        var feed = await Highlights()
-            .GetForUser(requester, new Name[] { "Crew" }, MixEnum.Phoenix, 20, CancellationToken.None);
+        var visible = await Highlights()
+            .GetVisibleEventIds(requester, new Name[] { "Crew" }, MixEnum.Phoenix, 20, CancellationToken.None);
 
-        var entry = Assert.Single(feed);
-        Assert.Equal(winner, entry.UserId);
-        var win = Assert.Single(entry.Wins);
-        Assert.Equal(WinKind.NotablePg, win.Kind);
-        Assert.Equal("Bee", win.ChartName);
-        Assert.Equal(0.004, win.RarityShare);
+        Assert.Equal(eventId, Assert.Single(visible));
     }
 
     [Fact]
@@ -69,17 +65,17 @@ public sealed class EFCommunityHighlightRepositoryTests : IAsyncLifetime
         var stranger = Guid.NewGuid();
         await SeedCommunity("Crew", winner);
 
-        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now, null,
-            new[] { Pg("Bee") }, CancellationToken.None);
+        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now,
+            CancellationToken.None);
 
-        var feed = await Highlights()
-            .GetForUser(stranger, new Name[] { "Crew" }, MixEnum.Phoenix, 20, CancellationToken.None);
+        var visible = await Highlights()
+            .GetVisibleEventIds(stranger, new Name[] { "Crew" }, MixEnum.Phoenix, 20, CancellationToken.None);
 
-        Assert.Empty(feed);
+        Assert.Empty(visible);
     }
 
     [Fact]
-    public async Task DedupesAWinFannedAcrossSeveralSharedCommunities()
+    public async Task DedupesAnEventFannedAcrossSeveralSharedCommunities()
     {
         var winner = Guid.NewGuid();
         var requester = Guid.NewGuid();
@@ -87,13 +83,31 @@ public sealed class EFCommunityHighlightRepositoryTests : IAsyncLifetime
         await SeedCommunity("Beta", winner, requester);
 
         // One event → a row in each community (same EventId); the feed must show it once.
-        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now, null,
-            new[] { Pg("Bee") }, CancellationToken.None);
+        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now,
+            CancellationToken.None);
 
-        var feed = await Highlights()
-            .GetForUser(requester, new Name[] { "Alpha", "Beta" }, MixEnum.Phoenix, 20, CancellationToken.None);
+        var visible = await Highlights()
+            .GetVisibleEventIds(requester, new Name[] { "Alpha", "Beta" }, MixEnum.Phoenix, 20,
+                CancellationToken.None);
 
-        Assert.Single(feed);
+        Assert.Single(visible);
+    }
+
+    [Fact]
+    public async Task IndexingTheSameEventTwiceWritesNothingNew()
+    {
+        var winner = Guid.NewGuid();
+        var requester = Guid.NewGuid();
+        var eventId = Guid.NewGuid();
+        await SeedCommunity("Crew", winner, requester);
+
+        await Highlights().AddForUserCommunities(eventId, winner, MixEnum.Phoenix, Now, CancellationToken.None);
+        await Highlights().AddForUserCommunities(eventId, winner, MixEnum.Phoenix, Now, CancellationToken.None);
+
+        var visible = await Highlights()
+            .GetVisibleEventIds(requester, new Name[] { "Crew" }, MixEnum.Phoenix, 20, CancellationToken.None);
+
+        Assert.Single(visible);
     }
 
     [Fact]
@@ -101,18 +115,18 @@ public sealed class EFCommunityHighlightRepositoryTests : IAsyncLifetime
     {
         var winner = Guid.NewGuid();
         var requester = Guid.NewGuid();
+        var fresh = Guid.NewGuid();
         await SeedCommunity("Crew", winner, requester);
-        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now.AddDays(-40), null,
-            new[] { Pg("Old") }, CancellationToken.None);
-        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now, null,
-            new[] { Pg("Fresh") }, CancellationToken.None);
+        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now.AddDays(-40),
+            CancellationToken.None);
+        await Highlights().AddForUserCommunities(fresh, winner, MixEnum.Phoenix, Now, CancellationToken.None);
 
         var removed = await Highlights().PurgeBefore(Now.AddDays(-30), CancellationToken.None);
 
         Assert.Equal(1, removed);
-        var feed = await Highlights()
-            .GetForUser(requester, new Name[] { "Crew" }, MixEnum.Phoenix, 20, CancellationToken.None);
-        Assert.Equal("Fresh", Assert.Single(feed).Wins.Single().ChartName);
+        var visible = await Highlights()
+            .GetVisibleEventIds(requester, new Name[] { "Crew" }, MixEnum.Phoenix, 20, CancellationToken.None);
+        Assert.Equal(fresh, Assert.Single(visible));
     }
 
     [Fact]
@@ -121,11 +135,11 @@ public sealed class EFCommunityHighlightRepositoryTests : IAsyncLifetime
         var winner = Guid.NewGuid();
         var requester = Guid.NewGuid();
         await SeedCommunity("Crew", winner, requester);
-        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now, null,
-            new[] { Pg("Bee") }, CancellationToken.None);
+        await Highlights().AddForUserCommunities(Guid.NewGuid(), winner, MixEnum.Phoenix, Now,
+            CancellationToken.None);
 
         var otherMix = await Highlights()
-            .GetForUser(requester, new Name[] { "Crew" }, MixEnum.Phoenix2, 20, CancellationToken.None);
+            .GetVisibleEventIds(requester, new Name[] { "Crew" }, MixEnum.Phoenix2, 20, CancellationToken.None);
 
         Assert.Empty(otherMix);
     }
