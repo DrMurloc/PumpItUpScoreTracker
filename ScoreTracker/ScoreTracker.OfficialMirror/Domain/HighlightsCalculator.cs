@@ -14,7 +14,8 @@ internal sealed record HighlightsInput(
     IReadOnlyList<FolderRecordRow> FolderRecords,
     CrossMixRecordHighs? CrossMix = null,
     IReadOnlySet<int>? PreviouslySeenPlayerIds = null,
-    ScoringConfiguration? Scoring = null);
+    ScoringConfiguration? Scoring = null,
+    bool IncludeRecordKinds = true);
 
 internal sealed record HighlightsResult(
     IReadOnlyList<HighlightRow> Highlights,
@@ -57,13 +58,25 @@ internal static class HighlightsCalculator
 
         var (updatedBoardRecords, updatedFolderRecords, beatenBoards) =
             UpdateRecords(input, chartBoards, currentByBoard);
+
+        // The supplemented reading neither writes the record books nor claims anything from
+        // them. World firsts and new #1s are all-time facts about what has ever been played
+        // on a chart, and the mirror only knows that about rows piugame published — so they
+        // stay a property of the official reading, and the books stay single-copy.
+        if (!input.IncludeRecordKinds)
+        {
+            updatedBoardRecords = Array.Empty<BoardRecordRow>();
+            updatedFolderRecords = Array.Empty<FolderRecordRow>();
+        }
+
         if (input.IsBaseline)
             return new HighlightsResult(Array.Empty<HighlightRow>(), updatedBoardRecords, updatedFolderRecords);
 
         var highlights = new List<HighlightRow>();
         highlights.AddRange(Movers(input.Boards, currentByBoard, previousByBoard));
         highlights.AddRange(BoardsClimbed(chartBoards, currentByBoard, previousByBoard, input.Previous != null));
-        highlights.AddRange(RecordHighlights(input, chartBoards, previousByBoard, beatenBoards));
+        if (input.IncludeRecordKinds)
+            highlights.AddRange(RecordHighlights(input, chartBoards, previousByBoard, beatenBoards));
         highlights.AddRange(HeroSummary(input, chartBoards, currentByBoard, previousByBoard));
 
         return new HighlightsResult(highlights, updatedBoardRecords, updatedFolderRecords);

@@ -35,9 +35,11 @@ public sealed class SupplementRollupSagaTests
     private sealed record Fixture(
         Mock<IOfficialSnapshotRepository> Snapshots,
         Mock<IScoreReader> Scores,
+        Mock<IOfficialRecordRepository> Records,
         SupplementRollupSaga Saga)
     {
         public List<PlacementRow> Written { get; } = new();
+        public List<HighlightRow> Highlights { get; } = new();
     }
 
     private static Fixture Arrange(
@@ -65,6 +67,17 @@ public sealed class SupplementRollupSagaTests
         snapshots.Setup(s => s.GetBoardPlacements(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<PlacementScope>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PlacementRow>());
+        // The highlights pass reads the whole snapshot back; a repository never answers null.
+        snapshots.Setup(s => s.GetPlacements(It.IsAny<int>(), It.IsAny<PlacementScope>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<PlacementRow>());
+        snapshots.Setup(s => s.GetSeenPlayerIds(It.IsAny<MixEnum>(), It.IsAny<int>(), It.IsAny<PlacementScope>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new HashSet<int>());
+        snapshots.Setup(s => s.GetSealedBefore(It.IsAny<MixEnum>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SnapshotRun?)null);
+        snapshots.Setup(s => s.AnySupplemented(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var scores = new Mock<IScoreReader>();
         scores.Setup(s => s.GetVerifiedBests(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<Guid>>(),
@@ -80,14 +93,23 @@ public sealed class SupplementRollupSagaTests
         userReader.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((users ?? new[] { Person(PublicUser, true) }).ToArray());
 
-        var fixture = new Fixture(snapshots, scores, new SupplementRollupSaga(snapshots.Object,
-            new Mock<IOfficialRecordRepository>().Object, scores.Object, stats.Object, userReader.Object,
+        var records = new Mock<IOfficialRecordRepository>();
+        records.Setup(r => r.DeleteSupplementedHighlights(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var fixture = new Fixture(snapshots, scores, records, new SupplementRollupSaga(snapshots.Object,
+            records.Object, scores.Object, stats.Object, userReader.Object,
             new MemoryCache(new MemoryCacheOptions()), NullLogger<SupplementRollupSaga>.Instance));
 
         snapshots.Setup(s => s.WritePlacements(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<PlacementRow>>(),
                 It.IsAny<CancellationToken>()))
             .Callback((int _, IReadOnlyCollection<PlacementRow> rows, CancellationToken _) =>
                 fixture.Written.AddRange(rows))
+            .Returns(Task.CompletedTask);
+        records.Setup(r => r.WriteHighlights(It.IsAny<int>(), It.IsAny<MixEnum>(),
+                It.IsAny<IReadOnlyCollection<HighlightRow>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .Callback((int _, MixEnum _, IReadOnlyCollection<HighlightRow> rows, bool _, CancellationToken _) =>
+                fixture.Highlights.AddRange(rows))
             .Returns(Task.CompletedTask);
 
         return fixture;
@@ -173,6 +195,35 @@ public sealed class SupplementRollupSagaTests
         Assert.Empty(f.Written);
         f.Snapshots.Verify(s => s.DeleteSupplementedPlacements(It.IsAny<int>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task TheHighlightsPassIsMarkedSupplementedAndNeverTouchesTheRecordBooks()
+    {
+        var f = Arrange();
+
+        await f.Saga.Consume(Context());
+
+        f.Records.Verify(r => r.WriteHighlights(SnapshotId, It.IsAny<MixEnum>(),
+            It.IsAny<IReadOnlyCollection<HighlightRow>>(), true, It.IsAny<CancellationToken>()), Times.Once);
+        f.Records.Verify(r => r.UpsertBoardRecords(It.IsAny<IReadOnlyCollection<BoardRecordRow>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        f.Records.Verify(r => r.UpsertFolderRecords(It.IsAny<MixEnum>(),
+            It.IsAny<IReadOnlyCollection<FolderRecordRow>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheFirstEverRollUpIsItsOwnBaselineAndStaysSilent()
+    {
+        var f = Arrange(official: new[] { new PlacementRow(BoardId, 90, 1, 990_000) });
+        f.Snapshots.Setup(s => s.AnySupplemented(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        await f.Saga.Consume(Context());
+
+        // Rows still land — it is the celebration that is suppressed, not the board.
+        Assert.NotEmpty(f.Written);
+        Assert.Empty(f.Highlights);
     }
 
     [Fact]

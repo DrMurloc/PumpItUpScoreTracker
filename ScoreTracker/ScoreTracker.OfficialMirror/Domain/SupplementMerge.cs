@@ -47,6 +47,16 @@ internal static class SupplementMerge
         Rank(Collapse(rows));
 
     /// <summary>
+    ///     Many boards' rows at once, each merged within itself. Ranking is per board, so a
+    ///     whole snapshot has to be split before it is ranked rather than after — the highlights
+    ///     pass reads a snapshot this way.
+    /// </summary>
+    public static IReadOnlyList<PlacementRow> MergedBoards(IEnumerable<PlacementRow> rows) =>
+        rows.GroupBy(r => r.LeaderboardId)
+            .SelectMany(MergedBoard)
+            .ToArray();
+
+    /// <summary>
     ///     One row per player. A supplemented row only exists where it beat the player's
     ///     official row, so taking the higher score is the same rule read back — but it is
     ///     stated rather than assumed, because the stored rows outlive the run that wrote them

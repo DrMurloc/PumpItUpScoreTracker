@@ -7,6 +7,7 @@ using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.OfficialMirror.Application;
 
@@ -78,8 +79,14 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
             return;
         }
 
+        // The supplemented series has its own week one, which is a different question from
+        // whether the official sweep was a baseline. Without this the first roll-up announces
+        // several hundred simultaneous debuts and a board-wide flood of "new entries".
+        var isBaseline = !await _snapshots.AnySupplemented(mix, ct);
+
         // Clear this run's own previous output first, so a re-press replaces rather than doubles.
         await _snapshots.DeleteSupplementedPlacements(latest.Id, ct);
+        await _records.DeleteSupplementedHighlights(latest.Id, ct);
 
         var boards = await _snapshots.GetBoards(mix, ct);
         var written = new List<PlacementRow>();
@@ -87,11 +94,47 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
         written.AddRange(await RatingBoardRows(latest.Id, mix, boards, cohort, ct));
 
         await _snapshots.WritePlacements(latest.Id, written, ct);
+        await ComputeHighlights(latest.Id, mix, boards, isBaseline, ct);
         EvictSnapshotCaches(mix, latest.Id);
 
         _logger.LogInformation(
             "{Mix} snapshot {SnapshotId}: {Rows} supplemented rows from {Players} linked public players",
             mix, latest.Id, written.Count, cohort.Count);
+    }
+
+    /// <summary>
+    ///     This Week, read the supplemented way. The same calculator over the merged board, with
+    ///     the record-book kinds switched off — every diff-based kind (movers, climbers, pulse,
+    ///     gainers, floors, debuts) answers differently once our players are on the board, while
+    ///     world firsts and new #1s stay a fact about what piugame published.
+    ///     <para>
+    ///         Both the debut seen-set and the previous week are read at the same scope as the
+    ///         current one. Mixing scopes would make every supplemented player debut every week,
+    ///         because they were never in the official history being compared against.
+    ///     </para>
+    /// </summary>
+    private async Task ComputeHighlights(int snapshotId, MixEnum mix, IReadOnlyList<BoardDimension> boards,
+        bool isBaseline, CancellationToken ct)
+    {
+        const PlacementScope scope = PlacementScope.IncludingSupplemented;
+        var previous = await _snapshots.GetSealedBefore(mix, snapshotId, ct);
+
+        var input = new HighlightsInput(mix, snapshotId, isBaseline, boards,
+            SupplementMerge.MergedBoards(await _snapshots.GetPlacements(snapshotId, scope, ct)),
+            previous == null
+                ? null
+                : SupplementMerge.MergedBoards(await _snapshots.GetPlacements(previous.Id, scope, ct)),
+            Array.Empty<BoardRecordRow>(),
+            Array.Empty<FolderRecordRow>(),
+            CrossMixRecordHighs.Empty,
+            await _snapshots.GetSeenPlayerIds(mix, snapshotId, scope, ct),
+            ScoringConfiguration.PumbilityScoring(mix, false),
+            false);
+
+        var result = HighlightsCalculator.Calculate(input);
+        await _records.WriteHighlights(snapshotId, mix, result.Highlights, true, ct);
+        _logger.LogInformation("{Mix} snapshot {SnapshotId}: {Count} supplemented highlights", mix, snapshotId,
+            result.Highlights.Count);
     }
 
     /// <summary>
