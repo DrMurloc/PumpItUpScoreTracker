@@ -103,26 +103,32 @@ internal sealed class RivalReadSaga :
             .FirstOrDefault();
         if (subject == null) return null;
 
+        // A record with no score at all, or one set on a run that broke, is not a comparable
+        // result — the same bar the community folder compare uses. Both halves matter: the
+        // ledger holds scoreless break rows, and counting a break as a number would report
+        // losses nobody played. An official placement is a completed run by construction, so
+        // excluding breaks on OUR side only would hand every ghost comparison a free win.
         var mine = (await _scores.GetBestScores(request.Mix, me, cancellationToken))
-            .ToDictionary(s => s.ChartId, s => (int)s.Score);
+            .Where(s => s.Score != null && !s.IsBroken)
+            .ToDictionary(s => s.ChartId, s => (int)s.Score!.Value);
 
         // A site rival compares within a folder; a board-only one compares on the charts we are
         // BOTH on, because the mirror covers a scattering of level 20+ boards rather than a
         // folder. Same table either way — the unit is what differs, and the count says so.
         var chartIds = subject.IsGhost
             ? mine.Keys.ToArray()
-            : await FolderChartIds(request, me, cancellationToken);
+            : await FolderChartIds(request, me, mine.Keys, cancellationToken);
 
         var theirs = await _rivalScores.Read(new[] { subject }, request.Mix, chartIds, cancellationToken);
 
         var rows = new List<RivalHeadToHeadRow>();
         foreach (var (chartId, scores) in theirs.ByChart)
         {
-            var theirScore = scores.FirstOrDefault();
+            var theirScore = scores.FirstOrDefault(s => !s.IsBroken);
             if (theirScore == null) continue;
-            rows.Add(new RivalHeadToHeadRow(chartId, mine.GetValueOrDefault(chartId, 0) is var m && m > 0
-                ? m
-                : null, theirScore.Score, theirScore.Source));
+            rows.Add(new RivalHeadToHeadRow(chartId,
+                mine.TryGetValue(chartId, out var myScore) ? myScore : null,
+                theirScore.Score, theirScore.Source));
         }
 
         var shared = rows.Count(r => r.YourScore != null && r.TheirScore != null);
@@ -160,11 +166,14 @@ internal sealed class RivalReadSaga :
     }
 
     private async Task<IReadOnlyCollection<Guid>> FolderChartIds(GetRivalHeadToHeadQuery request, Guid me,
-        CancellationToken cancellationToken)
+        IEnumerable<Guid> myScoredCharts, CancellationToken cancellationToken)
     {
+        // No folder named: the universe is every chart you hold a comparable score on, which the
+        // caller has already read. Asking the ledger for the same rows a second time also asked a
+        // different question — that read kept scoreless breaks, so the two paths disagreed about
+        // which charts are in play.
         if (request.ChartType == null || request.Level == null)
-            return (await _scores.GetBestScores(request.Mix, me, cancellationToken))
-                .Select(s => s.ChartId).ToArray();
+            return myScoredCharts.ToArray();
 
         return (await _scores.GetPlayerScores(request.Mix, new[] { me }, request.ChartType.Value,
                 request.Level.Value, cancellationToken))
