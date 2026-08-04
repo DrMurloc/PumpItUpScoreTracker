@@ -12051,15 +12051,20 @@ button.chart-card-art {
     white-space: nowrap;
 }
 
-/* The table scrolls sideways rather than crushing its columns. A score with its grade and plate
-   has a floor width, and below it the cells were wrapping into unreadable stacks. */
-.rvl-cmp-table-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
+/* Sideways scroll is a MOBILE fallback, not the table's normal state. Above that the row has
+   room — the song name is already gone below 760px (.olb-hide-mobile), which is most of the
+   width back — so a scrollbar there would be a control with nothing to do. The min-width only
+   applies where the scroll does, and is the real floor of a mobile row: art, bubble, and two
+   score stacks with the difference column dropped. */
+@media (max-width: 599.98px) {
+    .rvl-cmp-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 
-.rvl-cmp-table-wrap table {
-    min-width: 420px;
+    .rvl-cmp-table-wrap table {
+        min-width: 340px;
+    }
 }
 
 /* Same breakpoint the score stack uses: at 1:1 and narrower the row has no horizontal room to
