@@ -92,9 +92,9 @@ Spanish, one Portuguese — into four locales, three arms, thinking disabled, sy
 
 | Arm | Per comment | Per 1,000/mo | Batched | Entities kept | Language detected | Failures |
 |---|---|---|---|---|---|---|
-| Opus 5 | $0.0363 | $36.34 | $18.17 | **89/89** | 23/23 | 0 |
-| Sonnet 5 | $0.0218 | $21.77 | $10.88 | **89/89** | 23/23 | 0 |
-| Haiku 4.5 | $0.0056 | $5.59 | $2.79 | 81/89 (91%) | 23/23 | 0 |
+| Opus 5 | $0.0365 | $36.54 | $18.27 | **89/89** | 23/23 | 0 |
+| Sonnet 5 | $0.0220 | $22.02 | $11.01 | **89/89** | 23/23 | 0 |
+| Haiku 4.5 | $0.0056 | $5.62 | $2.81 | 81/89 (91%) | 23/23 | 0 |
 
 Costs ran ~2.5× the pre-run estimate. The prompts are ~2,400 tokens per call and the system prompt
 is sent twice per comment, so input is now ~60% of the bill rather than the ~35% assumed. **Prompt
@@ -160,7 +160,54 @@ native reader finds Sonnet's output thin.
 - **The 500-character cap**, raised from 200 after four of 23 real comments exceeded it. The
   longest are the heartfelt replies; a 200 cap would have truncated those and kept `FATALITY`.
 
-## 5. Running it
+## 5. Prompt injection
+
+Comments are untrusted text going into a model, so the question is not whether someone will try
+but what they get if it works.
+
+**The boundary is the message role, not a delimiter.** An earlier version fenced the comment in
+`<comment>` tags under a "this is data" note — which a comment containing `</comment>` walks
+straight out of, because the fence and the attack are in the same string. Prose asking a model to
+respect a delimiter is a request, not a boundary. So the instruction lives in the system prompt
+and the untrusted text is **alone in the user turn, wrapped in nothing**: no author can type a
+string that becomes a role marker, so there is nothing left to escape.
+
+**Assume it is bypassable anyway.** Instruction-hierarchy defenses degrade under pressure, and a
+design that depends on the model always obeying is a design waiting to be embarrassed. What makes
+that acceptable here is the blast radius:
+
+- **No tools, no web access, no file access.** The injection → tool call → exfiltration chain does
+  not exist; there is nothing to escalate into.
+- **Structured outputs is a decoding constraint, not an instruction.** Response shape holds
+  regardless of what the comment says.
+- **The attacker already had arbitrary text on the page.** That is what a comment is. Injection
+  grants no capability they lacked.
+
+**The one real gain is language asymmetry** — benign Korean, hostile Spanish, since the two
+audiences never compare. Note this cuts against reviewing only the original: if moderation is ever
+built it has to see both ends, even though it must *read* the original (§4).
+
+Three things blunt it without costing a token:
+
+- **The payload is public.** The original always renders alongside the translation, in the
+  author's own words under their own handle. Injecting means broadcasting "ignore previous
+  instructions" on a chart page with your name on it.
+- **The 500-character cap** leaves very little room for a plausible comment *plus* a payload
+  *plus* framing to sell it.
+- **A URL check at build time** — reject any rendering containing a link or domain absent from the
+  source. Deterministic, free, and it kills the only version of this worth an attacker's effort.
+  Not implemented: there is no production pipeline to put it in yet. **It is a requirement for
+  whoever builds one.**
+
+Round-trip divergence checking (render back to English, compare to the pivot) catches asymmetry
+directly at roughly +30% cost. Deliberately skipped — it doubles a bill to defend against an
+attack whose payoff is showing Spanish speakers text the attacker could simply have typed.
+
+**At the display layer, XSS matters more than injection.** Blazor auto-encodes; this only becomes
+a hazard if someone reaches for `MarkupString` on comment text, which is exactly the temptation
+when adding link support.
+
+## 6. Running it
 
 Every test bills a real account. `ClaudeApi:ApiKey` in the AppHost user-secrets store; inert
 without it. See [HOW-TO-TEST.md](../HOW-TO-TEST.md#translation-workbench--spends-real-money-manual-runs-only).
