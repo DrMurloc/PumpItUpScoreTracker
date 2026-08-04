@@ -19,6 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Anthropic" Version="12.39.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
@@ -45,6 +46,7 @@
     <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
     <ProjectReference Include="..\ScoreTracker.Identity\ScoreTracker.Identity.csproj" />
     <ProjectReference Include="..\ScoreTracker.ScoreLedger\ScoreTracker.ScoreLedger.csproj" />
+    <ProjectReference Include="..\ScoreTracker.Translations\ScoreTracker.Translations.csproj" />
   </ItemGroup>
 
 </Project>
