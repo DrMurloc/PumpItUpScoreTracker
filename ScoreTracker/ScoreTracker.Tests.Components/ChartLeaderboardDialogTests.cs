@@ -15,6 +15,8 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
+using ScoreTracker.Rivals.Contracts.Queries;
+using ScoreTracker.Rivals.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -209,6 +211,53 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
             builder.CloseComponent();
         });
     }
+
+    /// <summary>
+    ///     The reported bug: a rival who is also a clubmate read as a plain clubmate on this board,
+    ///     because its Row model had no rival flag at all. Asserting the class the stylesheet keys
+    ///     on, not the presence of a row.
+    /// </summary>
+    [Fact]
+    public void ARivalWhoIsAlsoAClubmateGetsTheSegmentedRow()
+    {
+        var rivalAndClubmate = Guid.NewGuid();
+        var clubmateOnly = Guid.NewGuid();
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User).Returns(new User(Guid.NewGuid(), Name.From("ME"), true, null,
+            new Uri("https://example.invalid/me.png"), null));
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false) });
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { rivalAndClubmate, clubmateOnly });
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new RivalSubject(Guid.NewGuid(), rivalAndClubmate, null, "TRIGGER", null, false,
+                    RivalCapabilities.LiveScores, When)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                ScoreFor(rivalAndClubmate, 990_000, "TRIGGER"),
+                ScoreFor(clubmateOnly, 980_000, "VALEX")
+            });
+
+        var cut = RenderDialog();
+
+        cut.WaitForAssertion(() =>
+        {
+            var rows = cut.FindAll(".weekly-lb-row");
+            Assert.Equal(2, rows.Count);
+            Assert.Contains("is-both", rows[0].ClassName);
+            Assert.Contains("weekly-lb-community", rows[1].ClassName);
+            Assert.DoesNotContain("is-both", rows[1].ClassName);
+        });
+    }
+
+    private static UserPhoenixScore ScoreFor(Guid userId, int score, string name) =>
+        new(userId, Guid.NewGuid(), Name.From(name), PhoenixScore.From(score),
+            PhoenixPlate.PerfectGame, false, true, When);
 
     private static UserPhoenixScore Score(int score, DateTimeOffset recordedAt, string name = "PLAYER")
     {

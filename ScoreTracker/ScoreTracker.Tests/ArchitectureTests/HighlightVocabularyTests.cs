@@ -68,6 +68,34 @@ public sealed class HighlightVocabularyTests
             + "there: " + string.Join(", ", offenders));
     }
 
+    /// <summary>
+    ///     The precedence ladder lives in exactly one place. Copies are how this broke twice: a
+    ///     board written before rivals existed keeps a you/clubmate ternary, nothing references
+    ///     the missing arm, and the rival state is simply unreachable there — no failing test, no
+    ///     warning, just a row that never turns red. The parameter-passing check below cannot see
+    ///     it, because a board that resolves membership internally passes no parameters at all.
+    ///     Emitting "is-both" outside the reader means someone wrote the ladder again.
+    /// </summary>
+    [Fact]
+    public void OnlyOneImplementationOfThePrecedenceLadder()
+    {
+        var root = Path.Combine(FindSolutionRoot(), "ScoreTracker");
+        var offenders = Directory
+            .EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
+            .Where(f => f.EndsWith(".razor", StringComparison.Ordinal)
+                        || f.EndsWith(".cs", StringComparison.Ordinal))
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")
+                        && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+            .Where(f => !f.EndsWith("CommunityGlowReader.cs", StringComparison.Ordinal))
+            .Where(f => File.ReadAllText(f).Contains("\"is-both\"", StringComparison.Ordinal))
+            .Select(Path.GetFileName)
+            .ToArray();
+
+        Assert.True(offenders.Length == 0,
+            "These decide the row class themselves instead of calling CommunityGlowReader.RowClass, "
+            + "so they will drift out of the ladder: " + string.Join(", ", offenders));
+    }
+
     private static string BlockFor(string css, string selector)
     {
         var start = css.IndexOf(selector, StringComparison.Ordinal);

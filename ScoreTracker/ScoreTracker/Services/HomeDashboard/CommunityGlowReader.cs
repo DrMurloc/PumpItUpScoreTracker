@@ -67,11 +67,19 @@ public sealed class CommunityGlowReader(IMediator mediator, ICurrentUserAccessor
     ///     <para>Null sets are treated as empty, so a board can adopt this before it has both.</para>
     /// </summary>
     public static string RowClass(Guid userId, Guid? me, IReadOnlySet<Guid>? rivals,
-        IReadOnlySet<Guid>? clubmates, string youClass, string communityClass = "is-community")
+        IReadOnlySet<Guid>? clubmates, string youClass, string communityClass = "is-community") =>
+        RowClass(userId == me, rivals?.Contains(userId) == true, clubmates?.Contains(userId) == true,
+            youClass, communityClass);
+
+    /// <summary>
+    ///     The same ladder for a board that already resolved the three memberships — it row-models
+    ///     them as flags rather than re-testing sets per row. Both overloads exist so neither call
+    ///     shape has an excuse to write the ladder again.
+    /// </summary>
+    public static string RowClass(bool isMe, bool isRival, bool isClubmate, string youClass,
+        string communityClass = "is-community")
     {
-        if (userId == me) return youClass;
-        var isRival = rivals?.Contains(userId) == true;
-        var isClubmate = clubmates?.Contains(userId) == true;
+        if (isMe) return youClass;
         return (isRival, isClubmate) switch
         {
             (true, true) => "is-both",

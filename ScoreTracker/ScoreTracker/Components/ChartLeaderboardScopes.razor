@@ -11,6 +11,7 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.HomeDashboard
 @using ScoreTracker.Web.Services.Theming
 @namespace ScoreTracker.Web.Components
 
@@ -147,7 +148,7 @@ else
     [Parameter] public LeaderboardScope InitialScope { get; set; } = LeaderboardScope.World;
 
     private sealed record Row(int Place, double Percentile, UserPhoenixScore Score, bool IsMe,
-        bool IsCommunity, bool IsOfficial);
+        bool IsCommunity, bool IsRival, bool IsOfficial);
 
     private Chart? _chart;
     private bool _loading = true;
@@ -165,6 +166,7 @@ else
     private UserPhoenixScore[] _world = Array.Empty<UserPhoenixScore>();
     private IReadOnlySet<Guid> _clubmates = new HashSet<Guid>();
     private IReadOnlyList<RivalSubject> _rivals = Array.Empty<RivalSubject>();
+    private IReadOnlySet<Guid> _rivalUserIds = new HashSet<Guid>();
     private IReadOnlySet<Guid> _officialRivalEdges = new HashSet<Guid>();
     private DateTimeOffset? _rivalOfficialAsOf;
     private int _rivalsWithoutAScore;
@@ -213,6 +215,9 @@ else
             // Loaded up front so the chip can grey itself: a scope with nothing behind it is
             // exactly what the disabled state is for.
             _rivals = await Mediator.Send(new GetMyRivalsQuery(Mix)) ?? Array.Empty<RivalSubject>();
+            // Site-user rivals only: a board-only rival has no account, so no row here is theirs.
+            // Resolved once per chart rather than per row — this runs inside the ranking loop.
+            _rivalUserIds = _rivals.Where(r => r.UserId != null).Select(r => r.UserId!.Value).ToHashSet();
         }
 
         if (!IsAvailable(_scope)) _scope = LeaderboardScope.World;
@@ -260,7 +265,7 @@ else
                 _rows.Add(new Row(tiePlace,
                     total == 0 ? 0 : (total - tiePlace + 1) / (double)total,
                     score, score.UserId == myId, _communityUserIds.Contains(score.UserId),
-                    IsOfficialRow(score)));
+                    _rivalUserIds.Contains(score.UserId), IsOfficialRow(score)));
                 place++;
             }
         }
@@ -369,8 +374,12 @@ else
     private bool IsOfficialRow(UserPhoenixScore score) =>
         _scope == LeaderboardScope.Rivals && _officialRivalEdges.Count > 0 && score.UserId == Guid.Empty;
 
+    // The shared ladder, not a private copy of it. This board carried its own you/clubmate
+    // ternary with no rival arm at all, so a rival read as a plain clubmate on every scope —
+    // including the two surfaces this component was just lifted onto.
     private string RowClass(Row row) =>
-        row.IsMe ? "weekly-lb-me" : row.IsCommunity ? "weekly-lb-community" : string.Empty;
+        CommunityGlowReader.RowClass(row.IsMe, row.IsRival, row.IsCommunity,
+            "weekly-lb-me", "weekly-lb-community");
 
     private double? MyPercentile =>
         _myPlace == null || _rows.Count == 0 ? null : (_rows.Count - _myPlace.Value + 1) / (double)_rows.Count;

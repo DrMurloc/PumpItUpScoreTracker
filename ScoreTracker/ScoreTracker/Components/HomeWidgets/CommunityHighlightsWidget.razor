@@ -286,15 +286,9 @@ else
     // population is genuinely mixed (docs/design/rivals.md D36).
     private string RowClass(PlayerHighlightRecord record)
     {
-        var isRival = _rivalUserIds.Contains(record.UserId);
-        var isCommunity = _communityUserIds.Contains(record.UserId);
-        return (isRival, isCommunity) switch
-        {
-            (true, true) => "dash-ch-entry is-both",
-            (true, false) => "dash-ch-entry is-rival",
-            (false, true) => "dash-ch-entry is-community",
-            _ => "dash-ch-entry"
-        };
+        return ("dash-ch-entry " + CommunityGlowReader.RowClass(false,
+            _rivalUserIds.Contains(record.UserId), _communityUserIds.Contains(record.UserId),
+            youClass: string.Empty)).TrimEnd();
     }
 
     // "80% of S22" when the completion tier is the news, "D21 now S" when the grade is. The

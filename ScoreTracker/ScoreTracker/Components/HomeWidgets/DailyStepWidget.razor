@@ -159,17 +159,9 @@ else
     private sealed record Row(int Place, DailyStepEntry Entry, User? User, bool IsYou, bool IsCommunity,
         bool IsRival);
 
-    // Precedence: you -> both -> rival -> community. A rival who is also a clubmate is more
-    // interesting as both than as either.
-    private static string RowClass(Row row) => row.IsYou
-        ? "dash-lb-you"
-        : (row.IsRival, row.IsCommunity) switch
-        {
-            (true, true) => "is-both",
-            (true, false) => "is-rival",
-            (false, true) => "dash-lb-community",
-            _ => ""
-        };
+    private static string RowClass(Row row) =>
+        CommunityGlowReader.RowClass(row.IsYou, row.IsRival, row.IsCommunity,
+            "dash-lb-you", "dash-lb-community");
 
     private bool _loaded;
     private bool _tall;
