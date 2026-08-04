@@ -29,4 +29,13 @@ internal sealed class OfficialWeeklyHighlightEntity
     public decimal? Score { get; set; }
     public decimal? PrevValue { get; set; }
     public decimal? NewValue { get; set; }
+
+    /// <summary>
+    ///     Which reading of the snapshot produced this row. The supplemented pass emits only
+    ///     the diff-based kinds — movers, boards climbed, pulse, gainers, floors, debuts —
+    ///     because those need this snapshot against the previous one and nothing else. World
+    ///     firsts and new #1s read the record books, so they stay official and the record
+    ///     books never need a supplemented twin (supplemented-leaderboards.md §6).
+    /// </summary>
+    public bool IsSupplemented { get; set; }
 }

@@ -105,11 +105,11 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.OfficialLeaderboard` | Board dimension: one row per mirrored board (Rating or Chart), chart boards keyed to their catalog ChartId |
 | `scores.OfficialPlayer` | Player dimension: one row per board-visible tag per mix, avatar + optional import-confirmed UserId link |
 | `scores.OfficialLeaderboardSnapshot` | One sweep run per row — run state (stage/counts/error) while executing, snapshot anchor once `CompletedAt` seals it; unsealed rows are invisible to reads |
-| `scores.OfficialLeaderboardPlacement` | One player-place-on-board per snapshot (weekly history); clustered by (Snapshot, Leaderboard, Place, Player) |
+| `scores.OfficialLeaderboardPlacement` | One player-place-on-board per snapshot (weekly history); clustered by (Snapshot, Leaderboard, Place, Player). `IsSupplemented` separates the two readings of a snapshot: false = published by piugame, true = rolled up from a linked public player's ledger ([supplemented-leaderboards.md](design/supplemented-leaderboards.md)). Every official read filters it false |
 | `scores.OfficialChartPopularity` | Official play-ranking place per chart per snapshot (popularity history) |
 | `scores.OfficialBoardRecord` | Record book per chart board: all-time high score (encodes every claimed grade band) |
 | `scores.OfficialFolderRecord` | Record book per folder (mix + type + level): all-time high score across the folder's boards |
-| `scores.OfficialWeeklyHighlight` | Editorial weekly highlights computed at import (movers, boards climbed, new #1s, grade firsts, plus the This Week hero's playerless summary rows: pulse, gainers, debuts, floor marks); rebuildable from snapshots |
+| `scores.OfficialWeeklyHighlight` | Editorial weekly highlights computed at import (movers, boards climbed, new #1s, grade firsts, plus the This Week hero's playerless summary rows: pulse, gainers, debuts, floor marks); rebuildable from snapshots. `IsSupplemented` marks the second pass, which emits only the diff-based kinds — world firsts and new #1s stay official so the record books never need a twin |
 | `scores.OfficialPlayerRenameProposal` | Detected likely renames awaiting admin accept/dismiss; survives merges as the audit trail |
 
 ## Weekly Challenge (vertical: `ScoreTracker.WeeklyChallenge`)
