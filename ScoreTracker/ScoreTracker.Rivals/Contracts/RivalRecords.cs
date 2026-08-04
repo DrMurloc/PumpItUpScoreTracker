@@ -1,3 +1,5 @@
+using ScoreTracker.SharedKernel.Enums;
+
 namespace ScoreTracker.Rivals.Contracts;
 
 /// <summary>
@@ -59,7 +61,7 @@ public sealed record RivalChartScore(
     string DisplayName,
     Uri? Avatar,
     int Score,
-    string? Plate,
+    PhoenixPlate? Plate,
     bool IsBroken,
     RivalScoreSource Source);
 

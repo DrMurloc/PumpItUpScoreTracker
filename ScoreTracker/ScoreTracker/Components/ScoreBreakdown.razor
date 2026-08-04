@@ -24,7 +24,7 @@ else
         {
             <MudImage tabindex="0" Src="@LetterGradeImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
         }
-        @if (Plate != null)
+        @if (ShownPlate != null)
         {
             <MudImage tabindex="0" Src="@PlateImage" Height="@Height" ObjectFit="ObjectFit.ScaleDown"></MudImage>
         }
@@ -52,6 +52,17 @@ else
     public int Height { get; set; } = 20;
 
     [Parameter] public PhoenixPlate? Plate { get; set; }
+
+    /// <summary>
+    ///     A million is a Perfect Game by definition — every judgement was perfect, there is no
+    ///     other way to reach it — so a stored plate is confirmation, not the source of the fact.
+    ///     Sources that carry a score without one (the official mirror, older imports) would
+    ///     otherwise show the site's best possible result as plateless next to a 994k that has a
+    ///     plate. Never inferred for a broken run: 1,000,000 cannot be broken, so if both are
+    ///     somehow set the stored plate wins and the data speaks for itself.
+    /// </summary>
+    private PhoenixPlate? ShownPlate =>
+        Plate ?? (!IsBroken && Score == 1_000_000 ? PhoenixPlate.PerfectGame : null);
 
     [Parameter]
     public bool ShowScore { get; set; } = false;
@@ -90,6 +101,6 @@ else
     private string LetterGradeImage =>
         $"https://piuimages.arroweclip.se/letters/{Score?.LetterGradeFor(Mix).ToString().ToLower()}{BrokenPiece}.png";
 
-    private string PlateImage => $"https://piuimages.arroweclip.se/plates/{Plate?.GetShorthand().ToLower()}.png";
+    private string PlateImage => $"https://piuimages.arroweclip.se/plates/{ShownPlate?.GetShorthand().ToLower()}.png";
 
 }

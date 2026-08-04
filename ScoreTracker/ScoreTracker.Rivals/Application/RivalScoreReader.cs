@@ -55,7 +55,7 @@ internal sealed class RivalScoreReader
         {
             if (!byUserId.TryGetValue(score.UserId, out var rival)) continue;
             Add(byChart, score.ChartId, new RivalChartScore(rival.EdgeId, rival.UserId, rival.Tag,
-                rival.DisplayName, rival.Avatar, (int)score.Score, score.Plate?.ToString(), score.IsBroken,
+                rival.DisplayName, rival.Avatar, (int)score.Score, score.Plate, score.IsBroken,
                 RivalScoreSource.Site));
         }
     }

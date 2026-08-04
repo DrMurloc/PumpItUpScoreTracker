@@ -3,6 +3,8 @@
 @using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Rivals.Contracts
 @using ScoreTracker.Rivals.Contracts.Queries
@@ -119,13 +121,21 @@ else
         Region,
         Community,
         Rivals,
-        CompetitivePeers
+        CompetitivePeers,
+
+        /// <summary>
+        ///     The mirrored piugame board at the latest sealed snapshot. Not a live board and
+        ///     not this site's players: it is what the official game says about this chart, up
+        ///     to a week old, which is why it is its own scope rather than rows mixed into
+        ///     another one (D28).
+        /// </summary>
+        Official
     }
 
     private static readonly LeaderboardScope[] Scopes =
     {
         LeaderboardScope.World, LeaderboardScope.Region, LeaderboardScope.Community,
-        LeaderboardScope.Rivals, LeaderboardScope.CompetitivePeers
+        LeaderboardScope.Rivals, LeaderboardScope.CompetitivePeers, LeaderboardScope.Official
     };
 
     [Parameter] public Guid ChartId { get; set; }
@@ -167,6 +177,10 @@ else
     private IReadOnlySet<Guid> _clubmates = new HashSet<Guid>();
     private IReadOnlyList<RivalSubject> _rivals = Array.Empty<RivalSubject>();
     private IReadOnlySet<Guid> _rivalUserIds = new HashSet<Guid>();
+    private IReadOnlySet<string> _rivalGhostNames = new HashSet<string>();
+    private OfficialChartBoardRecord? _officialBoard;
+    private bool _officialBoardExists => _officialBoard is { Entries.Count: > 0 };
+    private DateTimeOffset? _officialAsOf => _officialBoard?.AsOf;
     private IReadOnlySet<Guid> _officialRivalEdges = new HashSet<Guid>();
     private DateTimeOffset? _rivalOfficialAsOf;
     private int _rivalsWithoutAScore;
@@ -194,6 +208,10 @@ else
         _world = (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(WorldCommunity, ChartId, Mix)))
             .OrderByDescending(s => (int)s.Score)
             .ToArray();
+        // Read up front rather than on selection: the mirror covers a scattering of boards, so
+        // most charts have none, and a chip that lights up only to say "nothing here" is worse
+        // than one that greys. Paid once per chart, and switching to it then costs nothing.
+        _officialBoard = await Mediator.Send(new GetOfficialChartBoardQuery(Mix, ChartId));
 
         if (CurrentUser.IsLoggedIn)
         {
@@ -265,7 +283,7 @@ else
                 _rows.Add(new Row(tiePlace,
                     total == 0 ? 0 : (total - tiePlace + 1) / (double)total,
                     score, score.UserId == myId, _communityUserIds.Contains(score.UserId),
-                    _rivalUserIds.Contains(score.UserId), IsOfficialRow(score)));
+                    IsRivalRow(score), IsOfficialRow(score)));
                 place++;
             }
         }
@@ -302,16 +320,37 @@ else
                 _officialRivalEdges = rivalRows.Where(r => r.Source == RivalScoreSource.Official)
                     .Select(r => r.EdgeId).ToHashSet();
 
-                // Every row here IS a rival, so a red glow would mark everything and therefore
-                // nothing - the same reasoning that blanks the green on Community scope.
-                _communityUserIds = new HashSet<Guid>();
+                // Highlight normally here. The argument for blanking it was that every row is a
+                // rival so red marks nothing — but a board that drops the glow its neighbours all
+                // carry just reads as broken, and the segmented state still says something these
+                // rows do not: which of your rivals you also share a club with (owner, field test).
+                _communityUserIds = _clubmates;
+                // A ghost has no account, so every one of them collapses to Guid.Empty and can
+                // never match the rival id set. Their tag is the identity here, as it is
+                // everywhere else in this feature.
+                _rivalGhostNames = rivalRows.Where(r => r.UserId == null).Select(r => r.DisplayName)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
                 var mine = CurrentUser.IsLoggedIn
                     ? _world.Where(s => s.UserId == CurrentUser.User.Id).ToArray()
                     : Array.Empty<UserPhoenixScore>();
                 return rivalRows
                     .Select(r => new UserPhoenixScore(r.UserId ?? Guid.Empty, ChartId, r.DisplayName, r.Score,
-                        null, r.IsBroken))
+                        r.Plate, r.IsBroken))
                     .Concat(mine)
+                    .ToArray();
+            }
+            case LeaderboardScope.Official:
+            {
+                if (_officialBoard == null) return Array.Empty<UserPhoenixScore>();
+                // A mirrored row is a board tag, and only some of them link to an account. The
+                // glows still apply through that link — this is the one scope where a rival can
+                // show up who has never shared a site with you.
+                _communityUserIds = _clubmates;
+                // The mirror holds no plates, so rows carry the score alone; a perfect one still
+                // reads PG, because a million is a Perfect Game by definition.
+                return _officialBoard.Entries
+                    .Select(e => new UserPhoenixScore(e.Player.UserId ?? Guid.Empty, ChartId,
+                        e.Player.Username, e.Score, null, false))
                     .ToArray();
             }
             case LeaderboardScope.Region:
@@ -323,9 +362,10 @@ else
                 return await CommunityScoresAsync(_regionalCommunities.First());
             }
             case LeaderboardScope.Community:
-                // Here every row IS a member, so a glow would mark everything and therefore
-                // nothing.
-                _communityUserIds = new HashSet<Guid>();
+                // Same call as the Rivals scope: the glow stays. A club board where a clubmate
+                // is unmarked reads as a bug, and it is the only place a rival among them shows
+                // up as one.
+                _communityUserIds = _clubmates;
                 return _community == null
                     ? Array.Empty<UserPhoenixScore>()
                     : await CommunityScoresAsync(_community.Value);
@@ -360,6 +400,9 @@ else
         // Competitive cohorts have no co-op side. The chip greys and says nothing further —
         // a sentence about cohorts costs more confusion than it buys (owner call).
         LeaderboardScope.CompetitivePeers => _chart is { Type: not ScoreTracker.SharedKernel.Enums.ChartType.CoOp },
+        // The mirror covers a scattering of boards rather than every chart, so this is lit by
+        // whether a board actually came back — greyed is the honest state for the rest.
+        LeaderboardScope.Official => _officialBoardExists,
         _ => true
     };
 
@@ -371,6 +414,14 @@ else
 
     // A board-only rival has no account, so its score row carries Guid.Empty and its name is
     // the tag. Only ever marked on the Rivals scope, which is the only one ghosts appear on.
+    /// <summary>
+    ///     A site rival matches on id; a ghost cannot, because every ghost row carries
+    ///     Guid.Empty. Their tag is the identity, which is what the rest of the feature keys on.
+    /// </summary>
+    private bool IsRivalRow(UserPhoenixScore score) =>
+        (score.UserId != Guid.Empty && _rivalUserIds.Contains(score.UserId))
+        || _rivalGhostNames.Contains(score.UserName.ToString());
+
     private bool IsOfficialRow(UserPhoenixScore score) =>
         _scope == LeaderboardScope.Rivals && _officialRivalEdges.Count > 0 && score.UserId == Guid.Empty;
 
@@ -390,6 +441,7 @@ else
         LeaderboardScope.Community => L["Community"],
         LeaderboardScope.Rivals => L["Rivals"],
         LeaderboardScope.CompetitivePeers => L["Competitive Peers"],
+        LeaderboardScope.Official => L["Official"],
         _ => L["World"]
     };
 
@@ -405,6 +457,12 @@ else
     {
         get
         {
+            // The Official board is entirely snapshot data, so the date is the whole footnote
+            // and no row needs an asterisk to say what every row is.
+            if (_scope == LeaderboardScope.Official)
+                return _officialAsOf is { } officialAsOf
+                    ? L["Official board data, as of {0}.", officialAsOf.ToString("d MMM")].Value
+                    : null;
             if (_scope != LeaderboardScope.Rivals) return null;
             var parts = new List<string>();
             if (_rivalOfficialAsOf is { } asOf)
