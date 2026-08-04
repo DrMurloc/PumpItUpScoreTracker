@@ -71,7 +71,31 @@ public static class WidgetRegistry
             new[] { MixEnum.Phoenix, MixEnum.Phoenix2 },
             typeof(CommunityHighlightsWidget),
             typeof(CommunityHighlightsConfigPanel),
-            typeof(CommunityHighlightsConfig)),
+            typeof(CommunityHighlightsConfig),
+            // One widget type, two audiences, two drawer cards (D10). "Rivals feed" is not a
+            // second widget — it is this one with the community half switched off — but nobody
+            // finds a feature by adding a widget called something else and unticking a box.
+            DrawerPresets: new[]
+            {
+                new WidgetDrawerPreset("Highlights feed",
+                    "Recent big wins from the communities you pick.",
+                    WidgetConfigJson.Write(new CommunityHighlightsConfig())),
+                new WidgetDrawerPreset("Rivals feed",
+                    "Recent big wins from the players you rival.",
+                    WidgetConfigJson.Write(new CommunityHighlightsConfig
+                    {
+                        IncludeCommunities = false,
+                        IncludeRivals = true
+                    }))
+            },
+            // So the two presets wear their own titles without storing one per instance.
+            DynamicNameKey: json =>
+            {
+                var config = WidgetConfigJson.Read<CommunityHighlightsConfig>(json);
+                return config is { IncludeCommunities: false, IncludeRivals: true }
+                    ? "Rivals feed"
+                    : null;
+            }),
         new("daily-step",
             "Daily Step",
             "Today's shared chart, plus a weekly Limbo Day.",

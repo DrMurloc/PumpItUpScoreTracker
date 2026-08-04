@@ -184,7 +184,6 @@ else
     private OfficialChartBoardRecord? _officialBoard;
     private IReadOnlySet<Guid> _officialPublicLinks = new HashSet<Guid>();
     private IReadOnlyDictionary<string, Uri?> _officialAvatars = new Dictionary<string, Uri?>();
-    private bool _officialBoardExists => _officialBoard is { Entries.Count: > 0 };
     private DateTimeOffset? _officialAsOf => _officialBoard?.AsOf;
     private IReadOnlySet<Guid> _officialRivalEdges = new HashSet<Guid>();
     private DateTimeOffset? _rivalOfficialAsOf;
@@ -199,6 +198,7 @@ else
         if (!Active || _loadedFor == (ChartId, Mix)) return;
         _loadedFor = (ChartId, Mix);
         _scope = InitialScope;
+        _officialBoard = null;
         await LoadChartAsync();
     }
 
@@ -213,10 +213,11 @@ else
         _world = (await Mediator.Send(new GetPhoenixRecordsForCommunityQuery(WorldCommunity, ChartId, Mix)))
             .OrderByDescending(s => (int)s.Score)
             .ToArray();
-        // Read up front rather than on selection: the mirror covers a scattering of boards, so
-        // most charts have none, and a chip that lights up only to say "nothing here" is worse
-        // than one that greys. Paid once per chart, and switching to it then costs nothing.
-        _officialBoard = await Mediator.Send(new GetOfficialChartBoardQuery(Mix, ChartId));
+        // NOT read here. Greying the Official chip honestly would mean asking the mirror on
+        // every chart view, and this component opens inside the details dialogue — that one extra
+        // query measurably delayed everything else the dialogue renders, deterministically enough
+        // to fail the video assertion in the E2E suite. The chip is always enabled and the read
+        // happens on selection instead, cached for the rest of the chart's life.
 
         if (CurrentUser.IsLoggedIn)
         {
@@ -346,7 +347,10 @@ else
             }
             case LeaderboardScope.Official:
             {
-                if (_officialBoard == null) return Array.Empty<UserPhoenixScore>();
+                // Fetched on first selection and kept for the rest of this chart's life, so
+                // switching away and back is free.
+                _officialBoard ??= await Mediator.Send(new GetOfficialChartBoardQuery(Mix, ChartId));
+                if (_officialBoard is not { Entries.Count: > 0 }) return Array.Empty<UserPhoenixScore>();
                 // The glows still apply through a link — this is the one scope where a rival can
                 // show up who has never shared a site with you.
                 _communityUserIds = _clubmates;
@@ -421,9 +425,10 @@ else
         // Competitive cohorts have no co-op side. The chip greys and says nothing further —
         // a sentence about cohorts costs more confusion than it buys (owner call).
         LeaderboardScope.CompetitivePeers => _chart is { Type: not ScoreTracker.SharedKernel.Enums.ChartType.CoOp },
-        // The mirror covers a scattering of boards rather than every chart, so this is lit by
-        // whether a board actually came back — greyed is the honest state for the rest.
-        LeaderboardScope.Official => _officialBoardExists,
+        // Always lit: knowing whether a board exists costs a query, and paying it on every
+        // chart view to grey one chip is not a trade worth making (see LoadChartAsync). A chart
+        // the mirror does not cover says so in the empty state instead.
+        LeaderboardScope.Official => true,
         _ => true
     };
 
@@ -485,7 +490,11 @@ else
         _ => L["World"]
     };
 
-    private string EmptyText => L["Nobody here has played this yet."];
+    private string EmptyText => _scope == LeaderboardScope.Official
+        // The mirror covers a scattering of boards rather than every chart, so "nobody has played
+        // this" would be a lie about a chart plenty of people have played.
+        ? L["The official site doesn't publish a board for this chart."]
+        : L["Nobody here has played this yet."];
 
     /// <summary>
     ///     One line under the board rather than a marker on every row: the asterisk beside a

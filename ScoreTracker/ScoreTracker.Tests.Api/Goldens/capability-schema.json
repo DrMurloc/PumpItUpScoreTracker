@@ -325,6 +325,9 @@
           },
           "includeRivals": {
             "type": "boolean"
+          },
+          "includeCommunities": {
+            "type": "boolean"
           }
         }
       }

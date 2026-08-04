@@ -17,7 +17,7 @@
 }
 else
 {
-    <div class="dash-ch-feed" data-testid="rival-feed">
+    <div class="dash-ch-feed @(Rail ? "rvl-feed-rail" : "")" data-testid="rival-feed">
         @foreach (var record in Records)
         {
             <div class="@RowClass(record)">
@@ -60,6 +60,13 @@ else
 
 @inject ScoreTracker.Domain.SecondaryPorts.IDateTimeOffsetAccessor Clock
 @code {
+    /// <summary>
+    ///     Lay the feed out as a horizontal strip rather than a column. The Rivals page sets it
+    ///     so the feed can sit above the fold without pushing the roster off screen; the home
+    ///     widget leaves it false, because a widget IS a column.
+    /// </summary>
+    [Parameter] public bool Rail { get; set; }
+
     [Parameter] public IReadOnlyList<PlayerHighlightRecord> Records { get; set; } = Array.Empty<PlayerHighlightRecord>();
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
     [Parameter] public IReadOnlySet<Guid> Clubmates { get; set; } = new HashSet<Guid>();

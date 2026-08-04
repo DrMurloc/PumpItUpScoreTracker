@@ -188,12 +188,16 @@ else
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
 
         // Empty config follows your non-regional crews (CH1) — World/country are opt-in.
-        var communities = config.Communities.Count > 0
-            ? config.Communities.Select(Name.From).ToList()
-            : (await Mediator.Send(new GetMyCommunitiesQuery()))
-                .Where(c => !c.IsRegional).Select(c => c.CommunityName).ToList();
+        var communities = !config.IncludeCommunities
+            ? new List<Name>()
+            : config.Communities.Count > 0
+                ? config.Communities.Select(Name.From).ToList()
+                : (await Mediator.Send(new GetMyCommunitiesQuery()))
+                    .Where(c => !c.IsRegional).Select(c => c.CommunityName).ToList();
 
-        if (communities.Count == 0)
+        // Nothing to read from EITHER half is the only empty case now — a rivals-only feed has no
+        // communities by design and must not bail here.
+        if (communities.Count == 0 && !config.IncludeRivals)
         {
             _records = Array.Empty<PlayerHighlightRecord>();
             _charts = new Dictionary<Guid, Chart>();
@@ -201,8 +205,10 @@ else
             return;
         }
 
-        var community = (await Mediator.Send(
-            new GetMyCommunityHighlightsQuery(communities, _mix, config.IncludeOwnWins, FeedTake))).ToArray();
+        var community = communities.Count == 0
+            ? Array.Empty<PlayerHighlightRecord>()
+            : (await Mediator.Send(
+                new GetMyCommunityHighlightsQuery(communities, _mix, config.IncludeOwnWins, FeedTake))).ToArray();
         _communityUserIds = community.Select(r => r.UserId).ToHashSet();
 
         if (config.IncludeRivals)

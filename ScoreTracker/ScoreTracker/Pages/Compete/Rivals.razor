@@ -26,6 +26,21 @@ else
     <MudText Typo="Typo.h5" Class="mb-1">@L["Rivals"]</MudText>
     <MudText Typo="Typo.caption" Class="dash-muted">@L["{0} rivals", _rivals.Count]</MudText>
 
+    @* What your rivals have been doing is the reason to open this page, so it leads rather than
+       hiding behind a tab nobody clicked. A strip, not a column: the roster underneath still has
+       to be visible without scrolling. Only shown once you HAVE rivals — an empty rail above an
+       empty roster is two ways of saying the same nothing. *@
+    @if (_rivals.Count > 0)
+    {
+        <div class="rvl-feed-lead">
+            <div class="sbd-section-head">
+                <span class="sbd-eyebrow">@L["What your rivals are up to"]</span>
+            </div>
+            <RivalHighlightsFeed Records="_feed" Charts="_charts" Clubmates="_clubmateIds"
+                                 Rail="true"></RivalHighlightsFeed>
+        </div>
+    }
+
     <MudTabs Elevation="0" Class="mt-3" ApplyEffectsToContainer="true">
         <MudTabPanel Text="@L["Your rivals"]">
             @if (_selected != null)
@@ -47,9 +62,6 @@ else
                             OnBlock="Block" OnUnblock="Unblock"></RivalsOfMeList>
         </MudTabPanel>
 
-        <MudTabPanel Text="@L["Feed"]">
-            <RivalHighlightsFeed Records="_feed" Charts="_charts" Clubmates="_clubmateIds"></RivalHighlightsFeed>
-        </MudTabPanel>
     </MudTabs>
 }
 

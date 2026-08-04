@@ -2911,6 +2911,51 @@ html.sheet-open .more-sheet-scrim {
     padding: 1rem;
 }
 
+.rvl-feed-lead {
+    margin: 14px 0 4px;
+}
+
+/* ── The rivals rail ───────────────────────────────────────────────────────────────────
+   Same feed component, laid out as a strip. On the Rivals page the feed is the first thing
+   above the fold, and a column there pushes the roster off screen to say what a strip says
+   in one glance. Cards are fixed-width and snap, so a partially visible next card is what
+   tells you the rail scrolls — no arrows, no scrollbar chrome to style.
+
+   Below 700px it reverts to the column it already is: a horizontal scroller on a phone
+   competes with the page's own vertical scroll and loses. */
+.dash-ch-feed.rvl-feed-rail {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 10px;
+    height: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+}
+
+.dash-ch-feed.rvl-feed-rail > .dash-ch-entry {
+    flex: 0 0 clamp(230px, 26vw, 310px);
+    scroll-snap-align: start;
+    border-bottom: 0;
+    border-radius: 8px;
+    padding: .55rem .6rem;
+    background: color-mix(in srgb, var(--mix-ink-muted) 7%, transparent);
+}
+
+@media (max-width: 700px) {
+    .dash-ch-feed.rvl-feed-rail {
+        flex-direction: column;
+        overflow-x: visible;
+        overflow-y: auto;
+        max-height: 340px;
+    }
+
+    .dash-ch-feed.rvl-feed-rail > .dash-ch-entry {
+        flex: none;
+    }
+}
+
 .dash-ch-entry {
     display: flex;
     gap: .6rem;

@@ -24,4 +24,13 @@ public sealed record CommunityHighlightsConfig
     ///     widget is a content change nobody asked for.
     /// </summary>
     public bool IncludeRivals { get; set; }
+
+    /// <summary>
+    ///     Whether the community half runs at all. Defaults TRUE for the same reason
+    ///     <see cref="IncludeRivals" /> defaults false — an absent field on an existing dashboard
+    ///     must behave exactly as it did. A rivals-only feed needs this because an EMPTY
+    ///     <see cref="Communities" /> already means "all my crews", so there was no way to say
+    ///     "none of them".
+    /// </summary>
+    public bool IncludeCommunities { get; set; } = true;
 }
