@@ -96,6 +96,20 @@ dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationT
 
 The offline half of that guard — spelling drift between the two title lists, plus the corrected names pinned against regression — is `ScoreTracker.Tests/DomainTests/TitleSongNameTests`, and does run on every PR.
 
+### Translation workbench — spends real money, manual runs only
+
+`ExplorationTests/Translations/` renders 23 real community comments — English, Korean, Spanish and Portuguese — into es-ES, fr-FR, ko-KR and pt-BR across three model tiers, to find the cheapest one that still does the job. It is the only place in the solution that calls a metered LLM: the `ILanguageModelClient` Domain port has no implementation in `Data` and no DI registration, so nothing that ships can reach one.
+
+**Every run bills the owner's account.** Run `SmokeOneCommentOnSonnet` first (a couple of cents, proves the plumbing) before `SweepThreeArmsOverTheCorpus` (~$1.50, writes a markdown report). `BatchTransportTests` proves the Batch API path separately — batching halves the bill and suits production, but an hour-long round trip is an hour per prompt revision, so the sweep runs synchronously.
+
+Configuration (skips automatically when absent): `ClaudeApi:ApiKey` in the shared AppHost user-secrets store, or `ANTHROPIC_API_KEY`. The report lands in `%TEMP%/scoretracker-translation-probe/sweep.md` unless `SCORETRACKER_TRANSLATION_REPORTS` says otherwise.
+
+```sh
+dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj --filter "FullyQualifiedName~SmokeOneCommentOnSonnet"
+```
+
+Design and findings: [comment-translation.md](design/comment-translation.md).
+
 ### Discord canary — testing bot required, manual runs only
 
 `ExplorationTests/DiscordCanary/` posts the sample Components V2 score cards to the owner's private lab channel with the **testing** bot and reads them back over REST — catching what component tests can't: Discord API contract drift, emoji-id resolution, and token/permission validity. It is the one exploration test that **writes** to a remote by design (the owner's own lab channel). **Run it manually when a change touches Discord or Communities code.** Messages are left in the channel on purpose: it doubles as a visual gallery of what the cards looked like on every run.
