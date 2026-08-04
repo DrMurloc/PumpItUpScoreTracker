@@ -20,6 +20,7 @@ namespace ScoreTracker.Web.Services.HomeDashboard;
 public sealed class CommunityGlowReader(IMediator mediator, ICurrentUserAccessor currentUser)
 {
     private static readonly IReadOnlySet<Guid> None = new HashSet<Guid>();
+    private static readonly IReadOnlySet<string> NoTags = new HashSet<string>();
     private IReadOnlySet<Guid>? _cached;
 
     public async Task<IReadOnlySet<Guid>> GetMyCommunityMemberIds()
@@ -41,16 +42,41 @@ public sealed class CommunityGlowReader(IMediator mediator, ICurrentUserAccessor
     }
 
     /// <summary>
-    ///     The site-user rivals you can highlight. Board-only rivals are absent by construction —
-    ///     they have no account, so no row on a live board is theirs.
+    ///     The site-user rivals you can highlight. A board-only rival has no account, so no row on
+    ///     a LIVE board is ever theirs — on the official boards, where they do appear, match
+    ///     <see cref="GetMyRivalTags" /> as well.
     /// </summary>
     public async Task<IReadOnlySet<Guid>> GetMyRivalIds(MixEnum mix)
     {
-        if (_rivals != null) return _rivals;
-        if (!currentUser.IsLoggedIn) return _rivals = None;
+        await LoadRivals(mix);
+        return _rivals!;
+    }
+
+    /// <summary>
+    ///     The board tags you rival, for the official boards — the one place a rival with no site
+    ///     account is a row rather than an absence. Matching those by user id can never hit: a
+    ///     ghost has no account, and an official row for a linked player may not carry one either.
+    /// </summary>
+    public async Task<IReadOnlySet<string>> GetMyRivalTags(MixEnum mix)
+    {
+        await LoadRivals(mix);
+        return _rivalTags!;
+    }
+
+    private async Task LoadRivals(MixEnum mix)
+    {
+        if (_rivals != null) return;
+        if (!currentUser.IsLoggedIn)
+        {
+            _rivals = None;
+            _rivalTags = NoTags;
+            return;
+        }
 
         var rivals = await mediator.Send(new GetMyRivalsQuery(mix));
-        return _rivals = rivals.Where(r => r.UserId != null).Select(r => r.UserId!.Value).ToHashSet();
+        _rivals = rivals.Where(r => r.UserId != null).Select(r => r.UserId!.Value).ToHashSet();
+        _rivalTags = rivals.Where(r => r.Tag != null).Select(r => r.Tag!)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -90,4 +116,5 @@ public sealed class CommunityGlowReader(IMediator mediator, ICurrentUserAccessor
     }
 
     private IReadOnlySet<Guid>? _rivals;
+    private IReadOnlySet<string>? _rivalTags;
 }

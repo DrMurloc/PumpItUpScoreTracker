@@ -169,7 +169,7 @@
             <div class="chart-details-board">
                 <MudText Typo="Typo.overline">@L["Leaderboard"]</MudText>
                 <ChartLeaderboardScopes ChartId="Chart.Id" Mix="Mix" Active="Visible"
-                                        InitialScope="ChartLeaderboardScopes.LeaderboardScope.World"
+                                        InitialScope="BoardScope"
                                         @key="(Chart.Id, Mix)"></ChartLeaderboardScopes>
             </div>
             @* Reserved slot: chart comments land here if user-generated content ever ships. *@
@@ -348,6 +348,14 @@
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
 
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>
+    ///     Which board the embedded leaderboard opens on. The sessions page passes Competitive
+    ///     Peers — that is the cohort the row's score colour came from, so opening there makes
+    ///     the colour auditable instead of asserted. Everywhere else wants World.
+    /// </summary>
+    [Parameter] public ChartLeaderboardScopes.LeaderboardScope BoardScope { get; set; } =
+        ChartLeaderboardScopes.LeaderboardScope.World;
 
     /// <summary>
     ///     Opt-in: start the video on open. Callers that reach this dialog through a play badge

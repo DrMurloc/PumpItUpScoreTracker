@@ -43,7 +43,7 @@
         }
 
         <div class="@(_busy ? "sbd-busy" : null)">
-            <SessionHero Breakdown="_model.Hero" OnOpenLeaderboard="OpenLeaderboard"></SessionHero>
+            <SessionHero Breakdown="_model.Hero" OnOpenChart="OpenChart"></SessionHero>
         </div>
 
         <div class="mt-4 @(_busy ? "sbd-busy" : null)">
@@ -57,10 +57,14 @@
             @L["Score history begins with journaling (June 2026) — older plays aren't shown."]
         </MudText>
 
-        <ChartLeaderboardDialog @bind-Visible="_leaderboardOpen" ChartId="_leaderboardChartId"
-                                Mix="_model.Hero.Group.Mix"
-                                InitialScope="ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers">
-        </ChartLeaderboardDialog>
+        @* The details dialogue carries the board now, so there is no dedicated leaderboard
+           dialog to open. It opens on Competitive Peers because that is the cohort the row's
+           score colour came from — opening there makes the colour auditable rather than
+           asserted (rivals.md, session-breakdown.md). *@
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart"
+                            Mix="_model.Hero.Group.Mix"
+                            BoardScope="ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers">
+        </ChartDetailsDialog>
     }
 }
 
@@ -81,10 +85,10 @@
     private bool _firstLoad = true;
     private bool _busy;
     private Guid? _selectedSessionId;
-    private bool _leaderboardOpen;
+    private bool _detailsOpen;
     private int _page = 1;
     private DateTime? _before;
-    private Guid _leaderboardChartId;
+    private Chart? _detailsChart;
     private SessionsPageModel _model = new(null, Array.Empty<SessionHistoryRow>(), 0, false);
 
     protected override async Task OnInitializedAsync()
@@ -173,9 +177,9 @@
             CancellationToken.None));
     }
 
-    private void OpenLeaderboard(Guid chartId)
+    private void OpenChart(Chart chart)
     {
-        _leaderboardChartId = chartId;
-        _leaderboardOpen = true;
+        _detailsChart = chart;
+        _detailsOpen = true;
     }
 }

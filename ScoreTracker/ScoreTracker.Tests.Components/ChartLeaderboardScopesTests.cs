@@ -30,12 +30,12 @@ namespace ScoreTracker.Tests.Components;
 ///     invented parameter at compile time and throws on first render, so a component nothing
 ///     ever renders is a component nothing ever checks.
 /// </summary>
-public sealed class ChartLeaderboardDialogTests : ComponentTestBase
+public sealed class ChartLeaderboardScopesTests : ComponentTestBase
 {
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IUserReader> _readers = new();
 
-    public ChartLeaderboardDialogTests()
+    public ChartLeaderboardScopesTests()
     {
         var chart = TestChart();
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
@@ -175,11 +175,12 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
     [Fact]
     public void ChangingMixOnTheSameChartRebuildsTheBoard()
     {
-        // The sessions page keeps one dialog and swaps its mix as the hero session changes,
-        // so a load keyed on the chart alone serves the previous mix's board back.
+        // A host can keep one board and swap its mix — the details dialogue does exactly that as
+        // its chart changes — so a load keyed on the chart alone serves the previous mix's board
+        // back (origin/main f00dd27e).
         RenderComponent<MudDialogProvider>();
-        var dialog = RenderComponent<ChartLeaderboardDialog>(p => p
-            .Add(c => c.Visible, true)
+        var dialog = RenderComponent<ChartLeaderboardScopes>(p => p
+            .Add(c => c.Active, true)
             .Add(c => c.ChartId, ChartId)
             .Add(c => c.Mix, MixEnum.Phoenix));
         dialog.WaitForAssertion(() => VerifyWorldBoardRead(MixEnum.Phoenix));
@@ -203,11 +204,11 @@ public sealed class ChartLeaderboardDialogTests : ComponentTestBase
         {
             builder.OpenComponent<MudDialogProvider>(0);
             builder.CloseComponent();
-            builder.OpenComponent<ChartLeaderboardDialog>(1);
-            builder.AddAttribute(2, nameof(ChartLeaderboardDialog.Visible), true);
-            builder.AddAttribute(3, nameof(ChartLeaderboardDialog.ChartId), ChartId);
-            builder.AddAttribute(4, nameof(ChartLeaderboardDialog.Mix), mix);
-            builder.AddAttribute(5, nameof(ChartLeaderboardDialog.InitialScope), scope);
+            builder.OpenComponent<ChartLeaderboardScopes>(1);
+            builder.AddAttribute(2, nameof(ChartLeaderboardScopes.Active), true);
+            builder.AddAttribute(3, nameof(ChartLeaderboardScopes.ChartId), ChartId);
+            builder.AddAttribute(4, nameof(ChartLeaderboardScopes.Mix), mix);
+            builder.AddAttribute(5, nameof(ChartLeaderboardScopes.InitialScope), scope);
             builder.CloseComponent();
         });
     }
