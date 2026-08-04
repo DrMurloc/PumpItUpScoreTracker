@@ -13,6 +13,7 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Components.Rivals
 
 <PageTitle>@L["Rivals"]</PageTitle>
@@ -52,7 +53,7 @@ else
                            OnClick="() => _selected = null" Class="mb-2">@L["Back to rivals"]</MudButton>
                 <RivalComparison Record="_headToHead" Charts="_charts" YourAvatar="@MyAvatar"
                                  Mix="CurrentMix" FolderType="_compareType" FolderLevel="_compareLevel"
-                                 FolderChanged="OnFolderChanged"></RivalComparison>
+                                 FolderChanged="OnFolderChanged" OnOpenChart="OpenChart"></RivalComparison>
             }
             else
             {
@@ -68,6 +69,10 @@ else
         </MudTabPanel>
 
     </MudTabs>
+
+    @* Same shared surface every other chart affordance on the site opens. *@
+    <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart"
+                        Mix="CurrentMix"></ChartDetailsDialog>
 }
 
 @inject IMediator Mediator
@@ -81,6 +86,14 @@ else
 
     private ChartType _compareType = ChartType.Double;
     private int? _compareLevel;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+
+    private void OpenChart(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
 
     private IReadOnlyList<RivalSubject> _rivals = Array.Empty<RivalSubject>();
     private IReadOnlyList<RivalOfMeRecord> _rivalsOfMe = Array.Empty<RivalOfMeRecord>();

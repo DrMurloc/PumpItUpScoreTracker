@@ -3,6 +3,7 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using Microsoft.AspNetCore.Components.Web
 @namespace ScoreTracker.Web.Components.Rivals
 
 @* One rival, compared. Takes a RESOLVED SUBJECT rather than a user id, so the sections it can't
@@ -79,6 +80,7 @@ else
                    song's art, and the letter grade + plate every other board prints. It was a
                    bare div list of numbers, which read as a lesser table than the one the
                    community page shows for the same question. *@
+                <div class="rvl-cmp-table-wrap">
                 <MudTable T="CompareRow" Items="Rows" Breakpoint="Breakpoint.None" Dense="true"
                           Class="olb-board-table olb-pager-tight" data-testid="rival-compare-table">
                     <HeaderContent>
@@ -91,34 +93,43 @@ else
                         <MudTh Style="text-align:right">
                             <MudTableSortLabel T="CompareRow" SortBy="@(r => r.Row.TheirScore ?? -1)">@Record.Subject.DisplayName</MudTableSortLabel>
                         </MudTh>
-                        <MudTh Style="text-align:right">
+                        @* The two scores are right there; the subtraction is the first thing
+                           worth losing when the row runs out of room. *@
+                        <MudTh Style="text-align:right" Class="rvl-cmp-diff-col">
                             <MudTableSortLabel T="CompareRow" SortBy="@(r => r.Difference ?? int.MinValue)">@L["Difference"]</MudTableSortLabel>
                         </MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>
-                            <div class="rvl-cmp-chart">
-                                @if (context.Chart is { } chart)
-                                {
+                            @if (context.Chart is { } chart)
+                            {
+                                @* Art, bubble and name are one target, not three: they name one
+                                   chart, so anything less than the whole cell is a hit area you
+                                   have to aim at. *@
+                                <div class="rvl-cmp-chart" role="button" tabindex="0"
+                                     @onclick="() => OnOpenChart.InvokeAsync(chart)"
+                                     @onkeydown="e => OnChartKey(e, chart)">
                                     <SongImage Song="chart.Song" Small="true"></SongImage>
                                     <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                                    <span class="rvl-cmp-song olb-hide-mobile">@chart.Song.Name</span>
-                                }
-                                else
-                                {
+                                    <span class="rvl-cmp-song" title="@chart.Song.Name">@chart.Song.Name</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="rvl-cmp-chart">
                                     <span class="rvl-cmp-song">@L["Unknown chart"]</span>
-                                }
-                            </div>
+                                </div>
+                            }
                         </MudTd>
                         <MudTd Style="text-align:right">
-                            <span class="@YoursClass(context.Row)">
+                            <span class="@YoursClass(context.Row) sbd-score-stack">
                                 <ScoreBreakdown Score="@(context.Row.YourScore == null ? null : PhoenixScore.From(context.Row.YourScore.Value))"
                                                 Plate="context.Row.YourPlate" IsBroken="context.Row.YourIsBroken"
                                                 Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
                             </span>
                         </MudTd>
                         <MudTd Style="text-align:right">
-                            <span class="@TheirsClass(context.Row)">
+                            <span class="@TheirsClass(context.Row) sbd-score-stack">
                                 @* The mirror records no plates, so an official row must not be
                                    handed an inferred one. *@
                                 <ScoreBreakdown Score="@(context.Row.TheirScore == null ? null : PhoenixScore.From(context.Row.TheirScore.Value))"
@@ -131,11 +142,12 @@ else
                                 }
                             </span>
                         </MudTd>
-                        <MudTd Style="text-align:right">
+                        <MudTd Style="text-align:right" Class="rvl-cmp-diff-col">
                             <span class="@DeltaClass(context.Row)">@Delta(context.Row)</span>
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
+                </div>
                 @if (Footnote is { Length: > 0 } footnote)
                 {
                     <p class="cld-footnote">@footnote</p>
@@ -174,6 +186,12 @@ else
 
     private Task OnFolder((ChartType Type, int Level) folder) =>
         FolderChanged.InvokeAsync((folder.Type, folder.Level));
+
+    /// <summary>The cell is a button, so it answers to the keyboard like one.</summary>
+    [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
+
+    private Task OnChartKey(KeyboardEventArgs e, Chart chart) =>
+        e.Key is "Enter" or " " ? OnOpenChart.InvokeAsync(chart) : Task.CompletedTask;
 
     private const string DefaultAvatar = "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
 
