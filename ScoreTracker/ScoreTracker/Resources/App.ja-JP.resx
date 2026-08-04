@@ -2210,6 +2210,9 @@
   <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
     <value>類似度グラフより——根拠で重み付けし、毎晩再計算。</value>
   </data>
+  <data name="From their PIU Scores account, not the official board" xml:space="preserve">
+    <value>公式ボードではなく、PIU Scores のアカウントから</value>
+  </data>
   <data name="From {0}" xml:space="preserve">
     <value>{0}から</value>
   </data>
@@ -4247,6 +4250,9 @@
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>PIU Scores 公式ミラー</value>
   </data>
+  <data name="PIU Scores Supplemented" xml:space="preserve">
+    <value>PIU Scores 補完</value>
+  </data>
   <data name="PIU Scores tools" xml:space="preserve">
     <value>PIU Scores ツール</value>
   </data>
@@ -4424,6 +4430,9 @@
   </data>
   <data name="Popularity" xml:space="preserve">
     <value>人気</value>
+  </data>
+  <data name="Popularity always comes from the official leaderboards. It's ranked on full play data, not on a truncated board, so there's nothing for PIU Scores to add." xml:space="preserve">
+    <value>人気度は常に公開ランキングから取得されます。切り詰められたボードではなく、すべてのプレイデータで順位付けされるため、PIU Scores が加えられるものはありません。</value>
   </data>
   <data name="Popularity in {0}" xml:space="preserve">
     <value>{0} 内の人気順位</value>
@@ -4955,6 +4964,9 @@
   </data>
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>ランダマイザーでチャートを抽選し、ゲーセンでブラケットやカードドラフトを運営、ライブビューを共有すれば会場全体 — や配信 — がラウンドを追えます。</value>
+  </data>
+  <data name="Roll up supplemented leaderboards" xml:space="preserve">
+    <value>補完ランキングを集計</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>今週のボードを今すぐ更新しますか？現在の週が締められ、次のセットが抽選されます。</value>
@@ -5756,6 +5768,9 @@
   </data>
   <data name="Suggested · Title Hunt" xml:space="preserve">
     <value>おすすめ · 称号ハント</value>
+  </data>
+  <data name="Supplemented roll-up queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>補完集計をキューに追加 - 最新スナップショットに再アタッチされます</value>
   </data>
   <data name="Supported Formats" xml:space="preserve">
 	  <value>対応フォーマット</value>
@@ -7502,6 +7517,9 @@
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0}人</value>
+  </data>
+  <data name="{0} players added · {1} scores, rolled up {2}" xml:space="preserve">
+    <value>プレーヤー {0} 人を追加 · スコア {1} 件、{2} に集計</value>
   </data>
   <data name="{0} players found" xml:space="preserve">
     <value>{0}人のプレイヤーが見つかりました</value>

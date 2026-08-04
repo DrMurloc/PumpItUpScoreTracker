@@ -126,6 +126,11 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Title / Titles | Mrgl | |
 | Tournament(s) | Mrllrlrlrlgl | |
 | Download | Murlg | |
+| Supplement / Supplemented | Blurgmorglmrgl | Coined 2026-08-04 for the supplemented leaderboard reading. |
+| Roll up | Mrgloru | Coined 2026-08-04 — the weekly gather, not a rolling motion. |
+| Snapshot | Barglub | Coined 2026-08-04. |
+| Data | Gru | Coined 2026-08-04. |
+| From | Blarg | Coined 2026-08-04. |
 
 ### Difficulty and intensity
 
