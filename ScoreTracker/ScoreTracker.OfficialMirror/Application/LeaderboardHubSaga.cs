@@ -28,7 +28,8 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialChartBoardQuery, OfficialChartBoardRecord?>,
     IRequestHandler<GetLinkedOfficialPlayerTagQuery, string?>,
     IRequestHandler<GetOfficialChartPlacementsQuery, IReadOnlyDictionary<Guid, OfficialPlacementEstimate>>,
-    IRequestHandler<GetOfficialPumbilityBoardQuery, OfficialPumbilityBoard?>
+    IRequestHandler<GetOfficialPumbilityBoardQuery, OfficialPumbilityBoard?>,
+    IRequestHandler<GetSupplementedSummaryQuery, SupplementedSummaryRecord>
 {
     // The board names the sweep writes, published so the estimate callers and the scrape
     // cannot drift to different spellings of the same board.
@@ -96,6 +97,16 @@ internal sealed class LeaderboardHubSaga :
         }
 
         return results;
+    }
+
+    public async Task<SupplementedSummaryRecord> Handle(GetSupplementedSummaryQuery request,
+        CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        if (latest?.CompletedAt == null) return new SupplementedSummaryRecord(0, 0, null);
+
+        var (players, rows) = await _snapshots.CountSupplemented(latest.Id, cancellationToken);
+        return new SupplementedSummaryRecord(players, rows, latest.CompletedAt);
     }
 
     public async Task<OfficialPumbilityBoard?> Handle(GetOfficialPumbilityBoardQuery request,

@@ -11,6 +11,14 @@
             <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" Color="Color.Primary"/>
         </MudTooltip>
     }
+    @* Every list that shows a player gets this for free, which is the point of putting it
+       here: a mover, a debut, a rankings row and a board entry all read the same way. *@
+    @if (Player.IsSupplemented)
+    {
+        <MudTooltip Text="@L["From their PIU Scores account, not the official board"]">
+            <span class="olb-supp-chip">@L["PIU Scores"]</span>
+        </MudTooltip>
+    }
 </MudStack>
 
 @code {

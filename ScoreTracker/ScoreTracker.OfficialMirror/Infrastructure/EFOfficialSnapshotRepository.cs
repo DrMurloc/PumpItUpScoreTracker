@@ -318,6 +318,14 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ExecuteDeleteAsync(ct);
     }
 
+    public async Task<(int Players, int Rows)> CountSupplemented(int snapshotId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var rows = database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.SnapshotId == snapshotId && p.IsSupplemented);
+        return (await rows.Select(p => p.PlayerId).Distinct().CountAsync(ct), await rows.CountAsync(ct));
+    }
+
     public async Task<bool> AnySupplemented(MixEnum mix, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);

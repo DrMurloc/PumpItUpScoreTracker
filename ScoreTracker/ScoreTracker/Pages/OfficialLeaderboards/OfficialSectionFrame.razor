@@ -1,5 +1,6 @@
-@namespace ScoreTracker.Web.Pages.OfficialLeaderboards
+﻿@namespace ScoreTracker.Web.Pages.OfficialLeaderboards
 @using MediatR
+@using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
@@ -25,8 +26,20 @@
         display: flex;
         gap: 6px;
         flex-wrap: wrap;
+        align-items: center;
         margin-top: 10px;
     }
+
+    /* The reading switch closes the nav row. Its own colour is the palette's secondary,
+       which carries no other meaning on these boards, so it never competes with the
+       primary the active page chip already wears. */
+    .olb-reading {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .olb-reading .mud-switch { margin: 0; }
 
     .olb-folder-first {
         border: 1px solid var(--plate-pg);
@@ -83,17 +96,35 @@
 <nav class="olb-section-nav" aria-label="@L["Official Leaderboards"]">
     @foreach (var (key, href, label) in Links)
     {
-        <MudButton Href="@href" Size="Size.Small" Color="Color.Primary"
-                   Variant="@(key == Active ? Variant.Filled : Variant.Outlined)">
-            @L[label]
-        </MudButton>
+        @* What It Takes reads cutlines off the real board, so it has no supplemented
+           reading and comes out of the nav rather than showing an inert chip. Reaching
+           it by URL still works and simply shows the official answer. *@
+        @if (key != TakesKey || !_supplemented)
+        {
+            <MudButton Href="@href" Size="Size.Small" Color="Color.Primary"
+                       Variant="@(key == Active ? Variant.Filled : Variant.Outlined)">
+                @L[label]
+            </MudButton>
+        }
     }
+    <div class="olb-reading">
+        <MudSwitch T="bool" Value="_supplemented" ValueChanged="SetSupplemented" Color="Color.Secondary"
+                   Size="Size.Small" Label="@L["PIU Scores Supplemented"]"/>
+    </div>
 </nav>
+
+@if (_supplemented && _summary is { Players: > 0 })
+{
+    <MudText Typo="Typo.body2" Class="olb-subtitle mt-2">
+        @L["{0} players added · {1} scores, rolled up {2}", _summary.Players, _summary.Rows,
+            _summary.AsOf?.ToLocalTime().ToString("d") ?? "—"]
+    </MudText>
+}
 
 <div class="pt-4">
     @if (_loaded)
     {
-        @Body(new SectionContext(_mix, _charts))
+        @Body(new SectionContext(_mix, _charts, _supplemented))
     }
     else
     {
@@ -102,7 +133,15 @@
 </div>
 
 @code {
-    public sealed record SectionContext(MixEnum Mix, IDictionary<Guid, Chart> Charts);
+    public sealed record SectionContext(MixEnum Mix, IDictionary<Guid, Chart> Charts, bool Supplemented);
+
+    /// <summary>
+    ///     Remembered per browser rather than per account: the section is readable signed out,
+    ///     and UiSettings falls back to browser storage for anonymous visitors.
+    /// </summary>
+    private const string SupplementedSetting = "OfficialLeaderboards__Supplemented";
+
+    private const string TakesKey = "takes";
 
     private static readonly (string Key, string Href, string Label)[] Links =
     {
@@ -122,6 +161,8 @@
     [Parameter] public bool RequiresCharts { get; set; } = true;
 
     private bool _loaded;
+    private bool _supplemented;
+    private SupplementedSummaryRecord? _summary;
     private MixEnum _mix = MixEnum.Phoenix2;
     private DateTimeOffset? _lastImported;
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
@@ -132,11 +173,20 @@
     {
         _mix = await UiSettings.GetSelectedMix();
         if (_mix == MixEnum.XX) _mix = MixEnum.Phoenix;
+        _supplemented = await UiSettings.GetSetting(SupplementedSetting) == bool.TrueString;
+        _summary = await Mediator.Send(new GetSupplementedSummaryQuery(_mix));
 
         _lastImported = await Mediator.Send(new GetLastLeaderboardImportTimestampQuery(_mix));
         if (RequiresCharts)
             _charts = (await Mediator.Send(new ScoreTracker.Catalog.Contracts.Queries.GetChartsQuery(_mix)))
                 .ToDictionary(c => c.Id);
         _loaded = true;
+    }
+
+    private async Task SetSupplemented(bool supplemented)
+    {
+        _supplemented = supplemented;
+        _summary = await Mediator.Send(new GetSupplementedSummaryQuery(_mix));
+        await UiSettings.SetSetting(SupplementedSetting, supplemented.ToString());
     }
 }

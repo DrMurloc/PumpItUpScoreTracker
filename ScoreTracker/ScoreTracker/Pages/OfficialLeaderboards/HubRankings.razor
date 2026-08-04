@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
@@ -59,7 +59,7 @@ else
     <div class="olb-rank-cards">
         @foreach (var row in Filtered.Skip((page - 1) * PageSize).Take(PageSize))
         {
-            <div class="olb-rank-card @GlowClass(row.Player)">
+            <div class="olb-rank-card @GlowClass(row.Player) @SupplementClass(row.Player)">
                 <span class="olb-rank-rankbox">
                     <RankDelta Rank="row.Rank" PreviousRank="row.PreviousRank"/>
                 </span>
@@ -100,6 +100,7 @@ else
 @code {
     [Parameter] public MixEnum Mix { get; set; }
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+    [Parameter] public bool Supplemented { get; set; }
 
     // Raised by the Boards link — the hub answers by switching to the Players view
     // with that player selected.
@@ -126,11 +127,26 @@ else
                                            StringComparison.OrdinalIgnoreCase))
         ?? Array.Empty<OfficialRankingRecord>();
 
-    protected override async Task OnInitializedAsync()
+    private bool? _loadedSupplemented;
+
+    protected override async Task OnParametersSetAsync()
     {
+        if (_loadedSupplemented == Supplemented) return;
+        _loadedSupplemented = Supplemented;
         _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+        _expanded = null;
+        _expandedProfile = null;
+        _page = 1;
         await Load();
     }
+
+    /// <summary>
+    ///     The rail marks a player who is on this board only because we know their scores.
+    ///     It is a class of its own rather than part of GlowClass because a row can be both,
+    ///     and the glow owns the background while this owns the edge.
+    /// </summary>
+    private string SupplementClass(OfficialPlayerRecord player) =>
+        player.IsSupplemented ? "olb-row-supp" : string.Empty;
 
     private string GlowClass(OfficialPlayerRecord player)
     {
@@ -142,7 +158,7 @@ else
     private async Task Load()
     {
         _loading = true;
-        _rankings = await Mediator.Send(new GetOfficialRankingsQuery(Mix, _type));
+        _rankings = await Mediator.Send(new GetOfficialRankingsQuery(Mix, _type, Supplemented));
         _loading = false;
     }
 
@@ -173,7 +189,7 @@ else
 
         _expanded = username;
         _expandedProfile = null;
-        _expandedProfile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username));
+        _expandedProfile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username, Supplemented));
     }
 
 }

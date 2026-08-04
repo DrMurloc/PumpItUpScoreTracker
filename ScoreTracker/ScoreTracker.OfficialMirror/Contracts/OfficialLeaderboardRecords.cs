@@ -93,6 +93,10 @@ public sealed record OfficialPlayerHistoryPoint(DateTimeOffset At, decimal? Pumb
 public sealed record OfficialPlayerChartRecord(Guid ChartId, int? Place, int? PlaceDelta, int Score,
     int ComputedRating, bool IsSupplemented = false);
 
+/// <summary>What the supplemented reading added to the latest sealed snapshot.</summary>
+[ExcludeFromCodeCoverage]
+public sealed record SupplementedSummaryRecord(int Players, int Rows, DateTimeOffset? AsOf);
+
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPopularityRecord(Guid ChartId, int Place, int? PreviousPlace,
     IReadOnlyList<int> RecentPlaces);

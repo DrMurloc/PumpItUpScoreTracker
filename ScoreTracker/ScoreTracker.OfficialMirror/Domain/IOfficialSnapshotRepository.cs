@@ -64,6 +64,9 @@ internal interface IOfficialSnapshotRepository
     ///     roll-up emits no highlights instead of several hundred simultaneous debuts.
     /// </summary>
     Task<bool> AnySupplemented(MixEnum mix, CancellationToken ct);
+
+    /// <summary>How many players and rows one snapshot's supplemented reading added.</summary>
+    Task<(int Players, int Rows)> CountSupplemented(int snapshotId, CancellationToken ct);
     Task WritePopularity(int snapshotId, IReadOnlyCollection<(Guid ChartId, int Place)> rows, CancellationToken ct);
     Task DeletePopularity(int snapshotId, CancellationToken ct);
 

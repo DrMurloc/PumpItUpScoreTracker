@@ -1,11 +1,11 @@
-@page "/OfficialLeaderboards/Players"
+﻿@page "/OfficialLeaderboards/Players"
 @rendermode RenderModes.Interactive
 @inject IJSRuntime Js
 @inject NavigationManager Navigation
 
 <OfficialSectionFrame Active="players">
     <Body Context="ctx">
-        <HubPlayers Mix="ctx.Mix" Charts="ctx.Charts" Selected="@PlayerParam"
+        <HubPlayers Mix="ctx.Mix" Supplemented="ctx.Supplemented" Charts="ctx.Charts" Selected="@PlayerParam"
                     SelectedChanged="OnPlayerSelected"/>
     </Body>
 </OfficialSectionFrame>

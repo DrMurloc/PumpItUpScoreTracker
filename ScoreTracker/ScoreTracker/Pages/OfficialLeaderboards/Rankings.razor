@@ -1,11 +1,12 @@
-@page "/OfficialLeaderboards/Rankings"
+﻿@page "/OfficialLeaderboards/Rankings"
 @page "/PlayerRankings"
 @rendermode RenderModes.Interactive
 @inject NavigationManager Navigation
 
 <OfficialSectionFrame Active="rankings">
     <Body Context="ctx">
-        <HubRankings Mix="ctx.Mix" Charts="ctx.Charts" OnShowPlayer="ShowPlayer"/>
+        <HubRankings Mix="ctx.Mix" Charts="ctx.Charts" Supplemented="ctx.Supplemented"
+                     OnShowPlayer="ShowPlayer"/>
     </Body>
 </OfficialSectionFrame>
 

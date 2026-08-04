@@ -1,4 +1,4 @@
-@using ApexCharts
+﻿@using ApexCharts
 @using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
@@ -123,6 +123,7 @@ else
         </MudText>
         <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true" Elevation="0"
                   Breakpoint="Breakpoint.None" RowsPerPage="25"
+                  RowClassFunc="@((r, _) => r.IsSupplemented ? "olb-row-supp" : string.Empty)"
                   Class="olb-board-table olb-sticky-first olb-pager-tight">
             <HeaderContent>
                 <MudTh Style="text-align:right">
@@ -180,10 +181,12 @@ else
     </MudPaper>
 }
 
-<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"/>
+<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"
+                          Supplemented="Supplemented"/>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public bool Supplemented { get; set; }
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
     // Two-way selection: the hub preselects (Boards links, ?player= deep links) and hears
@@ -223,7 +226,7 @@ else
         _lineOptions = GlanceOptions();
         _rankOptions = GlanceOptions();
         _rankOptions.Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } };
-        _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix))).ToArray();
+        _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix, Supplemented))).ToArray();
 
         // Nothing picked yet: land on your own board tag when the account is linked,
         // otherwise on whoever tops the combined ranking board.
@@ -232,7 +235,7 @@ else
             var defaultTag = CurrentUser.IsLoggedIn
                 ? await Mediator.Send(new GetLinkedOfficialPlayerTagQuery(Mix, CurrentUser.User.Id))
                 : null;
-            defaultTag ??= (await Mediator.Send(new GetOfficialRankingsQuery(Mix, "All")))
+            defaultTag ??= (await Mediator.Send(new GetOfficialRankingsQuery(Mix, "All", Supplemented)))
                 ?.Rankings.FirstOrDefault()?.Player.Username;
             if (!string.IsNullOrWhiteSpace(defaultTag)) await SelectPlayer(defaultTag);
         }
@@ -244,8 +247,21 @@ else
         _boardOpen = true;
     }
 
+    private bool? _loadedSupplemented;
+
     protected override async Task OnParametersSetAsync()
     {
+        // Flipping the reading re-reads the same player rather than resetting the page:
+        // the point of the switch is to see what changes about THEM.
+        if (_loadedSupplemented != null && _loadedSupplemented != Supplemented)
+        {
+            _loadedSupplemented = Supplemented;
+            _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix, Supplemented))).ToArray();
+            if (!string.IsNullOrWhiteSpace(_selected)) await SelectPlayer(_selected);
+            return;
+        }
+
+        _loadedSupplemented = Supplemented;
         if (!string.IsNullOrWhiteSpace(Selected) && Selected != _selected)
             await SelectPlayer(Selected);
     }
@@ -263,7 +279,7 @@ else
         }
 
         _loadingProfile = true;
-        _profile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username));
+        _profile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username, Supplemented));
         _pumbilityHistory = _profile?.History
                                 .Where(h => h.Pumbility != null)
                                 .Select(h => new HistoryPoint(h.At.ToLocalTime().ToString("MMM d"),
