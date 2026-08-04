@@ -3630,7 +3630,7 @@ html.sheet-open .more-sheet-scrim {
 }
 
 /* ── Row highlighting, one utility set over four unrelated row layouts ──────────────────
-   .weekly-lb-row (flex), .chart-lb-* (table cells), .dash-ch-entry (feed card) and the rival
+   .weekly-lb-row (flex), .dash-ch-entry (feed card), the challenge board rows and the rival
    roster row share no layout at all, so the treatment is applied OVER whichever they use rather
    than grown as a variant inside each family (docs/design/rivals.md §3.6).
 
@@ -3656,28 +3656,6 @@ html.sheet-open .more-sheet-scrim {
         color-mix(in srgb, var(--daily-rival) 14%, transparent) 0 50%,
         color-mix(in srgb, var(--daily-community) 14%, transparent) 50% 100%);
     box-shadow: inset 3px 0 0 var(--daily-rival), inset -3px 0 0 var(--daily-community);
-}
-
-/* The table-cell family cannot carry a ring — a row is several <td>s and the shadow would draw
-   between them — so it tints cells and bars only the outer two. */
-.chart-lb-rival td {
-    background: color-mix(in srgb, var(--daily-rival) 13%, transparent);
-}
-
-.chart-lb-rival td:first-child {
-    box-shadow: inset 3px 0 0 var(--daily-rival);
-}
-
-.chart-lb-both td {
-    background: color-mix(in srgb, var(--daily-rival) 13%, transparent);
-}
-
-.chart-lb-both td:first-child {
-    box-shadow: inset 3px 0 0 var(--daily-rival);
-}
-
-.chart-lb-both td:last-child {
-    box-shadow: inset -3px 0 0 var(--daily-community);
 }
 
 /* A board-only rival's score came from the last weekly sweep. The asterisk is the whole
@@ -4528,69 +4506,9 @@ html.sheet-open .more-sheet-scrim {
     font-weight: 800;
 }
 
-/* Leaderboard - the widgets' glow vocabulary at page scale. */
-.chart-lb-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: .88rem;
-}
-
-.chart-lb-table th {
-    text-align: left;
-    font-size: .66rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--mix-ink-muted);
-    font-weight: 600;
-    padding: 4px 10px 7px;
-}
-
-.chart-lb-table td {
-    padding: 6px 10px;
-    border-top: 1px solid rgba(255, 255, 255, .07);
-}
-
-.chart-lb-place {
-    color: var(--mix-ink-muted);
-    width: 34px;
-    font-variant-numeric: tabular-nums;
-}
-
-.chart-lb-level {
-    color: var(--mix-ink-muted);
-    font-variant-numeric: tabular-nums;
-}
-
-.chart-lb-score-col {
-    text-align: right;
-}
-
-.chart-lb-me td {
-    background: color-mix(in srgb, var(--daily-you) 15%, transparent);
-    box-shadow: inset 0 1.5px 0 var(--daily-you), inset 0 -1.5px 0 var(--daily-you);
-}
-
-.chart-lb-community td {
-    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
-}
-
-.chart-lb-gap td {
-    text-align: center;
-    color: var(--mix-ink-muted);
-    font-size: .74rem;
-    padding: 2px;
-    border-top: none;
-}
-
-.chart-lb-foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-}
-
+/* The legend chips, still worn by the official chart-board dialog. The page's own
+   leaderboard table is gone — chart details renders ChartLeaderboardScopes now, which
+   brings the .weekly-lb-row vocabulary with it. */
 .chart-lb-legend {
     display: inline-flex;
     align-items: center;
@@ -4615,7 +4533,7 @@ html.sheet-open .more-sheet-scrim {
     margin-left: 10px;
 }
 
-.chart-lb-empty, .chart-shelf-empty {
+.chart-shelf-empty {
     color: var(--mix-ink-muted);
 }
 
