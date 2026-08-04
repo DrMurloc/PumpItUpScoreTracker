@@ -37,30 +37,41 @@ internal sealed class AnthropicLanguageModelClient(AnthropicClient client) : ILa
         CancellationToken cancellationToken)
     {
         var arm = ModelArm.For(request.ModelId);
-
-        var parameters = new MessageCreateParams
-        {
-            Model = request.ModelId,
-            MaxTokens = MaxTokens,
-            System = new List<TextBlockParam> { new() { Text = request.SystemPrompt } },
-            Messages = [new() { Role = Role.User, Content = request.UserPrompt }],
-            // Opus 5 and Sonnet 5 think unless told not to, and thinking bills at the output
-            // rate — for a two-sentence translation that is most of the cost and none of the
-            // value. Haiku 4.5 does not think unless asked and rejects the effort parameter, so
-            // it gets neither field.
-            Thinking = arm.ThinksByDefault ? new ThinkingConfigDisabled() : null,
-            OutputConfig = new OutputConfig
+        var system = new List<TextBlockParam> { new() { Text = request.SystemPrompt } };
+        List<MessageParam> messages = [new() { Role = Role.User, Content = request.UserPrompt }];
+        var format = request.JsonSchema == null
+            ? null
+            : new JsonOutputFormat
             {
-                Effort = arm.SupportsEffort ? Effort.Medium : null,
-                Format = request.JsonSchema == null
-                    ? null
-                    : new JsonOutputFormat
-                    {
-                        Schema = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
-                            request.JsonSchema)!
-                    }
+                Schema = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(request.JsonSchema)!
+            };
+
+        // The two shapes are spelled out rather than nulled into one, because the API rejects an
+        // explicit null as hard as a wrong value — "thinking: Input should be an object" is what
+        // a `Thinking = null` earns on a model that simply does not take the field. Omission and
+        // null are different requests.
+        //
+        // Opus 5 and Sonnet 5 think unless told not to, and thinking bills at the output rate:
+        // for a two-sentence translation that is most of the cost and none of the value. Haiku
+        // 4.5 does not think unless asked and rejects effort outright, so it gets neither field.
+        var parameters = arm.ThinksByDefault
+            ? new MessageCreateParams
+            {
+                Model = request.ModelId,
+                MaxTokens = MaxTokens,
+                System = system,
+                Messages = messages,
+                Thinking = new ThinkingConfigDisabled(),
+                OutputConfig = new OutputConfig { Effort = Effort.Medium, Format = format }
             }
-        };
+            : new MessageCreateParams
+            {
+                Model = request.ModelId,
+                MaxTokens = MaxTokens,
+                System = system,
+                Messages = messages,
+                OutputConfig = new OutputConfig { Format = format }
+            };
 
         var response = await client.Messages.Create(parameters, cancellationToken: cancellationToken);
 
