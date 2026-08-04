@@ -11,7 +11,24 @@ internal sealed record BoardDimension(int Id, string LeaderboardType, string Nam
 
 internal sealed record PlayerDimension(int Id, string Username, Uri? Avatar, Guid? UserId);
 
-internal sealed record PlacementRow(int LeaderboardId, int PlayerId, int Place, decimal Score);
+internal sealed record PlacementRow(int LeaderboardId, int PlayerId, int Place, decimal Score,
+    bool IsSupplemented = false);
+
+/// <summary>
+///     Which reading of a snapshot a placement query wants. There is no default: a snapshot
+///     holds two readings and every caller has to say which one it means, because the wrong
+///     answer is silent. Official rows feed the record books, the tier-list feed, the
+///     cutlines and the Discord digest, and none of those may ever see a supplemented row
+///     (supplemented-leaderboards.md §7).
+/// </summary>
+internal enum PlacementScope
+{
+    /// <summary>Only what piugame published.</summary>
+    OfficialOnly,
+
+    /// <summary>Both readings — the supplemented view, and only the supplemented view.</summary>
+    IncludingSupplemented
+}
 
 internal sealed record BoardRecordRow(int LeaderboardId, int HighScore, int AchievedSnapshotId);
 
@@ -41,11 +58,11 @@ internal sealed record RenameProposal(int Id, int OldPlayerId, int NewPlayerId, 
 
 /// <summary>A placement joined with its board's dimension — the hub read shape.</summary>
 internal sealed record PlacementDetail(int PlayerId, int LeaderboardId, string LeaderboardType, string BoardName,
-    Guid? ChartId, string? ChartType, int? Level, int Place, decimal Score);
+    Guid? ChartId, string? ChartType, int? Level, int Place, decimal Score, bool IsSupplemented = false);
 
 /// <summary>One row of a player's life across snapshots, sealed runs only.</summary>
 internal sealed record PlayerTimelineRow(int SnapshotId, DateTimeOffset CompletedAt, string LeaderboardType,
-    string BoardName, Guid? ChartId, int Place, decimal Score);
+    string BoardName, Guid? ChartId, int Place, decimal Score, bool IsSupplemented = false);
 
 internal static class LeaderboardTypes
 {

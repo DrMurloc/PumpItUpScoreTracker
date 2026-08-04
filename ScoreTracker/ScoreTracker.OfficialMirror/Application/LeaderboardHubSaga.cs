@@ -78,7 +78,7 @@ internal sealed class LeaderboardHubSaga :
         // link there is nothing to exclude and the estimate is off by one — the honest limit.
         var me = await _snapshots.GetPlayerByUserId(request.Mix, request.UserId, cancellationToken);
         var placements = (await _snapshots.GetBoardPlacements(latest.Id, boards.Select(b => b.Id).ToArray(),
-                cancellationToken))
+                PlacementScope.OfficialOnly, cancellationToken))
             .ToLookup(p => p.LeaderboardId);
 
         var results = new Dictionary<Guid, OfficialPlacementEstimate>();
@@ -108,7 +108,8 @@ internal sealed class LeaderboardHubSaga :
             .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Rating && b.Name == request.BoardName);
         if (board == null) return null;
 
-        var values = (await _snapshots.GetBoardPlacements(latest.Id, board.Id, cancellationToken))
+        var values = (await _snapshots.GetBoardPlacements(latest.Id, board.Id, PlacementScope.OfficialOnly,
+                cancellationToken))
             .Select(p => p.Score)
             .OrderByDescending(v => v)
             .ToArray();
@@ -298,7 +299,7 @@ internal sealed class LeaderboardHubSaga :
         var stats = await GetSnapshotStats(request.Mix, latest.Id, cancellationToken);
         var playerStats = stats.ByPlayer.TryGetValue(player.Id, out var s) ? s : null;
 
-        var timeline = await _snapshots.GetPlayerTimeline(player.Id, cancellationToken);
+        var timeline = await _snapshots.GetPlayerTimeline(player.Id, PlacementScope.OfficialOnly, cancellationToken);
         var history = timeline.GroupBy(r => (r.SnapshotId, r.CompletedAt))
             .OrderBy(g => g.Key.CompletedAt)
             .Select(g =>
@@ -367,7 +368,8 @@ internal sealed class LeaderboardHubSaga :
             .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Chart && b.ChartId == request.ChartId);
         if (board == null) return null;
 
-        var placements = await _snapshots.GetBoardPlacements(latest.Id, board.Id, cancellationToken);
+        var placements = await _snapshots.GetBoardPlacements(latest.Id, board.Id, PlacementScope.OfficialOnly,
+            cancellationToken);
         var players = (await _snapshots.GetPlayersByIds(
                 placements.Select(p => p.PlayerId).Distinct().ToArray(), cancellationToken))
             .ToDictionary(p => p.Id);
@@ -501,7 +503,7 @@ internal sealed class LeaderboardHubSaga :
             comparisons.Add(new BoardCutlineRecord(label, value, value - previousValue, compareFull));
         }
 
-        var history = (await _snapshots.GetBoardFloorHistory(mix, boardName, ct))
+        var history = (await _snapshots.GetBoardFloorHistory(mix, boardName, PlacementScope.OfficialOnly, ct))
             .Where(h => h.Count >= CutlineCalculator.BoardCapacity)
             .Select(h => new CutlineHistoryPointRecord(h.CompletedAt, h.MinScore,
                 CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.AAA, h.MinScore),
@@ -551,7 +553,7 @@ internal sealed class LeaderboardHubSaga :
         return (await _cache.GetOrCreateAsync(OfficialCacheKeys.SnapshotStats(mix, snapshotId), async entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromHours(12);
-            var details = await _snapshots.GetPlacementDetails(snapshotId, ct);
+            var details = await _snapshots.GetPlacementDetails(snapshotId, PlacementScope.OfficialOnly, ct);
             return ComputeStats(mix, details);
         }))!;
     }

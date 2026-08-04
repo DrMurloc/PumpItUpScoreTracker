@@ -48,7 +48,22 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<PlayerDimension>> GetPlayers(MixEnum mix, CancellationToken ct);
 
     Task WritePlacements(int snapshotId, IReadOnlyCollection<PlacementRow> rows, CancellationToken ct);
-    Task<IReadOnlyList<PlacementRow>> GetPlacements(int snapshotId, CancellationToken ct);
+    Task<IReadOnlyList<PlacementRow>> GetPlacements(int snapshotId, PlacementScope scope, CancellationToken ct);
+
+    /// <summary>
+    ///     Clears one snapshot's supplemented rows, leaving every official row alone. The
+    ///     roll-up runs this first so a re-press of the admin button replaces its own output
+    ///     rather than doubling it.
+    /// </summary>
+    Task DeleteSupplementedPlacements(int snapshotId, CancellationToken ct);
+
+    /// <summary>
+    ///     True once any sealed snapshot in this mix holds supplemented rows. False means the
+    ///     next roll-up is the supplemented series' own week one — which is a different
+    ///     question from whether the official sweep was a baseline, and the reason the first
+    ///     roll-up emits no highlights instead of several hundred simultaneous debuts.
+    /// </summary>
+    Task<bool> AnySupplemented(MixEnum mix, CancellationToken ct);
     Task WritePopularity(int snapshotId, IReadOnlyCollection<(Guid ChartId, int Place)> rows, CancellationToken ct);
     Task DeletePopularity(int snapshotId, CancellationToken ct);
 
@@ -66,10 +81,12 @@ internal interface IOfficialSnapshotRepository
     ///     Every player id with a placement in any of this mix's snapshots before the given
     ///     one — the all-history "seen" set that makes a debut a debut.
     /// </summary>
-    Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, CancellationToken ct);
+    Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, PlacementScope scope,
+        CancellationToken ct);
 
     /// <summary>One board's rows within one snapshot, in display order.</summary>
-    Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId, CancellationToken ct);
+    Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId, PlacementScope scope,
+        CancellationToken ct);
 
     /// <summary>
     ///     Several boards' rows within one snapshot, in display order. The batch exists because
@@ -77,13 +94,15 @@ internal interface IOfficialSnapshotRepository
     ///     query each; every row carries its LeaderboardId, so the caller regroups.
     /// </summary>
     Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, IReadOnlyCollection<int> leaderboardIds,
-        CancellationToken ct);
+        PlacementScope scope, CancellationToken ct);
 
     /// <summary>Every placement in a snapshot joined with its board dimension.</summary>
-    Task<IReadOnlyList<PlacementDetail>> GetPlacementDetails(int snapshotId, CancellationToken ct);
+    Task<IReadOnlyList<PlacementDetail>> GetPlacementDetails(int snapshotId, PlacementScope scope,
+        CancellationToken ct);
 
     /// <summary>A player's rows across every sealed snapshot, oldest first.</summary>
-    Task<IReadOnlyList<PlayerTimelineRow>> GetPlayerTimeline(int playerId, CancellationToken ct);
+    Task<IReadOnlyList<PlayerTimelineRow>> GetPlayerTimeline(int playerId, PlacementScope scope,
+        CancellationToken ct);
 
     /// <summary>Popularity rows for the newest sealed snapshots, newest snapshot first.</summary>
     Task<IReadOnlyList<(int SnapshotId, Guid ChartId, int Place)>> GetPopularityHistory(MixEnum mix,
@@ -95,7 +114,7 @@ internal interface IOfficialSnapshotRepository
     ///     entry bar).
     /// </summary>
     Task<IReadOnlyList<(int SnapshotId, DateTimeOffset CompletedAt, decimal MinScore, int Count)>>
-        GetBoardFloorHistory(MixEnum mix, string boardName, CancellationToken ct);
+        GetBoardFloorHistory(MixEnum mix, string boardName, PlacementScope scope, CancellationToken ct);
 
     /// <summary>One row per distinct unmapped chart; re-sightings refresh LastIdentified.</summary>
     Task UpsertMissingCharts(MixEnum mix, IReadOnlyCollection<MissingChartSighting> sightings,

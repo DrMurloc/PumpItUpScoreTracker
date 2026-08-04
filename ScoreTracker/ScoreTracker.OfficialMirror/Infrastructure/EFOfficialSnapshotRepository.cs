@@ -248,12 +248,13 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
         return result;
     }
 
-    public async Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, CancellationToken ct)
+    public async Task<IReadOnlySet<int>> GetSeenPlayerIds(MixEnum mix, int beforeSnapshotId, PlacementScope scope,
+        CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
         // Unsealed leftovers count as "seen" — the conservative direction for a debut.
-        return (await database.Set<OfficialLeaderboardPlacementEntity>()
+        return (await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
                 .Where(p => p.SnapshotId < beforeSnapshotId &&
                             database.Set<OfficialLeaderboardSnapshotEntity>()
                                 .Any(s => s.Id == p.SnapshotId && s.MixId == mixId))
@@ -284,18 +285,49 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
                 LeaderboardId = r.LeaderboardId,
                 PlayerId = r.PlayerId,
                 Place = r.Place,
-                Score = r.Score
+                Score = r.Score,
+                IsSupplemented = r.IsSupplemented
             }), ct);
         await database.SaveChangesAsync(ct);
     }
 
-    public async Task<IReadOnlyList<PlacementRow>> GetPlacements(int snapshotId, CancellationToken ct)
+    /// <summary>
+    ///     The one place the supplemented filter is written. Every placement read in this
+    ///     class routes through it, so a new read cannot forget the predicate — it has to
+    ///     take a <see cref="PlacementScope" /> to compile, and the scope has no default.
+    /// </summary>
+    private static IQueryable<OfficialLeaderboardPlacementEntity> Scoped(
+        IQueryable<OfficialLeaderboardPlacementEntity> placements, PlacementScope scope) =>
+        scope == PlacementScope.OfficialOnly ? placements.Where(p => !p.IsSupplemented) : placements;
+
+    public async Task<IReadOnlyList<PlacementRow>> GetPlacements(int snapshotId, PlacementScope scope,
+        CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
-        return await database.Set<OfficialLeaderboardPlacementEntity>()
+        return await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
             .Where(p => p.SnapshotId == snapshotId)
-            .Select(p => new PlacementRow(p.LeaderboardId, p.PlayerId, p.Place, p.Score))
+            .Select(p => new PlacementRow(p.LeaderboardId, p.PlayerId, p.Place, p.Score, p.IsSupplemented))
             .ToArrayAsync(ct);
+    }
+
+    public async Task DeleteSupplementedPlacements(int snapshotId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.SnapshotId == snapshotId && p.IsSupplemented)
+            .ExecuteDeleteAsync(ct);
+    }
+
+    public async Task<bool> AnySupplemented(MixEnum mix, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        return await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.IsSupplemented)
+            .Join(database.Set<OfficialLeaderboardSnapshotEntity>()
+                    .Where(s => s.MixId == mixId && s.CompletedAt != null),
+                p => p.SnapshotId, s => s.Id, (p, _) => p)
+            .AnyAsync(ct);
     }
 
     public async Task WritePopularity(int snapshotId, IReadOnlyCollection<(Guid ChartId, int Place)> rows,
@@ -382,45 +414,47 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     }
 
     public async Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId, int leaderboardId,
-        CancellationToken ct)
+        PlacementScope scope, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
-        return await database.Set<OfficialLeaderboardPlacementEntity>()
+        return await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
             .Where(p => p.SnapshotId == snapshotId && p.LeaderboardId == leaderboardId)
             .OrderBy(p => p.Place)
-            .Select(p => new PlacementRow(p.LeaderboardId, p.PlayerId, p.Place, p.Score))
+            .Select(p => new PlacementRow(p.LeaderboardId, p.PlayerId, p.Place, p.Score, p.IsSupplemented))
             .ToArrayAsync(ct);
     }
 
     public async Task<IReadOnlyList<PlacementRow>> GetBoardPlacements(int snapshotId,
-        IReadOnlyCollection<int> leaderboardIds, CancellationToken ct)
+        IReadOnlyCollection<int> leaderboardIds, PlacementScope scope, CancellationToken ct)
     {
         if (leaderboardIds.Count == 0) return Array.Empty<PlacementRow>();
         await using var database = await _factory.CreateDbContextAsync(ct);
-        return await database.Set<OfficialLeaderboardPlacementEntity>()
+        return await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
             .Where(p => p.SnapshotId == snapshotId && leaderboardIds.Contains(p.LeaderboardId))
             .OrderBy(p => p.LeaderboardId).ThenBy(p => p.Place)
-            .Select(p => new PlacementRow(p.LeaderboardId, p.PlayerId, p.Place, p.Score))
+            .Select(p => new PlacementRow(p.LeaderboardId, p.PlayerId, p.Place, p.Score, p.IsSupplemented))
             .ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyList<PlacementDetail>> GetPlacementDetails(int snapshotId, CancellationToken ct)
+    public async Task<IReadOnlyList<PlacementDetail>> GetPlacementDetails(int snapshotId, PlacementScope scope,
+        CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
-        return await database.Set<OfficialLeaderboardPlacementEntity>()
+        return await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
             .Where(p => p.SnapshotId == snapshotId)
             .Join(database.Set<OfficialLeaderboardEntity>(), p => p.LeaderboardId, b => b.Id,
                 (p, b) => new PlacementDetail(p.PlayerId, p.LeaderboardId, b.LeaderboardType, b.Name, b.ChartId,
-                    b.ChartType, b.Level, p.Place, p.Score))
+                    b.ChartType, b.Level, p.Place, p.Score, p.IsSupplemented))
             .ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyList<PlayerTimelineRow>> GetPlayerTimeline(int playerId, CancellationToken ct)
+    public async Task<IReadOnlyList<PlayerTimelineRow>> GetPlayerTimeline(int playerId, PlacementScope scope,
+        CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         // Ordering must happen over the anonymous projection — EF cannot translate an
         // OrderBy that reaches into a constructed record's member.
-        return (await database.Set<OfficialLeaderboardPlacementEntity>()
+        return (await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
                 .Where(p => p.PlayerId == playerId)
                 .Join(database.Set<OfficialLeaderboardSnapshotEntity>().Where(s => s.CompletedAt != null),
                     p => p.SnapshotId, s => s.Id, (p, s) => new { p, s })
@@ -433,12 +467,13 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
                         b.Name,
                         b.ChartId,
                         ps.p.Place,
-                        ps.p.Score
+                        ps.p.Score,
+                        ps.p.IsSupplemented
                     })
                 .OrderBy(r => r.CompletedAt)
                 .ToArrayAsync(ct))
             .Select(r => new PlayerTimelineRow(r.SnapshotId, r.CompletedAt, r.LeaderboardType, r.Name, r.ChartId,
-                r.Place, r.Score))
+                r.Place, r.Score, r.IsSupplemented))
             .ToArray();
     }
 
@@ -465,11 +500,11 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     }
 
     public async Task<IReadOnlyList<(int SnapshotId, DateTimeOffset CompletedAt, decimal MinScore, int Count)>>
-        GetBoardFloorHistory(MixEnum mix, string boardName, CancellationToken ct)
+        GetBoardFloorHistory(MixEnum mix, string boardName, PlacementScope scope, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
-        return (await database.Set<OfficialLeaderboardPlacementEntity>()
+        return (await Scoped(database.Set<OfficialLeaderboardPlacementEntity>(), scope)
                 .Join(database.Set<OfficialLeaderboardEntity>()
                         .Where(b => b.MixId == mixId && b.LeaderboardType == LeaderboardTypes.Rating &&
                                     b.Name == boardName),

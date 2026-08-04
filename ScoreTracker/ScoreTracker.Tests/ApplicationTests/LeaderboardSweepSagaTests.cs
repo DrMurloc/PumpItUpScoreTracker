@@ -89,7 +89,7 @@ public sealed class LeaderboardSweepSagaTests
 
         snapshots.Setup(s => s.GetBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<BoardDimension>());
-        snapshots.Setup(s => s.GetPlacements(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        snapshots.Setup(s => s.GetPlacements(It.IsAny<int>(), It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PlacementRow>());
         snapshots.Setup(s => s.GetSealedBefore(It.IsAny<MixEnum>(), It.IsAny<int>(),
             It.IsAny<CancellationToken>())).ReturnsAsync((SnapshotRun?)null);
