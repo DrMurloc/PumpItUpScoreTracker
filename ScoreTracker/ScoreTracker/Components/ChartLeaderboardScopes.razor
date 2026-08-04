@@ -75,15 +75,14 @@ else
                 <span class="weekly-lb-place" style="@ThemeScales.RarityStyle(row.Percentile)">
                     #@row.Place
                 </span>
-                @if (_users.TryGetValue(row.Score.UserId, out var avatar))
+                @if (AvatarFor(row) is { } avatarUrl)
                 {
                     <span class="sbd-avatar"><MudAvatar Size="Size.Small">
-                        <MudImage Src="@avatar.ProfileImage.ToString()" Alt="@avatar.Name.ToString()">
-                        </MudImage>
+                        <MudImage Src="@avatarUrl" Alt=""></MudImage>
                     </MudAvatar></span>
                 }
                 <span class="weekly-lb-user">
-                    @if (_users.TryGetValue(row.Score.UserId, out var labelled))
+                    @if (ShowsSiteIdentity(row) && _users.TryGetValue(row.Score.UserId, out var labelled))
                     {
                         <UserLabel User="labelled"></UserLabel>
                     }
@@ -97,7 +96,11 @@ else
                     }
                 </span>
                 <span class="sbd-score-stack">
+                    @* The mirror records no plates, so a PG here would be this site asserting
+                       something the official board never said. Everywhere else a million is a
+                       Perfect Game by definition and the inference stands. *@
                     <ScoreBreakdown Score="row.Score.Score" Plate="row.Score.Plate" Mix="Mix"
+                                    InferPlate="@(_scope != LeaderboardScope.Official)"
                                     IsBroken="row.Score.IsBroken" OneLine="true" ShowScore="true" Tooltip="false">
                     </ScoreBreakdown>
                 </span>
@@ -179,6 +182,8 @@ else
     private IReadOnlySet<Guid> _rivalUserIds = new HashSet<Guid>();
     private IReadOnlySet<string> _rivalGhostNames = new HashSet<string>();
     private OfficialChartBoardRecord? _officialBoard;
+    private IReadOnlySet<Guid> _officialPublicLinks = new HashSet<Guid>();
+    private IReadOnlyDictionary<string, Uri?> _officialAvatars = new Dictionary<string, Uri?>();
     private bool _officialBoardExists => _officialBoard is { Entries.Count: > 0 };
     private DateTimeOffset? _officialAsOf => _officialBoard?.AsOf;
     private IReadOnlySet<Guid> _officialRivalEdges = new HashSet<Guid>();
@@ -342,15 +347,31 @@ else
             case LeaderboardScope.Official:
             {
                 if (_officialBoard == null) return Array.Empty<UserPhoenixScore>();
-                // A mirrored row is a board tag, and only some of them link to an account. The
-                // glows still apply through that link — this is the one scope where a rival can
+                // The glows still apply through a link — this is the one scope where a rival can
                 // show up who has never shared a site with you.
                 _communityUserIds = _clubmates;
-                // The mirror holds no plates, so rows carry the score alone; a perfect one still
-                // reads PG, because a million is a Perfect Game by definition.
+
+                // A private account's link is mirrored data they never published, so it is not
+                // surfaced: their row keeps the board tag and nothing else, which is exactly what
+                // the official site shows. Dropping the id also drops every glow, because a glow
+                // would say "this tag is someone you know" just as loudly as a name would.
+                var linked = _officialBoard.Entries.Where(e => e.Player.UserId != null)
+                    .Select(e => e.Player.UserId!.Value).Distinct().ToArray();
+                _officialPublicLinks = linked.Length == 0
+                    ? new HashSet<Guid>()
+                    : (await Users.GetUsers(linked)).Where(u => u.IsPublic).Select(u => u.Id).ToHashSet();
+
+                // The mirror has an avatar for every board player, and it is the same source a
+                // site avatar comes from — keyed by tag, since unlinked rows share Guid.Empty.
+                _officialAvatars = _officialBoard.Entries
+                    .GroupBy(e => e.Player.Username, StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(g => g.Key, g => g.First().Player.AvatarUrl,
+                        StringComparer.OrdinalIgnoreCase);
+
                 return _officialBoard.Entries
-                    .Select(e => new UserPhoenixScore(e.Player.UserId ?? Guid.Empty, ChartId,
-                        e.Player.Username, e.Score, null, false))
+                    .Select(e => new UserPhoenixScore(
+                        e.Player.UserId is { } id && _officialPublicLinks.Contains(id) ? id : Guid.Empty,
+                        ChartId, e.Player.Username, e.Score, null, false))
                     .ToArray();
             }
             case LeaderboardScope.Region:
@@ -418,6 +439,25 @@ else
     ///     A site rival matches on id; a ghost cannot, because every ghost row carries
     ///     Guid.Empty. Their tag is the identity, which is what the rest of the feature keys on.
     /// </summary>
+    /// <summary>
+    ///     The official board names people by their GAME TAG, always. A linked player's site
+    ///     username is a different name for the same person, and swapping it in makes the row
+    ///     disagree with the board it is mirroring.
+    /// </summary>
+    private bool ShowsSiteIdentity(Row row) => _scope != LeaderboardScope.Official;
+
+    private string? AvatarFor(Row row)
+    {
+        if (_scope == LeaderboardScope.Official)
+            return _officialAvatars.TryGetValue(row.Score.UserName.ToString(), out var mirrored)
+                ? mirrored?.ToString() ?? DefaultAvatar
+                : DefaultAvatar;
+        return _users.TryGetValue(row.Score.UserId, out var user) ? user.ProfileImage.ToString() : null;
+    }
+
+    private const string DefaultAvatar =
+        "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
+
     private bool IsRivalRow(UserPhoenixScore score) =>
         (score.UserId != Guid.Empty && _rivalUserIds.Contains(score.UserId))
         || _rivalGhostNames.Contains(score.UserName.ToString());

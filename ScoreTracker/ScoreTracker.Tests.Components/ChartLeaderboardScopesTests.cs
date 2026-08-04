@@ -13,6 +13,8 @@ using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.OfficialMirror.Contracts;
+using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Rivals.Contracts.Queries;
@@ -253,6 +255,55 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             Assert.Contains("is-both", rows[0].ClassName);
             Assert.Contains("weekly-lb-community", rows[1].ClassName);
             Assert.DoesNotContain("is-both", rows[1].ClassName);
+        });
+    }
+
+    /// <summary>
+    ///     The mirror knows which board tags link to site accounts, but a PRIVATE account never
+    ///     published that link. Their row stays a bare board tag: no site username, and no glow,
+    ///     because a glow says "this tag is someone you know" as loudly as a name does.
+    /// </summary>
+    [Fact]
+    public void APrivateAccountsLinkIsNotSurfacedOnTheOfficialBoard()
+    {
+        var publicUser = Guid.NewGuid();
+        var privateUser = Guid.NewGuid();
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User).Returns(new User(Guid.NewGuid(), Name.From("ME"), true, null,
+            new Uri("https://example.invalid/me.png"), null));
+        // Both are clubmates, so both would glow if the link were honoured for either.
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false) });
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { publicUser, privateUser });
+        _readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new User(publicUser, Name.From("OPENBOOK"), true, null, new Uri("https://example.invalid/a.png"), null),
+                new User(privateUser, Name.From("HIDDEN"), false, null, new Uri("https://example.invalid/b.png"), null)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialChartBoardQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OfficialChartBoardRecord(When, new[]
+            {
+                new OfficialChartBoardEntryRecord(1,
+                    new OfficialPlayerRecord(1, "OPENBOOK#1", new Uri("https://example.invalid/o.png"), publicUser), 999_000),
+                new OfficialChartBoardEntryRecord(2,
+                    new OfficialPlayerRecord(2, "HIDDEN#2", new Uri("https://example.invalid/h.png"), privateUser), 998_000)
+            }));
+
+        var cut = RenderDialog(scope: ChartLeaderboardScopes.LeaderboardScope.Official);
+
+        cut.WaitForAssertion(() =>
+        {
+            var rows = cut.FindAll(".weekly-lb-row");
+            Assert.Equal(2, rows.Count);
+            // Both are named by their board tag, never their site username.
+            Assert.Contains("OPENBOOK#1", rows[0].TextContent);
+            Assert.Contains("HIDDEN#2", rows[1].TextContent);
+            Assert.DoesNotContain("HIDDEN", rows[1].ClassName);
+            // The public link still glows; the private one is treated as an unlinked tag.
+            Assert.Contains("weekly-lb-community", rows[0].ClassName);
+            Assert.DoesNotContain("weekly-lb-community", rows[1].ClassName);
         });
     }
 
