@@ -116,6 +116,33 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .ToHashSet();
     }
 
+    async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetVerifiedBests(MixEnum mix,
+        IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)
+    {
+        if (userIds.Count == 0) return Array.Empty<(Guid, RecordedPhoenixScore)>();
+
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // NULL source is pre-capture and counts as verified: nothing has written a null since
+        // 2026-07-06, and among the null rows the journal can classify, official imports beat
+        // manual and CSV plays about twenty to one. A row a human typed is the thing being
+        // excluded, and those are stamped.
+        return (await database.Set<PhoenixRecordEntity>()
+                .Where(pba => pba.MixId == mixId
+                              && userIds.Contains(pba.UserId)
+                              && !pba.IsBroken
+                              && pba.Score != null
+                              && (pba.Source == null || pba.Source == ScoreJournalEntry.OfficialImportSource))
+                .Select(pba => new
+                {
+                    pba.UserId, pba.ChartId, pba.Score, pba.Plate, pba.IsBroken, pba.RecordedDate, pba.Source
+                })
+                .ToArrayAsync(cancellationToken))
+            .Select(pba => (pba.UserId, new RecordedPhoenixScore(pba.ChartId, pba.Score,
+                PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate, pba.Source)))
+            .ToArray();
+    }
+
     Task<IEnumerable<ChartScoreAggregate>> IScoreReader.GetChartScoreAggregates(MixEnum mix,
         CancellationToken cancellationToken)
     {

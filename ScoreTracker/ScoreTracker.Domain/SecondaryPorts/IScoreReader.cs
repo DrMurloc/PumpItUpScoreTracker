@@ -67,6 +67,21 @@ public interface IScoreReader
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Verified, passing current bests for a set of players in a mix — the read behind the
+    ///     supplemented leaderboards. Verified means the record came from an official import,
+    ///     or predates source capture (2026-07) and so is import-derived in all but the
+    ///     unprovable case: a manual or CSV score is a number a human typed and may lower a
+    ///     best, which is not something a public leaderboard should carry.
+    ///     <para>
+    ///         Broken and score-less records are excluded — a board row is a passing score.
+    ///         Callers chunk their player set; the whole mix at once is several hundred
+    ///         thousand rows.
+    ///     </para>
+    /// </summary>
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetVerifiedBests(MixEnum mix,
+        IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Distinct calendar days with any journaled score event for the player in a mix.
     ///     The 2026-06 backfill dated rows at each record's last update, so this spans the
     ///     whole mix era as a lower bound on real play days.
