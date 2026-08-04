@@ -96,6 +96,26 @@ public sealed class HighlightVocabularyTests
             + "so they will drift out of the ladder: " + string.Join(", ", offenders));
     }
 
+    /// <summary>
+    ///     One geometry for every state: a tint plus a bar down each edge, never a ring. A ring
+    ///     at row height reads as a box drawn around the row and fights the board's own grid, and
+    ///     it makes the segmented row look like a different component instead of the same one
+    ///     carrying two states. New boards copy an existing rule, so the old shape comes back
+    ///     unless something says no.
+    /// </summary>
+    [Theory]
+    [InlineData("is-rival")]
+    [InlineData("is-community")]
+    [InlineData("is-both")]
+    public void HighlightStatesUseEdgeBarsRatherThanARing(string className)
+    {
+        var block = BlockFor(SiteCss(), $".{className} {{");
+
+        Assert.Contains("inset 3px 0 0", block);
+        Assert.Contains("inset -3px 0 0", block);
+        Assert.DoesNotContain("inset 0 0 0", block);
+    }
+
     private static string BlockFor(string css, string selector)
     {
         var start = css.IndexOf(selector, StringComparison.Ordinal);

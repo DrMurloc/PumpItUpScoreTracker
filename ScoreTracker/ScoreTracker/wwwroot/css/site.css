@@ -3630,6 +3630,11 @@ html.sheet-open .more-sheet-scrim {
 }
 
 /* ── Row highlighting, one utility set over four unrelated row layouts ──────────────────
+   ONE GEOMETRY for every state: a tint plus a bar down each edge. Colour is the only variable,
+   so the segmented row is not a special case — it is the same shape with a different colour at
+   each end. Rings were the original treatment and are gone: at row height a 1.5px ring reads as
+   a box drawn around the row, which fought the board's own grid, and it made the segmented row
+   look like a different component rather than the same one carrying two states.
    .weekly-lb-row (flex), .dash-ch-entry (feed card), the challenge board rows and the rival
    roster row share no layout at all, so the treatment is applied OVER whichever they use rather
    than grown as a variant inside each family (docs/design/rivals.md §3.6).
@@ -3638,7 +3643,7 @@ html.sheet-open .more-sheet-scrim {
    clubmate is more interesting as both than as either. */
 .is-rival {
     background: color-mix(in srgb, var(--daily-rival) 13%, transparent);
-    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-rival) 60%, transparent);
+    box-shadow: inset 3px 0 0 var(--daily-rival), inset -3px 0 0 var(--daily-rival);
 }
 
 /* The green half of the pair. The weekly board had its own community row style before this
@@ -3646,7 +3651,7 @@ html.sheet-open .more-sheet-scrim {
    have no such ancestor, so without this rule they emit a class that styles nothing. */
 .is-community {
     background: color-mix(in srgb, var(--daily-community) 13%, transparent);
-    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-community) 60%, transparent);
+    box-shadow: inset 3px 0 0 var(--daily-community), inset -3px 0 0 var(--daily-community);
 }
 
 /* Split fill plus a left and a right edge bar. A two-tone border-image ring would read as
@@ -3747,12 +3752,13 @@ html.sheet-open .more-sheet-scrim {
 
 .dash-lb-you {
     background: color-mix(in srgb, var(--daily-you) 15%, transparent);
-    box-shadow: inset 0 0 0 1px var(--daily-you), 0 0 12px -4px var(--daily-you);
+    box-shadow: inset 3px 0 0 var(--daily-you), inset -3px 0 0 var(--daily-you),
+        0 0 12px -4px var(--daily-you);
 }
 
 .dash-lb-community {
     background: color-mix(in srgb, var(--daily-community) 13%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--daily-community) 60%, transparent);
+    box-shadow: inset 3px 0 0 var(--daily-community), inset -3px 0 0 var(--daily-community);
 }
 
 .dash-lb-divider {
@@ -3909,12 +3915,12 @@ html.sheet-open .more-sheet-scrim {
 
 .weekly-lb-me {
     background: color-mix(in srgb, var(--daily-you) 15%, transparent);
-    box-shadow: inset 0 0 0 1.5px var(--daily-you);
+    box-shadow: inset 3px 0 0 var(--daily-you), inset -3px 0 0 var(--daily-you);
 }
 
 .weekly-lb-community {
     background: color-mix(in srgb, var(--daily-community) 13%, transparent);
-    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-community) 60%, transparent);
+    box-shadow: inset 3px 0 0 var(--daily-community), inset -3px 0 0 var(--daily-community);
 }
 
 .weekly-lb-place {
@@ -5486,8 +5492,9 @@ button.chart-card-art {
 }
 
 .challenge-card-line.mine {
-    background: color-mix(in srgb, var(--mix-primary) 15%, transparent);
-    box-shadow: inset 0 0 0 1px var(--mix-primary), 0 0 12px -4px var(--mix-primary);
+    background: color-mix(in srgb, var(--daily-you) 15%, transparent);
+    box-shadow: inset 3px 0 0 var(--daily-you), inset -3px 0 0 var(--daily-you),
+        0 0 12px -4px var(--daily-you);
 }
 
 .challenge-card-line.mine .who {
@@ -5835,9 +5842,14 @@ button.chart-card-art {
     font-size: .83rem;
 }
 
+/* The row group is mix-invariant by design, so these read --daily-* like every other board
+   rather than the per-mix brand colour they used to. The ladder now emits .is-rival/.is-both
+   onto these same rows, and two greens (or two blues) for one meaning on one board is worse
+   than a board whose you-row is not brand-coloured. */
 .challenge-lb-row.mine {
-    background: color-mix(in srgb, var(--mix-primary) 15%, transparent);
-    box-shadow: inset 0 0 0 1px var(--mix-primary), 0 0 12px -4px var(--mix-primary);
+    background: color-mix(in srgb, var(--daily-you) 15%, transparent);
+    box-shadow: inset 3px 0 0 var(--daily-you), inset -3px 0 0 var(--daily-you),
+        0 0 12px -4px var(--daily-you);
 }
 
 .challenge-lb-name {
@@ -6189,12 +6201,20 @@ button.chart-card-art {
 /* Shared-community rows glow green (the homepage widgets' treatment), you glow blue. */
 .challenge-lb-row.community,
 .challenge-card-line.community {
-    background: color-mix(in srgb, var(--rarity-emerald) 13%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rarity-emerald) 60%, transparent);
+    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
+    box-shadow: inset 3px 0 0 var(--daily-community), inset -3px 0 0 var(--daily-community);
 }
 
 .challenge-monthly tr.community td {
-    background: color-mix(in srgb, var(--rarity-emerald) 10%, transparent);
+    background: color-mix(in srgb, var(--daily-community) 10%, transparent);
+}
+
+.challenge-monthly tr.community td:first-child {
+    box-shadow: inset 3px 0 0 var(--daily-community);
+}
+
+.challenge-monthly tr.community td:last-child {
+    box-shadow: inset -3px 0 0 var(--daily-community);
 }
 
 /* UserLabel inside board rows: flag + name on one truncating line. */
@@ -6336,6 +6356,14 @@ button.chart-card-art {
 
 .challenge-monthly tr.mine td {
     background: color-mix(in srgb, var(--daily-you) 10%, transparent);
+}
+
+.challenge-monthly tr.mine td:first-child {
+    box-shadow: inset 3px 0 0 var(--daily-you);
+}
+
+.challenge-monthly tr.mine td:last-child {
+    box-shadow: inset -3px 0 0 var(--daily-you);
 }
 
 .challenge-mono-place {
@@ -7291,7 +7319,7 @@ button.chart-card-art {
 
 .olb-row-community {
     background: color-mix(in srgb, var(--daily-community) 13%, transparent);
-    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-community) 60%, transparent);
+    box-shadow: inset 3px 0 0 var(--daily-community), inset -3px 0 0 var(--daily-community);
     border-radius: 6px;
 }
 
