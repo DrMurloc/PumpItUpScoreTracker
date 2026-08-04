@@ -1,4 +1,4 @@
-@page "/Admin/OfficialLeaderboards"
+﻿@page "/Admin/OfficialLeaderboards"
 @rendermode RenderModes.Interactive
 @using MassTransit
 @using MediatR
@@ -35,6 +35,10 @@
     <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_popularityQueued"
                OnClick="RefreshPopularity">
         @L["Refresh popularity"]
+    </MudButton>
+    <MudButton Color="Color.Warning" Variant="Variant.Outlined" Disabled="_supplementQueued"
+               OnClick="RollUpSupplemented">
+        @L["Roll up supplemented leaderboards"]
     </MudButton>
 </MudStack>
 
@@ -144,6 +148,7 @@ else
     private bool _importQueued;
     private bool _rebuildQueued;
     private bool _popularityQueued;
+    private bool _supplementQueued;
     private IReadOnlyList<ImportRunRecord> _runs = Array.Empty<ImportRunRecord>();
     private IReadOnlyList<RenameProposalRecord> _proposals = Array.Empty<RenameProposalRecord>();
     private IReadOnlyList<MissingChartRecord> _missingCharts = Array.Empty<MissingChartRecord>();
@@ -176,8 +181,21 @@ else
     private async Task SetMix(MixEnum mix)
     {
         _mix = mix;
-        _importQueued = _rebuildQueued = _popularityQueued = false;
+        _importQueued = _rebuildQueued = _popularityQueued = _supplementQueued = false;
         await Load();
+    }
+
+    /// <summary>
+    ///     Rebuilds the supplemented reading of the latest sealed snapshot without waiting for
+    ///     Sunday. The first press on a mix is that reading's baseline, so it lands rows and no
+    ///     highlights; every press after replaces its own previous output.
+    /// </summary>
+    private async Task RollUpSupplemented()
+    {
+        _supplementQueued = true;
+        await Bus.Publish(new RollUpSupplementedLeaderboardsCommand(_mix));
+        Snackbar.Add(L["Supplemented roll-up queued - re-attaches to the latest snapshot"].Value,
+            Severity.Success);
     }
 
     private async Task RefreshPopularity()
