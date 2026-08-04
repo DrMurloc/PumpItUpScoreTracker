@@ -12051,18 +12051,31 @@ button.chart-card-art {
     white-space: nowrap;
 }
 
-/* Sideways scroll is a MOBILE fallback, not the table's normal state. Above that the row has
-   room — the song name is already gone below 760px (.olb-hide-mobile), which is most of the
-   width back — so a scrollbar there would be a control with nothing to do. The min-width only
-   applies where the scroll does, and is the real floor of a mobile row: art, bubble, and two
-   score stacks with the difference column dropped. */
+/* MudTable ships its OWN overflow-x:auto container, so the scrolling at tablet widths was
+   never the wrapper's — it was the table growing past its column and Mud's container obliging.
+   Two things fix it, and both are needed.
+
+   First, cap the chart column. A table cell sizes to its content, so a long song name widened
+   the whole table instead of truncating inside it; nothing downstream could shrink it back. */
+.rvl-cmp-table .mud-table-cell:first-child {
+    max-width: 260px;
+}
+
+/* Second, the container only scrolls at mobile. Above that the row has room — the name is
+   already gone below 760px (.olb-hide-mobile) — so a sideways scrollbar there is a control
+   with nothing to do. */
+.rvl-cmp-table .mud-table-container {
+    overflow-x: visible;
+}
+
 @media (max-width: 599.98px) {
-    .rvl-cmp-table-wrap {
+    .rvl-cmp-table .mud-table-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
 
-    .rvl-cmp-table-wrap table {
+    /* The real floor of a mobile row: art, bubble and two score stacks, difference dropped. */
+    .rvl-cmp-table .mud-table-container > table {
         min-width: 340px;
     }
 }

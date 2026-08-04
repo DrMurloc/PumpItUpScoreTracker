@@ -80,9 +80,8 @@ else
                    song's art, and the letter grade + plate every other board prints. It was a
                    bare div list of numbers, which read as a lesser table than the one the
                    community page shows for the same question. *@
-                <div class="rvl-cmp-table-wrap">
                 <MudTable T="CompareRow" Items="Rows" Breakpoint="Breakpoint.None" Dense="true"
-                          Class="olb-board-table olb-pager-tight" data-testid="rival-compare-table">
+                          Class="olb-board-table olb-pager-tight rvl-cmp-table" data-testid="rival-compare-table">
                     <HeaderContent>
                         <MudTh>
                             <MudTableSortLabel T="CompareRow" SortBy="@(r => r.SongName)">@L["Chart"]</MudTableSortLabel>
@@ -147,7 +146,6 @@ else
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
-                </div>
                 @if (Footnote is { Length: > 0 } footnote)
                 {
                     <p class="cld-footnote">@footnote</p>
