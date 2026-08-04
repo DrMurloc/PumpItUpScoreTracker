@@ -1,8 +1,10 @@
 # PIU Scores Supplemented — the second view of the Official Leaderboards
 
-Status: **designed, not built** (2026-08-04). Owner post-deploy: press **Roll up supplemented
+Status: **built** (2026-08-04, S0–S12). Owner post-deploy: press **Roll up supplemented
 leaderboards** per mix on `/Admin/OfficialLeaderboards` once, immediately after the deploy — that
-press is the supplemented baseline. From the following Sunday the normal sweep cadence carries it.
+press is the supplemented baseline, so it lands rows and deliberately no highlights. From the
+following Sunday the normal sweep cadence carries it, and the first Sunday after the press is the
+first real supplemented This Week.
 
 The Official Leaderboards section grows a second reading of the same snapshots. Official mode is
 what piugame publishes, unchanged. Supplemented mode folds in the weekly rolled-up scores of public
@@ -76,9 +78,10 @@ a board*. Two consequences:
 
 - `UserIdSource` gains a third value so backfilled provenance stays distinguishable from
   import-observed.
-- **`GetPlayerNames` must gain a placement filter in the same PR.** It returns every `OfficialPlayer`
-  row with no filter today — already 282 blank Phoenix 2 profiles — and 394 new dim rows would make
-  that worse *in official mode*, where the feature isn't even switched on.
+- **`GetPlayerNames` gained a placement filter** (landed with the hub reads, not the backfill). It
+  used to return every `OfficialPlayer` row — already 282 blank Phoenix 2 profiles — and the new dim
+  rows would have made that worse *in official mode*, where the feature isn't even switched on. It
+  now offers players with a placement in the latest sealed snapshot at the reading being viewed.
 
 **Collisions.** 11 Phoenix and 6 Phoenix 2 board tags are claimed by more than one public account.
 Most-recently-active resolves them, defined as `MAX(PhoenixRecord.RecordedDate)` for the user in that
@@ -106,12 +109,15 @@ NULL rows for that set is a one-line predicate.
 
 Per board, per snapshot: official rows, plus the ledger bests of every linked public player, deduped
 to **one row per human** — a player present on both sides keeps the higher score, since scores only
-improve. Ranked with the same Olympic tie rule, with a deterministic tiebreak (official first, then
-tag) so a paginated board doesn't reshuffle between renders.
+improve. Ranked with the sweep's own Olympic tie rule (`Placements.Olympic`), with a deterministic
+tiebreak — official ahead of supplemented, then by player id — so a paginated board doesn't
+reshuffle between one render and the next.
 
 **On chart boards, supplemented rows can only append below the official tail.** If a player is not on
 the official top 300, their score is by definition below the 300th score, so they rank ≥301 and
-places 1–300 never move. `SupplementMerge` asserts this rather than assuming it. The exceptions are
+places 1–300 never move. `SupplementMerge` *measures* this rather than enforcing it — it is a
+property of the data, not a rule to impose, and pretending otherwise would hide the case where it
+does not hold. The exceptions are
 narrow and all visible: a board the sweep skipped (`BoardsSkipped` is already tracked), a chart with
 no mirrored board, or a play landing between the scrape and the rollup.
 
@@ -148,10 +154,14 @@ Two behaviours to expect:
 Decision 10 puts both row kinds in one table, so the filter is a discipline problem. It is made
 machine-checked instead:
 
-- The repository exposes `GetOfficialPlacements` and `GetAllPlacements`. No handler writes its own
-  predicate.
-- An architecture test fails the build if `Set<OfficialLeaderboardPlacementEntity>()` appears outside
-  `EFOfficialSnapshotRepository`.
+- Every placement read takes a `PlacementScope` — `OfficialOnly` or `IncludingSupplemented` — with
+  **no default**, so the compiler asks each caller which reading it means. The predicate itself is
+  written once, in `EFOfficialSnapshotRepository.Scoped`. (The design first called for two method
+  names; a required parameter is stronger, because a name you can forget to use is not a
+  chokepoint. Turning the port over produced exactly ten call sites, each set deliberately.)
+- `SupplementedPlacementScopeTests` fails the build if the placement entity is named outside the
+  repository (allowlisting the rename merge and the account purge, each with its reason), if a
+  placement read on the port lacks a scope, or if the scope parameter ever grows a default.
 - An integration test asserts every hub read in official mode returns zero supplemented rows against
   a real database seeded with both.
 
@@ -228,7 +238,8 @@ needs a hand-written integration test, and this paragraph is the reason it exist
 streamed rather than materialised (587k rows on Phoenix). Implementation in
 `EFPhoenixRecordsRepository`.
 
-**Presentation** — the switch and What-It-Takes hiding in `OfficialSectionFrame`; the flag threaded
+**Presentation** — the switch, the What-It-Takes hiding and the count line (`GetSupplementedSummaryQuery`)
+in `OfficialSectionFrame`; the flag threaded
 through `HubRankings`, `HubPlayers`, `HubThisWeek`, `OfficialChartBoardDialog`; the disclaimer and
 count line on `HubPopularity`; `.olb-row-supp` in `site.css` (rail only, so it composes with both
 glows); a fourth button on `/Admin/OfficialLeaderboards` beside Run import / Rebuild highlights /
@@ -266,11 +277,15 @@ switch, row marker, disclaimer, count line · **S8** admin button · **S9** link
 
 ## 13. Open items
 
-- **A supplemented board with no official rows.** When the sweep skips a board, supplemented mode
-  shows our players alone on it, ranked from #1. Undecided whether that renders normally, carries a
-  note, or is suppressed.
+- **A supplemented board with no official rows** renders normally, ranked from #1, and the roll-up
+  logs how many boards that happened on (`SupplementMerge.RowsAboveOfficialTail`). On a complete
+  board the count is zero by construction, so a non-zero one says the official side was short that
+  week — worth a maintainer seeing, not worth a note on a player's screen.
 - **`?supplemented=1` querystring override** — offered and not taken; the switch is preference-only,
   so a supplemented view is not shareable by link. Additive later.
+- **Two orphaned localization keys** from round 6 (`piuscores`, "From their linked piuscores
+  account…") were kept for this feature's return, but the copy landed differently and they are now
+  permanently unused. Harmless; sweep them with the next resx cleanup.
 - **Discord digest** — deliberately official-only in v1. A supplemented weekly section is an obvious
   follow-up and the highlight rows are already the right shape.
 - **`api/v2/official`** — decision 13 is "not for now", not "never". If it ever changes, it publishes

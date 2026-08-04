@@ -82,7 +82,7 @@ ScoreTracker.sln
 │   ├── ScoreTracker.Catalog           chart/song reads, videos, skills
 │   ├── ScoreTracker.Randomizer        chart draw generation + randomizer settings
 │   ├── ScoreTracker.OfficialMirror    PiuGame ACL: scraping, leaderboard mirror,
-│   │                                  score import saga
+│   │                                  supplemented reading, score import saga
 │   ├── ScoreTracker.WeeklyChallenge   weekly board rotation, entries, placements
 │   ├── ScoreTracker.EventCompetition  tournaments, sessions, qualifiers, co-op teams
 │   ├── ScoreTracker.Communities       communities, memberships, Discord channel feeds
