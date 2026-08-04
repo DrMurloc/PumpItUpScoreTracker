@@ -21,7 +21,21 @@ internal interface IOfficialRecordRepository
     Task UpsertFolderRecords(MixEnum mix, IReadOnlyCollection<FolderRecordRow> records, CancellationToken ct);
     Task ResetRecords(MixEnum mix, CancellationToken ct);
 
-    Task WriteHighlights(int snapshotId, MixEnum mix, IReadOnlyCollection<HighlightRow> rows, CancellationToken ct);
-    Task<IReadOnlyList<HighlightRow>> GetHighlights(int snapshotId, CancellationToken ct);
+    /// <summary>
+    ///     Highlights carry the same reading flag as placements, and for the same reason: a
+    ///     snapshot has an official week and a supplemented one, and the two sets never mix on
+    ///     a page. Both parameters are explicit rather than defaulted — see
+    ///     <see cref="PlacementScope" />.
+    /// </summary>
+    Task WriteHighlights(int snapshotId, MixEnum mix, IReadOnlyCollection<HighlightRow> rows,
+        bool isSupplemented, CancellationToken ct);
+
+    Task<IReadOnlyList<HighlightRow>> GetHighlights(int snapshotId, bool isSupplemented, CancellationToken ct);
     Task DeleteHighlights(MixEnum mix, CancellationToken ct);
+
+    /// <summary>
+    ///     Clears one snapshot's supplemented highlights so a re-run replaces its own output.
+    ///     The official rows are untouched — they belong to the sweep, not to the roll-up.
+    /// </summary>
+    Task DeleteSupplementedHighlights(int snapshotId, CancellationToken ct);
 }

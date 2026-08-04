@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -47,7 +47,7 @@ public sealed class LeaderboardHubSagaTests
                 ids.Select(id => new PlayerDimension(id, $"PLAYER{id}",
                     new Uri($"https://example.invalid/{id}.png"), null)).ToArray());
         var records = new Mock<IOfficialRecordRepository>();
-        records.Setup(r => r.GetHighlights(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        records.Setup(r => r.GetHighlights(It.IsAny<int>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<HighlightRow>());
         var saga = new LeaderboardHubSaga(snapshots.Object, records.Object,
             new MemoryCache(new MemoryCacheOptions()));
@@ -138,7 +138,7 @@ public sealed class LeaderboardHubSagaTests
     public async Task HighlightsGroupByKindAndResolvePlayers()
     {
         var f = Arrange(Run(2, Week2), Run(1, Week1));
-        f.Records.Setup(r => r.GetHighlights(2, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Records.Setup(r => r.GetHighlights(2, false, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
             new HighlightRow(HighlightKinds.PumbilityMover, 1, 11, null, 900, null, null, null, null,
                 18204.51m, 31, 17),

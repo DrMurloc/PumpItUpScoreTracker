@@ -1,4 +1,4 @@
-using ScoreTracker.OfficialMirror.Domain;
+﻿using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.Integration.Fixtures;
@@ -186,9 +186,9 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
                 "Double", 26, null, 995000, null, null),
             new HighlightRow(HighlightKinds.PumbilityMover, 1, bob.Id, null, null, null, null, null, null,
                 17418.45m, 26, 18)
-        }, CancellationToken.None);
+        }, false, CancellationToken.None);
 
-        var highlights = await records.GetHighlights(snapshotId, CancellationToken.None);
+        var highlights = await records.GetHighlights(snapshotId, false, CancellationToken.None);
 
         Assert.Equal(2, highlights.Count);
         var mover = highlights.Single(h => h.Kind == HighlightKinds.PumbilityMover);

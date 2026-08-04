@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -154,7 +154,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
             await _snapshots.GetSeenPlayerIds(mix, snapshotId, PlacementScope.OfficialOnly, ct),
             ScoringConfiguration.PumbilityScoring(mix, false));
         var result = HighlightsCalculator.Calculate(input);
-        await _records.WriteHighlights(snapshotId, mix, result.Highlights, ct);
+        await _records.WriteHighlights(snapshotId, mix, result.Highlights, false, ct);
         await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
         await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
         _logger.LogInformation("{Mix} snapshot {SnapshotId}: {Count} highlights", mix, snapshotId,
@@ -221,7 +221,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
                 await _records.GetBoardRecords(mix, ct), await _records.GetFolderRecords(mix, ct), crossMix,
                 seen, scoring);
             var result = HighlightsCalculator.Calculate(input);
-            await _records.WriteHighlights(run.Id, mix, result.Highlights, ct);
+            await _records.WriteHighlights(run.Id, mix, result.Highlights, false, ct);
             await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
             await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
             foreach (var placement in current) seen.Add(placement.PlayerId);

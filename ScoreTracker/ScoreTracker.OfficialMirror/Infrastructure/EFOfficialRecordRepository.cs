@@ -135,7 +135,7 @@ internal sealed class EFOfficialRecordRepository : IOfficialRecordRepository
     }
 
     public async Task WriteHighlights(int snapshotId, MixEnum mix, IReadOnlyCollection<HighlightRow> rows,
-        CancellationToken ct)
+        bool isSupplemented, CancellationToken ct)
     {
         if (rows.Count == 0) return;
         await using var database = await _factory.CreateDbContextAsync(ct);
@@ -156,16 +156,18 @@ internal sealed class EFOfficialRecordRepository : IOfficialRecordRepository
                 GradeBand = r.GradeBand,
                 Score = r.Score,
                 PrevValue = r.PrevValue,
-                NewValue = r.NewValue
+                NewValue = r.NewValue,
+                IsSupplemented = isSupplemented
             }), ct);
         await database.SaveChangesAsync(ct);
     }
 
-    public async Task<IReadOnlyList<HighlightRow>> GetHighlights(int snapshotId, CancellationToken ct)
+    public async Task<IReadOnlyList<HighlightRow>> GetHighlights(int snapshotId, bool isSupplemented,
+        CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         return await database.Set<OfficialWeeklyHighlightEntity>()
-            .Where(h => h.SnapshotId == snapshotId)
+            .Where(h => h.SnapshotId == snapshotId && h.IsSupplemented == isSupplemented)
             .OrderBy(h => h.Kind).ThenBy(h => h.SortOrder)
             .Select(h => new HighlightRow(h.Kind, h.SortOrder, h.PlayerId, h.DethronedPlayerId, h.LeaderboardId,
                 h.ChartId, h.ChartType, h.Level, h.GradeBand, h.Score, h.PrevValue, h.NewValue))
@@ -178,5 +180,12 @@ internal sealed class EFOfficialRecordRepository : IOfficialRecordRepository
         var mixId = MixIds.For(mix);
         await database.Set<OfficialWeeklyHighlightEntity>()
             .Where(h => h.MixId == mixId).ExecuteDeleteAsync(ct);
+    }
+
+    public async Task DeleteSupplementedHighlights(int snapshotId, CancellationToken ct)
+    {
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        await database.Set<OfficialWeeklyHighlightEntity>()
+            .Where(h => h.SnapshotId == snapshotId && h.IsSupplemented).ExecuteDeleteAsync(ct);
     }
 }

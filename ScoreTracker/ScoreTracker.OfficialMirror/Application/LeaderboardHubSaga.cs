@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
@@ -125,7 +125,7 @@ internal sealed class LeaderboardHubSaga :
         if (latest?.CompletedAt == null) return null;
 
         var previous = await _snapshots.GetSealedBefore(request.Mix, latest.Id, cancellationToken);
-        var highlights = await _records.GetHighlights(latest.Id, cancellationToken);
+        var highlights = await _records.GetHighlights(latest.Id, false, cancellationToken);
         var players = (await _snapshots.GetPlayersByIds(
                 highlights.SelectMany(h => new[] { h.PlayerId, h.DethronedPlayerId })
                     .Where(id => id != null).Select(id => id!.Value)
@@ -550,7 +550,7 @@ internal sealed class LeaderboardHubSaga :
 
     private async Task<SnapshotStats> GetSnapshotStats(MixEnum mix, int snapshotId, CancellationToken ct)
     {
-        return (await _cache.GetOrCreateAsync(OfficialCacheKeys.SnapshotStats(mix, snapshotId), async entry =>
+        return (await _cache.GetOrCreateAsync(OfficialCacheKeys.SnapshotStats(mix, snapshotId, false), async entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromHours(12);
             var details = await _snapshots.GetPlacementDetails(snapshotId, PlacementScope.OfficialOnly, ct);
