@@ -36,6 +36,8 @@ public sealed class SupplementedPlacementScopeTests
         ["Infrastructure/EFOfficialSnapshotRepository.cs"] = "the chokepoint — the only reader",
         ["Infrastructure/EFOfficialPlayerIdentityRepository.cs"] =
             "the rename merge re-points placements; reading-agnostic by design",
+        ["Infrastructure/EFAccountPurgeRepository.cs"] =
+            "account deletion takes the supplemented rows, which are the account's own scores",
         ["Wiring/OfficialMirrorModelContribution.cs"] = "the table mapping"
     };
 
