@@ -63,11 +63,24 @@ internal interface IOfficialSnapshotRepository
     Task<IReadOnlyList<string>> GetPlayerNames(MixEnum mix, CancellationToken ct);
 
     /// <summary>
-    ///     Tags that actually placed in one snapshot, as opposed to every tag ever seen. A picker
-    ///     offering somebody a departed tag hands them a permanently empty result
-    ///     (docs/design/rivals.md D21).
+    ///     Tags that placed in one snapshot and match a search term, capped. A picker offering
+    ///     somebody a departed tag hands them a permanently empty result (docs/design/rivals.md
+    ///     D21), so the snapshot — not the all-time dimension — is the population.
+    ///     <para>
+    ///         Term and cap are the repository's business, not the caller's: a snapshot holds every
+    ///         placement on every chart board, so "read the snapshot's tags and filter in memory"
+    ///         moves the whole board population over the wire to keep ten rows, per keystroke.
+    ///     </para>
     /// </summary>
-    Task<IReadOnlyList<string>> GetPlayerNamesInSnapshot(int snapshotId, CancellationToken ct);
+    Task<IReadOnlyList<string>> SearchPlayerNamesInSnapshot(int snapshotId, string term, int take,
+        CancellationToken ct);
+
+    /// <summary>
+    ///     Which of these tags placed in the snapshot. Answers a membership question about a known
+    ///     handful of tags without materializing the population they are being tested against.
+    /// </summary>
+    Task<IReadOnlyList<string>> FilterNamesInSnapshot(int snapshotId, IReadOnlyCollection<string> names,
+        CancellationToken ct);
 
     /// <summary>
     ///     The mirror players behind a set of tags, normalized on the way in — a caller outside

@@ -43,16 +43,32 @@
 
     [CascadingParameter(Name = "Mix")] public MixEnum CurrentMix { get; set; } = MixEnum.Phoenix;
 
-    private async Task<IEnumerable<RivalCandidateRecord>> SearchPlayers(string term, CancellationToken token)
-    {
-        if (string.IsNullOrWhiteSpace(term)) return Array.Empty<RivalCandidateRecord>();
-        return await Mediator.Send(new SearchRivalCandidatesQuery(term), token);
-    }
+    private Task<IEnumerable<RivalCandidateRecord>> SearchPlayers(string term, CancellationToken token) =>
+        Abandonable<RivalCandidateRecord>(
+            async () => await Mediator.Send(new SearchRivalCandidatesQuery(term), token), term, token);
 
-    private async Task<IEnumerable<string>> SearchTags(string term, CancellationToken token)
+    private Task<IEnumerable<string>> SearchTags(string term, CancellationToken token) =>
+        Abandonable<string>(
+            async () => await Mediator.Send(new SearchRivalTagsQuery(CurrentMix, term), token), term, token);
+
+    // MudAutocomplete cancels the in-flight search the moment the next character arrives, so an
+    // abandoned search is the normal case here, not a failure. It does not always arrive as an
+    // OperationCanceledException: a cancelled SqlCommand surfaces as a provider error instead, and
+    // catching by exception type would miss that and tear the circuit down mid-keystroke. The token
+    // is the reliable signal — swallow only what this component already abandoned, and let a real
+    // failure through to be reported.
+    private static async Task<IEnumerable<T>> Abandonable<T>(Func<Task<IEnumerable<T>>> search,
+        string term, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(term)) return Array.Empty<string>();
-        return await Mediator.Send(new SearchRivalTagsQuery(CurrentMix, term), token);
+        if (string.IsNullOrWhiteSpace(term)) return Array.Empty<T>();
+        try
+        {
+            return await search();
+        }
+        catch (Exception) when (token.IsCancellationRequested)
+        {
+            return Array.Empty<T>();
+        }
     }
 
     private Task AddPlayer(RivalCandidateRecord? candidate) =>

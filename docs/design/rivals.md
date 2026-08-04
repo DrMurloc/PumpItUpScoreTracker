@@ -55,7 +55,7 @@ Owner calls from the 2026-08-02 workshop.
 | D18 | **Default sort is recent activity**, with a sort control. A 300-row alphabetical list is a phone book. |
 | D19 | **Two search fields, not one merged autocomplete.** The site index and the board index are different populations with different rules; merging them hides which one failed you. |
 | D20 | **The site picker is "public users ∪ your community members."** A private clubmate is addable; a private stranger is not findable at all. |
-| D21 | **Departed tags are filtered out of the board picker.** `GetOfficialPlayerNamesQuery` returns every tag ever seen — right for the Players page, wrong here, because the edge would be permanently empty. Filter to the latest sealed snapshot. |
+| D21 | **Departed tags are filtered out of the board picker.** `GetOfficialPlayerNamesQuery` returns every tag ever seen — right for the Players page, wrong here, because the edge would be permanently empty. The picker asks `SearchOfficialBoardTagsQuery` instead: latest sealed snapshot, term and cap pushed into SQL. It is a separate query rather than a flag because the picker runs **per keystroke** — reading a snapshot's whole tag population to keep ten strings moves every board placement over the wire, and a search still running when the next character arrives gets cancelled, which SqlClient reports as a severe command error rather than a cancellation (§6). |
 | D22 | **Adding happens on `/Rivals` only in v1.** No ⊕ affordance on leaderboard, community or official rows yet. |
 | D23 | **The invite code is minted for private accounts only.** A public account has nothing to hand out, and a code nobody needs reads as a step they missed. |
 | D24 | **Recycling invalidates the code, not the edges already made with it.** Revoking a person is the reverse list's job. |
@@ -277,7 +277,7 @@ the empty state names what would fill it.
 | **`ScoreTracker.Rivals` (NEW)** | The whole vertical: three tables, the edge model, resolution to `RivalSubject`, the invite-code lifecycle, block enforcement, the rival-scores query, the feed read, the purge manifest, two event consumers. |
 | **PlayerProgress** | Owns tier 2 after the move: the win policy + capturer, the `PlayerHighlight` store, and one published query for a set of users' recent wins. `RivalMatcher` renamed (D48). |
 | **Communities** | Loses the policy/capturer and the payload; keeps `CommunityHighlight` as the audience index (D33) and re-points its feed query at the new payload. `SignificantWin` / `WinKind` / the schema stamp re-home to `PlayerProgress.Contracts`. |
-| **OfficialMirror** | Two published events (D5), two published queries (resolve a tag to a subject; board scores for tags × charts at the latest sealed snapshot), and a snapshot-filtered variant of the player-names query for the picker (D21). |
+| **OfficialMirror** | Two published events (D5), and three published queries: resolve a tag to a subject, board scores for tags × charts at the latest sealed snapshot, and the snapshot-scoped tag search the picker types into (D21). |
 | **Identity** | **Nothing.** `SearchForUsersQuery` already exists; Rivals filters its results to public players ∪ the caller's clubmates. Teaching Identity what a community is would put the membership graph in the wrong vertical. |
 | **ScoreLedger** | **Nothing.** `IScoreReader.GetPlayerScores(mix, userIds, chartIds, ct)` is already the exact shape. |
 | **HomePage** | Nothing structural — the widget's config record gains a field, the type key is untouched (D38). |
@@ -374,7 +374,7 @@ implementation is a runtime-only failure nothing catches.
 | `Contracts/Events/OfficialPlayerRenamedEvent.cs` | new — published when a rename proposal is accepted |
 | `Contracts/Queries/ResolveOfficialPlayerQuery.cs` | new — tag → `(exists, linked UserId?, avatar, lastSeen)` |
 | `Contracts/Queries/GetOfficialScoresForTagsQuery.cs` | new — board scores for (tags × chartIds) at the latest sealed snapshot, batched |
-| `Contracts/Queries/GetOfficialPlayerNamesQuery.cs` | + a "current snapshot only" flag for the picker (D21) |
+| `Contracts/Queries/SearchOfficialBoardTagsQuery.cs` | new — snapshot-scoped tag search for the picker, term + cap pushed to SQL (D21) |
 | `Application/OfficialLeaderboardSaga.cs`, the rename-accept handler | + the two publishes |
 | `Infrastructure/OfficialSiteClient.cs` | the `?? DefaultAvatar` fix (§6) |
 
@@ -463,7 +463,7 @@ Backfill: copy the last 30 days of `CommunityHighlight` into `PlayerHighlight`, 
 | # | Commit |
 |---|---|
 | 9 | `feat(mirror): publish player-linked and player-renamed events` |
-| 10 | `feat(mirror): resolve a tag, and board scores for tags × charts` — plus the current-snapshot flag on `GetOfficialPlayerNamesQuery` (D21) |
+| 10 | `feat(mirror): resolve a tag, and board scores for tags × charts` — plus `SearchOfficialBoardTagsQuery` for the picker (D21) |
 | 11 | `fix(mirror): stop persisting the default avatar over a good one` — §6; independent of Rivals, but the roster is what makes it visible |
 
 ### Phase 5 — Rivals logic
@@ -538,6 +538,18 @@ Backfill: copy the last 30 days of `CommunityHighlight` into `PlayerHighlight`, 
   are the same source. Don't "simplify" that folder split away.
 - **Set-based reads or nothing.** §2.5. Three hundred rivals × N charts is the shape that will
   actually be exercised, not the exception.
+- **A picker's query runs per keystroke, and gets cancelled mid-flight.** Found in field testing:
+  the board-tag picker reused `GetOfficialPlayerNamesQuery(CurrentBoardsOnly: true)`, which reads
+  every placement in the sealed snapshot, de-duplicates to a tag list, ships the whole thing to the
+  handler, and keeps the ten that match. Two failures compound. The query is slow enough that
+  MudAutocomplete cancels it when the next character arrives — and **a cancelled `SqlCommand` does
+  not raise `OperationCanceledException`**; SqlClient raises "a severe error occurred on the current
+  command", so a `catch (OperationCanceledException)` would miss it and the unhandled exception
+  tears down the Blazor circuit. Both halves are fixed: term and cap pushed into SQL as an EXISTS
+  semi-join over the player dimension (D21), and the panel filters on
+  `token.IsCancellationRequested` rather than on exception type — Web cannot reference SqlClient to
+  catch it by type, and a genuine failure must still surface. Any future per-keystroke surface
+  inherits both traps.
 - **Two normalizers is the recurring bug in this codebase.** D7 exists because
   `PiuGameApi.ImageRegex` and `OfficialSiteClient.ImageRegex` drifted apart and cost two
   separate outages with different symptoms.

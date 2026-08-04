@@ -22,6 +22,7 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialPlayerProfileQuery, OfficialPlayerProfileRecord?>,
     IRequestHandler<GetOfficialPlayerStandingQuery, OfficialPlayerStandingRecord?>,
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
+    IRequestHandler<SearchOfficialBoardTagsQuery, IReadOnlyList<string>>,
     IRequestHandler<ResolveOfficialPlayerQuery, OfficialPlayerResolution?>,
     IRequestHandler<ResolveOfficialPlayersQuery, IReadOnlyList<OfficialPlayerResolution>>,
     IRequestHandler<GetOfficialScoresForTagsQuery, OfficialTagScores>,
@@ -355,15 +356,19 @@ internal sealed class LeaderboardHubSaga :
     }
 
     public async Task<IReadOnlyList<string>> Handle(GetOfficialPlayerNamesQuery request,
+        CancellationToken cancellationToken) =>
+        await _snapshots.GetPlayerNames(request.Mix, cancellationToken);
+
+    public async Task<IReadOnlyList<string>> Handle(SearchOfficialBoardTagsQuery request,
         CancellationToken cancellationToken)
     {
-        if (!request.CurrentBoardsOnly)
-            return await _snapshots.GetPlayerNames(request.Mix, cancellationToken);
+        if (string.IsNullOrWhiteSpace(request.Term)) return Array.Empty<string>();
 
         var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
         return latest == null
             ? Array.Empty<string>()
-            : await _snapshots.GetPlayerNamesInSnapshot(latest.Id, cancellationToken);
+            : await _snapshots.SearchPlayerNamesInSnapshot(latest.Id, request.Term, request.Take,
+                cancellationToken);
     }
 
     public async Task<OfficialPlayerResolution?> Handle(ResolveOfficialPlayerQuery request,
@@ -386,7 +391,8 @@ internal sealed class LeaderboardHubSaga :
         var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
         var current = latest == null
             ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            : (await _snapshots.GetPlayerNamesInSnapshot(latest.Id, cancellationToken))
+            : (await _snapshots.FilterNamesInSnapshot(latest.Id,
+                players.Select(p => p.Username).ToArray(), cancellationToken))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         return players

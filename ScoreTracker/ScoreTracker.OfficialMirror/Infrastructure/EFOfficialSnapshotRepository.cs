@@ -381,14 +381,37 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyList<string>> GetPlayerNamesInSnapshot(int snapshotId, CancellationToken ct)
+    public async Task<IReadOnlyList<string>> SearchPlayerNamesInSnapshot(int snapshotId, string term,
+        int take, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(term) || take <= 0) return Array.Empty<string>();
+
         await using var database = await _factory.CreateDbContextAsync(ct);
-        return await database.Set<OfficialLeaderboardPlacementEntity>()
-            .Where(p => p.SnapshotId == snapshotId)
-            .Join(database.Set<OfficialPlayerEntity>(), p => p.PlayerId, x => x.Id, (_, x) => x.Username)
-            .Distinct()
-            .OrderBy(name => name)
+        // Player-first with an EXISTS, not placements-first with a DISTINCT. The placement table
+        // holds every board position in the snapshot and the player dimension holds one row per
+        // tag, so filtering the dimension by name and then testing membership reads orders of
+        // magnitude fewer rows than de-duplicating the join's output.
+        return await database.Set<OfficialPlayerEntity>()
+            .Where(x => x.Username.Contains(term))
+            .Where(x => database.Set<OfficialLeaderboardPlacementEntity>()
+                .Any(p => p.SnapshotId == snapshotId && p.PlayerId == x.Id))
+            .OrderBy(x => x.Username)
+            .Select(x => x.Username)
+            .Take(take)
+            .ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<string>> FilterNamesInSnapshot(int snapshotId,
+        IReadOnlyCollection<string> names, CancellationToken ct)
+    {
+        if (names.Count == 0) return Array.Empty<string>();
+
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        return await database.Set<OfficialPlayerEntity>()
+            .Where(x => names.Contains(x.Username))
+            .Where(x => database.Set<OfficialLeaderboardPlacementEntity>()
+                .Any(p => p.SnapshotId == snapshotId && p.PlayerId == x.Id))
+            .Select(x => x.Username)
             .ToArrayAsync(ct);
     }
 
