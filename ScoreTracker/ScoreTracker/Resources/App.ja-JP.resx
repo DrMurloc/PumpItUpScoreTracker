@@ -153,6 +153,12 @@
   <data name="(Optional) Also delete historical data" xml:space="preserve">
 	  <value>（任意）履歴データも削除する</value>
   </data>
+  <data name="* Official board data, as of {0}." xml:space="preserve">
+    <value>* 公式ボードのデータ（{0} 時点）。</value>
+  </data>
+  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
+    <value>* 公式ボードのデータ（{0} 時点）。ボードはレベル20以上のみです。</value>
+  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>デイリーステップ {1} {2} で **#{0}**</value>
   </data>
@@ -348,6 +354,9 @@
   <data name="A miss. In practice: straight to zero." xml:space="preserve">
     <value>Miss。実質ゼロ直行。</value>
   </data>
+  <data name="A new code stops the old link working. People who already added you stay — remove them from Rivals of you." xml:space="preserve">
+    <value>新しいコードを作ると古いリンクは使えなくなります。すでに追加した人はそのまま残るので、「あなたをライバルにしている人」から削除してください。</value>
+  </data>
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>倍率上限での Perfect。</value>
   </data>
@@ -424,6 +433,9 @@
   <data name="Add a public source repository and your Discord handle, then check the link. Until then invite links and listing are closed." xml:space="preserve">
     <value>公開ソースリポジトリとあなたの Discord ハンドルを追加し、リンクを確認してください。それまでは招待リンクも掲載も使えません。</value>
   </data>
+  <data name="Add a rival" xml:space="preserve">
+    <value>ライバルを追加</value>
+  </data>
   <data name="Add photo" xml:space="preserve">
     <value>写真を追加</value>
   </data>
@@ -451,6 +463,9 @@
   <data name="Add widgets to this page in edit mode." xml:space="preserve">
     <value>編集モードでこのページにウィジェットを追加できます。</value>
   </data>
+  <data name="Add {0} as a rival" xml:space="preserve">
+    <value>{0} をライバルに追加</value>
+  </data>
   <data name="Added" xml:space="preserve">
 	  <value>追加済み</value>
   </data>
@@ -459,6 +474,15 @@
   </data>
   <data name="Added to ToDo List!" xml:space="preserve">
 	  <value>やることリストに追加しました！</value>
+  </data>
+  <data name="Added you {0}" xml:space="preserve">
+    <value>{0} に追加されました</value>
+  </data>
+  <data name="Added you {0} · you rival them too" xml:space="preserve">
+    <value>{0} に追加されました — あなたも相手をライバルにしています</value>
+  </data>
+  <data name="Added {0}" xml:space="preserve">
+    <value>{0} に追加</value>
   </data>
   <data name="Additional Comments" xml:space="preserve">
 	  <value>追加コメント</value>
@@ -739,6 +763,9 @@
   <data name="Back to community" xml:space="preserve">
     <value>コミュニティに戻る</value>
   </data>
+  <data name="Back to rivals" xml:space="preserve">
+    <value>ライバルに戻る</value>
+  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>ティアリストに戻る</value>
   </data>
@@ -747,6 +774,9 @@
   </data>
   <data name="Backfill" xml:space="preserve">
     <value>バックフィル</value>
+  </data>
+  <data name="Backfill Highlights" xml:space="preserve">
+    <value>ハイライトをバックフィル</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>BAD</value>
@@ -853,14 +883,32 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>選択したチャートをバインド</value>
   </data>
+  <data name="Block" xml:space="preserve">
+    <value>ブロック</value>
+  </data>
   <data name="Block this tool" xml:space="preserve">
     <value>このツールをブロック</value>
+  </data>
+  <data name="Blocked" xml:space="preserve">
+    <value>ブロック済み</value>
+  </data>
+  <data name="Blocked {0} · neither of you can rival the other" xml:space="preserve">
+    <value>{0} をブロック — どちらも相手をライバルにできません</value>
+  </data>
+  <data name="Blocked. Neither of you can rival the other." xml:space="preserve">
+    <value>ブロックしました。どちらも相手をライバルにできません。</value>
   </data>
   <data name="Board" xml:space="preserve">
     <value>ボード</value>
   </data>
+  <data name="Board only" xml:space="preserve">
+    <value>ボードのみ</value>
+  </data>
   <data name="Boards" xml:space="preserve">
     <value>ボード</value>
+  </data>
+  <data name="Boards you're both on" xml:space="preserve">
+    <value>二人とも載っているボード</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>ボスブレイカー</value>
@@ -1310,6 +1358,9 @@
   <data name="Compact" xml:space="preserve">
     <value>コンパクト</value>
   </data>
+  <data name="Compare" xml:space="preserve">
+    <value>比較</value>
+  </data>
   <data name="Compare in folder" xml:space="preserve">
     <value>フォルダー内で比較</value>
   </data>
@@ -1446,6 +1497,9 @@
   <data name="Copy your key now" xml:space="preserve">
     <value>今すぐキーをコピーしてください</value>
   </data>
+  <data name="Copying existing highlights into the new feed store." xml:space="preserve">
+    <value>既存のハイライトを新しいフィードストアにコピーしています。</value>
+  </data>
   <data name="Could not create the invite link." xml:space="preserve">
     <value>招待リンクを作成できませんでした。</value>
   </data>
@@ -1545,6 +1599,9 @@
   </data>
   <data name="Credential security" xml:space="preserve">
     <value>認証情報のセキュリティ</value>
+  </data>
+  <data name="Crew" xml:space="preserve">
+    <value>クルー</value>
   </data>
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>パッド間移動</value>
@@ -2126,6 +2183,9 @@
   <data name="Folder Cleared" xml:space="preserve">
     <value>フォルダクリア</value>
   </data>
+  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
+    <value>フォルダー比較・称号・進行状況には piuscores のアカウントが必要です。{0} がインポートすればここに表示されます。</value>
+  </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>フォルダークリア率</value>
   </data>
@@ -2252,6 +2312,9 @@
   <data name="generous to score once you're through" xml:space="preserve">
     <value>クリアさえすればスコアは伸びやすい</value>
   </data>
+  <data name="Get a new code" xml:space="preserve">
+    <value>新しいコードを取得</value>
+  </data>
   <data name="Get told when someone plays" xml:space="preserve">
     <value>誰かがプレイしたら知らせる</value>
   </data>
@@ -2275,6 +2338,9 @@
   </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>削除へ</value>
+  </data>
+  <data name="Go to Rivals" xml:space="preserve">
+    <value>ライバルへ</value>
   </data>
   <data name="Go to the console" xml:space="preserve">
     <value>コンソールへ</value>
@@ -2326,6 +2392,9 @@
   </data>
   <data name="Greats" xml:space="preserve">
 	  <value>Great数</value>
+  </data>
+  <data name="Green marks a rival who's also in one of your communities." xml:space="preserve">
+    <value>緑は、あなたのコミュニティにも所属しているライバルを示します。</value>
   </data>
   <data name="Grind" xml:space="preserve">
     <value>持続区間</value>
@@ -2386,6 +2455,9 @@
   </data>
   <data name="Hide Chart for this Category" xml:space="preserve">
 	  <value>このカテゴリーで譜面を隠す</value>
+  </data>
+  <data name="Hide players whose level sat outside this chart's range" xml:space="preserve">
+    <value>このチャートのレンジ外だったプレイヤーを隠す</value>
   </data>
   <data name="Hide Record-less Charts" xml:space="preserve">
 	  <value>記録なし譜面を隠す</value>
@@ -2669,6 +2741,9 @@
   <data name="Include my own wins" xml:space="preserve">
     <value>自分の記録も含める</value>
   </data>
+  <data name="Include my rivals" xml:space="preserve">
+    <value>ライバルを含める</value>
+  </data>
   <data name="Input Json" xml:space="preserve">
 	  <value>JSON入力</value>
   </data>
@@ -2717,6 +2792,9 @@
   <data name="invited you to connect" xml:space="preserve">
     <value>があなたを招待しました</value>
   </data>
+  <data name="invites you to track them as a rival" xml:space="preserve">
+    <value>があなたをライバルとして追跡するよう招待しています</value>
+  </data>
   <data name="IsBroken" xml:space="preserve">
 	  <value>IsBroken</value>
 	  
@@ -2729,6 +2807,9 @@
   </data>
   <data name="It is not limited to reading scores, and I can't limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
     <value>スコアの読み取りに限定されておらず、私に制限することもできません。キーはpiugame.comが失効させるまで有効です。</value>
+  </data>
+  <data name="It may have been replaced by a newer one. Ask them for a fresh link." xml:space="preserve">
+    <value>新しいものに置き換わった可能性があります。新しいリンクをもらってください。</value>
   </data>
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>取り消されたか、ツールが削除された可能性があります。送った人に新しいリンクをもらってください。</value>
@@ -3380,6 +3461,9 @@
   <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
     <value>API キーが必要です。あなたが API を呼ぶか、PIU Scores があなたを呼びます。</value>
   </data>
+  <data name="Neither of you has scores on the same charts yet." xml:space="preserve">
+    <value>まだ二人が同じチャートにスコアを持っていません。</value>
+  </data>
   <data name="net" xml:space="preserve">
     <value>合計</value>
   </data>
@@ -3404,6 +3488,9 @@
   </data>
   <data name="New board soon." xml:space="preserve">
     <value>まもなく新しいボードが登場します。</value>
+  </data>
+  <data name="New code. The old link no longer works." xml:space="preserve">
+    <value>新しいコードです。古いリンクはもう使えません。</value>
   </data>
   <data name="New folder" xml:space="preserve">
     <value>変更後のフォルダ</value>
@@ -3504,6 +3591,9 @@
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>まだ招待リンクがありません。作成してメンバーを招待しましょう。</value>
   </data>
+  <data name="No longer on the boards" xml:space="preserve">
+    <value>ボードから外れています</value>
+  </data>
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>まだ該当する好プレイがありません。自分を追い込んで、おすすめをもらいましょう！</value>
   </data>
@@ -3530,6 +3620,9 @@
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>スコア記録なし</value>
+  </data>
+  <data name="No rivals yet" xml:space="preserve">
+    <value>まだライバルがいません</value>
   </data>
   <data name="No Score Yet" xml:space="preserve">
     <value>スコアなし</value>
@@ -3597,6 +3690,9 @@
   <data name="No webhook" xml:space="preserve">
     <value>Webhookなし</value>
   </data>
+  <data name="No wins from your rivals yet" xml:space="preserve">
+    <value>まだライバルの記録がありません</value>
+  </data>
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>いいえ — データを完全に削除したいです。</value>
   </data>
@@ -3614,6 +3710,9 @@
   </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>今週はPUMBILITYボードで順位を上げたプレイヤーはいません。</value>
+  </data>
+  <data name="Nobody rivals you yet" xml:space="preserve">
+    <value>まだ誰もあなたをライバルにしていません</value>
   </data>
   <data name="None" xml:space="preserve">
 	  <value>なし</value>
@@ -3671,6 +3770,9 @@
   </data>
   <data name="Not played yet" xml:space="preserve">
     <value>未プレイ</value>
+  </data>
+  <data name="Not Rated" xml:space="preserve">
+    <value>未評価</value>
   </data>
   <data name="Not Recorded" xml:space="preserve">
     <value>未記録</value>
@@ -3754,6 +3856,9 @@
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>変更なし — {0} 譜面すべてが難度を維持しています。</value>
   </data>
+  <data name="Nothing to compare yet" xml:space="preserve">
+    <value>まだ比較できるものがありません</value>
+  </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>まだ提案できるものがありません — プレイしてスコアをインポートしてください。</value>
   </data>
@@ -3822,6 +3927,18 @@
   </data>
   <data name="official" xml:space="preserve">
     <value>公式</value>
+  </data>
+  <data name="Official board" xml:space="preserve">
+    <value>公式ボード</value>
+  </data>
+  <data name="Official board data" xml:space="preserve">
+    <value>公式ボードのデータ</value>
+  </data>
+  <data name="Official board data only" xml:space="preserve">
+    <value>公式ボードのデータのみ</value>
+  </data>
+  <data name="Official board data, as of {0}." xml:space="preserve">
+    <value>公式ボードのデータ（{0} 時点）。</value>
   </data>
   <data name="official board · as of {0}" xml:space="preserve">
     <value>公式ランキング · {0} 時点</value>
@@ -4220,6 +4337,9 @@
   <data name="Pick a registration to remove from the list." xml:space="preserve">
     <value>リストから解除する登録を選んでください。</value>
   </data>
+  <data name="Pick players you want to measure yourself against — from piuscores, or straight off the official boards. Their big wins land in your feed." xml:space="preserve">
+    <value>自分を比べたいプレイヤーを選びましょう — piuscores から、または公式ボードから直接。その大きな記録があなたのフィードに届きます。</value>
+  </data>
   <data name="Pick the folders you're working on." xml:space="preserve">
     <value>取り組んでいるフォルダを選んでください。</value>
   </data>
@@ -4516,6 +4636,9 @@
     <value>公開</value>
     
   <comment>(on/offもしアカウントが公開が設定された)</comment></data>
+  <data name="Public players and your community members." xml:space="preserve">
+    <value>公開プレイヤーと、あなたのコミュニティのメンバー。</value>
+  </data>
   <data name="Public profile" xml:space="preserve">
     <value>公開プロフィール</value>
   </data>
@@ -4659,6 +4782,9 @@
   </data>
   <data name="Rare PG" xml:space="preserve">
     <value>珍しいPG</value>
+  </data>
+  <data name="Rare PGs, big titles and top scores from the piuscores players you rival show up here. Board-only rivals don't post wins." xml:space="preserve">
+    <value>ライバルにしている piuscores プレイヤーの珍しい PG、大きな称号、上位スコアがここに表示されます。ボードのみのライバルは記録を投稿しません。</value>
   </data>
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>コミュニティの珍しいPG、大きな称号、トップスコアがここに表示されます。</value>
@@ -4806,6 +4932,9 @@
   <data name="Rejected" xml:space="preserve">
     <value>却下しました</value>
   </data>
+  <data name="Relevant players" xml:space="preserve">
+    <value>関連プレイヤー</value>
+  </data>
   <data name="Reload the page" xml:space="preserve">
     <value>ページを再読み込み</value>
   </data>
@@ -4949,6 +5078,18 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>取り消し済み</value>
+  </data>
+  <data name="Rival invite" xml:space="preserve">
+    <value>ライバル招待</value>
+  </data>
+  <data name="Rival removed." xml:space="preserve">
+    <value>ライバルを削除しました。</value>
+  </data>
+  <data name="Rivals" xml:space="preserve">
+    <value>ライバル</value>
+  </data>
+  <data name="Rivals of you" xml:space="preserve">
+    <value>あなたをライバルにしている人</value>
   </data>
   <data name="Role" xml:space="preserve">
     <value>役割</value>
@@ -5165,8 +5306,14 @@
   <data name="Search any board player" xml:space="preserve">
     <value>ボードのプレイヤーを検索</value>
   </data>
+  <data name="Search board tags…" xml:space="preserve">
+    <value>ボードのタグを検索…</value>
+  </data>
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>上の検索バーで曲名を検索してください — 譜面ごとに専用ページがあります。</value>
+  </data>
+  <data name="Search players…" xml:space="preserve">
+    <value>プレイヤーを検索…</value>
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
 	  <value>ユーザー検索（名前またはユーザーID）</value>
@@ -5334,6 +5481,12 @@
   <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
     <value>各パターンと負荷が譜面に占める割合</value>
   </data>
+  <data name="Shared" xml:space="preserve">
+    <value>共通</value>
+  </data>
+  <data name="Shared charts" xml:space="preserve">
+    <value>共通のチャート</value>
+  </data>
   <data name="shared top-50 charts" xml:space="preserve">
     <value>トップ50共通譜面</value>
   </data>
@@ -5440,6 +5593,9 @@
   <data name="Sign in to accept this invite." xml:space="preserve">
     <value>招待を受けるにはログインしてください。</value>
   </data>
+  <data name="Sign in to add them" xml:space="preserve">
+    <value>追加するにはサインインしてください</value>
+  </data>
   <data name="Sign in to continue" xml:space="preserve">
     <value>続けるにはログイン</value>
   </data>
@@ -5454,6 +5610,9 @@
   </data>
   <data name="Sign in to record." xml:space="preserve">
     <value>記録するにはログインしてください。</value>
+  </data>
+  <data name="Sign in to track rivals." xml:space="preserve">
+    <value>ライバルを追跡するにはサインインしてください。</value>
   </data>
   <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
     <value>そのアカウントのログイン方法でログインして本人確認をしてください</value>
@@ -5794,6 +5953,9 @@
 	  <value>タグ</value>
 	  
   <comment>Tag</comment></data>
+  <data name="Tags on the current boards. Departed tags aren't listed." xml:space="preserve">
+    <value>現在のボードのタグ。外れたタグは表示されません。</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Nノートごとに1回失敗し続けると、体力はどこかに収束します。崖の下ではゼロに収束します。曲線は緩やかに落ちるのではなく、崖のように落ちます。倍率を建て直すより速く倍率が死んでいるからです。</value>
   </data>
@@ -5917,6 +6079,9 @@
   <data name="the official leaderboards' weekly digest" xml:space="preserve">
     <value>公式ランキングの週間ダイジェスト</value>
   </data>
+  <data name="The official site doesn't publish a board for this chart." xml:space="preserve">
+    <value>公式サイトはこのチャートのボードを公開していません。</value>
+  </data>
   <data name="The ones worth framing" xml:space="preserve">
     <value>額に入れて飾りたい記録</value>
   </data>
@@ -5998,8 +6163,20 @@
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>これらの計算式は Team Infinitesimal が NX2 と Prime からデータマインしたものです。Phoenix や Phoenix 2 での再検証は誰も行っていないため、数値は正確な筐体値ではなく仕組みの形として捉えてください。</value>
   </data>
+  <data name="They ahead" xml:space="preserve">
+    <value>相手が上</value>
+  </data>
+  <data name="They can see your scores on their rivals surfaces. Removing someone lets them add you again; blocking doesn't." xml:space="preserve">
+    <value>相手は自分のライバル画面であなたのスコアを見られます。削除した相手は再び追加できますが、ブロックした相手はできません。</value>
+  </data>
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>解除するまで、新しいツールは作れません。</value>
+  </data>
+  <data name="They haven't placed on any board you've played." xml:space="preserve">
+    <value>あなたがプレイしたチャートのボードには載っていません。</value>
+  </data>
+  <data name="They're already one of your rivals." xml:space="preserve">
+    <value>すでにあなたのライバルです。</value>
   </data>
   <data name="Third" xml:space="preserve">
     <value>3 枚目</value>
@@ -6066,6 +6243,9 @@
   </data>
   <data name="This invite link doesn't work" xml:space="preserve">
     <value>この招待リンクは使えません</value>
+  </data>
+  <data name="This invite link isn't valid" xml:space="preserve">
+    <value>この招待リンクは有効ではありません</value>
   </data>
   <data name="This invite link isn't valid." xml:space="preserve">
     <value>この招待リンクは無効です。</value>
@@ -6422,6 +6602,9 @@
   <data name="Unban" xml:space="preserve">
     <value>BAN解除</value>
   </data>
+  <data name="Unblock" xml:space="preserve">
+    <value>ブロック解除</value>
+  </data>
   <data name="Unchanged Charts:" xml:space="preserve">
     <value>変更なしの譜面：</value>
   </data>
@@ -6460,6 +6643,9 @@
   </data>
   <data name="Unknown" xml:space="preserve">
 	  <value>不明</value>
+  </data>
+  <data name="Unknown chart" xml:space="preserve">
+    <value>不明なチャート</value>
   </data>
   <data name="Unknown feed." xml:space="preserve">
     <value>不明なフィードです。</value>
@@ -6789,11 +6975,17 @@
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>取り組む目標（既定は称号ハント）</value>
   </data>
+  <data name="What your rivals are up to" xml:space="preserve">
+    <value>ライバルの最近の動き</value>
+  </data>
   <data name="When" xml:space="preserve">
     <value>日時</value>
   </data>
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>新しいバージョンが来ても、ここでは何もリセットされません。記録したスコアはすべて残ります — 振り返り、比較し、積み上げるために。{0} バージョンの記録が、1999年から今日まで並んでいます。</value>
+  </data>
+  <data name="When somebody adds you, they show up here." xml:space="preserve">
+    <value>誰かがあなたを追加すると、ここに表示されます。</value>
   </data>
   <data name="Where a player lands when they click through from the directory." xml:space="preserve">
     <value>プレイヤーがディレクトリから移動したときに開く場所です。</value>
@@ -6932,6 +7124,9 @@
   </data>
   <data name="You" xml:space="preserve">
     <value>あなた</value>
+  </data>
+  <data name="You ahead" xml:space="preserve">
+    <value>自分が上</value>
   </data>
   <data name="You are already connected to your own tool, so you have one real player to build against — yourself. An invite link adds anyone else, public profile or not." xml:space="preserve">
     <value>あなたはすでに自分のツールに接続しているので、試せる実在のプレイヤーが一人います — あなた自身です。招待リンクを使えば、公開プロフィールでなくても他の人を追加できます。</value>
@@ -7092,6 +7287,9 @@
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>あなたのグループ、あなたの地域、そして世界。</value>
   </data>
+  <data name="Your invite code" xml:space="preserve">
+    <value>あなたの招待コード</value>
+  </data>
   <data name="Your key" xml:space="preserve">
     <value>あなたのキー</value>
   </data>
@@ -7134,6 +7332,9 @@
   <data name="Your profile is private, so nothing is shared." xml:space="preserve">
     <value>プロフィールが非公開なので、何も共有されていません。</value>
   </data>
+  <data name="Your profile is private, so people can't find you in search. Share this to let someone add you." xml:space="preserve">
+    <value>プロフィールが非公開なので検索では見つかりません。これを共有すると追加してもらえます。</value>
+  </data>
   <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
     <value>プロフィールは非公開です。このコミュニティに参加すると、ランキング、プレーヤーページ、比較画面でコミュニティの全員にスコアが公開されます。他の場所では非公開のままです。</value>
   </data>
@@ -7163,6 +7364,9 @@
   </data>
   <data name="Your repository is reachable." xml:space="preserve">
     <value>リポジトリに到達できました。</value>
+  </data>
+  <data name="Your rivals" xml:space="preserve">
+    <value>あなたのライバル</value>
   </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>保存済みのランダマイザー設定</value>
@@ -7265,6 +7469,9 @@
   </data>
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} クリア</value>
+  </data>
+  <data name="{0} added as a rival." xml:space="preserve">
+    <value>{0} をライバルに追加しました。</value>
   </data>
   <data name="{0} admins" xml:space="preserve">
     <value>管理者 {0} 人</value>
@@ -7428,6 +7635,9 @@
   <data name="{0} more perfects to cap" xml:space="preserve">
     <value>上限まであと Perfect {0} 回</value>
   </data>
+  <data name="{0} more rivals have not played this." xml:space="preserve">
+    <value>他に {0} 人のライバルがこれをプレイしていません。</value>
+  </data>
   <data name="{0} more scores" xml:space="preserve">
     <value>他 {0} 件のスコア</value>
   </data>
@@ -7520,6 +7730,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>今週の Pump It Up チャレンジ譜面{0}件、ライブ順位付きのデイリー譜面、そして月間 PUMBILITY ボード。</value>
+  </data>
+  <data name="{0} rivals" xml:space="preserve">
+    <value>ライバル {0} 人</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0}スコア</value>
