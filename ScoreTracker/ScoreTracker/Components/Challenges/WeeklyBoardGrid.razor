@@ -6,6 +6,7 @@
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Web.Services.HomeDashboard
 
 @* This week's board (weekly-charts-overhaul.md §12): the density-managed grid, rebuilt to the
    round-12 anatomy. Comfortable cards carry the top three and your row (M17); the banner is the
@@ -72,7 +73,7 @@ else
                     <a class="challenge-card-name" href="@chart.CanonicalPath()" data-challenge-chart="@chart.Id">@chart.Song.Name</a>
                     @foreach (var row in MergedTop(summary))
                     {
-                        <div class="challenge-card-line @WorldClasses(row) @(IsMine(row) ? "mine" : "") @(IsCommunity(row) ? "community" : "")"
+                        <div class="challenge-card-line @WorldClasses(row) @RowClass(row)"
                              data-inrange="@row.WasWithinRange.ToString().ToLowerInvariant()">
                             <span class="challenge-lb-place co">#@row.Place</span>
                             <span class="challenge-lb-place cr">@(row.InRangePlace is { } p ? $"#{p}" : "—")</span>
@@ -155,8 +156,9 @@ else
 
     private bool IsMine(WeeklyBoardRow row) => UserId != null && row.Entry.UserId == UserId;
 
-    private bool IsCommunity(WeeklyBoardRow row) =>
-        !IsMine(row) && CommunityUserIds?.Contains(row.Entry.UserId) == true;
+    private string RowClass(WeeklyBoardRow row) =>
+        CommunityGlowReader.RowClass(row.Entry.UserId, UserId, RivalUserIds, CommunityUserIds,
+            "mine", "community");
 
     // A bare number reads as noise; the count always names what it counts.
     private string PlayerCount(int count) => count == 1 ? L["1 Player"] : L["{0} Players", count];

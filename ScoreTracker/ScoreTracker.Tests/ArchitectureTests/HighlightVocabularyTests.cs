@@ -1,0 +1,87 @@
+using System;
+using System.IO;
+using System.Linq;
+using Xunit;
+
+namespace ScoreTracker.Tests.ArchitectureTests;
+
+/// <summary>
+///     The row-highlight utility set (docs/design/rivals.md §3.6) is applied OVER four row
+///     layouts that share nothing, so the class names are the only thing tying markup to style.
+///     A name that markup emits and the stylesheet never defines renders as plain markup: no
+///     error, no warning, no failing test anywhere else — which is how `.is-community` shipped
+///     styling nothing on the feed and roster families.
+/// </summary>
+public sealed class HighlightVocabularyTests
+{
+    private static string SiteCss() => File.ReadAllText(
+        Path.Combine(FindSolutionRoot(), "ScoreTracker", "wwwroot", "css", "site.css"));
+
+    [Theory]
+    [InlineData("is-rival")]
+    [InlineData("is-community")]
+    [InlineData("is-both")]
+    public void EveryHighlightStateHasARule(string className)
+    {
+        var css = SiteCss();
+
+        Assert.Contains($".{className} {{", css);
+    }
+
+    /// <summary>
+    ///     Each state must actually paint. A rule that exists but sets nothing visible would
+    ///     satisfy the check above while still rendering an unmarked row.
+    /// </summary>
+    [Theory]
+    [InlineData("is-rival")]
+    [InlineData("is-community")]
+    [InlineData("is-both")]
+    public void EveryHighlightStateSetsABackground(string className)
+    {
+        var block = BlockFor(SiteCss(), $".{className} {{");
+
+        Assert.Contains("background", block);
+    }
+
+    /// <summary>
+    ///     "Red for rivals wherever community members are highlighted" is the rule, and a Blazor
+    ///     parameter nobody passes is silently null — the dialog kept its rival parameter through
+    ///     three call sites that only ever passed the community one, so the segmented row was
+    ///     unreachable while every test stayed green. A caller that highlights one must highlight
+    ///     both.
+    /// </summary>
+    [Fact]
+    public void EveryBoardThatHighlightsClubmatesAlsoHighlightsRivals()
+    {
+        var root = Path.Combine(FindSolutionRoot(), "ScoreTracker");
+        var offenders = Directory.EnumerateFiles(root, "*.razor", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}"))
+            .Select(f => (File: f, Text: File.ReadAllText(f)))
+            // The declaring component is where the pair is defined, not passed.
+            .Where(x => !x.File.EndsWith("LeaderboardDialog.razor", StringComparison.Ordinal))
+            .Where(x => x.Text.Contains("CommunityUserIds=") && !x.Text.Contains("RivalUserIds="))
+            .Select(x => Path.GetFileName(x.File))
+            .ToArray();
+
+        Assert.True(offenders.Length == 0,
+            "These pass CommunityUserIds but never RivalUserIds, so a rival can never light up "
+            + "there: " + string.Join(", ", offenders));
+    }
+
+    private static string BlockFor(string css, string selector)
+    {
+        var start = css.IndexOf(selector, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"{selector} is not defined in site.css");
+        var end = css.IndexOf('}', start);
+        return css[start..end];
+    }
+
+    private static string FindSolutionRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "ScoreTracker.sln")))
+            dir = dir.Parent;
+        Assert.NotNull(dir);
+        return dir!.FullName;
+    }
+}

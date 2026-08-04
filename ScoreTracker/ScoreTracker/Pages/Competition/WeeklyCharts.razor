@@ -73,14 +73,14 @@ else
         <div class="challenge-rail">
             <DailyStepRailCard View="_daily" Chart="_dailyChart" ResetsIn="@_dailyResetsIn"
                                IsLoggedIn="_isLoggedIn" UserId="_userId"
-                               CommunityUserIds="_communityIds"></DailyStepRailCard>
+                               CommunityUserIds="_communityIds" RivalUserIds="_rivalIds"></DailyStepRailCard>
             <MonthlyRailCard Boards="_monthlyBoards" ActiveType="_type" UserId="_userId"
-                             CommunityUserIds="_communityIds"></MonthlyRailCard>
+                             CommunityUserIds="_communityIds" RivalUserIds="_rivalIds"></MonthlyRailCard>
         </div>
         <section id="weekly" class="challenge-main">
             <WeeklyBoardGrid Summaries="_board.Charts" Charts="_charts" Density="_density"
                              IsLoggedIn="_isLoggedIn" UserId="_userId"
-                             CommunityUserIds="_communityIds"
+                             CommunityUserIds="_communityIds" RivalUserIds="_rivalIds"
                              ShowingSuggestedOnly="_showingSuggestedOnly"
                              SuggestionsAvailable="_board.SuggestionsAvailable"
                              RelevantOnly="_relevantOnly" PoolHref="/WeeklyCharts?pool=1"
@@ -175,6 +175,7 @@ else
     private ChartType? _type;
 
     private IReadOnlySet<Guid> _communityIds = new HashSet<Guid>();
+    private IReadOnlySet<Guid> _rivalIds = new HashSet<Guid>();
 
     private WeeklyBoardView _board = new(Array.Empty<WeeklyBoardChartSummary>(), true, false);
     private IReadOnlyList<MonthlyRailBoard> _monthlyBoards = Array.Empty<MonthlyRailBoard>();
@@ -224,6 +225,7 @@ else
             // The community filter died at field-test round 1 — shared-community rows glow
             // green in place instead (the homepage widgets' treatment).
             _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
+            _rivalIds = await CommunityGlow.GetMyRivalIds(_mix);
 
             var density = await UiSettings.GetSetting(DensityKey);
             if (Enum.TryParse<UiDensity>(density, out var d)) _density = d;

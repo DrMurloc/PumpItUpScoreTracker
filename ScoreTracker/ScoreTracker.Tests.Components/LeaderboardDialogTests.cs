@@ -43,7 +43,8 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
     }
 
     private IRenderedFragment RenderDialog(WeeklyTournamentEntry[] entries,
-        IReadOnlySet<Guid>? officialIds = null, bool ascending = false, IReadOnlySet<Guid>? inRangeIds = null)
+        IReadOnlySet<Guid>? officialIds = null, bool ascending = false, IReadOnlySet<Guid>? inRangeIds = null,
+        IReadOnlySet<Guid>? communityIds = null, IReadOnlySet<Guid>? rivalIds = null)
     {
         return Render(builder =>
         {
@@ -56,6 +57,8 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
             builder.AddComponentParameter(5, nameof(LeaderboardDialog.OfficialUserIds), officialIds);
             builder.AddComponentParameter(6, nameof(LeaderboardDialog.Ascending), ascending);
             builder.AddComponentParameter(7, nameof(LeaderboardDialog.InRangeUserIds), inRangeIds);
+            builder.AddComponentParameter(8, nameof(LeaderboardDialog.CommunityUserIds), communityIds);
+            builder.AddComponentParameter(9, nameof(LeaderboardDialog.RivalUserIds), rivalIds);
             builder.CloseComponent();
         });
     }
@@ -170,5 +173,49 @@ public sealed class LeaderboardDialogTests : ComponentTestBase
 
         cut.WaitForAssertion(() => Assert.Single(cut.FindAll(".weekly-lb-row")));
         Assert.Empty(cut.FindAll(".challenge-switch"));
+    }
+
+    /// <summary>
+    ///     Someone who is both a rival and a clubmate gets the segmented treatment, not one or
+    ///     the other (docs/design/rivals.md D40/D41). The dialog carried the rival parameter for
+    ///     a while with no caller passing it, so the combined state could never appear on screen
+    ///     — assert the class the stylesheet actually keys on.
+    /// </summary>
+    [Fact]
+    public void ARivalWhoIsAlsoAClubmateGetsTheSegmentedRow()
+    {
+        var both = Entry(990_000);
+        var rivalOnly = Entry(980_000);
+        var clubmateOnly = Entry(970_000);
+
+        var cut = RenderDialog([both, rivalOnly, clubmateOnly],
+            communityIds: new HashSet<Guid> { both.UserId, clubmateOnly.UserId },
+            rivalIds: new HashSet<Guid> { both.UserId, rivalOnly.UserId });
+
+        cut.WaitForAssertion(() =>
+        {
+            var rows = cut.FindAll(".weekly-lb-row");
+            Assert.Equal(3, rows.Count);
+            Assert.Contains("is-both", rows[0].ClassName);
+            Assert.Contains("is-rival", rows[1].ClassName);
+            Assert.DoesNotContain("is-both", rows[1].ClassName);
+            Assert.Contains("weekly-lb-community", rows[2].ClassName);
+        });
+    }
+
+    [Fact]
+    public void ABoardWithNoRivalsMarksNobodyRed()
+    {
+        var entry = Entry(990_000);
+
+        var cut = RenderDialog([entry], communityIds: new HashSet<Guid> { entry.UserId });
+
+        cut.WaitForAssertion(() =>
+        {
+            var row = cut.FindAll(".weekly-lb-row")[0];
+            Assert.Contains("weekly-lb-community", row.ClassName);
+            Assert.DoesNotContain("is-rival", row.ClassName);
+            Assert.DoesNotContain("is-both", row.ClassName);
+        });
     }
 }

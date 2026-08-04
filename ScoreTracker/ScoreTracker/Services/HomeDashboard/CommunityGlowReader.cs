@@ -56,18 +56,27 @@ public sealed class CommunityGlowReader(IMediator mediator, ICurrentUserAccessor
     /// <summary>
     ///     The row class for one player, applying the precedence ladder: you → both → rival →
     ///     community. A rival who is also a clubmate is more interesting as both than as either.
+    ///     <para>
+    ///         Every board calls this rather than writing the ladder again. Each row family had
+    ///         its own copy of the you/clubmate ternary, and the copies drifted: the ones written
+    ///         before rivals existed never grew the rival arms, so a rival lit up on some boards
+    ///         and not others. <paramref name="youClass" /> and <paramref name="communityClass" />
+    ///         are the caller's native class names for those two states — the rival states use the
+    ///         layout-agnostic utility set, which is the point of that set.
+    ///     </para>
+    ///     <para>Null sets are treated as empty, so a board can adopt this before it has both.</para>
     /// </summary>
-    public static string RowClass(Guid userId, Guid? me, IReadOnlySet<Guid> rivals,
-        IReadOnlySet<Guid> clubmates, string youClass)
+    public static string RowClass(Guid userId, Guid? me, IReadOnlySet<Guid>? rivals,
+        IReadOnlySet<Guid>? clubmates, string youClass, string communityClass = "is-community")
     {
         if (userId == me) return youClass;
-        var isRival = rivals.Contains(userId);
-        var isClubmate = clubmates.Contains(userId);
+        var isRival = rivals?.Contains(userId) == true;
+        var isClubmate = clubmates?.Contains(userId) == true;
         return (isRival, isClubmate) switch
         {
             (true, true) => "is-both",
             (true, false) => "is-rival",
-            (false, true) => "is-community",
+            (false, true) => communityClass,
             _ => string.Empty
         };
     }

@@ -260,6 +260,16 @@ One new token (D39), one new combined state (D41), one precedence ladder (D40) �
 `.dash-ch-entry` (feed card), and the new roster row. One utility set applied over each layout,
 not four families each growing their own variants.
 
+**The ladder has exactly one implementation**: `CommunityGlowReader.RowClass`. Every board calls
+it, passing its own native class names for the you and clubmate states; the rival states use the
+utility set, which is the whole point of that set. Field testing found the ladder had been copied
+per family instead, and the copies drifted — boards written before rivals existed kept a
+you/clubmate ternary that could never produce a rival row, so red lit up on some boards and not
+others while every test stayed green. Two ratchets hold it now (`HighlightVocabularyTests`): every
+`is-*` state must have a rule that paints, and a board that passes `CommunityUserIds` must pass
+`RivalUserIds` — an unpassed Blazor parameter is silently null, which is how the segmented row
+stayed unreachable in a component that had supported it all along.
+
 ### 3.7 Feeds
 
 Rivals page = rivals only, green marks clubmates. Community page = communities only, red marks

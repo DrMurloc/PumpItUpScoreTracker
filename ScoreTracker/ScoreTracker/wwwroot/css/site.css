@@ -3641,6 +3641,14 @@ html.sheet-open .more-sheet-scrim {
     box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-rival) 60%, transparent);
 }
 
+/* The green half of the pair. The weekly board had its own community row style before this
+   utility set existed (.weekly-lb-community) and keeps it; the feed card and roster families
+   have no such ancestor, so without this rule they emit a class that styles nothing. */
+.is-community {
+    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--daily-community) 60%, transparent);
+}
+
 /* Split fill plus a left and a right edge bar. A two-tone border-image ring would read as
    segmented too, but it kills border-radius; this keeps the corners every other row has. */
 .is-both {
