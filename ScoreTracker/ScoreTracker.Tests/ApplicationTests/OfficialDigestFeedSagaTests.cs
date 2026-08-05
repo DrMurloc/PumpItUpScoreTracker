@@ -14,6 +14,7 @@ using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -114,6 +115,47 @@ public sealed class OfficialDigestFeedSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
         _localizer.Verify(l => l.Get("ko-KR", "PUMBILITY movers"), Times.Once);
         _localizer.Verify(l => l.Get(null, "PUMBILITY movers"), Times.Once);
+    }
+
+    [Fact]
+    public async Task LeadsWithTheWeeksPulseAndWearsTheTopFirstsJacket()
+    {
+        _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
+        var lower = new ChartBuilder().WithSongName("Digitalis").WithType(ChartType.Double).WithLevel(24)
+            .WithSong(new Song(Name.From("Digitalis"), SongType.Arcade,
+                new Uri("https://example.invalid/digitalis.png"), TimeSpan.FromMinutes(2),
+                Name.From("A"), null)).Build();
+        var marquee = new ChartBuilder().WithType(ChartType.Double).WithLevel(27)
+            .WithSong(new Song(Name.From("Freedom Dive"), SongType.Arcade,
+                new Uri("https://example.invalid/freedomdive.png"), TimeSpan.FromMinutes(2),
+                Name.From("B"), null)).Build();
+        _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { lower, marquee });
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WeeklyHighlightsRecord(DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddDays(-7),
+                Array.Empty<OfficialMoverRecord>(), Array.Empty<OfficialBoardsClimbedRecord>(),
+                new[]
+                {
+                    // A perfect game on a lower chart must not outrank a lesser grade higher up.
+                    new OfficialGradeFirstRecord(Player("FEFEMZ"), lower.Id, "D", 24, "PG", 1000000, false),
+                    new OfficialGradeFirstRecord(Player("FRANCO"), marquee.Id, "D", 27, "AAA+", 964378, false)
+                },
+                Array.Empty<OfficialNewNumberOneRecord>(),
+                new WeeklyPulseRecord(23273, 3214, 1857, 375)));
+
+        await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
+
+        var card = Assert.Single(_sent);
+        // The jacket belongs to the highest-level first, and the hype sentence is its caption.
+        Assert.Equal(marquee.Song.ImagePath, card.Header!.Thumbnail);
+        Assert.Contains("1,857 players left their mark — and Freedom Dive D27 fell to its first AAA+.",
+            card.Header.Markdown);
+
+        var text = string.Join("\n", card.Blocks.OfType<RichBotText>().Select(t => t.Markdown));
+        // Entries are the two halves added together; the split rides the subtext below.
+        Assert.Contains("**26,487** board entries · **1,857** players active · **375** debuts", text);
+        Assert.Contains("-# 23,273 new · 3,214 upscored", text);
     }
 
     [Fact]

@@ -57,7 +57,9 @@ namespace ScoreTracker.OfficialMirror.Application
             foreach (var group in channels.GroupBy(c => c.Culture))
             {
                 var card = DigestCard(msg.Mix, highlights, cutlines, rankings, charts, group.Key);
-                if (card == null) return; // a quiet week (no movers, firsts, #1s, or full boards)
+                // Null means the snapshot carries nothing at all, not that the week was slow —
+                // and that verdict is the same for every culture, so stopping here is stopping.
+                if (card == null) return;
                 await _bot.SendRichMessages(new[] { card }, group.Select(c => c.ChannelId).ToArray(), ct);
             }
         }
@@ -68,13 +70,38 @@ namespace ScoreTracker.OfficialMirror.Application
         {
             var blocks = new List<IRichBotBlock>();
 
+            // The week's marquee chart: the highest-level world first, best score breaking a
+            // tie — same pick the hub's hero makes. Its jacket is the card's only picture, and
+            // the hype sentence is the only thing that says why it is there, so they live or
+            // die together.
+            var highestFirst = HighestFirst(highlights);
+            var marqueeChart = highestFirst?.ChartId != null &&
+                               charts.TryGetValue(highestFirst.ChartId.Value, out var found)
+                ? found
+                : null;
+
             // A separator fences each section so the card reads as grouped blocks rather than
-            // one dense emoji wall.
-            void AddSection(string heading, IEnumerable<string> lines)
+            // one dense emoji wall. The lead is the block's first line — a heading on most of
+            // them, the numbers themselves on the pulse.
+            void AddSection(string lead, IEnumerable<string> lines)
             {
                 if (blocks.Count > 0) blocks.Add(new RichBotDivider());
-                blocks.Add(Section(heading, lines));
+                blocks.Add(Section(lead, lines));
             }
+
+            // The week in four numbers, before any list. Everything below is an example of
+            // this; without it the card opened on a leaderboard and never said what happened.
+            var pulse = highlights.Pulse;
+            if (pulse != null)
+                AddSection(
+                    _localizer.Get(culture, "**{0}** board entries · **{1}** players active · **{2}** debuts",
+                        Count(pulse.NewEntries + pulse.UpscoredEntries, culture),
+                        Count(pulse.PlayersActive, culture), Count(pulse.DebutCount, culture)),
+                    new[]
+                    {
+                        "-# " + _localizer.Get(culture, "{0} new · {1} upscored",
+                            Count(pulse.NewEntries, culture), Count(pulse.UpscoredEntries, culture))
+                    });
 
             // Open with the current top 10 and each player's week-over-week rank move.
             if (rankings != null && rankings.Rankings.Count > 0)
@@ -142,6 +169,8 @@ namespace ScoreTracker.OfficialMirror.Application
                         new[] { string.Join(" · ", takes) });
             }
 
+            // Only a snapshot carrying no pulse row and no highlights at all reaches this —
+            // never a slow week, which still has entries and players to report.
             if (blocks.Count == 0) return null;
 
             // "m" is the culture's month-day pattern, so the week tag reads naturally.
@@ -150,10 +179,11 @@ namespace ScoreTracker.OfficialMirror.Application
                     highlights.PreviousSnapshotAt.Value.ToString("m", FormatCulture(culture)))
                 : _localizer.Get(culture, "first week");
             var mixTag = mix == MixEnum.Phoenix ? "" : $"[{mix.GetName()}] ";
+            var hype = Hype(pulse, highestFirst, marqueeChart, culture);
             return new RichBotMessage(
                 new RichBotSection(
-                    $"### {_localizer.Get(culture, "This week on the official boards")}\n-# {mixTag}{week} · {_localizer.Get(culture, "swept Sunday")}",
-                    null),
+                    $"### {_localizer.Get(culture, "This week on the official boards")}\n-# {mixTag}{week}{hype}",
+                    marqueeChart?.Song.ImagePath),
                 blocks,
                 $"#MIX|{mix}# {mix.GetName()} · {_localizer.Get(culture, "PIU Scores official mirror")}",
                 mix.GetAccentColor(),
@@ -173,6 +203,32 @@ namespace ScoreTracker.OfficialMirror.Application
         // the hub — the digits identify an account, they don't name anyone.
         private static string Name(OfficialPlayerRecord player) =>
             OfficialPlayerNames.Human(player.Username);
+
+        // Counts are grouped in the reader's locale before they reach a template, because the
+        // templates carry no format specifier of their own.
+        private static string Count(int value, string? culture) =>
+            value.ToString("N0", FormatCulture(culture));
+
+        /// <summary>The marquee first: highest chart level wins, the better score breaks ties.</summary>
+        private static OfficialGradeFirstRecord? HighestFirst(WeeklyHighlightsRecord highlights) =>
+            highlights.WorldFirsts
+                .OrderByDescending(f => f.Level ?? 0)
+                .ThenByDescending(f => f.Score)
+                .FirstOrDefault();
+
+        // The hub's own hype line, and the caption for the jacket above it. A week with no
+        // first still gets the players-only half; a week with no pulse row gets nothing, since
+        // the sentence is built around the count.
+        private string Hype(WeeklyPulseRecord? pulse, OfficialGradeFirstRecord? highest, Chart? chart,
+            string? culture)
+        {
+            if (pulse == null) return "";
+            var players = Count(pulse.PlayersActive, culture);
+            return " · " + (chart == null || highest == null
+                ? _localizer.Get(culture, "{0} players left their mark on the chart boards.", players)
+                : _localizer.Get(culture, "{0} players left their mark — and {1} fell to its first {2}.",
+                    players, $"{(string)chart.Song.Name} {chart.DifficultyString}", highest.GradeBand));
+        }
 
         private static string RankMove(int rank, int? previousRank)
         {
