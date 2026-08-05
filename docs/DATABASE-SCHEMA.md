@@ -119,7 +119,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.OfficialBoardRecord` | Record book per chart board: all-time high score (encodes every claimed grade band) |
 | `scores.OfficialFolderRecord` | Record book per folder (mix + type + level): all-time high score across the folder's boards |
 | `scores.OfficialWeeklyHighlight` | Editorial weekly highlights computed at import (movers, boards climbed, new #1s, grade firsts, plus the This Week hero's playerless summary rows: pulse, gainers, debuts, floor marks); rebuildable from snapshots. `IsSupplemented` marks the second pass, which emits only the diff-based kinds — world firsts and new #1s stay official so the record books never need a twin |
-| `scores.OfficialPlayerRenameProposal` | Detected likely renames awaiting admin accept/dismiss; survives merges as the audit trail |
+| `scores.OfficialPlayerRenameProposal` | Every tag that left the boards, with the analyzer's verdict and evidence; conclusive ones merge unattended, the rest await admin accept/dismiss. Survives merges as the audit trail |
 
 ## Weekly Challenge (vertical: `ScoreTracker.WeeklyChallenge`)
 
