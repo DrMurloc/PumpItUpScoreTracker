@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -373,19 +373,30 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
         Assert.Contains("DRMURLOC#7222", mine.InnerHtml);
     }
 
+    /// <summary>
+    ///     Phoenix serves one PUMBILITY board and ignores the tab parameter, so offering
+    ///     Singles and Doubles there would be three names for the same list. Phoenix 2 really
+    ///     does split, and keeps all four.
+    /// </summary>
     [Fact]
-    public void RankingsShowTheComputedCaptionWhenNoOfficialBoardExists()
+    public void PhoenixOffersOnlyTheBoardAndTheCoOpEstimate()
     {
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new OfficialRankingsRecord(Week2, false, new[]
+            .ReturnsAsync(new OfficialRankingsRecord(Week2, true, new[]
             {
-                new OfficialRankingRecord(1, null, Player(), 123456m, 100, null)
+                new OfficialRankingRecord(1, null, Player(), 1040.25m, 100, null)
             }));
 
-        var cut = RenderComponent<HubRankings>(p => p.Add(x => x.Mix, MixEnum.Phoenix));
+        // MudSelect renders its items only once the popover opens, so the options are read
+        // off the component tree — asserting on markup here passes whatever the truth is.
+        static string[] Options(IRenderedComponent<HubRankings> c) =>
+            c.FindComponents<MudSelectItem<string>>().Select(i => i.Instance.Value!).ToArray();
 
-        Assert.Contains("computed rating", cut.Markup);
-        Assert.Contains("123,456", cut.Markup);
+        var phoenix = RenderComponent<HubRankings>(p => p.Add(x => x.Mix, MixEnum.Phoenix));
+        Assert.Equal(new[] { "All", "CoOp" }, Options(phoenix));
+
+        var phoenix2 = RenderComponent<HubRankings>(p => p.Add(x => x.Mix, MixEnum.Phoenix2));
+        Assert.Equal(new[] { "All", "Singles", "Doubles", "CoOp" }, Options(phoenix2));
     }
 
     [Fact]

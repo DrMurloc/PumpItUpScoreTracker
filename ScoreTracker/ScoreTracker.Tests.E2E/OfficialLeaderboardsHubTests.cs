@@ -1,4 +1,4 @@
-using Microsoft.Playwright;
+﻿using Microsoft.Playwright;
 using ScoreTracker.Tests.E2E.Support;
 using static Microsoft.Playwright.Assertions;
 
@@ -58,15 +58,15 @@ public sealed class OfficialLeaderboardsHubTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task RankingsDeepLinkOpensTheComputedBoardWithTheSeededPlayers()
+    public async Task RankingsDeepLinkOpensTheMirroredBoardWithTheSeededPlayers()
     {
         await _page.GotoAsync("/OfficialLeaderboards/Rankings");
 
         var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
-        // The seed mirrors chart boards only, no PUMBILITY board — so the caption says
-        // computed, and both seeded players rank by their computed rating (the
-        // million-point PG on top).
-        await Expect(_page.GetByText("computed rating", new PageGetByTextOptions { Exact = false }))
+        // The rankings are the mirrored PUMBILITY board, so the seeded values render as
+        // official ones (two decimals) and in the board's own order. A snapshot without
+        // that board ranks nobody rather than computing a stand-in.
+        await Expect(_page.GetByText("1,040.25", new PageGetByTextOptions { Exact = false }))
             .ToBeVisibleAsync(timeout);
         await Expect(_page.GetByText("E2ECHAMP").First).ToBeVisibleAsync();
         await Expect(_page.GetByText("E2ERUNNER").First).ToBeVisibleAsync();

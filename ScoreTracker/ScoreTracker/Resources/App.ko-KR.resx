@@ -4745,9 +4745,6 @@
   <data name="Ranked by" xml:space="preserve">
     <value>정렬 기준</value>
   </data>
-  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
-    <value>미러링된 채보 보드 기반 계산 레이팅 순위입니다 - 이 시리즈에는 공식 PUMBILITY 보드가 없습니다.</value>
-  </data>
   <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
     <value>매주 미러링되는 공식 PUMBILITY 보드 기준 순위입니다.</value>
   </data>

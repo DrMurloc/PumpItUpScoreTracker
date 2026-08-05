@@ -4745,9 +4745,6 @@
   <data name="Ranked by" xml:space="preserve">
     <value>Clasificado por</value>
   </data>
-  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
-    <value>Clasificación por rating calculado sobre los tableros espejados - esta versión no tiene tablero PUMBILITY oficial.</value>
-  </data>
   <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
     <value>Clasificación según el tablero PUMBILITY oficial, espejado cada semana.</value>
   </data>
