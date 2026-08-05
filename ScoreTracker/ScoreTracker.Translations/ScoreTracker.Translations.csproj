@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only Contracts/ and Wiring/ are public (ADR-001 D2); the vertical's tests see the rest. -->
+    <InternalsVisibleTo Include="ScoreTracker.Tests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The only vertical with no ScoreTracker.Data reference: it owns no tables. Translation
+         results have nowhere to live until the comments feature exists, so the handler returns
+         them and the caller decides. -->
+    <ProjectReference Include="..\ScoreTracker.Domain\ScoreTracker.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

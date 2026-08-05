@@ -23,6 +23,8 @@ Cross-vertical communication happens two ways, and only two ways:
 
 The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, skills), **Randomizer** (chart draw generation, randomizer settings, tournament draws), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **CommunityTools** (registered partner tools, player sharing, API keys, webhook delivery), **Rivals** (the rival graph — a directed edge onto a site player or a board tag, plus the blocks and invite codes that gate it; see [rivals.md](design/rivals.md)), **Identity** (accounts, logins, tokens), and **HomePage** (dashboard layout persistence — pages and widget instances; the widget *render components* live in Web's registry, see [docs/design/HomePageWidgets/README.md](design/HomePageWidgets/README.md)).
 
+**Translations** is a vertical in shape only, and deliberately so: it holds the prompts and glossary for rendering community text across locales, owns no tables, references no `Data`, and is wired into nothing. Its one dependency — the `ILanguageModelClient` Domain port — has no registration anywhere in the application, so no shipping code path can spend a metered token. It exists to be experimented against from `ScoreTracker.ExplorationTests`; see [docs/design/comment-translation.md](design/comment-translation.md).
+
 ### Onion (dependency direction)
 
 Within and across layers, dependencies point **inward, toward the domain**:
@@ -92,6 +94,8 @@ ScoreTracker.sln
 │   │                                  board tags, blocks, invite codes
 │   ├── ScoreTracker.HomePage          dashboard layout persistence: pages + widget
 │   │                                  instances (widget UI lives in Web's registry)
+│   ├── ScoreTracker.Translations      community-text translation prompts + glossary
+│   │                                  (exploratory; owns no tables, wired nowhere)
 │   └── ScoreTracker.Identity          accounts, external logins, api tokens, settings
 ├── Infrastructure
 │   └── ScoreTracker.Data              shared DbContext, unextracted repositories,

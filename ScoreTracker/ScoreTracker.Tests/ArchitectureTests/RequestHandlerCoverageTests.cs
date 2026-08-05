@@ -38,7 +38,8 @@ public sealed class RequestHandlerCoverageTests
         typeof(Communities.Contracts.Commands.CreateCommunityCommand).Assembly,
         typeof(CommunityTools.Contracts.Commands.CreateToolCommand).Assembly,
         typeof(HomePage.Contracts.Commands.CreateHomePageCommand).Assembly,
-        typeof(Identity.Contracts.Commands.CreateUserCommand).Assembly
+        typeof(Identity.Contracts.Commands.CreateUserCommand).Assembly,
+        typeof(Translations.Contracts.Commands.TranslateCommentCommand).Assembly
     };
 
     /// <summary>
