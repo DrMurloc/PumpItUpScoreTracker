@@ -2150,6 +2150,9 @@
   <data name="Find a player" xml:space="preserve">
     <value>Trova un giocatore</value>
   </data>
+  <data name="Find a song" xml:space="preserve">
+    <value>Cerca una canzone</value>
+  </data>
   <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
     <value>Cerca una canzone — es. Iolite Sky</value>
   </data>
@@ -5117,6 +5120,9 @@
   </data>
   <data name="Rotation started." xml:space="preserve">
     <value>Rotazione avviata.</value>
+  </data>
+  <data name="Rows with this edge come from the player's PIU Scores account, not the official board." xml:space="preserve">
+    <value>Le righe con questo bordo vengono dall'account PIU Scores del giocatore, non dalla classifica ufficiale.</value>
   </data>
   <data name="Rules" xml:space="preserve">
     <value>Regole</value>

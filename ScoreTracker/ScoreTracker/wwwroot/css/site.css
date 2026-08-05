@@ -7440,6 +7440,24 @@ button.chart-card-art {
     border-left: 2px dashed var(--mix-secondary);
 }
 
+/* The rail, explained next to the table it marks. The swatch is the same dashed border on
+   the same token as .olb-row-supp, so the key cannot drift from the thing it describes. */
+.olb-supp-legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0 10px;
+    font-size: .8rem;
+    color: var(--mix-ink-muted);
+}
+
+.olb-supp-legend-rail {
+    flex: 0 0 auto;
+    width: 0;
+    height: 16px;
+    border-left: 2px dashed var(--mix-secondary);
+}
+
 /* A note the supplemented reading pins above a board it cannot change. */
 .olb-reading-note {
     display: flex;

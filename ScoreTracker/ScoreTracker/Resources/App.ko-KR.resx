@@ -2133,6 +2133,9 @@
   <data name="Find a player" xml:space="preserve">
     <value>플레이어 찾기</value>
   </data>
+  <data name="Find a song" xml:space="preserve">
+    <value>곡 검색</value>
+  </data>
   <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
     <value>노래 찾기 — 예: Iolite Sky</value>
   </data>
@@ -5074,6 +5077,9 @@
   </data>
   <data name="Rotation started." xml:space="preserve">
     <value>교체를 시작했습니다.</value>
+  </data>
+  <data name="Rows with this edge come from the player's PIU Scores account, not the official board." xml:space="preserve">
+    <value>이 테두리가 있는 행은 공식 보드가 아니라 해당 플레이어의 PIU Scores 계정에서 가져온 것입니다.</value>
   </data>
   <data name="Rules" xml:space="preserve">
     <value>규칙</value>

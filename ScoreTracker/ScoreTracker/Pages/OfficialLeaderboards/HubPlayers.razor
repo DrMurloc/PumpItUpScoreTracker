@@ -121,7 +121,31 @@ else
         <MudText Typo="Typo.overline" Class="mt-3 d-block">
             @L["Chart board placements"] · @_profile.BoardsInTop
         </MudText>
-        <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true" Elevation="0"
+
+        @* The rail is the only thing on this table that needs explaining, so it explains itself
+           where it appears rather than in a key somewhere else on the page. It shows up only
+           when there is a marked row to explain. *@
+        @if (_profile.Placements.Any(r => r.IsSupplemented))
+        {
+            <div class="olb-supp-legend">
+                <span class="olb-supp-legend-rail"></span>
+                <span>@L["Rows with this edge come from the player's PIU Scores account, not the official board."]</span>
+            </div>
+        }
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2 flex-wrap">
+            <MudTextField T="string" @bind-Value="_placementFilter" Label="@L["Find a song"]" Immediate="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          Clearable="true" Style="max-width:260px"/>
+            <FolderPicker Type="_folderType" Level="_folderLevel" FolderChanged="SetFolder"></FolderPicker>
+            @if (_folderLevel != null)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="ClearFolder"
+                               aria-label="@L["All Folders"]"></MudIconButton>
+            }
+        </MudStack>
+
+        <MudTable T="OfficialPlayerChartRecord" Items="FilteredPlacements" Dense="true" Elevation="0"
                   Breakpoint="Breakpoint.None" RowsPerPage="25"
                   RowClassFunc="@((r, _) => r.IsSupplemented ? "olb-row-supp" : string.Empty)"
                   Class="olb-board-table olb-sticky-first olb-pager-tight">
@@ -299,6 +323,36 @@ else
     private string SongName(OfficialPlayerChartRecord record)
     {
         return Charts.TryGetValue(record.ChartId, out var chart) ? (string)chart.Song.Name : string.Empty;
+    }
+
+    private string _placementFilter = string.Empty;
+    private ScoreTracker.SharedKernel.Enums.ChartType _folderType =
+        ScoreTracker.SharedKernel.Enums.ChartType.Single;
+    private int? _folderLevel;
+
+    /// <summary>
+    ///     Search matches the song, not the chart: a player looking for "Bee" wants both its
+    ///     singles and its doubles rows, and the difficulty is already a column they can sort.
+    ///     A chart the catalog has no entry for keeps its row while the box is empty and drops
+    ///     out of a search rather than matching everything.
+    /// </summary>
+    private IEnumerable<OfficialPlayerChartRecord> FilteredPlacements =>
+        (_profile?.Placements ?? Array.Empty<OfficialPlayerChartRecord>())
+        .Where(r => string.IsNullOrWhiteSpace(_placementFilter)
+                    || SongName(r).Contains(_placementFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(r => _folderLevel == null
+                    || (Charts.TryGetValue(r.ChartId, out var chart)
+                        && chart.Type == _folderType && chart.Level == _folderLevel));
+
+    private void SetFolder((ScoreTracker.SharedKernel.Enums.ChartType Type, int Level) folder)
+    {
+        _folderType = folder.Type;
+        _folderLevel = folder.Level;
+    }
+
+    private void ClearFolder()
+    {
+        _folderLevel = null;
     }
 
     private sealed record HistoryPoint(string Label, decimal Value);

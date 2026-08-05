@@ -140,6 +140,9 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Snapshot | Barglub | Coined 2026-08-04. |
 | Data | Gru | Coined 2026-08-04. |
 | From | Blarg | Coined 2026-08-04. |
+| Find | Grubmarg | Coined 2026-08-04. |
+| Row / Rows | Grolgub | Coined 2026-08-04. |
+| Edge | Bralmo | Coined 2026-08-04 for the supplemented-row legend. |
 
 
 ### Difficulty and intensity
