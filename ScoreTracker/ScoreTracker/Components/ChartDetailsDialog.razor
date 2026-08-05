@@ -306,7 +306,6 @@
     private string? _videoUrl;
     private DetailsTab _tab = DetailsTab.Leaderboard;
     private DetailsTab? _remembered;
-    private bool _rememberRead;
     private bool _wasVisible;
     private Guid _anchorId = Guid.Empty;
     private Chart? _drilled;
@@ -431,6 +430,19 @@
         await UiSettings.SetSetting(TabSettingKey, tab.ToString());
     }
 
+    /// <summary>
+    ///     Reads the remembered tab once per instance, and here rather than on the open path.
+    ///     Signed out this setting lives in browser storage, so the read is a JS interop round
+    ///     trip; awaiting it inside the click that opens the dialog would put it in front of
+    ///     everything the dialog renders. Every other consumer of GetSetting reads it here for
+    ///     the same reason (ProfilePanel, ChartsExportDialog, CommunityToolsAnnouncement).
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        var stored = await UiSettings.GetSetting(TabSettingKey);
+        if (Enum.TryParse<DetailsTab>(stored, out var restored)) _remembered = restored;
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (!Visible)
@@ -448,7 +460,7 @@
         if (!_wasVisible)
         {
             _wasVisible = true;
-            await ResolveOpeningTab();
+            ResolveOpeningTab();
         }
 
         // A new chart from the host replaces whatever the reader had drilled into.
@@ -492,25 +504,15 @@
         if (Chart != null) await LoadChart(Chart.Id);
     }
 
-    private async Task ResolveOpeningTab()
+    /// <summary>
+    ///     Synchronous on purpose: nothing here may go to storage or to the browser, because
+    ///     this runs on the click that opens the dialog and anything awaited here delays the
+    ///     content behind it.
+    /// </summary>
+    private void ResolveOpeningTab()
     {
-        if (InitialTab is { } forced)
-        {
-            _tab = forced;
-        }
-        else
-        {
-            // Read once per instance. Signed in this is a query, and paying it on every open
-            // of a dialog that nineteen call sites render is exactly the cost the tabs removed.
-            if (!_rememberRead)
-            {
-                _rememberRead = true;
-                var stored = await UiSettings.GetSetting(TabSettingKey);
-                if (Enum.TryParse<DetailsTab>(stored, out var restored)) _remembered = restored;
-            }
-
-            if (_remembered is { } remembered) _tab = remembered;
-        }
+        if (InitialTab is { } forced) _tab = forced;
+        else if (_remembered is { } remembered) _tab = remembered;
 
         // A remembered History from a previous session is not a tab an anonymous visitor has.
         if (!AvailableTabs.Contains(_tab)) _tab = DetailsTab.Leaderboard;
