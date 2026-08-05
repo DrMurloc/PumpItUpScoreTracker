@@ -41,8 +41,9 @@ shares. They legitimately differ, and Advanced is the worked example: three scor
 Most rails fall out of constructor arguments that were already being passed and discarded — a
 skill's name and level, a boss chart's mix. Basic titles have no requirement to sort by, so they
 declare their rail as data. **Nothing keys off a title's name**: Phoenix 2's 272 names are
-verbatim scrape output (typos preserved, one masked as `[P.B] ??? 20000`), so a name is external
-data and a rename would silently collapse a rail.
+verbatim scrape output (typos preserved — the 20,000 PUMBILITY capstone `ABYSS ABSOLUTE` even
+carries a trailing space on the site), so a name is external data and a rename would silently
+collapse a rail.
 
 ## The page
 
