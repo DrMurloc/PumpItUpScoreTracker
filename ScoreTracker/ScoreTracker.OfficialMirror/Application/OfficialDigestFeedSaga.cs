@@ -50,13 +50,12 @@ namespace ScoreTracker.OfficialMirror.Application
             var highlights = await _mediator.Send(new GetWeeklyHighlightsQuery(msg.Mix), ct);
             if (highlights == null) return;
             var cutlines = await _mediator.Send(new GetWhatItTakesQuery(msg.Mix), ct);
-            var rankings = await _mediator.Send(new GetOfficialRankingsQuery(msg.Mix), ct);
             var charts = (await _charts.GetCharts(msg.Mix, cancellationToken: ct)).ToDictionary(c => c.Id);
 
             // One composition per registered language, fanned out to that language's channels.
             foreach (var group in channels.GroupBy(c => c.Culture))
             {
-                var card = DigestCard(msg.Mix, highlights, cutlines, rankings, charts, group.Key);
+                var card = DigestCard(msg.Mix, highlights, cutlines, charts, group.Key);
                 // Null means the snapshot carries nothing at all, not that the week was slow —
                 // and that verdict is the same for every culture, so stopping here is stopping.
                 if (card == null) return;
@@ -65,8 +64,7 @@ namespace ScoreTracker.OfficialMirror.Application
         }
 
         private RichBotMessage? DigestCard(MixEnum mix, WeeklyHighlightsRecord highlights,
-            WhatItTakesRecord? cutlines, OfficialRankingsRecord? rankings, IReadOnlyDictionary<Guid, Chart> charts,
-            string? culture)
+            WhatItTakesRecord? cutlines, IReadOnlyDictionary<Guid, Chart> charts, string? culture)
         {
             var blocks = new List<IRichBotBlock>();
 
@@ -103,56 +101,52 @@ namespace ScoreTracker.OfficialMirror.Application
                             Count(pulse.NewEntries, culture), Count(pulse.UpscoredEntries, culture))
                     });
 
-            // Open with the current top 10 and each player's week-over-week rank move.
-            if (rankings != null && rankings.Rankings.Count > 0)
-                AddSection($"🏆 **{_localizer.Get(culture, "PUMBILITY top 10")}**", rankings.Rankings.Take(10)
-                    .Select(r =>
-                        $"`{r.Rank,2}` **{Name(r.Player)}** — {r.Rating:N0} {RankMove(r.Rank, r.PreviousRank)}"));
+            // One name each, not five. The gainer leads on value won rather than places moved:
+            // a rank jump off the crowded middle of the board can be enormous and mean little,
+            // and the value is what the player actually earned.
+            if (highlights.Gainers?.FirstOrDefault() is { } gainer)
+                AddSection($"📈 **{_localizer.Get(culture, "Biggest PUMBILITY gain")}**", new[]
+                {
+                    _localizer.Get(culture, "{0} **+{1}** to {2} · #{3} → **#{4}**",
+                        PlayerLink(gainer.Player),
+                        (gainer.NewPumbility - gainer.PreviousPumbility).ToString("N2", FormatCulture(culture)),
+                        gainer.NewPumbility.ToString("N2", FormatCulture(culture)),
+                        Count(gainer.PreviousRank, culture), Count(gainer.NewRank, culture))
+                });
 
-            if (highlights.Movers.Count > 0)
-                AddSection($"📈 **{_localizer.Get(culture, "PUMBILITY movers")}**", highlights.Movers.Take(5).Select(m =>
-                    $"**{Name(m.Player)}** #{m.PreviousRank} → **#{m.NewRank}** · {m.Pumbility:N2}"));
+            if (highlights.BoardsClimbed.FirstOrDefault() is { } climber)
+            {
+                var line = _localizer.Get(culture, "{0} **+{1} places** across {2} chart boards",
+                    PlayerLink(climber.Player), Count(climber.NetPlacesGained, culture),
+                    Count(climber.BoardsClimbed, culture));
+                if (climber.NewBoards is { } fresh)
+                    line += " · " + _localizer.Get(culture, "{0} new", Count(fresh, culture));
+                AddSection($"🧗 **{_localizer.Get(culture, "Biggest board climber")}**", new[] { line });
+            }
 
-            if (highlights.BoardsClimbed.Count > 0)
-                AddSection($"🧗 **{_localizer.Get(culture, "Biggest board climbers")}**", highlights.BoardsClimbed.Take(5)
-                    .Select(b => b.NewBoards is { } fresh
-                        ? _localizer.Get(culture, "**{0}** — {1} chart boards ({2} new, net +{3})",
-                            Name(b.Player), b.BoardsClimbed, fresh, b.NetPlacesGained)
-                        : _localizer.Get(culture, "**{0}** climbed {1} chart boards (+{2})",
-                            Name(b.Player), b.BoardsClimbed, b.NetPlacesGained)));
-
-            if (highlights.WorldFirsts.Count > 0 || highlights.NewNumberOnes.Count > 0)
+            if (highlights.WorldFirsts.Count > 0)
             {
                 // World-first lines follow a fixed shape: difficulty bubble, song, the words
                 // "World First", the grade as its emoji (a PG rides its plate art), then the
                 // player linked to their board profile. Folder firsts append their folder tag.
                 var lines = highlights.WorldFirsts.Take(6).Select(f =>
-                    {
-                        var chart = f.ChartId != null && charts.TryGetValue(f.ChartId.Value, out var c) ? c : null;
-                        var bubble = chart == null ? "" : $"#DIFFICULTY|{chart.DifficultyString}# ";
-                        var song = chart == null
-                            ? _localizer.Get(culture, "a chart")
-                            : (string)chart.Song.Name;
-                        var grade = f.GradeBand == "PG"
-                            ? $"#PLATE|{PhoenixPlate.PerfectGame}#"
-                            : $"#LETTERGRADE|{PhoenixLetterGradeHelperMethods.TryParse(f.GradeBand)}#";
-                        // The link text is the human half; the query parameter keeps the full
-                        // tag, which is what /Players resolves on.
-                        var link = $"[{Name(f.Player)}]({SiteBase}/OfficialLeaderboards/Players" +
-                                   $"?player={Uri.EscapeDataString(f.Player.Username)})";
-                        var folder = f.IsFolderFirst && f.ChartType != null && f.Level != null
-                            ? " · " + _localizer.Get(culture, "{0} folder first",
-                                $"{(f.ChartType == ChartType.Double.ToString() ? "D" : "S")}{f.Level}")
-                            : "";
-                        return $"{bubble}**{song}** — {_localizer.Get(culture, "World First")} {grade} — {link}{folder}";
-                    })
-                    .Concat(highlights.NewNumberOnes.Take(4).Select(n =>
-                        _localizer.Get(culture, "New #1 — **{0}** on {1} · {2:N0}",
-                            Name(n.Player), ChartName(charts, n.ChartId, culture), n.Score) +
-                        (n.Dethroned != null
-                            ? _localizer.Get(culture, ", dethroning {0}", Name(n.Dethroned))
-                            : "")));
-                AddSection($"🌍 **{_localizer.Get(culture, "World firsts & new #1s")}**", lines);
+                {
+                    var chart = f.ChartId != null && charts.TryGetValue(f.ChartId.Value, out var c) ? c : null;
+                    var bubble = chart == null ? "" : $"#DIFFICULTY|{chart.DifficultyString}# ";
+                    var song = chart == null
+                        ? _localizer.Get(culture, "a chart")
+                        : (string)chart.Song.Name;
+                    var grade = f.GradeBand == "PG"
+                        ? $"#PLATE|{PhoenixPlate.PerfectGame}#"
+                        : $"#LETTERGRADE|{PhoenixLetterGradeHelperMethods.TryParse(f.GradeBand)}#";
+                    var folder = f.IsFolderFirst && f.ChartType != null && f.Level != null
+                        ? " · " + _localizer.Get(culture, "{0} folder first",
+                            $"{(f.ChartType == ChartType.Double.ToString() ? "D" : "S")}{f.Level}")
+                        : "";
+                    return $"{bubble}**{song}** — {_localizer.Get(culture, "World First")} {grade} — " +
+                           $"{PlayerLink(f.Player)}{folder}";
+                });
+                AddSection($"🌍 **{_localizer.Get(culture, "World firsts")}**", lines);
             }
 
             // What it takes, in difficulties: the uniform level where AAA/SSS on fifty charts
@@ -200,9 +194,11 @@ namespace ScoreTracker.OfficialMirror.Application
             new($"{heading}\n{string.Join("\n", lines)}");
 
         // Board tags are TAG#1234 and the card prints the human half, same as every list on
-        // the hub — the digits identify an account, they don't name anyone.
-        private static string Name(OfficialPlayerRecord player) =>
-            OfficialPlayerNames.Human(player.Username);
+        // the hub — the digits identify an account, they don't name anyone. The link keeps the
+        // whole tag in its query parameter, which is what /Players resolves on.
+        private static string PlayerLink(OfficialPlayerRecord player) =>
+            $"[{OfficialPlayerNames.Human(player.Username)}]({SiteBase}/OfficialLeaderboards/Players" +
+            $"?player={Uri.EscapeDataString(player.Username)})";
 
         // Counts are grouped in the reader's locale before they reach a template, because the
         // templates carry no format specifier of their own.
@@ -229,20 +225,6 @@ namespace ScoreTracker.OfficialMirror.Application
                 : _localizer.Get(culture, "{0} players left their mark — and {1} fell to its first {2}.",
                     players, $"{(string)chart.Song.Name} {chart.DifficultyString}", highest.GradeBand));
         }
-
-        private static string RankMove(int rank, int? previousRank)
-        {
-            if (previousRank == null) return "🆕";
-            var delta = previousRank.Value - rank; // positive = moved up the board
-            return delta > 0 ? $"↑{delta}" : delta < 0 ? $"↓{-delta}" : "–";
-        }
-
-        // Plain-text difficulty (e.g. "Paradoxx S26"), not a bubble emoji — the digest lines
-        // already carry enough symbols.
-        private string ChartName(IReadOnlyDictionary<Guid, Chart> charts, Guid? chartId, string? culture) =>
-            chartId != null && charts.TryGetValue(chartId.Value, out var chart)
-                ? $"{(string)chart.Song.Name} {chart.DifficultyString}"
-                : _localizer.Get(culture, "a chart");
 
         // The formatting culture for dates composed outside a localizer template.
         private static CultureInfo FormatCulture(string? culture) =>

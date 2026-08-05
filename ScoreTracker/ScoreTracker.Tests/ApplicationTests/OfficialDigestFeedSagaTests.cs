@@ -96,14 +96,12 @@ public sealed class OfficialDigestFeedSagaTests
             });
         _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WeeklyHighlightsRecord(DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddDays(-7),
-                new[] { new OfficialMoverRecord(Player("HYSTERIA"), 58, 41, 9120.45m) },
-                Array.Empty<OfficialBoardsClimbedRecord>(),
-                Array.Empty<OfficialGradeFirstRecord>(),
-                Array.Empty<OfficialNewNumberOneRecord>()));
+                Array.Empty<OfficialMoverRecord>(), Array.Empty<OfficialBoardsClimbedRecord>(),
+                Array.Empty<OfficialGradeFirstRecord>(), Array.Empty<OfficialNewNumberOneRecord>(),
+                new WeeklyPulseRecord(23273, 3214, 1857, 375),
+                new[] { new OfficialGainerRecord(Player("HYSTERIA"), 9120.45m, 9500m, 58, 41) }));
         _mediator.Setup(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((WhatItTakesRecord?)null);
-        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((OfficialRankingsRecord?)null);
 
         await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
 
@@ -113,8 +111,8 @@ public sealed class OfficialDigestFeedSagaTests
         _bot.Verify(b => b.SendRichMessages(It.IsAny<IEnumerable<RichBotMessage>>(),
             It.Is<IEnumerable<ulong>>(ids => ids.Count() == 1 && ids.First() == 3),
             It.IsAny<CancellationToken>()), Times.Once);
-        _localizer.Verify(l => l.Get("ko-KR", "PUMBILITY movers"), Times.Once);
-        _localizer.Verify(l => l.Get(null, "PUMBILITY movers"), Times.Once);
+        _localizer.Verify(l => l.Get("ko-KR", "Biggest PUMBILITY gain"), Times.Once);
+        _localizer.Verify(l => l.Get(null, "Biggest PUMBILITY gain"), Times.Once);
     }
 
     [Fact]
@@ -159,7 +157,7 @@ public sealed class OfficialDigestFeedSagaTests
     }
 
     [Fact]
-    public async Task PostsADigestWithTopTenMoversAndDifficultyCutlines()
+    public async Task PostsADigestWithOneMarqueeNamePerCategory()
     {
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
             It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
@@ -170,37 +168,69 @@ public sealed class OfficialDigestFeedSagaTests
         _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WeeklyHighlightsRecord(DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddDays(-7),
                 new[] { new OfficialMoverRecord(Player("HYSTERIA"), 58, 41, 9120.45m) },
-                Array.Empty<OfficialBoardsClimbedRecord>(),
+                new[]
+                {
+                    new OfficialBoardsClimbedRecord(Player("MECCHAMILE"), 90, 11990, 90),
+                    new OfficialBoardsClimbedRecord(Player("BG"), 105, 11946, 105)
+                },
                 new[] { new OfficialGradeFirstRecord(Player("ESI"), paradoxx.Id, "S", 26, "SSS+", 995120, false) },
-                Array.Empty<OfficialNewNumberOneRecord>()));
+                new[] { new OfficialNewNumberOneRecord(Player("ORIU"), paradoxx.Id, 999720, Player("CLUCLE")) },
+                new WeeklyPulseRecord(23273, 3214, 1857, 375),
+                new[] { new OfficialGainerRecord(Player("RUN"), 15731.46m, 18645.90m, 908, 41) }));
         _mediator.Setup(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new WhatItTakesRecord(DateTimeOffset.UnixEpoch, true, 1000,
                 new CutlineTierRecord(1000, 7842.10m, 34.55m, 20, 18, 17, 16),
                 Array.Empty<CutlineTierRecord>(),
                 Array.Empty<BoardCutlineRecord>(),
                 Array.Empty<CutlineHistoryPointRecord>()));
-        _mediator.Setup(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new OfficialRankingsRecord(DateTimeOffset.UnixEpoch, true,
-                new[] { new OfficialRankingRecord(1, 3, Player("JEWEL"), 9999m, 50, null) }));
 
         await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
 
         Assert.Single(_sent);
         var text = string.Join("\n", _sent[0].Blocks.OfType<RichBotText>().Select(t => t.Markdown));
-        Assert.Contains("PUMBILITY top 10", text);
-        Assert.Contains("**JEWEL**", text);
-        Assert.DoesNotContain("JEWEL#1489", text); // a tag's digits never render as a name
-        Assert.Contains("↑2", text); // moved from rank 3 to rank 1
-        Assert.Contains("50× AAA at Lv.20", text);
-        Assert.Contains("50× SSS at Lv.16", text);
         Assert.Contains(_sent[0].Blocks, b => b is RichBotDivider); // sections are fenced for readability
-        // World-first lines: bubble token, song, "World First", the grade as its emoji, the
-        // player linked to their board profile — no raw score on the line. The link text is the
-        // human half of the tag; the query parameter keeps the whole thing, because that is what
-        // /Players resolves on.
+
+        // The gainer leads on value won, and only the top one appears.
+        Assert.Contains("**+2,914.44** to 18,645.90 · #908 → **#41**", text);
+        // The climber likewise — one name, with the entered/climbed split intact.
+        Assert.Contains("**+11,990 places** across 90 chart boards · 90 new", text);
+        Assert.DoesNotContain("BG", text);
+
+        // Standings and the new-#1 sample are gone: the first is not news and the second ran
+        // to three figures on a real week, so four of them read as the whole story.
+        Assert.DoesNotContain("PUMBILITY top 10", text);
+        Assert.DoesNotContain("New #1", text);
+        Assert.DoesNotContain("ORIU", text);
+        Assert.DoesNotContain("dethroning", text);
+
+        // World-first lines keep their shape: bubble token, song, "World First", the grade as
+        // its emoji, the player linked to their board profile — no raw score on the line. The
+        // link text is the human half of the tag; the query parameter keeps the whole thing,
+        // because that is what /Players resolves on.
         Assert.Contains("#DIFFICULTY|S26# **Paradoxx** — World First #LETTERGRADE|SSSPlus# — " +
                         "[ESI](https://piuscores.arroweclip.se/OfficialLeaderboards/Players?player=ESI%231489)",
             text);
         Assert.DoesNotContain("995,120", text);
+    }
+
+    [Fact]
+    public async Task NeverAsksForTheRankingsBoard()
+    {
+        _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WeeklyHighlightsRecord(DateTimeOffset.UnixEpoch, null,
+                Array.Empty<OfficialMoverRecord>(), Array.Empty<OfficialBoardsClimbedRecord>(),
+                Array.Empty<OfficialGradeFirstRecord>(), Array.Empty<OfficialNewNumberOneRecord>(),
+                new WeeklyPulseRecord(1, 1, 1, 1)));
+        _mediator.Setup(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((WhatItTakesRecord?)null);
+
+        await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
+
+        // The board existed on the card only to fill the top 10; with that gone the whole
+        // dispatch goes, not just its rendering.
+        _mediator.Verify(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }
