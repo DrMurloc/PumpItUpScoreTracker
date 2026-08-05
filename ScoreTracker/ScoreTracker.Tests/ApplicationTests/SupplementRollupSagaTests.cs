@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -47,6 +47,7 @@ public sealed class SupplementRollupSagaTests
         IEnumerable<User>? users = null,
         IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>? ledger = null,
         IEnumerable<PlacementRow>? official = null,
+        IEnumerable<BoardDimension>? boards = null,
         bool hasSealed = true)
     {
         var snapshots = new Mock<IOfficialSnapshotRepository>();
@@ -57,10 +58,10 @@ public sealed class SupplementRollupSagaTests
         snapshots.Setup(s => s.GetPlayers(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((players ?? new[] { Linked(1, PublicUser) }).ToArray());
         snapshots.Setup(s => s.GetBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
+            .ReturnsAsync((boards ?? new[]
             {
                 new BoardDimension(BoardId, LeaderboardTypes.Chart, "Some Song S20", ChartId, "Single", 20)
-            });
+            }).ToArray());
         snapshots.Setup(s => s.GetBoardPlacements(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<int>>(),
                 It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((official ?? Array.Empty<PlacementRow>()).ToArray());
@@ -115,8 +116,8 @@ public sealed class SupplementRollupSagaTests
         return fixture;
     }
 
-    private static PlayerDimension Linked(int id, Guid? userId) =>
-        new(id, $"PLAYER{id}#0001", null, userId);
+    private static PlayerDimension Linked(int id, Guid? userId, DateTimeOffset lastSeen = default) =>
+        new(id, $"PLAYER{id}#0001", null, userId, lastSeen);
 
     private static User Person(Guid id, bool isPublic) =>
         new(id, Name.From($"user-{id:N}"), isPublic, Name.From("TAG"), new Uri("https://example.test/a.png"), null);
@@ -224,6 +225,46 @@ public sealed class SupplementRollupSagaTests
         // Rows still land — it is the celebration that is suppressed, not the board.
         Assert.NotEmpty(f.Written);
         Assert.Empty(f.Highlights);
+    }
+
+    /// <summary>
+    ///     One account, two tags in a mix — a rename or a second game card. LinkPlayer sets
+    ///     UserId on the tag an import proved and never clears it from the one before, so this
+    ///     state is permanent and six accounts were already in it. Their ledger is per user, not
+    ///     per card, so the account is published under one tag: the most recently seen.
+    /// </summary>
+    [Fact]
+    public async Task AnAccountWithTwoTagsIsPublishedUnderTheMostRecentlySeenOne()
+    {
+        var old = new DateTimeOffset(2026, 7, 19, 0, 0, 0, TimeSpan.Zero);
+        var recent = new DateTimeOffset(2026, 8, 4, 0, 0, 0, TimeSpan.Zero);
+        var f = Arrange(players: new[]
+        {
+            Linked(1, PublicUser, old),
+            Linked(2, PublicUser, recent)
+        });
+
+        await f.Saga.Consume(Context());
+
+        // One human, one row — not two, and not a crash inverting the map.
+        var row = Assert.Single(f.Written);
+        Assert.Equal(2, row.PlayerId);
+    }
+
+    [Fact]
+    public async Task TwoBoardsForOneChartResolveToTheNewestRow()
+    {
+        // The board dimension is unique on NAME, so a song renamed on piugame leaves two rows
+        // pointing at one chart. Without this the roll-up died building its chart lookup.
+        var f = Arrange(boards: new[]
+        {
+            new BoardDimension(BoardId, LeaderboardTypes.Chart, "Old Name S20", ChartId, "Single", 20),
+            new BoardDimension(BoardId + 5, LeaderboardTypes.Chart, "New Name S20", ChartId, "Single", 20)
+        });
+
+        await f.Saga.Consume(Context());
+
+        Assert.Equal(BoardId + 5, Assert.Single(f.Written).LeaderboardId);
     }
 
     [Fact]

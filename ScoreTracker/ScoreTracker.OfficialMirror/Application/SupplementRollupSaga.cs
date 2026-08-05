@@ -142,6 +142,15 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
     ///     first and visibility second: a tag whose most recent claimant has gone private
     ///     produces no row at all, rather than falling back to whoever held it before — those
     ///     are different people's scores.
+    ///     <para>
+    ///         **One account can own several tags in a mix.** `LinkPlayer` sets `UserId` on the
+    ///         tag an import proved and never clears it from the one before, so a rename or a
+    ///         second game card leaves an account linked to both rows permanently. Their ledger
+    ///         is per user and per mix, not per card, so publishing it under both tags would put
+    ///         one human on every board twice. The most recently seen tag wins — `LastSeenAt` is
+    ///         refreshed every sweep for a tag still appearing on a board, which makes it the
+    ///         mirror's own evidence of which one is live — and the newest row breaks a tie.
+    ///     </para>
     /// </summary>
     private async Task<IReadOnlyDictionary<int, Guid>> Cohort(MixEnum mix, CancellationToken ct)
     {
@@ -157,17 +166,25 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
 
         return linked
             .Where(p => publicIds.Contains(p.UserId!.Value))
-            .ToDictionary(p => p.Id, p => p.UserId!.Value);
+            .GroupBy(p => p.UserId!.Value)
+            .ToDictionary(
+                g => g.OrderByDescending(p => p.LastSeenAt).ThenByDescending(p => p.Id).First().Id,
+                g => g.Key);
     }
 
     private async Task<IReadOnlyList<PlacementRow>> ChartBoardRows(int snapshotId, MixEnum mix,
         IReadOnlyList<BoardDimension> boards, IReadOnlyDictionary<int, Guid> cohort, CancellationToken ct)
     {
+        // A chart can carry more than one board row: the dimension is unique on NAME, so a song
+        // renamed on piugame gets a fresh row pointing at the same chart while the old one
+        // lingers. The newest row is the live one.
         var chartBoards = boards
             .Where(b => b.LeaderboardType == LeaderboardTypes.Chart && b.ChartId != null)
-            .ToDictionary(b => b.ChartId!.Value, b => b);
+            .GroupBy(b => b.ChartId!.Value)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(b => b.Id).First());
         if (chartBoards.Count == 0) return Array.Empty<PlacementRow>();
 
+        // Safe to invert: Cohort has already collapsed each account to a single tag.
         var playerByUser = cohort.ToDictionary(kv => kv.Value, kv => kv.Key);
 
         // Chart id to the cohort's bests on it. Only charts that actually have a mirrored

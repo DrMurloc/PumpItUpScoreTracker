@@ -670,6 +670,7 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
     private static PlayerDimension ToPlayer(OfficialPlayerEntity entity)
     {
         return new PlayerDimension(entity.Id, entity.Username,
-            entity.AvatarUrl == null ? null : new Uri(entity.AvatarUrl, UriKind.Absolute), entity.UserId);
+            entity.AvatarUrl == null ? null : new Uri(entity.AvatarUrl, UriKind.Absolute), entity.UserId,
+            entity.LastSeenAt);
     }
 }

@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Domain;
 
@@ -11,7 +11,13 @@ internal sealed record SnapshotRun(int Id, DateTimeOffset StartedAt, DateTimeOff
 internal sealed record BoardDimension(int Id, string LeaderboardType, string Name,
     Guid? ChartId, string? ChartType, int? Level);
 
-internal sealed record PlayerDimension(int Id, string Username, Uri? Avatar, Guid? UserId);
+/// <param name="LastSeenAt">
+///     Refreshed every sweep for a tag that appears on a board, so it is the mirror's own
+///     evidence of which of an account's tags is still in use — see the one-user-many-tags
+///     note on SupplementRollupSaga.Cohort.
+/// </param>
+internal sealed record PlayerDimension(int Id, string Username, Uri? Avatar, Guid? UserId,
+    DateTimeOffset LastSeenAt = default);
 
 internal sealed record PlacementRow(int LeaderboardId, int PlayerId, int Place, decimal Score,
     bool IsSupplemented = false);

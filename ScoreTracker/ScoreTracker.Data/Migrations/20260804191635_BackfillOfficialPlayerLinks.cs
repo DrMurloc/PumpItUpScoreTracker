@@ -22,6 +22,16 @@ namespace ScoreTracker.Data.Migrations
     ///         is claimed by more than one public account the most recently active in that mix
     ///         wins, which is the rule the live link path already applies.
     ///     </para>
+    ///     <para>
+    ///         It can leave one account linked to two tags in a mix, and that is deliberate.
+    ///         `User.GameTag` holds the tag of the account's most recent import, so a player who
+    ///         renamed or added a card gets a row for their CURRENT tag while an older
+    ///         import-observed link survives on the previous one — `LinkPlayer` has never
+    ///         cleared those. Skipping already-linked accounts would publish them under the
+    ///         stale tag instead, which is worse. The state predates this migration (accounts
+    ///         reached it through renames alone), and `SupplementRollupSaga.Cohort` is what
+    ///         collapses an account to a single tag when it reads them back.
+    ///     </para>
     /// </summary>
     public partial class BackfillOfficialPlayerLinks : Migration
     {
