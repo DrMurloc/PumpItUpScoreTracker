@@ -214,8 +214,12 @@ native reader finds Sonnet's output thin.
 
 **Not settled, and deliberately so:**
 
-- **A native pass on ko-KR.** Neither the owner nor Claude can grade Korean output. The es-ES and
-  pt-BR renderings are spot-checkable; Korean needs a volunteer before anything ships.
+- **ko-KR quality is validated in production, not before it** (owner, 2026-08-04). Neither the
+  owner nor Claude can grade Korean, and holding the feature for a volunteer who may not appear
+  trades a real launch for a hypothetical review. Because the English pivot is stored, a bad
+  rendering is a **re-run of stage two**, not a re-translation — which is what makes shipping
+  first the cheap direction. Korean-reading players are the reviewers, and their feedback is the
+  signal to regenerate.
 - **es-MX.** Left out: peninsular and Mexican Spanish are mutually intelligible, the es-MX
   catalogue has known contamination, and the original is always displayed alongside. The stored
   English pivot makes adding it a stage-two backfill.
@@ -277,7 +281,39 @@ attack whose payoff is showing Spanish speakers text the attacker could simply h
 a hazard if someone reaches for `MarkupString` on comment text, which is exactly the temptation
 when adding link support.
 
-## 6. Running it
+## 6. How it would run — designed, not built
+
+None of this exists. It is the operational half, recorded because the reasoning is easy to lose
+and the two non-obvious parts are load-bearing.
+
+**Cap on spend, not on count.** A nightly count is a proxy for the thing that matters and a lossy
+one — this corpus spans `FATALITY` to a 330-character reply, roughly 10× in tokens, so 50 long
+comments and 50 short ones are very different bills. The primary control is a **rolling monthly
+dollar ceiling that parks the job**; a nightly count (~50) sits underneath purely so one runaway
+night cannot spend a third of the month before anyone looks.
+
+**Set the cap as a fuse, not a budget.** Against a realistic 100–300 comments a month, a $30
+ceiling buys 9–27× headroom. It should never fire in normal operation; what it protects against is
+a bug that clears the translated flag and re-queues the catalogue, or a backfill loop. A cap tuned
+close to expected volume produces a queue that is permanently one day deep, which is the worst of
+both.
+
+The rest, briefly:
+
+- **Oldest-first**, because it is starvation-free. Newest-first would translate what people are
+  reading, but lets a comment posted during a burst wait forever.
+- **Pending shows the original, not a placeholder.** The comment already exists in *some* language.
+  A badge, not an empty box.
+- **A `translated_by` provenance column** on every rendering — model and path. It is what makes
+  "why do these two hundred read differently?" answerable instead of a mystery.
+- **A "Drain now" admin button** running the same job off-schedule, so catch-up cannot drift from
+  the nightly path.
+- **Admin page**: backlog depth, oldest pending age, rolling spend against the ceiling, last run,
+  failures.
+- **Re-translation after a prompt or glossary change is admin-triggered only**, and quotes its cost
+  before running. Anything automatic here is what spends $50 with nobody pressing anything.
+
+## 7. Running it
 
 **Probe reliability.** Two of the four sweeps lost comments to client-side timeouts, and the arms
 that suffered were Opus and Sonnet — the two the exercise exists to compare — while Haiku, being
