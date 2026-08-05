@@ -230,7 +230,7 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
         var cut = Render();
 
         Assert.Contains("No matching standouts yet, go push yourself to start getting suggestions!", cut.Markup);
-        Assert.DoesNotContain("Upload Scores", cut.Markup);
+        Assert.DoesNotContain("Import Scores", cut.Markup);
     }
 
     [Fact]

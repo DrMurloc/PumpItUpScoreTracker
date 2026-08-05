@@ -55,6 +55,7 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Filters | Filtres | |
 | Full Privacy Policy | Politique de confidentialité complète | |
 | Home | Accueil | Sidebar nav label. |
+| Import Scores | Importer les scores | The verb for bringing scores in from PIUGame — nothing is sent, so never `Téléverser`/`Télécharger`. Every CTA pointing at `/UploadPhoenixScores` uses this key. |
 | Language | Langue | |
 | Last Updated | Dernière mise à jour | |
 | Level | Niveau | |
@@ -116,8 +117,8 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Tournaments | Tournois | |
 | UCS Leaderboard | Leaderboard UCS | Postfixed UCS. |
 | Upload Image | Uploader l'image | Loanword verb `uploader`. |
-| Upload Scores | Téléverser les scores | `Téléverser` = upload (the old `Télécharger` wrong-direction values were fixed in the 2026-07 QC pass). |
-| Upload XX Scores | Téléverser les scores XX | |
+| Upload Scores | Téléverser les scores | `Téléverser` = upload (the old `Télécharger` wrong-direction values were fixed in the 2026-07 QC pass). Reaches the screen only as the XX page's file-picker button, where a file really is sent; bringing scores in from PIUGame is `Import Scores`. |
+| Upload XX Scores | Téléverser les scores XX | The XX page is a genuine spreadsheet upload, so `Téléverser` is right here. |
 | Uploader | Uploadeur | Role/agent noun derived from `uploader`. |
 | Use Script | Utiliser le script | |
 | Used Primarily for debugging | Utilisé principalement pour déboguer | |
@@ -144,7 +145,7 @@ These have at least one existing translation in `App.fr-FR.resx`. New translatio
 | Difficulty Categorization | Catégorisation par difficulté | |
 | Letter Grade | Rang (lettres) | Translated as `Rang` with parenthetical `(lettres)` to disambiguate from numeric rank. Min/Max forms keep the parenthetical. |
 | Mix | Mix | Untranslated. (Compare ja-JP `バージョン`/`ベーション`, ko-KR `시리즈`, pt-BR `Versão`.) |
-| Phoenix / XX | Phoenix / XX | Game versions, untranslated proper nouns. "Phoenix Score Calculator" → "Calculateur de score Phoenix" (Phoenix postfixed). "Import Phoenix Scores" → "Importer les Scores Phoenix"; "Upload XX Scores" → "Télécharger Scores XX". |
+| Phoenix / XX | Phoenix / XX | Game versions, untranslated proper nouns. "Phoenix Score Calculator" → "Calculateur de score Phoenix" (Phoenix postfixed). "Import Phoenix Scores" → "Importer les Scores Phoenix"; "Upload XX Scores" → "Téléverser les scores XX". |
 | Plate | Plaque | **Translated** — `Plaque` is a literal French rendering. (Compare ja-JP `プレート` loanword, pt-BR `Plate` untranslated, ko-KR `플레이트` loanword.) French is the only locale that translates this. The comment notes `MG, PG, UG` are the in-game tier abbreviations. |
 | Pass / Passed / Not Passed | Pass / Passed / Non Passed | **Untranslated**, kept English. `Passed Count` → `Passed`; `Not Passed Count` → `Non Passed`; `Stage Pass` → `Stage Pass`. The `Unpassed ToDos` prose keeps `Pass` in English mid-French-sentence: `que vous n'avez pas Pass`. |
 | Score (singular) | Score | Identical, loanword. |
