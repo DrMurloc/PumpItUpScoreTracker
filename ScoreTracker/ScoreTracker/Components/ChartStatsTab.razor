@@ -1,0 +1,190 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Catalog.Contracts
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.Theming
+@inject IMediator Mediator
+
+@* What the chart IS, extracted from ChartDetailsDialog: the meta grid, where the tier
+   lists place it, what it is made of, and the way out to PIU Center. It owns the three
+   reads that feed those — placements, the alias key, and the badge chips — so a host that
+   never shows this block never pays for them. *@
+@if (Chart != null)
+{
+    <div class="chart-details-meta">
+        @if (Chart.Song.Bpm != null)
+        {
+            <div><span class="chart-details-meta-label">@L["BPM"]</span><span>@Chart.Song.Bpm</span></div>
+        }
+        @if (Chart.NoteCount != null)
+        {
+            <div><span class="chart-details-meta-label">@L["Note Count"]</span><span>@Chart.NoteCount</span></div>
+        }
+        @if (Chart.StepArtist != null)
+        {
+            <div><span class="chart-details-meta-label">@L["Step Artist"]</span><span>@Chart.StepArtist</span></div>
+        }
+        <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
+        <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
+        @* Two separate facts, because they answer different questions: how played this
+           chart is across the whole mix, and how played it is against its own folder —
+           a chart four hundredth overall can still be the most played thing in its
+           folder. Both are piugame's play ranking, not this site's score counts. *@
+        @if (OfficialPlace != null)
+        {
+            <div>
+                <span class="chart-details-meta-label">@L["Popularity overall"]</span>
+                <span>@L["#{0}", OfficialPlace.Value.ToString("N0")]</span>
+            </div>
+        }
+        @if (OfficialFolderPlace != null)
+        {
+            <div>
+                <span class="chart-details-meta-label">@L["Popularity in {0}", Chart.DifficultyString]</span>
+                <span>@L["#{0}", OfficialFolderPlace.Value.ToString("N0")]</span>
+            </div>
+        }
+    </div>
+    @if (_placements.Any())
+    {
+        <div class="chart-details-placements">
+            @foreach (var placement in _placements)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                         Style="@($"color:{placement.Color};border-color:{placement.Color}")">@placement.Label</MudChip>
+            }
+        </div>
+    }
+    @* Badge coverage bars — granular piucenter badges, dominance-first (their top-3
+       pick, then coverage). A pre-crawl chart shows nothing here rather than falling
+       back to the rollup tags: an arbitrary "Technical" is worse than silence
+       (docs/design/nuke-old-skill-categories.md). *@
+    @if (_skillChips.Any())
+    {
+        <MudText Typo="Typo.overline">@L["Skills"]</MudText>
+        @* Bars extracted to SkillCoverageBars (chart-page overhaul): one concept,
+           one component — the page renders the same bars at section scale. *@
+        <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
+    }
+    <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption" Class="chart-details-piucenter">@L["View full chart on PIU Center"]</MudLink>
+}
+
+<style>
+    .chart-details-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 4px 12px;
+        margin-bottom: 8px;
+    }
+
+    .chart-details-meta-label {
+        color: var(--mud-palette-text-secondary);
+        font-size: .7rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        display: block;
+    }
+
+    .chart-details-placements, .chart-details-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 8px 0;
+    }
+
+    .chart-details-piucenter {
+        display: inline-block;
+        margin-top: 8px;
+    }
+</style>
+
+@code {
+    [Parameter] public Chart? Chart { get; set; }
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>
+    ///     The chart's place on piugame's play ranking for the whole mix, and its place among
+    ///     the charts of its own folder. Optional: a caller that has not fetched the official
+    ///     board leaves both null and neither line renders. Not this site's Popularity sort,
+    ///     which counts scores recorded here.
+    /// </summary>
+    [Parameter] public int? OfficialPlace { get; set; }
+
+    [Parameter] public int? OfficialFolderPlace { get; set; }
+
+    private Guid _loadedChartId = Guid.Empty;
+    private string? _externalKey;
+    private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
+    private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Chart == null || Chart.Id == _loadedChartId) return;
+        _loadedChartId = Chart.Id;
+        _placements = await LoadPlacements(Chart.Id);
+        // The alias table's key beats the guessed one (crawler project hardening).
+        _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
+        // Coverage bars: granular piucenter badges, dominance-ordered, from the banked metrics.
+        _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { Chart.Id })))
+            .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartBadgeChipRecord>();
+    }
+
+    private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
+    {
+        var placements = new List<(string, string)>();
+        foreach (var (listName, label) in new (string, string)[]
+                 {
+                     ("Pass Count", L["Pass Difficulty"].ToString()),
+                     ("Scores", L["Score Difficulty"].ToString())
+                 })
+        {
+            var result = await Mediator.Send(new GetTierListWithFallbackQuery(listName, Mix));
+            var entry = result.Entries.FirstOrDefault(e => e.ChartId == chartId);
+            if (entry == null || entry.Category == TierListCategory.Unrecorded) continue;
+            placements.Add(($"{label}: {DifficultyName(entry.Category)}",
+                ThemeScales.DifficultyColor(entry.Category)));
+        }
+
+        return placements;
+    }
+
+    private string DifficultyName(TierListCategory category)
+    {
+        return category switch
+        {
+            TierListCategory.Overrated => L["1+ Level Easier"],
+            TierListCategory.VeryEasy => L["Very Easy"],
+            TierListCategory.Easy => L["Easy"],
+            TierListCategory.Medium => L["Medium"],
+            TierListCategory.Hard => L["Hard"],
+            TierListCategory.VeryHard => L["Very Hard"],
+            TierListCategory.Underrated => L["1+ Level Harder"],
+            _ => L["Not Rated"]
+        };
+    }
+
+    // The resolved alias key when the crawler has one; otherwise a best-effort guess
+    // in the current key format ("<Song>_-_<Artist>_<S|D><level>_<SONGTYPE>").
+    private string PiuCenterUrl
+    {
+        get
+        {
+            if (_externalKey != null)
+                return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(_externalKey)}";
+            if (Chart == null) return "https://www.piucenter.com/chart";
+            var suffix = Chart.Song.Type switch
+            {
+                SongType.Remix => "REMIX",
+                SongType.ShortCut => "SHORTCUT",
+                SongType.FullSong => "FULLSONG",
+                _ => "ARCADE"
+            };
+            var key =
+                $"{Chart.Song.Name}_-_{Chart.Song.Artist}_{Chart.Type.GetShortHand()}{(int)Chart.Level}_{suffix}"
+                    .Replace(' ', '_');
+            return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(key)}";
+        }
+    }
+}
