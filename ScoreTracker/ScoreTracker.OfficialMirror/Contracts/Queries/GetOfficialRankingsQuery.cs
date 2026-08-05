@@ -1,4 +1,4 @@
-using ScoreTracker.OfficialMirror.Contracts;
+﻿using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Messaging;
 
@@ -10,5 +10,5 @@ namespace ScoreTracker.OfficialMirror.Contracts.Queries;
 ///     rating over its mirrored chart boards.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record GetOfficialRankingsQuery(MixEnum Mix, string Type = "All")
+public sealed record GetOfficialRankingsQuery(MixEnum Mix, string Type = "All", bool Supplemented = false)
     : IQuery<OfficialRankingsRecord>;

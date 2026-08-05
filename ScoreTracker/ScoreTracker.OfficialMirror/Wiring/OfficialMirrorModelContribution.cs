@@ -30,8 +30,12 @@ public sealed class OfficialMirrorModelContribution : IDbModelContribution
         var placement = modelBuilder.Entity<OfficialLeaderboardPlacementEntity>()
             .ToTable("OfficialLeaderboardPlacement");
         placement.HasKey(e => new { e.SnapshotId, e.LeaderboardId, e.Place, e.PlayerId });
+        // IsSupplemented rides the INCLUDE rather than the key: a board read is already a
+        // clustered range of a few hundred rows, so the flag costs a residual predicate
+        // there, but a player timeline seeks this index and would otherwise pay a lookup
+        // per row just to learn which reading each placement belongs to.
         placement.HasIndex(e => new { e.PlayerId, e.SnapshotId })
-            .IncludeProperties(e => new { e.LeaderboardId, e.Place, e.Score });
+            .IncludeProperties(e => new { e.LeaderboardId, e.Place, e.Score, e.IsSupplemented });
         placement.Property(e => e.Score).HasPrecision(9, 2);
 
         modelBuilder.Entity<OfficialChartPopularityEntity>().ToTable("OfficialChartPopularity")
@@ -43,7 +47,10 @@ public sealed class OfficialMirrorModelContribution : IDbModelContribution
             .HasKey(e => new { e.MixId, e.ChartType, e.Level });
 
         var highlight = modelBuilder.Entity<OfficialWeeklyHighlightEntity>().ToTable("OfficialWeeklyHighlight");
-        highlight.HasIndex(e => e.SnapshotId);
+        // Highlights are always read as "this snapshot, this reading", so the flag belongs in
+        // the key rather than the INCLUDE — unlike placements, where a board range is small
+        // enough that a residual predicate is cheaper than a wider index.
+        highlight.HasIndex(e => new { e.SnapshotId, e.IsSupplemented });
         highlight.Property(e => e.Score).HasPrecision(9, 2);
         highlight.Property(e => e.PrevValue).HasPrecision(9, 2);
         highlight.Property(e => e.NewValue).HasPrecision(9, 2);

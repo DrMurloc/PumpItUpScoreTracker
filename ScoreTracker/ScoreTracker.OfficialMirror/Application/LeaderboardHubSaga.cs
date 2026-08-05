@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
@@ -32,7 +32,8 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialChartBoardQuery, OfficialChartBoardRecord?>,
     IRequestHandler<GetLinkedOfficialPlayerTagQuery, string?>,
     IRequestHandler<GetOfficialChartPlacementsQuery, IReadOnlyDictionary<Guid, OfficialPlacementEstimate>>,
-    IRequestHandler<GetOfficialPumbilityBoardQuery, OfficialPumbilityBoard?>
+    IRequestHandler<GetOfficialPumbilityBoardQuery, OfficialPumbilityBoard?>,
+    IRequestHandler<GetSupplementedSummaryQuery, SupplementedSummaryRecord>
 {
     // The board names the sweep writes, published so the estimate callers and the scrape
     // cannot drift to different spellings of the same board.
@@ -82,7 +83,7 @@ internal sealed class LeaderboardHubSaga :
         // link there is nothing to exclude and the estimate is off by one — the honest limit.
         var me = await _snapshots.GetPlayerByUserId(request.Mix, request.UserId, cancellationToken);
         var placements = (await _snapshots.GetBoardPlacements(latest.Id, boards.Select(b => b.Id).ToArray(),
-                cancellationToken))
+                PlacementScope.OfficialOnly, cancellationToken))
             .ToLookup(p => p.LeaderboardId);
 
         var results = new Dictionary<Guid, OfficialPlacementEstimate>();
@@ -102,6 +103,16 @@ internal sealed class LeaderboardHubSaga :
         return results;
     }
 
+    public async Task<SupplementedSummaryRecord> Handle(GetSupplementedSummaryQuery request,
+        CancellationToken cancellationToken)
+    {
+        var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
+        if (latest?.CompletedAt == null) return new SupplementedSummaryRecord(0, 0, null);
+
+        var (players, rows) = await _snapshots.CountSupplemented(latest.Id, cancellationToken);
+        return new SupplementedSummaryRecord(players, rows, latest.CompletedAt);
+    }
+
     public async Task<OfficialPumbilityBoard?> Handle(GetOfficialPumbilityBoardQuery request,
         CancellationToken cancellationToken)
     {
@@ -112,7 +123,8 @@ internal sealed class LeaderboardHubSaga :
             .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Rating && b.Name == request.BoardName);
         if (board == null) return null;
 
-        var values = (await _snapshots.GetBoardPlacements(latest.Id, board.Id, cancellationToken))
+        var values = (await _snapshots.GetBoardPlacements(latest.Id, board.Id, PlacementScope.OfficialOnly,
+                cancellationToken))
             .Select(p => p.Score)
             .OrderByDescending(v => v)
             .ToArray();
@@ -128,7 +140,7 @@ internal sealed class LeaderboardHubSaga :
         if (latest?.CompletedAt == null) return null;
 
         var previous = await _snapshots.GetSealedBefore(request.Mix, latest.Id, cancellationToken);
-        var highlights = await _records.GetHighlights(latest.Id, cancellationToken);
+        var highlights = await _records.GetHighlights(latest.Id, request.Supplemented, cancellationToken);
         var players = (await _snapshots.GetPlayersByIds(
                 highlights.SelectMany(h => new[] { h.PlayerId, h.DethronedPlayerId })
                     .Where(id => id != null).Select(id => id!.Value)
@@ -196,7 +208,7 @@ internal sealed class LeaderboardHubSaga :
         if (latest?.CompletedAt == null)
             return new OfficialRankingsRecord(null, false, Array.Empty<OfficialRankingRecord>());
 
-        var stats = await GetSnapshotStats(request.Mix, latest.Id, cancellationToken);
+        var stats = await GetSnapshotStats(request.Mix, latest.Id, request.Supplemented, cancellationToken);
         var boardName = request.Type switch
         {
             "Singles" => PumbilitySingles,
@@ -206,13 +218,22 @@ internal sealed class LeaderboardHubSaga :
         };
         var pumbilityBoard = stats.RatingBoards.TryGetValue(boardName, out var board) ? board : null;
 
+        // The co-op board has no scraped counterpart and never will — it is computed from the
+        // mirrored co-op chart boards and labelled an estimate. Every other board IS the
+        // official PUMBILITY ranking: if the mirror has not got it, the honest answer is an
+        // empty board that fills in on the next sweep. Computing a stand-in used to be the
+        // fallback, and it invented rankings thousands of players deep plus Singles and Doubles
+        // boards for a mix whose site publishes neither.
+        if (pumbilityBoard == null && request.Type != CoOpType)
+            return new OfficialRankingsRecord(latest.CompletedAt, true, Array.Empty<OfficialRankingRecord>());
+
         var previous = await _snapshots.GetSealedBefore(request.Mix, latest.Id, cancellationToken);
         IReadOnlyList<OfficialRankingRecord> rankings;
         if (pumbilityBoard != null)
         {
             var previousPlaces = previous == null
                 ? new Dictionary<int, int>()
-                : (await GetSnapshotStats(request.Mix, previous.Id, cancellationToken))
+                : (await GetSnapshotStats(request.Mix, previous.Id, request.Supplemented, cancellationToken))
                 .RatingBoards.TryGetValue(boardName, out var prevBoard)
                     ? prevBoard.ToDictionary(p => p.PlayerId, p => p.Place)
                     : new Dictionary<int, int>();
@@ -227,7 +248,7 @@ internal sealed class LeaderboardHubSaga :
         {
             var previousRanks = previous == null
                 ? new Dictionary<int, int>()
-                : ComputedRanks(await GetSnapshotStats(request.Mix, previous.Id, cancellationToken),
+                : ComputedRanks(await GetSnapshotStats(request.Mix, previous.Id, request.Supplemented, cancellationToken),
                     request.Type);
             var currentRanks = ComputedRanks(stats, request.Type);
             rankings = currentRanks
@@ -299,10 +320,12 @@ internal sealed class LeaderboardHubSaga :
         var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
         if (latest?.CompletedAt == null) return null;
 
-        var stats = await GetSnapshotStats(request.Mix, latest.Id, cancellationToken);
+        var stats = await GetSnapshotStats(request.Mix, latest.Id, request.Supplemented, cancellationToken);
         var playerStats = stats.ByPlayer.TryGetValue(player.Id, out var s) ? s : null;
 
-        var timeline = await _snapshots.GetPlayerTimeline(player.Id, cancellationToken);
+        var timeline = await _snapshots.GetPlayerTimeline(player.Id,
+            request.Supplemented ? PlacementScope.IncludingSupplemented : PlacementScope.OfficialOnly,
+            cancellationToken);
         var history = timeline.GroupBy(r => (r.SnapshotId, r.CompletedAt))
             .OrderBy(g => g.Key.CompletedAt)
             .Select(g =>
@@ -340,10 +363,12 @@ internal sealed class LeaderboardHubSaga :
                 previousPlaces.TryGetValue(r.ChartId.Value, out var prev) ? prev - r.Place : null,
                 (int)r.Score, playerStats?.ChartRatings.TryGetValue(r.ChartId.Value, out var rating) == true
                     ? rating
-                    : 0))
+                    : 0, r.IsSupplemented))
             .ToArray();
 
-        return new OfficialPlayerProfileRecord(ToRecord(player), playerStats?.PlayerType,
+        return new OfficialPlayerProfileRecord(
+            ToRecord(player, chartRows.Length > 0 && chartRows.All(r => r.IsSupplemented)),
+            playerStats?.PlayerType,
             pumbilityRow?.Score, pumbilityRow?.Place,
             pumbilityRow?.Place != null && previousPumbilityRank != null
                 ? previousPumbilityRank - pumbilityRow.Place
@@ -357,7 +382,9 @@ internal sealed class LeaderboardHubSaga :
 
     public async Task<IReadOnlyList<string>> Handle(GetOfficialPlayerNamesQuery request,
         CancellationToken cancellationToken) =>
-        await _snapshots.GetPlayerNames(request.Mix, cancellationToken);
+        await _snapshots.GetPlayerNames(request.Mix,
+            request.Supplemented ? PlacementScope.IncludingSupplemented : PlacementScope.OfficialOnly,
+            cancellationToken);
 
     public async Task<IReadOnlyList<string>> Handle(SearchOfficialBoardTagsQuery request,
         CancellationToken cancellationToken)
@@ -419,6 +446,7 @@ internal sealed class LeaderboardHubSaga :
         return new OfficialTagScores(latest.CompletedAt, placements
             .Select(p => new OfficialTagScore(tagById[p.PlayerId], p.ChartId, p.Place, (int)p.Score))
             .ToArray());
+
     }
 
     public async Task<OfficialChartBoardRecord?> Handle(GetOfficialChartBoardQuery request,
@@ -431,7 +459,10 @@ internal sealed class LeaderboardHubSaga :
             .FirstOrDefault(b => b.LeaderboardType == LeaderboardTypes.Chart && b.ChartId == request.ChartId);
         if (board == null) return null;
 
-        var placements = await _snapshots.GetBoardPlacements(latest.Id, board.Id, cancellationToken);
+        var stored = await _snapshots.GetBoardPlacements(latest.Id, board.Id,
+            request.Supplemented ? PlacementScope.IncludingSupplemented : PlacementScope.OfficialOnly,
+            cancellationToken);
+        var placements = request.Supplemented ? SupplementMerge.MergedBoard(stored) : stored;
         var players = (await _snapshots.GetPlayersByIds(
                 placements.Select(p => p.PlayerId).Distinct().ToArray(), cancellationToken))
             .ToDictionary(p => p.Id);
@@ -439,9 +470,9 @@ internal sealed class LeaderboardHubSaga :
             .OrderBy(p => p.Place)
             .Select(p => new OfficialChartBoardEntryRecord(p.Place,
                 players.TryGetValue(p.PlayerId, out var player)
-                    ? ToRecord(player)
-                    : new OfficialPlayerRecord(p.PlayerId, "?", null, null),
-                (int)p.Score))
+                    ? ToRecord(player, p.IsSupplemented)
+                    : new OfficialPlayerRecord(p.PlayerId, "?", null, null, p.IsSupplemented),
+                (int)p.Score, p.IsSupplemented))
             .ToArray());
     }
 
@@ -512,7 +543,7 @@ internal sealed class LeaderboardHubSaga :
         };
         var chartType = type == "Doubles" ? ChartType.Double : ChartType.Single;
         var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
-        var stats = await GetSnapshotStats(mix, latest.Id, ct);
+        var stats = await GetSnapshotStats(mix, latest.Id, false, ct);
         var board = stats.RatingBoards.TryGetValue(boardName, out var rows)
             ? rows
             : Array.Empty<PlacementRow>();
@@ -520,7 +551,7 @@ internal sealed class LeaderboardHubSaga :
         var previous = await _snapshots.GetSealedBefore(mix, latest.Id, ct);
         var previousBoard = previous == null
             ? Array.Empty<PlacementRow>()
-            : (await GetSnapshotStats(mix, previous.Id, ct)).RatingBoards.TryGetValue(boardName, out var prev)
+            : (await GetSnapshotStats(mix, previous.Id, false, ct)).RatingBoards.TryGetValue(boardName, out var prev)
                 ? prev
                 : Array.Empty<PlacementRow>();
 
@@ -558,14 +589,14 @@ internal sealed class LeaderboardHubSaga :
                 : null;
             var previousValue = CutlineCalculator.ValueAtRank(previous == null
                     ? Array.Empty<PlacementRow>()
-                    : (await GetSnapshotStats(mix, previous.Id, ct)).RatingBoards.TryGetValue(name, out var pb)
+                    : (await GetSnapshotStats(mix, previous.Id, false, ct)).RatingBoards.TryGetValue(name, out var pb)
                         ? pb
                         : Array.Empty<PlacementRow>(),
                 CutlineCalculator.BoardCapacity);
             comparisons.Add(new BoardCutlineRecord(label, value, value - previousValue, compareFull));
         }
 
-        var history = (await _snapshots.GetBoardFloorHistory(mix, boardName, ct))
+        var history = (await _snapshots.GetBoardFloorHistory(mix, boardName, PlacementScope.OfficialOnly, ct))
             .Where(h => h.Count >= CutlineCalculator.BoardCapacity)
             .Select(h => new CutlineHistoryPointRecord(h.CompletedAt, h.MinScore,
                 CutlineCalculator.LevelFor(scoring, chartType, PhoenixLetterGrade.AAA, h.MinScore),
@@ -578,9 +609,9 @@ internal sealed class LeaderboardHubSaga :
             history);
     }
 
-    private static OfficialPlayerRecord ToRecord(PlayerDimension player)
+    private static OfficialPlayerRecord ToRecord(PlayerDimension player, bool isSupplemented = false)
     {
-        return new OfficialPlayerRecord(player.Id, player.Username, player.Avatar, player.UserId);
+        return new OfficialPlayerRecord(player.Id, player.Username, player.Avatar, player.UserId, isSupplemented);
     }
 
     // ── snapshot-scoped stats ────────────────────────────────────────────────
@@ -610,14 +641,22 @@ internal sealed class LeaderboardHubSaga :
         IReadOnlyDictionary<int, PlayerSnapshotStats> ByPlayer,
         IReadOnlyDictionary<string, IReadOnlyList<PlacementRow>> RatingBoards);
 
-    private async Task<SnapshotStats> GetSnapshotStats(MixEnum mix, int snapshotId, CancellationToken ct)
+    /// <summary>
+    ///     Per-snapshot aggregates for one reading. The supplemented reading re-ranks each board
+    ///     before computing anything, because a merged board's places are not the stored ones —
+    ///     on a rating board an official row's place moves when ours land around it.
+    /// </summary>
+    private async Task<SnapshotStats> GetSnapshotStats(MixEnum mix, int snapshotId, bool supplemented,
+        CancellationToken ct)
     {
-        return (await _cache.GetOrCreateAsync(OfficialCacheKeys.SnapshotStats(mix, snapshotId), async entry =>
-        {
-            entry.SlidingExpiration = TimeSpan.FromHours(12);
-            var details = await _snapshots.GetPlacementDetails(snapshotId, ct);
-            return ComputeStats(mix, details);
-        }))!;
+        return (await _cache.GetOrCreateAsync(OfficialCacheKeys.SnapshotStats(mix, snapshotId, supplemented),
+            async entry =>
+            {
+                entry.SlidingExpiration = TimeSpan.FromHours(12);
+                var details = await _snapshots.GetPlacementDetails(snapshotId,
+                    supplemented ? PlacementScope.IncludingSupplemented : PlacementScope.OfficialOnly, ct);
+                return ComputeStats(mix, supplemented ? SupplementMerge.MergedBoards(details) : details);
+            }))!;
     }
 
     private static SnapshotStats ComputeStats(MixEnum mix, IReadOnlyList<PlacementDetail> details)

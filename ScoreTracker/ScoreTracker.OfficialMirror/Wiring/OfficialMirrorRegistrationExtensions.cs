@@ -50,6 +50,7 @@ public static class OfficialMirrorRegistrationExtensions
     public static void AddOfficialMirrorConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<LeaderboardSweepSaga>();
+        configurator.AddConsumer<SupplementRollupSaga>();
         configurator.AddConsumer<OfficialDigestFeedSaga>();
         configurator.AddConsumer<PlayerIdentitySaga>();
         configurator.AddConsumer<RunOfficialImportConsumer>();

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -39,7 +39,7 @@ public sealed class LeaderboardHubSagaTests
             .ReturnsAsync(latest);
         snapshots.Setup(s => s.GetSealedBefore(It.IsAny<MixEnum>(), It.IsAny<int>(),
             It.IsAny<CancellationToken>())).ReturnsAsync(previous);
-        snapshots.Setup(s => s.GetPlacementDetails(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        snapshots.Setup(s => s.GetPlacementDetails(It.IsAny<int>(), It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PlacementDetail>());
         snapshots.Setup(s => s.GetPlayersByIds(It.IsAny<IReadOnlyCollection<int>>(),
                 It.IsAny<CancellationToken>()))
@@ -47,7 +47,7 @@ public sealed class LeaderboardHubSagaTests
                 ids.Select(id => new PlayerDimension(id, $"PLAYER{id}",
                     new Uri($"https://example.invalid/{id}.png"), null)).ToArray());
         var records = new Mock<IOfficialRecordRepository>();
-        records.Setup(r => r.GetHighlights(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        records.Setup(r => r.GetHighlights(It.IsAny<int>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<HighlightRow>());
         var saga = new LeaderboardHubSaga(snapshots.Object, records.Object,
             new MemoryCache(new MemoryCacheOptions()));
@@ -84,7 +84,7 @@ public sealed class LeaderboardHubSagaTests
                 new BoardDimension(516, LeaderboardTypes.Chart, "1948 D29", ChartA, "Double", 29),
                 new BoardDimension(9, LeaderboardTypes.Rating, "PUMBILITY", null, null, null)
             });
-        fixture.Snapshots.Setup(s => s.GetBoardPlacements(4, 516, It.IsAny<CancellationToken>()))
+        fixture.Snapshots.Setup(s => s.GetBoardPlacements(4, 516, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
                 new PlacementRow(516, 7, 2, 951210),
@@ -138,7 +138,7 @@ public sealed class LeaderboardHubSagaTests
     public async Task HighlightsGroupByKindAndResolvePlayers()
     {
         var f = Arrange(Run(2, Week2), Run(1, Week1));
-        f.Records.Setup(r => r.GetHighlights(2, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Records.Setup(r => r.GetHighlights(2, false, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
             new HighlightRow(HighlightKinds.PumbilityMover, 1, 11, null, 900, null, null, null, null,
                 18204.51m, 31, 17),
@@ -176,7 +176,7 @@ public sealed class LeaderboardHubSagaTests
     public async Task Phoenix2RankingsFollowTheOfficialBoardWithDeltas()
     {
         var f = Arrange(Run(2, Week2), Run(1, Week1));
-        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
             Pumbility(11, 1, 19412.88m),
             Pumbility(12, 2, 19205.13m),
@@ -184,7 +184,7 @@ public sealed class LeaderboardHubSagaTests
             Chart(11, ChartB, 2, 993000, level: 24, boardId: 501),
             Chart(12, ChartB, 1, 995000, level: 24, boardId: 501)
         });
-        f.Snapshots.Setup(s => s.GetPlacementDetails(1, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Snapshots.Setup(s => s.GetPlacementDetails(1, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
             Pumbility(11, 2, 19100.00m),
             Pumbility(12, 1, 19180.00m)
@@ -203,11 +203,18 @@ public sealed class LeaderboardHubSagaTests
         Assert.Equal(2, top.BoardsInTop);
     }
 
+    /// <summary>
+    ///     A mix whose PUMBILITY board the mirror has not got yet shows nothing, and waits.
+    ///     This used to compute a stand-in from chart placements, which ranked thousands of
+    ///     players on a board the site publishes 1,000 of — and invented Singles and Doubles
+    ///     boards for a mix that has neither. The rankings are the official ranking or they
+    ///     are not the rankings.
+    /// </summary>
     [Fact]
-    public async Task PhoenixRankingsFallBackToComputedRatings()
+    public async Task AMixWithNoMirroredPumbilityBoardRanksNobody()
     {
         var f = Arrange(Run(2, Week2));
-        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
             Chart(11, ChartA, 1, 995000, level: 24, boardId: 500),
             Chart(12, ChartA, 2, 970000, level: 24, boardId: 500)
@@ -216,11 +223,8 @@ public sealed class LeaderboardHubSagaTests
         var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix),
             CancellationToken.None);
 
-        Assert.False(result.RatingIsOfficial);
-        Assert.Equal(2, result.Rankings.Count);
-        Assert.Equal("PLAYER11", result.Rankings[0].Player.Username);
-        Assert.True(result.Rankings[0].Rating > result.Rankings[1].Rating);
-        Assert.Null(result.Rankings[0].PreviousRank);
+        Assert.Empty(result.Rankings);
+        Assert.True(result.RatingIsOfficial);
     }
 
     [Fact]
@@ -229,7 +233,7 @@ public sealed class LeaderboardHubSagaTests
         var f = Arrange(Run(2, Week2));
         var coopA = Guid.NewGuid();
         var coopB = Guid.NewGuid();
-        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
             CoOpChart(11, coopA, 1, 1_000_000),
             CoOpChart(11, coopB, 2, 995_000),
@@ -257,8 +261,10 @@ public sealed class LeaderboardHubSagaTests
     public async Task StandardRankingsNeverCountCoOpBoards()
     {
         var f = Arrange(Run(2, Week2));
-        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
+            // The board itself is what ranks the standard views now, so it has to be here.
+            Pumbility(11, 1, 17_900m),
             Chart(11, ChartA, 1, 995_000, level: 24, boardId: 500),
             // Player 12 lives only on co-op boards — invisible to the standard views.
             CoOpChart(12, Guid.NewGuid(), 1, 1_000_000)
@@ -278,11 +284,11 @@ public sealed class LeaderboardHubSagaTests
         var player = new PlayerDimension(11, "NIMBUS9", null, null);
         f.Snapshots.Setup(s => s.GetPlayerByUsername(MixEnum.Phoenix2, "NIMBUS9", It.IsAny<CancellationToken>()))
             .ReturnsAsync(player);
-        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
             Chart(11, ChartA, 1, 999120, level: 24, type: "Double", boardId: 500)
         });
-        f.Snapshots.Setup(s => s.GetPlayerTimeline(11, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Snapshots.Setup(s => s.GetPlayerTimeline(11, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
             new PlayerTimelineRow(1, Week1, LeaderboardTypes.Rating, "PUMBILITY", null, 9, 17755.00m),
             new PlayerTimelineRow(1, Week1, LeaderboardTypes.Chart, "Altale D24", ChartA, 3, 998000),
@@ -315,7 +321,7 @@ public sealed class LeaderboardHubSagaTests
         var boardChart = new ChartBuilder().WithLevel(24).WithType(ChartType.Single).Build();
         f.Snapshots.Setup(s => s.GetPlayerByUsername(MixEnum.Phoenix2, "NIMBUS9", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PlayerDimension(11, "NIMBUS9", null, Guid.NewGuid()));
-        f.Snapshots.Setup(s => s.GetPlayerTimeline(11, It.IsAny<CancellationToken>())).ReturnsAsync(new[]
+        f.Snapshots.Setup(s => s.GetPlayerTimeline(11, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
             new PlayerTimelineRow(2, Week2, LeaderboardTypes.Chart, "Board", boardChart.Id, 3, 991000)
         });
@@ -362,12 +368,12 @@ public sealed class LeaderboardHubSagaTests
         var previousBoard = Enumerable.Range(1, 1000)
             .Select(rank => Pumbility(rank, rank, 20900m - rank * 8))
             .ToArray();
-        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>()))
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(fullBoard);
-        f.Snapshots.Setup(s => s.GetPlacementDetails(1, It.IsAny<CancellationToken>()))
+        f.Snapshots.Setup(s => s.GetPlacementDetails(1, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(previousBoard);
         f.Snapshots.Setup(s => s.GetBoardFloorHistory(MixEnum.Phoenix2, "PUMBILITY",
-                It.IsAny<CancellationToken>()))
+                It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { (1, Week1, 12900m, 1000), (2, Week2, 13000m, 1000) });
 
         var result = await f.Saga.Handle(new GetWhatItTakesQuery(MixEnum.Phoenix2), CancellationToken.None);
@@ -393,7 +399,7 @@ public sealed class LeaderboardHubSagaTests
         // Phoenix serves one PUMBILITY list with no per-type split; Phoenix 2 splits it in
         // three. The comparison strip names what was mirrored, never an invented board.
         var f = Arrange(Run(2, Week2));
-        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>()))
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Enumerable.Range(1, 1000)
                 .SelectMany(rank => new[]
                 {
@@ -402,7 +408,7 @@ public sealed class LeaderboardHubSagaTests
                 })
                 .ToArray());
         f.Snapshots.Setup(s => s.GetBoardFloorHistory(MixEnum.Phoenix2, "PUMBILITY",
-                It.IsAny<CancellationToken>()))
+                It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<(int, DateTimeOffset, decimal, int)>());
 
         var result = await f.Saga.Handle(new GetWhatItTakesQuery(MixEnum.Phoenix2), CancellationToken.None);
@@ -418,10 +424,10 @@ public sealed class LeaderboardHubSagaTests
         var partialBoard = Enumerable.Range(1, 250)
             .Select(rank => Pumbility(rank, rank, 18000m - rank * 10))
             .ToArray();
-        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<CancellationToken>()))
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(partialBoard);
         f.Snapshots.Setup(s => s.GetBoardFloorHistory(MixEnum.Phoenix2, "PUMBILITY",
-                It.IsAny<CancellationToken>()))
+                It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { (2, Week2, 15500m, 250) });
 
         var result = await f.Saga.Handle(new GetWhatItTakesQuery(MixEnum.Phoenix2), CancellationToken.None);

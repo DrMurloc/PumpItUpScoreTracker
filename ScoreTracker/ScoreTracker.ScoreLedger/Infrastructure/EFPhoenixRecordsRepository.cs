@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -114,6 +114,50 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 .Distinct()
                 .ToArrayAsync(cancellationToken))
             .ToHashSet();
+    }
+
+    async Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> IScoreReader.GetVerifiedBests(MixEnum mix,
+        IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)
+    {
+        if (userIds.Count == 0) return Array.Empty<(Guid, RecordedPhoenixScore)>();
+
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // NULL source is pre-capture and counts as verified: nothing has written a null since
+        // 2026-07-06, and among the null rows the journal can classify, official imports beat
+        // manual and CSV plays about twenty to one. A row a human typed is the thing being
+        // excluded, and those are stamped.
+        return (await database.Set<PhoenixRecordEntity>()
+                .Where(pba => pba.MixId == mixId
+                              && userIds.Contains(pba.UserId)
+                              && !pba.IsBroken
+                              && pba.Score != null
+                              && (pba.Source == null || pba.Source == ScoreJournalEntry.OfficialImportSource))
+                .Select(pba => new
+                {
+                    pba.UserId, pba.ChartId, pba.Score, pba.Plate, pba.IsBroken, pba.RecordedDate, pba.Source
+                })
+                .ToArrayAsync(cancellationToken))
+            .Select(pba => (pba.UserId, new RecordedPhoenixScore(pba.ChartId, pba.Score,
+                PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, pba.RecordedDate, pba.Source)))
+            .ToArray();
+    }
+
+    async Task<IReadOnlyList<(Guid UserId, DateTimeOffset LastRecordedAt)>> IScoreReader.GetVerifiedRecordActivity(
+        MixEnum mix, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<PhoenixRecordEntity>()
+                .Where(pba => pba.MixId == mixId
+                              && !pba.IsBroken
+                              && pba.Score != null
+                              && (pba.Source == null || pba.Source == ScoreJournalEntry.OfficialImportSource))
+                .GroupBy(pba => pba.UserId)
+                .Select(g => new { UserId = g.Key, Last = g.Max(pba => pba.RecordedDate) })
+                .ToArrayAsync(cancellationToken))
+            .Select(x => (x.UserId, x.Last))
+            .ToArray();
     }
 
     Task<IEnumerable<ChartScoreAggregate>> IScoreReader.GetChartScoreAggregates(MixEnum mix,

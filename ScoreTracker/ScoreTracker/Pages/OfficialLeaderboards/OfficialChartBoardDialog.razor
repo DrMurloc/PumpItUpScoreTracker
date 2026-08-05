@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
@@ -75,6 +75,7 @@
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
     [Parameter] public Chart? Chart { get; set; }
     [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public bool Supplemented { get; set; }
 
     private const int InitialPlaces = 10;
     private const int PageSize = 25;
@@ -93,17 +94,19 @@
     private int _visible = InitialPlaces;
     private int _pagesShown;
     private Guid _loadedFor;
+    private bool? _loadedSupplemented;
 
     private bool ShowAllNext => _pagesShown >= PagesBeforeShowAll;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!Visible || Chart == null || Chart.Id == _loadedFor) return;
+        if (!Visible || Chart == null || (Chart.Id == _loadedFor && _loadedSupplemented == Supplemented)) return;
         _loadedFor = Chart.Id;
+        _loadedSupplemented = Supplemented;
         _loading = true;
         _visible = InitialPlaces;
         _pagesShown = 0;
-        _board = await Mediator.Send(new GetOfficialChartBoardQuery(Mix, Chart.Id));
+        _board = await Mediator.Send(new GetOfficialChartBoardQuery(Mix, Chart.Id, Supplemented));
         _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
         _rivalIds = await CommunityGlow.GetMyRivalIds(Mix);
         _rivalTags = await CommunityGlow.GetMyRivalTags(Mix);

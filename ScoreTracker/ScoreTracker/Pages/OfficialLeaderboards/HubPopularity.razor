@@ -1,4 +1,4 @@
-@using ApexCharts
+﻿@using ApexCharts
 @using MediatR
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
@@ -148,6 +148,16 @@ else if (!_popularity.Any())
 }
 else
 {
+    @if (Supplemented)
+    {
+        @* Popularity is a play ranking over the site's whole population, not a top-N board
+           with room underneath. There is nothing for us to add, so the reading says so
+           rather than leaving someone to wonder why the switch did nothing. *@
+        <div class="olb-reading-note">
+            <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small"/>
+            <span>@L["Popularity always comes from the official leaderboards. It's ranked on full play data, not on a truncated board, so there's nothing for PIU Scores to add."]</span>
+        </div>
+    }
     @if (!_songsView && _folderLevel == null)
     {
         <div class="olb-pop-extremes">
@@ -362,6 +372,7 @@ else
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public bool Supplemented { get; set; }
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
     private bool _loading = true;

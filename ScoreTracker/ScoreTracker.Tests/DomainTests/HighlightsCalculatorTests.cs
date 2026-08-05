@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScoreTracker.OfficialMirror.Domain;
@@ -34,7 +34,8 @@ public sealed class HighlightsCalculatorTests
         CrossMixRecordHighs? crossMix = null,
         IReadOnlySet<int>? seen = null,
         ScoringConfiguration? scoring = null,
-        MixEnum mix = MixEnum.Phoenix2)
+        MixEnum mix = MixEnum.Phoenix2,
+        bool includeRecordKinds = true)
     {
         return new HighlightsInput(mix, SnapshotId, isBaseline,
             (boards ?? new[] { Pumbility }).ToArray(),
@@ -42,7 +43,7 @@ public sealed class HighlightsCalculatorTests
             previous?.ToArray(),
             (boardRecords ?? Array.Empty<BoardRecordRow>()).ToArray(),
             (folderRecords ?? Array.Empty<FolderRecordRow>()).ToArray(),
-            crossMix, seen, scoring);
+            crossMix, seen, scoring, includeRecordKinds);
     }
 
     [Fact]
@@ -210,6 +211,70 @@ public sealed class HighlightsCalculatorTests
         Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
         var numberOne = Assert.Single(result.Highlights, h => h.Kind == HighlightKinds.NewNumberOne);
         Assert.Equal(7, numberOne.PlayerId);
+    }
+
+    [Fact]
+    public void TheSupplementedReadingClaimsNoRecordKindsAndTouchesNoRecordBook()
+    {
+        // The same week that would fire a new #1 on the official reading. Supplemented, it
+        // fires nothing of the sort: a world first is a fact about what has ever been played
+        // on a chart, and the mirror only knows that about rows piugame published.
+        var board = ChartBoard(level: 26);
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: new[] { new PlacementRow(board.Id, 7, 1, 995000) },
+            previous: new[] { new PlacementRow(board.Id, 9, 1, 962000) },
+            boardRecords: new[] { new BoardRecordRow(board.Id, 962000, 1) },
+            includeRecordKinds: false));
+
+        Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.NewNumberOne);
+        Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.ChartGradeFirst);
+        Assert.DoesNotContain(result.Highlights, h => h.Kind == HighlightKinds.FolderGradeFirst);
+
+        // Nothing to write back either — the books stay single-copy.
+        Assert.Empty(result.UpdatedBoardRecords);
+        Assert.Empty(result.UpdatedFolderRecords);
+    }
+
+    [Fact]
+    public void TheSupplementedReadingStillProducesTheDiffBasedKinds()
+    {
+        // Everything that only needs this snapshot against the previous one keeps working —
+        // which is the whole point of running the calculator twice.
+        var board = ChartBoard(level: 26);
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { Pumbility, board },
+            current: new[]
+            {
+                new PlacementRow(Pumbility.Id, 7, 1, 1040m),
+                new PlacementRow(board.Id, 7, 1, 995000)
+            },
+            previous: new[]
+            {
+                new PlacementRow(Pumbility.Id, 7, 4, 1000m),
+                new PlacementRow(board.Id, 7, 3, 980000)
+            },
+            includeRecordKinds: false));
+
+        Assert.Contains(result.Highlights, h => h.Kind == HighlightKinds.PumbilityMover);
+        Assert.Contains(result.Highlights, h => h.Kind == HighlightKinds.WeeklyPulse);
+        Assert.Contains(result.Highlights, h => h.Kind == HighlightKinds.PumbilityGainer);
+    }
+
+    [Fact]
+    public void TheSupplementedSeriesOwnFirstWeekIsSilent()
+    {
+        // The official snapshot is long past its baseline, but the supplemented reading of it
+        // has never been built. Without its own baseline every linked player debuts at once.
+        var board = ChartBoard();
+        var result = HighlightsCalculator.Calculate(Input(
+            boards: new[] { board },
+            current: new[] { new PlacementRow(board.Id, 1, 1, 990000) },
+            isBaseline: true,
+            seen: new HashSet<int>(),
+            includeRecordKinds: false));
+
+        Assert.Empty(result.Highlights);
     }
 
     [Fact]

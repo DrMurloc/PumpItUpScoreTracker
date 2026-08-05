@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Messaging;
 
 namespace ScoreTracker.OfficialMirror.Contracts.Queries;
@@ -9,4 +9,5 @@ namespace ScoreTracker.OfficialMirror.Contracts.Queries;
 ///     and needs them narrowed by a search term, wants <see cref="SearchOfficialBoardTagsQuery" />.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record GetOfficialPlayerNamesQuery(MixEnum Mix) : IQuery<IReadOnlyList<string>>;
+public sealed record GetOfficialPlayerNamesQuery(MixEnum Mix, bool Supplemented = false)
+    : IQuery<IReadOnlyList<string>>;

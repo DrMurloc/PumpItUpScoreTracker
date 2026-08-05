@@ -489,10 +489,12 @@ else
     </MudGrid>
 }
 
-<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"/>
+<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"
+                          Supplemented="Supplemented"/>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public bool Supplemented { get; set; }
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
     private bool _loading = true;
@@ -504,12 +506,17 @@ else
     private IReadOnlySet<Guid> _rivalIds = new HashSet<Guid>();
     private IReadOnlySet<string> _rivalTags = new HashSet<string>();
 
-    protected override async Task OnInitializedAsync()
+    private bool? _loadedSupplemented;
+
+    protected override async Task OnParametersSetAsync()
     {
+        if (_loadedSupplemented == Supplemented) return;
+        _loadedSupplemented = Supplemented;
+        _loading = true;
         _communityIds = await CommunityGlow.GetMyCommunityMemberIds();
         _rivalIds = await CommunityGlow.GetMyRivalIds(Mix);
         _rivalTags = await CommunityGlow.GetMyRivalTags(Mix);
-        _highlights = await Mediator.Send(new GetWeeklyHighlightsQuery(Mix));
+        _highlights = await Mediator.Send(new GetWeeklyHighlightsQuery(Mix, Supplemented));
         _loading = false;
     }
 

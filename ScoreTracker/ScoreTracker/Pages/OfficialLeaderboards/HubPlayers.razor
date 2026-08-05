@@ -1,4 +1,4 @@
-@using ApexCharts
+﻿@using ApexCharts
 @using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.OfficialMirror.Contracts
@@ -121,8 +121,38 @@ else
         <MudText Typo="Typo.overline" Class="mt-3 d-block">
             @L["Chart board placements"] · @_profile.BoardsInTop
         </MudText>
-        <MudTable T="OfficialPlayerChartRecord" Items="_profile.Placements" Dense="true" Elevation="0"
+
+        @* The rail is the only thing on this table that needs explaining, so it explains itself
+           where it appears rather than in a key somewhere else on the page. It shows up only
+           when there is a marked row to explain. *@
+        @if (_profile.Placements.Any(r => r.IsSupplemented))
+        {
+            <div class="olb-supp-legend">
+                <span class="olb-supp-legend-rail"></span>
+                <span>@L["Rows with this edge come from the player's PIU Scores account, not the official board."]</span>
+            </div>
+        }
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2 flex-wrap">
+            <MudTextField T="string" @bind-Value="_placementFilter" Label="@L["Find a song"]" Immediate="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                          Clearable="true" Style="max-width:260px"/>
+            @* piugame publishes chart boards for level 20 and up, so a lower folder can never
+               hold a placement — the grid greys those out and the ◄ ► steppers skip past them.
+               Co-op is exempt: its folder number is how many players a chart takes, not a
+               difficulty, so every co-op folder is 2 through 5 and all of them have boards. *@
+            <FolderPicker Type="_folderType" Level="_folderLevel" FolderChanged="SetFolder"
+                          IsMissing="Unboarded"></FolderPicker>
+            @if (_folderLevel != null)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="ClearFolder"
+                               aria-label="@L["All Folders"]"></MudIconButton>
+            }
+        </MudStack>
+
+        <MudTable T="OfficialPlayerChartRecord" Items="FilteredPlacements" Dense="true" Elevation="0"
                   Breakpoint="Breakpoint.None" RowsPerPage="25"
+                  RowClassFunc="@((r, _) => r.IsSupplemented ? "olb-row-supp" : string.Empty)"
                   Class="olb-board-table olb-sticky-first olb-pager-tight">
             <HeaderContent>
                 <MudTh Style="text-align:right">
@@ -180,10 +210,12 @@ else
     </MudPaper>
 }
 
-<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"/>
+<OfficialChartBoardDialog @bind-Visible="_boardOpen" Chart="_boardChart" Mix="Mix"
+                          Supplemented="Supplemented"/>
 
 @code {
     [Parameter] public MixEnum Mix { get; set; }
+    [Parameter] public bool Supplemented { get; set; }
     [Parameter] public IDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
 
     // Two-way selection: the hub preselects (Boards links, ?player= deep links) and hears
@@ -223,7 +255,7 @@ else
         _lineOptions = GlanceOptions();
         _rankOptions = GlanceOptions();
         _rankOptions.Yaxis = new List<YAxis> { new() { Reversed = true, DecimalsInFloat = 0 } };
-        _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix))).ToArray();
+        _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix, Supplemented))).ToArray();
 
         // Nothing picked yet: land on your own board tag when the account is linked,
         // otherwise on whoever tops the combined ranking board.
@@ -232,7 +264,7 @@ else
             var defaultTag = CurrentUser.IsLoggedIn
                 ? await Mediator.Send(new GetLinkedOfficialPlayerTagQuery(Mix, CurrentUser.User.Id))
                 : null;
-            defaultTag ??= (await Mediator.Send(new GetOfficialRankingsQuery(Mix, "All")))
+            defaultTag ??= (await Mediator.Send(new GetOfficialRankingsQuery(Mix, "All", Supplemented)))
                 ?.Rankings.FirstOrDefault()?.Player.Username;
             if (!string.IsNullOrWhiteSpace(defaultTag)) await SelectPlayer(defaultTag);
         }
@@ -244,8 +276,21 @@ else
         _boardOpen = true;
     }
 
+    private bool? _loadedSupplemented;
+
     protected override async Task OnParametersSetAsync()
     {
+        // Flipping the reading re-reads the same player rather than resetting the page:
+        // the point of the switch is to see what changes about THEM.
+        if (_loadedSupplemented != null && _loadedSupplemented != Supplemented)
+        {
+            _loadedSupplemented = Supplemented;
+            _names = (await Mediator.Send(new GetOfficialPlayerNamesQuery(Mix, Supplemented))).ToArray();
+            if (!string.IsNullOrWhiteSpace(_selected)) await SelectPlayer(_selected);
+            return;
+        }
+
+        _loadedSupplemented = Supplemented;
         if (!string.IsNullOrWhiteSpace(Selected) && Selected != _selected)
             await SelectPlayer(Selected);
     }
@@ -263,7 +308,7 @@ else
         }
 
         _loadingProfile = true;
-        _profile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username));
+        _profile = await Mediator.Send(new GetOfficialPlayerProfileQuery(Mix, username, Supplemented));
         _pumbilityHistory = _profile?.History
                                 .Where(h => h.Pumbility != null)
                                 .Select(h => new HistoryPoint(h.At.ToLocalTime().ToString("MMM d"),
@@ -283,6 +328,50 @@ else
     private string SongName(OfficialPlayerChartRecord record)
     {
         return Charts.TryGetValue(record.ChartId, out var chart) ? (string)chart.Song.Name : string.Empty;
+    }
+
+    /// <summary>
+    ///     The lowest difficulty piugame ranks. Its chart boards are the "20 and above" window,
+    ///     so nothing below this has a board to place on in either reading.
+    /// </summary>
+    private const int FirstBoardedLevel = 20;
+
+    /// <summary>
+    ///     Folders with no board behind them. Co-op is never one: its folder number counts
+    ///     players (2–5), not difficulty, so comparing it against a difficulty floor would
+    ///     disable the whole tab.
+    /// </summary>
+    private static bool Unboarded(ScoreTracker.SharedKernel.Enums.ChartType type, int level) =>
+        type != ScoreTracker.SharedKernel.Enums.ChartType.CoOp && level < FirstBoardedLevel;
+
+    private string _placementFilter = string.Empty;
+    private ScoreTracker.SharedKernel.Enums.ChartType _folderType =
+        ScoreTracker.SharedKernel.Enums.ChartType.Single;
+    private int? _folderLevel;
+
+    /// <summary>
+    ///     Search matches the song, not the chart: a player looking for "Bee" wants both its
+    ///     singles and its doubles rows, and the difficulty is already a column they can sort.
+    ///     A chart the catalog has no entry for keeps its row while the box is empty and drops
+    ///     out of a search rather than matching everything.
+    /// </summary>
+    private IEnumerable<OfficialPlayerChartRecord> FilteredPlacements =>
+        (_profile?.Placements ?? Array.Empty<OfficialPlayerChartRecord>())
+        .Where(r => string.IsNullOrWhiteSpace(_placementFilter)
+                    || SongName(r).Contains(_placementFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(r => _folderLevel == null
+                    || (Charts.TryGetValue(r.ChartId, out var chart)
+                        && chart.Type == _folderType && chart.Level == _folderLevel));
+
+    private void SetFolder((ScoreTracker.SharedKernel.Enums.ChartType Type, int Level) folder)
+    {
+        _folderType = folder.Type;
+        _folderLevel = folder.Level;
+    }
+
+    private void ClearFolder()
+    {
+        _folderLevel = null;
     }
 
     private sealed record HistoryPoint(string Label, decimal Value);

@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Domain;
 
@@ -21,6 +21,16 @@ internal interface IOfficialPlayerIdentityRepository
     /// </summary>
     Task<string> LinkPlayer(MixEnum mix, string username, Guid userId, DateTimeOffset seenAt,
         CancellationToken ct);
+
+    /// <summary>
+    ///     Resolves game tags to mirror players for the supplemented roll-up: a tag the crawl
+    ///     has never seen gets a row, and an unlinked row gets its account. An existing
+    ///     import-observed link is never overwritten — that one was proved by logging in, this
+    ///     one is inferred from a tag the import wrote — and an existing row's LastSeenAt is
+    ///     left alone, because that column means "seen on a board", not "we looked it up".
+    /// </summary>
+    Task<IReadOnlyList<PlayerDimension>> EnsureGameTagLinks(MixEnum mix,
+        IReadOnlyCollection<(string Username, Guid UserId)> pairs, DateTimeOffset seenAt, CancellationToken ct);
 
     /// <summary>Re-points every mirror player linked to one account onto another (account merges).</summary>
     Task RelinkUser(Guid fromUserId, Guid toUserId, CancellationToken ct);

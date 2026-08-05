@@ -1,10 +1,10 @@
-@page "/OfficialLeaderboards"
+﻿@page "/OfficialLeaderboards"
 @rendermode RenderModes.Interactive
 @inject NavigationManager Navigation
 
 <OfficialSectionFrame Active="week">
     <Body Context="ctx">
-        <HubThisWeek Mix="ctx.Mix" Charts="ctx.Charts"/>
+        <HubThisWeek Mix="ctx.Mix" Supplemented="ctx.Supplemented" Charts="ctx.Charts"/>
     </Body>
 </OfficialSectionFrame>
 

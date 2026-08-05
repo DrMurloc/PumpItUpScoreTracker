@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
@@ -64,6 +64,30 @@ public interface IScoreReader
 
     /// <summary>Users with any recorded best-attempt activity in a mix on or after the cutoff.</summary>
     Task<IReadOnlySet<Guid>> GetActiveUserIds(MixEnum mix, DateTimeOffset since,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Verified, passing current bests for a set of players in a mix — the read behind the
+    ///     supplemented leaderboards. Verified means the record came from an official import,
+    ///     or predates source capture (2026-07) and so is import-derived in all but the
+    ///     unprovable case: a manual or CSV score is a number a human typed and may lower a
+    ///     best, which is not something a public leaderboard should carry.
+    ///     <para>
+    ///         Broken and score-less records are excluded — a board row is a passing score.
+    ///         Callers chunk their player set; the whole mix at once is several hundred
+    ///         thousand rows.
+    ///     </para>
+    /// </summary>
+    Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetVerifiedBests(MixEnum mix,
+        IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Everyone holding a verified, passing record in a mix, with the date of their most
+    ///     recent one — the roster the supplemented leaderboards are drawn from, and the
+    ///     recency that settles a game tag two accounts both claim. One grouped read; the
+    ///     caller decides who is public.
+    /// </summary>
+    Task<IReadOnlyList<(Guid UserId, DateTimeOffset LastRecordedAt)>> GetVerifiedRecordActivity(MixEnum mix,
         CancellationToken cancellationToken = default);
 
     /// <summary>

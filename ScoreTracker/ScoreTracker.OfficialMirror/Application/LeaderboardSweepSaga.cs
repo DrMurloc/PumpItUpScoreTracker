@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -146,15 +146,15 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         var previous = await _snapshots.GetSealedBefore(mix, snapshotId, ct);
         var input = new HighlightsInput(mix, snapshotId, isBaseline,
             await _snapshots.GetBoards(mix, ct),
-            await _snapshots.GetPlacements(snapshotId, ct),
-            previous == null ? null : await _snapshots.GetPlacements(previous.Id, ct),
+            await _snapshots.GetPlacements(snapshotId, PlacementScope.OfficialOnly, ct),
+            previous == null ? null : await _snapshots.GetPlacements(previous.Id, PlacementScope.OfficialOnly, ct),
             await _records.GetBoardRecords(mix, ct),
             await _records.GetFolderRecords(mix, ct),
             await _records.GetCrossMixHighs(mix, ct),
-            await _snapshots.GetSeenPlayerIds(mix, snapshotId, ct),
+            await _snapshots.GetSeenPlayerIds(mix, snapshotId, PlacementScope.OfficialOnly, ct),
             ScoringConfiguration.PumbilityScoring(mix, false));
         var result = HighlightsCalculator.Calculate(input);
-        await _records.WriteHighlights(snapshotId, mix, result.Highlights, ct);
+        await _records.WriteHighlights(snapshotId, mix, result.Highlights, false, ct);
         await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
         await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
         _logger.LogInformation("{Mix} snapshot {SnapshotId}: {Count} highlights", mix, snapshotId,
@@ -216,12 +216,12 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         var isFirst = true;
         foreach (var run in runs)
         {
-            var current = await _snapshots.GetPlacements(run.Id, ct);
+            var current = await _snapshots.GetPlacements(run.Id, PlacementScope.OfficialOnly, ct);
             var input = new HighlightsInput(mix, run.Id, isFirst || run.IsBaseline, boards, current, previous,
                 await _records.GetBoardRecords(mix, ct), await _records.GetFolderRecords(mix, ct), crossMix,
                 seen, scoring);
             var result = HighlightsCalculator.Calculate(input);
-            await _records.WriteHighlights(run.Id, mix, result.Highlights, ct);
+            await _records.WriteHighlights(run.Id, mix, result.Highlights, false, ct);
             await _records.UpsertBoardRecords(result.UpdatedBoardRecords, ct);
             await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
             foreach (var placement in current) seen.Add(placement.PlayerId);

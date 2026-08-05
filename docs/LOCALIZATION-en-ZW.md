@@ -135,6 +135,15 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Feed | Glorgmorg | Recovered from the existing "Feeds" entry. |
 | Board | Mrglblarg | Plural `Grrglplgl`. Distinct from `Mrglrmrgl` (Leaderboard). |
 | Shared | Murpro | Recovered from the existing "One shared board" entry. |
+| Supplement / Supplemented | Blurgmorglmrgl | Coined 2026-08-04 for the supplemented leaderboard reading. |
+| Roll up | Mrgloru | Coined 2026-08-04 — the weekly gather, not a rolling motion. |
+| Snapshot | Barglub | Coined 2026-08-04. |
+| Data | Gru | Coined 2026-08-04. |
+| From | Blarg | Coined 2026-08-04. |
+| Find | Grubmarg | Coined 2026-08-04. |
+| Row / Rows | Grolgub | Coined 2026-08-04. |
+| Edge | Bralmo | Coined 2026-08-04 for the supplemented-row legend. |
+
 
 ### Difficulty and intensity
 

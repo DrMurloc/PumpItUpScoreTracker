@@ -2136,6 +2136,9 @@
   <data name="Find a player" xml:space="preserve">
     <value>플레이어 찾기</value>
   </data>
+  <data name="Find a song" xml:space="preserve">
+    <value>곡 검색</value>
+  </data>
   <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
     <value>노래 찾기 — 예: Iolite Sky</value>
   </data>
@@ -2255,6 +2258,9 @@
   </data>
   <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
     <value>유사도 그래프에서 — 근거 가중치 기반, 매일 밤 재계산.</value>
+  </data>
+  <data name="From their PIU Scores account, not the official board" xml:space="preserve">
+    <value>공식 보드가 아닌 PIU Scores 계정에서</value>
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>{0}부터</value>
@@ -4335,6 +4341,9 @@
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>PIU Scores 공식 미러</value>
   </data>
+  <data name="PIU Scores Supplemented" xml:space="preserve">
+    <value>PIU Scores 보완</value>
+  </data>
   <data name="PIU Scores tools" xml:space="preserve">
     <value>PIU Scores 도구</value>
   </data>
@@ -4511,6 +4520,9 @@
   </data>
   <data name="Popularity" xml:space="preserve">
     <value>인기</value>
+  </data>
+  <data name="Popularity always comes from the official leaderboards. It's ranked on full play data, not on a truncated board, so there's nothing for PIU Scores to add." xml:space="preserve">
+    <value>인기도는 항상 공식 리더보드에서 가져옵니다. 잘린 보드가 아니라 전체 플레이 데이터로 순위가 매겨지므로 PIU Scores가 더할 것이 없습니다.</value>
   </data>
   <data name="Popularity in {0}" xml:space="preserve">
     <value>{0} 내 인기 순위</value>
@@ -4735,9 +4747,6 @@
        게임 내 밈이므로 모든 로케일 공통, 번역하지 않음. -->
   <data name="Ranked by" xml:space="preserve">
     <value>정렬 기준</value>
-  </data>
-  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
-    <value>미러링된 채보 보드 기반 계산 레이팅 순위입니다 - 이 시리즈에는 공식 PUMBILITY 보드가 없습니다.</value>
   </data>
   <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
     <value>매주 미러링되는 공식 PUMBILITY 보드 기준 순위입니다.</value>
@@ -5057,6 +5066,9 @@
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>랜덤마이저로 채보를 뽑고, 오락실에서 브래킷과 카드 드래프트를 운영하고, 라이브 뷰를 공유해 현장 전체 — 또는 방송 — 가 라운드를 따라오게 하세요.</value>
   </data>
+  <data name="Roll up supplemented leaderboards" xml:space="preserve">
+    <value>보완 리더보드 집계</value>
+  </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>이번 주 보드를 지금 교체할까요? 현재 주가 마감되고 다음 세트가 뽑힙니다.</value>
   </data>
@@ -5065,6 +5077,9 @@
   </data>
   <data name="Rotation started." xml:space="preserve">
     <value>교체를 시작했습니다.</value>
+  </data>
+  <data name="Rows with this edge come from the player's PIU Scores account, not the official board." xml:space="preserve">
+    <value>이 테두리가 있는 행은 공식 보드가 아니라 해당 플레이어의 PIU Scores 계정에서 가져온 것입니다.</value>
   </data>
   <data name="Rules" xml:space="preserve">
     <value>규칙</value>
@@ -5860,6 +5875,9 @@
   </data>
   <data name="Suggested · Title Hunt" xml:space="preserve">
     <value>추천 · 칭호 사냥</value>
+  </data>
+  <data name="Supplemented roll-up queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>보완 집계 대기 중 - 최신 스냅샷에 다시 연결됩니다</value>
   </data>
   <data name="Supported Formats" xml:space="preserve">
     <value>지원 형식</value>
@@ -7645,6 +7663,9 @@
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0}명</value>
+  </data>
+  <data name="{0} players added · {1} scores, rolled up {2}" xml:space="preserve">
+    <value>플레이어 {0}명 추가 · 점수 {1}개, {2} 집계</value>
   </data>
   <data name="{0} players found" xml:space="preserve">
     <value>플레이어 {0}명 발견</value>

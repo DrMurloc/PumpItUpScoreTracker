@@ -2136,6 +2136,9 @@
   <data name="Find a player" xml:space="preserve">
     <value>Buscar jogador</value>
   </data>
+  <data name="Find a song" xml:space="preserve">
+    <value>Buscar uma música</value>
+  </data>
   <data name="Find a song — e.g. Iolite Sky" xml:space="preserve">
     <value>Procure uma música — ex. Iolite Sky</value>
   </data>
@@ -2255,6 +2258,9 @@
   </data>
   <data name="From the similarity graph — evidence-weighted, rebuilt nightly." xml:space="preserve">
     <value>Do grafo de similaridade — ponderado por evidências, recalculado toda noite.</value>
+  </data>
+  <data name="From their PIU Scores account, not the official board" xml:space="preserve">
+    <value>Da conta PIU Scores deles, não da classificação oficial</value>
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>A partir de {0}</value>
@@ -4335,6 +4341,9 @@
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>espelho oficial do PIU Scores</value>
   </data>
+  <data name="PIU Scores Supplemented" xml:space="preserve">
+    <value>Complementado com PIU Scores</value>
+  </data>
   <data name="PIU Scores tools" xml:space="preserve">
     <value>Ferramentas do PIU Scores</value>
   </data>
@@ -4511,6 +4520,9 @@
   </data>
   <data name="Popularity" xml:space="preserve">
     <value>Popularidade</value>
+  </data>
+  <data name="Popularity always comes from the official leaderboards. It's ranked on full play data, not on a truncated board, so there's nothing for PIU Scores to add." xml:space="preserve">
+    <value>A popularidade sempre vem das classificações oficiais. Ela é ordenada pelos dados completos de jogo, não por um quadro truncado, então PIU Scores não tem nada a acrescentar.</value>
   </data>
   <data name="Popularity in {0}" xml:space="preserve">
     <value>Popularidade em {0}</value>
@@ -4735,9 +4747,6 @@
        meme do jogo: termo universal, não se traduz. -->
   <data name="Ranked by" xml:space="preserve">
     <value>Classificado por</value>
-  </data>
-  <data name="Ranked by computed rating over the mirrored chart boards - this mix has no official PUMBILITY board." xml:space="preserve">
-    <value>Classificado pelo rating calculado sobre os placares espelhados - esta versão não tem placar PUMBILITY oficial.</value>
   </data>
   <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
     <value>Classificado pelo placar PUMBILITY oficial, espelhado semanalmente.</value>
@@ -5057,6 +5066,9 @@
   <data name="Roll charts with the randomizer, run brackets and card drafts at your local, and share a live view so the whole venue — or the stream — can follow the round." xml:space="preserve">
     <value>Sorteie charts com o randomizer, rode brackets e drafts de cartas no seu local, e compartilhe uma visão ao vivo para que todo o fliperama — ou a stream — acompanhe a rodada.</value>
   </data>
+  <data name="Roll up supplemented leaderboards" xml:space="preserve">
+    <value>Compilar classificações complementadas</value>
+  </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>Girar o quadro desta semana agora? Isso fecha a semana atual e sorteia o próximo conjunto.</value>
   </data>
@@ -5065,6 +5077,9 @@
   </data>
   <data name="Rotation started." xml:space="preserve">
     <value>Rotação iniciada.</value>
+  </data>
+  <data name="Rows with this edge come from the player's PIU Scores account, not the official board." xml:space="preserve">
+    <value>As linhas com esta borda vêm da conta PIU Scores do jogador, não da classificação oficial.</value>
   </data>
   <data name="Rules" xml:space="preserve">
     <value>Regras</value>
@@ -5860,6 +5875,9 @@
   </data>
   <data name="Suggested · Title Hunt" xml:space="preserve">
     <value>Sugeridos · Caça aos títulos</value>
+  </data>
+  <data name="Supplemented roll-up queued - re-attaches to the latest snapshot" xml:space="preserve">
+    <value>Compilação complementada na fila - reanexa ao último instantâneo</value>
   </data>
   <data name="Supported Formats" xml:space="preserve">
     <value>Formatos suportados</value>
@@ -7645,6 +7663,9 @@
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0} jogadores</value>
+  </data>
+  <data name="{0} players added · {1} scores, rolled up {2}" xml:space="preserve">
+    <value>{0} jogadores adicionados · {1} pontuações, compilado em {2}</value>
   </data>
   <data name="{0} players found" xml:space="preserve">
     <value>{0} jogadores encontrados</value>

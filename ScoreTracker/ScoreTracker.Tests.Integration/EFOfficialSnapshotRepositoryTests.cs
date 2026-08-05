@@ -1,4 +1,4 @@
-using ScoreTracker.OfficialMirror.Domain;
+﻿using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.Integration.Fixtures;
@@ -97,8 +97,8 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
 
         await snapshots.PurgeUnsealed(MixEnum.Phoenix2, Week1.AddDays(-7), CancellationToken.None);
 
-        Assert.Empty(await snapshots.GetPlacements(staleId, CancellationToken.None));
-        Assert.Single(await snapshots.GetPlacements(kept.snapshotId, CancellationToken.None),
+        Assert.Empty(await snapshots.GetPlacements(staleId, PlacementScope.OfficialOnly, CancellationToken.None));
+        Assert.Single(await snapshots.GetPlacements(kept.snapshotId, PlacementScope.OfficialOnly, CancellationToken.None),
             p => p.Place == 1);
         Assert.Equal(kept.snapshotId, (await snapshots.GetLatestSealed(MixEnum.Phoenix2, CancellationToken.None))!.Id);
     }
@@ -186,9 +186,9 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
                 "Double", 26, null, 995000, null, null),
             new HighlightRow(HighlightKinds.PumbilityMover, 1, bob.Id, null, null, null, null, null, null,
                 17418.45m, 26, 18)
-        }, CancellationToken.None);
+        }, false, CancellationToken.None);
 
-        var highlights = await records.GetHighlights(snapshotId, CancellationToken.None);
+        var highlights = await records.GetHighlights(snapshotId, false, CancellationToken.None);
 
         Assert.Equal(2, highlights.Count);
         var mover = highlights.Single(h => h.Kind == HighlightKinds.PumbilityMover);
@@ -231,11 +231,11 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
 
         await Identity().MergePlayers(oldPlayer.Id, survivor.Id, CancellationToken.None);
 
-        var week2 = await snapshots.GetPlacements(week2Id, CancellationToken.None);
+        var week2 = await snapshots.GetPlacements(week2Id, PlacementScope.OfficialOnly, CancellationToken.None);
         Assert.Equal(2, week2.Count);
         Assert.All(week2, p => Assert.Equal(survivor.Id, p.PlayerId));
         Assert.Equal(1, week2.Single(p => p.LeaderboardId == board.Id).Place);
-        var week1 = await snapshots.GetPlacements(week1Id, CancellationToken.None);
+        var week1 = await snapshots.GetPlacements(week1Id, PlacementScope.OfficialOnly, CancellationToken.None);
         Assert.All(week1.Where(p => p.Place == 1), p => Assert.Equal(survivor.Id, p.PlayerId));
         Assert.DoesNotContain(await snapshots.GetPlayers(MixEnum.Phoenix2, CancellationToken.None),
             p => p.Id == oldPlayer.Id);
@@ -291,7 +291,7 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
             new PlacementRow(week2.board.Id, week2.alice.Id, 1, 999000)
         }, CancellationToken.None);
 
-        var timeline = await snapshots.GetPlayerTimeline(week2.alice.Id, CancellationToken.None);
+        var timeline = await snapshots.GetPlayerTimeline(week2.alice.Id, PlacementScope.OfficialOnly, CancellationToken.None);
 
         Assert.Equal(2, timeline.Count);
         Assert.Equal(week1.snapshotId, timeline[0].SnapshotId);

@@ -310,7 +310,15 @@ public sealed class E2ESeedData
             ChartType = "Double",
             Level = 26
         };
-        context.Set<OfficialLeaderboardEntity>().Add(board);
+        // The rankings read the mirrored PUMBILITY board and nothing else — a snapshot
+        // without one ranks nobody by design, so the seed has to carry it.
+        var pumbility = new OfficialLeaderboardEntity
+        {
+            MixId = PhoenixMixId,
+            LeaderboardType = "Rating",
+            Name = "PUMBILITY"
+        };
+        context.Set<OfficialLeaderboardEntity>().AddRange(board, pumbility);
         var champion = new OfficialPlayerEntity
             { MixId = PhoenixMixId, Username = "E2ECHAMP", LastSeenAt = sealedAt };
         var runnerUp = new OfficialPlayerEntity
@@ -328,6 +336,16 @@ public sealed class E2ESeedData
             {
                 SnapshotId = snapshot.Id, LeaderboardId = board.Id, PlayerId = runnerUp.Id, Place = 2,
                 Score = 995_000
+            },
+            new OfficialLeaderboardPlacementEntity
+            {
+                SnapshotId = snapshot.Id, LeaderboardId = pumbility.Id, PlayerId = champion.Id, Place = 1,
+                Score = 1_040.25m
+            },
+            new OfficialLeaderboardPlacementEntity
+            {
+                SnapshotId = snapshot.Id, LeaderboardId = pumbility.Id, PlayerId = runnerUp.Id, Place = 2,
+                Score = 1_012.80m
             });
         context.Set<OfficialWeeklyHighlightEntity>().Add(new OfficialWeeklyHighlightEntity
         {
