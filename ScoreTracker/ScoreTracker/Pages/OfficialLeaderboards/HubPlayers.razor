@@ -137,7 +137,11 @@ else
             <MudTextField T="string" @bind-Value="_placementFilter" Label="@L["Find a song"]" Immediate="true"
                           Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
                           Clearable="true" Style="max-width:260px"/>
-            <FolderPicker Type="_folderType" Level="_folderLevel" FolderChanged="SetFolder"></FolderPicker>
+            @* piugame publishes chart boards for level 20 and up, so a folder below that can
+               never hold a placement — the grid greys those out and the ◄ ► steppers skip
+               straight past them. *@
+            <FolderPicker Type="_folderType" Level="_folderLevel" FolderChanged="SetFolder"
+                          IsMissing="(_, level) => level < FirstBoardedLevel"></FolderPicker>
             @if (_folderLevel != null)
             {
                 <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="ClearFolder"
@@ -324,6 +328,12 @@ else
     {
         return Charts.TryGetValue(record.ChartId, out var chart) ? (string)chart.Song.Name : string.Empty;
     }
+
+    /// <summary>
+    ///     The lowest level piugame ranks. Its chart boards are the "20 and above" window, so
+    ///     nothing below this has a board to place on in either reading.
+    /// </summary>
+    private const int FirstBoardedLevel = 20;
 
     private string _placementFilter = string.Empty;
     private ScoreTracker.SharedKernel.Enums.ChartType _folderType =
