@@ -171,8 +171,12 @@ public static class Phoenix2TitleList
         // players wearing them on the live PUMBILITY ranking (Phoenix2PumbilityTitleReconTests).
         // BRONZE..ALEXANDRITE confirmed 2026-07-23 by worn titles whose lowest wearer sits just
         // above each threshold (SILVER@12,804 .. ALEXANDRITE@19,047 for the 12500..19000 rungs).
-        // The 20000 tier exists on title.php but is still unreached (top of board ~19,640), so its
-        // name stays masked — re-run the recon to reveal it once someone earns it.
+        // The 20000 capstone was revealed 2026-08-04, the day FEFEMZ#1489 cleared it at 20,000.92
+        // and became its only wearer. It drops the [P.B] prefix, exactly as SINGLE/DOUBLE MASTER
+        // do at the top of their own ladders; its rail comes from the pool, not the name, so it
+        // still draws as the eighth gem. The site's string carries a trailing space
+        // ("ABYSS ABSOLUTE ", 15 chars on both the ranking and title.php's 15-"?" mask) — Name
+        // trims it, and the two surfaces agree on the rest character for character.
         new Phoenix2PumbilityTitle("[P.B] BRONZE", PumbilityPool.Total, 10000),
         new Phoenix2PumbilityTitle("[P.B] SILVER", PumbilityPool.Total, 12500),
         new Phoenix2PumbilityTitle("[P.B] GOLD", PumbilityPool.Total, 15000),
@@ -180,7 +184,7 @@ public static class Phoenix2TitleList
         new Phoenix2PumbilityTitle("[P.B] DIAMOND", PumbilityPool.Total, 17000),
         new Phoenix2PumbilityTitle("[P.B] RED BERYL", PumbilityPool.Total, 18000),
         new Phoenix2PumbilityTitle("[P.B] ALEXANDRITE", PumbilityPool.Total, 19000),
-        new Phoenix2PumbilityTitle("[P.B] ??? 20000", PumbilityPool.Total, 20000),
+        new Phoenix2PumbilityTitle("ABYSS ABSOLUTE", PumbilityPool.Total, 20000),
 
         // ---- Skill ladders (chart + grade) ----
         new Phoenix2ChartGradeTitle("[TWIST S] LV.1", "TWIST S", "Scorpion King", ChartType.Single, 15, PhoenixLetterGrade.SSS),
