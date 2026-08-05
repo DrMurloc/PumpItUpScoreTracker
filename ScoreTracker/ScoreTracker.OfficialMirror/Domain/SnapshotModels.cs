@@ -1,3 +1,5 @@
+using ScoreTracker.SharedKernel.Enums;
+
 namespace ScoreTracker.OfficialMirror.Domain;
 
 /// <summary>
@@ -36,8 +38,22 @@ internal sealed record HighlightRow(string Kind, int SortOrder, int? PlayerId, i
     int? LeaderboardId, Guid? ChartId, string? ChartType, int? Level, string? GradeBand,
     decimal? Score, decimal? PrevValue, decimal? NewValue);
 
+/// <summary>
+///     A detected likely rename.
+///     <para>
+///         <paramref name="Mix" /> is null on a freshly detected proposal and set once it has been
+///         read back from storage — the same lifecycle <paramref name="Id" /> already expresses by
+///         being 0 until written. The detector is mix-agnostic (it compares two snapshots that are
+///         a mix's by construction) and the sweep supplies the mix on write; a reader accepting a
+///         proposal by id needs it back, to say which boards the rename happened on.
+///     </para>
+/// </summary>
 internal sealed record RenameProposal(int Id, int OldPlayerId, int NewPlayerId, string OldUsername,
-    string NewUsername, bool AvatarMatched, int Top50Overlap, string Status, int CreatedSnapshotId);
+    string NewUsername, bool AvatarMatched, int Top50Overlap, string Status, int CreatedSnapshotId,
+    MixEnum? Mix = null);
+
+/// <summary>One player's place and score on one chart's board.</summary>
+internal sealed record PlayerChartPlacement(int PlayerId, Guid ChartId, int Place, decimal Score);
 
 /// <summary>A placement joined with its board's dimension — the hub read shape.</summary>
 internal sealed record PlacementDetail(int PlayerId, int LeaderboardId, string LeaderboardType, string BoardName,

@@ -163,6 +163,15 @@
                 </div>
             }
             <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption" Class="chart-details-piucenter">@L["View full chart on PIU Center"]</MudLink>
+            @* The chart page's board, unchanged — the dialog is the third host of one component
+               rather than a third leaderboard. Active follows Visible so a dialog nobody has
+               opened issues no queries, which matters here: ten call sites render this. *@
+            <div class="chart-details-board">
+                <MudText Typo="Typo.overline">@L["Leaderboard"]</MudText>
+                <ChartLeaderboardScopes ChartId="Chart.Id" Mix="Mix" Active="Visible"
+                                        InitialScope="BoardScope"
+                                        @key="(Chart.Id, Mix)"></ChartLeaderboardScopes>
+            </div>
             @* Reserved slot: chart comments land here if user-generated content ever ships. *@
         }
     </DialogContent>
@@ -339,6 +348,14 @@
     [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
 
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>
+    ///     Which board the embedded leaderboard opens on. The sessions page passes Competitive
+    ///     Peers — that is the cohort the row's score colour came from, so opening there makes
+    ///     the colour auditable instead of asserted. Everywhere else wants World.
+    /// </summary>
+    [Parameter] public ChartLeaderboardScopes.LeaderboardScope BoardScope { get; set; } =
+        ChartLeaderboardScopes.LeaderboardScope.World;
 
     /// <summary>
     ///     Opt-in: start the video on open. Callers that reach this dialog through a play badge

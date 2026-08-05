@@ -408,11 +408,11 @@ internal sealed class RecapSaga :
         var tiers = new[]
         {
             eligible.Where(id => communityMembers.Contains(id) &&
-                                 InRange(id, RivalMatcher.CommunityCompetitiveRange)).ToArray(),
+                                 InRange(id, RecapPeerMatcher.CommunityCompetitiveRange)).ToArray(),
             eligible.Where(id => countryMembers.Contains(id) && !communityMembers.Contains(id) &&
-                                 InRange(id, RivalMatcher.CompetitiveRange)).ToArray(),
+                                 InRange(id, RecapPeerMatcher.CompetitiveRange)).ToArray(),
             eligible.Where(id => !communityMembers.Contains(id) && !countryMembers.Contains(id) &&
-                                 InRange(id, RivalMatcher.CompetitiveRange)).ToArray()
+                                 InRange(id, RecapPeerMatcher.CompetitiveRange)).ToArray()
         };
 
         var myTop50 = await GetTop50Set(mix, userId, type, refresh: true, cancellationToken);
@@ -420,11 +420,11 @@ internal sealed class RecapSaga :
         foreach (var tier in tiers)
         {
             if (picked.Count >= 3) break;
-            var candidates = new List<RivalMatcher.Candidate>();
+            var candidates = new List<RecapPeerMatcher.Candidate>();
             foreach (var candidateId in tier)
-                candidates.Add(new RivalMatcher.Candidate(candidateId, levelByUser[candidateId],
+                candidates.Add(new RecapPeerMatcher.Candidate(candidateId, levelByUser[candidateId],
                     await GetTop50Set(mix, candidateId, type, refresh: false, cancellationToken)));
-            picked.AddRange(RivalMatcher.PickRivals(myTop50, myLevel, candidates, 3 - picked.Count)
+            picked.AddRange(RecapPeerMatcher.PickPeers(myTop50, myLevel, candidates, 3 - picked.Count)
                 .Select(r => new RecapRival(r.Candidate.UserId,
                     shared.UserNames.GetValueOrDefault(r.Candidate.UserId, "another player"),
                     r.Candidate.CompetitiveLevel, r.Overlap)));

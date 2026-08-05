@@ -2339,6 +2339,40 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("PlayerFolderLevel", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerHighlightEntity", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SchemaVersion")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("UserId", "MixId", "OccurredAt");
+
+                    b.ToTable("PlayerHighlight", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.PlayerProgress.Infrastructure.Entities.PlayerHistoryEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -2834,6 +2868,82 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("UserId", "Name");
 
                     b.ToTable("UserRandomSettings", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Rivals.Infrastructure.Entities.RivalBlockEntity", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BlockedUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("UserId", "BlockedUserId");
+
+                    b.HasIndex("BlockedUserId");
+
+                    b.ToTable("RivalBlock", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Rivals.Infrastructure.Entities.RivalEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AddedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TargetTag")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("TargetUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TargetTag");
+
+                    b.HasIndex("TargetUserId");
+
+                    b.HasIndex("OwnerUserId", "TargetTag")
+                        .IsUnique()
+                        .HasFilter("[TargetTag] IS NOT NULL");
+
+                    b.HasIndex("OwnerUserId", "TargetUserId")
+                        .IsUnique()
+                        .HasFilter("[TargetUserId] IS NOT NULL");
+
+                    b.ToTable("Rival", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.Rivals.Infrastructure.Entities.RivalInviteCodeEntity", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("RivalInviteCode", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.BestAttemptEntity", b =>

@@ -143,8 +143,13 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                     {
                         if (!seen.Add(score.ProfileName)) continue;
 
+                        // Null flows on a parse miss rather than being replaced by the stock
+                        // avatar: EnsurePlayers writes any non-null incoming picture, so
+                        // substituting here overwrote a good mirrored avatar with a placeholder.
+                        // The rating-board path below already let null through; this is the two
+                        // paths agreeing.
                         entries.Add(new OfficialChartLeaderboardEntry(score.ProfileName, chart, score.Score,
-                            await MirrorAvatar(score.AvatarUrl, avatarCache, cancellationToken) ?? DefaultAvatar));
+                            await MirrorAvatar(score.AvatarUrl, avatarCache, cancellationToken)));
                         added++;
                     }
 
@@ -267,9 +272,6 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             ? Task.CompletedTask
             : Task.Delay(_configuration.SweepRequestDelayMilliseconds, cancellationToken);
     }
-
-    private static readonly Uri DefaultAvatar =
-        new("https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png");
 
     public async Task<string> SignIn(MixEnum mix, string username, string password,
         CancellationToken cancellationToken)

@@ -153,6 +153,12 @@
   <data name="(Optional) Also delete historical data" xml:space="preserve">
     <value>(선택) 이력 데이터도 삭제</value>
   </data>
+  <data name="* Official board data, as of {0}." xml:space="preserve">
+    <value>* 공식 보드 데이터, {0} 기준.</value>
+  </data>
+  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
+    <value>* 공식 보드 데이터, {0} 기준. 보드는 레벨 20 이상만 다룹니다.</value>
+  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>데일리 스텝 {1} {2} **#{0}**</value>
   </data>
@@ -348,6 +354,9 @@
   <data name="A miss. In practice: straight to zero." xml:space="preserve">
     <value>Miss. 사실상 0 직행.</value>
   </data>
+  <data name="A new code stops the old link working. People who already added you stay — remove them from Rivals of you." xml:space="preserve">
+    <value>새 코드를 만들면 이전 링크는 작동하지 않습니다. 이미 추가한 사람은 그대로 남으니 '나를 라이벌로 등록한 사람'에서 삭제하세요.</value>
+  </data>
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>배율 상한에서의 Perfect.</value>
   </data>
@@ -423,6 +432,12 @@
   <data name="Add a public source repository and your Discord handle, then check the link. Until then invite links and listing are closed." xml:space="preserve">
     <value>공개 소스 저장소와 Discord 핸들을 추가한 뒤 링크를 확인하세요. 그전까지는 초대 링크와 목록 등록이 막혀 있습니다.</value>
   </data>
+  <data name="Add a rival" xml:space="preserve">
+    <value>라이벌 추가</value>
+  </data>
+  <data name="Add as rival" xml:space="preserve">
+    <value>라이벌로 추가</value>
+  </data>
   <data name="Add photo" xml:space="preserve">
     <value>사진 추가</value>
   </data>
@@ -450,6 +465,9 @@
   <data name="Add widgets to this page in edit mode." xml:space="preserve">
     <value>편집 모드에서 이 페이지에 위젯을 추가하세요.</value>
   </data>
+  <data name="Add {0} as a rival" xml:space="preserve">
+    <value>{0} 을(를) 라이벌로 추가</value>
+  </data>
   <data name="Added" xml:space="preserve">
     <value>추가됨</value>
   </data>
@@ -458,6 +476,15 @@
   </data>
   <data name="Added to ToDo List!" xml:space="preserve">
     <value>목표 목록에 추가됨!</value>
+  </data>
+  <data name="Added you {0}" xml:space="preserve">
+    <value>{0} 에 추가함</value>
+  </data>
+  <data name="Added you {0} · you rival them too" xml:space="preserve">
+    <value>{0} 에 추가함 — 나도 상대를 라이벌로 등록함</value>
+  </data>
+  <data name="Added {0}" xml:space="preserve">
+    <value>{0} 에 추가함</value>
   </data>
   <data name="Additional Comments" xml:space="preserve">
     <value>추가 의견</value>
@@ -732,6 +759,9 @@
   <data name="Back to community" xml:space="preserve">
     <value>커뮤니티로 돌아가기</value>
   </data>
+  <data name="Back to rivals" xml:space="preserve">
+    <value>라이벌로 돌아가기</value>
+  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>티어리스트로 돌아가기</value>
   </data>
@@ -740,6 +770,9 @@
   </data>
   <data name="Backfill" xml:space="preserve">
     <value>백필</value>
+  </data>
+  <data name="Backfill Highlights" xml:space="preserve">
+    <value>하이라이트 백필</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>BAD</value>
@@ -846,14 +879,32 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>선택한 채보 연결</value>
   </data>
+  <data name="Block" xml:space="preserve">
+    <value>차단</value>
+  </data>
   <data name="Block this tool" xml:space="preserve">
     <value>이 도구 차단</value>
+  </data>
+  <data name="Blocked" xml:space="preserve">
+    <value>차단됨</value>
+  </data>
+  <data name="Blocked {0} · neither of you can rival the other" xml:space="preserve">
+    <value>{0} 차단됨 — 서로 라이벌로 등록할 수 없습니다</value>
+  </data>
+  <data name="Blocked. Neither of you can rival the other." xml:space="preserve">
+    <value>차단했습니다. 서로 라이벌로 등록할 수 없습니다.</value>
   </data>
   <data name="Board" xml:space="preserve">
     <value>보드</value>
   </data>
+  <data name="Board only" xml:space="preserve">
+    <value>보드 전용</value>
+  </data>
   <data name="Boards" xml:space="preserve">
     <value>보드</value>
+  </data>
+  <data name="Boards you're both on" xml:space="preserve">
+    <value>둘 다 오른 보드</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>보스 브레이커</value>
@@ -1299,6 +1350,9 @@
   <data name="Compact" xml:space="preserve">
     <value>컴팩트</value>
   </data>
+  <data name="Compare" xml:space="preserve">
+    <value>비교</value>
+  </data>
   <data name="Compare in folder" xml:space="preserve">
     <value>폴더 내 비교</value>
   </data>
@@ -1434,6 +1488,9 @@
   <data name="Copy your key now" xml:space="preserve">
     <value>지금 키를 복사하세요</value>
   </data>
+  <data name="Copying existing highlights into the new feed store." xml:space="preserve">
+    <value>기존 하이라이트를 새 피드 저장소로 복사하는 중입니다.</value>
+  </data>
   <data name="Could not create the invite link." xml:space="preserve">
     <value>초대 링크를 생성할 수 없습니다.</value>
   </data>
@@ -1532,6 +1589,9 @@
   </data>
   <data name="Credential security" xml:space="preserve">
     <value>자격 증명 보안</value>
+  </data>
+  <data name="Crew" xml:space="preserve">
+    <value>크루</value>
   </data>
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>패드 이동</value>
@@ -2109,6 +2169,9 @@
   <data name="Folder Cleared" xml:space="preserve">
     <value>폴더 클리어</value>
   </data>
+  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
+    <value>폴더 비교, 칭호, 진행도는 piuscores 계정이 필요합니다. {0} 이(가) 임포트하면 여기에 표시됩니다.</value>
+  </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>폴더 완료율</value>
   </data>
@@ -2235,6 +2298,9 @@
   <data name="generous to score once you're through" xml:space="preserve">
     <value>클리어만 하면 점수는 후하게 나옵니다</value>
   </data>
+  <data name="Get a new code" xml:space="preserve">
+    <value>새 코드 받기</value>
+  </data>
   <data name="Get told when someone plays" xml:space="preserve">
     <value>플레이 소식 받기</value>
   </data>
@@ -2258,6 +2324,9 @@
   </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>삭제로 이동</value>
+  </data>
+  <data name="Go to Rivals" xml:space="preserve">
+    <value>라이벌로 이동</value>
   </data>
   <data name="Go to the console" xml:space="preserve">
     <value>콘솔로 가기</value>
@@ -2309,6 +2378,9 @@
   </data>
   <data name="Greats" xml:space="preserve">
     <value>그레이트</value>
+  </data>
+  <data name="Green marks a rival who's also in one of your communities." xml:space="preserve">
+    <value>초록색은 내 커뮤니티에도 속한 라이벌을 표시합니다.</value>
   </data>
   <data name="Grind" xml:space="preserve">
     <value>지속 구간</value>
@@ -2369,6 +2441,9 @@
   </data>
   <data name="Hide Chart for this Category" xml:space="preserve">
     <value>이 카테고리에서 채보 숨기기</value>
+  </data>
+  <data name="Hide players whose level sat outside this chart's range" xml:space="preserve">
+    <value>이 차트 범위 밖이었던 플레이어 숨기기</value>
   </data>
   <data name="Hide Record-less Charts" xml:space="preserve">
     <value>기록 없는 채보 숨기기</value>
@@ -2652,6 +2727,9 @@
   <data name="Include my own wins" xml:space="preserve">
     <value>내 성과도 포함</value>
   </data>
+  <data name="Include my rivals" xml:space="preserve">
+    <value>내 라이벌 포함</value>
+  </data>
   <data name="Input Json" xml:space="preserve">
     <value>JSON 입력</value>
   </data>
@@ -2700,6 +2778,9 @@
   <data name="invited you to connect" xml:space="preserve">
     <value>님이 연결을 초대했습니다</value>
   </data>
+  <data name="invites you to track them as a rival" xml:space="preserve">
+    <value>님이 나를 라이벌로 등록하도록 초대했습니다</value>
+  </data>
   <data name="IsBroken" xml:space="preserve">
     <value>IsBroken</value>
   </data>
@@ -2711,6 +2792,9 @@
   </data>
   <data name="It is not limited to reading scores, and I can't limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
     <value>점수 읽기로 제한되지 않으며, 제가 제한할 수도 없습니다. 키는 piugame.com이 만료시킬 때까지 유효합니다.</value>
+  </data>
+  <data name="It may have been replaced by a newer one. Ask them for a fresh link." xml:space="preserve">
+    <value>더 새로운 코드로 교체되었을 수 있습니다. 새 링크를 요청하세요.</value>
   </data>
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>취소되었거나 도구가 삭제되었을 수 있습니다. 보낸 사람에게 새 링크를 요청하세요.</value>
@@ -3351,6 +3435,9 @@
   <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
     <value>API 키가 필요합니다. 여러분이 API를 호출하거나, PIU Scores가 여러분을 호출합니다.</value>
   </data>
+  <data name="Neither of you has scores on the same charts yet." xml:space="preserve">
+    <value>아직 두 사람이 같은 차트에 점수가 없습니다.</value>
+  </data>
   <data name="net" xml:space="preserve">
     <value>합계</value>
   </data>
@@ -3374,6 +3461,9 @@
   </data>
   <data name="New board soon." xml:space="preserve">
     <value>곧 새로운 보드가 시작됩니다.</value>
+  </data>
+  <data name="New code. The old link no longer works." xml:space="preserve">
+    <value>새 코드입니다. 이전 링크는 더 이상 작동하지 않습니다.</value>
   </data>
   <data name="New folder" xml:space="preserve">
     <value>새 폴더</value>
@@ -3474,6 +3564,9 @@
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>아직 초대 링크가 없습니다 — 링크를 만들어 멤버를 초대해보세요.</value>
   </data>
+  <data name="No longer on the boards" xml:space="preserve">
+    <value>더 이상 보드에 없음</value>
+  </data>
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>아직 조건에 맞는 활약이 없습니다. 한계를 밀어붙여 추천을 받아보세요!</value>
   </data>
@@ -3500,6 +3593,9 @@
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
     <value>기록된 점수 없음</value>
+  </data>
+  <data name="No rivals yet" xml:space="preserve">
+    <value>아직 라이벌이 없습니다</value>
   </data>
   <data name="No Score Yet" xml:space="preserve">
     <value>아직 점수 없음</value>
@@ -3567,6 +3663,9 @@
   <data name="No webhook" xml:space="preserve">
     <value>웹훅 없음</value>
   </data>
+  <data name="No wins from your rivals yet" xml:space="preserve">
+    <value>아직 라이벌의 기록이 없습니다</value>
+  </data>
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>아니요 — 데이터를 영구히 삭제하겠습니다.</value>
   </data>
@@ -3584,6 +3683,9 @@
   </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>이번 주에는 PUMBILITY 보드에서 상승한 플레이어가 없습니다.</value>
+  </data>
+  <data name="Nobody rivals you yet" xml:space="preserve">
+    <value>아직 아무도 나를 라이벌로 등록하지 않았습니다</value>
   </data>
   <data name="None" xml:space="preserve">
     <value>없음</value>
@@ -3641,6 +3743,9 @@
   </data>
   <data name="Not played yet" xml:space="preserve">
     <value>아직 미플레이</value>
+  </data>
+  <data name="Not Rated" xml:space="preserve">
+    <value>미평가</value>
   </data>
   <data name="Not Recorded" xml:space="preserve">
     <value>기록 없음</value>
@@ -3723,6 +3828,9 @@
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>변경 없음 — {0}개 채보 모두 난이도를 유지했습니다.</value>
   </data>
+  <data name="Nothing to compare yet" xml:space="preserve">
+    <value>아직 비교할 것이 없습니다</value>
+  </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>아직 추천할 것이 없습니다 — 먼저 플레이하고 점수를 가져오세요.</value>
   </data>
@@ -3791,6 +3899,18 @@
   </data>
   <data name="official" xml:space="preserve">
     <value>공식</value>
+  </data>
+  <data name="Official board" xml:space="preserve">
+    <value>공식 보드</value>
+  </data>
+  <data name="Official board data" xml:space="preserve">
+    <value>공식 보드 데이터</value>
+  </data>
+  <data name="Official board data only" xml:space="preserve">
+    <value>공식 보드 데이터만</value>
+  </data>
+  <data name="Official board data, as of {0}." xml:space="preserve">
+    <value>공식 보드 데이터, {0} 기준.</value>
   </data>
   <data name="official board · as of {0}" xml:space="preserve">
     <value>공식 순위표 · {0} 기준</value>
@@ -4185,6 +4305,9 @@
   <data name="Pick a registration to remove from the list." xml:space="preserve">
     <value>목록에서 해제할 등록을 선택해주세요.</value>
   </data>
+  <data name="Pick players you want to measure yourself against — from piuscores, or straight off the official boards. Their big wins land in your feed." xml:space="preserve">
+    <value>자신을 견줄 플레이어를 고르세요 — piuscores에서, 또는 공식 보드에서 바로. 그들의 큰 기록이 내 피드에 올라옵니다.</value>
+  </data>
   <data name="Pick the folders you're working on." xml:space="preserve">
     <value>작업 중인 폴더를 선택하세요.</value>
   </data>
@@ -4479,6 +4602,9 @@
   <data name="Public" xml:space="preserve">
     <value>공개</value>
   </data>
+  <data name="Public players and your community members." xml:space="preserve">
+    <value>공개 플레이어와 내 커뮤니티 멤버.</value>
+  </data>
   <data name="Public profile" xml:space="preserve">
     <value>공개 프로필</value>
   </data>
@@ -4621,6 +4747,9 @@
   </data>
   <data name="Rare PG" xml:space="preserve">
     <value>희귀 PG</value>
+  </data>
+  <data name="Rare PGs, big titles and top scores from the piuscores players you rival show up here. Board-only rivals don't post wins." xml:space="preserve">
+    <value>라이벌로 등록한 piuscores 플레이어의 희귀 PG, 큰 칭호, 상위 점수가 여기에 표시됩니다. 보드 전용 라이벌은 기록을 올리지 않습니다.</value>
   </data>
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>커뮤니티의 희귀한 PG, 큰 칭호, 최고 점수가 여기에 표시됩니다.</value>
@@ -4766,6 +4895,9 @@
   <data name="Rejected" xml:space="preserve">
     <value>거절됨</value>
   </data>
+  <data name="Relevant players" xml:space="preserve">
+    <value>관련 플레이어</value>
+  </data>
   <data name="Reload the page" xml:space="preserve">
     <value>페이지 새로 고침</value>
   </data>
@@ -4906,6 +5038,18 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>취소됨</value>
+  </data>
+  <data name="Rival invite" xml:space="preserve">
+    <value>라이벌 초대</value>
+  </data>
+  <data name="Rival removed." xml:space="preserve">
+    <value>라이벌을 삭제했습니다.</value>
+  </data>
+  <data name="Rivals" xml:space="preserve">
+    <value>라이벌</value>
+  </data>
+  <data name="Rivals of you" xml:space="preserve">
+    <value>나를 라이벌로 등록한 사람</value>
   </data>
   <data name="Role" xml:space="preserve">
     <value>역할</value>
@@ -5117,8 +5261,14 @@
   <data name="Search any board player" xml:space="preserve">
     <value>보드 플레이어 검색</value>
   </data>
+  <data name="Search board tags…" xml:space="preserve">
+    <value>보드 태그 검색…</value>
+  </data>
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>위의 검색창에서 곡 이름으로 검색하세요 — 모든 채보에는 각자의 페이지가 있습니다.</value>
+  </data>
+  <data name="Search players…" xml:space="preserve">
+    <value>플레이어 검색…</value>
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
     <value>유저 검색 (이름 또는 유저 ID)</value>
@@ -5285,6 +5435,12 @@
   <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
     <value>각 패턴과 체력 요소가 채보에서 차지하는 비율</value>
   </data>
+  <data name="Shared" xml:space="preserve">
+    <value>공통</value>
+  </data>
+  <data name="Shared charts" xml:space="preserve">
+    <value>공통 차트</value>
+  </data>
   <data name="shared top-50 charts" xml:space="preserve">
     <value>톱50 공통 채보</value>
   </data>
@@ -5387,6 +5543,9 @@
   <data name="Sign in to accept this invite." xml:space="preserve">
     <value>초대를 수락하려면 로그인해주세요.</value>
   </data>
+  <data name="Sign in to add them" xml:space="preserve">
+    <value>추가하려면 로그인하세요</value>
+  </data>
   <data name="Sign in to continue" xml:space="preserve">
     <value>계속하려면 로그인</value>
   </data>
@@ -5401,6 +5560,9 @@
   </data>
   <data name="Sign in to record." xml:space="preserve">
     <value>기록하려면 로그인하세요.</value>
+  </data>
+  <data name="Sign in to track rivals." xml:space="preserve">
+    <value>라이벌을 추적하려면 로그인하세요.</value>
   </data>
   <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
     <value>해당 계정의 로그인 방법으로 로그인하여 본인임을 증명하세요</value>
@@ -5735,6 +5897,9 @@
   <data name="Tag" xml:space="preserve">
     <value>태그</value>
   </data>
+  <data name="Tags on the current boards. Departed tags aren't listed." xml:space="preserve">
+    <value>현재 보드의 태그. 사라진 태그는 표시되지 않습니다.</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>N노트마다 브레이크를 계속 내면 라이프는 어딘가로 수렴합니다. 절벽 아래에서는 0으로 수렴합니다. 곡선은 완만해지는 게 아니라 뚝 떨어집니다. 배율을 다시 쌓는 속도보다 배율이 죽는 속도가 빠르기 때문입니다.</value>
   </data>
@@ -5858,6 +6023,9 @@
   <data name="the official leaderboards' weekly digest" xml:space="preserve">
     <value>공식 리더보드 주간 요약</value>
   </data>
+  <data name="The official site doesn't publish a board for this chart." xml:space="preserve">
+    <value>공식 사이트는 이 차트의 보드를 제공하지 않습니다.</value>
+  </data>
   <data name="The ones worth framing" xml:space="preserve">
     <value>액자에 걸어둘 기록들</value>
   </data>
@@ -5939,8 +6107,20 @@
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>이 공식들은 Team Infinitesimal이 NX2와 Prime에서 데이터마이닝한 것입니다. Phoenix나 Phoenix 2에서 재검증한 사람은 없으므로, 이 수치는 정확한 기체 값이 아니라 시스템의 형태로 받아들이세요.</value>
   </data>
+  <data name="They ahead" xml:space="preserve">
+    <value>상대 우세</value>
+  </data>
+  <data name="They can see your scores on their rivals surfaces. Removing someone lets them add you again; blocking doesn't." xml:space="preserve">
+    <value>상대는 자신의 라이벌 화면에서 내 점수를 볼 수 있습니다. 삭제한 사람은 다시 추가할 수 있지만, 차단하면 불가능합니다.</value>
+  </data>
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>해제하기 전까지는 새 도구를 만들 수 없습니다.</value>
+  </data>
+  <data name="They haven't placed on any board you've played." xml:space="preserve">
+    <value>내가 플레이한 차트의 보드에는 오르지 않았습니다.</value>
+  </data>
+  <data name="They're already one of your rivals." xml:space="preserve">
+    <value>이미 내 라이벌입니다.</value>
   </data>
   <data name="Third" xml:space="preserve">
     <value>세 번째</value>
@@ -6007,6 +6187,9 @@
   </data>
   <data name="This invite link doesn't work" xml:space="preserve">
     <value>이 초대 링크는 사용할 수 없습니다</value>
+  </data>
+  <data name="This invite link isn't valid" xml:space="preserve">
+    <value>이 초대 링크는 유효하지 않습니다</value>
   </data>
   <data name="This invite link isn't valid." xml:space="preserve">
     <value>유효하지 않은 초대 링크입니다.</value>
@@ -6362,6 +6545,9 @@
   <data name="Unban" xml:space="preserve">
     <value>차단 해제</value>
   </data>
+  <data name="Unblock" xml:space="preserve">
+    <value>차단 해제</value>
+  </data>
   <data name="Unchanged Charts:" xml:space="preserve">
     <value>변경 없는 채보:</value>
   </data>
@@ -6400,6 +6586,9 @@
   </data>
   <data name="Unknown" xml:space="preserve">
     <value>알 수 없음</value>
+  </data>
+  <data name="Unknown chart" xml:space="preserve">
+    <value>알 수 없는 차트</value>
   </data>
   <data name="Unknown feed." xml:space="preserve">
     <value>알 수 없는 피드입니다.</value>
@@ -6725,11 +6914,17 @@
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>목표 (기본 칭호 사냥)</value>
   </data>
+  <data name="What your rivals are up to" xml:space="preserve">
+    <value>라이벌의 최근 활동</value>
+  </data>
   <data name="When" xml:space="preserve">
     <value>일시</value>
   </data>
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>새 시리즈가 나와도 여기서는 아무것도 초기화되지 않습니다. 기록한 모든 스코어가 남아 — 돌아보고, 비교하고, 쌓아 올릴 수 있습니다. 1999년부터 오늘까지 {0}개 시리즈가 나란히 기록되어 있습니다.</value>
+  </data>
+  <data name="When somebody adds you, they show up here." xml:space="preserve">
+    <value>누군가 나를 추가하면 여기에 표시됩니다.</value>
   </data>
   <data name="Where a player lands when they click through from the directory." xml:space="preserve">
     <value>플레이어가 디렉터리에서 눌렀을 때 도착하는 곳입니다.</value>
@@ -6862,6 +7057,9 @@
   </data>
   <data name="You" xml:space="preserve">
     <value>나</value>
+  </data>
+  <data name="You ahead" xml:space="preserve">
+    <value>내가 우세</value>
   </data>
   <data name="You are already connected to your own tool, so you have one real player to build against — yourself. An invite link adds anyone else, public profile or not." xml:space="preserve">
     <value>이미 본인 도구에 연결되어 있으므로 시험해 볼 실제 플레이어가 한 명 있습니다 — 바로 본인입니다. 초대 링크로 다른 사람도 추가할 수 있으며, 공개 프로필이 아니어도 됩니다.</value>
@@ -7022,6 +7220,9 @@
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>나의 그룹, 나의 지역, 그리고 전 세계까지.</value>
   </data>
+  <data name="Your invite code" xml:space="preserve">
+    <value>내 초대 코드</value>
+  </data>
   <data name="Your key" xml:space="preserve">
     <value>발급된 키</value>
   </data>
@@ -7064,6 +7265,9 @@
   <data name="Your profile is private, so nothing is shared." xml:space="preserve">
     <value>프로필이 비공개 상태여서 공유되는 것이 없습니다.</value>
   </data>
+  <data name="Your profile is private, so people can't find you in search. Share this to let someone add you." xml:space="preserve">
+    <value>프로필이 비공개라 검색으로 찾을 수 없습니다. 이것을 공유하면 상대가 추가할 수 있습니다.</value>
+  </data>
   <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
     <value>프로필이 비공개입니다. 이 커뮤니티에 가입하면 리더보드, 유저 페이지, 비교 화면에서 커뮤니티의 모든 멤버에게 점수가 공개됩니다. 다른 곳에서는 계속 비공개로 유지됩니다.</value>
   </data>
@@ -7093,6 +7297,9 @@
   </data>
   <data name="Your repository is reachable." xml:space="preserve">
     <value>저장소에 접근할 수 있습니다.</value>
+  </data>
+  <data name="Your rivals" xml:space="preserve">
+    <value>내 라이벌</value>
   </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>저장된 랜덤 설정</value>
@@ -7195,6 +7402,9 @@
   </data>
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} 클리어</value>
+  </data>
+  <data name="{0} added as a rival." xml:space="preserve">
+    <value>{0} 을(를) 라이벌로 추가했습니다.</value>
   </data>
   <data name="{0} admins" xml:space="preserve">
     <value>관리자 {0}명</value>
@@ -7358,6 +7568,9 @@
   <data name="{0} more perfects to cap" xml:space="preserve">
     <value>상한까지 Perfect {0}개 더</value>
   </data>
+  <data name="{0} more rivals have not played this." xml:space="preserve">
+    <value>다른 라이벌 {0} 명은 이것을 플레이하지 않았습니다.</value>
+  </data>
   <data name="{0} more scores" xml:space="preserve">
     <value>점수 {0}개 더</value>
   </data>
@@ -7450,6 +7663,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>이번 주 Pump It Up 챌린지 채보 {0}개, 실시간 순위가 있는 데일리 채보, 그리고 월간 PUMBILITY 보드.</value>
+  </data>
+  <data name="{0} rivals" xml:space="preserve">
+    <value>라이벌 {0} 명</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>점수 {0}개</value>

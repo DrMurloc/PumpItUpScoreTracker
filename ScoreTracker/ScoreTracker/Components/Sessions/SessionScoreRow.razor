@@ -1,3 +1,4 @@
+@using ScoreTracker.Domain.Models
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.SharedKernel.Enums
@@ -17,7 +18,11 @@
         <div class="sbd-row-body">
             <div class="sbd-row-line">
                 <DifficultyBubble Chart="Score.Chart" Small="true"></DifficultyBubble>
-                <MudLink Href="@Score.Chart.CanonicalPath()">@Score.Chart.Song.Name</MudLink>
+                @* The name IS the affordance now. It used to navigate to the chart page while a
+                   separate trophy opened a board; both did the same job badly, and the details
+                   dialogue carries the board itself. *@
+                <MudLink Href="javascript:void(0)" data-testid="session-row-chart"
+                         @onclick="() => OnOpenChart.InvokeAsync(Score.Chart)">@Score.Chart.Song.Name</MudLink>
                 @foreach (var badge in Badges)
                 {
                     <MudTooltip Text="@badge.Tooltip">
@@ -38,9 +43,6 @@
                 }
             </div>
         </div>
-        <MudIconButton Icon="@Icons.Material.Filled.EmojiEvents" Size="Size.Small" Class="sbd-lbbtn"
-                       aria-label="@L["Leaderboard"]" data-testid="session-row-leaderboard"
-                       OnClick="() => OnOpenLeaderboard.InvokeAsync(Score.Row.ChartId)"></MudIconButton>
         <div class="sbd-row-tail">
             <ClassificationChip Classification="Score.Row.Classification"></ClassificationChip>
             @if (Score.Row.Classification == ScoreEventClassification.Upscore
@@ -56,7 +58,7 @@
 
 @code {
     [Parameter] [EditorRequired] public SessionScore Score { get; set; } = null!;
-    [Parameter] public EventCallback<Guid> OnOpenLeaderboard { get; set; }
+    [Parameter] public EventCallback<Chart> OnOpenChart { get; set; }
 
     private string ScoreColor => Score.PeerPercentile == null
         ? string.Empty

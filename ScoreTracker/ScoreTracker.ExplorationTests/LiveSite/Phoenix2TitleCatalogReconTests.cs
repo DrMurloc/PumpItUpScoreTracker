@@ -18,7 +18,7 @@ namespace ScoreTracker.ExplorationTests.LiveSite;
 ///     <para>
 ///         Report-only (a workbench probe, not a gate): asserts only that the crawl worked, then
 ///         prints the diff for a human, because "missing" needs judgment. Masked tiers (all-"?"
-///         names the account hasn't revealed) are our <c>[P.B] ??? …</c> placeholders under a mask;
+///         names the account hasn't revealed) are the total-PUMBILITY gems under a mask;
 ///         the duplicate <c>LOVERS</c> data-names are our suffixed CO-OP titles. Only genuinely-new
 ///         names are actionable, and their requirement text comes from the page's txt_w2 block.
 ///         Run on demand:
@@ -57,7 +57,7 @@ public sealed class Phoenix2TitleCatalogReconTests : IClassFixture<PiuGameSessio
 
         var missingAll = site.Where(n => !ours.Contains(n)).ToArray();
         // Masks (a title the account hasn't revealed renders as all "?") aren't new titles —
-        // they're our [P.B] ??? placeholders under a different disguise. Bucket them apart so the
+        // they're the total-PUMBILITY gems under a different disguise. Bucket them apart so the
         // actionable list is only genuinely-new names.
         var masked = missingAll.Where(IsMasked).OrderBy(n => n.Length).ToArray();
         var missing = missingAll.Where(n => !IsMasked(n)).OrderBy(n => n, StringComparer.Ordinal).ToArray();
@@ -87,7 +87,7 @@ public sealed class Phoenix2TitleCatalogReconTests : IClassFixture<PiuGameSessio
         foreach (var n in crossVersion)
             _output.WriteLine($"    {n}  ->  {Req(n)}");
         _output.WriteLine("");
-        _output.WriteLine($"Masked tiers the account hasn't revealed ({masked.Length}) — our [P.B] ??? placeholders:");
+        _output.WriteLine($"Masked tiers the account hasn't revealed ({masked.Length}) — the PUMBILITY gems:");
         foreach (var n in masked) _output.WriteLine($"    {n}  (len {n.Length})");
         _output.WriteLine("");
         _output.WriteLine($"OURS not on the live page — masked/deduped/renamed, review ({stale.Length}):");

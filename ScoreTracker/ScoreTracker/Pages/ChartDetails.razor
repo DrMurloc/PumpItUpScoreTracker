@@ -157,7 +157,12 @@
         <div class="chart-section-head">
             <MudText Typo="Typo.h5">@L["Leaderboard"]</MudText>
         </div>
-        <ChartLeaderboardSection @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix" @key="_chart.Id"></ChartLeaderboardSection>
+        @* The same board the dialogs render, not a second implementation of one. It opens on
+           World because this URL is public and often arrived at cold from search — a signed-in
+           default would make one address show two different boards. *@
+        <ChartLeaderboardScopes @rendermode="RenderModes.Interactive" ChartId="_chart.Id" Mix="_chart.Mix"
+                                InitialScope="ChartLeaderboardScopes.LeaderboardScope.World"
+                                @key="_chart.Id"></ChartLeaderboardScopes>
     </section>
 
     <section class="chart-section">

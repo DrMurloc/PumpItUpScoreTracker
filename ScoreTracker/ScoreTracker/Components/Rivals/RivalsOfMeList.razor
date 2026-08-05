@@ -1,0 +1,106 @@
+@using ScoreTracker.Rivals.Contracts
+@namespace ScoreTracker.Web.Components.Rivals
+
+@* The counterweight to the whole feature. Since an edge never lapses on its own, this list is the
+   ONLY revocation there is — so every row shows, private accounts included. A row you cannot see
+   is somebody watching you with no way to stop them (docs/design/rivals.md D13/D14). *@
+<MudText Typo="Typo.caption" Class="dash-muted">
+    @L["They can see your scores on their rivals surfaces. Removing someone lets them add you again; blocking doesn't."]
+</MudText>
+
+@if (Rivals.Count == 0)
+{
+    <div class="sbd-empty mt-2">
+        <b>@L["Nobody rivals you yet"]</b>
+        <span>@L["When somebody adds you, they show up here."]</span>
+    </div>
+}
+else
+{
+    <div class="rvl-roster mt-2" data-testid="rivals-of-me">
+        @foreach (var rival in Rivals)
+        {
+            <div class="@RowClass(rival)">
+                <MudAvatar Size="Size.Medium">
+                    <MudImage Src="@rival.Avatar.ToString()" Alt=""></MudImage>
+                </MudAvatar>
+                <div class="rvl-row-main">
+                    <div class="rvl-row-name">
+                        @rival.PlayerName
+                        @if (!rival.IsPublic)
+                        {
+                            <span class="rvl-tag rvl-tag-priv">@L["Private"]</span>
+                        }
+                        @if (rival.SharesCommunity)
+                        {
+                            <span class="rvl-tag rvl-tag-crew">@L["Crew"]</span>
+                        }
+                    </div>
+                    <div class="rvl-row-meta">@Meta(rival)</div>
+                </div>
+                <div class="rvl-row-actions">
+                    @* Adding back is the one constructive thing to do from this list, so it leads
+                       and it is the only filled button in the row. *@
+                    @if (CanAddBack(rival))
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                                   OnClick="() => OnAdd.InvokeAsync(rival)">@L["Add as rival"]</MudButton>
+                    }
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                               OnClick="() => OnRemove.InvokeAsync(rival.EdgeId)">@L["Remove"]</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error"
+                               OnClick="() => OnBlock.InvokeAsync(rival.UserId)">@L["Block"]</MudButton>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (Blocked.Count > 0)
+{
+    <MudText Typo="Typo.subtitle2" Class="mt-4">@L["Blocked"]</MudText>
+    <div class="rvl-roster mt-1" data-testid="rivals-blocked">
+        @foreach (var blocked in Blocked)
+        {
+            <div class="rvl-row">
+                <MudAvatar Size="Size.Medium">
+                    <MudImage Src="@blocked.Avatar.ToString()" Alt=""></MudImage>
+                </MudAvatar>
+                <div class="rvl-row-main">
+                    <div class="rvl-row-name">@blocked.PlayerName</div>
+                    @* The rule, in six words, on the row it applies to. *@
+                    <div class="rvl-row-meta">
+                        @L["Blocked {0} · neither of you can rival the other", blocked.BlockedAt.ToString("d MMM yyyy")]
+                    </div>
+                </div>
+                <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                           OnClick="() => OnUnblock.InvokeAsync(blocked.UserId)">@L["Unblock"]</MudButton>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<RivalOfMeRecord> Rivals { get; set; } = Array.Empty<RivalOfMeRecord>();
+    [Parameter] public IReadOnlyList<BlockedPlayerRecord> Blocked { get; set; } = Array.Empty<BlockedPlayerRecord>();
+    [Parameter] public EventCallback<Guid> OnRemove { get; set; }
+    [Parameter] public EventCallback<Guid> OnBlock { get; set; }
+    [Parameter] public EventCallback<Guid> OnUnblock { get; set; }
+    [Parameter] public EventCallback<RivalOfMeRecord> OnAdd { get; set; }
+
+    // Reciprocating is an ordinary add and answers to the ordinary gate: their arrow at you is not
+    // a basis for yours at them (docs/design/rivals.md D9). A private stranger can rival you off
+    // your public profile and still not be addable, so the button is offered only where it would
+    // succeed — one that comes back "not available" is worse than none.
+    private static bool CanAddBack(RivalOfMeRecord rival) =>
+        !rival.IsMutual && (rival.IsPublic || rival.SharesCommunity);
+
+    // Everyone here already rivals you, so a red ring would mark the whole list. Green for a
+    // clubmate is the only marker that says anything.
+    private static string RowClass(RivalOfMeRecord rival) =>
+        rival.SharesCommunity ? "rvl-row is-community" : "rvl-row";
+
+    private string Meta(RivalOfMeRecord rival) => rival.IsMutual
+        ? L["Added you {0} · you rival them too", rival.AddedAt.ToString("d MMM yyyy")]
+        : L["Added you {0}", rival.AddedAt.ToString("d MMM yyyy")];
+}

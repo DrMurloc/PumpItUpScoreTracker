@@ -1,0 +1,101 @@
+@page "/Rivals/Invite/{Code}"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Rivals.Contracts
+@using ScoreTracker.Rivals.Contracts.Commands
+@using ScoreTracker.Rivals.Contracts.Queries
+
+<PageTitle>@L["Rival invite"]</PageTitle>
+
+@* The landing page a private player's code links to, matching /Communities/Invite/{code}. A code
+   is a handshake, not a profile — so this shows the person and nothing else, and asks before it
+   acts (docs/design/rivals.md D25). *@
+<MudCard Class="mx-auto mt-4" Style="max-width: 480px">
+    <MudCardContent>
+        @if (!_loaded)
+        {
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary"/>
+        }
+        else if (_preview == null)
+        {
+            <MudText Typo="Typo.h6">@L["This invite link isn't valid"]</MudText>
+            @* A recycled code and a mistyped one land in exactly the same place, which is right:
+               neither tells the visitor anything about whose code it was. *@
+            <MudText Typo="Typo.body2" Class="dash-muted mt-1">
+                @L["It may have been replaced by a newer one. Ask them for a fresh link."]
+            </MudText>
+        }
+        else
+        {
+            <div class="rvl-h2h-who">
+                <MudAvatar Size="Size.Large">
+                    <MudImage Src="@_preview.Avatar.ToString()" Alt=""></MudImage>
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h6">@_preview.PlayerName</MudText>
+                    <MudText Typo="Typo.caption" Class="dash-muted">
+                        @L["invites you to track them as a rival"]
+                    </MudText>
+                </div>
+            </div>
+
+            @if (!CurrentUser.IsLoggedIn)
+            {
+                <MudButton Href="/Login" Variant="Variant.Filled" Color="Color.Primary" Class="mt-3">
+                    @L["Sign in to add them"]
+                </MudButton>
+            }
+            else if (_preview.AlreadyRival || _added)
+            {
+                @* Links get clicked twice. Saying so beats offering a button that resolves to the
+                   edge you already have. *@
+                <MudText Typo="Typo.body2" Class="mt-3">@L["They're already one of your rivals."]</MudText>
+                <MudButton Href="/Rivals" Variant="Variant.Outlined" Class="mt-2">@L["Go to Rivals"]</MudButton>
+            }
+            else
+            {
+                <MudButton OnClick="Accept" Variant="Variant.Filled" Color="Color.Primary" Class="mt-3"
+                           data-testid="accept-rival-invite">
+                    @L["Add {0} as a rival", _preview.PlayerName]
+                </MudButton>
+            }
+        }
+    </MudCardContent>
+</MudCard>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+@code {
+    [Parameter] public string Code { get; set; } = string.Empty;
+
+    private RivalInvitePreviewRecord? _preview;
+    private bool _loaded;
+    private bool _added;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _preview = await Mediator.Send(new GetRivalInvitePreviewQuery(Code));
+        _loaded = true;
+    }
+
+    private async Task Accept()
+    {
+        try
+        {
+            await Mediator.Send(new RedeemRivalInviteCodeCommand(Code));
+            _added = true;
+            Snackbar.Add(L["{0} added as a rival.", _preview!.PlayerName].Value, Severity.Success);
+        }
+        catch (InvalidRivalInviteCodeException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+        catch (RivalNotAvailableException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
+    }
+}

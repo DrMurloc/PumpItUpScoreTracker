@@ -1,0 +1,63 @@
+@using ScoreTracker.Rivals.Contracts
+@namespace ScoreTracker.Web.Components.Rivals
+
+@* The roster. Ghosts sit INLINE with site rivals rather than in their own section — the tag and
+   the "board only" chip carry the difference, and segregating them would say they are a lesser
+   kind of rival rather than one we know less about (docs/design/rivals.md D27). *@
+@if (Rivals.Count == 0)
+{
+    <div class="sbd-empty" data-testid="rivals-empty">
+        <b>@L["No rivals yet"]</b>
+        <span>@L["Pick players you want to measure yourself against — from piuscores, or straight off the official boards. Their big wins land in your feed."]</span>
+    </div>
+}
+else
+{
+    <div class="rvl-roster" data-testid="rival-roster">
+        @foreach (var rival in Sorted)
+        {
+            <div class="rvl-row">
+                <MudAvatar Size="Size.Medium">
+                    <MudImage Src="@(rival.Avatar?.ToString() ?? DefaultAvatar)" Alt=""></MudImage>
+                </MudAvatar>
+                <div class="rvl-row-main">
+                    <div class="rvl-row-name">
+                        @rival.DisplayName
+                        @if (rival.IsGhost)
+                        {
+                            <span class="rvl-tag rvl-tag-ghost">@L["Board only"]</span>
+                        }
+                        @if (rival.IsGhost && !rival.IsOnCurrentBoards)
+                        {
+                            @* An undetected rename, or somebody who stopped placing. Said out loud
+                               so the user can fix it — a silently dead row cannot be acted on. *@
+                            <span class="rvl-tag rvl-tag-gone">@L["No longer on the boards"]</span>
+                        }
+                    </div>
+                    <div class="rvl-row-meta">@Meta(rival)</div>
+                </div>
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                           OnClick="() => OnCompare.InvokeAsync(rival)">@L["Compare"]</MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                               aria-label="@L["Remove"]"
+                               OnClick="() => OnRemove.InvokeAsync(rival.EdgeId)"></MudIconButton>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<RivalSubject> Rivals { get; set; } = Array.Empty<RivalSubject>();
+    [Parameter] public EventCallback<RivalSubject> OnCompare { get; set; }
+    [Parameter] public EventCallback<Guid> OnRemove { get; set; }
+
+    private const string DefaultAvatar = "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
+
+    // Newest arrow first for now — a proper "recent activity" sort needs each rival's last import,
+    // which is a read this list does not otherwise make.
+    private IEnumerable<RivalSubject> Sorted => Rivals.OrderByDescending(r => r.AddedAt);
+
+    private string Meta(RivalSubject rival) => rival.IsGhost
+        ? L["Official board data only"]
+        : L["Added {0}", rival.AddedAt.ToString("d MMM yyyy")];
+}

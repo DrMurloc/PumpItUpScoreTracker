@@ -243,6 +243,26 @@ step-analysis read** on Catalog if the nightly sweep is too chatty per-chart (B2
 **capped top-N-plus-rank leaderboard read** so the page never inherits the uncapped World
 query (P2).
 
+> **Superseded 2026-08-04 — one leaderboard, three hosts.** The page no longer has a
+> leaderboard of its own. `ChartLeaderboardSection` is deleted and the page, the chart
+> leaderboard dialog and the chart details dialog all render `ChartLeaderboardScopes`, lifted
+> across unchanged. Three consequences were accepted rather than designed around, because the
+> alternative was keeping two implementations of one board:
+>
+> - **The cap is gone.** The shared board renders every row it loads, so the page inherits
+>   exactly the uncapped World read this section set out to avoid. The paged top-N read (P2)
+>   is unbuilt and now belongs to the shared component, not to this page.
+> - **The Level column is gone.** It was fetched per visible row, which only works with paging.
+> - **The population changed.** The board reads the World *community*, not every score on the
+>   chart, so a private player no longer holds an unnamed "Anonymous" rank — they are absent.
+>   The page's **Scores tracked** fact still counts everyone, so it reads higher than the rows
+>   beneath it. ⚠ This makes the board sensitive to World-community drift: public accounts
+>   missing from that community vanish from every chart board, so the backfill is a
+>   prerequisite, not a nicety.
+>
+> In exchange the page gains the five scopes, the "#N of M" standing chip, rival highlighting
+> and the official-data asterisk. A dialog overhaul is queued behind this.
+
 **Infrastructure (`ScoreTracker.Data`): migration only** — the `ChartSimilarity` table. No new
 clients, no new external APIs.
 
@@ -329,7 +349,7 @@ site-wide QA, the same shape as Stage 1's:
 
 **P3-1 — then this page.** Delete `ChartDetails`' `@rendermode`; island what needs a circuit:
 `ChartVideoPlayer`, `ChartRecordPanel` (also personal → must never enter the cache),
-`ChartEvidenceSection` (Apex), `ChartLeaderboardSection`, `SimilarChartsShelf`'s controls (the
+`ChartEvidenceSection` (Apex), `ChartLeaderboardScopes`, `SimilarChartsShelf`'s controls (the
 cards are already real `<a href>`s and stay static), and `ChartSelector` on the empty state.
 
 ⚠ **The head is an unsolved problem, and it is the whole SEO point.** `HeadOutlet` is

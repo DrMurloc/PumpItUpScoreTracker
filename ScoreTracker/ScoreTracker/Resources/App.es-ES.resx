@@ -153,6 +153,12 @@
   <data name="(Optional) Also delete historical data" xml:space="preserve">
     <value>(Opcional) Eliminar también el historial</value>
   </data>
+  <data name="* Official board data, as of {0}." xml:space="preserve">
+    <value>* Datos del marcador oficial, a {0}.</value>
+  </data>
+  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
+    <value>* Datos del marcador oficial, a {0}. Los marcadores solo cubren nivel 20+.</value>
+  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>**#{0}** en {1} {2} Paso Diario</value>
   </data>
@@ -348,6 +354,9 @@
   <data name="A miss. In practice: straight to zero." xml:space="preserve">
     <value>Un Miss. En la práctica: directo a cero.</value>
   </data>
+  <data name="A new code stops the old link working. People who already added you stay — remove them from Rivals of you." xml:space="preserve">
+    <value>Un código nuevo invalida el enlace anterior. Quienes ya te añadieron siguen ahí: elimínalos desde Te tienen como rival.</value>
+  </data>
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>Un Perfect con el multiplicador al tope.</value>
   </data>
@@ -423,6 +432,12 @@
   <data name="Add a public source repository and your Discord handle, then check the link. Until then invite links and listing are closed." xml:space="preserve">
     <value>Añade un repositorio público del código y tu usuario de Discord, y luego comprueba el enlace. Hasta entonces los enlaces de invitación y el directorio están cerrados.</value>
   </data>
+  <data name="Add a rival" xml:space="preserve">
+    <value>Añadir un rival</value>
+  </data>
+  <data name="Add as rival" xml:space="preserve">
+    <value>Añadir como rival</value>
+  </data>
   <data name="Add photo" xml:space="preserve">
     <value>Añadir foto</value>
   </data>
@@ -450,6 +465,9 @@
   <data name="Add widgets to this page in edit mode." xml:space="preserve">
     <value>Añade widgets a esta página en el modo de edición.</value>
   </data>
+  <data name="Add {0} as a rival" xml:space="preserve">
+    <value>Añadir a {0} como rival</value>
+  </data>
   <data name="Added" xml:space="preserve">
     <value>Añadido</value>
   </data>
@@ -458,6 +476,15 @@
   </data>
   <data name="Added to ToDo List!" xml:space="preserve">
     <value>Añadido a pendientes!</value>
+  </data>
+  <data name="Added you {0}" xml:space="preserve">
+    <value>Te añadió {0}</value>
+  </data>
+  <data name="Added you {0} · you rival them too" xml:space="preserve">
+    <value>Te añadió {0} — tú también le tienes como rival</value>
+  </data>
+  <data name="Added {0}" xml:space="preserve">
+    <value>Añadido {0}</value>
   </data>
   <data name="Additional Comments" xml:space="preserve">
     <value>Comentarios adicionales</value>
@@ -732,6 +759,9 @@
   <data name="Back to community" xml:space="preserve">
     <value>Volver a la comunidad</value>
   </data>
+  <data name="Back to rivals" xml:space="preserve">
+    <value>Volver a rivales</value>
+  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Volver a la tier list</value>
   </data>
@@ -740,6 +770,9 @@
   </data>
   <data name="Backfill" xml:space="preserve">
     <value>Backfill</value>
+  </data>
+  <data name="Backfill Highlights" xml:space="preserve">
+    <value>Rellenar destacados</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
@@ -846,14 +879,32 @@
   <data name="Bind Selected Chart" xml:space="preserve">
     <value>Vincular chart seleccionado</value>
   </data>
+  <data name="Block" xml:space="preserve">
+    <value>Bloquear</value>
+  </data>
   <data name="Block this tool" xml:space="preserve">
     <value>Bloquear esta herramienta</value>
+  </data>
+  <data name="Blocked" xml:space="preserve">
+    <value>Bloqueado</value>
+  </data>
+  <data name="Blocked {0} · neither of you can rival the other" xml:space="preserve">
+    <value>Bloqueado {0} — ninguno de los dos puede tener al otro como rival</value>
+  </data>
+  <data name="Blocked. Neither of you can rival the other." xml:space="preserve">
+    <value>Bloqueado. Ninguno de los dos puede tener al otro como rival.</value>
   </data>
   <data name="Board" xml:space="preserve">
     <value>Tablero</value>
   </data>
+  <data name="Board only" xml:space="preserve">
+    <value>Solo marcador</value>
+  </data>
   <data name="Boards" xml:space="preserve">
     <value>Leaderboards</value>
+  </data>
+  <data name="Boards you're both on" xml:space="preserve">
+    <value>Marcadores en los que estáis los dos</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
@@ -1299,6 +1350,9 @@
   <data name="Compact" xml:space="preserve">
     <value>Compacta</value>
   </data>
+  <data name="Compare" xml:space="preserve">
+    <value>Comparar</value>
+  </data>
   <data name="Compare in folder" xml:space="preserve">
     <value>Comparar en el folder</value>
   </data>
@@ -1434,6 +1488,9 @@
   <data name="Copy your key now" xml:space="preserve">
     <value>Copia tu clave ahora</value>
   </data>
+  <data name="Copying existing highlights into the new feed store." xml:space="preserve">
+    <value>Copiando los destacados existentes al nuevo almacén del feed.</value>
+  </data>
   <data name="Could not create the invite link." xml:space="preserve">
     <value>No se ha podido crear el enlace de invitación.</value>
   </data>
@@ -1532,6 +1589,9 @@
   </data>
   <data name="Credential security" xml:space="preserve">
     <value>Seguridad de credenciales</value>
+  </data>
+  <data name="Crew" xml:space="preserve">
+    <value>Grupo</value>
   </data>
   <data name="Cross-pad Transitions" xml:space="preserve">
     <value>Transiciones entre pads</value>
@@ -2109,6 +2169,9 @@
   <data name="Folder Cleared" xml:space="preserve">
     <value>Carpeta completada</value>
   </data>
+  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
+    <value>La comparación por carpeta, los títulos y el progreso necesitan una cuenta de piuscores. Aparecerán aquí si {0} llega a importar.</value>
+  </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>Completado por folder</value>
   </data>
@@ -2235,6 +2298,9 @@
   <data name="generous to score once you're through" xml:space="preserve">
     <value>generoso al puntuar una vez que lo pasas</value>
   </data>
+  <data name="Get a new code" xml:space="preserve">
+    <value>Obtener un código nuevo</value>
+  </data>
   <data name="Get told when someone plays" xml:space="preserve">
     <value>Que te avisemos cuando alguien juegue</value>
   </data>
@@ -2258,6 +2324,9 @@
   </data>
   <data name="Go to Delete" xml:space="preserve">
     <value>Ir a Eliminar</value>
+  </data>
+  <data name="Go to Rivals" xml:space="preserve">
+    <value>Ir a Rivales</value>
   </data>
   <data name="Go to the console" xml:space="preserve">
     <value>Ir a la consola</value>
@@ -2309,6 +2378,9 @@
   </data>
   <data name="Greats" xml:space="preserve">
     <value>Greats</value>
+  </data>
+  <data name="Green marks a rival who's also in one of your communities." xml:space="preserve">
+    <value>El verde marca a un rival que además está en una de tus comunidades.</value>
   </data>
   <data name="Grind" xml:space="preserve">
     <value>Sostenido</value>
@@ -2369,6 +2441,9 @@
   </data>
   <data name="Hide Chart for this Category" xml:space="preserve">
     <value>Ocultar chart para esta categoría</value>
+  </data>
+  <data name="Hide players whose level sat outside this chart's range" xml:space="preserve">
+    <value>Ocultar a los jugadores cuyo nivel quedó fuera del rango de este chart</value>
   </data>
   <data name="Hide Record-less Charts" xml:space="preserve">
     <value>Ocultar charts sin registro</value>
@@ -2652,6 +2727,9 @@
   <data name="Include my own wins" xml:space="preserve">
     <value>Incluir mis propios logros</value>
   </data>
+  <data name="Include my rivals" xml:space="preserve">
+    <value>Incluir a mis rivales</value>
+  </data>
   <data name="Input Json" xml:space="preserve">
     <value>JSON de entrada</value>
   </data>
@@ -2700,6 +2778,9 @@
   <data name="invited you to connect" xml:space="preserve">
     <value>te invitó a conectarte</value>
   </data>
+  <data name="invites you to track them as a rival" xml:space="preserve">
+    <value>te invita a seguirle como rival</value>
+  </data>
   <data name="IsBroken" xml:space="preserve">
     <value>IsBroken</value>
   </data>
@@ -2711,6 +2792,9 @@
   </data>
   <data name="It is not limited to reading scores, and I can't limit it. The key stays valid until piugame.com expires it." xml:space="preserve">
     <value>No se limita a leer puntuaciones, y no puedo limitarla. La clave sigue siendo válida hasta que piugame.com la caduque.</value>
+  </data>
+  <data name="It may have been replaced by a newer one. Ask them for a fresh link." xml:space="preserve">
+    <value>Puede que lo haya sustituido uno más nuevo. Pídele un enlace nuevo.</value>
   </data>
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>Puede que se haya revocado, o que la herramienta ya no exista. Pide un enlace nuevo a quien te lo envió.</value>
@@ -3351,6 +3435,9 @@
   <data name="Needs an API key. You call the API, or PIU Scores calls you." xml:space="preserve">
     <value>Necesita una clave de API. Tú llamas a la API, o PIU Scores te llama a ti.</value>
   </data>
+  <data name="Neither of you has scores on the same charts yet." xml:space="preserve">
+    <value>Ninguno de los dos tiene puntuaciones en los mismos charts todavía.</value>
+  </data>
   <data name="net" xml:space="preserve">
     <value>neto</value>
   </data>
@@ -3374,6 +3461,9 @@
   </data>
   <data name="New board soon." xml:space="preserve">
     <value>Pronto habrá un nuevo tablero.</value>
+  </data>
+  <data name="New code. The old link no longer works." xml:space="preserve">
+    <value>Código nuevo. El enlace anterior ya no funciona.</value>
   </data>
   <data name="New folder" xml:space="preserve">
     <value>Carpeta nueva</value>
@@ -3474,6 +3564,9 @@
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>Aún no hay enlaces de invitación — crea uno para traer gente.</value>
   </data>
+  <data name="No longer on the boards" xml:space="preserve">
+    <value>Ya no está en los marcadores</value>
+  </data>
   <data name="No matching standouts yet, go push yourself to start getting suggestions!" xml:space="preserve">
     <value>Aún no hay actuaciones destacadas que cuenten, ¡exígete más para empezar a recibir sugerencias!</value>
   </data>
@@ -3500,6 +3593,9 @@
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
     <value>Sin scores registrados</value>
+  </data>
+  <data name="No rivals yet" xml:space="preserve">
+    <value>Aún no hay rivales</value>
   </data>
   <data name="No Score Yet" xml:space="preserve">
     <value>Aún sin puntuación</value>
@@ -3567,6 +3663,9 @@
   <data name="No webhook" xml:space="preserve">
     <value>Sin webhook</value>
   </data>
+  <data name="No wins from your rivals yet" xml:space="preserve">
+    <value>Aún no hay logros de tus rivales</value>
+  </data>
   <data name="No — I want to permanently delete data." xml:space="preserve">
     <value>No: quiero eliminar datos de forma permanente.</value>
   </data>
@@ -3584,6 +3683,9 @@
   </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Nadie escaló en el leaderboard PUMBILITY esta semana.</value>
+  </data>
+  <data name="Nobody rivals you yet" xml:space="preserve">
+    <value>Nadie te tiene como rival todavía</value>
   </data>
   <data name="None" xml:space="preserve">
     <value>Ninguno</value>
@@ -3641,6 +3743,9 @@
   </data>
   <data name="Not played yet" xml:space="preserve">
     <value>Aún sin jugar</value>
+  </data>
+  <data name="Not Rated" xml:space="preserve">
+    <value>Sin valorar</value>
   </data>
   <data name="Not Recorded" xml:space="preserve">
     <value>Sin registrar</value>
@@ -3723,6 +3828,9 @@
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>No cambió nada — los {0} charts mantienen su nivel.</value>
   </data>
+  <data name="Nothing to compare yet" xml:space="preserve">
+    <value>Nada que comparar todavía</value>
+  </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Aún no hay nada que sugerir — juega e importa puntuaciones primero.</value>
   </data>
@@ -3791,6 +3899,18 @@
   </data>
   <data name="official" xml:space="preserve">
     <value>oficial</value>
+  </data>
+  <data name="Official board" xml:space="preserve">
+    <value>Marcador oficial</value>
+  </data>
+  <data name="Official board data" xml:space="preserve">
+    <value>Datos del marcador oficial</value>
+  </data>
+  <data name="Official board data only" xml:space="preserve">
+    <value>Solo datos del marcador oficial</value>
+  </data>
+  <data name="Official board data, as of {0}." xml:space="preserve">
+    <value>Datos del marcador oficial, a {0}.</value>
   </data>
   <data name="official board · as of {0}" xml:space="preserve">
     <value>tabla oficial · a fecha de {0}</value>
@@ -4185,6 +4305,9 @@
   <data name="Pick a registration to remove from the list." xml:space="preserve">
     <value>Elige de la lista un registro para quitar.</value>
   </data>
+  <data name="Pick players you want to measure yourself against — from piuscores, or straight off the official boards. Their big wins land in your feed." xml:space="preserve">
+    <value>Elige jugadores con los que medirte — de piuscores o directamente de los marcadores oficiales. Sus grandes logros llegan a tu feed.</value>
+  </data>
   <data name="Pick the folders you're working on." xml:space="preserve">
     <value>Elige las carpetas en las que estás trabajando.</value>
   </data>
@@ -4479,6 +4602,9 @@
   <data name="Public" xml:space="preserve">
     <value>Pública</value>
   </data>
+  <data name="Public players and your community members." xml:space="preserve">
+    <value>Jugadores públicos y miembros de tus comunidades.</value>
+  </data>
   <data name="Public profile" xml:space="preserve">
     <value>Perfil público</value>
   </data>
@@ -4619,6 +4745,9 @@
   </data>
   <data name="Rare PG" xml:space="preserve">
     <value>PG raro</value>
+  </data>
+  <data name="Rare PGs, big titles and top scores from the piuscores players you rival show up here. Board-only rivals don't post wins." xml:space="preserve">
+    <value>Los PG raros, los títulos grandes y las mejores puntuaciones de los jugadores de piuscores que tienes como rivales aparecen aquí. Los rivales solo de marcador no publican logros.</value>
   </data>
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>Aquí aparecen PG raros, grandes títulos y mejores puntuaciones de tus comunidades.</value>
@@ -4764,6 +4893,9 @@
   <data name="Rejected" xml:space="preserve">
     <value>Rechazada</value>
   </data>
+  <data name="Relevant players" xml:space="preserve">
+    <value>Jugadores relevantes</value>
+  </data>
   <data name="Reload the page" xml:space="preserve">
     <value>Recargar la página</value>
   </data>
@@ -4904,6 +5036,18 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>Revocada</value>
+  </data>
+  <data name="Rival invite" xml:space="preserve">
+    <value>Invitación de rival</value>
+  </data>
+  <data name="Rival removed." xml:space="preserve">
+    <value>Rival eliminado.</value>
+  </data>
+  <data name="Rivals" xml:space="preserve">
+    <value>Rivales</value>
+  </data>
+  <data name="Rivals of you" xml:space="preserve">
+    <value>Te tienen como rival</value>
   </data>
   <data name="Role" xml:space="preserve">
     <value>Rol</value>
@@ -5115,8 +5259,14 @@
   <data name="Search any board player" xml:space="preserve">
     <value>Busca cualquier jugador/a de los leaderboards</value>
   </data>
+  <data name="Search board tags…" xml:space="preserve">
+    <value>Buscar etiquetas de marcador…</value>
+  </data>
   <data name="Search by song name in the bar above — every chart has its own page." xml:space="preserve">
     <value>Busca por nombre de la canción en la barra de arriba — cada chart tiene su propia página.</value>
+  </data>
+  <data name="Search players…" xml:space="preserve">
+    <value>Buscar jugadores…</value>
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
     <value>Buscar usuario (nombre o UserId)</value>
@@ -5283,6 +5433,12 @@
   <data name="Share of the chart each pattern and demand covers" xml:space="preserve">
     <value>Parte del chart que cubre cada patrón y cada exigencia</value>
   </data>
+  <data name="Shared" xml:space="preserve">
+    <value>Compartidos</value>
+  </data>
+  <data name="Shared charts" xml:space="preserve">
+    <value>Charts compartidos</value>
+  </data>
   <data name="shared top-50 charts" xml:space="preserve">
     <value>charts compartidos en el top 50</value>
   </data>
@@ -5385,6 +5541,9 @@
   <data name="Sign in to accept this invite." xml:space="preserve">
     <value>Inicia sesión para aceptar esta invitación.</value>
   </data>
+  <data name="Sign in to add them" xml:space="preserve">
+    <value>Inicia sesión para añadirle</value>
+  </data>
   <data name="Sign in to continue" xml:space="preserve">
     <value>Inicia sesión para continuar</value>
   </data>
@@ -5399,6 +5558,9 @@
   </data>
   <data name="Sign in to record." xml:space="preserve">
     <value>Inicia sesión para registrar.</value>
+  </data>
+  <data name="Sign in to track rivals." xml:space="preserve">
+    <value>Inicia sesión para seguir a tus rivales.</value>
   </data>
   <data name="Sign in with one of that account's methods to prove it's yours" xml:space="preserve">
     <value>Inicia sesión con uno de los métodos de esa cuenta para demostrar que es tuya</value>
@@ -5733,6 +5895,9 @@
   <data name="Tag" xml:space="preserve">
     <value>Tag</value>
   </data>
+  <data name="Tags on the current boards. Departed tags aren't listed." xml:space="preserve">
+    <value>Etiquetas de los marcadores actuales. Las etiquetas que ya no aparecen no se listan.</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Falla una vez cada N notas indefinidamente y tu vida converge en algún punto. Por debajo del acantilado converge en cero: la curva no se suaviza, se despeña. Es el multiplicador muriendo más rápido de lo que puedes reconstruirlo.</value>
   </data>
@@ -5856,6 +6021,9 @@
   <data name="the official leaderboards' weekly digest" xml:space="preserve">
     <value>el resumen semanal de los leaderboards oficiales</value>
   </data>
+  <data name="The official site doesn't publish a board for this chart." xml:space="preserve">
+    <value>El sitio oficial no publica marcador para este chart.</value>
+  </data>
   <data name="The ones worth framing" xml:space="preserve">
     <value>Los que merecen un marco</value>
   </data>
@@ -5937,8 +6105,20 @@
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>Team Infinitesimal extrajo estas fórmulas del código de NX2 y Prime. Nadie las ha vuelto a verificar en Phoenix ni en Phoenix 2, así que toma los números como la forma del sistema y no como valores exactos de la máquina.</value>
   </data>
+  <data name="They ahead" xml:space="preserve">
+    <value>Van por delante</value>
+  </data>
+  <data name="They can see your scores on their rivals surfaces. Removing someone lets them add you again; blocking doesn't." xml:space="preserve">
+    <value>Pueden ver tus puntuaciones en sus pantallas de rivales. Si eliminas a alguien podrá volver a añadirte; si le bloqueas, no.</value>
+  </data>
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>No podrá crear una herramienta nueva hasta que lo levantes.</value>
+  </data>
+  <data name="They haven't placed on any board you've played." xml:space="preserve">
+    <value>No han entrado en ningún marcador de los charts que has jugado.</value>
+  </data>
+  <data name="They're already one of your rivals." xml:space="preserve">
+    <value>Ya es uno de tus rivales.</value>
   </data>
   <data name="Third" xml:space="preserve">
     <value>Tercer</value>
@@ -6005,6 +6185,9 @@
   </data>
   <data name="This invite link doesn't work" xml:space="preserve">
     <value>Este enlace de invitación no funciona</value>
+  </data>
+  <data name="This invite link isn't valid" xml:space="preserve">
+    <value>Este enlace de invitación no es válido</value>
   </data>
   <data name="This invite link isn't valid." xml:space="preserve">
     <value>Este enlace de invitación no es válido.</value>
@@ -6360,6 +6543,9 @@
   <data name="Unban" xml:space="preserve">
     <value>Desbanear</value>
   </data>
+  <data name="Unblock" xml:space="preserve">
+    <value>Desbloquear</value>
+  </data>
   <data name="Unchanged Charts:" xml:space="preserve">
     <value>Charts sin cambios:</value>
   </data>
@@ -6398,6 +6584,9 @@
   </data>
   <data name="Unknown" xml:space="preserve">
     <value>Desconocido</value>
+  </data>
+  <data name="Unknown chart" xml:space="preserve">
+    <value>Chart desconocido</value>
   </data>
   <data name="Unknown feed." xml:space="preserve">
     <value>Feed desconocido.</value>
@@ -6723,11 +6912,17 @@
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>En qué trabajar (por defecto Title Hunt)</value>
   </data>
+  <data name="What your rivals are up to" xml:space="preserve">
+    <value>Qué están haciendo tus rivales</value>
+  </data>
   <data name="When" xml:space="preserve">
     <value>Cuándo</value>
   </data>
   <data name="When a new mix arrives, nothing here resets. Every score you've recorded stays — to look back on, compare against, and build from. {0} mixes on record, side by side, 1999 to today." xml:space="preserve">
     <value>Cuando llega una versión nueva, aquí no se reinicia nada. Cada puntuación que registraste se queda — para mirar atrás, comparar y seguir construyendo. {0} versiones registradas, lado a lado, de 1999 a hoy.</value>
+  </data>
+  <data name="When somebody adds you, they show up here." xml:space="preserve">
+    <value>Cuando alguien te añada, aparecerá aquí.</value>
   </data>
   <data name="Where a player lands when they click through from the directory." xml:space="preserve">
     <value>Donde llega un jugador cuando entra desde el directorio.</value>
@@ -6860,6 +7055,9 @@
   </data>
   <data name="You" xml:space="preserve">
     <value>Tú</value>
+  </data>
+  <data name="You ahead" xml:space="preserve">
+    <value>Vas por delante</value>
   </data>
   <data name="You are already connected to your own tool, so you have one real player to build against — yourself. An invite link adds anyone else, public profile or not." xml:space="preserve">
     <value>Ya estás conectado a tu propia herramienta, así que tienes un jugador real contra el que trabajar: tú. Un enlace de invitación añade a cualquier otro, tenga el perfil público o no.</value>
@@ -7020,6 +7218,9 @@
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>Tus grupos, tu región y el mundo.</value>
   </data>
+  <data name="Your invite code" xml:space="preserve">
+    <value>Tu código de invitación</value>
+  </data>
   <data name="Your key" xml:space="preserve">
     <value>Tu clave</value>
   </data>
@@ -7062,6 +7263,9 @@
   <data name="Your profile is private, so nothing is shared." xml:space="preserve">
     <value>Tu perfil es privado, así que no se comparte nada.</value>
   </data>
+  <data name="Your profile is private, so people can't find you in search. Share this to let someone add you." xml:space="preserve">
+    <value>Tu perfil es privado, así que no pueden encontrarte en la búsqueda. Comparte esto para que alguien pueda añadirte.</value>
+  </data>
   <data name="Your profile is private. Joining this community makes your scores visible to everyone in it — on its leaderboards, player pages, and comparisons. You'll stay hidden everywhere else." xml:space="preserve">
     <value>Tu perfil es privado. Al unirte a esta comunidad, tus scores serán visibles para todos sus miembros — en sus leaderboards, páginas de jugador y comparaciones. En el resto del sitio seguirás oculto/a.</value>
   </data>
@@ -7091,6 +7295,9 @@
   </data>
   <data name="Your repository is reachable." xml:space="preserve">
     <value>Tu repositorio es accesible.</value>
+  </data>
+  <data name="Your rivals" xml:space="preserve">
+    <value>Tus rivales</value>
   </data>
   <data name="Your saved randomizer settings" xml:space="preserve">
     <value>Tus ajustes guardados del randomizer</value>
@@ -7193,6 +7400,9 @@
   </data>
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} superados</value>
+  </data>
+  <data name="{0} added as a rival." xml:space="preserve">
+    <value>{0} añadido como rival.</value>
   </data>
   <data name="{0} admins" xml:space="preserve">
     <value>{0} administradores</value>
@@ -7356,6 +7566,9 @@
   <data name="{0} more perfects to cap" xml:space="preserve">
     <value>{0} Perfects más para llegar al tope</value>
   </data>
+  <data name="{0} more rivals have not played this." xml:space="preserve">
+    <value>Otros {0} rivales no han jugado esto.</value>
+  </data>
   <data name="{0} more scores" xml:space="preserve">
     <value>{0} scores más</value>
   </data>
@@ -7448,6 +7661,9 @@
   </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} charts de desafío de Pump It Up esta semana, un chart diario con posiciones en vivo y el tablero mensual PUMBILITY.</value>
+  </data>
+  <data name="{0} rivals" xml:space="preserve">
+    <value>{0} rivales</value>
   </data>
   <data name="{0} scores" xml:space="preserve">
     <value>{0} scores</value>
