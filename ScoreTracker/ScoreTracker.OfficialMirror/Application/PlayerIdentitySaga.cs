@@ -34,25 +34,45 @@ internal sealed class PlayerIdentitySaga :
         _bus = bus;
     }
 
-    public async Task Handle(AcceptRenameProposalCommand request, CancellationToken cancellationToken)
+    public Task Handle(AcceptRenameProposalCommand request, CancellationToken cancellationToken) =>
+        Merge(request.ProposalId,
+            request.Unattended ? ProposalStatuses.AutoAccepted : ProposalStatuses.Accepted,
+            cancellationToken);
+
+    /// <summary>
+    ///     The one merge path, whoever asked for it. An admin's accept and the sweep's
+    ///     unattended merge differ by the status they leave behind and nothing else — a second
+    ///     implementation would be a second place for the announce-after-the-merge ordering to
+    ///     be got wrong.
+    /// </summary>
+    private async Task Merge(int proposalId, string resolution, CancellationToken cancellationToken)
     {
-        var proposal = await _identity.GetProposal(request.ProposalId, cancellationToken);
-        if (proposal == null || proposal.Status != ProposalStatuses.Pending)
+        var proposal = await _identity.GetProposal(proposalId, cancellationToken);
+        if (proposal is not { Status: ProposalStatuses.Pending, NewPlayerId: { } newPlayerId })
         {
-            _logger.LogWarning("Rename proposal {ProposalId} is not pending; nothing merged",
-                request.ProposalId);
+            _logger.LogWarning("Rename finding {ProposalId} is not a pending pair; nothing merged", proposalId);
             return;
         }
 
-        await _identity.MergePlayers(proposal.OldPlayerId, proposal.NewPlayerId, cancellationToken);
-        await _identity.SetProposalStatus(proposal.Id, ProposalStatuses.Accepted, cancellationToken);
+        var outcome = await _identity.MergePlayers(proposal.OldPlayerId, newPlayerId, cancellationToken);
+        if (outcome != MergeOutcome.Merged)
+        {
+            // Nothing moved. The finding is stale rather than wrong, so it leaves the queue
+            // instead of sitting there offering the same impossible merge every week.
+            _logger.LogWarning("Refused to merge {Old} into {New} ({Outcome}); finding {ProposalId} dismissed",
+                proposal.OldUsername, proposal.NewUsername, outcome, proposal.Id);
+            await _identity.SetProposalStatus(proposal.Id, ProposalStatuses.Dismissed, cancellationToken);
+            return;
+        }
+
+        await _identity.SetProposalStatus(proposal.Id, resolution, cancellationToken);
         // The merge deletes the old dimension row, so anything that stored the old tag is now
         // pointing at nothing. Announced after the merge lands, never before.
-        if (proposal.Mix is { } mix)
-            await _bus.Publish(new OfficialPlayerRenamedEvent(mix, proposal.OldUsername, proposal.NewUsername),
+        if (proposal is { Mix: { } mix, NewUsername: { } newUsername })
+            await _bus.Publish(new OfficialPlayerRenamedEvent(mix, proposal.OldUsername, newUsername),
                 cancellationToken);
-        _logger.LogInformation("Merged {Old} into {New} (proposal {ProposalId})", proposal.OldUsername,
-            proposal.NewUsername, proposal.Id);
+        _logger.LogInformation("Merged {Old} into {New} ({Resolution}, finding {ProposalId})",
+            proposal.OldUsername, proposal.NewUsername, resolution, proposal.Id);
     }
 
     public async Task Handle(DismissRenameProposalCommand request, CancellationToken cancellationToken)
@@ -66,9 +86,11 @@ internal sealed class PlayerIdentitySaga :
     public async Task<IReadOnlyList<RenameProposalRecord>> Handle(GetRenameProposalsQuery request,
         CancellationToken cancellationToken)
     {
-        return (await _identity.GetProposals(request.Mix, ProposalStatuses.Pending, cancellationToken))
-            .Select(p => new RenameProposalRecord(p.Id, p.OldUsername, p.NewUsername, p.AvatarMatched,
-                p.Top50Overlap))
+        return (await _identity.GetFindings(request.Mix, request.UnresolvedOnly, cancellationToken))
+            .Select(p => new RenameProposalRecord(p.Id, p.OldUsername, p.NewUsername, p.Verdict, p.Status,
+                p.Evidence.OldPlacements, p.Evidence.BoardsPresent, p.Evidence.ExactNonPgMatches,
+                p.Evidence.ExactPerfectGames, p.Evidence.RunnerUpExactMatches, p.Evidence.SuspiciousAbsences,
+                p.Evidence.AvatarMatched))
             .ToArray();
     }
 

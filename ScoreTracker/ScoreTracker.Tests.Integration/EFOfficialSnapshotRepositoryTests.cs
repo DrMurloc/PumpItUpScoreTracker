@@ -1,4 +1,4 @@
-﻿using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.Integration.Fixtures;
@@ -242,40 +242,169 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task WriteProposalsDeduplicatesRedetectedPairs()
+    public async Task MergePlayersKeepsThePublishedRowWhenASupplementedOneCollides()
     {
-        var identity = Identity();
-        var proposal = new RenameProposal(0, OldPlayerId: 11, NewPlayerId: 22, "OLDTAG", "NEWTAG",
-            true, 46, ProposalStatuses.Pending, CreatedSnapshotId: 1);
-        await identity.WriteProposals(MixEnum.Phoenix2, new[] { proposal }, CancellationToken.None);
-        await identity.WriteProposals(MixEnum.Phoenix2, new[] { proposal with { CreatedSnapshotId = 2 } },
-            CancellationToken.None);
+        var snapshots = Snapshots();
+        var (_, board, oldPlayer, survivor) = await SeedSealedSnapshot(Week1);
+        var week2Id = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2, CancellationToken.None);
+        // The old tag genuinely charted this week. The new tag holds only a supplemented
+        // stand-in on the same board, because the roll-up found no row under its player id.
+        await snapshots.WritePlacements(week2Id, new[]
+        {
+            new PlacementRow(board.Id, oldPlayer.Id, 12, 980000),
+            new PlacementRow(board.Id, survivor.Id, 400, 980000, IsSupplemented: true)
+        }, CancellationToken.None);
+        await snapshots.Seal(week2Id, Week2.AddMinutes(41), CancellationToken.None);
 
-        var pending = await identity.GetProposals(MixEnum.Phoenix2, ProposalStatuses.Pending,
-            CancellationToken.None);
+        await Identity().MergePlayers(oldPlayer.Id, survivor.Id, CancellationToken.None);
 
-        Assert.Single(pending);
-        Assert.Equal(1, pending[0].CreatedSnapshotId);
+        // The real placement survives under the survivor. Dropping it would delete the player
+        // from a board the crawl saw them on, and the official reading would never know.
+        var official = await snapshots.GetPlacements(week2Id, PlacementScope.OfficialOnly,
+            CancellationToken.None);
+        var kept = Assert.Single(official);
+        Assert.Equal(survivor.Id, kept.PlayerId);
+        Assert.Equal(12, kept.Place);
+        // And the stand-in is gone rather than sitting beside it — one player, one board row.
+        Assert.Single(await snapshots.GetPlacements(week2Id, PlacementScope.IncludingSupplemented,
+            CancellationToken.None));
+    }
+
+    private static RenameProposal Finding(string verdict = VanishVerdicts.Merge, int? newPlayerId = 22,
+        int exactNonPg = 46) =>
+        new(0, OldPlayerId: 11, newPlayerId, "OLDTAG", newPlayerId == null ? null : "NEWTAG", verdict,
+            new RenameEvidence(50, 48, exactNonPg, 2, 0, 0, true), ProposalStatuses.Pending,
+            CreatedSnapshotId: 1);
+
+    [Fact]
+    public async Task MergingIntoADeletedPlayerMovesNothing()
+    {
+        // A finding can sit on the desk for weeks while other merges delete its candidate out
+        // from under it. There is no foreign key on PlayerId, so re-pointing history at a row
+        // that no longer exists would commit silently and render as blank names on the boards.
+        var snapshots = Snapshots();
+        var (week1Id, board, oldPlayer, doomed) = await SeedSealedSnapshot(Week1);
+        var bystander = (await snapshots.EnsurePlayers(MixEnum.Phoenix2,
+            new[] { ("carol", (Uri?)null) }, Week1, CancellationToken.None)).Single();
+        await Identity().MergePlayers(doomed.Id, bystander.Id, CancellationToken.None);
+
+        var outcome = await Identity().MergePlayers(oldPlayer.Id, doomed.Id, CancellationToken.None);
+
+        Assert.Equal(MergeOutcome.PlayerGone, outcome);
+        var rows = await snapshots.GetPlacements(week1Id, PlacementScope.OfficialOnly,
+            CancellationToken.None);
+        Assert.Contains(rows, p => p.PlayerId == oldPlayer.Id && p.LeaderboardId == board.Id);
+        Assert.DoesNotContain(rows, p => p.PlayerId == doomed.Id);
     }
 
     [Fact]
-    public async Task ProposalStatusTransitionsPersist()
+    public async Task TwoTagsHeldByDifferentAccountsNeverMerge()
+    {
+        // A link is either proved by logging into the account or inferred from the game tag an
+        // import wrote. One human's two mirror rows carry the same account; two accounts is the
+        // site's own answer that these are two people, whatever the scores agree on.
+        var snapshots = Snapshots();
+        var (week1Id, _, oldPlayer, other) = await SeedSealedSnapshot(Week1);
+        var identity = Identity();
+        await identity.LinkPlayer(MixEnum.Phoenix2, "alice", Guid.NewGuid(), Week1, CancellationToken.None);
+        await identity.LinkPlayer(MixEnum.Phoenix2, "bob", Guid.NewGuid(), Week1, CancellationToken.None);
+
+        var outcome = await identity.MergePlayers(oldPlayer.Id, other.Id, CancellationToken.None);
+
+        Assert.Equal(MergeOutcome.DifferentAccounts, outcome);
+        Assert.Contains(await snapshots.GetPlacements(week1Id, PlacementScope.OfficialOnly,
+            CancellationToken.None), p => p.PlayerId == oldPlayer.Id);
+        Assert.NotNull(await snapshots.GetPlayerByUsername(MixEnum.Phoenix2, "alice", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ResolvedHistoryIsCappedButUnresolvedWorkIsNot()
     {
         var identity = Identity();
-        await identity.WriteProposals(MixEnum.Phoenix2, new[]
-        {
-            new RenameProposal(0, 11, 22, "OLDTAG", "NEWTAG", true, 46, ProposalStatuses.Pending, 1)
-        }, CancellationToken.None);
-        var pending = (await identity.GetProposals(MixEnum.Phoenix2, ProposalStatuses.Pending,
-            CancellationToken.None)).Single();
+        var findings = Enumerable.Range(1, 260)
+            .Select(i => Finding(newPlayerId: 1000 + i) with { OldPlayerId = i })
+            .ToArray();
+        await identity.WriteFindings(MixEnum.Phoenix2, findings, CancellationToken.None);
+        var written = await identity.GetFindings(MixEnum.Phoenix2, true, CancellationToken.None);
+        foreach (var f in written.Take(250))
+            await identity.SetProposalStatus(f.Id, ProposalStatuses.AutoAccepted, CancellationToken.None);
 
-        await identity.SetProposalStatus(pending.Id, ProposalStatuses.Accepted, CancellationToken.None);
+        var desk = await identity.GetFindings(MixEnum.Phoenix2, false, CancellationToken.None);
 
-        Assert.Empty(await identity.GetProposals(MixEnum.Phoenix2, ProposalStatuses.Pending,
-            CancellationToken.None));
-        Assert.Equal(ProposalStatuses.Accepted,
-            (await identity.GetProposal(pending.Id, CancellationToken.None))!.Status);
+        // Ten still need a decision; the merged history behind them is trimmed rather than
+        // rendering a year of rows into a Blazor circuit.
+        Assert.Equal(10, desk.Count(f => f.Status == ProposalStatuses.Pending));
+        Assert.Equal(200, desk.Count(f => f.Status == ProposalStatuses.AutoAccepted));
     }
+
+    [Fact]
+    public async Task WriteFindingsDeduplicatesRedetectedPairs()
+    {
+        var identity = Identity();
+        await identity.WriteFindings(MixEnum.Phoenix2, new[] { Finding() }, CancellationToken.None);
+        await identity.WriteFindings(MixEnum.Phoenix2,
+            new[] { Finding() with { CreatedSnapshotId = 2 } }, CancellationToken.None);
+
+        var findings = await identity.GetFindings(MixEnum.Phoenix2, true, CancellationToken.None);
+
+        Assert.Single(findings);
+        Assert.Equal(1, findings[0].CreatedSnapshotId);
+    }
+
+    [Fact]
+    public async Task WriteFindingsReturnsWhatItWroteWithIdsAttached()
+    {
+        // The sweep merges the conclusive findings straight after writing them, and it needs
+        // the ids to send them through the accept path rather than a private merge.
+        var written = await WriteOneFinding();
+
+        Assert.NotEqual(0, written.Id);
+        Assert.Equal(MixEnum.Phoenix2, written.Mix);
+        Assert.Equal(VanishVerdicts.Merge, written.Verdict);
+    }
+
+    [Fact]
+    public async Task EvidenceSurvivesTheRoundTrip()
+    {
+        var written = await WriteOneFinding();
+
+        var stored = (await Identity().GetProposal(written.Id, CancellationToken.None))!;
+
+        Assert.Equal(new RenameEvidence(50, 48, 46, 2, 0, 0, true), stored.Evidence);
+        Assert.Equal(VanishVerdicts.Merge, stored.Verdict);
+    }
+
+    [Fact]
+    public async Task ATagWithNoCandidateStoresWithoutOne()
+    {
+        var identity = Identity();
+        await identity.WriteFindings(MixEnum.Phoenix2,
+            new[] { Finding(VanishVerdicts.DroppedOff, null, 0) }, CancellationToken.None);
+
+        var stored = Assert.Single(await identity.GetFindings(MixEnum.Phoenix2, true, CancellationToken.None));
+
+        Assert.Null(stored.NewPlayerId);
+        Assert.Null(stored.NewUsername);
+        Assert.Equal(VanishVerdicts.DroppedOff, stored.Verdict);
+    }
+
+    [Fact]
+    public async Task ResolvedFindingsLeaveTheQueueButStayOnTheDesk()
+    {
+        var identity = Identity();
+        var written = await WriteOneFinding();
+
+        await identity.SetProposalStatus(written.Id, ProposalStatuses.AutoAccepted, CancellationToken.None);
+
+        Assert.Empty(await identity.GetFindings(MixEnum.Phoenix2, true, CancellationToken.None));
+        // Still visible in the full population — an unattended merge that nobody can see
+        // afterwards is a one-way door with no record of who walked through it.
+        var all = Assert.Single(await identity.GetFindings(MixEnum.Phoenix2, false, CancellationToken.None));
+        Assert.Equal(ProposalStatuses.AutoAccepted, all.Status);
+    }
+
+    private async Task<RenameProposal> WriteOneFinding() =>
+        (await Identity().WriteFindings(MixEnum.Phoenix2, new[] { Finding() }, CancellationToken.None)).Single();
 
     [Fact]
     public async Task PlayerTimelineSpansSealedSnapshotsInOrderAndSkipsUnsealed()

@@ -10,7 +10,7 @@ The Official Mirror's leaderboard side gets rebuilt bottoms-up: Phoenix 2 boards
 |---|---|
 | 1 | **Weekly cadence, everything.** One Sunday sweep per mix; no daily pumbility polling ("I'm not bombarding PIUGame every day"). |
 | 2 | Highlights v1 = PUMBILITY movers + most-boards-climbed + new #1s (level 24+, must *beat* the standing record) + **world firsts**: first-ever of each grade band **SS and up, PG included**, tracked **per chart and per folder** (S24, D24, …). Same-week rule below. Skipped weeks self-label ("vs Jun 28 (2 weeks)"). |
-| 3 | Renames: auto-detect heuristic **proposes**, owner accepts from the admin page. Never auto-merge. |
+| 3 | Renames: auto-detect heuristic **proposes**, owner accepts from the admin page. Never auto-merge. **Superseded 2026-08-05** — conclusive renames now merge unattended; see [rename-matching.md](rename-matching.md). |
 | 4 | PlayerCompare and the avatar leaderboard are **dropped for now** (revisit later). |
 | 5 | Popularity: **no backfill**; accumulate from the first new-pipeline snapshot. Song view aggregates chart ranks at read time. |
 | 6 | The P2 rankings hub ranks by **official PUMBILITY board values**; our computed rating is drill-down detail. (P1 keeps computed rankings — it has no pumbility board.) |
@@ -49,7 +49,7 @@ Facts:
 | `OfficialBoardRecord` | LeaderboardId PK, HighScore, AchievedSnapshotId | The record book. A band is claimed iff HighScore ≥ its floor, so one number encodes every claimed band. Rebuildable from history. |
 | `OfficialFolderRecord` | (MixId, ChartType, Level) PK, HighScore, AchievedSnapshotId | Folder-level record book (S24, D26, …), level 24+ only in practice. |
 | `OfficialWeeklyHighlight` | Id, SnapshotId, MixId, Kind, SortOrder, PlayerId?, LeaderboardId?, ChartId?, ChartType?, Level?, GradeBand?, Score?, PrevValue?, NewValue? | Kinds: PumbilityMover, BoardsClimbed, NewNumberOne, ChartGradeFirst, FolderGradeFirst + the hero's playerless summary kinds WeeklyPulse, PumbilityGainer, Debut, FloorMark (per-kind packing documented on `HighlightKinds`). Co-credits = one row per claimant sharing (Kind, subject); UI groups. Index (SnapshotId). |
-| `OfficialPlayerRenameProposal` | Id, MixId, OldPlayerId, NewPlayerId, OldUsername, NewUsername, AvatarMatched bit, Top50Overlap int, Status (Pending/Accepted/Dismissed), CreatedSnapshotId | The old/new username text columns are the audit trail — accept hard-merges the player rows (§5). |
+| `OfficialPlayerRenameProposal` | **Reshaped 2026-08-05** ([rename-matching.md](rename-matching.md)): NewPlayerId/NewUsername nullable, Top50Overlap → BoardsPresent, + Verdict, OldPlacements, ExactNonPgMatches, ExactPerfectGames, RunnerUpExactMatches, SuspiciousAbsences; Status gains AutoAccepted | The old/new username text columns are the audit trail — a merge hard-merges the player rows (§5). |
 
 Growth: P2 steady state ≈ 150–200k placement rows/week ≈ 350 MB/yr all-in at this shape. P1 adds ~60k/week until its sunset bounds it. Storage is a non-issue at the raised cap; the index set above is the actual deliverable (incident lesson: ship indexes with the query shapes).
 
@@ -75,7 +75,7 @@ Scraper hardening riding along (`PiuGameApi` / `OfficialSiteClient`): `EnsureSuc
 
 **UserId linking (decision 8).** The player score import (`RunImport`) learns the account's game tag authoritatively — after account resolution it upserts `OfficialPlayer(mix, tag).UserId = userId, UserIdSource = Import, LastSeenAt = now`, overwriting any previous link (imports are activity, so last-import-wins *is* most-recently-active). No string-matching backfill against `Users.GameTag` — import-confirmed only. Linked players render as `UserLabel` (profile link); unlinked render tag + mirrored avatar. Touchpoint to investigate in build: when the account-merge tool merges users, re-point `OfficialPlayer.UserId` rows (event consumer if Identity publishes one; admin note if not).
 
-**Renames (decision 3).** During the highlights stage, tags that *disappeared* this snapshot are paired against tags that *appeared*: candidate when avatar URL matches **and** the old player's top-50 placements substantially reappear under the new tag (same chart, score ≥ old — scores only ever improve). Candidates land as Pending proposals with their evidence; the admin page lists them with **Accept — merge history** / Dismiss. Accept re-points the old player's placements and highlight rows to the new player id and deletes the old dim row (the proposal row keeps both usernames as audit; a freed tag can be re-registered by a different human later, which correctly creates a fresh player). No proposal, no merge — a vanished tag with no candidate is just churn.
+**Renames (decision 3, superseded).** The shipped rule is in [rename-matching.md](rename-matching.md) and differs from what this section described in every particular: the avatar is evidence rather than a gate, the overlap fraction is gone, and a conclusive match merges without an admin. What survives is the merge itself — placements and highlight rows re-point to the new player id, the old dim row is deleted, and the finding row keeps both usernames as audit (a freed tag re-registered by a different human later correctly creates a fresh player).
 
 ## 6. Query strategy (the DTU conversation, settled)
 

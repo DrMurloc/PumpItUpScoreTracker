@@ -47,13 +47,15 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     private readonly ITierListRepository _tierLists;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IBus _bus;
+    private readonly IMediator _mediator;
     private readonly ILogger _logger;
 
     public LeaderboardSweepSaga(IOfficialSiteClient officialSite, IOfficialSnapshotRepository snapshots,
         IOfficialRecordRepository records, IOfficialPlayerIdentityRepository identity,
         IChartRepository charts, ITierListRepository tierLists, IDateTimeOffsetAccessor dateTime,
-        IBus bus, ILogger<LeaderboardSweepSaga> logger)
+        IBus bus, IMediator mediator, ILogger<LeaderboardSweepSaga> logger)
     {
+        _mediator = mediator;
         _officialSite = officialSite;
         _snapshots = snapshots;
         _records = records;
@@ -161,14 +163,52 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
             result.Highlights.Count);
 
         if (!input.IsBaseline && input.Previous != null)
-        {
-            var proposals = RenameProposalDetector.Detect(snapshotId,
-                await _snapshots.GetPlayers(mix, ct), input.Boards, input.Current, input.Previous);
-            await _identity.WriteProposals(mix, proposals, ct);
-            if (proposals.Count > 0)
-                _logger.LogInformation("{Mix} snapshot {SnapshotId}: {Count} rename proposals", mix, snapshotId,
-                    proposals.Count);
-        }
+            await ExplainVanishedTags(snapshotId, mix, input, ct);
+    }
+
+    /// <summary>
+    ///     Accounts for every tag that left the boards this week and merges the ones the
+    ///     evidence settles. The rest land on the admin desk with their verdict — including
+    ///     the ones that merged themselves, which is how anyone can tell the rule is still
+    ///     working rather than silently finding nothing.
+    /// </summary>
+    private async Task ExplainVanishedTags(int snapshotId, MixEnum mix, HighlightsInput input,
+        CancellationToken ct)
+    {
+        var findings = VanishedTagAnalyzer.Analyze(snapshotId, await _snapshots.GetPlayers(mix, ct),
+            input.Boards, input.Current, input.Previous!);
+        var written = await _identity.WriteFindings(mix, findings, ct);
+
+        // Driven off everything still unresolved, not off what was just written. A sweep that
+        // died mid-merge leaves conclusive findings sitting Pending, and the write is deduped
+        // on (old, new) — so re-deriving them next run produces nothing to merge and they
+        // would stay stranded. Reading the queue instead makes the sweep self-healing.
+        var pending = (await _identity.GetFindings(mix, true, ct))
+            .Where(f => f.Verdict == VanishVerdicts.Merge && f.NewPlayerId != null)
+            .ToArray();
+
+        var merged = 0;
+        foreach (var finding in pending)
+            try
+            {
+                // Through the command an admin's button sends, not a private copy of the merge:
+                // the history re-point, the status and the rename announcement have to stay one
+                // sequence however the decision was reached.
+                await _mediator.Send(new AcceptRenameProposalCommand(finding.Id, true), ct);
+                merged++;
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                // One bad row must not cost the other twenty, and must not cost the seal
+                // either: an unsealed snapshot keeps the whole site on last week's data.
+                _logger.LogError(e, "{Mix} snapshot {SnapshotId}: merging {Old} into {New} failed",
+                    mix, snapshotId, finding.OldUsername, finding.NewUsername);
+            }
+
+        if (findings.Count > 0 || merged > 0)
+            _logger.LogInformation(
+                "{Mix} snapshot {SnapshotId}: {Found} tags left the boards ({New} new), {Merged} of {Eligible} merged",
+                mix, snapshotId, findings.Count, written.Count, merged, pending.Length);
     }
 
     /// <summary>
