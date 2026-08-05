@@ -114,6 +114,12 @@
 
     [Parameter] public int? OfficialFolderPlace { get; set; }
 
+    /// <summary>
+    ///     Set false by a host that renders this behind a tab nobody has selected, so a panel
+    ///     out of sight issues none of its three reads.
+    /// </summary>
+    [Parameter] public bool Active { get; set; } = true;
+
     private Guid _loadedChartId = Guid.Empty;
     private string? _externalKey;
     private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
@@ -121,7 +127,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Chart == null || Chart.Id == _loadedChartId) return;
+        if (!Active || Chart == null || Chart.Id == _loadedChartId) return;
         _loadedChartId = Chart.Id;
         _placements = await LoadPlacements(Chart.Id);
         // The alias table's key beats the guessed one (crawler project hardening).

@@ -48,7 +48,7 @@
        purpose-built — EditChartGrid brought duplicate To-Do/favorite buttons and
        a layout that fell apart on phones. To-Do lives on the dialog's title row. *@
     <div class="chart-details-record">
-        <MudText Typo="Typo.overline">@L["Record Score"]</MudText>
+        <MudText Typo="Typo.overline">@L["Manual score edit"]</MudText>
         <div class="chart-details-record-row">
             <MudNumericField T="int?" Label="@L["Score"]" @bind-Value="_inputScore" Min="0" Max="1000000"
                              HideSpinButtons="true" Class="chart-details-record-score"></MudNumericField>
@@ -132,6 +132,12 @@
     /// </summary>
     [Parameter] public bool ShowHeading { get; set; } = true;
 
+    /// <summary>
+    ///     Set false by a host that renders this behind a tab nobody has selected, so a panel
+    ///     out of sight does not fetch a journey nobody is reading.
+    /// </summary>
+    [Parameter] public bool Active { get; set; } = true;
+
     private Guid _loadedChartId = Guid.Empty;
     private int? _inputScore;
     private PhoenixPlate? _inputPlate;
@@ -141,7 +147,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Chart == null || Chart.Id == _loadedChartId) return;
+        if (!Active || Chart == null || Chart.Id == _loadedChartId) return;
         _loadedChartId = Chart.Id;
         _inputScore = Score?.Score == null ? null : (int)Score.Score.Value;
         _inputPlate = Score?.Plate;

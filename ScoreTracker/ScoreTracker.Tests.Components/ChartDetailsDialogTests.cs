@@ -22,6 +22,7 @@ using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services;
+using ScoreTracker.Web.Services.Contracts;
 using Xunit;
 
 namespace ScoreTracker.Tests.Components;
@@ -36,6 +37,7 @@ public sealed class ChartDetailsDialogTests : TestContext
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IAdminNotificationClient> _notifications = new();
+    private readonly Mock<IUiSettingsAccessor> _uiSettings = new();
 
     public ChartDetailsDialogTests()
     {
@@ -44,6 +46,10 @@ public sealed class ChartDetailsDialogTests : TestContext
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton(_notifications.Object);
         Services.AddSingleton(_currentUser.Object);
+        // The tab the dialog opens on is remembered per user; nothing stored means the default.
+        Services.AddSingleton(_uiSettings.Object);
+        _uiSettings.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<Guid?>()))
+            .ReturnsAsync((string?)null);
         _currentUser.Setup(u => u.IsLoggedIn).Returns(false);
         // The bubble nested in the title row injects this and reads through it.
         _mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
@@ -83,7 +89,7 @@ public sealed class ChartDetailsDialogTests : TestContext
     }
 
     /// <summary>Inline MudDialogs render through the provider, so the fragment hosts both.</summary>
-    private IRenderedFragment RenderDialog(Chart chart)
+    private IRenderedFragment RenderDialog(Chart chart, ChartDetailsDialog.DetailsTab? initialTab = null)
     {
         return Render(builder =>
         {
@@ -92,6 +98,7 @@ public sealed class ChartDetailsDialogTests : TestContext
             builder.OpenComponent<ChartDetailsDialog>(1);
             builder.AddAttribute(2, nameof(ChartDetailsDialog.Chart), chart);
             builder.AddAttribute(3, nameof(ChartDetailsDialog.Visible), true);
+            builder.AddAttribute(4, nameof(ChartDetailsDialog.InitialTab), initialTab);
             builder.CloseComponent();
         });
     }
@@ -123,17 +130,63 @@ public sealed class ChartDetailsDialogTests : TestContext
     /// <summary>
     ///     The dialog hosts the shared board rather than growing one of its own. Asserting on
     ///     the scope rail is what distinguishes the two — a private copy would have no scopes.
+    ///     It is also the default tab, so this doubles as the check that the dialog opens on it.
     /// </summary>
     [Fact]
-    public void TheSharedBoardRendersInsideTheDialog()
+    public void TheSharedBoardRendersInsideTheDialogAndIsTheDefaultTab()
     {
         var cut = RenderDialog(SetupChart(null));
 
         cut.WaitForAssertion(() =>
         {
-            Assert.NotEmpty(cut.FindAll(".chart-details-board"));
             Assert.NotEmpty(cut.FindAll("[data-testid='cld-scope-World']"));
+            Assert.Equal("true",
+                cut.Find("[data-testid='cdt-tab-Leaderboard']").GetAttribute("aria-selected"));
         });
+    }
+
+    /// <summary>
+    ///     The point of the tabs. A panel nobody selected must not fetch: the stats panel's
+    ///     badge chips are the cheapest thing to assert on, because the meta grid renders from
+    ///     the Chart itself and would be present either way.
+    /// </summary>
+    [Fact]
+    public void AnUnselectedTabFetchesNothing()
+    {
+        RenderDialog(SetupChart(null));
+
+        _mediator.Verify(m => m.Send(It.IsAny<GetChartBadgeChipsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
+    ///     A caller that opens this dialog for one section says so, and is obeyed — which is
+    ///     what keeps recording a score one tap away from the widgets that exist to record.
+    /// </summary>
+    [Fact]
+    public void InitialTabDecidesWhereTheDialogOpens()
+    {
+        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Stats);
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal("true", cut.Find("[data-testid='cdt-tab-Stats']").GetAttribute("aria-selected"));
+            _mediator.Verify(m => m.Send(It.IsAny<GetChartBadgeChipsQuery>(), It.IsAny<CancellationToken>()),
+                Times.Once);
+        });
+    }
+
+    /// <summary>
+    ///     Score History is your journal plus your recording inputs. Signed out both are empty,
+    ///     so the tab is not offered at all rather than opening onto nothing.
+    /// </summary>
+    [Fact]
+    public void SignedOutThereIsNoScoreHistoryTab()
+    {
+        var cut = RenderDialog(SetupChart(null));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid='cdt-tab-Stats']")));
+        Assert.Empty(cut.FindAll("[data-testid='cdt-tab-History']"));
     }
 
     /// <summary>

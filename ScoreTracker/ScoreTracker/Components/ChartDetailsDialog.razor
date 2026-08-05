@@ -12,12 +12,13 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
-@using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
 @inject IAdminNotificationClient Notifications
+@inject IUiSettingsAccessor UiSettings
 
 @* The one shared chart-details surface (design doc §4): leads with the video like
    today's video dialog, then meta, the cross-mix score journey (ScoreEventJournal),
@@ -62,26 +63,48 @@
                     }
                 </div>
             }
-            @* Keys carry each panel's identity alongside the chart id: Blazor's sibling key
-               lookup compares key VALUES only, so two keyed siblings sharing a chart id
-               collide even when they are different component types. *@
-            <ChartStatsTab Chart="Chart" Mix="Mix" OfficialPlace="OfficialPlace"
-                           OfficialFolderPlace="OfficialFolderPlace"
-                           @key="(Chart.Id, nameof(ChartStatsTab))"></ChartStatsTab>
-            @* Round 4 (piucenter): "Your journey" renamed Score History and moved next
-               to the recording inputs it feeds — past scores directly above the new one. *@
-            <ChartScoreHistoryTab Chart="Chart" Mix="Mix" Score="Score" OnScoreRecorded="OnScoreRecorded"
-                                  @key="(Chart.Id, nameof(ChartScoreHistoryTab))"></ChartScoreHistoryTab>
+            @* Sticky so a tall header — video, title, your score — scrolls away underneath the
+               strip instead of taking it with it. The panels below all stay mounted and are
+               gated on Active rather than unmounted: switching tabs would otherwise throw away
+               the board's scope selection and re-query on the way back.
+               Comments becomes the first tab when that feature lands (docs/design/chart-comments). *@
+            <div class="chart-details-tabs" role="tablist">
+                @foreach (var tab in AvailableTabs)
+                {
+                    var t = tab;
+                    <button type="button" role="tab" class="@TabClass(t)" data-testid="@($"cdt-tab-{t}")"
+                            aria-selected="@((_tab == t).ToString().ToLowerInvariant())"
+                            @onclick="() => SelectTab(t)">@TabLabel(t)</button>
+                }
+            </div>
             @* The chart page's board, unchanged — the dialog is the third host of one component
-               rather than a third leaderboard. Active follows Visible so a dialog nobody has
-               opened issues no queries, which matters here: ten call sites render this. *@
-            <div class="chart-details-board">
-                <MudText Typo="Typo.overline">@L["Leaderboard"]</MudText>
-                <ChartLeaderboardScopes ChartId="Chart.Id" Mix="Mix" Active="Visible"
+               rather than a third leaderboard. Active is Visible AND selected, so neither a
+               dialog nobody opened nor a tab nobody picked issues a query. Nineteen call sites
+               render this. *@
+            <div class="@PanelClass(DetailsTab.Leaderboard)">
+                <ChartLeaderboardScopes ChartId="Chart.Id" Mix="Mix"
+                                        Active="IsLive(DetailsTab.Leaderboard)"
                                         InitialScope="BoardScope"
                                         @key="(Chart.Id, Mix)"></ChartLeaderboardScopes>
             </div>
-            @* Reserved slot: chart comments land here if user-generated content ever ships. *@
+            @* Keys carry each panel's identity alongside the chart id: Blazor's key lookup
+               compares key VALUES only, so two keyed siblings sharing a chart id collide even
+               when they are different component types. *@
+            <div class="@PanelClass(DetailsTab.Stats)">
+                <ChartStatsTab Chart="Chart" Mix="Mix" OfficialPlace="OfficialPlace"
+                               OfficialFolderPlace="OfficialFolderPlace"
+                               Active="IsLive(DetailsTab.Stats)"
+                               @key="(Chart.Id, nameof(ChartStatsTab))"></ChartStatsTab>
+            </div>
+            @* Round 4 (piucenter): "Your journey" renamed Score History and kept next to the
+               recording inputs it feeds — past scores directly above the new one. The tab is
+               the heading now, so the panel no longer prints one of its own. *@
+            <div class="@PanelClass(DetailsTab.History)">
+                <ChartScoreHistoryTab Chart="Chart" Mix="Mix" Score="Score" ShowHeading="false"
+                                      OnScoreRecorded="OnScoreRecorded"
+                                      Active="IsLive(DetailsTab.History)"
+                                      @key="(Chart.Id, nameof(ChartScoreHistoryTab))"></ChartScoreHistoryTab>
+            </div>
         }
     </DialogContent>
     <DialogActions>
@@ -148,6 +171,61 @@
         margin: 8px 0;
     }
 
+    /* Sticky against the dialog content, which is the scroll container. It does not bleed to
+       the content's padding edges on purpose: matching MudBlazor's own gutter by hand risks
+       overflowing it, and a dialog that scrolls sideways is a worse bug than a 24px gutter. */
+    .chart-details-tabs {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: flex;
+        gap: 2px;
+        margin-top: 10px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        background: var(--mud-palette-surface);
+        border-top: 1px solid var(--mud-palette-lines-default);
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .chart-details-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Labels stay whole words and the strip scrolls instead. Four of them do not fit a 390px
+       phone, and abbreviating "Leaderboard" into jargon to buy 40px is the worse trade. */
+    .chart-details-tab {
+        appearance: none;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--mud-palette-text-secondary);
+        font: inherit;
+        font-size: .82rem;
+        padding: 10px 12px 8px;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .chart-details-tab:hover {
+        color: var(--mud-palette-text-primary);
+    }
+
+    .chart-details-tab-on {
+        color: var(--mud-palette-primary);
+        border-bottom-color: var(--mud-palette-primary);
+    }
+
+    .chart-details-tab:focus-visible {
+        outline: 2px solid var(--mud-palette-primary);
+        outline-offset: -2px;
+    }
+
+    /* Hidden, not unmounted — see the panel comment in the markup. */
+    .chart-details-panel-hidden {
+        display: none;
+    }
+
     /* Age reads under the score, not beside it (owner, piucenter round 3). */
     .chart-details-score-age {
         display: block;
@@ -167,6 +245,26 @@
 </style>
 
 @code {
+    /// <summary>
+    ///     The dialog's sections. Comments joins as the first tab when that feature lands
+    ///     (docs/design/chart-comments); until it has something behind it, shipping a fourth
+    ///     tab would just be a dead control.
+    /// </summary>
+    public enum DetailsTab
+    {
+        Leaderboard,
+        Stats,
+        History
+    }
+
+    /// <summary>
+    ///     Per user, not per page. The density preference is keyed by page because a table on
+    ///     one screen says nothing about a table on another; this dialog is the same object
+    ///     everywhere it opens, so remembering it nineteen times over would be nineteen answers
+    ///     to one question.
+    /// </summary>
+    private const string TabSettingKey = "ChartDetails__Tab";
+
     // MaxWidth.False on purpose: Small would tag the dialog `mud-dialog-width-sm`, which
     // charts.scss globally forces to `max-width: none !important`. The cap lives in this
     // component's own stylesheet instead — see the note beside it.
@@ -175,6 +273,10 @@
     private Guid _loadedChartId = Guid.Empty;
     private bool _isSaving;
     private string? _videoUrl;
+    private DetailsTab _tab = DetailsTab.Leaderboard;
+    private DetailsTab? _remembered;
+    private bool _rememberRead;
+    private bool _wasVisible;
 
     [Parameter] public Chart? Chart { get; set; }
 
@@ -233,15 +335,101 @@
     /// </summary>
     [Parameter] public string? SuggestionCategory { get; set; }
 
+    /// <summary>
+    ///     Which tab to open on. A caller that reaches this dialog in order to record a score
+    ///     has already said which section it means, and making them tap for it would undo what
+    ///     always-visible inputs were for. Null defers to the remembered choice.
+    /// </summary>
+    [Parameter] public DetailsTab? InitialTab { get; set; }
+
+    private IReadOnlyList<DetailsTab> AvailableTabs => CurrentUser.IsLoggedIn
+        ? new[] { DetailsTab.Leaderboard, DetailsTab.Stats, DetailsTab.History }
+        // Score History is your journal plus your recording inputs. Signed out it is an empty
+        // box with a heading, which is worse than one fewer tab.
+        : new[] { DetailsTab.Leaderboard, DetailsTab.Stats };
+
+    private bool IsLive(DetailsTab tab)
+    {
+        return Visible && _tab == tab;
+    }
+
+    private string TabClass(DetailsTab tab)
+    {
+        return _tab == tab ? "chart-details-tab chart-details-tab-on" : "chart-details-tab";
+    }
+
+    private string PanelClass(DetailsTab tab)
+    {
+        return _tab == tab ? "chart-details-panel" : "chart-details-panel chart-details-panel-hidden";
+    }
+
+    private string TabLabel(DetailsTab tab)
+    {
+        return tab switch
+        {
+            DetailsTab.Stats => L["Chart Stats"],
+            DetailsTab.History => L["Score History"],
+            _ => L["Leaderboard"]
+        };
+    }
+
+    private async Task SelectTab(DetailsTab tab)
+    {
+        if (_tab == tab) return;
+        _tab = tab;
+        _remembered = tab;
+        await UiSettings.SetSetting(TabSettingKey, tab.ToString());
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        if (!Visible || Chart == null || Chart.Id == _loadedChartId) return;
+        if (!Visible)
+        {
+            // Resolved once per opening rather than on every parameter change: re-applying
+            // InitialTab while the dialog is open would snap the user back out of any tab
+            // they picked themselves.
+            _wasVisible = false;
+            return;
+        }
+
+        if (Chart == null) return;
+        if (!_wasVisible)
+        {
+            _wasVisible = true;
+            await ResolveOpeningTab();
+        }
+
+        if (Chart.Id == _loadedChartId) return;
         _loadedChartId = Chart.Id;
         _feedbackSent = false;
-        // The video is all this component reads now — the stats and history panels own the
-        // rest, so a host that never shows one never pays for its queries.
+        // The video is all this component reads now — the stats, history and leaderboard
+        // panels own the rest and only read when they are the selected tab.
         _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { Chart.Id })))
             .FirstOrDefault()?.VideoUrl.ToString();
+    }
+
+    private async Task ResolveOpeningTab()
+    {
+        if (InitialTab is { } forced)
+        {
+            _tab = forced;
+        }
+        else
+        {
+            // Read once per instance. Signed in this is a query, and paying it on every open
+            // of a dialog that nineteen call sites render is exactly the cost the tabs removed.
+            if (!_rememberRead)
+            {
+                _rememberRead = true;
+                var stored = await UiSettings.GetSetting(TabSettingKey);
+                if (Enum.TryParse<DetailsTab>(stored, out var restored)) _remembered = restored;
+            }
+
+            if (_remembered is { } remembered) _tab = remembered;
+        }
+
+        // A remembered History from a previous session is not a tab an anonymous visitor has.
+        if (!AvailableTabs.Contains(_tab)) _tab = DetailsTab.Leaderboard;
     }
 
     /// <summary>Names the chart to an admin — wrong videos get caught by whoever is watching.</summary>
