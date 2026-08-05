@@ -31,29 +31,42 @@ public sealed class SupplementMergeTests
     }
 
     [Fact]
-    public void APlayerAlreadyOnTheBoardWithNoBetterScoreIsNotStoredAtAll()
+    public void APlayerTheBoardAlreadyListsIsNeverStored()
     {
         var official = new[] { Official(1, 1, 990_000), Official(2, 2, 985_000) };
 
-        // Equal, not merely lower: re-storing an identical score would put the same human on
-        // the board twice for no gain.
+        // Higher, equal or lower — all three are left as piugame published them. Supplement
+        // fills gaps; it does not refresh a row the official board already carries.
         var stored = SupplementMerge.RowsToStore(Board, official,
-            new[] { (PlayerId: 1, Score: 990_000m), (PlayerId: 2, Score: 900_000m) });
+            new[] { (PlayerId: 1, Score: 995_000m), (PlayerId: 2, Score: 900_000m) });
 
         Assert.Empty(stored);
     }
 
+    /// <summary>
+    ///     The invariant the placement key depends on. That key is
+    ///     (Snapshot, Leaderboard, Place, Player), so a supplemented row sharing a player with
+    ///     an official one can land on the identical key — which is exactly how a live roll-up
+    ///     died: an improvement too small to move the player past the one above them collided
+    ///     with their own official row.
+    /// </summary>
     [Fact]
-    public void APlayerOnTheBoardWhoseLedgerScoreIsHigherIsStoredAndTakesTheHigherPlace()
+    public void NoStoredRowEverSharesAPlayerWithAnOfficialOne()
     {
-        // The board is a week old and they improved since the scrape.
-        var official = new[] { Official(1, 1, 990_000), Official(2, 2, 985_000), Official(3, 3, 980_000) };
+        var official = Enumerable.Range(1, 10)
+            .Select(i => Official(i, i, 1_000_000 - i * 1_000))
+            .ToArray();
 
-        var stored = SupplementMerge.RowsToStore(Board, official, new[] { (PlayerId: 3, Score: 995_000m) });
+        // Every listed player, each with a ledger score that would have "upgraded" them, plus
+        // one genuine newcomer.
+        var ledger = official.Select(r => (PlayerId: r.PlayerId, Score: r.Score + 500m))
+            .Append((PlayerId: 99, Score: 900_000m))
+            .ToArray();
 
-        var row = Assert.Single(stored);
-        Assert.Equal(3, row.PlayerId);
-        Assert.Equal(1, row.Place);
+        var stored = SupplementMerge.RowsToStore(Board, official, ledger);
+
+        Assert.Equal(99, Assert.Single(stored).PlayerId);
+        Assert.Empty(stored.Select(r => r.PlayerId).Intersect(official.Select(r => r.PlayerId)));
     }
 
     [Fact]

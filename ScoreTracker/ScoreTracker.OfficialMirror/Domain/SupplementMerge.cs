@@ -6,9 +6,13 @@ namespace ScoreTracker.OfficialMirror.Domain;
 ///     store, and the supplemented read uses it to rank what it found, so the two cannot
 ///     disagree about what the board looks like.
 ///     <para>
-///         One human, one row: a player who is on the official board and also has a ledger
-///         best keeps whichever score is higher, because scores only improve. That is the only
-///         reason a supplemented row is ever stored for someone already on the board.
+///         **Supplement fills gaps; it never refreshes.** A player the official board already
+///         lists is left exactly as piugame published them, even when their own ledger is newer
+///         and better. Storing the upgrade meant two rows for one human on one board, and the
+///         placement key is (Snapshot, Leaderboard, Place, Player) — so an improvement too
+///         small to move them past the player above collides with their own official row. It
+///         is also the honest reading: every other row on that board is the seal's data, and
+///         one player's fresher score among them is a different week's answer.
 ///     </para>
 ///     <para>
 ///         On a complete chart board supplemented rows can only land below the official tail —
@@ -22,19 +26,18 @@ namespace ScoreTracker.OfficialMirror.Domain;
 internal static class SupplementMerge
 {
     /// <summary>
-    ///     The supplemented rows to store for one board: the ledger bests that earn a place,
-    ///     each carrying its merged place. Ledger entries that lose to the player's own
-    ///     official row are dropped rather than stored and filtered later.
+    ///     The supplemented rows to store for one board: the ledger bests of players the board
+    ///     does not already list, each carrying its merged place. A player with an official row
+    ///     contributes nothing, which is what guarantees no stored supplemented row can share a
+    ///     (Place, Player) with an official one — the placement key's whole safety.
     /// </summary>
     public static IReadOnlyList<PlacementRow> RowsToStore(int leaderboardId,
         IReadOnlyList<PlacementRow> official, IReadOnlyList<(int PlayerId, decimal Score)> ledger)
     {
-        var officialByPlayer = official
-            .GroupBy(r => r.PlayerId)
-            .ToDictionary(g => g.Key, g => g.Max(r => r.Score));
+        var listed = official.Select(r => r.PlayerId).ToHashSet();
 
         var candidates = ledger
-            .Where(l => !officialByPlayer.TryGetValue(l.PlayerId, out var theirs) || l.Score > theirs)
+            .Where(l => !listed.Contains(l.PlayerId))
             .Select(l => new PlacementRow(leaderboardId, l.PlayerId, 0, l.Score, true));
 
         return MergedBoard(official.Concat(candidates))

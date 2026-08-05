@@ -107,11 +107,20 @@ NULL rows for that set is a one-line predicate.
 
 ## 5. The merge
 
-Per board, per snapshot: official rows, plus the ledger bests of every linked public player, deduped
-to **one row per human** — a player present on both sides keeps the higher score, since scores only
-improve. Ranked with the sweep's own Olympic tie rule (`Placements.Olympic`), with a deterministic
-tiebreak — official ahead of supplemented, then by player id — so a paginated board doesn't
-reshuffle between one render and the next.
+Per board, per snapshot: official rows, plus the ledger bests of linked public players **the board
+does not already list**. Ranked with the sweep's own Olympic tie rule (`Placements.Olympic`), with a
+deterministic tiebreak — official ahead of supplemented, then by player id — so a paginated board
+doesn't reshuffle between one render and the next.
+
+> **Corrected 2026-08-04, after a live roll-up died on it.** This section first said a player on
+> both sides keeps the higher score, so a fresher ledger would upgrade their official row. That
+> stores two rows for one human on one board, and the placement key is
+> (Snapshot, Leaderboard, Place, Player): an improvement too small to move them past the player
+> above collides with their own official row. It happened on Emperor CoOp2, where a player sat at
+> place 8 with 988,495 and their ledger was higher but not by enough. Supplement now **fills gaps
+> and never refreshes** — which is also the more honest reading, since every other row on that
+> board is the seal's data and one player's newer score is a different week's answer. Restoring the
+> upgrade would mean changing that clustered primary key.
 
 **On chart boards, supplemented rows can only append below the official tail.** If a player is not on
 the official top 300, their score is by definition below the 300th score, so they rank ≥301 and
