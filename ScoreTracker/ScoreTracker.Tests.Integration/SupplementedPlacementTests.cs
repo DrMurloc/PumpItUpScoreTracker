@@ -1,4 +1,4 @@
-using ScoreTracker.OfficialMirror.Domain;
+﻿using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.Integration.Fixtures;
@@ -124,6 +124,28 @@ public sealed class SupplementedPlacementTests : IAsyncLifetime
         Assert.Equal(975_000, rows.Single(r => r.IsSupplemented).Score);
         // The official row is untouched by a roll-up, however many times it runs.
         Assert.Equal(990_000, rows.Single(r => !r.IsSupplemented).Score);
+    }
+
+    /// <summary>
+    ///     The roll-up hands over a whole mix at once — nearly 200,000 rows on Phoenix — where
+    ///     the sweep only ever passes one board. A single tracked transaction that size does not
+    ///     complete, which is why the write batches, and why this covers more than one batch.
+    /// </summary>
+    [Fact]
+    public async Task AWriteLargerThanOneBatchLandsInFull()
+    {
+        var s = await SeedBothReadings();
+        var ct = CancellationToken.None;
+        var players = await Snapshots().EnsurePlayers(MixEnum.Phoenix2,
+            Enumerable.Range(1, 2_500).Select(i => ($"BULK{i}#0", (Uri?)null)).ToArray(), Week1, ct);
+
+        await Snapshots().WritePlacements(s.SnapshotId, players
+            .Select((p, i) => new PlacementRow(s.Board.Id, p.Id, 100 + i, 900_000 - i, true))
+            .ToArray(), ct);
+
+        // 2,500 written across two batches, plus the one the seed already carries.
+        var rows = await Snapshots().GetPlacements(s.SnapshotId, PlacementScope.IncludingSupplemented, ct);
+        Assert.Equal(2_501, rows.Count(r => r.IsSupplemented));
     }
 
     [Fact]

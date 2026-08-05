@@ -31,10 +31,11 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
     IConsumer<OfficialSnapshotSealedEvent>
 {
     /// <summary>
-    ///     Players per ledger read. The whole Phoenix cohort at once is roughly six hundred
-    ///     thousand rows and a parameter list SQL Server would refuse.
+    ///     Players per ledger read. Phoenix's cohort holds roughly six hundred thousand records
+    ///     between them, so this is about how much of that is in flight at once — not about the
+    ///     parameter list, which would tolerate far more.
     /// </summary>
-    private const int UserChunk = 200;
+    private const int UserChunk = 50;
 
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
@@ -98,6 +99,8 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
         written.AddRange(await ChartBoardRows(latest.Id, mix, boards, cohort, ct));
         written.AddRange(await RatingBoardRows(latest.Id, mix, boards, cohort, ct));
 
+        _logger.LogInformation("{Mix} snapshot {SnapshotId}: writing {Rows} supplemented rows", mix, latest.Id,
+            written.Count);
         await _snapshots.WritePlacements(latest.Id, written, ct);
         await ComputeHighlights(latest.Id, mix, boards, isBaseline, ct);
         EvictSnapshotCaches(mix, latest.Id);

@@ -274,21 +274,37 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .Select(ToPlayer).ToArray();
     }
 
+    /// <summary>
+    ///     Rows per SaveChanges. The sweep calls this once per board and never notices, but the
+    ///     supplemented roll-up hands over a whole mix at once — nearly 200,000 rows on Phoenix
+    ///     — and one tracked transaction that size does not complete. A fresh context per batch
+    ///     keeps change tracking linear rather than quadratic.
+    /// </summary>
+    private const int WriteBatch = 2000;
+
     public async Task WritePlacements(int snapshotId, IReadOnlyCollection<PlacementRow> rows, CancellationToken ct)
     {
         if (rows.Count == 0) return;
-        await using var database = await _factory.CreateDbContextAsync(ct);
-        await database.Set<OfficialLeaderboardPlacementEntity>().AddRangeAsync(rows.Select(r =>
-            new OfficialLeaderboardPlacementEntity
-            {
-                SnapshotId = snapshotId,
-                LeaderboardId = r.LeaderboardId,
-                PlayerId = r.PlayerId,
-                Place = r.Place,
-                Score = r.Score,
-                IsSupplemented = r.IsSupplemented
-            }), ct);
-        await database.SaveChangesAsync(ct);
+
+        // Batching gives up atomicity across the whole write, which is safe here: an unsealed
+        // snapshot is invisible until the sweep seals it, and a roll-up clears its own
+        // supplemented rows before writing, so a half-finished run is replaced rather than
+        // merged into.
+        foreach (var batch in rows.Chunk(WriteBatch))
+        {
+            await using var database = await _factory.CreateDbContextAsync(ct);
+            await database.Set<OfficialLeaderboardPlacementEntity>().AddRangeAsync(batch.Select(r =>
+                new OfficialLeaderboardPlacementEntity
+                {
+                    SnapshotId = snapshotId,
+                    LeaderboardId = r.LeaderboardId,
+                    PlayerId = r.PlayerId,
+                    Place = r.Place,
+                    Score = r.Score,
+                    IsSupplemented = r.IsSupplemented
+                }), ct);
+            await database.SaveChangesAsync(ct);
+        }
     }
 
     /// <summary>
