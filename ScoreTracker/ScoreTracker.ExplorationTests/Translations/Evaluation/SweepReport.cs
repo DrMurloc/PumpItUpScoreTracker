@@ -145,10 +145,15 @@ internal static class SweepReport
                     report.AppendLine("- *entities* " + string.Join(", ",
                         pivot.Entities.Select(e => $"`{e.Surface}`→`{e.Canonical}` ({e.Kind})")));
 
+                var expected = TranslationTarget.ForSource(pivot.SourceLanguage);
                 foreach (var locale in TranslationTarget.All)
                     report.AppendLine(result.Outcome.Translations.TryGetValue(locale, out var text)
                         ? $"- **{locale}** — {Flatten(text)}"
-                        : $"- **{locale}** — *missing*");
+                        // Absent because it speaks the source language reads very differently from
+                        // absent because the model skipped it, and the report should not conflate them.
+                        : expected.Contains(locale)
+                            ? $"- **{locale}** — *missing*"
+                            : $"- **{locale}** — *the original, untranslated*");
 
                 report.AppendLine();
             }

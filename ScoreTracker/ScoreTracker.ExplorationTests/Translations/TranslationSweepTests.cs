@@ -23,10 +23,13 @@ namespace ScoreTracker.ExplorationTests.Translations;
 public sealed class TranslationSweepTests(ITestOutputHelper output)
 {
     /// <summary>
-    ///     Enough concurrency to keep the run to a few minutes, low enough not to trip rate
-    ///     limits on an account that is not provisioned for a fleet.
+    ///     Low enough not to trip rate limits on an account that is not provisioned for a fleet.
+    ///     Four was comfortable on the first runs and became a problem after several sweeps in an
+    ///     hour: request latency climbed, and the arms that suffered were Opus and Sonnet — the
+    ///     two the whole exercise exists to compare — while Haiku sailed through on speed alone.
+    ///     A probe that degrades its own subjects under load measures the load, not the models.
     /// </summary>
-    private const int Concurrency = 4;
+    private const int Concurrency = 2;
 
     /// <summary>
     ///     Resolving the handler through a real container is deliberate. A vertical's handlers are
@@ -68,8 +71,13 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
         output.WriteLine($"cost: ${cost:F5}");
 
         Assert.Equal("ko", outcome.Pivot.SourceLanguage);
-        Assert.Equal(TranslationTarget.All.Count, outcome.Translations.Count);
-        Assert.All(TranslationTarget.All, locale => Assert.True(
+
+        // A Korean comment gets three renderings, not four: ko-KR is deliberately absent so the
+        // reader sees the author's own words instead of a round trip through English.
+        var expected = TranslationTarget.ForSource(outcome.Pivot.SourceLanguage);
+        Assert.DoesNotContain("ko-KR", expected);
+        Assert.Equal(expected.Count, outcome.Translations.Count);
+        Assert.All(expected, locale => Assert.True(
             !string.IsNullOrWhiteSpace(outcome.Translations.GetValueOrDefault(locale)),
             $"{locale} came back empty."));
     }
@@ -80,32 +88,45 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
         var mediator = BuildMediator();
         var gate = new SemaphoreSlim(Concurrency);
 
-        var work = ModelArm.All
-            .SelectMany(arm => TranslationCorpus.All.Select(comment => (arm, comment)))
-            .Select(async pair =>
+        async Task<SweepResult> Translate(ModelArm arm, CorpusComment comment)
+        {
+            await gate.WaitAsync();
+            try
             {
-                await gate.WaitAsync();
-                try
-                {
-                    var outcome = await mediator.Send(
-                        new TranslateCommentCommand(pair.comment.Text, pair.arm.ModelId));
+                var outcome = await mediator.Send(new TranslateCommentCommand(comment.Text, arm.ModelId));
 
-                    return new SweepResult(pair.arm, pair.comment, outcome, null);
-                }
-                catch (Exception exception)
-                {
-                    // Recorded, not thrown: one bad response should not discard the other
-                    // sixty-eight results, and a model that fails on a particular comment is
-                    // more useful as a row in the report than as a stack trace.
-                    return new SweepResult(pair.arm, pair.comment, null, exception.Message);
-                }
-                finally
-                {
-                    gate.Release();
-                }
-            });
+                return new SweepResult(arm, comment, outcome, null);
+            }
+            catch (Exception exception)
+            {
+                // Recorded, not thrown: one bad response should not discard the other
+                // sixty-eight results, and a model that fails on a particular comment is
+                // more useful as a row in the report than as a stack trace.
+                return new SweepResult(arm, comment, null, exception.Message);
+            }
+            finally
+            {
+                gate.Release();
+            }
+        }
 
-        var results = await Task.WhenAll(work);
+        var results = (await Task.WhenAll(ModelArm.All
+            .SelectMany(arm => TranslationCorpus.All.Select(comment => (arm, comment)))
+            .Select(pair => Translate(pair.arm, pair.comment)))).ToArray();
+
+        // One retry pass. A timeout or a 429 says nothing about whether a model can translate a
+        // comment, but it lands in the report looking exactly like a model that couldn't — and a
+        // run with holes in it is a run that has to be repeated in full.
+        var retried = await Task.WhenAll(results
+            .Where(r => r.Outcome == null)
+            .Select(r => Translate(r.Arm, r.Comment)));
+
+        foreach (var attempt in retried.Where(r => r.Outcome != null))
+            results[Array.FindIndex(results,
+                r => r.Arm == attempt.Arm && r.Comment.Id == attempt.Comment.Id)] = attempt;
+
+        if (retried.Length > 0)
+            output.WriteLine($"retried {retried.Length}, recovered {retried.Count(r => r.Outcome != null)}");
 
         Directory.CreateDirectory(TranslationProbeConfiguration.ReportDirectory);
         var path = Path.Combine(TranslationProbeConfiguration.ReportDirectory, "sweep.md");

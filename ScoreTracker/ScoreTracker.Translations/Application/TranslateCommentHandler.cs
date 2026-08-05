@@ -35,11 +35,17 @@ internal sealed class TranslateCommentHandler(ILanguageModelClient languageModel
 
         var pivot = TranslationResponseReader.ReadPivot(pivotResponse.Text);
 
+        // Never render a comment back into the language it arrived in. That round trip is not a
+        // no-op, it is a rewrite: it raises casual endings into polite ones, swaps community
+        // vocabulary for neutral words, converts dialect the reader could have read as written,
+        // and occasionally corrupts a number. The original is already there and already better.
+        var targets = TranslationTarget.ForSource(pivot.SourceLanguage);
+
         var fanOutResponse = await languageModel.Complete(new LanguageModelRequest(
             request.FanOutModelId,
-            FanOutPrompt.System(),
+            FanOutPrompt.System(targets),
             FanOutPrompt.User(PivotPrompt.Render(pivot)),
-            FanOutPrompt.Schema), cancellationToken);
+            FanOutPrompt.Schema(targets)), cancellationToken);
 
         var translations = TranslationResponseReader.ReadTranslations(fanOutResponse.Text);
 

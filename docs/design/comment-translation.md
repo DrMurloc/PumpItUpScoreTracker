@@ -50,6 +50,38 @@ nuance can quietly evaporate with nothing to point at. `formality_marked` distin
 author chose polite" from "the language never offered a choice" — the second is where a house
 default applies rather than a mirror.
 
+### Never render a comment back into its own language
+
+Stage two skips the locale that speaks the language the comment arrived in. A Korean comment
+produces three renderings, not four; the reader in that locale sees the author's own words.
+
+This was originally missed — solved for English (`en-US` is the pivot, and the prompt says to copy
+an English comment out character for character) and nowhere else, because the other four locales
+sat in the target list unconditionally. The round trip is **not** a no-op. Measured against the
+corpus:
+
+| | Author wrote | Round trip produced |
+|---|---|---|
+| Register | `하는거임?` (clipped, casual) | `인가요?` / `뜻인가요?` (polite) |
+| Vocabulary | `검수`, `짠 사람` (the community's words) | `심사`, `만든 사람` (neutral) |
+| Contempt | `검수 이 따위로하는` | dropped by **every** arm |
+| Dialect | `carnal`, `exelente` (Mexican) | `tío`, `de puta madre` (peninsular, cruder) |
+| Fact | `sigue dando el 1000%` | Haiku: `seguid dando el 100%` |
+
+So it was spending money to replace a perfect original with a laundered paraphrase, and in one
+case to corrupt a number in the author's own language. Suppressing the source locale removes that
+opportunity outright for the locale that needs it least — Haiku can no longer mangle `1000%` in
+Spanish, because it is no longer asked to write Spanish for a Spanish comment.
+
+**Region is ignored**, so a Mexican comment suppresses es-ES too. Same argument that kept es-MX
+off the list: the two are mutually intelligible, so a Spaniard reading Mexican Spanish loses
+nothing, while converting it costs the author their voice. "Dialect belongs to the target" is a
+rule for rendering *across* languages; applied within one it is just rewriting.
+
+**Absence is the contract.** `TranslationOutcome.Translations` simply has no key for the
+suppressed locale, and the caller's display rule is: render locale L from `Translations[L]` when
+present, from the original comment when not. No separate flag to forget.
+
 ### The rule stage two turns on
 
 - **Dialect belongs to the target.** es-ES output uses *vosotros*, even when the source was
@@ -90,18 +122,30 @@ now; the site already stores per-culture song names (`SongCultureName`) and game
 23 real YouTube comments (`ExplorationTests/Translations/TranslationCorpus.cs`) — English, Korean,
 Spanish, one Portuguese — into four locales, three arms, thinking disabled, synchronous.
 
-| Arm | Per comment | Per 1,000/mo | Batched | Entities kept | Language detected | Failures |
-|---|---|---|---|---|---|---|
-| Opus 5 | $0.0365 | $36.54 | $18.27 | **89/89** | 23/23 | 0 |
-| Sonnet 5 | $0.0220 | $22.02 | $11.01 | **89/89** | 23/23 | 0 |
-| Haiku 4.5 | $0.0056 | $5.62 | $2.81 | 81/89 (91%) | 23/23 | 0 |
+| Arm | Per comment | Per 1,000/mo | Batched | Entity survival, 4 runs | Language detected |
+|---|---|---|---|---|---|
+| Opus 5 | $0.0350 | $35.04 | $17.52 | **100% / 100% / 100% / 100%** | every comment, every run |
+| Sonnet 5 | $0.0211 | $21.07 | $10.53 | 100% / 100% / 100% / **95.5%** | every comment, every run |
+| Haiku 4.5 | $0.0054 | $5.38 | $2.69 | 91% / 91% / 96% / 92% | every comment, every run |
+
+**Entity survival is reported across all four runs, not one, because a single run over-states it.**
+The first two sweeps put Sonnet at a flat 89/89 and this document said "flawless" — then a later
+run showed it dropping the `💯` emoji from three locales. Haiku's `1000%` → `100%` corruption is
+likewise intermittent: present in three runs, absent in one. Both models are *mostly* right on
+these tokens and occasionally not, and a one-sample number turns "usually" into "always".
+
+The ordering is stable and that is what the decision rests on: Opus never lost a token in four
+runs, Sonnet lost one kind of token once, Haiku lost several every time.
 
 Costs ran ~2.5× the pre-run estimate. The prompts are ~2,400 tokens per call and the system prompt
-is sent twice per comment, so input is now ~60% of the bill rather than the ~35% assumed. **Prompt
+is sent twice per comment, so input is ~60% of the bill rather than the ~35% assumed. **Prompt
 caching does not help at this volume** — a thousand comments a month is 1.4 an hour against a
 five-minute cache TTL, so the cache is written and never read. Splitting the glossary so each
 stage carries only the half it needs would cut input ~30% and is the obvious optimization if
 volume ever justifies one.
+
+Two of the four runs also lost comments to client-side timeouts, which is a property of the probe
+rather than the models — see §6.
 
 ### Where Haiku fails, and why it matters
 
@@ -208,6 +252,15 @@ a hazard if someone reaches for `MarkupString` on comment text, which is exactly
 when adding link support.
 
 ## 6. Running it
+
+**Probe reliability.** Two of the four sweeps lost comments to client-side timeouts, and the arms
+that suffered were Opus and Sonnet — the two the exercise exists to compare — while Haiku, being
+faster, never did. A probe that degrades its own subjects under load is measuring the load. The
+harness now uses a three-minute request timeout (the SDK's ten-minute default lets a few wedged
+requests hold every concurrency slot; ninety seconds was too tight in the other direction and
+manufactured failures), a concurrency of two, and one retry pass over anything that failed. Treat
+a run with failures as a run to repeat, not as evidence about a model.
+
 
 Every test bills a real account. `ClaudeApi:ApiKey` in the AppHost user-secrets store; inert
 without it. See [HOW-TO-TEST.md](../HOW-TO-TEST.md#translation-workbench--spends-real-money-manual-runs-only).

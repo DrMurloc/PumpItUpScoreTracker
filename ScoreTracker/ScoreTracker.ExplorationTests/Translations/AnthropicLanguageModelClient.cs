@@ -25,11 +25,26 @@ internal sealed class AnthropicLanguageModelClient(AnthropicClient client) : ILa
     /// </summary>
     private const int MaxTokens = 4096;
 
+    /// <summary>
+    ///     How long a request gets before it is treated as wedged rather than slow.
+    ///     <para>
+    ///         The SDK's ten-minute default is the wrong shape for a bounded-concurrency sweep: a
+    ///         few stuck requests hold every slot for ten minutes each and stall the run behind
+    ///         them. A first attempt at ninety seconds then proved too tight in the other
+    ///         direction — Opus and Sonnet exceed it under load while Haiku, being faster, never
+    ///         did, so the cap was manufacturing failures for exactly the two arms being compared.
+    ///         Three minutes clears observed latency with room for one backoff, and still frees a
+    ///         slot long before the default would.
+    ///     </para>
+    /// </summary>
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromMinutes(3);
+
     public static AnthropicLanguageModelClient Create()
     {
         return new AnthropicLanguageModelClient(new AnthropicClient
         {
-            ApiKey = TranslationProbeConfiguration.ApiKey
+            ApiKey = TranslationProbeConfiguration.ApiKey,
+            Timeout = RequestTimeout
         });
     }
 
