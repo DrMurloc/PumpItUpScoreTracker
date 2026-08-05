@@ -26,8 +26,17 @@
    (their full chart rendering is deliberately not imported — §8a). *@
 <MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options" Class="chart-details-dialog">
     <DialogContent>
-        @if (Chart != null)
+        @if (ViewChart != null)
         {
+            @* Drilled in from Charts like this. A crumb rather than a second dialog: the host
+               owns Visible, and nineteen of them would each need to learn a chart-change
+               callback for what is one piece of state in here. *@
+            @if (IsDrilled && Chart != null)
+            {
+                <MudButton Size="Size.Small" Variant="Variant.Text" Class="chart-details-crumb"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="BackToAnchor">@L["Back to {0}", Chart.Song.Name]</MudButton>
+            }
             @if (!string.IsNullOrWhiteSpace(_videoUrl))
             {
                 <iframe class="chart-details-video" src="@EmbedUrl" allow="@(AutoPlay ? "autoplay; encrypted-media" : "encrypted-media")" allowfullscreen></iframe>
@@ -39,10 +48,13 @@
                 </div>
             }
             <div class="chart-details-title">
-                <DifficultyBubble Chart="Chart"></DifficultyBubble>
-                <MudText Typo="Typo.h5">@Chart.Song.Name</MudText>
+                <DifficultyBubble Chart="ViewChart"></DifficultyBubble>
+                <MudText Typo="Typo.h5">@ViewChart.Song.Name</MudText>
                 <MudSpacer></MudSpacer>
-                @if (CurrentUser.IsLoggedIn)
+                @* Score, To-Do, the suggestion action and the popularity places all describe
+                   the chart the HOST passed. While drilled into a neighbour they would be
+                   describing the wrong one, so they stand down rather than lie. *@
+                @if (!IsDrilled && CurrentUser.IsLoggedIn && Chart != null)
                 {
                     <MudTooltip Text="@(IsToDo ? L["On ToDo List"] : L["Add to ToDo List"])">
                         <MudIconButton Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
@@ -52,7 +64,7 @@
                     </MudTooltip>
                 }
             </div>
-            @if (Score?.Score != null)
+            @if (!IsDrilled && Score?.Score != null)
             {
                 <div class="chart-details-score">
                     <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Mix" OneLine="true" ShowScore="true"
@@ -82,28 +94,31 @@
                dialog nobody opened nor a tab nobody picked issues a query. Nineteen call sites
                render this. *@
             <div class="@PanelClass(DetailsTab.Leaderboard)">
-                <ChartLeaderboardScopes ChartId="Chart.Id" Mix="Mix"
+                <ChartLeaderboardScopes ChartId="ViewChart.Id" Mix="Mix"
                                         Active="IsLive(DetailsTab.Leaderboard)"
                                         InitialScope="BoardScope"
-                                        @key="(Chart.Id, Mix)"></ChartLeaderboardScopes>
+                                        @key="(ViewChart.Id, Mix)"></ChartLeaderboardScopes>
             </div>
             @* Keys carry each panel's identity alongside the chart id: Blazor's key lookup
                compares key VALUES only, so two keyed siblings sharing a chart id collide even
                when they are different component types. *@
             <div class="@PanelClass(DetailsTab.Stats)">
-                <ChartStatsTab Chart="Chart" Mix="Mix" OfficialPlace="OfficialPlace"
-                               OfficialFolderPlace="OfficialFolderPlace"
+                <ChartStatsTab Chart="ViewChart" Mix="Mix"
+                               OfficialPlace="@(IsDrilled ? null : OfficialPlace)"
+                               OfficialFolderPlace="@(IsDrilled ? null : OfficialFolderPlace)"
                                Active="IsLive(DetailsTab.Stats)"
-                               @key="(Chart.Id, nameof(ChartStatsTab))"></ChartStatsTab>
+                               OnSimilarChartSelected="Drill"
+                               @key="(ViewChart.Id, nameof(ChartStatsTab))"></ChartStatsTab>
             </div>
             @* Round 4 (piucenter): "Your journey" renamed Score History and kept next to the
                recording inputs it feeds — past scores directly above the new one. The tab is
                the heading now, so the panel no longer prints one of its own. *@
             <div class="@PanelClass(DetailsTab.History)">
-                <ChartScoreHistoryTab Chart="Chart" Mix="Mix" Score="Score" ShowHeading="false"
+                <ChartScoreHistoryTab Chart="ViewChart" Mix="Mix" ShowHeading="false"
+                                      Score="@(IsDrilled ? null : Score)"
                                       OnScoreRecorded="OnScoreRecorded"
                                       Active="IsLive(DetailsTab.History)"
-                                      @key="(Chart.Id, nameof(ChartScoreHistoryTab))"></ChartScoreHistoryTab>
+                                      @key="(ViewChart.Id, nameof(ChartScoreHistoryTab))"></ChartScoreHistoryTab>
             </div>
         }
     </DialogContent>
@@ -111,7 +126,7 @@
         @* Suggestion context (opened from a Suggested Charts row): a quick thumbs-up
            feeds the same store as WSIP's feedback. The veto path lives on the widget's
            edit-mode ✕ — negative feedback wants the reason dialog, not one tap. *@
-        @if (SuggestionCategory != null && CurrentUser.IsLoggedIn && Chart != null)
+        @if (!IsDrilled && SuggestionCategory != null && CurrentUser.IsLoggedIn && Chart != null)
         {
             <MudButton StartIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Secondary"
                        Disabled="_isSaving || _feedbackSent"
@@ -119,10 +134,10 @@
         }
         @* The dialog is a summary; the chart page is the whole record (videos, similar charts,
            the score distribution). A real link, so it opens in a tab like any other. *@
-        @if (Chart != null)
+        @if (ViewChart != null)
         {
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew"
-                       Href="@ChartSlugs.CanonicalPath(Chart)">@L["More info"]</MudButton>
+                       Href="@ChartSlugs.CanonicalPath(ViewChart)">@L["More info"]</MudButton>
         }
         <MudSpacer></MudSpacer>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close"
@@ -226,6 +241,10 @@
         display: none;
     }
 
+    .chart-details-crumb {
+        margin-bottom: 2px;
+    }
+
     /* Age reads under the score, not beside it (owner, piucenter round 3). */
     .chart-details-score-age {
         display: block;
@@ -277,6 +296,16 @@
     private DetailsTab? _remembered;
     private bool _rememberRead;
     private bool _wasVisible;
+    private Guid _anchorId = Guid.Empty;
+    private Chart? _drilled;
+
+    /// <summary>
+    ///     The chart currently on screen: the host's, or the neighbour the reader drilled into
+    ///     from Charts like this.
+    /// </summary>
+    private Chart? ViewChart => _drilled ?? Chart;
+
+    private bool IsDrilled => _drilled != null;
 
     [Parameter] public Chart? Chart { get; set; }
 
@@ -387,8 +416,10 @@
         {
             // Resolved once per opening rather than on every parameter change: re-applying
             // InitialTab while the dialog is open would snap the user back out of any tab
-            // they picked themselves.
+            // they picked themselves. A drill-down is scoped to one opening for the same
+            // reason — reopening from a row starts at the chart that row names.
             _wasVisible = false;
+            _drilled = null;
             return;
         }
 
@@ -399,13 +430,45 @@
             await ResolveOpeningTab();
         }
 
-        if (Chart.Id == _loadedChartId) return;
-        _loadedChartId = Chart.Id;
+        // A new chart from the host replaces whatever the reader had drilled into.
+        if (Chart.Id != _anchorId)
+        {
+            _anchorId = Chart.Id;
+            _drilled = null;
+        }
+
+        if (ViewChart!.Id == _loadedChartId) return;
+        await LoadChart(ViewChart.Id);
+    }
+
+    /// <summary>
+    ///     The video is all this component reads — the stats, history and leaderboard panels
+    ///     own the rest and only read when they are the selected tab.
+    /// </summary>
+    private async Task LoadChart(Guid chartId)
+    {
+        _loadedChartId = chartId;
         _feedbackSent = false;
-        // The video is all this component reads now — the stats, history and leaderboard
-        // panels own the rest and only read when they are the selected tab.
-        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { Chart.Id })))
+        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { chartId })))
             .FirstOrDefault()?.VideoUrl.ToString();
+    }
+
+    /// <summary>
+    ///     Swap to a neighbour without leaving the dialog. The tab stays put — the reader was
+    ///     on Chart Stats to tap this, and landing them somewhere else would lose the shelf
+    ///     they are browsing.
+    /// </summary>
+    private async Task Drill(Chart chart)
+    {
+        if (chart.Id == ViewChart?.Id) return;
+        _drilled = chart;
+        await LoadChart(chart.Id);
+    }
+
+    private async Task BackToAnchor()
+    {
+        _drilled = null;
+        if (Chart != null) await LoadChart(Chart.Id);
     }
 
     private async Task ResolveOpeningTab()

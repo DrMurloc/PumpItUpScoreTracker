@@ -67,6 +67,10 @@ public sealed class ChartDetailsDialogTests : TestContext
             .ReturnsAsync(Array.Empty<UserPhoenixScore>());
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
+        // The similarity graph is empty on a fresh database and until the nightly rebuild has
+        // run once, so that is the default here too — the drill-down test seeds its own.
+        _mediator.Setup(m => m.Send(It.IsAny<GetSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ChartSimilarityRecord>());
         var localizer = new Mock<IStringLocalizer<App>>();
         localizer.Setup(l => l[It.IsAny<string>()])
             .Returns((string key) => new LocalizedString(key, key));
@@ -210,5 +214,47 @@ public sealed class ChartDetailsDialogTests : TestContext
 
         _mediator.Verify(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     Tapping a similar chart swaps the dialog in place and offers the way back. The host
+    ///     owns Visible, so a second dialog would mean teaching nineteen call sites a
+    ///     chart-change callback for what is one piece of state in here.
+    /// </summary>
+    [Fact]
+    public void TappingASimilarChartSwapsTheDialogAndLeavesACrumbBack()
+    {
+        var anchor = SetupChart(null);
+        var neighbour = ChartSlugsTests.BuildChart(song: "TRICKL4SH 220");
+        _mediator.Setup(m => m.Send(It.IsAny<GetSimilarChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartSimilarityRecord(neighbour.Id, 0.81, 0.8, 0.8, Array.Empty<ChartSharedBadgeRecord>())
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { neighbour });
+
+        var cut = RenderDialog(anchor, ChartDetailsDialog.DetailsTab.Stats);
+
+        cut.WaitForAssertion(() => cut.Find("[data-testid='chart-similar-tile']").Click());
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Contains(neighbour.Song.Name.ToString(), cut.Find(".chart-details-title").TextContent);
+            Assert.Contains(anchor.Song.Name.ToString(), cut.Find(".chart-details-crumb").TextContent);
+        });
+    }
+
+    /// <summary>
+    ///     A chart with no edges is every chart until the nightly rebuild has run at least
+    ///     once, so the panel says "not yet" rather than rendering an empty grid.
+    /// </summary>
+    [Fact]
+    public void AChartWithNoSimilarityEdgesSaysSoRatherThanShowingAnEmptyGrid()
+    {
+        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Stats);
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-similar-empty")));
+        Assert.Empty(cut.FindAll("[data-testid='chart-similar-tile']"));
     }
 }

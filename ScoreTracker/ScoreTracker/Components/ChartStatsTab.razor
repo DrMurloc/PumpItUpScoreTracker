@@ -67,6 +67,9 @@
            one component — the page renders the same bars at section scale. *@
         <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
     }
+    <MudText Typo="Typo.overline">@L["Charts like this"]</MudText>
+    <SimilarChartsCompactGrid ChartId="Chart.Id" Mix="Mix" Active="Active"
+                              OnChartSelected="OnSimilarChartSelected"></SimilarChartsCompactGrid>
     <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption" Class="chart-details-piucenter">@L["View full chart on PIU Center"]</MudLink>
 }
 
@@ -119,6 +122,12 @@
     ///     out of sight issues none of its three reads.
     /// </summary>
     [Parameter] public bool Active { get; set; } = true;
+
+    /// <summary>
+    ///     Raised when a similar chart is tapped. Passed straight through from the grid — this
+    ///     panel has no opinion about what opening one means, and its host does.
+    /// </summary>
+    [Parameter] public EventCallback<Chart> OnSimilarChartSelected { get; set; }
 
     private Guid _loadedChartId = Guid.Empty;
     private string? _externalKey;

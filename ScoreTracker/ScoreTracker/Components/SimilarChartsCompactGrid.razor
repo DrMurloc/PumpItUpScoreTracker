@@ -1,0 +1,127 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@inject IMediator Mediator
+
+@* The dialog's read of the similarity graph: stored match order, floored, and nothing else.
+   The chart page's shelf owns the ordering lenses, the four range filters and the least-similar
+   mode; none of that belongs in a quick look, so this is deliberately a grid of jackets you tap.
+   Tapping one swaps the dialog to that chart rather than opening a second one. *@
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="my-2"></MudProgressLinear>
+}
+else if (_matches.Count == 0)
+{
+    @* Every chart looks like this until the nightly rebuild has run at least once, so this
+       reads as "not yet" rather than "this chart is unlike anything". *@
+    <MudText Typo="Typo.body2" Class="chart-similar-empty">@L["No similar charts for this one yet."]</MudText>
+}
+else
+{
+    <div class="chart-similar-grid">
+        @foreach (var match in _matches)
+        {
+            var chart = match;
+            <button type="button" class="chart-similar-tile" data-testid="chart-similar-tile"
+                    title="@($"{chart.Song.Name} {chart.DifficultyString}")"
+                    @onclick="() => OnChartSelected.InvokeAsync(chart)">
+                <SongImage Song="chart.Song" Height="40"></SongImage>
+                <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                <span class="chart-similar-name">@chart.Song.Name</span>
+            </button>
+        }
+    </div>
+}
+
+<style>
+    .chart-similar-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+        gap: 8px;
+        margin: 8px 0;
+    }
+
+    .chart-similar-tile {
+        appearance: none;
+        background: none;
+        color: inherit;
+        font: inherit;
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 6px;
+        padding: 6px 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        min-width: 0;
+    }
+
+    .chart-similar-tile:hover {
+        border-color: var(--mud-palette-primary);
+    }
+
+    .chart-similar-tile:focus-visible {
+        outline: 2px solid var(--mud-palette-primary);
+        outline-offset: 1px;
+    }
+
+    .chart-similar-name {
+        font-size: .68rem;
+        color: var(--mud-palette-text-secondary);
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .chart-similar-empty {
+        color: var(--mud-palette-text-secondary);
+        margin: 8px 0;
+    }
+</style>
+
+@code {
+    [Parameter] public Guid ChartId { get; set; }
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>Set false behind an unselected tab, so nothing is fetched for a panel out of sight.</summary>
+    [Parameter] public bool Active { get; set; } = true;
+
+    /// <summary>Raised with the tapped chart. The host decides what "open it" means.</summary>
+    [Parameter] public EventCallback<Chart> OnChartSelected { get; set; }
+
+    private (Guid Chart, MixEnum Mix)? _loadedFor;
+    private bool _loading = true;
+    private IReadOnlyList<Chart> _matches = Array.Empty<Chart>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Active || _loadedFor == (ChartId, Mix)) return;
+        _loadedFor = (ChartId, Mix);
+        _loading = true;
+
+        var edges = (await Mediator.Send(new GetSimilarChartsQuery(ChartId, Mix)))
+            // The graph stores its top twenty floor-free because where the bar falls is a
+            // render decision. This is that decision, and it is the same constant the shelf
+            // and the Hot Streak expansion use, so "a match" means one thing site-wide.
+            .Where(e => e.Score >= ChartSimilarityRecord.MatchFloor)
+            .ToArray();
+        if (edges.Length == 0)
+        {
+            _matches = Array.Empty<Chart>();
+            _loading = false;
+            return;
+        }
+
+        var charts = (await Mediator.Send(new GetChartsQuery(Mix, ChartIds: edges.Select(e => e.ChartId).ToArray())))
+            .ToDictionary(c => c.Id);
+        // Stored match order, preserved — GetChartsQuery has an ordering of its own and it is
+        // not this one. A chart the mix no longer carries simply drops out.
+        _matches = edges.Where(e => charts.ContainsKey(e.ChartId)).Select(e => charts[e.ChartId]).ToArray();
+        _loading = false;
+    }
+}
