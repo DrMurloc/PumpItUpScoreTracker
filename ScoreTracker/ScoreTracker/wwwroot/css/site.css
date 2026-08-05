@@ -11906,6 +11906,16 @@ button.chart-card-art {
     margin-top: 1px;
 }
 
+/* The reverse list carries three buttons on one row; on a phone they wrap into a block rather
+   than pushing the row wider than the screen. */
+.rvl-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
 .rvl-tag {
     font-size: .6rem;
     text-transform: uppercase;

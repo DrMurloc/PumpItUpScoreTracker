@@ -223,6 +223,13 @@ Remove / Block / Unblock (D14–D15), with the symmetric rule stated on the row 
 Private players appear by name (D13). No notification exists, so this list *is* the discovery
 mechanism (D47); the `/Account` private toggle links here (D12).
 
+Since it is the discovery mechanism, the row also carries **Add as rival** — the one constructive
+action here, and the only filled button among the two revocations. It is an ordinary add answering
+to the ordinary gate: their arrow at you is **not** a fifth basis (D9), so the button appears only
+where the add would succeed — not on somebody you already rival (the row says so), and not on a
+private stranger who rivalled you off your public profile. Offering it there would resolve to
+"that player isn't available", which is a worse answer than no button.
+
 ### 3.3 Head-to-head — the shared player summary
 
 `/Community/Player`'s member summary + folder compare is lifted into a shared component with
@@ -573,7 +580,7 @@ Backfill: copy the last 30 days of `CommunityHighlight` into `PlayerHighlight`, 
 | `ScoreTracker.Tests/DomainTests` | `RivalVisibilityPolicy` (all four bases + the private-ghost exception), `RivalInviteCode` value type, the tier-2 policy after its move |
 | `ScoreTracker.Tests/ApplicationTests` | Add/Remove/Block/Unblock handlers (block symmetry both directions), `RivalSubjectResolver` (D4 normalization), the two promote/rename consumers, `GetRivalScoresForChartsHandler` merging site + official sources |
 | `ScoreTracker.Tests/ArchitectureTests` | the existing ratchets pick up the new vertical automatically — `AccountPurgeCoverageTests`, `ModelContributionRegistrationTests`, `VerticalBoundaryTests`, `UiColorTokenTests`, `LocalizationKeyTests`, `ResxKeysAreStoredAlphabetically` |
-| `ScoreTracker.Tests.Components` | roster rendering (ghost tag + asterisk + footnote), the sessions toggle, the fifth dialog scope, the four highlight states, feed cross-markers |
+| `ScoreTracker.Tests.Components` | roster rendering (ghost tag + asterisk + footnote), the sessions toggle, the fifth dialog scope, the four highlight states, feed cross-markers, which reverse-list rows offer **Add as rival** |
 | `ScoreTracker.Tests.Integration` | the three repositories against real SQL, the unique filtered indexes, the purge covering both directions of `Rival` |
 | `ScoreTracker.Tests.E2E` | not a critical whole-workflow path — nothing new |
 

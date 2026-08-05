@@ -65,7 +65,7 @@ else
 
         <MudTabPanel Text="@L["Rivals of you"]">
             <RivalsOfMeList Rivals="_rivalsOfMe" Blocked="_blocked" OnRemove="RemoveRival"
-                            OnBlock="Block" OnUnblock="Unblock"></RivalsOfMeList>
+                            OnBlock="Block" OnUnblock="Unblock" OnAdd="AddBack"></RivalsOfMeList>
         </MudTabPanel>
 
     </MudTabs>
@@ -175,6 +175,25 @@ else
         await Mediator.Send(new RemoveRivalCommand(edgeId));
         Snackbar.Add(L["Rival removed."].Value, Severity.Success);
         await Reload();
+    }
+
+    /// <summary>
+    ///     The same add the picker makes, from the row that told you about them. The refusal is
+    ///     still possible — a block can land between the render and the click — and is reported the
+    ///     same deliberately generic way it is on the picker.
+    /// </summary>
+    private async Task AddBack(RivalOfMeRecord rival)
+    {
+        try
+        {
+            await Mediator.Send(new AddRivalCommand(rival.UserId, null));
+            Snackbar.Add(L["{0} added as a rival.", rival.PlayerName].Value, Severity.Success);
+            await Reload();
+        }
+        catch (RivalNotAvailableException e)
+        {
+            Snackbar.Add(e.Message, Severity.Warning);
+        }
     }
 
     private async Task Block(Guid userId)
