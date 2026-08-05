@@ -1803,6 +1803,9 @@
   <data name="Dismiss" xml:space="preserve">
     <value>숨기기</value>
   </data>
+  <data name="dismissed" xml:space="preserve">
+    <value>숨김</value>
+  </data>
   <data name="Display" xml:space="preserve">
     <value>표시</value>
   </data>
@@ -1883,6 +1886,9 @@
   </data>
   <data name="DrMurloc's Rules for Integrated Toolmakers" xml:space="preserve">
     <value>연동 도구 제작자를 위한 DrMurloc의 규칙</value>
+  </data>
+  <data name="Dropped off the boards" xml:space="preserve">
+    <value>보드에서 밀려남</value>
   </data>
   <data name="Duplicate Explainer" xml:space="preserve">
     <value>{0} 이름으로 두 개의 기록이 있습니다. 오래된 쪽은 로그인 전에 올린 것이니, 계정 기록을 남기고 나머지를 삭제하세요.</value>
@@ -1994,6 +2000,9 @@
   </data>
   <data name="Every record held this week." xml:space="preserve">
     <value>이번 주에는 모든 기록이 유지되었습니다.</value>
+  </data>
+  <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
+    <value>스스로 병합된 것을 포함해 사라진 모든 태그입니다. 닉네임 변경을 더 이상 찾지 못하는 규칙은, 전체를 보지 않으면 그냥 조용한 주와 똑같아 보입니다.</value>
   </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>임포트할 때마다 piugame.com에 여러분으로 로그인하는 데 사용하는 세션 키를 이 도구에 전달합니다. 그 키가 살아 있는 동안에는 여러분이 그곳에서 할 수 있는 모든 것 — 카드 변경, 설정 변경, PIUGame 계정 삭제까지 — 을 할 수 있습니다.</value>
@@ -3216,6 +3225,15 @@
   <data name="Merged account data is deleted on" xml:space="preserve">
     <value>병합된 계정의 데이터는 {0}에 삭제됩니다</value>
   </data>
+  <data name="Merged automatically" xml:space="preserve">
+    <value>자동으로 병합됨</value>
+  </data>
+  <data name="merged by the sweep" xml:space="preserve">
+    <value>수집이 병합함</value>
+  </data>
+  <data name="merged by you" xml:space="preserve">
+    <value>직접 병합함</value>
+  </data>
   <data name="Metric" xml:space="preserve">
     <value>지표</value>
   </data>
@@ -3326,6 +3344,9 @@
   </data>
   <data name="More than a tracker" xml:space="preserve">
     <value>트래커 그 이상</value>
+  </data>
+  <data name="More than one candidate fits" xml:space="preserve">
+    <value>후보가 둘 이상</value>
   </data>
   <data name="More tools · {0}" xml:space="preserve">
     <value>다른 도구 · {0}</value>
@@ -3510,6 +3531,9 @@
   <data name="Newest Score" xml:space="preserve">
     <value>최신 점수</value>
   </data>
+  <data name="next best candidate {0}" xml:space="preserve">
+    <value>다음 후보 {0}</value>
+  </data>
   <data name="Next Folder" xml:space="preserve">
     <value>다음 폴더</value>
   </data>
@@ -3588,9 +3612,6 @@
   <data name="No new scores found" xml:space="preserve">
     <value>새로운 점수가 없습니다</value>
   </data>
-  <data name="No pending rename proposals." xml:space="preserve">
-    <value>대기 중인 이름 변경 제안이 없습니다.</value>
-  </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>아직 인기 순위 스냅샷이 없습니다 - 주간 가져오기와 함께 생성됩니다.</value>
   </data>
@@ -3644,6 +3665,9 @@
   </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>지금은 추천할 채보가 없습니다. 다른 목표를 선택하거나 먼저 점수를 가져와주세요.</value>
+  </data>
+  <data name="No tags have left the boards since the last sweep." xml:space="preserve">
+    <value>마지막 수집 이후 보드를 떠난 태그가 없습니다.</value>
   </data>
   <data name="No thanks" xml:space="preserve">
     <value>괜찮습니다</value>
@@ -4533,6 +4557,9 @@
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>인기도 새로고침이 대기열에 추가되었습니다 - 최신 스냅샷에 다시 연결됩니다</value>
   </data>
+  <data name="Possible rename" xml:space="preserve">
+    <value>닉네임 변경 가능성</value>
+  </data>
   <data name="Post A Score" xml:space="preserve">
     <value>점수 올리기</value>
   </data>
@@ -4960,9 +4987,6 @@
   </data>
   <data name="Rename" xml:space="preserve">
     <value>이름 변경</value>
-  </data>
-  <data name="Rename proposals" xml:space="preserve">
-    <value>이름 변경 제안</value>
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>정렬 중…</value>
@@ -5918,6 +5942,9 @@
   <data name="Tags on the current boards. Departed tags aren't listed." xml:space="preserve">
     <value>현재 보드의 태그. 사라진 태그는 표시되지 않습니다.</value>
   </data>
+  <data name="Tags that left the boards" xml:space="preserve">
+    <value>보드를 떠난 태그</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>N노트마다 브레이크를 계속 내면 라이프는 어딘가로 수렴합니다. 절벽 아래에서는 0으로 수렴합니다. 곡선은 완만해지는 게 아니라 뚝 떨어집니다. 배율을 다시 쌓는 속도보다 배율이 죽는 속도가 빠르기 때문입니다.</value>
   </data>
@@ -6458,9 +6485,6 @@
   <data name="Top-50 average score {0} — {1}" xml:space="preserve">
     <value>톱50 평균 점수 {0} — {1}</value>
   </data>
-  <data name="top-50 overlap" xml:space="preserve">
-    <value>상위 50 일치</value>
-  </data>
   <data name="Total" xml:space="preserve">
     <value>합계</value>
   </data>
@@ -6718,6 +6742,9 @@
   </data>
   <data name="Value" xml:space="preserve">
     <value>값</value>
+  </data>
+  <data name="Vanished while still ranking" xml:space="preserve">
+    <value>랭킹에 남아야 하는데 사라짐</value>
   </data>
   <data name="Verification" xml:space="preserve">
     <value>인증</value>
@@ -7436,6 +7463,9 @@
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0}님이 이 커뮤니티의 개설자가 되고 회원님은 관리자가 됩니다. 개설자 자리는 하나뿐이라 직접 되돌릴 수 없습니다.</value>
   </data>
+  <data name="{0} boards held" xml:space="preserve">
+    <value>보드 {0}개 보유</value>
+  </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
   </data>
@@ -7643,6 +7673,9 @@
   <data name="{0} of {1} rating" xml:space="preserve">
     <value>레이팅 {0} / {1}</value>
   </data>
+  <data name="{0} of {1} scores identical" xml:space="preserve">
+    <value>{1}개 중 {0}개 점수 일치</value>
+  </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>기록된 유저 {1}명 중 {0}명</value>
   </data>
@@ -7697,8 +7730,14 @@
   <data name="{0} scores imported from PIUGAME" xml:space="preserve">
     <value>PIUGAME에서 {0}개 스코어 임포트됨</value>
   </data>
+  <data name="{0} scores should still be ranking" xml:space="preserve">
+    <value>{0}개 점수가 아직 랭킹에 있어야 함</value>
+  </data>
   <data name="{0} scores tracked · {1}% pass rate" xml:space="preserve">
     <value>기록된 점수 {0}개 · 클리어율 {1}%</value>
+  </data>
+  <data name="{0} shared perfect games" xml:space="preserve">
+    <value>퍼펙트 게임 {0}개 일치</value>
   </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>싱글 {0} · 더블 {1} 클리어</value>

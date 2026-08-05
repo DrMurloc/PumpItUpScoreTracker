@@ -35,8 +35,20 @@ internal interface IOfficialPlayerIdentityRepository
     /// <summary>Re-points every mirror player linked to one account onto another (account merges).</summary>
     Task RelinkUser(Guid fromUserId, Guid toUserId, CancellationToken ct);
 
-    Task WriteProposals(MixEnum mix, IReadOnlyCollection<RenameProposal> proposals, CancellationToken ct);
-    Task<IReadOnlyList<RenameProposal>> GetProposals(MixEnum mix, string status, CancellationToken ct);
+    /// <summary>
+    ///     Records what the sweep concluded about every tag that left the boards, and hands
+    ///     back what it wrote with ids attached — the conclusive ones are merged immediately,
+    ///     through the same accept path an admin uses.
+    /// </summary>
+    Task<IReadOnlyList<RenameProposal>> WriteFindings(MixEnum mix,
+        IReadOnlyCollection<RenameProposal> findings, CancellationToken ct);
+
+    /// <summary>
+    ///     The desk. <paramref name="unresolvedOnly" /> false includes what merged itself and
+    ///     what was already dismissed, which is the only way to see whether the rule is still
+    ///     catching what it should rather than only what it failed to decide.
+    /// </summary>
+    Task<IReadOnlyList<RenameProposal>> GetFindings(MixEnum mix, bool unresolvedOnly, CancellationToken ct);
     Task<RenameProposal?> GetProposal(int id, CancellationToken ct);
     Task SetProposalStatus(int id, string status, CancellationToken ct);
     Task MergePlayers(int oldPlayerId, int newPlayerId, CancellationToken ct);

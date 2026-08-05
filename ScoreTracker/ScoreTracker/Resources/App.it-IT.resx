@@ -1816,6 +1816,9 @@
   <data name="Dismiss" xml:space="preserve">
     <value>Scarta</value>
   </data>
+  <data name="dismissed" xml:space="preserve">
+    <value>scartato</value>
+  </data>
   <data name="Display" xml:space="preserve">
     <value>Visualizzazione</value>
   </data>
@@ -1897,6 +1900,9 @@
   </data>
   <data name="DrMurloc's Rules for Integrated Toolmakers" xml:space="preserve">
     <value>Le regole di DrMurloc per chi integra strumenti</value>
+  </data>
+  <data name="Dropped off the boards" xml:space="preserve">
+    <value>Usciti dalle board</value>
   </data>
   <data name="Duplicate Explainer" xml:space="preserve">
     <value>Due iscrizioni con {0}. La più vecchia è precedente all'accesso: tieni quella dell'account ed elimina l'altra.</value>
@@ -2010,6 +2016,9 @@
   </data>
   <data name="Every record held this week." xml:space="preserve">
     <value>Tutti i record hanno resistito questa settimana.</value>
+  </data>
+  <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
+    <value>Ogni tag sparito, compresi quelli che si sono uniti da soli. Una regola che ha smesso di trovare cambi di nome sembra una settimana tranquilla se non puoi vedere tutto.</value>
   </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>Ogni volta che importi, PIU Scores consegna a questo strumento la chiave di sessione con cui accede a piugame.com come te. Finché quella chiave è viva può fare tutto quello che puoi fare tu lì — cambiare la tua card, cambiare le tue impostazioni, cancellare il tuo account PIUGame.</value>
@@ -3241,6 +3250,15 @@
   <data name="Merged account data is deleted on" xml:space="preserve">
     <value>I dati dell'account unito verranno eliminati il {0}</value>
   </data>
+  <data name="Merged automatically" xml:space="preserve">
+    <value>Uniti automaticamente</value>
+  </data>
+  <data name="merged by the sweep" xml:space="preserve">
+    <value>unito dalla scansione</value>
+  </data>
+  <data name="merged by you" xml:space="preserve">
+    <value>unito da te</value>
+  </data>
   <data name="Metric" xml:space="preserve">
     <value>Metrica</value>
   </data>
@@ -3354,6 +3372,9 @@
   </data>
   <data name="More than a tracker" xml:space="preserve">
     <value>Più di un tracker</value>
+  </data>
+  <data name="More than one candidate fits" xml:space="preserve">
+    <value>Più di un candidato corrisponde</value>
   </data>
   <data name="More tools · {0}" xml:space="preserve">
     <value>Altri strumenti · {0}</value>
@@ -3540,6 +3561,9 @@
   <data name="Newest Score" xml:space="preserve">
     <value>Punteggio più recente</value>
   </data>
+  <data name="next best candidate {0}" xml:space="preserve">
+    <value>candidato successivo {0}</value>
+  </data>
   <data name="Next Folder" xml:space="preserve">
     <value>Cartella successiva</value>
   </data>
@@ -3618,9 +3642,6 @@
   <data name="No new scores found" xml:space="preserve">
     <value>Nessun nuovo punteggio trovato</value>
   </data>
-  <data name="No pending rename proposals." xml:space="preserve">
-    <value>Nessuna proposta di rinomina in sospeso.</value>
-  </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>Ancora nessuna istantanea di popolarità - arriva con l'import settimanale.</value>
   </data>
@@ -3674,6 +3695,9 @@
   </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>Nessun suggerimento al momento — prova un altro obiettivo o importa prima più punteggi.</value>
+  </data>
+  <data name="No tags have left the boards since the last sweep." xml:space="preserve">
+    <value>Nessun tag ha lasciato le board dall'ultima scansione.</value>
   </data>
   <data name="No thanks" xml:space="preserve">
     <value>No, grazie</value>
@@ -4569,6 +4593,9 @@
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Aggiornamento della popolarità in coda - si riaggancia all'ultimo snapshot</value>
   </data>
+  <data name="Possible rename" xml:space="preserve">
+    <value>Possibile cambio di nome</value>
+  </data>
   <data name="Post A Score" xml:space="preserve">
     <value>Pubblica un punteggio</value>
   </data>
@@ -5002,9 +5029,6 @@
   </data>
   <data name="Rename" xml:space="preserve">
     <value>Rinomina</value>
-  </data>
-  <data name="Rename proposals" xml:space="preserve">
-    <value>Proposte di rinomina</value>
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Riordino…</value>
@@ -5977,6 +6001,9 @@
   <data name="Tags on the current boards. Departed tags aren't listed." xml:space="preserve">
     <value>Tag delle classifiche attuali. I tag scomparsi non sono elencati.</value>
   </data>
+  <data name="Tags that left the boards" xml:space="preserve">
+    <value>Tag usciti dalle board</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Rompi una volta ogni N note all'infinito e la tua vita converge da qualche parte. Sotto il dirupo converge a zero: la curva non si addolcisce, precipita. È il moltiplicatore che muore più in fretta di quanto tu riesca a ricostruirlo.</value>
   </data>
@@ -6517,9 +6544,6 @@
   <data name="Top-50 average score {0} — {1}" xml:space="preserve">
     <value>Punteggio medio della top 50: {0} — {1}</value>
   </data>
-  <data name="top-50 overlap" xml:space="preserve">
-    <value>sovrapposizione nella top 50</value>
-  </data>
   <data name="Total" xml:space="preserve">
     <value>Totale</value>
   </data>
@@ -6781,6 +6805,9 @@
   </data>
   <data name="Value" xml:space="preserve">
     <value>Valore</value>
+  </data>
+  <data name="Vanished while still ranking" xml:space="preserve">
+    <value>Spariti pur essendo ancora in classifica</value>
   </data>
   <data name="Verification" xml:space="preserve">
     <value>Verifica</value>
@@ -7506,6 +7533,9 @@
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0} diventa il creatore di questa community e tu diventi amministratore. C'è un solo posto da creatore, quindi non potrai riprendertelo da solo.</value>
   </data>
+  <data name="{0} boards held" xml:space="preserve">
+    <value>{0} board occupate</value>
+  </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
   </data>
@@ -7713,6 +7743,9 @@
   <data name="{0} of {1} rating" xml:space="preserve">
     <value>{0} su {1} di punteggio</value>
   </data>
+  <data name="{0} of {1} scores identical" xml:space="preserve">
+    <value>{0} di {1} punteggi identici</value>
+  </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>{0} di {1} giocatori registrati</value>
   </data>
@@ -7767,8 +7800,14 @@
   <data name="{0} scores imported from PIUGAME" xml:space="preserve">
     <value>{0} punteggi importati da PIUGAME</value>
   </data>
+  <data name="{0} scores should still be ranking" xml:space="preserve">
+    <value>{0} punteggi dovrebbero essere ancora in classifica</value>
+  </data>
   <data name="{0} scores tracked · {1}% pass rate" xml:space="preserve">
     <value>{0} punteggi registrati · {1}% di pass</value>
+  </data>
+  <data name="{0} shared perfect games" xml:space="preserve">
+    <value>{0} perfect game in comune</value>
   </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>{0} singles · {1} doubles superate</value>

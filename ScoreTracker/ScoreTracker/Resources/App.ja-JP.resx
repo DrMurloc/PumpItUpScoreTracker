@@ -1816,6 +1816,9 @@
   <data name="Dismiss" xml:space="preserve">
     <value>非表示</value>
   </data>
+  <data name="dismissed" xml:space="preserve">
+    <value>非表示</value>
+  </data>
   <data name="Display" xml:space="preserve">
     <value>表示</value>
   </data>
@@ -1897,6 +1900,9 @@
   </data>
   <data name="DrMurloc's Rules for Integrated Toolmakers" xml:space="preserve">
     <value>連携ツール作者への DrMurloc のルール</value>
+  </data>
+  <data name="Dropped off the boards" xml:space="preserve">
+    <value>ボードから外れた</value>
   </data>
   <data name="Duplicate Explainer" xml:space="preserve">
     <value>{0} で二つのエントリーがあります。古いほうはログイン前の投稿なので、アカウントのエントリーを残して、もう一方を削除してください。</value>
@@ -2010,6 +2016,9 @@
   </data>
   <data name="Every record held this week." xml:space="preserve">
     <value>今週はすべての記録が守られました。</value>
+  </data>
+  <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
+    <value>自動で統合されたものも含め、消えたタグのすべてです。改名を見つけられなくなった規則は、全体を見なければ静かな週と区別がつきません。</value>
   </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>インポートのたびに、piugame.comへあなたとしてログインするためのセッションキーをこのツールに渡します。そのキーが有効な間、そこであなたができることは何でもできます — カードの変更、設定の変更、PIUGameアカウントの削除まで。</value>
@@ -3241,6 +3250,15 @@
   <data name="Merged account data is deleted on" xml:space="preserve">
     <value>統合されたアカウントのデータは{0}に削除されます</value>
   </data>
+  <data name="Merged automatically" xml:space="preserve">
+    <value>自動で統合済み</value>
+  </data>
+  <data name="merged by the sweep" xml:space="preserve">
+    <value>収集が統合</value>
+  </data>
+  <data name="merged by you" xml:space="preserve">
+    <value>自分で統合</value>
+  </data>
   <data name="Metric" xml:space="preserve">
     <value>指標</value>
   </data>
@@ -3354,6 +3372,9 @@
   </data>
   <data name="More than a tracker" xml:space="preserve">
     <value>トラッカー以上のもの</value>
+  </data>
+  <data name="More than one candidate fits" xml:space="preserve">
+    <value>候補が複数該当</value>
   </data>
   <data name="More tools · {0}" xml:space="preserve">
     <value>ほかのツール · {0}</value>
@@ -3540,6 +3561,9 @@
   <data name="Newest Score" xml:space="preserve">
     <value>最新のスコア</value>
   </data>
+  <data name="next best candidate {0}" xml:space="preserve">
+    <value>次点の候補 {0}</value>
+  </data>
   <data name="Next Folder" xml:space="preserve">
     <value>次のフォルダー</value>
   </data>
@@ -3618,9 +3642,6 @@
   <data name="No new scores found" xml:space="preserve">
     <value>新しいスコアはありませんでした</value>
   </data>
-  <data name="No pending rename proposals." xml:space="preserve">
-    <value>保留中の改名提案はありません。</value>
-  </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>人気ランキングのスナップショットはまだありません - 週次インポートで作成されます。</value>
   </data>
@@ -3674,6 +3695,9 @@
   </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>現在提案はありません。別の目標を試すか、先にスコアをインポートしてください。</value>
+  </data>
+  <data name="No tags have left the boards since the last sweep." xml:space="preserve">
+    <value>前回の収集以降、ボードを離れたタグはありません。</value>
   </data>
   <data name="No thanks" xml:space="preserve">
     <value>遠慮します</value>
@@ -4569,6 +4593,9 @@
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>人気度の更新をキューに追加しました - 最新のスナップショットに再適用されます</value>
   </data>
+  <data name="Possible rename" xml:space="preserve">
+    <value>改名の可能性</value>
+  </data>
   <data name="Post A Score" xml:space="preserve">
     <value>スコアを登録</value>
   </data>
@@ -5002,9 +5029,6 @@
   </data>
   <data name="Rename" xml:space="preserve">
     <value>名前を変更</value>
-  </data>
-  <data name="Rename proposals" xml:space="preserve">
-    <value>改名提案</value>
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>並び替え中…</value>
@@ -5977,6 +6001,9 @@
   <data name="Tags on the current boards. Departed tags aren't listed." xml:space="preserve">
     <value>現在のボードのタグ。外れたタグは表示されません。</value>
   </data>
+  <data name="Tags that left the boards" xml:space="preserve">
+    <value>ボードを離れたタグ</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Nノートごとに1回失敗し続けると、体力はどこかに収束します。崖の下ではゼロに収束します。曲線は緩やかに落ちるのではなく、崖のように落ちます。倍率を建て直すより速く倍率が死んでいるからです。</value>
   </data>
@@ -6517,9 +6544,6 @@
   <data name="Top-50 average score {0} — {1}" xml:space="preserve">
     <value>トップ50平均スコア {0} — {1}</value>
   </data>
-  <data name="top-50 overlap" xml:space="preserve">
-    <value>トップ50一致</value>
-  </data>
   <data name="Total" xml:space="preserve">
 	  <value>総計</value>
   </data>
@@ -6781,6 +6805,9 @@
   </data>
   <data name="Value" xml:space="preserve">
     <value>値</value>
+  </data>
+  <data name="Vanished while still ranking" xml:space="preserve">
+    <value>ランキングに残るはずが消えた</value>
   </data>
   <data name="Verification" xml:space="preserve">
 	  <value>確認</value>
@@ -7506,6 +7533,9 @@
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0} がこのコミュニティの作成者になり、あなたは管理者になります。作成者は 1 人だけなので、自分では戻せません。</value>
   </data>
+  <data name="{0} boards held" xml:space="preserve">
+    <value>ボード{0}件に在籍</value>
+  </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
   </data>
@@ -7713,6 +7743,9 @@
   <data name="{0} of {1} rating" xml:space="preserve">
     <value>レーティング {0} / {1}</value>
   </data>
+  <data name="{0} of {1} scores identical" xml:space="preserve">
+    <value>{1}件中{0}件のスコアが一致</value>
+  </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>記録のあるプレイヤー {1} 人中 {0} 人</value>
   </data>
@@ -7767,8 +7800,14 @@
   <data name="{0} scores imported from PIUGAME" xml:space="preserve">
     <value>PIUGAME から {0} スコアをインポート</value>
   </data>
+  <data name="{0} scores should still be ranking" xml:space="preserve">
+    <value>{0}件のスコアはまだランキングに残るはず</value>
+  </data>
   <data name="{0} scores tracked · {1}% pass rate" xml:space="preserve">
     <value>記録スコア{0}件・クリア率{1}%</value>
+  </data>
+  <data name="{0} shared perfect games" xml:space="preserve">
+    <value>パーフェクトゲーム{0}件が一致</value>
   </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>シングル{0}・ダブル{1}クリア</value>

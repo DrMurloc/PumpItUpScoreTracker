@@ -17,9 +17,11 @@ namespace ScoreTracker.Tests.ApplicationTests;
 
 public sealed class PlayerIdentitySagaTests
 {
+    private static readonly RenameEvidence Evidence = new(50, 48, 46, 2, 1, 0, true);
+
     private static readonly RenameProposal Pending =
-        new(4, OldPlayerId: 11, NewPlayerId: 22, "OLDTAG", "NEWTAG", true, 46, ProposalStatuses.Pending, 3,
-            MixEnum.Phoenix);
+        new(4, OldPlayerId: 11, NewPlayerId: 22, "OLDTAG", "NEWTAG", VanishVerdicts.Merge, Evidence,
+            ProposalStatuses.Pending, 3, MixEnum.Phoenix);
 
     private readonly Mock<IBus> _bus = new();
 
@@ -88,11 +90,42 @@ public sealed class PlayerIdentitySagaTests
     }
 
     [Fact]
-    public async Task PendingProposalsProjectToTheAdminRecordShape()
+    public async Task AnUnattendedMergeIsRecordedAsOne()
+    {
+        // Same merge, different signature in the audit trail. The desk has to be able to say
+        // which of these a human actually looked at, because none of them can be undone.
+        var (identity, saga) = Arrange(Pending);
+
+        await saga.Handle(new AcceptRenameProposalCommand(Pending.Id, true), CancellationToken.None);
+
+        identity.Verify(i => i.MergePlayers(11, 22, It.IsAny<CancellationToken>()), Times.Once);
+        identity.Verify(i => i.SetProposalStatus(Pending.Id, ProposalStatuses.AutoAccepted,
+            It.IsAny<CancellationToken>()), Times.Once);
+        _bus.Verify(b => b.Publish(It.IsAny<OfficialPlayerRenamedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AFindingWithNoCandidateMergesNothing()
+    {
+        // A tag that simply dropped off the boards is recorded, never merged — there is
+        // nothing to merge it into.
+        var (identity, saga) = Arrange(Pending with { NewPlayerId = null, NewUsername = null });
+
+        await saga.Handle(new AcceptRenameProposalCommand(Pending.Id), CancellationToken.None);
+
+        identity.Verify(i => i.MergePlayers(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _bus.Verify(b => b.Publish(It.IsAny<OfficialPlayerRenamedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task FindingsProjectToTheAdminRecordShape()
     {
         var (identity, saga) = Arrange();
-        identity.Setup(i => i.GetProposals(MixEnum.Phoenix2, ProposalStatuses.Pending,
-            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { Pending });
+        identity.Setup(i => i.GetFindings(MixEnum.Phoenix2, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Pending });
 
         var records = await saga.Handle(new GetRenameProposalsQuery(MixEnum.Phoenix2), CancellationToken.None);
 
@@ -100,7 +133,24 @@ public sealed class PlayerIdentitySagaTests
         Assert.Equal(Pending.Id, record.Id);
         Assert.Equal("OLDTAG", record.OldUsername);
         Assert.Equal("NEWTAG", record.NewUsername);
-        Assert.Equal(46, record.Top50Overlap);
+        Assert.Equal(VanishVerdicts.Merge, record.Verdict);
+        Assert.Equal(46, record.ExactNonPgMatches);
+        Assert.Equal(1, record.RunnerUpExactMatches);
+    }
+
+    [Fact]
+    public async Task TheDeskCanAskForTheWholePopulation()
+    {
+        // Not just what needs deciding: a rule that has quietly stopped detecting renames
+        // is indistinguishable from a quiet week unless the merges are visible too.
+        var (identity, saga) = Arrange();
+        identity.Setup(i => i.GetFindings(MixEnum.Phoenix2, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Pending with { Status = ProposalStatuses.AutoAccepted } });
+
+        var records = await saga.Handle(new GetRenameProposalsQuery(MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Equal(ProposalStatuses.AutoAccepted, Assert.Single(records).Status);
     }
 
     [Fact]

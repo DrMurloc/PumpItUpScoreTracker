@@ -1,4 +1,4 @@
-﻿using ScoreTracker.OfficialMirror.Domain;
+using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.Integration.Fixtures;
@@ -270,41 +270,80 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
             CancellationToken.None));
     }
 
+    private static RenameProposal Finding(string verdict = VanishVerdicts.Merge, int? newPlayerId = 22,
+        int exactNonPg = 46) =>
+        new(0, OldPlayerId: 11, newPlayerId, "OLDTAG", newPlayerId == null ? null : "NEWTAG", verdict,
+            new RenameEvidence(50, 48, exactNonPg, 2, 0, 0, true), ProposalStatuses.Pending,
+            CreatedSnapshotId: 1);
+
     [Fact]
-    public async Task WriteProposalsDeduplicatesRedetectedPairs()
+    public async Task WriteFindingsDeduplicatesRedetectedPairs()
     {
         var identity = Identity();
-        var proposal = new RenameProposal(0, OldPlayerId: 11, NewPlayerId: 22, "OLDTAG", "NEWTAG",
-            true, 46, ProposalStatuses.Pending, CreatedSnapshotId: 1);
-        await identity.WriteProposals(MixEnum.Phoenix2, new[] { proposal }, CancellationToken.None);
-        await identity.WriteProposals(MixEnum.Phoenix2, new[] { proposal with { CreatedSnapshotId = 2 } },
-            CancellationToken.None);
+        await identity.WriteFindings(MixEnum.Phoenix2, new[] { Finding() }, CancellationToken.None);
+        await identity.WriteFindings(MixEnum.Phoenix2,
+            new[] { Finding() with { CreatedSnapshotId = 2 } }, CancellationToken.None);
 
-        var pending = await identity.GetProposals(MixEnum.Phoenix2, ProposalStatuses.Pending,
-            CancellationToken.None);
+        var findings = await identity.GetFindings(MixEnum.Phoenix2, true, CancellationToken.None);
 
-        Assert.Single(pending);
-        Assert.Equal(1, pending[0].CreatedSnapshotId);
+        Assert.Single(findings);
+        Assert.Equal(1, findings[0].CreatedSnapshotId);
     }
 
     [Fact]
-    public async Task ProposalStatusTransitionsPersist()
+    public async Task WriteFindingsReturnsWhatItWroteWithIdsAttached()
+    {
+        // The sweep merges the conclusive findings straight after writing them, and it needs
+        // the ids to send them through the accept path rather than a private merge.
+        var written = await WriteOneFinding();
+
+        Assert.NotEqual(0, written.Id);
+        Assert.Equal(MixEnum.Phoenix2, written.Mix);
+        Assert.Equal(VanishVerdicts.Merge, written.Verdict);
+    }
+
+    [Fact]
+    public async Task EvidenceSurvivesTheRoundTrip()
+    {
+        var written = await WriteOneFinding();
+
+        var stored = (await Identity().GetProposal(written.Id, CancellationToken.None))!;
+
+        Assert.Equal(new RenameEvidence(50, 48, 46, 2, 0, 0, true), stored.Evidence);
+        Assert.Equal(VanishVerdicts.Merge, stored.Verdict);
+    }
+
+    [Fact]
+    public async Task ATagWithNoCandidateStoresWithoutOne()
     {
         var identity = Identity();
-        await identity.WriteProposals(MixEnum.Phoenix2, new[]
-        {
-            new RenameProposal(0, 11, 22, "OLDTAG", "NEWTAG", true, 46, ProposalStatuses.Pending, 1)
-        }, CancellationToken.None);
-        var pending = (await identity.GetProposals(MixEnum.Phoenix2, ProposalStatuses.Pending,
-            CancellationToken.None)).Single();
+        await identity.WriteFindings(MixEnum.Phoenix2,
+            new[] { Finding(VanishVerdicts.DroppedOff, null, 0) }, CancellationToken.None);
 
-        await identity.SetProposalStatus(pending.Id, ProposalStatuses.Accepted, CancellationToken.None);
+        var stored = Assert.Single(await identity.GetFindings(MixEnum.Phoenix2, true, CancellationToken.None));
 
-        Assert.Empty(await identity.GetProposals(MixEnum.Phoenix2, ProposalStatuses.Pending,
-            CancellationToken.None));
-        Assert.Equal(ProposalStatuses.Accepted,
-            (await identity.GetProposal(pending.Id, CancellationToken.None))!.Status);
+        Assert.Null(stored.NewPlayerId);
+        Assert.Null(stored.NewUsername);
+        Assert.Equal(VanishVerdicts.DroppedOff, stored.Verdict);
     }
+
+    [Fact]
+    public async Task ResolvedFindingsLeaveTheQueueButStayOnTheDesk()
+    {
+        var identity = Identity();
+        var written = await WriteOneFinding();
+
+        await identity.SetProposalStatus(written.Id, ProposalStatuses.AutoAccepted, CancellationToken.None);
+
+        Assert.Empty(await identity.GetFindings(MixEnum.Phoenix2, true, CancellationToken.None));
+        // Still visible in the full population — an unattended merge that nobody can see
+        // afterwards is a one-way door with no record of who walked through it.
+        var all = Assert.Single(await identity.GetFindings(MixEnum.Phoenix2, false, CancellationToken.None));
+        Assert.Equal(ProposalStatuses.AutoAccepted, all.Status);
+    }
+
+    private async Task<RenameProposal> WriteOneFinding() =>
+        (await Identity().WriteFindings(MixEnum.Phoenix2, new[] { Finding() }, CancellationToken.None)).Single();
 
     [Fact]
     public async Task PlayerTimelineSpansSealedSnapshotsInOrderAndSkipsUnsealed()

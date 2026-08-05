@@ -42,31 +42,53 @@
     </MudButton>
 </MudStack>
 
-<MudText Typo="Typo.h6">@L["Rename proposals"]</MudText>
+<MudText Typo="Typo.h6">@L["Tags that left the boards"]</MudText>
 @if (!_proposals.Any())
 {
-    <MudText Typo="Typo.body2" Class="mb-4">@L["No pending rename proposals."]</MudText>
+    <MudText Typo="Typo.body2" Class="mb-4">@L["No tags have left the boards since the last sweep."]</MudText>
 }
-@foreach (var proposal in _proposals)
+else
 {
-    <MudPaper Class="pa-3 mb-2">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
-            <MudText Typo="Typo.body1">
-                <b>@proposal.OldUsername</b> → <b>@proposal.NewUsername</b>
-            </MudText>
-            <MudText Typo="Typo.body2">
-                @(proposal.AvatarMatched ? L["avatar match"] : "") · @proposal.Top50Overlap/50 @L["top-50 overlap"]
-            </MudText>
-            <MudSpacer/>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small"
-                       OnClick="() => Accept(proposal)">
-                @L["Accept - merge history"]
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => Dismiss(proposal)">
-                @L["Dismiss"]
-            </MudButton>
-        </MudStack>
-    </MudPaper>
+    <MudText Typo="Typo.body2" Class="mb-2">
+        @L["Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it."]
+    </MudText>
+}
+@foreach (var group in _proposals.GroupBy(p => p.Verdict).OrderBy(g => VerdictOrder(g.Key)))
+{
+    <MudText Typo="Typo.subtitle2" Class="mt-3">@VerdictHeading(group.Key) (@group.Count())</MudText>
+    @foreach (var proposal in group)
+    {
+        <MudPaper Class="pa-3 mb-2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap">
+                <MudText Typo="Typo.body1">
+                    <b>@proposal.OldUsername</b>
+                    @if (proposal.NewUsername != null)
+                    {
+                        <text> → <b>@proposal.NewUsername</b></text>
+                    }
+                </MudText>
+                <MudText Typo="Typo.body2">@Evidence(proposal)</MudText>
+                <MudSpacer/>
+                @if (proposal.Status != "Pending")
+                {
+                    <MudText Typo="Typo.body2">@StatusLabel(proposal.Status)</MudText>
+                }
+                else
+                {
+                    @if (proposal.NewUsername != null)
+                    {
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small"
+                                   OnClick="() => Accept(proposal)">
+                            @L["Accept - merge history"]
+                        </MudButton>
+                    }
+                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => Dismiss(proposal)">
+                        @L["Dismiss"]
+                    </MudButton>
+                }
+            </MudStack>
+        </MudPaper>
+    }
 }
 
 <MudText Typo="Typo.h6" Class="mt-4">@L["Missing charts"] @(_missingCharts.Any() ? $"({_missingCharts.Count})" : "")</MudText>
@@ -169,6 +191,51 @@ else
         _runs = await Mediator.Send(new GetImportRunsQuery(_mix));
         _proposals = await Mediator.Send(new GetRenameProposalsQuery(_mix));
         _missingCharts = await Mediator.Send(new GetMissingChartsQuery(_mix));
+    }
+
+    // The desk reads worst-first: what needs a decision, then what merged itself, then the
+    // tags that simply got passed — which are the bulk of them and the least interesting.
+    private static int VerdictOrder(string verdict) => verdict switch
+    {
+        "Suspicious" => 0,
+        "Ambiguous" => 1,
+        "Propose" => 2,
+        "Merge" => 3,
+        _ => 4
+    };
+
+    private string VerdictHeading(string verdict) => verdict switch
+    {
+        "Suspicious" => L["Vanished while still ranking"],
+        "Ambiguous" => L["More than one candidate fits"],
+        "Propose" => L["Possible rename"],
+        "Merge" => L["Merged automatically"],
+        _ => L["Dropped off the boards"]
+    };
+
+    private string StatusLabel(string status) => status switch
+    {
+        "AutoAccepted" => L["merged by the sweep"],
+        "Accepted" => L["merged by you"],
+        _ => L["dismissed"]
+    };
+
+    private string Evidence(RenameProposalRecord proposal)
+    {
+        var parts = new List<string> { L["{0} boards held", proposal.OldPlacements] };
+        if (proposal.NewUsername != null)
+        {
+            parts.Add(L["{0} of {1} scores identical", proposal.ExactNonPgMatches, proposal.BoardsPresent]);
+            if (proposal.ExactPerfectGames > 0)
+                parts.Add(L["{0} shared perfect games", proposal.ExactPerfectGames]);
+            if (proposal.RunnerUpExactMatches > 0)
+                parts.Add(L["next best candidate {0}", proposal.RunnerUpExactMatches]);
+            if (proposal.AvatarMatched) parts.Add(L["avatar match"]);
+        }
+
+        if (proposal.SuspiciousAbsences > 0)
+            parts.Add(L["{0} scores should still be ranking", proposal.SuspiciousAbsences]);
+        return string.Join(" · ", parts);
     }
 
     private async Task Resolve(MissingChartRecord missing)

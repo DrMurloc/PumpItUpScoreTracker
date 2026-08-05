@@ -1816,6 +1816,9 @@
   <data name="Dismiss" xml:space="preserve">
     <value>Murpmrblgrl</value>
   </data>
+  <data name="dismissed" xml:space="preserve">
+    <value>murpmrblgrl</value>
+  </data>
   <data name="Display" xml:space="preserve">
     <value>Mrurggrrgl</value>
   </data>
@@ -1897,6 +1900,9 @@
   </data>
   <data name="DrMurloc's Rules for Integrated Toolmakers" xml:space="preserve">
     <value>DrMurloc Murgrgl blu Rorglmorp</value>
+  </data>
+  <data name="Dropped off the boards" xml:space="preserve">
+    <value>Blurp om mrglblarg</value>
   </data>
   <data name="Duplicate Explainer" xml:space="preserve">
     <value>Bo grumla lo {0}. La mrrgl blarg amru grgl — algo grgl grumla bo murgro obo.</value>
@@ -2010,6 +2016,9 @@
   </data>
   <data name="Every record held this week." xml:space="preserve">
     <value>Murgglorg blubgrorp glorgblgrl grglmrp plglmorg.</value>
+  </data>
+  <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
+    <value>Alu morp blurpa, murglub apa oru. Groblu blab mo murpalu problu blaru puru gala, gorap oru bralu alu.</value>
   </data>
   <data name="Every time you import, PIU Scores hands this tool the session key it uses to sign in to piugame.com as you. While that key is alive it can do anything you can do there — change your card, change your settings, delete your PIUGame account." xml:space="preserve">
     <value>Argla murgm gromurp murpo, murm murgargl blu Rorgl murgloborg grabla murm murpmurp blu piugame.com blu gromurp. Grabla mrgloo, murgm murp murpmurp argla gromurp murp — murgloo grglm, murgloo mrpgrogl, murgloo PIUGame Grgl.</value>
@@ -3241,6 +3250,15 @@
   <data name="Merged account data is deleted on" xml:space="preserve">
     <value>Murpmrp grgl gromurm urg mrglmorggrorp lurg {0}</value>
   </data>
+  <data name="Merged automatically" xml:space="preserve">
+    <value>Murglub blaraglu</value>
+  </data>
+  <data name="merged by the sweep" xml:space="preserve">
+    <value>murglub pa lorgab</value>
+  </data>
+  <data name="merged by you" xml:space="preserve">
+    <value>murglub pa oru</value>
+  </data>
   <data name="Metric" xml:space="preserve">
     <value>Murmgrorp</value>
   </data>
@@ -3354,6 +3372,9 @@
   </data>
   <data name="More than a tracker" xml:space="preserve">
     <value>Mrrgl grogrgl gro grrglgroblarg</value>
+  </data>
+  <data name="More than one candidate fits" xml:space="preserve">
+    <value>Maru grumblab romagl</value>
   </data>
   <data name="More tools · {0}" xml:space="preserve">
     <value>Marogl blurgl · {0}</value>
@@ -3540,6 +3561,9 @@
   <data name="Newest Score" xml:space="preserve">
     <value>Grglmurp Mrglrgl</value>
   </data>
+  <data name="next best candidate {0}" xml:space="preserve">
+    <value>gorulab grumblab {0}</value>
+  </data>
   <data name="Next Folder" xml:space="preserve">
     <value>Grorpglorg Grrgllurg</value>
   </data>
@@ -3618,9 +3642,6 @@
   <data name="No new scores found" xml:space="preserve">
     <value>Mrp grgl mgrlgmrg arglurg</value>
   </data>
-  <data name="No pending rename proposals." xml:space="preserve">
-    <value>Mrp murggrglurg glorggrgl mrgrrglgrorp.</value>
-  </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>Mrp grorpmorgmurm mrpmaglmurp argl - gl mrgllurg glgrgl mrp murmmr glorggl.</value>
   </data>
@@ -3674,6 +3695,9 @@
   </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>Mrp glrglmurpmrp rogro magl — lurg gro roplglblgrl mrpmrp, argl glorggl mrrgl mgrlgmrg murpargl.</value>
+  </data>
+  <data name="No tags have left the boards since the last sweep." xml:space="preserve">
+    <value>Mo morp blurpa om mrglblarg puru lorgab.</value>
   </data>
   <data name="No thanks" xml:space="preserve">
     <value>Mrp argllurg</value>
@@ -4569,6 +4593,9 @@
   <data name="Popularity refresh queued - re-attaches to the latest snapshot" xml:space="preserve">
     <value>Grorpmorgmurm grogrrgllurg lurggrgl - gl-grglblgrlmrgl grgl mrp mrpblarg mrpmaglmurp</value>
   </data>
+  <data name="Possible rename" xml:space="preserve">
+    <value>Baglu murpalu</value>
+  </data>
   <data name="Post A Score" xml:space="preserve">
     <value>Blarg Mrglrgl</value>
   </data>
@@ -5002,9 +5029,6 @@
   </data>
   <data name="Rename" xml:space="preserve">
     <value>Glorggrgl</value>
-  </data>
-  <data name="Rename proposals" xml:space="preserve">
-    <value>Glorggrgl mrgrrglgrorp</value>
   </data>
   <data name="Reordering…" xml:space="preserve">
     <value>Mrpplglmrp…</value>
@@ -5977,6 +6001,9 @@
   <data name="Tags on the current boards. Departed tags aren't listed." xml:space="preserve">
     <value>Blubgrrgl mrp grrglplgl mrpo. Blubgrrgl murgargl bo grog.</value>
   </data>
+  <data name="Tags that left the boards" xml:space="preserve">
+    <value>Morp blurpa om mrglblarg</value>
+  </data>
   <data name="Take one break every N notes forever and your life converges somewhere. Below the cliff it converges on zero — the curve does not taper, it falls off. That is the multiplier dying faster than you can rebuild it." xml:space="preserve">
     <value>Murmglorg argl arglglorg murgglorg GRRGL roblub murgmurpblub ro gromurp glorgrgl plglmurmro rorglrgl. Blgrlblarg mrp murmargl gl plglmurmro lurg romurg — mrp murggrrgl argllurg murm arglglorg, gl groplgl morg. Blubgrrgl urg mrp glmurmargl mrpmurg glorgmurm grogrgl blub grorp glrolurg gl.</value>
   </data>
@@ -6517,9 +6544,6 @@
   <data name="Top-50 average score {0} — {1}" xml:space="preserve">
     <value>Blarg-50 rorg mrglrgl {0} — {1}</value>
   </data>
-  <data name="top-50 overlap" xml:space="preserve">
-    <value>blarg-50 urgmurpmurg</value>
-  </data>
   <data name="Total" xml:space="preserve">
 	  <value>Urgargl</value>
   </data>
@@ -6781,6 +6805,9 @@
   </data>
   <data name="Value" xml:space="preserve">
     <value>Grumb</value>
+  </data>
+  <data name="Vanished while still ranking" xml:space="preserve">
+    <value>Blurpa alu maglmrpplgl</value>
   </data>
   <data name="Verification" xml:space="preserve">
 	  <value>Morgmrglblubmagl</value>
@@ -7506,6 +7533,9 @@
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0} grumba burgola, golu marbo. Umba burgo, gorb uroba.</value>
   </data>
+  <data name="{0} boards held" xml:space="preserve">
+    <value>{0} mrglblarg glorp</value>
+  </data>
   <data name="{0} BPM" xml:space="preserve">
     <value>{0} BPM</value>
   </data>
@@ -7713,6 +7743,9 @@
   <data name="{0} of {1} rating" xml:space="preserve">
     <value>{0} ub {1} bragl</value>
   </data>
+  <data name="{0} of {1} scores identical" xml:space="preserve">
+    <value>{0} pu {1} magrub romagl</value>
+  </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>{0} mrgl {1} mrplglmagl morp</value>
   </data>
@@ -7767,8 +7800,14 @@
   <data name="{0} scores imported from PIUGAME" xml:space="preserve">
     <value>{0} mgrlgmrg plglgromurm romurg PIUGAME</value>
   </data>
+  <data name="{0} scores should still be ranking" xml:space="preserve">
+    <value>{0} magrub blub maglmrpplgl</value>
+  </data>
   <data name="{0} scores tracked · {1}% pass rate" xml:space="preserve">
     <value>{0} mgrlgmrg mrplglmagl · {1}% maglplgl mrpurg</value>
+  </data>
+  <data name="{0} shared perfect games" xml:space="preserve">
+    <value>{0} groblu palruglub</value>
   </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>{0} mrglrlgl · {1} groggl rglplgl</value>

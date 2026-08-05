@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -38,6 +39,7 @@ public sealed class LeaderboardSweepSagaTests
         LeaderboardSweepSaga Saga)
     {
         public Mock<IChartRepository> Charts { get; init; } = null!;
+        public Mock<IMediator> Mediator { get; init; } = null!;
     }
 
     private static Fixture Arrange(
@@ -108,11 +110,12 @@ public sealed class LeaderboardSweepSagaTests
                 It.IsAny<ChartType?>(), It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         var tierLists = new Mock<ITierListRepository>();
+        var mediator = new Mock<IMediator>();
         var saga = new LeaderboardSweepSaga(site.Object, snapshots.Object, records.Object, identity.Object,
             charts.Object, tierLists.Object, FakeDateTime.At(Now).Object,
-            new Mock<IBus>().Object,
+            new Mock<IBus>().Object, mediator.Object,
             NullLogger<LeaderboardSweepSaga>.Instance);
-        return new Fixture(site, snapshots, records, tierLists, saga) { Charts = charts };
+        return new Fixture(site, snapshots, records, tierLists, saga) { Charts = charts, Mediator = mediator };
     }
 
     private static async IAsyncEnumerable<OfficialChartBoardResult> ToAsync(

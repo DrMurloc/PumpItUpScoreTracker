@@ -61,18 +61,57 @@ internal sealed record HighlightRow(string Kind, int SortOrder, int? PlayerId, i
     int? LeaderboardId, Guid? ChartId, string? ChartType, int? Level, string? GradeBand,
     decimal? Score, decimal? PrevValue, decimal? NewValue);
 
+/// <summary>What the analyzer concluded about a tag that left the boards.</summary>
+internal static class VanishVerdicts
+{
+    /// <summary>Conclusive. Merged unattended, no admin in the loop.</summary>
+    public const string Merge = "Merge";
+
+    /// <summary>Two candidates explain the tag comparably well; guessing between them is not on.</summary>
+    public const string Ambiguous = "Ambiguous";
+
+    /// <summary>
+    ///     The tag left scores behind that should still be ranking. Whatever happened is not
+    ///     an ordinary rename — a ban is the usual answer — so it never merges itself.
+    /// </summary>
+    public const string Suspicious = "Suspicious";
+
+    /// <summary>A candidate fits and nothing contradicts it, but the evidence is thin.</summary>
+    public const string Propose = "Propose";
+
+    /// <summary>
+    ///     Nothing fits, and every score the tag held has fallen below its board's cut. The
+    ///     ordinary way a player leaves the boards: they were passed. Recorded, not actioned.
+    /// </summary>
+    public const string DroppedOff = "DroppedOff";
+}
+
 /// <summary>
-///     A detected likely rename.
+///     Why the analyzer reached its verdict, kept whole so the admin desk argues the case
+///     rather than asserting it. <paramref name="ExactNonPgMatches" /> is the one that
+///     identifies a person: two players sharing a perfect 1,000,000 is a weekly occurrence,
+///     two players sharing five identical imperfect scores is not.
+/// </summary>
+internal sealed record RenameEvidence(int OldPlacements, int BoardsPresent, int ExactNonPgMatches,
+    int ExactPerfectGames, int RunnerUpExactMatches, int SuspiciousAbsences, bool AvatarMatched)
+{
+    public static readonly RenameEvidence None = new(0, 0, 0, 0, 0, 0, false);
+}
+
+/// <summary>
+///     A tag that was on the chart boards last snapshot and is on nothing at all now, with
+///     the analyzer's verdict and the candidate it points at (none, for a tag that simply
+///     dropped off).
 ///     <para>
-///         <paramref name="Mix" /> is null on a freshly detected proposal and set once it has been
-///         read back from storage — the same lifecycle <paramref name="Id" /> already expresses by
-///         being 0 until written. The detector is mix-agnostic (it compares two snapshots that are
-///         a mix's by construction) and the sweep supplies the mix on write; a reader accepting a
-///         proposal by id needs it back, to say which boards the rename happened on.
+///         <paramref name="Mix" /> is null on a fresh finding and set once it has been read back
+///         from storage — the same lifecycle <paramref name="Id" /> already expresses by being 0
+///         until written. The analyzer is mix-agnostic (it compares two snapshots that are a
+///         mix's by construction) and the sweep supplies the mix on write; a reader accepting a
+///         finding by id needs it back, to say which boards the rename happened on.
 ///     </para>
 /// </summary>
-internal sealed record RenameProposal(int Id, int OldPlayerId, int NewPlayerId, string OldUsername,
-    string NewUsername, bool AvatarMatched, int Top50Overlap, string Status, int CreatedSnapshotId,
+internal sealed record RenameProposal(int Id, int OldPlayerId, int? NewPlayerId, string OldUsername,
+    string? NewUsername, string Verdict, RenameEvidence Evidence, string Status, int CreatedSnapshotId,
     MixEnum? Mix = null);
 
 /// <summary>One player's place and score on one chart's board.</summary>
@@ -134,4 +173,15 @@ internal static class ProposalStatuses
     public const string Pending = "Pending";
     public const string Accepted = "Accepted";
     public const string Dismissed = "Dismissed";
+
+    /// <summary>
+    ///     Merged by the sweep with nobody watching. Kept distinct from <see cref="Accepted" />
+    ///     so the desk can always answer "did a human decide this?" — the merge is a one-way
+    ///     door, and which ones the machine walked through on its own is the first thing worth
+    ///     knowing when one turns out to be wrong.
+    /// </summary>
+    public const string AutoAccepted = "AutoAccepted";
+
+    /// <summary>Statuses that have already had their effect and want no further action.</summary>
+    public static readonly string[] Resolved = { Accepted, Dismissed, AutoAccepted };
 }

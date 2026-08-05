@@ -102,48 +102,65 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
             .ExecuteUpdateAsync(u => u.SetProperty(p => p.UserId, toUserId), ct);
     }
 
-    public async Task WriteProposals(MixEnum mix, IReadOnlyCollection<RenameProposal> proposals,
-        CancellationToken ct)
+    public async Task<IReadOnlyList<RenameProposal>> WriteFindings(MixEnum mix,
+        IReadOnlyCollection<RenameProposal> findings, CancellationToken ct)
     {
-        if (proposals.Count == 0) return;
+        if (findings.Count == 0) return Array.Empty<RenameProposal>();
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
-        // One live proposal per (old, new) pair — a re-detected pair on a later sweep
-        // must not stack duplicates in the admin queue.
-        var oldIds = proposals.Select(p => p.OldPlayerId).ToArray();
+        // One live row per (old, new) pair — a replayed sweep must not stack duplicates on
+        // the desk. A vanished tag with no candidate dedupes on the old id alone, since
+        // NewPlayerId is null for every one of them.
+        var oldIds = findings.Select(p => p.OldPlayerId).ToArray();
         var existingPairs = (await database.Set<OfficialPlayerRenameProposalEntity>()
                 .Where(p => p.MixId == mixId && oldIds.Contains(p.OldPlayerId))
                 .Select(p => new { p.OldPlayerId, p.NewPlayerId })
                 .ToArrayAsync(ct))
             .Select(p => (p.OldPlayerId, p.NewPlayerId))
             .ToHashSet();
-        foreach (var proposal in proposals.Where(p =>
+
+        var written = new List<(OfficialPlayerRenameProposalEntity Entity, RenameProposal Finding)>();
+        foreach (var finding in findings.Where(p =>
                      !existingPairs.Contains((p.OldPlayerId, p.NewPlayerId))))
-            await database.Set<OfficialPlayerRenameProposalEntity>().AddAsync(
-                new OfficialPlayerRenameProposalEntity
-                {
-                    MixId = mixId,
-                    OldPlayerId = proposal.OldPlayerId,
-                    NewPlayerId = proposal.NewPlayerId,
-                    OldUsername = proposal.OldUsername,
-                    NewUsername = proposal.NewUsername,
-                    AvatarMatched = proposal.AvatarMatched,
-                    Top50Overlap = proposal.Top50Overlap,
-                    Status = ProposalStatuses.Pending,
-                    CreatedSnapshotId = proposal.CreatedSnapshotId
-                }, ct);
+        {
+            var entity = new OfficialPlayerRenameProposalEntity
+            {
+                MixId = mixId,
+                OldPlayerId = finding.OldPlayerId,
+                NewPlayerId = finding.NewPlayerId,
+                OldUsername = finding.OldUsername,
+                NewUsername = finding.NewUsername,
+                Verdict = finding.Verdict,
+                OldPlacements = finding.Evidence.OldPlacements,
+                BoardsPresent = finding.Evidence.BoardsPresent,
+                ExactNonPgMatches = finding.Evidence.ExactNonPgMatches,
+                ExactPerfectGames = finding.Evidence.ExactPerfectGames,
+                RunnerUpExactMatches = finding.Evidence.RunnerUpExactMatches,
+                SuspiciousAbsences = finding.Evidence.SuspiciousAbsences,
+                AvatarMatched = finding.Evidence.AvatarMatched,
+                Status = ProposalStatuses.Pending,
+                CreatedSnapshotId = finding.CreatedSnapshotId
+            };
+            await database.Set<OfficialPlayerRenameProposalEntity>().AddAsync(entity, ct);
+            written.Add((entity, finding));
+        }
+
         await database.SaveChangesAsync(ct);
+        // Ids come back because the caller merges the conclusive ones straight away, and it
+        // does that through the same accept path an admin uses rather than a second copy of it.
+        return written.Select(w => w.Finding with { Id = w.Entity.Id, Mix = mix }).ToArray();
     }
 
-    public async Task<IReadOnlyList<RenameProposal>> GetProposals(MixEnum mix, string status, CancellationToken ct)
+    public async Task<IReadOnlyList<RenameProposal>> GetFindings(MixEnum mix, bool unresolvedOnly,
+        CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
-        return await database.Set<OfficialPlayerRenameProposalEntity>()
-            .Where(p => p.MixId == mixId && p.Status == status)
+        var query = database.Set<OfficialPlayerRenameProposalEntity>().Where(p => p.MixId == mixId);
+        if (unresolvedOnly) query = query.Where(p => p.Status == ProposalStatuses.Pending);
+        return await query
             .OrderByDescending(p => p.Id)
-            .Select(p => new RenameProposal(p.Id, p.OldPlayerId, p.NewPlayerId, p.OldUsername, p.NewUsername,
-                p.AvatarMatched, p.Top50Overlap, p.Status, p.CreatedSnapshotId, mix))
+            .Select(p => Project(p, mix))
             .ToArrayAsync(ct);
     }
 
@@ -152,18 +169,16 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
         await using var database = await _factory.CreateDbContextAsync(ct);
         var row = await database.Set<OfficialPlayerRenameProposalEntity>()
             .Where(p => p.Id == id)
-            .Select(p => new
-            {
-                p.Id, p.MixId, p.OldPlayerId, p.NewPlayerId, p.OldUsername, p.NewUsername, p.AvatarMatched,
-                p.Top50Overlap, p.Status, p.CreatedSnapshotId
-            })
+            .Select(p => new { Entity = p, p.MixId })
             .FirstOrDefaultAsync(ct);
-        return row == null
-            ? null
-            : new RenameProposal(row.Id, row.OldPlayerId, row.NewPlayerId, row.OldUsername, row.NewUsername,
-                row.AvatarMatched, row.Top50Overlap, row.Status, row.CreatedSnapshotId,
-                MixIds.ToEnum(row.MixId));
+        return row == null ? null : Project(row.Entity, MixIds.ToEnum(row.MixId));
     }
+
+    private static RenameProposal Project(OfficialPlayerRenameProposalEntity p, MixEnum mix) =>
+        new(p.Id, p.OldPlayerId, p.NewPlayerId, p.OldUsername, p.NewUsername, p.Verdict,
+            new RenameEvidence(p.OldPlacements, p.BoardsPresent, p.ExactNonPgMatches, p.ExactPerfectGames,
+                p.RunnerUpExactMatches, p.SuspiciousAbsences, p.AvatarMatched),
+            p.Status, p.CreatedSnapshotId, mix);
 
     public async Task SetProposalStatus(int id, string status, CancellationToken ct)
     {
