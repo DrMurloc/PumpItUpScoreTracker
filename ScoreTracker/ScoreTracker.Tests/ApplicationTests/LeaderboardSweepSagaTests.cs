@@ -30,6 +30,7 @@ public sealed class LeaderboardSweepSagaTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 12, 16, 30, 0, TimeSpan.Zero);
     private const int SnapshotId = 77;
+    private const int PreviousSnapshotId = 76;
 
     private sealed record Fixture(
         Mock<IOfficialSiteClient> Site,
@@ -40,6 +41,7 @@ public sealed class LeaderboardSweepSagaTests
     {
         public Mock<IChartRepository> Charts { get; init; } = null!;
         public Mock<IMediator> Mediator { get; init; } = null!;
+        public Mock<IOfficialPlayerIdentityRepository> Identity { get; init; } = null!;
     }
 
     private static Fixture Arrange(
@@ -115,7 +117,8 @@ public sealed class LeaderboardSweepSagaTests
             charts.Object, tierLists.Object, FakeDateTime.At(Now).Object,
             new Mock<IBus>().Object, mediator.Object,
             NullLogger<LeaderboardSweepSaga>.Instance);
-        return new Fixture(site, snapshots, records, tierLists, saga) { Charts = charts, Mediator = mediator };
+        return new Fixture(site, snapshots, records, tierLists, saga)
+            { Charts = charts, Mediator = mediator, Identity = identity };
     }
 
     private static async IAsyncEnumerable<OfficialChartBoardResult> ToAsync(
@@ -135,6 +138,90 @@ public sealed class LeaderboardSweepSagaTests
         ctx.SetupGet(c => c.Message).Returns(new StartLeaderboardImportCommand(mix));
         ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
         return ctx.Object;
+    }
+
+    /// <summary>
+    ///     Points the sweep at a previous snapshot where OLDTAG held six boards and a current
+    ///     one where NEWTAG holds the same six at the same scores — a rename the analyzer
+    ///     settles on its own.
+    /// </summary>
+    private static Fixture ArrangeRename()
+    {
+        var f = Arrange();
+        var boards = Enumerable.Range(1, 6)
+            .Select(id => new BoardDimension(id, LeaderboardTypes.Chart, $"Board {id}", Guid.NewGuid(),
+                "Single", 24))
+            .ToArray();
+        PlacementRow[] Rows(int playerId) => boards
+            .Select(b => new PlacementRow(b.Id, playerId, 3, 950000 + b.Id)).ToArray();
+
+        f.Snapshots.Setup(s => s.GetBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(boards);
+        f.Snapshots.Setup(s => s.GetSealedBefore(It.IsAny<MixEnum>(), It.IsAny<int>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new SnapshotRun(PreviousSnapshotId, Now.AddDays(-7), Now.AddDays(-7), false,
+                "Done", 0, 0, 0, null));
+        f.Snapshots.Setup(s => s.GetPlacements(PreviousSnapshotId, PlacementScope.OfficialOnly,
+            It.IsAny<CancellationToken>())).ReturnsAsync(Rows(11));
+        f.Snapshots.Setup(s => s.GetPlacements(SnapshotId, PlacementScope.OfficialOnly,
+            It.IsAny<CancellationToken>())).ReturnsAsync(Rows(22));
+        f.Snapshots.Setup(s => s.GetPlayers(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new PlayerDimension(11, "OLDTAG", null, null),
+                new PlayerDimension(22, "NEWTAG", null, null)
+            });
+        f.Identity.Setup(i => i.WriteFindings(It.IsAny<MixEnum>(),
+                It.IsAny<IReadOnlyCollection<RenameProposal>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum mix, IReadOnlyCollection<RenameProposal> findings, CancellationToken _) =>
+                findings.Select((p, i) => p with { Id = 700 + i, Mix = mix }).ToArray());
+        return f;
+    }
+
+    [Fact]
+    public async Task AConclusiveRenameMergesWithinTheSweep()
+    {
+        var f = ArrangeRename();
+
+        await f.Saga.Consume(Context());
+
+        // Through the command the admin button sends, flagged as nobody's decision — a second
+        // merge implementation is a second place to get the announce-after-merge order wrong.
+        f.Mediator.Verify(m => m.Send(
+            It.Is<AcceptRenameProposalCommand>(c => c.ProposalId == 700 && c.Unattended),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ATagWithNothingToMergeIntoIsRecordedAndLeftAlone()
+    {
+        var f = ArrangeRename();
+        // Nobody appeared to carry the scores forward.
+        f.Snapshots.Setup(s => s.GetPlacements(SnapshotId, PlacementScope.OfficialOnly,
+            It.IsAny<CancellationToken>())).ReturnsAsync(Array.Empty<PlacementRow>());
+
+        await f.Saga.Consume(Context());
+
+        f.Identity.Verify(i => i.WriteFindings(It.IsAny<MixEnum>(),
+            It.Is<IReadOnlyCollection<RenameProposal>>(p =>
+                p.Count == 1 && p.Single().Verdict == VanishVerdicts.DroppedOff),
+            It.IsAny<CancellationToken>()), Times.Once);
+        f.Mediator.Verify(m => m.Send(It.IsAny<AcceptRenameProposalCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ABaselineSweepExplainsNothing()
+    {
+        // Nothing to diff against, so every tag on the boards would read as having appeared.
+        var f = ArrangeRename();
+        f.Snapshots.Setup(s => s.AnySealed(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        await f.Saga.Consume(Context());
+
+        f.Identity.Verify(i => i.WriteFindings(It.IsAny<MixEnum>(),
+            It.IsAny<IReadOnlyCollection<RenameProposal>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
