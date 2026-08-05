@@ -768,6 +768,9 @@
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Voltar para Weekly Charts</value>
   </data>
+  <data name="Back to {0}" xml:space="preserve">
+    <value>Voltar para {0}</value>
+  </data>
   <data name="Backfill" xml:space="preserve">
     <value>Retroativo</value>
   </data>
@@ -3147,6 +3150,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Importação manual — script de console + CSV</value>
   </data>
+  <data name="Manual score edit" xml:space="preserve">
+    <value>Edição manual da pontuação</value>
+  </data>
   <data name="Marked for review" xml:space="preserve">
     <value>Marcada para revisão</value>
   </data>
@@ -3609,6 +3615,9 @@
   <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
     <value>Ainda não há pontuações neste intervalo — registre ou importe para ver seu detalhamento.</value>
   </data>
+  <data name="No scores recorded on this chart yet." xml:space="preserve">
+    <value>Nenhuma pontuação registrada neste chart ainda.</value>
+  </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>Ainda não há pontuações — seja a primeira pessoa.</value>
   </data>
@@ -3626,6 +3635,9 @@
   </data>
   <data name="No significant matches — here's the closest we could find." xml:space="preserve">
     <value>Nenhuma correspondência significativa — estes são os mais próximos.</value>
+  </data>
+  <data name="No similar charts for this one yet." xml:space="preserve">
+    <value>Ainda não há charts semelhantes a este.</value>
   </data>
   <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
     <value>Ainda sem instantâneo: os limites aparecem após a primeira importação semanal.</value>
@@ -4828,6 +4840,9 @@
   </data>
   <data name="Record" xml:space="preserve">
     <value>Registrar</value>
+  </data>
+  <data name="Record a score" xml:space="preserve">
+    <value>Registrar uma pontuação</value>
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Registre uma pontuação à mão para qualquer chart.</value>

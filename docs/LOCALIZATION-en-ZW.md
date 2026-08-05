@@ -151,6 +151,23 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | More / Most | Mrrgl / Mrrrgl | |
 | Less / Least | Mgl / Mggl | |
 
+### Function words
+
+English function words have no Murloc equivalent to recover, but the word-count rule means a
+seven-word English sentence needs seven Murloc words — so they get coined once and reused rather
+than dropped. Kept deliberately short, since the length rule tracks the English.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| a | a | |
+| for | ba | |
+| on | ap | |
+| to | ro | Not `mo`, which is the negation prefix (`Momurgloo`). |
+| one | mrp | The pronoun ("similar to this **one**"), not the numeral. |
+| yet | larg | |
+| Manual | Blargurg | Coined 2026-08-05 for the score dialog's manual edit heading. |
+| Similar | Plglrogrgl | Distinct from `plglro` ("like"), which the *Charts like this* heading already uses. |
+
 ## Process for future batches
 
 1. A new en-US key gets an en-ZW value **in the same pass**, like every other locale.

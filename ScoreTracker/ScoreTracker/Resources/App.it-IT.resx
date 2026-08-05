@@ -775,6 +775,9 @@
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Torna a Weekly Charts</value>
   </data>
+  <data name="Back to {0}" xml:space="preserve">
+    <value>Torna a {0}</value>
+  </data>
   <data name="Backfill" xml:space="preserve">
     <value>Retroattivo</value>
   </data>
@@ -3169,6 +3172,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Importazione manuale — script da console + CSV</value>
   </data>
+  <data name="Manual score edit" xml:space="preserve">
+    <value>Modifica manuale del punteggio</value>
+  </data>
   <data name="Marked for review" xml:space="preserve">
     <value>Segnato per la revisione</value>
   </data>
@@ -3639,6 +3645,9 @@
   <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
     <value>Ancora nessun punteggio in questo intervallo: registra o importa per vedere la tua ripartizione.</value>
   </data>
+  <data name="No scores recorded on this chart yet." xml:space="preserve">
+    <value>Nessun punteggio ancora registrato su questa chart.</value>
+  </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>Ancora nessun punteggio — sii il primo.</value>
   </data>
@@ -3656,6 +3665,9 @@
   </data>
   <data name="No significant matches — here's the closest we could find." xml:space="preserve">
     <value>Nessuna corrispondenza significativa — ecco le più vicine.</value>
+  </data>
+  <data name="No similar charts for this one yet." xml:space="preserve">
+    <value>Nessuna chart simile a questa.</value>
   </data>
   <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
     <value>Nessuno snapshot ancora - le soglie compaiono dopo la prima importazione settimanale.</value>
@@ -4867,6 +4879,9 @@
   </data>
   <data name="Record" xml:space="preserve">
     <value>Registra</value>
+  </data>
+  <data name="Record a score" xml:space="preserve">
+    <value>Registra un punteggio</value>
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Registra un punteggio a mano per qualsiasi chart.</value>

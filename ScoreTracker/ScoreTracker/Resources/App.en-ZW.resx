@@ -775,6 +775,9 @@
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Arglblgrl grgl Murmmr Murgl</value>
   </data>
+  <data name="Back to {0}" xml:space="preserve">
+    <value>Arglblgrl ro {0}</value>
+  </data>
   <data name="Backfill" xml:space="preserve">
     <value>Mrglrglmrp</value>
   </data>
@@ -3169,6 +3172,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Murggrgl glorggl — blubmrmr blubblgrl + CSV</value>
   </data>
+  <data name="Manual score edit" xml:space="preserve">
+    <value>Blargurg mrglrgl murmmurp</value>
+  </data>
   <data name="Marked for review" xml:space="preserve">
     <value>Marogl bo grumba</value>
   </data>
@@ -3639,6 +3645,9 @@
   <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
     <value>Mrp mgrlgmrg mrp grglmrp blubmrgl argl — blubgrorp argl glorggl grgl blarg gromurp maglgrogrrgl.</value>
   </data>
+  <data name="No scores recorded on this chart yet." xml:space="preserve">
+    <value>Bo mgrlgmrg blubgrorp ap grglmrp murgl larg.</value>
+  </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>Mrp mgrlgmrg murmgrglurg argl — glorg mrp murpargl.</value>
   </data>
@@ -3656,6 +3665,9 @@
   </data>
   <data name="No significant matches — here's the closest we could find." xml:space="preserve">
     <value>Mrp glgrglromrgl morgmaglblgrl — grglgl mrp murmurgmurp mrgl arglgro blubgl.</value>
+  </data>
+  <data name="No similar charts for this one yet." xml:space="preserve">
+    <value>Bo plglrogrgl murgl ba grglmrp mrp larg.</value>
   </data>
   <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
     <value>Mrp mrpmaglmurp argl - glmrpblub gromr glmrp mrp murpargl murmmr glorggl.</value>
@@ -4867,6 +4879,9 @@
   </data>
   <data name="Record" xml:space="preserve">
     <value>Blubgrorp</value>
+  </data>
+  <data name="Record a score" xml:space="preserve">
+    <value>Blubgrorp a mrglrgl</value>
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Blubgrorp gro mrglrgl murm mrurg ro ro murgl.</value>

@@ -768,6 +768,9 @@
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Weekly Charts로 돌아가기</value>
   </data>
+  <data name="Back to {0}" xml:space="preserve">
+    <value>{0}(으)로 돌아가기</value>
+  </data>
   <data name="Backfill" xml:space="preserve">
     <value>백필</value>
   </data>
@@ -3147,6 +3150,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>수동 가져오기 — 콘솔 스크립트 + CSV</value>
   </data>
+  <data name="Manual score edit" xml:space="preserve">
+    <value>점수 직접 입력</value>
+  </data>
   <data name="Marked for review" xml:space="preserve">
     <value>검토 대기로 표시됨</value>
   </data>
@@ -3609,6 +3615,9 @@
   <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
     <value>이 범위에 아직 점수가 없습니다 — 기록하거나 가져오면 구성을 볼 수 있습니다.</value>
   </data>
+  <data name="No scores recorded on this chart yet." xml:space="preserve">
+    <value>이 채보에 기록된 점수가 아직 없습니다.</value>
+  </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>아직 기록된 점수가 없습니다 — 첫 주인공이 되어 보세요.</value>
   </data>
@@ -3626,6 +3635,9 @@
   </data>
   <data name="No significant matches — here's the closest we could find." xml:space="preserve">
     <value>뚜렷한 일치 항목이 없습니다 — 가장 비슷한 채보입니다.</value>
+  </data>
+  <data name="No similar charts for this one yet." xml:space="preserve">
+    <value>이 채보와 비슷한 채보가 아직 없습니다.</value>
   </data>
   <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
     <value>아직 스냅샷이 없습니다 - 첫 주간 가져오기 후 기준선이 표시됩니다.</value>
@@ -4828,6 +4840,9 @@
   </data>
   <data name="Record" xml:space="preserve">
     <value>기록</value>
+  </data>
+  <data name="Record a score" xml:space="preserve">
+    <value>점수 기록하기</value>
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>아무 채보나 점수를 직접 입력해 기록하세요.</value>

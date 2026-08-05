@@ -775,6 +775,9 @@
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Back to Weekly Charts</value>
   </data>
+  <data name="Back to {0}" xml:space="preserve">
+    <value>Back to {0}</value>
+  </data>
   <data name="Backfill" xml:space="preserve">
     <value>Backfill</value>
   </data>
@@ -3169,6 +3172,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Manual import — console script + CSV</value>
   </data>
+  <data name="Manual score edit" xml:space="preserve">
+    <value>Manual score edit</value>
+  </data>
   <data name="Marked for review" xml:space="preserve">
     <value>Marked for review</value>
   </data>
@@ -3639,6 +3645,9 @@
   <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
     <value>No scores in this range yet — record or import to see your breakdown.</value>
   </data>
+  <data name="No scores recorded on this chart yet." xml:space="preserve">
+    <value>No scores recorded on this chart yet.</value>
+  </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>No scores recorded yet — be the first.</value>
   </data>
@@ -3656,6 +3665,9 @@
   </data>
   <data name="No significant matches — here's the closest we could find." xml:space="preserve">
     <value>No significant matches — here's the closest we could find.</value>
+  </data>
+  <data name="No similar charts for this one yet." xml:space="preserve">
+    <value>No similar charts for this one yet.</value>
   </data>
   <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
     <value>No snapshot yet - thresholds appear after the first weekly import.</value>
@@ -4867,6 +4879,9 @@
   </data>
   <data name="Record" xml:space="preserve">
     <value>Record</value>
+  </data>
+  <data name="Record a score" xml:space="preserve">
+    <value>Record a score</value>
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Record a score by hand for any chart.</value>

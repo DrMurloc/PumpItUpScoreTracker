@@ -775,6 +775,9 @@
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Weekly Charts に戻る</value>
   </data>
+  <data name="Back to {0}" xml:space="preserve">
+    <value>{0}に戻る</value>
+  </data>
   <data name="Backfill" xml:space="preserve">
     <value>バックフィル</value>
   </data>
@@ -3169,6 +3172,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>手動インポート — コンソールスクリプト + CSV</value>
   </data>
+  <data name="Manual score edit" xml:space="preserve">
+    <value>スコアを手動で編集</value>
+  </data>
   <data name="Marked for review" xml:space="preserve">
     <value>確認待ちにしました</value>
   </data>
@@ -3639,6 +3645,9 @@
   <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
     <value>この範囲のスコアはまだありません — 記録またはインポートすると内訳が表示されます。</value>
   </data>
+  <data name="No scores recorded on this chart yet." xml:space="preserve">
+    <value>この譜面にはまだスコアが記録されていません。</value>
+  </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>まだスコアがありません——最初の1人になりましょう。</value>
   </data>
@@ -3656,6 +3665,9 @@
   </data>
   <data name="No significant matches — here's the closest we could find." xml:space="preserve">
     <value>明確な一致はありません — 最も近い譜面です。</value>
+  </data>
+  <data name="No similar charts for this one yet." xml:space="preserve">
+    <value>この譜面に似ている譜面はまだありません。</value>
   </data>
   <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
     <value>まだスナップショットがありません - 最初の週間インポート後にしきい値が表示されます。</value>
@@ -4867,6 +4879,9 @@
   </data>
   <data name="Record" xml:space="preserve">
     <value>記録</value>
+  </data>
+  <data name="Record a score" xml:space="preserve">
+    <value>スコアを記録</value>
   </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>任意の譜面のスコアを手入力で記録します。</value>
