@@ -3,5 +3,6 @@ Disallow: /hangfire
 Disallow: /api/
 Disallow: /Dev/
 Disallow: /Admin
+Disallow: /Mix/Set
 
 Sitemap: https://piuscores.arroweclip.se/sitemap.xml

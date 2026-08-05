@@ -121,6 +121,23 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
     }
 
     /// <summary>
+    ///     The shell's mix menu renders an anchor per mix on every page, each one
+    ///     /Mix/Set?mix=X&amp;redirectUrl=&lt;this page&gt;. Left crawlable that is 31 redirect-only
+    ///     URLs per indexable page — the whole chart catalogue multiplied — so the endpoint is
+    ///     robots-blocked and the casing has to match the anchors, which robots.txt compares
+    ///     case-sensitively.
+    /// </summary>
+    [Fact]
+    public async Task RobotsTxtKeepsCrawlersOffTheMixSwitchEndpoint()
+    {
+        var response = await _client.GetAsync("/robots.txt");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Disallow: /Mix/Set", body);
+    }
+
+    /// <summary>
     ///     The chart head is the SEO payoff: a crawler runs no circuit, so the chart's name,
     ///     description and jacket must be in the raw HTML the server returns — this reads the
     ///     document exactly as a crawler does, no browser.
