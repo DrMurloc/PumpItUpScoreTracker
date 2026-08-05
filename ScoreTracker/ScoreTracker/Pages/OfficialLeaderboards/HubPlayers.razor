@@ -137,11 +137,12 @@ else
             <MudTextField T="string" @bind-Value="_placementFilter" Label="@L["Find a song"]" Immediate="true"
                           Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
                           Clearable="true" Style="max-width:260px"/>
-            @* piugame publishes chart boards for level 20 and up, so a folder below that can
-               never hold a placement — the grid greys those out and the ◄ ► steppers skip
-               straight past them. *@
+            @* piugame publishes chart boards for level 20 and up, so a lower folder can never
+               hold a placement — the grid greys those out and the ◄ ► steppers skip past them.
+               Co-op is exempt: its folder number is how many players a chart takes, not a
+               difficulty, so every co-op folder is 2 through 5 and all of them have boards. *@
             <FolderPicker Type="_folderType" Level="_folderLevel" FolderChanged="SetFolder"
-                          IsMissing="(_, level) => level < FirstBoardedLevel"></FolderPicker>
+                          IsMissing="Unboarded"></FolderPicker>
             @if (_folderLevel != null)
             {
                 <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="ClearFolder"
@@ -330,10 +331,18 @@ else
     }
 
     /// <summary>
-    ///     The lowest level piugame ranks. Its chart boards are the "20 and above" window, so
-    ///     nothing below this has a board to place on in either reading.
+    ///     The lowest difficulty piugame ranks. Its chart boards are the "20 and above" window,
+    ///     so nothing below this has a board to place on in either reading.
     /// </summary>
     private const int FirstBoardedLevel = 20;
+
+    /// <summary>
+    ///     Folders with no board behind them. Co-op is never one: its folder number counts
+    ///     players (2–5), not difficulty, so comparing it against a difficulty floor would
+    ///     disable the whole tab.
+    /// </summary>
+    private static bool Unboarded(ScoreTracker.SharedKernel.Enums.ChartType type, int level) =>
+        type != ScoreTracker.SharedKernel.Enums.ChartType.CoOp && level < FirstBoardedLevel;
 
     private string _placementFilter = string.Empty;
     private ScoreTracker.SharedKernel.Enums.ChartType _folderType =
