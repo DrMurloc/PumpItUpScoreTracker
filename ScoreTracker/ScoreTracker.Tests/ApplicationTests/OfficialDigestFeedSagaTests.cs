@@ -56,7 +56,8 @@ public sealed class OfficialDigestFeedSagaTests
         return ctx.Object;
     }
 
-    private static OfficialPlayerRecord Player(string name) => new(1, name, null, null);
+    // Board tags carry a discriminator; the card prints the human half and links on the full tag.
+    private static OfficialPlayerRecord Player(string name) => new(1, name + "#1489", null, null);
 
     [Fact]
     public async Task BaselineSealSkipsTheDigestEntirely()
@@ -145,15 +146,19 @@ public sealed class OfficialDigestFeedSagaTests
         Assert.Single(_sent);
         var text = string.Join("\n", _sent[0].Blocks.OfType<RichBotText>().Select(t => t.Markdown));
         Assert.Contains("PUMBILITY top 10", text);
-        Assert.Contains("JEWEL", text);
+        Assert.Contains("**JEWEL**", text);
+        Assert.DoesNotContain("JEWEL#1489", text); // a tag's digits never render as a name
         Assert.Contains("↑2", text); // moved from rank 3 to rank 1
         Assert.Contains("50× AAA at Lv.20", text);
         Assert.Contains("50× SSS at Lv.16", text);
         Assert.Contains(_sent[0].Blocks, b => b is RichBotDivider); // sections are fenced for readability
         // World-first lines: bubble token, song, "World First", the grade as its emoji, the
-        // player linked to their board profile — no raw score on the line.
+        // player linked to their board profile — no raw score on the line. The link text is the
+        // human half of the tag; the query parameter keeps the whole thing, because that is what
+        // /Players resolves on.
         Assert.Contains("#DIFFICULTY|S26# **Paradoxx** — World First #LETTERGRADE|SSSPlus# — " +
-                        "[ESI](https://piuscores.arroweclip.se/OfficialLeaderboards/Players?player=ESI)", text);
+                        "[ESI](https://piuscores.arroweclip.se/OfficialLeaderboards/Players?player=ESI%231489)",
+            text);
         Assert.DoesNotContain("995,120", text);
     }
 }

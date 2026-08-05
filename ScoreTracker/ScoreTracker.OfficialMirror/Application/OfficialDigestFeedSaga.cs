@@ -79,19 +79,20 @@ namespace ScoreTracker.OfficialMirror.Application
             // Open with the current top 10 and each player's week-over-week rank move.
             if (rankings != null && rankings.Rankings.Count > 0)
                 AddSection($"🏆 **{_localizer.Get(culture, "PUMBILITY top 10")}**", rankings.Rankings.Take(10)
-                    .Select(r => $"`{r.Rank,2}` **{r.Player.Username}** — {r.Rating:N0} {RankMove(r.Rank, r.PreviousRank)}"));
+                    .Select(r =>
+                        $"`{r.Rank,2}` **{Name(r.Player)}** — {r.Rating:N0} {RankMove(r.Rank, r.PreviousRank)}"));
 
             if (highlights.Movers.Count > 0)
                 AddSection($"📈 **{_localizer.Get(culture, "PUMBILITY movers")}**", highlights.Movers.Take(5).Select(m =>
-                    $"**{m.Player.Username}** #{m.PreviousRank} → **#{m.NewRank}** · {m.Pumbility:N2}"));
+                    $"**{Name(m.Player)}** #{m.PreviousRank} → **#{m.NewRank}** · {m.Pumbility:N2}"));
 
             if (highlights.BoardsClimbed.Count > 0)
                 AddSection($"🧗 **{_localizer.Get(culture, "Biggest board climbers")}**", highlights.BoardsClimbed.Take(5)
                     .Select(b => b.NewBoards is { } fresh
                         ? _localizer.Get(culture, "**{0}** — {1} chart boards ({2} new, net +{3})",
-                            b.Player.Username, b.BoardsClimbed, fresh, b.NetPlacesGained)
+                            Name(b.Player), b.BoardsClimbed, fresh, b.NetPlacesGained)
                         : _localizer.Get(culture, "**{0}** climbed {1} chart boards (+{2})",
-                            b.Player.Username, b.BoardsClimbed, b.NetPlacesGained)));
+                            Name(b.Player), b.BoardsClimbed, b.NetPlacesGained)));
 
             if (highlights.WorldFirsts.Count > 0 || highlights.NewNumberOnes.Count > 0)
             {
@@ -108,7 +109,9 @@ namespace ScoreTracker.OfficialMirror.Application
                         var grade = f.GradeBand == "PG"
                             ? $"#PLATE|{PhoenixPlate.PerfectGame}#"
                             : $"#LETTERGRADE|{PhoenixLetterGradeHelperMethods.TryParse(f.GradeBand)}#";
-                        var link = $"[{f.Player.Username}]({SiteBase}/OfficialLeaderboards/Players" +
+                        // The link text is the human half; the query parameter keeps the full
+                        // tag, which is what /Players resolves on.
+                        var link = $"[{Name(f.Player)}]({SiteBase}/OfficialLeaderboards/Players" +
                                    $"?player={Uri.EscapeDataString(f.Player.Username)})";
                         var folder = f.IsFolderFirst && f.ChartType != null && f.Level != null
                             ? " · " + _localizer.Get(culture, "{0} folder first",
@@ -118,9 +121,9 @@ namespace ScoreTracker.OfficialMirror.Application
                     })
                     .Concat(highlights.NewNumberOnes.Take(4).Select(n =>
                         _localizer.Get(culture, "New #1 — **{0}** on {1} · {2:N0}",
-                            n.Player.Username, ChartName(charts, n.ChartId, culture), n.Score) +
+                            Name(n.Player), ChartName(charts, n.ChartId, culture), n.Score) +
                         (n.Dethroned != null
-                            ? _localizer.Get(culture, ", dethroning {0}", n.Dethroned.Username)
+                            ? _localizer.Get(culture, ", dethroning {0}", Name(n.Dethroned))
                             : "")));
                 AddSection($"🌍 **{_localizer.Get(culture, "World firsts & new #1s")}**", lines);
             }
@@ -165,6 +168,11 @@ namespace ScoreTracker.OfficialMirror.Application
 
         private static RichBotText Section(string heading, IEnumerable<string> lines) =>
             new($"{heading}\n{string.Join("\n", lines)}");
+
+        // Board tags are TAG#1234 and the card prints the human half, same as every list on
+        // the hub — the digits identify an account, they don't name anyone.
+        private static string Name(OfficialPlayerRecord player) =>
+            OfficialPlayerNames.Human(player.Username);
 
         private static string RankMove(int rank, int? previousRank)
         {
