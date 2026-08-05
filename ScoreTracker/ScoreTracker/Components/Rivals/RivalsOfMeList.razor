@@ -38,10 +38,19 @@ else
                     </div>
                     <div class="rvl-row-meta">@Meta(rival)</div>
                 </div>
-                <MudButton Size="Size.Small" Variant="Variant.Outlined"
-                           OnClick="() => OnRemove.InvokeAsync(rival.EdgeId)">@L["Remove"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error"
-                           OnClick="() => OnBlock.InvokeAsync(rival.UserId)">@L["Block"]</MudButton>
+                <div class="rvl-row-actions">
+                    @* Adding back is the one constructive thing to do from this list, so it leads
+                       and it is the only filled button in the row. *@
+                    @if (CanAddBack(rival))
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                                   OnClick="() => OnAdd.InvokeAsync(rival)">@L["Add as rival"]</MudButton>
+                    }
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                               OnClick="() => OnRemove.InvokeAsync(rival.EdgeId)">@L["Remove"]</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error"
+                               OnClick="() => OnBlock.InvokeAsync(rival.UserId)">@L["Block"]</MudButton>
+                </div>
             </div>
         }
     </div>
@@ -77,6 +86,14 @@ else
     [Parameter] public EventCallback<Guid> OnRemove { get; set; }
     [Parameter] public EventCallback<Guid> OnBlock { get; set; }
     [Parameter] public EventCallback<Guid> OnUnblock { get; set; }
+    [Parameter] public EventCallback<RivalOfMeRecord> OnAdd { get; set; }
+
+    // Reciprocating is an ordinary add and answers to the ordinary gate: their arrow at you is not
+    // a basis for yours at them (docs/design/rivals.md D9). A private stranger can rival you off
+    // your public profile and still not be addable, so the button is offered only where it would
+    // succeed — one that comes back "not available" is worse than none.
+    private static bool CanAddBack(RivalOfMeRecord rival) =>
+        !rival.IsMutual && (rival.IsPublic || rival.SharesCommunity);
 
     // Everyone here already rivals you, so a red ring would mark the whole list. Green for a
     // clubmate is the only marker that says anything.

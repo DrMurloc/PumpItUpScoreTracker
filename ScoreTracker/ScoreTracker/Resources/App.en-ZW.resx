@@ -436,6 +436,9 @@
   <data name="Add a rival" xml:space="preserve">
     <value>Glorg gro Murgmorp</value>
   </data>
+  <data name="Add as rival" xml:space="preserve">
+    <value>Glorg mrp Murgmorp</value>
+  </data>
   <data name="Add photo" xml:space="preserve">
     <value>Glorg murpplgl</value>
   </data>
