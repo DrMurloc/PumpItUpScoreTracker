@@ -242,6 +242,35 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task MergePlayersKeepsThePublishedRowWhenASupplementedOneCollides()
+    {
+        var snapshots = Snapshots();
+        var (_, board, oldPlayer, survivor) = await SeedSealedSnapshot(Week1);
+        var week2Id = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week2, CancellationToken.None);
+        // The old tag genuinely charted this week. The new tag holds only a supplemented
+        // stand-in on the same board, because the roll-up found no row under its player id.
+        await snapshots.WritePlacements(week2Id, new[]
+        {
+            new PlacementRow(board.Id, oldPlayer.Id, 12, 980000),
+            new PlacementRow(board.Id, survivor.Id, 400, 980000, IsSupplemented: true)
+        }, CancellationToken.None);
+        await snapshots.Seal(week2Id, Week2.AddMinutes(41), CancellationToken.None);
+
+        await Identity().MergePlayers(oldPlayer.Id, survivor.Id, CancellationToken.None);
+
+        // The real placement survives under the survivor. Dropping it would delete the player
+        // from a board the crawl saw them on, and the official reading would never know.
+        var official = await snapshots.GetPlacements(week2Id, PlacementScope.OfficialOnly,
+            CancellationToken.None);
+        var kept = Assert.Single(official);
+        Assert.Equal(survivor.Id, kept.PlayerId);
+        Assert.Equal(12, kept.Place);
+        // And the stand-in is gone rather than sitting beside it — one player, one board row.
+        Assert.Single(await snapshots.GetPlacements(week2Id, PlacementScope.IncludingSupplemented,
+            CancellationToken.None));
+    }
+
+    [Fact]
     public async Task WriteProposalsDeduplicatesRedetectedPairs()
     {
         var identity = Identity();

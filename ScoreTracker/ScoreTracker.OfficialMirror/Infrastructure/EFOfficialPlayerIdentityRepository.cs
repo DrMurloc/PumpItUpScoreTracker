@@ -178,9 +178,21 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
         await using var database = await _factory.CreateDbContextAsync(ct);
         await using var transaction = await database.Database.BeginTransactionAsync(ct);
 
-        // Where both tags appear on the same board in the same snapshot (the transition
-        // week), the new tag's row is the truth — drop the old row instead of colliding
-        // with the placement key on re-point.
+        // Where both tags hold a row on the same board in the same snapshot, one of them has
+        // to go: they are one player now, and a board lists a player once. The PUBLISHED row
+        // always wins that contest. A supplemented row is a stand-in the account's own ledger
+        // provided for a board it never placed on, so keeping it over a real placement would
+        // erase history the crawl actually recorded — and erase it from the official reading,
+        // where the player would then be missing from a board they genuinely charted on.
+        await database.Set<OfficialLeaderboardPlacementEntity>()
+            .Where(p => p.PlayerId == newPlayerId && p.IsSupplemented &&
+                        database.Set<OfficialLeaderboardPlacementEntity>().Any(o =>
+                            o.PlayerId == oldPlayerId && o.SnapshotId == p.SnapshotId &&
+                            o.LeaderboardId == p.LeaderboardId && !o.IsSupplemented))
+            .ExecuteDeleteAsync(ct);
+
+        // Whatever collision survives that is the transition week — both tags published on
+        // one board — and there the new tag's row is the truth.
         await database.Set<OfficialLeaderboardPlacementEntity>()
             .Where(p => p.PlayerId == oldPlayerId &&
                         database.Set<OfficialLeaderboardPlacementEntity>().Any(n =>
