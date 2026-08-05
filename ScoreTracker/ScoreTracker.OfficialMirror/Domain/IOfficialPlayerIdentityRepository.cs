@@ -51,5 +51,11 @@ internal interface IOfficialPlayerIdentityRepository
     Task<IReadOnlyList<RenameProposal>> GetFindings(MixEnum mix, bool unresolvedOnly, CancellationToken ct);
     Task<RenameProposal?> GetProposal(int id, CancellationToken ct);
     Task SetProposalStatus(int id, string status, CancellationToken ct);
-    Task MergePlayers(int oldPlayerId, int newPlayerId, CancellationToken ct);
+
+    /// <summary>
+    ///     Re-points one player's history onto another and deletes the old row. Refuses rather
+    ///     than throwing when the pair no longer makes sense — a finding can sit on the desk
+    ///     for weeks while other merges change the world underneath it.
+    /// </summary>
+    Task<MergeOutcome> MergePlayers(int oldPlayerId, int newPlayerId, CancellationToken ct);
 }

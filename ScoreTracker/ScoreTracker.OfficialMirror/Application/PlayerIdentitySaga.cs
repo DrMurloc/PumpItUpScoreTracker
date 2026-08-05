@@ -54,7 +54,17 @@ internal sealed class PlayerIdentitySaga :
             return;
         }
 
-        await _identity.MergePlayers(proposal.OldPlayerId, newPlayerId, cancellationToken);
+        var outcome = await _identity.MergePlayers(proposal.OldPlayerId, newPlayerId, cancellationToken);
+        if (outcome != MergeOutcome.Merged)
+        {
+            // Nothing moved. The finding is stale rather than wrong, so it leaves the queue
+            // instead of sitting there offering the same impossible merge every week.
+            _logger.LogWarning("Refused to merge {Old} into {New} ({Outcome}); finding {ProposalId} dismissed",
+                proposal.OldUsername, proposal.NewUsername, outcome, proposal.Id);
+            await _identity.SetProposalStatus(proposal.Id, ProposalStatuses.Dismissed, cancellationToken);
+            return;
+        }
+
         await _identity.SetProposalStatus(proposal.Id, resolution, cancellationToken);
         // The merge deletes the old dimension row, so anything that stored the old tag is now
         // pointing at nothing. Announced after the merge lands, never before.

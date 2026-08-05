@@ -119,7 +119,8 @@ internal static class VanishedTagAnalyzer
             if (currentPlayerIds.Contains(oldId) || oldRows.Count < MinimumPlacements) continue;
             if (!playersById.TryGetValue(oldId, out var oldPlayer)) continue;
 
-            var best = BestCandidate(oldRows, appearedByBoard, out var runnerUpExact);
+            var best = BestCandidate(oldRows, appearedByBoard, playersById, oldPlayer.UserId,
+                out var runnerUpExact);
             var suspicious = CountSuspiciousAbsences(oldRows, boardScores,
                 best == null ? null : appearedBoards.GetValueOrDefault(best.Value.PlayerId));
 
@@ -159,7 +160,8 @@ internal static class VanishedTagAnalyzer
     ///     right or merely ahead.
     /// </summary>
     private static Candidate? BestCandidate(IReadOnlyList<PlacementRow> oldRows,
-        IReadOnlyDictionary<int, (int PlayerId, decimal Score)[]> appearedByBoard, out int runnerUpExact)
+        IReadOnlyDictionary<int, (int PlayerId, decimal Score)[]> appearedByBoard,
+        IReadOnlyDictionary<int, PlayerDimension> playersById, Guid? oldUserId, out int runnerUpExact)
     {
         var tally = new Dictionary<int, Candidate>();
         foreach (var row in oldRows)
@@ -167,6 +169,7 @@ internal static class VanishedTagAnalyzer
             if (!appearedByBoard.TryGetValue(row.LeaderboardId, out var onBoard)) continue;
             foreach (var (playerId, score) in onBoard)
             {
+                if (ClaimedByAnotherAccount(playersById, playerId, oldUserId)) continue;
                 tally.TryGetValue(playerId, out var candidate);
                 candidate.PlayerId = playerId;
                 candidate.Present++;
@@ -205,6 +208,22 @@ internal static class VanishedTagAnalyzer
         }
 
         return suspicious;
+    }
+
+    /// <summary>
+    ///     Both tags are linked, to different site accounts. That is the strongest veto there
+    ///     is: a link is either proved by logging into the account or inferred from the game
+    ///     tag an import wrote, and one human holding two mirror rows in a mix carries the SAME
+    ///     account on both (supplemented-leaderboards.md). Two different accounts means two
+    ///     different people — the site's own answer, and it outranks any amount of score
+    ///     agreement, because a second card owned by the same human is a second account here.
+    /// </summary>
+    private static bool ClaimedByAnotherAccount(IReadOnlyDictionary<int, PlayerDimension> playersById,
+        int candidateId, Guid? oldUserId)
+    {
+        if (oldUserId == null) return false;
+        return playersById.TryGetValue(candidateId, out var candidate) &&
+               candidate.UserId != null && candidate.UserId != oldUserId;
     }
 
     private static bool AvatarsAgree(PlayerDimension old, PlayerDimension candidate) =>

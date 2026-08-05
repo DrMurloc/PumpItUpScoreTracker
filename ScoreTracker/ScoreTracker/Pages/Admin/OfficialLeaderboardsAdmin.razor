@@ -53,7 +53,7 @@ else
         @L["Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it."]
     </MudText>
 }
-@foreach (var group in _proposals.GroupBy(p => p.Verdict).OrderBy(g => VerdictOrder(g.Key)))
+@foreach (var group in _proposals.GroupBy(Grouping).OrderBy(g => VerdictOrder(g.Key)))
 {
     <MudText Typo="Typo.subtitle2" Class="mt-3">@VerdictHeading(group.Key) (@group.Count())</MudText>
     @foreach (var proposal in group)
@@ -75,7 +75,10 @@ else
                 }
                 else
                 {
-                    @if (proposal.NewUsername != null)
+                    @* No button without at least one identical score. The merge cannot be
+                       undone, and a candidate that shares no score with the vanished tag is
+                       whoever happened to sort first among the players it never contradicted. *@
+                    @if (proposal.NewUsername != null && proposal.ExactNonPgMatches > 0)
                     {
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small"
                                    OnClick="() => Accept(proposal)">
@@ -193,20 +196,28 @@ else
         _missingCharts = await Mediator.Send(new GetMissingChartsQuery(_mix));
     }
 
-    // The desk reads worst-first: what needs a decision, then what merged itself, then the
-    // tags that simply got passed — which are the bulk of them and the least interesting.
-    private static int VerdictOrder(string verdict) => verdict switch
+    // Grouped by what HAPPENED, not by what was concluded. A Merge verdict that never merged
+    // -- a sweep that died partway through its queue -- would otherwise file itself under
+    // "Merged automatically", which is the one lie this page must not tell.
+    private static string Grouping(RenameProposalRecord proposal) =>
+        proposal is { Verdict: "Merge", Status: "Pending" } ? "MergePending" : proposal.Verdict;
+
+    // Worst-first: what needs a decision, then what merged itself, then the tags that simply
+    // got passed -- the bulk of them, and the least interesting.
+    private static int VerdictOrder(string grouping) => grouping switch
     {
         "Suspicious" => 0,
-        "Ambiguous" => 1,
-        "Propose" => 2,
-        "Merge" => 3,
-        _ => 4
+        "MergePending" => 1,
+        "Ambiguous" => 2,
+        "Propose" => 3,
+        "Merge" => 4,
+        _ => 5
     };
 
-    private string VerdictHeading(string verdict) => verdict switch
+    private string VerdictHeading(string grouping) => grouping switch
     {
         "Suspicious" => L["Vanished while still ranking"],
+        "MergePending" => L["Conclusive, but not merged yet"],
         "Ambiguous" => L["More than one candidate fits"],
         "Propose" => L["Possible rename"],
         "Merge" => L["Merged automatically"],

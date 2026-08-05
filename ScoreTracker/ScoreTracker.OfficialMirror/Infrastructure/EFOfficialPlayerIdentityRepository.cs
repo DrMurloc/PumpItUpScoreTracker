@@ -151,17 +151,33 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
         return written.Select(w => w.Finding with { Id = w.Entity.Id, Mix = mix }).ToArray();
     }
 
+    /// <summary>
+    ///     Unresolved findings are never capped — every one of them is work somebody has to do.
+    ///     Resolved ones are history and are capped, because the table only grows: seventeen a
+    ///     week per mix in the ordinary case, and one row per board-visible player on a week
+    ///     where the crawl returns empty boards without tripping a skip.
+    /// </summary>
+    private const int ResolvedHistoryShown = 200;
+
     public async Task<IReadOnlyList<RenameProposal>> GetFindings(MixEnum mix, bool unresolvedOnly,
         CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         var mixId = MixIds.For(mix);
-        var query = database.Set<OfficialPlayerRenameProposalEntity>().Where(p => p.MixId == mixId);
-        if (unresolvedOnly) query = query.Where(p => p.Status == ProposalStatuses.Pending);
-        return await query
+        var unresolved = await database.Set<OfficialPlayerRenameProposalEntity>()
+            .Where(p => p.MixId == mixId && p.Status == ProposalStatuses.Pending)
             .OrderByDescending(p => p.Id)
             .Select(p => Project(p, mix))
             .ToArrayAsync(ct);
+        if (unresolvedOnly) return unresolved;
+
+        var resolved = await database.Set<OfficialPlayerRenameProposalEntity>()
+            .Where(p => p.MixId == mixId && p.Status != ProposalStatuses.Pending)
+            .OrderByDescending(p => p.Id)
+            .Take(ResolvedHistoryShown)
+            .Select(p => Project(p, mix))
+            .ToArrayAsync(ct);
+        return unresolved.Concat(resolved).ToArray();
     }
 
     public async Task<RenameProposal?> GetProposal(int id, CancellationToken ct)
@@ -188,10 +204,26 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
             .ExecuteUpdateAsync(u => u.SetProperty(p => p.Status, status), ct);
     }
 
-    public async Task MergePlayers(int oldPlayerId, int newPlayerId, CancellationToken ct)
+    public async Task<MergeOutcome> MergePlayers(int oldPlayerId, int newPlayerId, CancellationToken ct)
     {
         await using var database = await _factory.CreateDbContextAsync(ct);
         await using var transaction = await database.Database.BeginTransactionAsync(ct);
+
+        // Both rows are read before anything moves. A finding can sit on the desk for weeks
+        // while other merges delete rows out from under it, and the placement table carries no
+        // foreign key on PlayerId — so re-pointing history at a player that no longer exists
+        // would commit silently and render as blank names on the boards.
+        var old = await database.Set<OfficialPlayerEntity>().FirstOrDefaultAsync(p => p.Id == oldPlayerId, ct);
+        var target = await database.Set<OfficialPlayerEntity>()
+            .FirstOrDefaultAsync(p => p.Id == newPlayerId, ct);
+        if (target == null || old == null) return MergeOutcome.PlayerGone;
+
+        // Both tags are linked, to different accounts. One human's two mirror rows in a mix
+        // carry the same account; two accounts means two people, whatever the scores say.
+        // The analyzer vetoes this before proposing, so reaching here means the desk offered a
+        // stale finding — refuse rather than fusing two accounts and dropping one link.
+        if (old.UserId != null && target.UserId != null && old.UserId != target.UserId)
+            return MergeOutcome.DifferentAccounts;
 
         // Where both tags hold a row on the same board in the same snapshot, one of them has
         // to go: they are one player now, and a board lists a player once. The PUBLISHED row
@@ -225,25 +257,17 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
             .Where(h => h.DethronedPlayerId == oldPlayerId)
             .ExecuteUpdateAsync(u => u.SetProperty(h => h.DethronedPlayerId, newPlayerId), ct);
 
-        // The merged player keeps any import-confirmed account link the old tag carried.
-        var old = await database.Set<OfficialPlayerEntity>().FirstOrDefaultAsync(p => p.Id == oldPlayerId, ct);
-        if (old != null)
+        // The merged player keeps any import-confirmed account link the old tag carried. The
+        // conflicting case was refused above, so this only ever fills a gap.
+        if (old.UserId != null && target.UserId == null)
         {
-            if (old.UserId != null)
-            {
-                var target = await database.Set<OfficialPlayerEntity>()
-                    .FirstAsync(p => p.Id == newPlayerId, ct);
-                if (target.UserId == null)
-                {
-                    target.UserId = old.UserId;
-                    target.UserIdSource = old.UserIdSource;
-                }
-            }
-
-            database.Set<OfficialPlayerEntity>().Remove(old);
-            await database.SaveChangesAsync(ct);
+            target.UserId = old.UserId;
+            target.UserIdSource = old.UserIdSource;
         }
 
+        database.Set<OfficialPlayerEntity>().Remove(old);
+        await database.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
+        return MergeOutcome.Merged;
     }
 }

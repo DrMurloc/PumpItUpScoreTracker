@@ -27,10 +27,11 @@ now, chart and rating boards alike. About 24 a week across both mixes.
 
 **Candidate** — on a chart board now, on nothing at all last snapshot.
 
-Three tests, in order of authority:
+Four tests, in order of authority:
 
 | | Test | Why it is the authority it is |
 |---|---|---|
+| 0 | **The site's own answer wins.** A candidate whose account link differs from the old tag's is disqualified before anything else is measured. | A link is proved by logging into the account or inferred from the game tag an import wrote. One human's two mirror rows in a mix carry the *same* account — that case is accepted (§5). Two *different* accounts means two people, and a second card owned by the same human is a second account here. Also enforced in `MergePlayers`, since a finding can outlive the world it was written against. |
 | 1 | **Nobody goes backwards.** A candidate on one of the old tag's boards with a *lower* score is disqualified. | Mirrored bests only ever improve. One violation is enough; there is no threshold to argue about. It never once fired on a real rename, and it eliminates 40–70% of candidates. |
 | 2 | **Scores do not evaporate.** A score the old tag held that would still rank comfortably inside its board, with nobody standing there, routes to an admin. | Not a rename. Usually a ban. |
 | 3 | **Exact non-perfect matches identify the person.** Count the boards where the scores are *identical* and not 1,000,000. | Sharing a perfect game means nothing. Sharing five identical imperfect scores does not happen to strangers. |
@@ -124,3 +125,29 @@ it could not decide.
 A merge deletes the old dimension row and re-points its placements, and afterwards there is no
 record of which placements came from which tag — **it cannot be undone.** `AutoAccepted` is
 therefore its own status, so "did a human look at this one?" always has an answer.
+
+Three things follow from that page being the only signal anyone gets:
+
+- **Grouped by what happened, not by what was concluded.** A `Merge` verdict that has not
+  merged — a sweep that died partway through its queue — files under *"Conclusive, but not
+  merged yet"*, never under *"Merged automatically"*. Reporting success for the rows that
+  failed is the one lie this page must not tell.
+- **No Accept button without at least one identical score.** A finding always names its best
+  candidate, including on a `DroppedOff` verdict where that candidate may share nothing with
+  the vanished tag — useful to read, not something to offer a one-click irreversible merge on.
+- **Resolved rows are capped, unresolved ones are not.** The table only grows: ~17 a week per
+  mix normally, and one row per board-visible player on a week where the crawl returns empty
+  boards without tripping a skip.
+
+## 8. The sweep's merge loop is failure-isolated and self-healing
+
+Two properties that are not obvious from reading it:
+
+- **A merge that throws costs only its own row.** It used to abort the loop, which aborted the
+  sweep, which left the snapshot unsealed — putting the whole site on last week's data over one
+  bad row.
+- **The loop reads the unresolved queue, not what the write just returned.** `WriteFindings`
+  dedupes on `(OldPlayerId, NewPlayerId)`, so a sweep that died mid-merge and replayed would
+  re-derive the same findings, dedupe them all away, and never touch the ones left `Pending`.
+  Reading the queue means a stranded finding merges on the next run instead of waiting forever
+  for a human who has no reason to think anything is wrong.

@@ -145,15 +145,18 @@ public sealed class LeaderboardSweepSagaTests
     ///     one where NEWTAG holds the same six at the same scores — a rename the analyzer
     ///     settles on its own.
     /// </summary>
-    private static Fixture ArrangeRename()
+    private static Fixture ArrangeRename(int mergeCount = 1)
     {
         var f = Arrange();
-        var boards = Enumerable.Range(1, 6)
+        // One board group per rename so several can be in flight at once.
+        var boards = Enumerable.Range(0, mergeCount)
+            .SelectMany(g => Enumerable.Range(1, 6).Select(i => g * 6 + i))
             .Select(id => new BoardDimension(id, LeaderboardTypes.Chart, $"Board {id}", Guid.NewGuid(),
                 "Single", 24))
             .ToArray();
-        PlacementRow[] Rows(int playerId) => boards
-            .Select(b => new PlacementRow(b.Id, playerId, 3, 950000 + b.Id)).ToArray();
+        PlacementRow[] Rows(int firstPlayerId) => boards
+            .Select(b => new PlacementRow(b.Id, firstPlayerId + (b.Id - 1) / 6, 3, 950000 + b.Id))
+            .ToArray();
 
         f.Snapshots.Setup(s => s.GetBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(boards);
@@ -166,15 +169,24 @@ public sealed class LeaderboardSweepSagaTests
         f.Snapshots.Setup(s => s.GetPlacements(SnapshotId, PlacementScope.OfficialOnly,
             It.IsAny<CancellationToken>())).ReturnsAsync(Rows(22));
         f.Snapshots.Setup(s => s.GetPlayers(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new PlayerDimension(11, "OLDTAG", null, null),
-                new PlayerDimension(22, "NEWTAG", null, null)
-            });
+            .ReturnsAsync(Enumerable.Range(0, mergeCount)
+                .SelectMany(g => new[]
+                {
+                    new PlayerDimension(11 + g, $"OLDTAG{g}", null, null),
+                    new PlayerDimension(22 + g, $"NEWTAG{g}", null, null)
+                }).ToArray());
         f.Identity.Setup(i => i.WriteFindings(It.IsAny<MixEnum>(),
                 It.IsAny<IReadOnlyCollection<RenameProposal>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((MixEnum mix, IReadOnlyCollection<RenameProposal> findings, CancellationToken _) =>
                 findings.Select((p, i) => p with { Id = 700 + i, Mix = mix }).ToArray());
+        // The merge loop reads the queue rather than the write's return value, so the queue is
+        // what has to hold the conclusive findings.
+        f.Identity.Setup(i => i.GetFindings(It.IsAny<MixEnum>(), true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Range(0, mergeCount)
+                .Select(g => new RenameProposal(700 + g, 11 + g, 22 + g, $"OLDTAG{g}", $"NEWTAG{g}",
+                    VanishVerdicts.Merge, RenameEvidence.None, ProposalStatuses.Pending, SnapshotId,
+                    MixEnum.Phoenix2))
+                .ToArray());
         return f;
     }
 
@@ -193,12 +205,48 @@ public sealed class LeaderboardSweepSagaTests
     }
 
     [Fact]
+    public async Task OneFailedMergeCostsNeitherTheOthersNorTheSeal()
+    {
+        var f = ArrangeRename(mergeCount: 3);
+        f.Mediator.Setup(m => m.Send(It.Is<AcceptRenameProposalCommand>(c => c.ProposalId == 701),
+            It.IsAny<CancellationToken>())).ThrowsAsync(new InvalidOperationException("deadlock"));
+
+        await f.Saga.Consume(Context());
+
+        f.Mediator.Verify(m => m.Send(It.Is<AcceptRenameProposalCommand>(c => c.ProposalId == 702),
+            It.IsAny<CancellationToken>()), Times.Once);
+        // An unsealed snapshot leaves the whole site on last week's data. One row that would
+        // not merge is not worth that.
+        f.Snapshots.Verify(s => s.Seal(SnapshotId, Now, It.IsAny<CancellationToken>()), Times.Once);
+        f.Snapshots.Verify(s => s.MarkFailed(It.IsAny<int>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AConclusiveFindingStrandedByAnEarlierFailureMergesOnTheNextSweep()
+    {
+        // The replay re-derives the same pair, which WriteFindings dedupes away — so a sweep
+        // driven only off what it just wrote would never touch it again.
+        var f = ArrangeRename();
+        f.Identity.Setup(i => i.WriteFindings(It.IsAny<MixEnum>(),
+                It.IsAny<IReadOnlyCollection<RenameProposal>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RenameProposal>());
+
+        await f.Saga.Consume(Context());
+
+        f.Mediator.Verify(m => m.Send(It.Is<AcceptRenameProposalCommand>(c => c.ProposalId == 700),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task ATagWithNothingToMergeIntoIsRecordedAndLeftAlone()
     {
         var f = ArrangeRename();
-        // Nobody appeared to carry the scores forward.
+        // Nobody appeared to carry the scores forward, so nothing conclusive reaches the queue.
         f.Snapshots.Setup(s => s.GetPlacements(SnapshotId, PlacementScope.OfficialOnly,
             It.IsAny<CancellationToken>())).ReturnsAsync(Array.Empty<PlacementRow>());
+        f.Identity.Setup(i => i.GetFindings(It.IsAny<MixEnum>(), true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RenameProposal>());
 
         await f.Saga.Consume(Context());
 

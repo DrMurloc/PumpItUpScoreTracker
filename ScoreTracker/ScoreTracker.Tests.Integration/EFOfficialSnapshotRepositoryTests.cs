@@ -277,6 +277,67 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
             CreatedSnapshotId: 1);
 
     [Fact]
+    public async Task MergingIntoADeletedPlayerMovesNothing()
+    {
+        // A finding can sit on the desk for weeks while other merges delete its candidate out
+        // from under it. There is no foreign key on PlayerId, so re-pointing history at a row
+        // that no longer exists would commit silently and render as blank names on the boards.
+        var snapshots = Snapshots();
+        var (week1Id, board, oldPlayer, doomed) = await SeedSealedSnapshot(Week1);
+        var bystander = (await snapshots.EnsurePlayers(MixEnum.Phoenix2,
+            new[] { ("carol", (Uri?)null) }, Week1, CancellationToken.None)).Single();
+        await Identity().MergePlayers(doomed.Id, bystander.Id, CancellationToken.None);
+
+        var outcome = await Identity().MergePlayers(oldPlayer.Id, doomed.Id, CancellationToken.None);
+
+        Assert.Equal(MergeOutcome.PlayerGone, outcome);
+        var rows = await snapshots.GetPlacements(week1Id, PlacementScope.OfficialOnly,
+            CancellationToken.None);
+        Assert.Contains(rows, p => p.PlayerId == oldPlayer.Id && p.LeaderboardId == board.Id);
+        Assert.DoesNotContain(rows, p => p.PlayerId == doomed.Id);
+    }
+
+    [Fact]
+    public async Task TwoTagsHeldByDifferentAccountsNeverMerge()
+    {
+        // A link is either proved by logging into the account or inferred from the game tag an
+        // import wrote. One human's two mirror rows carry the same account; two accounts is the
+        // site's own answer that these are two people, whatever the scores agree on.
+        var snapshots = Snapshots();
+        var (week1Id, _, oldPlayer, other) = await SeedSealedSnapshot(Week1);
+        var identity = Identity();
+        await identity.LinkPlayer(MixEnum.Phoenix2, "alice", Guid.NewGuid(), Week1, CancellationToken.None);
+        await identity.LinkPlayer(MixEnum.Phoenix2, "bob", Guid.NewGuid(), Week1, CancellationToken.None);
+
+        var outcome = await identity.MergePlayers(oldPlayer.Id, other.Id, CancellationToken.None);
+
+        Assert.Equal(MergeOutcome.DifferentAccounts, outcome);
+        Assert.Contains(await snapshots.GetPlacements(week1Id, PlacementScope.OfficialOnly,
+            CancellationToken.None), p => p.PlayerId == oldPlayer.Id);
+        Assert.NotNull(await snapshots.GetPlayerByUsername(MixEnum.Phoenix2, "alice", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ResolvedHistoryIsCappedButUnresolvedWorkIsNot()
+    {
+        var identity = Identity();
+        var findings = Enumerable.Range(1, 260)
+            .Select(i => Finding(newPlayerId: 1000 + i) with { OldPlayerId = i })
+            .ToArray();
+        await identity.WriteFindings(MixEnum.Phoenix2, findings, CancellationToken.None);
+        var written = await identity.GetFindings(MixEnum.Phoenix2, true, CancellationToken.None);
+        foreach (var f in written.Take(250))
+            await identity.SetProposalStatus(f.Id, ProposalStatuses.AutoAccepted, CancellationToken.None);
+
+        var desk = await identity.GetFindings(MixEnum.Phoenix2, false, CancellationToken.None);
+
+        // Ten still need a decision; the merged history behind them is trimmed rather than
+        // rendering a year of rows into a Blazor circuit.
+        Assert.Equal(10, desk.Count(f => f.Status == ProposalStatuses.Pending));
+        Assert.Equal(200, desk.Count(f => f.Status == ProposalStatuses.AutoAccepted));
+    }
+
+    [Fact]
     public async Task WriteFindingsDeduplicatesRedetectedPairs()
     {
         var identity = Identity();

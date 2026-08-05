@@ -61,6 +61,22 @@ internal sealed record HighlightRow(string Kind, int SortOrder, int? PlayerId, i
     int? LeaderboardId, Guid? ChartId, string? ChartType, int? Level, string? GradeBand,
     decimal? Score, decimal? PrevValue, decimal? NewValue);
 
+/// <summary>
+///     What a merge attempt did. A finding can outlive the world it was written against —
+///     another merge can delete its candidate, or an import can claim the tag for a different
+///     account — so refusing is a normal outcome, not an exception.
+/// </summary>
+internal enum MergeOutcome
+{
+    Merged,
+
+    /// <summary>One of the two rows no longer exists. Re-pointing would orphan history.</summary>
+    PlayerGone,
+
+    /// <summary>Both tags are linked, to different site accounts. They are not one person.</summary>
+    DifferentAccounts
+}
+
 /// <summary>What the analyzer concluded about a tag that left the boards.</summary>
 internal static class VanishVerdicts
 {
@@ -181,7 +197,4 @@ internal static class ProposalStatuses
     ///     knowing when one turns out to be wrong.
     /// </summary>
     public const string AutoAccepted = "AutoAccepted";
-
-    /// <summary>Statuses that have already had their effect and want no further action.</summary>
-    public static readonly string[] Resolved = { Accepted, Dismissed, AutoAccepted };
 }

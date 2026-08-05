@@ -1413,6 +1413,9 @@
   <data name="Completionist Ultra" xml:space="preserve">
     <value>Completionist Ultra</value>
   </data>
+  <data name="Conclusive, but not merged yet" xml:space="preserve">
+    <value>확실하지만 아직 병합되지 않음</value>
+  </data>
   <data name="Configure" xml:space="preserve">
     <value>설정</value>
   </data>

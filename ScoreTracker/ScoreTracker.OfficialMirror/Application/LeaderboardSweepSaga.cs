@@ -177,22 +177,38 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     {
         var findings = VanishedTagAnalyzer.Analyze(snapshotId, await _snapshots.GetPlayers(mix, ct),
             input.Boards, input.Current, input.Previous!);
-        if (findings.Count == 0) return;
-
         var written = await _identity.WriteFindings(mix, findings, ct);
-        var merged = 0;
-        foreach (var finding in written.Where(f => f.Verdict == VanishVerdicts.Merge))
-        {
-            // Through the command an admin's button sends, not a private copy of the merge:
-            // the history re-point, the status and the rename announcement have to stay one
-            // sequence however the decision was reached.
-            await _mediator.Send(new AcceptRenameProposalCommand(finding.Id, true), ct);
-            merged++;
-        }
 
-        _logger.LogInformation(
-            "{Mix} snapshot {SnapshotId}: {Total} tags left the boards, {Merged} merged, {Desk} for review",
-            mix, snapshotId, written.Count, merged, written.Count - merged);
+        // Driven off everything still unresolved, not off what was just written. A sweep that
+        // died mid-merge leaves conclusive findings sitting Pending, and the write is deduped
+        // on (old, new) — so re-deriving them next run produces nothing to merge and they
+        // would stay stranded. Reading the queue instead makes the sweep self-healing.
+        var pending = (await _identity.GetFindings(mix, true, ct))
+            .Where(f => f.Verdict == VanishVerdicts.Merge && f.NewPlayerId != null)
+            .ToArray();
+
+        var merged = 0;
+        foreach (var finding in pending)
+            try
+            {
+                // Through the command an admin's button sends, not a private copy of the merge:
+                // the history re-point, the status and the rename announcement have to stay one
+                // sequence however the decision was reached.
+                await _mediator.Send(new AcceptRenameProposalCommand(finding.Id, true), ct);
+                merged++;
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                // One bad row must not cost the other twenty, and must not cost the seal
+                // either: an unsealed snapshot keeps the whole site on last week's data.
+                _logger.LogError(e, "{Mix} snapshot {SnapshotId}: merging {Old} into {New} failed",
+                    mix, snapshotId, finding.OldUsername, finding.NewUsername);
+            }
+
+        if (findings.Count > 0 || merged > 0)
+            _logger.LogInformation(
+                "{Mix} snapshot {SnapshotId}: {Found} tags left the boards ({New} new), {Merged} of {Eligible} merged",
+                mix, snapshotId, findings.Count, written.Count, merged, pending.Length);
     }
 
     /// <summary>
