@@ -27,9 +27,17 @@ internal sealed record CorpusComment(
     string[] NamesInLatinScript);
 
 /// <summary>
-///     Real Pump It Up comments, taken from YouTube by the owner. Everything here was written by
-///     a player about a chart or a match — nothing is invented, because invented comments are
-///     tidier than real ones in exactly the ways that hide translation failures.
+///     Real Pump It Up community text, collected by the owner. Nothing is invented, because
+///     invented comments are tidier than real ones in exactly the ways that hide translation
+///     failures.
+///     <para>
+///         Three sources, deliberately: YouTube reaction comments on chart videos, Discord
+///         conversation, and one official Andamiro announcement. The announcement is the only
+///         formal register here and the only text carrying a URL. The Discord English is the
+///         closest thing to what a chart-comments feature would actually hold — two players
+///         working out how to pass a chart — so it is the sample the recommendation should be
+///         read against.
+///     </para>
 ///     <para>
 ///         The distribution is what the community actually produces: English, Korean, and Spanish,
 ///         with one Portuguese comment. There is no French source, so fr-FR is exercised only as
@@ -167,6 +175,113 @@ internal static class TranslationCorpus
             """,
             "es",
             "~330 chars over four lines — the longest and warmest in the corpus. Uses tú. Line breaks should survive.",
-            [], ["Big One"])
+            [], ["Big One"]),
+
+        // --- Official announcement (Andamiro, Korean) ---------------------------------
+        // Corporate and legal register, which nothing else in the corpus reaches, plus a URL.
+
+        new CorpusComment("andamiro-notice",
+            "안녕하세요. 안다미로 관리자입니다. 어제 CookieRun: Braverse의 공식 SNS X(전 트위터)에서 펌프잇업 불법 프로그램을 사용한 오프라인 이벤트 글이 게시되었습니다. 이를 본 유저분들이 제보를 해주셨고 담당자와 직접 연결하여 해당 이벤트는 즉각 취소되었음을 알려드립니다. https://twitter.com/CRbraverse/status/1711458954081722605",
+            "ko",
+            "Official notice, 합쇼체 throughout. Carries a live URL — the one entity a prompt-injection check would care about — plus two company names and a game title.",
+            ["https://twitter.com/CRbraverse/status/1711458954081722605"],
+            ["CookieRun", "Braverse"]),
+
+        new CorpusComment("andamiro-trademark",
+            "안다미로는 펌프잇업 상표 및 펌프잇업 게임에 대한 모든 권한을 가지고 있으며, 안다미로의 승인없이 펌프잇업을 모방하거나 펌프잇업의 리소스를 사용한 모든 제작물은 상업적으로 이용할 수 없습니다. 개발팀에서는 펌프잇업 게임 리소스를 사용하여 제작된 불법 프로그램의 존재를 알고 있습니다.",
+            "ko",
+            "Legal prose — a trademark assertion. Register is as far from a chart comment as this corpus goes, and 안다미로 / 펌프잇업 must reach Andamiro / Pump It Up in Latin script.",
+            [], ["Andamiro"]),
+
+        // --- Discord, Spanish: buying used cabinets ------------------------------------
+
+        new CorpusComment("conjo-usadas",
+            "como a cuanto estás comprando esas versiones usadas? poco después de que salga phoenix 2 la 1 debería estar bastante más barata que ahora",
+            "es",
+            "Lowercase throughout, no opening inverted question mark. The elliptical la 1 means Phoenix 1 and only resolves from context.",
+            [], ["phoenix 2"]),
+
+        new CorpusComment("kaimaruz-precios",
+            """
+            La PHX 1 ahorita no baja de 15K
+            La XX la conseguí en 4mil
+            Igual no me afecta mucho perderme la 2, la Phoenix 1 solo la jugué un par de veces hahaha así que tendría toda una versión nueva que explorar
+            """,
+            "es",
+            "Prices in two different shorthands (15K, 4mil), ahorita is Mexican, and hahaha should localize per target.",
+            // 15K is an international shorthand and must survive; 4mil is Spanish for "four
+            // thousand" and legitimately becomes 4 000, 4.000 or 4k elsewhere — asserting it
+            // verbatim was the Mexico/Mexique mistake again, and marked all three arms wrong
+            // for localizing a number correctly.
+            ["15K"], ["PHX", "XX"]),
+
+        new CorpusComment("kaimaruz-local",
+            "Igual con XX me perdí casi todo lo que salió de 2021 para adelante porque ahí fue cuando cerraron el local y el más cercano me queda a 2 horas de viaje y tristemente ese tampoco tendrá Phoenix 2 por el precio xD",
+            "es",
+            "A run-on with real sadness under an xD. A year, a travel time, and an emoticon doing tonal work.",
+            ["2021"], ["XX", "Phoenix 2"]),
+
+        new CorpusComment("alvar-salto",
+            """
+            creeme
+            el salto ente prime2 e phoenix1 es enorme
+            hay como el doble de canciones entre esas dos
+            phoenix1 tiene como 150 nuevas canciones
+            y en general el nuevo tema de puntuaciones que van hasta un millon y los rerates y cosas estan muy bien
+            así que si, mejor compra phoenix1 y se feliz
+            """,
+            "es",
+            "Six lines, no accents, two typos (ente for entre, e for y). rerates is untranslated English jargon sitting inside Spanish — a test of leaving a borrowed term alone.",
+            ["150"], ["prime2", "phoenix1"]),
+
+        // --- Discord, Spanish: release timing and sanctions ----------------------------
+
+        new CorpusComment("xtrem3x-kits",
+            """
+            acá no habrá evento, solo anunciarán que están listos los kits y todos irán por ello
+            pero seguro será hasta precisamente el lunes 20 o muy tardado el miercoles 22
+            así que desconozco como le hicieron para tener la versión antes que todos los demas ... ya si los de AM consideran que recurrieron a una falta pues posiblemente les bloqueen los discos
+            """,
+            "es",
+            "AM is Andamiro abbreviated — an initialism the glossary does not list. Weekday-plus-number dates must not be reformatted.",
+            ["20", "22"], ["AM"]),
+
+        new CorpusComment("kaimaruz-funa",
+            """
+            Sin miedo a la funa alguien de acá sabe que dicen los textos detrás de la mona China verde?
+            Yo nomás leo Infinity y Resurrection xd
+            """,
+            "es",
+            "funa is Chilean and Argentine for a public shaming — regional slang neither es-ES nor es-MX uses. mona China verde is colloquial for a character on a song jacket.",
+            // xd is laughter, not an identifier: it correctly becomes ㅋㅋ in Korean and kkkk
+            // in Portuguese. Asserting it verbatim contradicted the design rule it was meant
+            // to protect — the same mistake as 4mil, and as Mexico/Mexique before it.
+            [], ["Infinity", "Resurrection"]),
+
+        // --- Discord, English: the tips content the real feature would carry -----------
+
+        new CorpusComment("touhoufan-thug",
+            """
+            How do you thug out Skeptic 22?
+            Is it just a form thing or do I really need to exercise more?
+            """,
+            "en",
+            "The closest thing here to a real chart tip. thug out is community jargon for muscling through a chart; a literal rendering produces criminals.",
+            ["22"], ["Skeptic"]),
+
+        new CorpusComment("alex-runs",
+            """
+            What part are you struggling on
+            Just overall 200bpm runs or the weird tech part before the run
+            """,
+            "en",
+            "run and tech are PIU pattern vocabulary, deliberately absent from the glossary. Spanish must not reach carrera (racing) nor French course.",
+            ["200"], []),
+
+        new CorpusComment("touhoufan-dement",
+            "It's destroying me like Dement s21. It feels awkward",
+            "en",
+            "s21 is Singles 21 in lowercase shorthand, and Dement is a song title that reads like an English word.",
+            ["s21"], ["Dement"])
     };
 }

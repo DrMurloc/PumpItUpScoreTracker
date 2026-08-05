@@ -28,7 +28,13 @@ internal static class EntityPreservationCheck
             ["Fefemz"] = ["Fefemz", "피펨즈"],
             ["fefemz"] = ["Fefemz", "피펨즈"],
             ["Big One"] = ["Big One", "B1G", "빅원"],
-            ["B1G"] = ["B1G", "Big One", "빅원"]
+            ["B1G"] = ["B1G", "Big One", "빅원"],
+            // The Korean source writes the company and the game in Hangul; every Latin-script
+            // locale should reach the romanized names, and Korean may keep either.
+            ["Andamiro"] = ["Andamiro", "안다미로"],
+            ["AM"] = ["AM", "Andamiro", "안다미로"],
+            ["Phoenix 2"] = ["Phoenix 2", "피닉스 2", "PHX 2"],
+            ["PHX"] = ["PHX", "Phoenix", "피닉스"]
         };
 
     public static IReadOnlyList<EntityFinding> Check(CorpusComment comment, TranslationOutcome outcome)

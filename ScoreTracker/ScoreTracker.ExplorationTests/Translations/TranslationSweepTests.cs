@@ -24,12 +24,11 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
 {
     /// <summary>
     ///     Low enough not to trip rate limits on an account that is not provisioned for a fleet.
-    ///     Four was comfortable on the first runs and became a problem after several sweeps in an
-    ///     hour: request latency climbed, and the arms that suffered were Opus and Sonnet — the
-    ///     two the whole exercise exists to compare — while Haiku sailed through on speed alone.
-    ///     A probe that degrades its own subjects under load measures the load, not the models.
+    ///     Briefly dropped to two while chasing timeouts that turned out to be the owner's network
+    ///     rather than the API — which cost a 34-comment sweep twenty-five minutes and bought
+    ///     nothing. Four is the setting the clean runs used.
     /// </summary>
-    private const int Concurrency = 2;
+    private const int Concurrency = 4;
 
     /// <summary>
     ///     Resolving the handler through a real container is deliberate. A vertical's handlers are
@@ -85,6 +84,22 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
     [TranslationProbeFact]
     public async Task SweepThreeArmsOverTheCorpus()
     {
+        await Sweep(ModelArm.All);
+    }
+
+    /// <summary>
+    ///     One arm over the whole corpus, for when the model is already chosen and the question is
+    ///     whether a glossary or prompt change did what it was supposed to. A third of the cost of
+    ///     the full sweep, and the two arms it skips cannot answer that question anyway.
+    /// </summary>
+    [TranslationProbeFact]
+    public async Task SweepSonnetOverTheCorpus()
+    {
+        await Sweep([ModelArm.Sonnet]);
+    }
+
+    private async Task Sweep(IReadOnlyList<ModelArm> arms)
+    {
         var mediator = BuildMediator();
         var gate = new SemaphoreSlim(Concurrency);
 
@@ -110,7 +125,7 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
             }
         }
 
-        var results = (await Task.WhenAll(ModelArm.All
+        var results = (await Task.WhenAll(arms
             .SelectMany(arm => TranslationCorpus.All.Select(comment => (arm, comment)))
             .Select(pair => Translate(pair.arm, pair.comment)))).ToArray();
 
@@ -129,11 +144,14 @@ public sealed class TranslationSweepTests(ITestOutputHelper output)
             output.WriteLine($"retried {retried.Length}, recovered {retried.Count(r => r.Outcome != null)}");
 
         Directory.CreateDirectory(TranslationProbeConfiguration.ReportDirectory);
-        var path = Path.Combine(TranslationProbeConfiguration.ReportDirectory, "sweep.md");
+        // Named for the arms that ran, so a single-arm re-run does not overwrite the comparison
+        // report that justified picking the arm in the first place.
+        var name = arms.Count == ModelArm.All.Count ? "sweep" : $"sweep-{arms[0].ModelId}";
+        var path = Path.Combine(TranslationProbeConfiguration.ReportDirectory, $"{name}.md");
         await File.WriteAllTextAsync(path,
-            SweepReport.Write(results, string.Join(", ", ModelArm.All.Select(a => a.Name))));
+            SweepReport.Write(results, string.Join(", ", arms.Select(a => a.Name))));
 
-        foreach (var arm in ModelArm.All)
+        foreach (var arm in arms)
         {
             var forArm = results.Where(r => r.Arm == arm).ToArray();
             var findings = forArm.SelectMany(r => r.Entities).ToArray();

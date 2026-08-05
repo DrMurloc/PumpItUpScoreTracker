@@ -63,6 +63,8 @@ internal static class TranslationGlossary
         | song | canción | chanson | 노래 | música |
         | player | jugador | joueur | 유저 | jogador |
         | level | nivel | niveau | 난이도 | nível |
+        | run (a stretch of fast consecutive steps) | run (EN) | run (EN) | | run (EN) |
+        | tech (technical, twisty patterns) | tech (EN) | tech (EN) | | tech (EN) |
         | one attempt at a chart | intento | | | |
         | lifebar / life | barra de vida / vida | | | |
         | Perfect / Great / Good / Bad / Miss | English, capitalized | | | |
@@ -83,6 +85,8 @@ internal static class TranslationGlossary
         - Scores: `989,999` keeps its digits and its separators.
         - Timestamps: `2:01` is a position in a video, not a duration to localize.
         - Song and chart titles, unless this glossary lists a rendering for that locale.
+        - A number after a game name is a **version**, never a difficulty: `Phoenix 2`, `PHX 1`,
+          `prime2`, `XX`. Rendering "PHX 1" as "Phoenix level 1" says something the author did not.
         """;
 
     /// <summary>

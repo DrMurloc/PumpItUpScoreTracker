@@ -119,8 +119,9 @@ now; the site already stores per-culture song names (`SongCultureName`) and game
 
 ## 3. Results
 
-23 real YouTube comments (`ExplorationTests/Translations/TranslationCorpus.cs`) — English, Korean,
-Spanish, one Portuguese — into four locales, three arms, thinking disabled, synchronous.
+34 real community texts (`ExplorationTests/Translations/TranslationCorpus.cs`) — YouTube
+reaction comments, Discord conversation, and one official Andamiro announcement; English,
+Korean, Spanish, one Portuguese — into four locales, thinking disabled, synchronous.
 
 | Arm | Per comment | Per 1,000/mo | Batched | Entity survival, 4 runs | Language detected |
 |---|---|---|---|---|---|
@@ -134,8 +135,24 @@ run showed it dropping the `💯` emoji from three locales. Haiku's `1000%` → 
 likewise intermittent: present in three runs, absent in one. Both models are *mostly* right on
 these tokens and occasionally not, and a one-sample number turns "usually" into "always".
 
-The ordering is stable and that is what the decision rests on: Opus never lost a token in four
-runs, Sonnet lost one kind of token once, Haiku lost several every time.
+The ordering is stable and that is what the decision rests on: Opus never lost a token, Sonnet
+lost one kind of token once, Haiku lost several every time.
+
+### Three assertions that were wrong, and what they have in common
+
+Every false failure this evaluation produced was the same mistake — demanding that something
+which *should* localize survive verbatim:
+
+| Asserted verbatim | What the models correctly produced |
+|---|---|
+| `México` | `Mexique` (fr), `멕시코` (ko) — caught before the first run |
+| `4mil` | `4 000` (fr), `4.000` (pt), `4k` — Spanish for "four thousand", not an identifier |
+| `xd` | `ㅋㅋ` (ko), `kkkk` (pt) — laughter, the exact behaviour §2 celebrates |
+
+The last one was asserted in the same document that praises laughter localizing. The rule that
+would have prevented all three: **an entity is something with one correct written form in every
+language.** A difficulty code, a score, a URL, a proper noun. A number phrase, a country, and an
+emoticon are none of those. With them removed, Sonnet's final run is **147/147**.
 
 Costs ran ~2.5× the pre-run estimate. The prompts are ~2,400 tokens per call and the system prompt
 is sent twice per comment, so input is ~60% of the bill rather than the ~35% assumed. **Prompt
@@ -172,6 +189,15 @@ comparison mean anything.
   `참 대단하네요` in ko-KR, `es de verdad algo digno de ver` in es-ES, `c'est vraiment quelque chose`
   in fr-FR. All three arms.
 - **Dialect held.** Mexican `ustedes` → peninsular **vosotros** in es-ES, on all three.
+- **Community jargon needed one glossary row, and the sweep found it.** `run` and `tech` were
+  deliberately left out to see what happened. Opus and Haiku kept both in English; Sonnet — the
+  recommended arm — rendered es-ES as `las tiradas... antes de la tirada`, which is defensible
+  Spanish and not what the community says. Adding two rows fixed it (`los runs... antes del
+  run`). This is the argument for generating the glossary from `SharedKernel/Enums/Skill.cs`,
+  which already carries `Runs`, `Brackets`, `Twists`, `Jacks`, `Technical` and a dozen more with
+  human descriptions attached.
+- **Version numbers are not difficulty levels.** Haiku rendered `PHX 1` as `O Phoenix nível 1`.
+  A format rule now says a number after a game name is a version.
 - **Glossary held.** `chart` in es-ES/pt-BR, `la Chart` (feminine) in fr-FR, `채보` in ko-KR.
 - **Structure survived.** The meme comment kept its `2:01`, its blank line, and its quoted
   punchline everywhere.
