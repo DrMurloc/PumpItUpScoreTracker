@@ -55,9 +55,20 @@ Site totals for context: 2,473 accounts, 793 public, 414 with an `officialImport
 
 ## 3. Identity
 
-**The link is `OfficialPlayer.UserId`**, set by `LinkPlayer` during a successful import
-(`OfficialLeaderboardSaga`), last-import-wins. Supplementation is defined over linked players, so a
-tag on a public board always belongs to the account that most recently proved it.
+**The cohort is every public account with verified scores in the mix**, joined to the boards by the
+game tag on their profile, and resolved fresh on every roll-up. A tag the crawl has never seen gets
+a mirror row created for it — someone below every board's cut is precisely who this view exists to
+show, so requiring an existing board entry would defeat it.
+
+> **Corrected 2026-08-04.** This section first defined the cohort as `OfficialPlayer.UserId` links,
+> which made membership depend on a one-time migration having run and on each account having
+> imported since that column shipped (2026-07-17). Deriving it each run means an account that turns
+> public, sets a tag, or starts playing a new mix simply appears in the next roll-up.
+
+Identity still resolves before visibility: where two public accounts claim one tag the most recently
+scoring one takes it, and a private account is dropped before that contest rather than yielding its
+tag to whoever else claims it. Keying on the account also means one human appears once even when the
+mirror still carries their old tag — a user has one game tag, however many rows point at them.
 
 **`User.GameTag` is import-confirmed.** `UpdateUserGameProfileCommand` has exactly one sender —
 `OfficialLeaderboardSaga:182`, with `accountData.AccountName` — and the only other writer is the

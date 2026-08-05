@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -38,6 +38,8 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
 
     private readonly IOfficialSnapshotRepository _snapshots;
     private readonly IOfficialRecordRepository _records;
+    private readonly IOfficialPlayerIdentityRepository _identity;
+    private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IScoreReader _scores;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IUserReader _users;
@@ -45,11 +47,14 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
     private readonly ILogger _logger;
 
     public SupplementRollupSaga(IOfficialSnapshotRepository snapshots, IOfficialRecordRepository records,
-        IScoreReader scores, IPlayerStatsReader playerStats, IUserReader users, IMemoryCache cache,
+        IOfficialPlayerIdentityRepository identity, IScoreReader scores, IPlayerStatsReader playerStats,
+        IUserReader users, IMemoryCache cache, IDateTimeOffsetAccessor dateTime,
         ILogger<SupplementRollupSaga> logger)
     {
         _snapshots = snapshots;
         _records = records;
+        _identity = identity;
+        _dateTime = dateTime;
         _scores = scores;
         _playerStats = playerStats;
         _users = users;
@@ -138,38 +143,46 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
     }
 
     /// <summary>
-    ///     The linked public players, as mirror-player id to site user id. Identity is resolved
-    ///     first and visibility second: a tag whose most recent claimant has gone private
-    ///     produces no row at all, rather than falling back to whoever held it before — those
-    ///     are different people's scores.
+    ///     Who the supplemented reading speaks for, resolved fresh every run: **every public
+    ///     account holding verified scores in this mix**, joined to the boards by the game tag
+    ///     on their profile. A tag the crawl has never seen gets a mirror row created for it —
+    ///     a player below every board's cut is exactly who this view exists to show, so needing
+    ///     to already be on a board would defeat it.
     ///     <para>
-    ///         **One account can own several tags in a mix.** `LinkPlayer` sets `UserId` on the
-    ///         tag an import proved and never clears it from the one before, so a rename or a
-    ///         second game card leaves an account linked to both rows permanently. Their ledger
-    ///         is per user and per mix, not per card, so publishing it under both tags would put
-    ///         one human on every board twice. The most recently seen tag wins — `LastSeenAt` is
-    ///         refreshed every sweep for a tag still appearing on a board, which makes it the
-    ///         mirror's own evidence of which one is live — and the newest row breaks a tie.
+    ///         Derived rather than looked up on purpose. Reading the existing links instead
+    ///         would make membership depend on a one-time migration having run and on each
+    ///         account having imported since the link column shipped; this way an account that
+    ///         turns public, or sets a tag, or imports a new mix simply appears in the next
+    ///         roll-up.
+    ///     </para>
+    ///     <para>
+    ///         Identity resolves before visibility. Where two public accounts claim one tag the
+    ///         most recently scoring one takes it — the same last-active rule the import link
+    ///         applies — and a private account is dropped before that contest rather than
+    ///         yielding the tag to whoever held it before. Keying on the account also means one
+    ///         human appears once even when the mirror still carries their old tag: a user has
+    ///         one game tag, however many rows point at them.
     ///     </para>
     /// </summary>
     private async Task<IReadOnlyDictionary<int, Guid>> Cohort(MixEnum mix, CancellationToken ct)
     {
-        var linked = (await _snapshots.GetPlayers(mix, ct))
-            .Where(p => p.UserId != null)
+        var activity = await _scores.GetVerifiedRecordActivity(mix, ct);
+        if (activity.Count == 0) return new Dictionary<int, Guid>();
+
+        var lastScored = activity.ToDictionary(a => a.UserId, a => a.LastRecordedAt);
+        var claims = (await _users.GetUsers(lastScored.Keys, ct))
+            .Where(u => u.IsPublic && u.GameTag != null && u.GameTag.Value.ToString().Trim().Length > 0)
+            .Select(u => (Tag: u.GameTag!.Value.ToString(), UserId: u.Id))
+            .GroupBy(c => c.Tag.Replace(" ", string.Empty), StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.OrderByDescending(c => lastScored[c.UserId]).ThenBy(c => c.UserId).First())
             .ToArray();
-        if (linked.Length == 0) return new Dictionary<int, Guid>();
+        if (claims.Length == 0) return new Dictionary<int, Guid>();
 
-        var publicIds = (await _users.GetUsers(linked.Select(p => p.UserId!.Value).Distinct(), ct))
-            .Where(u => u.IsPublic)
-            .Select(u => u.Id)
-            .ToHashSet();
-
-        return linked
-            .Where(p => publicIds.Contains(p.UserId!.Value))
+        var players = await _identity.EnsureGameTagLinks(mix, claims, _dateTime.Now, ct);
+        return players
+            .Where(p => p.UserId != null)
             .GroupBy(p => p.UserId!.Value)
-            .ToDictionary(
-                g => g.OrderByDescending(p => p.LastSeenAt).ThenByDescending(p => p.Id).First().Id,
-                g => g.Key);
+            .ToDictionary(g => g.First().Id, g => g.Key);
     }
 
     private async Task<IReadOnlyList<PlacementRow>> ChartBoardRows(int snapshotId, MixEnum mix,

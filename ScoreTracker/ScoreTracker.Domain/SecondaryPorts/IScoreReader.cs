@@ -1,4 +1,4 @@
-using ScoreTracker.SharedKernel.Enums;
+﻿using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
@@ -80,6 +80,15 @@ public interface IScoreReader
     /// </summary>
     Task<IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>> GetVerifiedBests(MixEnum mix,
         IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Everyone holding a verified, passing record in a mix, with the date of their most
+    ///     recent one — the roster the supplemented leaderboards are drawn from, and the
+    ///     recency that settles a game tag two accounts both claim. One grouped read; the
+    ///     caller decides who is public.
+    /// </summary>
+    Task<IReadOnlyList<(Guid UserId, DateTimeOffset LastRecordedAt)>> GetVerifiedRecordActivity(MixEnum mix,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Distinct calendar days with any journaled score event for the player in a mix.

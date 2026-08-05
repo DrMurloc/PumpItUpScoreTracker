@@ -218,6 +218,15 @@ internal sealed class LeaderboardHubSaga :
         };
         var pumbilityBoard = stats.RatingBoards.TryGetValue(boardName, out var board) ? board : null;
 
+        // The co-op board has no scraped counterpart and never will — it is computed from the
+        // mirrored co-op chart boards and labelled an estimate. Every other board IS the
+        // official PUMBILITY ranking: if the mirror has not got it, the honest answer is an
+        // empty board that fills in on the next sweep. Computing a stand-in used to be the
+        // fallback, and it invented rankings thousands of players deep plus Singles and Doubles
+        // boards for a mix whose site publishes neither.
+        if (pumbilityBoard == null && request.Type != CoOpType)
+            return new OfficialRankingsRecord(latest.CompletedAt, true, Array.Empty<OfficialRankingRecord>());
+
         var previous = await _snapshots.GetSealedBefore(request.Mix, latest.Id, cancellationToken);
         IReadOnlyList<OfficialRankingRecord> rankings;
         if (pumbilityBoard != null)

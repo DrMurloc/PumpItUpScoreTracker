@@ -203,8 +203,15 @@ public sealed class LeaderboardHubSagaTests
         Assert.Equal(2, top.BoardsInTop);
     }
 
+    /// <summary>
+    ///     A mix whose PUMBILITY board the mirror has not got yet shows nothing, and waits.
+    ///     This used to compute a stand-in from chart placements, which ranked thousands of
+    ///     players on a board the site publishes 1,000 of — and invented Singles and Doubles
+    ///     boards for a mix that has neither. The rankings are the official ranking or they
+    ///     are not the rankings.
+    /// </summary>
     [Fact]
-    public async Task PhoenixRankingsFallBackToComputedRatings()
+    public async Task AMixWithNoMirroredPumbilityBoardRanksNobody()
     {
         var f = Arrange(Run(2, Week2));
         f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
@@ -216,11 +223,8 @@ public sealed class LeaderboardHubSagaTests
         var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix),
             CancellationToken.None);
 
-        Assert.False(result.RatingIsOfficial);
-        Assert.Equal(2, result.Rankings.Count);
-        Assert.Equal("PLAYER11", result.Rankings[0].Player.Username);
-        Assert.True(result.Rankings[0].Rating > result.Rankings[1].Rating);
-        Assert.Null(result.Rankings[0].PreviousRank);
+        Assert.Empty(result.Rankings);
+        Assert.True(result.RatingIsOfficial);
     }
 
     [Fact]
@@ -259,6 +263,8 @@ public sealed class LeaderboardHubSagaTests
         var f = Arrange(Run(2, Week2));
         f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>())).ReturnsAsync(new[]
         {
+            // The board itself is what ranks the standard views now, so it has to be here.
+            Pumbility(11, 1, 17_900m),
             Chart(11, ChartA, 1, 995_000, level: 24, boardId: 500),
             // Player 12 lives only on co-op boards — invisible to the standard views.
             CoOpChart(12, Guid.NewGuid(), 1, 1_000_000)

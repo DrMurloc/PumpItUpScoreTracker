@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure.Entities;
@@ -40,6 +40,58 @@ internal sealed class EFOfficialPlayerIdentityRepository : IOfficialPlayerIdenti
         entity.UserIdSource = "Import";
         await database.SaveChangesAsync(ct);
         return username;
+    }
+
+    public async Task<IReadOnlyList<PlayerDimension>> EnsureGameTagLinks(MixEnum mix,
+        IReadOnlyCollection<(string Username, Guid UserId)> pairs, DateTimeOffset seenAt, CancellationToken ct)
+    {
+        if (pairs.Count == 0) return Array.Empty<PlayerDimension>();
+
+        var normalized = pairs
+            .Select(p => (Username: OfficialPlayerTag.Normalize(p.Username), p.UserId))
+            .Where(p => p.Username.Length > 0)
+            .ToArray();
+        var tags = normalized.Select(p => p.Username).Distinct().ToArray();
+
+        await using var database = await _factory.CreateDbContextAsync(ct);
+        var mixId = MixIds.For(mix);
+        var existing = await database.Set<OfficialPlayerEntity>()
+            .Where(p => p.MixId == mixId && tags.Contains(p.Username))
+            .ToDictionaryAsync(p => p.Username, ct);
+
+        foreach (var (username, userId) in normalized)
+        {
+            if (!existing.TryGetValue(username, out var entity))
+            {
+                // A tag the crawl has never seen: this player is below every board's cut, which
+                // is exactly who the supplemented reading exists to show. LastSeenAt is set once,
+                // here, and the next sweep takes over if they ever place.
+                entity = new OfficialPlayerEntity
+                {
+                    MixId = mixId, Username = username, LastSeenAt = seenAt,
+                    UserId = userId, UserIdSource = "GameTag"
+                };
+                existing[username] = entity;
+                await database.Set<OfficialPlayerEntity>().AddAsync(entity, ct);
+                continue;
+            }
+
+            // An import-observed link was proved by logging into that account; this one is
+            // inferred from the tag an import wrote onto the profile. Never downgrade.
+            if (entity.UserId == null)
+            {
+                entity.UserId = userId;
+                entity.UserIdSource = "GameTag";
+            }
+        }
+
+        await database.SaveChangesAsync(ct);
+        return normalized
+            .Select(p => existing[p.Username])
+            .DistinctBy(e => e.Id)
+            .Select(e => new PlayerDimension(e.Id, e.Username,
+                e.AvatarUrl == null ? null : new Uri(e.AvatarUrl, UriKind.Absolute), e.UserId, e.LastSeenAt))
+            .ToArray();
     }
 
     public async Task RelinkUser(Guid fromUserId, Guid toUserId, CancellationToken ct)

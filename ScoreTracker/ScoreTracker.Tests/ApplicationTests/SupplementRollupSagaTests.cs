@@ -15,6 +15,7 @@ using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -36,6 +37,7 @@ public sealed class SupplementRollupSagaTests
         Mock<IOfficialSnapshotRepository> Snapshots,
         Mock<IScoreReader> Scores,
         Mock<IOfficialRecordRepository> Records,
+        Mock<IOfficialPlayerIdentityRepository> Identity,
         SupplementRollupSaga Saga)
     {
         public List<PlacementRow> Written { get; } = new();
@@ -48,6 +50,7 @@ public sealed class SupplementRollupSagaTests
         IEnumerable<(Guid UserId, RecordedPhoenixScore Record)>? ledger = null,
         IEnumerable<PlacementRow>? official = null,
         IEnumerable<BoardDimension>? boards = null,
+        IEnumerable<(Guid, DateTimeOffset)>? activity = null,
         bool hasSealed = true)
     {
         var snapshots = new Mock<IOfficialSnapshotRepository>();
@@ -56,7 +59,7 @@ public sealed class SupplementRollupSagaTests
                 ? new SnapshotRun(SnapshotId, DateTimeOffset.Now, DateTimeOffset.Now, false, "Sealed", 1, 1, 0, null)
                 : null);
         snapshots.Setup(s => s.GetPlayers(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((players ?? new[] { Linked(1, PublicUser) }).ToArray());
+            .ReturnsAsync(Array.Empty<PlayerDimension>());
         snapshots.Setup(s => s.GetBoards(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((boards ?? new[]
             {
@@ -80,7 +83,19 @@ public sealed class SupplementRollupSagaTests
         snapshots.Setup(s => s.AnySupplemented(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
+        var identity = new Mock<IOfficialPlayerIdentityRepository>();
+        identity.Setup(i => i.EnsureGameTagLinks(It.IsAny<MixEnum>(),
+                It.IsAny<IReadOnlyCollection<(string Username, Guid UserId)>>(), It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, IReadOnlyCollection<(string Username, Guid UserId)> pairs,
+                    DateTimeOffset _, CancellationToken _) =>
+                // The real one creates a row per distinct tag; the fixture mints ids the same way.
+                (players ?? pairs.Select((p, i) => Linked(i + 1, p.UserId)).ToArray()).ToArray());
+
         var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetVerifiedRecordActivity(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((activity ?? new[] { (PublicUser, DateTimeOffset.Now) })
+                .Select(a => (a.Item1, a.Item2)).ToArray());
         scores.Setup(s => s.GetVerifiedBests(It.IsAny<MixEnum>(), It.IsAny<IReadOnlyCollection<Guid>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((MixEnum _, IReadOnlyCollection<Guid> ids, CancellationToken _) =>
@@ -98,9 +113,10 @@ public sealed class SupplementRollupSagaTests
         records.Setup(r => r.DeleteSupplementedHighlights(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var fixture = new Fixture(snapshots, scores, records, new SupplementRollupSaga(snapshots.Object,
-            records.Object, scores.Object, stats.Object, userReader.Object,
-            new MemoryCache(new MemoryCacheOptions()), NullLogger<SupplementRollupSaga>.Instance));
+        var fixture = new Fixture(snapshots, scores, records, identity, new SupplementRollupSaga(snapshots.Object,
+            records.Object, identity.Object, scores.Object, stats.Object, userReader.Object,
+            new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(DateTimeOffset.Now).Object,
+            NullLogger<SupplementRollupSaga>.Instance));
 
         snapshots.Setup(s => s.WritePlacements(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<PlacementRow>>(),
                 It.IsAny<CancellationToken>()))
@@ -119,8 +135,9 @@ public sealed class SupplementRollupSagaTests
     private static PlayerDimension Linked(int id, Guid? userId, DateTimeOffset lastSeen = default) =>
         new(id, $"PLAYER{id}#0001", null, userId, lastSeen);
 
-    private static User Person(Guid id, bool isPublic) =>
-        new(id, Name.From($"user-{id:N}"), isPublic, Name.From("TAG"), new Uri("https://example.test/a.png"), null);
+    private static User Person(Guid id, bool isPublic, string? tag = "TAG") =>
+        new(id, Name.From($"user-{id:N}"), isPublic, tag == null ? (Name?)null : Name.From(tag),
+            new Uri("https://example.test/a.png"), null);
 
     private static RecordedPhoenixScore Best(int score) =>
         new(ChartId, PhoenixScore.From(score), null, false, DateTimeOffset.Now, "officialImport");
@@ -163,15 +180,33 @@ public sealed class SupplementRollupSagaTests
     }
 
     [Fact]
-    public async Task AnUnlinkedMirrorPlayerContributesNothing()
+    public async Task AnAccountWithNoGameTagContributesNothing()
     {
-        // A tag the crawl has seen but no account has ever proved. Their scores are not ours
-        // to publish, and we could not attribute them anyway.
-        var f = Arrange(players: new[] { Linked(1, null) });
+        // The join is on the game tag: with none there is no name to publish the scores under.
+        var f = Arrange(users: new[] { Person(PublicUser, true, null) });
 
         await f.Saga.Consume(Context());
 
         Assert.Empty(f.Written);
+    }
+
+    /// <summary>
+    ///     A player the crawl has never seen still gets onto the board. That is the whole point
+    ///     of the reading — someone below every board's cut is exactly who it exists to show —
+    ///     so the roll-up creates their mirror row rather than requiring one to exist.
+    /// </summary>
+    [Fact]
+    public async Task APlayerTheMirrorHasNeverSeenIsGivenARowAndPublished()
+    {
+        var f = Arrange();
+
+        await f.Saga.Consume(Context());
+
+        f.Identity.Verify(i => i.EnsureGameTagLinks(It.IsAny<MixEnum>(),
+                It.Is<IReadOnlyCollection<(string Username, Guid UserId)>>(p => p.Any(x => x.UserId == PublicUser)),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        Assert.Single(f.Written);
     }
 
     [Fact]
@@ -228,27 +263,56 @@ public sealed class SupplementRollupSagaTests
     }
 
     /// <summary>
-    ///     One account, two tags in a mix — a rename or a second game card. LinkPlayer sets
-    ///     UserId on the tag an import proved and never clears it from the one before, so this
-    ///     state is permanent and six accounts were already in it. Their ledger is per user, not
-    ///     per card, so the account is published under one tag: the most recently seen.
+    ///     Two public accounts claiming one game tag. Only one human is playing under it now,
+    ///     and it is whoever scored most recently — the rule the import link already applies.
     /// </summary>
     [Fact]
-    public async Task AnAccountWithTwoTagsIsPublishedUnderTheMostRecentlySeenOne()
+    public async Task AContestedGameTagGoesToTheMostRecentlyScoringAccount()
     {
-        var old = new DateTimeOffset(2026, 7, 19, 0, 0, 0, TimeSpan.Zero);
-        var recent = new DateTimeOffset(2026, 8, 4, 0, 0, 0, TimeSpan.Zero);
-        var f = Arrange(players: new[]
-        {
-            Linked(1, PublicUser, old),
-            Linked(2, PublicUser, recent)
-        });
+        var other = Guid.Parse("44444444-4444-4444-4444-444444444444");
+        var f = Arrange(
+            activity: new[]
+            {
+                (PublicUser, new DateTimeOffset(2026, 7, 19, 0, 0, 0, TimeSpan.Zero)),
+                (other, new DateTimeOffset(2026, 8, 4, 0, 0, 0, TimeSpan.Zero))
+            },
+            users: new[] { Person(PublicUser, true), Person(other, true) },
+            ledger: new[] { (PublicUser, Best(970_000)), (other, Best(960_000)) });
 
         await f.Saga.Consume(Context());
 
-        // One human, one row — not two, and not a crash inverting the map.
-        var row = Assert.Single(f.Written);
-        Assert.Equal(2, row.PlayerId);
+        // One claim on the tag, and it is the recent scorer's.
+        f.Identity.Verify(i => i.EnsureGameTagLinks(It.IsAny<MixEnum>(),
+                It.Is<IReadOnlyCollection<(string Username, Guid UserId)>>(
+                    p => p.Count == 1 && p.Single().UserId == other),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    /// <summary>
+    ///     A private account is dropped before the contest, not after: the tag produces no row
+    ///     rather than falling back to whoever else claims it.
+    /// </summary>
+    [Fact]
+    public async Task APrivateAccountDoesNotYieldItsTagToAnotherClaimant()
+    {
+        var other = Guid.Parse("55555555-5555-5555-5555-555555555555");
+        var f = Arrange(
+            activity: new[]
+            {
+                (PublicUser, new DateTimeOffset(2026, 7, 19, 0, 0, 0, TimeSpan.Zero)),
+                (other, new DateTimeOffset(2026, 8, 4, 0, 0, 0, TimeSpan.Zero))
+            },
+            users: new[] { Person(PublicUser, true), Person(other, false) },
+            ledger: new[] { (PublicUser, Best(970_000)) });
+
+        await f.Saga.Consume(Context());
+
+        f.Identity.Verify(i => i.EnsureGameTagLinks(It.IsAny<MixEnum>(),
+                It.Is<IReadOnlyCollection<(string Username, Guid UserId)>>(
+                    p => p.Count == 1 && p.Single().UserId == PublicUser),
+                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
