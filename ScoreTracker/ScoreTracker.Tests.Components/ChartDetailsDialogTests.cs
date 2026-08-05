@@ -246,6 +246,31 @@ public sealed class ChartDetailsDialogTests : TestContext
     }
 
     /// <summary>
+    ///     Recording went behind a tab, so the header keeps a one-tap way back to it — that is
+    ///     what round 11's always-visible inputs were protecting. Crucially it does NOT write
+    ///     the remembered tab: using a shortcut once is not a standing preference.
+    /// </summary>
+    [Fact]
+    public void TheRecordShortcutOpensHistoryWithoutRememberingIt()
+    {
+        _currentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
+        // The board reads CurrentUser.User to find your own row, so IsLoggedIn alone is a
+        // half-built user and NREs before anything under test runs.
+        _currentUser.SetupGet(u => u.User)
+            .Returns(new User(Guid.NewGuid(), "Me", true, null, new Uri("https://piu.test/me.png"), null));
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        var cut = RenderDialog(SetupChart(null));
+
+        cut.WaitForAssertion(() => cut.Find("[data-testid='cdt-record-shortcut']").Click());
+
+        cut.WaitForAssertion(() => Assert.Equal("true",
+            cut.Find("[data-testid='cdt-tab-History']").GetAttribute("aria-selected")));
+        _uiSettings.Verify(s => s.SetSetting(It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
     ///     A chart with no edges is every chart until the nightly rebuild has run at least
     ///     once, so the panel says "not yet" rather than rendering an empty grid.
     /// </summary>

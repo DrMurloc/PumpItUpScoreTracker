@@ -51,6 +51,18 @@
                 <DifficultyBubble Chart="ViewChart"></DifficultyBubble>
                 <MudText Typo="Typo.h5">@ViewChart.Song.Name</MudText>
                 <MudSpacer></MudSpacer>
+                @* Recording moved behind a tab, so it gets a way back to one tap. Round 11
+                   made the inputs always-visible for a reason and this is that reason kept.
+                   It does NOT write the remembered tab: a shortcut used once is not a
+                   preference, and only picking a tab by hand should read as one. *@
+                @if (CurrentUser.IsLoggedIn)
+                {
+                    <MudTooltip Text="@L["Record a score"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.EditNote" Color="Color.Default"
+                                       OnClick="JumpToRecord" data-testid="cdt-record-shortcut"
+                                       aria-label="@L["Record a score"]"></MudIconButton>
+                    </MudTooltip>
+                }
                 @* Score, To-Do, the suggestion action and the popularity places all describe
                    the chart the HOST passed. While drilled into a neighbour they would be
                    describing the wrong one, so they stand down rather than lie. *@
@@ -400,6 +412,15 @@
             DetailsTab.History => L["Score History"],
             _ => L["Leaderboard"]
         };
+    }
+
+    /// <summary>
+    ///     The header shortcut. Deliberately not <see cref="SelectTab" />: jumping to record
+    ///     once should not make History the tab every chart opens on from then on.
+    /// </summary>
+    private void JumpToRecord()
+    {
+        _tab = DetailsTab.History;
     }
 
     private async Task SelectTab(DetailsTab tab)
