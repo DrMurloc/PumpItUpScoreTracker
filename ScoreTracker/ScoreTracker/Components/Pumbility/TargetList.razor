@@ -1,0 +1,158 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* What to play next, in the three sanctioned densities (UX rule 5).
+
+   There is no "kind" column. A row carrying a grade in the You-have cell IS an upgrade and
+   a row carrying a dash IS new -- a column repeating that said nothing on Phoenix 1 and the
+   same word down every row on Phoenix 2. The coloured rail is the scan affordance, paired
+   with the grade cell so no meaning rides on colour alone (rule 8).
+
+   The "why" is an EVIDENCE line, never an attribution: the estimator carries no skill term,
+   so naming skills beside a projection would assert a causal path that does not exist
+   (docs/design/pumbility-overhaul.md §3.3). *@
+@if (Targets.Count == 0)
+{
+    <p class="pmb-empty">@L["Nothing here clears your bar yet — play a few more charts and check back."]</p>
+}
+else if (Density == UiDensity.Table)
+{
+    <div class="tier-table-wrap">
+        <table class="tier-table pmb-table">
+            <thead>
+            <tr>
+                <th>@L["Chart"]</th>
+                <th>@L["You have"]</th>
+                <th>@L["Projected"]</th>
+                <th class="pmb-r">@L["Gain"]</th>
+                <th class="pmb-col-why">@L["Evidence"]</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var target in Targets)
+            {
+                var chart = Charts[target.ChartId];
+                <tr @onclick="() => OnOpen.InvokeAsync(chart)" class="pmb-row">
+                    <td class="pmb-ident">
+                        <span class="pmb-ident-cell">
+                            <SongImage Song="chart.Song" Height="34"></SongImage>
+                            <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                            <span class="pmb-ident-name">@chart.Song.Name</span>
+                        </span>
+                    </td>
+                    <td>@CurrentCell(target)</td>
+                    <td>
+                        <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
+                        <span class="pmb-num pmb-score-text">@(((int)target.Projected).ToString("N0"))</span>
+                    </td>
+                    <td class="pmb-r pmb-gain-cell">+@target.Gain.ToString("N0")</td>
+                    <td class="pmb-col-why pmb-muted">@EvidenceLine(target)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else if (Density == UiDensity.Compact)
+{
+    <div class="tier-card-grid tier-card-grid-compact">
+        @foreach (var target in Targets)
+        {
+            var chart = Charts[target.ChartId];
+            <div class="pmb-sticker" @onclick="() => OnOpen.InvokeAsync(chart)"
+                 title="@($"{chart.Song.Name} +{target.Gain:N0}")">
+                <SongImage Song="chart.Song" Height="96"></SongImage>
+                <div class="pmb-sticker-line">
+                    <span class="pmb-sticker-gain">+@target.Gain.ToString("N0")</span>
+                    <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="16"></LetterGradeIcon>
+                </div>
+                <div class="pmb-sticker-name">@chart.Song.Name</div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="pmb-targets">
+        @foreach (var target in Targets)
+        {
+            var chart = Charts[target.ChartId];
+            <div class="pmb-tcard @(target.Current == null ? "is-new" : "")"
+                 @onclick="() => OnOpen.InvokeAsync(chart)">
+                <div class="pmb-tcard-art">
+                    <SongImage Song="chart.Song" Height="56"></SongImage>
+                    <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                </div>
+                <div class="pmb-tcard-body">
+                    <div class="pmb-tcard-name">@chart.Song.Name</div>
+                    <div class="pmb-tcard-meta">
+                        @CurrentCell(target)
+                        <span class="pmb-arrow">→</span>
+                        <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
+                        <span class="pmb-num pmb-score-text">@(((int)target.Projected).ToString("N0"))</span>
+                    </div>
+                    @if (target.Evidence != null)
+                    {
+                        <div class="pmb-tcard-why pmb-muted">@EvidenceLine(target)</div>
+                    }
+                </div>
+                <div class="pmb-tcard-gain">
+                    <div class="pmb-gain-num">+@target.Gain.ToString("N0")</div>
+                    <div class="pmb-gain-lbl">@L["Pumbility"]</div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] [EditorRequired] public IReadOnlyList<PumbilityTarget> Targets { get; set; } =
+        Array.Empty<PumbilityTarget>();
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    private RenderFragment CurrentCell(PumbilityTarget target) => builder =>
+    {
+        if (target.Current == null)
+        {
+            builder.OpenElement(0, "span");
+            builder.AddAttribute(1, "class", "pmb-none");
+            builder.AddContent(2, "—");
+            builder.CloseElement();
+            return;
+        }
+
+        builder.OpenComponent<LetterGradeIcon>(3);
+        builder.AddComponentParameter(4, nameof(LetterGradeIcon.Grade),
+            target.Current.Value.LetterGradeFor(Mix));
+        builder.AddComponentParameter(5, nameof(LetterGradeIcon.IsBroken), target.CurrentIsBroken);
+        builder.AddComponentParameter(6, nameof(LetterGradeIcon.Height), 18);
+        builder.CloseComponent();
+
+        builder.OpenElement(7, "span");
+        builder.AddAttribute(8, "class", "pmb-num pmb-muted pmb-score-text");
+        builder.AddContent(9, ((int)target.Current.Value).ToString("N0"));
+        builder.CloseElement();
+    };
+
+    // What the estimate heard, not why it landed there. Effective peers is voices after
+    // growth weighting -- ten people who have all levelled past the score they lent are
+    // worth about one -- so it is the honest number to print.
+    private string EvidenceLine(PumbilityTarget target)
+    {
+        if (target.Evidence is not { } evidence) return string.Empty;
+        return string.Format(L["from {0} players like you"], evidence.PeerCount);
+    }
+}

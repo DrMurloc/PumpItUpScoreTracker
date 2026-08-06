@@ -1,0 +1,83 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* The pool as a board: a ranked list of entities wears the .olb-rank-card skin and gets no
+   density toggle (UX rule 5 -- the rankings board is the standard). The bar renders as a
+   rule inside the list so the waiting room is visible where it actually sits. *@
+<div class="pmb-board">
+    @foreach (var entry in Page.Pool)
+    {
+        @Row(entry, entry.ChartId == Page.BarChartId, false)
+    }
+    @if (Page.WaitingRoom.Count > 0)
+    {
+        <div class="pmb-barrule">@L["The bar — everything below is waiting"]</div>
+        @foreach (var entry in Page.WaitingRoom)
+        {
+            @Row(entry, false, true)
+        }
+    }
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public PumbilityPageRecord Page { get; set; } = default!;
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    private RenderFragment Row(PoolEntry entry, bool atBar, bool below) => builder =>
+    {
+        if (!Charts.TryGetValue(entry.ChartId, out var chart)) return;
+
+        var classes = "olb-rank-card pmb-rankrow" + (atBar ? " pmb-at-bar" : "") + (below ? " pmb-below" : "");
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", classes);
+        builder.AddAttribute(2, "onclick",
+            EventCallback.Factory.Create(this, () => OnOpen.InvokeAsync(chart)));
+
+        builder.OpenElement(3, "span");
+        builder.AddAttribute(4, "class", "pmb-place");
+        builder.AddContent(5, entry.Place.ToString());
+        builder.CloseElement();
+
+        builder.OpenElement(6, "span");
+        builder.AddAttribute(7, "class", "pmb-ident");
+        builder.OpenComponent<SongImage>(8);
+        builder.AddComponentParameter(9, nameof(SongImage.Song), chart.Song);
+        builder.AddComponentParameter(10, nameof(SongImage.Height), 30);
+        builder.CloseComponent();
+        builder.OpenComponent<DifficultyBubble>(11);
+        builder.AddComponentParameter(12, nameof(DifficultyBubble.Chart), chart);
+        builder.AddComponentParameter(13, nameof(DifficultyBubble.Small), true);
+        builder.CloseComponent();
+        builder.OpenElement(14, "span");
+        builder.AddAttribute(15, "class", "pmb-rname");
+        builder.AddContent(16, chart.Song.Name.ToString());
+        builder.CloseElement();
+        builder.CloseElement();
+
+        builder.OpenElement(17, "span");
+        builder.AddAttribute(18, "class", "olb-rank-tail pmb-tail");
+        builder.OpenComponent<LetterGradeIcon>(19);
+        builder.AddComponentParameter(20, nameof(LetterGradeIcon.Grade), entry.Score.LetterGradeFor(Page.Mix));
+        builder.AddComponentParameter(21, nameof(LetterGradeIcon.IsBroken), entry.IsBroken);
+        builder.AddComponentParameter(22, nameof(LetterGradeIcon.Height), 18);
+        builder.CloseComponent();
+        builder.OpenElement(23, "span");
+        builder.AddAttribute(24, "class", "pmb-num pmb-muted pmb-rscore");
+        builder.AddContent(25, ((int)entry.Score).ToString("N0"));
+        builder.CloseElement();
+        builder.OpenElement(26, "span");
+        builder.AddAttribute(27, "class", "pmb-val");
+        builder.AddContent(28, entry.Value.ToString("N0"));
+        builder.CloseElement();
+        builder.CloseElement();
+
+        builder.CloseElement();
+    };
+}

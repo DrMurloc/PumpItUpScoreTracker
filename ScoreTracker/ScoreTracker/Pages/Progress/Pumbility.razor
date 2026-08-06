@@ -1,255 +1,186 @@
-﻿@using MediatR
-@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Services
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
-@using ScoreTracker.PlayerProgress.Contracts.Commands
-@using ScoreTracker.Domain.Services
-@using ScoreTracker.Application.Handlers
-@using ScoreTracker.Application.Queries
-@using ScoreTracker.Data.Migrations
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.SharedKernel.ValueTypes
-@using ScoreTracker.Domain.Models
 @using ScoreTracker.SharedKernel.Models
-@using ScoreTracker.Domain.Records
-@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
-@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services.Contracts
-@using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @page "/Pumbility"
 @rendermode RenderModes.Interactive
 
-<MudText Typo="Typo.h6">PUMBILITY</MudText>
+@* The page answers "what should I grind" and has to define the question before it answers
+   it: the number, then the bar it has to beat, then what to play. The eight rating bands
+   this replaced ranked your pool against itself and never said what for
+   (docs/design/pumbility-overhaul.md §3). *@
 
-@if (_currentMix == MixEnum.Phoenix2 && _stats != null)
+<PageTitle>@L["PUMBILITY"]</PageTitle>
+
+<p class="pmb-eyebrow">@MixName · @L["PUMBILITY"]</p>
+
+@if (_page == null)
 {
-    @* Phoenix 2's PUMBILITY is two independent top-50 pools summed — surface all three. *@
-    <div class="d-flex flex-wrap gap-2 my-2">
-        <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">
-            @L["Total"]: @(((int)_stats.SkillRating).ToString("N0"))
-        </MudChip>
-        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">
-            @L["Singles"]: @(((int)_stats.SinglesRating).ToString("N0"))
-        </MudChip>
-        <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined">
-            @L["Doubles"]: @(((int)_stats.DoublesRating).ToString("N0"))
-        </MudChip>
+    @* Rule 9: a skeleton shaped like what it becomes, never a lone spinner. *@
+    <div class="pmb-hero">
+        <div class="pmb-skeleton pmb-skeleton-figure"></div>
+        <div class="pmb-skeleton pmb-skeleton-curve"></div>
     </div>
 }
+else
+{
+    <div class="pmb-hero">
+        <PumbilityHero Page="_page" Charts="_charts" Pools="_pools" Selected="_pool"
+                       Subtitle="@HeroSubtitle" OnPoolChanged="ChangePool"></PumbilityHero>
+        <PoolCurve Page="_page" Charts="_charts"></PoolCurve>
+    </div>
 
-<MudGrid>
-
-    @foreach (var group in _tierList.OrderBy(kv => GetTierListOrder(kv.Key)))
+    @if (_carryover != null)
     {
-        <MudItem xs="12">
-            <MudText Typo="Typo.h6">@GetTierListName(group.Key)</MudText>
-        </MudItem>
+        <section class="pmb-block">
+            <div class="pmb-block-head">
+                <h2 class="pmb-block-title">@L["What Phoenix 1 is worth here"]</h2>
+            </div>
+            <p class="pmb-block-lede">
+                @string.Format(L["You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard."], _carryover.ScoredHere)
+            </p>
+            <CarryoverPanel Carryover="_carryover" Charts="_charts"></CarryoverPanel>
+        </section>
+    }
 
+    <section class="pmb-block">
+        <div class="pmb-block-head">
+            <h2 class="pmb-block-title">@L["What to play next"]</h2>
+            <div class="pmb-densitybar" role="group" aria-label="@L["Density"]">
+                <button type="button" aria-pressed="@Pressed(UiDensity.Comfortable)"
+                        @onclick="() => SetDensity(UiDensity.Comfortable)">@L["Comfortable"]</button>
+                <button type="button" aria-pressed="@Pressed(UiDensity.Compact)"
+                        @onclick="() => SetDensity(UiDensity.Compact)">@L["Compact"]</button>
+                <button type="button" aria-pressed="@Pressed(UiDensity.Table)"
+                        @onclick="() => SetDensity(UiDensity.Table)">@L["Table"]</button>
+            </div>
+        </div>
+        <p class="pmb-block-lede">
+            @L["Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar."]
+        </p>
 
-        foreach (var chart in group.Value.Select(c => _charts[c]))
+        @if (_projecting)
         {
-
-            <MudItem xs="6" sm="3" md="2">
-
-                <MudCard Class="chart-card">
-                    <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
-
-                        <DifficultyBubble Chart="chart"></DifficultyBubble>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <ScoreBreakdown Score="_scores[chart.Id].Score!.Value" IsBroken="_scores[chart.Id].IsBroken" Plate="_scores[chart.Id].Plate" Mix="_currentMix" Text=@(_ratings[chart.Id].ToString("N0")+" - "+(DateTimeOffset.Now-_scores[chart.Id].RecordedDate).TotalDays.ToString("N0")+" "+@L["Days Old"])></ScoreBreakdown>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudSpacer></MudSpacer>
-                        <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowChartDetails(chart))"></MudIconButton>
-                    </MudCardActions>
-                </MudCard>
-            </MudItem>
-        
+            <div class="pmb-skeleton pmb-skeleton-targets"></div>
         }
-    }
-    <MudItem xs="12">
-        <MudText Typo="Typo.h6">PUMBILITY Gain Calculator</MudText>
-    </MudItem>
-    <MudItem xs="4" sm="3">
-        <MudNumericField T="int" Min="1" Max="DifficultyLevel.Max" Value="_newPassLevel" ValueChanged="s=>CalculateNewScore(s,_newPassLetterGrade,_oldPassLetterGrade)" Label=@L["Difficulty Level"]></MudNumericField>
-    </MudItem>
-    <MudItem xs="4" sm="3">
-        <MudSelect T="PhoenixLetterGrade?" Clearable="true" Label=@L["Old Letter Grade"] Value="_oldPassLetterGrade" ValueChanged="s => CalculateNewScore(_newPassLevel,_newPassLetterGrade, s)">
-            @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>())
-            {
-                <MudSelectItem T="PhoenixLetterGrade?" Value="letterGrade">
-                    <LetterGradeIcon Grade="letterGrade"></LetterGradeIcon>
-                </MudSelectItem>
-            }
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="4" sm="3">
-        <MudSelect T="PhoenixLetterGrade" Label=@L["New Letter Grade"] Value="_newPassLetterGrade" ValueChanged="s => CalculateNewScore(_newPassLevel, s,_oldPassLetterGrade)">
-            @foreach (var letterGrade in Enum.GetValues<PhoenixLetterGrade>())
-            {
-                <MudSelectItem T="PhoenixLetterGrade" Value="letterGrade">
-                    <LetterGradeIcon Grade="letterGrade"></LetterGradeIcon>
-                </MudSelectItem>
-            }
-        </MudSelect>
-    </MudItem>
-    <MudItem xs="12" sm="3">+@_projectedNewPassRating PUMBILITY</MudItem>
-    <MudItem xs="12">
-        <MudText Typo="Typo.h6">Projected PUMBILITY Gains (BETA):</MudText>
-        <MudText Typo="Typo.subtitle1">Requires 20% of folder cleared for score projections.</MudText>
-    </MudItem>
-    @if (!_projectedGains.Any() && !_finishedProjecting)
-    {
-        <MudItem xs="12">
-            <MudProgressLinear Indeterminate="true" Color="Color.Primary">Computing</MudProgressLinear>
-        </MudItem>
-        <br/>
-        <br/>
-    }
-    @if (_finishedProjecting && !_projectedGains.Any())
-    {
-        <MudItem xs="12">
-            <MudText>You are seeing this because you are just too good for your level range. All of your scores are projected to be your best potential PUMBILITY.</MudText>
-        </MudItem>
-    }
-    @foreach (var gain in _projectedGains.OrderByDescending(kv=>_allScores.TryGetValue(kv.Key,out var existing)&&existing is { Score: not null,IsBroken: false }).ThenByDescending(kv => kv.Value).ThenBy(kv=>_chartDifficulty.TryGetValue(kv.Key,out var diff)?diff:TierListCategory.Unrecorded))
-    {
-        var chart = _charts[gain.Key];
-        <MudItem xs="6" sm="3" md="2">
+        else
+        {
+            <TargetList Targets="_page.Targets" Charts="_charts" Density="_density" Mix="_currentMix"
+                        OnOpen="ShowChartDetails"></TargetList>
+        }
+    </section>
 
-            <MudCard Class="chart-card">
-                <MudCardHeader Style=@($"background-image:url(\"{chart.Song.ImagePath}\");")>
+    <details class="pmb-fold">
+        <summary>
+            <h3>@L["Your top 50"]</h3>
+            <span class="pmb-sum-note">@L["The charts your PUMBILITY is made of"]</span>
+        </summary>
+        <div class="pmb-fold-body">
+            <PoolBoard Page="_page" Charts="_charts" OnOpen="ShowChartDetails"></PoolBoard>
+        </div>
+    </details>
 
-                    <DifficultyBubble Chart="chart"></DifficultyBubble>
-                </MudCardHeader>
-                <MudCardContent>
-                    @if (_allScores.TryGetValue(chart.Id, out var record) &&record.Score != null)
-                    {
-                        <MudText>
-                            @((DateTimeOffset.Now - record.RecordedDate).TotalDays.ToString("N0") + " " + @L["Days Old"])
-                        </MudText>
-                        <MudTooltip Text="@record.Score!.Value.ToString()">
-                            <LetterGradeIcon Grade="record.Score!.Value.LetterGradeFor(_currentMix)" IsBroken="record.IsBroken"></LetterGradeIcon>
-                        </MudTooltip>
-                        <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"></MudIcon>
-                        
-                    }
-                    <MudTooltip Text="@_expectedScore[chart.Id].ToString()">
-                        <LetterGradeIcon Grade="_expectedScore[chart.Id].LetterGradeFor(_currentMix)"></LetterGradeIcon>
-                    </MudTooltip>
-                    @if (_chartDifficulty.TryGetValue(chart.Id, out var difficulty)&&(!_allScores.TryGetValue(chart.Id, out var record2) || record2.IsBroken || record2.Score == null))
-                    {
-                        <MudText Style=@($"color:{TierListColor(difficulty)}")>@difficulty</MudText>
-                    }
-                    <MudText>+@_projectedGains[chart.Id].ToString("N0") PUMBILITY</MudText>
-                    @if (_evidence.TryGetValue(chart.Id, out var ev))
-                    {
-                        <MudText Typo="Typo.caption">@ev.PeerCount @L["players"]</MudText>
-                    }
-                </MudCardContent>
-                <MudCardActions>
-                    <MudSpacer></MudSpacer>
-                    <MudIconButton Icon="@Icons.Custom.Brands.YouTube" OnClick="@(() => ShowChartDetails(chart))"></MudIconButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-    }
-</MudGrid>
-
+    <details class="pmb-fold">
+        <summary>
+            <h3>@L["What would a clear be worth?"]</h3>
+            <span class="pmb-sum-note">@L["Try a level and a grade"]</span>
+        </summary>
+        <div class="pmb-fold-body">
+            <div class="pmb-whatif">
+                <div class="pmb-field">
+                    <label for="wi-level">@L["Difficulty Level"]</label>
+                    <MudNumericField id="wi-level" T="int" Min="1" Max="DifficultyLevel.Max" Value="_whatIfLevel"
+                                     ValueChanged="l => Recalculate(l, _whatIfType, _whatIfNew, _whatIfOld)"></MudNumericField>
+                </div>
+                <div class="pmb-field">
+                    <label for="wi-type">@L["Type"]</label>
+                    <MudSelect id="wi-type" T="ChartType" Value="_whatIfType"
+                               ValueChanged="t => Recalculate(_whatIfLevel, t, _whatIfNew, _whatIfOld)">
+                        <MudSelectItem T="ChartType" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
+                        <MudSelectItem T="ChartType" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
+                    </MudSelect>
+                </div>
+                <div class="pmb-field">
+                    <label>@L["Old Letter Grade"]</label>
+                    <MudSelect T="PhoenixLetterGrade?" Clearable="true" Value="_whatIfOld"
+                               ValueChanged="g => Recalculate(_whatIfLevel, _whatIfType, _whatIfNew, g)">
+                        @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
+                        {
+                            <MudSelectItem T="PhoenixLetterGrade?" Value="grade">
+                                <LetterGradeIcon Grade="grade"></LetterGradeIcon>
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+                <div class="pmb-field">
+                    <label>@L["New Letter Grade"]</label>
+                    <MudSelect T="PhoenixLetterGrade" Value="_whatIfNew"
+                               ValueChanged="g => Recalculate(_whatIfLevel, _whatIfType, g, _whatIfOld)">
+                        @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
+                        {
+                            <MudSelectItem T="PhoenixLetterGrade" Value="grade">
+                                <LetterGradeIcon Grade="grade"></LetterGradeIcon>
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+                <div class="pmb-whatif-out">
+                    +@_whatIfGain.ToString("N0")
+                    <small>@(_whatIfGain <= 0 ? L["this would not clear your bar"] : L["added to your PUMBILITY"])</small>
+                </div>
+            </div>
+        </div>
+    </details>
+}
 
 <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
 
 @inject IMediator Mediator
 @inject NavigationManager NavManager
-@inject ICurrentUserAccessor CurrentUser;
-@inject IUiSettingsAccessor UiSettings;
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+
 @code {
+    private const string DensitySettingKey = "Density__Pumbility";
 
     // PUMBILITY is a Phoenix-lineage stat — XX viewers keep seeing Phoenix, as before.
     private MixEnum _currentMix = MixEnum.Phoenix;
 
-    private void ShowChartDetails(Chart chart)
-    {
-        _detailsChart = chart;
-        _detailsOpen = true;
-    }
-    private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private PumbilityPageRecord? _page;
+    private Phoenix2CarryoverRecord? _carryover;
+    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IReadOnlyList<PumbilityHero.PoolOption> _pools = Array.Empty<PumbilityHero.PoolOption>();
+    private ChartType? _pool;
+    private UiDensity _density = UiDensity.Comfortable;
+    private bool _projecting;
+
     private Chart? _detailsChart;
     private bool _detailsOpen;
-    private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
-    private IDictionary<Guid, int> _ratings = new Dictionary<Guid, int>();
-    private IDictionary<TierListCategory, IEnumerable<Guid>> _tierList = new Dictionary<TierListCategory, IEnumerable<Guid>>();
-    private IDictionary<Guid, TierListCategory> _chartDifficulty = new Dictionary<Guid, TierListCategory>();
 
-    private string TierListColor(TierListCategory category) => ThemeScales.DifficultyColor(category);
-    private int GetTierListOrder(TierListCategory category) => category switch{
-        TierListCategory.Overrated => 1,
-        TierListCategory.VeryEasy => 2,
-        TierListCategory.Easy => 3,
-        TierListCategory.Medium => 4,
-        TierListCategory.Hard => 5,
-        TierListCategory.VeryHard => 6,
-        TierListCategory.Underrated => 7,
-        TierListCategory.Unrecorded => 8
-    };
-    private string GetTierListName(TierListCategory category) => category switch {
-        TierListCategory.Overrated=>"Extremely High Rating",
-        TierListCategory.VeryEasy=>"Very High Rating",
-        TierListCategory.Easy=>"High Rating",
-        TierListCategory.Medium=>"Standard Rating",
-        TierListCategory.Hard=>"Low Rating",
-        TierListCategory.VeryHard=>"Very Low Rating",
-        TierListCategory.Underrated=>"Extremely Low Rating",
-        TierListCategory.Unrecorded => "Runners Up (51-100)",_ => throw new ArgumentOutOfRangeException(nameof(category), category, null)};
+    private DifficultyLevel _whatIfLevel = 18;
+    private ChartType _whatIfType = ChartType.Single;
+    private PhoenixLetterGrade _whatIfNew = PhoenixLetterGrade.AA;
+    private PhoenixLetterGrade? _whatIfOld;
+    private int _whatIfGain;
 
-    private IDictionary<Guid, PhoenixScore> _expectedScore = new Dictionary<Guid, PhoenixScore>();
-    private IDictionary<Guid, int> _projectedGains = new Dictionary<Guid, int>();
-    private DifficultyLevel _newPassLevel = 18;
-    private PhoenixLetterGrade _newPassLetterGrade = PhoenixLetterGrade.AA;
-    private PhoenixLetterGrade? _oldPassLetterGrade = null;
-    private int _projectedNewPassRating = 0;
-    private void CalculateNewScore(DifficultyLevel newLevel, PhoenixLetterGrade newLetterGrade, PhoenixLetterGrade? oldLetter)
-    {
-        _newPassLevel = newLevel;
-        _newPassLetterGrade = newLetterGrade;
-        _oldPassLetterGrade = oldLetter;
-        // No recorded scores yet (every Phoenix 2 player's launch-week state): gains baseline is 0.
-        var lowestScore = _ratings.Any() ? _ratings.OrderByDescending(kv => kv.Value).Take(50).Last().Value : 0;
-        var oldRating = lowestScore;
-        if (_oldPassLetterGrade != null)
-        {
-            oldRating = (int)ScoringConfiguration.PumbilityScoring(_currentMix, false).GetScore(_newPassLevel, _oldPassLetterGrade.Value.GetMinimumScoreFor(_currentMix));
-            if (oldRating < lowestScore)
-            {
-                oldRating = lowestScore;
-            }
-        }
-        var rating = (int)ScoringConfiguration.PumbilityScoring(_currentMix, false).GetScore(_newPassLevel, newLetterGrade.GetMinimumScoreFor(_currentMix));
-        _projectedNewPassRating = rating - oldRating;
-        if (_projectedNewPassRating <= 0)
-        {
-            _projectedNewPassRating = 0;
-        }
-    }
-    private bool _finishedProjecting = false;
-    private async Task ProjectScores()
-    {
-        var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix), CancellationToken.None);
-        _expectedScore = projection.ExpectedScores.ToDictionary(kv => kv.Key, kv => kv.Value);
-        _projectedGains = projection.ProjectedGains.ToDictionary(kv => kv.Key, kv => kv.Value);
-        _chartDifficulty = projection.ChartDifficulty.ToDictionary(kv => kv.Key, kv => kv.Value);
-        _evidence = projection.Evidence.ToDictionary(kv => kv.Key, kv => kv.Value);
-        _finishedProjecting = true;
-    }
+    private string MixName => _currentMix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
 
-    private IDictionary<Guid, ProjectionEvidence> _evidence = new Dictionary<Guid, ProjectionEvidence>();
+    private string? HeroSubtitle => _currentMix == MixEnum.Phoenix2 && _carryover != null
+        ? string.Format(L["Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own."],
+            _carryover.ScoredHere)
+        : L["The sum of your 50 best-rated charts."];
 
-    private IDictionary<Guid, RecordedPhoenixScore> _allScores = new Dictionary<Guid, RecordedPhoenixScore>();
-    private PlayerStatsRecord? _stats;
+    private string Pressed(UiDensity density) => _density == density ? "true" : "false";
+
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -257,24 +188,82 @@
             NavManager.NavigateTo("/");
             return;
         }
-        var selectedMix = await UiSettings.GetSelectedMix();
-        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
-        if (_currentMix == MixEnum.Phoenix2)
-            _stats = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
-        var scoring = ScoringConfiguration.PumbilityScoring(_currentMix, false);
+
+        var selected = await UiSettings.GetSelectedMix();
+        _currentMix = selected == MixEnum.XX ? MixEnum.Phoenix : selected;
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
+            _density = density;
+
         _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
-        _allScores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix))).Where(r=>r.Score!=null).ToDictionary(s => s.ChartId);
-        _scores = (await Mediator.Send(new GetTop50ForPlayerQuery(CurrentUser.User.Id, null, 100, _currentMix))).ToDictionary(s => s.ChartId);
-        _ratings = _scores.ToDictionary(kv => kv.Key, kv => (int)scoring.GetScore(_charts[kv.Key], kv.Value.Score!.Value, kv.Value.Plate ?? PhoenixPlate.RoughGame, kv.Value.IsBroken));
-        var top50 = _scores.Values.OrderByDescending(s => _ratings[s.ChartId]).Take(50);
-
-        _tierList = TierListProcessor.ProcessIntoTierList("PUMBILITY", top50.ToDictionary(s => s.ChartId, s => _ratings[s.ChartId])).GroupBy(t => t.Category)
-
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(e => e.Order).Select(e => e.ChartId).ToArray().AsEnumerable());
-
-
-        await ProjectScores();
-        
+        await Load();
     }
 
+    private async Task Load()
+    {
+        _projecting = true;
+        _page = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, _pool));
+        _projecting = false;
+
+        // Phoenix 2 keeps Singles and Doubles as independent pools alongside the merged one,
+        // so the selector is real there and would invent a stat on Phoenix 1.
+        if (_currentMix == MixEnum.Phoenix2)
+        {
+            _pools = new[]
+            {
+                new PumbilityHero.PoolOption(null, L["All"], await TotalFor(null)),
+                new PumbilityHero.PoolOption(ChartType.Single, L["Singles"], await TotalFor(ChartType.Single)),
+                new PumbilityHero.PoolOption(ChartType.Double, L["Doubles"], await TotalFor(ChartType.Double))
+            };
+            _carryover = await Mediator.Send(new ProjectPhoenix2CarryoverQuery(CurrentUser.User.Id, _pool));
+        }
+
+        Recalculate(_whatIfLevel, _whatIfType, _whatIfNew, _whatIfOld);
+    }
+
+    private async Task<int> TotalFor(ChartType? pool)
+    {
+        if (pool == _pool && _page != null) return _page.Total;
+        var record = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, pool));
+        return record.Total;
+    }
+
+    private async Task ChangePool(ChartType? pool)
+    {
+        if (_pool == pool) return;
+        _pool = pool;
+        await Load();
+    }
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private void ShowChartDetails(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
+
+    // The what-if is a tool, not an answer, which is why it sits at the bottom. It prices
+    // against the same bar everything else on the page measures from.
+    private void Recalculate(DifficultyLevel level, ChartType type, PhoenixLetterGrade newGrade,
+        PhoenixLetterGrade? oldGrade)
+    {
+        _whatIfLevel = level;
+        _whatIfType = type;
+        _whatIfNew = newGrade;
+        _whatIfOld = oldGrade;
+
+        var scoring = ScoringConfiguration.PumbilityScoring(_currentMix, false);
+        var bar = _page?.Bar ?? 0;
+        var floor = (double)bar;
+        if (oldGrade != null)
+            floor = Math.Max(
+                scoring.GetScore(type, level, oldGrade.Value.GetMinimumScoreFor(_currentMix)), bar);
+
+        var after = scoring.GetScore(type, level, newGrade.GetMinimumScoreFor(_currentMix));
+        _whatIfGain = (int)Math.Max(0, after - floor);
+    }
 }
