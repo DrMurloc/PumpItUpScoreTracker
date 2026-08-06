@@ -609,14 +609,17 @@
   <data name="Any" xml:space="preserve">
     <value>전체</value>
   </data>
-  <data name="Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
-    <value>승인된 도구가 내 점수를 읽을 수 있습니다. 주로 점수 분석 도구에 사용됩니다. 끄면 새로운 접근이 중단되지만, 이미 수집한 데이터는 도구에 남아 있을 수 있습니다.</value>
-  </data>
   <data name="Any level" xml:space="preserve">
     <value>모든 레벨</value>
   </data>
   <data name="any moment now" xml:space="preserve">
     <value>곧</value>
+  </data>
+  <data name="Any tool that publishes its source code can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>소스 코드를 공개한 도구가 내 점수를 읽을 수 있습니다. 주로 점수 분석 도구에 사용됩니다. 끄면 새로운 접근이 중단되지만, 이미 수집한 데이터는 도구에 남아 있을 수 있습니다.</value>
+  </data>
+  <data name="Any tool that publishes its source code will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>소스 코드를 공개한 도구가 내 점수를 읽을 수 있게 됩니다. 대부분의 점수 분석 도구가 이 기능을 사용합니다. 별도의 설정이므로 이 페이지에서 바로 끌 수 있습니다.</value>
   </data>
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>초대 링크가 있으면 프로필이 공개든 비공개든 연결할 수 있습니다.</value>
@@ -659,9 +662,6 @@
   </data>
   <data name="Approved" xml:space="preserve">
     <value>승인됨</value>
-  </data>
-  <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
-    <value>승인된 도구가 내 점수를 읽을 수 있게 됩니다. 대부분의 점수 분석 도구가 이 기능을 사용합니다. 별도의 설정이므로 이 페이지에서 바로 끌 수 있습니다.</value>
   </data>
   <data name="Approving a tool puts its name, description and link in front of every player. Everything else about it — webhooks, keys, who it can read — is the maker's business and is not reviewed here." xml:space="preserve">
     <value>도구를 승인하면 이름, 설명, 링크가 모든 플레이어에게 표시됩니다. 웹훅, 키, 읽을 수 있는 대상 등 나머지는 제작자의 영역이며 여기서 검토하지 않습니다.</value>

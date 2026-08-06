@@ -342,8 +342,17 @@ Effective read access for tool T over player P:
 
 ```
    explicit ToolShare(T, P)
-OR (P.ShareWithAllTools AND T.AcceptsAllToolsShare AND NOT ToolBlock(T, P))
+OR (P.ShareWithAllTools AND T.AcceptsAllToolsShare AND NOT ToolBlock(T, P)
+    AND T.WebhookMode <> PiuGameSession        -- never by blanket consent
+    AND T.RepositoryUrl is published and checked
+    AND T.DiscordHandle is set
+    AND T.OwnerUserId is not banned)
 ```
+
+**`T.Visibility` is not a term and must not become one.** Listing is a directory concern; the
+conditions above are the access ones. The `Visibility = Public` check that once sat in
+`GetReadablePlayerIds` was never in this formula — it made every unlisted tool read its own maker
+and nobody else, which reads to a toolmaker as "the API is broken".
 
 **Public and all-tools are separate concepts and must stay separate.** They are coupled in exactly
 two places, both deliberate:
@@ -610,9 +619,15 @@ Three, in order of value per unit of build:
 ## 9. State machines
 
 **Listing.** `Private → PendingApproval → Public | Rejected`. A private tool is fully functional —
-invite links work, keys work, webhooks fire. Approval buys the directory listing and eligibility for
-the all-tools pool, nothing else. Editing name, link or description on a public tool returns it to
-`PendingApproval` while it stays listed. Rejection carries a required reason, sent to the maker.
+invite links work, keys work, webhooks fire, and it is eligible for the all-tools pool on exactly
+the same terms as a listed one. **Approval buys the directory listing, nothing else.** Editing name,
+link or description on a public tool returns it to `PendingApproval` while it stays listed.
+Rejection carries a required reason, sent to the maker.
+
+Listing is deliberately not an access gate. What protects a pooled player is the published source,
+the reachable maker, and the maker ban (§5) — a private tool is held to all three identically, and
+registration is self-serve either way, so gating the pool on approval would have bought the
+appearance of review rather than review.
 
 **Webhook mode.** `None ↔ PlayerPing ↔ ScorePush` freely. `→ PiuGameSession` only when the tool has
 zero connected players. `PiuGameSession →` anything is always allowed (a de-escalation).

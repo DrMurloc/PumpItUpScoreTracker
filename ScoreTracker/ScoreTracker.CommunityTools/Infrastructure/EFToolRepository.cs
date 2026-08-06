@@ -239,11 +239,11 @@ internal sealed class EFToolRepository : IToolRepository
             .Where(b => b.UserId == userId).Select(b => b.ToolId).ToArrayAsync(cancellationToken);
 
         // The source gate and the maker ban are resolved in memory against the same predicates the
-        // per-tool query uses. The candidate set is every listed pooled tool — tens of rows — and
-        // one rule expressed twice is one rule that can drift into disagreeing with itself about
-        // who may read a player's scores.
+        // per-tool query uses. The candidate set is every pooled tool — tens of rows — and one rule
+        // expressed twice is one rule that can drift into disagreeing with itself about who may read
+        // a player's scores.
         var candidates = await database.Set<ToolEntity>()
-            .Where(t => t.Visibility == nameof(ToolVisibility.Public) && t.AcceptsAllToolsShare)
+            .Where(t => t.AcceptsAllToolsShare)
             // Session mode never arrives by blanket consent — it needs a moment the player saw.
             .Where(t => t.WebhookMode != nameof(WebhookMode.PiuGameSession))
             .Select(t => new
@@ -280,14 +280,15 @@ internal sealed class EFToolRepository : IToolRepository
             .Select(s => s.UserId).ToArrayAsync(cancellationToken);
 
         // A tool without a readable source and a reachable maker is excluded from the blanket pool,
-        // exactly as a private or session-mode tool is. Deliberate grants already given survive it:
-        // the site's own rule is that going private blocks the blanket grant and never a named one
-        // (api-v2-community-tools.md §5), and cutting off players who chose a tool because its
-        // maker mistyped a URL would punish the wrong people.
-        if (tool.Visibility != nameof(ToolVisibility.Public) || !tool.AcceptsAllToolsShare
-                                                             || tool.WebhookMode == nameof(WebhookMode.PiuGameSession)
-                                                             || !Tool.Shareable(tool.Id, tool.RepositoryUrl,
-                                                                 tool.RepositoryCheckedAt, tool.DiscordHandle))
+        // exactly as a session-mode tool is. Deliberate grants already given survive it: cutting off
+        // players who chose a tool because its maker mistyped a URL would punish the wrong people.
+        //
+        // Visibility is deliberately NOT part of this. Listing is a directory concern — what protects
+        // a pooled player is the published source, the reachable maker, and the maker ban, all of
+        // which a private tool is held to identically.
+        if (!tool.AcceptsAllToolsShare
+            || tool.WebhookMode == nameof(WebhookMode.PiuGameSession)
+            || !Tool.Shareable(tool.Id, tool.RepositoryUrl, tool.RepositoryCheckedAt, tool.DiscordHandle))
             return direct.Distinct().ToArray();
 
         var blocked = await database.Set<ToolBlockEntity>()
