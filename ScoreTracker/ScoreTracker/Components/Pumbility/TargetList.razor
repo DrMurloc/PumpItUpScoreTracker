@@ -164,41 +164,46 @@ else
     private int _page = 1;
     private int _lastFilteredCount = -1;
 
-    private IReadOnlyList<PumbilityTarget> Filtered
-    {
-        get
-        {
-            if (TypeFilter == null && MaxLevel == null) return Targets;
-            return Targets.Where(t => Charts.TryGetValue(t.ChartId, out var chart)
-                                      && (TypeFilter == null || chart.Type == TypeFilter)
-                                      && (MaxLevel == null || (int)chart.Level <= MaxLevel)).ToArray();
-        }
-    }
+    // Filtered once per parameter set, not once per read: Shown, PageCount, HasCarryover and
+    // the render itself all want it, and re-running the Where each time is four sweeps of a
+    // list that can run to several hundred.
+    private IReadOnlyList<PumbilityTarget> _filtered = Array.Empty<PumbilityTarget>();
+
+    private IReadOnlyList<PumbilityTarget> Filtered => _filtered;
 
     private IReadOnlyList<PumbilityTarget> Shown =>
-        Filtered.Skip((_page - 1) * PageSize).Take(PageSize).ToArray();
+        _filtered.Skip((_page - 1) * PageSize).Take(PageSize).ToArray();
 
-    private int PageCount => (Filtered.Count + PageSize - 1) / PageSize;
+    private int PageCount => (_filtered.Count + PageSize - 1) / PageSize;
 
     protected override async Task OnParametersSetAsync()
     {
+        _filtered = Filter();
+
         // A narrowed filter can leave the reader stranded on a page that no longer exists,
         // which renders as an empty list rather than as "no matches" — so clamp rather than
         // reset: a density flip changes the page size and should keep you roughly in place.
-        var count = Filtered.Count;
         if (_page > Math.Max(1, PageCount)) _page = Math.Max(1, PageCount);
 
-        if (count != _lastFilteredCount)
+        if (_filtered.Count != _lastFilteredCount)
         {
-            _lastFilteredCount = count;
-            await OnFilteredCountChanged.InvokeAsync(count);
+            _lastFilteredCount = _filtered.Count;
+            await OnFilteredCountChanged.InvokeAsync(_filtered.Count);
         }
+    }
+
+    private IReadOnlyList<PumbilityTarget> Filter()
+    {
+        if (TypeFilter == null && MaxLevel == null) return Targets;
+        return Targets.Where(t => Charts.TryGetValue(t.ChartId, out var chart)
+                                  && (TypeFilter == null || chart.Type == TypeFilter)
+                                  && (MaxLevel == null || (int)chart.Level <= MaxLevel)).ToArray();
     }
 
     private void GoToPage(int page) => _page = page;
 
     /// <summary>Only worth a column when the list actually mixes evidence.</summary>
-    private bool HasCarryover => Filtered.Any(t => t.Source == TargetSource.Phoenix1);
+    private bool HasCarryover => _filtered.Any(t => t.Source == TargetSource.Phoenix1);
 
     private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
 
@@ -207,13 +212,19 @@ else
     // Three kinds of row, and the corner is the only place a Compact card can say which:
     // a score you already hold elsewhere, a score you hold here and would beat, and one
     // nobody has seen you play. The legend prints all three (rule 8).
-    private static string CornerClass(PumbilityTarget target) =>
-        target.Source == TargetSource.Phoenix1 ? "pmb-corner-carry" :
-        target.Current != null ? "pmb-corner-up" : "pmb-corner-new";
+    private static string CornerClass(PumbilityTarget target) => target switch
+    {
+        { Source: TargetSource.Phoenix1 } => "pmb-corner-carry",
+        { Current: not null } => "pmb-corner-up",
+        _ => "pmb-corner-new"
+    };
 
-    private string CornerMeaning(PumbilityTarget target) =>
-        target.Source == TargetSource.Phoenix1 ? L["Carried from Phoenix 1"] :
-        target.Current != null ? L["Upscore"] : L["Not yet played"];
+    private string CornerMeaning(PumbilityTarget target) => target switch
+    {
+        { Source: TargetSource.Phoenix1 } => L["Carried from Phoenix 1"],
+        { Current: not null } => L["Upscore"],
+        _ => L["Not yet played"]
+    };
 
     private RenderFragment ProjectionBody(PumbilityTarget target) => builder =>
     {

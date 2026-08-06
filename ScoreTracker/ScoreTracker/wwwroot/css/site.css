@@ -5021,9 +5021,10 @@ html.sheet-open .more-sheet-scrim {
 .chart-card-art {
     position: relative;
     display: block;
-    width: 100%;
     aspect-ratio: 16 / 9;
     margin: 10px 10px 0;
+    /* Minus the 10px side margins, so the art stays inside the card. A dead `width: 100%`
+       sat above this and never applied. */
     width: calc(100% - 20px);
     border-radius: 2px;
     background: rgba(0, 0, 0, .35);

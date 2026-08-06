@@ -259,13 +259,21 @@ else
                                  && _page.Targets.Any(t => TypeOf(t) == ChartType.Single)
                                  && _page.Targets.Any(t => TypeOf(t) == ChartType.Double);
 
-    /// <summary>Printed levels present in the suggestions, so the ceiling can only pick a real one.</summary>
-    private IReadOnlyList<int> TargetLevels => _page == null
-        ? Array.Empty<int>()
-        : _page.Targets
-            .Where(t => _charts.ContainsKey(t.ChartId))
-            .Select(t => (int)_charts[t.ChartId].Level)
-            .Distinct().OrderBy(l => l).ToArray();
+    /// <summary>
+    ///     Printed levels present in the suggestions, so the ceiling can only pick a real one.
+    ///     Rebuilt when the targets are, not on every render — the select re-reads it each time.
+    /// </summary>
+    private IReadOnlyList<int> TargetLevels { get; set; } = Array.Empty<int>();
+
+    private void IndexTargetLevels()
+    {
+        TargetLevels = _page == null
+            ? Array.Empty<int>()
+            : _page.Targets
+                .Where(t => _charts.ContainsKey(t.ChartId))
+                .Select(t => (int)_charts[t.ChartId].Level)
+                .Distinct().OrderBy(l => l).ToArray();
+    }
 
     private ChartType? TypeOf(PumbilityTarget target) =>
         _charts.TryGetValue(target.ChartId, out var chart) ? chart.Type : null;
@@ -300,6 +308,7 @@ else
         _projecting = true;
         _page = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, _pool));
         _projecting = false;
+        IndexTargetLevels();
 
         // Phoenix 2 keeps Singles and Doubles as independent pools alongside the merged one,
         // so the selector is real there and would invent a stat on Phoenix 1.
