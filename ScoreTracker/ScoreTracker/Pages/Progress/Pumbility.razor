@@ -88,12 +88,19 @@ else
         <div class="pmb-filters">
             @if (HasBothTypes)
             {
-                <MudButtonGroup OverrideStyles="false" Size="Size.Small" Variant="Variant.Outlined">
-                    <MudButton Color="@(_typeFilter == null ? Color.Primary : Color.Default)"
+                @* Variant rides each button, not the group: OverrideStyles="false" means the
+                   group propagates nothing, so a Variant on it is inert and the buttons render
+                   flat. Filled-when-selected against Outlined is the tier list's segmented
+                   control exactly. *@
+                <MudButtonGroup OverrideStyles="false">
+                    <MudButton Variant="@(_typeFilter == null ? Variant.Filled : Variant.Outlined)"
+                               Color="Color.Primary" Size="Size.Small"
                                OnClick="() => SetTypeFilter(null)">@L["All"]</MudButton>
-                    <MudButton Color="@(_typeFilter == ChartType.Single ? Color.Primary : Color.Default)"
+                    <MudButton Variant="@(_typeFilter == ChartType.Single ? Variant.Filled : Variant.Outlined)"
+                               Color="Color.Primary" Size="Size.Small"
                                OnClick="() => SetTypeFilter(ChartType.Single)">@L["Singles"]</MudButton>
-                    <MudButton Color="@(_typeFilter == ChartType.Double ? Color.Primary : Color.Default)"
+                    <MudButton Variant="@(_typeFilter == ChartType.Double ? Variant.Filled : Variant.Outlined)"
+                               Color="Color.Primary" Size="Size.Small"
                                OnClick="() => SetTypeFilter(ChartType.Double)">@L["Doubles"]</MudButton>
                 </MudButtonGroup>
             }
