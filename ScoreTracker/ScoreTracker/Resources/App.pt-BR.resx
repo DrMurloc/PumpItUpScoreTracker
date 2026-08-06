@@ -477,6 +477,9 @@
   <data name="Added to ToDo List!" xml:space="preserve">
     <value>Adicionado à lista de tarefas!</value>
   </data>
+  <data name="added to your PUMBILITY" xml:space="preserve">
+    <value>somado ao seu PUMBILITY</value>
+  </data>
   <data name="Added you {0}" xml:space="preserve">
     <value>Te adicionou {0}</value>
   </data>
@@ -2277,6 +2280,9 @@
   <data name="From {0}" xml:space="preserve">
     <value>A partir de {0}</value>
   </data>
+  <data name="from {0} players like you" xml:space="preserve">
+    <value>de {0} jogadores como você</value>
+  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Com {0} pontuações</value>
   </data>
@@ -3507,6 +3513,9 @@
   <data name="New invite link" xml:space="preserve">
     <value>Novo link de convite</value>
   </data>
+  <data name="New Letter Grade" xml:space="preserve">
+    <value>Nova nota</value>
+  </data>
   <data name="New mix. Same you." xml:space="preserve">
     <value>Nova versão. O mesmo você.</value>
   </data>
@@ -3614,6 +3623,9 @@
   </data>
   <data name="No new scores found" xml:space="preserve">
     <value>Nenhuma pontuação nova encontrada</value>
+  </data>
+  <data name="No Phoenix 2 chart" xml:space="preserve">
+    <value>Sem chart no Phoenix 2</value>
   </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>Ainda não há captura de popularidade - ela chega com a importação semanal.</value>
@@ -3786,6 +3798,9 @@
   <data name="Not Relevant to Category" xml:space="preserve">
     <value>Não relevante para a categoria</value>
   </data>
+  <data name="Not scored yet in Phoenix 2" xml:space="preserve">
+    <value>Ainda sem pontuação no Phoenix 2</value>
+  </data>
   <data name="Not set" xml:space="preserve">
     <value>Não definido</value>
   </data>
@@ -3840,11 +3855,17 @@
   <data name="Nothing changed for you. You can still share with a single tool you trust using an invite link from its maker." xml:space="preserve">
     <value>Nada mudou para você. Você ainda pode compartilhar com uma única ferramenta em que confia usando um link de convite do criador.</value>
   </data>
+  <data name="Nothing counts until it beats this. A chart worth more replaces it and you keep the difference." xml:space="preserve">
+    <value>Nada conta até superar isto. Um chart que vale mais o substitui e você fica com a diferença.</value>
+  </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Nada desta pasta está no quadro de popularidade.</value>
   </data>
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>Pedir não envia nada, então escreva no Discord do PIU Scores e alguém vai olhar. Sua ferramenta continua funcionando enquanto isso.</value>
+  </data>
+  <data name="Nothing here clears your bar yet — play a few more charts and check back." xml:space="preserve">
+    <value>Nada aqui supera sua marca ainda — jogue mais alguns charts e volte.</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>Nada é apagado. As ferramentas, a atividade delas e o histórico de entregas ficam como estão, então você pode ver o que aconteceu — ou desfazer isto.</value>
@@ -3974,6 +3995,9 @@
   </data>
   <data name="Old folder" xml:space="preserve">
     <value>Pasta anterior</value>
+  </data>
+  <data name="Old Letter Grade" xml:space="preserve">
+    <value>Nota anterior</value>
   </data>
   <data name="Older mixes ({0})" xml:space="preserve">
     <value>Versões antigas ({0})</value>
@@ -4266,8 +4290,17 @@
   <data name="PG · {0} of {1} peers have it" xml:space="preserve">
     <value>PG · {0} de {1} pares têm</value>
   </data>
+  <data name="Phoenix 1 · your real top 50" xml:space="preserve">
+    <value>Phoenix 1 · seu top 50 real</value>
+  </data>
+  <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
+    <value>O Phoenix 2 avalia um chart Singles um nível acima na curva base — um S22 vale como um 23. Insistir nos mesmos charts da versão anterior é o plano errado.</value>
+  </data>
   <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
     <value>O Phoenix 2 passa um efeito elétrico pela barra quando o transbordo fica completamente cheio: o único momento em que o jogo admite que aquela vida escondida existe.</value>
+  </data>
+  <data name="Phoenix 2 · same scores, repriced" xml:space="preserve">
+    <value>Phoenix 2 · as mesmas pontuações, revalorizadas</value>
   </data>
   <data name="Phoenix grade" xml:space="preserve">
     <value>Grau Phoenix</value>
@@ -4542,6 +4575,9 @@
   <data name="Poll the API instead." xml:space="preserve">
     <value>Consulte a API por polling.</value>
   </data>
+  <data name="Pool" xml:space="preserve">
+    <value>Conjunto</value>
+  </data>
   <data name="Popular" xml:space="preserve">
     <value>Popular</value>
   </data>
@@ -4623,8 +4659,14 @@
   <data name="Progression" xml:space="preserve">
     <value>Progressão</value>
   </data>
+  <data name="Projected" xml:space="preserve">
+    <value>Previsto</value>
+  </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY Doubles projetado</value>
+  </data>
+  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
+    <value>Previsto a partir do Phoenix 1 — você tem {0} pontuações próprias no Phoenix 2.</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY Singles projetado</value>
@@ -4780,6 +4822,9 @@
   </data>
   <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
     <value>Classificado pelo placar PUMBILITY oficial, espelhado semanalmente.</value>
+  </data>
+  <data name="Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar." xml:space="preserve">
+    <value>Ordenado pelo que cada um somaria se você jogasse no padrão que jogadores do seu nível alcançam. Tudo aqui supera sua marca.</value>
   </data>
   <data name="Rankings" xml:space="preserve">
     <value>Classificações</value>
@@ -5999,6 +6044,15 @@
   <data name="The arc" xml:space="preserve">
     <value>O arco</value>
   </data>
+  <data name="The bar" xml:space="preserve">
+    <value>A marca</value>
+  </data>
+  <data name="The bar this pool would set" xml:space="preserve">
+    <value>A marca que este conjunto definiria</value>
+  </data>
+  <data name="The bar — everything below is waiting" xml:space="preserve">
+    <value>A marca — tudo abaixo está esperando</value>
+  </data>
   <data name="The Best" xml:space="preserve">
     <value>O melhor</value>
   </data>
@@ -6019,6 +6073,9 @@
   </data>
   <data name="The Charts" xml:space="preserve">
     <value>As tabelas</value>
+  </data>
+  <data name="The charts your PUMBILITY is made of" xml:space="preserve">
+    <value>Os charts que compõem seu PUMBILITY</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>O texto cifrado fica no seu navegador; a chave envelopada no nosso banco de dados; a chave mestra no Key Vault. A descriptografia precisa das três — um vazamento de uma, ou de duas, não revela nada. Nenhuma senha é jamais escrita no nosso banco de dados ou nos logs.</value>
@@ -6118,6 +6175,9 @@
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>A tier list compartilhada desta pasta, construída com os dados de todos.</value>
+  </data>
+  <data name="The sum of your 50 best-rated charts." xml:space="preserve">
+    <value>A soma dos seus 50 charts mais bem avaliados.</value>
   </data>
   <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
     <value>A coleta os viu no site oficial, mas não encontrou o chart no catálogo. Adicione o chart e depois resolva: um chart que continuar faltando volta a aparecer na próxima coleta.</value>
@@ -6325,6 +6385,9 @@
   </data>
   <data name="This will delete all of your scores and reset your player stats and title progress" xml:space="preserve">
     <value>Isso excluirá todas as suas pontuações e redefinirá suas estatísticas de jogador e progresso de títulos</value>
+  </data>
+  <data name="this would not clear your bar" xml:space="preserve">
+    <value>isto não superaria sua marca</value>
   </data>
   <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
     <value>Isso assume Perfects no meio. Com Greats, esses mesmos três custam {0}, {1} e {2} notas.</value>
@@ -6535,6 +6598,9 @@
   </data>
   <data name="TRUE/FALSE Template" xml:space="preserve">
     <value>Modelo TRUE/FALSE</value>
+  </data>
+  <data name="Try a level and a grade" xml:space="preserve">
+    <value>Teste um nível e uma nota</value>
   </data>
   <data name="Try again" xml:space="preserve">
     <value>Tentar novamente</value>
@@ -6854,6 +6920,9 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Falta alguém olhar — dê um toque</value>
   </data>
+  <data name="Waiting room" xml:space="preserve">
+    <value>Sala de espera</value>
+  </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Veja você mesmo subir</value>
   </data>
@@ -6956,11 +7025,20 @@
   <data name="What it will be able to read" xml:space="preserve">
     <value>O que ela poderá ler</value>
   </data>
+  <data name="What Phoenix 1 is worth here" xml:space="preserve">
+    <value>Quanto o Phoenix 1 vale aqui</value>
+  </data>
   <data name="What should they change?" xml:space="preserve">
     <value>O que deveriam mudar?</value>
   </data>
+  <data name="What to play next" xml:space="preserve">
+    <value>O que jogar em seguida</value>
+  </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>No que trabalhar (padrão Title Hunt)</value>
+  </data>
+  <data name="What would a clear be worth?" xml:space="preserve">
+    <value>Quanto valeria um clear?</value>
   </data>
   <data name="What your rivals are up to" xml:space="preserve">
     <value>O que seus rivais andam fazendo</value>
@@ -7151,6 +7229,12 @@
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
     <value>Você tinha alguns charts que não puderam ser baixados. Você pode baixar o CSV das falhas para fazer ajustes e tentar novamente.</value>
   </data>
+  <data name="You have" xml:space="preserve">
+    <value>Você tem</value>
+  </data>
+  <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
+    <value>Você tem {0} pontuações no Phoenix 2. Este é o seu histórico do Phoenix 1 avaliado pelas regras do Phoenix 2 — no que seu conjunto se transforma se você refizer tudo no mesmo padrão.</value>
+  </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>Você ainda não entrou em nenhuma comunidade — encontre uma abaixo ou crie a sua.</value>
   </data>
@@ -7229,6 +7313,9 @@
   <data name="Your API" xml:space="preserve">
     <value>Sua API</value>
   </data>
+  <data name="Your bar" xml:space="preserve">
+    <value>Sua marca</value>
+  </data>
   <data name="Your best" xml:space="preserve">
     <value>Seu melhor</value>
   </data>
@@ -7306,6 +7393,15 @@
   </data>
   <data name="Your Points per Second" xml:space="preserve">
     <value>Seus pontos por segundo</value>
+  </data>
+  <data name="Your pool" xml:space="preserve">
+    <value>Seu conjunto</value>
+  </data>
+  <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
+    <value>Seu conjunto tem {0} de 50. Até encher, cada chart que você jogar conta inteiro — ainda não há marca a superar.</value>
+  </data>
+  <data name="Your pool isn't full yet, so every new chart counts whole — nothing is being displaced." xml:space="preserve">
+    <value>Seu conjunto ainda não está cheio, então cada chart novo conta inteiro — nada é substituído.</value>
   </data>
   <data name="Your profile is private" xml:space="preserve">
     <value>Seu perfil está privado</value>
@@ -7408,6 +7504,15 @@
   </data>
   <data name="Your tools, their keys, and how they hear about new scores." xml:space="preserve">
     <value>Suas ferramentas, as chaves delas, e como ficam sabendo de pontuações novas.</value>
+  </data>
+  <data name="Your top 50" xml:space="preserve">
+    <value>Seu top 50</value>
+  </data>
+  <data name="Your top and bottom are {0}% apart, and {1} charts sit level with your 50th. That shape says grind volume, not one hero chart." xml:space="preserve">
+    <value>Seu topo e sua base estão a {0}% de distância, e {1} charts empatam com o seu 50º. Esse formato pede volume, não um único chart heroico.</value>
+  </data>
+  <data name="Your top and bottom are {0}% apart." xml:space="preserve">
+    <value>Seu topo e sua base estão a {0}% de distância.</value>
   </data>
   <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
     <value>Seu usuário e senha são selados juntos com AES-256-GCM sob uma chave de dados aleatória. Essa chave de dados é envelopada por uma chave mestra que nunca sai do Azure Key Vault.</value>
@@ -7528,6 +7633,9 @@
   </data>
   <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
     <value>{0} charts · troca segunda à meia-noite (ET)</value>
+  </data>
+  <data name="{0} charts · {1} down to {2}" xml:space="preserve">
+    <value>{0} charts · de {1} a {2}</value>
   </data>
   <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
     <value>{0} charts, escolhidos por não terem nada a ver com este.</value>

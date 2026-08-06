@@ -15,7 +15,7 @@
         <div class="pmb-curve-head">
             <span class="pmb-curve-title">@L["Your pool"]</span>
             <span class="pmb-curve-note">
-                @Page.Pool.Count @L["charts"] · @Page.PoolTop.ToString("N0") @L["down to"] @Page.PoolBottom.ToString("N0")
+                @string.Format(L["{0} charts · {1} down to {2}"], Page.Pool.Count, Page.PoolTop.ToString("N0"), Page.PoolBottom.ToString("N0"))
             </span>
         </div>
 
