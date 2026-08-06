@@ -20,26 +20,31 @@ else if (_matches.Count == 0)
 }
 else
 {
+    @* Jacket and bubble, nothing else. The song name is what SongImage's own tooltip is for,
+       and spelling it out under a 70px tile only ever showed "Darkside of ..." anyway. The
+       bubble's tooltip is off because two of them fired on one tile. *@
     <div class="chart-similar-grid">
         @foreach (var match in _matches)
         {
             var chart = match;
             <button type="button" class="chart-similar-tile" data-testid="chart-similar-tile"
-                    title="@($"{chart.Song.Name} {chart.DifficultyString}")"
                     @onclick="() => OnChartSelected.InvokeAsync(chart)">
-                <SongImage Song="chart.Song" Height="40"></SongImage>
-                <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                <span class="chart-similar-name">@chart.Song.Name</span>
+                <span class="chart-similar-jacket"><SongImage Song="chart.Song"></SongImage></span>
+                <span class="chart-similar-bubble">
+                    <DifficultyBubble Chart="chart" Small="true" Tooltip="false"></DifficultyBubble>
+                </span>
             </button>
         }
     </div>
 }
 
 <style>
+    /* Six fixed columns rather than auto-fill: the jackets are landscape and their intrinsic
+       width was deciding the track count, which is how a 572px dialog ended up fitting five. */
     .chart-similar-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 6px;
         margin: 8px 0;
     }
 
@@ -50,13 +55,31 @@ else
         font: inherit;
         border: 1px solid var(--mud-palette-lines-default);
         border-radius: 6px;
-        padding: 6px 4px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
+        padding: 0;
+        overflow: hidden;
+        position: relative;
+        display: block;
+        line-height: 0;
         cursor: pointer;
         min-width: 0;
+    }
+
+    /* Width-driven, not height-driven. SongImage sizes by height, so landscape and square
+       jackets came out different widths and the row never lined up. Scoped to the jacket so
+       it cannot catch the bubble's own image, and !important because MudImage writes its
+       height inline, which no normal-weight rule can beat. */
+    .chart-similar-jacket .mud-image {
+        width: 100%;
+        height: auto !important;
+        display: block;
+    }
+
+    .chart-similar-bubble {
+        position: absolute;
+        right: 1px;
+        bottom: 1px;
+        line-height: 0;
+        pointer-events: none;
     }
 
     .chart-similar-tile:hover {
@@ -66,15 +89,6 @@ else
     .chart-similar-tile:focus-visible {
         outline: 2px solid var(--mud-palette-primary);
         outline-offset: 1px;
-    }
-
-    .chart-similar-name {
-        font-size: .68rem;
-        color: var(--mud-palette-text-secondary);
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
     .chart-similar-empty {
