@@ -26,6 +26,87 @@ XX (`GetBestXXAttempts`), intersected by canonical chart id — the same "passed
 semantics the tier list draws, with no new project reference and no privacy gate. Upscore-only
 or first-clear batches short-circuit before any cross-mix read.
 
+**Iteration (D1, owner feedback 2026-08-05) — the official digest is reshaped onto the This Week
+hero. IMPLEMENTED.** The card as shipped rendered **39 lines across five stacked lists with no
+image** (owner: "ugly AF, too much wall of text") while ignoring most of what the hero it should
+mirror already computes: `WeeklyHighlightsRecord` has carried `Pulse`, `Gainers`, `Floors` and
+`Debuts` since [I2](official-leaderboards-overhaul.md) and `DigestCard` reads none of them. The new
+shape is **19 lines**, in this order — header (`###` + `-#` subtext carrying the mix tag, the week
+pair and the hero's hype sentence, with the top world first's **song jacket as the section
+thumbnail**: the header `RichBotSection` already accepts one and passes `null`) → **pulse** (board
+entries · players active · debuts, new/upscored as subtext) → **biggest PUMBILITY gain** (the
+hero's gainer card — value gained leads, the rank jump trails) → **biggest board climber** →
+**the floors** (#100 and #1000, last week's 50× AAA level → this week's, plus value and delta) →
+**world firsts** → footer + buttons.
+
+Locked calls:
+
+- **The PUMBILITY top 10 is cut.** Eleven of the thirty-nine lines went to standings that barely
+  move — on the 2026-08-02 Phoenix 2 sweep #1 held and the biggest shuffle inside the ten was ↑8.
+  A **Rankings** link button replaces it.
+- **The new-#1 sample is cut entirely**, not reduced. That same sweep produced **105** of them;
+  listing four was an arbitrary slice that read as the whole story, and the "dethroning" clause is
+  what made those lines wrap on a phone.
+- **World firsts move to the bottom and keep their `Take(6)`.** A big week there is the hype, not
+  an info dump — but a content drop hands every brand-new chart a first at once, so the cap stays
+  and the block sorts by level, biggest first.
+- **No row gets emphasis.** Components V2 text has no per-line background, border or size, so a
+  "featured" first can only be faked with a leading emoji. The jacket is the only real emphasis the
+  format offers.
+- **An empty firsts list drops the section *and* the thumbnail.** The jacket belongs to the top
+  first; with none there is no chart for the card to be about. Late-mix weeks post the short card.
+- **The card always posts.** `blocks.Count == 0` stops being the suppressor once the pulse strip is
+  unconditional, and it needn't be one: board activity never stops, so there are no quiet weeks —
+  only firstless ones.
+- **Names lose the discriminator**, matching I6 on the hub. The digest was the last surface still
+  printing raw `TAG#1234`.
+- **The debut subtext dies** — "every debut a first-ever appearance on any board" is tautologous.
+
+**The floors block targets AAA, deliberately diverging from the hero, which shows SS** — AAA is the
+yardstick this audience actually plays toward, and the card is read by people who will never see the
+hub. That has a mechanical consequence: `FloorMark` stores the **SS** level (`Level` /
+`NewValue`) and nothing else, so the digest cannot read its levels off the row. It computes them —
+`CutlineCalculator.LevelFor(PumbilityScoring(mix, false), ChartType.Single, PhoenixLetterGrade.AAA,
+value)`, twice per rung, against the row's `Score` (this week) and `PrevValue` (last week). That
+static is pure and lives in the same assembly, so this needs no sweep change, no new stored column
+and no Rebuild press — and the hero keeps rendering SS off the untouched columns.
+
+Two more consequences. The consumer still drops **two** of its three dispatches:
+`GetOfficialRankingsQuery` existed only for the top 10, and `GetWhatItTakesQuery` goes too — its
+`CutlineTierRecord` carries a current AAA level but no previous one, and its `History` is the #1000
+floor alone, so it cannot answer "what did #100 take last week" at all. The `FloorMark` rows can.
+Fixed in passing: the climbers template interpolates `NetPlacesGained` as a raw int, so today the
+card's largest number renders `net +11990` with no separators.
+
+**As built — one vertical, no schema.** *Domain*: nothing. *Application* (`OfficialMirror`):
+`OfficialDigestFeedSaga` only — `Consume` dropped two dispatches, `DigestCard` was rewritten around
+the new order, and the tag-to-name rule moved into `OfficialPlayerNames` in `OfficialMirror/
+Contracts` so the card and `HubPlayerChip.NameOf` share one implementation (a helper class, not a
+member on the coverage-excluded `OfficialPlayerRecord`). *Infrastructure*: nothing — every figure was
+already stored, so no entity, repository or migration, and no Rebuild-highlights press.
+*Presentation*: resx only, plus `HubPlayerChip.NameOf` delegating to the contract helper. The card
+needed seven strings and only **six** were new: `Biggest board climber` already existed, because the
+hero names the same card, and they now share the key. Eleven keys the reshape orphaned came out of
+all nine locales. Murloc coined `Roglub` (gain), `Plglarg` (across) and `Ur` (on). *Tests*:
+`OfficialDigestFeedSagaTests` grew from 4 to 9 — the four assertions that pinned the old shape moved,
+and the new cases cover the pulse + jacket, one-name-per-category, the AAA floors ignoring the stored
+SS level, the firsts closing the card ordered by level, the firstless card losing its picture, and
+both dropped dispatches.
+
+The floor levels are deliberately **not** pinned to numbers in the tests: they follow pumbility
+scoring, which is not this card's business. The assertions pin the *shapes* — a floor that rose
+without crossing a level shows one level, one that crossed shows an arrow. Against the real
+2026-08-02 values the built code renders `#100 **Lv.24**` holding and `#1000 Lv.16 → **Lv.20**`.
+
+**Canary: run and green** (2026-08-05, lab channel). `PiuCardCanaryTests` carries the reshaped card
+in English and Korean, sampled from that same sweep so the sample has a live week's lengths and digit
+counts. Discord accepted both payloads — thumbnail, five text blocks, four separators, three link
+buttons — and the read-back found every card. Korean is in there on purpose: CJK glyphs are
+double-width and the floor rows depend on the rank labels lining up.
+
+Mock: claude.ai artifact `4e24d721-1ea3-4620-a380-c2ff6c05d163` (before/after, rendered from the
+real 2026-08-02 Phoenix 2 sweep).
+
 **As-built deviation (C10):** the official-leaderboards digest lives in **OfficialMirror**, not
 Communities. Communities cannot reference OfficialMirror — the vertical graph would cycle
 (`OfficialMirror → ScoreLedger → Communities`). So OfficialMirror hosts `OfficialDigestFeedSaga`
@@ -151,7 +232,9 @@ already writes with Place; direction-correct for Limbo by construction) + today'
 from `GetDailyStepQuery(mix)` with the Limbo banner ("lowest passing score wins") when
 `IsLimbo`.
 
-**Official digest** (per subscribed mix): skip when `IsBaseline`. Compose from
+**Official digest** (per subscribed mix) — *the original C10 composition, kept as history.
+**Superseded by the D1 reshape above**, which drops the rankings and cutline reads and recomposes
+the card around the This Week hero*: skip when `IsBaseline`. Compose from
 `GetWeeklyHighlightsQuery(mix)` (PUMBILITY movers — absent for Phoenix, which has no
 pumbility board — boards climbed, new #1s, chart/folder grade world-firsts, all
 name-resolved by the sweep) + `GetWhatItTakesQuery(mix, All|Singles|Doubles)` cutlines with

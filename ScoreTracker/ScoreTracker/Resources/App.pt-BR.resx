@@ -168,12 +168,6 @@
   <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
     <value>**#{0}** em {1} {2} semanal</value>
   </data>
-  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
-    <value>**50× AAA no Nv.{0}**</value>
-  </data>
-  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
-    <value>**50× SSS no Nv.{0}**</value>
-  </data>
   <data name="**All passed!**" xml:space="preserve">
     <value>**Todos passados!**</value>
   </data>
@@ -201,8 +195,8 @@
   <data name="**{0}** at {1}" xml:space="preserve">
     <value>**{0}** com {1}</value>
   </data>
-  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
-    <value>**{0}** escalou {1} placares de charts (+{2})</value>
+  <data name="**{0}** board entries · **{1}** players active · **{2}** debuts" xml:space="preserve">
+    <value>**{0}** entradas · **{1}** jogadores ativos · **{2}** estreantes</value>
   </data>
   <data name="**{0}** completed" xml:space="preserve">
     <value>**{0}** concluído</value>
@@ -215,9 +209,6 @@
   </data>
   <data name="**{0}** — now ~#{1:0}" xml:space="preserve">
     <value>**{0}** — agora ~#{1:0}</value>
-  </data>
-  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
-    <value>**{0}** — {1} placares de charts ({2} novos, saldo +{3})</value>
   </data>
   <data name="+ {0} more" xml:space="preserve">
     <value>+ {0} mais</value>
@@ -236,9 +227,6 @@
   </data>
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>+{0} jogadores subiram mais nesta escada.</value>
-  </data>
-  <data name=", dethroning {0}" xml:space="preserve">
-    <value>, destronando {0}</value>
   </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
@@ -287,6 +275,9 @@
   </data>
   <data name="50% -> 75%" xml:space="preserve">
     <value>50% -> 75%</value>
+  </data>
+  <data name="50× AAA on singles" xml:space="preserve">
+    <value>50× AAA em singles</value>
   </data>
   <data name="6 months" xml:space="preserve">
     <value>6 meses</value>
@@ -887,6 +878,9 @@
   </data>
   <data name="Biggest Movers" xml:space="preserve">
     <value>Maiores movimentos</value>
+  </data>
+  <data name="Biggest PUMBILITY gain" xml:space="preserve">
+    <value>Maior ganho de PUMBILITY</value>
   </data>
   <data name="Biggest PUMBILITY gainer" xml:space="preserve">
     <value>Maior ganho de PUMBILITY</value>
@@ -3507,9 +3501,6 @@
   <data name="New" xml:space="preserve">
     <value>Novo</value>
   </data>
-  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
-    <value>Novo #1 — **{0}** em {1} · {2:N0}</value>
-  </data>
   <data name="New #1s" xml:space="preserve">
     <value>Novos primeiros lugares</value>
   </data>
@@ -4737,9 +4728,6 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
-  <data name="PUMBILITY movers" xml:space="preserve">
-    <value>Movimentações de PUMBILITY</value>
-  </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY ao longo do tempo</value>
   </data>
@@ -4751,9 +4739,6 @@
   </data>
   <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
     <value>Rating Pumbility, títulos e um resumo de temporada que vale um print.</value>
-  </data>
-  <data name="PUMBILITY top 10" xml:space="preserve">
-    <value>Top 10 de PUMBILITY</value>
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>Top 50 de PUMBILITY</value>
@@ -5996,9 +5981,6 @@
   <data name="Swap direction" xml:space="preserve">
     <value>Inverter o sentido</value>
   </data>
-  <data name="swept Sunday" xml:space="preserve">
-    <value>varredura de domingo</value>
-  </data>
   <data name="Switch it any time from the mix pill in the top bar." xml:space="preserve">
     <value>Você pode trocar quando quiser na barra do topo.</value>
   </data>
@@ -6493,9 +6475,6 @@
   </data>
   <data name="To Leaderboard" xml:space="preserve">
     <value>Ver classificação</value>
-  </data>
-  <data name="To make the top 1000" xml:space="preserve">
-    <value>Para entrar no top 1000</value>
   </data>
   <data name="To page" xml:space="preserve">
     <value>Até a página</value>
@@ -7037,6 +7016,9 @@
   <data name="What goes into your list" xml:space="preserve">
     <value>O que entra na sua lista</value>
   </data>
+  <data name="What holds the rungs" xml:space="preserve">
+    <value>O que segura cada degrau</value>
+  </data>
   <data name="What is this tool?" xml:space="preserve">
     <value>O que é esta ferramenta?</value>
   </data>
@@ -7156,9 +7138,6 @@
   </data>
   <data name="World firsts" xml:space="preserve">
     <value>Primeiras mundiais</value>
-  </data>
-  <data name="World firsts &amp; new #1s" xml:space="preserve">
-    <value>Primeiras mundiais e novos #1</value>
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>Rankings mundiais</value>
@@ -7573,6 +7552,12 @@
   </data>
   <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
     <value>{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} de combo máximo</value>
+  </data>
+  <data name="{0} **+{1} places** across {2} chart boards" xml:space="preserve">
+    <value>{0} **+{1} posições** em {2} placares de charts</value>
+  </data>
+  <data name="{0} **+{1}** to {2} · #{3} → **#{4}**" xml:space="preserve">
+    <value>{0} **+{1}** até {2} · #{3} → **#{4}**</value>
   </data>
   <data name="{0} / {1} charts rated" xml:space="preserve">
     <value>{0} / {1} charts avaliados</value>
