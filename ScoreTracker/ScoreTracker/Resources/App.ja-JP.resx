@@ -375,6 +375,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>ドキュメント完備の公開 API がコミュニティ製ツールを支えます — ボット、オーバーレイ、統計サイト。アカウントからトークンを取得して、私たちと同じデータの上に作ってください。</value>
   </data>
+  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
+    <value>Phoenix 1 で既に出したスコアを、Phoenix 2 の基準で再計算した値です。</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
   </data>
@@ -592,6 +595,9 @@
   </data>
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>ゲームタグ{0}のアカウントがすでに存在します。あなたですか？</value>
+  </data>
+  <data name="An estimate from players at your competitive level." xml:space="preserve">
+    <value>同じ競技レベルのプレイヤーからの推定です。</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>インポートは既に実行中です</value>
@@ -819,6 +825,9 @@
   </data>
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>基準オフ — コンペティティブレベルを上げたプレイはすべて対象です。</value>
+  </data>
+  <data name="Based on" xml:space="preserve">
+    <value>根拠</value>
   </data>
   <data name="based on your scores" xml:space="preserve">
     <value>あなたのスコアに基づく</value>

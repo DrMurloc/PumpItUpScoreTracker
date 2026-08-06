@@ -375,6 +375,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Uma API pública com documentação completa move as ferramentas da comunidade — bots, overlays, sites de estatísticas. Pegue um token na sua conta e construa sobre os mesmos dados que usamos.</value>
   </data>
+  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
+    <value>Uma pontuação que você já alcançou no Phoenix 1, revalorizada para o Phoenix 2.</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Um zip de snapshot importa diretamente uma versão de dados já baixada: mesmo processo da varredura, sem downloads</value>
   </data>
@@ -590,6 +593,9 @@
   </data>
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>Já existe uma conta com a game tag {0}, é você?</value>
+  </data>
+  <data name="An estimate from players at your competitive level." xml:space="preserve">
+    <value>Uma estimativa a partir de jogadores do seu nível competitivo.</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>Uma importação já está em andamento</value>
@@ -812,6 +818,9 @@
   </data>
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>Sem limite — conta qualquer jogada que subiu seu nível competitivo.</value>
+  </data>
+  <data name="Based on" xml:space="preserve">
+    <value>Baseado em</value>
   </data>
   <data name="based on your scores" xml:space="preserve">
     <value>com base nas suas pontuações</value>

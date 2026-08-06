@@ -375,6 +375,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>GRO mrglrgll API glgrgl mrglmr blargplgl lurgrgl plglmurgblub-grglgrrgl rorgl — arglmr, glorgblarggrrgl, lurglurg mrmagl. Glorgmagl gro murpblgrl romurg gromurp grgl ro glorgmurg lurg mrp blubmurm gromurm mrgl murg.</value>
   </data>
+  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
+    <value>Mrglrgl morp mrgl blub Phoenix 1, mrglrgo blarg Phoenix 2.</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>GRO mrpmaglmurp ro murgmrblarg gro groblgrlmagl gromurm grrglurgmurp grorpmrglblgrl - blubmurm blubgrrglmurm lurg mrp morgmurg, mrp maglplglblub</value>
   </data>
@@ -592,6 +595,9 @@
   </data>
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>Blgrl grgl glgrgl glorgargl gro {0} glglgrrgl glmrp, urg blubgrrgl blub?</value>
+  </data>
+  <data name="An estimate from players at your competitive level." xml:space="preserve">
+    <value>Mrglrgo blarg Morp blub morp mrglrg mrogl.</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>Blgrl glorggl urg glglgrrgl grorpgrglmrgl</value>
@@ -819,6 +825,9 @@
   </data>
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>Mr morg — ro grrglgrrgl blubgrrgl arglblgrl gromurp arglrglmrmurm grorpmurm mrargl.</value>
+  </data>
+  <data name="Based on" xml:space="preserve">
+    <value>Blarg</value>
   </data>
   <data name="based on your scores" xml:space="preserve">
     <value>arglgl lurg gromurp mgrlgmrg</value>

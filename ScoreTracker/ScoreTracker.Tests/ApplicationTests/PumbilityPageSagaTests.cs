@@ -100,6 +100,48 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
+    public async Task InPhoenix2YourOwnPhoenix1ScoresBecomeTargets()
+    {
+        // The point of the feature: charts from your Phoenix 1 pool you have not scored here
+        // are the plan, and they need no cohort to produce.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 55, 985_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.NotEmpty(page.Targets);
+        Assert.All(page.Targets, t => Assert.Equal(TargetSource.Phoenix1, t.Source));
+    }
+
+    [Fact]
+    public async Task AScoreYouAlreadyHitBeatsAnEstimateOfWhatYouMight()
+    {
+        // Both sources have an opinion on the same chart. There is no better evidence than a
+        // score already on record, so the estimate must not survive.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 55, 985_000);
+        var contested = ctx.FirstPhoenixChart();
+        ctx.WithPeerProjection(contested, projected: 910_000, gain: 999);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var row = page.Targets.Single(t => t.ChartId == contested);
+        Assert.Equal(TargetSource.Phoenix1, row.Source);
+        Assert.Equal(985_000, (int)row.Projected);
+    }
+
+    [Fact]
+    public async Task OnPhoenix1NothingClaimsToBeCarriedOver()
+    {
+        var ctx = new PageContext().WithPool(55, ChartType.Single, 20);
+        ctx.WithTarget(out _, gain: 400, projected: 985_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId), CancellationToken.None);
+
+        Assert.All(page.Targets, t => Assert.Equal(TargetSource.Peers, t.Source));
+    }
+
+    [Fact]
     public async Task TheCarryoverShowsWhichPoolPhoenix2WouldGiveYou()
     {
         // Phoenix 2 pays a Singles chart one level up, so a pool of S22s and D23s
@@ -221,6 +263,17 @@ public sealed class PumbilityPageSagaTests
             if (current != null)
                 _myBests[chart.Id] = new RecordedPhoenixScore(chart.Id, current.Value,
                     PhoenixPlate.TalentedGame, false, Now.AddDays(-200));
+            return this;
+        }
+
+        /// <summary>The first Phoenix 1 chart seeded — something for both sources to contest.</summary>
+        public Guid FirstPhoenixChart() => _myBests.Keys.First();
+
+        /// <summary>Gives the peer estimator an opinion on a chart, so precedence is testable.</summary>
+        public PageContext WithPeerProjection(Guid chartId, int projected, int gain)
+        {
+            _projected[chartId] = projected;
+            _gains[chartId] = gain;
             return this;
         }
 

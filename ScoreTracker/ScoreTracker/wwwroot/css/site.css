@@ -13525,3 +13525,46 @@ details.pmb-fold > summary:focus-visible {
         display: none;
     }
 }
+
+/* Source label on a target row. It only renders when the list actually mixes a repriced
+   Phoenix 1 score with a peer estimate, so the carried rows read as the harder currency
+   they are rather than as one more guess. */
+.pmb-src {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    color: var(--mix-ink-muted);
+}
+
+.pmb-src-carry {
+    border-color: color-mix(in srgb, var(--mix-accent) 60%, transparent);
+    background: color-mix(in srgb, var(--mix-accent) 12%, transparent);
+    color: var(--mix-accent);
+}
+
+/* The sticker sheet has no room for a word beside the grade, so the mark rides the jacket. */
+.pmb-sticker {
+    position: relative;
+}
+
+.pmb-sticker-carry {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background: var(--mix-accent);
+    color: var(--mix-primary-contrast);
+}

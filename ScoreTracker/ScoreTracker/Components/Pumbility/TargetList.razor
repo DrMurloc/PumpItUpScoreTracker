@@ -8,10 +8,14 @@
 
 @* What to play next, in the three sanctioned densities (UX rule 5).
 
-   There is no "kind" column. A row carrying a grade in the You-have cell IS an upgrade and
-   a row carrying a dash IS new -- a column repeating that said nothing on Phoenix 1 and the
-   same word down every row on Phoenix 2. The coloured rail is the scan affordance, paired
-   with the grade cell so no meaning rides on colour alone (rule 8).
+   There is no "upgrade vs new" column: a row carrying a grade in the You-have cell IS an
+   upgrade and a row carrying a dash IS new, and a column repeating that says nothing.
+
+   There IS a source label, and only because the list genuinely mixes two kinds of evidence.
+   A "From Phoenix 1" row is a score the player has already hit, repriced -- not an estimate
+   of what they might do. That outranks a peer quantile and the reader has to be able to tell
+   which they are looking at. On Phoenix 1 every row is a peer estimate, so the label would be
+   constant and it is suppressed there.
 
    The "why" is an EVIDENCE line, never an attribution: the estimator carries no skill term,
    so naming skills beside a projection would assert a causal path that does not exist
@@ -27,6 +31,10 @@ else if (Density == UiDensity.Table)
             <thead>
             <tr>
                 <th>@L["Chart"]</th>
+                @if (HasCarryover)
+                {
+                    <th>@L["Based on"]</th>
+                }
                 <th>@L["You have"]</th>
                 <th>@L["Projected"]</th>
                 <th class="pmb-r">@L["Gain"]</th>
@@ -45,6 +53,10 @@ else if (Density == UiDensity.Table)
                             <span class="pmb-ident-name">@chart.Song.Name</span>
                         </span>
                     </td>
+                    @if (HasCarryover)
+                    {
+                        <td>@SourceChip(target)</td>
+                    }
                     <td>@CurrentCell(target)</td>
                     <td>
                         <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
@@ -67,6 +79,10 @@ else if (Density == UiDensity.Compact)
             <div class="pmb-sticker" @onclick="() => OnOpen.InvokeAsync(chart)"
                  title="@($"{chart.Song.Name} +{target.Gain:N0}")">
                 <SongImage Song="chart.Song" Height="96"></SongImage>
+                @if (target.Source == TargetSource.Phoenix1)
+                {
+                    <span class="pmb-sticker-carry">@L["Phoenix 1"]</span>
+                }
                 <div class="pmb-sticker-line">
                     <span class="pmb-sticker-gain">+@target.Gain.ToString("N0")</span>
                     <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="16"></LetterGradeIcon>
@@ -91,6 +107,10 @@ else
                 <div class="pmb-tcard-body">
                     <div class="pmb-tcard-name">@chart.Song.Name</div>
                     <div class="pmb-tcard-meta">
+                        @if (HasCarryover)
+                        {
+                            @SourceChip(target)
+                        }
                         @CurrentCell(target)
                         <span class="pmb-arrow">→</span>
                         <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
@@ -122,6 +142,21 @@ else
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
 
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    /// <summary>Only worth a column when the list actually mixes evidence.</summary>
+    private bool HasCarryover => Targets.Any(t => t.Source == TargetSource.Phoenix1);
+
+    private RenderFragment SourceChip(PumbilityTarget target) => builder =>
+    {
+        var carried = target.Source == TargetSource.Phoenix1;
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", carried ? "pmb-src pmb-src-carry" : "pmb-src");
+        builder.AddAttribute(2, "title",
+            carried ? L["A score you already hit in Phoenix 1, repriced for Phoenix 2."].ToString()
+                    : L["An estimate from players at your competitive level."].ToString());
+        builder.AddContent(3, carried ? L["Phoenix 1"] : L["Players"]);
+        builder.CloseElement();
+    };
 
     private RenderFragment CurrentCell(PumbilityTarget target) => builder =>
     {

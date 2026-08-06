@@ -61,6 +61,29 @@ public sealed record PoolEntry(int Place, Guid ChartId, PhoenixScore Score, Phoe
 ///     upgrade from something new — the page reads it off the row rather than printing a
 ///     redundant "kind" column (§3.3).
 /// </param>
+/// <param name="Source">
+///     Where the projected score came from. The distinction is not cosmetic: a
+///     <see cref="TargetSource.Phoenix1" /> row is a score the player has already hit, and
+///     there is no better evidence than that.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityTarget(Guid ChartId, PhoenixScore Projected, int Gain,
-    PhoenixScore? Current, bool CurrentIsBroken, TierListCategory? Difficulty, ProjectionEvidence? Evidence);
+    PhoenixScore? Current, bool CurrentIsBroken, TierListCategory? Difficulty, ProjectionEvidence? Evidence,
+    TargetSource Source = TargetSource.Peers);
+
+/// <summary>
+///     What a projected score is built on.
+///     <para>
+///         The two are not equally trustworthy and the page must not present them as if they
+///         were. <see cref="Peers" /> is an estimate — a quantile of what comparable players
+///         scored. <see cref="Phoenix1" /> is the player's own score on that exact chart in the
+///         previous mix, repriced: not a guess about what they could do, a record of what they
+///         did. It wins wherever both exist, and it is the only signal that works at a mix
+///         launch, when there is no peer data to estimate from.
+///     </para>
+/// </summary>
+public enum TargetSource
+{
+    Peers,
+    Phoenix1
+}

@@ -74,7 +74,6 @@ namespace ScoreTracker.PlayerProgress.Application
 
             var targets = projection.ProjectedGains
                 .Where(kv => charts.ContainsKey(kv.Key))
-                .OrderByDescending(kv => kv.Value)
                 .Select(kv => new PumbilityTarget(kv.Key,
                     projection.ExpectedScores[kv.Key],
                     kv.Value,
@@ -82,10 +81,53 @@ namespace ScoreTracker.PlayerProgress.Application
                     mine.TryGetValue(kv.Key, out var broken) && broken.IsBroken,
                     projection.ChartDifficulty.TryGetValue(kv.Key, out var d) ? d : null,
                     projection.Evidence.GetValueOrDefault(kv.Key)))
-                .ToArray();
+                .ToDictionary(t => t.ChartId);
+
+            // In Phoenix 2, a chart the player already cleared in Phoenix 1 does not need
+            // estimating — the score is on record, and repricing it is arithmetic. Those rows
+            // REPLACE any peer estimate for the same chart, because a number the player has
+            // actually hit beats a quantile of what other people hit.
+            if (mix == MixEnum.Phoenix2)
+                foreach (var carried in await CarryoverTargets(request.UserId, request.Pool, charts,
+                             bar, projection, mine, cancellationToken))
+                    targets[carried.ChartId] = carried;
 
             return new PumbilityPageRecord(mix, request.Pool, pool.Sum(p => p.Value), bar, barChart,
-                pool, waiting, targets);
+                pool, waiting, targets.Values.OrderByDescending(t => t.Gain).ToArray());
+        }
+
+        /// <summary>
+        ///     Phoenix 1 scores that would land in the requested Phoenix 2 pool, as targets.
+        ///     Excludes anything already scored here (done) and anything with no Phoenix 2
+        ///     appearance (unplayable — the carryover panel states those as a fact instead).
+        /// </summary>
+        private async Task<IReadOnlyList<PumbilityTarget>> CarryoverTargets(Guid userId, ChartType? poolScope,
+            IReadOnlyDictionary<Guid, Chart> charts, int? bar, PumbilityProjection projection,
+            IReadOnlyDictionary<Guid, RecordedPhoenixScore> mine, CancellationToken cancellationToken)
+        {
+            var carryover = await Handle(new ProjectPhoenix2CarryoverQuery(userId, poolScope), cancellationToken);
+            var floor = bar ?? 0;
+
+            return carryover.Entries
+                .Where(e => e.Phoenix2Score == null && e.AvailableInPhoenix2 && charts.ContainsKey(e.ChartId))
+                .Select(e => new
+                {
+                    Entry = e,
+                    Gain = (int)Math.Round(e.Phoenix2Value - floor)
+                })
+                .Where(x => x.Gain > 0)
+                .Select(x => new PumbilityTarget(x.Entry.ChartId,
+                    // The projection IS the Phoenix 1 score. Not an estimate of it.
+                    x.Entry.Phoenix1Score,
+                    x.Gain,
+                    mine.TryGetValue(x.Entry.ChartId, out var held) ? held.Score : null,
+                    mine.TryGetValue(x.Entry.ChartId, out var broken) && broken.IsBroken,
+                    projection.ChartDifficulty.TryGetValue(x.Entry.ChartId, out var d) ? d : null,
+                    // No peer evidence line: nothing was estimated, so there is nothing to
+                    // report about how many people were heard from.
+                    null,
+                    TargetSource.Phoenix1))
+                .ToArray();
         }
 
         public async Task<Phoenix2CarryoverRecord> Handle(ProjectPhoenix2CarryoverQuery request,

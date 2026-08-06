@@ -90,6 +90,14 @@ the *You have* cell is an upgrade; a chart with a dash is new. A "Kind" column r
 Phoenix 1 and read the same value down every row on Phoenix 2. The coloured left rail stays as a
 scan affordance, paired with the grade cell so nothing rides on colour alone (rule 8).
 
+**In Phoenix 2 the list mixes two kinds of evidence, and says which is which.** A chart from
+the player's Phoenix 1 pool that they have not scored here is not estimated — the score is on
+record and repricing it is arithmetic. Those rows **replace** any peer estimate for the same
+chart (owner, 2026-08-06: *"there is no better data than the actual scores you had before"*),
+carry a **Phoenix 1** label, and are the only signal that works at a mix launch when there is
+no peer data to estimate from. The label renders only where the list actually mixes sources —
+on Phoenix 1 every row is a peer estimate, so it would be a column repeating itself.
+
 ⚠ **The "why" line is OPEN, and the mock's version is now dishonest.** The mock renders badge
 chips ("▲ Anchor Runs · ▼ Twists") as the explanation for each target. That was drawn when the
 estimator weighted charts by skill. **It no longer does** — §4.1 carries no skill term — so

@@ -375,6 +375,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>문서가 완비된 공개 API가 커뮤니티 툴을 움직입니다 — 봇, 오버레이, 통계 사이트. 계정에서 토큰을 받아 우리와 같은 데이터 위에 만들어 보세요.</value>
   </data>
+  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
+    <value>Phoenix 1에서 이미 낸 점수를 Phoenix 2 기준으로 재산정한 값입니다.</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
   </data>
@@ -590,6 +593,9 @@
   </data>
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>게임 태그 {0}인 계정이 이미 있습니다. 본인인가요?</value>
+  </data>
+  <data name="An estimate from players at your competitive level." xml:space="preserve">
+    <value>같은 경쟁 레벨 플레이어들에게서 얻은 추정치입니다.</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>이미 가져오기가 실행 중입니다</value>
@@ -812,6 +818,9 @@
   </data>
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>기준 해제 — 경쟁 레벨을 올린 모든 플레이가 집계됩니다.</value>
+  </data>
+  <data name="Based on" xml:space="preserve">
+    <value>근거</value>
   </data>
   <data name="based on your scores" xml:space="preserve">
     <value>내 점수 기반</value>

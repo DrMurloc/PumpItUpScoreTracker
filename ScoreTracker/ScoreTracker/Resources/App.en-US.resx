@@ -375,6 +375,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use.</value>
   </data>
+  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
+    <value>A score you already hit in Phoenix 1, repriced for Phoenix 2.</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching</value>
   </data>
@@ -592,6 +595,9 @@
   </data>
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>An account with game tag {0} already exists, is that you?</value>
+  </data>
+  <data name="An estimate from players at your competitive level." xml:space="preserve">
+    <value>An estimate from players at your competitive level.</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>An import is already running</value>
@@ -819,6 +825,9 @@
   </data>
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>Bar off — any play that raised your competitive level counts.</value>
+  </data>
+  <data name="Based on" xml:space="preserve">
+    <value>Based on</value>
   </data>
   <data name="based on your scores" xml:space="preserve">
     <value>based on your scores</value>

@@ -136,6 +136,47 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     [Fact]
+    public void ACarriedPhoenix1ScoreIsLabelledSoItIsNotMistakenForAnEstimate()
+    {
+        var carried = NewChart(ChartType.Single, 22);
+        var guessed = NewChart(ChartType.Single, 22);
+        var targets = new[]
+        {
+            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, null, TargetSource.Phoenix1),
+            new PumbilityTarget(guessed.Id, 960_000, 300, null, false, null,
+                new ProjectionEvidence(20, 15, 9_000))
+        };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [carried.Id] = carried, [guessed.Id] = guessed })
+            .Add(x => x.Density, UiDensity.Comfortable));
+
+        var chips = cut.FindAll(".pmb-src");
+        Assert.Equal(2, chips.Count);
+        Assert.Single(cut.FindAll(".pmb-src-carry"));
+        Assert.Contains("Phoenix 1", cut.Find(".pmb-src-carry").TextContent);
+    }
+
+    [Fact]
+    public void ThereIsNoSourceLabelWhenEveryRowIsTheSameKind()
+    {
+        // Phoenix 1 has no carryover, so a column reading "Players" down every row is noise.
+        var chart = NewChart(ChartType.Single, 20);
+        var targets = new[]
+        {
+            new PumbilityTarget(chart.Id, 970_000, 300, null, false, null, new ProjectionEvidence(20, 15, 9_000))
+        };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart })
+            .Add(x => x.Density, UiDensity.Comfortable));
+
+        Assert.Empty(cut.FindAll(".pmb-src"));
+    }
+
+    [Fact]
     public void TargetsExplainTheirEvidenceAndNeverAttributeSkills()
     {
         var chart = NewChart(ChartType.Single, 20);
