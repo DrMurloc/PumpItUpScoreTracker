@@ -124,7 +124,30 @@ scores are, and how spread they were* — an evidence line, not an attribution l
 may still show, separately and unattached to the projection, is the player's own thumbprint as
 descriptive data (§4.3). **Needs an owner call before C6.**
 
-Density trio via `Density__Pumbility`, governing the targets only.
+Density trio via `Density__Pumbility`, governing the targets only, using the site's standard
+control — a `MudButtonGroup` of `ViewComfy` / `GridView` / `TableRows` icon buttons, the same
+one the tier list carries.
+
+**The list narrows and pages.** A full projection runs to hundreds of charts, and the page is a
+plan rather than an archive:
+
+- **Type** — All / Singles / Doubles, rendered only where the list actually holds both. On a
+  Phoenix 2 Singles board the projection is already scoped to one type, so the control would
+  have two states that do nothing.
+- **Max level** — the printed level on the bubble, offering only levels the suggestions actually
+  contain, so the ceiling can never select an empty result by accident.
+- **Pagination** sized by density (Comfortable 24, Compact 60, Table 50) — one page size would
+  be wrong at two of the three. Narrowing the filter **clamps** the current page rather than
+  resetting it, so a density flip keeps you roughly where you were.
+
+Both filters are **view** concerns: they change what the list shows, never what your PUMBILITY
+is measured against, and they apply to carried Phoenix 1 rows exactly as they do to estimates
+(owner, 2026-08-06). A carried row is a suggestion in the same list — an unfiltered block among
+filtered ones reads as a bug.
+
+Two empty states, deliberately distinct: *nothing clears your bar yet* is a fact about the
+account; *nothing matched those filters* is a fact about the controls, and only one of them is
+the player's to fix.
 
 ### 3.4 The pool board
 

@@ -12994,31 +12994,33 @@ span.ct-console-pick { cursor: default; }
     margin: 2px 0 14px;
 }
 
-.pmb-densitybar {
+/* Narrowing controls for the suggestion list. Wraps rather than scrolls: on a phone the
+   count drops under the controls instead of pushing them off the edge. */
+.pmb-filters {
     display: flex;
-    gap: 4px;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 8px 0 10px;
 }
 
-.pmb-densitybar button {
-    font: inherit;
+.pmb-field-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 150px;
+}
+
+.pmb-field-inline label {
+    white-space: nowrap;
     font-size: 12px;
-    background: transparent;
     color: var(--mix-ink-muted);
-    border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
-    border-radius: 4px;
-    padding: 3px 10px;
-    cursor: pointer;
 }
 
-.pmb-densitybar button[aria-pressed="true"] {
-    color: var(--mix-ink);
-    border-color: var(--mix-primary);
-    background: color-mix(in srgb, var(--mix-primary) 12%, transparent);
-}
-
-.pmb-densitybar button:focus-visible {
-    outline: 2px solid var(--mix-primary);
-    outline-offset: 2px;
+.pmb-filter-count {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    margin-left: auto;
 }
 
 /* --- targets, comfortable --- */

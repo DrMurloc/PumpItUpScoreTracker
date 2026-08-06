@@ -57,18 +57,66 @@ else
     <section class="pmb-block">
         <div class="pmb-block-head">
             <h2 class="pmb-block-title">@L["What to play next"]</h2>
-            <div class="pmb-densitybar" role="group" aria-label="@L["Density"]">
-                <button type="button" aria-pressed="@Pressed(UiDensity.Comfortable)"
-                        @onclick="() => SetDensity(UiDensity.Comfortable)">@L["Comfortable"]</button>
-                <button type="button" aria-pressed="@Pressed(UiDensity.Compact)"
-                        @onclick="() => SetDensity(UiDensity.Compact)">@L["Compact"]</button>
-                <button type="button" aria-pressed="@Pressed(UiDensity.Table)"
-                        @onclick="() => SetDensity(UiDensity.Table)">@L["Table"]</button>
-            </div>
+            <MudButtonGroup OverrideStyles="false">
+                <MudTooltip Text="@L["Comfortable"]">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                                   Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                                   OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+                </MudTooltip>
+                <MudTooltip Text="@L["Compact"]">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                                   Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                                   OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+                </MudTooltip>
+                <MudTooltip Text="@L["Table"]">
+                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                                   Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                                   OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+                </MudTooltip>
+            </MudButtonGroup>
         </div>
         <p class="pmb-block-lede">
             @L["Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar."]
         </p>
+
+        @* Narrowing controls, not a second pool selector: these change what the list SHOWS,
+           never what your PUMBILITY is measured against. The type filter renders only where
+           the list actually holds both — on a Phoenix 2 Singles board it would be a control
+           with one reachable state. Carried Phoenix 1 rows obey both filters, because they
+           are suggestions in the same list and an unfiltered block among filtered ones reads
+           as a bug. *@
+        <div class="pmb-filters">
+            @if (HasBothTypes)
+            {
+                <MudButtonGroup OverrideStyles="false" Size="Size.Small" Variant="Variant.Outlined">
+                    <MudButton Color="@(_typeFilter == null ? Color.Primary : Color.Default)"
+                               OnClick="() => SetTypeFilter(null)">@L["All"]</MudButton>
+                    <MudButton Color="@(_typeFilter == ChartType.Single ? Color.Primary : Color.Default)"
+                               OnClick="() => SetTypeFilter(ChartType.Single)">@L["Singles"]</MudButton>
+                    <MudButton Color="@(_typeFilter == ChartType.Double ? Color.Primary : Color.Default)"
+                               OnClick="() => SetTypeFilter(ChartType.Double)">@L["Doubles"]</MudButton>
+                </MudButtonGroup>
+            }
+            @if (TargetLevels.Count > 1)
+            {
+                <div class="pmb-field pmb-field-inline">
+                    <label for="pmb-maxlevel">@L["Max Level"]</label>
+                    <MudSelect id="pmb-maxlevel" T="int?" Value="_maxLevel" ValueChanged="SetMaxLevel"
+                               Dense="true" Margin="Margin.Dense">
+                        <MudSelectItem T="int?" Value="@((int?)null)">@L["Any"]</MudSelectItem>
+                        @foreach (var level in TargetLevels)
+                        {
+                            <MudSelectItem T="int?" Value="@((int?)level)">@level</MudSelectItem>
+                        }
+                    </MudSelect>
+                </div>
+            }
+            <span class="pmb-filter-count pmb-muted">
+                @(_filteredCount == _page.Targets.Count
+                    ? string.Format(L["{0} suggestions"], _page.Targets.Count)
+                    : string.Format(L["{0} of {1} suggestions"], _filteredCount, _page.Targets.Count))
+            </span>
+        </div>
 
         @if (_projecting)
         {
@@ -77,6 +125,8 @@ else
         else
         {
             <TargetList Targets="_page.Targets" Charts="_charts" Density="_density" Mix="_currentMix"
+                        TypeFilter="_typeFilter" MaxLevel="_maxLevel"
+                        OnFilteredCountChanged="c => _filteredCount = c"
                         ShowToDo="true" ToDos="_todos" OnToDo="ToggleToDo"
                         OnOpen="ShowChartDetails" OnPlay="PlayChart"></TargetList>
         }
@@ -172,6 +222,10 @@ else
     private UiDensity _density = UiDensity.Comfortable;
     private bool _projecting;
 
+    private ChartType? _typeFilter;
+    private int? _maxLevel;
+    private int _filteredCount;
+
     private Chart? _detailsChart;
     private bool _detailsOpen;
     private bool _detailsAutoPlay;
@@ -191,7 +245,27 @@ else
             _carryover.ScoredHere)
         : L["The sum of your 50 best-rated charts."];
 
-    private string Pressed(UiDensity density) => _density == density ? "true" : "false";
+    // A control that can only reach one state is not a choice. On a Phoenix 2 Singles or
+    // Doubles board the projection is already scoped to that type, so the filter would be
+    // three buttons where two do nothing.
+    private bool HasBothTypes => _page != null
+                                 && _page.Targets.Any(t => TypeOf(t) == ChartType.Single)
+                                 && _page.Targets.Any(t => TypeOf(t) == ChartType.Double);
+
+    /// <summary>Printed levels present in the suggestions, so the ceiling can only pick a real one.</summary>
+    private IReadOnlyList<int> TargetLevels => _page == null
+        ? Array.Empty<int>()
+        : _page.Targets
+            .Where(t => _charts.ContainsKey(t.ChartId))
+            .Select(t => (int)_charts[t.ChartId].Level)
+            .Distinct().OrderBy(l => l).ToArray();
+
+    private ChartType? TypeOf(PumbilityTarget target) =>
+        _charts.TryGetValue(target.ChartId, out var chart) ? chart.Type : null;
+
+    private void SetTypeFilter(ChartType? type) => _typeFilter = type;
+
+    private void SetMaxLevel(int? level) => _maxLevel = level;
 
     protected override async Task OnInitializedAsync()
     {

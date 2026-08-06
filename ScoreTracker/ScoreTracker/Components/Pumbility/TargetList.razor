@@ -24,6 +24,10 @@
 {
     <p class="pmb-empty">@L["Nothing here clears your bar yet — play a few more charts and check back."]</p>
 }
+else if (Shown.Count == 0)
+{
+    <p class="pmb-empty">@L["No suggestions match those filters."]</p>
+}
 else if (Density == UiDensity.Table)
 {
     <div class="tier-table-wrap">
@@ -42,7 +46,7 @@ else if (Density == UiDensity.Table)
             </tr>
             </thead>
             <tbody>
-            @foreach (var target in Targets)
+            @foreach (var target in Shown)
             {
                 var chart = Charts[target.ChartId];
                 <tr @onclick="() => OnOpen.InvokeAsync(chart)" class="pmb-row">
@@ -74,10 +78,13 @@ else if (Density == UiDensity.Compact)
 {
     @* The tier list's sticker sheet, because it IS that: a jacket, a bubble, and one
        printed value. The value here is the gain, since that is what the list is ranked
-       by — nothing else on a 72px card would earn its space. *@
-    <CornerLegend Targets="Targets"></CornerLegend>
+       by — nothing else on a 72px card would earn its space.
+
+       The legend reads the whole filtered set, not the page: paging to a slice that
+       happens to hold no carryover row should not retire the word for it mid-browse. *@
+    <CornerLegend Targets="Filtered"></CornerLegend>
     <div class="tier-card-grid tier-card-grid-compact">
-        @foreach (var target in Targets)
+        @foreach (var target in Shown)
         {
             var chart = Charts[target.ChartId];
             <TierListChartCard Chart="chart" Density="UiDensity.Compact"
@@ -92,7 +99,7 @@ else if (Density == UiDensity.Compact)
 else
 {
     <div class="tier-card-grid">
-        @foreach (var target in Targets)
+        @foreach (var target in Shown)
         {
             var chart = Charts[target.ChartId];
             <TierListChartCard Chart="chart" Density="UiDensity.Comfortable"
@@ -103,6 +110,14 @@ else
                                OnOpen="OpenById"
                                Body="@ProjectionBody(target)"></TierListChartCard>
         }
+    </div>
+}
+
+@if (PageCount > 1)
+{
+    <div class="srp-pager">
+        <MudPagination Count="PageCount" Selected="_page" SelectedChanged="GoToPage"
+                       Color="Color.Primary" Size="Size.Small"></MudPagination>
     </div>
 }
 
@@ -127,8 +142,63 @@ else
 
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
+    /// <summary>Null shows both. Applies to carried Phoenix 1 rows exactly as it does to estimates.</summary>
+    [Parameter] public ChartType? TypeFilter { get; set; }
+
+    /// <summary>Printed difficulty ceiling — the number on the bubble, which is what a player filters by.</summary>
+    [Parameter] public int? MaxLevel { get; set; }
+
+    /// <summary>Reports how much of the list survived the filters, so the page can print it.</summary>
+    [Parameter] public EventCallback<int> OnFilteredCountChanged { get; set; }
+
+    // A full projection runs to hundreds of charts and the page is a plan, not an archive.
+    // Compact fits far more per screen than Comfortable does, so the page size follows the
+    // density rather than forcing one number to be wrong at two of the three.
+    private int PageSize => Density switch
+    {
+        UiDensity.Compact => 60,
+        UiDensity.Table => 50,
+        _ => 24
+    };
+
+    private int _page = 1;
+    private int _lastFilteredCount = -1;
+
+    private IReadOnlyList<PumbilityTarget> Filtered
+    {
+        get
+        {
+            if (TypeFilter == null && MaxLevel == null) return Targets;
+            return Targets.Where(t => Charts.TryGetValue(t.ChartId, out var chart)
+                                      && (TypeFilter == null || chart.Type == TypeFilter)
+                                      && (MaxLevel == null || (int)chart.Level <= MaxLevel)).ToArray();
+        }
+    }
+
+    private IReadOnlyList<PumbilityTarget> Shown =>
+        Filtered.Skip((_page - 1) * PageSize).Take(PageSize).ToArray();
+
+    private int PageCount => (Filtered.Count + PageSize - 1) / PageSize;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // A narrowed filter can leave the reader stranded on a page that no longer exists,
+        // which renders as an empty list rather than as "no matches" — so clamp rather than
+        // reset: a density flip changes the page size and should keep you roughly in place.
+        var count = Filtered.Count;
+        if (_page > Math.Max(1, PageCount)) _page = Math.Max(1, PageCount);
+
+        if (count != _lastFilteredCount)
+        {
+            _lastFilteredCount = count;
+            await OnFilteredCountChanged.InvokeAsync(count);
+        }
+    }
+
+    private void GoToPage(int page) => _page = page;
+
     /// <summary>Only worth a column when the list actually mixes evidence.</summary>
-    private bool HasCarryover => Targets.Any(t => t.Source == TargetSource.Phoenix1);
+    private bool HasCarryover => Filtered.Any(t => t.Source == TargetSource.Phoenix1);
 
     private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
 

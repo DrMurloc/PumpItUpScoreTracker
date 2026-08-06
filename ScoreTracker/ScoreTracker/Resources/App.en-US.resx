@@ -3237,6 +3237,9 @@
 	  <value>Max Letter Grade</value>
 	  <comment>Max Letter Grade</comment>
   </data>
+  <data name="Max Level" xml:space="preserve">
+    <value>Max Level</value>
+  </data>
   <data name="Max Note Count" xml:space="preserve">
 	  <value>Max Note Count</value>
 	  <comment>Max Note Count</comment>
@@ -3719,6 +3722,9 @@
   </data>
   <data name="No source published" xml:space="preserve">
     <value>No source published</value>
+  </data>
+  <data name="No suggestions match those filters." xml:space="preserve">
+    <value>No suggestions match those filters.</value>
   </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>No suggestions right now — try a different goal, or import more scores first.</value>
@@ -7872,6 +7878,9 @@
   <data name="{0} of {1} scores identical" xml:space="preserve">
     <value>{0} of {1} scores identical</value>
   </data>
+  <data name="{0} of {1} suggestions" xml:space="preserve">
+    <value>{0} of {1} suggestions</value>
+  </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>{0} of {1} tracked players</value>
   </data>
@@ -7943,6 +7952,9 @@
   </data>
   <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
     <value>{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile.</value>
+  </data>
+  <data name="{0} suggestions" xml:space="preserve">
+    <value>{0} suggestions</value>
   </data>
   <data name="{0} titles" xml:space="preserve">
     <value>{0} titles</value>

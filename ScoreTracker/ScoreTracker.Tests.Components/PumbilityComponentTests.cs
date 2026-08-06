@@ -293,6 +293,113 @@ public sealed class PumbilityComponentTests : ComponentTestBase
 
     // ------------------------------------------------------------------ helpers
 
+    [Fact]
+    public void ALongListPagesRatherThanRunningOffTheScreen()
+    {
+        var page = Page(poolSize: 50, targets: 70);
+        var charts = page.Charts();
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, page.Targets).Add(x => x.Charts, charts)
+            .Add(x => x.Density, UiDensity.Comfortable));
+
+        // Comfortable pages at 24; the pager is what makes the other 46 reachable.
+        Assert.Equal(24, cut.FindAll(".tier-chart-card").Count);
+        Assert.NotEmpty(cut.FindAll(".srp-pager"));
+    }
+
+    [Fact]
+    public void AListThatFitsOnOnePageShowsNoPager()
+    {
+        var page = Page(poolSize: 50, targets: 5);
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, page.Targets).Add(x => x.Charts, page.Charts())
+            .Add(x => x.Density, UiDensity.Comfortable));
+
+        Assert.Empty(cut.FindAll(".srp-pager"));
+    }
+
+    [Fact]
+    public void TheTypeFilterNarrowsCarriedPhoenix1RowsToo()
+    {
+        // The point of the parenthetical in the owner's ask: a carried row is a suggestion in
+        // the same list, so an unfiltered block among filtered ones would read as a bug.
+        var single = NewChart(ChartType.Single, 21);
+        var doubleCarried = NewChart(ChartType.Double, 21);
+        var targets = new[]
+        {
+            new PumbilityTarget(single.Id, 970_000, 300, null, false, null, null),
+            new PumbilityTarget(doubleCarried.Id, 985_000, 400, null, false, null, null, TargetSource.Phoenix1)
+        };
+        var charts = new Dictionary<Guid, Chart> { [single.Id] = single, [doubleCarried.Id] = doubleCarried };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets).Add(x => x.Charts, charts)
+            .Add(x => x.Density, UiDensity.Comfortable)
+            .Add(x => x.TypeFilter, ChartType.Single));
+
+        Assert.Single(cut.FindAll(".tier-chart-card"));
+        Assert.Empty(cut.FindAll(".pmb-corner-carry"));
+    }
+
+    [Fact]
+    public void TheLevelCeilingDropsAnythingAboveIt()
+    {
+        var low = NewChart(ChartType.Single, 19);
+        var high = NewChart(ChartType.Single, 23);
+        var targets = new[]
+        {
+            new PumbilityTarget(high.Id, 970_000, 400, null, false, null, null),
+            new PumbilityTarget(low.Id, 960_000, 300, null, false, null, null)
+        };
+        var charts = new Dictionary<Guid, Chart> { [low.Id] = low, [high.Id] = high };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets).Add(x => x.Charts, charts)
+            .Add(x => x.Density, UiDensity.Comfortable)
+            .Add(x => x.MaxLevel, 20));
+
+        Assert.Single(cut.FindAll(".tier-chart-card"));
+        Assert.Contains("+300", cut.Find(".tier-chart-card .pmb-corner-new").TextContent);
+    }
+
+    [Fact]
+    public void FilteringToNothingSaysSoRatherThanShowingTheEmptyStateForNoTargets()
+    {
+        // Two different nothings: "you have no suggestions" is a state of your account,
+        // "nothing matched" is a state of the controls, and only one of them is your fault.
+        var chart = NewChart(ChartType.Single, 23);
+        var targets = new[] { new PumbilityTarget(chart.Id, 970_000, 300, null, false, null, null) };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart })
+            .Add(x => x.Density, UiDensity.Comfortable)
+            .Add(x => x.MaxLevel, 20));
+
+        Assert.Contains("No suggestions match", cut.Find(".pmb-empty").TextContent);
+    }
+
+    [Fact]
+    public void ANarrowedFilterCannotStrandTheReaderOnAPageThatIsGone()
+    {
+        var page = Page(poolSize: 50, targets: 70);
+        var charts = page.Charts();
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, page.Targets).Add(x => x.Charts, charts)
+            .Add(x => x.Density, UiDensity.Comfortable));
+
+        // Page 3 exists at 70 targets; filtering down to a handful must not leave the list
+        // rendering an empty slice off the end of the new, shorter result.
+        cut.SetParametersAndRender(p => p.Add(x => x.MaxLevel, 1));
+        Assert.Contains("No suggestions match", cut.Find(".pmb-empty").TextContent);
+
+        cut.SetParametersAndRender(p => p.Add(x => x.MaxLevel, (int?)null));
+        Assert.NotEmpty(cut.FindAll(".tier-chart-card"));
+    }
+
     private static Chart NewChart(ChartType type, int level) =>
         new(Guid.NewGuid(), MixEnum.Phoenix,
             new Song($"Song {Guid.NewGuid():N}"[..12], SongType.Arcade,
@@ -331,7 +438,11 @@ public sealed class PumbilityComponentTests : ComponentTestBase
             {
                 var chart = NewChart(ChartType.Single, 21);
                 _charts[chart.Id] = chart;
-                list.Add(new PumbilityTarget(chart.Id, 970_000 + i * 1_000, 400 - i * 20,
+                // Both descend and both stay in range at any count — the old formula ran the
+                // score past 1,000,000 at the 31st target and the gain negative at the 21st,
+                // which capped every fixture at a size too small to page.
+                list.Add(new PumbilityTarget(chart.Id, Math.Max(900_000, 999_000 - i * 1_000),
+                    Math.Max(1, 400 - i * 5),
                     i % 2 == 0 ? null : 930_000, false, null, new ProjectionEvidence(20 + i, 15.5, 12_000)));
             }
 
