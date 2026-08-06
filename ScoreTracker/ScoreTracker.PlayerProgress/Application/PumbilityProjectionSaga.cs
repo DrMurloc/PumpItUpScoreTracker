@@ -105,7 +105,17 @@ namespace ScoreTracker.PlayerProgress.Application
             PlayerStatsRecord myStats, IDictionary<Guid, PhoenixScore> expectedScore,
             IDictionary<Guid, ProjectionEvidence> evidence, CancellationToken cancellationToken)
         {
+            // The player is measured in the mix they are looking at: their pool, their bar and
+            // their level all come from this mix and nowhere else. The reference mix is a
+            // detail of the PEER side only (see BestAcrossMixes).
+            var reference = ReferenceMixFor(mix);
+
             var myLevel = CompetitiveLevelFor(myStats, chartType);
+            if (myLevel <= 1 && reference != mix)
+                // A launch-mix account with no scores yet has no level to match peers on. The
+                // other mix names one rather than the page projecting nothing at all.
+                myLevel = CompetitiveLevelFor(
+                    await _stats.GetStats(reference, userId, cancellationToken), chartType);
             // Competitive level 1 is the no-data floor; below 10 the pool contributes nothing
             // to PUMBILITY anyway, so there is no projection worth making.
             if (myLevel <= 1) return;
@@ -119,18 +129,28 @@ namespace ScoreTracker.PlayerProgress.Application
 
             var cohort = (await _stats.GetPlayersByCompetitiveRange(mix, chartType, myLevel,
                 CohortEstimator.CompetitiveWindow, cancellationToken)).ToHashSet();
+            if (reference != mix)
+                cohort.UnionWith(await _stats.GetPlayersByCompetitiveRange(reference, chartType, myLevel,
+                    CohortEstimator.CompetitiveWindow, cancellationToken));
             cohort.Remove(userId);
             if (cohort.Count == 0) return;
 
             // Their level NOW, and their whole level history, so a score can be dated against
             // the player they were when they set it. One read each for the cohort (§6.3).
-            var levelNow = (await _stats.GetStats(mix, cohort, cancellationToken))
+            // Both come from the reference mix, which is where the level series actually runs;
+            // a peer the reference mix has never seen falls back to this one.
+            var levelNow = (await _stats.GetStats(reference, cohort, cancellationToken))
                 .ToDictionary(s => s.UserId, s => CompetitiveLevelFor(s, chartType));
-            var history = (await _history.GetHistory(mix, cohort, cancellationToken))
+            if (reference != mix)
+                foreach (var stats in await _stats.GetStats(mix, cohort, cancellationToken))
+                    if (!levelNow.ContainsKey(stats.UserId))
+                        levelNow[stats.UserId] = CompetitiveLevelFor(stats, chartType);
+
+            var history = (await _history.GetHistory(reference, cohort, cancellationToken))
                 .GroupBy(h => h.UserId)
                 .ToDictionary(g => g.Key, g => g.OrderBy(h => h.Date).ToArray());
 
-            var peerScores = await _scores.GetPlayerScores(mix, cohort, scoped, cancellationToken);
+            var peerScores = await BestAcrossMixes(mix, reference, cohort, scoped, cancellationToken);
 
             foreach (var group in peerScores.GroupBy(s => s.ChartId))
             {
@@ -147,6 +167,42 @@ namespace ScoreTracker.PlayerProgress.Application
                 evidence[group.Key] = new ProjectionEvidence(peers.Length,
                     Math.Round(CohortEstimator.Evidence(peers), 2), Spread(peers));
             }
+        }
+
+        /// <summary>
+        ///     The mix a peer's evidence may also be read from. Phoenix 2 rerated Phoenix 1's
+        ///     charts rather than restepping them, and the score scale did not move with them:
+        ///     across 2,241 player-chart pairs scored in both mixes the median difference is
+        ///     zero, with 976 higher in Phoenix 2 against 994 lower. A changed scoring formula
+        ///     would show a consistent offset — that spread is practice, so a peer's Phoenix 1
+        ///     score is real evidence of what they can do on the same steps today.
+        ///     <para>
+        ///         This matters most at a launch, which is exactly when the cohort is thinnest:
+        ///         Phoenix 2 has scores from tens of players where Phoenix 1 has thousands.
+        ///     </para>
+        /// </summary>
+        private static MixEnum ReferenceMixFor(MixEnum mix)
+        {
+            return mix == MixEnum.Phoenix2 ? MixEnum.Phoenix : mix;
+        }
+
+        /// <summary>
+        ///     Each peer's best attempt per chart across the projected mix and its reference
+        ///     mix. Only the peers pool — the player's own scores are never read from another
+        ///     mix, because what they are being shown is what they have done HERE.
+        /// </summary>
+        private async Task<IReadOnlyCollection<UserPhoenixScore>> BestAcrossMixes(MixEnum mix, MixEnum reference,
+            IReadOnlyCollection<Guid> cohort, IReadOnlyCollection<Guid> chartIds,
+            CancellationToken cancellationToken)
+        {
+            var scores = (await _scores.GetPlayerScores(mix, cohort, chartIds, cancellationToken)).ToList();
+            if (reference != mix)
+                scores.AddRange(await _scores.GetPlayerScores(reference, cohort, chartIds, cancellationToken));
+
+            return scores
+                .GroupBy(s => (s.UserId, s.ChartId))
+                .Select(g => g.OrderByDescending(s => (int)s.Score).First())
+                .ToArray();
         }
 
         /// <summary>

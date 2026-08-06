@@ -292,6 +292,44 @@ An earlier draft worried that D2's floor silenced the skill nudge across many ta
 87,520 targets project below 900,000 — 0.2%.** Moot either way now that the estimator carries no
 skill term, but recorded so the concern is not re-raised.
 
+### 4.7 The peer cohort pools Phoenix 1 and Phoenix 2
+
+Phoenix 2 has scores from **74 players**. Phoenix 1 has **1,529**. A cohort drawn from the
+launch mix alone is too thin to estimate from, and stays thin for as long as it takes the
+player base to re-grind — which is most of the window in which the page is useful.
+
+The mixes share their charts: ~4,367 chart IDs appear in both, because Phoenix 2 **rerated**
+Phoenix 1's charts rather than restepping them. So the only question is whether a *score* means
+the same thing on either side. Measured on the 2,241 player-chart pairs scored in both mixes,
+across 62 players:
+
+| | |
+|---|---|
+| median difference (P2 − P1) | **0** |
+| P2 higher / equal / lower | **976 / 271 / 994** |
+| p25 → p75 | −4,955 → +6,458 |
+| within-player sd | ~16,000 |
+
+Symmetric and centred on zero. A changed scoring formula would show a consistent offset; this
+is practice noise. (The −3,989 mean on pairs where the Phoenix 1 score is ≥ 990,000 is
+regression to the mean — a near-max score has nowhere to go but down. And the "P2 is lower 85%
+of the time" figure from the leaderboard work describes a different population: the elite, who
+ground Phoenix 1 for years and have played Phoenix 2 once.)
+
+So for a Phoenix 2 projection the peer side reads **both** mixes and takes each peer's better
+attempt per chart, and the cohort is the union of both mixes' competitive-range queries. Level
+history comes from Phoenix 1, which is where the series actually runs.
+
+**Only the peer side pools.** The player's own pool, bar, current scores and competitive level
+are read from the mix they are looking at and nowhere else — what the page shows them is what
+they have done *here*. The one exception is an account with no Phoenix 2 scores at all: it has
+no competitive level to match peers on, so the other mix names one rather than the page
+projecting nothing. Their own Phoenix 1 scores still reach the page, but as **carryover rows**
+(§5), labelled as such — not silently blended into an estimate.
+
+The reference mix runs one way only. A Phoenix 1 projection never reads Phoenix 2: it would add
+nothing, and it would make the older page's numbers drift as the newer mix fills up.
+
 ## 5. Phoenix 2 carryover
 
 Only on the Phoenix 2 view; Phoenix 1 has one pool and no per-type board, so offering a split

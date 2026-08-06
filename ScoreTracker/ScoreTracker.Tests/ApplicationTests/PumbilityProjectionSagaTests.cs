@@ -194,15 +194,78 @@ public sealed class PumbilityProjectionSagaTests
 
     // ------------------------------------------------------------------ context
 
+    [Fact]
+    public async Task APhoenix2ProjectionHearsPeersWhoOnlyEverScoredInPhoenix1()
+    {
+        // Nobody has touched this chart in Phoenix 2. Phoenix 2 rerated Phoenix 1's charts
+        // rather than restepping them, so what those players scored on the same steps is
+        // still evidence — and at a launch it is the only evidence there is.
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithPeerScores(chart, 940_000, 950_000, 960_000, 970_000);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.True(result.ExpectedScores.ContainsKey(chart.Id));
+        Assert.Equal(4, result.Evidence[chart.Id].PeerCount);
+    }
+
+    [Fact]
+    public async Task APhoenix1ProjectionNeverReachesIntoPhoenix2()
+    {
+        // The reference mix runs one way only. Phoenix 1 is the populated mix; borrowing
+        // back from the launch mix would add nothing and would make the older page's
+        // numbers move when the newer one gains scores.
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithPeerScore(chart, 950_000, mix: MixEnum.Phoenix2)
+            .WithPeerScore(chart, 955_000, mix: MixEnum.Phoenix2)
+            .WithPeerScore(chart, 960_000, mix: MixEnum.Phoenix2);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        Assert.DoesNotContain(chart.Id, result.ExpectedScores.Keys);
+    }
+
+    [Fact]
+    public async Task APeerScoredInBothMixesSpeaksOnceWithTheirBetterScore()
+    {
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithPeerScoredInBothMixes(chart, 900_000, 980_000)
+            .WithPeerScoredInBothMixes(chart, 985_000, 905_000);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Equal(2, result.Evidence[chart.Id].PeerCount);
+        Assert.True((int)result.ExpectedScores[chart.Id] > 905_000,
+            "each peer should be represented by what they proved they can score, not by their weaker attempt");
+    }
+
+    [Fact]
+    public async Task AnAccountWithNoPhoenix2ScoresIsStillMatchedToPeers()
+    {
+        // A launch-mix account has no Phoenix 2 competitive level to match on. Reading the
+        // level it does have beats showing the player nothing at all.
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithNoDataIn(MixEnum.Phoenix2).WithPeerScores(chart, 940_000, 950_000, 960_000);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.True(result.ExpectedScores.ContainsKey(chart.Id));
+    }
+
     private sealed class ProjectionContext
     {
         private static readonly DateTimeOffset Now = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         private readonly List<Chart> _charts = new();
         private readonly double _doubles;
+        private readonly HashSet<MixEnum> _myMissingMixes = new();
+        private readonly Dictionary<Guid, HashSet<MixEnum>> _peerCohortMixes = new();
         private readonly List<PlayerRatingRecord> _peerHistory = new();
         private readonly Dictionary<Guid, double> _peerLevelNow = new();
-        private readonly List<UserPhoenixScore> _peerScores = new();
+        private readonly List<(MixEnum Mix, UserPhoenixScore Score)> _peerScores = new();
         private readonly Dictionary<Guid, double> _scoringLevels = new();
         private readonly double _singles;
         private readonly List<RecordedPhoenixScore> _topScores = new();
@@ -214,14 +277,18 @@ public sealed class PumbilityProjectionSagaTests
 
             Stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), It.Is<Guid>(g => g == UserId),
                     It.IsAny<CancellationToken>()))
-                .ReturnsAsync(() => StatsFor(UserId, _singles, _doubles));
+                .ReturnsAsync((MixEnum mix, Guid _, CancellationToken _) => _myMissingMixes.Contains(mix)
+                    ? StatsFor(UserId, 1, 1)
+                    : StatsFor(UserId, _singles, _doubles));
             Stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<CancellationToken>()))
-                .ReturnsAsync(() => _peerLevelNow
-                    .Select(kv => StatsFor(kv.Key, kv.Value, kv.Value)).ToArray().AsEnumerable());
+                .ReturnsAsync((MixEnum mix, IEnumerable<Guid> ids, CancellationToken _) => ids
+                    .Where(id => KnownIn(id, mix))
+                    .Select(id => StatsFor(id, _peerLevelNow[id], _peerLevelNow[id])).ToArray().AsEnumerable());
             Stats.Setup(s => s.GetPlayersByCompetitiveRange(It.IsAny<MixEnum>(), It.IsAny<ChartType?>(),
                     It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(() => _peerLevelNow.Keys.ToArray().AsEnumerable());
+                .ReturnsAsync((MixEnum mix, ChartType? _, double _, double _, CancellationToken _) =>
+                    _peerLevelNow.Keys.Where(id => KnownIn(id, mix)).ToArray().AsEnumerable());
 
             History.Setup(h => h.GetHistory(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<CancellationToken>()))
@@ -229,10 +296,14 @@ public sealed class PumbilityProjectionSagaTests
 
             Scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((MixEnum _, IEnumerable<Guid> _, IEnumerable<Guid> chartIds, CancellationToken _) =>
+                .ReturnsAsync((MixEnum mix, IEnumerable<Guid> userIds, IEnumerable<Guid> chartIds,
+                    CancellationToken _) =>
                 {
                     var wanted = chartIds.ToHashSet();
-                    return _peerScores.Where(p => wanted.Contains(p.ChartId)).ToArray().AsEnumerable();
+                    var asked = userIds.ToHashSet();
+                    return _peerScores
+                        .Where(p => p.Mix == mix && wanted.Contains(p.Score.ChartId) && asked.Contains(p.Score.UserId))
+                        .Select(p => p.Score).ToArray().AsEnumerable();
                 });
 
             Mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
@@ -276,18 +347,48 @@ public sealed class PumbilityProjectionSagaTests
             return this;
         }
 
-        public ProjectionContext WithPeerScore(Chart chart, int score, double levelsGrownSince = 0)
+        public ProjectionContext WithPeerScore(Chart chart, int score, double levelsGrownSince = 0,
+            MixEnum mix = MixEnum.Phoenix)
         {
             var peer = Guid.NewGuid();
             var levelNow = chart.Type == ChartType.Single ? _singles : _doubles;
             _peerLevelNow[peer] = levelNow;
+            _peerCohortMixes[peer] = new HashSet<MixEnum> { mix };
             var recordedAt = Now.AddDays(-100);
-            _peerScores.Add(new UserPhoenixScore(peer, chart.Id, "Peer", score, PhoenixPlate.MarvelousGame,
-                false, true, recordedAt));
+            _peerScores.Add((mix, new UserPhoenixScore(peer, chart.Id, "Peer", score, PhoenixPlate.MarvelousGame,
+                false, true, recordedAt)));
             // One history row dated before the score: the level they held when they set it.
             var then = levelNow - levelsGrownSince;
             _peerHistory.Add(new PlayerRatingRecord(peer, recordedAt.AddDays(-1), then, then, then, 0, 0));
             return this;
+        }
+
+        /// <summary>One peer carrying a score in each mix — the pair a cross-mix read must reconcile.</summary>
+        public ProjectionContext WithPeerScoredInBothMixes(Chart chart, int phoenixScore, int phoenix2Score)
+        {
+            var peer = Guid.NewGuid();
+            var levelNow = chart.Type == ChartType.Single ? _singles : _doubles;
+            _peerLevelNow[peer] = levelNow;
+            _peerCohortMixes[peer] = new HashSet<MixEnum> { MixEnum.Phoenix, MixEnum.Phoenix2 };
+            var recordedAt = Now.AddDays(-100);
+            _peerScores.Add((MixEnum.Phoenix, new UserPhoenixScore(peer, chart.Id, "Peer", phoenixScore,
+                PhoenixPlate.MarvelousGame, false, true, recordedAt)));
+            _peerScores.Add((MixEnum.Phoenix2, new UserPhoenixScore(peer, chart.Id, "Peer", phoenix2Score,
+                PhoenixPlate.MarvelousGame, false, true, recordedAt.AddDays(40))));
+            _peerHistory.Add(new PlayerRatingRecord(peer, recordedAt.AddDays(-1), levelNow, levelNow, levelNow, 0, 0));
+            return this;
+        }
+
+        /// <summary>The player has no scores at all in <paramref name="mix" />, so no level there either.</summary>
+        public ProjectionContext WithNoDataIn(MixEnum mix)
+        {
+            _myMissingMixes.Add(mix);
+            return this;
+        }
+
+        private bool KnownIn(Guid peer, MixEnum mix)
+        {
+            return _peerCohortMixes.TryGetValue(peer, out var mixes) && mixes.Contains(mix);
         }
 
         /// <summary>
