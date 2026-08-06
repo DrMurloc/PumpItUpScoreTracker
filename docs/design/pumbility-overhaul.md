@@ -415,21 +415,43 @@ multi-event pairs are the subset with true history.
 
 ### 6.6 Build order
 
-| # | Commit | Contents |
-|---|---|---|
-| C1 | Bulk history read | `IPlayerHistoryRepository.GetHistory(mix, userIds)` + EF implementation. Additive, no schema change |
-| C2 | `CohortEstimator` | Pure domain class + `DomainTests`. No callers yet |
-| C3 | The harness | Port from `Downloads/pumbility-harness/`, reproduce §4.2, pin fact against C2 |
-| C4 | Re-fit the calibrations | The p65 quantile against the page's stated truth horizon (§4.4), confirmed at levels 17–19 and 22–24. **Gate: do not proceed until §4.2's numbers hold at the chosen horizon** |
-| C5 | Saga rewrite | `PumbilityProjectionSaga` on `CohortEstimator`; delete the skill path; `PumbilityProjection` relocated + slimmed; pool scoping |
-| C6 | Page read model | `GetPumbilityPageQuery`, `ProjectPhoenix2CarryoverQuery` |
-| C7 | The page | Rewrite + components + density + the responsive ladder |
-| C8 | l10n | New keys in all nine locales, alphabetical position, no case collisions |
-| C9 | Docs | This doc's outcomes, `ARCHITECTURE.md` page row, `DATABASE-SCHEMA.md` |
+| # | Commit | Contents | |
+|---|---|---|---|
+| C1 | Bulk history read | `IPlayerHistoryRepository.GetHistory(mix, userIds)` + EF implementation. Additive, no schema change | ✅ |
+| C2 | `CohortEstimator` | Pure domain class + `DomainTests` | ✅ |
+| C5 | Saga rewrite | `PumbilityProjectionSaga` on `CohortEstimator`; skill path deleted; `PumbilityProjection` relocated + slimmed; pool scoping; scoping moved to **scoring** level | ✅ |
+| C6 | Page read model | `GetPumbilityPageQuery`, `ProjectPhoenix2CarryoverQuery`, `PumbilityPageSaga` | ✅ |
+| C7 | The page | Rewrite + `Components/Pumbility/*` + density + the responsive ladder + bUnit facts | ✅ |
+| C8 | l10n | 36 keys × 9 locales, alphabetical, two case collisions caught | ✅ |
+| C9 | Docs | This section, `ARCHITECTURE.md` page row | ✅ |
+| **C3** | **The harness** | Port from `Downloads/pumbility-harness/`, reproduce §4.2, pin fact against C2 | **not done** |
+| **C4** | **Re-fit the calibrations** | p65 against the page's stated truth horizon (§4.4), confirmed at levels 17–19 and 22–24 | **not done** |
 
-C1–C4 are the engine and touch no UI. C5–C9 are the page. **C4 is a real gate**, not a
-formality: the whole §4.2 result is calibrated to a one-year truth horizon, and if it does not
-survive re-fitting to the page's horizon, C5 onward is building on a number that moved.
+⚠ **C3 and C4 did not ship and the page is live without them.** C4 was specified as a gate on
+C5 onward and that gate was not honoured — the build ran C5–C9 while the quantile is still the
+one fitted to a **one-year** truth horizon. Consequences, stated plainly:
+
+- Every projected score on the page is calibrated to *"what you would eventually score"*, not
+  *"what you would score now"*. Measured on the old formula, that difference was worth ~2,500
+  points of bias. The direction is known — projections read **high** for a near-term reading.
+- `CohortEstimator.Quantile` is one constant in one pure class, so re-fitting is a one-line
+  change plus a re-run. Nothing built on top of it needs to move.
+- §4.2's numbers are from the scratchpad harness on levels 19–21. Until C3 ports it into
+  `ExplorationTests`, nothing in CI or in the repo can reproduce them, and the ratchet that
+  would catch a drift between the harness and `CohortEstimator` does not exist yet.
+
+### 6.7 What the build changed about the design
+
+- **The migration was dropped** (§6.3). The join is per-peer, not per-score.
+- **Scoping moved from printed level to scoring level.** A chart printed 24 and scored like a 21
+  belongs in a level-20 player's window; the reverse was cluttering the list. Pinned by
+  `AChartIsScopedByItsScoringLevelNotItsPrintedLevel`.
+- **`PumbilityProjection` gained `Evidence`** — peer count, effective peers after growth
+  weighting, and the 10th-to-90th spread — because the page still owed the player a "why" and
+  the honest one is what the estimate heard, not what it attributed (§3.3).
+- **`ProjectionEvidence.Spread` and `EffectivePeers` are computed but not yet rendered.** The
+  comfortable card prints the peer count only. The other two are the raw material for a
+  confidence treatment nobody has designed.
 
 ## 7. Responsive
 
