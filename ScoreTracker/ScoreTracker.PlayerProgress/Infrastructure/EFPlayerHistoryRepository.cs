@@ -43,6 +43,22 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                     r.DoublesLevel, r.CoOpRating, r.PassCount, r.SkillRating)).ToArrayAsync(cancellationToken);
         }
 
+        public async Task<IEnumerable<PlayerRatingRecord>> GetHistory(MixEnum mix, IEnumerable<Guid> userIds,
+            CancellationToken cancellationToken)
+        {
+            var ids = userIds.Distinct().ToArray();
+            if (ids.Length == 0) return Array.Empty<PlayerRatingRecord>();
+
+            await using var database = await factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            return await database.Set<PlayerHistoryEntity>()
+                .Where(r => ids.Contains(r.UserId) && r.MixId == mixId)
+                .OrderBy(r => r.UserId).ThenBy(r => r.Date)
+                .Select(r => new PlayerRatingRecord(r.UserId, r.Date, r.CompetitiveLevel, r.SinglesLevel,
+                    r.DoublesLevel, r.CoOpRating, r.PassCount, r.SkillRating))
+                .ToArrayAsync(cancellationToken);
+        }
+
         public async Task DeleteHistoryForUser(Guid userId, CancellationToken cancellationToken)
         {
             // Account-level wipe: spans every mix by design.

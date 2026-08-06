@@ -327,7 +327,7 @@ chart scoring levels. Three of those already have homes.
 | **Catalog** | Chart metadata and `ChartScoringLevel` reads only. **No badge query.** `GetChartBadgeChipsQuery` is needed only if the page shows the thumbprint as descriptive data (§3.3, open) |
 | **Domain** | `PumbilityProjection` loses `SkillAdjustments` entirely; `SkillAdjustmentRecord` is **deleted**, not re-keyed. ⚠ Both live in `Domain/Records/` and should **move to `PlayerProgress/Contracts/`** — a vertical's projection contract has no business in shared Domain |
 | **SharedKernel** | Untouched. N8's deletion of `Skill`/`SkillCategory` is the nuke's tail and out of scope here |
-| **Data** | **One migration** — see §6.3. This is the scope's only real infrastructure |
+| **Data** | **Nothing — no migration.** See §6.3; the growth weight is derived at read time from an existing table |
 | **Web** | The page and its components (§6.2) |
 | **ExplorationTests** | The harness (§6.4) |
 
@@ -344,8 +344,9 @@ existing Domain port.
 `Domain/`: new **`CohortEstimator.cs`** — pure, no I/O: takes (peer scores, peer levels now,
 peer levels at record, τ, q) and returns the estimate. The harness and the app share this one
 implementation, which is what stops them drifting.
-`Infrastructure/`: `EFPhoenixRecordRepository` (or wherever the score read lands) gains the
-`CompetitiveLevelAtRecord` projection; `EFPlayerHistoryRepository` gains the backfill read.
+`Infrastructure/`: `EFPlayerHistoryRepository` gains a **bulk** read —
+`GetHistory(mix, userIds, ct)` — so a cohort's level series arrives in one query instead of
+N. Additive to `IPlayerHistoryRepository`, which PlayerProgress already owns.
 
 **Web** — `Pages/Progress/Pumbility.razor` rewritten. New in `Components/Pumbility/`:
 `PumbilityHero`, `PoolCurve`, `PoolSelector`, `TargetCard`, `TargetStickerSheet`, `TargetTable`,
@@ -356,36 +357,29 @@ implementation, which is what stops them drifting.
 `TierListProcessor.ProcessIntoTierList("PUMBILITY", …)` call, and the whole skill-adjustment path
 in the saga.
 
-### 6.3 The migration — and why there has to be one
+### 6.3 No migration — the join is per-peer, not per-score
 
-The growth weight needs, per score, **the player's competitive level at the moment that score was
-recorded**. Computing it at query time means joining every candidate score against
-`PlayerHistory` and interpolating — a per-request fan-out over a table with 40,795 rows and no
-index for that shape.
+An earlier draft of this doc specified a `CompetitiveLevelAtRecord` column on
+`scores.PhoenixRecord`, on the reasoning that resolving "their level when they set it" at query
+time meant joining every candidate score against `PlayerHistory`.
 
-The fix is to store it **at write time, once, immutably**:
+**That was wrong about the shape of the join.** A projection touches the peers inside a ±1
+competitive band — on real data, 150–300 players — and `PlayerHistory` holds ~27 rows per player
+per mix (40,795 rows over 1,509 Phoenix users). So the whole history for a cohort is **one read
+of roughly 8,000 narrow rows**, bisected in memory per score. That is an order of magnitude
+smaller than the cohort score read the estimator already performs.
 
-| Table | Change |
-|---|---|
-| `scores.PhoenixRecord` | + `CompetitiveLevelAtRecord float NULL` — the player's competitive level for that chart's type when the row was written |
+Storing it would also have coupled the write path across verticals: `PhoenixRecordEntity` belongs
+to **ScoreLedger**, while competitive level is **PlayerProgress** data, so every import path
+would have had to ask another vertical for a number at insert time — to denormalize something
+already derivable.
 
-**Why this column and not a materialized weight.** The weight is
-`exp(−(level_now − level_then)/τ)`, and `level_now` moves every time ratings recompute — a
-materialized weight would need re-sweeping the whole table on every rating run. The *level then*
-never changes once written. Store the immutable half, compute the weight from two numbers the
-query already has.
+So: **no migration, no backfill, no nullable-column semantics, no write-path change.** One
+additive method on an existing port (§6.2).
 
-**Backfill** from `PlayerHistory` — nearest preceding row per (user, mix, date), falling back to
-the nearest following for scores predating a player's first history row. Rows with no history at
-all stay NULL and weight 1.0, which is the correct no-information default.
-
-**Write path**: set alongside `RecordedDate` wherever a Phoenix record is written (import, CSV,
-manual). A NULL there is not a bug — it is a score whose era we cannot date.
-
-⚠ `PlayerHistory` begins **2024-06-04**. Scores older than that get the earliest known level, so
-the weight under-states growth for the site's oldest records. Stated, not fixed.
-
-New row in [DATABASE-SCHEMA.md](../DATABASE-SCHEMA.md) in the same PR. No table is dropped.
+⚠ **`PlayerHistory` begins 2024-06-04.** A score older than that resolves to the player's
+earliest known level, so the growth weight *under-states* how much they have improved on the
+site's oldest records. Same limitation the column would have had; stated, not fixed.
 
 ### 6.4 The harness
 
@@ -415,7 +409,7 @@ multi-event pairs are the subset with true history.
 | `ScoreTracker.Tests/DomainTests` | **`CohortEstimatorTests`** — the weighted quantile (including a left-skewed fixture where mean and p65 diverge), the growth weight's self-conditioning (flat player → all weights 1.0), the ±1 gate, empty-cohort behaviour |
 | `ScoreTracker.Tests/ApplicationTests` | `PumbilityProjectionSagaTests` rewritten: pool scoping, no skill dependency, carryover repricing |
 | `ScoreTracker.Tests.Components` | Page and components with mocked data — hero prints the bar, curve renders 50 + waiting room, targets shed by density, carryover hides on Phoenix 1, pool selector re-ranks everything |
-| `ScoreTracker.Tests.Integration` | The migration's backfill against a real migrated DB |
+| `ScoreTracker.Tests.Integration` | The bulk history read against a real migrated DB |
 | `ScoreTracker.Tests.E2E` | Nothing new — not a critical whole-workflow path (owner's granularity ladder) |
 | `ScoreTracker.ExplorationTests` | §6.4 |
 
@@ -423,7 +417,7 @@ multi-event pairs are the subset with true history.
 
 | # | Commit | Contents |
 |---|---|---|
-| C1 | Migration + backfill | `CompetitiveLevelAtRecord`, backfill from `PlayerHistory`, write-path wiring, schema doc row |
+| C1 | Bulk history read | `IPlayerHistoryRepository.GetHistory(mix, userIds)` + EF implementation. Additive, no schema change |
 | C2 | `CohortEstimator` | Pure domain class + `DomainTests`. No callers yet |
 | C3 | The harness | Port from `Downloads/pumbility-harness/`, reproduce §4.2, pin fact against C2 |
 | C4 | Re-fit the calibrations | The p65 quantile against the page's stated truth horizon (§4.4), confirmed at levels 17–19 and 22–24. **Gate: do not proceed until §4.2's numbers hold at the chosen horizon** |
