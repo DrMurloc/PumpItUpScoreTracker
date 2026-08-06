@@ -68,9 +68,11 @@ namespace ScoreTracker.PlayerProgress.Application
                 ? new[] { only }
                 : new[] { ChartType.Single, ChartType.Double };
 
+            var scope = new ProjectionScope(mix, charts, scoringLevels, myStats);
+            var into = new ProjectionResults(expectedScore, evidence);
+
             foreach (var chartType in types)
-                await ProjectType(chartType, request.UserId, mix, charts, scoringLevels, myStats,
-                    expectedScore, evidence, cancellationToken);
+                await ProjectType(chartType, request.UserId, scope, into, cancellationToken);
 
             var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count", mix), cancellationToken))
                 .ToDictionary(s => s.ChartId, e => e.Category);
@@ -100,11 +102,19 @@ namespace ScoreTracker.PlayerProgress.Application
             return new PumbilityProjection(expectedScore, projectedGains, chartDifficulty, evidence);
         }
 
-        private async Task ProjectType(ChartType chartType, Guid userId, MixEnum mix,
-            IReadOnlyDictionary<Guid, Chart> charts, IDictionary<Guid, double> scoringLevels,
-            PlayerStatsRecord myStats, IDictionary<Guid, PhoenixScore> expectedScore,
-            IDictionary<Guid, ProjectionEvidence> evidence, CancellationToken cancellationToken)
+        /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
+        private sealed record ProjectionScope(MixEnum Mix, IReadOnlyDictionary<Guid, Chart> Charts,
+            IDictionary<Guid, double> ScoringLevels, PlayerStatsRecord MyStats);
+
+        /// <summary>What it writes. Both types accumulate into one pair, which is why they are passed in.</summary>
+        private sealed record ProjectionResults(IDictionary<Guid, PhoenixScore> ExpectedScore,
+            IDictionary<Guid, ProjectionEvidence> Evidence);
+
+        private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
+            ProjectionResults into, CancellationToken cancellationToken)
         {
+            var (mix, charts, scoringLevels, myStats) = scope;
+
             // The player is measured in the mix they are looking at: their pool, their bar and
             // their level all come from this mix and nowhere else. The reference mix is a
             // detail of the PEER side only (see BestAcrossMixes).
@@ -163,8 +173,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 var estimate = CohortEstimator.Estimate(peers);
                 if (estimate == null) continue;
 
-                expectedScore[group.Key] = estimate.Value;
-                evidence[group.Key] = new ProjectionEvidence(peers.Length,
+                into.ExpectedScore[group.Key] = estimate.Value;
+                into.Evidence[group.Key] = new ProjectionEvidence(peers.Length,
                     Math.Round(CohortEstimator.Evidence(peers), 2), Spread(peers));
             }
         }
