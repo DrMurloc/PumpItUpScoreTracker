@@ -12707,9 +12707,8 @@ span.ct-console-pick { cursor: default; }
    switch without a circuit.
    ============================================================================ */
 
-/* The shell clears the app bar and nothing more, so a page whose first element is raw
-   markup opens flush against it — MudBlazor pages get this gap from their first
-   component's own margin. */
+/* The shell leaves the page flush against the nav, and this one opens on an eyebrow rather
+   than on a heading, so it owes itself the breathing room. */
 .pmb-eyebrow {
     font-family: var(--font-display);
     font-weight: 600;
@@ -12717,7 +12716,7 @@ span.ct-console-pick { cursor: default; }
     letter-spacing: .16em;
     text-transform: uppercase;
     color: var(--mix-ink-muted);
-    margin: 20px 0 8px;
+    margin: 16px 0 8px;
 }
 
 .pmb-hero {
