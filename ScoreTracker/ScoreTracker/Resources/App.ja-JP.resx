@@ -375,6 +375,9 @@
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>ドキュメント完備の公開 API がコミュニティ製ツールを支えます — ボット、オーバーレイ、統計サイト。アカウントからトークンを取得して、私たちと同じデータの上に作ってください。</value>
   </data>
+  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
+    <value>Phoenix 1 で既に出したスコアを、Phoenix 2 の基準で再計算した値です。</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
   </data>
@@ -477,6 +480,9 @@
   </data>
   <data name="Added to ToDo List!" xml:space="preserve">
 	  <value>やることリストに追加しました！</value>
+  </data>
+  <data name="added to your PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY に加算</value>
   </data>
   <data name="Added you {0}" xml:space="preserve">
     <value>{0} に追加されました</value>
@@ -589,6 +595,9 @@
   </data>
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>ゲームタグ{0}のアカウントがすでに存在します。あなたですか？</value>
+  </data>
+  <data name="An estimate from players at your competitive level." xml:space="preserve">
+    <value>同じ競技レベルのプレイヤーからの推定です。</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>インポートは既に実行中です</value>
@@ -820,6 +829,9 @@
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>基準オフ — コンペティティブレベルを上げたプレイはすべて対象です。</value>
   </data>
+  <data name="Based on" xml:space="preserve">
+    <value>根拠</value>
+  </data>
   <data name="based on your scores" xml:space="preserve">
     <value>あなたのスコアに基づく</value>
   </data>
@@ -1036,6 +1048,9 @@
   </data>
   <data name="Card {0} of {1}" xml:space="preserve">
     <value>カード {0}/{1}</value>
+  </data>
+  <data name="Carried from Phoenix 1" xml:space="preserve">
+    <value>Phoenix 1 から引き継ぎ</value>
   </data>
   <data name="Category" xml:space="preserve">
 	  <value>カテゴリー</value>
@@ -2297,6 +2312,9 @@
   <data name="From {0}" xml:space="preserve">
     <value>{0}から</value>
   </data>
+  <data name="from {0} players like you" xml:space="preserve">
+    <value>同水準のプレイヤー {0} 人から</value>
+  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0} スコアから算出</value>
   </data>
@@ -3222,6 +3240,9 @@
 	  <value>最高ランク</value>
 	  
   <comment>Max Letter Grade</comment></data>
+  <data name="Max Level" xml:space="preserve">
+    <value>最高レベル</value>
+  </data>
   <data name="Max Note Count" xml:space="preserve">
 	  <value>最高ノーツ数</value>
 	  
@@ -3540,6 +3561,9 @@
   <data name="New invite link" xml:space="preserve">
     <value>新しい招待リンク</value>
   </data>
+  <data name="New Letter Grade" xml:space="preserve">
+    <value>新しいグレード</value>
+  </data>
   <data name="New mix. Same you." xml:space="preserve">
     <value>新しいバージョン。変わらないあなた。</value>
   </data>
@@ -3648,6 +3672,9 @@
   <data name="No new scores found" xml:space="preserve">
     <value>新しいスコアはありませんでした</value>
   </data>
+  <data name="No Phoenix 2 chart" xml:space="preserve">
+    <value>Phoenix 2 に譜面なし</value>
+  </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>人気ランキングのスナップショットはまだありません - 週次インポートで作成されます。</value>
   </data>
@@ -3704,6 +3731,9 @@
   </data>
   <data name="No source published" xml:space="preserve">
     <value>ソース未公開</value>
+  </data>
+  <data name="No suggestions match those filters." xml:space="preserve">
+    <value>そのフィルターに一致する候補はありません。</value>
   </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>現在提案はありません。別の目標を試すか、先にスコアをインポートしてください。</value>
@@ -3825,6 +3855,9 @@
   <data name="Not Relevant to Category" xml:space="preserve">
 	  <value>このカテゴリーに無関係</value>
   </data>
+  <data name="Not scored yet in Phoenix 2" xml:space="preserve">
+    <value>Phoenix 2 未プレイ</value>
+  </data>
   <data name="Not set" xml:space="preserve">
     <value>未設定</value>
   </data>
@@ -3836,6 +3869,9 @@
   </data>
   <data name="Not yet" xml:space="preserve">
     <value>未獲得</value>
+  </data>
+  <data name="Not yet played" xml:space="preserve">
+    <value>未プレイ</value>
   </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>メモ (任意)</value>
@@ -3880,11 +3916,17 @@
   <data name="Nothing changed for you. You can still share with a single tool you trust using an invite link from its maker." xml:space="preserve">
     <value>何も変わっていません。制作者の招待リンクを使えば、信頼できるツール1つとは今でも共有できます。</value>
   </data>
+  <data name="Nothing counts until it beats this. A chart worth more replaces it and you keep the difference." xml:space="preserve">
+    <value>これを超えるまでは何も加算されません。より高い譜面が入れ替わり、その差分があなたのものになります。</value>
+  </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>このフォルダーの譜面は人気ボードに入っていません。</value>
   </data>
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>申請しても自動で通知は飛びません。PIU Scores の Discord に書き込めば誰かが見ます。その間もツールは動き続けます。</value>
+  </data>
+  <data name="Nothing here clears your bar yet — play a few more charts and check back." xml:space="preserve">
+    <value>まだ基準を超えるものがありません。もう少し譜面をプレイしてから確認してください。</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>何も削除されません。ツールも、アクティビティも、配信履歴もそのまま残るので、何が起きたか確認できますし、取り消すこともできます。</value>
@@ -4014,6 +4056,9 @@
   </data>
   <data name="Old folder" xml:space="preserve">
     <value>変更前のフォルダ</value>
+  </data>
+  <data name="Old Letter Grade" xml:space="preserve">
+    <value>以前のグレード</value>
   </data>
   <data name="Older mixes ({0})" xml:space="preserve">
     <value>古いバージョン ({0})</value>
@@ -4308,8 +4353,17 @@
   <data name="PG · {0} of {1} peers have it" xml:space="preserve">
     <value>PG・同レベル帯 {1} 人中 {0} 人が達成</value>
   </data>
+  <data name="Phoenix 1 · your real top 50" xml:space="preserve">
+    <value>Phoenix 1 · 実際のトップ50</value>
+  </data>
+  <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
+    <value>Phoenix 2 では Singles の譜面が基準カーブ上で1レベル上として計算されます。S22 は 23 と同じ扱いです。前のバージョンと同じ譜面を掘るのは正しい戦略ではありません。</value>
+  </data>
   <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
     <value>Phoenix 2 ではオーバーフローが完全に満タンになるとバーに電撃エフェクトが走ります。ゲームが隠れた体力の存在を認める唯一の瞬間です。</value>
+  </data>
+  <data name="Phoenix 2 · same scores, repriced" xml:space="preserve">
+    <value>Phoenix 2 · 同じスコアを再計算</value>
   </data>
   <data name="Phoenix grade" xml:space="preserve">
     <value>Phoenixランク</value>
@@ -4587,6 +4641,9 @@
   <data name="Poll the API instead." xml:space="preserve">
     <value>代わりに API をポーリングしてください。</value>
   </data>
+  <data name="Pool" xml:space="preserve">
+    <value>プール</value>
+  </data>
   <data name="Popular" xml:space="preserve">
     <value>人気</value>
   </data>
@@ -4668,8 +4725,14 @@
   <data name="Progression" xml:space="preserve">
     <value>ステップ</value>
   </data>
+  <data name="Projected" xml:space="preserve">
+    <value>予測</value>
+  </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>予測ダブルPUMBILITY</value>
+  </data>
+  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
+    <value>Phoenix 1 からの予測です。Phoenix 2 での自分のスコアは {0} 件です。</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>予測シングルPUMBILITY</value>
@@ -4827,6 +4890,9 @@
   </data>
   <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
     <value>毎週ミラーリングされる公式PUMBILITYボードに基づく順位です。</value>
+  </data>
+  <data name="Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar." xml:space="preserve">
+    <value>同じレベルのプレイヤーが到達する水準でプレイした場合の増加量順です。ここにあるものはすべて基準を超えます。</value>
   </data>
   <data name="Rankings" xml:space="preserve">
     <value>ランキング</value>
@@ -6061,6 +6127,15 @@
   <data name="The arc" xml:space="preserve">
     <value>あなたの軌跡</value>
   </data>
+  <data name="The bar" xml:space="preserve">
+    <value>基準</value>
+  </data>
+  <data name="The bar this pool would set" xml:space="preserve">
+    <value>このプールが定める基準</value>
+  </data>
+  <data name="The bar — everything below is waiting" xml:space="preserve">
+    <value>基準 — これより下は待機中</value>
+  </data>
   <data name="The Best" xml:space="preserve">
     <value>トップ</value>
   </data>
@@ -6081,6 +6156,9 @@
   </data>
   <data name="The Charts" xml:space="preserve">
     <value>課題譜面</value>
+  </data>
+  <data name="The charts your PUMBILITY is made of" xml:space="preserve">
+    <value>PUMBILITY を構成する譜面</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>暗号文はブラウザに、ラップされた鍵はデータベースに、マスターキーは Key Vault にあります。復号には3つすべてが必要です。1つ、あるいは2つが流出しても何も得られません。パスワードがデータベースやログに書き込まれることは決してありません。</value>
@@ -6180,6 +6258,9 @@
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>このフォルダの共有ティアリスト。全員のデータから作られます。</value>
+  </data>
+  <data name="The sum of your 50 best-rated charts." xml:space="preserve">
+    <value>評価上位50譜面の合計です。</value>
   </data>
   <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
     <value>公式サイトで確認されたもののカタログに譜面が見つかりませんでした。譜面を追加してから解決を押してください - 未解決のままの譜面は次回の取得時に再表示されます。</value>
@@ -6387,6 +6468,9 @@
   </data>
   <data name="This will delete all of your scores and reset your player stats and title progress" xml:space="preserve">
 	  <value>全スコアが削除され、プレーヤー統計とタイトル進捗がリセットされます</value>
+  </data>
+  <data name="this would not clear your bar" xml:space="preserve">
+    <value>これでは基準を超えません</value>
   </data>
   <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
     <value>以上は間を Perfect で埋めた場合です。Great の場合、同じ3つは {0}、{1}、{2} ノートになります。</value>
@@ -6598,6 +6682,9 @@
   </data>
   <data name="TRUE/FALSE Template" xml:space="preserve">
 	  <value>TRUE/FALSEテンプレート</value>
+  </data>
+  <data name="Try a level and a grade" xml:space="preserve">
+    <value>レベルとグレードを試す</value>
   </data>
   <data name="Try again" xml:space="preserve">
     <value>再試行</value>
@@ -6920,6 +7007,9 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>人の確認待ちです — ひと声かけてください</value>
   </data>
+  <data name="Waiting room" xml:space="preserve">
+    <value>待機中</value>
+  </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>自分の成長を見よう</value>
   </data>
@@ -7023,11 +7113,20 @@
   <data name="What it will be able to read" xml:space="preserve">
     <value>読み取れる情報</value>
   </data>
+  <data name="What Phoenix 1 is worth here" xml:space="preserve">
+    <value>Phoenix 1 はここでいくらになるか</value>
+  </data>
   <data name="What should they change?" xml:space="preserve">
     <value>何を直すべきですか?</value>
   </data>
+  <data name="What to play next" xml:space="preserve">
+    <value>次に何をプレイするか</value>
+  </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>取り組む目標（既定は称号ハント）</value>
+  </data>
+  <data name="What would a clear be worth?" xml:space="preserve">
+    <value>クリアするといくら？</value>
   </data>
   <data name="What your rivals are up to" xml:space="preserve">
     <value>ライバルの最近の動き</value>
@@ -7224,6 +7323,12 @@
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
 	  <value>一部のスコアダウンロードが失敗しました。失敗したCSVファイルはダウンロードして編集して、もう一回アップロード可能です。</value>
   </data>
+  <data name="You have" xml:space="preserve">
+    <value>現在</value>
+  </data>
+  <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
+    <value>Phoenix 2 でのスコアは {0} 件です。これは Phoenix 1 の記録を Phoenix 2 のルールで計算したもので、同じ水準で再クリアした場合のプールです。</value>
+  </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>まだコミュニティに参加していません。下から探すか、自分で作成しましょう。</value>
   </data>
@@ -7302,6 +7407,9 @@
   <data name="Your API" xml:space="preserve">
     <value>あなたの API</value>
   </data>
+  <data name="Your bar" xml:space="preserve">
+    <value>あなたの基準</value>
+  </data>
   <data name="Your best" xml:space="preserve">
     <value>自己ベスト</value>
   </data>
@@ -7379,6 +7487,15 @@
   </data>
   <data name="Your Points per Second" xml:space="preserve">
 	  <value>自己秒間ポイント</value>
+  </data>
+  <data name="Your pool" xml:space="preserve">
+    <value>あなたのプール</value>
+  </data>
+  <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
+    <value>プールは 50 のうち {0} です。埋まるまでは、プレイした譜面がそのまま加算されます。まだ超えるべき基準はありません。</value>
+  </data>
+  <data name="Your pool isn't full yet, so every new chart counts whole — nothing is being displaced." xml:space="preserve">
+    <value>プールがまだ埋まっていないため、新しい譜面はそのまま加算され、何も押し出されません。</value>
   </data>
   <data name="Your profile is private" xml:space="preserve">
     <value>プロフィールを非公開にしました</value>
@@ -7481,6 +7598,15 @@
   </data>
   <data name="Your tools, their keys, and how they hear about new scores." xml:space="preserve">
     <value>あなたのツール、そのキー、そして新しいスコアの受け取り方。</value>
+  </data>
+  <data name="Your top 50" xml:space="preserve">
+    <value>あなたのトップ50</value>
+  </data>
+  <data name="Your top and bottom are {0}% apart, and {1} charts sit level with your 50th. That shape says grind volume, not one hero chart." xml:space="preserve">
+    <value>上位と下位の差は {0}% で、50位と同点の譜面が {1} 枚あります。この形は、1曲の大勝ちではなく数を求めています。</value>
+  </data>
+  <data name="Your top and bottom are {0}% apart." xml:space="preserve">
+    <value>上位と下位の差は {0}% です。</value>
   </data>
   <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
     <value>ユーザー名とパスワードは、ランダムなデータキーの下で AES-256-GCM により一緒に封印されます。そのデータキーは、Azure Key Vault から決して出ないマスターキーでラップされます。</value>
@@ -7601,6 +7727,9 @@
   </data>
   <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
     <value>{0}譜面 · 月曜0時(ET)に更新</value>
+  </data>
+  <data name="{0} charts · {1} down to {2}" xml:space="preserve">
+    <value>{0} 譜面 · {1} から {2}</value>
   </data>
   <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
     <value>この譜面とまったく似ていない、という理由で選ばれた{0}譜面。</value>
@@ -7752,6 +7881,9 @@
   <data name="{0} of {1} scores identical" xml:space="preserve">
     <value>{1}件中{0}件のスコアが一致</value>
   </data>
+  <data name="{0} of {1} suggestions" xml:space="preserve">
+    <value>{1} 件中 {0} 件の候補</value>
+  </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>記録のあるプレイヤー {1} 人中 {0} 人</value>
   </data>
@@ -7823,6 +7955,9 @@
   </data>
   <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
     <value>{0} 曲がカタログから削除され、{1} 譜面がなくなりました。記録はプロフィールに残ります。</value>
+  </data>
+  <data name="{0} suggestions" xml:space="preserve">
+    <value>{0} 件の候補</value>
   </data>
   <data name="{0} titles" xml:space="preserve">
     <value>タイトル {0} 件</value>

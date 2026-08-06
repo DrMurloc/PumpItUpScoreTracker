@@ -60,6 +60,57 @@ Percentile semantics are the established `ScoreRankingRecord.Ranking` convention
 
 **A folder is how players navigate a big list, and `FolderPicker` is that navigation.** A page holding hundreds of charts shows **one folder at a time** rather than every group stacked into a scroll (owner, 2026-07-26, on the mix diff). Where a host's data is sparse, it passes `IsEnabled` and the picker greys the folders it has nothing for — dimmed, never hidden, because the holes are the map of where the change landed — and its ◄ ► steppers skip straight to the next folder that has something. A type whose every folder is empty has its tab disabled, and the grid opens on one that isn't.
 
+### The viewport ladder
+
+One ladder, sitewide. A page picks the rungs it needs; it does not invent its own numbers.
+Every rung below is MudBlazor's breakpoint scale or a device the site is actually field-tested
+on — the tablet and fold widths are measured, not rounded guesses.
+
+**Four classes, and the rungs between them** (owner, 2026-08-05). Think in classes, not device
+model numbers — a class survives the next hardware refresh and a pinned device width does not:
+
+| Class | Rung | The shapes in it |
+|---|---|---|
+| **Desktop** | **≥ 900** | Laptops, landscape tablets (iPad Air/10th gen land at **1180**, Pro 11" at **1194**), portrait 12.9" iPads (1024) |
+| **Tablet** | **700 – 900** | Portrait tablets. Note the real range is **820 – 1032** and straddles the top rung: an iPad Air is 820 portrait, a Pro 13" is 1032 |
+| **Fold unfolded** | **500 – 700** | ~700 wide, aspect ~0.84 — **taller than 1:1**. ⚠ A Z Fold 7 runs a little **above** 700, which puts it in the tablet class. That is the right outcome (it genuinely has tablet-class room) but it means 700 is the class *floor*, not the handset — measure a real one before any rule leans on where it lands |
+| **Mobile** | **< 500** | Phones, and a fold's cover screen |
+
+⚠ **`768` is dead as a tablet width.** It is the 2010-era iPad and no tablet in circulation
+reports it. It survives in the [static-shell.md §5](design/static-shell.md) FT matrix as a record
+of a test that already ran — don't pin new work to it.
+
+The rungs the codebase already turns on, and what each one carries:
+
+| Rung | Where it comes from | What moves |
+|---|---|---|
+| **1280** | Mud `Lg` | Tier Lists folds into Play ([static-shell.md §11.1](design/static-shell.md)). Picked over a tighter ~1150 so that landscape iPads (1180/1194) sit on the folded side rather than rendering every nav label in their tightest configuration |
+| **960** | Mud `Md` | The shell's desktop/mobile switch |
+| **760 / 600 / 500** | the boards | A board sheds one column at a time: song titles step aside at 760, long labels fall back to short forms at 500. **Figures never stack — every value keeps its own column** |
+| **`(min-aspect-ratio: 1/1), (min-width: 700px)`** | the More sheet | Squarish-or-wide gets the icon grid, narrow-and-tall the drill-down. **The width floor carries both the portrait tablet and the fold** — both are taller than 1:1 and both fail the aspect half, so the floor is the only thing keeping either off the phone treatment. That is why it is 700 and not a rounder number |
+| **`max-height: 520px`** | the session breakdown | The rule no width query can express — see below |
+
+**Two shapes any width-only ladder gets wrong:**
+
+- **Landscape phone, 844 × 390.** A width rule stacks the layout at 844px when *height* is the
+  scarce axis — exactly backwards. `max-height: 520px` compresses the vertical budget and
+  *un-stacks*. It keys on height rather than aspect on purpose, because a landscape tablet
+  (1024 × 768) is also wider than 1:1 and must **not** compress.
+- **Portrait tablet.** Wide in pixels, still short of horizontal room. The Rivals compare table
+  is the worked example — `(max-aspect-ratio: 1/1), (max-width: 599.98px)` drops it to grade art
+  and two score stacks. Prefer **grade art over a printed score** when a row runs out of room:
+  the art is narrower than the number it replaces, and rule 8 is already satisfied by the score
+  riding the tooltip.
+
+⚠ **Never place a breakpoint within a scrollbar's width of a target device.** A media or
+container query measures the **content box**, and a scrollbar takes 2px (overlay) to ~15px
+(classic) off the nominal width — so a rule at 899 flips a 900px viewport one way on macOS and
+the other on Windows. Leave a margin, and never sit a rung directly on a device's nominal width.
+
+⚠ **A fold changes its viewport mid-session.** The shell renders once per document with no
+circuit to re-render it, so anything that must survive an unfold has to be a media query —
+CSS, never Razor ([static-shell.md §11](design/static-shell.md)).
+
 ---
 
 ## 2. The rules

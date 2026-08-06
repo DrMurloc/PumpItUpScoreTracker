@@ -583,8 +583,15 @@ a `Class` parameter for this.
 
 The aspect half is the rule the bottom nav already uses for its wide-only Communities slot
 (*"squarish viewports (fold phones, landscape)"*). The width floor exists because a portrait
-tablet is **taller** than 1:1 — it would otherwise get the phone's drill-down across 768px of
+tablet is **taller** than 1:1 — it would otherwise get the phone's drill-down across its whole
 width. 700 clears the largest phone (~430) with room and sits below the 960 shell switch.
+
+⚠ **The floor carries the fold too, and that is the load-bearing half for it.** A fold unfolded
+is ~700 wide and about **0.84** — taller than 1:1, so it fails the aspect half exactly like a
+portrait tablet does, and only the width floor keeps it off the drill-down. The row above lists
+"fold unfolded" under squarish-or-wide, which is true of the *outcome* but not of the aspect
+test. Do not tighten 700 without checking a fold: it sits nearer that number than any tablet
+does. The class ladder is in [UX-GUIDELINES.md §1](../UX-GUIDELINES.md).
 
 `ShellMoreSheet` emits every destination **exactly once**, inside a `.more-group` with a head
 and a body. Emitting a grid structure and a drill structure side by side would mean ~20

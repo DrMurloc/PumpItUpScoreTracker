@@ -1,0 +1,41 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@namespace ScoreTracker.Web.Components
+
+@* Compact prints one number per card and nothing else, so the treatment of that number is
+   the only thing separating "you already scored this" from "we think you would". A colour
+   carrying meaning has to be printed somewhere (UX rule 8) and Compact has no room, so the
+   legend carries it for the whole grid.
+
+   Each item only appears when the grid actually contains that kind — a legend row for a
+   state no card is in reads as a state you failed to find. *@
+<div class="border-legend pmb-legend">
+    @if (HasCarry)
+    {
+        <span class="border-legend-item">
+            <span class="pmb-legend-swatch pmb-corner-carry">+000</span>@L["Carried from Phoenix 1"]
+        </span>
+    }
+    @if (HasUp)
+    {
+        <span class="border-legend-item">
+            <span class="pmb-legend-swatch pmb-corner-up">+000</span>@L["Upscore"]
+        </span>
+    }
+    @if (HasNew)
+    {
+        <span class="border-legend-item">
+            <span class="pmb-legend-swatch pmb-corner-new">+000</span>@L["Not yet played"]
+        </span>
+    }
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public IReadOnlyList<PumbilityTarget> Targets { get; set; } =
+        Array.Empty<PumbilityTarget>();
+
+    private bool HasCarry => Targets.Any(t => t.Source == TargetSource.Phoenix1);
+
+    private bool HasUp => Targets.Any(t => t.Source != TargetSource.Phoenix1 && t.Current != null);
+
+    private bool HasNew => Targets.Any(t => t.Source != TargetSource.Phoenix1 && t.Current == null);
+}

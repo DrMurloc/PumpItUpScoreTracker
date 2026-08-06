@@ -1,0 +1,137 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* The pool as fifty descending bars with the bar drawn across them and the waiting room
+   ghosted underneath. It answers the one question the pool can answer about itself: how
+   flat is it, which is what decides whether grinding volume pays. It replaces eight
+   rating-band headings that ranked the pool against itself and never said what for
+   (docs/design/pumbility-overhaul.md §3.2). *@
+@if (Page.Pool.Count > 0)
+{
+    <div class="pmb-curve">
+        <div class="pmb-curve-head">
+            <span class="pmb-curve-title">@L["Your pool"]</span>
+            <span class="pmb-curve-note">
+                @string.Format(L["{0} charts · {1} down to {2}"], Page.Pool.Count, Page.PoolTop.ToString("N0"), Page.PoolBottom.ToString("N0"))
+            </span>
+        </div>
+
+        <div class="pmb-curve-plot">
+            @foreach (var bar in Bars)
+            {
+                <span class="pmb-cbar @(bar.IsDouble ? "d" : "s") @(bar.Ghost ? "ghost" : "") @(bar.IsBar ? "is-bar" : "")"
+                      style="height:@bar.Percent.ToString("0.0")%"
+                      title="@bar.Title"></span>
+            }
+            @if (BarPercent != null)
+            {
+                <span class="pmb-curve-line" style="bottom:@BarPercent.Value.ToString("0.0")%">
+                    <span>@L["The bar"]</span>
+                </span>
+            }
+        </div>
+
+        <div class="pmb-curve-axis">
+            <span>#1</span>
+            <span>#@Page.Pool.Count</span>
+            @if (Page.WaitingRoom.Count > 0)
+            {
+                <span>#@(Page.Pool.Count + Page.WaitingRoom.Count)</span>
+            }
+        </div>
+
+        <div class="pmb-curve-legend">
+            <span><i class="pmb-swatch" style="background:var(--chart-doubles)"></i>@L["Doubles"]</span>
+            <span><i class="pmb-swatch" style="background:var(--chart-singles)"></i>@L["Singles"]</span>
+            @if (Page.Bar != null)
+            {
+                <span><i class="pmb-swatch" style="background:var(--mix-accent)"></i>@L["The bar"]</span>
+            }
+            @if (Page.WaitingRoom.Count > 0)
+            {
+                <span class="pmb-legend-ghost"><i class="pmb-swatch pmb-swatch-ghost"></i>@L["Waiting room"]</span>
+            }
+        </div>
+
+        <p class="pmb-curve-read">@ShapeSentence</p>
+    </div>
+}
+
+@code {
+    [Parameter] [EditorRequired] public PumbilityPageRecord Page { get; set; } = default!;
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    private sealed record Bar(double Percent, bool IsDouble, bool Ghost, bool IsBar, string Title);
+
+    // The plot floors a little under the lowest ghost so every bar keeps visible height —
+    // a pool spanning 1,460 to 1,207 would otherwise render as fifty identical full bars.
+    private double _floor;
+    private double _span;
+
+    private IReadOnlyList<Bar> _bars = Array.Empty<Bar>();
+
+    private IReadOnlyList<Bar> Bars => _bars;
+
+    // Built once per parameter set. As a property it rebuilt the whole list on every read AND
+    // set _floor/_span as a side effect, which is why BarPercent had to discard a second
+    // build (`_ = Bars`) just to make the line land on the same scale as the bars.
+    protected override void OnParametersSet()
+    {
+        var all = Page.Pool.Concat(Page.WaitingRoom).ToArray();
+        if (all.Length == 0)
+        {
+            _bars = Array.Empty<Bar>();
+            _floor = 0;
+            _span = 1;
+            return;
+        }
+
+        var max = all.Max(e => e.Value);
+        var min = all.Min(e => e.Value);
+        _floor = min - (max - min) * 0.9;
+        _span = Math.Max(1, max - _floor);
+
+        _bars = all.Select((entry, i) =>
+        {
+            var ghost = i >= Page.Pool.Count;
+            var isBar = Page.Bar != null && i == Page.Pool.Count - 1;
+            var isDouble = Charts.TryGetValue(entry.ChartId, out var chart) &&
+                           chart.Type == ChartType.Double;
+            var name = Charts.TryGetValue(entry.ChartId, out var c) ? c.Song.Name.ToString() : string.Empty;
+            return new Bar(Math.Clamp((entry.Value - _floor) / _span * 100, 2, 100), isDouble, ghost, isBar,
+                $"#{entry.Place} {name} — {entry.Value:N0}");
+        }).ToArray();
+    }
+
+    private double? BarPercent
+    {
+        get
+        {
+            if (Page.Bar == null || Page.Pool.Count == 0) return null;
+            // Same _floor/_span the bars were measured against, so the line lands on them.
+            return Math.Clamp((Page.Bar.Value - _floor) / _span * 100, 0, 100);
+        }
+    }
+
+    // What the shape means, in a sentence. A flat pool is the common case at the top of a
+    // level band and it changes the advice: nothing you play moves the number much, so the
+    // answer is volume rather than one hero chart.
+    private string ShapeSentence
+    {
+        get
+        {
+            if (Page.Pool.Count < 2) return string.Empty;
+            var spread = (int)Math.Round(Page.PoolSpread * 100);
+            if (Page.Bar == null)
+                return L["Your pool isn't full yet, so every new chart counts whole — nothing is being displaced."];
+            return Page.TiedAtBar > 1
+                ? string.Format(L["Your top and bottom are {0}% apart, and {1} charts sit level with your 50th. That shape says grind volume, not one hero chart."], spread, Page.TiedAtBar)
+                : string.Format(L["Your top and bottom are {0}% apart."], spread);
+        }
+    }
+}

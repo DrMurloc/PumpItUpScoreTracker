@@ -1,0 +1,298 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* What to play next, in the three sanctioned densities (UX rule 5).
+
+   There is no "upgrade vs new" column: a row carrying a grade in the You-have cell IS an
+   upgrade and a row carrying a dash IS new, and a column repeating that says nothing.
+
+   There IS a source label, and only because the list genuinely mixes two kinds of evidence.
+   A "From Phoenix 1" row is a score the player has already hit, repriced -- not an estimate
+   of what they might do. That outranks a peer quantile and the reader has to be able to tell
+   which they are looking at. On Phoenix 1 every row is a peer estimate, so the label would be
+   constant and it is suppressed there.
+
+   The "why" is an EVIDENCE line, never an attribution: the estimator carries no skill term,
+   so naming skills beside a projection would assert a causal path that does not exist
+   (docs/design/pumbility-overhaul.md §3.3). *@
+@if (Targets.Count == 0)
+{
+    <p class="pmb-empty">@L["Nothing here clears your bar yet — play a few more charts and check back."]</p>
+}
+else if (Shown.Count == 0)
+{
+    <p class="pmb-empty">@L["No suggestions match those filters."]</p>
+}
+else if (Density == UiDensity.Table)
+{
+    <div class="tier-table-wrap">
+        <table class="tier-table pmb-table">
+            <thead>
+            <tr>
+                <th>@L["Chart"]</th>
+                @if (HasCarryover)
+                {
+                    <th>@L["Based on"]</th>
+                }
+                <th>@L["You have"]</th>
+                <th>@L["Projected"]</th>
+                <th class="pmb-r">@L["Gain"]</th>
+                <th class="pmb-col-why">@L["Evidence"]</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var target in Shown)
+            {
+                var chart = Charts[target.ChartId];
+                <tr @onclick="() => OnOpen.InvokeAsync(chart)" class="pmb-row">
+                    <td class="pmb-ident">
+                        <span class="pmb-ident-cell">
+                            <SongImage Song="chart.Song" Height="34"></SongImage>
+                            <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                            <span class="pmb-ident-name">@chart.Song.Name</span>
+                        </span>
+                    </td>
+                    @if (HasCarryover)
+                    {
+                        <td>@SourceChip(target)</td>
+                    }
+                    <td>@CurrentCell(target)</td>
+                    <td>
+                        <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
+                        <span class="pmb-num pmb-score-text">@(((int)target.Projected).ToString("N0"))</span>
+                    </td>
+                    <td class="pmb-r pmb-gain-cell">+@target.Gain.ToString("N0")</td>
+                    <td class="pmb-col-why pmb-muted">@EvidenceLine(target)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else if (Density == UiDensity.Compact)
+{
+    @* The tier list's sticker sheet, because it IS that: a jacket, a bubble, and one
+       printed value. The value here is the gain, since that is what the list is ranked
+       by — nothing else on a 72px card would earn its space.
+
+       The legend reads the whole filtered set, not the page: paging to a slice that
+       happens to hold no carryover row should not retire the word for it mid-browse. *@
+    <CornerLegend Targets="Filtered"></CornerLegend>
+    <div class="tier-card-grid tier-card-grid-compact">
+        @foreach (var target in Shown)
+        {
+            var chart = Charts[target.ChartId];
+            <TierListChartCard Chart="chart" Density="UiDensity.Compact"
+                               CornerBadge="@($"+{target.Gain:N0}")"
+                               CornerBadgeClass="@CornerClass(target)"
+                               TooltipNote="@CornerMeaning(target)"
+                               ShowName="false" ShowToDo="false"
+                               OnOpen="OpenById"></TierListChartCard>
+        }
+    </div>
+}
+else
+{
+    <div class="tier-card-grid">
+        @foreach (var target in Shown)
+        {
+            var chart = Charts[target.ChartId];
+            <TierListChartCard Chart="chart" Density="UiDensity.Comfortable"
+                               CornerBadge="@($"+{target.Gain:N0}")"
+                               CornerBadgeClass="@CornerClass(target)"
+                               ShowPlay="true" OnPlay="OnPlayById"
+                               ShowToDo="ShowToDo" IsToDo="ToDos.Contains(target.ChartId)" OnToDo="OnToDo"
+                               OnOpen="OpenById"
+                               Body="@ProjectionBody(target)"></TierListChartCard>
+        }
+    </div>
+}
+
+@if (PageCount > 1)
+{
+    <div class="srp-pager">
+        <MudPagination Count="PageCount" Selected="_page" SelectedChanged="GoToPage"
+                       Color="Color.Primary" Size="Size.Small"></MudPagination>
+    </div>
+}
+
+@code {
+    [Parameter] [EditorRequired] public IReadOnlyList<PumbilityTarget> Targets { get; set; } =
+        Array.Empty<PumbilityTarget>();
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
+
+    [Parameter] public bool ShowToDo { get; set; }
+
+    [Parameter] public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
+
+    [Parameter] public EventCallback<Guid> OnToDo { get; set; }
+
+    /// <summary>Null shows both. Applies to carried Phoenix 1 rows exactly as it does to estimates.</summary>
+    [Parameter] public ChartType? TypeFilter { get; set; }
+
+    /// <summary>Printed difficulty ceiling — the number on the bubble, which is what a player filters by.</summary>
+    [Parameter] public int? MaxLevel { get; set; }
+
+    /// <summary>Reports how much of the list survived the filters, so the page can print it.</summary>
+    [Parameter] public EventCallback<int> OnFilteredCountChanged { get; set; }
+
+    // A full projection runs to hundreds of charts and the page is a plan, not an archive.
+    // Compact fits far more per screen than Comfortable does, so the page size follows the
+    // density rather than forcing one number to be wrong at two of the three.
+    private int PageSize => Density switch
+    {
+        UiDensity.Compact => 60,
+        UiDensity.Table => 50,
+        _ => 24
+    };
+
+    private int _page = 1;
+    private int _lastFilteredCount = -1;
+
+    // Filtered once per parameter set, not once per read: Shown, PageCount, HasCarryover and
+    // the render itself all want it, and re-running the Where each time is four sweeps of a
+    // list that can run to several hundred.
+    private IReadOnlyList<PumbilityTarget> _filtered = Array.Empty<PumbilityTarget>();
+
+    private IReadOnlyList<PumbilityTarget> Filtered => _filtered;
+
+    private IReadOnlyList<PumbilityTarget> Shown =>
+        _filtered.Skip((_page - 1) * PageSize).Take(PageSize).ToArray();
+
+    private int PageCount => (_filtered.Count + PageSize - 1) / PageSize;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _filtered = Filter();
+
+        // A narrowed filter can leave the reader stranded on a page that no longer exists,
+        // which renders as an empty list rather than as "no matches" — so clamp rather than
+        // reset: a density flip changes the page size and should keep you roughly in place.
+        if (_page > Math.Max(1, PageCount)) _page = Math.Max(1, PageCount);
+
+        if (_filtered.Count != _lastFilteredCount)
+        {
+            _lastFilteredCount = _filtered.Count;
+            await OnFilteredCountChanged.InvokeAsync(_filtered.Count);
+        }
+    }
+
+    private IReadOnlyList<PumbilityTarget> Filter()
+    {
+        if (TypeFilter == null && MaxLevel == null) return Targets;
+        return Targets.Where(t => Charts.TryGetValue(t.ChartId, out var chart)
+                                  && (TypeFilter == null || chart.Type == TypeFilter)
+                                  && (MaxLevel == null || (int)chart.Level <= MaxLevel)).ToArray();
+    }
+
+    private void GoToPage(int page) => _page = page;
+
+    /// <summary>Only worth a column when the list actually mixes evidence.</summary>
+    private bool HasCarryover => _filtered.Any(t => t.Source == TargetSource.Phoenix1);
+
+    private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
+
+    private Task OnPlayById(Guid chartId) => OnPlay.InvokeAsync(Charts[chartId]);
+
+    // Three kinds of row, and the corner is the only place a Compact card can say which:
+    // a score you already hold elsewhere, a score you hold here and would beat, and one
+    // nobody has seen you play. The legend prints all three (rule 8).
+    private static string CornerClass(PumbilityTarget target) => target switch
+    {
+        { Source: TargetSource.Phoenix1 } => "pmb-corner-carry",
+        { Current: not null } => "pmb-corner-up",
+        _ => "pmb-corner-new"
+    };
+
+    private string CornerMeaning(PumbilityTarget target) => target switch
+    {
+        { Source: TargetSource.Phoenix1 } => L["Carried from Phoenix 1"],
+        { Current: not null } => L["Upscore"],
+        _ => L["Not yet played"]
+    };
+
+    private RenderFragment ProjectionBody(PumbilityTarget target) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "pmb-tcard-meta");
+        builder.AddContent(2, CurrentCell(target));
+        builder.OpenElement(3, "span");
+        builder.AddAttribute(4, "class", "pmb-arrow");
+        builder.AddContent(5, "→");
+        builder.CloseElement();
+        builder.OpenComponent<LetterGradeIcon>(6);
+        builder.AddComponentParameter(7, nameof(LetterGradeIcon.Grade), target.Projected.LetterGradeFor(Mix));
+        builder.AddComponentParameter(8, nameof(LetterGradeIcon.Height), 18);
+        builder.CloseComponent();
+        builder.OpenElement(9, "span");
+        builder.AddAttribute(10, "class", "pmb-num pmb-score-text");
+        builder.AddContent(11, ((int)target.Projected).ToString("N0"));
+        builder.CloseElement();
+        builder.CloseElement();
+
+        builder.OpenElement(12, "div");
+        builder.AddAttribute(13, "class", "pmb-tcard-why pmb-muted");
+        builder.AddContent(14, target.Evidence != null ? EvidenceLine(target) : CornerMeaning(target));
+        builder.CloseElement();
+    };
+
+    private RenderFragment SourceChip(PumbilityTarget target) => builder =>
+    {
+        var carried = target.Source == TargetSource.Phoenix1;
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", carried ? "pmb-src pmb-src-carry" : "pmb-src");
+        builder.AddAttribute(2, "title",
+            carried ? L["A score you already hit in Phoenix 1, repriced for Phoenix 2."].ToString()
+                    : L["An estimate from players at your competitive level."].ToString());
+        builder.AddContent(3, carried ? L["Phoenix 1"] : L["Players"]);
+        builder.CloseElement();
+    };
+
+    private RenderFragment CurrentCell(PumbilityTarget target) => builder =>
+    {
+        if (target.Current == null)
+        {
+            builder.OpenElement(0, "span");
+            builder.AddAttribute(1, "class", "pmb-none");
+            builder.AddContent(2, "—");
+            builder.CloseElement();
+            return;
+        }
+
+        builder.OpenComponent<LetterGradeIcon>(3);
+        builder.AddComponentParameter(4, nameof(LetterGradeIcon.Grade),
+            target.Current.Value.LetterGradeFor(Mix));
+        builder.AddComponentParameter(5, nameof(LetterGradeIcon.IsBroken), target.CurrentIsBroken);
+        builder.AddComponentParameter(6, nameof(LetterGradeIcon.Height), 18);
+        builder.CloseComponent();
+
+        builder.OpenElement(7, "span");
+        builder.AddAttribute(8, "class", "pmb-num pmb-muted pmb-score-text");
+        builder.AddContent(9, ((int)target.Current.Value).ToString("N0"));
+        builder.CloseElement();
+    };
+
+    // What the estimate heard, not why it landed there. Effective peers is voices after
+    // growth weighting -- ten people who have all levelled past the score they lent are
+    // worth about one -- so it is the honest number to print.
+    private string EvidenceLine(PumbilityTarget target)
+    {
+        if (target.Evidence is not { } evidence) return string.Empty;
+        return string.Format(L["from {0} players like you"], evidence.PeerCount);
+    }
+}
