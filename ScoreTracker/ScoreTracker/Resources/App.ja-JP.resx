@@ -168,12 +168,6 @@
   <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
     <value>週間 {1} {2} で **#{0}**</value>
   </data>
-  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
-    <value>**Lv.{0} で AAA ×50**</value>
-  </data>
-  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
-    <value>**Lv.{0} で SSS ×50**</value>
-  </data>
   <data name="**All passed!**" xml:space="preserve">
     <value>**全譜面パス！**</value>
   </data>
@@ -201,8 +195,8 @@
   <data name="**{0}** at {1}" xml:space="preserve">
     <value>**{0}**（{1}）</value>
   </data>
-  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
-    <value>**{0}** が {1} 譜面ボードで順位上昇（+{2}）</value>
+  <data name="**{0}** board entries · **{1}** players active · **{2}** debuts" xml:space="preserve">
+    <value>エントリー **{0}** · アクティブ **{1}** · 初登場 **{2}**</value>
   </data>
   <data name="**{0}** completed" xml:space="preserve">
     <value>**{0}** 達成</value>
@@ -215,9 +209,6 @@
   </data>
   <data name="**{0}** — now ~#{1:0}" xml:space="preserve">
     <value>**{0}** — 現在 ~#{1:0}</value>
-  </data>
-  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
-    <value>**{0}** — 譜面ボード{1}面（新規{2}・純増+{3}）</value>
   </data>
   <data name="+ {0} more" xml:space="preserve">
     <value>他 {0} 件</value>
@@ -236,9 +227,6 @@
   </data>
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>他 {0} 人はこの段位をさらに上まで進んでいます。</value>
-  </data>
-  <data name=", dethroning {0}" xml:space="preserve">
-    <value>（{0} を王座から陥落）</value>
   </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
@@ -287,6 +275,9 @@
   </data>
   <data name="50% -> 75%" xml:space="preserve">
     <value>50% -> 75%</value>
+  </data>
+  <data name="50× AAA on singles" xml:space="preserve">
+    <value>Singles で 50× AAA</value>
   </data>
   <data name="6 months" xml:space="preserve">
     <value>6か月</value>
@@ -879,6 +870,9 @@
   </data>
   <data name="Biggest Movers" xml:space="preserve">
     <value>順位変動トップ</value>
+  </data>
+  <data name="Biggest PUMBILITY gain" xml:space="preserve">
+    <value>PUMBILITY最大上昇</value>
   </data>
   <data name="Biggest PUMBILITY gainer" xml:space="preserve">
     <value>PUMBILITY最大上昇</value>
@@ -3513,9 +3507,6 @@
   <data name="New" xml:space="preserve">
     <value>新しい</value>
   </data>
-  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
-    <value>新 #1 — **{0}**（{1}）· {2:N0}</value>
-  </data>
   <data name="New #1s" xml:space="preserve">
     <value>新しい1位</value>
   </data>
@@ -4702,9 +4693,6 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
-  <data name="PUMBILITY movers" xml:space="preserve">
-    <value>PUMBILITY 変動</value>
-  </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITYの推移</value>
   </data>
@@ -4716,9 +4704,6 @@
   </data>
   <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
     <value>Pumbility レーティング、タイトル、スクショしたくなるシーズンリキャップ。</value>
-  </data>
-  <data name="PUMBILITY top 10" xml:space="preserve">
-    <value>PUMBILITY トップ 10</value>
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY トップ 50</value>
@@ -5985,9 +5970,6 @@
   <data name="Swap direction" xml:space="preserve">
     <value>方向を入れ替える</value>
   </data>
-  <data name="swept Sunday" xml:space="preserve">
-    <value>日曜集計</value>
-  </data>
   <data name="Switch it any time from the mix pill in the top bar." xml:space="preserve">
     <value>上部バーからいつでも切り替えられます。</value>
   </data>
@@ -6465,9 +6447,6 @@
   </data>
   <data name="To Leaderboard" xml:space="preserve">
     <value>ランキングチェック</value>
-  </data>
-  <data name="To make the top 1000" xml:space="preserve">
-    <value>トップ 1000 入りの条件</value>
   </data>
   <data name="To page" xml:space="preserve">
     <value>終了ページ</value>
@@ -7008,6 +6987,9 @@
   <data name="What goes into your list" xml:space="preserve">
     <value>リストに入るもの</value>
   </data>
+  <data name="What holds the rungs" xml:space="preserve">
+    <value>各順位のボーダー</value>
+  </data>
   <data name="What is this tool?" xml:space="preserve">
     <value>このツールは何ですか？</value>
   </data>
@@ -7118,9 +7100,6 @@
   </data>
   <data name="World firsts" xml:space="preserve">
     <value>世界初達成</value>
-  </data>
-  <data name="World firsts &amp; new #1s" xml:space="preserve">
-    <value>世界初 &amp; 新 #1</value>
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>世界ランキング</value>
@@ -7514,6 +7493,12 @@
   </data>
   <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
     <value>Perfect {0:N0}、Great {1:N0}、Good {2:N0}、Bad {3:N0}、Miss {4:N0}、最大コンボ {5:N0}</value>
+  </data>
+  <data name="{0} **+{1} places** across {2} chart boards" xml:space="preserve">
+    <value>{0} 譜面ボード {2} 件で **+{1}**</value>
+  </data>
+  <data name="{0} **+{1}** to {2} · #{3} → **#{4}**" xml:space="preserve">
+    <value>{0} **+{1}**（{2}）· #{3} → **#{4}**</value>
   </data>
   <data name="{0} / {1} charts rated" xml:space="preserve">
     <value>{0} / {1} 譜面が評価済み</value>

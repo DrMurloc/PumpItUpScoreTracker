@@ -143,6 +143,9 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Find | Grubmarg | Coined 2026-08-04. |
 | Row / Rows | Grolgub | Coined 2026-08-04. |
 | Edge | Bralmo | Coined 2026-08-04 for the supplemented-row legend. |
+| Gain | Roglub | Coined 2026-08-05 for the digest's PUMBILITY gain. The amount won, distinct from `Romr` (gainer), the player who won it. |
+| Across | Plglarg | Coined 2026-08-05 for the digest's board-climber line. |
+| On | Ur | Coined 2026-08-05 — the preposition, as in "50× AAA on singles". |
 
 
 ### Difficulty and intensity
