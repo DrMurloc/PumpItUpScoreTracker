@@ -1046,6 +1046,9 @@
   <data name="Card {0} of {1}" xml:space="preserve">
     <value>カード {0}/{1}</value>
   </data>
+  <data name="Carried from Phoenix 1" xml:space="preserve">
+    <value>Phoenix 1 から引き継ぎ</value>
+  </data>
   <data name="Category" xml:space="preserve">
 	  <value>カテゴリー</value>
   </data>
@@ -3851,6 +3854,9 @@
   </data>
   <data name="Not yet" xml:space="preserve">
     <value>未獲得</value>
+  </data>
+  <data name="Not yet played" xml:space="preserve">
+    <value>未プレイ</value>
   </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>メモ (任意)</value>

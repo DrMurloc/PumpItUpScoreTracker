@@ -1046,6 +1046,9 @@
   <data name="Card {0} of {1}" xml:space="preserve">
     <value>Carte {0} sur {1}</value>
   </data>
+  <data name="Carried from Phoenix 1" xml:space="preserve">
+    <value>Repris de Phoenix 1</value>
+  </data>
   <data name="Category" xml:space="preserve">
     <value>Catégorie</value>
   </data>
@@ -3850,6 +3853,9 @@
   </data>
   <data name="Not yet" xml:space="preserve">
     <value>Pas encore</value>
+  </data>
+  <data name="Not yet played" xml:space="preserve">
+    <value>Pas encore joué</value>
   </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>Note (facultatif)</value>

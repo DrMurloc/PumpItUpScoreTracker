@@ -72,60 +72,36 @@ else if (Density == UiDensity.Table)
 }
 else if (Density == UiDensity.Compact)
 {
+    @* The tier list's sticker sheet, because it IS that: a jacket, a bubble, and one
+       printed value. The value here is the gain, since that is what the list is ranked
+       by — nothing else on a 72px card would earn its space. *@
+    <CornerLegend Targets="Targets"></CornerLegend>
     <div class="tier-card-grid tier-card-grid-compact">
         @foreach (var target in Targets)
         {
             var chart = Charts[target.ChartId];
-            <div class="pmb-sticker" @onclick="() => OnOpen.InvokeAsync(chart)"
-                 title="@($"{chart.Song.Name} +{target.Gain:N0}")">
-                <SongImage Song="chart.Song" Height="96"></SongImage>
-                @if (target.Source == TargetSource.Phoenix1)
-                {
-                    <span class="pmb-sticker-carry">@L["Phoenix 1"]</span>
-                }
-                <div class="pmb-sticker-line">
-                    <span class="pmb-sticker-gain">+@target.Gain.ToString("N0")</span>
-                    <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="16"></LetterGradeIcon>
-                </div>
-                <div class="pmb-sticker-name">@chart.Song.Name</div>
-            </div>
+            <TierListChartCard Chart="chart" Density="UiDensity.Compact"
+                               CornerBadge="@($"+{target.Gain:N0}")"
+                               CornerBadgeClass="@CornerClass(target)"
+                               TooltipNote="@CornerMeaning(target)"
+                               ShowName="false" ShowToDo="false"
+                               OnOpen="OpenById"></TierListChartCard>
         }
     </div>
 }
 else
 {
-    <div class="pmb-targets">
+    <div class="tier-card-grid">
         @foreach (var target in Targets)
         {
             var chart = Charts[target.ChartId];
-            <div class="pmb-tcard @(target.Current == null ? "is-new" : "")"
-                 @onclick="() => OnOpen.InvokeAsync(chart)">
-                <div class="pmb-tcard-art">
-                    <SongImage Song="chart.Song" Height="56"></SongImage>
-                    <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                </div>
-                <div class="pmb-tcard-body">
-                    <div class="pmb-tcard-name">@chart.Song.Name</div>
-                    <div class="pmb-tcard-meta">
-                        @if (HasCarryover)
-                        {
-                            @SourceChip(target)
-                        }
-                        @CurrentCell(target)
-                        <span class="pmb-arrow">→</span>
-                        <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
-                        <span class="pmb-num pmb-score-text">@(((int)target.Projected).ToString("N0"))</span>
-                    </div>
-                    @if (target.Evidence != null)
-                    {
-                        <div class="pmb-tcard-why pmb-muted">@EvidenceLine(target)</div>
-                    }
-                </div>
-                <div class="pmb-tcard-gain">
-                    <div class="pmb-gain-num">+@target.Gain.ToString("N0")</div>
-                    <div class="pmb-gain-lbl">@L["PUMBILITY"]</div>
-                </div>
-            </div>
+            <TierListChartCard Chart="chart" Density="UiDensity.Comfortable"
+                               CornerBadge="@($"+{target.Gain:N0}")"
+                               CornerBadgeClass="@CornerClass(target)"
+                               ShowPlay="true" OnPlay="OnPlayById"
+                               ShowToDo="ShowToDo" IsToDo="ToDos.Contains(target.ChartId)" OnToDo="OnToDo"
+                               OnOpen="OpenById"
+                               Body="@ProjectionBody(target)"></TierListChartCard>
         }
     </div>
 }
@@ -143,8 +119,56 @@ else
 
     [Parameter] public EventCallback<Chart> OnOpen { get; set; }
 
+    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
+
+    [Parameter] public bool ShowToDo { get; set; }
+
+    [Parameter] public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
+
+    [Parameter] public EventCallback<Guid> OnToDo { get; set; }
+
     /// <summary>Only worth a column when the list actually mixes evidence.</summary>
     private bool HasCarryover => Targets.Any(t => t.Source == TargetSource.Phoenix1);
+
+    private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
+
+    private Task OnPlayById(Guid chartId) => OnPlay.InvokeAsync(Charts[chartId]);
+
+    // Three kinds of row, and the corner is the only place a Compact card can say which:
+    // a score you already hold elsewhere, a score you hold here and would beat, and one
+    // nobody has seen you play. The legend prints all three (rule 8).
+    private static string CornerClass(PumbilityTarget target) =>
+        target.Source == TargetSource.Phoenix1 ? "pmb-corner-carry" :
+        target.Current != null ? "pmb-corner-up" : "pmb-corner-new";
+
+    private string CornerMeaning(PumbilityTarget target) =>
+        target.Source == TargetSource.Phoenix1 ? L["Carried from Phoenix 1"] :
+        target.Current != null ? L["Upscore"] : L["Not yet played"];
+
+    private RenderFragment ProjectionBody(PumbilityTarget target) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "pmb-tcard-meta");
+        builder.AddContent(2, CurrentCell(target));
+        builder.OpenElement(3, "span");
+        builder.AddAttribute(4, "class", "pmb-arrow");
+        builder.AddContent(5, "→");
+        builder.CloseElement();
+        builder.OpenComponent<LetterGradeIcon>(6);
+        builder.AddComponentParameter(7, nameof(LetterGradeIcon.Grade), target.Projected.LetterGradeFor(Mix));
+        builder.AddComponentParameter(8, nameof(LetterGradeIcon.Height), 18);
+        builder.CloseComponent();
+        builder.OpenElement(9, "span");
+        builder.AddAttribute(10, "class", "pmb-num pmb-score-text");
+        builder.AddContent(11, ((int)target.Projected).ToString("N0"));
+        builder.CloseElement();
+        builder.CloseElement();
+
+        builder.OpenElement(12, "div");
+        builder.AddAttribute(13, "class", "pmb-tcard-why pmb-muted");
+        builder.AddContent(14, target.Evidence != null ? EvidenceLine(target) : CornerMeaning(target));
+        builder.CloseElement();
+    };
 
     private RenderFragment SourceChip(PumbilityTarget target) => builder =>
     {

@@ -1046,6 +1046,9 @@
   <data name="Card {0} of {1}" xml:space="preserve">
     <value>Mrpmorg {0} mrgl {1}</value>
   </data>
+  <data name="Carried from Phoenix 1" xml:space="preserve">
+    <value>Blarg mrogl Phoenix 1</value>
+  </data>
   <data name="Category" xml:space="preserve">
 	  <value>Murmgrglgrgl</value>
   </data>
@@ -3851,6 +3854,9 @@
   </data>
   <data name="Not yet" xml:space="preserve">
     <value>Murm argl</value>
+  </data>
+  <data name="Not yet played" xml:space="preserve">
+    <value>Blub morp mrogl</value>
   </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>Blurgl (opa)</value>

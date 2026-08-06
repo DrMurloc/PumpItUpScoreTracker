@@ -82,21 +82,36 @@ The curve replaces the eight rating bands. They are deleted, not relocated.
 
 ### 3.3 Targets — "what to play next"
 
-Ranked by projected gain. Each row: jacket, difficulty bubble, chart name, what you hold now →
-what you are projected to reach, the gain, and the badge chips explaining why.
+Ranked by projected gain.
 
-**Two kinds, distinguished by the row itself and never by a column.** A chart with a grade in
-the *You have* cell is an upgrade; a chart with a dash is new. A "Kind" column restated that on
-Phoenix 1 and read the same value down every row on Phoenix 2. The coloured left rail stays as a
-scan affordance, paired with the grade cell so nothing rides on colour alone (rule 8).
+**Comfortable and Compact are the tier list's chart card** (`TierListChartCard`), not a
+lookalike — the same component, extended. A grid of chart cards is one concept, and the tier
+list already owns it: jacket, difficulty bubble top-left, body below, To-Do and details in the
+action row. What this page adds is generic and reusable — a printed **corner badge** bottom-right
+of the jacket, a **body slot**, and an optional **play** affordance that opens the chart dialog
+with the video already running. Cloning the card instead would have bought a second thing to
+keep in sync, which is the drift the one-concept-one-component rule exists to prevent.
+
+The corner badge is the **gain**, because a Compact card is 72px tall and prints exactly one
+value — so it has to be the one the list is ranked by.
+
+**Three kinds of row, said by the badge and never by a column.** Green-filled = you hold a score
+here and would beat it. Green-outlined = you hold it in *another mix* (§5). Neither = nobody has
+seen you play it. A "Kind" column restated what the card already says, and read the same value
+down every row on Phoenix 1.
+
+Compact has no room for a word on the card, so the **legend prints all three** — and only the
+kinds the grid actually contains, since a swatch for an absent state reads as one you failed to
+find. Comfortable needs no legend: every card's why-line says its kind in words. That is rule 8
+satisfied at both densities without a colour travelling alone at either.
 
 **In Phoenix 2 the list mixes two kinds of evidence, and says which is which.** A chart from
 the player's Phoenix 1 pool that they have not scored here is not estimated — the score is on
 record and repricing it is arithmetic. Those rows **replace** any peer estimate for the same
-chart (owner, 2026-08-06: *"there is no better data than the actual scores you had before"*),
-carry a **Phoenix 1** label, and are the only signal that works at a mix launch when there is
-no peer data to estimate from. The label renders only where the list actually mixes sources —
-on Phoenix 1 every row is a peer estimate, so it would be a column repeating itself.
+chart (owner, 2026-08-06: *"there is no better data than the actual scores you had before"*)
+and are the only signal that works at a mix launch. Table density keeps a **Based on** column
+with the word spelled out, because a table cell can hold a word where a 72px card cannot; it
+renders only where the list actually mixes sources.
 
 ⚠ **The "why" line is OPEN, and the mock's version is now dishonest.** The mock renders badge
 chips ("▲ Anchor Runs · ▼ Twists") as the explanation for each target. That was drawn when the

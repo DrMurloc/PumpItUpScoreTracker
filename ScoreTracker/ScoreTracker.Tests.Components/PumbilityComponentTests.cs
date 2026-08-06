@@ -101,12 +101,13 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         var comfortable = RenderComponent<TargetList>(p => p
             .Add(x => x.Targets, page.Targets).Add(x => x.Charts, charts)
             .Add(x => x.Density, UiDensity.Comfortable));
-        Assert.Equal(4, comfortable.FindAll(".pmb-tcard").Count);
+        Assert.Equal(4, comfortable.FindAll(".tier-chart-card").Count);
+        Assert.Empty(comfortable.FindAll(".tier-chart-card-compact"));
 
         var compact = RenderComponent<TargetList>(p => p
             .Add(x => x.Targets, page.Targets).Add(x => x.Charts, charts)
             .Add(x => x.Density, UiDensity.Compact));
-        Assert.Equal(4, compact.FindAll(".pmb-sticker").Count);
+        Assert.Equal(4, compact.FindAll(".tier-chart-card-compact").Count);
 
         var table = RenderComponent<TargetList>(p => p
             .Add(x => x.Targets, page.Targets).Add(x => x.Charts, charts)
@@ -115,28 +116,64 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     [Fact]
-    public void AnUnplayedChartWearsTheNewRailAndAnUpgradeDoesNot()
+    public void TheGainBadgeSaysWhichOfTheThreeKindsOfRowThisIs()
     {
-        // The whole reason there is no "kind" column: the row already says it.
-        var page = Page(poolSize: 50, targets: 0);
-        var chart = NewChart(ChartType.Single, 20);
+        // The whole reason there is no "kind" column: the card already says it. A Compact
+        // card prints one number and nothing else, so that number's treatment carries it.
+        var carried = NewChart(ChartType.Single, 22);
+        var upscore = NewChart(ChartType.Single, 22);
+        var unplayed = NewChart(ChartType.Single, 22);
         var targets = new[]
         {
-            new PumbilityTarget(chart.Id, 970_000, 300, null, false, null, null),
-            new PumbilityTarget(chart.Id, 980_000, 200, 930_000, false, null, null)
+            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, null, TargetSource.Phoenix1),
+            new PumbilityTarget(upscore.Id, 980_000, 200, 930_000, false, null, null),
+            new PumbilityTarget(unplayed.Id, 970_000, 300, null, false, null, null)
+        };
+        var charts = new Dictionary<Guid, Chart>
+            { [carried.Id] = carried, [upscore.Id] = upscore, [unplayed.Id] = unplayed };
+
+        foreach (var density in new[] { UiDensity.Comfortable, UiDensity.Compact })
+        {
+            var cut = RenderComponent<TargetList>(p => p
+                .Add(x => x.Targets, targets).Add(x => x.Charts, charts)
+                .Add(x => x.Density, density));
+
+            // Scoped to the grid: Compact's legend wears the same classes on purpose, so a
+            // swatch is a second match for every kind the grid contains.
+            Assert.Single(cut.FindAll(".tier-card-grid .pmb-corner-carry"));
+            Assert.Single(cut.FindAll(".tier-card-grid .pmb-corner-up"));
+            Assert.Single(cut.FindAll(".tier-card-grid .pmb-corner-new"));
+            Assert.Contains("400", cut.Find(".tier-card-grid .pmb-corner-carry").TextContent);
+        }
+    }
+
+    [Fact]
+    public void CompactPrintsTheWordsForEveryColourItIsUsing()
+    {
+        // Rule 8: Compact has no room for a word on the card, so the legend carries it —
+        // and only for kinds the grid actually contains.
+        var carried = NewChart(ChartType.Single, 22);
+        var unplayed = NewChart(ChartType.Single, 22);
+        var targets = new[]
+        {
+            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, null, TargetSource.Phoenix1),
+            new PumbilityTarget(unplayed.Id, 970_000, 300, null, false, null, null)
         };
 
         var cut = RenderComponent<TargetList>(p => p
             .Add(x => x.Targets, targets)
-            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart })
-            .Add(x => x.Density, UiDensity.Comfortable));
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [carried.Id] = carried, [unplayed.Id] = unplayed })
+            .Add(x => x.Density, UiDensity.Compact));
 
-        Assert.Single(cut.FindAll(".pmb-tcard.is-new"));
-        Assert.Equal(2, cut.FindAll(".pmb-tcard").Count);
+        var legend = cut.Find(".pmb-legend").TextContent;
+        Assert.Contains("Phoenix 1", legend);
+        Assert.Contains("Not yet played", legend);
+        // No row is an upscore, so a swatch for one would be a state you failed to find.
+        Assert.DoesNotContain("Upscore", legend);
     }
 
     [Fact]
-    public void ACarriedPhoenix1ScoreIsLabelledSoItIsNotMistakenForAnEstimate()
+    public void TheTableStillNamesItsSourceBecauseAColumnCanHoldAWord()
     {
         var carried = NewChart(ChartType.Single, 22);
         var guessed = NewChart(ChartType.Single, 22);
@@ -150,10 +187,9 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         var cut = RenderComponent<TargetList>(p => p
             .Add(x => x.Targets, targets)
             .Add(x => x.Charts, new Dictionary<Guid, Chart> { [carried.Id] = carried, [guessed.Id] = guessed })
-            .Add(x => x.Density, UiDensity.Comfortable));
+            .Add(x => x.Density, UiDensity.Table));
 
-        var chips = cut.FindAll(".pmb-src");
-        Assert.Equal(2, chips.Count);
+        Assert.Equal(2, cut.FindAll(".pmb-src").Count);
         Assert.Single(cut.FindAll(".pmb-src-carry"));
         Assert.Contains("Phoenix 1", cut.Find(".pmb-src-carry").TextContent);
     }
@@ -171,7 +207,7 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         var cut = RenderComponent<TargetList>(p => p
             .Add(x => x.Targets, targets)
             .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart })
-            .Add(x => x.Density, UiDensity.Comfortable));
+            .Add(x => x.Density, UiDensity.Table));
 
         Assert.Empty(cut.FindAll(".pmb-src"));
     }

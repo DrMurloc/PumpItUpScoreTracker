@@ -1046,6 +1046,9 @@
   <data name="Card {0} of {1}" xml:space="preserve">
     <value>Card {0} of {1}</value>
   </data>
+  <data name="Carried from Phoenix 1" xml:space="preserve">
+    <value>Carried from Phoenix 1</value>
+  </data>
   <data name="Category" xml:space="preserve">
 	  <value>Category</value>
   </data>
@@ -3851,6 +3854,9 @@
   </data>
   <data name="Not yet" xml:space="preserve">
     <value>Not yet</value>
+  </data>
+  <data name="Not yet played" xml:space="preserve">
+    <value>Not yet played</value>
   </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>Note (optional)</value>

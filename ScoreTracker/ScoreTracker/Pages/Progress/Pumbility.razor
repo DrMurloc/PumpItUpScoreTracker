@@ -1,4 +1,6 @@
 @using MediatR
+@using ScoreTracker.Application.Commands
+@using ScoreTracker.Application.Queries
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Domain.Services
@@ -75,7 +77,8 @@ else
         else
         {
             <TargetList Targets="_page.Targets" Charts="_charts" Density="_density" Mix="_currentMix"
-                        OnOpen="ShowChartDetails"></TargetList>
+                        ShowToDo="true" ToDos="_todos" OnToDo="ToggleToDo"
+                        OnOpen="ShowChartDetails" OnPlay="PlayChart"></TargetList>
         }
     </section>
 
@@ -142,12 +145,18 @@ else
     </details>
 }
 
-<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
+@* AutoPlay is bound rather than fixed: the card's play button and its jacket open the same
+   dialog, and only one of them asked for the video. *@
+<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"
+                    AutoPlay="_detailsAutoPlay"
+                    IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
+                    OnToDo="ToggleToDo"></ChartDetailsDialog>
 
 @inject IMediator Mediator
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
+@inject ISnackbar Snackbar
 
 @code {
     private const string DensitySettingKey = "Density__Pumbility";
@@ -165,6 +174,9 @@ else
 
     private Chart? _detailsChart;
     private bool _detailsOpen;
+    private bool _detailsAutoPlay;
+
+    private readonly ISet<Guid> _todos = new HashSet<Guid>();
 
     private DifficultyLevel _whatIfLevel = 18;
     private ChartType _whatIfType = ChartType.Single;
@@ -194,7 +206,11 @@ else
         if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
             _density = density;
 
+        var todosTask = Mediator.Send(new GetSavedChartsQuery());
         _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
+        foreach (var saved in (await todosTask).Where(c => c.ListType == ChartListType.ToDo))
+            _todos.Add(saved.ChartId);
+
         await Load();
     }
 
@@ -243,7 +259,33 @@ else
     private void ShowChartDetails(Chart chart)
     {
         _detailsChart = chart;
+        _detailsAutoPlay = false;
         _detailsOpen = true;
+    }
+
+    private void PlayChart(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsAutoPlay = true;
+        _detailsOpen = true;
+    }
+
+    private async Task ToggleToDo(Guid chartId)
+    {
+        if (_todos.Contains(chartId))
+        {
+            await Mediator.Send(new RemoveChartFromListCommand(ChartListType.ToDo, chartId));
+            Snackbar.Add(L["Removed from ToDo List!"], Severity.Success);
+            _todos.Remove(chartId);
+        }
+        else
+        {
+            await Mediator.Send(new SaveChartToListCommand(ChartListType.ToDo, chartId));
+            Snackbar.Add(L["Added to ToDo List!"], Severity.Success);
+            _todos.Add(chartId);
+        }
+
+        StateHasChanged();
     }
 
     // The what-if is a tool, not an answer, which is why it sits at the bottom. It prices

@@ -1038,6 +1038,9 @@
   <data name="Card {0} of {1}" xml:space="preserve">
     <value>카드 {0}/{1}</value>
   </data>
+  <data name="Carried from Phoenix 1" xml:space="preserve">
+    <value>Phoenix 1에서 이어옴</value>
+  </data>
   <data name="Category" xml:space="preserve">
     <value>카테고리</value>
   </data>
@@ -3821,6 +3824,9 @@
   </data>
   <data name="Not yet" xml:space="preserve">
     <value>미획득</value>
+  </data>
+  <data name="Not yet played" xml:space="preserve">
+    <value>아직 플레이 안 함</value>
   </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>메모 (선택)</value>
