@@ -26,7 +26,7 @@ semantics the tier list draws, with no new project reference and no privacy gate
 or first-clear batches short-circuit before any cross-mix read.
 
 **Iteration (D1, owner feedback 2026-08-05) — the official digest is reshaped onto the This Week
-hero. DESIGNED, NOT BUILT.** The shipped card renders **39 lines across five stacked lists with no
+hero. IMPLEMENTED.** The card as shipped rendered **39 lines across five stacked lists with no
 image** (owner: "ugly AF, too much wall of text") while ignoring most of what the hero it should
 mirror already computes: `WeeklyHighlightsRecord` has carried `Pulse`, `Gainers`, `Floors` and
 `Debuts` since [I2](official-leaderboards-overhaul.md) and `DigestCard` reads none of them. The new
@@ -77,16 +77,31 @@ floor alone, so it cannot answer "what did #100 take last week" at all. The `Flo
 Fixed in passing: the climbers template interpolates `NetPlacesGained` as a raw int, so today the
 card's largest number renders `net +11990` with no separators.
 
-**Scope — one vertical, no schema.** *Domain*: nothing. *Application* (`OfficialMirror`):
-`OfficialDigestFeedSaga` only — `Consume` drops two dispatches, `DigestCard` is rewritten around the
-new order, and the tag-to-name rule moves into a small public helper in `OfficialMirror/Contracts`
-so the card and `HubPlayerChip.NameOf` share one implementation (a helper class, not a member on the
-coverage-excluded `OfficialPlayerRecord`). *Infrastructure*: nothing — every figure is already
-stored, so no entity, repository or migration, and no Rebuild-highlights press. *Presentation*:
-resx only (new keys in all nine locales, alphabetical position) plus `HubPlayerChip.NameOf`
-delegating to the contract helper. *Tests*: `OfficialDigestFeedSagaTests` asserts "PUMBILITY top
-10", `↑2`, `50× AAA at Lv.20` and the exact world-first line — all four move — plus a new case for
-the firstless card dropping its thumbnail; then the lab-channel canary.
+**As built — one vertical, no schema.** *Domain*: nothing. *Application* (`OfficialMirror`):
+`OfficialDigestFeedSaga` only — `Consume` dropped two dispatches, `DigestCard` was rewritten around
+the new order, and the tag-to-name rule moved into `OfficialPlayerNames` in `OfficialMirror/
+Contracts` so the card and `HubPlayerChip.NameOf` share one implementation (a helper class, not a
+member on the coverage-excluded `OfficialPlayerRecord`). *Infrastructure*: nothing — every figure was
+already stored, so no entity, repository or migration, and no Rebuild-highlights press.
+*Presentation*: resx only, plus `HubPlayerChip.NameOf` delegating to the contract helper. The card
+needed seven strings and only **six** were new: `Biggest board climber` already existed, because the
+hero names the same card, and they now share the key. Eleven keys the reshape orphaned came out of
+all nine locales. Murloc coined `Roglub` (gain), `Plglarg` (across) and `Ur` (on). *Tests*:
+`OfficialDigestFeedSagaTests` grew from 4 to 9 — the four assertions that pinned the old shape moved,
+and the new cases cover the pulse + jacket, one-name-per-category, the AAA floors ignoring the stored
+SS level, the firsts closing the card ordered by level, the firstless card losing its picture, and
+both dropped dispatches.
+
+The floor levels are deliberately **not** pinned to numbers in the tests: they follow pumbility
+scoring, which is not this card's business. The assertions pin the *shapes* — a floor that rose
+without crossing a level shows one level, one that crossed shows an arrow. Against the real
+2026-08-02 values the built code renders `#100 **Lv.24**` holding and `#1000 Lv.16 → **Lv.20**`.
+
+**Canary: run and green** (2026-08-05, lab channel). `PiuCardCanaryTests` carries the reshaped card
+in English and Korean, sampled from that same sweep so the sample has a live week's lengths and digit
+counts. Discord accepted both payloads — thumbnail, five text blocks, four separators, three link
+buttons — and the read-back found every card. Korean is in there on purpose: CJK glyphs are
+double-width and the floor rows depend on the rank labels lining up.
 
 Mock: claude.ai artifact `4e24d721-1ea3-4620-a380-c2ff6c05d163` (before/after, rendered from the
 real 2026-08-02 Phoenix 2 sweep).
@@ -216,9 +231,9 @@ already writes with Place; direction-correct for Limbo by construction) + today'
 from `GetDailyStepQuery(mix)` with the Limbo banner ("lowest passing score wins") when
 `IsLimbo`.
 
-**Official digest** (per subscribed mix) — *as built; superseded by the D1 reshape above, which
-drops the rankings and cutline reads and recomposes the card around the This Week hero*: skip when
-`IsBaseline`. Compose from
+**Official digest** (per subscribed mix) — *the original C10 composition, kept as history.
+**Superseded by the D1 reshape above**, which drops the rankings and cutline reads and recomposes
+the card around the This Week hero*: skip when `IsBaseline`. Compose from
 `GetWeeklyHighlightsQuery(mix)` (PUMBILITY movers — absent for Phoenix, which has no
 pumbility board — boards climbed, new #1s, chart/folder grade world-firsts, all
 name-resolved by the sweep) + `GetWhatItTakesQuery(mix, All|Singles|Doubles)` cutlines with
