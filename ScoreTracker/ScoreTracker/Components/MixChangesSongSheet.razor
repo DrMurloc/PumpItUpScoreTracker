@@ -69,7 +69,10 @@
     }
 </div>
 
-<ChartDetailsDialog @bind-Visible="_open" Chart="_chart" Mix="Mix"></ChartDetailsDialog>
+@* Opens on Chart Stats: this sheet exists to answer what changed about a chart between two
+   mixes, and the meta grid is where that answer is. Everywhere else wants the board. *@
+<ChartDetailsDialog @bind-Visible="_open" Chart="_chart" Mix="Mix"
+                    InitialTab="ChartDetailsDialog.DetailsTab.Stats"></ChartDetailsDialog>
 
 @code {
     [Parameter] [EditorRequired] public IReadOnlyList<MixDiffSongRecord> Songs { get; set; } = Array.Empty<MixDiffSongRecord>();

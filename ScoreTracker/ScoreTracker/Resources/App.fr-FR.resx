@@ -775,6 +775,9 @@
   <data name="Back to Weekly Charts" xml:space="preserve">
     <value>Retour à Weekly Charts</value>
   </data>
+  <data name="Back to {0}" xml:space="preserve">
+    <value>Retour à {0}</value>
+  </data>
   <data name="Backfill" xml:space="preserve">
     <value>Rétroactif</value>
   </data>
@@ -2374,9 +2377,6 @@
   <data name="Good count" xml:space="preserve">
     <value>Nombre de Goods</value>
   </data>
-  <data name="Good Suggestion" xml:space="preserve">
-    <value>Bonne suggestion</value>
-  </data>
   <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
     <value>Les Goods ne donnent aucune vie et, contrairement aux Perfects et aux Greats, ils ne construisent pas non plus le multiplicateur. Ils ne vous pénalisent jamais. Ils ne comptent simplement pas.</value>
   </data>
@@ -3186,6 +3186,9 @@
   <data name="Manual import — console script + CSV" xml:space="preserve">
     <value>Import manuel — script console + CSV</value>
   </data>
+  <data name="Manual score edit" xml:space="preserve">
+    <value>Modification manuelle du score</value>
+  </data>
   <data name="Marked for review" xml:space="preserve">
     <value>Marqué pour relecture</value>
   </data>
@@ -3668,6 +3671,9 @@
   <data name="No scores in this range yet — record or import to see your breakdown." xml:space="preserve">
     <value>Aucun score dans cette plage pour l'instant — enregistrez ou importez pour voir votre répartition.</value>
   </data>
+  <data name="No scores recorded on this chart yet." xml:space="preserve">
+    <value>Aucun score enregistré sur ce chart pour le moment.</value>
+  </data>
   <data name="No scores recorded yet — be the first." xml:space="preserve">
     <value>Pas encore de scores — soyez le premier.</value>
   </data>
@@ -3685,6 +3691,9 @@
   </data>
   <data name="No significant matches — here's the closest we could find." xml:space="preserve">
     <value>Aucune correspondance significative — voici les plus proches.</value>
+  </data>
+  <data name="No similar charts for this one yet." xml:space="preserve">
+    <value>Aucun chart similaire à celui-ci pour le moment.</value>
   </data>
   <data name="No snapshot yet - thresholds appear after the first weekly import." xml:space="preserve">
     <value>Pas encore d'instantané - les seuils apparaissent après le premier import hebdomadaire.</value>
@@ -5037,12 +5046,6 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>Rejouer</value>
-  </data>
-  <data name="Report Video" xml:space="preserve">
-    <value>Signaler vidéo</value>
-  </data>
-  <data name="Report Video Tooltip" xml:space="preserve">
-    <value>Signaler lien endommagé, ou vidéo incorrecte</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>En-tête de requête</value>

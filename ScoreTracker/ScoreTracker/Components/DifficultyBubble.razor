@@ -13,7 +13,7 @@
     @* MudTooltip renders a popover, which throws in static SSR (no provider in the static
        tree). The tooltip is a hover affordance, so a static render drops it and keeps the
        bubble; in a circuit it comes back. *@
-    @if (RendererInfo.IsInteractive)
+    @if (RendererInfo.IsInteractive && Tooltip)
     {
         <MudTooltip ShowOnFocus="true" Placement="Placement.Right">
             <ChildContent>@Bubble</ChildContent>
@@ -72,6 +72,14 @@
 
     [Parameter]
     public bool Small { get; set; } = false;
+
+    /// <summary>
+    ///     Off when the bubble sits inside something that already explains itself on hover —
+    ///     two overlapping tooltips on one tile is worse than none. Same opt-out ScoreBreakdown
+    ///     carries.
+    /// </summary>
+    [Parameter]
+    public bool Tooltip { get; set; } = true;
 
     [Parameter]
     public int? Height { get; set; }

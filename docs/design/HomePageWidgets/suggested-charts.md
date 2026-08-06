@@ -42,8 +42,11 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
   names. Sizes 1x2 / 2x1 / 2x2, default 1x2.
 - **Feedback**: veto ✕ (edit mode) → WSIP's reason dialog (reason/notes/hide, hide default-on) →
   `SubmitFeedbackCommand` into the same per-category server-side store the engine already honors —
-  deliberately NOT widget config. Thumbs-up = one-tap **Good Suggestion** in the shared
-  ChartDetailsDialog, unlocked when the row click carries a suggestion category.
+  deliberately NOT widget config. There was also a one-tap **Good Suggestion** in the shared
+  ChartDetailsDialog, unlocked when the row click carries a suggestion category; **removed
+  2026-08-05** (owner: nobody used it, and it wrapped the dialog's action bar onto two lines on
+  a phone). The veto path above is untouched. `ChartClickContext` still carries the category —
+  it is part of the render contract — but nothing reads it now.
 - **Shell extensions this widget introduced**: `WidgetDescriptor.DrawerPresets` (one add-drawer card
   per pre-filled config, D10) and `ChartClickContext` (the OnChartClick payload — chart + optional
   suggestion category; all widgets raise it).

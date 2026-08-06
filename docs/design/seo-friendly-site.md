@@ -263,9 +263,9 @@ MainLayout's video dialog, shrinking PR-3's blast radius before the flip exists.
   pattern live on HomeDashboard/ChartSkills/ChartRandomizer/RandomizerSpectate), and renders
   through `MudDialogProvider` — zero MainLayout involvement. Flipping a caller = host an
   instance + set two fields in the click handler.
-- **Port Report Video** into `ChartDetailsDialog`'s video block (the one feature the old dialog
-  has that the new one lacks — `IAdminNotificationClient.NotifyAdmin` + snackbar; the resx keys
-  exist in all locales). Every dialog surface gains reporting as a side effect.
+- ~~**Port Report Video** into `ChartDetailsDialog`'s video block~~ — done, then **deleted
+  2026-08-05**. The owner does not read the notification mail; wrong videos reach him as Discord
+  DMs instead. No surface offers video reporting now, and the resx keys are gone from all locales.
 - `Charts.razor` rows are `BestAttemptDto` (ChartId only) — that one call site needs a chart
   lookup on click; the other three hold full `Chart` records.
 - **Deletes**: `Components/ChartVideoDisplay.razor`, `Services/ChartVideoDisplayer.cs`, the

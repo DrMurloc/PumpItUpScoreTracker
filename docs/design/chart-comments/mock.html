@@ -1,0 +1,827 @@
+<title>Chart Details Overhaul — mocks</title>
+<style>
+/* ============================================================
+   Two layers, deliberately different materials:
+   - ANNOTATION layer: slate ground, mono eyebrows, theme-aware.
+   - APP layer: the real Phoenix palette, always dark, because the
+     site is dark-only by design (PaletteLight == PaletteDark).
+   Nothing in the annotation layer may look like product UI.
+   ============================================================ */
+:root {
+  --paper: #eef1f5;
+  --paper-2: #e2e7ee;
+  --edge: #c2cbd8;
+  --note: #2b3648;
+  --note-soft: #5d6b80;
+  --mark: #0b5fa5;
+  --warn-bg: #fdf0e3;
+  --warn-edge: #e2a86a;
+  --warn-ink: #7a4410;
+
+  /* App tokens — verbatim from Services/Theming/MixThemes.cs, Phoenix */
+  --mix-bg: #070B15;
+  --mix-surface: #161E2C;
+  --mix-surface-muted: #1E2A3D;
+  --mix-nav: #0D1626;
+  --mix-primary: #3FA9F5;
+  --mix-primary-contrast: #06101C;
+  --mix-secondary: #FF6B35;
+  --mix-accent: #FFD24A;
+  --mix-ink: #E9EFF7;
+  --mix-ink-muted: #93A3B8;
+  --mix-lines: #2A3648;
+
+  --ok: #3ec98b;
+  --bad: #f2555a;
+
+  --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --cond: "Arial Narrow", "Helvetica Neue", var(--sans);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --paper:#10151d; --paper-2:#161d27; --edge:#28323f; --note:#dde4ee; --note-soft:#8c9bb0; --mark:#6bb8f5;
+          --warn-bg:#2a2013; --warn-edge:#6b4a1c; --warn-ink:#f0c589; }
+}
+:root[data-theme="dark"] { --paper:#10151d; --paper-2:#161d27; --edge:#28323f; --note:#dde4ee; --note-soft:#8c9bb0; --mark:#6bb8f5;
+          --warn-bg:#2a2013; --warn-edge:#6b4a1c; --warn-ink:#f0c589; }
+:root[data-theme="light"] { --paper:#eef1f5; --paper-2:#e2e7ee; --edge:#c2cbd8; --note:#2b3648; --note-soft:#5d6b80; --mark:#0b5fa5;
+          --warn-bg:#fdf0e3; --warn-edge:#e2a86a; --warn-ink:#7a4410; }
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--note);
+  font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 24px 100px; }
+
+/* ---------- annotation typography ---------- */
+h1 { font-family: var(--cond); font-size: clamp(30px, 5vw, 46px); font-weight: 700; letter-spacing: .01em;
+     text-wrap: balance; margin: 0 0 6px; }
+h2 { font-family: var(--cond); font-size: 27px; font-weight: 700; margin: 0; text-wrap: balance; }
+h3 { font-size: 16px; font-weight: 650; margin: 0 0 6px; }
+p  { margin: 0 0 12px; max-width: 68ch; }
+a  { color: var(--mark); }
+code { font-family: var(--mono); font-size: .88em; background: var(--paper-2); border: 1px solid var(--edge);
+       border-radius: 4px; padding: 1px 5px; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+           color: var(--note-soft); }
+.lede { font-size: 17px; color: var(--note-soft); max-width: 70ch; }
+
+section { margin-top: 56px; }
+.sec-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+            border-bottom: 2px solid var(--edge); padding-bottom: 10px; margin-bottom: 22px; }
+.sec-head .n { font-family: var(--mono); font-size: 12px; color: var(--note-soft); letter-spacing: .1em; }
+
+.cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; align-items: start; }
+@media (min-width: 900px) { .cols.split { grid-template-columns: minmax(0,var(--w,420px)) minmax(0,1fr); } }
+
+.note ul { margin: 0 0 12px; padding-left: 18px; }
+.note li { margin-bottom: 7px; max-width: 62ch; }
+
+.flag { background: var(--warn-bg); border-left: 3px solid var(--warn-edge); color: var(--warn-ink);
+        padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; margin: 0 0 14px; max-width: 66ch; }
+.flag b { font-weight: 700; }
+
+table.spec { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.spec th, table.spec td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--edge); vertical-align: top; }
+table.spec th { font-family: var(--mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
+                color: var(--note-soft); border-bottom-width: 2px; }
+table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scroller { overflow-x: auto; }
+
+/* ---------- device frames ---------- */
+.frame { background: var(--mix-bg); border: 1px solid var(--edge); border-radius: 12px;
+         padding: 16px; box-shadow: 0 14px 40px rgba(0,0,0,.22); }
+.frame .cap { font-family: var(--mono); font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase;
+              color: var(--mix-ink-muted); margin-bottom: 12px; }
+.frame.narrow { width: 100%; max-width: 424px; }
+
+/* ============================================================
+   APP LAYER — everything below .app mimics the running dialog
+   ============================================================ */
+.app { font-family: var(--sans); color: var(--mix-ink); font-size: 14px; line-height: 1.5; }
+.dlg { background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 8px;
+       overflow: hidden; max-width: 572px; }
+.dlg.mobile { max-width: 390px; }
+
+.video { aspect-ratio: 16/9; background:
+   radial-gradient(120% 90% at 30% 20%, #24354d 0%, #0d1524 60%, #070b15 100%);
+   display: grid; place-items: center; position: relative; }
+.video .play { width: 52px; height: 36px; border-radius: 8px; background: rgba(255,255,255,.14);
+   display: grid; place-items: center; border: 1px solid rgba(255,255,255,.2); }
+.video .play::after { content: ""; border-left: 12px solid var(--mix-ink); border-top: 8px solid transparent;
+   border-bottom: 8px solid transparent; margin-left: 3px; }
+
+.pad { padding: 10px 14px; }
+.title-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px 4px; }
+.song { font-family: var(--cond); font-size: 21px; font-weight: 700; letter-spacing: .01em; flex: 1;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bub { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; flex: none;
+       font-weight: 800; font-size: 12px; color: #0b0f18; letter-spacing: -.02em;
+       background: linear-gradient(160deg, #ff8a4c, #e0442c); box-shadow: 0 0 0 2px rgba(255,255,255,.09) inset; }
+.bub.d { background: linear-gradient(160deg, #62c2ff, #2b6fd6); }
+.bub.sm { width: 30px; height: 30px; font-size: 10.5px; }
+.icon-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--mix-lines);
+            background: transparent; color: var(--mix-ink-muted); display: grid; place-items: center;
+            font-size: 15px; cursor: pointer; flex: none; }
+.icon-btn.on { color: var(--mix-primary); border-color: rgba(63,169,245,.5); }
+
+.scoreline { display: flex; align-items: center; gap: 10px; padding: 4px 14px 12px; flex-wrap: wrap; }
+.score-v { font-family: var(--cond); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums;
+           color: var(--mix-accent); }
+.grade { width: 26px; height: 26px; border-radius: 5px; display: grid; place-items: center; font-weight: 800;
+         font-size: 11px; background: linear-gradient(160deg,#ffe27a,#e8a41d); color: #2a1a00; }
+.muted { color: var(--mix-ink-muted); }
+.tiny { font-size: 11.5px; }
+
+/* tab strip — sticky inside the scroll container */
+.tabs { display: flex; gap: 2px; background: var(--mix-nav); border-top: 1px solid var(--mix-lines);
+        border-bottom: 1px solid var(--mix-lines); padding: 0 6px; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { appearance: none; background: none; border: none; color: var(--mix-ink-muted); font: inherit;
+       font-size: 12.5px; padding: 11px 12px 9px; border-bottom: 2px solid transparent; cursor: pointer;
+       white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+.tab.on { color: var(--mix-primary); border-bottom-color: var(--mix-primary); }
+.tab .cnt { background: var(--mix-surface-muted); color: var(--mix-ink); border-radius: 9px; padding: 0 6px;
+            font-size: 10.5px; font-variant-numeric: tabular-nums; }
+.tab.on .cnt { background: var(--mix-primary); color: var(--mix-primary-contrast); }
+
+/* scope rail — the .cld-chip vocabulary from ChartLeaderboardScopes */
+.rail { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 14px 8px; }
+.chip { appearance: none; font: inherit; font-size: 12px; padding: 4px 11px; border-radius: 999px;
+        border: 1px solid var(--mix-lines); background: transparent; color: var(--mix-ink-muted); cursor: pointer; }
+.chip.on { background: var(--mix-primary); border-color: var(--mix-primary); color: var(--mix-primary-contrast);
+           font-weight: 650; }
+.chip.off { opacity: .38; cursor: not-allowed; }
+
+.subbar { display: flex; align-items: center; gap: 8px; padding: 2px 14px 10px; flex-wrap: wrap;
+          font-size: 11.5px; color: var(--mix-ink-muted); }
+.select { background: var(--mix-surface-muted); border: 1px solid var(--mix-lines); color: var(--mix-ink);
+          border-radius: 5px; font: inherit; font-size: 11.5px; padding: 3px 7px; }
+
+/* comment */
+.clist { display: flex; flex-direction: column; }
+.cmt { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 10px; padding: 12px 14px;
+       border-top: 1px solid var(--mix-lines); }
+/* The thread rail is absolutely positioned on purpose: a static ::before inside a grid
+   container becomes a THIRD grid item against two columns, which wraps the comment body
+   onto its own row and stacks the whole reply vertically. */
+.cmt.reply { padding-left: 40px; background: rgba(255,255,255,.017); position: relative; }
+.cmt.reply::before { content: ""; position: absolute; left: 20px; top: 0; bottom: 0; width: 2px;
+                     background: var(--mix-lines); border-radius: 1px; }
+.av { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(150deg,#43536b,#243044);
+      display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--mix-ink); }
+.chead { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; margin-bottom: 4px; }
+.cname { font-weight: 650; font-size: 13px; }
+.cmeta { font-size: 11px; color: var(--mix-ink-muted); }
+.badge { font-size: 10px; letter-spacing: .04em; padding: 1.5px 7px; border-radius: 999px;
+         border: 1px solid var(--mix-lines); color: var(--mix-ink-muted); background: var(--mix-surface-muted); }
+.badge.orig { border-color: rgba(255,210,74,.4); color: var(--mix-accent); }
+.badge.tr { border-color: rgba(63,169,245,.4); color: var(--mix-primary); }
+.badge.q { border-color: rgba(255,107,53,.45); color: var(--mix-secondary); }
+.cbody { font-size: 13.5px; }
+.cbody p { margin: 0 0 7px; max-width: none; }
+.cbody p:last-child { margin-bottom: 0; }
+.cbody strong { color: #fff; }
+.cbody code { background: var(--mix-surface-muted); border-color: var(--mix-lines); color: var(--mix-accent); }
+.cbody ul { margin: 4px 0; padding-left: 18px; }
+.lnk { color: var(--mix-primary); text-decoration: underline; text-underline-offset: 2px; }
+.lnk.untrusted { color: var(--mix-secondary); }
+.lnk.untrusted::after { content: " ⚠"; font-size: .85em; }
+
+.cfoot { display: flex; align-items: center; gap: 4px; margin-top: 7px; }
+.act { appearance: none; background: none; border: none; font: inherit; font-size: 11.5px;
+       color: var(--mix-ink-muted); padding: 3px 7px; border-radius: 5px; cursor: pointer;
+       display: inline-flex; align-items: center; gap: 4px; }
+.act:hover { background: var(--mix-surface-muted); color: var(--mix-ink); }
+.act.voted { color: var(--mix-accent); }
+.act.shield { color: var(--mix-primary); }
+.spacer { flex: 1; }
+.removed { font-size: 12.5px; color: var(--mix-ink-muted); font-style: italic; }
+
+/* composer */
+.comp { border-top: 1px solid var(--mix-lines); background: var(--mix-nav); padding: 10px 14px 12px; }
+.comp-tabs { display: flex; gap: 3px; margin-bottom: 8px; }
+.ct { appearance: none; background: none; border: none; font: inherit; font-size: 11.5px; padding: 3px 9px;
+      border-radius: 5px; color: var(--mix-ink-muted); cursor: pointer; }
+.ct.on { background: var(--mix-surface-muted); color: var(--mix-ink); }
+.tools { display: flex; gap: 2px; align-items: center; margin-bottom: 6px; }
+.tbtn { width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--mix-lines); background: transparent;
+        color: var(--mix-ink-muted); font-size: 12px; cursor: pointer; display: grid; place-items: center; }
+.tbtn b, .tbtn i { pointer-events: none; }
+.ta { width: 100%; min-height: 62px; background: var(--mix-surface); border: 1px solid var(--mix-lines);
+      border-radius: 6px; color: var(--mix-ink); font: inherit; font-size: 13px; padding: 8px 10px; resize: vertical; }
+.ta:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 1px; }
+.prev { width: 100%; min-height: 62px; background: var(--mix-surface); border: 1px dashed var(--mix-lines);
+        border-radius: 6px; padding: 8px 10px; font-size: 13.5px; }
+.comp-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.count { font-size: 11px; color: var(--mix-ink-muted); font-variant-numeric: tabular-nums; }
+.count.warn { color: var(--mix-secondary); }
+.btn { appearance: none; font: inherit; font-size: 12.5px; font-weight: 650; padding: 6px 15px; border-radius: 6px;
+       border: 1px solid transparent; cursor: pointer; }
+.btn.primary { background: var(--mix-primary); color: var(--mix-primary-contrast); }
+.btn.ghost { background: transparent; border-color: var(--mix-lines); color: var(--mix-ink-muted); }
+.btn.danger { background: var(--bad); color: #fff; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.posting-as { font-size: 11px; color: var(--mix-ink-muted); }
+.posting-as b { color: var(--mix-primary); }
+
+/* modal */
+.modal { background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 8px; max-width: 520px; }
+.modal-h { font-family: var(--cond); font-size: 19px; font-weight: 700; padding: 14px 16px 8px; }
+.modal-b { padding: 0 16px 4px; font-size: 13px; }
+.rules { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+.rules li { display: grid; grid-template-columns: 8px minmax(0,1fr); gap: 10px; }
+.rules li::before { content: ""; width: 4px; border-radius: 2px; background: var(--mix-primary); opacity: .55;
+                    margin-top: 3px; }
+.rules b { display: block; color: #fff; font-size: 13px; margin-bottom: 1px; }
+.rules span { color: var(--mix-ink-muted); font-size: 12.5px; }
+.chk { display: flex; gap: 9px; align-items: flex-start; padding: 11px 16px 0; font-size: 12.5px; }
+.chk .box { width: 16px; height: 16px; border-radius: 3px; border: 1.5px solid var(--mix-primary); flex: none;
+            margin-top: 2px; display: grid; place-items: center; font-size: 11px; color: var(--mix-primary-contrast); }
+.chk .box.on { background: var(--mix-primary); }
+.chk.consent .box { border-color: var(--mix-secondary); }
+.chk.consent .box.on { background: var(--mix-secondary); }
+.modal-f { display: flex; gap: 8px; justify-content: flex-end; padding: 14px 16px; }
+
+/* similar charts grid */
+.simgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; padding: 4px 14px 14px; }
+.simtile { background: var(--mix-surface-muted); border: 1px solid var(--mix-lines); border-radius: 7px;
+           padding: 7px; text-align: center; cursor: pointer; }
+.simtile:hover { border-color: var(--mix-primary); }
+.jacket { aspect-ratio: 1; border-radius: 5px; margin-bottom: 6px; display: grid; place-items: center;
+          font-family: var(--cond); font-weight: 700; font-size: 11px; color: rgba(255,255,255,.72); padding: 4px;
+          line-height: 1.15; text-align: center; overflow: hidden; }
+.simtile .nm { font-size: 10px; color: var(--mix-ink-muted); white-space: nowrap; overflow: hidden;
+               text-overflow: ellipsis; margin-top: 5px; }
+.simtile .bub { margin: 0 auto; }
+
+/* stats */
+.ovr { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mix-ink-muted);
+       border-top: 1px solid var(--mix-lines); padding: 11px 14px 6px; }
+.metagrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 5px 12px; padding: 0 14px 10px; }
+.metagrid .k { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mix-ink-muted); }
+.metagrid .v { font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.bars { padding: 0 14px 10px; display: flex; flex-direction: column; gap: 6px; }
+.bar { display: grid; grid-template-columns: 78px minmax(0,1fr) 34px; gap: 8px; align-items: center; font-size: 11.5px; }
+.bar .track { height: 7px; border-radius: 4px; background: var(--mix-surface-muted); overflow: hidden; }
+.bar .fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--mix-primary), var(--mix-accent)); }
+.bar .p { text-align: right; color: var(--mix-ink-muted); font-variant-numeric: tabular-nums; }
+.tierchips { display: flex; gap: 5px; flex-wrap: wrap; padding: 0 14px 12px; }
+.tchip { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; }
+
+/* history rows */
+.hrow { display: grid; grid-template-columns: 86px 68px minmax(0,1fr) auto; gap: 9px; align-items: center;
+        padding: 7px 14px; border-bottom: 1px dashed var(--mix-lines); font-size: 12.5px; }
+.hrow .d { color: var(--mix-ink-muted); font-variant-numeric: tabular-nums; }
+.hrow .s { font-variant-numeric: tabular-nums; font-weight: 650; }
+.mixchip { font-size: 10px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--mix-lines);
+           color: var(--mix-ink-muted); text-align: center; }
+.editrow { display: grid; grid-template-columns: minmax(90px,1fr) minmax(90px,1fr) auto auto; gap: 9px;
+           align-items: center; padding: 12px 14px 14px; }
+.fld { background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 6px; padding: 6px 9px; }
+.fld .k { display: block; font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--mix-ink-muted); }
+.fld .v { font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* moderation queue row */
+.qrow { display: grid; grid-template-columns: 40px 44px minmax(0,1fr) auto; gap: 11px; align-items: center;
+        padding: 10px 12px; border-bottom: 1px solid var(--mix-lines); }
+.qrow .who { font-size: 12.5px; min-width: 0; }
+.qrow .who .r { color: var(--mix-ink-muted); font-size: 11px; }
+.qrow .reason { font-size: 10px; padding: 1.5px 7px; border-radius: 999px; border: 1px solid var(--bad);
+                color: var(--bad); white-space: nowrap; }
+
+/* decision table */
+.vs { display: grid; grid-template-columns: minmax(0,1fr); gap: 0; border: 1px solid var(--edge); border-radius: 8px;
+      overflow: hidden; }
+.vs .r { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(0,1.3fr) minmax(0,1.3fr);
+         border-bottom: 1px solid var(--edge); font-size: 13.5px; }
+.vs .r:last-child { border-bottom: none; }
+.vs .r > div { padding: 9px 12px; border-right: 1px solid var(--edge); }
+.vs .r > div:last-child { border-right: none; }
+.vs .r.h > div { font-family: var(--mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
+                 color: var(--note-soft); background: var(--paper-2); }
+.vs .k { font-weight: 600; background: var(--paper-2); }
+.yes { color: #1c7a4d; font-weight: 650; }
+.no { color: #a83338; font-weight: 650; }
+@media (prefers-color-scheme: dark) { .yes { color: #4fd493; } .no { color: #f2777c; } }
+:root[data-theme="dark"] .yes { color: #4fd493; } :root[data-theme="dark"] .no { color: #f2777c; }
+:root[data-theme="light"] .yes { color: #1c7a4d; } :root[data-theme="light"] .no { color: #a83338; }
+@media (max-width: 700px) { .vs .r { grid-template-columns: minmax(0,1fr); } .vs .r > div { border-right: none; } }
+
+.callout { border: 2px solid var(--mark); border-radius: 8px; padding: 16px 18px; background: var(--paper-2); }
+.callout h3 { font-size: 17px; margin-bottom: 8px; }
+</style>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">PIU Scores · design review</div>
+  <h1>Chart details overhaul</h1>
+  <p class="lede">Four tabs, community comments with nightly translation, and moderation that lives where the community does. Mocks are at true width — 572&nbsp;px desktop, 390&nbsp;px mobile — on the real Phoenix palette.</p>
+  <p class="tiny" style="color:var(--note-soft);margin-top:14px">The mocked dialog stays dark in both page themes, because the site is dark-only by design — <code>PaletteLight</code> and <code>PaletteDark</code> are deliberately identical.</p>
+</header>
+
+<!-- ══════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="n">01</span><h2>Anatomy</h2></div>
+  <div class="cols split" style="--w:424px">
+    <div class="frame narrow">
+      <div class="cap">Header + tab strip</div>
+      <div class="app"><div class="dlg">
+        <div class="video"><span class="play"></span></div>
+        <div class="title-row">
+          <span class="bub">S20</span>
+          <span class="song">Baroque Virus</span>
+          <button class="icon-btn on" aria-label="On to-do list">★</button>
+        </div>
+        <div class="scoreline">
+          <span class="grade">AA+</span>
+          <span class="score-v">964,102</span>
+          <span class="muted tiny">#84 of 2,317 · recorded 12 days ago</span>
+        </div>
+        <div class="tabs">
+          <button class="tab on">Comments <span class="cnt">7</span></button>
+          <button class="tab">Leaderboard</button>
+          <button class="tab">Stats</button>
+          <button class="tab">History</button>
+        </div>
+        <div class="pad muted tiny" style="padding:18px 14px 22px;text-align:center">tab content …</div>
+      </div></div>
+    </div>
+    <div class="note">
+      <h3>What stays out of the tabs</h3>
+      <p>Video, identity, and your standing — the three things you want without a click. Everything else moved.</p>
+      <ul>
+        <li><b>The tab strip is sticky</b> inside the scroll container, so a tall header scrolls away underneath it rather than taking the tabs with it.</li>
+        <li><b>The comment count is the invitation.</b> Default tab is Leaderboard; last choice persists in a <code>ChartDetails__Tab</code> UiSetting. The badge is what makes anyone open Comments the first time.</li>
+        <li><b>Every tab is lazy</b> — no queries until selected. Nineteen call sites render this dialog; the board already gates on <code>Active="Visible"</code> and the rest now follow.</li>
+        <li><b>History hides when logged out.</b> It's your journal plus your score inputs; both are meaningless signed out.</li>
+      </ul>
+      <div class="flag"><b>Regression to cover:</b> recording a score is now two taps, and several call sites exist only to record — QuickRecordWidget, DailyStepWidget, Charts' quick record. Fix is an <code>InitialTab</code> parameter beside the existing <code>BoardScope</code>, so those callers open straight on History. Round&nbsp;11's "always-visible inputs" decision survives for the people it was made for.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="n">02</span><h2>Comments</h2><span class="eyebrow">the main event</span></div>
+  <div class="cols split" style="--w:424px">
+    <div class="frame narrow">
+      <div class="cap">Comments tab · public scope</div>
+      <div class="app"><div class="dlg">
+        <div class="tabs">
+          <button class="tab on">Comments <span class="cnt">7</span></button>
+          <button class="tab">Leaderboard</button>
+          <button class="tab">Stats</button>
+          <button class="tab">History</button>
+        </div>
+        <div class="rail">
+          <button class="chip on">Public</button>
+          <button class="chip">Murloc Lab</button>
+          <button class="chip">NYC Pump</button>
+        </div>
+        <div class="subbar">
+          <span>Sort</span>
+          <select class="select"><option>Top</option><option>Newest</option></select>
+          <span class="spacer" style="flex:1"></span>
+          <span>Read in</span>
+          <select class="select"><option>English</option><option>Original</option></select>
+        </div>
+
+        <div class="clist">
+          <!-- native language -->
+          <div class="cmt">
+            <div class="av">E</div>
+            <div>
+              <div class="chead">
+                <span class="cname">ERRLENA 🇺🇸</span>
+                <span class="cmeta">3 days ago</span>
+              </div>
+              <div class="cbody">
+                <p>The <strong>drill section at 2:01</strong> is the whole chart. If you can hold that you pass — everything after is recovery. Practice it at half speed first.</p>
+              </div>
+              <div class="cfoot">
+                <button class="act voted">▲ 14</button>
+                <button class="act">Reply</button>
+                <span class="spacer"></span>
+                <button class="act">⋯</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- reply -->
+          <div class="cmt reply">
+            <div class="av">T</div>
+            <div>
+              <div class="chead">
+                <span class="cname">TUSA 🇰🇷</span>
+                <span class="cmeta">2 days ago</span>
+                <span class="badge tr">Translated from 한국어</span>
+              </div>
+              <div class="cbody">
+                <p>Agreed, but watch your footing going <em>into</em> it — most people fail because they enter on the wrong foot, not because the drill is too fast.</p>
+              </div>
+              <div class="cfoot">
+                <button class="act">▲ 9</button>
+                <button class="act">Show original</button>
+                <span class="spacer"></span>
+                <button class="act">⋯</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- queued -->
+          <div class="cmt">
+            <div class="av">R</div>
+            <div>
+              <div class="chead">
+                <span class="cname">rafa_pump 🇧🇷</span>
+                <span class="cmeta">14 minutes ago</span>
+                <span class="badge q">Queued for translation</span>
+              </div>
+              <div class="cbody">
+                <p>Alguém sabe se o BPM muda no final? Senti que acelerou mas pode ser impressão minha kkkk</p>
+              </div>
+              <div class="cfoot">
+                <button class="act">▲ 1</button>
+                <button class="act">Reply</button>
+                <span class="spacer"></span>
+                <button class="act">⋯</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- links + edited -->
+          <div class="cmt">
+            <div class="av">D</div>
+            <div>
+              <div class="chead">
+                <span class="cname">DrMurloc 🇺🇸</span>
+                <span class="cmeta">1 week ago · (edited 6 days ago)</span>
+              </div>
+              <div class="cbody">
+                <p>Best reference run I've found is <a class="lnk" href="#">this one on YouTube</a>. The step data is on <a class="lnk" href="#">PIU Center</a> if you want the breakdown, and someone mirrored the pattern chart at <a class="lnk untrusted" href="#">stepcharts.example.net</a>.</p>
+              </div>
+              <div class="cfoot">
+                <button class="act voted">▲ 22</button>
+                <button class="act">Reply</button>
+                <span class="spacer"></span>
+                <button class="act shield">🛡</button>
+                <button class="act">⋯</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- unsupported source -->
+          <div class="cmt">
+            <div class="av">A</div>
+            <div>
+              <div class="chead">
+                <span class="cname">andhika 🇮🇩</span>
+                <span class="cmeta">5 days ago</span>
+                <span class="badge tr">Translated from Indonesian</span>
+              </div>
+              <div class="cbody">
+                <p>Passed this on my third try after two months stuck. Don't give up — the timing window is more forgiving than it looks.</p>
+              </div>
+              <div class="cfoot">
+                <button class="act">▲ 31</button>
+                <button class="act">Show original</button>
+                <span class="spacer"></span>
+                <button class="act">⋯</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- removed -->
+          <div class="cmt">
+            <div class="av" style="opacity:.35">?</div>
+            <div>
+              <div class="chead"><span class="removed">Removed by a community admin · 4 days ago</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- composer -->
+        <div class="comp">
+          <div class="posting-as" style="margin-bottom:7px">Posting to <b>Public</b> as ERRLENA</div>
+          <div class="comp-tabs">
+            <button class="ct on">Write</button><button class="ct">Preview</button>
+          </div>
+          <div class="tools">
+            <button class="tbtn" title="Bold"><b>B</b></button>
+            <button class="tbtn" title="Italic"><i>I</i></button>
+            <button class="tbtn" title="Strikethrough"><s>S</s></button>
+            <button class="tbtn" title="Code">&lt;&gt;</button>
+            <button class="tbtn" title="Link">🔗</button>
+            <button class="tbtn" title="Bulleted list">☰</button>
+          </div>
+          <textarea class="ta" placeholder="Share what you know about this chart…">Hold the **drill at 2:01** and the rest is recovery.</textarea>
+          <div class="comp-foot">
+            <span class="count">51 / 500</span>
+            <span class="spacer"></span>
+            <button class="btn ghost">Cancel</button>
+            <button class="btn primary">Post</button>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="note">
+      <h3>The scope rail is the audience picker</h3>
+      <p>Same <code>.cld-chip</code> vocabulary as the leaderboard's scopes, doing double duty: it filters what you read <em>and</em> decides what you post to. "Which community am I posting to" is answered by where you're standing, not by a second dropdown.</p>
+      <p>A reply inherits its root's audience as a <b>domain invariant on the aggregate</b> — it isn't a field the UI can set wrong. One level of replies; replying to a reply targets the root.</p>
+
+      <h3 style="margin-top:20px">Every language state on screen</h3>
+      <ul>
+        <li><b>Reader's own language</b> → no badge. Silence is the common case.</li>
+        <li><b>Translated</b> → <span class="badge tr" style="font-size:10px">Translated from 한국어</span> plus a per-comment <i>Show original</i>. Never rendered back into its own language — that round trip is a measured rewrite, not a no-op.</li>
+        <li><b>Pending</b> → the original text with <span class="badge q" style="font-size:10px">Queued for translation</span>. The comment already exists in <em>some</em> language; an empty box would be worse than the author's own words.</li>
+        <li><b>Unsupported source</b> (Indonesian) → detected by stage one, named from <code>CultureInfo.DisplayName</code>, translated normally.</li>
+      </ul>
+
+      <div class="flag"><b>Untrusted links are marked before you click</b>, not just on the way out — the orange <span class="lnk untrusted" style="font-size:13px">stepcharts.example.net</span> treatment. Trusted hosts (YouTube, Reddit, piugame, PIU Center, Pumpout, and every <em>public</em> Community Tool) open straight through.</div>
+
+      <h3 style="margin-top:18px">The shield is the permission</h3>
+      <p>A moderator sees 🛡 on comments they have power over — site admin on everything, a community admin only inside their own club. Its presence <em>is</em> the signal; nobody else renders it. Report lives in the ⋯ for everyone signed in.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="n">03</span><h2>First post</h2><span class="eyebrow">the rules card</span></div>
+  <div class="cols split" style="--w:520px">
+    <div class="frame" style="max-width:552px">
+      <div class="cap">Blocking modal · private profile posting publicly</div>
+      <div class="app"><div class="modal">
+        <div class="modal-h">DrMurloc's Rules for Comments</div>
+        <div class="modal-b">
+          <p style="color:var(--mix-ink-muted);font-size:12.5px;margin-bottom:12px">PIU Scores exists to bring the Pump It Up community together across distance and language. Comments are where you share what you know and help each other get better at the game.</p>
+          <ul class="rules">
+            <li><div><b>Your community moderates itself.</b><span>Community comments belong to that community, and its admins handle them. I stay out of it, except for hate, discrimination, or threats. The rule is "Don't Be An Asshole" — where exactly that line sits is your admins' call.</span></div></li>
+            <li><div><b>Public comments are mine.</b><span>I read generously; different cultures and different people communicate differently. But a public comment reported for bad faith, discrimination, or hate is very likely to come down.</span></div></li>
+            <li><div><b>Step artists and the PIU devs are community too.</b><span>They're players, same as us. Joking about someone's charting habits is fine. Insults and bad-faith accusations are not.</span></div></li>
+            <li><div><b>I'm one person.</b><span>I would far rather build features for you than investigate community drama. We play this game because it's fun. Keep it fun.</span></div></li>
+          </ul>
+        </div>
+        <div class="chk"><span class="box on">✓</span><span>I've read these, and I'll keep it fun.</span></div>
+        <div class="chk consent"><span class="box"></span><span>My profile is private. I understand my username, avatar, and country will be visible on public comments.</span></div>
+        <div class="modal-f">
+          <button class="btn ghost">Cancel</button>
+          <button class="btn primary" disabled>Post comment</button>
+        </div>
+      </div></div>
+    </div>
+    <div class="note">
+      <h3>Two consents, collected when they're true</h3>
+      <p>Follows <code>ToolRulesCard</code> exactly — bold lead, body, checkbox at the bottom, every string through <code>L[…]</code>.</p>
+      <ul>
+        <li><code>AgreedToTermsAt</code> + <code>TermsVersion</code> — once, on the first comment of any kind. Versioned so editing the rules re-prompts.</li>
+        <li><code>ConsentedToPublicIdentityAt</code> — the orange checkbox, fired the first time a <em>private-profile</em> user posts to <em>Public</em>. Post to a community first and you only see the one checkbox; the second appears later, when it's actually true.</li>
+      </ul>
+      <p>A real row rather than a UiSettings key: an agreement wants a timestamp and a version, and you'll want it auditable if a dispute ever lands.</p>
+      <div class="flag"><b>Build note:</b> the Murloc rendering exists to satisfy <code>LocalizationKeyTests</code> and <code>MurlocValuesUseOnlyTheMurlocAlphabet</code> — five bullets in <code>a b g l m o p r u</code>, with "DrMurloc" and "PIU Scores" riding the protected proper-noun exemption.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="n">04</span><h2>Link gate &amp; reports</h2></div>
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+    <div class="frame">
+      <div class="cap">Untrusted link interstitial</div>
+      <div class="app"><div class="modal" style="max-width:100%">
+        <div class="modal-h">Leaving PIU Scores</div>
+        <div class="modal-b">
+          <p style="font-size:13px;color:var(--mix-ink-muted)">This link goes to a site I don't know anything about:</p>
+          <p style="font-family:var(--mono);font-size:14px;background:var(--mix-surface-muted);border:1px solid var(--mix-lines);border-radius:6px;padding:9px 11px;word-break:break-all;color:var(--mix-accent)">stepcharts.example.net</p>
+          <p style="font-size:12.5px;color:var(--mix-ink-muted)">Make sure you trust it before you go.</p>
+        </div>
+        <div class="modal-f">
+          <button class="btn ghost">Stay here</button>
+          <button class="btn primary">Open anyway</button>
+        </div>
+      </div></div>
+    </div>
+    <div class="frame">
+      <div class="cap">Report · closed reason list</div>
+      <div class="app"><div class="modal" style="max-width:100%">
+        <div class="modal-h">Report this comment</div>
+        <div class="modal-b">
+          <p style="font-size:12.5px;color:var(--mix-ink-muted)">Goes to the admins of <b style="color:var(--mix-ink)">Murloc Lab</b>.</p>
+          <div style="display:flex;flex-direction:column;gap:6px;margin:10px 0 4px">
+            <label class="chk" style="padding:0"><span class="box"></span><span>Spam or advertising</span></label>
+            <label class="chk" style="padding:0"><span class="box"></span><span>Off topic</span></label>
+            <label class="chk" style="padding:0"><span class="box"></span><span>Wrong information</span></label>
+            <label class="chk" style="padding:0"><span class="box on">✓</span><span>Hate or discrimination</span></label>
+            <label class="chk" style="padding:0"><span class="box"></span><span>Threats or harassment</span></label>
+          </div>
+        </div>
+        <div class="modal-f">
+          <button class="btn ghost">Cancel</button>
+          <button class="btn danger">Report</button>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:22px">
+    <div class="flag"><b>The report row stamps the rendering the reporter was reading.</b> Translation launders the thing being detected — and the language-asymmetry case (benign Korean, hostile Spanish) is <em>only</em> a moderation problem, because a moderator ever sees one language. So the moderation view shows the original <em>and</em> what the reporter saw. Without that, an admin reading ko-KR literally cannot evaluate a report filed against the es-ES rendering.</div>
+    <p>Only <code>http</code> and <code>https</code> parse. Fixed-list hosts match on a dot boundary so <code>youtube.com.evil.tld</code> can't slip through; tool URLs match <b>exact host only</b>, so a tool at <code>tools.example.com</code> doesn't bless <code>evil.example.com</code>. The interstitial always shows the parsed host, never the link text.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="n">05</span><h2>Stats &amp; History</h2></div>
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">
+    <div class="frame narrow">
+      <div class="cap">Chart Stats</div>
+      <div class="app"><div class="dlg">
+        <div class="tabs">
+          <button class="tab">Comments <span class="cnt">7</span></button>
+          <button class="tab">Leaderboard</button>
+          <button class="tab on">Stats</button>
+          <button class="tab">History</button>
+        </div>
+        <div class="metagrid" style="padding-top:12px">
+          <div><span class="k">BPM</span><span class="v">142–190</span></div>
+          <div><span class="k">Notes</span><span class="v">1,204</span></div>
+          <div><span class="k">Notes / sec</span><span class="v">10.7</span></div>
+          <div><span class="k">Step artist</span><span class="v">SANJIYAN</span></div>
+          <div><span class="k">Popularity overall</span><span class="v">#417</span></div>
+          <div><span class="k">In Single 20</span><span class="v">#23</span></div>
+        </div>
+        <div class="tierchips">
+          <span class="tchip" style="color:#f0a13a">Pass Difficulty: Hard</span>
+          <span class="tchip" style="color:#e0563f">Score Difficulty: Very Hard</span>
+        </div>
+        <div class="ovr">Skills</div>
+        <div class="bars">
+          <div class="bar"><span>Drill</span><span class="track"><span class="fill" style="width:64%"></span></span><span class="p">64%</span></div>
+          <div class="bar"><span>Twist</span><span class="track"><span class="fill" style="width:41%"></span></span><span class="p">41%</span></div>
+          <div class="bar"><span>Run</span><span class="track"><span class="fill" style="width:22%"></span></span><span class="p">22%</span></div>
+        </div>
+        <div class="ovr">Charts like this</div>
+        <div class="simgrid">
+          <div class="simtile"><div class="jacket" style="background:linear-gradient(150deg,#5b2f6e,#20122b)">TRICKL4SH<br>220</div><span class="bub sm">S20</span><div class="nm">TRICKL4SH 220</div></div>
+          <div class="simtile"><div class="jacket" style="background:linear-gradient(150deg,#7a3520,#2a1109)">Slapstick<br>Parfait</div><span class="bub sm">S20</span><div class="nm">Slapstick Parfait</div></div>
+          <div class="simtile"><div class="jacket" style="background:linear-gradient(150deg,#1f4f6d,#0d1e2b)">Horang<br>Pungryuga</div><span class="bub sm">S21</span><div class="nm">Horang Pungryuga</div></div>
+          <div class="simtile"><div class="jacket" style="background:linear-gradient(150deg,#2d5c3a,#101f16)">Conflict</div><span class="bub sm">S20</span><div class="nm">Conflict</div></div>
+          <div class="simtile"><div class="jacket" style="background:linear-gradient(150deg,#6b2340,#28101c)">Viyella's<br>Nightmare</div><span class="bub sm">S21</span><div class="nm">Viyella's Nightmare</div></div>
+          <div class="simtile"><div class="jacket" style="background:linear-gradient(150deg,#4a4520,#1c1a0c)">Yoropiku<br>Pikuyoro</div><span class="bub d sm">D20</span><div class="nm">Yoropiku Pikuyoro</div></div>
+        </div>
+        <div class="pad tiny muted" style="padding-top:0">Tap a chart to open it here. Step analysis from PIU Center.</div>
+      </div></div>
+    </div>
+
+    <div class="frame narrow">
+      <div class="cap">Score History · manual edit at the bottom</div>
+      <div class="app"><div class="dlg">
+        <div class="tabs">
+          <button class="tab">Comments <span class="cnt">7</span></button>
+          <button class="tab">Leaderboard</button>
+          <button class="tab">Stats</button>
+          <button class="tab on">History</button>
+        </div>
+        <div style="padding-top:8px"></div>
+        <div class="hrow"><span class="d">2026-07-28</span><span class="mixchip">Phoenix 2</span><span class="s">964,102</span><span class="grade">AA+</span></div>
+        <div class="hrow"><span class="d">2026-06-11</span><span class="mixchip">Phoenix 2</span><span class="s">941,880</span><span class="grade" style="background:linear-gradient(160deg,#d8dee8,#96a2b4);color:#1b2230">AA</span></div>
+        <div class="hrow"><span class="d">2026-03-02</span><span class="mixchip">Phoenix</span><span class="s">918,447</span><span class="grade" style="background:linear-gradient(160deg,#d8dee8,#96a2b4);color:#1b2230">A+</span></div>
+        <div class="hrow"><span class="d">2025-11-19</span><span class="mixchip">Phoenix</span><span class="s">—</span><span class="badge">Broken</span></div>
+        <div class="ovr">Manual score edit</div>
+        <div class="editrow">
+          <span class="fld"><span class="k">Score</span><span class="v">964102</span></span>
+          <span class="fld"><span class="k">Plate</span><span class="v">Marvelous</span></span>
+          <label class="chk" style="padding:0;font-size:12px"><span class="box"></span><span>Broken</span></label>
+          <button class="btn primary">Save</button>
+        </div>
+      </div></div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:22px">
+    <p><b>Similar charts stays deliberately dumb</b> — stored match order at the 0.55 floor, no re-sorting, no difficulty lens. Tapping one swaps the dialog in place via an internal chart override with a <i>← back to Baroque&nbsp;Virus</i> crumb, rather than pushing a chart-change callback out to nineteen hosts.</p>
+    <p><b>The graph is populated</b> — <code>recalculate-chart-similarity</code> runs on a daily cron. The empty state still matters: 139 of 4,426 charts have no piucenter coverage and show it.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="n">06</span><h2>Moderation queue</h2><span class="eyebrow">community admin page &amp; /Admin</span></div>
+  <div class="frame">
+    <div class="cap">Renders only when that moderator has open reports</div>
+    <div class="app">
+      <div style="border:1px solid var(--mix-lines);border-radius:8px;overflow:hidden;background:var(--mix-surface)">
+        <div class="ovr" style="border-top:none">Reported comments · Murloc Lab</div>
+        <div class="qrow">
+          <span class="bub sm">S20</span>
+          <span class="jacket" style="width:44px;height:44px;margin:0;font-size:8px;background:linear-gradient(150deg,#7a3520,#2a1109)">Baroque<br>Virus</span>
+          <span class="who"><b>kimchi_stomper</b><span class="r"> — reported by ERRLENA · 2 hours ago</span></span>
+          <span style="display:flex;gap:8px;align-items:center"><span class="reason">Hate or discrimination</span><button class="btn ghost">Open</button></span>
+        </div>
+        <div class="qrow" style="border-bottom:none">
+          <span class="bub d sm">D22</span>
+          <span class="jacket" style="width:44px;height:44px;margin:0;font-size:8px;background:linear-gradient(150deg,#1f4f6d,#0d1e2b)">Horang<br>Pungryuga</span>
+          <span class="who"><b>bot_spam_9000</b><span class="r"> — reported by TUSA · yesterday</span></span>
+          <span style="display:flex;gap:8px;align-items:center"><span class="reason" style="border-color:var(--mix-ink-muted);color:var(--mix-ink-muted)">Spam</span><button class="btn ghost">Open</button></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:18px">
+    <p><b>Open</b> launches the chart details dialog with <code>InitialTab=Comments</code> and <code>FocusCommentId</code>, so moderation happens in the surface where the comment actually lives — no second console to build or maintain. Same row, same behaviour, on <code>/Admin</code> for anything that reaches your desk.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="n">07</span><h2>390&nbsp;px</h2><span class="eyebrow">where it gets tight</span></div>
+  <div class="cols split" style="--w:424px">
+    <div class="frame narrow">
+      <div class="cap">Mobile · four tabs</div>
+      <div class="app"><div class="dlg mobile">
+        <div class="video"><span class="play"></span></div>
+        <div class="title-row">
+          <span class="bub">S20</span>
+          <span class="song">Baroque Virus</span>
+          <button class="icon-btn on">★</button>
+        </div>
+        <div class="scoreline"><span class="grade">AA+</span><span class="score-v">964,102</span><span class="muted tiny">#84 of 2,317</span></div>
+        <div class="tabs">
+          <button class="tab on">Comments <span class="cnt">7</span></button>
+          <button class="tab">Leaderboard</button>
+          <button class="tab">Stats</button>
+          <button class="tab">History</button>
+        </div>
+        <div class="rail"><button class="chip on">Public</button><button class="chip">Murloc Lab</button><button class="chip">NYC Pump</button></div>
+        <div class="cmt" style="border-top:1px solid var(--mix-lines)">
+          <div class="av">E</div>
+          <div>
+            <div class="chead"><span class="cname">ERRLENA 🇺🇸</span><span class="cmeta">3d</span></div>
+            <div class="cbody"><p>The <strong>drill at 2:01</strong> is the whole chart…</p></div>
+            <div class="cfoot"><button class="act voted">▲ 14</button><button class="act">Reply</button><span class="spacer"></span><button class="act">⋯</button></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div class="note">
+      <h3>The tab strip overflows, on purpose</h3>
+      <p>Four labels don't fit 390&nbsp;px. Rather than truncating to jargon ("Boards"), the strip scrolls horizontally and the fourth tab peeks — a standard, legible affordance that keeps every label a real word.</p>
+      <p>The header is 274&nbsp;px before the tabs. That's the argument for moving the record inputs out: with the old always-visible record row the first comment landed below the fold on every phone.</p>
+      <div class="flag"><b>To verify, not assume:</b> open at 390 and check <code>scrollWidth &gt; clientWidth</code> on the strip and nowhere else — the page body must never scroll sideways.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="n">08</span><h2>The editor question</h2><span class="eyebrow">own it vs. Froala</span></div>
+
+  <div class="callout" style="margin-bottom:24px">
+    <h3>The parser isn't optional, so a WYSIWYG library is additive — not a replacement.</h3>
+    <p style="margin-bottom:0">Comments render in five languages from machine-translated text. That rendering has to be safe, and it must never touch <code>MarkupString</code>. So a parser producing a token tree that Blazor renders as real elements exists <b>either way</b>. Once it exists, "the editor" is a textarea, six buttons that wrap the selection, and a preview piped through the renderer you already built.</p>
+  </div>
+
+  <div class="scroller">
+    <div class="vs">
+      <div class="r h"><div></div><div>Own it</div><div>Froala</div></div>
+      <div class="r"><div class="k">Display renderer</div><div>Needed. ~200 lines, pure, in the vertical's Domain.</div><div>Needed anyway — Froala is an input widget, not a renderer.</div></div>
+      <div class="r"><div class="k">Editor</div><div>Textarea + 6 buttons doing <code>wrapSelection('**')</code> + Write/Preview toggle. ~150 lines, no JS library.</div><div>~100&nbsp;KB of JS, a JS interop bridge, and a MudBlazor dialog host to fight.</div></div>
+      <div class="r"><div class="k">Stored format</div><div>Markdown. 500 characters.</div><div>HTML — or an HTML↔Markdown converter you now own.</div></div>
+      <div class="r"><div class="k">XSS surface</div><div><span class="yes">None by construction.</span> Tokens become elements; no raw string ever reaches the DOM.</div><div><span class="no">Arbitrary user HTML</span> that must be sanitized server-side before it's stored or re-rendered.</div></div>
+      <div class="r"><div class="k">Survives translation</div><div><span class="yes">Measured.</span> The corpus meme comment kept its <code>2:01</code>, its blank line, and its punchline across every arm.</div><div><span class="no">Unmeasured.</span> HTML tags round-tripping through an LLM in five languages.</div></div>
+      <div class="r"><div class="k">Testing</div><div><code>DomainTests</code>, no infrastructure. Link-trust rules unit-tested beside it.</div><div>Playwright, because the behaviour lives in JS.</div></div>
+      <div class="r"><div class="k">Package allowlist</div><div>Nothing new.</div><div>New dependency in <code>ScoreTracker.Web</code> + a CLAUDE.md amendment.</div></div>
+      <div class="r"><div class="k">Licence</div><div>—</div><div><span class="no">Commercial, per-domain</span>, on a free one-person community site.</div></div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:22px">
+    <p><b>And the cap argues on its own.</b> 500 characters is a tweet and a half. A rich-text editor for a 500-character comment is a bigger control than the content it produces — every community that gets this right (GitHub, Reddit, Discord) ships a textarea with a formatting row and a preview toggle, and none of them ship WYSIWYG.</p>
+    <p style="margin-bottom:0">If the Write/Preview split still feels too raw once it's in front of you, the upgrade path is cheap and doesn't touch storage: keep markdown on the wire and swap the input widget for a markdown-native open-source editor (EasyMDE, MIT, ~40&nbsp;KB). What you must not do is store HTML — that's the door that doesn't close again.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ -->
+<section>
+  <div class="sec-head"><span class="n">09</span><h2>Before build</h2></div>
+  <div class="scroller">
+    <table class="spec">
+      <thead><tr><th>Item</th><th>Where</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td><code>ModerateComments = 1&nbsp;&lt;&lt;&nbsp;4</code></td><td>SharedKernel</td><td><code>All</code> 15&nbsp;→&nbsp;31, seed 13&nbsp;→&nbsp;29. Creators are computed by <code>PermissionsOf</code>, so they need nothing.</td></tr>
+        <tr><td>Permission backfill</td><td>EF migration</td><td>13&nbsp;→&nbsp;29 and 15&nbsp;→&nbsp;31 across <b>both</b> <code>CommunityMembership.Permissions</code> and <code>Community</code>'s stored default. Missing the second means future admins in existing clubs silently lack the power.</td></tr>
+        <tr><td><code>CommentRestriction</code></td><td>ChartComments</td><td>Two Guid <code>*UserId</code> columns → needs <code>[PurgeKey(nameof(UserId))]</code>, or account deletion purges the wrong person.</td></tr>
+        <tr><td>Purge manifest</td><td>ChartComments</td><td>Comments, votes and restrictions carry <code>UserId</code>. Revisions don't — that table needs an exemption row with its reason.</td></tr>
+        <tr><td>Re-translation cooldown</td><td>ChartComments</td><td>The $30 ceiling is a fuse against bugs. An edit loop is a <i>user-driven</i> cost amplifier the fuse can't see.</td></tr>
+        <tr><td>Regional communities excluded</td><td>domain rule</td><td>World and country boards are ownerless and carry no roles — a comment there would have no moderator. Audiences are Public + your non-regional clubs.</td></tr>
+        <tr><td>Similar-charts empty state</td><td>ChartComments</td><td>Not a deploy step — the graph is live on a daily cron. 139 of 4,426 charts have no piucenter coverage, so the empty state is a real state.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div>

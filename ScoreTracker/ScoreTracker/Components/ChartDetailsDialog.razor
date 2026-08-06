@@ -6,18 +6,16 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
-@using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
-@inject ISnackbar Snackbar
-@inject IAdminNotificationClient Notifications
+@inject IUiSettingsAccessor UiSettings
 
 @* The one shared chart-details surface (design doc §4): leads with the video like
    today's video dialog, then meta, the cross-mix score journey (ScoreEventJournal),
@@ -25,23 +23,31 @@
    (their full chart rendering is deliberately not imported — §8a). *@
 <MudDialog Visible="Visible" VisibleChanged="VisibleChanged" Options="_options" Class="chart-details-dialog">
     <DialogContent>
-        @if (Chart != null)
+        @if (ViewChart != null)
         {
+            @* Drilled in from Charts like this. A crumb rather than a second dialog: the host
+               owns Visible, and nineteen of them would each need to learn a chart-change
+               callback for what is one piece of state in here. *@
+            @if (IsDrilled && Chart != null)
+            {
+                <MudButton Size="Size.Small" Variant="Variant.Text" Class="chart-details-crumb"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="BackToAnchor">@L["Back to {0}", Chart.Song.Name]</MudButton>
+            }
             @if (!string.IsNullOrWhiteSpace(_videoUrl))
             {
                 <iframe class="chart-details-video" src="@EmbedUrl" allow="@(AutoPlay ? "autoplay; encrypted-media" : "encrypted-media")" allowfullscreen></iframe>
-                <div class="chart-details-video-report">
-                    <MudTooltip Text=@L["Report Video Tooltip"]>
-                        <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Report"
-                                   OnClick="ReportVideo">@L["Report Video"]</MudButton>
-                    </MudTooltip>
-                </div>
             }
             <div class="chart-details-title">
-                <DifficultyBubble Chart="Chart"></DifficultyBubble>
-                <MudText Typo="Typo.h5">@Chart.Song.Name</MudText>
+                <DifficultyBubble Chart="ViewChart"></DifficultyBubble>
+                <MudText Typo="Typo.h5">@ViewChart.Song.Name</MudText>
                 <MudSpacer></MudSpacer>
-                @if (CurrentUser.IsLoggedIn)
+                @* Score, To-Do, the suggestion action and the popularity places all describe
+                   the chart the HOST passed. While drilled into a neighbour they would be
+                   describing the wrong one, so they stand down rather than lie.
+                   HasDelegate is load-bearing: ten of the thirteen hosts never wire OnToDo, and
+                   without it they all rendered a bookmark whose click went nowhere. *@
+                @if (!IsDrilled && CurrentUser.IsLoggedIn && Chart != null && OnToDo.HasDelegate)
                 {
                     <MudTooltip Text="@(IsToDo ? L["On ToDo List"] : L["Add to ToDo List"])">
                         <MudIconButton Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
@@ -51,41 +57,7 @@
                     </MudTooltip>
                 }
             </div>
-            <div class="chart-details-meta">
-                @if (Chart.Song.Bpm != null)
-                {
-                    <div><span class="chart-details-meta-label">@L["BPM"]</span><span>@Chart.Song.Bpm</span></div>
-                }
-                @if (Chart.NoteCount != null)
-                {
-                    <div><span class="chart-details-meta-label">@L["Note Count"]</span><span>@Chart.NoteCount</span></div>
-                }
-                @if (Chart.StepArtist != null)
-                {
-                    <div><span class="chart-details-meta-label">@L["Step Artist"]</span><span>@Chart.StepArtist</span></div>
-                }
-                <div><span class="chart-details-meta-label">@L["Song Artist"]</span><span>@Chart.Song.Artist</span></div>
-                <div><span class="chart-details-meta-label">@L["Song Type"]</span><span>@Chart.Song.Type</span></div>
-                @* Two separate facts, because they answer different questions: how played this
-                   chart is across the whole mix, and how played it is against its own folder —
-                   a chart four hundredth overall can still be the most played thing in its
-                   folder. Both are piugame's play ranking, not this site's score counts. *@
-                @if (OfficialPlace != null)
-                {
-                    <div>
-                        <span class="chart-details-meta-label">@L["Popularity overall"]</span>
-                        <span>@L["#{0}", OfficialPlace.Value.ToString("N0")]</span>
-                    </div>
-                }
-                @if (OfficialFolderPlace != null)
-                {
-                    <div>
-                        <span class="chart-details-meta-label">@L["Popularity in {0}", Chart.DifficultyString]</span>
-                        <span>@L["#{0}", OfficialFolderPlace.Value.ToString("N0")]</span>
-                    </div>
-                }
-            </div>
-            @if (Score?.Score != null)
+            @if (!IsDrilled && Score?.Score != null)
             {
                 <div class="chart-details-score">
                     <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Mix" OneLine="true" ShowScore="true"
@@ -96,101 +68,60 @@
                     }
                 </div>
             }
-            @if (_placements.Any())
-            {
-                <div class="chart-details-placements">
-                    @foreach (var placement in _placements)
-                    {
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
-                                 Style="@($"color:{placement.Color};border-color:{placement.Color}")">@placement.Label</MudChip>
-                    }
-                </div>
-            }
-            @* Badge coverage bars — granular piucenter badges, dominance-first (their top-3
-               pick, then coverage). A pre-crawl chart shows nothing here rather than falling
-               back to the rollup tags: an arbitrary "Technical" is worse than silence
-               (docs/design/nuke-old-skill-categories.md). *@
-            @if (_skillChips.Any())
-            {
-                <MudText Typo="Typo.overline">@L["Skills"]</MudText>
-                @* Bars extracted to SkillCoverageBars (chart-page overhaul): one concept,
-                   one component — the page renders the same bars at section scale. *@
-                <SkillCoverageBars Chips="_skillChips"></SkillCoverageBars>
-            }
-            @* Round 4 (piucenter): "Your journey" renamed Score History and moved next
-               to the recording inputs it feeds — past scores directly above the new one. *@
-            @if (_journey.Any())
-            {
-                <MudText Typo="Typo.overline">@L["Score History"]</MudText>
-                <div class="chart-details-journey">
-                    @foreach (var entry in _journey)
-                    {
-                        <div class="chart-details-journey-row">
-                            <span class="chart-details-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@MixName(entry.Mix)</MudChip>
-                            <span class="chart-details-journey-score">@(entry.Score?.ToString() ?? "—")</span>
-                            @if (entry.Score != null)
-                            {
-                                <LetterGradeIcon Grade="entry.Score.Value.LetterGradeFor(Mix)" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-            @* Round 10: buttons never shrink into vertical letter-stacks (nowrap + wrap
-               to their own line instead); the PIU Center link gets its own line.
-               Round 11: the score inputs are always visible (no Record Score toggle) and
-               purpose-built — EditChartGrid brought duplicate To-Do/favorite buttons and
-               a layout that fell apart on phones. To-Do moved to the title-row icon. *@
-            @if (CurrentUser.IsLoggedIn)
-            {
-                <div class="chart-details-record">
-                    <MudText Typo="Typo.overline">@L["Record Score"]</MudText>
-                    <div class="chart-details-record-row">
-                        <MudNumericField T="int?" Label="@L["Score"]" @bind-Value="_inputScore" Min="0" Max="1000000"
-                                         HideSpinButtons="true" Class="chart-details-record-score"></MudNumericField>
-                        <MudSelect T="PhoenixPlate?" Label="@L["Plate"]" @bind-Value="_inputPlate" Clearable="true"
-                                   Class="chart-details-record-plate">
-                            @foreach (var plate in Enum.GetValues<PhoenixPlate>())
-                            {
-                                <MudSelectItem T="PhoenixPlate?" Value="plate">@plate.GetName()</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudCheckBox T="bool" @bind-Value="_inputBroken" Label="@L["Broken"]" Class="chart-details-record-broken"></MudCheckBox>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving"
-                                   OnClick="SaveScore">@L["Save"]</MudButton>
-                    </div>
-                </div>
-            }
-            <MudLink Href="@PiuCenterUrl" Target="_blank" Typo="Typo.caption" Class="chart-details-piucenter">@L["View full chart on PIU Center"]</MudLink>
-            @* The chart page's board, unchanged — the dialog is the third host of one component
-               rather than a third leaderboard. Active follows Visible so a dialog nobody has
-               opened issues no queries, which matters here: ten call sites render this. *@
-            <div class="chart-details-board">
-                <MudText Typo="Typo.overline">@L["Leaderboard"]</MudText>
-                <ChartLeaderboardScopes ChartId="Chart.Id" Mix="Mix" Active="Visible"
-                                        InitialScope="BoardScope"
-                                        @key="(Chart.Id, Mix)"></ChartLeaderboardScopes>
+            @* Sticky so a tall header — video, title, your score — scrolls away underneath the
+               strip instead of taking it with it. The panels below all stay mounted and are
+               gated on Active rather than unmounted: switching tabs would otherwise throw away
+               the board's scope selection and re-query on the way back.
+               Comments becomes the first tab when that feature lands (docs/design/chart-comments). *@
+            <div class="chart-details-tabs" role="tablist">
+                @foreach (var tab in AvailableTabs)
+                {
+                    var t = tab;
+                    <button type="button" role="tab" class="@TabClass(t)" data-testid="@($"cdt-tab-{t}")"
+                            aria-selected="@((_tab == t).ToString().ToLowerInvariant())"
+                            @onclick="() => SelectTab(t)">@TabLabel(t)</button>
+                }
             </div>
-            @* Reserved slot: chart comments land here if user-generated content ever ships. *@
+            @* The chart page's board, unchanged — the dialog is the third host of one component
+               rather than a third leaderboard. Active is Visible AND selected, so neither a
+               dialog nobody opened nor a tab nobody picked issues a query. Nineteen call sites
+               render this. *@
+            <div class="@PanelClass(DetailsTab.Leaderboard)">
+                <ChartLeaderboardScopes ChartId="ViewChart.Id" Mix="Mix"
+                                        Active="IsLive(DetailsTab.Leaderboard)"
+                                        InitialScope="BoardScope"
+                                        @key="(ViewChart.Id, Mix)"></ChartLeaderboardScopes>
+            </div>
+            @* Keys carry each panel's identity alongside the chart id: Blazor's key lookup
+               compares key VALUES only, so two keyed siblings sharing a chart id collide even
+               when they are different component types. *@
+            <div class="@PanelClass(DetailsTab.Stats)">
+                <ChartStatsTab Chart="ViewChart" Mix="Mix"
+                               OfficialPlace="@(IsDrilled ? null : OfficialPlace)"
+                               OfficialFolderPlace="@(IsDrilled ? null : OfficialFolderPlace)"
+                               Active="IsLive(DetailsTab.Stats)"
+                               OnSimilarChartSelected="Drill"
+                               @key="(ViewChart.Id, nameof(ChartStatsTab))"></ChartStatsTab>
+            </div>
+            @* Round 4 (piucenter): "Your journey" renamed Score History and kept next to the
+               recording inputs it feeds — past scores directly above the new one. The tab is
+               the heading now, so the panel no longer prints one of its own. *@
+            <div class="@PanelClass(DetailsTab.History)">
+                <ChartScoreHistoryTab Chart="ViewChart" Mix="Mix" ShowHeading="false"
+                                      Score="@(IsDrilled ? null : Score)"
+                                      OnScoreRecorded="OnScoreRecorded"
+                                      Active="IsLive(DetailsTab.History)"
+                                      @key="(ViewChart.Id, nameof(ChartScoreHistoryTab))"></ChartScoreHistoryTab>
+            </div>
         }
     </DialogContent>
     <DialogActions>
-        @* Suggestion context (opened from a Suggested Charts row): a quick thumbs-up
-           feeds the same store as WSIP's feedback. The veto path lives on the widget's
-           edit-mode ✕ — negative feedback wants the reason dialog, not one tap. *@
-        @if (SuggestionCategory != null && CurrentUser.IsLoggedIn && Chart != null)
-        {
-            <MudButton StartIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Secondary"
-                       Disabled="_isSaving || _feedbackSent"
-                       OnClick="SubmitGoodSuggestion">@L["Good Suggestion"]</MudButton>
-        }
         @* The dialog is a summary; the chart page is the whole record (videos, similar charts,
            the score distribution). A real link, so it opens in a tab like any other. *@
-        @if (Chart != null)
+        @if (ViewChart != null)
         {
             <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew"
-                       Href="@ChartSlugs.CanonicalPath(Chart)">@L["More info"]</MudButton>
+                       Href="@ChartSlugs.CanonicalPath(ViewChart)">@L["More info"]</MudButton>
         }
         <MudSpacer></MudSpacer>
         <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close"
@@ -222,12 +153,6 @@
         border: 0;
     }
 
-    .chart-details-video-report {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 2px;
-    }
-
     .chart-details-title {
         display: flex;
         align-items: center;
@@ -235,23 +160,73 @@
         margin: 8px 0;
     }
 
-    .chart-details-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 4px 12px;
-        margin-bottom: 8px;
-    }
-
-    .chart-details-meta-label {
-        color: var(--mud-palette-text-secondary);
-        font-size: .7rem;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        display: block;
-    }
-
     .chart-details-score {
         margin: 8px 0;
+    }
+
+    /* Sticky against the dialog content, which is the scroll container. It does not bleed to
+       the content's padding edges on purpose: matching MudBlazor's own gutter by hand risks
+       overflowing it, and a dialog that scrolls sideways is a worse bug than a 24px gutter. */
+    .chart-details-tabs {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        display: flex;
+        gap: 2px;
+        margin-top: 10px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        background: var(--mud-palette-surface);
+        border-top: 1px solid var(--mud-palette-lines-default);
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .chart-details-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Labels stay whole words and the strip scrolls instead. Four of them do not fit a 390px
+       phone, and abbreviating "Leaderboard" into jargon to buy 40px is the worse trade. */
+    .chart-details-tab {
+        appearance: none;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--mud-palette-text-secondary);
+        font: inherit;
+        font-size: .82rem;
+        padding: 10px 12px 8px;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .chart-details-tab:hover {
+        color: var(--mud-palette-text-primary);
+    }
+
+    .chart-details-tab-on {
+        color: var(--mud-palette-primary);
+        border-bottom-color: var(--mud-palette-primary);
+    }
+
+    .chart-details-tab:focus-visible {
+        outline: 2px solid var(--mud-palette-primary);
+        outline-offset: -2px;
+    }
+
+    /* Panels sat flush against the strip, so the first row of every tab read as part of
+       the tabs rather than under them. */
+    .chart-details-panel {
+        padding-top: 12px;
+    }
+
+    /* Hidden, not unmounted — see the panel comment in the markup. */
+    .chart-details-panel-hidden {
+        display: none;
+    }
+
+    .chart-details-crumb {
+        margin-bottom: 2px;
     }
 
     /* Age reads under the score, not beside it (owner, piucenter round 3). */
@@ -270,76 +245,49 @@
         margin-top: 12px;
     }
 
-    .chart-details-journey-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 2px 0;
-        border-bottom: 1px dashed var(--mud-palette-lines-default);
-    }
-
-    .chart-details-journey-date {
-        color: var(--mud-palette-text-secondary);
-        font-variant-numeric: tabular-nums;
-    }
-
-    /* No flex-grow: the grade icon sits beside the score, not floated to the far
-       right (owner, piucenter round 4). */
-    .chart-details-journey-score {
-        font-variant-numeric: tabular-nums;
-    }
-
-    .chart-details-placements, .chart-details-skills {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin: 8px 0;
-    }
-
-    .chart-details-piucenter {
-        display: inline-block;
-        margin-top: 8px;
-    }
-
-    .chart-details-record {
-        margin-top: 8px;
-    }
-
-    /* Round 12: a grid keeps everything left-packed (the trailing 1fr ghost column
-       absorbs the slack — Broken stays glued to Plate, not to Save). */
-    .chart-details-record-row {
-        display: grid;
-        grid-template-columns: minmax(130px, 200px) minmax(130px, 170px) max-content max-content 1fr;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .chart-details-record-broken {
-        white-space: nowrap;
-        margin: 0;
-    }
-
-    @@media (max-width: 599.98px) {
-        .chart-details-record-row {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
 </style>
 
 @code {
+    /// <summary>
+    ///     The dialog's sections. Comments joins as the first tab when that feature lands
+    ///     (docs/design/chart-comments); until it has something behind it, shipping a fourth
+    ///     tab would just be a dead control.
+    /// </summary>
+    public enum DetailsTab
+    {
+        Leaderboard,
+        Stats,
+        History
+    }
+
+    /// <summary>
+    ///     Per user, not per page. The density preference is keyed by page because a table on
+    ///     one screen says nothing about a table on another; this dialog is the same object
+    ///     everywhere it opens, so remembering it nineteen times over would be nineteen answers
+    ///     to one question.
+    /// </summary>
+    private const string TabSettingKey = "ChartDetails__Tab";
+
     // MaxWidth.False on purpose: Small would tag the dialog `mud-dialog-width-sm`, which
     // charts.scss globally forces to `max-width: none !important`. The cap lives in this
     // component's own stylesheet instead — see the note beside it.
     private readonly DialogOptions _options = new()
         { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
     private Guid _loadedChartId = Guid.Empty;
-    private int? _inputScore;
-    private PhoenixPlate? _inputPlate;
-    private bool _inputBroken;
-    private bool _isSaving;
     private string? _videoUrl;
-    private IReadOnlyList<ScoreJournalEntry> _journey = Array.Empty<ScoreJournalEntry>();
-    private IReadOnlyList<(string Label, string Color)> _placements = Array.Empty<(string, string)>();
+    private DetailsTab _tab = DetailsTab.Leaderboard;
+    private DetailsTab? _remembered;
+    private bool _wasVisible;
+    private Guid _anchorId = Guid.Empty;
+    private Chart? _drilled;
+
+    /// <summary>
+    ///     The chart currently on screen: the host's, or the neighbour the reader drilled into
+    ///     from Charts like this.
+    /// </summary>
+    private Chart? ViewChart => _drilled ?? Chart;
+
+    private bool IsDrilled => _drilled != null;
 
     [Parameter] public Chart? Chart { get; set; }
 
@@ -393,142 +341,136 @@
     [Parameter] public int? OfficialFolderPlace { get; set; }
 
     /// <summary>
-    ///     The recommendation category this chart was suggested under (Suggested Charts
-    ///     widget). Non-null unlocks the Good Suggestion action.
+    ///     Which tab to open on. A caller that reaches this dialog in order to record a score
+    ///     has already said which section it means, and making them tap for it would undo what
+    ///     always-visible inputs were for. Null defers to the remembered choice.
     /// </summary>
-    [Parameter] public string? SuggestionCategory { get; set; }
+    [Parameter] public DetailsTab? InitialTab { get; set; }
 
-    protected override async Task OnParametersSetAsync()
+    private IReadOnlyList<DetailsTab> AvailableTabs => CurrentUser.IsLoggedIn
+        ? new[] { DetailsTab.Leaderboard, DetailsTab.Stats, DetailsTab.History }
+        // Score History is your journal plus your recording inputs. Signed out it is an empty
+        // box with a heading, which is worse than one fewer tab.
+        : new[] { DetailsTab.Leaderboard, DetailsTab.Stats };
+
+    private bool IsLive(DetailsTab tab)
     {
-        if (!Visible || Chart == null || Chart.Id == _loadedChartId) return;
-        _loadedChartId = Chart.Id;
-        _feedbackSent = false;
-        // Prefill the recording inputs from the current best (round 11).
-        _inputScore = Score?.Score == null ? null : (int)Score.Score.Value;
-        _inputPlate = Score?.Plate;
-        _inputBroken = Score?.IsBroken ?? false;
-        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { Chart.Id })))
-            .FirstOrDefault()?.VideoUrl.ToString();
-        _journey = CurrentUser.IsLoggedIn
-            ? (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray()
-            : Array.Empty<ScoreJournalEntry>();
-        _placements = await LoadPlacements(Chart.Id);
-        // The alias table's key beats the guessed one (crawler project hardening).
-        _externalKey = (await Mediator.Send(new GetChartStepAnalysisQuery(Chart.Id)))?.ExternalKey;
-        // Coverage bars: granular piucenter badges, dominance-ordered, from the banked metrics.
-        _skillChips = (await Mediator.Send(new GetChartBadgeChipsQuery(new[] { Chart.Id })))
-            .GetValueOrDefault(Chart.Id) ?? Array.Empty<ChartBadgeChipRecord>();
+        return Visible && _tab == tab;
     }
 
-    private async Task<IReadOnlyList<(string, string)>> LoadPlacements(Guid chartId)
+    private string TabClass(DetailsTab tab)
     {
-        var placements = new List<(string, string)>();
-        foreach (var (listName, label) in new (string, string)[]
-                 {
-                     ("Pass Count", L["Pass Difficulty"].ToString()),
-                     ("Scores", L["Score Difficulty"].ToString())
-                 })
-        {
-            var result = await Mediator.Send(new GetTierListWithFallbackQuery(listName, Mix));
-            var entry = result.Entries.FirstOrDefault(e => e.ChartId == chartId);
-            if (entry == null || entry.Category == TierListCategory.Unrecorded) continue;
-            placements.Add(($"{label}: {DifficultyName(entry.Category)}",
-                ThemeScales.DifficultyColor(entry.Category)));
-        }
-
-        return placements;
+        return _tab == tab ? "chart-details-tab chart-details-tab-on" : "chart-details-tab";
     }
 
-    private string DifficultyName(TierListCategory category)
+    private string PanelClass(DetailsTab tab)
     {
-        return category switch
+        return _tab == tab ? "chart-details-panel" : "chart-details-panel chart-details-panel-hidden";
+    }
+
+    private string TabLabel(DetailsTab tab)
+    {
+        return tab switch
         {
-            TierListCategory.Overrated => L["1+ Level Easier"],
-            TierListCategory.VeryEasy => L["Very Easy"],
-            TierListCategory.Easy => L["Easy"],
-            TierListCategory.Medium => L["Medium"],
-            TierListCategory.Hard => L["Hard"],
-            TierListCategory.VeryHard => L["Very Hard"],
-            TierListCategory.Underrated => L["1+ Level Harder"],
-            _ => L["Not Rated"]
+            DetailsTab.Stats => L["Chart Stats"],
+            DetailsTab.History => L["Score History"],
+            _ => L["Leaderboard"]
         };
     }
 
-    private static string MixName(MixEnum mix)
+    private async Task SelectTab(DetailsTab tab)
     {
-        return mix == MixEnum.Phoenix2 ? "Phoenix 2" : mix.ToString();
+        if (_tab == tab) return;
+        _tab = tab;
+        _remembered = tab;
+        await UiSettings.SetSetting(TabSettingKey, tab.ToString());
     }
 
-    private string? _externalKey;
-    private IReadOnlyList<ChartBadgeChipRecord> _skillChips = Array.Empty<ChartBadgeChipRecord>();
-
-    // The resolved alias key when the crawler has one; otherwise a best-effort guess
-    // in the current key format ("<Song>_-_<Artist>_<S|D><level>_<SONGTYPE>").
-    private string PiuCenterUrl
+    /// <summary>
+    ///     Reads the remembered tab once per instance, and here rather than on the open path.
+    ///     Signed out this setting lives in browser storage, so the read is a JS interop round
+    ///     trip; awaiting it inside the click that opens the dialog would put it in front of
+    ///     everything the dialog renders. Every other consumer of GetSetting reads it here for
+    ///     the same reason (ProfilePanel, ChartsExportDialog, CommunityToolsAnnouncement).
+    /// </summary>
+    protected override async Task OnInitializedAsync()
     {
-        get
+        var stored = await UiSettings.GetSetting(TabSettingKey);
+        if (Enum.TryParse<DetailsTab>(stored, out var restored)) _remembered = restored;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Visible)
         {
-            if (_externalKey != null)
-                return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(_externalKey)}";
-            if (Chart == null) return "https://www.piucenter.com/chart";
-            var suffix = Chart.Song.Type switch
-            {
-                SongType.Remix => "REMIX",
-                SongType.ShortCut => "SHORTCUT",
-                SongType.FullSong => "FULLSONG",
-                _ => "ARCADE"
-            };
-            var key =
-                $"{Chart.Song.Name}_-_{Chart.Song.Artist}_{Chart.Type.GetShortHand()}{(int)Chart.Level}_{suffix}"
-                    .Replace(' ', '_');
-            return $"https://www.piucenter.com/chart/{Uri.EscapeDataString(key)}";
+            // Resolved once per opening rather than on every parameter change: re-applying
+            // InitialTab while the dialog is open would snap the user back out of any tab
+            // they picked themselves. A drill-down is scoped to one opening for the same
+            // reason — reopening from a row starts at the chart that row names.
+            _wasVisible = false;
+            _drilled = null;
+            return;
         }
-    }
 
-    private async Task SaveScore()
-    {
         if (Chart == null) return;
-        _isSaving = true;
-        try
+        if (!_wasVisible)
         {
-            var parsedScore = _inputScore == null ? null :
-                PhoenixScore.TryParse(_inputScore.Value, out var score) ? (PhoenixScore?)score : null;
-            await Mediator.Send(new UpdatePhoenixBestAttemptCommand(Chart.Id, _inputBroken, parsedScore, _inputPlate,
-                Mix: Mix));
-            Snackbar.Add($"Recorded {(_inputBroken ? "Broken" : "Passing")} for {Chart.Song.Name}", Severity.Success);
-            await OnScoreRecorded.InvokeAsync();
-            // The journey timeline gains the new entry immediately.
-            _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
-        }
-        catch (Exception)
-        {
-            Snackbar.Add("There was an error while recording the score", Severity.Error);
+            _wasVisible = true;
+            ResolveOpeningTab();
         }
 
-        _isSaving = false;
+        // A new chart from the host replaces whatever the reader had drilled into.
+        if (Chart.Id != _anchorId)
+        {
+            _anchorId = Chart.Id;
+            _drilled = null;
+        }
+
+        if (ViewChart!.Id == _loadedChartId) return;
+        await LoadChart(ViewChart.Id);
     }
 
-    /// <summary>Names the chart to an admin — wrong videos get caught by whoever is watching.</summary>
-    private async Task ReportVideo()
+    /// <summary>
+    ///     The video is all this component reads — the stats, history and leaderboard panels
+    ///     own the rest and only read when they are the selected tab.
+    /// </summary>
+    private async Task LoadChart(Guid chartId)
     {
-        if (Chart == null) return;
-        await Notifications.NotifyAdmin(
-            $"The video for {Chart.Song.Name} {Chart.DifficultyString} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}",
-            CancellationToken.None);
-        Snackbar.Add("Notification was sent", Severity.Success);
+        _loadedChartId = chartId;
+        _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { chartId })))
+            .FirstOrDefault()?.VideoUrl.ToString();
     }
 
-    private bool _feedbackSent;
-
-    private async Task SubmitGoodSuggestion()
+    /// <summary>
+    ///     Swap to a neighbour without leaving the dialog. The tab stays put — the reader was
+    ///     on Chart Stats to tap this, and landing them somewhere else would lose the shelf
+    ///     they are browsing.
+    /// </summary>
+    private async Task Drill(Chart chart)
     {
-        if (Chart == null || SuggestionCategory == null) return;
-        _isSaving = true;
-        await Mediator.Send(new SubmitFeedbackCommand(new SuggestionFeedbackRecord(
-            SuggestionCategory, "Positive", string.Empty, ShouldHide: false, IsPositive: true, Chart.Id)));
-        Snackbar.Add(L["Feedback Submitted, Thank You!"].Value, Severity.Success);
-        _feedbackSent = true;
-        _isSaving = false;
+        if (chart.Id == ViewChart?.Id) return;
+        _drilled = chart;
+        await LoadChart(chart.Id);
+    }
+
+    private async Task BackToAnchor()
+    {
+        _drilled = null;
+        if (Chart != null) await LoadChart(Chart.Id);
+    }
+
+    /// <summary>
+    ///     Synchronous on purpose: nothing here may go to storage or to the browser, because
+    ///     this runs on the click that opens the dialog and anything awaited here delays the
+    ///     content behind it.
+    /// </summary>
+    private void ResolveOpeningTab()
+    {
+        if (InitialTab is { } forced) _tab = forced;
+        else if (_remembered is { } remembered) _tab = remembered;
+
+        // A remembered History from a previous session is not a tab an anonymous visitor has.
+        if (!AvailableTabs.Contains(_tab)) _tab = DetailsTab.Leaderboard;
     }
 
     private Task Close()

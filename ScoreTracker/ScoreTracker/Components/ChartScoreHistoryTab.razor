@@ -1,0 +1,187 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+
+@* Your record on this chart, extracted from ChartDetailsDialog: the cross-mix journey
+   from the ScoreEventJournal with the recording inputs directly beneath it. That
+   adjacency is deliberate (piucenter round 4) — past scores sit above the new one, so
+   the number you are about to type has its own history for context. *@
+@if (Chart != null && CurrentUser.IsLoggedIn)
+{
+    @if (ShowHeading)
+    {
+        <MudText Typo="Typo.overline">@L["Score History"]</MudText>
+    }
+    @if (_journey.Any())
+    {
+        <div class="chart-details-journey">
+            @foreach (var entry in _journey)
+            {
+                <div class="chart-details-journey-row">
+                    <span class="chart-details-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@MixName(entry.Mix)</MudChip>
+                    <span class="chart-details-journey-score">@(entry.Score?.ToString() ?? "—")</span>
+                    @if (entry.Score != null)
+                    {
+                        <LetterGradeIcon Grade="entry.Score.Value.LetterGradeFor(Mix)" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Class="chart-details-journey-empty">@L["No scores recorded on this chart yet."]</MudText>
+    }
+    @* Round 10: buttons never shrink into vertical letter-stacks (nowrap + wrap
+       to their own line instead).
+       Round 11: the score inputs are always visible (no Record Score toggle) and
+       purpose-built — EditChartGrid brought duplicate To-Do/favorite buttons and
+       a layout that fell apart on phones. To-Do lives on the dialog's title row. *@
+    <div class="chart-details-record">
+        <MudText Typo="Typo.overline">@L["Manual score edit"]</MudText>
+        <div class="chart-details-record-row">
+            <MudNumericField T="int?" Label="@L["Score"]" @bind-Value="_inputScore" Min="0" Max="1000000"
+                             HideSpinButtons="true" Class="chart-details-record-score"></MudNumericField>
+            <MudSelect T="PhoenixPlate?" Label="@L["Plate"]" @bind-Value="_inputPlate" Clearable="true"
+                       Class="chart-details-record-plate">
+                @foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                {
+                    <MudSelectItem T="PhoenixPlate?" Value="plate">@plate.GetName()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudCheckBox T="bool" @bind-Value="_inputBroken" Label="@L["Broken"]" Class="chart-details-record-broken"></MudCheckBox>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving"
+                       OnClick="SaveScore">@L["Save"]</MudButton>
+        </div>
+    </div>
+}
+
+<style>
+    .chart-details-journey-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 2px 0;
+        border-bottom: 1px dashed var(--mud-palette-lines-default);
+    }
+
+    .chart-details-journey-date {
+        color: var(--mud-palette-text-secondary);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* No flex-grow: the grade icon sits beside the score, not floated to the far
+       right (owner, piucenter round 4). */
+    .chart-details-journey-score {
+        font-variant-numeric: tabular-nums;
+    }
+
+    .chart-details-journey-empty {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .chart-details-record {
+        margin-top: 8px;
+    }
+
+    /* Round 12: a grid keeps everything left-packed (the trailing 1fr ghost column
+       absorbs the slack — Broken stays glued to Plate, not to Save). */
+    .chart-details-record-row {
+        display: grid;
+        grid-template-columns: minmax(130px, 200px) minmax(130px, 170px) max-content max-content 1fr;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .chart-details-record-broken {
+        white-space: nowrap;
+        margin: 0;
+    }
+
+    @@media (max-width: 599.98px) {
+        .chart-details-record-row {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public Chart? Chart { get; set; }
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>The current best, used to prefill the inputs (round 11).</summary>
+    [Parameter] public RecordedPhoenixScore? Score { get; set; }
+
+    [Parameter] public EventCallback OnScoreRecorded { get; set; }
+
+    /// <summary>
+    ///     Whether the block labels itself. A host that renders it inline among other sections
+    ///     needs the heading to tell them apart; a host whose tab is already called History does
+    ///     not, and printing it twice is just noise.
+    /// </summary>
+    [Parameter] public bool ShowHeading { get; set; } = true;
+
+    /// <summary>
+    ///     Set false by a host that renders this behind a tab nobody has selected, so a panel
+    ///     out of sight does not fetch a journey nobody is reading.
+    /// </summary>
+    [Parameter] public bool Active { get; set; } = true;
+
+    private Guid _loadedChartId = Guid.Empty;
+    private int? _inputScore;
+    private PhoenixPlate? _inputPlate;
+    private bool _inputBroken;
+    private bool _isSaving;
+    private IReadOnlyList<ScoreJournalEntry> _journey = Array.Empty<ScoreJournalEntry>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Active || Chart == null || Chart.Id == _loadedChartId) return;
+        _loadedChartId = Chart.Id;
+        _inputScore = Score?.Score == null ? null : (int)Score.Score.Value;
+        _inputPlate = Score?.Plate;
+        _inputBroken = Score?.IsBroken ?? false;
+        _journey = CurrentUser.IsLoggedIn
+            ? (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray()
+            : Array.Empty<ScoreJournalEntry>();
+    }
+
+    private static string MixName(MixEnum mix)
+    {
+        return mix == MixEnum.Phoenix2 ? "Phoenix 2" : mix.ToString();
+    }
+
+    private async Task SaveScore()
+    {
+        if (Chart == null) return;
+        _isSaving = true;
+        try
+        {
+            var parsedScore = _inputScore == null ? null :
+                PhoenixScore.TryParse(_inputScore.Value, out var score) ? (PhoenixScore?)score : null;
+            await Mediator.Send(new UpdatePhoenixBestAttemptCommand(Chart.Id, _inputBroken, parsedScore, _inputPlate,
+                Mix: Mix));
+            Snackbar.Add($"Recorded {(_inputBroken ? "Broken" : "Passing")} for {Chart.Song.Name}", Severity.Success);
+            await OnScoreRecorded.InvokeAsync();
+            // The journey timeline gains the new entry immediately.
+            _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("There was an error while recording the score", Severity.Error);
+        }
+
+        _isSaving = false;
+    }
+}
