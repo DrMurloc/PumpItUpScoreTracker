@@ -95,6 +95,14 @@ else
         color: var(--mud-palette-text-secondary);
         margin: 8px 0;
     }
+
+    /* Six columns on a phone put a 22px bubble on a ~25px-tall jacket, so the tile was all
+       bubble and no art. Three is the point where the jacket is still a picture. */
+    @@media (max-width: 499.98px) {
+        .chart-similar-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
 </style>
 
 @code {

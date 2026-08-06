@@ -2360,9 +2360,6 @@
   <data name="Good count" xml:space="preserve">
     <value>Good 数</value>
   </data>
-  <data name="Good Suggestion" xml:space="preserve">
-	  <value>良いおすすめ</value>
-  </data>
   <data name="Goods give no life, and — unlike perfects and greats — they do not build the multiplier either. They never hurt you. They just do not count." xml:space="preserve">
     <value>Good は体力を与えず、Perfect や Great と違って倍率も積みません。害はありませんが、ただ数に入らないだけです。</value>
   </data>

@@ -6,7 +6,6 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -16,7 +15,6 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
-@inject ISnackbar Snackbar
 @inject IUiSettingsAccessor UiSettings
 
 @* The one shared chart-details surface (design doc §4): leads with the video like
@@ -118,15 +116,6 @@
         }
     </DialogContent>
     <DialogActions>
-        @* Suggestion context (opened from a Suggested Charts row): a quick thumbs-up
-           feeds the same store as WSIP's feedback. The veto path lives on the widget's
-           edit-mode ✕ — negative feedback wants the reason dialog, not one tap. *@
-        @if (!IsDrilled && SuggestionCategory != null && CurrentUser.IsLoggedIn && Chart != null)
-        {
-            <MudButton StartIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Secondary"
-                       Disabled="_isSaving || _feedbackSent"
-                       OnClick="SubmitGoodSuggestion">@L["Good Suggestion"]</MudButton>
-        }
         @* The dialog is a summary; the chart page is the whole record (videos, similar charts,
            the score distribution). A real link, so it opens in a tab like any other. *@
         @if (ViewChart != null)
@@ -285,7 +274,6 @@
     private readonly DialogOptions _options = new()
         { CloseOnEscapeKey = true, FullWidth = true, MaxWidth = MaxWidth.False };
     private Guid _loadedChartId = Guid.Empty;
-    private bool _isSaving;
     private string? _videoUrl;
     private DetailsTab _tab = DetailsTab.Leaderboard;
     private DetailsTab? _remembered;
@@ -351,12 +339,6 @@
     [Parameter] public int? OfficialPlace { get; set; }
 
     [Parameter] public int? OfficialFolderPlace { get; set; }
-
-    /// <summary>
-    ///     The recommendation category this chart was suggested under (Suggested Charts
-    ///     widget). Non-null unlocks the Good Suggestion action.
-    /// </summary>
-    [Parameter] public string? SuggestionCategory { get; set; }
 
     /// <summary>
     ///     Which tab to open on. A caller that reaches this dialog in order to record a score
@@ -455,7 +437,6 @@
     private async Task LoadChart(Guid chartId)
     {
         _loadedChartId = chartId;
-        _feedbackSent = false;
         _videoUrl = (await Mediator.Send(new GetChartVideosQuery(new[] { chartId })))
             .FirstOrDefault()?.VideoUrl.ToString();
     }
@@ -490,19 +471,6 @@
 
         // A remembered History from a previous session is not a tab an anonymous visitor has.
         if (!AvailableTabs.Contains(_tab)) _tab = DetailsTab.Leaderboard;
-    }
-
-    private bool _feedbackSent;
-
-    private async Task SubmitGoodSuggestion()
-    {
-        if (Chart == null || SuggestionCategory == null) return;
-        _isSaving = true;
-        await Mediator.Send(new SubmitFeedbackCommand(new SuggestionFeedbackRecord(
-            SuggestionCategory, "Positive", string.Empty, ShouldHide: false, IsPositive: true, Chart.Id)));
-        Snackbar.Add(L["Feedback Submitted, Thank You!"].Value, Severity.Success);
-        _feedbackSent = true;
-        _isSaving = false;
     }
 
     private Task Close()
