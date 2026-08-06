@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
@@ -210,6 +211,73 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
+    public async Task ARepeatVisitDoesNotSweepTheCohortAgain()
+    {
+        // The cohort sweep and the history read are sized by the player population, not by
+        // the viewer, so a second visit must not pay for them twice.
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithPeerScores(chart, 950_000, 955_000, 960_000, 965_000);
+
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        // Once, not twice: the fixture holds singles only, so the doubles pass finds nothing
+        // in scope and returns before it reads anything. The point is the SECOND visit adds
+        // nothing at all.
+        ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.History.Verify(h => h.GetHistory(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnImportDropsTheCachedProjection()
+    {
+        // Serving a projection that predates your own import reads as the page ignoring the
+        // scores you just uploaded, which is worse than being slow.
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithPeerScores(chart, 950_000, 955_000, 960_000, 965_000);
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        ctx.Cache.Evict(ctx.UserId, MixEnum.Phoenix);
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        // Twice over: the eviction sent the second visit back to the database, which is the
+        // whole contract — an import must not be able to serve you a projection older than it.
+        ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task AWipeWithNoNamedMixDropsEveryMix()
+    {
+        // PlayerScoreDataDeletedEvent carries a null mix for an all-mixes wipe, and a
+        // projection surviving that would keep recommending scores that no longer exist.
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithPeerScores(chart, 950_000, 955_000, 960_000, 965_000);
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        ctx.Cache.Evict(ctx.UserId, null);
+
+        Assert.False(ctx.Cache.TryGet(ctx.UserId, MixEnum.Phoenix, null, out _));
+        Assert.False(ctx.Cache.TryGet(ctx.UserId, MixEnum.Phoenix2, null, out _));
+    }
+
+    [Fact]
+    public async Task OnePlayersImportLeavesAnotherPlayersProjectionAlone()
+    {
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithPeerScores(chart, 950_000, 955_000, 960_000, 965_000);
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        ctx.Cache.Evict(Guid.NewGuid(), MixEnum.Phoenix);
+
+        Assert.True(ctx.Cache.TryGet(ctx.UserId, MixEnum.Phoenix, null, out _));
+    }
+
+    [Fact]
     public async Task APlayerWithNoCompetitiveLevelGetsNothingRatherThanNonsense()
     {
         var ctx = new ProjectionContext(1, 1).WithChart(out var chart, ChartType.Single, 20);
@@ -322,6 +390,26 @@ public sealed class PumbilityProjectionSagaTests
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => _peerHistory.ToArray().AsEnumerable());
 
+            // The level-band read the saga actually uses: a range scan rather than several
+            // hundred chart GUIDs in an IN list.
+            Scores.Setup(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+                    It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((MixEnum mix, IEnumerable<Guid> userIds, ChartType type, DifficultyLevel min,
+                    DifficultyLevel max, CancellationToken _) =>
+                {
+                    var asked = userIds.ToHashSet();
+                    return _peerScores
+                        .Where(p => p.Mix == mix && asked.Contains(p.Score.UserId))
+                        .Where(p =>
+                        {
+                            var chart = _charts.FirstOrDefault(c => c.Id == p.Score.ChartId);
+                            return chart != null && chart.Type == type
+                                                 && (int)chart.Level >= (int)min && (int)chart.Level <= (int)max;
+                        })
+                        .Select(p => p.Score).ToArray().AsEnumerable();
+                });
+
             Scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum mix, IEnumerable<Guid> userIds, IEnumerable<Guid> chartIds,
@@ -348,7 +436,10 @@ public sealed class PumbilityProjectionSagaTests
             Mediator.Setup(m => m.Send(It.IsAny<GetTierListQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => Array.Empty<SongTierListEntry>().AsEnumerable());
 
-            Saga = new PumbilityProjectionSaga(Mediator.Object, Stats.Object, Scores.Object, History.Object);
+            // A cache per context, so one test's projection can never answer another's.
+            Cache = new PumbilityProjectionCache(new MemoryCache(new MemoryCacheOptions()));
+            Saga = new PumbilityProjectionSaga(Mediator.Object, Stats.Object, Scores.Object,
+                History.Object, Cache);
         }
 
         public Guid UserId { get; } = Guid.NewGuid();
@@ -357,6 +448,8 @@ public sealed class PumbilityProjectionSagaTests
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IPlayerHistoryRepository> History { get; } = new();
         public PumbilityProjectionSaga Saga { get; }
+
+        public PumbilityProjectionCache Cache { get; }
 
         public ProjectionContext WithChart(out Chart chart, ChartType type, int level, double? scoringLevel = null)
         {

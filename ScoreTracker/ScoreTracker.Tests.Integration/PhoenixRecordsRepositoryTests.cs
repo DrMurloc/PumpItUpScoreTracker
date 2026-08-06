@@ -43,6 +43,53 @@ public sealed class PhoenixRecordsRepositoryTests : IAsyncLifetime
             Mock.Of<IMediator>(), Mock.Of<IPlayerStatsReader>());
 
     [Fact]
+    public async Task GetPlayerScoresInLevelRangeReadsTheBandAndNothingOutsideIt()
+    {
+        // The read that replaced a several-hundred-GUID IN list on the Pumbility cohort
+        // sweep. Its whole value is that the level band is a range the index can serve, so
+        // the band's edges and the type filter are what has to hold against real SQL.
+        var userId = await _seed.SeedUserAsync();
+        var stranger = await _seed.SeedUserAsync();
+        var below = await _seed.SeedPhoenixChartAsync(18);
+        var low = await _seed.SeedPhoenixChartAsync(19);
+        var high = await _seed.SeedPhoenixChartAsync(21);
+        var above = await _seed.SeedPhoenixChartAsync(22);
+        var doubles = await _seed.SeedPhoenixChartAsync(20, "Double");
+
+        var writer = BuildRepository();
+        foreach (var chartId in new[] { below, low, high, above, doubles })
+            await writer.UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
+                PhoenixScore.From(950000), PhoenixPlate.SuperbGame, IsBroken: false, RecordedAt));
+        await writer.UpdateBestAttempt(MixEnum.Phoenix, stranger, new RecordedPhoenixScore(low,
+            PhoenixScore.From(910000), PhoenixPlate.SuperbGame, IsBroken: false, RecordedAt));
+
+        var read = (await BuildRepository().GetPlayerScoresInLevelRange(MixEnum.Phoenix, new[] { userId },
+            ChartType.Single, 19, 21)).ToArray();
+
+        // Inclusive at both ends, exclusive of 18 and 22, and never the doubles chart sitting
+        // inside the band — a type mismatch is the failure that would look like a level bug.
+        Assert.Equal(new[] { low, high }.OrderBy(g => g), read.Select(r => r.ChartId).OrderBy(g => g));
+        Assert.All(read, r => Assert.Equal(userId, r.UserId));
+    }
+
+    [Fact]
+    public async Task GetPlayerScoresInLevelRangeLeavesOutBrokenRuns()
+    {
+        // Cohort-only contract, same as every other cohort read: a broken row is a walkoff in
+        // the distribution and would drag the quantile the projection is built on.
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+
+        await BuildRepository().UpdateBestAttempt(MixEnum.Phoenix, userId, new RecordedPhoenixScore(chartId,
+            PhoenixScore.From(880000), PhoenixPlate.SuperbGame, IsBroken: true, RecordedAt));
+
+        var read = await BuildRepository().GetPlayerScoresInLevelRange(MixEnum.Phoenix, new[] { userId },
+            ChartType.Single, 19, 21);
+
+        Assert.Empty(read);
+    }
+
+    [Fact]
     public async Task UpdateBestAttemptInsertsANewRecordReadableViaGetRecordedScore()
     {
         var userId = await _seed.SeedUserAsync();

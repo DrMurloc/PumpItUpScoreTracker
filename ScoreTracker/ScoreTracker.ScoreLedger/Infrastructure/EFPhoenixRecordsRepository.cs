@@ -76,6 +76,14 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return GetPlayerScores(mix, userIds, chartIds, cancellationToken);
     }
 
+    Task<IEnumerable<UserPhoenixScore>> IScoreReader.GetPlayerScoresInLevelRange(MixEnum mix,
+        IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel minimumLevel,
+        DifficultyLevel maximumLevel, CancellationToken cancellationToken)
+    {
+        return GetPlayerScoresInLevelRange(mix, userIds, chartType, minimumLevel, maximumLevel,
+            cancellationToken);
+    }
+
     Task<IEnumerable<UserPhoenixScore>> IScoreReader.GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds,
         Guid chartId,
         CancellationToken cancellationToken)
@@ -420,6 +428,32 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
                     pba.Score!.Value,
                     PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, u.IsPublic, pba.RecordedDate))
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<UserPhoenixScore>> GetPlayerScoresInLevelRange(MixEnum mix,
+        IEnumerable<Guid> userIds, ChartType chartType, DifficultyLevel minimumLevel,
+        DifficultyLevel maximumLevel, CancellationToken cancellationToken = default)
+    {
+        var userIdArray = userIds.Distinct().ToArray();
+        var mixId = MixIds.For(mix);
+        var min = (int)minimumLevel;
+        var max = (int)maximumLevel;
+        var chartTypeString = chartType.ToString();
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Same cohort-only contract as the other cohort reads: a broken row is a walkoff in
+        // the distribution and never enters.
+        return await (from cm in database.ChartMix
+                join c in database.Chart on cm.ChartId equals c.Id
+                join pba in database.Set<PhoenixRecordEntity>() on c.Id equals pba.ChartId
+                join u in database.User on pba.UserId equals u.Id
+                where cm.MixId == mixId && pba.MixId == mixId
+                      && cm.Level >= min && cm.Level <= max && c.Type == chartTypeString
+                      && pba.Score != null && !pba.IsBroken
+                      && userIdArray.Contains(pba.UserId)
+                select new UserPhoenixScore(pba.UserId, pba.ChartId, u.IsPublic ? u.Name : "Anonymous",
+                    pba.Score!.Value, PhoenixPlateHelperMethods.TryParse(pba.Plate), pba.IsBroken, u.IsPublic,
+                    pba.RecordedDate))
             .ToArrayAsync(cancellationToken);
     }
 
