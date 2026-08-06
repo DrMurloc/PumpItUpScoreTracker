@@ -1,5 +1,6 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Commands
 @using ScoreTracker.Domain.Services
@@ -115,15 +116,6 @@
             <MudText>You are seeing this because you are just too good for your level range. All of your scores are projected to be your best potential PUMBILITY.</MudText>
         </MudItem>
     }
-    @foreach (var kv in _insufficientData.OrderBy(kv=>kv.Key.Item2).ThenBy(kv=>kv.Key.Item1))
-    {
-        <MudItem xs="12">
-            <MudImage tabindex="0" Src=@($"https://piuimages.arroweclip.se/difficulty/{_currentMix}/{kv.Key.Item1.GetShortHand().ToLower()}{kv.Key.Item2}.png") Height="20" ObjectFit="ObjectFit.ScaleDown"></MudImage>
-            <LetterGradeIcon Grade="PhoenixLetterGrade.AA"></LetterGradeIcon>
-            <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"></MudIcon>
-            +@kv.Value.ToString("N0") PUMBILITY
-        </MudItem>
-    }
     @foreach (var gain in _projectedGains.OrderByDescending(kv=>_allScores.TryGetValue(kv.Key,out var existing)&&existing is { Score: not null,IsBroken: false }).ThenByDescending(kv => kv.Value).ThenBy(kv=>_chartDifficulty.TryGetValue(kv.Key,out var diff)?diff:TierListCategory.Unrecorded))
     {
         var chart = _charts[gain.Key];
@@ -154,14 +146,9 @@
                         <MudText Style=@($"color:{TierListColor(difficulty)}")>@difficulty</MudText>
                     }
                     <MudText>+@_projectedGains[chart.Id].ToString("N0") PUMBILITY</MudText>
-                    @if (_skillAdjustments.TryGetValue(chart.Id, out var skillWhy))
+                    @if (_evidence.TryGetValue(chart.Id, out var ev))
                     {
-                        @* Why this target: the skill-profile nudge (Projections v2). *@
-                        <MudTooltip Text="@string.Join(", ", skillWhy.Select(a => a.Skill.GetName() + " " + (a.ScoreDelta >= 0 ? "+" : "") + ((int)a.ScoreDelta).ToString("N0")))">
-                            <MudText Typo="Typo.caption">
-                                @string.Join(" ", skillWhy.Take(2).Select(a => (a.ScoreDelta >= 0 ? "+" : "-") + a.Skill.GetName()))
-                            </MudText>
-                        </MudTooltip>
+                        <MudText Typo="Typo.caption">@ev.PeerCount @L["players"]</MudText>
                     }
                 </MudCardContent>
                 <MudCardActions>
@@ -221,7 +208,6 @@
 
     private IDictionary<Guid, PhoenixScore> _expectedScore = new Dictionary<Guid, PhoenixScore>();
     private IDictionary<Guid, int> _projectedGains = new Dictionary<Guid, int>();
-    private IDictionary<(ChartType,DifficultyLevel), int> _insufficientData = new Dictionary<(ChartType, DifficultyLevel), int>();
     private DifficultyLevel _newPassLevel = 18;
     private PhoenixLetterGrade _newPassLetterGrade = PhoenixLetterGrade.AA;
     private PhoenixLetterGrade? _oldPassLetterGrade = null;
@@ -255,14 +241,12 @@
         var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id, _currentMix), CancellationToken.None);
         _expectedScore = projection.ExpectedScores.ToDictionary(kv => kv.Key, kv => kv.Value);
         _projectedGains = projection.ProjectedGains.ToDictionary(kv => kv.Key, kv => kv.Value);
-        _insufficientData = projection.InsufficientDataGains.ToDictionary(kv => kv.Key, kv => kv.Value);
         _chartDifficulty = projection.ChartDifficulty.ToDictionary(kv => kv.Key, kv => kv.Value);
-        _skillAdjustments = projection.SkillAdjustments.ToDictionary(kv => kv.Key, kv => kv.Value);
+        _evidence = projection.Evidence.ToDictionary(kv => kv.Key, kv => kv.Value);
         _finishedProjecting = true;
     }
 
-    private IDictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>> _skillAdjustments =
-        new Dictionary<Guid, IReadOnlyList<SkillAdjustmentRecord>>();
+    private IDictionary<Guid, ProjectionEvidence> _evidence = new Dictionary<Guid, ProjectionEvidence>();
 
     private IDictionary<Guid, RecordedPhoenixScore> _allScores = new Dictionary<Guid, RecordedPhoenixScore>();
     private PlayerStatsRecord? _stats;
