@@ -23,6 +23,12 @@ namespace ScoreTracker.OfficialMirror.Application
     {
         private const string SiteBase = "https://piuscores.arroweclip.se";
 
+        /// <summary>
+        ///     A normal week produces five or six firsts and they all belong on the card. The
+        ///     cap is here for the week a song pack lands, when every new chart takes one.
+        /// </summary>
+        private const int MaxWorldFirsts = 6;
+
         private readonly IBotClient _bot;
         private readonly IChartRepository _charts;
         private readonly IDiscordFeedReader _feeds;
@@ -124,31 +130,6 @@ namespace ScoreTracker.OfficialMirror.Application
                 AddSection($"🧗 **{_localizer.Get(culture, "Biggest board climber")}**", new[] { line });
             }
 
-            if (highlights.WorldFirsts.Count > 0)
-            {
-                // World-first lines follow a fixed shape: difficulty bubble, song, the words
-                // "World First", the grade as its emoji (a PG rides its plate art), then the
-                // player linked to their board profile. Folder firsts append their folder tag.
-                var lines = highlights.WorldFirsts.Take(6).Select(f =>
-                {
-                    var chart = f.ChartId != null && charts.TryGetValue(f.ChartId.Value, out var c) ? c : null;
-                    var bubble = chart == null ? "" : $"#DIFFICULTY|{chart.DifficultyString}# ";
-                    var song = chart == null
-                        ? _localizer.Get(culture, "a chart")
-                        : (string)chart.Song.Name;
-                    var grade = f.GradeBand == "PG"
-                        ? $"#PLATE|{PhoenixPlate.PerfectGame}#"
-                        : $"#LETTERGRADE|{PhoenixLetterGradeHelperMethods.TryParse(f.GradeBand)}#";
-                    var folder = f.IsFolderFirst && f.ChartType != null && f.Level != null
-                        ? " · " + _localizer.Get(culture, "{0} folder first",
-                            $"{(f.ChartType == ChartType.Double.ToString() ? "D" : "S")}{f.Level}")
-                        : "";
-                    return $"{bubble}**{song}** — {_localizer.Get(culture, "World First")} {grade} — " +
-                           $"{PlayerLink(f.Player)}{folder}";
-                });
-                AddSection($"🌍 **{_localizer.Get(culture, "World firsts")}**", lines);
-            }
-
             // What holds each rung, in difficulties: the uniform level where fifty AAAs clear
             // the floor, this week against last. The hero draws the same two rungs at SS; AAA
             // is the yardstick this audience actually plays toward, and the card is read by
@@ -181,6 +162,39 @@ namespace ScoreTracker.OfficialMirror.Application
                             : "";
                         return $"`{"#" + f.Rank,5}` {level} · {f.Value.ToString("N2", FormatCulture(culture))}{climb}";
                     }));
+            }
+
+            // The firsts close the card. A busy week here is the payoff, not clutter, so the
+            // block runs long on purpose — but the cap stays: a content drop hands every
+            // brand-new chart a first at once, and forty rows would rebuild the wall of text
+            // against Discord's own character ceiling.
+            //
+            // Ordered by level so the biggest leads, because that is the only emphasis this
+            // format has. Components V2 text carries no background, border or size, so a
+            // featured row can only be faked with a leading emoji, which reads as clutter.
+            if (highlights.WorldFirsts.Count > 0)
+            {
+                // Each line: difficulty bubble, song, the words "World First", the grade as its
+                // emoji (a PG rides its plate art), then the player linked to their board
+                // profile. Folder firsts append their folder tag.
+                var lines = FirstsByLevel(highlights).Take(MaxWorldFirsts).Select(f =>
+                {
+                    var chart = f.ChartId != null && charts.TryGetValue(f.ChartId.Value, out var c) ? c : null;
+                    var bubble = chart == null ? "" : $"#DIFFICULTY|{chart.DifficultyString}# ";
+                    var song = chart == null
+                        ? _localizer.Get(culture, "a chart")
+                        : (string)chart.Song.Name;
+                    var grade = f.GradeBand == "PG"
+                        ? $"#PLATE|{PhoenixPlate.PerfectGame}#"
+                        : $"#LETTERGRADE|{PhoenixLetterGradeHelperMethods.TryParse(f.GradeBand)}#";
+                    var folder = f.IsFolderFirst && f.ChartType != null && f.Level != null
+                        ? " · " + _localizer.Get(culture, "{0} folder first",
+                            $"{(f.ChartType == ChartType.Double.ToString() ? "D" : "S")}{f.Level}")
+                        : "";
+                    return $"{bubble}**{song}** — {_localizer.Get(culture, "World First")} {grade} — " +
+                           $"{PlayerLink(f.Player)}{folder}";
+                });
+                AddSection($"🌍 **{_localizer.Get(culture, "World firsts")}**", lines);
             }
 
             // Only a snapshot carrying no pulse row and no highlights at all reaches this —
@@ -225,12 +239,18 @@ namespace ScoreTracker.OfficialMirror.Application
         private static string Count(int value, string? culture) =>
             value.ToString("N0", FormatCulture(culture));
 
-        /// <summary>The marquee first: highest chart level wins, the better score breaks ties.</summary>
-        private static OfficialGradeFirstRecord? HighestFirst(WeeklyHighlightsRecord highlights) =>
+        /// <summary>Firsts ranked by how hard they were: level first, the better score breaking ties.</summary>
+        private static IEnumerable<OfficialGradeFirstRecord> FirstsByLevel(WeeklyHighlightsRecord highlights) =>
             highlights.WorldFirsts
                 .OrderByDescending(f => f.Level ?? 0)
-                .ThenByDescending(f => f.Score)
-                .FirstOrDefault();
+                .ThenByDescending(f => f.Score);
+
+        /// <summary>
+        ///     The marquee first, whose jacket the card wears. Null when the week produced none,
+        ///     which is how the card loses its picture rather than showing an unrelated one.
+        /// </summary>
+        private static OfficialGradeFirstRecord? HighestFirst(WeeklyHighlightsRecord highlights) =>
+            FirstsByLevel(highlights).FirstOrDefault();
 
         // The hub's own hype line, and the caption for the jacket above it. A week with no
         // first still gets the players-only half; a week with no pulse row gets nothing, since

@@ -251,6 +251,67 @@ public sealed class OfficialDigestFeedSagaTests
     }
 
     [Fact]
+    public async Task AFirstlessWeekLosesTheSectionAndThePictureWithIt()
+    {
+        // Late in a mix's life the firsts dry up. The jacket belongs to the top first, so with
+        // none there is no chart the card is about — and it still posts, because board activity
+        // never stops.
+        _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
+        _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new ChartBuilder().WithSongName("Paradoxx").Build() });
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WeeklyHighlightsRecord(DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddDays(-7),
+                Array.Empty<OfficialMoverRecord>(),
+                new[] { new OfficialBoardsClimbedRecord(Player("MECCHAMILE"), 90, 11990, 90) },
+                Array.Empty<OfficialGradeFirstRecord>(), Array.Empty<OfficialNewNumberOneRecord>(),
+                new WeeklyPulseRecord(23273, 3214, 1857, 375)));
+
+        await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
+
+        var card = Assert.Single(_sent);
+        Assert.Null(card.Header!.Thumbnail);
+        var text = string.Join("\n", card.Blocks.OfType<RichBotText>().Select(t => t.Markdown));
+        Assert.DoesNotContain("World firsts", text);
+        // The hype sentence falls back to its players-only half rather than naming a chart.
+        Assert.Contains("1,857 players left their mark on the chart boards.", card.Header.Markdown);
+        Assert.Contains("**+11,990 places**", text);
+    }
+
+    [Fact]
+    public async Task WorldFirstsCloseTheCardOrderedByLevel()
+    {
+        _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
+        var d24 = new ChartBuilder().WithSongName("Digitalis").WithType(ChartType.Double).WithLevel(24).Build();
+        var d27 = new ChartBuilder().WithSongName("Freedom Dive").WithType(ChartType.Double).WithLevel(27).Build();
+        _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { d24, d27 });
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WeeklyHighlightsRecord(DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddDays(-7),
+                Array.Empty<OfficialMoverRecord>(), Array.Empty<OfficialBoardsClimbedRecord>(),
+                // Stored order puts the lower chart first; the card reorders by level.
+                new[]
+                {
+                    new OfficialGradeFirstRecord(Player("FEFEMZ"), d24.Id, "D", 24, "PG", 1000000, false),
+                    new OfficialGradeFirstRecord(Player("FRANCO"), d27.Id, "D", 27, "AAA+", 964378, false)
+                },
+                Array.Empty<OfficialNewNumberOneRecord>(),
+                new WeeklyPulseRecord(23273, 3214, 1857, 375),
+                Array.Empty<OfficialGainerRecord>(), Array.Empty<OfficialDebutRecord>(),
+                new[] { new OfficialFloorMarkRecord(1000, 16489.37m, 15219.28m, 18, 15) }));
+
+        await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
+
+        var blocks = _sent[0].Blocks.OfType<RichBotText>().Select(t => t.Markdown).ToList();
+        var firsts = blocks.FindIndex(b => b.Contains("World firsts"));
+        Assert.Equal(blocks.Count - 1, firsts); // the closing block, after the floors
+        Assert.True(blocks.FindIndex(b => b.Contains("What holds the rungs")) < firsts);
+        // Highest level leads even though the lower chart took a better grade and was stored first.
+        Assert.Matches(@"Freedom Dive[\s\S]*Digitalis", blocks[firsts]);
+    }
+
+    [Fact]
     public async Task NeverAsksForTheRankingsBoardOrTheCutlines()
     {
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
