@@ -704,7 +704,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
   </div>
   <div class="note" style="margin-top:22px">
     <p><b>Similar charts stays deliberately dumb</b> — stored match order at the 0.55 floor, no re-sorting, no difficulty lens. Tapping one swaps the dialog in place via an internal chart override with a <i>← back to Baroque&nbsp;Virus</i> crumb, rather than pushing a chart-change callback out to nineteen hosts.</p>
-    <div class="flag"><b>Still owed:</b> trigger <code>recalculate-chart-similarity</code> once in <code>/hangfire</code>. Until then this grid is empty on every chart.</div>
+    <p><b>The graph is populated</b> — <code>recalculate-chart-similarity</code> runs on a daily cron. The empty state still matters: 139 of 4,426 charts have no piucenter coverage and show it.</p>
   </div>
 </section>
 
@@ -818,7 +818,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
         <tr><td>Purge manifest</td><td>ChartComments</td><td>Comments, votes and restrictions carry <code>UserId</code>. Revisions don't — that table needs an exemption row with its reason.</td></tr>
         <tr><td>Re-translation cooldown</td><td>ChartComments</td><td>The $30 ceiling is a fuse against bugs. An edit loop is a <i>user-driven</i> cost amplifier the fuse can't see.</td></tr>
         <tr><td>Regional communities excluded</td><td>domain rule</td><td>World and country boards are ownerless and carry no roles — a comment there would have no moderator. Audiences are Public + your non-regional clubs.</td></tr>
-        <tr><td class="num">recalculate-chart-similarity</td><td>/hangfire</td><td>Owner, post-deploy, once. Similar charts is empty until it runs.</td></tr>
+        <tr><td>Similar-charts empty state</td><td>ChartComments</td><td>Not a deploy step — the graph is live on a daily cron. 139 of 4,426 charts have no piucenter coverage, so the empty state is a real state.</td></tr>
       </tbody>
     </table>
   </div>

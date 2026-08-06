@@ -12,8 +12,9 @@ mirroring the `/Charts` page — the difficulty breakdown (scoring level + pass 
 `GetChartScoringLevelsQuery` + `GetTierListQuery("Pass Count")`), the skill fingerprint
 (`GetChartSkillChipsQuery`), and **similar charts by skill** (`GetSimilarChartsQuery`, the
 primary ask). Each section drops when its data is absent; a bare song name still falls back to
-the difficulty-list card. **Similar charts are empty until `recalculate-chart-similarity` runs
-once in `/hangfire`** — same trigger the chart-details page needs.
+the difficulty-list card. Similar charts were empty until `recalculate-chart-similarity` first
+ran; it is on a daily cron, so that resolved itself within a day of deploy and the graph has been
+populated since.
 
 **Iteration (F7, owner feedback):** the session-snapshot card now marks **cross-mix reclears**.
 A new pass on a chart the player already cleared (non-broken) in another mix trails an escaped

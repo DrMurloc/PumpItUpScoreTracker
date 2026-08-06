@@ -58,8 +58,9 @@ lens, no filters — that machinery belongs to the chart page's shelf. A compact
 difficulty bubble; tapping one **swaps the dialog in place** via an internal chart override with a
 "← back to \<song\>" crumb, rather than pushing a chart-change callback out to nineteen hosts.
 
-⚠ The graph is empty until `recalculate-chart-similarity` is triggered once in `/hangfire`. Owner,
-post-deploy, still owed from the chart-page overhaul.
+The graph is populated — `recalculate-chart-similarity` is on a daily cron and has been running
+since the chart-page overhaul deployed. Build the empty state anyway; it is what a chart the
+piucenter crawl never covered shows, which is 139 of 4,426.
 
 ---
 
