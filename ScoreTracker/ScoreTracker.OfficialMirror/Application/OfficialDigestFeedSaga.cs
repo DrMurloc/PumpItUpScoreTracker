@@ -93,8 +93,8 @@ namespace ScoreTracker.OfficialMirror.Application
                 blocks.Add(Section(lead, lines));
             }
 
-            // The week in four numbers, before any list. Everything below is an example of
-            // this; without it the card opened on a leaderboard and never said what happened.
+            // The week in numbers, before any list. Everything below is an example of this;
+            // without it the card opened on a leaderboard and never said what happened.
             var pulse = highlights.Pulse;
             if (pulse != null)
                 AddSection(
@@ -113,11 +113,13 @@ namespace ScoreTracker.OfficialMirror.Application
             if (highlights.Gainers?.FirstOrDefault() is { } gainer)
                 AddSection($"📈 **{_localizer.Get(culture, "Biggest PUMBILITY gain")}**", new[]
                 {
+                    // Ranks go in raw: "#1,000" reads as a quantity, and the hub prints them
+                    // ungrouped for the same reason.
                     _localizer.Get(culture, "{0} **+{1}** to {2} · #{3} → **#{4}**",
                         PlayerLink(gainer.Player),
                         (gainer.NewPumbility - gainer.PreviousPumbility).ToString("N2", FormatCulture(culture)),
                         gainer.NewPumbility.ToString("N2", FormatCulture(culture)),
-                        Count(gainer.PreviousRank, culture), Count(gainer.NewRank, culture))
+                        gainer.PreviousRank, gainer.NewRank)
                 });
 
             if (highlights.BoardsClimbed.FirstOrDefault() is { } climber)
