@@ -12183,6 +12183,8 @@ button.chart-card-art {
     border-radius: 6px;
     font-size: .74rem;
     color: var(--mix-ink-muted);
+}
+
 /* ---------------------------------------------------------------------------
    Community Tools: the secret block.
    A key or an invite URL is a thing you copy, not a thing you read, so it wears
