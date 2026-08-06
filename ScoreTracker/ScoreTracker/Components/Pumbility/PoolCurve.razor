@@ -73,28 +73,39 @@
     private double _floor;
     private double _span;
 
-    private IReadOnlyList<Bar> Bars
-    {
-        get
-        {
-            var all = Page.Pool.Concat(Page.WaitingRoom).ToArray();
-            if (all.Length == 0) return Array.Empty<Bar>();
-            var max = all.Max(e => e.Value);
-            var min = all.Min(e => e.Value);
-            _floor = min - (max - min) * 0.9;
-            _span = Math.Max(1, max - _floor);
+    private IReadOnlyList<Bar> _bars = Array.Empty<Bar>();
 
-            return all.Select((entry, i) =>
-            {
-                var ghost = i >= Page.Pool.Count;
-                var isBar = Page.Bar != null && i == Page.Pool.Count - 1;
-                var isDouble = Charts.TryGetValue(entry.ChartId, out var chart) &&
-                               chart.Type == ChartType.Double;
-                var name = Charts.TryGetValue(entry.ChartId, out var c) ? c.Song.Name.ToString() : string.Empty;
-                return new Bar(Math.Clamp((entry.Value - _floor) / _span * 100, 2, 100), isDouble, ghost, isBar,
-                    $"#{entry.Place} {name} — {entry.Value:N0}");
-            }).ToArray();
+    private IReadOnlyList<Bar> Bars => _bars;
+
+    // Built once per parameter set. As a property it rebuilt the whole list on every read AND
+    // set _floor/_span as a side effect, which is why BarPercent had to discard a second
+    // build (`_ = Bars`) just to make the line land on the same scale as the bars.
+    protected override void OnParametersSet()
+    {
+        var all = Page.Pool.Concat(Page.WaitingRoom).ToArray();
+        if (all.Length == 0)
+        {
+            _bars = Array.Empty<Bar>();
+            _floor = 0;
+            _span = 1;
+            return;
         }
+
+        var max = all.Max(e => e.Value);
+        var min = all.Min(e => e.Value);
+        _floor = min - (max - min) * 0.9;
+        _span = Math.Max(1, max - _floor);
+
+        _bars = all.Select((entry, i) =>
+        {
+            var ghost = i >= Page.Pool.Count;
+            var isBar = Page.Bar != null && i == Page.Pool.Count - 1;
+            var isDouble = Charts.TryGetValue(entry.ChartId, out var chart) &&
+                           chart.Type == ChartType.Double;
+            var name = Charts.TryGetValue(entry.ChartId, out var c) ? c.Song.Name.ToString() : string.Empty;
+            return new Bar(Math.Clamp((entry.Value - _floor) / _span * 100, 2, 100), isDouble, ghost, isBar,
+                $"#{entry.Place} {name} — {entry.Value:N0}");
+        }).ToArray();
     }
 
     private double? BarPercent
@@ -102,7 +113,7 @@
         get
         {
             if (Page.Bar == null || Page.Pool.Count == 0) return null;
-            _ = Bars; // establishes _floor/_span against the same data the bars used
+            // Same _floor/_span the bars were measured against, so the line lands on them.
             return Math.Clamp((Page.Bar.Value - _floor) / _span * 100, 0, 100);
         }
     }
