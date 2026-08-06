@@ -34,6 +34,9 @@ public static class PlayerProgressRegistrationExtensions
         services.AddTransient<IPlayerHighlightRepository, EFPlayerHighlightRepository>();
         services.AddTransient<IPlayerHighlightCapturer, PlayerHighlightCapturer>();
         services.AddTransient<CohortScoreProvider>();
+        // Singleton: the projection outlives the request that built it, which is the
+        // entire point, and its eviction consumer has to see the same instance.
+        services.AddSingleton<PumbilityProjectionCache>();
         services.AddSingleton<IDbModelContribution, PlayerProgressModelContribution>();
         return services;
     }
@@ -66,5 +69,9 @@ public static class PlayerProgressRegistrationExtensions
         // community-scoped (docs/design/rivals.md D32).
         configurator.AddConsumer<PlayerHighlightSaga>();
         configurator.AddConsumer<PlayerHighlightPurgeConsumer>();
+        // Drops a player's cached Pumbility projection when their own scores move.
+        // If this registration goes, the page serves a projection up to six hours
+        // stale after an import and looks like it ignored the scores.
+        configurator.AddConsumer<PumbilityProjectionCacheConsumer>();
     }
 }
