@@ -27,6 +27,10 @@ Nineteen call sites render `ChartDetailsDialog`. That number drives most of the 
 **Header (outside the tabs):** video → title row (difficulty bubble, song name, To-Do) → your score
 and standing. Three things you want without a click.
 
+⚠ **The To-Do bookmark renders only when the host wires `OnToDo`** — ten of the thirteen hosts do
+not, and before Slice 1 all of them showed a bookmark whose click invoked an unbound
+`EventCallback` and silently did nothing.
+
 **Tab strip is sticky** inside the scroll container, so a tall header scrolls away underneath it
 instead of taking the tabs with it. On 390 px the strip **scrolls horizontally** rather than
 truncating labels to jargon — the header alone is 274 px, so the fourth tab peeking is honest about
@@ -44,19 +48,33 @@ what is off-screen.
 - **Default tab is Leaderboard**, last choice persisted in a `ChartDetails__Tab` UiSetting. The
   comment count badge is what makes anyone open Comments the first time.
 - **Score History hides when logged out** — it is your journal plus your score inputs.
-- ⚠ **Recording a score became two taps**, and several call sites exist only to record
-  (`QuickRecordWidget`, `DailyStepWidget`, Charts' quick record). An **`InitialTab` parameter**
-  alongside the existing `BoardScope` lets those callers open straight on Score History, so Round
-  11's always-visible-inputs decision survives for the people it was made for.
-- **`FocusCommentId`** is the second new parameter: the moderation queue opens the dialog on
-  Comments, anchored to the reported one.
+- **Recording a score is two taps**, and that is accepted (owner, field test). The pre-build
+  assumption that several call sites "exist only to record" did not survive the audit:
+  `QuickRecordWidget` has its own inline row and never renders this dialog at all, and
+  `ChartSkills` — the one host wired to `OnScoreRecorded` — wants the board just as often. A
+  header shortcut to Score History was built and then cut. **No host forces History.**
+- **`InitialTab`** exists and is used by `MixChangesSongSheet`, which opens on Chart Stats: that
+  sheet answers what changed about a chart, and the meta grid is the answer.
+- **`FocusCommentId`** is the second new parameter, added in Slice 2: the moderation queue opens
+  the dialog on Comments, anchored to the reported one.
+- **Gone from the dialog in Slice 1**, both owner calls at field test: **Report Video** (the mail
+  went unread; wrong videos arrive as Discord DMs, and no surface offers reporting now) and
+  **Good Suggestion** (unused, and it wrapped the action bar onto two lines on a phone — took the
+  `SuggestionCategory` parameter with it).
 
 ### Similar charts stays deliberately dumb
 
 Stored match order from `GetSimilarChartsQuery` at the 0.55 floor. No re-sorting, no difficulty
-lens, no filters — that machinery belongs to the chart page's shelf. A compact tile is song image +
-difficulty bubble; tapping one **swaps the dialog in place** via an internal chart override with a
-"← back to \<song\>" crumb, rather than pushing a chart-change callback out to nineteen hosts.
+lens, no filters — that machinery belongs to the chart page's shelf. A compact tile is the jacket
+with the difficulty bubble overlaid bottom-right and no song name; tapping one **swaps the dialog
+in place** via an internal chart override with a "← back to \<song\>" crumb, rather than pushing a
+chart-change callback out to nineteen hosts.
+
+**Six columns, dropping to three below 500 px.** Fixed columns rather than `auto-fill`: the jackets
+are landscape, so their intrinsic width was deciding the track count and a 572 px dialog fitted
+five. At six columns on a phone a 22 px bubble sat on a ~25 px-tall jacket and the tile was all
+bubble. The bubble's own tooltip is suppressed (`DifficultyBubble.Tooltip="false"`, the opt-out
+`ScoreBreakdown` already carried) because two fired on one tile.
 
 The graph is populated — `recalculate-chart-similarity` is on a daily cron and has been running
 since the chart-page overhaul deployed. Build the empty state anyway; it is what a chart the
@@ -441,7 +459,7 @@ foundations that already work.
 
 | | Slice | Tabs | New tables | Spends money |
 |---|---|---|---|---|
-| **1** | Dialog re-shape — sticky tab strip, `InitialTab`, Chart Stats absorbs the meta/skills/similar charts, Score History tab with the manual score edit | **3** | none | no |
+| **1** ✅ | **SHIPPED — [PR #227](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/227)**, eleven commits, all five suites green. Sticky tab strip, `InitialTab`, Chart Stats absorbs the meta/skills/similar charts, Score History tab with the manual score edit | **3** | none | no |
 | **2** | Comments — vertical, aggregate, parser, link trust, threads, votes, composer, rules card, `FocusCommentId` | **4** | yes | no |
 | **3** | Moderation — permission flag + backfill, restrictions, reports, queue panels | 4 | yes | no |
 | **4** | Translation — batch client, the four-state pipeline, ceiling, admin page | 4 | yes | **yes** |
@@ -452,3 +470,17 @@ the 390 px tab-strip overflow gets measured twice, at three and again at four.
 
 ⚠ **Do not announce comments until slice 3 is deployed.** A UGC surface with no delete button is a
 bad week. Slices 2 and 3 may be separate PRs provided they go out together.
+
+### Picking up Slice 2
+
+Everything needed is in this folder: Part 1 for what to build, Part 2 for how, [mock.html](mock.html)
+for what it looks like — including the rules-card copy (§03), which is written, not a placeholder.
+
+Two things Slice 1 left open:
+
+- **The 390 px layout is unmeasured.** Three tab labels and the three-column similar-charts grid
+  both live on that screen. Open the dialog at 390 and confirm `scrollWidth > clientWidth` on the
+  tab strip and nowhere else. The fourth tab arrives with Comments, so measure again then.
+- **`ChartClickContext` still carries `SuggestionCategory` and nothing reads it.** Left deliberately:
+  it is part of the widget render contract `WidgetRenderContractTests` ratchets, so pruning it is a
+  contract change across every widget that constructs one, not a cleanup to fold into other work.
