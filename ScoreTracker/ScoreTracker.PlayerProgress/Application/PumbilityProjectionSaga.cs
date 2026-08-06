@@ -84,7 +84,14 @@ namespace ScoreTracker.PlayerProgress.Application
                 var expectedPumbility = scoring.GetScore(chart, kv.Value,
                     ScoringConfiguration.ExpectedPlateForScore(kv.Value), false);
 
-                var floor = pool.Ratings.TryGetValue(kv.Key, out var current) ? current : pool.Baseline;
+                // What this chart would displace. A chart already IN the pool displaces its own
+                // old value; one outside displaces the 50th. Taking the current rating alone is
+                // wrong for anything ranked 51-100 — that value is BELOW the bar, so the gain
+                // comes out inflated by the difference. Max is exactly the rule, because being
+                // in the pool means the rating is already at or above the baseline.
+                var floor = pool.Ratings.TryGetValue(kv.Key, out var current)
+                    ? Math.Max(current, pool.Baseline)
+                    : pool.Baseline;
                 var gain = expectedPumbility - floor;
                 if (gain <= 0) continue;
                 projectedGains[kv.Key] = (int)gain;

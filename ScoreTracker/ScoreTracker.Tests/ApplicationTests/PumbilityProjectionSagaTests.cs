@@ -148,6 +148,26 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
+    public async Task AScoredChartOutsideThePoolIsPricedAgainstTheBarNotItsOwnValue()
+    {
+        // A chart you have played but that sits below your 50th displaces the BAR when it
+        // improves, not its own old value. Pricing it against itself inflates the gain by
+        // the gap, and every such chart out-ranks the honest ones on the list.
+        var ctx = new ProjectionContext().WithChart(out var weak, ChartType.Single, 20);
+        ctx.WithPeerScores(weak, 985_000, 988_000, 990_000, 995_000);
+        ctx.WithPoolAndTail(inPool: 950_000, belowBar: 905_000, ChartType.Single, 20, weak);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false);
+        var projected = result.ExpectedScores[weak.Id];
+        var expected = (int)(scoring.GetScore(weak, projected,
+                                 ScoringConfiguration.ExpectedPlateForScore(projected), false)
+                             - ctx.PoolBaseline(scoring));
+        Assert.Equal(expected, result.ProjectedGains[weak.Id]);
+    }
+
+    [Fact]
     public async Task AChartThatCannotClearTheBarIsNotOffered()
     {
         // A weak 15 against a pool of 22s: the projection exists, the gain does not.
@@ -267,6 +287,20 @@ public sealed class PumbilityProjectionSagaTests
             // One history row dated before the score: the level they held when they set it.
             var then = levelNow - levelsGrownSince;
             _peerHistory.Add(new PlayerRatingRecord(peer, recordedAt.AddDays(-1), then, then, then, 0, 0));
+            return this;
+        }
+
+        /// <summary>
+        ///     A full pool plus a tail below the bar, with <paramref name="tailChart" /> among
+        ///     the tail — the shape that exposes pricing a below-bar chart against itself.
+        ///     GetTop50ForPlayerQuery returns 100, so ranks 51-100 reach the saga.
+        /// </summary>
+        public ProjectionContext WithPoolAndTail(int inPool, int belowBar, ChartType type, int level,
+            Chart tailChart)
+        {
+            WithFullPoolAt(inPool, type, level);
+            _topScores.Add(new RecordedPhoenixScore(tailChart.Id, belowBar, PhoenixPlate.FairGame, false,
+                Now.AddDays(-300)));
             return this;
         }
 
