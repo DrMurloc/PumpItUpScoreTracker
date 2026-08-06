@@ -4880,9 +4880,6 @@
   <data name="Record" xml:space="preserve">
     <value>記録</value>
   </data>
-  <data name="Record a score" xml:space="preserve">
-    <value>スコアを記録</value>
-  </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>任意の譜面のスコアを手入力で記録します。</value>
   </data>
@@ -5017,12 +5014,6 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>再送</value>
-  </data>
-  <data name="Report Video" xml:space="preserve">
-    <value>ビデオを報告</value>
-  </data>
-  <data name="Report Video Tooltip" xml:space="preserve">
-    <value>間違いとか壊れたビデオを報告</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>リクエストヘッダー</value>

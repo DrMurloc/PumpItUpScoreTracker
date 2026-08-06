@@ -4880,9 +4880,6 @@
   <data name="Record" xml:space="preserve">
     <value>Blubgrorp</value>
   </data>
-  <data name="Record a score" xml:space="preserve">
-    <value>Blubgrorp a mrglrgl</value>
-  </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Blubgrorp gro mrglrgl murm mrurg ro ro murgl.</value>
   </data>
@@ -5017,12 +5014,6 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>Murpmurp</value>
-  </data>
-  <data name="Report Video" xml:space="preserve">
-    <value>Mrglmurp Grrrgl</value>
-  </data>
-  <data name="Report Video Tooltip" xml:space="preserve">
-    <value>Mrglmurp Morgl, argl Gromurggrrgl Grrrgl</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>Murgm Grumba</value>

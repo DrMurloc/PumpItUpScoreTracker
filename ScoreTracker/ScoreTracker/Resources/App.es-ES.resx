@@ -4839,9 +4839,6 @@
   <data name="Record" xml:space="preserve">
     <value>Registrar</value>
   </data>
-  <data name="Record a score" xml:space="preserve">
-    <value>Registrar un score</value>
-  </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>Anota una puntuación a mano para cualquier chart.</value>
   </data>
@@ -4973,12 +4970,6 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>Reenviar</value>
-  </data>
-  <data name="Report Video" xml:space="preserve">
-    <value>Reportar vídeo</value>
-  </data>
-  <data name="Report Video Tooltip" xml:space="preserve">
-    <value>Reportar vídeo roto o incorrecto</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>Cabecera de la petición</value>

@@ -17,7 +17,6 @@
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
-@inject IAdminNotificationClient Notifications
 @inject IUiSettingsAccessor UiSettings
 
 @* The one shared chart-details surface (design doc §4): leads with the video like
@@ -40,33 +39,17 @@
             @if (!string.IsNullOrWhiteSpace(_videoUrl))
             {
                 <iframe class="chart-details-video" src="@EmbedUrl" allow="@(AutoPlay ? "autoplay; encrypted-media" : "encrypted-media")" allowfullscreen></iframe>
-                <div class="chart-details-video-report">
-                    <MudTooltip Text=@L["Report Video Tooltip"]>
-                        <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Report"
-                                   OnClick="ReportVideo">@L["Report Video"]</MudButton>
-                    </MudTooltip>
-                </div>
             }
             <div class="chart-details-title">
                 <DifficultyBubble Chart="ViewChart"></DifficultyBubble>
                 <MudText Typo="Typo.h5">@ViewChart.Song.Name</MudText>
                 <MudSpacer></MudSpacer>
-                @* Recording moved behind a tab, so it gets a way back to one tap. Round 11
-                   made the inputs always-visible for a reason and this is that reason kept.
-                   It does NOT write the remembered tab: a shortcut used once is not a
-                   preference, and only picking a tab by hand should read as one. *@
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <MudTooltip Text="@L["Record a score"]">
-                        <MudIconButton Icon="@Icons.Material.Filled.EditNote" Color="Color.Default"
-                                       OnClick="JumpToRecord" data-testid="cdt-record-shortcut"
-                                       aria-label="@L["Record a score"]"></MudIconButton>
-                    </MudTooltip>
-                }
                 @* Score, To-Do, the suggestion action and the popularity places all describe
                    the chart the HOST passed. While drilled into a neighbour they would be
-                   describing the wrong one, so they stand down rather than lie. *@
-                @if (!IsDrilled && CurrentUser.IsLoggedIn && Chart != null)
+                   describing the wrong one, so they stand down rather than lie.
+                   HasDelegate is load-bearing: ten of the thirteen hosts never wire OnToDo, and
+                   without it they all rendered a bookmark whose click went nowhere. *@
+                @if (!IsDrilled && CurrentUser.IsLoggedIn && Chart != null && OnToDo.HasDelegate)
                 {
                     <MudTooltip Text="@(IsToDo ? L["On ToDo List"] : L["Add to ToDo List"])">
                         <MudIconButton Icon="@(IsToDo ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
@@ -181,12 +164,6 @@
         border: 0;
     }
 
-    .chart-details-video-report {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 2px;
-    }
-
     .chart-details-title {
         display: flex;
         align-items: center;
@@ -246,6 +223,12 @@
     .chart-details-tab:focus-visible {
         outline: 2px solid var(--mud-palette-primary);
         outline-offset: -2px;
+    }
+
+    /* Panels sat flush against the strip, so the first row of every tab read as part of
+       the tabs rather than under them. */
+    .chart-details-panel {
+        padding-top: 12px;
     }
 
     /* Hidden, not unmounted — see the panel comment in the markup. */
@@ -413,15 +396,6 @@
         };
     }
 
-    /// <summary>
-    ///     The header shortcut. Deliberately not <see cref="SelectTab" />: jumping to record
-    ///     once should not make History the tab every chart opens on from then on.
-    /// </summary>
-    private void JumpToRecord()
-    {
-        _tab = DetailsTab.History;
-    }
-
     private async Task SelectTab(DetailsTab tab)
     {
         if (_tab == tab) return;
@@ -516,16 +490,6 @@
 
         // A remembered History from a previous session is not a tab an anonymous visitor has.
         if (!AvailableTabs.Contains(_tab)) _tab = DetailsTab.Leaderboard;
-    }
-
-    /// <summary>Names the chart to an admin — wrong videos get caught by whoever is watching.</summary>
-    private async Task ReportVideo()
-    {
-        if (Chart == null) return;
-        await Notifications.NotifyAdmin(
-            $"The video for {Chart.Song.Name} {Chart.DifficultyString} was reported by {(CurrentUser.IsLoggedIn ? CurrentUser.User.Name : "Unknown")}",
-            CancellationToken.None);
-        Snackbar.Add("Notification was sent", Severity.Success);
     }
 
     private bool _feedbackSent;

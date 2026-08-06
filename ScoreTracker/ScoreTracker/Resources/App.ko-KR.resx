@@ -4841,9 +4841,6 @@
   <data name="Record" xml:space="preserve">
     <value>기록</value>
   </data>
-  <data name="Record a score" xml:space="preserve">
-    <value>점수 기록하기</value>
-  </data>
   <data name="Record a score by hand for any chart." xml:space="preserve">
     <value>아무 채보나 점수를 직접 입력해 기록하세요.</value>
   </data>
@@ -4975,12 +4972,6 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>재전송</value>
-  </data>
-  <data name="Report Video" xml:space="preserve">
-    <value>동영상 신고</value>
-  </data>
-  <data name="Report Video Tooltip" xml:space="preserve">
-    <value>저화질, 깨짐, 관련없는 동영상 신고</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>요청 헤더</value>

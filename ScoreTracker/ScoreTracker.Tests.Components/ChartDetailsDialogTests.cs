@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Bunit;
 using MediatR;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Moq;
@@ -93,7 +94,8 @@ public sealed class ChartDetailsDialogTests : TestContext
     }
 
     /// <summary>Inline MudDialogs render through the provider, so the fragment hosts both.</summary>
-    private IRenderedFragment RenderDialog(Chart chart, ChartDetailsDialog.DetailsTab? initialTab = null)
+    private IRenderedFragment RenderDialog(Chart chart, ChartDetailsDialog.DetailsTab? initialTab = null,
+        EventCallback<Guid>? onToDo = null)
     {
         return Render(builder =>
         {
@@ -103,32 +105,64 @@ public sealed class ChartDetailsDialogTests : TestContext
             builder.AddAttribute(2, nameof(ChartDetailsDialog.Chart), chart);
             builder.AddAttribute(3, nameof(ChartDetailsDialog.Visible), true);
             builder.AddAttribute(4, nameof(ChartDetailsDialog.InitialTab), initialTab);
+            if (onToDo != null) builder.AddAttribute(5, nameof(ChartDetailsDialog.OnToDo), onToDo.Value);
             builder.CloseComponent();
         });
     }
 
+    /// <summary>
+    ///     The video leads the dialog and is the one thing outside the tabs, so a chart with
+    ///     one shows it above the title regardless of which tab is open.
+    /// </summary>
     [Fact]
-    public void ReportingAVideoNamesTheChartToAnAdmin()
+    public void AChartWithAVideoLeadsWithIt()
     {
-        var chart = SetupChart("https://www.youtube.com/embed/abc");
-        var cut = RenderDialog(chart);
+        var cut = RenderDialog(SetupChart("https://www.youtube.com/embed/abc"));
 
-        cut.WaitForAssertion(() => cut.Find(".chart-details-video-report button").Click());
-
-        _notifications.Verify(n => n.NotifyAdmin(
-            It.Is<string>(m => m.Contains(chart.Song.Name.ToString()) && m.Contains(chart.DifficultyString)),
-            It.IsAny<CancellationToken>()), Times.Once);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("iframe.chart-details-video")));
     }
 
     [Fact]
-    public void NoVideoMeansNothingToReport()
+    public void AChartWithNoVideoRendersTheRestOfTheDialog()
     {
+        var cut = RenderDialog(SetupChart(null), ChartDetailsDialog.DetailsTab.Stats);
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-meta")));
+        Assert.Empty(cut.FindAll("iframe.chart-details-video"));
+    }
+
+    /// <summary>
+    ///     Ten of the thirteen hosts never wire OnToDo, and every one of them used to render a
+    ///     bookmark whose click invoked an unbound callback. A control that does nothing is
+    ///     worse than an absent one, so the affordance follows the delegate.
+    /// </summary>
+    [Fact]
+    public void TheToDoBookmarkIsAbsentWhereNoHostHandlesIt()
+    {
+        SignIn();
         var cut = RenderDialog(SetupChart(null));
 
-        // The dialog rendered (its meta grid is there) but no report affordance exists —
-        // reporting is the video's action, not the chart's.
-        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-meta")));
-        Assert.Empty(cut.FindAll(".chart-details-video-report"));
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".chart-details-title")));
+        Assert.Empty(cut.FindAll("[aria-label='To Do']"));
+    }
+
+    [Fact]
+    public void TheToDoBookmarkAppearsWhereAHostHandlesIt()
+    {
+        SignIn();
+        var cut = RenderDialog(SetupChart(null), onToDo: EventCallback.Factory.Create<Guid>(this, _ => { }));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[aria-label='To Do']")));
+    }
+
+    /// <summary>The board reads CurrentUser.User, so IsLoggedIn alone is a half-built user.</summary>
+    private void SignIn()
+    {
+        _currentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
+        _currentUser.SetupGet(u => u.User)
+            .Returns(new User(Guid.NewGuid(), "Me", true, null, new Uri("https://piu.test/me.png"), null));
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
     }
 
     /// <summary>
@@ -243,31 +277,6 @@ public sealed class ChartDetailsDialogTests : TestContext
             Assert.Contains(neighbour.Song.Name.ToString(), cut.Find(".chart-details-title").TextContent);
             Assert.Contains(anchor.Song.Name.ToString(), cut.Find(".chart-details-crumb").TextContent);
         });
-    }
-
-    /// <summary>
-    ///     Recording went behind a tab, so the header keeps a one-tap way back to it — that is
-    ///     what round 11's always-visible inputs were protecting. Crucially it does NOT write
-    ///     the remembered tab: using a shortcut once is not a standing preference.
-    /// </summary>
-    [Fact]
-    public void TheRecordShortcutOpensHistoryWithoutRememberingIt()
-    {
-        _currentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
-        // The board reads CurrentUser.User to find your own row, so IsLoggedIn alone is a
-        // half-built user and NREs before anything under test runs.
-        _currentUser.SetupGet(u => u.User)
-            .Returns(new User(Guid.NewGuid(), "Me", true, null, new Uri("https://piu.test/me.png"), null));
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
-        var cut = RenderDialog(SetupChart(null));
-
-        cut.WaitForAssertion(() => cut.Find("[data-testid='cdt-record-shortcut']").Click());
-
-        cut.WaitForAssertion(() => Assert.Equal("true",
-            cut.Find("[data-testid='cdt-tab-History']").GetAttribute("aria-selected")));
-        _uiSettings.Verify(s => s.SetSetting(It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     /// <summary>
