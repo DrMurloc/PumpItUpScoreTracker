@@ -214,7 +214,44 @@ public sealed class OfficialDigestFeedSagaTests
     }
 
     [Fact]
-    public async Task NeverAsksForTheRankingsBoard()
+    public async Task DrawsBothFloorsInAAAWithLastWeeksLevelBesideThem()
+    {
+        _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
+            It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
+        _mediator.Setup(m => m.Send(It.IsAny<GetWeeklyHighlightsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WeeklyHighlightsRecord(DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch.AddDays(-7),
+                Array.Empty<OfficialMoverRecord>(), Array.Empty<OfficialBoardsClimbedRecord>(),
+                Array.Empty<OfficialGradeFirstRecord>(), Array.Empty<OfficialNewNumberOneRecord>(),
+                new WeeklyPulseRecord(1, 1, 1, 1), Array.Empty<OfficialGainerRecord>(),
+                Array.Empty<OfficialDebutRecord>(),
+                // The 2026-08-02 Phoenix 2 sweep's real floors. The stored SS levels (23 and
+                // 18) are deliberately absurd here: the card must ignore them and derive AAA.
+                new[]
+                {
+                    new OfficialFloorMarkRecord(100, 18283.13m, 18097.98m, 99, 99),
+                    new OfficialFloorMarkRecord(1000, 16489.37m, 15219.28m, 99, 99)
+                }));
+
+        await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
+
+        var text = string.Join("\n", _sent[0].Blocks.OfType<RichBotText>().Select(t => t.Markdown));
+        Assert.Contains("50× AAA on singles", text);
+        Assert.DoesNotContain("Lv.99", text); // the stored SS level is never what gets drawn
+        // Rank labels are right-aligned so the two rungs line up under a proportional font.
+        Assert.Contains("` #100`", text);
+        Assert.Contains("`#1000`", text);
+        // A rising floor shows the week's climb; both rose that week.
+        Assert.Contains("18,283.13 ▲185", text);
+        Assert.Contains("16,489.37 ▲1,270", text);
+        // A floor that rose without crossing a level shows one level, not an arrow to itself;
+        // one that crossed four shows where it came from. (Deliberately not pinning the level
+        // numbers: those follow pumbility scoring, which is not this card's business.)
+        Assert.Matches(@"` #100` \*\*Lv\.\d+\*\* ·", text);
+        Assert.Matches(@"`#1000` Lv\.\d+ → \*\*Lv\.\d+\*\* ·", text);
+    }
+
+    [Fact]
+    public async Task NeverAsksForTheRankingsBoardOrTheCutlines()
     {
         _feeds.Setup(f => f.GetSubscribedChannels(DiscordFeedKinds.OfficialLeaderboards, MixEnum.Phoenix2,
             It.IsAny<CancellationToken>())).ReturnsAsync(new[] { new DiscordFeedChannel(123, null) });
@@ -223,14 +260,14 @@ public sealed class OfficialDigestFeedSagaTests
                 Array.Empty<OfficialMoverRecord>(), Array.Empty<OfficialBoardsClimbedRecord>(),
                 Array.Empty<OfficialGradeFirstRecord>(), Array.Empty<OfficialNewNumberOneRecord>(),
                 new WeeklyPulseRecord(1, 1, 1, 1)));
-        _mediator.Setup(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((WhatItTakesRecord?)null);
 
         await Saga().Consume(Context(new OfficialSnapshotSealedEvent(MixEnum.Phoenix2, false)));
 
-        // The board existed on the card only to fill the top 10; with that gone the whole
-        // dispatch goes, not just its rendering.
+        // Both existed only to render blocks the card no longer draws, so the dispatches go
+        // too, not just their rendering. The digest asks for highlights and charts, nothing else.
         _mediator.Verify(m => m.Send(It.IsAny<GetOfficialRankingsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _mediator.Verify(m => m.Send(It.IsAny<GetWhatItTakesQuery>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }

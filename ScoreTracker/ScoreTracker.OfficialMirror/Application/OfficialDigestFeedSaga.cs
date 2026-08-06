@@ -6,6 +6,7 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
+using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 
@@ -49,13 +50,12 @@ namespace ScoreTracker.OfficialMirror.Application
 
             var highlights = await _mediator.Send(new GetWeeklyHighlightsQuery(msg.Mix), ct);
             if (highlights == null) return;
-            var cutlines = await _mediator.Send(new GetWhatItTakesQuery(msg.Mix), ct);
             var charts = (await _charts.GetCharts(msg.Mix, cancellationToken: ct)).ToDictionary(c => c.Id);
 
             // One composition per registered language, fanned out to that language's channels.
             foreach (var group in channels.GroupBy(c => c.Culture))
             {
-                var card = DigestCard(msg.Mix, highlights, cutlines, charts, group.Key);
+                var card = DigestCard(msg.Mix, highlights, charts, group.Key);
                 // Null means the snapshot carries nothing at all, not that the week was slow —
                 // and that verdict is the same for every culture, so stopping here is stopping.
                 if (card == null) return;
@@ -64,7 +64,7 @@ namespace ScoreTracker.OfficialMirror.Application
         }
 
         private RichBotMessage? DigestCard(MixEnum mix, WeeklyHighlightsRecord highlights,
-            WhatItTakesRecord? cutlines, IReadOnlyDictionary<Guid, Chart> charts, string? culture)
+            IReadOnlyDictionary<Guid, Chart> charts, string? culture)
         {
             var blocks = new List<IRichBotBlock>();
 
@@ -149,18 +149,38 @@ namespace ScoreTracker.OfficialMirror.Application
                 AddSection($"🌍 **{_localizer.Get(culture, "World firsts")}**", lines);
             }
 
-            // What it takes, in difficulties: the uniform level where AAA/SSS on fifty charts
-            // clears the rank-1000 cutline (null until the board is full at 1000).
-            if (cutlines?.Entry != null)
+            // What holds each rung, in difficulties: the uniform level where fifty AAAs clear
+            // the floor, this week against last. The hero draws the same two rungs at SS; AAA
+            // is the yardstick this audience actually plays toward, and the card is read by
+            // people who will never open the hub.
+            //
+            // FloorMark stores the SS level and nothing else, so the AAA equivalents are
+            // computed here from the values the row does carry. GetWhatItTakesQuery cannot
+            // stand in: its tier rows have no previous level at all, and its history covers
+            // the #1000 floor alone, so it can never say what #100 took last week.
+            var floors = highlights.Floors ?? Array.Empty<OfficialFloorMarkRecord>();
+            if (floors.Count > 0)
             {
-                var takes = new List<string>();
-                if (cutlines.Entry.LevelForAAA != null)
-                    takes.Add(_localizer.Get(culture, "**50× AAA at Lv.{0}**", cutlines.Entry.LevelForAAA));
-                if (cutlines.Entry.LevelForSSS != null)
-                    takes.Add(_localizer.Get(culture, "**50× SSS at Lv.{0}**", cutlines.Entry.LevelForSSS));
-                if (takes.Count > 0)
-                    AddSection($"🎟 **{_localizer.Get(culture, "To make the top 1000")}**",
-                        new[] { string.Join(" · ", takes) });
+                var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+
+                int? LevelFor(decimal value) => CutlineCalculator.LevelFor(scoring, ChartType.Single,
+                    PhoenixLetterGrade.AAA, value);
+
+                AddSection(
+                    $"🎟 **{_localizer.Get(culture, "What holds the rungs")}** — " +
+                    _localizer.Get(culture, "50× AAA on singles"),
+                    floors.Select(f =>
+                    {
+                        var now = LevelFor(f.Value);
+                        var was = f.PreviousValue == null ? null : LevelFor(f.PreviousValue.Value);
+                        var level = now == null ? "—"
+                            : was != null && was != now ? $"Lv.{was} → **Lv.{now}**"
+                            : $"**Lv.{now}**";
+                        var climb = f.PreviousValue is { } previous && f.Value > previous
+                            ? $" ▲{(f.Value - previous).ToString("N0", FormatCulture(culture))}"
+                            : "";
+                        return $"`{"#" + f.Rank,5}` {level} · {f.Value.ToString("N2", FormatCulture(culture))}{climb}";
+                    }));
             }
 
             // Only a snapshot carrying no pulse row and no highlights at all reaches this —
