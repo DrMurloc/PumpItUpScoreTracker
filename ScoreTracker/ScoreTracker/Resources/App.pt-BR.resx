@@ -609,14 +609,17 @@
   <data name="Any" xml:space="preserve">
     <value>Todos</value>
   </data>
-  <data name="Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
-    <value>Qualquer ferramenta aprovada pode ler suas pontuações. Isso serve principalmente para ferramentas de análise. Desativar interrompe novos acessos, mas as ferramentas podem manter o que já coletaram.</value>
-  </data>
   <data name="Any level" xml:space="preserve">
     <value>Qualquer nível</value>
   </data>
   <data name="any moment now" xml:space="preserve">
     <value>a qualquer momento</value>
+  </data>
+  <data name="Any tool that publishes its source code can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>Qualquer ferramenta que publique seu código-fonte pode ler suas pontuações. Isso serve principalmente para ferramentas de análise. Desativar interrompe novos acessos, mas as ferramentas podem manter o que já coletaram.</value>
+  </data>
+  <data name="Any tool that publishes its source code will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>Qualquer ferramenta que publique seu código-fonte poderá ler suas pontuações — é isso que move a maioria das ferramentas de análise. É um ajuste separado e você pode desativá-lo logo em seguida, nesta página.</value>
   </data>
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>Qualquer pessoa com um link de convite pode conectar, com perfil público ou privado.</value>
@@ -659,9 +662,6 @@
   </data>
   <data name="Approved" xml:space="preserve">
     <value>Aprovada</value>
-  </data>
-  <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
-    <value>Ferramentas aprovadas poderão ler suas pontuações — é isso que move a maioria das ferramentas de análise. É um ajuste separado e você pode desativá-lo logo em seguida, nesta página.</value>
   </data>
   <data name="Approving a tool puts its name, description and link in front of every player. Everything else about it — webhooks, keys, who it can read — is the maker's business and is not reviewed here." xml:space="preserve">
     <value>Aprovar uma ferramenta coloca o nome, a descrição e o link dela diante de todos os jogadores. Todo o resto — webhooks, chaves, quem ela pode ler — é assunto de quem a desenvolve e não é revisado aqui.</value>

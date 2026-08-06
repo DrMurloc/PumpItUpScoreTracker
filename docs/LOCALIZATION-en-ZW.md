@@ -104,6 +104,7 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Hour / Hours | grogl | Coined 2026-08-03 for the console's `· 24 grogl` stat labels. |
 | GameTag | Grglmrg | `Grgl` (account) + `Mrg` (name). |
 | Code / Source | Murgblub | Already carried "Source & contact" (`Murgblub opa golba`); the Code tab reuses it. |
+| Publishes | Grolub | Coined 2026-08-06 for the sharing copy, which names publishing source as the gate. Not `Murpro` — that is already "Shared". |
 | Insights / Activity | Murgblarg | The console tab and the "recent activity" strings share one word. |
 
 ### PIU domain

@@ -70,7 +70,7 @@
                        ValueChanged="ToggleShareWithAllTools" Color="Color.Success"
                        Label=@L["Share my scores with community tools"]></MudSwitch>
             <MudText Typo="Typo.body2" Style="opacity:.75;" Class="ml-11">
-                @L["Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected."]
+                @L["Any tool that publishes its source code can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected."]
             </MudText>
             <div class="d-flex align-center gap-2 ml-11 mt-2 flex-wrap">
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">
@@ -168,7 +168,7 @@
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-3">
                 <MudText Typo="Typo.body2"><b>@L["This also turns on sharing with community tools."]</b></MudText>
                 <MudText Typo="Typo.body2">
-                    @L["Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page."]
+                    @L["Any tool that publishes its source code will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page."]
                 </MudText>
             </MudAlert>
         }

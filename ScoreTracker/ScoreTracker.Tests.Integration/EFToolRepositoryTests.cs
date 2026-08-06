@@ -248,11 +248,39 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
     }
 
     /// <summary>
-    ///     A private tool is invite-only whatever a player's blanket preference says — approval is
-    ///     what puts a tool in front of everyone, and it hasn't happened.
+    ///     Listing is a directory concern and never an access one: a private tool that publishes its
+    ///     source and names a reachable maker is in the pool on the same terms as a listed one.
+    ///     <para>
+    ///         Asserted against a real query rather than a handler, because nothing routes through a
+    ///         handler to grant the pool — the predicate <i>is</i> the rule.
+    ///     </para>
     /// </summary>
     [Fact]
-    public async Task APrivateToolIsNotInThePoolEvenWhenItAcceptsIt()
+    public async Task APrivateToolIsInThePoolOnTheSameTermsAsAListedOne()
+    {
+        var repository = BuildRepository();
+        var player = Guid.NewGuid();
+        await repository.SetShareWithAllTools(player, true, Now);
+
+        var unlisted = await SaveTool(repository, "Unlisted", t =>
+        {
+            Sourced(t);
+            t.SetAcceptsAllToolsShare(true);
+        });
+
+        Assert.Equal(ToolVisibility.Private, unlisted.Visibility);
+        Assert.True(await repository.CanRead(unlisted.Id, player));
+        Assert.Contains(player, await repository.GetReadablePlayerIds(unlisted.Id));
+        Assert.Contains(unlisted.Id, await repository.GetToolIdsReading(player));
+    }
+
+    /// <summary>
+    ///     The other half, and the reason dropping the visibility gate is safe: what actually holds
+    ///     the line is the published source and the reachable maker, and an unlisted tool is held to
+    ///     it exactly as a listed one is.
+    /// </summary>
+    [Fact]
+    public async Task APrivateToolWithNoCheckedSourceIsStillNotInThePool()
     {
         var repository = BuildRepository();
         var player = Guid.NewGuid();
@@ -261,6 +289,7 @@ public sealed class EFToolRepositoryTests : IAsyncLifetime
         var tool = await SaveTool(repository, "Unlisted", t => t.SetAcceptsAllToolsShare(true));
 
         Assert.False(await repository.CanRead(tool.Id, player));
+        Assert.DoesNotContain(tool.Id, await repository.GetToolIdsReading(player));
     }
 
     /// <summary>
