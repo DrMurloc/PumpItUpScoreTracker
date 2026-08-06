@@ -32,6 +32,9 @@ namespace ScoreTracker.PlayerProgress.Application
         /// </summary>
         private const double ScoringLevelWindow = 2.0;
 
+        /// <summary>How many suggestions per chart type survive to the page (owner, 2026-08-06).</summary>
+        private const int MaxTargetsPerType = 100;
+
         private readonly IPlayerHistoryRepository _history;
         private readonly IMediator _mediator;
         private readonly IScoreReader _scores;
@@ -68,7 +71,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 ? new[] { only }
                 : new[] { ChartType.Single, ChartType.Double };
 
-            var scope = new ProjectionScope(mix, charts, scoringLevels, myStats);
+            var scope = new ProjectionScope(mix, charts, scoringLevels, myStats, scoring, pool.Baseline);
             var into = new ProjectionResults(expectedScore, evidence);
 
             foreach (var chartType in types)
@@ -99,12 +102,29 @@ namespace ScoreTracker.PlayerProgress.Application
                 projectedGains[kv.Key] = (int)gain;
             }
 
-            return new PumbilityProjection(expectedScore, projectedGains, chartDifficulty, evidence);
+            // Ranked advice, not an inventory. A full window clears the bar on well over a
+            // thousand charts, and nobody plans past the first hundred — the tail is payload,
+            // render and scrolling for suggestions no one reads.
+            //
+            // Per TYPE, not overall: capping the merged list would let a singles-heavy top
+            // hundred empty out the Doubles filter, which is the one place a doubles player
+            // looks.
+            var ranked = projectedGains
+                .GroupBy(kv => charts[kv.Key].Type)
+                .SelectMany(g => g.OrderByDescending(kv => kv.Value).Take(MaxTargetsPerType))
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            return new PumbilityProjection(
+                expectedScore.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value),
+                ranked,
+                chartDifficulty,
+                evidence.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
         private sealed record ProjectionScope(MixEnum Mix, IReadOnlyDictionary<Guid, Chart> Charts,
-            IDictionary<Guid, double> ScoringLevels, PlayerStatsRecord MyStats);
+            IDictionary<Guid, double> ScoringLevels, PlayerStatsRecord MyStats,
+            ScoringConfiguration Scoring, int Baseline);
 
         /// <summary>What it writes. Both types accumulate into one pair, which is why they are passed in.</summary>
         private sealed record ProjectionResults(IDictionary<Guid, PhoenixScore> ExpectedScore,
@@ -113,7 +133,7 @@ namespace ScoreTracker.PlayerProgress.Application
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
             ProjectionResults into, CancellationToken cancellationToken)
         {
-            var (mix, charts, scoringLevels, myStats) = scope;
+            var (mix, charts, scoringLevels, myStats, scoring, baseline) = scope;
 
             // The player is measured in the mix they are looking at: their pool, their bar and
             // their level all come from this mix and nowhere else. The reference mix is a
@@ -133,6 +153,11 @@ namespace ScoreTracker.PlayerProgress.Application
             var scoped = charts.Values
                 .Where(c => c.Type == chartType)
                 .Where(c => Math.Abs(ScoringLevelOf(c, scoringLevels) - myLevel) <= ScoringLevelWindow)
+                // A chart whose value at a PERFECT game still sits under the bar can never pay,
+                // so nothing downstream would keep it. Dropping it here costs nothing and is
+                // exact — but it is the difference between asking the database for every peer's
+                // scores on ~600 charts and asking for the couple hundred that could matter.
+                .Where(c => scoring.GetScore(c, PhoenixScore.Max, PhoenixPlate.PerfectGame, false) > baseline)
                 .Select(c => c.Id)
                 .ToArray();
             if (scoped.Length == 0) return;

@@ -170,15 +170,43 @@ public sealed class PumbilityProjectionSagaTests
     [Fact]
     public async Task AChartThatCannotClearTheBarIsNotOffered()
     {
-        // A weak 15 against a pool of 22s: the projection exists, the gain does not.
+        // A weak 15 against a pool of 22s. Its value at a PERFECT game is still under the bar,
+        // so it is dropped before anyone's scores are read — not estimated and then discarded.
+        // That is the cheap half of the projection: the database is never asked about it.
         var ctx = new ProjectionContext(17).WithChart(out var weak, ChartType.Single, 15);
         ctx.WithPeerScores(weak, 910_000, 915_000, 920_000, 925_000);
         ctx.WithFullPoolAt(990_000, ChartType.Single, 22);
 
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
-        Assert.Contains(weak.Id, result.ExpectedScores.Keys);
         Assert.DoesNotContain(weak.Id, result.ProjectedGains.Keys);
+        Assert.DoesNotContain(weak.Id, result.ExpectedScores.Keys);
+    }
+
+    [Fact]
+    public async Task TheAdviceStopsAtAHundredPerTypeAndKeepsTheBestOnes()
+    {
+        // A full window clears the bar on well over a thousand charts. Nobody plans past the
+        // first hundred, so the tail is payload and scrolling for suggestions no one reads.
+        var ctx = new ProjectionContext();
+        for (var i = 0; i < 130; i++)
+        {
+            ctx.WithChart(out var single, ChartType.Single, 20);
+            ctx.WithPeerScores(single, 900_000 + i * 500, 905_000 + i * 500, 910_000 + i * 500);
+            ctx.WithChart(out var doubles, ChartType.Double, 20);
+            ctx.WithPeerScores(doubles, 900_000 + i * 500, 905_000 + i * 500, 910_000 + i * 500);
+        }
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        // Per type, so a singles-heavy top hundred cannot empty out the Doubles filter.
+        var perType = result.ProjectedGains.Keys.GroupBy(id => ctx.TypeOf(id)).ToArray();
+        Assert.All(perType, g => Assert.Equal(100, g.Count()));
+
+        // And it keeps the top of the ranking, not an arbitrary hundred.
+        var kept = result.ProjectedGains.Values.OrderByDescending(v => v).ToArray();
+        Assert.Equal(kept, result.ProjectedGains.Values.OrderByDescending(v => v).Take(kept.Length));
+        Assert.True(kept.Min() > 0);
     }
 
     [Fact]
@@ -385,6 +413,8 @@ public sealed class PumbilityProjectionSagaTests
             _myMissingMixes.Add(mix);
             return this;
         }
+
+        public ChartType TypeOf(Guid chartId) => _charts.First(c => c.Id == chartId).Type;
 
         private bool KnownIn(Guid peer, MixEnum mix)
         {
