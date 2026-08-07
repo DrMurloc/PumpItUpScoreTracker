@@ -4719,9 +4719,6 @@
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>予測ダブルPUMBILITY</value>
   </data>
-  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
-    <value>Phoenix 1 からの予測です。Phoenix 2 での自分のスコアは {0} 件です。</value>
-  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>予測シングルPUMBILITY</value>
   </data>
