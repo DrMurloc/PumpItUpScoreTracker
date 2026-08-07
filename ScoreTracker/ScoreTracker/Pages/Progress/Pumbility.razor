@@ -196,10 +196,11 @@ else
 
     private string MixName => _currentMix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
 
-    private string? HeroSubtitle => _currentMix == MixEnum.Phoenix2 && _carryover != null
-        ? string.Format(L["Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own."],
-            _carryover.ScoredHere)
-        : L["The sum of your 50 best-rated charts."];
+    // The hero number is this mix's own pool, in every mix. It was captioned as a Phoenix 1
+    // projection on Phoenix 2, which described the carryover panel further down the page
+    // instead — and at launch those two figures are far apart, so the caption read as the
+    // number being wrong. What Phoenix 1 is worth here is that panel's job to say.
+    private string? HeroSubtitle => L["The sum of your 50 best-rated charts."];
 
 
     protected override async Task OnInitializedAsync()

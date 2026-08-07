@@ -89,9 +89,11 @@ else if (Density == UiDensity.Compact)
             var chart = Charts[target.ChartId];
             <TierListChartCard Chart="chart" Density="UiDensity.Compact"
                                CornerBadge="@($"+{target.Gain:N0}")" CornerBadgeClass="pmb-corner-gain"
-                               Passed="target.Current != null"
+                               CornerBadgeStart="@ProjectedGrade(target)" CornerBadgeStartClass="pmb-corner-gain"
+                               Passed="target.Current != null && !target.CurrentIsBroken"
                                PassedInAnotherMix="target.Source == TargetSource.Phoenix1"
-                               TooltipNote="@CornerMeaning(target)"
+                               Broke="target.CurrentIsBroken"
+                               TooltipNote="@CompactNote(target)"
                                ShowName="false" ShowToDo="false"
                                OnOpen="OpenById"></TierListChartCard>
         }
@@ -181,11 +183,28 @@ else
 
     private Task OnPlayById(Guid chartId) => OnPlay.InvokeAsync(Charts[chartId]);
 
+    // The grade the projection lands on, opposite the gain in the jacket's other bottom
+    // corner. Compact prints one number, and the number is how much — this says what you
+    // would come away with, which is the other half of deciding whether to go and play it.
+    private RenderFragment ProjectedGrade(PumbilityTarget target) => builder =>
+    {
+        builder.OpenComponent<LetterGradeIcon>(0);
+        builder.AddComponentParameter(1, nameof(LetterGradeIcon.Grade), target.Projected.LetterGradeFor(Mix));
+        builder.AddComponentParameter(2, nameof(LetterGradeIcon.Height), 14);
+        builder.CloseComponent();
+    };
+
+    // The jacket says it in pictures, so the tooltip says it in words — Compact has no body
+    // to carry either (rule 7).
+    private string CompactNote(PumbilityTarget target) =>
+        $"{CornerMeaning(target)} · {L["Projected"]} {target.Projected.LetterGradeFor(Mix).GetName()}";
+
     // Compact hides the body, so the words for the three kinds ride the tooltip and the
     // legend (rule 8: the border's colour never travels alone).
     private string CornerMeaning(PumbilityTarget target) => target switch
     {
         { Source: TargetSource.Phoenix1 } => L["Carried from Phoenix 1"],
+        { CurrentIsBroken: true } => L["Played, not passed"],
         { Current: not null } => L["Upscore"],
         _ => L["Not yet played"]
     };

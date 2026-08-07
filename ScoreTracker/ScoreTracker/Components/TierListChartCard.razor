@@ -28,6 +28,10 @@
                        prints the word so the hue never travels alone (rule 8). *@
                     <span class="tier-chart-card-lens-dot" style="background:@TierColor"></span>
                 }
+                @if (CornerBadgeStart != null)
+                {
+                    <div class="tier-chart-card-corner-start tier-chart-card-corner @CornerBadgeStartClass">@CornerBadgeStart</div>
+                }
                 @if (CornerBadge != null)
                 {
                     @* A printed value wins the corner over the grade icon: a caller that
@@ -182,6 +186,12 @@ else
     // A printed value in the jacket's bottom-right corner. Wins that slot over the grade
     // icon in Compact, and is the only thing a Compact card can say in words — so it is for
     // the number the list is RANKED by, not decoration.
+    // The jacket's other bottom corner. Content rather than text, because what goes here is a
+    // picture — the difficulty bubble owns the top edge, so the two badges share the bottom.
+    [Parameter] public RenderFragment? CornerBadgeStart { get; set; }
+
+    [Parameter] public string? CornerBadgeStartClass { get; set; }
+
     [Parameter] public string? CornerBadge { get; set; }
 
     /// <summary>A site.css modifier on the corner badge; the caller owns its meaning and its legend.</summary>
@@ -204,14 +214,22 @@ else
     // on, so a To-Do ring there would be a fourth meaning competing with three.
     [Parameter] public bool ShowStateBorder { get; set; } = true;
 
+    // A run that broke. Ranked below the two pass states on purpose: where a chart is both
+    // attempted here and passed elsewhere, where the number came from is the more useful
+    // thing to say. It earns a state of its own because the alternative is no border at all,
+    // which reads as a chart nobody has ever seen the player touch.
+    [Parameter] public bool Broke { get; set; }
+
     private string StateClass => !ShowStateBorder ? string.Empty :
         Passed ? "tier-chart-card-pass" :
         IsToDo ? "tier-chart-card-todo" :
-        PassedInAnotherMix ? "tier-chart-card-other-mix" : string.Empty;
+        PassedInAnotherMix ? "tier-chart-card-other-mix" :
+        Broke ? "tier-chart-card-broken" : string.Empty;
 
     private string? StateTitle => Passed ? L["Passed"] :
         IsToDo ? L["To Do"] :
-        PassedInAnotherMix ? L["Passed in another mix"] : null;
+        PassedInAnotherMix ? L["Passed in another mix"] :
+        Broke ? L["Played, not passed"] : null;
 
     // Compact hides the name, so the tooltip carries the identity (rule 7: no
     // truncation without a tooltip) plus the state and lens-tier words (rule 8).

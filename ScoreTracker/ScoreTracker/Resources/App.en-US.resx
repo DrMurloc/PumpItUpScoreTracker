@@ -4560,6 +4560,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>Played, not counting</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>Played, not passed</value>
+  </data>
   <data name="Player" xml:space="preserve">
 	  <value>Player</value>
   </data>
@@ -4715,9 +4718,6 @@
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>projected Doubles PUMBILITY</value>
-  </data>
-  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
-    <value>Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own.</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>projected Singles PUMBILITY</value>

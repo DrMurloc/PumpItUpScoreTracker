@@ -103,7 +103,7 @@ namespace ScoreTracker.PlayerProgress.Application
             // actually hit beats a quantile of what other people hit.
             if (mix == MixEnum.Phoenix2)
                 foreach (var carried in await CarryoverTargets(request.UserId, request.Pool, charts,
-                             bar, projection, mine, cancellationToken))
+                             bar, scoring, projection, mine, cancellationToken))
                     targets[carried.ChartId] = carried;
 
             // One ranked list of likely gains with two sources of evidence behind it, not two
@@ -122,22 +122,40 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     Phoenix 1 scores worth playing here, as targets. The pool AND everything ranked
         ///     behind it: capping at the fiftieth hid the rows with the best evidence there is,
         ///     because against a thin Phoenix 2 pool a repriced #73 still clears the bar
-        ///     (owner, 2026-08-06). Excludes anything already scored here (done) and anything
-        ///     with no Phoenix 2 appearance (unplayable — the panel states those as a fact).
+        ///     (owner, 2026-08-06). Excludes anything with no Phoenix 2 appearance (unplayable —
+        ///     the panel states those as a fact).
+        ///     <para>
+        ///         A chart already scored here is NOT excluded. An 980k in Phoenix 1 against a
+        ///         900k here is a gain worth playing for, and the question is the same one the
+        ///         peer projection asks: how much does this beat what it would displace. So the
+        ///         floor is the same too — your standing value on the chart, or the pool's bar,
+        ///         whichever is higher — and both sources of evidence end up on one ranked list
+        ///         priced identically.
+        ///     </para>
         /// </summary>
         private async Task<IReadOnlyList<PumbilityTarget>> CarryoverTargets(Guid userId, ChartType? poolScope,
-            IReadOnlyDictionary<Guid, Chart> charts, int? bar, PumbilityProjection projection,
-            IReadOnlyDictionary<Guid, RecordedPhoenixScore> mine, CancellationToken cancellationToken)
+            IReadOnlyDictionary<Guid, Chart> charts, int? bar, ScoringConfiguration scoring,
+            PumbilityProjection projection, IReadOnlyDictionary<Guid, RecordedPhoenixScore> mine,
+            CancellationToken cancellationToken)
         {
             var carryover = await Handle(new ProjectPhoenix2CarryoverQuery(userId, poolScope), cancellationToken);
-            var floor = bar ?? 0;
+            var bottom = bar ?? 0;
+
+            // What the chart is worth to the player right now. A broken run is worth nothing,
+            // which is the same thing as never having played it.
+            double Standing(Guid chartId)
+            {
+                if (!mine.TryGetValue(chartId, out var held) || held.Score == null || held.IsBroken) return 0;
+                return scoring.GetScore(charts[chartId], held.Score.Value,
+                    held.Plate ?? PhoenixPlate.RoughGame, held.IsBroken);
+            }
 
             return carryover.Entries.Concat(carryover.Candidates)
-                .Where(e => e.Phoenix2Score == null && e.AvailableInPhoenix2 && charts.ContainsKey(e.ChartId))
+                .Where(e => e.AvailableInPhoenix2 && charts.ContainsKey(e.ChartId))
                 .Select(e => new
                 {
                     Entry = e,
-                    Gain = (int)Math.Round(e.Phoenix2Value - floor)
+                    Gain = (int)Math.Round(e.Phoenix2Value - Math.Max(Standing(e.ChartId), bottom))
                 })
                 .Where(x => x.Gain > 0)
                 .Select(x => new PumbilityTarget(x.Entry.ChartId,
@@ -172,8 +190,11 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Where(s => s is { Score: not null, IsBroken: false } && phoenixCharts.ContainsKey(s.ChartId))
                 .Where(s => request.Pool == null || phoenixCharts[s.ChartId].Type == request.Pool)
                 .ToArray();
+            // A stage break here is not a score you hold — it rates zero, and a chart you broke
+            // on is precisely the chart your Phoenix 1 record has something to say about.
+            // Reading it as "already scored in Phoenix 2" is what hid those rows entirely.
             var phoenix2Scores = (await _scores.GetBestScores(MixEnum.Phoenix2, request.UserId, cancellationToken))
-                .Where(s => s.Score != null)
+                .Where(s => s is { Score: not null, IsBroken: false })
                 .ToDictionary(s => s.ChartId, s => s.Score!.Value);
 
             // The repricing: every Phoenix 1 score run through Phoenix 2's formula, which pays

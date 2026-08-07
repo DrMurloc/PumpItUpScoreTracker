@@ -4524,6 +4524,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>플레이함, 미반영</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>플레이함, 미클리어</value>
+  </data>
   <data name="Player" xml:space="preserve">
     <value>플레이어</value>
   </data>
@@ -4679,9 +4682,6 @@
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>예상 더블 PUMBILITY</value>
-  </data>
-  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
-    <value>Phoenix 1 기준 예상입니다 — Phoenix 2에는 본인 점수가 {0}개 있습니다.</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>예상 싱글 PUMBILITY</value>

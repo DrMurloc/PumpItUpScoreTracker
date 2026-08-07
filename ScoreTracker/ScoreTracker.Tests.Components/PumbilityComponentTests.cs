@@ -140,7 +140,9 @@ public sealed class PumbilityComponentTests : ComponentTestBase
             .Add(x => x.Targets, ThreeKinds(out var charts)).Add(x => x.Charts, charts)
             .Add(x => x.Density, UiDensity.Compact));
 
-        var badges = cut.FindAll(".tier-card-grid .tier-chart-card-corner");
+        // Scoped to the end corner: the jacket carries two badges now, and they share the
+        // treatment on purpose — .tier-chart-card-corner alone would count both.
+        var badges = cut.FindAll(".tier-card-grid .tier-chart-card-compact-grade");
         Assert.Equal(3, badges.Count);
         Assert.All(badges, b => Assert.Contains("pmb-corner-gain", b.ClassName));
         Assert.Contains("+400", badges.Select(b => b.TextContent.Trim()).ToArray());
@@ -161,6 +163,44 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         Assert.Empty(cut.FindAll(".tier-chart-card-pass"));
         Assert.Empty(cut.FindAll(".tier-chart-card-other-mix"));
         Assert.Empty(cut.FindAll(".tier-chart-card-todo"));
+    }
+
+    [Fact]
+    public void CompactPrintsTheGradeTheProjectionLandsOnOppositeTheGain()
+    {
+        // Two badges on the jacket's bottom edge, one treatment: how much on the right, what
+        // you would come away with on the left. The words for it ride the tooltip, which
+        // renders into the popover provider and so is not assertable from here.
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, ThreeKinds(out var charts)).Add(x => x.Charts, charts)
+            .Add(x => x.Density, UiDensity.Compact));
+
+        var grades = cut.FindAll(".tier-card-grid .tier-chart-card-corner-start");
+        Assert.Equal(3, grades.Count);
+        Assert.All(grades, g => Assert.Contains("pmb-corner-gain", g.ClassName));
+        // The icon, not a specific letter: which grade a score earns is the scoring
+        // configuration's business and pinning one here would test that instead of this.
+        Assert.All(grades, g => Assert.Contains("/letters/", g.InnerHtml));
+    }
+
+    [Fact]
+    public void ABrokenRunGetsItsOwnBorderRatherThanReadingAsAnUpscore()
+    {
+        // A stage break is worth nothing, so the arithmetic prices the chart from the bar as
+        // though it had never been played. A solid "upscore" border would then be describing a
+        // score the page has just decided the player does not hold — and no border at all
+        // would claim they have never touched it.
+        var broke = NewChart(ChartType.Single, 22);
+        var targets = new[] { new PumbilityTarget(broke.Id, 980_000, 300, 640_000, true, null, null) };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [broke.Id] = broke })
+            .Add(x => x.Density, UiDensity.Compact));
+
+        Assert.Single(cut.FindAll(".tier-card-grid .tier-chart-card-broken"));
+        Assert.Empty(cut.FindAll(".tier-card-grid .tier-chart-card-pass"));
+        Assert.Contains("Played, not passed", cut.Find(".pmb-legend").TextContent);
     }
 
     /// <summary>One of each kind: carried from another mix, an upscore, and never played.</summary>

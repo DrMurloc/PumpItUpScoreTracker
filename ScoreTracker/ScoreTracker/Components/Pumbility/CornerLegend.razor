@@ -24,6 +24,12 @@
             <span class="border-legend-swatch tier-chart-card-other-mix"></span>@L["Carried from Phoenix 1"]
         </span>
     }
+    @if (HasBroke)
+    {
+        <span class="border-legend-item">
+            <span class="border-legend-swatch tier-chart-card-broken"></span>@L["Played, not passed"]
+        </span>
+    }
     @if (HasNew)
     {
         <span class="border-legend-item">
@@ -38,7 +44,12 @@
 
     private bool HasCarry => Targets.Any(t => t.Source == TargetSource.Phoenix1);
 
-    private bool HasUp => Targets.Any(t => t.Source != TargetSource.Phoenix1 && t.Current != null);
+    // A broken run holds no score for these purposes, so it is neither an upscore nor a chart
+    // the page has never seen you play. The four states stay disjoint on that reading.
+    private bool HasUp => Targets.Any(t => t.Source != TargetSource.Phoenix1
+                                           && t is { Current: not null, CurrentIsBroken: false });
+
+    private bool HasBroke => Targets.Any(t => t.Source != TargetSource.Phoenix1 && t.CurrentIsBroken);
 
     private bool HasNew => Targets.Any(t => t.Source != TargetSource.Phoenix1 && t.Current == null);
 }
