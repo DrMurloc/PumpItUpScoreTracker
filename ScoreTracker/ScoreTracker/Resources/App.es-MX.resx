@@ -3213,9 +3213,6 @@
   <data name="Max Letter Grade" xml:space="preserve">
     <value>Grado de letra máx</value>
   </data>
-  <data name="Max Level" xml:space="preserve">
-    <value>Nivel máximo</value>
-  </data>
   <data name="Max Note Count" xml:space="preserve">
     <value>Conteo de notas máx</value>
   </data>
@@ -3692,9 +3689,6 @@
   </data>
   <data name="No source published" xml:space="preserve">
     <value>Sin código publicado</value>
-  </data>
-  <data name="No suggestions match those filters." xml:space="preserve">
-    <value>Ninguna sugerencia coincide con esos filtros.</value>
   </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>No hay sugerencias por ahora — prueba otra meta o importa más puntajes primero.</value>
@@ -7808,9 +7802,6 @@
   <data name="{0} of {1} scores identical" xml:space="preserve">
     <value>{0} de {1} scores idénticos</value>
   </data>
-  <data name="{0} of {1} suggestions" xml:space="preserve">
-    <value>{0} de {1} sugerencias</value>
-  </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>{0} de {1} jugadores registrados</value>
   </data>
@@ -7882,9 +7873,6 @@
   </data>
   <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
     <value>{0} canciones salieron del catálogo, llevándose {1} charts. Tus puntajes siguen en tu perfil.</value>
-  </data>
-  <data name="{0} suggestions" xml:space="preserve">
-    <value>{0} sugerencias</value>
   </data>
   <data name="{0} titles" xml:space="preserve">
     <value>{0} títulos</value>

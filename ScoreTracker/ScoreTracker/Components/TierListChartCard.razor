@@ -199,7 +199,13 @@ else
     // only in Comfortable has to be reachable here or it is lost (rule 7).
     [Parameter] public string? TooltipNote { get; set; }
 
-    private string StateClass => Passed ? "tier-chart-card-pass" :
+    // A page that means something else by a border turns this off and paints nothing, rather
+    // than fighting the class: PUMBILITY reads a border as which evidence a suggestion rests
+    // on, so a To-Do ring there would be a fourth meaning competing with three.
+    [Parameter] public bool ShowStateBorder { get; set; } = true;
+
+    private string StateClass => !ShowStateBorder ? string.Empty :
+        Passed ? "tier-chart-card-pass" :
         IsToDo ? "tier-chart-card-todo" :
         PassedInAnotherMix ? "tier-chart-card-other-mix" : string.Empty;
 

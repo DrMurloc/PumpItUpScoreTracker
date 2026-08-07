@@ -79,51 +79,6 @@ else
             @L["Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar."]
         </p>
 
-        @* Narrowing controls, not a second pool selector: these change what the list SHOWS,
-           never what your PUMBILITY is measured against. The type filter renders only where
-           the list actually holds both — on a Phoenix 2 Singles board it would be a control
-           with one reachable state. Carried Phoenix 1 rows obey both filters, because they
-           are suggestions in the same list and an unfiltered block among filtered ones reads
-           as a bug. *@
-        <div class="pmb-filters">
-            @if (HasBothTypes)
-            {
-                @* Variant rides each button, not the group: OverrideStyles="false" means the
-                   group propagates nothing, so a Variant on it is inert and the buttons render
-                   flat. Filled-when-selected against Outlined is the tier list's segmented
-                   control exactly. *@
-                <MudButtonGroup OverrideStyles="false">
-                    <MudButton Variant="@(_typeFilter == null ? Variant.Filled : Variant.Outlined)"
-                               Color="Color.Primary" Size="Size.Small"
-                               OnClick="() => SetTypeFilter(null)">@L["All"]</MudButton>
-                    <MudButton Variant="@(_typeFilter == ChartType.Single ? Variant.Filled : Variant.Outlined)"
-                               Color="Color.Primary" Size="Size.Small"
-                               OnClick="() => SetTypeFilter(ChartType.Single)">@L["Singles"]</MudButton>
-                    <MudButton Variant="@(_typeFilter == ChartType.Double ? Variant.Filled : Variant.Outlined)"
-                               Color="Color.Primary" Size="Size.Small"
-                               OnClick="() => SetTypeFilter(ChartType.Double)">@L["Doubles"]</MudButton>
-                </MudButtonGroup>
-            }
-            @if (TargetLevels.Count > 1)
-            {
-                <div class="pmb-field pmb-field-inline">
-                    <label for="pmb-maxlevel">@L["Max Level"]</label>
-                    <MudSelect id="pmb-maxlevel" T="int?" Value="_maxLevel" ValueChanged="SetMaxLevel"
-                               Dense="true" Margin="Margin.Dense">
-                        <MudSelectItem T="int?" Value="@((int?)null)">@L["Any"]</MudSelectItem>
-                        @foreach (var level in TargetLevels)
-                        {
-                            <MudSelectItem T="int?" Value="@((int?)level)">@level</MudSelectItem>
-                        }
-                    </MudSelect>
-                </div>
-            }
-            <span class="pmb-filter-count pmb-muted">
-                @(_filteredCount == _page.Targets.Count
-                    ? string.Format(L["{0} suggestions"], _page.Targets.Count)
-                    : string.Format(L["{0} of {1} suggestions"], _filteredCount, _page.Targets.Count))
-            </span>
-        </div>
 
         @if (_projecting)
         {
@@ -132,8 +87,6 @@ else
         else
         {
             <TargetList Targets="_page.Targets" Charts="_charts" Density="_density" Mix="_currentMix"
-                        TypeFilter="_typeFilter" MaxLevel="_maxLevel"
-                        OnFilteredCountChanged="c => _filteredCount = c"
                         ShowToDo="true" ToDos="_todos" OnToDo="ToggleToDo"
                         OnOpen="ShowChartDetails" OnPlay="PlayChart"></TargetList>
         }
@@ -229,10 +182,6 @@ else
     private UiDensity _density = UiDensity.Comfortable;
     private bool _projecting;
 
-    private ChartType? _typeFilter;
-    private int? _maxLevel;
-    private int _filteredCount;
-
     private Chart? _detailsChart;
     private bool _detailsOpen;
     private bool _detailsAutoPlay;
@@ -252,35 +201,6 @@ else
             _carryover.ScoredHere)
         : L["The sum of your 50 best-rated charts."];
 
-    // A control that can only reach one state is not a choice. On a Phoenix 2 Singles or
-    // Doubles board the projection is already scoped to that type, so the filter would be
-    // three buttons where two do nothing.
-    private bool HasBothTypes => _page != null
-                                 && _page.Targets.Any(t => TypeOf(t) == ChartType.Single)
-                                 && _page.Targets.Any(t => TypeOf(t) == ChartType.Double);
-
-    /// <summary>
-    ///     Printed levels present in the suggestions, so the ceiling can only pick a real one.
-    ///     Rebuilt when the targets are, not on every render — the select re-reads it each time.
-    /// </summary>
-    private IReadOnlyList<int> TargetLevels { get; set; } = Array.Empty<int>();
-
-    private void IndexTargetLevels()
-    {
-        TargetLevels = _page == null
-            ? Array.Empty<int>()
-            : _page.Targets
-                .Where(t => _charts.ContainsKey(t.ChartId))
-                .Select(t => (int)_charts[t.ChartId].Level)
-                .Distinct().OrderBy(l => l).ToArray();
-    }
-
-    private ChartType? TypeOf(PumbilityTarget target) =>
-        _charts.TryGetValue(target.ChartId, out var chart) ? chart.Type : null;
-
-    private void SetTypeFilter(ChartType? type) => _typeFilter = type;
-
-    private void SetMaxLevel(int? level) => _maxLevel = level;
 
     protected override async Task OnInitializedAsync()
     {
@@ -308,7 +228,6 @@ else
         _projecting = true;
         _page = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, _pool));
         _projecting = false;
-        IndexTargetLevels();
 
         // Phoenix 2 keeps Singles and Doubles as independent pools alongside the merged one,
         // so the selector is real there and would invent a stat on Phoenix 1.
