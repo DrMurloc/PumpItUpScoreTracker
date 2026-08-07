@@ -263,7 +263,7 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     public void TheCarryoverNamesTheFlipOnlyWhenThePoolActuallyChangedHands()
     {
         var flipped = new Phoenix2CarryoverRecord(18041, 358, 15, 49, Array.Empty<Guid>(),
-            32, 18, 4, 46, Array.Empty<CarryoverEntry>());
+            32, 18, 4, 46, Array.Empty<CarryoverEntry>(), Array.Empty<CarryoverEntry>());
         var steady = flipped with { SinglesInPool = 4, DoublesInPool = 46 };
 
         var withFlip = RenderComponent<CarryoverPanel>(p => p
@@ -280,7 +280,7 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     {
         var lost = NewChart(ChartType.Single, 22);
         var carry = new Phoenix2CarryoverRecord(18041, 358, 15, 49, new[] { lost.Id },
-            32, 18, 4, 46, Array.Empty<CarryoverEntry>());
+            32, 18, 4, 46, Array.Empty<CarryoverEntry>(), Array.Empty<CarryoverEntry>());
 
         var cut = RenderComponent<CarryoverPanel>(p => p
             .Add(x => x.Carryover, carry)

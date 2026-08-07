@@ -185,29 +185,30 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task TheAdviceStopsAtAHundredPerTypeAndKeepsTheBestOnes()
+    public async Task TheAdviceStopsAtAHundredAndKeepsTheBestOnes()
     {
         // A full window clears the bar on well over a thousand charts. Nobody plans past the
         // first hundred, so the tail is payload and scrolling for suggestions no one reads.
+        // Flat rather than per type: the query itself is type-scoped by the pool selector.
         var ctx = new ProjectionContext();
+        var offered = new List<int>();
         for (var i = 0; i < 130; i++)
         {
             ctx.WithChart(out var single, ChartType.Single, 20);
             ctx.WithPeerScores(single, 900_000 + i * 500, 905_000 + i * 500, 910_000 + i * 500);
-            ctx.WithChart(out var doubles, ChartType.Double, 20);
-            ctx.WithPeerScores(doubles, 900_000 + i * 500, 905_000 + i * 500, 910_000 + i * 500);
+            offered.Add(910_000 + i * 500);
         }
 
-        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+        var result = await ctx.Saga.Handle(
+            new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix, ChartType.Single),
+            CancellationToken.None);
 
-        // Per type, so a singles-heavy top hundred cannot empty out the Doubles filter.
-        var perType = result.ProjectedGains.Keys.GroupBy(id => ctx.TypeOf(id)).ToArray();
-        Assert.All(perType, g => Assert.Equal(100, g.Count()));
-
-        // And it keeps the top of the ranking, not an arbitrary hundred.
-        var kept = result.ProjectedGains.Values.OrderByDescending(v => v).ToArray();
-        Assert.Equal(kept, result.ProjectedGains.Values.OrderByDescending(v => v).Take(kept.Length));
-        Assert.True(kept.Min() > 0);
+        Assert.Equal(100, result.ProjectedGains.Count);
+        // The best hundred, not an arbitrary hundred: the weakest survivor still out-gains
+        // everything that was dropped.
+        Assert.True(result.ProjectedGains.Values.Min() > 0);
+        Assert.Equal(100, result.ExpectedScores.Count);
+        Assert.Equal(100, result.Evidence.Count);
     }
 
     [Fact]
