@@ -93,8 +93,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     kv.Value,
                     mine.TryGetValue(kv.Key, out var held) ? held.Score : null,
                     mine.TryGetValue(kv.Key, out var broken) && broken.IsBroken,
-                    projection.ChartDifficulty.TryGetValue(kv.Key, out var d) ? d : null,
-                    projection.Evidence.GetValueOrDefault(kv.Key)))
+                    projection.ChartDifficulty.TryGetValue(kv.Key, out var d) ? d : null))
                 .ToDictionary(t => t.ChartId);
 
             // In Phoenix 2, a chart the player already cleared in Phoenix 1 does not need
@@ -165,9 +164,6 @@ namespace ScoreTracker.PlayerProgress.Application
                     mine.TryGetValue(x.Entry.ChartId, out var held) ? held.Score : null,
                     mine.TryGetValue(x.Entry.ChartId, out var broken) && broken.IsBroken,
                     projection.ChartDifficulty.TryGetValue(x.Entry.ChartId, out var d) ? d : null,
-                    // No peer evidence line: nothing was estimated, so there is nothing to
-                    // report about how many people were heard from.
-                    null,
                     TargetSource.Phoenix1))
                 .OrderByDescending(t => t.Gain)
                 .Take(MaxTargets)

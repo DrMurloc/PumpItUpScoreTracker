@@ -2306,9 +2306,6 @@
   <data name="From {0}" xml:space="preserve">
     <value>Romurg {0}</value>
   </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>blarg {0} Morp mrgl morp</value>
-  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Romurg {0} mgrlgmrg</value>
   </data>

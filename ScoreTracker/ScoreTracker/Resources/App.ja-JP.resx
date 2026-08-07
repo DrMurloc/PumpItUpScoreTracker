@@ -2306,9 +2306,6 @@
   <data name="From {0}" xml:space="preserve">
     <value>{0}から</value>
   </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>同水準のプレイヤー {0} 人から</value>
-  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0} スコアから算出</value>
   </data>

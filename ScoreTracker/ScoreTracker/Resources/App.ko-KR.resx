@@ -2289,9 +2289,6 @@
   <data name="From {0}" xml:space="preserve">
     <value>{0}부터</value>
   </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>비슷한 플레이어 {0}명 기준</value>
-  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0}개 스코어 기반</value>
   </data>

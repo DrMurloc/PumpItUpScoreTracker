@@ -87,17 +87,15 @@ namespace ScoreTracker.PlayerProgress.Application
             var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(mix), cancellationToken);
 
             var expectedScore = new Dictionary<Guid, PhoenixScore>();
-            var evidence = new Dictionary<Guid, ProjectionEvidence>();
 
             var types = request.ChartType is { } only
                 ? new[] { only }
                 : new[] { ChartType.Single, ChartType.Double };
 
             var scope = new ProjectionScope(mix, charts, scoringLevels, myStats, scoring, pool.Baseline);
-            var into = new ProjectionResults(expectedScore, evidence);
 
             foreach (var chartType in types)
-                await ProjectType(chartType, request.UserId, scope, into, cancellationToken);
+                await ProjectType(chartType, request.UserId, scope, expectedScore, cancellationToken);
 
             var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count", mix), cancellationToken))
                 .ToDictionary(s => s.ChartId, e => e.Category);
@@ -138,8 +136,7 @@ namespace ScoreTracker.PlayerProgress.Application
             return new PumbilityProjection(
                 expectedScore.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value),
                 ranked,
-                chartDifficulty,
-                evidence.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
+                chartDifficulty);
         }
 
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
@@ -147,12 +144,8 @@ namespace ScoreTracker.PlayerProgress.Application
             IDictionary<Guid, double> ScoringLevels, PlayerStatsRecord MyStats,
             ScoringConfiguration Scoring, int Baseline);
 
-        /// <summary>What it writes. Both types accumulate into one pair, which is why they are passed in.</summary>
-        private sealed record ProjectionResults(IDictionary<Guid, PhoenixScore> ExpectedScore,
-            IDictionary<Guid, ProjectionEvidence> Evidence);
-
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
-            ProjectionResults into, CancellationToken cancellationToken)
+            IDictionary<Guid, PhoenixScore> into, CancellationToken cancellationToken)
         {
             var (mix, charts, scoringLevels, myStats, scoring, baseline) = scope;
 
@@ -227,9 +220,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 var estimate = CohortEstimator.Estimate(peers);
                 if (estimate == null) continue;
 
-                into.ExpectedScore[group.Key] = estimate.Value;
-                into.Evidence[group.Key] = new ProjectionEvidence(peers.Length,
-                    Math.Round(CohortEstimator.Evidence(peers), 2), Spread(peers));
+                into[group.Key] = estimate.Value;
             }
         }
 
@@ -307,16 +298,6 @@ namespace ScoreTracker.PlayerProgress.Application
             var chosen = preceding ?? rows[0];
             var level = chartType == ChartType.Single ? chosen.SinglesLevel : chosen.DoublesLevel;
             return level > 1 ? level : fallback;
-        }
-
-        /// <summary>Points between the 10th and 90th percentile — how much the peers disagreed.</summary>
-        private static int Spread(IReadOnlyCollection<PeerScore> peers)
-        {
-            if (peers.Count < 2) return 0;
-            var ordered = peers.Select(p => p.Score).OrderBy(s => s).ToArray();
-            var low = ordered[(int)Math.Floor(0.10 * (ordered.Length - 1))];
-            var high = ordered[(int)Math.Ceiling(0.90 * (ordered.Length - 1))];
-            return high - low;
         }
 
         private static double ScoringLevelOf(Chart chart, IDictionary<Guid, double> scoringLevels)

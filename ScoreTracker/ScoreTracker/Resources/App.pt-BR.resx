@@ -2289,9 +2289,6 @@
   <data name="From {0}" xml:space="preserve">
     <value>A partir de {0}</value>
   </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>de {0} jogadores como você</value>
-  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Com {0} pontuações</value>
   </data>

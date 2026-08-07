@@ -70,23 +70,6 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task EvidenceReportsVoicesAndSpreadNotJustHeadcount()
-    {
-        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
-        ctx.WithPeerScore(chart, 910_000, levelsGrownSince: 4)
-            .WithPeerScore(chart, 950_000)
-            .WithPeerScore(chart, 990_000);
-
-        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
-
-        var evidence = result.Evidence[chart.Id];
-        Assert.Equal(3, evidence.PeerCount);
-        Assert.True(evidence.EffectivePeers < evidence.PeerCount,
-            "an outgrown peer should be worth less than a whole voice");
-        Assert.True(evidence.Spread > 0, "three different scores should report a spread");
-    }
-
-    [Fact]
     public async Task ChartsOutsideTheScoringLevelWindowAreNotProjected()
     {
         // Competitive level 20, window +/-2: a chart scoring at 24 is out of scope even
@@ -208,7 +191,6 @@ public sealed class PumbilityProjectionSagaTests
         // everything that was dropped.
         Assert.True(result.ProjectedGains.Values.Min() > 0);
         Assert.Equal(100, result.ExpectedScores.Count);
-        Assert.Equal(100, result.Evidence.Count);
     }
 
     [Fact]
@@ -304,7 +286,6 @@ public sealed class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         Assert.True(result.ExpectedScores.ContainsKey(chart.Id));
-        Assert.Equal(4, result.Evidence[chart.Id].PeerCount);
     }
 
     [Fact]
@@ -333,9 +314,10 @@ public sealed class PumbilityProjectionSagaTests
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
 
-        Assert.Equal(2, result.Evidence[chart.Id].PeerCount);
-        Assert.True((int)result.ExpectedScores[chart.Id] > 905_000,
-            "each peer should be represented by what they proved they can score, not by their weaker attempt");
+        // The value IS the proof that each peer spoke once. Two voices at 980k and 985k put
+        // the p65 at 984,000; had the weaker attempts entered as voices of their own, four
+        // values would have dragged it to 980,500.
+        Assert.Equal(984_000, (int)result.ExpectedScores[chart.Id]);
     }
 
     [Fact]
