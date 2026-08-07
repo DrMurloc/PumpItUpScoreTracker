@@ -97,10 +97,18 @@ keep in sync, which is the drift the one-concept-one-component rule exists to pr
 The corner badge is the **gain**, because a Compact card is 72px tall and prints exactly one
 value — so it has to be the one the list is ranked by.
 
-**The border says which kind, the number says how much** (owner, 2026-08-06). Every gain badge
-is one treatment — green on a green outline over the black backdrop — and carries no meaning
-beyond its value. The kind rides the **card border**, in the tier list's own language rather
-than a second one invented here:
+**The jacket's other bottom corner is the grade the projection lands on** (owner, 2026-08-07).
+The difficulty bubble owns the top edge, so the two badges share the bottom: how much on the
+end, what you would come away with on the start. It is a picture rather than a second number,
+so "Compact prints one value" still holds — and the tooltip says it in words, because Compact
+has no body to put them in (rule 7).
+
+**The border says which kind, the number says how much** (owner, 2026-08-06). Both jacket
+badges are one treatment — the **mix accent** on the mix accent over the black backdrop — and
+carry no meaning beyond what they state. Deliberately not the pass green: the border language
+below owns green, and `MixPalette.Success` is one constant across every mix, so a badge painted
+with it says nothing about where you are. The kind rides the **card border**, in the tier list's
+own language rather than a second one invented here:
 
 | border | meaning |
 |---|---|
