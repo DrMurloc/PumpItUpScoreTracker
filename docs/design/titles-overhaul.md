@@ -107,16 +107,38 @@ answers *"what does this folder do for me"* and needs your pool, floor and media
 drawer asks the opposite question — *"which folder is this title"* — which is a property of the
 title, so `SuggestedTitleLevel` is deliberately **impersonal**:
 
-> **S19** · Assuming AAA with a TG plate.
+```
+S13   at SSS+
+S16   at AAA
+S20   at A
+Fifty charts, TG plate.
+```
 
-The lowest folder whose fifty charts reach the threshold at one fixed reference performance
-(AAA + Talented Game plate, both read from the shipped `ScoringConfiguration`), with singles
-priced one level up the base curve and nothing below level 10 (Phoenix 2 prices those at zero).
-A merged-pool rung names both types, since either side can fill it.
+The lowest folder whose fifty charts reach the threshold, answered at **three fixed reference
+grades** on a Talented Game plate, every multiplier read from the shipped `ScoringConfiguration`.
+Singles price one level up the base curve; nothing below level 10 counts (Phoenix 2 prices those at
+zero). A merged-pool rung names both types, since either side can fill it.
+
+One number was the wrong shape for this answer: how well you play moves it by **up to eight
+levels** ([S] ADVANCED LV.4 is S15 at SSS+ and S23 at A), so a single folder was right only for the
+player already performing at the reference. Three rungs bracket it instead, and AAA — what the
+drawer printed alone before — stays the middle one. **A is the floor on purpose**: it is the lowest
+grade whose multiplier is verified against live data, and below it the config is still extrapolating
+at −0.05 a step.
+
+Grades run best-first, so the levels ascend down the block and the column reads in the same order as
+every other grade list on the site. Two shapes fall out of the curve's ends and both are rendered
+rather than hidden:
+
+| Shape | Rungs | What the drawer does |
+|---|---|---|
+| Grades landing on the same folder | 19 of 70 | The run collapses to one row reading *at {lowest} or better* — the level-10 floor produces two identical rows for every easy title, and identical rows read as a rendering fault. 15 of those collapse all the way to a single row. |
+| No folder reaches it at that grade | 4 of 70 | [D] EXPERT LV.9/LV.10, DOUBLE MASTER, ABYSS ABSOLUTE. Fifty D29s at a bare A come to 19,260. The row keeps its place naming the ceiling that falls short — *D29 still isn't enough at A* — and never merges, since its folders are not an answer. |
 
 Owner call, field-test round 3: a personalised version was built first and rejected as too wordy —
-*"don't mix in personalization here."* The reference constant is the single knob if the low end
-reads wrong against real data.
+*"don't mix in personalization here."* Three impersonal rungs are the answer to the same problem
+that one was too blunt for. The reference grades are the single knob if a column reads wrong
+against real data.
 
 ## What was tried and dropped
 
@@ -137,5 +159,6 @@ reads wrong against real data.
 |---|---|
 | `TitleRailTests` (unit) | The rail inventory: counts, contiguous rungs, capstones, the EXTRA double-only trap, rung order ≠ requirement order, a PUMBILITY band per rail |
 | `TitleRailsTests` (component) | Section assembly, official marking across both mixes, rarity banding, the worn title |
-| `SuggestedTitleLevelTests` (component) | Impersonality, singles-one-level-up, monotonicity, the level-10 floor |
+| `SuggestedTitleLevelTests` (component) | Impersonality, singles-one-level-up, monotonicity, the level-10 floor; grade order, the merge, and that no rung falls short above one that doesn't |
+| `TitleDetailDrawerTests` (bUnit) | What a player reads: the grade on the same line as its folder, both types on a merged row, the merge and the no-folder row rendered rather than dropped |
 | `TitlesPageTests` (bUnit) | Rails render, filters dim, search matches a title's chart, drawer states, signed-out |

@@ -705,11 +705,14 @@
   <data name="Ask to be listed" xml:space="preserve">
     <value>掲載を申請</value>
   </data>
-  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
-    <value>{0}、{1}プレート想定です。</value>
-  </data>
   <data name="At least" xml:space="preserve">
     <value>以上</value>
+  </data>
+  <data name="at {0}" xml:space="preserve">
+    <value>{0}で</value>
+  </data>
+  <data name="at {0} or better" xml:space="preserve">
+    <value>{0}以上で</value>
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>クリアまでの試行回数</value>
@@ -2136,6 +2139,9 @@
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
+  </data>
+  <data name="Fifty charts, {0} plate." xml:space="preserve">
+    <value>譜面50枚、{0}プレート。</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
 	  <value>ファイルは10MB以下にしてください</value>
@@ -5945,6 +5951,9 @@
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>ステップ：{0}</value>
+  </data>
+  <data name="still isn't enough at {0}" xml:space="preserve">
+    <value>{0}では届きません</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>クリアしてもスコアは渋い</value>

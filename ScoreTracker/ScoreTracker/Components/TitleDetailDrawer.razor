@@ -53,13 +53,21 @@
 
                     @if (Suggested != null)
                     {
+                        @* How well you play moves this by up to eight levels, so it answers at
+                           three grades rather than picking one. See SuggestedTitleLevel. *@
                         <p class="title-label">@L["Suggested level"]</p>
                         <div class="title-suggest">
-                            <span class="title-suggest-folder">@string.Join(" · ", Suggested.Folders)</span>
-                            <span class="title-suggest-ask">
-                                @L["Assuming {0} with a {1} plate.", Suggested.Grade.GetName(), Suggested.Plate.GetShorthand()]
-                            </span>
+                            <div class="title-suggest-rows">
+                                @foreach (var rung in Suggested.Rungs)
+                                {
+                                    <div class="title-suggest-row @(rung.Reachable ? "" : "short")">
+                                        <span class="title-suggest-folder">@string.Join(" · ", rung.Folders)</span>
+                                        <span class="title-suggest-ask">@AskFor(rung)</span>
+                                    </div>
+                                }
+                            </div>
                         </div>
+                        <p class="title-hint">@L["Fifty charts, {0} plate.", Suggested.Plate.GetShorthand()]</p>
                     }
 
                     <p class="title-label">@L["How rare"]</p>
@@ -123,6 +131,15 @@
     private string? _loadedFor;
 
     private SuggestedLevel? Suggested => Rung == null ? null : SuggestedTitleLevel.For(Rung.Title);
+
+    /// <summary>What a suggested rung's folders are conditional on, in its own words.</summary>
+    private string AskFor(SuggestedRung rung)
+    {
+        var grade = rung.Grade.GetName();
+        if (!rung.Reachable) return L["still isn't enough at {0}", grade];
+
+        return rung.OrBetter ? L["at {0} or better", grade] : L["at {0}", grade];
+    }
 
     private string Percent =>
         Rung == null ? "0%"

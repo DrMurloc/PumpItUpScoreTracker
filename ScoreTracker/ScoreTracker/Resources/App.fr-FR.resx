@@ -705,11 +705,14 @@
   <data name="Ask to be listed" xml:space="preserve">
     <value>Demander le référencement</value>
   </data>
-  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
-    <value>En supposant {0} avec un plate {1}.</value>
-  </data>
   <data name="At least" xml:space="preserve">
     <value>Au moins</value>
+  </data>
+  <data name="at {0}" xml:space="preserve">
+    <value>avec {0}</value>
+  </data>
+  <data name="at {0} or better" xml:space="preserve">
+    <value>avec {0} ou mieux</value>
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Essais avant cette réussite</value>
@@ -2135,6 +2138,9 @@
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
+  </data>
+  <data name="Fifty charts, {0} plate." xml:space="preserve">
+    <value>Cinquante charts, plate {0}.</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
     <value>Le fichier ne peut pas dépasser 10 Mo</value>
@@ -5944,6 +5950,9 @@
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>steps de {0}</value>
+  </data>
+  <data name="still isn't enough at {0}" xml:space="preserve">
+    <value>ne suffit toujours pas avec {0}</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>avare en score même une fois passé</value>
