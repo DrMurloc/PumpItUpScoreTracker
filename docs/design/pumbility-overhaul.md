@@ -45,6 +45,8 @@ Owner rulings, 2026-08-05. These bind; do not re-litigate them in the build.
 | D7 | **The top 50 is collapsed and below the fold.** It is a reference, not the answer |
 | D8 | **No world-rank chip.** Offered and declined |
 | D9 | **"Kind" is not a column.** It restated the cell beside it — see §3.3 |
+| D10 | **A broken run plays no part in this page** (owner, 2026-08-07). *"Failed shit should not show anywhere on here."* A stage break rates zero, so it is not a score the player holds: it cannot occupy a pool slot, cannot set the bar, and does not count as having scored a chart. Enforced at the two top-50 reads rather than per call site, so the queries mean what their names say |
+| D11 | **A carryover target is priced, not gated.** A chart already scored in Phoenix 2 stays a target when the Phoenix 1 repricing beats what it currently contributes — same floor as the peer projection, one ranked list, both sources priced identically |
 
 ## 3. The page
 
@@ -104,7 +106,15 @@ than a second one invented here:
 |---|---|
 | solid success (`.tier-chart-card-pass`) | you hold a score on this chart and would beat it |
 | dashed success (`.tier-chart-card-other-mix`) | you hold it in *another mix* (§5) |
+| dotted grey (`.tier-chart-card-broken`) | you played it here and broke |
 | none | nobody has seen you play it |
+
+The fourth state is what D10 costs. Once a stage break holds no score, a chart the player broke
+on falls through the first two — and *no* border would claim they had never touched it, on
+exactly the charts the rule changed. It ranks below both pass states on purpose: where a chart is
+attempted here and passed in Phoenix 1, where the number came from is the more useful thing to
+say. Grey rather than the pass green because the run earned nothing, dotted rather than dashed so
+the three "we have seen you here" states stay separable at 72px.
 
 Same classes as the tier list, so the two pages cannot drift apart. A "Kind" column restated
 what the card already says, and read the same value down every row on Phoenix 1.
@@ -409,6 +419,18 @@ Supporting facts the section renders, all real:
 
 **A chart with no Phoenix 2 appearance is a fact, not a target.** It is stated once in the fact
 tile and never appears in the target list — you cannot go and play it.
+
+**A chart already scored here is still a target** (D11). Carryover used to admit only charts with
+no Phoenix 2 score at all, which dropped 985k-there-against-900k-here — a real gain, resting on
+the best evidence the page has — for the sole reason that the chart had been touched. It now asks
+the projection's question with the projection's floor: `Phoenix2Value − max(what you already get
+from the chart, the bar)`, kept when positive. A stage break here contributes nothing and so reads
+as unscored, which was the compounding half of the same bug: a chart the player broke on was
+excluded for having been "scored" while adding nothing to the pool.
+
+Note what this does *not* change: `Entries`, `ScoredHere`, `NotYetScored` and every figure in the
+table above are still the pool's fifty. The repricing is the same arithmetic it always was — only
+which rows become suggestions moved.
 
 ## 6. Technical scope
 
