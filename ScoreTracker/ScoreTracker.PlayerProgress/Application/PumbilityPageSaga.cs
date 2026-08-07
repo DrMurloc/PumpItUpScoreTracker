@@ -26,6 +26,20 @@ namespace ScoreTracker.PlayerProgress.Application
         /// <summary>How many charts just outside the pool the curve ghosts in.</summary>
         private const int WaitingRoomSize = 6;
 
+        /// <summary>
+        ///     How deep the Phoenix 1 repricing is kept. The pool is the first fifty; the rest
+        ///     are suggestion candidates, and the depth only has to outrun the target cap after
+        ///     already-scored and unavailable charts are filtered out.
+        /// </summary>
+        private const int CandidateDepth = 200;
+
+        /// <summary>
+        ///     How long the suggestion list runs, per source and again after the merge (owner,
+        ///     2026-08-06). Nobody plans past the first hundred, and the tail is payload and
+        ///     scrolling for rows no one reads.
+        /// </summary>
+        private const int MaxTargets = 100;
+
         private readonly IMediator _mediator;
         private readonly IScoreReader _scores;
 
@@ -92,14 +106,24 @@ namespace ScoreTracker.PlayerProgress.Application
                              bar, projection, mine, cancellationToken))
                     targets[carried.ChartId] = carried;
 
+            // One ranked list of likely gains with two sources of evidence behind it, not two
+            // lists stapled together. The cut happens AFTER the merge so a chart both sources
+            // named cannot spend two of the hundred slots.
+            var top = targets.Values
+                .OrderByDescending(t => t.Gain)
+                .Take(MaxTargets)
+                .ToArray();
+
             return new PumbilityPageRecord(mix, request.Pool, pool.Sum(p => p.Value), bar, barChart,
-                pool, waiting, targets.Values.OrderByDescending(t => t.Gain).ToArray());
+                pool, waiting, top);
         }
 
         /// <summary>
-        ///     Phoenix 1 scores that would land in the requested Phoenix 2 pool, as targets.
-        ///     Excludes anything already scored here (done) and anything with no Phoenix 2
-        ///     appearance (unplayable — the carryover panel states those as a fact instead).
+        ///     Phoenix 1 scores worth playing here, as targets. The pool AND everything ranked
+        ///     behind it: capping at the fiftieth hid the rows with the best evidence there is,
+        ///     because against a thin Phoenix 2 pool a repriced #73 still clears the bar
+        ///     (owner, 2026-08-06). Excludes anything already scored here (done) and anything
+        ///     with no Phoenix 2 appearance (unplayable — the panel states those as a fact).
         /// </summary>
         private async Task<IReadOnlyList<PumbilityTarget>> CarryoverTargets(Guid userId, ChartType? poolScope,
             IReadOnlyDictionary<Guid, Chart> charts, int? bar, PumbilityProjection projection,
@@ -108,7 +132,7 @@ namespace ScoreTracker.PlayerProgress.Application
             var carryover = await Handle(new ProjectPhoenix2CarryoverQuery(userId, poolScope), cancellationToken);
             var floor = bar ?? 0;
 
-            return carryover.Entries
+            return carryover.Entries.Concat(carryover.Candidates)
                 .Where(e => e.Phoenix2Score == null && e.AvailableInPhoenix2 && charts.ContainsKey(e.ChartId))
                 .Select(e => new
                 {
@@ -127,6 +151,8 @@ namespace ScoreTracker.PlayerProgress.Application
                     // report about how many people were heard from.
                     null,
                     TargetSource.Phoenix1))
+                .OrderByDescending(t => t.Gain)
+                .Take(MaxTargets)
                 .ToArray();
         }
 
@@ -153,13 +179,17 @@ namespace ScoreTracker.PlayerProgress.Application
             // The repricing: every Phoenix 1 score run through Phoenix 2's formula, which pays
             // a Singles chart one level up the base curve and zeroes anything under level 10.
             // That rule alone can turn a doubles pool into a singles pool.
-            var repriced = phoenixScores
+            // Repriced to CandidateDepth, sliced at PoolSize. Every score was already being
+            // repriced before the Take, so reading past the fiftieth costs nothing: the pool
+            // figures below still come from the first fifty and mean exactly what they did.
+            var ranked = phoenixScores
                 .Select(s => (Score: s, Chart: phoenixCharts[s.ChartId],
                     Value: p2Scoring.GetScore(phoenixCharts[s.ChartId], s.Score!.Value,
                         s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)))
                 .OrderByDescending(x => x.Value)
-                .Take(PoolSize)
+                .Take(CandidateDepth)
                 .ToArray();
+            var repriced = ranked.Take(PoolSize).ToArray();
 
             var phoenix1Pool = phoenixScores
                 .Select(s => (Chart: phoenixCharts[s.ChartId],
@@ -169,12 +199,19 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Take(PoolSize)
                 .ToArray();
 
-            var entries = repriced
-                .Select((x, i) => new CarryoverEntry(i + 1, x.Score.ChartId, x.Score.Score!.Value,
+            CarryoverEntry Entry((RecordedPhoenixScore Score, Chart Chart, double Value) x, int index)
+            {
+                return new CarryoverEntry(index + 1, x.Score.ChartId, x.Score.Score!.Value,
                     x.Score.Score!.Value.LetterGradeFor(MixEnum.Phoenix),
                     Math.Round(x.Value, 2),
                     phoenix2Scores.TryGetValue(x.Score.ChartId, out var here) ? here : null,
-                    phoenix2Charts.Contains(x.Score.ChartId)))
+                    phoenix2Charts.Contains(x.Score.ChartId));
+            }
+
+            var entries = repriced.Select(Entry).ToArray();
+            // Place keeps counting past the pool, so a candidate can say it was your #73.
+            var candidates = ranked.Skip(PoolSize)
+                .Select((x, i) => Entry(x, PoolSize + i))
                 .ToArray();
 
             return new Phoenix2CarryoverRecord(
@@ -187,7 +224,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 repriced.Count(x => x.Chart.Type == ChartType.Double),
                 phoenix1Pool.Count(x => x.Chart.Type == ChartType.Single),
                 phoenix1Pool.Count(x => x.Chart.Type == ChartType.Double),
-                entries);
+                entries,
+                candidates);
         }
     }
 }

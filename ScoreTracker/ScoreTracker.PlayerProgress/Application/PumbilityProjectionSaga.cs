@@ -32,8 +32,8 @@ namespace ScoreTracker.PlayerProgress.Application
         /// </summary>
         private const double ScoringLevelWindow = 2.0;
 
-        /// <summary>How many suggestions per chart type survive to the page (owner, 2026-08-06).</summary>
-        private const int MaxTargetsPerType = 100;
+        /// <summary>How many peer-estimated suggestions survive to the merge (owner, 2026-08-06).</summary>
+        private const int MaxTargets = 100;
 
         /// <summary>
         ///     Levels of slack when reading the reference mix, which rerated these charts — a
@@ -125,15 +125,14 @@ namespace ScoreTracker.PlayerProgress.Application
             }
 
             // Ranked advice, not an inventory. A full window clears the bar on well over a
-            // thousand charts, and nobody plans past the first hundred — the tail is payload,
-            // render and scrolling for suggestions no one reads.
+            // thousand charts, and nobody plans past the first hundred.
             //
-            // Per TYPE, not overall: capping the merged list would let a singles-heavy top
-            // hundred empty out the Doubles filter, which is the one place a doubles player
-            // looks.
+            // Flat, not per chart type: the request itself carries the type now (the page's
+            // pool selector scopes the whole query), so a per-type split would be counting
+            // groups that only ever have one member.
             var ranked = projectedGains
-                .GroupBy(kv => charts[kv.Key].Type)
-                .SelectMany(g => g.OrderByDescending(kv => kv.Value).Take(MaxTargetsPerType))
+                .OrderByDescending(kv => kv.Value)
+                .Take(MaxTargets)
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             return new PumbilityProjection(
