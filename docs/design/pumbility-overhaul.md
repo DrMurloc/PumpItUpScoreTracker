@@ -95,23 +95,41 @@ keep in sync, which is the drift the one-concept-one-component rule exists to pr
 The corner badge is the **gain**, because a Compact card is 72px tall and prints exactly one
 value — so it has to be the one the list is ranked by.
 
-**Three kinds of row, said by the badge and never by a column.** Green-filled = you hold a score
-here and would beat it. Green-outlined = you hold it in *another mix* (§5). Neither = nobody has
-seen you play it. A "Kind" column restated what the card already says, and read the same value
-down every row on Phoenix 1.
+**The border says which kind, the number says how much** (owner, 2026-08-06). Every gain badge
+is one treatment — green on a green outline over the black backdrop — and carries no meaning
+beyond its value. The kind rides the **card border**, in the tier list's own language rather
+than a second one invented here:
 
-Compact has no room for a word on the card, so the **legend prints all three** — and only the
-kinds the grid actually contains, since a swatch for an absent state reads as one you failed to
-find. Comfortable needs no legend: every card's why-line says its kind in words. That is rule 8
-satisfied at both densities without a colour travelling alone at either.
+| border | meaning |
+|---|---|
+| solid success (`.tier-chart-card-pass`) | you hold a score on this chart and would beat it |
+| dashed success (`.tier-chart-card-other-mix`) | you hold it in *another mix* (§5) |
+| none | nobody has seen you play it |
 
-**In Phoenix 2 the list mixes two kinds of evidence, and says which is which.** A chart from
-the player's Phoenix 1 pool that they have not scored here is not estimated — the score is on
-record and repricing it is arithmetic. Those rows **replace** any peer estimate for the same
-chart (owner, 2026-08-06: *"there is no better data than the actual scores you had before"*)
-and are the only signal that works at a mix launch. Table density keeps a **Based on** column
-with the word spelled out, because a table cell can hold a word where a 72px card cannot; it
-renders only where the list actually mixes sources.
+Same classes as the tier list, so the two pages cannot drift apart. A "Kind" column restated
+what the card already says, and read the same value down every row on Phoenix 1.
+
+**Compact only.** Comfortable says the kind in words on every card's why-line, and its To-Do
+bookmark would otherwise paint a fourth ring competing with the three that mean something — so
+it turns the state border off (`ShowStateBorder="false"`, a flag that defaults *on* so the tier
+list is unaffected). Compact has no room for a word, so the **legend prints every kind the grid
+contains** — and only those, since a swatch for an absent state reads as one you failed to find.
+Rule 8 is satisfied at both densities without a colour travelling alone at either.
+
+**One ranked list, two sources of evidence.** Not two lists stapled together: up to 100 peer
+estimates and up to 100 carried Phoenix 1 scores, merged and cut to 100. The cut happens *after*
+the merge, so a chart both sources name cannot spend two slots.
+
+A chart from the player's Phoenix 1 record that they have not scored here is not estimated — the
+score is on record and repricing it is arithmetic. Those rows **replace** any peer estimate for
+the same chart (owner: *"there is no better data than the actual scores you had before"*) and are
+the only signal that works at a mix launch. Table density keeps a **Based on** column with the
+word spelled out, because a table cell can hold a word where a 72px card cannot; it renders only
+where the list actually mixes sources.
+
+**No filters on the list.** A filter that re-runs the query is what the hero's pool selector
+already is, and two controls driving one piece of state is one too many. The max-level filter
+was dropped outright — narrow use case, and it cost a control on every visit.
 
 ⚠ **The "why" line is OPEN, and the mock's version is now dishonest.** The mock renders badge
 chips ("▲ Anchor Runs · ▼ Twists") as the explanation for each target. That was drawn when the
@@ -128,26 +146,10 @@ Density trio via `Density__Pumbility`, governing the targets only, using the sit
 control — a `MudButtonGroup` of `ViewComfy` / `GridView` / `TableRows` icon buttons, the same
 one the tier list carries.
 
-**The list narrows and pages.** A full projection runs to hundreds of charts, and the page is a
-plan rather than an archive:
-
-- **Type** — All / Singles / Doubles, rendered only where the list actually holds both. On a
-  Phoenix 2 Singles board the projection is already scoped to one type, so the control would
-  have two states that do nothing.
-- **Max level** — the printed level on the bubble, offering only levels the suggestions actually
-  contain, so the ceiling can never select an empty result by accident.
-- **Pagination** sized by density (Comfortable 24, Compact 60, Table 50) — one page size would
-  be wrong at two of the three. Narrowing the filter **clamps** the current page rather than
-  resetting it, so a density flip keeps you roughly where you were.
-
-Both filters are **view** concerns: they change what the list shows, never what your PUMBILITY
-is measured against, and they apply to carried Phoenix 1 rows exactly as they do to estimates
-(owner, 2026-08-06). A carried row is a suggestion in the same list — an unfiltered block among
-filtered ones reads as a bug.
-
-Two empty states, deliberately distinct: *nothing clears your bar yet* is a fact about the
-account; *nothing matched those filters* is a fact about the controls, and only one of them is
-the player's to fix.
+**Pagination** sized by density (Comfortable 24, Compact 60, Table 50) — one page size would be
+wrong at two of the three. A shorter list **clamps** the current page rather than resetting it,
+so a density flip or a pool switch keeps you roughly where you were instead of throwing you back
+to the top.
 
 ### 3.4 The pool board
 
@@ -376,6 +378,19 @@ there would invent a stat.
 Every Phoenix 1 score repriced under `Phoenix2PumbilityScoring` — singles priced one level up the
 base curve, sub-10 charts at zero, broken plays at zero — then the top 50 taken for each of All,
 Singles and Doubles.
+
+**The panel's fifty is the definition; the suggestions are not bound by it** (owner, 2026-08-06).
+PUMBILITY *is* the top fifty, so `Entries` and every figure in the table below come from exactly
+that. But capping *suggestions* at the pool hid the rows carrying the best evidence the site has:
+against a thin Phoenix 2 pool a repriced **#73** clears the bar as surely as a #3 does, and it is
+still a score the player has actually hit. So the repricing is kept to `CandidateDepth` (200) and
+split — `Entries` is the pool, `Candidates` is what ranks behind it, each carrying its real place
+so a row can say it was your #73. This costs nothing: every score was already being repriced
+before the `Take(50)`.
+
+Under 50 Phoenix 2 scores the bar is **zero**, so every candidate qualifies and the 100-target cap
+is what actually limits the list. That is the launch case and it is correct — *"50 scores takes 3
+play sessions."*
 
 **The finding this section exists for.** On the owner's account the Phoenix 1 top 50 is **46
 Doubles / 4 Singles**. The same fifty scores under Phoenix 2's rules are **18 Doubles / 32
