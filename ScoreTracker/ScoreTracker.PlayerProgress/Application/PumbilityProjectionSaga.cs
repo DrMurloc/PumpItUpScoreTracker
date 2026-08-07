@@ -32,21 +32,46 @@ namespace ScoreTracker.PlayerProgress.Application
         /// </summary>
         private const double ScoringLevelWindow = 2.0;
 
+        /// <summary>How many peer-estimated suggestions survive to the merge (owner, 2026-08-06).</summary>
+        private const int MaxTargets = 100;
+
+        /// <summary>
+        ///     Levels of slack when reading the reference mix, which rerated these charts — a
+        ///     chart sitting at 21 here may sit at 22 or 20 there.
+        /// </summary>
+        private const int ReferenceLevelSlack = 2;
+
+        private readonly PumbilityProjectionCache _cache;
         private readonly IPlayerHistoryRepository _history;
         private readonly IMediator _mediator;
         private readonly IScoreReader _scores;
         private readonly IPlayerStatsReader _stats;
 
         public PumbilityProjectionSaga(IMediator mediator, IPlayerStatsReader stats, IScoreReader scores,
-            IPlayerHistoryRepository history)
+            IPlayerHistoryRepository history, PumbilityProjectionCache cache)
         {
             _mediator = mediator;
             _stats = stats;
             _scores = scores;
             _history = history;
+            _cache = cache;
         }
 
         public async Task<PumbilityProjection> Handle(ProjectPumbilityGainsQuery request,
+            CancellationToken cancellationToken)
+        {
+            // Held between visits and dropped when this player's scores move
+            // (PumbilityProjectionCacheConsumer). Everything below is sized by the player
+            // population, not by the viewer, so a repeat visit should not pay for it again.
+            if (_cache.TryGet(request.UserId, request.Mix, request.ChartType, out var cached) && cached != null)
+                return cached;
+
+            var projection = await Project(request, cancellationToken);
+            _cache.Set(request.UserId, request.Mix, request.ChartType, projection);
+            return projection;
+        }
+
+        private async Task<PumbilityProjection> Project(ProjectPumbilityGainsQuery request,
             CancellationToken cancellationToken)
         {
             var mix = request.Mix;
@@ -68,7 +93,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 ? new[] { only }
                 : new[] { ChartType.Single, ChartType.Double };
 
-            var scope = new ProjectionScope(mix, charts, scoringLevels, myStats);
+            var scope = new ProjectionScope(mix, charts, scoringLevels, myStats, scoring, pool.Baseline);
             var into = new ProjectionResults(expectedScore, evidence);
 
             foreach (var chartType in types)
@@ -99,12 +124,28 @@ namespace ScoreTracker.PlayerProgress.Application
                 projectedGains[kv.Key] = (int)gain;
             }
 
-            return new PumbilityProjection(expectedScore, projectedGains, chartDifficulty, evidence);
+            // Ranked advice, not an inventory. A full window clears the bar on well over a
+            // thousand charts, and nobody plans past the first hundred.
+            //
+            // Flat, not per chart type: the request itself carries the type now (the page's
+            // pool selector scopes the whole query), so a per-type split would be counting
+            // groups that only ever have one member.
+            var ranked = projectedGains
+                .OrderByDescending(kv => kv.Value)
+                .Take(MaxTargets)
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            return new PumbilityProjection(
+                expectedScore.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value),
+                ranked,
+                chartDifficulty,
+                evidence.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
         private sealed record ProjectionScope(MixEnum Mix, IReadOnlyDictionary<Guid, Chart> Charts,
-            IDictionary<Guid, double> ScoringLevels, PlayerStatsRecord MyStats);
+            IDictionary<Guid, double> ScoringLevels, PlayerStatsRecord MyStats,
+            ScoringConfiguration Scoring, int Baseline);
 
         /// <summary>What it writes. Both types accumulate into one pair, which is why they are passed in.</summary>
         private sealed record ProjectionResults(IDictionary<Guid, PhoenixScore> ExpectedScore,
@@ -113,7 +154,7 @@ namespace ScoreTracker.PlayerProgress.Application
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
             ProjectionResults into, CancellationToken cancellationToken)
         {
-            var (mix, charts, scoringLevels, myStats) = scope;
+            var (mix, charts, scoringLevels, myStats, scoring, baseline) = scope;
 
             // The player is measured in the mix they are looking at: their pool, their bar and
             // their level all come from this mix and nowhere else. The reference mix is a
@@ -133,6 +174,11 @@ namespace ScoreTracker.PlayerProgress.Application
             var scoped = charts.Values
                 .Where(c => c.Type == chartType)
                 .Where(c => Math.Abs(ScoringLevelOf(c, scoringLevels) - myLevel) <= ScoringLevelWindow)
+                // A chart whose value at a PERFECT game still sits under the bar can never pay,
+                // so nothing downstream would keep it. Dropping it here costs nothing and is
+                // exact — but it is the difference between asking the database for every peer's
+                // scores on ~600 charts and asking for the couple hundred that could matter.
+                .Where(c => scoring.GetScore(c, PhoenixScore.Max, PhoenixPlate.PerfectGame, false) > baseline)
                 .Select(c => c.Id)
                 .ToArray();
             if (scoped.Length == 0) return;
@@ -145,22 +191,30 @@ namespace ScoreTracker.PlayerProgress.Application
             cohort.Remove(userId);
             if (cohort.Count == 0) return;
 
-            // Their level NOW, and their whole level history, so a score can be dated against
-            // the player they were when they set it. One read each for the cohort (§6.3).
-            // Both come from the reference mix, which is where the level series actually runs;
-            // a peer the reference mix has never seen falls back to this one.
-            var levelNow = (await _stats.GetStats(reference, cohort, cancellationToken))
+            var peerScores = await BestAcrossMixes(mix, reference, cohort, scoped, charts, chartType,
+                cancellationToken);
+
+            // Their level NOW, and their level history, so a score can be dated against the
+            // player they were when they set it. Both come from the reference mix, which is
+            // where the level series actually runs; a peer the reference mix has never seen
+            // falls back to this one.
+            //
+            // History is read for the peers who ACTUALLY turned up in the sweep, not for the
+            // whole cohort — a cohort is several hundred players and each carries a full
+            // timeline, so the ones who never played a chart in the window were pure freight.
+            var voices = peerScores.Select(s => s.UserId).Distinct().ToArray();
+            if (voices.Length == 0) return;
+
+            var levelNow = (await _stats.GetStats(reference, voices, cancellationToken))
                 .ToDictionary(s => s.UserId, s => CompetitiveLevelFor(s, chartType));
             if (reference != mix)
-                foreach (var stats in await _stats.GetStats(mix, cohort, cancellationToken))
+                foreach (var stats in await _stats.GetStats(mix, voices, cancellationToken))
                     if (!levelNow.ContainsKey(stats.UserId))
                         levelNow[stats.UserId] = CompetitiveLevelFor(stats, chartType);
 
-            var history = (await _history.GetHistory(reference, cohort, cancellationToken))
+            var history = (await _history.GetHistory(reference, voices, cancellationToken))
                 .GroupBy(h => h.UserId)
                 .ToDictionary(g => g.Key, g => g.OrderBy(h => h.Date).ToArray());
-
-            var peerScores = await BestAcrossMixes(mix, reference, cohort, scoped, cancellationToken);
 
             foreach (var group in peerScores.GroupBy(s => s.ChartId))
             {
@@ -203,13 +257,29 @@ namespace ScoreTracker.PlayerProgress.Application
         /// </summary>
         private async Task<IReadOnlyCollection<UserPhoenixScore>> BestAcrossMixes(MixEnum mix, MixEnum reference,
             IReadOnlyCollection<Guid> cohort, IReadOnlyCollection<Guid> chartIds,
-            CancellationToken cancellationToken)
+            IReadOnlyDictionary<Guid, Chart> charts, ChartType chartType, CancellationToken cancellationToken)
         {
-            var scores = (await _scores.GetPlayerScores(mix, cohort, chartIds, cancellationToken)).ToList();
+            var wanted = chartIds.ToHashSet();
+            // The scoped set IS a level band, so it is asked for as one: a range scan the
+            // index can serve, rather than several hundred chart GUIDs in an IN list. The
+            // exact set is applied in memory below, so the result is identical either way.
+            var levels = chartIds.Select(id => (int)charts[id].Level).ToArray();
+            var min = levels.Min();
+            var max = levels.Max();
+
+            var scores = (await _scores.GetPlayerScoresInLevelRange(mix, cohort, chartType, min, max,
+                cancellationToken)).ToList();
+
             if (reference != mix)
-                scores.AddRange(await _scores.GetPlayerScores(reference, cohort, chartIds, cancellationToken));
+                // Widened, because the reference mix rerated these charts and a chart's level
+                // there is not necessarily its level here. Over-fetching costs a few rows; the
+                // wanted-set filter below makes it exact.
+                scores.AddRange(await _scores.GetPlayerScoresInLevelRange(reference, cohort, chartType,
+                    Math.Max(1, min - ReferenceLevelSlack), Math.Min(DifficultyLevel.Max, max + ReferenceLevelSlack),
+                    cancellationToken));
 
             return scores
+                .Where(s => wanted.Contains(s.ChartId))
                 .GroupBy(s => (s.UserId, s.ChartId))
                 .Select(g => g.OrderByDescending(s => (int)s.Score).First())
                 .ToArray();

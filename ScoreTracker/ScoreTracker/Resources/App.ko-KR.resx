@@ -3210,9 +3210,6 @@
   <data name="Max Letter Grade" xml:space="preserve">
     <value>최고 랭크</value>
   </data>
-  <data name="Max Level" xml:space="preserve">
-    <value>최고 레벨</value>
-  </data>
   <data name="Max Note Count" xml:space="preserve">
     <value>최대 노트 수</value>
   </data>
@@ -3692,9 +3689,6 @@
   </data>
   <data name="No source published" xml:space="preserve">
     <value>소스 미공개</value>
-  </data>
-  <data name="No suggestions match those filters." xml:space="preserve">
-    <value>해당 필터와 일치하는 추천이 없습니다.</value>
   </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>지금은 추천할 채보가 없습니다. 다른 목표를 선택하거나 먼저 점수를 가져와주세요.</value>
@@ -7796,9 +7790,6 @@
   <data name="{0} of {1} scores identical" xml:space="preserve">
     <value>{1}개 중 {0}개 점수 일치</value>
   </data>
-  <data name="{0} of {1} suggestions" xml:space="preserve">
-    <value>추천 {1}개 중 {0}개</value>
-  </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>기록된 유저 {1}명 중 {0}명</value>
   </data>
@@ -7870,9 +7861,6 @@
   </data>
   <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
     <value>노래 {0}곡이 목록에서 빠지면서 채보 {1}개가 사라졌습니다. 기록은 프로필에 그대로 남습니다.</value>
-  </data>
-  <data name="{0} suggestions" xml:space="preserve">
-    <value>추천 {0}개</value>
   </data>
   <data name="{0} titles" xml:space="preserve">
     <value>타이틀 {0}개</value>

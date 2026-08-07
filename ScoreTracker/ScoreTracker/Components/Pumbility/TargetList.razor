@@ -24,10 +24,6 @@
 {
     <p class="pmb-empty">@L["Nothing here clears your bar yet — play a few more charts and check back."]</p>
 }
-else if (Shown.Count == 0)
-{
-    <p class="pmb-empty">@L["No suggestions match those filters."]</p>
-}
 else if (Density == UiDensity.Table)
 {
     <div class="tier-table-wrap">
@@ -80,16 +76,21 @@ else if (Density == UiDensity.Compact)
        printed value. The value here is the gain, since that is what the list is ranked
        by — nothing else on a 72px card would earn its space.
 
-       The legend reads the whole filtered set, not the page: paging to a slice that
-       happens to hold no carryover row should not retire the word for it mid-browse. *@
-    <CornerLegend Targets="Filtered"></CornerLegend>
+       The BORDER says which kind of row it is, in the tier list's own language: solid you
+       hold a score here, dashed you hold it in another mix, bare nobody has seen you play
+       it. The number stays one treatment throughout and means only "how much".
+
+       The legend reads the whole list, not the page: paging to a slice that happens to hold
+       no carryover row should not retire the word for it mid-browse. *@
+    <CornerLegend Targets="Targets"></CornerLegend>
     <div class="tier-card-grid tier-card-grid-compact">
         @foreach (var target in Shown)
         {
             var chart = Charts[target.ChartId];
             <TierListChartCard Chart="chart" Density="UiDensity.Compact"
-                               CornerBadge="@($"+{target.Gain:N0}")"
-                               CornerBadgeClass="@CornerClass(target)"
+                               CornerBadge="@($"+{target.Gain:N0}")" CornerBadgeClass="pmb-corner-gain"
+                               Passed="target.Current != null"
+                               PassedInAnotherMix="target.Source == TargetSource.Phoenix1"
                                TooltipNote="@CornerMeaning(target)"
                                ShowName="false" ShowToDo="false"
                                OnOpen="OpenById"></TierListChartCard>
@@ -98,13 +99,16 @@ else if (Density == UiDensity.Compact)
 }
 else
 {
+    @* No border here: Comfortable says which kind it is in words, on the why-line under
+       every card, and the To-Do bookmark would otherwise paint a fourth ring nobody asked
+       for. *@
     <div class="tier-card-grid">
         @foreach (var target in Shown)
         {
             var chart = Charts[target.ChartId];
             <TierListChartCard Chart="chart" Density="UiDensity.Comfortable"
-                               CornerBadge="@($"+{target.Gain:N0}")"
-                               CornerBadgeClass="@CornerClass(target)"
+                               CornerBadge="@($"+{target.Gain:N0}")" CornerBadgeClass="pmb-corner-gain"
+                               ShowStateBorder="false"
                                ShowPlay="true" OnPlay="OnPlayById"
                                ShowToDo="ShowToDo" IsToDo="ToDos.Contains(target.ChartId)" OnToDo="OnToDo"
                                OnOpen="OpenById"
@@ -142,16 +146,8 @@ else
 
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 
-    /// <summary>Null shows both. Applies to carried Phoenix 1 rows exactly as it does to estimates.</summary>
-    [Parameter] public ChartType? TypeFilter { get; set; }
-
-    /// <summary>Printed difficulty ceiling — the number on the bubble, which is what a player filters by.</summary>
-    [Parameter] public int? MaxLevel { get; set; }
-
-    /// <summary>Reports how much of the list survived the filters, so the page can print it.</summary>
-    [Parameter] public EventCallback<int> OnFilteredCountChanged { get; set; }
-
-    // A full projection runs to hundreds of charts and the page is a plan, not an archive.
+    // The list arrives already scoped and already ranked: the hero's pool selector re-runs the
+    // whole query per chart type, so there is nothing left for the component to narrow.
     // Compact fits far more per screen than Comfortable does, so the page size follows the
     // density rather than forcing one number to be wrong at two of the three.
     private int PageSize => Density switch
@@ -162,63 +158,31 @@ else
     };
 
     private int _page = 1;
-    private int _lastFilteredCount = -1;
-
-    // Filtered once per parameter set, not once per read: Shown, PageCount, HasCarryover and
-    // the render itself all want it, and re-running the Where each time is four sweeps of a
-    // list that can run to several hundred.
-    private IReadOnlyList<PumbilityTarget> _filtered = Array.Empty<PumbilityTarget>();
-
-    private IReadOnlyList<PumbilityTarget> Filtered => _filtered;
 
     private IReadOnlyList<PumbilityTarget> Shown =>
-        _filtered.Skip((_page - 1) * PageSize).Take(PageSize).ToArray();
+        Targets.Skip((_page - 1) * PageSize).Take(PageSize).ToArray();
 
-    private int PageCount => (_filtered.Count + PageSize - 1) / PageSize;
+    private int PageCount => (Targets.Count + PageSize - 1) / PageSize;
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
-        _filtered = Filter();
-
-        // A narrowed filter can leave the reader stranded on a page that no longer exists,
-        // which renders as an empty list rather than as "no matches" — so clamp rather than
-        // reset: a density flip changes the page size and should keep you roughly in place.
+        // A shorter list can leave the reader stranded on a page that no longer exists, which
+        // renders as an empty list rather than as an empty state — so clamp rather than reset:
+        // a density flip changes the page size and should keep you roughly in place.
         if (_page > Math.Max(1, PageCount)) _page = Math.Max(1, PageCount);
-
-        if (_filtered.Count != _lastFilteredCount)
-        {
-            _lastFilteredCount = _filtered.Count;
-            await OnFilteredCountChanged.InvokeAsync(_filtered.Count);
-        }
-    }
-
-    private IReadOnlyList<PumbilityTarget> Filter()
-    {
-        if (TypeFilter == null && MaxLevel == null) return Targets;
-        return Targets.Where(t => Charts.TryGetValue(t.ChartId, out var chart)
-                                  && (TypeFilter == null || chart.Type == TypeFilter)
-                                  && (MaxLevel == null || (int)chart.Level <= MaxLevel)).ToArray();
     }
 
     private void GoToPage(int page) => _page = page;
 
     /// <summary>Only worth a column when the list actually mixes evidence.</summary>
-    private bool HasCarryover => _filtered.Any(t => t.Source == TargetSource.Phoenix1);
+    private bool HasCarryover => Targets.Any(t => t.Source == TargetSource.Phoenix1);
 
     private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
 
     private Task OnPlayById(Guid chartId) => OnPlay.InvokeAsync(Charts[chartId]);
 
-    // Three kinds of row, and the corner is the only place a Compact card can say which:
-    // a score you already hold elsewhere, a score you hold here and would beat, and one
-    // nobody has seen you play. The legend prints all three (rule 8).
-    private static string CornerClass(PumbilityTarget target) => target switch
-    {
-        { Source: TargetSource.Phoenix1 } => "pmb-corner-carry",
-        { Current: not null } => "pmb-corner-up",
-        _ => "pmb-corner-new"
-    };
-
+    // Compact hides the body, so the words for the three kinds ride the tooltip and the
+    // legend (rule 8: the border's colour never travels alone).
     private string CornerMeaning(PumbilityTarget target) => target switch
     {
         { Source: TargetSource.Phoenix1 } => L["Carried from Phoenix 1"],

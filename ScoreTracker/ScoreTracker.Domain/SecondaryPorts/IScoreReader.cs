@@ -46,6 +46,19 @@ public interface IScoreReader
     Task<IEnumerable<UserPhoenixScore>> GetPlayerScores(MixEnum mix, IEnumerable<Guid> userIds,
         IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Named best attempts for a set of players across a mix's level range and chart type.
+    ///     <para>
+    ///         The chart-id overload above takes the same shape as a list of GUIDs, which for a
+    ///         cohort read is several hundred of them — a parameter list SQL Server plans badly.
+    ///         A caller whose chart set IS a level band should ask for the band and narrow in
+    ///         memory: one indexed range scan instead of a second giant IN.
+    ///     </para>
+    /// </summary>
+    Task<IEnumerable<UserPhoenixScore>> GetPlayerScoresInLevelRange(MixEnum mix, IEnumerable<Guid> userIds,
+        ChartType chartType, DifficultyLevel minimumLevel, DifficultyLevel maximumLevel,
+        CancellationToken cancellationToken = default);
+
     /// <summary>Named best attempts for a set of players on one chart in a mix.</summary>
     Task<IEnumerable<UserPhoenixScore>> GetPhoenixScores(MixEnum mix, IEnumerable<Guid> userIds, Guid chartId,
         CancellationToken cancellationToken = default);

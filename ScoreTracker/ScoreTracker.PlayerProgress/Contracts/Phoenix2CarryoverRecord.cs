@@ -23,6 +23,13 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///     Singles chart one level up, so a doubles pool can become a singles pool and the player's
 ///     whole grind priority inverts.
 /// </param>
+/// <param name="Entries">The repriced pool — the top fifty, which is what PUMBILITY means.</param>
+/// <param name="Candidates">
+///     Repriced scores ranked past the fiftieth. They are NOT the pool and never count toward
+///     its figures, but they are still scores the player has actually hit: against an empty
+///     Phoenix 2 pool a repriced #73 can beat the bar comfortably. Capping suggestions at the
+///     pool hid exactly the rows carrying the best evidence there is (owner, 2026-08-06).
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record Phoenix2CarryoverRecord(
     double Projected,
@@ -34,7 +41,8 @@ public sealed record Phoenix2CarryoverRecord(
     int DoublesInPool,
     int Phoenix1SinglesInPool,
     int Phoenix1DoublesInPool,
-    IReadOnlyList<CarryoverEntry> Entries);
+    IReadOnlyList<CarryoverEntry> Entries,
+    IReadOnlyList<CarryoverEntry> Candidates);
 
 /// <summary>
 ///     One Phoenix 1 score repriced for Phoenix 2, with what it would be worth and whether the

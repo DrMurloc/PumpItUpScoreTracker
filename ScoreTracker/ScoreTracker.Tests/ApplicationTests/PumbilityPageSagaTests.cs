@@ -131,6 +131,67 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
+    public async Task CarryoverSuggestionsReachPastTheFiftiethScore()
+    {
+        // The gap this closes: capping suggestions at the pool hid rows carrying the best
+        // evidence there is. Against an empty Phoenix 2 pool the bar is zero, so a repriced
+        // #73 clears it as surely as a #3 does — and it is still a score actually hit.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 120, 985_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.True(page.Targets.Count > 50,
+            $"only {page.Targets.Count} suggestions — the pool cap is still in the way");
+        Assert.All(page.Targets, t => Assert.Equal(TargetSource.Phoenix1, t.Source));
+    }
+
+    [Fact]
+    public async Task ThePoolFiguresStillMeanTheTopFiftyAfterReadingDeeper()
+    {
+        // Reading past the fiftieth is for suggestions only. PUMBILITY IS the top fifty, so
+        // the panel's projected total and bar must not move when the candidate list grows.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 120, 985_000);
+
+        var carry = await ctx.Saga.Handle(new ProjectPhoenix2CarryoverQuery(ctx.UserId),
+            CancellationToken.None);
+
+        Assert.Equal(50, carry.Entries.Count);
+        Assert.Equal(50, carry.SinglesInPool + carry.DoublesInPool);
+        Assert.NotEmpty(carry.Candidates);
+        // Candidates rank behind the pool and say so.
+        Assert.All(carry.Candidates, c => Assert.True(c.Place > 50));
+    }
+
+    [Fact]
+    public async Task TheListIsOneRankedHundredAcrossBothSources()
+    {
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 160, 985_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Equal(100, page.Targets.Count);
+        Assert.True(page.Targets.Select(t => t.Gain).SequenceEqual(
+            page.Targets.Select(t => t.Gain).OrderByDescending(g => g)));
+    }
+
+    [Fact]
+    public async Task AChartBothSourcesNameSpendsOneSlotNotTwo()
+    {
+        // The merge dedups by chart before the cut. A duplicate would eat one of the hundred
+        // and push a real suggestion off the end.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 55, 985_000);
+        var contested = ctx.FirstPhoenixChart();
+        ctx.WithPeerProjection(contested, projected: 910_000, gain: 999);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Single(page.Targets, t => t.ChartId == contested);
+    }
+
+    [Fact]
     public async Task OnPhoenix1NothingClaimsToBeCarriedOver()
     {
         var ctx = new PageContext().WithPool(55, ChartType.Single, 20);
