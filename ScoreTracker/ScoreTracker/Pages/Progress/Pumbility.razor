@@ -27,9 +27,11 @@
 
 @if (_page == null)
 {
-    @* Rule 9: a skeleton shaped like what it becomes, never a lone spinner. *@
+    @* Rule 9: a skeleton shaped like what it becomes, never a lone spinner. The card takes
+       the figure's slot — where the number lands, and so where the eye already is — and the
+       curve keeps pulsing beside it, so the shape of the page still arrives first. *@
     <div class="pmb-hero">
-        <div class="pmb-skeleton pmb-skeleton-figure"></div>
+        <PatienceCard Explanation="@L["Working out your projections. This reads a few hundred players at your level, so it takes a moment."]"></PatienceCard>
         <div class="pmb-skeleton pmb-skeleton-curve"></div>
     </div>
 }

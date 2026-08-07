@@ -1,0 +1,62 @@
+@using ScoreTracker.Domain.SecondaryPorts
+@namespace ScoreTracker.Web.Components
+
+@* The other half of rule 9. A skeleton says a shape is coming; this says what is being
+   worked out and why it takes a moment, for the waits a page cannot shorten.
+
+   Two lines with two owners, and that split is what makes it reusable: the flavour line
+   knows nothing about the page, so it can never be wrong somewhere it was not written for,
+   and the explanation comes from the page, so it is always specific. *@
+<div class="patience-card">
+    <div class="patience-pad" aria-hidden="true">
+        <i class="patience-panel patience-ul"></i>
+        <i class="patience-panel patience-ur"></i>
+        <i class="patience-panel patience-ct"></i>
+        <i class="patience-panel patience-dl"></i>
+        <i class="patience-panel patience-dr"></i>
+    </div>
+    <p class="patience-line">@_phrase</p>
+    <p class="patience-sub">@Explanation</p>
+</div>
+
+@inject IRandomNumberGenerator Random
+
+@code {
+
+    /// <summary>
+    ///     What this page is working out, and why it takes a moment. Page-supplied, because
+    ///     only the page can say it truthfully.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public string Explanation { get; set; } = string.Empty;
+
+    // Arcade rather than software, and deliberately silent about what is computing — nothing
+    // here claims a step that is happening, so the same twelve work on a tier list, an import,
+    // or anything else that has to make somebody wait.
+    private static readonly string[] Phrases =
+    {
+        "Applying baby powder",
+        "Applying Gorilla Tape to the sensors",
+        "Counting perfects",
+        "Cueing the next song",
+        "Feeding it another credit",
+        "Finding the beat",
+        "Reading the step chart",
+        "Searching for Molex connectors",
+        "Stretching first",
+        "Waiting on the sensors",
+        "Warming up the pad",
+        "Wiping down the sensors"
+    };
+
+    private string _phrase = string.Empty;
+
+    // Once per load, not on a timer: a phrase that changes while you wait pulls your eye back
+    // to the thing you are waiting on.
+    protected override void OnInitialized()
+    {
+        _phrase = L[Phrases[Random.Next(Phrases.Length)]];
+    }
+
+}

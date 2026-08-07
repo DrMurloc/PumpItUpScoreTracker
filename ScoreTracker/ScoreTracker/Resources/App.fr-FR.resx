@@ -657,6 +657,12 @@
   <data name="Apply" xml:space="preserve">
     <value>Appliquer</value>
   </data>
+  <data name="Applying baby powder" xml:space="preserve">
+    <value>Application du talc</value>
+  </data>
+  <data name="Applying Gorilla Tape to the sensors" xml:space="preserve">
+    <value>Gorilla Tape sur les capteurs</value>
+  </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Des charts abordables non passés autour de votre niveau.</value>
   </data>
@@ -1559,6 +1565,9 @@
   <data name="Counting" xml:space="preserve">
     <value>Comptée</value>
   </data>
+  <data name="Counting perfects" xml:space="preserve">
+    <value>Comptage des perfects</value>
+  </data>
   <data name="Counting Toward Your Total" xml:space="preserve">
     <value>Comptée dans votre total</value>
   </data>
@@ -1625,6 +1634,9 @@
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>Import CSV</value>
+  </data>
+  <data name="Cueing the next song" xml:space="preserve">
+    <value>Lancement du morceau suivant</value>
   </data>
   <data name="Current" xml:space="preserve">
     <value>Actuel</value>
@@ -2130,6 +2142,9 @@
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>Merci pour votre retour !</value>
   </data>
+  <data name="Feeding it another credit" xml:space="preserve">
+    <value>Encore un crédit</value>
+  </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Feeds — enregistrez un salon une fois, le bot s'occupe du reste</value>
   </data>
@@ -2184,6 +2199,9 @@
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>Trouvez votre prochain pass.</value>
+  </data>
+  <data name="Finding the beat" xml:space="preserve">
+    <value>Recherche du tempo</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Terminer plus tard</value>
@@ -4921,6 +4939,9 @@
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Le lire nécessite trois choses à la fois, conservées à trois endroits différents :</value>
   </data>
+  <data name="Reading the step chart" xml:space="preserve">
+    <value>Lecture du pattern</value>
+  </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>Cela correspond à {0}.</value>
   </data>
@@ -5406,6 +5427,9 @@
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
     <value>Rechercher un utilisateur (nom ou UserId)</value>
+  </data>
+  <data name="Searching for Molex connectors" xml:space="preserve">
+    <value>Recherche de connecteurs Molex</value>
   </data>
   <data name="Second" xml:space="preserve">
     <value>Deuxième</value>
@@ -5950,6 +5974,9 @@
   </data>
   <data name="Store" xml:space="preserve">
     <value>Enregistrer</value>
+  </data>
+  <data name="Stretching first" xml:space="preserve">
+    <value>Échauffement d'abord</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>plus fort</value>
@@ -6976,8 +7003,14 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>En attente d'un humain — faites signe</value>
   </data>
+  <data name="Waiting on the sensors" xml:space="preserve">
+    <value>Attente des capteurs</value>
+  </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Salle d'attente</value>
+  </data>
+  <data name="Warming up the pad" xml:space="preserve">
+    <value>Chauffage du pad</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Regardez-vous grimper</value>
@@ -7172,6 +7205,9 @@
   <data name="wins in range" xml:space="preserve">
     <value>victoires dans ta tranche</value>
   </data>
+  <data name="Wiping down the sensors" xml:space="preserve">
+    <value>Nettoyage des capteurs</value>
+  </data>
   <data name="within 1 level" xml:space="preserve">
     <value>à ±1 niveau</value>
   </data>
@@ -7180,6 +7216,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Sans eux il fonctionne quand même — pour vous, sur vos propres scores.</value>
+  </data>
+  <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
+    <value>Calcul de tes projections. Cela consulte quelques centaines de joueurs de ton niveau, donc ça prend un moment.</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>
