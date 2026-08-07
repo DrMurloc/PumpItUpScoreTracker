@@ -47,6 +47,7 @@ Owner rulings, 2026-08-05. These bind; do not re-litigate them in the build.
 | D9 | **"Kind" is not a column.** It restated the cell beside it — see §3.3 |
 | D10 | **A broken run plays no part in this page** (owner, 2026-08-07). *"Failed shit should not show anywhere on here."* A stage break rates zero, so it is not a score the player holds: it cannot occupy a pool slot, cannot set the bar, and does not count as having scored a chart. Enforced at the two top-50 reads rather than per call site, so the queries mean what their names say |
 | D11 | **A carryover target is priced, not gated.** A chart already scored in Phoenix 2 stays a target when the Phoenix 1 repricing beats what it currently contributes — same floor as the peer projection, one ranked list, both sources priced identically |
+| D12 | **The projection does not explain itself** (owner, 2026-08-07). Peer counts, effective voices and spread were printed beside every estimate and told a player nothing they could act on. What survives of the why-line is the **source** — carried from Phoenix 1, or projected — because that is the one thing about a number that changes how far to trust it; what the row is *to you* the card's border and the legend already say. A thin cohort remains a reason to **gate** a suggestion; it is not a caption |
 
 ## 3. The page
 
@@ -578,9 +579,50 @@ one fitted to a **one-year** truth horizon. Consequences, stated plainly:
 - **`PumbilityProjection` gained `Evidence`** — peer count, effective peers after growth
   weighting, and the 10th-to-90th spread — because the page still owed the player a "why" and
   the honest one is what the estimate heard, not what it attributed (§3.3).
-- **`ProjectionEvidence.Spread` and `EffectivePeers` are computed but not yet rendered.** The
-  comfortable card prints the peer count only. The other two are the raw material for a
-  confidence treatment nobody has designed.
+- ~~**`ProjectionEvidence.Spread` and `EffectivePeers` are computed but not yet rendered.**~~
+  Superseded by D12: the whole evidence line is gone. The growth weighting still does its work
+  inside the quantile; nothing about it reaches the page.
+
+### 6.8 How a projection is held
+
+The cached artifact used to be the whole `PumbilityProjection`, keyed by `(user, mix, pool)`.
+That bundled four things with nothing in common:
+
+| | Cost | Moves when |
+|---|---|---|
+| the cohort sweep | seconds, sized by the player population | peers play |
+| the gains | arithmetic over the viewer's own top hundred | **the viewer plays** |
+| the top-hundred cut | derived from those gains | as above |
+| the Pass Count tier list | one read, **identical for every player in the mix** | the nightly job runs |
+
+The consequence was a per-pool key, so Phoenix 2's three selector positions each paid for their
+own sweep, and the same tier list was copied into every player's entry — about five-sixths of
+the bytes, with most of the rest being the evidence D12 removed.
+
+**Only the sweep is cached now, and it is pool-free.** Which pool you are looking at changes the
+bar an estimate is measured against, never the estimate, so all three positions share one sweep.
+Everything else is priced on each visit, from reads the page was already doing. The public
+contract did not change, so nothing downstream moved.
+
+Three properties that had to be got right, none of them obvious:
+
+- **The task is cached, not the result.** The dashboard's suggestion widget and the page ask for
+  the same sweep seconds apart — the design, not an edge case — and caching the result lets the
+  second arrival start a second sweep while the first is still running.
+- **A failure is never cached**, in either ordering. A sweep that fails before its first real
+  await is already a faulted task when control returns, so its own cleanup has run before the
+  store could happen; one that fails later has to clean up after. Handling only one of the two
+  leaves a stored failure that outlives its cause by the whole lifetime.
+- **The cache owns a bounded instance of its own.** Setting a `SizeLimit` on the app-wide
+  `IMemoryCache` would throw for every other caller in the solution that omits an entry size.
+
+Held for 24 hours, and dropped when the viewer's own scores move. Peers' play does not evict —
+a sweep a few hours behind on other people is indistinguishable from one that is not, and
+watching every import would evict continuously and cache nothing.
+
+⚠ **The scoping prefilter now uses the most permissive bar of the two per-type pools**, because
+one estimate set has to serve all three selector positions. A merged top fifty is drawn from a
+superset of either single type's, so it never sits below both.
 
 ## 7. Responsive
 
