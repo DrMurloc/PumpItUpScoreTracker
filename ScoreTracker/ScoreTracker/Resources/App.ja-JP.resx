@@ -3234,9 +3234,6 @@
 	  <value>最高ランク</value>
 	  
   <comment>Max Letter Grade</comment></data>
-  <data name="Max Level" xml:space="preserve">
-    <value>最高レベル</value>
-  </data>
   <data name="Max Note Count" xml:space="preserve">
 	  <value>最高ノーツ数</value>
 	  
@@ -3722,9 +3719,6 @@
   </data>
   <data name="No source published" xml:space="preserve">
     <value>ソース未公開</value>
-  </data>
-  <data name="No suggestions match those filters." xml:space="preserve">
-    <value>そのフィルターに一致する候補はありません。</value>
   </data>
   <data name="No suggestions right now — try a different goal, or import more scores first." xml:space="preserve">
     <value>現在提案はありません。別の目標を試すか、先にスコアをインポートしてください。</value>
@@ -7866,9 +7860,6 @@
   <data name="{0} of {1} scores identical" xml:space="preserve">
     <value>{1}件中{0}件のスコアが一致</value>
   </data>
-  <data name="{0} of {1} suggestions" xml:space="preserve">
-    <value>{1} 件中 {0} 件の候補</value>
-  </data>
   <data name="{0} of {1} tracked players" xml:space="preserve">
     <value>記録のあるプレイヤー {1} 人中 {0} 人</value>
   </data>
@@ -7940,9 +7931,6 @@
   </data>
   <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
     <value>{0} 曲がカタログから削除され、{1} 譜面がなくなりました。記録はプロフィールに残ります。</value>
-  </data>
-  <data name="{0} suggestions" xml:space="preserve">
-    <value>{0} 件の候補</value>
   </data>
   <data name="{0} titles" xml:space="preserve">
     <value>タイトル {0} 件</value>
