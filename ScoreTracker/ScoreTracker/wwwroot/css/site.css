@@ -2218,6 +2218,15 @@ html.sheet-open .more-sheet-scrim {
     border-style: dashed;
 }
 
+/* Played and broke. Grey rather than the pass green because the run earned nothing, and
+   dotted rather than dashed so the three "we have seen you here" states stay separable at
+   a glance. The mix token rather than a Mud palette entry: this is the only one of the
+   four whose colour is a shade of the page rather than a semantic. */
+.tier-chart-card-broken {
+    border-color: color-mix(in srgb, var(--mix-ink-muted) 70%, transparent);
+    border-style: dotted;
+}
+
 /* Randomizer draw states join the same source-order contract: held = mix-primary ring
    (deliberately NOT the pass-green), vetoed = error red — both in every density, on
    top of the dim/strike second channels. */

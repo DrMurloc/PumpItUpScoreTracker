@@ -4524,6 +4524,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>플레이함, 미반영</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>플레이함, 미클리어</value>
+  </data>
   <data name="Player" xml:space="preserve">
     <value>플레이어</value>
   </data>

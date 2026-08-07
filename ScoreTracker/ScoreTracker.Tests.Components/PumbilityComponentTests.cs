@@ -163,6 +163,26 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         Assert.Empty(cut.FindAll(".tier-chart-card-todo"));
     }
 
+    [Fact]
+    public void ABrokenRunGetsItsOwnBorderRatherThanReadingAsAnUpscore()
+    {
+        // A stage break is worth nothing, so the arithmetic prices the chart from the bar as
+        // though it had never been played. A solid "upscore" border would then be describing a
+        // score the page has just decided the player does not hold — and no border at all
+        // would claim they have never touched it.
+        var broke = NewChart(ChartType.Single, 22);
+        var targets = new[] { new PumbilityTarget(broke.Id, 980_000, 300, 640_000, true, null, null) };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [broke.Id] = broke })
+            .Add(x => x.Density, UiDensity.Compact));
+
+        Assert.Single(cut.FindAll(".tier-card-grid .tier-chart-card-broken"));
+        Assert.Empty(cut.FindAll(".tier-card-grid .tier-chart-card-pass"));
+        Assert.Contains("Played, not passed", cut.Find(".pmb-legend").TextContent);
+    }
+
     /// <summary>One of each kind: carried from another mix, an upscore, and never played.</summary>
     private static PumbilityTarget[] ThreeKinds(out Dictionary<Guid, Chart> charts)
     {

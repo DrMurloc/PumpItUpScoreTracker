@@ -89,8 +89,9 @@ else if (Density == UiDensity.Compact)
             var chart = Charts[target.ChartId];
             <TierListChartCard Chart="chart" Density="UiDensity.Compact"
                                CornerBadge="@($"+{target.Gain:N0}")" CornerBadgeClass="pmb-corner-gain"
-                               Passed="target.Current != null"
+                               Passed="target.Current != null && !target.CurrentIsBroken"
                                PassedInAnotherMix="target.Source == TargetSource.Phoenix1"
+                               Broke="target.CurrentIsBroken"
                                TooltipNote="@CornerMeaning(target)"
                                ShowName="false" ShowToDo="false"
                                OnOpen="OpenById"></TierListChartCard>
@@ -186,6 +187,7 @@ else
     private string CornerMeaning(PumbilityTarget target) => target switch
     {
         { Source: TargetSource.Phoenix1 } => L["Carried from Phoenix 1"],
+        { CurrentIsBroken: true } => L["Played, not passed"],
         { Current: not null } => L["Upscore"],
         _ => L["Not yet played"]
     };

@@ -4524,6 +4524,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>Jugada, no cuenta</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>Jugada, no superada</value>
+  </data>
   <data name="Player" xml:space="preserve">
     <value>Jugador/a</value>
   </data>

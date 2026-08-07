@@ -204,14 +204,22 @@ else
     // on, so a To-Do ring there would be a fourth meaning competing with three.
     [Parameter] public bool ShowStateBorder { get; set; } = true;
 
+    // A run that broke. Ranked below the two pass states on purpose: where a chart is both
+    // attempted here and passed elsewhere, where the number came from is the more useful
+    // thing to say. It earns a state of its own because the alternative is no border at all,
+    // which reads as a chart nobody has ever seen the player touch.
+    [Parameter] public bool Broke { get; set; }
+
     private string StateClass => !ShowStateBorder ? string.Empty :
         Passed ? "tier-chart-card-pass" :
         IsToDo ? "tier-chart-card-todo" :
-        PassedInAnotherMix ? "tier-chart-card-other-mix" : string.Empty;
+        PassedInAnotherMix ? "tier-chart-card-other-mix" :
+        Broke ? "tier-chart-card-broken" : string.Empty;
 
     private string? StateTitle => Passed ? L["Passed"] :
         IsToDo ? L["To Do"] :
-        PassedInAnotherMix ? L["Passed in another mix"] : null;
+        PassedInAnotherMix ? L["Passed in another mix"] :
+        Broke ? L["Played, not passed"] : null;
 
     // Compact hides the name, so the tooltip carries the identity (rule 7: no
     // truncation without a tooltip) plus the state and lens-tier words (rule 8).
