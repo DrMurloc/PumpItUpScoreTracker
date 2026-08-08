@@ -1,5 +1,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
+@using Microsoft.JSInterop
 @namespace ScoreTracker.Web.Components
+@implements IAsyncDisposable
 
 @* The other half of rule 9. A skeleton says a shape is coming; this says what is being
    worked out and why it takes a moment, for the waits a page cannot shorten. It stands in
@@ -10,7 +12,7 @@
    knows nothing about the page, so it can never be wrong somewhere it was not written for,
    and the explanation comes from the page, so it is always specific. *@
 <div class="patience-card">
-    <div class="patience-pad @_pattern" aria-hidden="true">
+    <div class="patience-pad @_pattern" aria-hidden="true" @ref="_pad">
         <i class="patience-panel patience-ul"></i>
         <i class="patience-panel patience-ur"></i>
         <i class="patience-panel patience-ct"></i>
@@ -22,6 +24,7 @@
 </div>
 
 @inject IRandomNumberGenerator Random
+@inject IJSRuntime JSRuntime
 
 @code {
 
@@ -52,29 +55,62 @@
         "Wiping down the sensors"
     };
 
-    // Real step patterns rather than a decorative sweep (owner, 2026-08-08). All four run back
-    // to back as one CSS cycle, because each begins and ends on the bottom-left arrow and so
-    // chains onto the next without a seam. What is chosen here is where that cycle STARTS —
-    // CSS cannot re-roll a pattern mid-flight, and the alternative was scripting a component
-    // that has needed no JavaScript so far.
-    private static readonly string[] Entries =
+    // Real step patterns rather than a decorative sweep (owner, 2026-08-08). Each begins and
+    // ends on the bottom-left arrow, so the next one picks up mid-stride — which is what lets
+    // js/patience.js swap them at the cycle boundary without the pad appearing to stop.
+    //
+    // This picks the FIRST one, on the server. That is not just an initial value: a pad whose
+    // script never arrives keeps stepping a real chart, it simply repeats the one it was given.
+    private static readonly string[] Patterns =
     {
-        "patience-from-mrun", // up the left, through the middle, down the right, and back
-        "patience-from-spin", // back to the centre between every corner
-        "patience-from-run", // the ordinary way round
-        "patience-from-cross" // every step lands on the far side
+        "patience-mrun", // up the left, through the middle, down the right, and back
+        "patience-spin", // back to the centre between every corner
+        "patience-run", // the ordinary way round
+        "patience-cross" // every step lands on the far side
     };
 
     private string _phrase = string.Empty;
     private string _pattern = string.Empty;
+    private ElementReference _pad;
+    private IJSObjectReference? _module;
 
     // The phrase is drawn once per load and stays put: one that rotates while you wait pulls
     // your eye back to the thing you are waiting on. The pad is the opposite case — it is
-    // already motion, so moving through all four patterns is what it is for.
+    // already motion, so a new pattern every cycle is what it is for.
     protected override void OnInitialized()
     {
         _phrase = L[Phrases[Random.Next(Phrases.Length)]];
-        _pattern = Entries[Random.Next(Entries.Length)];
+        _pattern = Patterns[Random.Next(Patterns.Length)];
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/patience.js");
+            await _module.InvokeVoidAsync("shuffleEachCycle", _pad);
+        }
+        catch (JSException)
+        {
+            // The pad keeps the pattern the server gave it and repeats that one. A loader is
+            // not worth failing a render over.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module == null) return;
+
+        try
+        {
+            await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit went first — the browser has already dropped the module with the page.
+        }
     }
 
 }
