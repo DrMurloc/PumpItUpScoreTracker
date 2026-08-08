@@ -166,12 +166,18 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
     }
 
     /// <summary>
-    ///     How long after the scores land we are still willing to call an empty session
-    ///     "calculating". Capture runs on the bus behind the import, so a page opened straight
-    ///     after one can genuinely beat it — but the claim has to expire, because a session that
-    ///     really earned nothing looks identical and must not be told to keep waiting.
+    ///     How long after the scores land the page keeps expecting capture. Taken from the
+    ///     Ledger's own batching policy rather than chosen: scores are held as a batch and
+    ///     capture cannot start until it drains, so any duration invented here is a guess about
+    ///     someone else's timer.
+    ///     <para>
+    ///         ⚠ It was originally two minutes, which was the same number for the wrong reason —
+    ///         the hold window exactly, so this expired at the instant the batch fired and the
+    ///         page gave up a heartbeat before its data arrived, every time. The hold is also
+    ///         measured from the LATEST score, so a long import pushes it out repeatedly.
+    ///     </para>
     /// </summary>
-    private static readonly TimeSpan CaptureWindow = TimeSpan.FromMinutes(2);
+    private static readonly TimeSpan CaptureWindow = ScoreBatchPolicy.WorkExpectedWithin;
 
     /// <summary>
     ///     Whether the scores arrived recently enough that capture could still be running. This

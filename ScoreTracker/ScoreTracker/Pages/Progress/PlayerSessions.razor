@@ -2,7 +2,8 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Queries
-@using ScoreTracker.Domain.Events
+@using ScoreTracker.PlayerProgress.Contracts.Events
+@using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.UiNotifications
@@ -111,7 +112,7 @@
         var query = System.Web.HttpUtility.ParseQueryString(NavManager.ToAbsoluteUri(NavManager.Uri).Query);
         if (Guid.TryParse(query.Get("session"), out var session)) _selectedSessionId = session;
 
-        WatchTheImport();
+        ListenForCapture();
         await LoadAsync();
     }
 
@@ -120,116 +121,49 @@
         _model = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page, HistoryPageSize,
             Before, CancellationToken.None);
         _firstLoad = false;
-        StartWatchingForCapture();
     }
 
-    /// <summary>
-    ///     How often the page asks whether capture has landed. Short enough that the card gives
-    ///     way promptly, long enough that a two-minute wait is a few dozen reads rather than
-    ///     hundreds — and it only ever runs for the one person watching their own fresh import.
-    /// </summary>
-    private static readonly TimeSpan CapturePoll = TimeSpan.FromSeconds(3);
-
-    private CancellationTokenSource? _watch;
-    private IDisposable? _importStatus;
-    private bool _importRunning;
+    private IDisposable? _captured;
 
     /// <summary>
-    ///     The status the import sends when it has finished writing scores. Capture runs on the
-    ///     bus AFTER that, so this is where the watch's tail begins rather than where it ends.
-    /// </summary>
-    private const string ImportFinished = "Charts finished saving";
-
-    /// <summary>
-    ///     An import is the reason this page has anything to wait for, so it is what the watch
-    ///     should follow — not a fixed window guessed from when scores last landed. A long import
-    ///     writes in phases minutes apart, and every phase pushes a status the shell's pulse dot
-    ///     already listens to; a window anchored on the last write closed between two of them and
-    ///     left the page stranded on a half-captured session.
+    ///     Capture announces itself when it finishes, so the page listens instead of asking.
     ///     <para>
-    ///         Only the owner's own page subscribes: the topic is per-user, and nobody else's
-    ///         import has anything to say about this one.
+    ///         Polling could never work here, and the reason is worth keeping: scores are held as
+    ///         a batch for two minutes past the LAST of them before capture even begins
+    ///         (<see cref="ScoreBatchPolicy" />), an import writes in phases minutes apart, and
+    ///         each phase is a separate batch and a separate capture. Every timer aimed at that
+    ///         was guessing at another component's schedule, and each guess failed differently —
+    ///         clearing the card mid-pipeline, between batches, or never watching at all.
+    ///     </para>
+    ///     <para>
+    ///         Same shape as the randomizer's draw view: a bus consumer bridges the event onto
+    ///         the user's UI topic and whichever circuit cares picks it up. Delivery is
+    ///         best-effort by design — a player who was not on the page simply never receives it
+    ///         and reads the finished article when they arrive.
     ///     </para>
     /// </summary>
-    private void WatchTheImport()
+    private void ListenForCapture()
     {
         if (!CurrentUser.IsLoggedIn || CurrentUser.User.Id != UserIdParam) return;
 
-        _importStatus = UiHub.Subscribe<ImportStatusUpdatedEvent>(UiTopics.User(UserIdParam), status =>
+        _captured = UiHub.Subscribe<ScoreHighlightsCapturedEvent>(UiTopics.User(UserIdParam), async _ =>
         {
-            _importRunning = status.Status != ImportFinished;
-            // A status arriving after the watch gave up restarts it — which is the case the
-            // three-refresh dance was really reporting.
-            return InvokeAsync(StartWatchingForCapture);
-        });
-    }
-
-    /// <summary>
-    ///     Capture lands on the bus behind the import, so a page opened right after one is
-    ///     watching a session that is still being written.
-    ///     <para>
-    ///         Gated on the WINDOW, not on the card. Capture writes in several passes, so a page
-    ///         that opens between two of them already has rows — no card — and would otherwise
-    ///         sit on half a session until someone reloaded by hand. That was the bug: the
-    ///         watcher only started when there was nothing at all, which is the one case where a
-    ///         reload was obviously needed and the least likely one to be hit.
-    ///     </para>
-    /// </summary>
-    private void StartWatchingForCapture()
-    {
-        if ((_model.Hero?.CaptureWindowOpen != true && !_importRunning) || _watch != null) return;
-
-        var cts = new CancellationTokenSource();
-        _watch = cts;
-        _ = WatchForCapture(cts);
-    }
-
-    private async Task WatchForCapture(CancellationTokenSource cts)
-    {
-        // Refresh until the window closes, and NOT a moment sooner on a guess about being
-        // finished. An import is many batches over minutes, each running capture separately, so
-        // the row count sitting still for a few seconds means "between batches" just as readily
-        // as "done" — reading it as done is what cleared the page while more was still coming.
-        //
-        // The window needs no such guess because it hangs off LastActivityAt, which advances
-        // every time a batch lands: a live import keeps extending its own deadline, and the
-        // watch outlives the last batch by the window and then stops.
-        try
-        {
-            using var timer = new PeriodicTimer(CapturePoll);
-            while (await timer.WaitForNextTickAsync(cts.Token))
+            // Build, not Reselect: Reselect is PINNED to the id it is handed, so a capture for a
+            // newer session would refresh the older one forever. Build takes the newest, which
+            // is what the hero means when the reader has not chosen one.
+            var refreshed = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page,
+                HistoryPageSize, Before, CancellationToken.None);
+            await InvokeAsync(() =>
             {
-                // Build, not Reselect, when the reader has not chosen a session. Reselect is
-                // PINNED to the id it is given, so an import that opens a newer session left the
-                // watch re-reading the old one forever while a manual reload moved on — which is
-                // exactly why refreshing by hand showed something the auto-refresh never did.
-                var refreshed = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page,
-                    HistoryPageSize, Before, cts.Token);
-                await InvokeAsync(() =>
-                {
-                    _model = refreshed;
-                    StateHasChanged();
-                });
-                if (refreshed.Hero?.CaptureWindowOpen != true && !_importRunning) break;
-            }
-        }
-        catch (Exception) when (cts.IsCancellationRequested)
-        {
-            // Navigated away mid-read. A cancelled SqlCommand does not always surface as an
-            // OperationCanceledException, so the token is what decides this is expected —
-            // filtering on the exception type would let a real failure through as a silent stop.
-        }
-        finally
-        {
-            if (ReferenceEquals(_watch, cts)) _watch = null;
-            cts.Dispose();
-        }
+                _model = refreshed;
+                StateHasChanged();
+            });
+        });
     }
 
     public void Dispose()
     {
-        _importStatus?.Dispose();
-        _watch?.Cancel();
+        _captured?.Dispose();
     }
 
     /// <summary>
