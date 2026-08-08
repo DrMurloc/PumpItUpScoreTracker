@@ -1,4 +1,6 @@
 using Bunit;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
@@ -10,6 +12,13 @@ namespace ScoreTracker.Tests.Components;
 
 public sealed class RandomizerSettingsPanelTests : ComponentTestBase
 {
+    // Every fact here drives the panel through ClickAsync/ChangeAsync rather than the
+    // synchronous Click()/Change(). The synchronous overloads post the event to the
+    // renderer's dispatcher and return without waiting for it, so on a busy thread pool
+    // the assertion on the next line reads the pre-event render — and a tap that depends
+    // on the one before it (open Advanced, then open the selector, then pick a level)
+    // reads a screen the earlier tap has not drawn yet.
+
     // The selector popup renders through MudPopoverProvider (same as on the live page,
     // where MainLayout hosts it), so the fragment carries a provider sibling and facts
     // search the whole fragment.
@@ -39,45 +48,46 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void CountPresetWritesTheSettingsCount()
+    public async Task CountPresetWritesTheSettingsCount()
     {
         var settings = new RandomSettings();
         var cut = Render(settings);
 
         // Presets are 3/5/7/10 in order.
-        cut.FindAll(".rand-count-preset")[2].Click();
+        await cut.FindAll(".rand-count-preset")[2].ClickAsync(new MouseEventArgs());
 
         Assert.Equal(7, settings.Count);
     }
 
     [Fact]
-    public void TogglingSinglesOnWritesAContiguousDefaultRange()
+    public async Task TogglingSinglesOnWritesAContiguousDefaultRange()
     {
         var settings = new RandomSettings();
         var cut = Render(settings);
 
-        cut.FindComponents<MudSwitch<bool>>()[0].Find("input").Change(true);
+        await cut.FindComponents<MudSwitch<bool>>()[0].Find("input")
+            .ChangeAsync(new ChangeEventArgs { Value = true });
 
         var active = settings.LevelWeights.Where(kv => kv.Value > 0).Select(kv => kv.Key).OrderBy(k => k).ToArray();
         Assert.Equal(new[] { 15, 16, 17, 18 }, active);
     }
 
     [Fact]
-    public void CoOpChipTogglesThePlayerCountWeight()
+    public async Task CoOpChipTogglesThePlayerCountWeight()
     {
         var settings = new RandomSettings();
         var cut = Render(settings);
 
-        cut.FindAll(".rand-coop-chip")[1].Click();
+        await cut.FindAll(".rand-coop-chip")[1].ClickAsync(new MouseEventArgs());
 
         Assert.Equal(1, settings.PlayerCountWeights[3]);
     }
 
     [Fact]
-    public void AdvancedShowsSectionsWithoutTogglesAndNoWeightRowsInSliderMode()
+    public async Task AdvancedShowsSectionsWithoutTogglesAndNoWeightRowsInSliderMode()
     {
         var cut = Render(WithSinglesRange(15, 18));
-        cut.Find(".rand-advanced-toggle").Click();
+        await cut.Find(".rand-advanced-toggle").ClickAsync(new MouseEventArgs());
 
         // Weighted Levels, Minimum Counts, Personal Scores — all visible, no opt-in toggles.
         Assert.Equal(3, cut.FindAll(".rand-adv-section").Count);
@@ -87,13 +97,13 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void OpeningTheSelectorHighlightsSliderLevelsWithoutEngagingWeightedMode()
+    public async Task OpeningTheSelectorHighlightsSliderLevelsWithoutEngagingWeightedMode()
     {
         var settings = WithSinglesRange(15, 18);
         var cut = Render(settings);
-        cut.Find(".rand-advanced-toggle").Click();
+        await cut.Find(".rand-advanced-toggle").ClickAsync(new MouseEventArgs());
 
-        cut.Find(".weight-add-btn").Click();
+        await cut.Find(".weight-add-btn").ClickAsync(new MouseEventArgs());
 
         // The sliders' range arrives highlighted; looking around changes nothing.
         Assert.Equal(4, cut.FindAll(".folder-picker-current").Count);
@@ -102,14 +112,15 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void TogglingALevelInTheSelectorEngagesWeightedMode()
+    public async Task TogglingALevelInTheSelectorEngagesWeightedMode()
     {
         var settings = WithSinglesRange(15, 18);
         var cut = Render(settings);
-        cut.Find(".rand-advanced-toggle").Click();
-        cut.Find(".weight-add-btn").Click();
+        await cut.Find(".rand-advanced-toggle").ClickAsync(new MouseEventArgs());
+        await cut.Find(".weight-add-btn").ClickAsync(new MouseEventArgs());
 
-        cut.FindAll(".folder-picker-level").First(b => b.TextContent == "20").Click();
+        await cut.FindAll(".folder-picker-level").First(b => b.TextContent == "20")
+            .ClickAsync(new MouseEventArgs());
 
         Assert.Equal(1, settings.LevelWeights[20]);
         // Weighted mode: rows for 15-18 + 20, and the basic controls hand over.
@@ -118,7 +129,7 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void BackToSlidersTakesTwoTapsAndSnapsToTheContiguousRange()
+    public async Task BackToSlidersTakesTwoTapsAndSnapsToTheContiguousRange()
     {
         // Gaps + a weight above 1: weighted mode derives itself on.
         var settings = WithSinglesRange(15, 15);
@@ -127,11 +138,11 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
 
         Assert.NotEmpty(cut.FindAll(".weight-row"));
 
-        cut.Find(".rand-back-to-sliders").Click();
+        await cut.Find(".rand-back-to-sliders").ClickAsync(new MouseEventArgs());
         Assert.Contains("Tap again to clear weights", cut.Markup);
         Assert.Equal(3, settings.LevelWeights[18]);
 
-        cut.Find(".rand-back-to-sliders").Click();
+        await cut.Find(".rand-back-to-sliders").ClickAsync(new MouseEventArgs());
         Assert.Equal(new[] { 15, 16, 17, 18 },
             settings.LevelWeights.Where(kv => kv.Value > 0).Select(kv => kv.Key).OrderBy(k => k).ToArray());
         Assert.All(settings.LevelWeights.Where(kv => kv.Value > 0), kv => Assert.Equal(1, kv.Value));
@@ -139,27 +150,27 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void SongTypeChipsLiveInBasicAndTheLastActiveTypeCannotBeRemoved()
+    public async Task SongTypeChipsLiveInBasicAndTheLastActiveTypeCannotBeRemoved()
     {
         var settings = WithSinglesRange(15, 18);
         var cut = Render(settings);
 
         // Basic filters now — no Advanced expansion needed.
-        cut.FindAll(".rand-song-chips .rand-grade-chip")[0].Click(); // Arcade off
+        await cut.FindAll(".rand-song-chips .rand-grade-chip")[0].ClickAsync(new MouseEventArgs()); // Arcade off
         Assert.Equal(0, settings.SongTypeWeights[SongType.Arcade]);
 
         // Turning the rest off leaves the final type lit.
-        cut.FindAll(".rand-song-chips .rand-grade-chip")[1].Click();
-        cut.FindAll(".rand-song-chips .rand-grade-chip")[2].Click();
-        cut.FindAll(".rand-song-chips .rand-grade-chip")[3].Click();
+        await cut.FindAll(".rand-song-chips .rand-grade-chip")[1].ClickAsync(new MouseEventArgs());
+        await cut.FindAll(".rand-song-chips .rand-grade-chip")[2].ClickAsync(new MouseEventArgs());
+        await cut.FindAll(".rand-song-chips .rand-grade-chip")[3].ClickAsync(new MouseEventArgs());
         Assert.Equal(1, settings.SongTypeWeights.Values.Count(v => v > 0));
     }
 
     [Fact]
-    public void MinimumCountsRenderWithoutAnOptInToggle()
+    public async Task MinimumCountsRenderWithoutAnOptInToggle()
     {
         var cut = Render(WithSinglesRange(15, 18));
-        cut.Find(".rand-advanced-toggle").Click();
+        await cut.Find(".rand-advanced-toggle").ClickAsync(new MouseEventArgs());
 
         Assert.NotEmpty(cut.FindAll(".rand-min-mode"));
         Assert.Contains("Guarantee at least", cut.Markup);
@@ -178,24 +189,24 @@ public sealed class RandomizerSettingsPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void LoggedOutHidesPersonalScoreFiltersEntirely()
+    public async Task LoggedOutHidesPersonalScoreFiltersEntirely()
     {
         var cut = Render(new RandomSettings(), loggedIn: false);
-        cut.Find(".rand-advanced-toggle").Click();
+        await cut.Find(".rand-advanced-toggle").ClickAsync(new MouseEventArgs());
 
         Assert.DoesNotContain("Filter By Personal Scores", cut.Markup);
         Assert.Equal(2, cut.FindAll(".rand-adv-section").Count);
     }
 
     [Fact]
-    public void AllowRepeatsLivesInAdvancedNow()
+    public async Task AllowRepeatsLivesInAdvancedNow()
     {
         var settings = new RandomSettings();
         var cut = Render(settings);
-        cut.Find(".rand-advanced-toggle").Click();
+        await cut.Find(".rand-advanced-toggle").ClickAsync(new MouseEventArgs());
 
         var repeats = cut.FindComponents<MudSwitch<bool>>().First(s => s.Instance.Label == "Allow Repeat Charts");
-        repeats.Find("input").Change(true);
+        await repeats.Find("input").ChangeAsync(new ChangeEventArgs { Value = true });
 
         Assert.True(settings.AllowRepeats);
     }

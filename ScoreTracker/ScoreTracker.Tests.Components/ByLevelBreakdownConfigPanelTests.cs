@@ -1,5 +1,6 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using ScoreTracker.HomePage.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components.HomeWidgets;
@@ -50,13 +51,16 @@ public sealed class ByLevelBreakdownConfigPanelTests : ComponentTestBase
             .Add(x => x.OnCancel, EventCallback.Empty));
     }
 
+    // Save goes through ClickAsync: the synchronous Click() posts the event to the
+    // renderer's dispatcher and returns without waiting for it, so on a busy thread pool
+    // OnSave has not fired yet when the next line reads `saved`.
     [Fact]
-    public void SaveEmitsTheDefaultConfig()
+    public async Task SaveEmitsTheDefaultConfig()
     {
         (string Json, int Version)? saved = null;
         var cut = Render(Widget(), t => saved = t);
 
-        cut.FindAll("button").Single(b => b.TextContent.Contains("Save")).Click();
+        await cut.FindAll("button").Single(b => b.TextContent.Contains("Save")).ClickAsync(new MouseEventArgs());
 
         Assert.NotNull(saved);
         var config = WidgetConfigJson.Read<ByLevelBreakdownConfig>(saved!.Value.Json);
@@ -67,7 +71,7 @@ public sealed class ByLevelBreakdownConfigPanelTests : ComponentTestBase
     }
 
     [Fact]
-    public void PinningALegacyMixCoercesAScoreMetricToGrade()
+    public async Task PinningALegacyMixCoercesAScoreMetricToGrade()
     {
         var pinnedXxWithScore = WidgetConfigJson.Write(new ByLevelBreakdownConfig
         {
@@ -78,7 +82,7 @@ public sealed class ByLevelBreakdownConfigPanelTests : ComponentTestBase
         (string Json, int Version)? saved = null;
         var cut = Render(Widget(pinnedXxWithScore), t => saved = t);
 
-        cut.FindAll("button").Single(b => b.TextContent.Contains("Save")).Click();
+        await cut.FindAll("button").Single(b => b.TextContent.Contains("Save")).ClickAsync(new MouseEventArgs());
 
         var config = WidgetConfigJson.Read<ByLevelBreakdownConfig>(saved!.Value.Json);
         Assert.Equal(BreakdownMetric.LetterGrade, config.Metric); // coerced on load
