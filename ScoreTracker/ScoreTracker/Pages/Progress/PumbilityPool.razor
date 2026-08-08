@@ -11,6 +11,19 @@
 
 <PumbilitySectionFrame Active="pool">
     <Body Context="ctx">
+        @if (ctx.Page.Rails is { Count: > 0 })
+        {
+            <section class="pmb-block">
+                <div class="pmb-block-head">
+                    <h2 class="pmb-block-title">@L["Your PUMBILITY titles"]</h2>
+                </div>
+                <p class="pmb-block-lede">
+                    @L["Three ladders run at once. Each asks a flat value of every one of your fifty charts."]
+                </p>
+                <PumbilityTitleRails Rails="ctx.Page.Rails" PoolCount="ctx.Page.Pool.Count"></PumbilityTitleRails>
+            </section>
+        }
+
         <section class="pmb-block">
             <PumbilityBreakdown Breakdown="ctx.Page.Breakdown" PoolCount="ctx.Page.Pool.Count"></PumbilityBreakdown>
         </section>

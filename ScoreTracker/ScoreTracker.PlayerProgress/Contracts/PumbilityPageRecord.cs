@@ -1,4 +1,6 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.PlayerProgress.Contracts;
@@ -35,7 +37,9 @@ public sealed record PumbilityPageRecord(
     IReadOnlyList<PoolEntry> Pool,
     IReadOnlyList<PoolEntry> WaitingRoom,
     IReadOnlyList<PumbilityTarget> Targets,
-    PoolBreakdown? Breakdown = null)
+    PoolBreakdown? Breakdown = null,
+    PoolTotals? Totals = null,
+    IReadOnlyList<TitleRail>? Rails = null)
 {
     /// <summary>Highest and lowest values in the pool — the curve's read-out.</summary>
     public int PoolTop => Pool.Count == 0 ? 0 : Pool[0].Value;
@@ -88,6 +92,62 @@ public sealed record PoolBreakdown(double Level, double FromScore, double FromPl
     public bool PlatesCount => PlateSpan > 0;
 
     public double ShareOf(double part) => Total <= 0 ? 0 : part / Total;
+}
+
+/// <summary>
+///     All three of Phoenix 2's pools at once. They feed the selector and the title rails, and
+///     computing them here is what lets the page stop dispatching the whole read twice more
+///     just to fill in the two it is not looking at.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record PoolTotals(int All, int Singles, int Doubles);
+
+/// <summary>
+///     One PUMBILITY title ladder against the pool that gates it
+///     (docs/design/pumbility-overhaul.md §3.7). Phoenix 2 only —
+///     <see cref="Phoenix2PumbilityTitle" /> is the only PUMBILITY-threshold title that exists.
+///     <para>
+///         <see cref="Ask" /> is the device. A pool is fifty charts, so a threshold is a flat
+///         per-chart value: 19,000 asks 380.00 of every chart you hold. That is order-free,
+///         which is the whole reason it is here — a count of charts would have to assume a play
+///         order, and the gain column it would have to assume is deliberately independent (D13).
+///     </para>
+/// </summary>
+/// <param name="Held">The highest rung the pool clears, or null below the first one.</param>
+/// <param name="Next">The rung above it, or null at the top of the ladder.</param>
+/// <param name="Ask">What <see cref="Next" /> asks of every chart in a full pool.</param>
+/// <param name="Average">What the pool's charts are worth each today, over a full fifty.</param>
+/// <param name="Bar">This pool's fiftieth chart, or null before it holds fifty.</param>
+/// <param name="ExampleLevel">
+///     The easiest chart that meets the ask, with the grade it would take — the actionable half,
+///     since a per-chart value is only useful once you can picture the chart.
+/// </param>
+[ExcludeFromCodeCoverage]
+public sealed record TitleRail(
+    PumbilityPool Pool,
+    int Value,
+    string? Held,
+    int HeldThreshold,
+    string? Next,
+    int? NextThreshold,
+    double Ask,
+    double Average,
+    int? Bar,
+    DifficultyLevel? ExampleLevel,
+    PhoenixLetterGrade? ExampleGrade)
+{
+    /// <summary>How far along the current rung the pool sits, for the bar between the two.</summary>
+    public double Progress => NextThreshold == null || NextThreshold.Value <= HeldThreshold
+        ? 1
+        : Math.Clamp((Value - HeldThreshold) / (double)(NextThreshold.Value - HeldThreshold), 0, 1);
+
+    /// <summary>What every chart still has to find. Zero at the top of the ladder.</summary>
+    public double PerChartGap => Math.Max(0, Ask - Average);
+
+    /// <summary>What the pool as a whole still has to find.</summary>
+    public int Gap => NextThreshold == null ? 0 : Math.Max(0, NextThreshold.Value - Value);
+
+    public bool AtTop => Next == null;
 }
 
 /// <summary>

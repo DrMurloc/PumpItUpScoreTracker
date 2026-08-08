@@ -7,6 +7,7 @@ using MediatR;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -278,6 +279,95 @@ public sealed class PumbilityPageSagaTests
 
         Assert.Equal(0, carry.ScoredHere);
         Assert.Equal(50, carry.NotYetScored);
+    }
+
+    [Fact]
+    public async Task PhoenixHasNoTitleRailsBecauseItHasNoPumbilityLadders()
+    {
+        // Phoenix2PumbilityTitle is the only PUMBILITY-threshold title that exists, so there is
+        // nothing to draw against on Phoenix — and no per-type split either.
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix),
+            CancellationToken.None);
+
+        Assert.Empty(page.Rails!);
+        Assert.Null(page.Totals);
+    }
+
+    [Fact]
+    public async Task TheAskIsTheNextRungSpreadOverAFullPool()
+    {
+        // The device the whole section turns on: a pool is fifty charts, so a threshold is a
+        // flat per-chart value. It is true however the player gets there, which is why it
+        // replaced counting charts.
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var rail = page.Rails!.Single(r => r.Pool == PumbilityPool.Singles);
+        Assert.NotNull(rail.NextThreshold);
+        Assert.Equal(rail.NextThreshold!.Value / 50.0, rail.Ask, 6);
+        Assert.Equal(rail.Value / 50.0, rail.Average, 6);
+        Assert.Equal(Math.Max(0, rail.Ask - rail.Average), rail.PerChartGap, 6);
+        Assert.InRange(rail.Progress, 0, 1);
+    }
+
+    [Fact]
+    public async Task EveryLadderGetsARailWhicheverPoolIsSelected()
+    {
+        // Three goals held at once. Hiding two behind the pool selector would be worse than
+        // showing all three, so the rails ignore it.
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(
+            new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Double),
+            CancellationToken.None);
+
+        Assert.Equal(3, page.Rails!.Count);
+        Assert.Contains(page.Rails, r => r.Pool == PumbilityPool.Total);
+        Assert.Contains(page.Rails, r => r.Pool == PumbilityPool.Singles);
+        Assert.Contains(page.Rails, r => r.Pool == PumbilityPool.Doubles);
+        // The doubles pool is empty here, so its rail is the not-started shape rather than absent.
+        Assert.Equal(0, page.Rails.Single(r => r.Pool == PumbilityPool.Doubles).Value);
+        Assert.Null(page.Rails.Single(r => r.Pool == PumbilityPool.Doubles).Held);
+    }
+
+    [Fact]
+    public async Task TheAskNamesAChartThatWouldMeetIt()
+    {
+        // A per-chart value is only useful once you can picture the chart, so the rail resolves
+        // it to the easiest level that gets there and the grade it would take.
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var rail = page.Rails!.Single(r => r.Pool == PumbilityPool.Singles);
+        Assert.NotNull(rail.ExampleLevel);
+        Assert.NotNull(rail.ExampleGrade);
+
+        // It has to actually meet the ask, at the grade named and with no plate help.
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        Assert.True(scoring.GetScore(ChartType.Single, rail.ExampleLevel!.Value,
+            rail.ExampleGrade!.Value.GetMinimumScoreFor(MixEnum.Phoenix2), PhoenixPlate.RoughGame) >= rail.Ask);
+    }
+
+    [Fact]
+    public async Task ThePoolSelectorTotalsComeBackOnTheRecord()
+    {
+        // Filling the selector used to mean running this whole read twice more from the page,
+        // for two pools it was not looking at.
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.NotNull(page.Totals);
+        Assert.Equal(page.Total, page.Totals!.All);
+        Assert.Equal(page.Total, page.Totals.Singles);
+        Assert.Equal(0, page.Totals.Doubles);
     }
 
     [Fact]

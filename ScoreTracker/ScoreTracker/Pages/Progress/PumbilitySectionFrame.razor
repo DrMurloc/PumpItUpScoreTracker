@@ -144,21 +144,16 @@ else if (_mixKnown)
     {
         _page = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, _pool));
 
-        if (_currentMix != MixEnum.Phoenix2) return;
-
-        _pools = new[]
-        {
-            new PumbilityHero.PoolOption(null, L["All"], await TotalFor(null)),
-            new PumbilityHero.PoolOption(ChartType.Single, L["Singles"], await TotalFor(ChartType.Single)),
-            new PumbilityHero.PoolOption(ChartType.Double, L["Doubles"], await TotalFor(ChartType.Double))
-        };
-    }
-
-    private async Task<int> TotalFor(ChartType? pool)
-    {
-        if (pool == _pool && _page != null) return _page.Total;
-        var record = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, pool));
-        return record.Total;
+        // All three totals come back on the record. Filling the selector used to mean running
+        // the whole read twice more from here, for two pools the page was not looking at.
+        _pools = _page.Totals == null
+            ? Array.Empty<PumbilityHero.PoolOption>()
+            : new[]
+            {
+                new PumbilityHero.PoolOption(null, L["All"], _page.Totals.All),
+                new PumbilityHero.PoolOption(ChartType.Single, L["Singles"], _page.Totals.Singles),
+                new PumbilityHero.PoolOption(ChartType.Double, L["Doubles"], _page.Totals.Doubles)
+            };
     }
 
     private async Task ChangePool(ChartType? pool)

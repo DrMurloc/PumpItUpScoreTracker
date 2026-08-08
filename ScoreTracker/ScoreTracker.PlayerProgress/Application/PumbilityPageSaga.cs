@@ -1,6 +1,7 @@
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -113,8 +114,100 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Take(MaxTargets)
                 .ToArray();
 
-            return new PumbilityPageRecord(mix, request.Pool, pool.Sum(p => p.Value), bar, barChart,
-                pool, waiting, top, Breakdown(pool, charts, scoring));
+            var total = pool.Sum(p => p.Value);
+            var totals = await PoolTotalsFor(request.UserId, mix, request.Pool, total, bar, charts, scoring,
+                cancellationToken);
+
+            return new PumbilityPageRecord(mix, request.Pool, total, bar, barChart,
+                pool, waiting, top, Breakdown(pool, charts, scoring), totals?.Totals,
+                totals?.Rails ?? Array.Empty<TitleRail>());
+        }
+
+        /// <summary>
+        ///     All three Phoenix 2 pools and their title ladders. The scope the caller asked for
+        ///     is already computed, so only the other two are read — which is why this belongs
+        ///     here rather than on the page, where filling the selector cost two more runs of
+        ///     this whole handler.
+        /// </summary>
+        private async Task<(PoolTotals Totals, IReadOnlyList<TitleRail> Rails)?> PoolTotalsFor(Guid userId,
+            MixEnum mix, ChartType? scope, int scopeTotal, int? scopeBar,
+            IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring,
+            CancellationToken cancellationToken)
+        {
+            // Phoenix 1 has one pool and no PUMBILITY-threshold titles, so there is neither a
+            // split to show nor a ladder to show it against.
+            if (mix != MixEnum.Phoenix2) return null;
+
+            async Task<(int Total, int? Bar)> PoolFor(ChartType? type)
+            {
+                if (type == scope) return (scopeTotal, scopeBar);
+
+                var values = (await _mediator.Send(new GetTop50ForPlayerQuery(userId, type, PoolSize, mix),
+                        cancellationToken))
+                    .Where(s => s.Score != null && charts.ContainsKey(s.ChartId))
+                    .Select(s => (int)scoring.GetScore(charts[s.ChartId], s.Score!.Value,
+                        s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken))
+                    .OrderByDescending(v => v)
+                    .ToArray();
+
+                return (values.Sum(), values.Length >= PoolSize ? values[^1] : null);
+            }
+
+            var all = await PoolFor(null);
+            var singles = await PoolFor(ChartType.Single);
+            var doubles = await PoolFor(ChartType.Double);
+
+            var ladders = Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>()
+                .GroupBy(t => t.Pool)
+                .ToDictionary(g => g.Key, g => g.OrderBy(t => t.CompletionRequired).ToArray());
+
+            var rails = new[]
+            {
+                Rail(PumbilityPool.Total, all, ChartType.Single),
+                Rail(PumbilityPool.Singles, singles, ChartType.Single),
+                Rail(PumbilityPool.Doubles, doubles, ChartType.Double)
+            }.Where(r => r != null).Select(r => r!).ToArray();
+
+            return (new PoolTotals(all.Total, singles.Total, doubles.Total), rails);
+
+            TitleRail? Rail(PumbilityPool pool, (int Total, int? Bar) figures, ChartType exampleType)
+            {
+                if (!ladders.TryGetValue(pool, out var ladder) || ladder.Length == 0) return null;
+
+                var held = ladder.LastOrDefault(t => t.CompletionRequired <= figures.Total);
+                var next = ladder.FirstOrDefault(t => t.CompletionRequired > figures.Total);
+
+                // A pool is fifty charts, so a threshold IS a per-chart value. That is the whole
+                // device: it is true however the player gets there, where a count of charts
+                // would have to assume an order the gain column deliberately does not have.
+                var ask = next == null ? 0 : next.CompletionRequired / (double)PoolSize;
+                var example = next == null ? null : AskExample(scoring, exampleType, ask);
+
+                return new TitleRail(pool, figures.Total, held?.Name.ToString(),
+                    held?.CompletionRequired ?? 0, next?.Name.ToString(), next?.CompletionRequired,
+                    ask, figures.Total / (double)PoolSize, figures.Bar,
+                    example?.Level, example?.Grade);
+            }
+        }
+
+        /// <summary>
+        ///     The easiest chart that meets a per-chart ask, and the grade it would take. Levels
+        ///     ascending and grades worst-first, so the answer is the lowest level that can do it
+        ///     at all and the lowest grade that does it there — which is the cheapest honest
+        ///     reading of the number, not the most flattering one.
+        /// </summary>
+        private static (DifficultyLevel Level, PhoenixLetterGrade Grade)? AskExample(
+            ScoringConfiguration scoring, ChartType type, double ask)
+        {
+            if (ask <= 0) return null;
+
+            foreach (var level in DifficultyLevel.All.OrderBy(l => (int)l))
+            foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderBy(g => (int)g))
+                if (scoring.GetScore(type, level, grade.GetMinimumScoreFor(scoring.Mix),
+                        PhoenixPlate.RoughGame) >= ask)
+                    return (level, grade);
+
+            return null;
         }
 
         /// <summary>
