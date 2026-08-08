@@ -7236,6 +7236,9 @@
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>なくても動きます — あなた自身の、あなたのスコアに対しては。</value>
   </data>
+  <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
+    <value>このセッションが動かしたものを計算中 — 称号、プール、そして同レベル帯での各スコアの位置。</value>
+  </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>予測を計算しています。同水準のプレイヤー数百人を参照するため、少し時間がかかります。</value>
   </data>

@@ -7236,6 +7236,9 @@
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Senza di essi funziona lo stesso — per te, sui tuoi punteggi.</value>
   </data>
+  <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
+    <value>Sto calcolando cosa ha mosso questa sessione: i tuoi titoli, la tua pool e la posizione di ogni punteggio tra i giocatori del tuo livello.</value>
+  </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>Calcolo delle tue proiezioni. Consulta qualche centinaio di giocatori del tuo livello, quindi ci vuole un momento.</value>
   </data>

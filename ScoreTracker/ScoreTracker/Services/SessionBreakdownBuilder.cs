@@ -27,7 +27,8 @@ namespace ScoreTracker.Web.Services;
 ///         anything a vertical should own.
 ///     </para>
 /// </summary>
-public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader users, IScoreReader ledger)
+public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader users, IScoreReader ledger,
+    IDateTimeOffsetAccessor clock)
 {
     /// <summary>How many charts get a community-peer board. Every flagged chart qualifies (D9).</summary>
     private const int MaxPeerBoards = 8;
@@ -152,13 +153,43 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
 
         var stats = await mediator.Send(new GetPlayerStatsQuery(userId, group.Mix), cancellationToken);
         var boards = await BuildPeerBoards(userId, group, scores, charts, stats, cancellationToken);
-        return new SessionBreakdown(group, sessions.FirstOrDefault(s => s.Id == group.SessionId), charts, scores,
+        var session = sessions.FirstOrDefault(s => s.Id == group.SessionId);
+        return new SessionBreakdown(group, session, charts, scores,
             BuildCeremony(milestones, stats),
             milestones.Where(m => m.Kind != MilestoneKind.TitleProgress).ToArray(),
             BuildTitleBars(milestones),
             boards,
             (await users.GetUsers(boards.SelectMany(b => b.Peers).Select(p => p.Score.UserId).Distinct(),
-                cancellationToken)).ToDictionary(u => u.Id));
+                cancellationToken)).ToDictionary(u => u.Id),
+            CapturePending(session, highlights, milestones));
+    }
+
+    /// <summary>
+    ///     How long after the scores land we are still willing to call an empty session
+    ///     "calculating". Capture runs on the bus behind the import, so a page opened straight
+    ///     after one can genuinely beat it — but the claim has to expire, because a session that
+    ///     really earned nothing looks identical and must not be told to keep waiting.
+    /// </summary>
+    private static readonly TimeSpan CaptureWindow = TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    ///     True while the highlight pipeline has plausibly not finished. An honest inference
+    ///     rather than a fact: what is known is "nothing has been captured and the scores arrived
+    ///     moments ago", and the two coincide nearly always. A session of co-op or
+    ///     far-below-competitive charts legitimately captures nothing, which is exactly why the
+    ///     window exists — it stops claiming after two minutes and the page falls back to its
+    ///     ordinary empty state on its own.
+    ///     <para>
+    ///         Sessions predating the ScoreSession table have no wall clock to test, so they are
+    ///         never pending: they are historical by definition.
+    ///     </para>
+    /// </summary>
+    private bool CapturePending(ScoreSessionRecord? session, IReadOnlyList<ScoreHighlightRecord> highlights,
+        IReadOnlyList<PlayerMilestoneRecord> milestones)
+    {
+        if (session == null || highlights.Count > 0 || milestones.Count > 0) return false;
+
+        return clock.Now - session.LastActivityAt < CaptureWindow;
     }
 
     /// <summary>

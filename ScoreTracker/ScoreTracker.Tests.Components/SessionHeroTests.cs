@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Bunit;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using ScoreTracker.Communities.Contracts;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.ScoreLedger.Contracts;
@@ -26,9 +29,17 @@ public sealed class SessionHeroTests : ComponentTestBase
     private static readonly Guid Session = Guid.NewGuid();
     private static readonly DateTimeOffset Start = new(2026, 8, 1, 20, 0, 0, TimeSpan.Zero);
 
-    // DifficultyBubble gates its tooltip on RendererInfo. Last after the base's registrations —
-    // reading the renderer locks the service collection.
-    public SessionHeroTests() => this.RenderInteractive();
+    // The hero can render a PatienceCard, which draws its flavour line through the RNG port.
+    // Registered here rather than per test: bUnit seals its service provider the moment a
+    // component asks it for anything.
+    //
+    // DifficultyBubble gates its tooltip on RendererInfo, and reading the renderer locks the
+    // service collection — so RenderInteractive stays last.
+    public SessionHeroTests()
+    {
+        Services.AddSingleton(new Mock<IRandomNumberGenerator>().Object);
+        this.RenderInteractive();
+    }
 
     [Fact]
     public void TheHeroRendersEverySectionItHasDataFor()
@@ -103,6 +114,39 @@ public sealed class SessionHeroTests : ComponentTestBase
         Assert.DoesNotContain("794,532", notable.InnerHtml);
         // Still present in the neutral log, where the record lives.
         Assert.Contains("794,532", hero.Find("[data-testid='session-all-plays']").InnerHtml);
+    }
+
+    [Fact]
+    public void APendingCaptureStandsInForEverythingItWouldHaveFilled()
+    {
+        // Capture runs on the bus behind the import, so the page can beat it there. One card
+        // replaces the whole region rather than four sections each rendering empty beside it.
+        var pending = FullBreakdown() with
+        {
+            CapturePending = true,
+            Milestones = Array.Empty<PlayerMilestoneRecord>(),
+            TitleBars = Array.Empty<SessionTitleBarModel>()
+        };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, pending));
+
+        Assert.NotEmpty(hero.FindAll("[data-testid='session-capture-pending']"));
+        Assert.Empty(hero.FindAll("[data-testid='session-notable']"));
+        Assert.Empty(hero.FindAll("[data-testid='community-peers']"));
+        Assert.Empty(hero.FindAll("[data-testid='community-peers-empty']"));
+    }
+
+    [Fact]
+    public void APendingCaptureKeepsTheNumbersThatDoNotComeFromIt()
+    {
+        // The band reads your stats row and All plays reads the journal — both true the moment
+        // the import lands. Hiding them would take real data away to explain one absence.
+        var pending = FullBreakdown() with { CapturePending = true };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, pending));
+
+        Assert.NotEmpty(hero.FindAll("[data-testid='session-ceremony']"));
+        Assert.NotEmpty(hero.FindAll("[data-testid='session-all-plays']"));
     }
 
     [Fact]

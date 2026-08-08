@@ -122,6 +122,57 @@ public sealed class SessionBreakdownBuilderTests
     }
 
     [Fact]
+    public async Task AFreshSessionWithNothingCapturedYetIsPending()
+    {
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(),
+            captured: false, sessionEndedMinutesAgo: 0);
+
+        Assert.True(model.Hero!.CapturePending);
+    }
+
+    [Fact]
+    public async Task ASessionOlderThanTheWindowStopsClaimingToBeCalculating()
+    {
+        // A session that genuinely earned nothing looks identical to one still being worked out.
+        // The window is what stops the page telling that player to keep waiting forever.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(),
+            captured: false, sessionEndedMinutesAgo: 30);
+
+        Assert.False(model.Hero!.CapturePending);
+    }
+
+    [Fact]
+    public async Task ASessionWithCapturedRowsIsNeverPending()
+    {
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(),
+            captured: true, sessionEndedMinutesAgo: 0);
+
+        Assert.False(model.Hero!.CapturePending);
+    }
+
+    [Fact]
+    public async Task ASessionPredatingTheSessionTableIsNeverPending()
+    {
+        // No ScoreSession row means no wall clock to test against — and those sessions are
+        // historical by definition, so "still calculating" could never be true of them.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), captured: false);
+
+        Assert.False(model.Hero!.CapturePending);
+    }
+
+    [Fact]
     public async Task APhoenix2ScorePastYourPhoenix1BestReportsHowFarPast()
     {
         var chart = ChartAt(ChartType.Single, 21);
@@ -185,30 +236,46 @@ public sealed class SessionBreakdownBuilderTests
 
     private static async Task<SessionsPageModel> Build(Chart chart,
         RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers,
-        MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null)
+        MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
+        bool captured = true, int? sessionEndedMinutesAgo = null)
     {
-        return (await BuildWith(chart, rows, peers, mix, phoenix1)).Model;
+        return (await BuildWith(chart, rows, peers, mix, phoenix1, captured, sessionEndedMinutesAgo)).Model;
     }
 
     private static async Task<(SessionBreakdownBuilder Builder, SessionsPageModel Model)> BuildWith(Chart chart,
         RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers,
-        MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null)
+        MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null,
+        bool captured = true, int? sessionEndedMinutesAgo = null)
     {
         var mediator = new Mock<IMediator>();
         var group = new RecentSessionsPage.SessionGroup(Session, null, mix, "officialImport",
             rows.Min(r => r.OccurredAt), rows.Max(r => r.OccurredAt), rows);
 
+        // Wall clock, deliberately distinct from the journal's play date: "is capture still
+        // running" is a question about when the scores reached us.
+        var now = Start.AddHours(4);
+        var sessions = sessionEndedMinutesAgo == null
+            ? Array.Empty<ScoreSessionRecord>()
+            : new[]
+            {
+                new ScoreSessionRecord(Session, User, mix, "officialImport", "SHIRONEKO", "2",
+                    now.AddMinutes(-sessionEndedMinutesAgo.Value - 5),
+                    now.AddMinutes(-sessionEndedMinutesAgo.Value), rows.Length, 1, 0)
+            };
+
         Setup(mediator, new GetRecentSessionsQuery(User, 1, 20),
             new RecentSessionsPage(1, new[] { group }));
-        Setup(mediator, new GetScoreSessionsQuery(User), (IReadOnlyList<ScoreSessionRecord>)Array.Empty<ScoreSessionRecord>());
+        Setup(mediator, new GetScoreSessionsQuery(User), (IReadOnlyList<ScoreSessionRecord>)sessions);
         mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { chart });
         mediator.Setup(m => m.Send(It.IsAny<GetScoreHighlightsForSessionsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new ScoreHighlightRecord(chart.Id, Session, Start, HighlightFlags.FolderDebut, 21, 21.0,
-                    new HighlightDetail(PeerPercentile: 0.4, AttemptsBeforeClear: 6))
-            });
+            .ReturnsAsync(captured
+                ? new[]
+                {
+                    new ScoreHighlightRecord(chart.Id, Session, Start, HighlightFlags.FolderDebut, 21, 21.0,
+                        new HighlightDetail(PeerPercentile: 0.4, AttemptsBeforeClear: 6))
+                }
+                : Array.Empty<ScoreHighlightRecord>());
         mediator.Setup(m => m.Send(It.IsAny<GetPlayerMilestonesForSessionsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PlayerMilestoneRecord>());
         mediator.Setup(m => m.Send(It.IsAny<GetPlayerStatsQuery>(), It.IsAny<CancellationToken>()))
@@ -225,7 +292,9 @@ public sealed class SessionBreakdownBuilderTests
         ledger.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(phoenix1 ?? Array.Empty<UserPhoenixScore>());
-        var builder = new SessionBreakdownBuilder(mediator.Object, readers.Object, ledger.Object);
+        var clock = new Mock<IDateTimeOffsetAccessor>();
+        clock.SetupGet(c => c.Now).Returns(now);
+        var builder = new SessionBreakdownBuilder(mediator.Object, readers.Object, ledger.Object, clock.Object);
         return (builder, await builder.Build(User, null, 1, 20, null, CancellationToken.None));
     }
 

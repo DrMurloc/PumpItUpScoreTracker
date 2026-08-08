@@ -30,7 +30,25 @@
         </div>
     </div>
 
+    @* The band stays above the card on purpose. Its figures come from your stats row, not from
+       capture, so they are true the moment the import lands — what it is missing is the deltas,
+       and the card immediately below is what explains that absence. Hiding it too would take two
+       real numbers away to avoid explaining one gap. *@
     <SessionCeremonyBand Ceremony="Breakdown.Ceremony"></SessionCeremonyBand>
+
+    @if (Breakdown.CapturePending)
+    {
+        @* Rule 9: the card stands in for the WHOLE region it replaces — titles, milestones, the
+           scores that mattered, the peer boards — rather than sitting inside one of them beside
+           the others rendering empty. Everything below it reads live and needs no capture, so
+           All plays carries on underneath. *@
+        <div class="sbd-section" data-testid="session-capture-pending">
+            <PatienceCard Explanation="@L["Working out what this session moved — your titles, your pool, and where each score stands among players at your level."]">
+            </PatienceCard>
+        </div>
+    }
+    else
+    {
     <SessionTitleBars Bars="Breakdown.TitleBars"></SessionTitleBars>
 
     @if (Breakdown.Milestones.Count > 0)
@@ -61,6 +79,7 @@
     <RivalPeersSection Boards="Breakdown.PeerBoards" Peers="Breakdown.Peers" Mix="Breakdown.Group.Mix"
                        OnOpenChart="OnOpenChart">
     </RivalPeersSection>
+    }
 
     <div class="sbd-section" data-testid="session-all-plays">
         <div class="sbd-section-head">
