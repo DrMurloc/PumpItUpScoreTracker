@@ -1,0 +1,97 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.OfficialMirror.Contracts
+
+@* The answer to "did my last import work?", above the form that would start the next one
+   (UX rule 1). Four states, and the fourth is the one a boolean could not have held: a run
+   that started and never reported back, which is neither a success to claim nor a failure to
+   blame anybody for.
+
+   Severity carries the colour so no hex ever enters Pages/Components (UX rule 4), and every
+   state prints its own sentence rather than relying on the colour alone (rule 8). *@
+
+@if (Attempt is not null)
+{
+    <MudAlert Severity="@Tone" Dense="@IsFinishedCleanly" Class="mb-4" data-testid="import-result-strip">
+        @if (IsFinishedCleanly)
+        {
+            @* A working import gets one quiet line. Anything louder trains people to stop
+               reading the strip, and then it is not there for the run that failed. *@
+            <span data-testid="import-result-summary">
+                @(Attempt.ScoreCount is { } saved
+                    ? L["Last import finished {0} — {1} scores.", When, saved]
+                    : L["Last import finished {0}.", When])
+            </span>
+        }
+        else
+        {
+            <div class="d-flex flex-column" style="gap:.25rem">
+                <MudText Typo="Typo.overline">@(Attempt.NeverFinished ? L["Unfinished"] : L["Couldn't finish"])</MudText>
+                <MudText Typo="Typo.body2" data-testid="import-result-summary"><b>@Headline</b></MudText>
+                <MudText Typo="Typo.body2">@Detail</MudText>
+                <MudText Typo="Typo.caption">@Meta</MudText>
+                @if (CanRetry)
+                {
+                    <div>
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                                   Class="mt-1" OnClick="OnRetry" data-testid="import-result-retry">
+                            @L["Import again"]
+                        </MudButton>
+                    </div>
+                }
+            </div>
+        }
+    </MudAlert>
+}
+
+@code {
+    /// <summary>The most recent attempt, or null when this player has never imported.</summary>
+    [Parameter] public ImportAttemptRecord? Attempt { get; set; }
+
+    /// <summary>Whether the page is currently in a state where pressing Import would work.</summary>
+    [Parameter] public bool CanRetry { get; set; }
+
+    [Parameter] public EventCallback OnRetry { get; set; }
+
+    private bool IsFinishedCleanly => Attempt?.Outcome == ImportOutcome.Completed;
+
+    // An absolute local timestamp rather than "4 minutes ago": a relative phrase needs a unit
+    // vocabulary in nine locales, and the exact time is what anybody comparing this against a
+    // piugame play history actually wants.
+    private string When => Attempt!.StartedAt.ToLocalTime().ToString("g");
+
+    private string Took => Attempt!.Duration is { } d
+        ? d.TotalHours >= 1 ? d.ToString(@"h\:mm\:ss") : d.ToString(@"m\:ss")
+        : string.Empty;
+
+    private string Headline => Attempt!.Outcome switch
+    {
+        ImportOutcome.PiuGameError => L["PIUGame.com stopped responding partway through your last import."],
+        ImportOutcome.CredentialRejected => L["PIUGame.com turned your sign-in away."],
+        ImportOutcome.PiuScoresError => L["PIU Scores hit an error finishing your last import."],
+        _ => L["Your last import started but never reported back."]
+    };
+
+    private string Detail => Attempt!.Outcome switch
+    {
+        ImportOutcome.PiuGameError =>
+            L["Your game tag and avatar may have been updated, but no scores were read. Nothing was lost — try again in a few minutes."],
+        ImportOutcome.CredentialRejected => L["Check your PIUGame.com username and password, then import again."],
+        ImportOutcome.PiuScoresError => L["The error is logged and your existing scores are untouched. Try again shortly."],
+        _ => L["It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest."]
+    };
+
+    private string Meta => Attempt!.NeverFinished
+        ? L["Started {0} · no result recorded", When]
+        : L["Started {0} · stopped after {1}", When, Took];
+
+    // A rejected sign-in is the player's to fix and a piugame outage is theirs to wait out, so
+    // neither reads as Error — that severity is reserved for the failures that are ours.
+    private Severity Tone => Attempt!.Outcome switch
+    {
+        ImportOutcome.Completed => Severity.Success,
+        ImportOutcome.PiuGameError => Severity.Warning,
+        ImportOutcome.CredentialRejected => Severity.Warning,
+        ImportOutcome.PiuScoresError => Severity.Error,
+        _ => Severity.Info
+    };
+}

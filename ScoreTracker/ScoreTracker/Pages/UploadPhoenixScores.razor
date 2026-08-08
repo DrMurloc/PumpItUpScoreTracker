@@ -35,6 +35,16 @@
     <MudCardHeader><h2>@L["Import Scores"]</h2></MudCardHeader>
     <MudCardContent>
         <MudText Typo="Typo.body2" Class="mb-4">@L["Import Lede"]</MudText>
+        @* Above the form, not below it: the page's job is importing, and the first thing it
+           owes somebody arriving is whether the last one worked (UX rule 1).
+
+           Hidden while a run is in flight, and deliberately NOT refreshed when one ends: the
+           consumer closes its row in a finally, after the status event that would trigger the
+           reload, so refreshing on that event races the close and would flash "never reported
+           back" at somebody whose import had in fact just succeeded. A live run narrates itself
+           through the status line and the score table right below this. *@
+        <ImportResultStrip Attempt="@(_isImporting ? null : _lastImport)" CanRetry="@(!ImportDisabled)"
+                           OnRetry="ImportScores"/>
         <MudGrid Spacing="3">
             <MudItem xs="12" sm="6">
                 @if (_hasStoredCredential)
@@ -644,6 +654,16 @@
         // instead of asking for the password again; the checkbox reflects the saved state.
         _storedBlob = await ClientStore.Read();
         _hasStoredCredential = _storedBlob != null;
+        await LoadLastImport();
+    }
+
+    private ImportAttemptRecord? _lastImport;
+
+    private async Task LoadLastImport()
+    {
+        // Take 1: the strip only ever shows the most recent attempt. The full list is the
+        // expander below, which reads its own page.
+        _lastImport = (await Mediator.Send(new GetImportHistoryQuery(_userId, 1))).FirstOrDefault();
     }
 
     private List<string> _errors = new List<string>();
