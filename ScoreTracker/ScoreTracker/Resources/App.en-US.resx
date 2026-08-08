@@ -711,11 +711,14 @@
   <data name="Ask to be listed" xml:space="preserve">
     <value>Ask to be listed</value>
   </data>
-  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
-    <value>Assuming {0} with a {1} plate.</value>
-  </data>
   <data name="At least" xml:space="preserve">
     <value>At least</value>
+  </data>
+  <data name="at {0}" xml:space="preserve">
+    <value>at {0}</value>
+  </data>
+  <data name="at {0} or better" xml:space="preserve">
+    <value>at {0} or better</value>
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Attempts before this clear</value>
@@ -2151,6 +2154,9 @@
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
+  </data>
+  <data name="Fifty charts, {0} plate." xml:space="preserve">
+    <value>Fifty charts, {0} plate.</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
 	  <value>File cannot be larger than 10 MB</value>
@@ -5966,6 +5972,9 @@
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>steps by {0}</value>
+  </data>
+  <data name="still isn't enough at {0}" xml:space="preserve">
+    <value>still isn't enough at {0}</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>stingy to score even when passed</value>

@@ -9268,6 +9268,39 @@ button.chart-card-art {
     line-height: 1.35;
 }
 
+/* One row per reference grade. The rows block is a flex item of .title-suggest, so it has to
+   claim the remaining width or its children size to content and the asks stop lining up. */
+.title-suggest-rows {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.title-suggest-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+/* The folder column is fixed so every grade's ask starts on the same edge, single-type and
+   merged-pool rungs alike. Out-specifies the standalone .title-suggest-folder above. */
+.title-suggest-row .title-suggest-folder {
+    font-size: 23px;
+    min-width: 96px;
+}
+
+/* A grade no folder reaches: the number is the ceiling that falls short, not an answer. */
+.title-suggest-row.short .title-suggest-folder {
+    font-size: 20px;
+    color: color-mix(in srgb, var(--mix-ink) 34%, transparent);
+}
+
+.title-suggest-row.short .title-suggest-ask {
+    color: var(--mix-ink-muted);
+}
+
 .title-rarity {
     display: flex;
     align-items: baseline;

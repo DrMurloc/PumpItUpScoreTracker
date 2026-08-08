@@ -711,11 +711,14 @@
   <data name="Ask to be listed" xml:space="preserve">
     <value>Murgargl blu mrpgrogl</value>
   </data>
-  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
-    <value>Glromrp {0} glgrgl gro {1} murp.</value>
-  </data>
   <data name="At least" xml:space="preserve">
     <value>Mr mggl</value>
+  </data>
+  <data name="at {0}" xml:space="preserve">
+    <value>og {0}</value>
+  </data>
+  <data name="at {0} or better" xml:space="preserve">
+    <value>og {0} ol mrrgl</value>
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Blub arg palo</value>
@@ -2151,6 +2154,9 @@
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Glorgplgl</value>
+  </data>
+  <data name="Fifty charts, {0} plate." xml:space="preserve">
+    <value>Murgro murgl, {0} murp.</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
 	  <value>Mrblub blubmrp glorg blarggrorp grogrgl 10 MB</value>
@@ -5966,6 +5972,9 @@
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>plglmrgl murm {0}</value>
+  </data>
+  <data name="still isn't enough at {0}" xml:space="preserve">
+    <value>larg bo blurg og {0}</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>murpmurp grgl mrglrgl mrpplgl mrpgrrgl rglplgl</value>

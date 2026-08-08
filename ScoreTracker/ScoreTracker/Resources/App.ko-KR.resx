@@ -705,11 +705,14 @@
   <data name="Ask to be listed" xml:space="preserve">
     <value>등록 요청</value>
   </data>
-  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
-    <value>{0} 등급, {1} 플레이트 기준입니다.</value>
-  </data>
   <data name="At least" xml:space="preserve">
     <value>이상</value>
+  </data>
+  <data name="at {0}" xml:space="preserve">
+    <value>{0} 기준</value>
+  </data>
+  <data name="at {0} or better" xml:space="preserve">
+    <value>{0} 이상 기준</value>
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>클리어까지의 시도 횟수</value>
@@ -2135,6 +2138,9 @@
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
+  </data>
+  <data name="Fifty charts, {0} plate." xml:space="preserve">
+    <value>채보 50개, {0} 플레이트 기준.</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
     <value>파일은 10 MB를 초과할 수 없습니다</value>
@@ -5908,6 +5914,9 @@
   </data>
   <data name="steps by {0}" xml:space="preserve">
     <value>스텝: {0}</value>
+  </data>
+  <data name="still isn't enough at {0}" xml:space="preserve">
+    <value>{0} 기준으로는 부족합니다</value>
   </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>클리어해도 점수는 짜게 나옵니다</value>
