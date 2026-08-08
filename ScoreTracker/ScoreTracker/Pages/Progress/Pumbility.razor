@@ -1,185 +1,72 @@
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Domain.SecondaryPorts
-@using ScoreTracker.Domain.Services
-@using ScoreTracker.PlayerProgress.Contracts
-@using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
-@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services.Contracts
-@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @page "/Pumbility"
 @rendermode RenderModes.Interactive
+@namespace ScoreTracker.Web.Pages.Progress
 
-@* The page answers "what should I grind" and has to define the question before it answers
-   it: the number, then the bar it has to beat, then what to play. The eight rating bands
-   this replaced ranked your pool against itself and never said what for
-   (docs/design/pumbility-overhaul.md §3). *@
+@* The section's front page: what to play, and nothing else. The number and the bar it has
+   to beat come from the frame, because every other page measures from them too
+   (docs/design/pumbility-overhaul.md §3.1). *@
 
-<PageTitle>@L["PUMBILITY"]</PageTitle>
-
-<p class="pmb-eyebrow">@MixName · @L["PUMBILITY"]</p>
-
-@if (_page == null)
-{
-    @* One card across the page rather than a card beside a pulsing block. Half a hero is not
-       the shape of what arrives, so it was not doing rule 9's job — it was reading as a
-       second thing still loading, next to something already saying it was (owner). *@
-    <PatienceCard Explanation="@L["Working out your projections. This reads a few hundred players at your level, so it takes a moment."]"></PatienceCard>
-}
-else
-{
-    <div class="pmb-hero">
-        <PumbilityHero Page="_page" Charts="_charts" Pools="_pools" Selected="_pool"
-                       Subtitle="@HeroSubtitle" OnPoolChanged="ChangePool"></PumbilityHero>
-        <PoolCurve Page="_page" Charts="_charts"></PoolCurve>
-    </div>
-
-    @if (_carryover != null)
-    {
+<PumbilitySectionFrame Active="play">
+    <Body Context="ctx">
         <section class="pmb-block">
             <div class="pmb-block-head">
-                <h2 class="pmb-block-title">@L["What Phoenix 1 is worth here"]</h2>
+                <h2 class="pmb-block-title">@L["What to play next"]</h2>
+                <MudButtonGroup OverrideStyles="false">
+                    <MudTooltip Text="@L["Comfortable"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                                       Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                                       OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="@L["Compact"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                                       Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                                       OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="@L["Table"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                                       Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                                       OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+                    </MudTooltip>
+                </MudButtonGroup>
             </div>
             <p class="pmb-block-lede">
-                @string.Format(L["You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard."], _carryover.ScoredHere)
+                @L["Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar."]
             </p>
-            <CarryoverPanel Carryover="_carryover" Charts="_charts"></CarryoverPanel>
-        </section>
-    }
 
-    <section class="pmb-block">
-        <div class="pmb-block-head">
-            <h2 class="pmb-block-title">@L["What to play next"]</h2>
-            <MudButtonGroup OverrideStyles="false">
-                <MudTooltip Text="@L["Comfortable"]">
-                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
-                                   Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
-                                   OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
-                </MudTooltip>
-                <MudTooltip Text="@L["Compact"]">
-                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
-                                   Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
-                                   OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
-                </MudTooltip>
-                <MudTooltip Text="@L["Table"]">
-                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
-                                   Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
-                                   OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
-                </MudTooltip>
-            </MudButtonGroup>
-        </div>
-        <p class="pmb-block-lede">
-            @L["Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar."]
-        </p>
-
-
-        @if (_projecting)
-        {
-            <div class="pmb-skeleton pmb-skeleton-targets"></div>
-        }
-        else
-        {
-            <TargetList Targets="_page.Targets" Charts="_charts" Density="_density" Mix="_currentMix"
+            <TargetList Targets="ctx.Page.Targets" Charts="ctx.Charts" Density="_density" Mix="ctx.Mix"
                         ShowToDo="true" ToDos="_todos" OnToDo="ToggleToDo"
                         OnOpen="ShowChartDetails" OnPlay="PlayChart"></TargetList>
-        }
-    </section>
+        </section>
 
-    <details class="pmb-fold">
-        <summary>
-            <h3>@L["Your top 50"]</h3>
-            <span class="pmb-sum-note">@L["The charts your PUMBILITY is made of"]</span>
-        </summary>
-        <div class="pmb-fold-body">
-            <PoolBoard Page="_page" Charts="_charts" OnOpen="ShowChartDetails"></PoolBoard>
-        </div>
-    </details>
-
-    <details class="pmb-fold">
-        <summary>
-            <h3>@L["What would a clear be worth?"]</h3>
-            <span class="pmb-sum-note">@L["Try a level and a grade"]</span>
-        </summary>
-        <div class="pmb-fold-body">
-            <div class="pmb-whatif">
-                <div class="pmb-field">
-                    <label for="wi-level">@L["Difficulty Level"]</label>
-                    <MudNumericField id="wi-level" T="int" Min="1" Max="DifficultyLevel.Max" Value="_whatIfLevel"
-                                     ValueChanged="l => Recalculate(l, _whatIfType, _whatIfNew, _whatIfOld)"></MudNumericField>
-                </div>
-                <div class="pmb-field">
-                    <label for="wi-type">@L["Type"]</label>
-                    <MudSelect id="wi-type" T="ChartType" Value="_whatIfType"
-                               ValueChanged="t => Recalculate(_whatIfLevel, t, _whatIfNew, _whatIfOld)">
-                        <MudSelectItem T="ChartType" Value="ChartType.Single">@L["Singles"]</MudSelectItem>
-                        <MudSelectItem T="ChartType" Value="ChartType.Double">@L["Doubles"]</MudSelectItem>
-                    </MudSelect>
-                </div>
-                <div class="pmb-field">
-                    <label>@L["Old Letter Grade"]</label>
-                    <MudSelect T="PhoenixLetterGrade?" Clearable="true" Value="_whatIfOld"
-                               ValueChanged="g => Recalculate(_whatIfLevel, _whatIfType, _whatIfNew, g)">
-                        @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
-                        {
-                            <MudSelectItem T="PhoenixLetterGrade?" Value="grade">
-                                <LetterGradeIcon Grade="grade"></LetterGradeIcon>
-                            </MudSelectItem>
-                        }
-                    </MudSelect>
-                </div>
-                <div class="pmb-field">
-                    <label>@L["New Letter Grade"]</label>
-                    <MudSelect T="PhoenixLetterGrade" Value="_whatIfNew"
-                               ValueChanged="g => Recalculate(_whatIfLevel, _whatIfType, g, _whatIfOld)">
-                        @foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
-                        {
-                            <MudSelectItem T="PhoenixLetterGrade" Value="grade">
-                                <LetterGradeIcon Grade="grade"></LetterGradeIcon>
-                            </MudSelectItem>
-                        }
-                    </MudSelect>
-                </div>
-                <div class="pmb-whatif-out">
-                    +@_whatIfGain.ToString("N0")
-                    <small>@(_whatIfGain <= 0 ? L["this would not clear your bar"] : L["added to your PUMBILITY"])</small>
-                </div>
-            </div>
-        </div>
-    </details>
-}
-
-@* AutoPlay is bound rather than fixed: the card's play button and its jacket open the same
-   dialog, and only one of them asked for the video. *@
-<ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"
-                    AutoPlay="_detailsAutoPlay"
-                    IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
-                    OnToDo="ToggleToDo"></ChartDetailsDialog>
+        @* AutoPlay is bound rather than fixed: the card's play button and its jacket open the
+           same dialog, and only one of them asked for the video. *@
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="ctx.Mix"
+                            AutoPlay="_detailsAutoPlay"
+                            IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
+                            OnToDo="ToggleToDo"></ChartDetailsDialog>
+    </Body>
+</PumbilitySectionFrame>
 
 @inject IMediator Mediator
-@inject NavigationManager NavManager
-@inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
 @inject ISnackbar Snackbar
 
 @code {
+    // Kept as the section's original key rather than renamed for the new page: the convention
+    // is per page, but renaming resets the preference for everyone holding one, and Play is
+    // the only tab with a toggle.
     private const string DensitySettingKey = "Density__Pumbility";
 
-    // PUMBILITY is a Phoenix-lineage stat — XX viewers keep seeing Phoenix, as before.
-    private MixEnum _currentMix = MixEnum.Phoenix;
-
-    private PumbilityPageRecord? _page;
-    private Phoenix2CarryoverRecord? _carryover;
-    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
-    private IReadOnlyList<PumbilityHero.PoolOption> _pools = Array.Empty<PumbilityHero.PoolOption>();
-    private ChartType? _pool;
     private UiDensity _density = UiDensity.Comfortable;
-    private bool _projecting;
 
     private Chart? _detailsChart;
     private bool _detailsOpen;
@@ -187,76 +74,14 @@ else
 
     private readonly ISet<Guid> _todos = new HashSet<Guid>();
 
-    private DifficultyLevel _whatIfLevel = 18;
-    private ChartType _whatIfType = ChartType.Single;
-    private PhoenixLetterGrade _whatIfNew = PhoenixLetterGrade.AA;
-    private PhoenixLetterGrade? _whatIfOld;
-    private int _whatIfGain;
-
-    private string MixName => _currentMix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
-
-    // The hero number is this mix's own pool, in every mix. It was captioned as a Phoenix 1
-    // projection on Phoenix 2, which described the carryover panel further down the page
-    // instead — and at launch those two figures are far apart, so the caption read as the
-    // number being wrong. What Phoenix 1 is worth here is that panel's job to say.
-    private string? HeroSubtitle => L["The sum of your 50 best-rated charts."];
-
-
     protected override async Task OnInitializedAsync()
     {
-        if (!CurrentUser.IsLoggedIn)
-        {
-            NavManager.NavigateTo("/");
-            return;
-        }
-
-        var selected = await UiSettings.GetSelectedMix();
-        _currentMix = selected == MixEnum.XX ? MixEnum.Phoenix : selected;
         if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
             _density = density;
 
-        var todosTask = Mediator.Send(new GetSavedChartsQuery());
-        _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
-        foreach (var saved in (await todosTask).Where(c => c.ListType == ChartListType.ToDo))
+        foreach (var saved in (await Mediator.Send(new GetSavedChartsQuery()))
+                 .Where(c => c.ListType == ChartListType.ToDo))
             _todos.Add(saved.ChartId);
-
-        await Load();
-    }
-
-    private async Task Load()
-    {
-        _projecting = true;
-        _page = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, _pool));
-        _projecting = false;
-
-        // Phoenix 2 keeps Singles and Doubles as independent pools alongside the merged one,
-        // so the selector is real there and would invent a stat on Phoenix 1.
-        if (_currentMix == MixEnum.Phoenix2)
-        {
-            _pools = new[]
-            {
-                new PumbilityHero.PoolOption(null, L["All"], await TotalFor(null)),
-                new PumbilityHero.PoolOption(ChartType.Single, L["Singles"], await TotalFor(ChartType.Single)),
-                new PumbilityHero.PoolOption(ChartType.Double, L["Doubles"], await TotalFor(ChartType.Double))
-            };
-            _carryover = await Mediator.Send(new ProjectPhoenix2CarryoverQuery(CurrentUser.User.Id, _pool));
-        }
-
-        Recalculate(_whatIfLevel, _whatIfType, _whatIfNew, _whatIfOld);
-    }
-
-    private async Task<int> TotalFor(ChartType? pool)
-    {
-        if (pool == _pool && _page != null) return _page.Total;
-        var record = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, pool));
-        return record.Total;
-    }
-
-    private async Task ChangePool(ChartType? pool)
-    {
-        if (_pool == pool) return;
-        _pool = pool;
-        await Load();
     }
 
     private async Task SetDensity(UiDensity density)
@@ -295,26 +120,5 @@ else
         }
 
         StateHasChanged();
-    }
-
-    // The what-if is a tool, not an answer, which is why it sits at the bottom. It prices
-    // against the same bar everything else on the page measures from.
-    private void Recalculate(DifficultyLevel level, ChartType type, PhoenixLetterGrade newGrade,
-        PhoenixLetterGrade? oldGrade)
-    {
-        _whatIfLevel = level;
-        _whatIfType = type;
-        _whatIfNew = newGrade;
-        _whatIfOld = oldGrade;
-
-        var scoring = ScoringConfiguration.PumbilityScoring(_currentMix, false);
-        var bar = _page?.Bar ?? 0;
-        var floor = (double)bar;
-        if (oldGrade != null)
-            floor = Math.Max(
-                scoring.GetScore(type, level, oldGrade.Value.GetMinimumScoreFor(_currentMix)), bar);
-
-        var after = scoring.GetScore(type, level, newGrade.GetMinimumScoreFor(_currentMix));
-        _whatIfGain = (int)Math.Max(0, after - floor);
     }
 }

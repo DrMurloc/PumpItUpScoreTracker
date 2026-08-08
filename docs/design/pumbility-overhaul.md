@@ -636,12 +636,18 @@ round trips and feeds the rails for free. It is not the split D19 declined; it i
 `Application/PlayerRatingSaga`: `Rank(s) > 0` in `GetTop50ForPlayerQuery` (§3.8), and the same rule
 on `repriced` and `phoenix1Pool` in `ProjectPhoenix2CarryoverQuery`.
 
-**Web** — `Pages/Progress/Pumbility/`: `PumbilitySectionFrame.razor` (a component, so **no**
-`@rendermode`), then `Play.razor` `/Pumbility`, `Pool.razor` `/Pumbility/Pool`, `Phoenix1.razor`
-`/Pumbility/Phoenix1` — each declaring `@rendermode RenderModes.Interactive`
-(`RenderModeDeclarationTests`).
+**Web** — `Pages/Progress/`: `PumbilitySectionFrame.razor` (a component, so **no** `@rendermode`),
+then `Pumbility.razor` `/Pumbility`, `PumbilityPool.razor` `/Pumbility/Pool` and
+`PumbilityPhoenix1.razor` `/Pumbility/Phoenix1`, each declaring
+`@rendermode RenderModes.Interactive` (`RenderModeDeclarationTests`). Flat rather than a
+`Pumbility/` subfolder, and prefixed rather than named `Play`/`Pool`/`Phoenix1`: components resolve
+by name inside a namespace, and three generic ones in `Pages.Progress` is a collision waiting to
+happen.
 `Components/Pumbility/`: new `PumbilityBreakdown` and `PumbilityTitleRails`; `PumbilityHero` becomes
-the frame's horizontal hero; `PoolCurve`, `PoolBoard`, `TargetList`, `CarryoverPanel` move unchanged.
+the frame's horizontal band; `PoolCurve`, `PoolBoard`, `TargetList`, `CarryoverPanel` move unchanged.
+New `CarryoverSection` wraps the last of those with its own read — the pool it is scoped to arrives
+from the frame, so it is a **parameter**, which is not something the page can dispatch on in
+`OnInitializedAsync`. Re-fetching on a pool change falls out of that for free.
 `site.css`: the `pmb-*` block gains frame, breakdown and rail classes — `var(--mix-*)` only, no
 literals (`UiColorTokenTests`).
 UiSettings: **`Pumbility__Pool`** new. **`Density__Pumbility` unchanged** — the convention is per

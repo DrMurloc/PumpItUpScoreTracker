@@ -12742,13 +12742,40 @@ span.ct-console-pick { cursor: default; }
     margin: 16px 0 8px;
 }
 
-.pmb-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 330px) minmax(0, 1fr);
-    gap: 16px;
+/* The section frame: the number, the pool selector and the bar, above the nav and shared by
+   every page in the section. Everything in it starts at the same left edge — the bar card
+   used to be pushed right, which reads fine on one line and strands it against the far edge
+   with nothing under it the moment the row wraps. */
+.pmb-frame {
+    display: flex;
+    align-items: center;
+    gap: 14px 22px;
+    flex-wrap: wrap;
+    padding-bottom: 14px;
 }
 
-.pmb-hero-figure,
+.pmb-frame-figure {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Holds the band's height while the number is still arriving, so the nav under it does not
+   jump once it lands. */
+.pmb-frame-waiting {
+    min-height: 74px;
+}
+
+.pmb-frame-nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: 12px;
+    margin-bottom: 4px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
 .pmb-curve {
     background: var(--mix-surface);
     border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
@@ -12756,13 +12783,8 @@ span.ct-console-pick { cursor: default; }
     padding: 14px 16px 16px;
 }
 
-.pmb-hero-figure {
-    display: flex;
-    flex-direction: column;
-}
-
 .pmb-hero-value {
-    font-size: 56px;
+    font-size: 46px;
     line-height: .96;
 }
 
@@ -12772,15 +12794,14 @@ span.ct-console-pick { cursor: default; }
     margin-top: 4px;
 }
 
-/* Pool selector — Phoenix 2 only, and it re-ranks the whole page. */
+/* Pool selector — Phoenix 2 only, and it re-ranks the whole section. */
 .pmb-poolsplit {
     display: flex;
     gap: 6px;
-    margin-top: 13px;
 }
 
 .pmb-poolsplit-seg {
-    flex: 1;
+    flex: 0 0 auto;
     min-width: 0;
     border-radius: 4px;
     padding: 6px 8px;
@@ -12813,9 +12834,8 @@ span.ct-console-pick { cursor: default; }
     outline-offset: 2px;
 }
 
-/* The bar callout — the mechanic the page is organised around. */
+/* The bar callout — the mechanic the section is organised around. */
 .pmb-barcard {
-    margin-top: 13px;
     padding: 10px 12px;
     border-radius: 4px;
     background: color-mix(in srgb, var(--mix-accent) 9%, transparent);
@@ -13287,95 +13307,6 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-accent);
 }
 
-/* --- collapsibles --- */
-details.pmb-fold {
-    margin-top: 26px;
-    border-radius: 6px;
-    background: var(--mix-surface);
-    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
-}
-
-details.pmb-fold > summary {
-    cursor: pointer;
-    list-style: none;
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-details.pmb-fold > summary::-webkit-details-marker {
-    display: none;
-}
-
-details.pmb-fold > summary::before {
-    content: "\25B8";
-    color: var(--mix-ink-muted);
-    font-size: 11px;
-    transition: transform .15s ease;
-}
-
-details.pmb-fold[open] > summary::before {
-    transform: rotate(90deg);
-}
-
-details.pmb-fold > summary h3 {
-    font-family: var(--font-display);
-    font-size: 16px;
-    margin: 0;
-}
-
-details.pmb-fold > summary .pmb-sum-note {
-    margin-left: auto;
-    font-size: 12px;
-    color: var(--mix-ink-muted);
-    text-align: right;
-}
-
-details.pmb-fold > summary:focus-visible {
-    outline: 2px solid var(--mix-primary);
-    outline-offset: -2px;
-}
-
-.pmb-fold-body {
-    padding: 0 14px 14px;
-}
-
-.pmb-whatif {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 12px;
-    align-items: end;
-}
-
-.pmb-field label {
-    display: block;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 11px;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--mix-ink-muted);
-    margin-bottom: 4px;
-}
-
-.pmb-whatif-out {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 30px;
-    color: var(--mix-primary);
-    font-variant-numeric: tabular-nums;
-}
-
-.pmb-whatif-out small {
-    display: block;
-    font-family: var(--font-body);
-    font-weight: 400;
-    font-size: 11.5px;
-    color: var(--mix-ink-muted);
-    letter-spacing: 0;
-}
-
 /* --- the patience card: sitewide, for waits a page cannot shorten --- */
 /* Lives here rather than in a Razor <style> block, which is page-scoped — a shared component
    styled that way renders unstyled on every other page that uses it. */
@@ -13489,24 +13420,14 @@ details.pmb-fold > summary:focus-visible {
     .pmb-skeleton {
         animation: none;
     }
-
-    details.pmb-fold > summary::before {
-        transition: none;
-    }
 }
 
 /* --- the class ladder (UX-GUIDELINES section 1): tablet under 900, fold under 700,
        mobile under 500. One class, one shed, least dense information first. --- */
 
-/* The hero is two-up for desktop only; a tablet gets the full-width curve, which its
-   height can afford. 860 sits between the real tablets (820, 834) and the 900 rung,
-   touching neither: a query measures the content box, and a scrollbar would flip a
-   rung sitting on a nominal device width. */
-@media (max-width: 860px) {
-    .pmb-hero {
-        grid-template-columns: 1fr;
-    }
-}
+/* The frame needs no width rung of its own: it is a wrapping row, so a narrow viewport
+   stacks the number, the selector and the bar in that order against one left edge. The
+   860 rung the two-up hero needed went with the hero. */
 
 /* Tablet: the evidence line goes first, least information per pixel on the row. */
 @media (max-width: 899.98px) {
@@ -13537,7 +13458,7 @@ details.pmb-fold > summary:focus-visible {
     }
 
     .pmb-hero-value {
-        font-size: 48px;
+        font-size: 38px;
     }
 
     .pmb-curve-plot {
@@ -13555,15 +13476,19 @@ details.pmb-fold > summary:focus-visible {
    height is the scarce axis, so this compresses instead. The one rule the width
    ladder cannot express (session-breakdown.md section 5 draws the same line). */
 @media (max-height: 520px) and (min-width: 700px) {
-    .pmb-hero {
-        grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
-    }
-
     .pmb-hero-value {
         font-size: 34px;
     }
 
-    .pmb-hero-figure,
+    .pmb-frame {
+        gap: 8px 16px;
+        padding-bottom: 9px;
+    }
+
+    .pmb-frame-nav {
+        padding-top: 8px;
+    }
+
     .pmb-curve {
         padding: 10px 12px 11px;
     }
@@ -13577,7 +13502,6 @@ details.pmb-fold > summary:focus-visible {
     }
 
     .pmb-barcard {
-        margin-top: 9px;
         padding: 7px 10px;
     }
 

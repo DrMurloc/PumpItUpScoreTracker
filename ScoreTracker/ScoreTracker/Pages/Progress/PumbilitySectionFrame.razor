@@ -1,0 +1,171 @@
+@namespace ScoreTracker.Web.Pages.Progress
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@inject IMediator Mediator
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+
+@* The PUMBILITY section chrome, shared by every page in it: the number, the pool selector,
+   the bar, and the nav. Those three ride the frame rather than a page because all three
+   pages measure from them — the targets clear the bar, the pool board draws it, and the
+   title rails divide the total by fifty (docs/design/pumbility-overhaul.md D14, D15).
+
+   Each page is its own route and circuit; the nav links are real document loads, which is
+   the site's navigation model anyway. That is also why the pool selection is a UiSetting
+   and not circuit state — anything held in a circuit dies on the way to the next tab. *@
+
+<PageTitle>@L[ActiveLabel] · @L["PUMBILITY"]</PageTitle>
+
+<p class="pmb-eyebrow">@MixName · @L["PUMBILITY"]</p>
+
+@if (_page != null)
+{
+    <PumbilityHero Page="_page" Charts="_charts" Pools="_pools" Selected="_pool"
+                   Subtitle="@L["The sum of your 50 best-rated charts."]"
+                   OnPoolChanged="ChangePool"></PumbilityHero>
+}
+else
+{
+    <div class="pmb-frame pmb-frame-waiting" aria-hidden="true"></div>
+}
+
+@* The nav renders as soon as the mix is known, which is one settings read — so a tab is
+   reachable while the number behind it is still arriving, rather than the whole section
+   sitting inert. *@
+@if (_mixKnown)
+{
+    <nav class="pmb-frame-nav" aria-label="@L["PUMBILITY"]">
+        @foreach (var (key, href, label) in Links)
+        {
+            <MudButton Href="@href" Size="Size.Small" Color="Color.Primary"
+                       Variant="@(key == Active ? Variant.Filled : Variant.Outlined)">
+                @L[label]
+            </MudButton>
+        }
+    </nav>
+}
+
+@if (_page != null)
+{
+    @Body(new SectionContext(_page, _charts, _currentMix, _pool))
+}
+else if (_mixKnown)
+{
+    @* One card across the section rather than a card beside a pulsing block. Half a hero is
+       not the shape of what arrives, so it was not doing rule 9's job. *@
+    <PatienceCard Explanation="@L["Working out your projections. This reads a few hundred players at your level, so it takes a moment."]"></PatienceCard>
+}
+
+@code {
+    /// <summary>Everything a page in this section renders from, resolved once by the frame.</summary>
+    public sealed record SectionContext(PumbilityPageRecord Page, IReadOnlyDictionary<Guid, Chart> Charts,
+        MixEnum Mix, ChartType? Pool);
+
+    /// <summary>
+    ///     Which pool the whole section is scoped to. A setting rather than circuit state
+    ///     because every tab link is a real navigation; it persists between visits too, which
+    ///     the in-circuit selector never did.
+    /// </summary>
+    public const string PoolSettingKey = "Pumbility__Pool";
+
+    private const string Phoenix1Key = "phoenix1";
+
+    private static readonly (string Key, string Href, string Label)[] AllLinks =
+    {
+        ("play", "/Pumbility", "Play"),
+        ("pool", "/Pumbility/Pool", "Your Pool"),
+        (Phoenix1Key, "/Pumbility/Phoenix1", "Phoenix 1")
+    };
+
+    [Parameter] [EditorRequired] public string Active { get; set; } = "play";
+
+    [Parameter] [EditorRequired] public RenderFragment<SectionContext> Body { get; set; } = null!;
+
+    // PUMBILITY is a Phoenix-lineage stat — XX viewers keep seeing Phoenix, as before.
+    private MixEnum _currentMix = MixEnum.Phoenix;
+
+    private bool _mixKnown;
+    private PumbilityPageRecord? _page;
+    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private IReadOnlyList<PumbilityHero.PoolOption> _pools = Array.Empty<PumbilityHero.PoolOption>();
+    private ChartType? _pool;
+
+    private string MixName => _currentMix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
+
+    private string ActiveLabel => AllLinks.First(l => l.Key == Active).Label;
+
+    // Phoenix 1 has no carryover to show, so it is a two-page section. The chip comes out
+    // rather than rendering inert — the same move the official frame makes for What It Takes.
+    private IEnumerable<(string Key, string Href, string Label)> Links =>
+        AllLinks.Where(l => l.Key != Phoenix1Key || _currentMix == MixEnum.Phoenix2);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        var selected = await UiSettings.GetSelectedMix();
+        _currentMix = selected == MixEnum.XX ? MixEnum.Phoenix : selected;
+
+        // Reached by URL on a mix that has no such page — send them somewhere that means
+        // something rather than rendering an empty argument.
+        if (Active == Phoenix1Key && _currentMix != MixEnum.Phoenix2)
+        {
+            NavManager.NavigateTo("/Pumbility");
+            return;
+        }
+
+        // Phoenix 2 keeps Singles and Doubles as independent pools alongside the merged one,
+        // so the selector is real there and would invent a stat on Phoenix 1.
+        if (_currentMix == MixEnum.Phoenix2 &&
+            Enum.TryParse<ChartType>(await UiSettings.GetSetting(PoolSettingKey), out var stored) &&
+            stored is ChartType.Single or ChartType.Double)
+            _pool = stored;
+
+        _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
+        _mixKnown = true;
+        StateHasChanged();
+
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _page = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, _pool));
+
+        if (_currentMix != MixEnum.Phoenix2) return;
+
+        _pools = new[]
+        {
+            new PumbilityHero.PoolOption(null, L["All"], await TotalFor(null)),
+            new PumbilityHero.PoolOption(ChartType.Single, L["Singles"], await TotalFor(ChartType.Single)),
+            new PumbilityHero.PoolOption(ChartType.Double, L["Doubles"], await TotalFor(ChartType.Double))
+        };
+    }
+
+    private async Task<int> TotalFor(ChartType? pool)
+    {
+        if (pool == _pool && _page != null) return _page.Total;
+        var record = await Mediator.Send(new GetPumbilityPageQuery(CurrentUser.User.Id, _currentMix, pool));
+        return record.Total;
+    }
+
+    private async Task ChangePool(ChartType? pool)
+    {
+        if (_pool == pool) return;
+        _pool = pool;
+        await UiSettings.SetSetting(PoolSettingKey, pool?.ToString() ?? string.Empty);
+        await Load();
+    }
+}
