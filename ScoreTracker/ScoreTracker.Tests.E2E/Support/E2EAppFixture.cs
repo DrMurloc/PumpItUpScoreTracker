@@ -138,16 +138,10 @@ public sealed class E2EAppFixture : IAsyncLifetime
     ///     Drops every in-memory cache the running app holds.
     ///     <para>
     ///         Call it AFTER seeding as well as before. The app is live while a test seeds, and
-    ///         several catalog reads cache a whole table under one key for days — chart videos are
-    ///         the sharpest: one global key, a 14-day expiry, and production only evicts it when a
-    ///         video is edited through the admin path. Anything that reads that table between the
-    ///         reset and the seed pins an EMPTY dictionary for the rest of the run, and no amount
-    ///         of waiting brings the row back. Seeding through raw SQL bypasses the eviction the
-    ///         real write path performs, so the test has to do it.
-    ///     </para>
-    ///     <para>
-    ///         Added while chasing TierListTests' intermittent video assertion. It is correct on
-    ///         its own terms and did not fix that — see the note there.
+    ///         several catalog reads cache a whole table under one key for days (charts a
+    ///         fortnight, tier lists a day), evicted in production only by the write path that a
+    ///         raw-SQL seed goes around. Without the second call, a read landing between the reset
+    ///         and the seed serves the previous test's world for the rest of the run.
     ///     </para>
     /// </summary>
     public void ClearCaches()
