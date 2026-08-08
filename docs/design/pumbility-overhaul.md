@@ -552,6 +552,17 @@ Every Phoenix 1 score repriced under `Phoenix2PumbilityScoring` — singles pric
 base curve, sub-10 charts at zero, broken plays at zero — then the top 50 taken for each of All,
 Singles and Doubles.
 
+⚠ **Repriced means the Phoenix 2 level, not the level the score was set against.** Phoenix 2
+*rerated* the charts it inherited rather than restepping them: 338 of the 4,367 shared charts carry
+a different level here — 302 up, 36 down — so the same chart id resolves to a different `Chart` in
+each catalog and only the price moves, never the steps. Reading the Phoenix 1 level pays a
+downrated chart a base the mix has taken away from it, and short-changes the 302 uprates by the
+same arithmetic (found by the owner 2026-08-08 on Spooky Macaron S23 → S22, suggested at +372 where
+the chart is worth +365 — over the bar on a rating it no longer has). A chart with **no** Phoenix 2
+row has no Phoenix 2 level to read, so it keeps its own; it still counts toward the pool, and it can
+never become a target. `Phoenix2ProjectionCalculator` (the recap) always did this correctly and is
+the reference. The peer side handles the same fact separately — see `ReferenceLevelSlack` in §4.
+
 **The panel's fifty is the definition; the suggestions are not bound by it** (owner, 2026-08-06).
 PUMBILITY *is* the top fifty, so `Entries` and every figure in the table below come from exactly
 that. But capping *suggestions* at the pool hid the rows carrying the best evidence the site has:
