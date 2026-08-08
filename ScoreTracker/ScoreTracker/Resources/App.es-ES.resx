@@ -654,6 +654,12 @@
   <data name="Apply" xml:space="preserve">
     <value>Aplicar</value>
   </data>
+  <data name="Applying baby powder" xml:space="preserve">
+    <value>Aplicando polvos de talco</value>
+  </data>
+  <data name="Applying Gorilla Tape to the sensors" xml:space="preserve">
+    <value>Aplicando Gorilla Tape a los sensores</value>
+  </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Charts asequibles sin pasar alrededor de tu nivel.</value>
   </data>
@@ -1548,6 +1554,9 @@
   <data name="Counting" xml:space="preserve">
     <value>Cuenta</value>
   </data>
+  <data name="Counting perfects" xml:space="preserve">
+    <value>Contando perfects</value>
+  </data>
   <data name="Counting Toward Your Total" xml:space="preserve">
     <value>Cuenta para tu total</value>
   </data>
@@ -1613,6 +1622,9 @@
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>Subida de CSV</value>
+  </data>
+  <data name="Cueing the next song" xml:space="preserve">
+    <value>Preparando la siguiente canción</value>
   </data>
   <data name="Current" xml:space="preserve">
     <value>Actual</value>
@@ -2115,6 +2127,9 @@
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>¡Gracias por tu opinión!</value>
   </data>
+  <data name="Feeding it another credit" xml:space="preserve">
+    <value>Metiendo otra ficha</value>
+  </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Feeds — registra un canal una vez y el bot lo mantiene al día</value>
   </data>
@@ -2168,6 +2183,9 @@
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>Encuentra tu próximo pase.</value>
+  </data>
+  <data name="Finding the beat" xml:space="preserve">
+    <value>Buscando el ritmo</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Terminar luego</value>
@@ -2288,9 +2306,6 @@
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>Desde {0}</value>
-  </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>de {0} jugadores como tú</value>
   </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Con {0} puntuaciones</value>
@@ -4884,6 +4899,9 @@
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Leerla requiere tres cosas a la vez, guardadas en tres lugares distintos:</value>
   </data>
+  <data name="Reading the step chart" xml:space="preserve">
+    <value>Leyendo el patrón</value>
+  </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>Eso equivale a {0}.</value>
   </data>
@@ -5360,6 +5378,9 @@
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
     <value>Buscar usuario (nombre o UserId)</value>
+  </data>
+  <data name="Searching for Molex connectors" xml:space="preserve">
+    <value>Buscando conectores Molex</value>
   </data>
   <data name="Second" xml:space="preserve">
     <value>Segundo</value>
@@ -5894,6 +5915,9 @@
   </data>
   <data name="Store" xml:space="preserve">
     <value>Guardar</value>
+  </data>
+  <data name="Stretching first" xml:space="preserve">
+    <value>Estirando primero</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>más fuerte</value>
@@ -6915,8 +6939,14 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Falta que lo vea una persona — dale un toque</value>
   </data>
+  <data name="Waiting on the sensors" xml:space="preserve">
+    <value>Esperando a los sensores</value>
+  </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Sala de espera</value>
+  </data>
+  <data name="Warming up the pad" xml:space="preserve">
+    <value>Calentando la plataforma</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Mírate subir</value>
@@ -7110,6 +7140,9 @@
   <data name="wins in range" xml:space="preserve">
     <value>victorias en tu rango</value>
   </data>
+  <data name="Wiping down the sensors" xml:space="preserve">
+    <value>Limpiando los sensores</value>
+  </data>
   <data name="within 1 level" xml:space="preserve">
     <value>a ±1 nivel</value>
   </data>
@@ -7118,6 +7151,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Sin ellos sigue funcionando — para ti, sobre tus propias puntuaciones.</value>
+  </data>
+  <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
+    <value>Calculando tus proyecciones. Esto consulta a unos cientos de jugadores de tu nivel, así que tarda un momento.</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>

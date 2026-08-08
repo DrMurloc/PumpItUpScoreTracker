@@ -38,7 +38,6 @@ else if (Density == UiDensity.Table)
                 <th>@L["You have"]</th>
                 <th>@L["Projected"]</th>
                 <th class="pmb-r">@L["Gain"]</th>
-                <th class="pmb-col-why">@L["Evidence"]</th>
             </tr>
             </thead>
             <tbody>
@@ -63,7 +62,6 @@ else if (Density == UiDensity.Table)
                         <span class="pmb-num pmb-score-text">@(((int)target.Projected).ToString("N0"))</span>
                     </td>
                     <td class="pmb-r pmb-gain-cell">+@target.Gain.ToString("N0")</td>
-                    <td class="pmb-col-why pmb-muted">@EvidenceLine(target)</td>
                 </tr>
             }
             </tbody>
@@ -195,19 +193,16 @@ else
     };
 
     // The jacket says it in pictures, so the tooltip says it in words — Compact has no body
-    // to carry either (rule 7).
+    // to carry either (rule 7). The card supplies the state word itself, so this is the
+    // source and the grade and nothing more.
     private string CompactNote(PumbilityTarget target) =>
-        $"{CornerMeaning(target)} · {L["Projected"]} {target.Projected.LetterGradeFor(Mix).GetName()}";
+        $"{CornerMeaning(target)} · {target.Projected.LetterGradeFor(Mix).GetName()}";
 
-    // Compact hides the body, so the words for the three kinds ride the tooltip and the
-    // legend (rule 8: the border's colour never travels alone).
-    private string CornerMeaning(PumbilityTarget target) => target switch
-    {
-        { Source: TargetSource.Phoenix1 } => L["Carried from Phoenix 1"],
-        { CurrentIsBroken: true } => L["Played, not passed"],
-        { Current: not null } => L["Upscore"],
-        _ => L["Not yet played"]
-    };
+    // Where the number came from, and only that. What the row is to YOU — upscore, carried,
+    // broke, untouched — is the border's job and the legend names it; saying it twice in
+    // different words was the whole reason the line read as noise (owner, 2026-08-07).
+    private string CornerMeaning(PumbilityTarget target) =>
+        target.Source == TargetSource.Phoenix1 ? L["Carried from Phoenix 1"] : L["Projected"];
 
     private RenderFragment ProjectionBody(PumbilityTarget target) => builder =>
     {
@@ -230,7 +225,7 @@ else
 
         builder.OpenElement(12, "div");
         builder.AddAttribute(13, "class", "pmb-tcard-why pmb-muted");
-        builder.AddContent(14, target.Evidence != null ? EvidenceLine(target) : CornerMeaning(target));
+        builder.AddContent(14, CornerMeaning(target));
         builder.CloseElement();
     };
 
@@ -270,12 +265,4 @@ else
         builder.CloseElement();
     };
 
-    // What the estimate heard, not why it landed there. Effective peers is voices after
-    // growth weighting -- ten people who have all levelled past the score they lent are
-    // worth about one -- so it is the honest number to print.
-    private string EvidenceLine(PumbilityTarget target)
-    {
-        if (target.Evidence is not { } evidence) return string.Empty;
-        return string.Format(L["from {0} players like you"], evidence.PeerCount);
-    }
 }

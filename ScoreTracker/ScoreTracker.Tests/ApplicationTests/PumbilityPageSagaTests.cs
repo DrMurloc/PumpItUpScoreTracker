@@ -313,7 +313,7 @@ public sealed class PumbilityPageSagaTests
                 });
             Mediator.Setup(m => m.Send(It.IsAny<ProjectPumbilityGainsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => new PumbilityProjection(_projected, _gains,
-                    new Dictionary<Guid, TierListCategory>(), new Dictionary<Guid, ProjectionEvidence>()));
+                    new Dictionary<Guid, TierListCategory>()));
 
             Scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum mix, Guid _, CancellationToken _) =>
