@@ -29,6 +29,16 @@
                         <span tabindex="0" class="sbd-badge">@badge.Glyph@(badge.Suffix == null ? "" : $" {badge.Suffix}")</span>
                     </MudTooltip>
                 }
+                @if (Score.Phoenix1Gain is { } phoenix1)
+                {
+                    @* Gold, not green: the tail already carries a green delta over your previous
+                       Phoenix 2 score, and a second green number measuring a different baseline
+                       eight pixels away reads as the same fact twice. The words are what keep
+                       them apart, so "over P1" never abbreviates away. *@
+                    <MudTooltip Text="@L["The first Phoenix 2 score to beat your Phoenix 1 best"]">
+                        <span tabindex="0" class="sbd-p1">@L["+{0} over P1", phoenix1.ToString("N0")]</span>
+                    </MudTooltip>
+                }
             </div>
             <div class="sbd-row-line">
                 <span class="sbd-score @GlowClass" style="@ScoreColor">
@@ -37,9 +47,9 @@
                                     Plate="PhoenixPlateHelperMethods.TryParse(Score.Row.Plate)"
                                     ShowScore="true" OneLine="true"></ScoreBreakdown>
                 </span>
-                @if (PercentileText != null)
+                @if (StandingText != null)
                 {
-                    <span class="sbd-peerpct">@PercentileText</span>
+                    <span class="sbd-peerpct">@StandingText</span>
                 }
             </div>
         </div>
@@ -69,17 +79,29 @@
         : ThemeScales.RarityClass(ThemeScales.BandFor(Score.PeerPercentile.Value));
 
     /// <summary>
-    ///     Null when nothing measured this score. The row then says nothing about it — a
-    ///     disclaimer there confuses more than it clarifies (owner call).
+    ///     Where you stand in the cohort the colour came from, as a place rather than a share —
+    ///     "#6 of 94" is the same fact as a percentile and reads like a leaderboard, which is
+    ///     what it is. Null when nothing measured this score: the row then says nothing about
+    ///     it, because a disclaimer there confuses more than it clarifies (owner call).
     /// </summary>
-    private string? PercentileText
+    private string? StandingText
     {
         get
         {
-            if (Score.PeerPercentile is not { } percentile || Score.Detail?.PeerCount is not { } count) return null;
-            return L["top {0}% at your level · {1} in cohort", Math.Round(percentile * 100), count];
+            if (Score.Detail?.PeerCount is not { } cohort || cohort == 0) return null;
+
+            // A Perfect Game cannot be beaten, only tied, so every PG row is "#1" and the place
+            // stops distinguishing anything. How many peers share it is the fact worth the line
+            // instead — unless nobody does, where the place says the better thing.
+            if (Score.Row.Score == PerfectGame && Score.OtherPeersWithPg is { } shared
+                                               && Score.PeerCountExcludingYou is { } peers)
+                return L["PG · {0} of {1} peers have it", shared, peers];
+
+            return Score.PeerPlace is { } place ? L["#{0} of {1} peers", place, cohort] : null;
         }
     }
+
+    private const int PerfectGame = 1_000_000;
 
     private IEnumerable<(string Glyph, string? Suffix, string Tooltip)> Badges
     {
@@ -89,8 +111,9 @@
             if (Score.Flags.HasFlag(HighlightFlags.PumbilityTop50))
                 yield return ("👑", detail?.PumbilityRank is { } r ? $"#{r}" : null,
                     L["In your PUMBILITY top 50"].Value);
-            if (Score.Flags.HasFlag(HighlightFlags.ScoreQuality90))
-                yield return ("📊", PeerSuffix, L["Top scores among comparable players"].Value);
+            // No ScoreQuality90 badge: it said "top 10% among comparable players", and the
+            // standing line beneath now says exactly where you placed among them. The flag
+            // itself is untouched — it still rides the Discord card and seeds hot streaks.
             if (Score.Flags.HasFlag(HighlightFlags.FolderCompletion90))
                 yield return ("📁", null, L["Nearly complete folder"].Value);
             if (Score.Flags.HasFlag(HighlightFlags.CompetitiveImprover))
@@ -105,16 +128,6 @@
                 yield return ("🎯", $"{attempts + 1}", L["Attempts before this clear"].Value);
             if (Score.Row.IsReclear)
                 yield return ("🔁", null, L["Passed in another mix"].Value);
-        }
-    }
-
-    private string? PeerSuffix
-    {
-        get
-        {
-            if (Score.Detail?.PeerCount is not { } count || count == 0) return null;
-            if (Score.Row.Score == 1_000_000 && Score.Detail.PeerPgCount is { } pg) return $"PG {pg}/{count}";
-            return $"#{(Score.Detail.PeerBetterCount ?? 0) + 1}/{count}";
         }
     }
 }

@@ -228,6 +228,9 @@
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>+{0} jogadores subiram mais nesta escada.</value>
   </data>
+  <data name="+{0} over P1" xml:space="preserve">
+    <value>+{0} acima do P1</value>
+  </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
@@ -6098,6 +6101,9 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>Os números exatos</value>
   </data>
+  <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
+    <value>A primeira pontuação de Phoenix 2 a superar seu melhor de Phoenix 1</value>
+  </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>A primeira captura semanal ainda não chegou - os destaques acendem após a importação do próximo domingo.</value>
   </data>
@@ -6538,9 +6544,6 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>Top {0}%</value>
-  </data>
-  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
-    <value>top {0}% no seu nível · {1} comparáveis</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>top {0}% entre pares</value>

@@ -806,8 +806,15 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     {
         if (d?.PeerCount is null or 0) return "📊 " + _localizer.Get(culture, "Top scores among peers");
         var isPg = best.Score != null && (int)best.Score.Value == 1_000_000;
-        if (isPg && d.PeerPgCount != null)
-            return "📊 " + _localizer.Get(culture, "PG · {0} of {1} peers have it", d.PeerPgCount, d.PeerCount);
+        // "Peers" means the other people at your level. The captured cohort includes you — you
+        // are trivially within ±0.5 competitive of yourself — so a count of who ELSE did
+        // something drops one from both ends. A PLACE keeps the whole cohort as its
+        // denominator, because a place is a position inside a population you belong to.
+        // Above ONE, not zero: at one you are the only holder, and "0 of 93 peers have it" is a
+        // clumsy way of saying first. The place below says it properly.
+        if (isPg && d.PeerPgCount is > 1)
+            return "📊 " + _localizer.Get(culture, "PG · {0} of {1} peers have it", d.PeerPgCount - 1,
+                d.PeerCount - 1);
         return "📊 " + _localizer.Get(culture, "#{0} of {1} peers", (d.PeerBetterCount ?? 0) + 1, d.PeerCount);
     }
 

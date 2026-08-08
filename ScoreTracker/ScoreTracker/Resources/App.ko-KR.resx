@@ -228,6 +228,9 @@
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>다른 {0}명은 이 단계를 더 위까지 올라갔습니다.</value>
   </data>
+  <data name="+{0} over P1" xml:space="preserve">
+    <value>P1 대비 +{0}</value>
+  </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
@@ -6098,6 +6101,9 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>정확한 수치</value>
   </data>
+  <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
+    <value>Phoenix 1 최고 기록을 처음으로 넘은 Phoenix 2 점수</value>
+  </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>첫 주간 스냅샷이 아직 없습니다 - 다음 일요일 가져오기 후 하이라이트가 표시됩니다.</value>
   </data>
@@ -6538,9 +6544,6 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>상위 {0}%</value>
-  </data>
-  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
-    <value>같은 실력대 상위 {0}% · {1}명 중</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>동급 상위 {0}%</value>

@@ -121,17 +121,81 @@ public sealed class SessionBreakdownBuilderTests
         Assert.NotNull(reselected.Hero);
     }
 
-    private static async Task<SessionsPageModel> Build(Chart chart,
-        RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers)
+    [Fact]
+    public async Task APhoenix2ScorePastYourPhoenix1BestReportsHowFarPast()
     {
-        return (await BuildWith(chart, rows, peers)).Model;
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 960000, false, ScoreEventClassification.NewPass) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix2,
+            new[] { Phoenix1(chart.Id, 940000) });
+
+        Assert.Equal(20000, model.Hero!.Scores.Single().Phoenix1Gain);
+    }
+
+    [Fact]
+    public async Task AnEarlierPhoenix2ScoreAlreadyPastPhoenix1SpendsTheMark()
+    {
+        // The mark is the moment you passed your old self, so it must not ride every later
+        // upscore on a chart you already took.
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { RowFrom(chart.Id, 975000, previousBest: 950000) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix2,
+            new[] { Phoenix1(chart.Id, 940000) });
+
+        Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
+    }
+
+    [Fact]
+    public async Task APhoenixSessionNeverComparesAgainstPhoenix1()
+    {
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 960000, false, ScoreEventClassification.NewPass) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix,
+            new[] { Phoenix1(chart.Id, 940000) });
+
+        Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
+    }
+
+    [Fact]
+    public async Task ABrokenPhoenix1RecordIsNotABestToHavePassed()
+    {
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 960000, false, ScoreEventClassification.NewPass) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix2,
+            new[] { Phoenix1(chart.Id, 940000, broken: true) });
+
+        Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
+    }
+
+    [Fact]
+    public async Task MatchingYourPhoenix1BestIsNotPassingIt()
+    {
+        var chart = ChartAt(ChartType.Single, 21);
+        var rows = new[] { Row(chart.Id, Start, 940000, false, ScoreEventClassification.NewPass) };
+
+        var model = await Build(chart, rows, Array.Empty<CommunityPeerScore>(), MixEnum.Phoenix2,
+            new[] { Phoenix1(chart.Id, 940000) });
+
+        Assert.Null(model.Hero!.Scores.Single().Phoenix1Gain);
+    }
+
+    private static async Task<SessionsPageModel> Build(Chart chart,
+        RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers,
+        MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null)
+    {
+        return (await BuildWith(chart, rows, peers, mix, phoenix1)).Model;
     }
 
     private static async Task<(SessionBreakdownBuilder Builder, SessionsPageModel Model)> BuildWith(Chart chart,
-        RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers)
+        RecentSessionsPage.ScoreEventRecord[] rows, CommunityPeerScore[] peers,
+        MixEnum mix = MixEnum.Phoenix, UserPhoenixScore[]? phoenix1 = null)
     {
         var mediator = new Mock<IMediator>();
-        var group = new RecentSessionsPage.SessionGroup(Session, null, MixEnum.Phoenix, "officialImport",
+        var group = new RecentSessionsPage.SessionGroup(Session, null, mix, "officialImport",
             rows.Min(r => r.OccurredAt), rows.Max(r => r.OccurredAt), rows);
 
         Setup(mediator, new GetRecentSessionsQuery(User, 1, 20),
@@ -157,7 +221,11 @@ public sealed class SessionBreakdownBuilderTests
         var readers = new Mock<IUserReader>();
         readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<User>());
-        var builder = new SessionBreakdownBuilder(mediator.Object, readers.Object);
+        var ledger = new Mock<IScoreReader>();
+        ledger.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(phoenix1 ?? Array.Empty<UserPhoenixScore>());
+        var builder = new SessionBreakdownBuilder(mediator.Object, readers.Object, ledger.Object);
         return (builder, await builder.Build(User, null, 1, 20, null, CancellationToken.None));
     }
 
@@ -180,6 +248,18 @@ public sealed class SessionBreakdownBuilderTests
     {
         return new RecentSessionsPage.ScoreEventRecord(chartId, at, score, broken ? null : "Fair Game",
             broken, "seed", Session, classification, null);
+    }
+
+    private static RecentSessionsPage.ScoreEventRecord RowFrom(Guid chartId, int score, int previousBest)
+    {
+        return new RecentSessionsPage.ScoreEventRecord(chartId, Start, score, "Fair Game", false, "seed",
+            Session, ScoreEventClassification.Upscore, previousBest);
+    }
+
+    private static UserPhoenixScore Phoenix1(Guid chartId, int score, bool broken = false)
+    {
+        return new UserPhoenixScore(User, chartId, Name.From("DrMurloc"), PhoenixScore.From(score),
+            PhoenixPlate.FairGame, broken);
     }
 
     private static CommunityPeerScore Peer(string name, double competitive, int score)

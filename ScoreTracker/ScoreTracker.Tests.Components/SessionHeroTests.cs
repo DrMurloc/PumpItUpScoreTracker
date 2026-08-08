@@ -66,14 +66,16 @@ public sealed class SessionHeroTests : ComponentTestBase
     }
 
     [Fact]
-    public void AScoreWithNoCohortRendersWithoutAPercentile()
+    public void AScoreWithNoCohortRendersWithoutAStanding()
     {
         // Co-op and far-below-competitive charts have nothing measuring them. The row prints no
         // standing and says nothing about why — a disclaimer there confuses more than it helps.
+        // The measured row alongside it proves the absence is the cohort's, not the render's.
         var breakdown = FullBreakdown();
         var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, breakdown));
 
-        Assert.Contains("at your level", hero.Markup);
+        // 12 peers scored higher, so the place is 13th; the denominator is the whole cohort.
+        Assert.Contains("#13 of 74 peers", hero.Markup);
         Assert.DoesNotContain("cohort has no", hero.Markup);
     }
 

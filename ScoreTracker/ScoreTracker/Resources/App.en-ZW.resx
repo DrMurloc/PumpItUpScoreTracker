@@ -228,6 +228,9 @@
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>+{0} lurgrgl mrglro grogrglro rglrgl lurg grglmrp grorpplgl.</value>
   </data>
+  <data name="+{0} over P1" xml:space="preserve">
+    <value>+{0} mrglrarg P1</value>
+  </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -&gt; 10%</value>
   </data>
@@ -6157,6 +6160,9 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>Mrp murmblub mrpblargro</value>
   </data>
+  <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
+    <value>Blarg murgloo Phoenix 2 glorgmurp mrgl blub Phoenix 1 magloo</value>
+  </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>Mrp murpargl murmmr mrpmaglmurp rgl murm roglorg argl - murmmurmgro urgmurg morg glmrp mrp grorpglorg Lurglurg glorggl.</value>
   </data>
@@ -6597,9 +6603,6 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>Blarg {0}%</value>
-  </data>
-  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
-    <value>gulp {0}% · {1} murlog</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>blarg {0}% mrgl maglmurp</value>

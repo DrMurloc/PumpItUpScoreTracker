@@ -11585,6 +11585,18 @@ button.chart-card-art {
     font-variant-numeric: tabular-nums;
 }
 
+/* "+27,450 over P1". Gold rather than the success green every other gain on this row
+   wears: the tail already prints a green delta over your previous Phoenix 2 score, and
+   two green numbers measuring different baselines a few pixels apart read as one fact
+   repeated. Plain text, not a pill — the pumbility badge is the only outlined thing a
+   row gets. */
+.sbd-p1 {
+    font-size: .72rem;
+    color: var(--rarity-gold);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
 .sbd-row-tail {
     flex: none;
     display: flex;
