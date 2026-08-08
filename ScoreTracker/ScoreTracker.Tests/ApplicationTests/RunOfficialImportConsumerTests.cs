@@ -135,7 +135,7 @@ public sealed class RunOfficialImportConsumerTests
 
         results.Verify(r => r.Open(userId, MixEnum.Phoenix, ImportKind.Standard, "card1", Now,
             It.IsAny<CancellationToken>()), Times.Once);
-        results.Verify(r => r.Close(It.IsAny<Guid>(), Now, ImportOutcome.Completed, It.IsAny<CancellationToken>()),
+        results.Verify(r => r.Close(It.IsAny<Guid>(), Now, ImportOutcome.Completed, It.IsAny<int?>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -182,7 +182,7 @@ public sealed class RunOfficialImportConsumerTests
         await Build(mediator, guard: guard, results: results).Consume(Context(Message(userId)));
 
         results.Verify(r => r.Close(It.IsAny<Guid>(), Now, ImportOutcome.PiuGameError,
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
         mediator.Verify(m => m.Publish(It.Is<ImportStatusErrorEvent>(e => e.UserId == userId),
             It.IsAny<CancellationToken>()), Times.Once);
         guard.Verify(g => g.End(userId), Times.Once);
@@ -199,7 +199,7 @@ public sealed class RunOfficialImportConsumerTests
         await Build(mediator, results: results).Consume(Context(Message(Guid.NewGuid())));
 
         results.Verify(r => r.Close(It.IsAny<Guid>(), Now, ImportOutcome.PiuScoresError,
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -215,7 +215,7 @@ public sealed class RunOfficialImportConsumerTests
         // Folding this into PiuGameError would tell somebody with a mistyped password that the
         // site was down, and ask them to wait instead of fixing it.
         results.Verify(r => r.Close(It.IsAny<Guid>(), Now, ImportOutcome.CredentialRejected,
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -238,7 +238,7 @@ public sealed class RunOfficialImportConsumerTests
             .Consume(Context(Message(Guid.NewGuid()), cancelled.Token));
 
         results.Verify(r => r.Close(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<ImportOutcome>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
         guard.Verify(g => g.End(It.IsAny<Guid>()), Times.Once);
     }
 }

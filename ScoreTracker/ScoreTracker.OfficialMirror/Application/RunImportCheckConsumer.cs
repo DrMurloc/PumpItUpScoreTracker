@@ -49,6 +49,7 @@ internal sealed class RunImportCheckConsumer : IConsumer<RunImportCheckCommand>
 
         var outcome = ImportOutcome.Completed;
         var reportIt = true;
+        int? saved = null;
         try
         {
             // A bus consumer has no HttpContext, so establish the job's user for this scope.
@@ -60,9 +61,11 @@ internal sealed class RunImportCheckConsumer : IConsumer<RunImportCheckCommand>
             // The saga hands its session back rather than the consumer minting one: it opens the
             // session AFTER the deep-scan slot gate, so a refused scan leaves no empty session row
             // in the player's list. Null means exactly that — refused, nothing opened.
-            var sessionId = await _mediator.Send(new ExecuteImportCheckCommand(message.UserId, message.Mix,
+            var run = await _mediator.Send(new ExecuteImportCheckCommand(message.UserId, message.Mix,
                 message.Sid, message.CardId, message.ExpectedGameTag, message.DeepScan), context.CancellationToken);
-            if (sessionId is { } session) await _results.AttachSession(resultId, session, context.CancellationToken);
+            saved = run.Saved;
+            if (run.SessionId is { } session)
+                await _results.AttachSession(resultId, session, context.CancellationToken);
         }
         catch (InvalidCredentialException)
         {
@@ -96,7 +99,7 @@ internal sealed class RunImportCheckConsumer : IConsumer<RunImportCheckCommand>
         finally
         {
             _guard.End(message.UserId);
-            if (reportIt) await _results.Close(resultId, _dateTime.Now, outcome, CancellationToken.None);
+            if (reportIt) await _results.Close(resultId, _dateTime.Now, outcome, saved, CancellationToken.None);
         }
     }
 }

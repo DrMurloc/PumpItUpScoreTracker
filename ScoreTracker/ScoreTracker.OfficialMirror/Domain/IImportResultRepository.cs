@@ -22,7 +22,7 @@ internal interface IImportResultRepository
     ///     Stamps how it ended. A row this is never called for is a run the process never closed,
     ///     which is a real state and not a bug in the caller.
     /// </summary>
-    Task Close(Guid id, DateTimeOffset finishedAt, ImportOutcome outcome,
+    Task Close(Guid id, DateTimeOffset finishedAt, ImportOutcome outcome, int? scoreCount,
         CancellationToken cancellationToken = default);
 
     /// <summary>

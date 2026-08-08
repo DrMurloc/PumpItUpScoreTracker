@@ -34,7 +34,7 @@ internal sealed class EFImportResultRepository : IImportResultRepository
         return id;
     }
 
-    public async Task Close(Guid id, DateTimeOffset finishedAt, ImportOutcome outcome,
+    public async Task Close(Guid id, DateTimeOffset finishedAt, ImportOutcome outcome, int? scoreCount,
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -45,7 +45,8 @@ internal sealed class EFImportResultRepository : IImportResultRepository
             .Where(r => r.Id == id && r.FinishedAt == null)
             .ExecuteUpdateAsync(u => u
                 .SetProperty(r => r.FinishedAt, finishedAt)
-                .SetProperty(r => r.Outcome, outcome.ToString()), cancellationToken);
+                .SetProperty(r => r.Outcome, outcome.ToString())
+                .SetProperty(r => r.ScoreCount, scoreCount), cancellationToken);
     }
 
     public async Task AttachSession(Guid id, Guid sessionId, CancellationToken cancellationToken = default)
@@ -76,7 +77,7 @@ internal sealed class EFImportResultRepository : IImportResultRepository
                 // verdict — the honest answer when the stored word is not one we know.
                 Enum.TryParse<ImportOutcome>(r.Outcome, out var outcome) ? outcome : null,
                 r.SessionId,
-                null))
+                r.ScoreCount))
             .ToArray();
     }
 }

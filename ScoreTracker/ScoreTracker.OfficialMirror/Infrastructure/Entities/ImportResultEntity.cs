@@ -42,4 +42,18 @@ internal sealed class ImportResultEntity
     ///     must not have to reach back into this table.
     /// </summary>
     public Guid? SessionId { get; set; }
+
+    /// <summary>
+    ///     How many records this run actually changed, stamped when the run closes.
+    ///     <para>
+    ///         Recorded here rather than read off <c>ScoreSession.ScoreCount</c>, which cannot
+    ///         answer for a run that just finished: that counter is written when the score batch
+    ///         DRAINS, on a ~2 minute in-memory debounce, so an early look or an app restart
+    ///         inside the window leaves it at zero forever while the journal holds the rows
+    ///         (observed 2026-08-08: a run with 7 journal rows and a ScoreCount of 0). The import
+    ///         already knows what it saved, so it says so itself.
+    ///     </para>
+    ///     Null on a run that never reported back, which is the one case nobody can count.
+    /// </summary>
+    public int? ScoreCount { get; set; }
 }

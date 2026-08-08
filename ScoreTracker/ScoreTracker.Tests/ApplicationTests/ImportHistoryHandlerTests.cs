@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 using Moq;
 using ScoreTracker.OfficialMirror.Application;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Domain;
-using ScoreTracker.ScoreLedger.Contracts;
-using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit;
 
@@ -21,123 +18,83 @@ public sealed class ImportHistoryHandlerTests
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly DateTimeOffset Started = new(2026, 8, 8, 2, 39, 0, TimeSpan.Zero);
 
-    private static ImportAttemptRecord Attempt(Guid? sessionId = null, ImportOutcome? outcome = null,
-        DateTimeOffset? finishedAt = null)
+    private static ImportAttemptRecord Attempt(ImportOutcome? outcome = ImportOutcome.Completed,
+        DateTimeOffset? finishedAt = null, int? scoreCount = null, Guid? sessionId = null)
     {
         return new ImportAttemptRecord(Guid.NewGuid(), MixEnum.Phoenix2, ImportKind.Standard, Started,
-            finishedAt, outcome, sessionId, null);
+            finishedAt, outcome, sessionId, scoreCount);
     }
 
-    private static ScoreSessionRecord Session(Guid id, int scoreCount)
-    {
-        return new ScoreSessionRecord(id, UserId, MixEnum.Phoenix2, "officialImport", "TAG #1", "card1",
-            Started, Started, scoreCount, scoreCount, 0);
-    }
-
-    private static (ImportHistoryHandler Handler, Mock<IMediator> Mediator) Build(
-        IReadOnlyList<ImportAttemptRecord> attempts, params ScoreSessionRecord[] sessions)
+    private static ImportHistoryHandler Build(params ImportAttemptRecord[] attempts)
     {
         var results = new Mock<IImportResultRepository>();
         results.Setup(r => r.GetRecent(UserId, It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(attempts);
-        var mediator = new Mock<IMediator>();
-        mediator.Setup(m => m.Send(It.IsAny<GetScoreSessionsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IReadOnlyList<ScoreSessionRecord>)sessions);
-        return (new ImportHistoryHandler(results.Object, mediator.Object), mediator);
-    }
-
-    [Fact]
-    public async Task FillsTheScoreCountFromTheSessionTheRunRecorded()
-    {
-        var sessionId = Guid.NewGuid();
-        var (handler, _) = Build(new[] { Attempt(sessionId, ImportOutcome.Completed, Started) },
-            Session(sessionId, 37));
-
-        var history = await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None);
-
-        Assert.Equal(37, history.Single().ScoreCount);
+            .ReturnsAsync((IReadOnlyList<ImportAttemptRecord>)attempts);
+        return new ImportHistoryHandler(results.Object);
     }
 
     /// <summary>
-    ///     A run that died before saving anything has no session. Its count stays null so the page
-    ///     can print "—" rather than a confident zero, which would read as "piugame says you have
-    ///     no new scores" instead of "this never got far enough to look".
+    ///     The count is stamped on the run when it closes, not read off the Ledger's session. That
+    ///     counter is written when the score batch DRAINS — a ~2 minute in-memory debounce — so an
+    ///     early look or an app restart inside the window leaves it at zero permanently while the
+    ///     journal holds the rows. Field-observed 2026-08-08: a check that saved seven scores sat
+    ///     at ScoreCount 0 with seven journal rows behind it.
     /// </summary>
     [Fact]
-    public async Task ARunWithNoSessionKeepsANullCount()
+    public async Task ReportsTheCountTheRunRecordedForItself()
     {
-        var (handler, _) = Build(new[] { Attempt(null, ImportOutcome.PiuGameError, Started) });
-
-        var history = await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None);
-
-        Assert.Null(history.Single().ScoreCount);
-    }
-
-    /// <summary>
-    ///     The Ledger's counter is written only when the score batch drains — a ~2 minute
-    ///     debounce — and both drain paths return early on an empty batch, so it can never say
-    ///     zero truthfully. Reading a fresh session's 0 as a fact printed "0 scores" over an
-    ///     import that had just saved six (field test, 2026-08-08).
-    /// </summary>
-    [Fact]
-    public async Task AZeroCountIsTreatedAsNotYetKnownRatherThanAsNoScores()
-    {
-        var sessionId = Guid.NewGuid();
-        var (handler, _) = Build(new[] { Attempt(sessionId, ImportOutcome.Completed, Started) },
-            Session(sessionId, 0));
-
-        var history = await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None);
-
-        Assert.Null(history.Single().ScoreCount);
-    }
-
-    [Fact]
-    public async Task ACountThatHasLandedIsStillReported()
-    {
-        var sessionId = Guid.NewGuid();
-        var (handler, _) = Build(new[] { Attempt(sessionId, ImportOutcome.Completed, Started) },
-            Session(sessionId, 6));
+        var handler = Build(Attempt(finishedAt: Started.AddMinutes(2), scoreCount: 6));
 
         var history = await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None);
 
         Assert.Equal(6, history.Single().ScoreCount);
     }
 
+    /// <summary>
+    ///     Zero is a real answer now that the run counts itself — importing twice in a row
+    ///     legitimately saves nothing, and saying so beats an em dash that reads as "unknown".
+    /// </summary>
     [Fact]
-    public async Task ASessionThatNoLongerExistsKeepsANullCount()
+    public async Task AnImportThatSavedNothingSaysZeroRatherThanUnknown()
     {
-        var (handler, _) = Build(new[] { Attempt(Guid.NewGuid(), ImportOutcome.Completed, Started) },
-            Session(Guid.NewGuid(), 12));
+        var handler = Build(Attempt(finishedAt: Started.AddMinutes(2), scoreCount: 0));
 
         var history = await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None);
 
-        Assert.Null(history.Single().ScoreCount);
-    }
-
-    /// <summary>
-    ///     The Ledger is only asked when at least one run has a session to match, so a player whose
-    ///     history is entirely failures does not pay for a session read that can match nothing.
-    /// </summary>
-    [Fact]
-    public async Task DoesNotAskTheLedgerWhenNoRunRecordedASession()
-    {
-        var (handler, mediator) = Build(new[] { Attempt(), Attempt() });
-
-        await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None);
-
-        mediator.Verify(m => m.Send(It.IsAny<GetScoreSessionsQuery>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        Assert.Equal(0, history.Single().ScoreCount);
     }
 
     [Fact]
-    public async Task AnUnfinishedRunReportsItselfAsSuchRatherThanAsAFailure()
+    public async Task ARunThatNeverReportedBackHasNoCountAtAll()
     {
-        var (handler, _) = Build(new[] { Attempt(Guid.NewGuid()) });
+        var handler = Build(Attempt(null));
 
         var attempt = (await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None)).Single();
 
+        Assert.Null(attempt.ScoreCount);
         Assert.True(attempt.NeverFinished);
-        Assert.Null(attempt.Outcome);
         Assert.Null(attempt.Duration);
+    }
+
+    [Fact]
+    public async Task AFailedRunCarriesNoCount()
+    {
+        var handler = Build(Attempt(ImportOutcome.PiuGameError, Started.AddMinutes(2)));
+
+        Assert.Null((await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None))
+            .Single().ScoreCount);
+    }
+
+    [Fact]
+    public async Task PassesTheRequestedTakeThrough()
+    {
+        var results = new Mock<IImportResultRepository>();
+        results.Setup(r => r.GetRecent(UserId, 3, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<ImportAttemptRecord>)new[] { Attempt() });
+
+        await new ImportHistoryHandler(results.Object)
+            .Handle(new GetImportHistoryQuery(UserId, 3), CancellationToken.None);
+
+        results.Verify(r => r.GetRecent(UserId, 3, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

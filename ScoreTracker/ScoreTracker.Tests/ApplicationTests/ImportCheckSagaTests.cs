@@ -141,7 +141,7 @@ public sealed class ImportCheckSagaTests
         var mediator = Mediator();
         var order = new List<string>();
         mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
-            .Callback(() => order.Add("import")).Returns(Task.CompletedTask);
+            .Callback(() => order.Add("import")).ReturnsAsync(0);
         var site = Site(Census(("18", 1)));
         site.Setup(s => s.GetOfficialCensus(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
@@ -340,7 +340,7 @@ public sealed class ImportCheckSagaTests
     {
         var mediator = new Mock<IMediator>();
         mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCommand>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(0);
         mediator.Setup(m => m.Send(It.IsAny<SaveOfficialScoresCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
         mediator.Setup(m => m.Send(It.IsAny<BeginScoreSessionCommand>(), It.IsAny<CancellationToken>()))

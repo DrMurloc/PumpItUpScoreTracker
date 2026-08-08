@@ -368,9 +368,17 @@ One `ImportResult` row per press of Import, Import and check, or Deep scan.
   standard path's session moved up into its consumer to make that free; the check's stays in the
   saga, because it is opened *after* the deep-scan slot gate and minting it earlier would leave
   an empty session row every time a scan lost the race.
-- `ScoreCount` is **not** stored or joined for. It lives on the Ledger's session, so
-  `ImportHistoryHandler` reads it through the published `GetScoreSessionsQuery` and matches on
-  the session id — never a cross-vertical SQL join (ADR-001).
+- **`ScoreCount` is stamped by the run itself**, at close. It was originally read off the
+  Ledger's `ScoreSession.ScoreCount` through the published `GetScoreSessionsQuery` — correct on
+  paper, wrong in practice: that counter is written when the score **batch drains**, on a
+  ~2 minute in-memory debounce, so it cannot answer for a run that just finished, and an app
+  restart inside the window leaves it at zero *permanently*. Field-observed 2026-08-08: a check
+  that saved seven scores sat at `ScoreCount` 0 with seven journal rows behind it, and the Undo
+  page showed 0 too. The import already knows what it saved, so it says so — which also drops a
+  cross-vertical read entirely.
+  ⚠ **The Ledger's own counter still has this hole**, and the Undo page still reads it. That is
+  its own ticket: the batch lives only in memory, so a restart between the last save and the
+  drain loses the count with no way to recover it.
 
 ### The surfaces
 

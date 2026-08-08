@@ -47,6 +47,7 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
 
         var outcome = ImportOutcome.Completed;
         var reportIt = true;
+        int? saved = null;
         try
         {
             // A bus consumer has no HttpContext, so establish the job's user for this scope; the
@@ -64,8 +65,12 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
                     message.ExpectedGameTag, message.CardId), context.CancellationToken);
             await _results.AttachSession(resultId, sessionId, context.CancellationToken);
 
-            await _mediator.Send(new ExecuteImportCommand(message.UserId, message.Mix, message.Sid, message.CardId,
-                message.ExpectedGameTag, message.IncludeBroken, sessionId), context.CancellationToken);
+            // The run's own count, not the Ledger's: ScoreSession.ScoreCount is written when the
+            // score batch DRAINS, on a ~2 minute in-memory debounce, so an early look or a restart
+            // inside that window leaves it at zero forever while the journal holds the rows.
+            saved = await _mediator.Send(new ExecuteImportCommand(message.UserId, message.Mix, message.Sid,
+                message.CardId, message.ExpectedGameTag, message.IncludeBroken, sessionId),
+                context.CancellationToken);
         }
         catch (InvalidCredentialException)
         {
@@ -106,7 +111,7 @@ internal sealed class RunOfficialImportConsumer : IConsumer<RunOfficialImportCom
         {
             // Free the slot the Start handler took, whatever the outcome — the user can import again.
             _guard.End(message.UserId);
-            if (reportIt) await _results.Close(resultId, _dateTime.Now, outcome, CancellationToken.None);
+            if (reportIt) await _results.Close(resultId, _dateTime.Now, outcome, saved, CancellationToken.None);
         }
     }
 }
