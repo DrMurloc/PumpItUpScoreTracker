@@ -150,6 +150,9 @@
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>PUMBILITY #{0}</value>
   </data>
+  <data name="(edited)" xml:space="preserve">
+    <value>(編集済み)</value>
+  </data>
   <data name="(Optional) Also delete historical data" xml:space="preserve">
 	  <value>（任意）履歴データも削除する</value>
   </data>
@@ -421,8 +424,14 @@
 	  <value>追加</value>
 	  
   <comment>Add</comment></data>
+  <data name="Add a comment…" xml:space="preserve">
+    <value>コメントを追加…</value>
+  </data>
   <data name="Add a description first — it is what a player reads before deciding whether to connect." xml:space="preserve">
     <value>先に説明を書いてください — プレイヤーが接続するか決める前に読む文章です。</value>
+  </data>
+  <data name="Add a note…" xml:space="preserve">
+    <value>メモを追加…</value>
   </data>
   <data name="Add A Photo" xml:space="preserve">
     <value>写真を追加</value>
@@ -1286,6 +1295,15 @@
   <data name="Commands — anyone in the server can use these" xml:space="preserve">
     <value>コマンド — サーバーの誰でも使えます</value>
   </data>
+  <data name="Comment" xml:space="preserve">
+    <value>コメントする</value>
+  </data>
+  <data name="Comment from a deleted user" xml:space="preserve">
+    <value>削除されたアカウントのコメント</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>コメント</value>
+  </data>
   <data name="Communities" xml:space="preserve">
     <value>地域ランキング</value>
   </data>
@@ -1300,6 +1318,9 @@
   </data>
   <data name="Community columns" xml:space="preserve">
     <value>コミュニティの列</value>
+  </data>
+  <data name="Community comments belong to that community, and its admins handle them. I stay out of it, except for hate, discrimination, or threats. The rule is &quot;Don't Be An Asshole&quot; — where exactly that line sits is your admins' call." xml:space="preserve">
+    <value>コミュニティのコメントはそのコミュニティのものであり、その管理者が対応します。憎悪・差別・脅迫を除いて、私は関与しません。ルールは "Don't Be An Asshole" です — その線がどこにあるかは、あなたの管理者が決めます。</value>
   </data>
   <data name="Community Highlights" xml:space="preserve">
     <value>コミュニティのハイライト</value>
@@ -1904,6 +1925,9 @@
   <data name="Drills" xml:space="preserve">
     <value>ドリル</value>
   </data>
+  <data name="DrMurloc's Rules for Comments" xml:space="preserve">
+    <value>DrMurloc のコメントのルール</value>
+  </data>
   <data name="DrMurloc's Rules for Integrated Toolmakers" xml:space="preserve">
     <value>連携ツール作者への DrMurloc のルール</value>
   </data>
@@ -2471,6 +2495,9 @@
   <data name="Help" xml:space="preserve">
     <value>ヘルプ</value>
   </data>
+  <data name="Helpful" xml:space="preserve">
+    <value>参考になった</value>
+  </data>
   <data name="Hide" xml:space="preserve">
 	  <value>隠す</value>
   </data>
@@ -2600,6 +2627,9 @@
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
 	  <value>譜面を隠したいだけ</value>
   </data>
+  <data name="I read generously; different cultures and different people communicate differently. But a public comment reported for bad faith, discrimination, or hate is very likely to come down." xml:space="preserve">
+    <value>私は寛容に読みます。文化が違えば人も違い、伝え方も違います。ただし、悪意・差別・憎悪として報告された公開コメントは、まず削除されます。</value>
+  </data>
   <data name="I store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>保存しているのはキーではなくハッシュです。失くしたら新しく作ってください — キーは同時に2つ使えるので、入れ替えに停止時間はかかりません。</value>
   </data>
@@ -2617,6 +2647,15 @@
   </data>
   <data name="I understand — remember it" xml:space="preserve">
     <value>理解しました — 記憶する</value>
+  </data>
+  <data name="I would far rather build features for you than investigate community drama. We play this game because it's fun. Keep it fun." xml:space="preserve">
+    <value>コミュニティのもめごとを調べるより、あなたのために機能を作るほうがずっといいです。このゲームは楽しいから遊ぶものです。楽しいままでいきましょう。</value>
+  </data>
+  <data name="I'm one person." xml:space="preserve">
+    <value>私は一人です。</value>
+  </data>
+  <data name="I've read these, and I'll keep it fun." xml:space="preserve">
+    <value>読みました。楽しくやります。</value>
   </data>
   <data name="I've saved it" xml:space="preserve">
     <value>保存しました</value>
@@ -2882,6 +2921,9 @@
   </data>
   <data name="Just for you — &quot;Production&quot;, &quot;my laptop&quot;, &quot;the test box&quot;. Nobody else sees it." xml:space="preserve">
     <value>自分用の名前です — 「本番」「自分のノート」「テスト機」。ほかの人には見えません。</value>
+  </data>
+  <data name="just now" xml:space="preserve">
+    <value>たった今</value>
   </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>とにかく生き残る</value>
@@ -3160,6 +3202,9 @@
   <data name="Make Public Disclaimer 2" xml:space="preserve">
     <value>公開すれば、以前のフォローしてる友達も見えるようになります。</value>
   </data>
+  <data name="Make sure you trust it before you go." xml:space="preserve">
+    <value>移動する前に信頼できるか確認してください。</value>
+  </data>
   <data name="Manage" xml:space="preserve">
     <value>管理</value>
   </data>
@@ -3343,6 +3388,9 @@
   <data name="Mixes" xml:space="preserve">
     <value>バージョン</value>
   </data>
+  <data name="Moderate" xml:space="preserve">
+    <value>管理</value>
+  </data>
   <data name="Modern" xml:space="preserve">
     <value>現行</value>
   </data>
@@ -3444,6 +3492,9 @@
   </data>
   <data name="My Phoenix score" xml:space="preserve">
     <value>自分のPhoenixスコア</value>
+  </data>
+  <data name="My profile is private. I understand my username, avatar, and country will be visible on public comments." xml:space="preserve">
+    <value>私のプロフィールは非公開です。公開コメントではユーザー名・アバター・国が表示されることを理解しています。</value>
   </data>
   <data name="My Progress" xml:space="preserve">
     <value>マイ進捗</value>
@@ -3560,6 +3611,9 @@
   </data>
   <data name="New Username" xml:space="preserve">
 	  <value>新ユーザー名</value>
+  </data>
+  <data name="Newest" xml:space="preserve">
+    <value>新着順</value>
   </data>
   <data name="Newest content" xml:space="preserve">
     <value>最新収録</value>
@@ -3871,6 +3925,9 @@
   <data name="Notes since your last break" xml:space="preserve">
     <value>最後の失敗からのノート数</value>
   </data>
+  <data name="Notes you write here are only ever visible to you." xml:space="preserve">
+    <value>ここに書いたメモはあなたにしか見えません。</value>
+  </data>
   <data name="Nothing" xml:space="preserve">
     <value>なし</value>
   </data>
@@ -3885,6 +3942,12 @@
   </data>
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>申請しても自動で通知は飛びません。PIU Scores の Discord に書き込めば誰かが見ます。その間もツールは動き続けます。</value>
+  </data>
+  <data name="Nothing here yet." xml:space="preserve">
+    <value>まだ何もありません。</value>
+  </data>
+  <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
+    <value>まだ何もありません。この譜面について知っていることを共有しましょう。</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>何も削除されません。ツールも、アクティビティも、配信履歴もそのまま残るので、何が起きたか確認できますし、取り消すこともできます。</value>
@@ -4081,6 +4144,9 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>変更があった譜面を持つ曲のみ表示しています。</value>
   </data>
+  <data name="Only you can see this" xml:space="preserve">
+    <value>これはあなたにしか見えません</value>
+  </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>いまはあなただけがこのツールを使えます。</value>
   </data>
@@ -4102,6 +4168,9 @@
   <comment>開く</comment></data>
   <data name="Open A Row For Its Photos" xml:space="preserve">
     <value>行を開くと写真が見られます</value>
+  </data>
+  <data name="Open anyway" xml:space="preserve">
+    <value>それでも開く</value>
   </data>
   <data name="Open chart details" xml:space="preserve">
     <value>譜面の詳細を開く</value>
@@ -4406,6 +4475,9 @@
   <data name="PIU Scores" xml:space="preserve">
     <value>PIU Scores</value>
   </data>
+  <data name="PIU Scores exists to bring the Pump It Up community together across distance and language. Comments are where you share what you know and help each other get better at the game." xml:space="preserve">
+    <value>PIU Scores は、距離と言語を越えて Pump It Up のコミュニティをつなぐために存在します。コメントは、知っていることを共有し、お互いに上達を助け合う場所です。</value>
+  </data>
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores は PIUGAME アカウントから直接インポートした Pump It Up の全履歴を保存し、ティアリスト、ランキング、あなたのプレイスタイルに合わせたおすすめに変えます。</value>
   </data>
@@ -4614,6 +4686,9 @@
   <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
     <value>コミュニティトーナメントの予選スコアをサイトから直接提出、そして March of Murlocs — サイト運営のスタミナセッションシリーズ — に挑戦。新フォーマットも準備中。</value>
   </data>
+  <data name="Posting to {0} as {1}" xml:space="preserve">
+    <value>{1} として {0} に投稿します</value>
+  </data>
   <data name="PP" xml:space="preserve">
     <value>PP</value>
   </data>
@@ -4690,6 +4765,9 @@
     <value>公開</value>
     
   <comment>(on/offもしアカウントが公開が設定された)</comment></data>
+  <data name="Public comments are mine." xml:space="preserve">
+    <value>公開コメントは私の担当です。</value>
+  </data>
   <data name="Public players and your community members." xml:space="preserve">
     <value>公開プレイヤーと、あなたのコミュニティのメンバー。</value>
   </data>
@@ -5012,6 +5090,9 @@
   <data name="Remove" xml:space="preserve">
     <value>削除</value>
   </data>
+  <data name="Remove comment" xml:space="preserve">
+    <value>コメントを削除</value>
+  </data>
   <data name="Remove from ToDo" xml:space="preserve">
     <value>やることリストから解除</value>
   </data>
@@ -5026,6 +5107,9 @@
   </data>
   <data name="Removed" xml:space="preserve">
 	  <value>削除済</value>
+  </data>
+  <data name="Removed by the site admin" xml:space="preserve">
+    <value>サイト管理者によって削除されました</value>
   </data>
   <data name="Removed from Favorites!" xml:space="preserve">
     <value>気に入れから削除しました！</value>
@@ -5047,6 +5131,12 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>再送</value>
+  </data>
+  <data name="Reply" xml:space="preserve">
+    <value>返信</value>
+  </data>
+  <data name="Reply…" xml:space="preserve">
+    <value>返信…</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>リクエストヘッダー</value>
@@ -5193,6 +5283,9 @@
   </data>
   <data name="Save first." xml:space="preserve">
     <value>先に保存してください。</value>
+  </data>
+  <data name="Save note" xml:space="preserve">
+    <value>メモを保存</value>
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>スコア保存</value>
@@ -5569,6 +5662,9 @@
   <data name="Show fewer" xml:space="preserve">
     <value>表示を減らす</value>
   </data>
+  <data name="Show more comments" xml:space="preserve">
+    <value>コメントをもっと見る</value>
+  </data>
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>全{0}件のスコアをもっと見る</value>
   </data>
@@ -5796,6 +5892,9 @@
   <data name="Songs" xml:space="preserve">
     <value>曲</value>
   </data>
+  <data name="Sort" xml:space="preserve">
+    <value>並び替え</value>
+  </data>
   <data name="Sort by" xml:space="preserve">
     <value>並び替え</value>
   </data>
@@ -5879,6 +5978,9 @@
   <data name="Status" xml:space="preserve">
     <value>状態</value>
   </data>
+  <data name="Stay here" xml:space="preserve">
+    <value>ここに残る</value>
+  </data>
   <data name="Stay in good standing." xml:space="preserve">
     <value>良識ある振る舞いを保つ。</value>
   </data>
@@ -5894,6 +5996,9 @@
   <comment>Step Artist</comment></data>
   <data name="Step artists" xml:space="preserve">
     <value>ステップアーティスト</value>
+  </data>
+  <data name="Step artists and the PIU devs are community too." xml:space="preserve">
+    <value>ステップアーティストも PIU の開発者もコミュニティの一員です。</value>
   </data>
   <data name="Step on" xml:space="preserve">
     <value>スクロール</value>
@@ -6232,6 +6337,9 @@
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>すでにあなたのライバルです。</value>
   </data>
+  <data name="They're players, same as us. Joking about someone's charting habits is fine. Insults and bad-faith accusations are not." xml:space="preserve">
+    <value>彼らも私たちと同じプレイヤーです。誰かの譜面づくりの癖をネタにするのは構いません。侮辱や悪意のある決めつけは違います。</value>
+  </data>
   <data name="Third" xml:space="preserve">
     <value>3 枚目</value>
   </data>
@@ -6324,6 +6432,9 @@
   </data>
   <data name="This key never expires." xml:space="preserve">
     <value>このキーは期限切れになりません。</value>
+  </data>
+  <data name="This link goes to a site I don't know anything about:" xml:space="preserve">
+    <value>このリンクは私がまったく知らないサイトに移動します:</value>
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>このバージョンはスコア正規化されていません — レターグレードとクリアのみ利用可能です。</value>
@@ -6507,6 +6618,9 @@
   </data>
   <data name="Tools that help players understand the game — score distributions, progress, analysis anyone can use. A tool built for one person's edge, like scouting opponents before a tournament, gets removed, and its maker does not get to make more." xml:space="preserve">
     <value>ゲームの理解を助けるツール — スコアの分布、進捗、誰でも使える分析。特定の誰かが有利になるために作られたもの、たとえば大会前に対戦相手を偵察するようなツールは削除し、その作者はもう作れません。</value>
+  </data>
+  <data name="Top" xml:space="preserve">
+    <value>人気順</value>
   </data>
   <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
     <value>Top 100 · Top 1000 ボーダー — 50× SS</value>
@@ -7314,6 +7428,9 @@
   <data name="Your Communities" xml:space="preserve">
     <value>自分のコミュニティ</value>
   </data>
+  <data name="Your community moderates itself." xml:space="preserve">
+    <value>コミュニティは自分たちで管理します。</value>
+  </data>
   <data name="Your community tools stop working" xml:space="preserve">
     <value>コミュニティツールが動作しなくなります</value>
   </data>
@@ -7875,14 +7992,23 @@
   <data name="{0}% to next title" xml:space="preserve">
     <value>次のタイトルまで {0}%</value>
   </data>
+  <data name="{0}d ago" xml:space="preserve">
+    <value>{0}日前</value>
+  </data>
   <data name="{0}d {1}h" xml:space="preserve">
     <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h ago" xml:space="preserve">
+    <value>{0}時間前</value>
   </data>
   <data name="{0}h {1}m" xml:space="preserve">
     <value>{0}h {1}m</value>
   </data>
   <data name="{0}m" xml:space="preserve">
     <value>{0}m</value>
+  </data>
+  <data name="{0}m ago" xml:space="preserve">
+    <value>{0}分前</value>
   </data>
   <data name="{0}y old" xml:space="preserve">
     <value>{0}年前</value>

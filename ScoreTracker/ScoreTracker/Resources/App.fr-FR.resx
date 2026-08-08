@@ -150,6 +150,9 @@
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} en PUMBILITY</value>
   </data>
+  <data name="(edited)" xml:space="preserve">
+    <value>(modifié)</value>
+  </data>
   <data name="(Optional) Also delete historical data" xml:space="preserve">
     <value>(Optionnel) Supprimer aussi les données historiques</value>
   </data>
@@ -421,8 +424,14 @@
 	  <value>Ajouter</value>
 	  <comment>Ajouter</comment>
   </data>
+  <data name="Add a comment…" xml:space="preserve">
+    <value>Ajouter un commentaire…</value>
+  </data>
   <data name="Add a description first — it is what a player reads before deciding whether to connect." xml:space="preserve">
     <value>Ajoutez d'abord une description — c'est ce qu'un joueur lit avant de décider de se connecter.</value>
+  </data>
+  <data name="Add a note…" xml:space="preserve">
+    <value>Ajouter une note…</value>
   </data>
   <data name="Add A Photo" xml:space="preserve">
     <value>Ajouter une photo</value>
@@ -1286,6 +1295,15 @@
   <data name="Commands — anyone in the server can use these" xml:space="preserve">
     <value>Commandes — tout le monde sur le serveur peut les utiliser</value>
   </data>
+  <data name="Comment" xml:space="preserve">
+    <value>Commenter</value>
+  </data>
+  <data name="Comment from a deleted user" xml:space="preserve">
+    <value>Commentaire d’un compte supprimé</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Commentaires</value>
+  </data>
   <data name="Communities" xml:space="preserve">
     <value>Communautés</value>
   </data>
@@ -1300,6 +1318,9 @@
   </data>
   <data name="Community columns" xml:space="preserve">
     <value>Colonnes communauté</value>
+  </data>
+  <data name="Community comments belong to that community, and its admins handle them. I stay out of it, except for hate, discrimination, or threats. The rule is &quot;Don't Be An Asshole&quot; — where exactly that line sits is your admins' call." xml:space="preserve">
+    <value>Les commentaires d’une communauté appartiennent à cette communauté, et ses administrateurs s’en occupent. Je n’interviens pas, sauf en cas de haine, de discrimination ou de menaces. La règle est "Don't Be An Asshole" — où passe exactement cette limite, c’est vos administrateurs qui le décident.</value>
   </data>
   <data name="Community Highlights" xml:space="preserve">
     <value>Faits marquants de la communauté</value>
@@ -1903,6 +1924,9 @@
   <data name="Drills" xml:space="preserve">
     <value>Drills</value>
   </data>
+  <data name="DrMurloc's Rules for Comments" xml:space="preserve">
+    <value>Les règles de DrMurloc pour les commentaires</value>
+  </data>
   <data name="DrMurloc's Rules for Integrated Toolmakers" xml:space="preserve">
     <value>Les règles de DrMurloc pour les créateurs d'outils intégrés</value>
   </data>
@@ -2470,6 +2494,9 @@
   <data name="Help" xml:space="preserve">
     <value>Aide</value>
   </data>
+  <data name="Helpful" xml:space="preserve">
+    <value>Utile</value>
+  </data>
   <data name="Hide" xml:space="preserve">
     <value>Masquer</value>
   </data>
@@ -2599,6 +2626,9 @@
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>Je veux juste masquer ce chart</value>
   </data>
+  <data name="I read generously; different cultures and different people communicate differently. But a public comment reported for bad faith, discrimination, or hate is very likely to come down." xml:space="preserve">
+    <value>Je lis avec bienveillance ; des cultures et des personnes différentes ne communiquent pas de la même façon. Mais un commentaire public signalé pour mauvaise foi, discrimination ou haine sera très probablement retiré.</value>
+  </data>
   <data name="I store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>Je stocke une empreinte, pas la clé. Si vous la perdez, créez-en une autre — vous pouvez avoir deux clés à la fois, donc remplacer l'une ne coûte aucune interruption.</value>
   </data>
@@ -2616,6 +2646,15 @@
   </data>
   <data name="I understand — remember it" xml:space="preserve">
     <value>J'ai compris — la mémoriser</value>
+  </data>
+  <data name="I would far rather build features for you than investigate community drama. We play this game because it's fun. Keep it fun." xml:space="preserve">
+    <value>Je préfère de loin vous construire des fonctionnalités qu’enquêter sur des drames de communauté. On joue à ce jeu parce que c’est amusant. Que ça le reste.</value>
+  </data>
+  <data name="I'm one person." xml:space="preserve">
+    <value>Je suis tout seul.</value>
+  </data>
+  <data name="I've read these, and I'll keep it fun." xml:space="preserve">
+    <value>Je les ai lues, et je garderai ça sympa.</value>
   </data>
   <data name="I've saved it" xml:space="preserve">
     <value>C'est enregistré</value>
@@ -2881,6 +2920,9 @@
   </data>
   <data name="Just for you — &quot;Production&quot;, &quot;my laptop&quot;, &quot;the test box&quot;. Nobody else sees it." xml:space="preserve">
     <value>Pour vous seul — « Production », « mon portable », « la machine de test ». Personne d'autre ne le voit.</value>
+  </data>
+  <data name="just now" xml:space="preserve">
+    <value>à l’instant</value>
   </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>Rester simplement en vie</value>
@@ -3159,6 +3201,9 @@
   <data name="Make Public Disclaimer 2" xml:space="preserve">
     <value>Si votre compte était précédemment public et que vous l'avez passé en privé, le passer à nouveau en public permettra à nouveau à vos followers de consulter votre progression.</value>
   </data>
+  <data name="Make sure you trust it before you go." xml:space="preserve">
+    <value>Assurez-vous de lui faire confiance avant d’y aller.</value>
+  </data>
   <data name="Manage" xml:space="preserve">
     <value>Gérer</value>
   </data>
@@ -3342,6 +3387,9 @@
   <data name="Mixes" xml:space="preserve">
     <value>Mix</value>
   </data>
+  <data name="Moderate" xml:space="preserve">
+    <value>Modérer</value>
+  </data>
   <data name="Modern" xml:space="preserve">
     <value>Actuels</value>
   </data>
@@ -3443,6 +3491,9 @@
   </data>
   <data name="My Phoenix score" xml:space="preserve">
     <value>Mon score Phoenix</value>
+  </data>
+  <data name="My profile is private. I understand my username, avatar, and country will be visible on public comments." xml:space="preserve">
+    <value>Mon profil est privé. Je comprends que mon nom d’utilisateur, mon avatar et mon pays seront visibles sur les commentaires publics.</value>
   </data>
   <data name="My Progress" xml:space="preserve">
     <value>Ma progression</value>
@@ -3559,6 +3610,9 @@
   </data>
   <data name="New Username" xml:space="preserve">
     <value>Nouveau nom d'utilisateur</value>
+  </data>
+  <data name="Newest" xml:space="preserve">
+    <value>Récents</value>
   </data>
   <data name="Newest content" xml:space="preserve">
     <value>Contenu le plus récent</value>
@@ -3870,6 +3924,9 @@
   <data name="Notes since your last break" xml:space="preserve">
     <value>Notes depuis votre dernière cassure</value>
   </data>
+  <data name="Notes you write here are only ever visible to you." xml:space="preserve">
+    <value>Les notes que vous écrivez ici ne sont visibles que par vous.</value>
+  </data>
   <data name="Nothing" xml:space="preserve">
     <value>Rien</value>
   </data>
@@ -3884,6 +3941,12 @@
   </data>
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>La demande n'envoie rien, alors écrivez sur le Discord PIU Scores et quelqu'un y jettera un œil. Votre outil continue de fonctionner entre-temps.</value>
+  </data>
+  <data name="Nothing here yet." xml:space="preserve">
+    <value>Rien pour l’instant.</value>
+  </data>
+  <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
+    <value>Rien pour l’instant. Partagez ce que vous savez de ce chart.</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>Rien n'est supprimé. Les outils, leur activité et leur historique de livraisons restent tels quels, vous pouvez donc voir ce qui s'est passé — ou revenir en arrière.</value>
@@ -4080,6 +4143,9 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Seules les chansons dont un chart a changé sont listées.</value>
   </data>
+  <data name="Only you can see this" xml:space="preserve">
+    <value>Vous seul pouvez voir ceci</value>
+  </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>Pour l'instant, vous seul pouvez utiliser cet outil.</value>
   </data>
@@ -4101,6 +4167,9 @@
   </data>
   <data name="Open A Row For Its Photos" xml:space="preserve">
     <value>Ouvrez une ligne pour voir ses photos</value>
+  </data>
+  <data name="Open anyway" xml:space="preserve">
+    <value>Ouvrir quand même</value>
   </data>
   <data name="Open chart details" xml:space="preserve">
     <value>Ouvrir les détails du chart</value>
@@ -4405,6 +4474,9 @@
   <data name="PIU Scores" xml:space="preserve">
     <value>PIU Scores</value>
   </data>
+  <data name="PIU Scores exists to bring the Pump It Up community together across distance and language. Comments are where you share what you know and help each other get better at the game." xml:space="preserve">
+    <value>PIU Scores existe pour rassembler la communauté Pump It Up par-delà la distance et la langue. Les commentaires, c’est là que vous partagez ce que vous savez et que vous vous aidez à progresser.</value>
+  </data>
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores conserve tout votre historique Pump It Up, importé directement depuis votre compte PIUGAME, et le transforme en tier lists, classements et recommandations adaptés à votre façon de jouer.</value>
   </data>
@@ -4613,6 +4685,9 @@
   <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
     <value>Soumettez vos scores de qualification aux tournois communautaires directement depuis le site, et affrontez March of Murlocs — la série de sessions d'endurance du site. D'autres formats arrivent.</value>
   </data>
+  <data name="Posting to {0} as {1}" xml:space="preserve">
+    <value>Vous publiez dans {0} en tant que {1}</value>
+  </data>
   <data name="PP" xml:space="preserve">
     <value>PP</value>
   </data>
@@ -4688,6 +4763,9 @@
   <data name="Public" xml:space="preserve">
     <value>Publique</value>
     <comment>(on/off, si le compte est configuré en tant que publique)</comment>
+  </data>
+  <data name="Public comments are mine." xml:space="preserve">
+    <value>Les commentaires publics sont les miens.</value>
   </data>
   <data name="Public players and your community members." xml:space="preserve">
     <value>Joueurs publics et membres de vos communautés.</value>
@@ -5011,6 +5089,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Retirer</value>
   </data>
+  <data name="Remove comment" xml:space="preserve">
+    <value>Supprimer le commentaire</value>
+  </data>
   <data name="Remove from ToDo" xml:space="preserve">
     <value>Enlever de la ToDo List</value>
   </data>
@@ -5025,6 +5106,9 @@
   </data>
   <data name="Removed" xml:space="preserve">
     <value>Supprimé</value>
+  </data>
+  <data name="Removed by the site admin" xml:space="preserve">
+    <value>Supprimé par l’administrateur du site</value>
   </data>
   <data name="Removed from Favorites!" xml:space="preserve">
     <value>Retiré des Favoris !</value>
@@ -5046,6 +5130,12 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>Rejouer</value>
+  </data>
+  <data name="Reply" xml:space="preserve">
+    <value>Répondre</value>
+  </data>
+  <data name="Reply…" xml:space="preserve">
+    <value>Répondre…</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>En-tête de requête</value>
@@ -5192,6 +5282,9 @@
   </data>
   <data name="Save first." xml:space="preserve">
     <value>Enregistrez d'abord.</value>
+  </data>
+  <data name="Save note" xml:space="preserve">
+    <value>Enregistrer la note</value>
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Sauvegarder les Scores</value>
@@ -5568,6 +5661,9 @@
   <data name="Show fewer" xml:space="preserve">
     <value>En afficher moins</value>
   </data>
+  <data name="Show more comments" xml:space="preserve">
+    <value>Afficher plus de commentaires</value>
+  </data>
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>Voir plus des {0} scores</value>
   </data>
@@ -5795,6 +5891,9 @@
   <data name="Songs" xml:space="preserve">
     <value>Chansons</value>
   </data>
+  <data name="Sort" xml:space="preserve">
+    <value>Trier</value>
+  </data>
   <data name="Sort by" xml:space="preserve">
     <value>Trier par</value>
   </data>
@@ -5878,6 +5977,9 @@
   <data name="Status" xml:space="preserve">
     <value>Statut</value>
   </data>
+  <data name="Stay here" xml:space="preserve">
+    <value>Rester ici</value>
+  </data>
   <data name="Stay in good standing." xml:space="preserve">
     <value>Restez en bons termes.</value>
   </data>
@@ -5893,6 +5995,9 @@
   </data>
   <data name="Step artists" xml:space="preserve">
     <value>Step artists</value>
+  </data>
+  <data name="Step artists and the PIU devs are community too." xml:space="preserve">
+    <value>Les step artists et les développeurs de PIU font aussi partie de la communauté.</value>
   </data>
   <data name="Step on" xml:space="preserve">
     <value>En piste</value>
@@ -6231,6 +6336,9 @@
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>C'est déjà un de vos rivaux.</value>
   </data>
+  <data name="They're players, same as us. Joking about someone's charting habits is fine. Insults and bad-faith accusations are not." xml:space="preserve">
+    <value>Ce sont des joueurs, comme nous. Plaisanter sur les habitudes de charting de quelqu’un, c’est bien. Les insultes et les accusations de mauvaise foi, non.</value>
+  </data>
   <data name="Third" xml:space="preserve">
     <value>Troisième</value>
   </data>
@@ -6323,6 +6431,9 @@
   </data>
   <data name="This key never expires." xml:space="preserve">
     <value>Cette clé n'expire pas.</value>
+  </data>
+  <data name="This link goes to a site I don't know anything about:" xml:space="preserve">
+    <value>Ce lien mène vers un site dont je ne sais rien :</value>
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>Ce Mix n'est pas normalisé en score — seuls la Note et le Pass sont disponibles.</value>
@@ -6506,6 +6617,9 @@
   </data>
   <data name="Tools that help players understand the game — score distributions, progress, analysis anyone can use. A tool built for one person's edge, like scouting opponents before a tournament, gets removed, and its maker does not get to make more." xml:space="preserve">
     <value>Des outils qui aident à comprendre le jeu — répartition des scores, progression, analyses utiles à tout le monde. Un outil fait pour l'avantage d'une seule personne, comme étudier ses adversaires avant un tournoi, est retiré, et sa créatrice ou son créateur n'en refera pas d'autre.</value>
+  </data>
+  <data name="Top" xml:space="preserve">
+    <value>Populaires</value>
   </data>
   <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
     <value>Seuils Top 100 · Top 1000 — 50× SS</value>
@@ -7313,6 +7427,9 @@
   <data name="Your Communities" xml:space="preserve">
     <value>Vos communautés</value>
   </data>
+  <data name="Your community moderates itself." xml:space="preserve">
+    <value>Votre communauté se modère elle-même.</value>
+  </data>
   <data name="Your community tools stop working" xml:space="preserve">
     <value>Vos outils communautaires cesseront de fonctionner</value>
   </data>
@@ -7874,14 +7991,23 @@
   <data name="{0}% to next title" xml:space="preserve">
     <value>{0} % avant le prochain titre</value>
   </data>
+  <data name="{0}d ago" xml:space="preserve">
+    <value>il y a {0} j</value>
+  </data>
   <data name="{0}d {1}h" xml:space="preserve">
     <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h ago" xml:space="preserve">
+    <value>il y a {0} h</value>
   </data>
   <data name="{0}h {1}m" xml:space="preserve">
     <value>{0}h {1}m</value>
   </data>
   <data name="{0}m" xml:space="preserve">
     <value>{0}m</value>
+  </data>
+  <data name="{0}m ago" xml:space="preserve">
+    <value>il y a {0} min</value>
   </data>
   <data name="{0}y old" xml:space="preserve">
     <value>{0} ans</value>
