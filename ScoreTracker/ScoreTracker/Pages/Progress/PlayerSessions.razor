@@ -6,6 +6,7 @@
 @using ScoreTracker.Web.Services
 @page "/Player/{UserIdParam:guid}/Sessions"
 @rendermode RenderModes.Interactive
+@implements IDisposable
 
 @if (_user != null)
 {
@@ -115,6 +116,68 @@
         _model = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page, HistoryPageSize,
             Before, CancellationToken.None);
         _firstLoad = false;
+        StartWatchingForCapture();
+    }
+
+    /// <summary>
+    ///     How often the page asks whether capture has landed. Short enough that the card gives
+    ///     way promptly, long enough that a two-minute wait is a few dozen reads rather than
+    ///     hundreds — and it only ever runs for the one person watching their own fresh import.
+    /// </summary>
+    private static readonly TimeSpan CapturePoll = TimeSpan.FromSeconds(3);
+
+    private CancellationTokenSource? _watch;
+
+    /// <summary>
+    ///     Capture lands on the bus behind the import, so the page that says "still working out
+    ///     what mattered" owes the player the moment it stops being true. Polls only while the
+    ///     card is up and stops the moment it is not — and needs no upper bound of its own,
+    ///     because the pending state expires on its own clock.
+    /// </summary>
+    private void StartWatchingForCapture()
+    {
+        if (_model.Hero?.CapturePending != true || _watch != null) return;
+
+        var cts = new CancellationTokenSource();
+        _watch = cts;
+        _ = WatchForCapture(cts);
+    }
+
+    private async Task WatchForCapture(CancellationTokenSource cts)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(CapturePoll);
+            while (await timer.WaitForNextTickAsync(cts.Token))
+            {
+                if (_model.Hero?.Group.SessionId is not { } sessionId) break;
+
+                var refreshed = await Breakdowns.Reselect(_model, UserIdParam, sessionId, _page,
+                    HistoryPageSize, Before, cts.Token);
+                await InvokeAsync(() =>
+                {
+                    _model = refreshed;
+                    StateHasChanged();
+                });
+                if (refreshed.Hero?.CapturePending != true) break;
+            }
+        }
+        catch (Exception) when (cts.IsCancellationRequested)
+        {
+            // Navigated away mid-read. A cancelled SqlCommand does not always surface as an
+            // OperationCanceledException, so the token is what decides this is expected —
+            // filtering on the exception type would let a real failure through as a silent stop.
+        }
+        finally
+        {
+            if (ReferenceEquals(_watch, cts)) _watch = null;
+            cts.Dispose();
+        }
+    }
+
+    public void Dispose()
+    {
+        _watch?.Cancel();
     }
 
     /// <summary>
