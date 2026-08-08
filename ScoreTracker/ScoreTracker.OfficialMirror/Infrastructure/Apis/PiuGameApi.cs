@@ -1337,8 +1337,13 @@ internal sealed class PiuGameApi : IPiuGameApi
     public async Task<IEnumerable<GameCardRecord>> GetCards(MixEnum mix, HttpClient client,
         CancellationToken cancellationToken)
     {
-        var html = await client.GetStringAsync($"{_urls.BaseUrlFor(mix)}/my_page/game_id_information.php",
-            cancellationToken);
+        // Through the retry policy like every other call: this is the FIRST request an import
+        // makes on a freshly-minted session client, so it meets both of the site's transients
+        // head-on — the am-pass SSO bounce, and the edge resets that time out at 30s. A bare
+        // GetStringAsync had neither guard, so one blip ended the whole import immediately after
+        // the game tag and avatar had already been written (the "tag updated, no scores" report).
+        var html = await GetWithRetries($"{_urls.BaseUrlFor(mix)}/my_page/game_id_information.php",
+            cancellationToken, client);
         var document = new HtmlDocument();
         document.LoadHtml(html);
         var profileBoxes = document.DocumentNode.SelectNodes(
