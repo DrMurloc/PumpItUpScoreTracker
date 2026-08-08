@@ -199,10 +199,18 @@ namespace ScoreTracker.PlayerProgress.Application
             // Repriced to CandidateDepth, sliced at PoolSize. Every score was already being
             // repriced before the Take, so reading past the fiftieth costs nothing: the pool
             // figures below still come from the first fifty and mean exactly what they did.
+            // Worth nothing, worth no slot — the same rule GetTop50ForPlayerQuery applies to a
+            // live pool. Here it bites on the two mixes' different floors: a level-9 chart pays
+            // in neither, and a level-10 through -14 chart that pays in Phoenix 1 prices at zero
+            // under Phoenix 2's sub-10 rule the moment its singles bump is not enough. Without
+            // this an account with under fifty counting charts fills the rest of its repriced
+            // fifty with zeros, which drives the bar this pool would set to zero and miscounts
+            // the singles/doubles split the panel is built to show.
             var ranked = phoenixScores
                 .Select(s => (Score: s, Chart: phoenixCharts[s.ChartId],
                     Value: p2Scoring.GetScore(phoenixCharts[s.ChartId], s.Score!.Value,
                         s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)))
+                .Where(x => x.Value > 0)
                 .OrderByDescending(x => x.Value)
                 .Take(CandidateDepth)
                 .ToArray();
@@ -212,6 +220,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Select(s => (Chart: phoenixCharts[s.ChartId],
                     Value: p1Scoring.GetScore(phoenixCharts[s.ChartId], s.Score!.Value,
                         s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)))
+                .Where(x => x.Value > 0)
                 .OrderByDescending(x => x.Value)
                 .Take(PoolSize)
                 .ToArray();

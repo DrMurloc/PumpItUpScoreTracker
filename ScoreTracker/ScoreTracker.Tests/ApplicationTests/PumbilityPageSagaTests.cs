@@ -280,6 +280,26 @@ public sealed class PumbilityPageSagaTests
         Assert.Equal(50, carry.NotYetScored);
     }
 
+    [Fact]
+    public async Task AChartWorthNothingTakesNoSlotInTheRepricedPool()
+    {
+        // Forty-five charts that pay and ten that cannot: below level 10 the base rating is
+        // zero in both mixes, so a perfect run on one is worth nothing at all. Without the
+        // filter they fill the pool out to fifty, and every figure the panel prints off it —
+        // the bar it would set, the singles/doubles split, how many are not yet scored — is
+        // counted against charts that contribute nothing.
+        var ctx = new PageContext()
+            .WithPhoenixScores(ChartType.Single, 22, 45, 985_000)
+            .WithPhoenixScores(ChartType.Single, 9, 10, 1_000_000);
+
+        var carry = await ctx.Saga.Handle(new ProjectPhoenix2CarryoverQuery(ctx.UserId), CancellationToken.None);
+
+        Assert.Equal(45, carry.Entries.Count);
+        Assert.Equal(45, carry.SinglesInPool);
+        Assert.Equal(45, carry.Phoenix1SinglesInPool);
+        Assert.All(carry.Entries, e => Assert.True(e.Phoenix2Value > 0));
+    }
+
     // ------------------------------------------------------------------ context
 
     private sealed class PageContext
