@@ -7,6 +7,20 @@ namespace ScoreTracker.OfficialMirror.Infrastructure;
 
 internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
 {
+    /// <summary>
+    ///     Every table the Mirror keys to a user and actually deletes. AccountPurgeCoverageTests
+    ///     checks this against the assembly and DeleteAllForUser executes it — one list, so a new
+    ///     table cannot be declared without also being deleted.
+    ///     <para>
+    ///         OfficialPlayerEntity is deliberately absent: it is unlinked, not deleted, and it
+    ///         carries its reason in the coverage test's Exempt list.
+    ///     </para>
+    /// </summary>
+    internal static readonly Type[] UserOwned =
+    {
+        typeof(ImportResultEntity)
+    };
+
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFAccountPurgeRepository(IDbContextFactory<ChartAttemptDbContext> factory)
@@ -37,5 +51,10 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
             .ExecuteUpdateAsync(s => s
                 .SetProperty(p => p.UserId, (Guid?)null)
                 .SetProperty(p => p.UserIdSource, "None"), cancellationToken);
+    }
+
+    public Task DeleteAllForUser(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return UserDataPurge.DeleteAll(_factory, UserOwned, userId, cancellationToken);
     }
 }

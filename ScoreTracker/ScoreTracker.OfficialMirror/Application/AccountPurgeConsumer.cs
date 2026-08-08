@@ -19,8 +19,9 @@ internal sealed class AccountPurgeConsumer : IConsumer<AccountPurgeStartedEvent>
         _purge = purge;
     }
 
-    public Task Consume(ConsumeContext<AccountPurgeStartedEvent> context)
+    public async Task Consume(ConsumeContext<AccountPurgeStartedEvent> context)
     {
-        return _purge.UnlinkUser(context.Message.RetiredUserId, context.CancellationToken);
+        await _purge.UnlinkUser(context.Message.RetiredUserId, context.CancellationToken);
+        await _purge.DeleteAllForUser(context.Message.RetiredUserId, context.CancellationToken);
     }
 }

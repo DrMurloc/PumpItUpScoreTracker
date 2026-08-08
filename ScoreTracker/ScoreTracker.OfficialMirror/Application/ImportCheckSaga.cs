@@ -31,7 +31,7 @@ namespace ScoreTracker.OfficialMirror.Application;
 /// </summary>
 internal sealed class ImportCheckSaga :
     IRequestHandler<StartImportCheckCommand, ImportCheckStartResult>,
-    IRequestHandler<ExecuteImportCheckCommand>
+    IRequestHandler<ExecuteImportCheckCommand, Guid?>
 {
     private readonly IBus _bus;
     private readonly IChartRepository _charts;
@@ -125,7 +125,7 @@ internal sealed class ImportCheckSaga :
     ///     The background body. Imports FIRST — counting an account that played twenty minutes ago
     ///     against scores we have not fetched yet reports charts that are simply not imported yet.
     /// </summary>
-    public async Task Handle(ExecuteImportCheckCommand request, CancellationToken cancellationToken)
+    public async Task<Guid?> Handle(ExecuteImportCheckCommand request, CancellationToken cancellationToken)
     {
         var deepScanSlot = false;
         try
@@ -137,7 +137,7 @@ internal sealed class ImportCheckSaga :
                 {
                     await Status(request, "Another deep scan is running — try again in a few minutes",
                         cancellationToken);
-                    return;
+                    return null;
                 }
             }
 
@@ -158,6 +158,7 @@ internal sealed class ImportCheckSaga :
             await _mediator.Publish(
                 new ImportCheckCompletedEvent(request.UserId, request.Mix, added, checkedCount),
                 cancellationToken);
+            return sessionId;
         }
         finally
         {

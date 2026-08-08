@@ -1170,6 +1170,9 @@
   <data name="Check the link" xml:space="preserve">
     <value>Comprobar el enlace</value>
   </data>
+  <data name="Check your PIUGame.com username and password, then import again." xml:space="preserve">
+    <value>Revisa tu usuario y contraseña de PIUGame.com y vuelve a importar.</value>
+  </data>
   <data name="Checked {0}" xml:space="preserve">
     <value>Comprobado el {0}</value>
   </data>
@@ -1533,6 +1536,9 @@
   <data name="Could not save your password" xml:space="preserve">
     <value>No se pudo guardar tu contraseña</value>
   </data>
+  <data name="Couldn't finish" xml:space="preserve">
+    <value>No se pudo terminar</value>
+  </data>
   <data name="Couldn't parse JSON" xml:space="preserve">
     <value>No se pudo leer el JSON</value>
   </data>
@@ -1691,6 +1697,9 @@
   </data>
   <data name="Debuted this week" xml:space="preserve">
     <value>Debutaron esta semana</value>
+  </data>
+  <data name="Deep scan" xml:space="preserve">
+    <value>Análisis profundo</value>
   </data>
   <data name="Default" xml:space="preserve">
     <value>Por defecto</value>
@@ -2196,6 +2205,9 @@
   <data name="Finish later" xml:space="preserve">
     <value>Terminar luego</value>
   </data>
+  <data name="Finished" xml:space="preserve">
+    <value>Terminada</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>Primer</value>
   </data>
@@ -2652,6 +2664,12 @@
   <data name="Import" xml:space="preserve">
     <value>Importar</value>
   </data>
+  <data name="Import again" xml:space="preserve">
+    <value>Importar de nuevo</value>
+  </data>
+  <data name="Import and check" xml:space="preserve">
+    <value>Importar y comprobar</value>
+  </data>
   <data name="Import Broken Helper" xml:space="preserve">
     <value>En charts que nunca has pasado, tu mejor intento con break pasa a ser tu marca. Un pase siempre gana.</value>
   </data>
@@ -2862,6 +2880,9 @@
   <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
     <value>Empieza privada y funcionando del todo. Puedes cambiar cualquiera de estas cosas después.</value>
   </data>
+  <data name="It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest." xml:space="preserve">
+    <value>Probablemente la interrumpió una actualización del sitio. Lo que llegó a guardar ya está en tu cuenta: al importar de nuevo se recoge el resto.</value>
+  </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Podrá leer</value>
   </data>
@@ -2939,6 +2960,12 @@
   </data>
   <data name="Last Checked" xml:space="preserve">
     <value>Última comprobación</value>
+  </data>
+  <data name="Last import finished {0} — {1} scores." xml:space="preserve">
+    <value>La última importación terminó el {0}: {1} puntuaciones.</value>
+  </data>
+  <data name="Last import finished {0}." xml:space="preserve">
+    <value>La última importación terminó el {0}.</value>
   </data>
   <data name="Last Place" xml:space="preserve">
     <value>Último puesto</value>
@@ -3629,6 +3656,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>Aún no hay participaciones.</value>
+  </data>
+  <data name="No imports yet." xml:space="preserve">
+    <value>Aún no hay importaciones.</value>
   </data>
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>Aún no hay enlaces de invitación — crea uno para traer gente.</value>
@@ -4431,6 +4461,9 @@
   <data name="PIU Scores" xml:space="preserve">
     <value>PIU Scores</value>
   </data>
+  <data name="PIU Scores hit an error finishing your last import." xml:space="preserve">
+    <value>PIU Scores tuvo un error al terminar tu última importación.</value>
+  </data>
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores guarda todo tu historial de Pump It Up, importado directamente desde tu cuenta de PIUGAME, y lo convierte en tier lists, clasificaciones y recomendaciones ajustadas a tu forma real de jugar.</value>
   </data>
@@ -4475,6 +4508,12 @@
   </data>
   <data name="PIUGame.com Password" xml:space="preserve">
     <value>Contraseña de PIUGame.com</value>
+  </data>
+  <data name="PIUGame.com stopped responding partway through your last import." xml:space="preserve">
+    <value>PIUGame.com dejó de responder a mitad de tu última importación.</value>
+  </data>
+  <data name="PIUGame.com turned your sign-in away." xml:space="preserve">
+    <value>PIUGame.com rechazó tu inicio de sesión.</value>
   </data>
   <data name="PIUGame.com Username" xml:space="preserve">
     <value>Nombre de usuario de PIUGame.com</value>
@@ -4937,6 +4976,9 @@
   </data>
   <data name="Recent deliveries" xml:space="preserve">
     <value>Entregas recientes</value>
+  </data>
+  <data name="Recent imports" xml:space="preserve">
+    <value>Importaciones recientes</value>
   </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>Reconectando…</value>
@@ -5691,6 +5733,9 @@
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Métodos de inicio de sesión</value>
   </data>
+  <data name="Sign-in refused" xml:space="preserve">
+    <value>Acceso rechazado</value>
+  </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Inactiva — todavía no hay jugadores en tu rango competitivo.</value>
   </data>
@@ -5876,6 +5921,12 @@
   </data>
   <data name="Started" xml:space="preserve">
     <value>Inicio</value>
+  </data>
+  <data name="Started {0} · no result recorded" xml:space="preserve">
+    <value>Empezó el {0} · sin resultado registrado</value>
+  </data>
+  <data name="Started {0} · stopped after {1}" xml:space="preserve">
+    <value>Empezó el {0} · se detuvo tras {1}</value>
   </data>
   <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
     <value>Partiendo de una barra llena, cuántas notas aguantas antes de fallar. Las series se cortan donde dejas de morir: pasado ese combo, la barra se recupera más rápido de lo que los fallos la vacían.</value>
@@ -6125,6 +6176,9 @@
   </data>
   <data name="The entry bar over time" xml:space="preserve">
     <value>El listón de entrada a lo largo del tiempo</value>
+  </data>
+  <data name="The error is logged and your existing scores are untouched. Try again shortly." xml:space="preserve">
+    <value>El error queda registrado y tus puntuaciones actuales están intactas. Inténtalo de nuevo en un momento.</value>
   </data>
   <data name="The exact numbers" xml:space="preserve">
     <value>Los números exactos</value>
@@ -6513,6 +6567,9 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>El Paso de hoy se publica a medianoche.</value>
   </data>
+  <data name="Took" xml:space="preserve">
+    <value>Duración</value>
+  </data>
   <data name="Tool" xml:space="preserve">
     <value>Herramienta</value>
   </data>
@@ -6722,6 +6779,9 @@
   </data>
   <data name="Undoing puts your scores back the way they were before it. Nothing is lost." xml:space="preserve">
     <value>Deshacer devuelve tus puntuaciones a como estaban antes. No se pierde nada.</value>
+  </data>
+  <data name="Unfinished" xml:space="preserve">
+    <value>Sin terminar</value>
   </data>
   <data name="Unknown" xml:space="preserve">
     <value>Desconocido</value>
@@ -7392,6 +7452,9 @@
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Tu archivo superaba los 10MB, redúcelo e inténtalo de nuevo.</value>
   </data>
+  <data name="Your game tag and avatar may have been updated, but no scores were read. Nothing was lost — try again in a few minutes." xml:space="preserve">
+    <value>Puede que tu etiqueta de jugador y tu avatar se hayan actualizado, pero no se leyó ninguna puntuación. No se ha perdido nada: inténtalo de nuevo en unos minutos.</value>
+  </data>
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>Tus grupos, tu región y el mundo.</value>
   </data>
@@ -7403,6 +7466,9 @@
   </data>
   <data name="Your key tail, your URL and your mixes are already filled in. Copy and run." xml:space="preserve">
     <value>Tu final de clave, tu URL y tus versiones ya están puestos. Copia y ejecuta.</value>
+  </data>
+  <data name="Your last import started but never reported back." xml:space="preserve">
+    <value>Tu última importación empezó pero nunca dio resultado.</value>
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>Tu historial de nivel comenzará a registrarse con tu próxima importación.</value>

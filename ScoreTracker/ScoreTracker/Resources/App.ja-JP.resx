@@ -1180,6 +1180,9 @@
   <data name="Check the link" xml:space="preserve">
     <value>リンクを確認</value>
   </data>
+  <data name="Check your PIUGame.com username and password, then import again." xml:space="preserve">
+    <value>PIUGame.com のユーザー名とパスワードを確認して、もう一度インポートしてください。</value>
+  </data>
   <data name="Checked {0}" xml:space="preserve">
     <value>{0} に確認</value>
   </data>
@@ -1545,6 +1548,9 @@
   <data name="Could not save your password" xml:space="preserve">
     <value>パスワードを保存できませんでした</value>
   </data>
+  <data name="Couldn't finish" xml:space="preserve">
+    <value>完了できませんでした</value>
+  </data>
   <data name="Couldn't parse JSON" xml:space="preserve">
 	  <value>JSON解析失敗</value>
   </data>
@@ -1704,6 +1710,9 @@
   </data>
   <data name="Debuted this week" xml:space="preserve">
     <value>今週デビュー</value>
+  </data>
+  <data name="Deep scan" xml:space="preserve">
+    <value>詳細スキャン</value>
   </data>
   <data name="Default" xml:space="preserve">
 	  <value>デフォルト</value>
@@ -2213,6 +2222,9 @@
   <data name="Finish later" xml:space="preserve">
     <value>あとで仕上げる</value>
   </data>
+  <data name="Finished" xml:space="preserve">
+    <value>完了</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>初</value>
   </data>
@@ -2669,6 +2681,12 @@
   <data name="Import" xml:space="preserve">
     <value>インポート</value>
   </data>
+  <data name="Import again" xml:space="preserve">
+    <value>もう一度インポート</value>
+  </data>
+  <data name="Import and check" xml:space="preserve">
+    <value>インポートして確認</value>
+  </data>
   <data name="Import Broken Helper" xml:space="preserve">
     <value>まだクリアしていない譜面では、最高のBreak Offスコアが記録になります。クリアは常に優先されます。</value>
   </data>
@@ -2880,6 +2898,9 @@
   <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
     <value>非公開の状態で、機能はすべて使える状態から始まります。ここの内容はあとから変更できます。</value>
   </data>
+  <data name="It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest." xml:space="preserve">
+    <value>サイトの更新で中断された可能性が高いです。保存済みの分はすでにアカウントにあります。もう一度インポートすれば残りを取得できます。</value>
+  </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>読み取れる情報</value>
   </data>
@@ -2957,6 +2978,12 @@
   </data>
   <data name="Last Checked" xml:space="preserve">
     <value>最終確認</value>
+  </data>
+  <data name="Last import finished {0} — {1} scores." xml:space="preserve">
+    <value>前回のインポートは {0} に完了しました — スコア {1} 件。</value>
+  </data>
+  <data name="Last import finished {0}." xml:space="preserve">
+    <value>前回のインポートは {0} に完了しました。</value>
   </data>
   <data name="Last Place" xml:space="preserve">
     <value>最下位</value>
@@ -3659,6 +3686,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>まだエントリーがありません。</value>
+  </data>
+  <data name="No imports yet." xml:space="preserve">
+    <value>インポートはまだありません。</value>
   </data>
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>まだ招待リンクがありません。作成してメンバーを招待しましょう。</value>
@@ -4466,6 +4496,9 @@
   <data name="PIU Scores" xml:space="preserve">
     <value>PIU Scores</value>
   </data>
+  <data name="PIU Scores hit an error finishing your last import." xml:space="preserve">
+    <value>PIU Scores が前回のインポートの完了時にエラーになりました。</value>
+  </data>
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores は PIUGAME アカウントから直接インポートした Pump It Up の全履歴を保存し、ティアリスト、ランキング、あなたのプレイスタイルに合わせたおすすめに変えます。</value>
   </data>
@@ -4510,6 +4543,12 @@
   </data>
   <data name="PIUGame.com Password" xml:space="preserve">
     <value>PIUGame.comパスワード</value>
+  </data>
+  <data name="PIUGame.com stopped responding partway through your last import." xml:space="preserve">
+    <value>前回のインポートの途中で PIUGame.com が応答しなくなりました。</value>
+  </data>
+  <data name="PIUGame.com turned your sign-in away." xml:space="preserve">
+    <value>PIUGame.com がログインを拒否しました。</value>
   </data>
   <data name="PIUGame.com Username" xml:space="preserve">
     <value>PIUGame.comユーザー名</value>
@@ -4978,6 +5017,9 @@
   </data>
   <data name="Recent deliveries" xml:space="preserve">
     <value>最近の配信</value>
+  </data>
+  <data name="Recent imports" xml:space="preserve">
+    <value>最近のインポート</value>
   </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>再接続中…</value>
@@ -5746,6 +5788,9 @@
   <data name="Sign-In Methods" xml:space="preserve">
     <value>ログイン方法</value>
   </data>
+  <data name="Sign-in refused" xml:space="preserve">
+    <value>ログイン拒否</value>
+  </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>停止中 — 競技レベル帯にまだプレイヤーがいません。</value>
   </data>
@@ -5935,6 +5980,12 @@
   </data>
   <data name="Started" xml:space="preserve">
     <value>開始</value>
+  </data>
+  <data name="Started {0} · no result recorded" xml:space="preserve">
+    <value>開始 {0} · 結果の記録なし</value>
+  </data>
+  <data name="Started {0} · stopped after {1}" xml:space="preserve">
+    <value>開始 {0} · {1} で停止</value>
   </data>
   <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
     <value>満タンから始めて、失敗するまでに何ノート持つか。死ななくなる地点で系列は途切れます。そのコンボを超えると、失敗で減る速さより回復の方が速くなります。</value>
@@ -6186,6 +6237,9 @@
   </data>
   <data name="The entry bar over time" xml:space="preserve">
     <value>エントリーラインの推移</value>
+  </data>
+  <data name="The error is logged and your existing scores are untouched. Try again shortly." xml:space="preserve">
+    <value>エラーは記録されており、既存のスコアはそのままです。しばらくしてからもう一度お試しください。</value>
   </data>
   <data name="The exact numbers" xml:space="preserve">
     <value>正確な数値</value>
@@ -6574,6 +6628,9 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>今日のステップは深夜に公開されます。</value>
   </data>
+  <data name="Took" xml:space="preserve">
+    <value>所要時間</value>
+  </data>
   <data name="Tool" xml:space="preserve">
     <value>ツール</value>
   </data>
@@ -6784,6 +6841,9 @@
   </data>
   <data name="Undoing puts your scores back the way they were before it. Nothing is lost." xml:space="preserve">
     <value>取り消すと、スコアは以前の状態に戻ります。失われるものはありません。</value>
+  </data>
+  <data name="Unfinished" xml:space="preserve">
+    <value>未完了</value>
   </data>
   <data name="Unknown" xml:space="preserve">
 	  <value>不明</value>
@@ -7464,6 +7524,9 @@
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>ファイルが10MBを超えています。サイズを小さくして再試行してください。</value>
   </data>
+  <data name="Your game tag and avatar may have been updated, but no scores were read. Nothing was lost — try again in a few minutes." xml:space="preserve">
+    <value>ゲームタグとアバターは更新された可能性がありますが、スコアは読み込まれていません。失われたものはありません。数分後にもう一度お試しください。</value>
+  </data>
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>あなたのグループ、あなたの地域、そして世界。</value>
   </data>
@@ -7475,6 +7538,9 @@
   </data>
   <data name="Your key tail, your URL and your mixes are already filled in. Copy and run." xml:space="preserve">
     <value>キーの末尾、URL、対象バージョンはすでに入っています。コピーしてそのまま動かせます。</value>
+  </data>
+  <data name="Your last import started but never reported back." xml:space="preserve">
+    <value>前回のインポートは開始しましたが、結果が返りませんでした。</value>
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>レベル履歴は次回のインポートから記録されます。</value>

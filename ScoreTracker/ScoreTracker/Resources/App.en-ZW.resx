@@ -1180,6 +1180,9 @@
   <data name="Check the link" xml:space="preserve">
     <value>Murgl murgm grog</value>
   </data>
+  <data name="Check your PIUGame.com username and password, then import again." xml:space="preserve">
+    <value>Grorp Grrmrrgl opa mrglrgl PIUGame.com, blub glorggl murgl.</value>
+  </data>
   <data name="Checked {0}" xml:space="preserve">
     <value>Murgl {0}</value>
   </data>
@@ -1545,6 +1548,9 @@
   <data name="Could not save your password" xml:space="preserve">
     <value>Arglgro murm glmurp gromurp glorgmrpmurm</value>
   </data>
+  <data name="Couldn't finish" xml:space="preserve">
+    <value>Mrp Morgrorp</value>
+  </data>
   <data name="Couldn't parse JSON" xml:space="preserve">
 	  <value>Glorgmrgrorp arglgrrgl JSON</value>
   </data>
@@ -1704,6 +1710,9 @@
   </data>
   <data name="Debuted this week" xml:space="preserve">
     <value>Blargmurmgl grglmrp plglmorg</value>
+  </data>
+  <data name="Deep scan" xml:space="preserve">
+    <value>Grrgl Murgblarg</value>
   </data>
   <data name="Default" xml:space="preserve">
 	  <value>Plglgrgllurg</value>
@@ -2213,6 +2222,9 @@
   <data name="Finish later" xml:space="preserve">
     <value>Golba pragl</value>
   </data>
+  <data name="Finished" xml:space="preserve">
+    <value>Morgrorp</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>Murpargl</value>
   </data>
@@ -2669,6 +2681,12 @@
   <data name="Import" xml:space="preserve">
     <value>Glorggl</value>
   </data>
+  <data name="Import again" xml:space="preserve">
+    <value>Glorggl Murgl</value>
+  </data>
+  <data name="Import and check" xml:space="preserve">
+    <value>Glorggl opa grorp</value>
+  </data>
   <data name="Import Broken Helper" xml:space="preserve">
     <value>Lurg murgl gropmur mrgro maglplgl, gromurp mrpblarg morgl blurgmrp murgblarg gromurp blubgrorp. Argl maglplgl mrgmurg grorpgl.</value>
   </data>
@@ -2880,6 +2898,9 @@
   <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
     <value>Mo blorm murgloo opa alla murp. Murgm murp blorp alla mo murmo.</value>
   </data>
+  <data name="It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest." xml:space="preserve">
+    <value>Murgl grorp mrgloru blarg. Mgrlgmrg mrgl blub Grgl — glorggl murgl morp blurg.</value>
+  </data>
   <data name="It will be able to read" xml:space="preserve">
     <value>Murp blurgl</value>
   </data>
@@ -2957,6 +2978,12 @@
   </data>
   <data name="Last Checked" xml:space="preserve">
     <value>Blgrlmrgl Blubmrprgl</value>
+  </data>
+  <data name="Last import finished {0} — {1} scores." xml:space="preserve">
+    <value>Glorggl morgrorp {0} — {1} Mgrlgmrg.</value>
+  </data>
+  <data name="Last import finished {0}." xml:space="preserve">
+    <value>Glorggl morgrorp {0}.</value>
   </data>
   <data name="Last Place" xml:space="preserve">
     <value>Blgrlmrgl Blgrlmagl</value>
@@ -3659,6 +3686,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>Mrp glplglrgl argl.</value>
+  </data>
+  <data name="No imports yet." xml:space="preserve">
+    <value>Mrp glorggl blurg.</value>
   </data>
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>Mrp blargmurgl grrglglorg argl — mrpmurp argl grgl arglblarg maglblarg mrp.</value>
@@ -4466,6 +4496,9 @@
   <data name="PIU Scores" xml:space="preserve">
     <value>PIU Mgrlgmrg</value>
   </data>
+  <data name="PIU Scores hit an error finishing your last import." xml:space="preserve">
+    <value>PIU Mgrlgmrg blarg morgl glorggl mrgloru.</value>
+  </data>
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Mgrlgmrg mrpmr gromurp grorpro Pump It Up lurgmrmorg, plglgromurm rorglmurm romurg gromurp PIUGAME grgl, ro blgrlgrgl gl murpgrrgl mrpgrrgl grog, maglmrpplgl, ro mrpmaglplglblgrl glorgmorg grgl gro blub mrglgrrglblarg grrglgrrgl.</value>
   </data>
@@ -4510,6 +4543,12 @@
   </data>
   <data name="PIUGame.com Password" xml:space="preserve">
     <value>PIUGame.com Glorgmrpmurm</value>
+  </data>
+  <data name="PIUGame.com stopped responding partway through your last import." xml:space="preserve">
+    <value>PIUGame.com mrgloru bo glorggl blurg.</value>
+  </data>
+  <data name="PIUGame.com turned your sign-in away." xml:space="preserve">
+    <value>PIUGame.com murgloo mrglmrp blarg.</value>
   </data>
   <data name="PIUGame.com Username" xml:space="preserve">
     <value>PIUGame.com Grrmrrgl</value>
@@ -4978,6 +5017,9 @@
   </data>
   <data name="Recent deliveries" xml:space="preserve">
     <value>Murgm murpo</value>
+  </data>
+  <data name="Recent imports" xml:space="preserve">
+    <value>Murgblarg Glorggl</value>
   </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>Urgmaglgrrglmurg…</value>
@@ -5746,6 +5788,9 @@
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Mrpmurp-Mrp Mrglglorggrgl</value>
   </data>
+  <data name="Sign-in refused" xml:space="preserve">
+    <value>Mrglmrp murgloo</value>
+  </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Morggrgl — mrp morp arglurg mrp gromurp arglrglmrmurm blubmrgl argl.</value>
   </data>
@@ -5935,6 +5980,12 @@
   </data>
   <data name="Started" xml:space="preserve">
     <value>Maglmrpmurp</value>
+  </data>
+  <data name="Started {0} · no result recorded" xml:space="preserve">
+    <value>Mrgloru {0} · mrp grog</value>
+  </data>
+  <data name="Started {0} · stopped after {1}" xml:space="preserve">
+    <value>Mrgloru {0} · murgloo {1}</value>
   </data>
   <data name="Starting from a full bar, how many notes you get before you fail. Series stop where you stop dying: past that combo the bar recovers faster than the breaks drain it." xml:space="preserve">
     <value>Rglplglblub romurg gro mrglmr mr, gro mrblgrl roblub blub blarg glorggro blub glorggrorp. Morggrorp roglorg blarggrorp blub roglorg mrpmurg: arglgl blubgrrgl grogrgl mrp mr romrglblgrl glorgmurm grogrgl mrp grorgl murpgl gl.</value>
@@ -6186,6 +6237,9 @@
   </data>
   <data name="The entry bar over time" xml:space="preserve">
     <value>Mrp plglargl mr grglglorg grglmrgl</value>
+  </data>
+  <data name="The error is logged and your existing scores are untouched. Try again shortly." xml:space="preserve">
+    <value>Morgl grog opa Mgrlgmrg mrgl blurg. Glub glorggl rorgl.</value>
   </data>
   <data name="The exact numbers" xml:space="preserve">
     <value>Mrp murmblub mrpblargro</value>
@@ -6574,6 +6628,9 @@
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>Maglrgl Glorgmagl urgmurg mr gromorgblub.</value>
   </data>
+  <data name="Took" xml:space="preserve">
+    <value>Grogl</value>
+  </data>
   <data name="Tool" xml:space="preserve">
     <value>Rorgl</value>
   </data>
@@ -6784,6 +6841,9 @@
   </data>
   <data name="Undoing puts your scores back the way they were before it. Nothing is lost." xml:space="preserve">
     <value>Glop blorgu uroba. Gorb blurpa.</value>
+  </data>
+  <data name="Unfinished" xml:space="preserve">
+    <value>Momorgrorp</value>
   </data>
   <data name="Unknown" xml:space="preserve">
 	  <value>Glorgarglro</value>
@@ -7464,6 +7524,9 @@
   <data name="Your file was larger than 10MB, please reduce it and try again." xml:space="preserve">
     <value>Gromurp mrblub ro blarggrorp grogrgl 10LURG, blgrlro murgmurp gl ro lurg morgro.</value>
   </data>
+  <data name="Your game tag and avatar may have been updated, but no scores were read. Nothing was lost — try again in a few minutes." xml:space="preserve">
+    <value>Grglmrg opa murgblarg mrgloru, blub mrp Mgrlgmrg murlg. Mrp blarg mrgl — glub glorggl morp rorgl.</value>
+  </data>
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>Gromurp blgrlmr, gromurp rglargl, ro mrp grolurg.</value>
   </data>
@@ -7475,6 +7538,9 @@
   </data>
   <data name="Your key tail, your URL and your mixes are already filled in. Copy and run." xml:space="preserve">
     <value>Murgm blarglurp, murgm URL opa murgm Mrgrgl murgloo blorp. Blorp opa murp.</value>
+  </data>
+  <data name="Your last import started but never reported back." xml:space="preserve">
+    <value>Glorggl mrgloru blub mrp blarg morp.</value>
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>Gromurp grorpmurm lurgmrmorg rglmagl grrglgroplgl glgrgl gromurp grorpglorg glorggl.</value>
