@@ -366,13 +366,40 @@ public sealed class PumbilityPageSagaTests
             CancellationToken.None);
 
         var rail = page.Rails!.Single(r => r.Pool == PumbilityPool.Singles);
-        Assert.NotNull(rail.ExampleLevel);
-        Assert.NotNull(rail.ExampleGrade);
 
-        // It has to actually meet the ask, at the grade named and with no plate help.
+        // Three references, best grade first, so the levels ascend and the low one is the hard
+        // one. A is the floor because it is the lowest multiplier this site has verified.
+        Assert.Equal(new[] { PhoenixLetterGrade.SSSPlus, PhoenixLetterGrade.AAA, PhoenixLetterGrade.A },
+            rail.Examples.Select(e => e.Grade));
+        Assert.True(rail.Examples.Select(e => (int)e.Level).SequenceEqual(
+            rail.Examples.Select(e => (int)e.Level).OrderBy(l => l)));
+
+        // Every one has to actually meet the ask, at the grade named and with no plate help.
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
-        Assert.True(scoring.GetScore(ChartType.Single, rail.ExampleLevel!.Value,
-            rail.ExampleGrade!.Value.GetMinimumScoreFor(MixEnum.Phoenix2), PhoenixPlate.RoughGame) >= rail.Ask);
+        Assert.All(rail.Examples, e => Assert.True(scoring.GetScore(e.Type, e.Level,
+            e.Grade.GetMinimumScoreFor(MixEnum.Phoenix2), PhoenixPlate.RoughGame) >= rail.Ask));
+    }
+
+    [Fact]
+    public async Task TheProjectedPoolSaysWhetherTheSuggestionsCanReachTheRung()
+    {
+        // The realism check: what the fifty would average if every suggestion landed. Read
+        // against the ask, it says whether the list on Play gets there at all.
+        //
+        // A Phoenix 1 record with nothing scored in Phoenix 2 yet is the sharp case — the pool is
+        // empty, every carried score is a suggestion, and the projection is therefore entirely
+        // what the list would build.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 24, 55, 995_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var rail = page.Rails!.Single(r => r.Pool == PumbilityPool.Singles);
+        Assert.Equal(0, rail.Average);
+        Assert.NotNull(rail.ProjectedAverage);
+        Assert.True(rail.ProjectedAverage!.Value > rail.Average,
+            "the suggestions should build a pool better than the empty one they start from");
+        Assert.Equal(rail.ProjectedAverage.Value >= rail.Ask, rail.ProjectionReaches);
     }
 
     [Fact]

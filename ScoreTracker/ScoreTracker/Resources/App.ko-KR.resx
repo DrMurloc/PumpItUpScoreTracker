@@ -2487,9 +2487,6 @@
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>타이틀 보유자의 {0}만 보유</value>
   </data>
-  <data name="held since {0}" xml:space="preserve">
-    <value>{0}부터 보유</value>
-  </data>
   <data name="Help" xml:space="preserve">
     <value>도움말</value>
   </data>
@@ -7277,9 +7274,6 @@
   <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
     <value>당신은 개설자입니다. 커뮤니티 양도, 삭제, 공개 설정 변경, 기본 관리자 권한 및 알림 언어 설정은 개설자만 할 수 있습니다.</value>
   </data>
-  <data name="You are {0} short across the pool." xml:space="preserve">
-    <value>풀 전체에서 {0} 부족합니다.</value>
-  </data>
   <data name="You beat {0}% of Peers on this." xml:space="preserve">
     <value>이 채보에서 동급 플레이어의 {0}%를 이겼습니다.</value>
   </data>
@@ -7511,6 +7505,9 @@
   <data name="Your progress" xml:space="preserve">
     <value>내 진행도</value>
   </data>
+  <data name="Your projected top 50" xml:space="preserve">
+    <value>예상 상위 50</value>
+  </data>
   <data name="Your PUMBILITY" xml:space="preserve">
     <value>내 PUMBILITY</value>
   </data>
@@ -7652,8 +7649,8 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} 클리어</value>
   </data>
-  <data name="{0} a chart is a {1} at {2}." xml:space="preserve">
-    <value>차트당 {0}은(는) {2} 등급의 {1}입니다.</value>
+  <data name="{0} a chart is:" xml:space="preserve">
+    <value>차트당 {0}은(는):</value>
   </data>
   <data name="{0} added as a rival." xml:space="preserve">
     <value>{0} 을(를) 라이벌로 추가했습니다.</value>
@@ -7669,6 +7666,9 @@
   </data>
   <data name="{0} asks" xml:space="preserve">
     <value>{0} 요구</value>
+  </data>
+  <data name="{0} at {1}" xml:space="preserve">
+    <value>{1} 등급의 {0}</value>
   </data>
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0}님이 이 커뮤니티의 개설자가 되고 회원님은 관리자가 됩니다. 개설자 자리는 하나뿐이라 직접 되돌릴 수 없습니다.</value>
@@ -7711,9 +7711,6 @@
   </data>
   <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
     <value>{0}개 채보는 노트 수가 기록되어 있지 않아 비교하지 않았습니다.</value>
-  </data>
-  <data name="{0} charts in the pool" xml:space="preserve">
-    <value>풀에 {0}개 차트</value>
   </data>
   <data name="{0} charts match the community tier" xml:space="preserve">
     <value>{0}개 채보가 커뮤니티 티어와 일치</value>
@@ -7931,6 +7928,9 @@
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>플레이어 {0}명 · {1} 주</value>
   </data>
+  <data name="{0} PUMBILITY remaining" xml:space="preserve">
+    <value>PUMBILITY {0} 남음</value>
+  </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>이번 주 Pump It Up 챌린지 채보 {0}개, 실시간 순위가 있는 데일리 채보, 그리고 월간 PUMBILITY 보드.</value>
   </data>
@@ -8035,9 +8035,6 @@
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>이 폴더에서 약 {0}개 더</value>
-  </data>
-  <data name="— none yet —" xml:space="preserve">
-    <value>— 아직 없음 —</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— 선택</value>

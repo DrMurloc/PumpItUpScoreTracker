@@ -12917,10 +12917,12 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-ink-muted);
 }
 
+/* A DEFINITE height, not min-height. Every bar sizes itself with a percentage height, and a
+   percentage resolves against auto as auto — so the whole plot painted empty the moment the
+   curve stopped being a grid cell that stretched to a neighbour's height. */
 .pmb-curve-plot {
     position: relative;
-    flex: 1;
-    min-height: 150px;
+    height: 190px;
     display: flex;
     align-items: flex-end;
     gap: 2px;
@@ -13511,7 +13513,7 @@ span.ct-console-pick { cursor: default; }
     }
 
     .pmb-curve-plot {
-        min-height: 118px;
+        height: 128px;
         gap: 1px;
     }
 
@@ -13543,7 +13545,7 @@ span.ct-console-pick { cursor: default; }
     }
 
     .pmb-curve-plot {
-        min-height: 84px;
+        height: 84px;
     }
 
     .pmb-curve-legend {
@@ -13617,22 +13619,6 @@ span.ct-console-pick { cursor: default; }
     line-height: 1;
 }
 
-.pmb-rail-have {
-    font-size: 12.5px;
-    color: var(--mix-ink-muted);
-    margin-left: auto;
-    text-align: right;
-}
-
-.pmb-rail-have b {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: .05em;
-    color: var(--mix-ink);
-    display: block;
-}
-
 .pmb-rail-track {
     display: flex;
     flex-direction: column;
@@ -13653,9 +13639,12 @@ span.ct-console-pick { cursor: default; }
     background: var(--mix-primary);
 }
 
+/* Three cells, so the distance still to travel sits between the two rungs it is the distance
+   across — rather than at the foot of the rail, where it read as a number with no unit beside
+   figures that were all per-chart. */
 .pmb-rail-ends {
     display: flex;
-    justify-content: space-between;
+    align-items: baseline;
     gap: 10px;
     font-family: var(--font-display);
     font-weight: 700;
@@ -13664,9 +13653,42 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-ink-muted);
 }
 
+.pmb-rail-ends > :first-child,
+.pmb-rail-ends > :last-child {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.pmb-rail-ends .pmb-rail-mid {
+    flex: 0 0 auto;
+    text-align: center;
+    color: var(--mix-accent);
+}
+
 .pmb-rail-ends .pmb-rail-next {
     color: var(--mix-primary);
     text-align: right;
+}
+
+/* The projected pool clearing the ask is the good answer, so it reads as one — the accent
+   otherwise on this row means "still to find". */
+.pmb-ask-cell.pmb-ask-reach {
+    background: color-mix(in srgb, var(--mix-primary) 14%, transparent);
+}
+
+.pmb-ask-cell.pmb-ask-reach .pmb-ask-num,
+.pmb-ask-cell.pmb-ask-reach .pmb-ask-lbl {
+    color: var(--mix-primary);
+}
+
+/* The grade rides the same line as its level, always: in a shared caption underneath, three
+   levels read as a path — and the low one is the hard one, not the first step. */
+.pmb-rail-eg {
+    display: inline-block;
+    margin-left: 8px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--mix-ink);
 }
 
 /* The ask: what the next rung wants of every chart, against what yours are worth now. It

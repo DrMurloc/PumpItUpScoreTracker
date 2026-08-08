@@ -2504,9 +2504,6 @@
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>glorgblgrl murm {0} mrgl glorgmurm morp</value>
   </data>
-  <data name="held since {0}" xml:space="preserve">
-    <value>murp blarg {0}</value>
-  </data>
   <data name="Help" xml:space="preserve">
     <value>Bragl</value>
   </data>
@@ -7347,9 +7344,6 @@
   <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
     <value>Blub mrp mrp Murmarglmurm. Mrpmurg blub grorp blargmrmurg mrp plglmurgblub, lurggrgl gl, blgrlblub argl grrglglgro, gro plglgrgllurg blgrlrgl urgmurpmrpmagl, ro gro mrp murgmrgrrglblgrl mrglrglrglrglrglrglrgl.</value>
   </data>
-  <data name="You are {0} short across the pool." xml:space="preserve">
-    <value>Urgl mo {0} ap grorgl.</value>
-  </data>
   <data name="You beat {0}% of Peers on this." xml:space="preserve">
     <value>Blub grrglgl {0}% mrgl Maglmurp lurg grglmrp.</value>
   </data>
@@ -7581,6 +7575,9 @@
   <data name="Your progress" xml:space="preserve">
     <value>Gromurp mrglrlgl</value>
   </data>
+  <data name="Your projected top 50" xml:space="preserve">
+    <value>Urgl Mrglurg 50</value>
+  </data>
   <data name="Your PUMBILITY" xml:space="preserve">
     <value>Gromurp PUMBILITY</value>
   </data>
@@ -7722,8 +7719,8 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} blarggrrglglorg</value>
   </data>
-  <data name="{0} a chart is a {1} at {2}." xml:space="preserve">
-    <value>{0} a murgl a {1} ap {2}.</value>
+  <data name="{0} a chart is:" xml:space="preserve">
+    <value>{0} a murgl a:</value>
   </data>
   <data name="{0} added as a rival." xml:space="preserve">
     <value>{0} glorg mrp Murgmorp.</value>
@@ -7739,6 +7736,9 @@
   </data>
   <data name="{0} asks" xml:space="preserve">
     <value>{0} arggro</value>
+  </data>
+  <data name="{0} at {1}" xml:space="preserve">
+    <value>{0} ap {1}</value>
   </data>
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0} grumba burgola, golu marbo. Umba burgo, gorb uroba.</value>
@@ -7781,9 +7781,6 @@
   </data>
   <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
     <value>{0} murgl mrglro mrp grogrgl glorgmurp murmgrglurg, blarg maglgro blubblarg glorgmurplurg.</value>
-  </data>
-  <data name="{0} charts in the pool" xml:space="preserve">
-    <value>{0} murgl ap grorgl</value>
   </data>
   <data name="{0} charts match the community tier" xml:space="preserve">
     <value>{0} murgl romagl mrp plglmurgblub mrpgrrgl</value>
@@ -8001,6 +7998,9 @@
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} morp · plglmorg mrgl {1}</value>
   </data>
+  <data name="{0} PUMBILITY remaining" xml:space="preserve">
+    <value>{0} PUMBILITY blurgmo</value>
+  </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} Pump It Up plglmurpmurm murgl grglmrp plglmorg, gro gromorg murgl glgrgl mrmrp murmblubgrrgl, ro mrp blubglplgl PUMBILITY mrglblarg.</value>
   </data>
@@ -8105,9 +8105,6 @@
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>~{0} mrrgl murgl mrp grglmrp grrgllurg</value>
-  </data>
-  <data name="— none yet —" xml:space="preserve">
-    <value>— mo larg —</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— murgal</value>

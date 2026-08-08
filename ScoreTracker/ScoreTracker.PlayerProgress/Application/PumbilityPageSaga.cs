@@ -114,9 +114,28 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Take(MaxTargets)
                 .ToArray();
 
+            // What each chart would be worth at its best available reading — held score, or the
+            // projection if that beats it. MERGED rather than summed: a chart already in the pool
+            // keeps the better of the two, so nothing counts twice and no gain has to be added to
+            // another one, which §8.3 forbids.
+            var reachable = new Dictionary<Guid, int>();
+            foreach (var (chartId, score) in mine)
+                if (charts.ContainsKey(chartId))
+                    reachable[chartId] = (int)scoring.GetScore(charts[chartId], score.Score!.Value,
+                        score.Plate ?? PhoenixPlate.RoughGame, score.IsBroken);
+            foreach (var target in targets.Values)
+            {
+                var plate = mine.TryGetValue(target.ChartId, out var held)
+                    ? held.Plate ?? PhoenixPlate.RoughGame
+                    : PhoenixPlate.RoughGame;
+                var projected = (int)scoring.GetScore(charts[target.ChartId], target.Projected, plate, false);
+                if (projected > reachable.GetValueOrDefault(target.ChartId))
+                    reachable[target.ChartId] = projected;
+            }
+
             var total = pool.Sum(p => p.Value);
             var totals = await PoolTotalsFor(request.UserId, mix, request.Pool, total, bar, charts, scoring,
-                cancellationToken);
+                reachable, cancellationToken);
 
             return new PumbilityPageRecord(mix, request.Pool, total, bar, barChart,
                 pool, waiting, top, Breakdown(pool, charts, scoring), totals?.Totals,
@@ -181,7 +200,7 @@ namespace ScoreTracker.PlayerProgress.Application
         private async Task<(PoolTotals Totals, IReadOnlyList<TitleRail> Rails)?> PoolTotalsFor(Guid userId,
             MixEnum mix, ChartType? scope, int scopeTotal, int? scopeBar,
             IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring,
-            CancellationToken cancellationToken)
+            IReadOnlyDictionary<Guid, int> reachable, CancellationToken cancellationToken)
         {
             // Phoenix 1 has one pool and no PUMBILITY-threshold titles, so there is neither a
             // split to show nor a ladder to show it against.
@@ -212,14 +231,17 @@ namespace ScoreTracker.PlayerProgress.Application
 
             var rails = new[]
             {
-                Rail(PumbilityPool.Total, all, ChartType.Single),
-                Rail(PumbilityPool.Singles, singles, ChartType.Single),
-                Rail(PumbilityPool.Doubles, doubles, ChartType.Double)
+                // The merged ladder can be filled from either side, and Phoenix 2 pays a Singles
+                // chart one level up — so the cheapest route to its ask is a single.
+                Rail(PumbilityPool.Total, all, ChartType.Single, null),
+                Rail(PumbilityPool.Singles, singles, ChartType.Single, ChartType.Single),
+                Rail(PumbilityPool.Doubles, doubles, ChartType.Double, ChartType.Double)
             }.Where(r => r != null).Select(r => r!).ToArray();
 
             return (new PoolTotals(all.Total, singles.Total, doubles.Total), rails);
 
-            TitleRail? Rail(PumbilityPool pool, (int Total, int? Bar) figures, ChartType exampleType)
+            TitleRail? Rail(PumbilityPool pool, (int Total, int? Bar) figures, ChartType exampleType,
+                ChartType? exampleScope)
             {
                 if (!ladders.TryGetValue(pool, out var ladder) || ladder.Length == 0) return null;
 
@@ -230,33 +252,65 @@ namespace ScoreTracker.PlayerProgress.Application
                 // device: it is true however the player gets there, where a count of charts
                 // would have to assume an order the gain column deliberately does not have.
                 var ask = next == null ? 0 : next.CompletionRequired / (double)PoolSize;
-                var example = next == null ? null : AskExample(scoring, exampleType, ask);
+                var examples = next == null
+                    ? Array.Empty<AskExample>()
+                    : AskExamples(scoring, exampleType, ask);
+
+                // What the fifty would average if every suggestion landed. Over PoolSize rather
+                // than over however many charts exist, so it is comparable to the ask and to the
+                // average beside it.
+                var projectable = reachable
+                    .Where(kv => exampleScope == null || charts[kv.Key].Type == exampleScope)
+                    .Select(kv => kv.Value)
+                    .Where(v => v > 0)
+                    .OrderByDescending(v => v)
+                    .Take(PoolSize)
+                    .ToArray();
 
                 return new TitleRail(pool, figures.Total, held?.Name.ToString(),
                     held?.CompletionRequired ?? 0, next?.Name.ToString(), next?.CompletionRequired,
-                    ask, figures.Total / (double)PoolSize, figures.Bar,
-                    example?.Level, example?.Grade);
+                    ask, figures.Total / (double)PoolSize, figures.Bar, examples,
+                    projectable.Length == 0 ? null : projectable.Sum() / (double)PoolSize);
             }
         }
 
         /// <summary>
-        ///     The easiest chart that meets a per-chart ask, and the grade it would take. Levels
-        ///     ascending and grades worst-first, so the answer is the lowest level that can do it
-        ///     at all and the lowest grade that does it there — which is the cheapest honest
-        ///     reading of the number, not the most flattering one.
+        ///     A grade multiplier this site has actually verified. B and below are the unverified
+        ///     −0.05 extrapolation in the Phoenix 2 config, so A is the floor: anchoring lower
+        ///     would print a level derived from a guess.
         /// </summary>
-        private static (DifficultyLevel Level, PhoenixLetterGrade Grade)? AskExample(
-            ScoringConfiguration scoring, ChartType type, double ask)
+        private static readonly PhoenixLetterGrade[] ReferenceGrades =
+            { PhoenixLetterGrade.SSSPlus, PhoenixLetterGrade.AAA, PhoenixLetterGrade.A };
+
+        /// <summary>
+        ///     What chart meets a per-chart ask, at each reference grade. One reference was the
+        ///     wrong shape — play quality moves the answer by several levels, so a single number
+        ///     is right only for the player already performing at it.
+        ///     <para>
+        ///         Best grade first, which makes the levels ascend downward: the low level is the
+        ///         hard one. A grade that cannot reach the ask at any level is omitted rather than
+        ///         reported against the ceiling, because naming a ceiling that falls short would
+        ///         read as an answer.
+        ///     </para>
+        /// </summary>
+        private static AskExample[] AskExamples(ScoringConfiguration scoring, ChartType type, double ask)
         {
-            if (ask <= 0) return null;
+            if (ask <= 0) return Array.Empty<AskExample>();
 
-            foreach (var level in DifficultyLevel.All.OrderBy(l => (int)l))
-            foreach (var grade in Enum.GetValues<PhoenixLetterGrade>().OrderBy(g => (int)g))
-                if (scoring.GetScore(type, level, grade.GetMinimumScoreFor(scoring.Mix),
-                        PhoenixPlate.RoughGame) >= ask)
-                    return (level, grade);
-
-            return null;
+            return ReferenceGrades
+                .Select(grade =>
+                {
+                    var score = grade.GetMinimumScoreFor(scoring.Mix);
+                    var level = DifficultyLevel.All
+                        .OrderBy(l => (int)l)
+                        .Cast<DifficultyLevel?>()
+                        .FirstOrDefault(l => scoring.GetScore(type, l!.Value, score,
+                            PhoenixPlate.RoughGame) >= ask);
+                    return level == null ? null : new AskExample(grade, level.Value, type);
+                })
+                .Where(e => e != null)
+                .Select(e => e!)
+                .ToArray();
         }
 
         /// <summary>

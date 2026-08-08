@@ -118,9 +118,15 @@ public sealed record PoolTotals(int All, int Singles, int Doubles);
 /// <param name="Ask">What <see cref="Next" /> asks of every chart in a full pool.</param>
 /// <param name="Average">What the pool's charts are worth each today, over a full fifty.</param>
 /// <param name="Bar">This pool's fiftieth chart, or null before it holds fifty.</param>
-/// <param name="ExampleLevel">
-///     The easiest chart that meets the ask, with the grade it would take — the actionable half,
-///     since a per-chart value is only useful once you can picture the chart.
+/// <param name="Examples">
+///     What chart meets the ask, at each of three reference grades — the actionable half, since a
+///     per-chart value is only useful once you can picture the chart. One reference was the wrong
+///     shape: play quality moves the answer by up to eight levels.
+/// </param>
+/// <param name="ProjectedAverage">
+///     What the fifty would average if every suggestion landed on its projection. Against
+///     <see cref="Ask" /> that is the realism check — whether the list on Play can reach this rung
+///     at all. Null where there is nothing to project from.
 /// </param>
 [ExcludeFromCodeCoverage]
 public sealed record TitleRail(
@@ -133,8 +139,8 @@ public sealed record TitleRail(
     double Ask,
     double Average,
     int? Bar,
-    DifficultyLevel? ExampleLevel,
-    PhoenixLetterGrade? ExampleGrade)
+    IReadOnlyList<AskExample> Examples,
+    double? ProjectedAverage)
 {
     /// <summary>How far along the current rung the pool sits, for the bar between the two.</summary>
     public double Progress => NextThreshold == null || NextThreshold.Value <= HeldThreshold
@@ -148,7 +154,21 @@ public sealed record TitleRail(
     public int Gap => NextThreshold == null ? 0 : Math.Max(0, NextThreshold.Value - Value);
 
     public bool AtTop => Next == null;
+
+    /// <summary>Could the suggestions on Play reach this rung at all, if every one landed?</summary>
+    public bool ProjectionReaches => ProjectedAverage != null && ProjectedAverage.Value >= Ask;
 }
+
+/// <summary>
+///     The chart that meets a per-chart ask at one reference grade.
+///     <para>
+///         ⚠ The grade belongs on the same line as its level wherever this renders. A grade in a
+///         shared caption underneath lets three levels read as a path, which is worse than the
+///         single number this replaced — and the low level is the hard one.
+///     </para>
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record AskExample(PhoenixLetterGrade Grade, DifficultyLevel Level, ChartType Type);
 
 /// <summary>
 ///     A chart worth playing, with what the player would be projected to score and what that

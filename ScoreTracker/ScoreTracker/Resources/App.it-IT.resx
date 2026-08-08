@@ -2504,9 +2504,6 @@
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>posseduto dal {0} dei giocatori con titoli</value>
   </data>
-  <data name="held since {0}" xml:space="preserve">
-    <value>ottenuto da {0}</value>
-  </data>
   <data name="Help" xml:space="preserve">
     <value>Aiuto</value>
   </data>
@@ -7347,9 +7344,6 @@
   <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
     <value>Sei il creatore. Solo tu puoi trasferire la comunità, eliminarla, cambiarne la privacy, impostare le autorizzazioni admin predefinite e la lingua delle notifiche.</value>
   </data>
-  <data name="You are {0} short across the pool." xml:space="preserve">
-    <value>Ti mancano {0} sull'intero gruppo.</value>
-  </data>
   <data name="You beat {0}% of Peers on this." xml:space="preserve">
     <value>Hai battuto il {0}% dei tuoi pari su questo chart.</value>
   </data>
@@ -7581,6 +7575,9 @@
   <data name="Your progress" xml:space="preserve">
     <value>I tuoi progressi</value>
   </data>
+  <data name="Your projected top 50" xml:space="preserve">
+    <value>Il tuo top 50 previsto</value>
+  </data>
   <data name="Your PUMBILITY" xml:space="preserve">
     <value>Il tuo PUMBILITY</value>
   </data>
@@ -7722,8 +7719,8 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} completati</value>
   </data>
-  <data name="{0} a chart is a {1} at {2}." xml:space="preserve">
-    <value>{0} per tracciato è un {1} con {2}.</value>
+  <data name="{0} a chart is:" xml:space="preserve">
+    <value>{0} per tracciato è:</value>
   </data>
   <data name="{0} added as a rival." xml:space="preserve">
     <value>{0} aggiunto come rivale.</value>
@@ -7739,6 +7736,9 @@
   </data>
   <data name="{0} asks" xml:space="preserve">
     <value>{0} chiede</value>
+  </data>
+  <data name="{0} at {1}" xml:space="preserve">
+    <value>{0} con {1}</value>
   </data>
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0} diventa il creatore di questa community e tu diventi amministratore. C'è un solo posto da creatore, quindi non potrai riprendertelo da solo.</value>
@@ -7781,9 +7781,6 @@
   </data>
   <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
     <value>{0} chart non hanno un numero di note registrato, quindi non vengono confrontate.</value>
-  </data>
-  <data name="{0} charts in the pool" xml:space="preserve">
-    <value>{0} tracciati nel gruppo</value>
   </data>
   <data name="{0} charts match the community tier" xml:space="preserve">
     <value>{0} chart coincidono con il livello della community</value>
@@ -8001,6 +7998,9 @@
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} giocatori · settimana del {1}</value>
   </data>
+  <data name="{0} PUMBILITY remaining" xml:space="preserve">
+    <value>{0} PUMBILITY rimanenti</value>
+  </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} chart sfida di Pump It Up questa settimana, un chart giornaliero con classifiche live e il tabellone mensile PUMBILITY.</value>
   </data>
@@ -8105,9 +8105,6 @@
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>~{0} chart in più in questa cartella</value>
-  </data>
-  <data name="— none yet —" xml:space="preserve">
-    <value>— nessuno ancora —</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— facoltativo</value>
