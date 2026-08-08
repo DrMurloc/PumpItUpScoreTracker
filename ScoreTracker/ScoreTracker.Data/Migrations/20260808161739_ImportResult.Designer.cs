@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260808161739_ImportResult")]
+    partial class ImportResult
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1966,9 +1969,6 @@ namespace ScoreTracker.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("nvarchar(16)");
 
-                    b.Property<int?>("ScoreCount")
-                        .HasColumnType("int");
-
                     b.Property<Guid?>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2639,9 +2639,6 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<double?>("CompetitiveBaseline")
-                        .HasColumnType("float");
-
                     b.Property<int>("Flags")
                         .HasColumnType("int");
 
@@ -2676,9 +2673,6 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("float");
 
                     b.Property<int?>("PeerPgCount")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PumbilityGain")
                         .HasColumnType("int");
 
                     b.Property<int?>("PumbilityRank")

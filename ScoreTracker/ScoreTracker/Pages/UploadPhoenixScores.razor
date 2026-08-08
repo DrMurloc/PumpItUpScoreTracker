@@ -35,6 +35,16 @@
     <MudCardHeader><h2>@L["Import Scores"]</h2></MudCardHeader>
     <MudCardContent>
         <MudText Typo="Typo.body2" Class="mb-4">@L["Import Lede"]</MudText>
+        @* Above the form, not below it: the page's job is importing, and the first thing it
+           owes somebody arriving is whether the last one worked (UX rule 1).
+
+           Hidden while a run is in flight, and deliberately NOT refreshed when one ends: the
+           consumer closes its row in a finally, after the status event that would trigger the
+           reload, so refreshing on that event races the close and would flash "never reported
+           back" at somebody whose import had in fact just succeeded. A live run narrates itself
+           through the status line and the score table right below this. *@
+        <ImportResultStrip Attempt="@(_isImporting ? null : _lastImport)" CanRetry="@(!ImportDisabled)"
+                           OnRetry="ImportScores"/>
         <MudGrid Spacing="3">
             <MudItem xs="12" sm="6">
                 @if (_hasStoredCredential)
@@ -214,6 +224,10 @@
    pressed, never automatic (docs/design/import-completeness-check.md §6). *@
 <ScoreCheckPanel Mix="_currentMix" CardId="@_selectedId" GameTag="@_selectedGameTag"
                  Busy="_isImporting" Credentials="ResolveCheckCredentials"/>
+
+@* Collapsed, and below the controls: somebody who just wants to import never has to see it,
+   and somebody comparing notes about a bad week can open it. *@
+<ImportHistoryPanel Attempts="_importHistory"/>
 
 @* The technical fallback (design doc D3): everything the script/CSV flow could do, collapsed. *@
 <MudExpansionPanels Class="mt-4">
@@ -644,6 +658,18 @@
         // instead of asking for the password again; the checkbox reflects the saved state.
         _storedBlob = await ClientStore.Read();
         _hasStoredCredential = _storedBlob != null;
+        await LoadLastImport();
+    }
+
+    private ImportAttemptRecord? _lastImport;
+    private IReadOnlyList<ImportAttemptRecord> _importHistory = Array.Empty<ImportAttemptRecord>();
+
+    private async Task LoadLastImport()
+    {
+        // One read serves both surfaces: the strip takes the newest row, the collapsed panel
+        // below takes the lot. Ten is what fits a glance without paging.
+        _importHistory = await Mediator.Send(new GetImportHistoryQuery(_userId, 10));
+        _lastImport = _importHistory.FirstOrDefault();
     }
 
     private List<string> _errors = new List<string>();
