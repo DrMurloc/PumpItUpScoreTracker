@@ -275,6 +275,37 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
+    public async Task ANewPassAfterAStageBreakEntersThePoolRatherThanImprovingWithinIt()
+    {
+        // The break scored 990,000 and the clear scores 992,445, but the pool counts non-broken
+        // scores only — so the chart held NO seat beforehand and is worth what it displaced, not
+        // the 2,445-point difference between the two scores. Pricing the break as a clean pass
+        // is what made a chart entering at #7 report "+2".
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var highlights = new Mock<IScoreHighlightRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 992445) }),
+            stats: stats, highlights: highlights);
+
+        await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Phoenix,
+                new[] { single.Id }, sessionId,
+                // IsNewPass with a non-null OldScore: the break that came before it.
+                new[] { new PlayerScoresUpdatedEvent.ScoreChange(single.Id, true, 990000, 992445, null, false) }),
+            CancellationToken.None);
+
+        highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, userId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == single.Id && x.Detail != null && x.Detail.PumbilityGain > 100)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AnAdminRecalculationClaimsNoPumbilityGain()
     {
         // No change set means no old scores, and pricing every chart as if it had just arrived

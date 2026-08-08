@@ -502,8 +502,15 @@ internal sealed class PlayerRatingSaga :
         if (changes == null || changes.Count == 0 || request.SessionId == null)
             return new Dictionary<Guid, int>();
 
-        var oldScores = changes.GroupBy(c => c.ChartId)
-            .ToDictionary(g => g.Key, g => g.Select(c => c.OldScore).Max());
+        // A new pass held NO seat, whatever score preceded it. The pool counts non-broken
+        // scores only, so a chart whose prior best was a stage break was not in it — and
+        // pricing that break as though it were a clean pass puts the chart in the old pool at
+        // nearly its new value, which collapses a real entry down to the score difference.
+        // That is how a chart entering at #7 reported "+2".
+        var prior = changes.GroupBy(c => c.ChartId)
+            .ToDictionary(g => g.Key, g => g.Any(c => c.IsNewPass)
+                ? null
+                : g.Select(c => c.OldScore).Max());
         var bests = recorded.ToDictionary(r => r.ChartId);
 
         double PriceAt(Guid chartId, int score)
@@ -522,7 +529,7 @@ internal sealed class PlayerRatingSaga :
         var priced = scores
             .Where(s => !s.IsBroken && s.Type != ChartType.CoOp)
             .Select(s => new PumbilityAttribution.Priced(s.ChartId,
-                !oldScores.TryGetValue(s.ChartId, out var old) ? s.Rating
+                !prior.TryGetValue(s.ChartId, out var old) ? s.Rating
                 : old == null ? null
                 : PriceAt(s.ChartId, old.Value),
                 s.Rating))
