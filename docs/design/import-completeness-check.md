@@ -289,10 +289,11 @@ function under unit test. The `Start*` (circuit) → `Run*` (bus) → `Execute*`
 triplet is copied from the import path verbatim, including **`SetScopedUser`, never
 `SetCurrentUser`**.
 
-**OfficialMirror still has no `UserOwned` purge manifest**, and that is now a feature of the
-design rather than a gap in it: the vertical owns no user-keyed table, so its purge stays the
-one-line unlink of `OfficialPlayerEntity` it has always been. The allowance lives on the `User`
-row, which the account purge already removes.
+**OfficialMirror had no `UserOwned` purge manifest**, and that was a feature of the design while
+it lasted: the vertical owned no user-keyed table, so its purge was the one-line unlink of
+`OfficialPlayerEntity`. The allowance lives on the `User` row, which the account purge already
+removes. ⚠ **Superseded 2026-08-08** — `ImportResult` (below) is user-keyed, so the vertical now
+carries a manifest and a real `DeleteAllForUser` alongside the unlink.
 
 ### Commit order
 
@@ -317,3 +318,88 @@ and a *check again* button (§4 — an unchanged account returns the same verdic
 **Not yet built**: unmappable sightings from a check do not yet reach the `OfficialMissingChart`
 admin inbox (§3.4). The census reports the level as short; the catalog gap behind it still needs
 the wiring.
+
+---
+
+## ImportResult — what happened to my last import (2026-08-08)
+
+### Why
+
+A player reported their game tag and avatar updating but no scores arriving. The cause was a
+single unretried call: `GetCards` used `GetStringAsync` directly rather than `GetWithRetries`,
+and it is the **first** request an import makes on a freshly-minted session client — so one 30s
+edge timeout ended the run immediately after the tag and avatar had been written. That is fixed.
+
+What the investigation actually exposed was worse than the bug: **an escaping exception left no
+trace at all.** No retry is configured on the in-memory transport, nothing consumes `Fault<T>`,
+the error queue dies with the process, and only `InvalidCredentialException` /
+`NoGameAccountAssociatedException` published a status event. So a timeout produced no log, no
+record, and no message — the import pulse simply span until the player navigated away. The whole
+durable trace of that failed import, across the entire system, was the App Insights `dependencies`
+rows and a barren `ScoreSession`.
+
+The daily rate was never the problem, and the numbers say so: the barren-session rate over the
+week the report landed ran 21%, 16%, 18%, 16%, 10%, 22% — noise, not a regression — and piugame's
+own dependency fault rate that day was the *lowest* of the six.
+
+### The model
+
+One `ImportResult` row per press of Import, Import and check, or Deep scan.
+
+- **Opened at the consumer, not in the import body.** `RunOfficialImportConsumer` and
+  `RunImportCheckConsumer` sit one level above where the three paths diverge. The check *runs*
+  the standard import inside itself, so a row minted in the body would give every check two —
+  the same trap the session table hit and solved by passing an id down.
+- **`Kind`** (`Standard` · `Check` · `DeepScan`) because the three cost the official site wildly
+  different amounts; "deep scans fail" and "everything fails" must be countable apart.
+- **`Outcome`** is a closed vocabulary and never exception text: `Completed` · `PiuGameError` ·
+  `CredentialRejected` · `PiuScoresError`. The split is decidable rather than guessed —
+  `ImportOutcomeClassifier` walks the exception chain, and anything thrown out of the piugame
+  client is theirs. `CredentialRejected` is its own value because it needs the opposite copy to
+  `PiuGameError`: one is fixable by the player, the other asks them to wait.
+- **Null `FinishedAt` + null `Outcome` is a state, not missing data** — the run never reported
+  back. The in-memory transport drops in-flight messages on restart, so every deploy landing
+  mid-import leaves one. A boolean could not have held this, which is why the column is nullable
+  rather than defaulted. A cancelled token is deliberately **not** given an outcome for the same
+  reason.
+- **Separate from `ScoreSession`**, which records what got *saved*: a session can span eight
+  hours and several runs, an import is one attempt with one ending, and a failed one may have no
+  session at all. The FK points import → session so undo never reaches into this table. The
+  standard path's session moved up into its consumer to make that free; the check's stays in the
+  saga, because it is opened *after* the deep-scan slot gate and minting it earlier would leave
+  an empty session row every time a scan lost the race.
+- `ScoreCount` is **not** stored or joined for. It lives on the Ledger's session, so
+  `ImportHistoryHandler` reads it through the published `GetScoreSessionsQuery` and matches on
+  the session id — never a cross-vertical SQL join (ADR-001).
+
+### The surfaces
+
+`ImportResultStrip` sits **above** the credential form (UX rule 1 — the page's job is importing,
+so the first thing it owes an arrival is whether the last one worked). A clean run collapses to
+one quiet line; anything louder trains people to stop reading it. `ImportHistoryPanel` is the
+collapsed table below, for working out a bad week rather than the run in front of you.
+
+Two deliberate deviations from the mock: the timestamp is absolute rather than "4 minutes ago"
+(a relative phrase needs a unit vocabulary in nine locales, and the exact time is what anybody
+comparing against a piugame play history wants), and the strip is **not** refreshed when a run
+ends — the consumer closes its row in a `finally`, *after* the status event that would trigger
+the reload, so refreshing on that event races the close and would flash "never reported back" at
+somebody whose import had just succeeded. It is hidden while a run is in flight instead.
+
+### Still open
+
+- The **spent-deep-scan bug**: `SpendDeepScanCommand` runs in the start handler, before the
+  publish, so a user who loses the site-wide slot race in `ExecuteImportCheckCommand` is charged
+  for a scan that never ran. Out of scope here; its own ticket.
+- **An unauthenticated page parses as "zero scores", not as an error.** `GetCards` returns an
+  empty array when the profile boxes are missing, `OfficialSiteClient.GetRecordedScores` uses the
+  raw `PiuGameApi.GetAccountData` overload with no `ThrowIfAccountInvalid`, and both best-score
+  parsers return an empty list when their list node is absent. So a session that goes bad
+  mid-import would report success with zero scores. Nothing observed depends on this today, but
+  it is the hole that would hide a session-invalidation bug if one exists.
+- **Whether a piugame login invalidates an in-flight sid** is unresolved. The dependency log
+  argues against it — sessions kept working across five separate logins in one window — but we do
+  not record which sid each request used, so it cannot be proved from telemetry. The test is a
+  `[LiveSiteFact]` probe: sign in, confirm the sid resolves `title.php`, sign in again on a fresh
+  cookie container, re-check the first. Read-only, and it kicks the owner's own browser session
+  if the answer turns out to be yes.
