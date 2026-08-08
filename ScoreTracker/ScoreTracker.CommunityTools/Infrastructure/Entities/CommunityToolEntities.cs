@@ -130,7 +130,7 @@ internal sealed class ToolBlockEntity
 }
 
 /// <summary>
-///     Whether a player shares with every approved tool.
+///     Whether a player shares with every registered tool.
 ///     <para>
 ///         Lives here rather than on the user row: it is authorization data this vertical owns, and
 ///         keeping it beside shares and blocks makes the effective-access check one local join

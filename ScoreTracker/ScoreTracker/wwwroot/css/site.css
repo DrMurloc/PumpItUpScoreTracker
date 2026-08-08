@@ -1941,6 +1941,86 @@ html.sheet-open .more-sheet-scrim {
     padding: 1px 3px;
 }
 
+/* A printed value in the jacket corner. Opaque backdrop rather than a tint, because it
+   sits on album art and has to stay legible over any of it. */
+.tier-chart-card-corner {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    background: rgba(0, 0, 0, .82);
+    color: var(--mix-ink);
+    padding: 1px 5px;
+    border: 1px solid transparent;
+}
+
+/* The jacket's other bottom corner. Position only — the chrome rides .tier-chart-card-corner
+   alongside it, so the two badges cannot drift apart. Declared after it so the tighter
+   padding a picture wants beats the padding a printed value wants, on source order. */
+.tier-chart-card-corner-start {
+    position: absolute;
+    bottom: 3px;
+    left: 3px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    padding: 1px 3px;
+}
+
+/* Play affordance on the jacket — .chart-card-play's treatment at card scale. Revealed on
+   hover, always present for keyboard. */
+.tier-chart-card-play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.tier-chart-card-play-glyph {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding-left: 3px;
+    border-radius: 99px;
+    background: rgba(0, 0, 0, .8);
+    border: 1px solid rgba(255, 255, 255, .2);
+    color: #fff;
+    opacity: 0;
+    transform: scale(.8);
+    transition: opacity .12s ease, transform .12s ease;
+}
+
+.tier-chart-card-play-glyph::before {
+    content: "";
+    border-style: solid;
+    border-width: 6px 0 6px 10px;
+    border-color: transparent transparent transparent currentColor;
+}
+
+.tier-chart-card-play:hover .tier-chart-card-play-glyph,
+.tier-chart-card-play:focus-visible .tier-chart-card-play-glyph {
+    opacity: 1;
+    transform: scale(1);
+    border-color: var(--mix-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tier-chart-card-play-glyph {
+        transition: none;
+    }
+}
+
+.tier-chart-card-extra {
+    margin-top: 2px;
+}
+
 .tier-chart-card-skeleton {
     border-radius: 8px;
 }
@@ -2149,6 +2229,15 @@ html.sheet-open .more-sheet-scrim {
 .tier-chart-card-other-mix {
     border-color: var(--mud-palette-success);
     border-style: dashed;
+}
+
+/* Played and broke. Grey rather than the pass green because the run earned nothing, and
+   dotted rather than dashed so the three "we have seen you here" states stay separable at
+   a glance. The mix token rather than a Mud palette entry: this is the only one of the
+   four whose colour is a shade of the page rather than a semantic. */
+.tier-chart-card-broken {
+    border-color: color-mix(in srgb, var(--mix-ink-muted) 70%, transparent);
+    border-style: dotted;
 }
 
 /* Randomizer draw states join the same source-order contract: held = mix-primary ring
@@ -4954,9 +5043,10 @@ html.sheet-open .more-sheet-scrim {
 .chart-card-art {
     position: relative;
     display: block;
-    width: 100%;
     aspect-ratio: 16 / 9;
     margin: 10px 10px 0;
+    /* Minus the 10px side margins, so the art stays inside the card. A dead `width: 100%`
+       sat above this and never applied. */
     width: calc(100% - 20px);
     border-radius: 2px;
     background: rgba(0, 0, 0, .35);
@@ -9178,6 +9268,39 @@ button.chart-card-art {
     line-height: 1.35;
 }
 
+/* One row per reference grade. The rows block is a flex item of .title-suggest, so it has to
+   claim the remaining width or its children size to content and the asks stop lining up. */
+.title-suggest-rows {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.title-suggest-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+/* The folder column is fixed so every grade's ask starts on the same edge, single-type and
+   merged-pool rungs alike. Out-specifies the standalone .title-suggest-folder above. */
+.title-suggest-row .title-suggest-folder {
+    font-size: 23px;
+    min-width: 96px;
+}
+
+/* A grade no folder reaches: the number is the ceiling that falls short, not an answer. */
+.title-suggest-row.short .title-suggest-folder {
+    font-size: 20px;
+    color: color-mix(in srgb, var(--mix-ink) 34%, transparent);
+}
+
+.title-suggest-row.short .title-suggest-ask {
+    color: var(--mix-ink-muted);
+}
+
 .title-rarity {
     display: flex;
     align-items: baseline;
@@ -12183,6 +12306,8 @@ button.chart-card-art {
     border-radius: 6px;
     font-size: .74rem;
     color: var(--mix-ink-muted);
+}
+
 /* ---------------------------------------------------------------------------
    Community Tools: the secret block.
    A key or an invite URL is a thing you copy, not a thing you read, so it wears
@@ -12630,3 +12755,894 @@ span.ct-console-pick { cursor: default; }
 /* A revealed secret box: shown only after "Set new token", because an empty
    password field beside a value that already exists reads as "it is gone". */
 .ct-reveal { max-width: 320px; }
+
+/* ============================================================================
+   PUMBILITY page (/Pumbility) — docs/design/pumbility-overhaul.md
+   The bar is the organising device: the hero prints it, the curve draws it, the
+   board rules it across the pool. Everything is --mix-* so it survives a mix
+   switch without a circuit.
+   ============================================================================ */
+
+/* The shell leaves the page flush against the nav, and this one opens on an eyebrow rather
+   than on a heading, so it owes itself the breathing room. */
+.pmb-eyebrow {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    margin: 16px 0 8px;
+}
+
+.pmb-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 330px) minmax(0, 1fr);
+    gap: 16px;
+}
+
+.pmb-hero-figure,
+.pmb-curve {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 6px;
+    padding: 14px 16px 16px;
+}
+
+.pmb-hero-figure {
+    display: flex;
+    flex-direction: column;
+}
+
+.pmb-hero-value {
+    font-size: 56px;
+    line-height: .96;
+}
+
+.pmb-hero-sub {
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+    margin-top: 4px;
+}
+
+/* Pool selector — Phoenix 2 only, and it re-ranks the whole page. */
+.pmb-poolsplit {
+    display: flex;
+    gap: 6px;
+    margin-top: 13px;
+}
+
+.pmb-poolsplit-seg {
+    flex: 1;
+    min-width: 0;
+    border-radius: 4px;
+    padding: 6px 8px;
+    cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    background: transparent;
+    color: var(--mix-ink-muted);
+    font: inherit;
+    font-size: 11px;
+    text-align: left;
+}
+
+.pmb-poolsplit-seg strong {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--mix-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-poolsplit-seg[aria-pressed="true"] {
+    border-color: var(--mix-primary);
+    color: var(--mix-ink);
+    background: color-mix(in srgb, var(--mix-primary) 12%, transparent);
+}
+
+.pmb-poolsplit-seg:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
+}
+
+/* The bar callout — the mechanic the page is organised around. */
+.pmb-barcard {
+    margin-top: 13px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mix-accent) 9%, transparent);
+    border-left: 3px solid var(--mix-accent);
+}
+
+/* Not an empty state: below fifty charts nothing is displaced, so there is no bar
+   rather than a missing one. */
+.pmb-barcard-none {
+    background: color-mix(in srgb, var(--mix-ink) 6%, transparent);
+    border-left-color: color-mix(in srgb, var(--mix-ink) 25%, transparent);
+}
+
+.pmb-barcard-top {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.pmb-barcard-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--mix-accent);
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-barcard-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-barcard-who {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    margin-top: 4px;
+}
+
+.pmb-barcard-say {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+    margin-top: 5px;
+}
+
+.pmb-dot {
+    color: var(--mix-ink-muted);
+}
+
+/* --- the pool curve --- */
+.pmb-curve {
+    display: flex;
+    flex-direction: column;
+}
+
+.pmb-curve-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.pmb-curve-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.pmb-curve-note {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-curve-plot {
+    position: relative;
+    flex: 1;
+    min-height: 150px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.pmb-cbar {
+    flex: 1;
+    min-width: 0;
+    border-radius: 1px 1px 0 0;
+    background: var(--chart-doubles);
+}
+
+.pmb-cbar.s {
+    background: var(--chart-singles);
+}
+
+.pmb-cbar.ghost {
+    opacity: .3;
+}
+
+.pmb-cbar.is-bar {
+    outline: 1px solid var(--mix-accent);
+}
+
+.pmb-curve-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed var(--mix-accent);
+    pointer-events: none;
+}
+
+.pmb-curve-line span {
+    position: absolute;
+    right: 0;
+    top: -18px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-accent);
+    background: var(--mix-surface);
+    padding: 0 4px;
+}
+
+.pmb-curve-axis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: var(--mix-ink-muted);
+    margin-top: 5px;
+}
+
+.pmb-curve-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 14px;
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+    margin-top: 6px;
+}
+
+.pmb-legend-ghost {
+    opacity: .6;
+}
+
+.pmb-swatch {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    margin-right: 5px;
+    vertical-align: -1px;
+}
+
+.pmb-swatch-ghost {
+    background: var(--chart-doubles);
+    opacity: .3;
+}
+
+.pmb-curve-read {
+    margin: 10px 0 0;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    font-size: 13px;
+}
+
+/* --- sections --- */
+.pmb-block {
+    margin-top: 28px;
+}
+
+.pmb-block-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+
+.pmb-block-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    margin: 0;
+}
+
+.pmb-block-lede {
+    font-size: 13.5px;
+    color: var(--mix-ink-muted);
+    max-width: 62ch;
+    margin: 2px 0 14px;
+}
+
+
+/* --- targets, comfortable --- */
+/* One treatment for both jacket badges: the mix accent on the mix accent, over the black
+   backdrop. The number says how MUCH and nothing else, the grade says what you would come
+   away with — which KIND of row it is rides the card's border (owner, 2026-08-06).
+   Deliberately the mix accent rather than the pass green: the border language owns green,
+   and MixPalette.Success is one constant across every mix, so a badge painted with it says
+   nothing about where you are. Declared AFTER .tier-chart-card-corner so it wins that rule's
+   border shorthand on source order, the same contract the card border language runs on. */
+.pmb-corner-gain {
+    border-color: var(--mix-primary);
+    color: var(--mix-primary);
+}
+
+.pmb-legend {
+    margin-top: 0;
+}
+
+.pmb-tcard-meta {
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.pmb-tcard-why {
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.pmb-arrow {
+    color: var(--mix-ink-muted);
+    font-size: 11px;
+}
+
+.pmb-none {
+    color: var(--mix-ink-muted);
+}
+
+.pmb-num {
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-muted {
+    color: var(--mix-ink-muted);
+}
+
+.pmb-empty {
+    color: var(--mix-ink-muted);
+    font-size: 13.5px;
+}
+
+/* --- targets, table --- */
+.pmb-table td {
+    white-space: nowrap;
+}
+
+.pmb-table .pmb-r {
+    text-align: right;
+}
+
+.pmb-row {
+    cursor: pointer;
+}
+
+.pmb-ident {
+    white-space: normal;
+}
+
+.pmb-ident-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pmb-ident-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 30ch;
+}
+
+.pmb-gain-cell {
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- the pool board --- */
+.pmb-board {
+    display: flex;
+    flex-direction: column;
+}
+
+.pmb-rankrow {
+    cursor: pointer;
+    gap: 10px;
+}
+
+.pmb-place {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+    width: 26px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-rankrow .pmb-ident {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pmb-rname {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pmb-tail {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.pmb-val {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-at-bar {
+    background: color-mix(in srgb, var(--mix-accent) 10%, transparent);
+}
+
+.pmb-below {
+    opacity: .55;
+}
+
+.pmb-barrule {
+    display: flex;
+    align-items: center;
+    margin: 2px 0;
+    padding: 3px 8px;
+    border-top: 1px dashed var(--mix-accent);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 10.5px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-accent);
+}
+
+/* --- Phoenix 2 carryover --- */
+.pmb-flip {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 6px;
+    padding: 15px 16px;
+}
+
+.pmb-flip-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 22px;
+}
+
+.pmb-flip-col-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 7px;
+}
+
+.pmb-flip-col-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.pmb-flip-col-name.pmb-p1 {
+    color: var(--mix-ink-muted);
+}
+
+.pmb-flip-col-name.pmb-p2 {
+    color: var(--mix-primary);
+}
+
+.pmb-flip-total {
+    font-size: 12px;
+    color: var(--mix-primary);
+}
+
+.pmb-flip-bar {
+    display: flex;
+    height: 30px;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.pmb-flip-seg {
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--mix-ink);
+}
+
+.pmb-flip-seg.s {
+    background: var(--chart-singles);
+}
+
+.pmb-flip-seg.d {
+    background: var(--chart-doubles);
+}
+
+.pmb-flip-say {
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.pmb-factrow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.pmb-fact {
+    background: var(--mix-surface-muted);
+    border-radius: 4px;
+    padding: 9px 11px;
+}
+
+.pmb-fact-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 24px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.05;
+}
+
+.pmb-fact-of {
+    font-size: 15px;
+}
+
+.pmb-fact-lbl {
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+    margin-top: 2px;
+}
+
+.pmb-fact-warn .pmb-fact-num {
+    color: var(--mix-accent);
+}
+
+/* --- collapsibles --- */
+details.pmb-fold {
+    margin-top: 26px;
+    border-radius: 6px;
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+details.pmb-fold > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+details.pmb-fold > summary::-webkit-details-marker {
+    display: none;
+}
+
+details.pmb-fold > summary::before {
+    content: "\25B8";
+    color: var(--mix-ink-muted);
+    font-size: 11px;
+    transition: transform .15s ease;
+}
+
+details.pmb-fold[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+details.pmb-fold > summary h3 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    margin: 0;
+}
+
+details.pmb-fold > summary .pmb-sum-note {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+    text-align: right;
+}
+
+details.pmb-fold > summary:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: -2px;
+}
+
+.pmb-fold-body {
+    padding: 0 14px 14px;
+}
+
+.pmb-whatif {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    align-items: end;
+}
+
+.pmb-field label {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    margin-bottom: 4px;
+}
+
+.pmb-whatif-out {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 30px;
+    color: var(--mix-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-whatif-out small {
+    display: block;
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+    letter-spacing: 0;
+}
+
+/* --- the patience card: sitewide, for waits a page cannot shorten --- */
+/* Lives here rather than in a Razor <style> block, which is page-scoped — a shared component
+   styled that way renders unstyled on every other page that uses it. */
+/* Full width of whatever it is dropped into, with its contents centred: it stands in for a
+   whole region rather than sitting beside one, so anything less than the full width reads as
+   a second thing still loading next to the thing that is telling you so. */
+.patience-card {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 6px;
+    padding: 28px 16px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
+}
+
+/* Five panels stepping in sequence. Motion without a spinner, and the one thing on the page
+   that could only belong to this game. */
+.patience-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 20px);
+    grid-template-rows: repeat(3, 20px);
+    gap: 4px;
+}
+
+.patience-panel {
+    display: block;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--mix-ink) 13%, transparent);
+    animation: patience-step 2s steps(1, end) infinite;
+}
+
+.patience-ul { grid-area: 1 / 1; animation-delay: 0s; }
+.patience-ur { grid-area: 1 / 3; animation-delay: .4s; }
+.patience-ct { grid-area: 2 / 2; animation-delay: .8s; }
+.patience-dl { grid-area: 3 / 1; animation-delay: 1.2s; }
+.patience-dr { grid-area: 3 / 3; animation-delay: 1.6s; }
+
+@keyframes patience-step {
+    0% {
+        background: var(--mix-primary);
+        box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    }
+
+    18% {
+        background: color-mix(in srgb, var(--mix-primary) 45%, transparent);
+        box-shadow: 0 0 0 transparent;
+    }
+
+    20%, 100% {
+        background: color-mix(in srgb, var(--mix-ink) 13%, transparent);
+        box-shadow: 0 0 0 transparent;
+    }
+}
+
+.patience-line {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    line-height: 1.15;
+    color: var(--mix-ink);
+    margin: 0;
+}
+
+.patience-sub {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--mix-ink-muted);
+    margin: 0;
+    max-width: 34ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .patience-panel {
+        animation: none;
+    }
+
+    .patience-ct {
+        background: var(--mix-primary);
+        box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    }
+}
+
+/* --- loading, rule 9: shaped like what it becomes --- */
+.pmb-skeleton {
+    background: color-mix(in srgb, var(--mix-ink) 8%, transparent);
+    border-radius: 6px;
+    animation: pmb-pulse 1.4s ease-in-out infinite;
+}
+
+.pmb-skeleton-targets {
+    min-height: 220px;
+    margin-top: 10px;
+}
+
+@keyframes pmb-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .55;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pmb-skeleton {
+        animation: none;
+    }
+
+    details.pmb-fold > summary::before {
+        transition: none;
+    }
+}
+
+/* --- the class ladder (UX-GUIDELINES section 1): tablet under 900, fold under 700,
+       mobile under 500. One class, one shed, least dense information first. --- */
+
+/* The hero is two-up for desktop only; a tablet gets the full-width curve, which its
+   height can afford. 860 sits between the real tablets (820, 834) and the 900 rung,
+   touching neither: a query measures the content box, and a scrollbar would flip a
+   rung sitting on a nominal device width. */
+@media (max-width: 860px) {
+    .pmb-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Tablet: the evidence line goes first, least information per pixel on the row. */
+@media (max-width: 899.98px) {
+    .pmb-col-why {
+        display: none;
+    }
+}
+
+/* Fold: the song name steps aside; jacket and difficulty bubble already say which
+   chart it is (the .olb-song-text rule). */
+@media (max-width: 699.98px) {
+    .pmb-ident-name,
+    .pmb-rname {
+        display: none;
+    }
+
+    .pmb-flip-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile: scores drop to grade art alone. The art is narrower than the number it
+   replaces and the score still rides the row tooltip. */
+@media (max-width: 499.98px) {
+    .pmb-score-text,
+    .pmb-rscore {
+        display: none;
+    }
+
+    .pmb-hero-value {
+        font-size: 48px;
+    }
+
+    .pmb-curve-plot {
+        min-height: 118px;
+        gap: 1px;
+    }
+
+    .pmb-table th,
+    .pmb-table td {
+        padding-right: 7px;
+    }
+}
+
+/* Landscape phone: 844 wide and 390 tall. A width rule stacks the hero exactly when
+   height is the scarce axis, so this compresses instead. The one rule the width
+   ladder cannot express (session-breakdown.md section 5 draws the same line). */
+@media (max-height: 520px) and (min-width: 700px) {
+    .pmb-hero {
+        grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+    }
+
+    .pmb-hero-value {
+        font-size: 34px;
+    }
+
+    .pmb-hero-figure,
+    .pmb-curve {
+        padding: 10px 12px 11px;
+    }
+
+    .pmb-curve-plot {
+        min-height: 84px;
+    }
+
+    .pmb-curve-legend {
+        display: none;
+    }
+
+    .pmb-barcard {
+        margin-top: 9px;
+        padding: 7px 10px;
+    }
+
+    .pmb-barcard-num {
+        font-size: 20px;
+    }
+
+    .pmb-barcard-say {
+        display: none;
+    }
+}
+
+/* Source label on a target row. It only renders when the list actually mixes a repriced
+   Phoenix 1 score with a peer estimate, so the carried rows read as the harder currency
+   they are rather than as one more guess. */
+.pmb-src {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    color: var(--mix-ink-muted);
+}
+
+.pmb-src-carry {
+    border-color: color-mix(in srgb, var(--mix-accent) 60%, transparent);
+    background: color-mix(in srgb, var(--mix-accent) 12%, transparent);
+    color: var(--mix-accent);
+}
+

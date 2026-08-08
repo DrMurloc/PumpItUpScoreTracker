@@ -1,0 +1,88 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* The number, then immediately the thing it has to beat. PUMBILITY is the sum of your top
+   fifty, so the only way to gain is to displace the fiftieth -- and until this page that
+   value was computed as a local and thrown away, leaving the mechanic invisible
+   (docs/design/pumbility-overhaul.md §3.2). *@
+<div class="pmb-hero-figure">
+    <div class="pmb-hero-value stat-display">@Page.Total.ToString("N0")</div>
+    <div class="pmb-hero-sub">@Subtitle</div>
+
+    @if (Pools.Count > 1)
+    {
+        <div class="pmb-poolsplit" role="group" aria-label="@L["Pool"]">
+            @foreach (var pool in Pools)
+            {
+                <button type="button" class="pmb-poolsplit-seg"
+                        aria-pressed="@(pool.Value == Selected ? "true" : "false")"
+                        @onclick="() => OnPoolChanged.InvokeAsync(pool.Value)">
+                    <strong>@pool.Total.ToString("N0")</strong>@pool.Label
+                </button>
+            }
+        </div>
+    }
+
+    @if (Page.Bar != null)
+    {
+        <div class="pmb-barcard">
+            <div class="pmb-barcard-top">
+                <span class="pmb-barcard-num">@Page.Bar.Value.ToString("N0")</span>
+                <span class="pmb-barcard-label">@L["Your bar"]</span>
+            </div>
+            @if (BarChart != null)
+            {
+                <div class="pmb-barcard-who">
+                    <strong>@BarChart.Song.Name</strong>
+                    <span class="pmb-dot">·</span>
+                    <DifficultyBubble Chart="BarChart" Small="true"></DifficultyBubble>
+                    @if (BarEntry != null)
+                    {
+                        <LetterGradeIcon Grade="BarEntry.Score.LetterGradeFor(Page.Mix)"
+                                         IsBroken="BarEntry.IsBroken" Height="16"></LetterGradeIcon>
+                        <span class="pmb-num">@(((int)BarEntry.Score).ToString("N0"))</span>
+                    }
+                </div>
+            }
+            <div class="pmb-barcard-say">
+                @L["Nothing counts until it beats this. A chart worth more replaces it and you keep the difference."]
+            </div>
+        </div>
+    }
+    else
+    {
+        @* Not an empty state -- a different rule. Below fifty charts nothing is displaced,
+           so a bar would be a number that means something else. *@
+        <div class="pmb-barcard pmb-barcard-none">
+            <div class="pmb-barcard-say">
+                @string.Format(L["Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet."], Page.Pool.Count)
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public PumbilityPageRecord Page { get; set; } = default!;
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    /// <summary>Phoenix 2 keeps three independent pools; Phoenix 1 has one, so this is empty there.</summary>
+    [Parameter] public IReadOnlyList<PoolOption> Pools { get; set; } = Array.Empty<PoolOption>();
+
+    [Parameter] public ChartType? Selected { get; set; }
+
+    [Parameter] public EventCallback<ChartType?> OnPoolChanged { get; set; }
+
+    [Parameter] public string? Subtitle { get; set; }
+
+    public sealed record PoolOption(ChartType? Value, string Label, int Total);
+
+    private PoolEntry? BarEntry => Page.Pool.Count > 0 && Page.Bar != null ? Page.Pool[^1] : null;
+
+    private Chart? BarChart =>
+        Page.BarChartId != null && Charts.TryGetValue(Page.BarChartId.Value, out var chart) ? chart : null;
+}

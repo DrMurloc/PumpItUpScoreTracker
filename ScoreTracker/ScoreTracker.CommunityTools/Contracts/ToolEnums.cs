@@ -20,7 +20,14 @@ public enum ToolKind
     ListingOnly
 }
 
-/// <summary>Where a tool sits in the listing flow.</summary>
+/// <summary>
+///     Where a tool sits in the listing flow — a directory concern only.
+///     <para>
+///         None of these values gates who a tool may read. A private tool is eligible for the
+///         all-tools pool on exactly the same terms as a listed one: it accepts the pool, it is not
+///         in session mode, its source is published and checked, and its maker is not banned.
+///     </para>
+/// </summary>
 public enum ToolVisibility
 {
     /// <summary>Fully functional and reachable by invite. The starting state, and a valid resting one.</summary>
@@ -29,7 +36,7 @@ public enum ToolVisibility
     /// <summary>Listing requested, awaiting an admin decision. Still fully functional.</summary>
     PendingApproval,
 
-    /// <summary>In the directory, and eligible for players who share with all tools.</summary>
+    /// <summary>In the directory, so a player can find it without an invite link.</summary>
     Public,
 
     /// <summary>Listing refused with a reason. Still fully functional as a private tool.</summary>
@@ -68,7 +75,7 @@ public enum ShareSource
     /// <summary>The player connected to this tool specifically.</summary>
     Direct,
 
-    /// <summary>The player shares with every approved tool, and this one accepts that pool.</summary>
+    /// <summary>The player shares with every registered tool, and this one accepts that pool.</summary>
     AllTools
 }
 

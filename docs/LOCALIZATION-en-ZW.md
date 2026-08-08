@@ -104,6 +104,7 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Hour / Hours | grogl | Coined 2026-08-03 for the console's `· 24 grogl` stat labels. |
 | GameTag | Grglmrg | `Grgl` (account) + `Mrg` (name). |
 | Code / Source | Murgblub | Already carried "Source & contact" (`Murgblub opa golba`); the Code tab reuses it. |
+| Publishes | Grolub | Coined 2026-08-06 for the sharing copy, which names publishing source as the gate. Not `Murpro` — that is already "Shared". |
 | Insights / Activity | Murgblarg | The console tab and the "recent activity" strings share one word. |
 
 ### PIU domain
@@ -143,6 +144,9 @@ file on 2026-07-28. **Reuse these; do not re-coin them.**
 | Find | Grubmarg | Coined 2026-08-04. |
 | Row / Rows | Grolgub | Coined 2026-08-04. |
 | Edge | Bralmo | Coined 2026-08-04 for the supplemented-row legend. |
+| Gain | Roglub | Coined 2026-08-05 for the digest's PUMBILITY gain. The amount won, distinct from `Romr` (gainer), the player who won it. |
+| Across | Plglarg | Coined 2026-08-05 for the digest's board-climber line. |
+| On | Ur | Coined 2026-08-05 — the preposition, as in "50× AAA on singles". |
 
 
 ### Difficulty and intensity
@@ -173,9 +177,14 @@ than dropped. Kept deliberately short, since the length rule tracks the English.
 | on | ap | |
 | to | ro | Not `mo`, which is the negation prefix (`Momurgloo`). |
 | one | mrp | The pronoun ("similar to this **one**"), not the numeral. |
-| yet | larg | |
+| yet | larg | Also carries "still", as in *still isn't enough*. |
 | Manual | Blargurg | Coined 2026-08-05 for the score dialog's manual edit heading. |
 | Similar | Plglrogrgl | Distinct from `plglro` ("like"), which the *Charts like this* heading already uses. |
+| at | og | Coined 2026-08-07 for the title drawer's per-grade rows ("S13 **at** SSS+"). Distinct from `ap`/`ur`, both "on". |
+| or | ol | Coined 2026-08-07. |
+| not / isn't | bo | Recovered from the file's existing `Bo` negatives; tabulated so the next batch reuses it rather than re-coining. |
+| enough | blurg | Coined 2026-08-07. |
+| fifty | murgro | Coined 2026-08-07 for *Fifty charts, {0} plate.* — the numeral spelled out, where `mrp` ("one") is the pronoun. Digits stay digits; only a spelled-out English numeral needs this. |
 
 ## Process for future batches
 

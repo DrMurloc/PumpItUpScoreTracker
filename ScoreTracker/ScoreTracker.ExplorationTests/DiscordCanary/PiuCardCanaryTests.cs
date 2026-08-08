@@ -21,6 +21,7 @@ public sealed class PiuCardCanaryTests
 {
     private static readonly Uri SongArt = new("https://piuimages.arroweclip.se/songs/WitchDoctor.png");
     private const string ChartBase = "https://piuscores.arroweclip.se/Chart";
+    private const string PlayersBase = "https://piuscores.arroweclip.se/OfficialLeaderboards/Players";
     private const string Vid = "https://youtu.be/piu-sample-video";
 
     [DiscordCanaryFact]
@@ -94,57 +95,82 @@ public sealed class PiuCardCanaryTests
             MixEnum.Phoenix2.GetAccentColor(),
             new[] { new RichBotLink("주간 채보", new Uri("https://piuscores.arroweclip.se/WeeklyCharts")) });
 
+    // The same reshaped card in Korean — the locale most likely to expose a length problem,
+    // since CJK glyphs are double-width and the floor rows depend on the rank labels aligning.
     private static RichBotMessage KoreanOfficialDigestCard(string marker) =>
-        new(new RichBotSection("### 이번 주 공식 리더보드\n-# [Phoenix 2] 7월 6일 대비 · 일요일 집계", null),
+        new(new RichBotSection(
+                "### 이번 주 공식 리더보드\n" +
+                "-# [Phoenix 2] 7월 26일 대비 · 1,857명이 흔적을 남겼고 — Freedom Dive D27가 세계 최초 AAA+를 내줬습니다.",
+                FreedomDiveArt),
             new IRichBotBlock[]
             {
-                new RichBotText("🏆 **PUMBILITY 톱 10**\n" +
-                                "` 1` **JEWEL** — 9,981 ↑2\n` 2` **ESI** — 9,940 –\n" +
-                                "` 3` **NIMGO** — 9,902 ↓1"),
+                new RichBotText("등록 **26,487** · 활동 **1,857** · 첫 등장 **375**\n-# 신규 23,273 · 갱신 3,214"),
                 new RichBotDivider(),
-                new RichBotText("🌍 **세계 최초 & 새로운 #1**\n" +
-                                "최초 **SSS+** — **ESI** (Paradoxx S26) · 995,120"),
+                new RichBotText("📈 **PUMBILITY 최다 상승**\n" +
+                                $"[RUN]({PlayersBase}?player=RUN%234678) **+2,914.44**（18,645.90）· #908 → **#41**"),
                 new RichBotDivider(),
-                new RichBotText("🎟 **톱 1000 진입 조건**\n**Lv.20 AAA 50개** · **Lv.17 SSS 50개**")
+                new RichBotText("🧗 **채보 보드 최다 상승**\n" +
+                                $"[MECCHAMILE]({PlayersBase}?player=MECCHAMILE%232227) 채보 보드 90개에서 **+11,990** · 신규 90"),
+                new RichBotDivider(),
+                new RichBotText("🎟 **각 순위 컷** — 싱글 50× AAA\n" +
+                                "` #100` **Lv.24** · 18,283.13 ▲185\n" +
+                                "`#1000` Lv.16 → **Lv.20** · 16,489.37 ▲1,270"),
+                new RichBotDivider(),
+                new RichBotText("🌍 **세계 최초 기록**\n" +
+                                $"#DIFFICULTY|D27# **Freedom Dive** — 세계 최초 #LETTERGRADE|AAAPlus# — [FRANCO]({PlayersBase}?player=FRANCO%233928)\n" +
+                                $"#DIFFICULTY|D26# **OVERNIGHT FLOWER** — 세계 최초 #LETTERGRADE|SSPlus# — [FEFEMZ]({PlayersBase}?player=FEFEMZ%231489)")
             },
             $"#MIX|Phoenix2# Phoenix 2 · PIU Scores 공식 미러 · {marker}",
             MixEnum.Phoenix2.GetAccentColor(),
             new[]
             {
                 new RichBotLink("이번 주", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards")),
+                new RichBotLink("랭킹", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards/Rankings")),
                 new RichBotLink("필요 조건", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards/WhatItTakes"))
             });
 
-    // Official digest — opens with the top 10 + rank movement, then movers/firsts, and
-    // "what it takes" framed as the two difficulty levels.
+    // Official digest (D1 reshape) — the week's numbers first, then one marquee name per
+    // category, the two PUMBILITY floors in AAA, and the world firsts closing it out ordered
+    // by level. The header wears the top first's jacket; the hype sentence is its caption.
+    // Sampled from the real Phoenix 2 sweep of 2026-08-02, which is what makes it a useful
+    // canary: these are the lengths and the digit counts a live week actually produces.
+    private static readonly Uri FreedomDiveArt =
+        new("https://piuimages.arroweclip.se/songs/FreedomDive.png");
+
     private static RichBotMessage OfficialDigestCard(string marker) =>
-        new(new RichBotSection("### This week on the official boards\n-# [Phoenix 2] vs Jul 6 · swept Sunday", null),
+        new(new RichBotSection(
+                "### This week on the official boards\n" +
+                "-# [Phoenix 2] vs Jul 26 · 1,857 players left their mark — and Freedom Dive D27 fell to its first AAA+.",
+                FreedomDiveArt),
             new IRichBotBlock[]
             {
-                new RichBotText("🏆 **PUMBILITY top 10**\n" +
-                                "` 1` **JEWEL** — 9,981 ↑2\n` 2` **ESI** — 9,940 –\n" +
-                                "` 3` **NIMGO** — 9,902 ↓1\n` 4` **HYSTERIA** — 9,846 ↑5\n" +
-                                "` 5` **PUMPKING** — 9,811 🆕\n` 6` **WABBIT** — 9,780 ↓2\n" +
-                                "` 7` **KUMA** — 9,742 ↑1\n` 8` **DION** — 9,701 –\n" +
-                                "` 9` **MELON** — 9,655 ↑3\n`10` **SPHAM** — 9,610 ↓4"),
+                new RichBotText("**26,487** board entries · **1,857** players active · **375** debuts\n" +
+                                "-# 23,273 new · 3,214 upscored"),
                 new RichBotDivider(),
-                new RichBotText("📈 **PUMBILITY movers**\n" +
-                                "**HYSTERIA** #58 → **#41** · 9,120.45\n**KUMA** #112 → **#97** · 8,644.02"),
+                new RichBotText("📈 **Biggest PUMBILITY gain**\n" +
+                                $"[RUN]({PlayersBase}?player=RUN%234678) **+2,914.44** to 18,645.90 · #908 → **#41**"),
                 new RichBotDivider(),
-                new RichBotText("🧗 **Boards climbed**\n**PUMPKING** climbed 23 boards (+118)"),
+                new RichBotText("🧗 **Biggest board climber**\n" +
+                                $"[MECCHAMILE]({PlayersBase}?player=MECCHAMILE%232227) **+11,990 places** " +
+                                "across 90 chart boards · 90 new"),
                 new RichBotDivider(),
-                new RichBotText("🌍 **World firsts & new #1s**\n" +
-                                "First **SSS+** — **ESI** on Paradoxx S26 · 995,120\n" +
-                                "New #1 — **NIMGO** on Gargoyle FS D25 · 998,110, dethroning SPHAM"),
+                new RichBotText("🎟 **What holds the rungs** — 50× AAA on singles\n" +
+                                "` #100` **Lv.24** · 18,283.13 ▲185\n" +
+                                "`#1000` Lv.16 → **Lv.20** · 16,489.37 ▲1,270"),
                 new RichBotDivider(),
-                new RichBotText("🎟 **To make the top 1000**\n" +
-                                "**50× AAA at Lv.20** · **50× SSS at Lv.17**")
+                new RichBotText("🌍 **World firsts**\n" +
+                                $"#DIFFICULTY|D27# **Freedom Dive** — World First #LETTERGRADE|AAAPlus# — [FRANCO]({PlayersBase}?player=FRANCO%233928)\n" +
+                                $"#DIFFICULTY|D26# **OVERNIGHT FLOWER** — World First #LETTERGRADE|SSPlus# — [FEFEMZ]({PlayersBase}?player=FEFEMZ%231489)\n" +
+                                $"#DIFFICULTY|D25# **Legendary Dominion** — World First #LETTERGRADE|SSSPlus# — [FEFEMZ]({PlayersBase}?player=FEFEMZ%231489)\n" +
+                                $"#DIFFICULTY|D24# **Digitalis** — World First #PLATE|PerfectGame# — [FEFEMZ]({PlayersBase}?player=FEFEMZ%231489)\n" +
+                                $"#DIFFICULTY|D24# **Unfelicitas** — World First #PLATE|PerfectGame# — [DA3RXM]({PlayersBase}?player=DA3RXM%233573)")
             },
             $"#MIX|Phoenix2# Phoenix 2 · PIU Scores official mirror · {marker}",
             MixEnum.Phoenix2.GetAccentColor(),
             new[]
             {
                 new RichBotLink("This Week", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards")),
+                new RichBotLink("Rankings", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards/Rankings")),
                 new RichBotLink("What It Takes", new Uri("https://piuscores.arroweclip.se/OfficialLeaderboards/WhatItTakes"))
             });
 

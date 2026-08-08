@@ -171,12 +171,6 @@
   <data name="**#{0}** on {1} {2} weekly" xml:space="preserve">
     <value>**#{0}** lurg {1} {2} murmmr</value>
   </data>
-  <data name="**50× AAA at Lv.{0}**" xml:space="preserve">
-    <value>**50× AAA mr Morg.{0}**</value>
-  </data>
-  <data name="**50× SSS at Lv.{0}**" xml:space="preserve">
-    <value>**50× SSS mr Morg.{0}**</value>
-  </data>
   <data name="**All passed!**" xml:space="preserve">
     <value>**Rgl rglplgl!**</value>
   </data>
@@ -204,8 +198,8 @@
   <data name="**{0}** at {1}" xml:space="preserve">
     <value>**{0}** mr {1}</value>
   </data>
-  <data name="**{0}** climbed {1} chart boards (+{2})" xml:space="preserve">
-    <value>**{0}** grogrglro {1} murgl grrglplgl (+{2})</value>
+  <data name="**{0}** board entries · **{1}** players active · **{2}** debuts" xml:space="preserve">
+    <value>**{0}** mrglblarg glplglrgl · **{1}** morp grglmurp · **{2}** blargmurmgl</value>
   </data>
   <data name="**{0}** completed" xml:space="preserve">
     <value>**{0}** morgrorp</value>
@@ -218,9 +212,6 @@
   </data>
   <data name="**{0}** — now ~#{1:0}" xml:space="preserve">
     <value>**{0}** — bulo ~#{1:0}</value>
-  </data>
-  <data name="**{0}** — {1} chart boards ({2} new, net +{3})" xml:space="preserve">
-    <value>**{0}** — {1} murgl grrglplgl ({2} grgl, glorg +{3})</value>
   </data>
   <data name="+ {0} more" xml:space="preserve">
     <value>+ {0} mrrgl</value>
@@ -239,9 +230,6 @@
   </data>
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>+{0} lurgrgl mrglro grogrglro rglrgl lurg grglmrp grorpplgl.</value>
-  </data>
-  <data name=", dethroning {0}" xml:space="preserve">
-    <value>, glurgmagl {0}</value>
   </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -&gt; 10%</value>
@@ -290,6 +278,9 @@
   </data>
   <data name="50% -> 75%" xml:space="preserve">
     <value>50% -&gt; 75%</value>
+  </data>
+  <data name="50× AAA on singles" xml:space="preserve">
+    <value>50× AAA ur mrglrlgl</value>
   </data>
   <data name="6 months" xml:space="preserve">
     <value>6 murgloburg</value>
@@ -377,6 +368,9 @@
   </data>
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>GRO mrglrgll API glgrgl mrglmr blargplgl lurgrgl plglmurgblub-grglgrrgl rorgl — arglmr, glorgblarggrrgl, lurglurg mrmagl. Glorgmagl gro murpblgrl romurg gromurp grgl ro glorgmurg lurg mrp blubmurm gromurm mrgl murg.</value>
+  </data>
+  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
+    <value>Mrglrgl morp mrgl blub Phoenix 1, mrglrgo blarg Phoenix 2.</value>
   </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>GRO mrpmaglmurp ro murgmrblarg gro groblgrlmagl gromurm grrglurgmurp grorpmrglblgrl - blubmurm blubgrrglmurm lurg mrp morgmurg, mrp maglplglblub</value>
@@ -486,6 +480,9 @@
   </data>
   <data name="Added to ToDo List!" xml:space="preserve">
 	  <value>Murpgrrgl grgl Blargmurm Grog!</value>
+  </data>
+  <data name="added to your PUMBILITY" xml:space="preserve">
+    <value>mrgloru morp PUMBILITY</value>
   </data>
   <data name="Added you {0}" xml:space="preserve">
     <value>Glorg blub {0}</value>
@@ -599,6 +596,9 @@
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>Blgrl grgl glgrgl glorgargl gro {0} glglgrrgl glmrp, urg blubgrrgl blub?</value>
   </data>
+  <data name="An estimate from players at your competitive level." xml:space="preserve">
+    <value>Mrglrgo blarg Morp blub morp mrglrg mrogl.</value>
+  </data>
   <data name="An import is already running" xml:space="preserve">
     <value>Blgrl glorggl urg glglgrrgl grorpgrglmrgl</value>
   </data>
@@ -621,14 +621,17 @@
   <data name="Any" xml:space="preserve">
     <value>Ro</value>
   </data>
-  <data name="Any approved tool can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
-    <value>Argla Rorgl murp blurgl gromurp Mgrlgmrg. Ormo blu mgrlgmrg-rorgblub. Murgloo grorp mrpgrogl, blu Rorgl grabla morgmurm.</value>
-  </data>
   <data name="Any level" xml:space="preserve">
     <value>Ro grorpmurm</value>
   </data>
   <data name="any moment now" xml:space="preserve">
     <value>puluma</value>
+  </data>
+  <data name="Any tool that publishes its source code can read your scores. Mostly this powers score-analysis tools. Turning it off stops new access — tools may keep what they already collected." xml:space="preserve">
+    <value>Argla Rorgl murp Grolub Murgblub blurgl gromurp Mgrlgmrg. Ormo blu mgrlgmrg-rorgblub. Murgloo grorp mrpgrogl, blu Rorgl grabla morgmurm.</value>
+  </data>
+  <data name="Any tool that publishes its source code will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
+    <value>Argla Rorgl murp Grolub Murgblub blurgl gromurp Mgrlgmrg — ormo blu mgrlgmrg-rorgblub. Amurmo murgargl, gromurp murp grorp murmarglmurp, blu blaromurp.</value>
   </data>
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>Argla morp murm murpgrogl grabla murp galm, mrpgrogl Mrglrgll arplo murmo.</value>
@@ -663,6 +666,12 @@
   <data name="Apply" xml:space="preserve">
     <value>Maglmr</value>
   </data>
+  <data name="Applying baby powder" xml:space="preserve">
+    <value>Blorpa mulgub</value>
+  </data>
+  <data name="Applying Gorilla Tape to the sensors" xml:space="preserve">
+    <value>Gorlum arp mrogl</value>
+  </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Lurggrgllurggl rglgrglblub murgl blubmurm gromurp grorpmurm.</value>
   </data>
@@ -671,9 +680,6 @@
   </data>
   <data name="Approved" xml:space="preserve">
     <value>Marogl</value>
-  </data>
-  <data name="Approved tools will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
-    <value>Argla Rorgl murp blurgl gromurp Mgrlgmrg — ormo blu mgrlgmrg-rorgblub. Amurmo murgargl, gromurp murp grorp murmarglmurp, blu blaromurp.</value>
   </data>
   <data name="Approving a tool puts its name, description and link in front of every player. Everything else about it — webhooks, keys, who it can read — is the maker's business and is not reviewed here." xml:space="preserve">
     <value>Marogl blurgl - alla plaruga glub burgla mo groblu, alla mogul. Bo grumbla, alla marogl: obbla, pragl, bloop groblu - alla blurgl mogla, opa marogl bo.</value>
@@ -714,11 +720,14 @@
   <data name="Ask to be listed" xml:space="preserve">
     <value>Murgargl blu mrpgrogl</value>
   </data>
-  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
-    <value>Glromrp {0} glgrgl gro {1} murp.</value>
-  </data>
   <data name="At least" xml:space="preserve">
     <value>Mr mggl</value>
+  </data>
+  <data name="at {0}" xml:space="preserve">
+    <value>og {0}</value>
+  </data>
+  <data name="at {0} or better" xml:space="preserve">
+    <value>og {0} ol mrrgl</value>
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Blub arg palo</value>
@@ -829,6 +838,9 @@
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>Mr morg — ro grrglgrrgl blubgrrgl arglblgrl gromurp arglrglmrmurm grorpmurm mrargl.</value>
   </data>
+  <data name="Based on" xml:space="preserve">
+    <value>Blarg</value>
+  </data>
   <data name="based on your scores" xml:space="preserve">
     <value>arglgl lurg gromurp mgrlgmrg</value>
   </data>
@@ -891,6 +903,9 @@
   </data>
   <data name="Biggest Movers" xml:space="preserve">
     <value>Grrglbluburg Murpplgl</value>
+  </data>
+  <data name="Biggest PUMBILITY gain" xml:space="preserve">
+    <value>Grrglbluburg PUMBILITY roglub</value>
   </data>
   <data name="Biggest PUMBILITY gainer" xml:space="preserve">
     <value>Grrglbluburg PUMBILITY romr</value>
@@ -1045,6 +1060,9 @@
   </data>
   <data name="Card {0} of {1}" xml:space="preserve">
     <value>Mrpmorg {0} mrgl {1}</value>
+  </data>
+  <data name="Carried from Phoenix 1" xml:space="preserve">
+    <value>Blarg mrogl Phoenix 1</value>
   </data>
   <data name="Category" xml:space="preserve">
 	  <value>Murmgrglgrgl</value>
@@ -1572,6 +1590,9 @@
   <data name="Counting" xml:space="preserve">
     <value>Grogmrgl</value>
   </data>
+  <data name="Counting perfects" xml:space="preserve">
+    <value>Murgla purpul</value>
+  </data>
   <data name="Counting Toward Your Total" xml:space="preserve">
     <value>Grogmrgl ma grogl</value>
   </data>
@@ -1638,6 +1659,9 @@
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSV Grglargl</value>
+  </data>
+  <data name="Cueing the next song" xml:space="preserve">
+    <value>Blub grumo maggl</value>
   </data>
   <data name="Current" xml:space="preserve">
 	  <value>Grglblargblarg</value>
@@ -2146,11 +2170,17 @@
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>Grorpgromurg Arglromurg, Maglargl Blub!</value>
   </data>
+  <data name="Feeding it another credit" xml:space="preserve">
+    <value>Groblu murp</value>
+  </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Glorgmorg — grorpplglblub gro glmurmblarg mrmurm, mrp murg mrpmr gl gro</value>
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Glorgplgl</value>
+  </data>
+  <data name="Fifty charts, {0} plate." xml:space="preserve">
+    <value>Murgro murgl, {0} murp.</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
 	  <value>Mrblub blubmrp glorg blarggrorp grogrgl 10 MB</value>
@@ -2200,6 +2230,9 @@
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>Blubgl gromurp grorpglorg maglplgl.</value>
+  </data>
+  <data name="Finding the beat" xml:space="preserve">
+    <value>Rugbam olo</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Golba pragl</value>
@@ -3567,9 +3600,6 @@
   <data name="New" xml:space="preserve">
     <value>Grgl</value>
   </data>
-  <data name="New #1 — **{0}** on {1} · {2:N0}" xml:space="preserve">
-    <value>Grgl #1 — **{0}** lurg {1} · {2:N0}</value>
-  </data>
   <data name="New #1s" xml:space="preserve">
     <value>Grgl #1mrp</value>
   </data>
@@ -3590,6 +3620,9 @@
   </data>
   <data name="New invite link" xml:space="preserve">
     <value>Grgl blargmurgl grorpgl</value>
+  </data>
+  <data name="New Letter Grade" xml:space="preserve">
+    <value>Mrgl Rorgl</value>
   </data>
   <data name="New mix. Same you." xml:space="preserve">
     <value>Grgl mrg. Blubmurm blub.</value>
@@ -3701,6 +3734,9 @@
   </data>
   <data name="No new scores found" xml:space="preserve">
     <value>Mrp grgl mgrlgmrg arglurg</value>
+  </data>
+  <data name="No Phoenix 2 chart" xml:space="preserve">
+    <value>Mo Phoenix 2 Murgl</value>
   </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>Mrp grorpmorgmurm mrpmaglmurp argl - gl mrgllurg glgrgl mrp murmmr glorggl.</value>
@@ -3879,6 +3915,9 @@
   <data name="Not Relevant to Category" xml:space="preserve">
 	  <value>Murm Blubrolurg grgl Murmgrglgrgl</value>
   </data>
+  <data name="Not scored yet in Phoenix 2" xml:space="preserve">
+    <value>Mo Mrglrgl Blarg Phoenix 2</value>
+  </data>
   <data name="Not set" xml:space="preserve">
     <value>Marglu</value>
   </data>
@@ -3890,6 +3929,9 @@
   </data>
   <data name="Not yet" xml:space="preserve">
     <value>Murm argl</value>
+  </data>
+  <data name="Not yet played" xml:space="preserve">
+    <value>Blub morp mrogl</value>
   </data>
   <data name="Note (optional)" xml:space="preserve">
     <value>Blurgl (opa)</value>
@@ -3937,11 +3979,17 @@
   <data name="Nothing changed for you. You can still share with a single tool you trust using an invite link from its maker." xml:space="preserve">
     <value>Bo murgm blorm blu gromurp. Gromurp murp murmo murgblub blu murmo Rorgl gromurp murgblub blu murpgrogl grabla.</value>
   </data>
+  <data name="Nothing counts until it beats this. A chart worth more replaces it and you keep the difference." xml:space="preserve">
+    <value>Morp mrgl blub grogmurg mrgl. Murgl mrrgl blarg mrgloru grolgub blubgro mrgl.</value>
+  </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Blarggllurg romurg grglmrp grrgllurg urg lurg mrp grorpmorgmurm mrglblarg.</value>
   </data>
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>Alla blorp mo golba, opa marogl la piuscores Discord opa bloop am olo. Grumb blurgl pragl.</value>
+  </data>
+  <data name="Nothing here clears your bar yet — play a few more charts and check back." xml:space="preserve">
+    <value>Mo mrgl grubmarg Rgl blarg — mrglrlgl murgl mrrgl argl blub.</value>
   </data>
   <data name="Nothing here yet." xml:space="preserve">
     <value>Mrgl blub morgla.</value>
@@ -4077,6 +4125,9 @@
   </data>
   <data name="Old folder" xml:space="preserve">
     <value>Rgl grrgllurg</value>
+  </data>
+  <data name="Old Letter Grade" xml:space="preserve">
+    <value>Morgl Rorgl</value>
   </data>
   <data name="Older mixes ({0})" xml:space="preserve">
     <value>Murgl murmo ({0})</value>
@@ -4377,8 +4428,17 @@
   <data name="PG · {0} of {1} peers have it" xml:space="preserve">
     <value>PG · {0} mrgl {1} maglmurp mrglro gl</value>
   </data>
+  <data name="Phoenix 1 · your real top 50" xml:space="preserve">
+    <value>Phoenix 1 · morp mrgl 50</value>
+  </data>
+  <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
+    <value>Phoenix 2 mrglrg Mrglrlgl Murgl mrgl mrogl blub grorp — S22 mrgloru murp 23. Grrgl morgl Murgl blarg mrg mrgl mo grubmarg.</value>
+  </data>
   <data name="Phoenix 2 runs an electric effect along the bar once the overflow is completely full — the one moment the game admits the hidden life is there." xml:space="preserve">
     <value>Phoenix 2 morgplgl blgrl glorgblubgl grglmagl blgrlgrorp mrp mr mrmurm mrp magllurgmurg urg arglmrglmurp mrglmr — mrp argl rglblgrl mrp glorgargl blgrlurg mrp mrpmr glorgrgl urg blgrlgrrgl.</value>
+  </data>
+  <data name="Phoenix 2 · same scores, repriced" xml:space="preserve">
+    <value>Phoenix 2 · morgl Mrglrgl, mrglrgo</value>
   </data>
   <data name="Phoenix grade" xml:space="preserve">
     <value>Phoenix rorgl</value>
@@ -4593,6 +4653,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>Murpla, blub grogmrgl</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>Blubrgl, blub rglplgl</value>
+  </data>
   <data name="Player" xml:space="preserve">
 	  <value>Morp</value>
   </data>
@@ -4658,6 +4721,9 @@
   </data>
   <data name="Poll the API instead." xml:space="preserve">
     <value>Marogl bo API.</value>
+  </data>
+  <data name="Pool" xml:space="preserve">
+    <value>Blubgro</value>
   </data>
   <data name="Popular" xml:space="preserve">
     <value>Grolurgmrp</value>
@@ -4743,6 +4809,9 @@
   <data name="Progression" xml:space="preserve">
     <value>Urgrglblarggrorp</value>
   </data>
+  <data name="Projected" xml:space="preserve">
+    <value>Mrglrgo</value>
+  </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>mrglgrrglrgl Groggl PUMBILITY</value>
   </data>
@@ -4789,9 +4858,6 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
-  <data name="PUMBILITY movers" xml:space="preserve">
-    <value>PUMBILITY murpplgl</value>
-  </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY grglglorg grglmrgl</value>
   </data>
@@ -4803,9 +4869,6 @@
   </data>
   <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
     <value>Pumbility mrglrg, mrgl, ro gro maglgrgl grrglmr grogro blubmurprglargl.</value>
-  </data>
-  <data name="PUMBILITY top 10" xml:space="preserve">
-    <value>PUMBILITY blarg 10</value>
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY blarg 50</value>
@@ -4906,6 +4969,9 @@
   <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
     <value>Blublurg murm mrp urgmrmurg PUMBILITY mrglblarg, grorpplglgrgl murmmr.</value>
   </data>
+  <data name="Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar." xml:space="preserve">
+    <value>Mrglrg blarg mrgl morp Morp mrgl mrogl mrglrlgl. Mrgl blub grubmarg Rgl.</value>
+  </data>
   <data name="Rankings" xml:space="preserve">
     <value>Maglmrpplgl</value>
   </data>
@@ -4957,6 +5023,9 @@
   </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Glmaglplgl gl mrpplgl morgmr gromr mr mrmurm, glorgblgrl mrp morgmr roplglblgrl gromrgl:</value>
+  </data>
+  <data name="Reading the step chart" xml:space="preserve">
+    <value>Mrogla blarp</value>
   </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>Obo blurg {0}.</value>
@@ -5458,6 +5527,9 @@
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
 	  <value>Grrglgro Glorgblarg (Mrg argl Plglmurp)</value>
+  </data>
+  <data name="Searching for Molex connectors" xml:space="preserve">
+    <value>Molgab urrum</value>
   </data>
   <data name="Second" xml:space="preserve">
     <value>Rogro</value>
@@ -6006,6 +6078,9 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>plglmrgl murm {0}</value>
   </data>
+  <data name="still isn't enough at {0}" xml:space="preserve">
+    <value>larg bo blurg og {0}</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>murpmurp grgl mrglrgl mrpplgl mrpgrrgl rglplgl</value>
   </data>
@@ -6014,6 +6089,9 @@
   </data>
   <data name="Store" xml:space="preserve">
     <value>Morgmrgl</value>
+  </data>
+  <data name="Stretching first" xml:space="preserve">
+    <value>Blurgama pol</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>murggroblarg</value>
@@ -6093,9 +6171,6 @@
   <data name="Swap direction" xml:space="preserve">
     <value>Rglglorg mrurgrgl</value>
   </data>
-  <data name="swept Sunday" xml:space="preserve">
-    <value>mrmorg Lurglurg</value>
-  </data>
   <data name="Switch it any time from the mix pill in the top bar." xml:space="preserve">
     <value>Grabalu mrg umglop bragl opalurg.</value>
   </data>
@@ -6166,6 +6241,15 @@
   <data name="The arc" xml:space="preserve">
     <value>Mrp gl</value>
   </data>
+  <data name="The bar" xml:space="preserve">
+    <value>Rgl</value>
+  </data>
+  <data name="The bar this pool would set" xml:space="preserve">
+    <value>Rgl blub Blubgro mrgloru</value>
+  </data>
+  <data name="The bar — everything below is waiting" xml:space="preserve">
+    <value>Rgl — mrgl blub Blargmo</value>
+  </data>
   <data name="The Best" xml:space="preserve">
     <value>Mrp Mrpblarg</value>
   </data>
@@ -6186,6 +6270,9 @@
   </data>
   <data name="The Charts" xml:space="preserve">
     <value>La Murgl</value>
+  </data>
+  <data name="The charts your PUMBILITY is made of" xml:space="preserve">
+    <value>Murgl blub PUMBILITY mrgloru</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>Mrp urgglorgglorg grglro mrp gromurp blgrlglorgmrgl; mrp grrgllurglurg grrgl grglro mrp magl plglrglmrgl; mrp mrmagl grrgl grglro mrp Grrgl Morgurg. Murpmurmro urgmrp rgl morgmr — gro grogrrgl mrgl ro argl, argl ro grrgl, grogl blarggllurg. Mrp glorgmrpmurm urg urgmorg grrglarglrgl grgl magl plglrglmrgl argl murggro.</value>
@@ -6285,6 +6372,9 @@
   </data>
   <data name="The shared tier list for this folder, built from everyone's data." xml:space="preserve">
     <value>Mrp murpro mrpgrrgl grog ro grglmrp grrgllurg, morgblarg romurg glorgplglmurm gromurm.</value>
+  </data>
+  <data name="The sum of your 50 best-rated charts." xml:space="preserve">
+    <value>Mrgloru blarg morp 50 mrrgl Murgl.</value>
   </data>
   <data name="The sweep saw these on the official site but found no catalog chart. Add the chart, then resolve - a still-missing chart relists on the next sweep." xml:space="preserve">
     <value>Mrp grglblarg grrgl blgrlmrp lurg mrp urgmrmurg plglmorg glorg arglurg mrp blgrlroglorg murgl. Glorg mrp murgl, mrplurg grglrogrrgl - gro maglgro-glurgro murgl grorpmorggl lurg mrp grorpglorg grglblarg.</value>
@@ -6499,6 +6589,9 @@
   <data name="This will delete all of your scores and reset your player stats and title progress" xml:space="preserve">
 	  <value>Grglmrp murmurg lurggrgl rgl mrgl gromurp mgrlgmrg ro maglgrorp gromurp morp grorpmrgl ro mrgl mrglrlgl</value>
   </data>
+  <data name="this would not clear your bar" xml:space="preserve">
+    <value>blub mo grubmarg morp Rgl</value>
+  </data>
   <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
     <value>Grglblarg glplgl plglgrglurg mrp blgrlarglblgrl. Lurg blarggl mrp blubmurm morgmr lurgmagl {0}, {1} ro {2} roblub.</value>
   </data>
@@ -6579,9 +6672,6 @@
   </data>
   <data name="To Leaderboard" xml:space="preserve">
     <value>Grgl Mrglrmrgl</value>
-  </data>
-  <data name="To make the top 1000" xml:space="preserve">
-    <value>Grgl glorggrorp mrp blarg 1000</value>
   </data>
   <data name="To page" xml:space="preserve">
     <value>Grgl urggrgl</value>
@@ -6712,6 +6802,9 @@
   </data>
   <data name="TRUE/FALSE Template" xml:space="preserve">
 	  <value>TRUE/FALSE Glglorgblub</value>
+  </data>
+  <data name="Try a level and a grade" xml:space="preserve">
+    <value>Grubmarg mrogl argl Rorgl</value>
   </data>
   <data name="Try again" xml:space="preserve">
     <value>Lurg morgro</value>
@@ -7034,6 +7127,15 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Marogl bloop grumba — golba la</value>
   </data>
+  <data name="Waiting on the sensors" xml:space="preserve">
+    <value>Ogul mrogl</value>
+  </data>
+  <data name="Waiting room" xml:space="preserve">
+    <value>Blargmo Gurg</value>
+  </data>
+  <data name="Warming up the pad" xml:space="preserve">
+    <value>Bramogl uppa</value>
+  </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Grorplurg lurgblgrlmurm rglmagl</value>
   </data>
@@ -7125,6 +7227,9 @@
   <data name="What goes into your list" xml:space="preserve">
     <value>Rglmorg glrgl murpgrrgl gromurp grog</value>
   </data>
+  <data name="What holds the rungs" xml:space="preserve">
+    <value>Rglmorg rglmr mrp mrpmurm</value>
+  </data>
   <data name="What is this tool?" xml:space="preserve">
     <value>Murgm rorgl mo?</value>
   </data>
@@ -7137,11 +7242,20 @@
   <data name="What it will be able to read" xml:space="preserve">
     <value>Murp murp blurgl</value>
   </data>
+  <data name="What Phoenix 1 is worth here" xml:space="preserve">
+    <value>Blarg Phoenix 1 mrgloru blub</value>
+  </data>
   <data name="What should they change?" xml:space="preserve">
     <value>Amba golba?</value>
   </data>
+  <data name="What to play next" xml:space="preserve">
+    <value>Blarg mrglrlgl mrrgl</value>
+  </data>
   <data name="What to work on (default Title Hunt)" xml:space="preserve">
     <value>Rglmorg grgl murglurg lurg (plglgrgllurg Mrgl Murgblgrl)</value>
+  </data>
+  <data name="What would a clear be worth?" xml:space="preserve">
+    <value>Blarg mrgloru mrgl?</value>
   </data>
   <data name="What your rivals are up to" xml:space="preserve">
     <value>Bam Murgmorp blub murgm</value>
@@ -7215,6 +7329,9 @@
   <data name="wins in range" xml:space="preserve">
     <value>blgrlblarg mrp blubmrgl</value>
   </data>
+  <data name="Wiping down the sensors" xml:space="preserve">
+    <value>Pluggam orlo</value>
+  </data>
   <data name="within 1 level" xml:space="preserve">
     <value>arglblgrl 1 grorpmurm</value>
   </data>
@@ -7223,6 +7340,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Bam murp mo blorp murgloo — blu murgm, la murgm Mgrlgmrg.</value>
+  </data>
+  <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
+    <value>Murgablar promglu. Blub morp mrgl oglu porum, mrogl gaal amur.</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>Grolurg</value>
@@ -7235,9 +7355,6 @@
   </data>
   <data name="World firsts" xml:space="preserve">
     <value>Grolurg glglorg</value>
-  </data>
-  <data name="World firsts &amp; new #1s" xml:space="preserve">
-    <value>Grolurg glglorg &amp; grgl #1mrp</value>
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>Grolurg Maglmrpplgl</value>
@@ -7338,6 +7455,12 @@
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
 	  <value>Blub urg gro rgl murgl blubgrrgl glmagl murm grorpmrgl grgl glorg murpmurgmurp. Blub grorp murlg gro CSV mrgl mrp rglgrglmr grgl glorggrorp blubglorgmaglurg ro lurg morgro.</value>
   </data>
+  <data name="You have" xml:space="preserve">
+    <value>Morp mrgl</value>
+  </data>
+  <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
+    <value>Morp mrgl {0} Mrglrgl blub Phoenix 2. Blub morp Phoenix 1 grolgub mrglrg Phoenix 2 mrgl — blarg Blubgro mrgloru morp mrglrlgl mrgl morgl.</value>
+  </data>
   <data name="You haven't joined any communities yet — find one below or create your own." xml:space="preserve">
     <value>Blub blubmurm urgmr ro grglrglplglblub argl — blubgl argl blgrlblarg argl mrpmurp gromurp grrgl.</value>
   </data>
@@ -7415,6 +7538,9 @@
   </data>
   <data name="Your API" xml:space="preserve">
     <value>Murgm API</value>
+  </data>
+  <data name="Your bar" xml:space="preserve">
+    <value>Morp Rgl</value>
   </data>
   <data name="Your best" xml:space="preserve">
     <value>Gromurp mrpblarg</value>
@@ -7496,6 +7622,15 @@
   </data>
   <data name="Your Points per Second" xml:space="preserve">
 	  <value>Gromurp Blargro morg Rogro</value>
+  </data>
+  <data name="Your pool" xml:space="preserve">
+    <value>Morp Blubgro</value>
+  </data>
+  <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
+    <value>Morp Blubgro mrgl {0} blarg 50. Mrgl mrrgl, mrgl Murgl morp mrglrlgl mrgloru — mo Rgl blub.</value>
+  </data>
+  <data name="Your pool isn't full yet, so every new chart counts whole — nothing is being displaced." xml:space="preserve">
+    <value>Morp Blubgro mo mrrgl, mrgl mrgl Murgl mrgloru — mo mrgloru grolgub.</value>
   </data>
   <data name="Your profile is private" xml:space="preserve">
     <value>Grubalgl marglurgl</value>
@@ -7599,6 +7734,15 @@
   <data name="Your tools, their keys, and how they hear about new scores." xml:space="preserve">
     <value>Gromurp Rorgl, mrpgrogl blarglurp, murm murgm murp murgargl blorm Mgrlgmrg.</value>
   </data>
+  <data name="Your top 50" xml:space="preserve">
+    <value>Morp mrgl 50</value>
+  </data>
+  <data name="Your top and bottom are {0}% apart, and {1} charts sit level with your 50th. That shape says grind volume, not one hero chart." xml:space="preserve">
+    <value>Morp mrgl argl blub mrgl {0}%, argl {1} Murgl mrgloru morp 50. Blub mrglrg grrgl mrrgl, mo mrgl Murgl.</value>
+  </data>
+  <data name="Your top and bottom are {0}% apart." xml:space="preserve">
+    <value>Morp mrgl argl blub mrgl {0}%.</value>
+  </data>
   <data name="Your username and password are sealed together with AES-256-GCM under a random data key. That data key is wrapped by a master key that never leaves Azure Key Vault." xml:space="preserve">
     <value>Gromurp grrmrrgl ro glorgmrpmurm mrp urgrgl arglglorgmurm glgrgl AES-256-GCM murgblub gro romorg gromurm grrgl. Blubgrrgl gromurm grrgl urg grrgllurglurg murm gro mrmagl grrgl blubgrrgl glargl plglmurm Arglblub Grrgl Morgurg.</value>
   </data>
@@ -7634,6 +7778,12 @@
   </data>
   <data name="{0:N0} Perfects, {1:N0} Greats, {2:N0} Goods, {3:N0} Bads, {4:N0} Misses, {5:N0} Max Combo" xml:space="preserve">
     <value>{0:N0} Plglgrglurg, {1:N0} Blarggl, {2:N0} Lurgplgl, {3:N0} Blubblgrl, {4:N0} Blubgl, {5:N0} Gro Grogrgl</value>
+  </data>
+  <data name="{0} **+{1} places** across {2} chart boards" xml:space="preserve">
+    <value>{0} **+{1} gromrgl** plglarg {2} murgl grrglplgl</value>
+  </data>
+  <data name="{0} **+{1}** to {2} · #{3} → **#{4}**" xml:space="preserve">
+    <value>{0} **+{1}** grgl {2} · #{3} → **#{4}**</value>
   </data>
   <data name="{0} / {1} charts rated" xml:space="preserve">
     <value>{0} / {1} murgl maglmr</value>
@@ -7718,6 +7868,9 @@
   </data>
   <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
     <value>{0} murgl · morggrrglglorg Lurggrrgl gromorgblub ET</value>
+  </data>
+  <data name="{0} charts · {1} down to {2}" xml:space="preserve">
+    <value>{0} Murgl · {1} blarg {2}</value>
   </data>
   <data name="{0} charts, chosen for being nothing like this one." xml:space="preserve">
     <value>{0} murgl, grorpplgl ro morgmorg blarggllurg plglro grglmrp argl.</value>

@@ -1481,6 +1481,51 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task PhoenixRecordsForACommunityThatDoesNotExistIsAnEmptyBoard()
+    {
+        // The chart leaderboard reads the World community on every open, and World seeds itself
+        // on first join rather than in a migration — so it is absent on a fresh database. Throwing
+        // there kills the Blazor circuit the read happens inside, taking the whole page with it
+        // instead of leaving one empty panel.
+        var ctx = new HandlerContext();
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Community?)null);
+
+        var result = await ctx.Saga.Handle(
+            new GetPhoenixRecordsForCommunityQuery("World", Guid.NewGuid(), MixEnum.Phoenix),
+            CancellationToken.None);
+
+        Assert.Empty(result);
+        ctx.Scores.Verify(s => s.GetPhoenixScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task PhoenixRecordsForACommunityReadsItsMembersScores()
+    {
+        // The other half of the pair: a community that IS there still reaches the ledger, so the
+        // null guard above cannot pass by returning empty for everyone.
+        var ctx = new HandlerContext();
+        var member = Guid.NewGuid();
+        var chartId = Guid.NewGuid();
+        var community = new Community(Name.From("Murlocs"), Guid.Empty, CommunityPrivacyType.Public,
+            new[] { member }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Murlocs"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(community);
+        ctx.Scores.Setup(s => s.GetPhoenixScores(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(), chartId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new UserPhoenixScore(member, chartId, Name.From("MURLOC"), 994_000, null, false) });
+
+        var result = await ctx.Saga.Handle(
+            new GetPhoenixRecordsForCommunityQuery("Murlocs", chartId, MixEnum.Phoenix),
+            CancellationToken.None);
+
+        Assert.Single(result);
+    }
+
+    [Fact]
     public async Task CommunityCountReturnsTheNonRegionalCount()
     {
         var ctx = new HandlerContext();

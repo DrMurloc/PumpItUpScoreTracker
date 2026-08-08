@@ -1,0 +1,104 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* What a Phoenix 1 record is worth under Phoenix 2's rules. The headline is the two pools'
+   singles/doubles split side by side: Phoenix 2 pays a Singles chart one level up the base
+   curve, so a doubles pool can become a singles pool and a player's whole grind priority
+   inverts. Nothing else on the site can tell them that
+   (docs/design/pumbility-overhaul.md §5). *@
+<div class="pmb-flip">
+    <div class="pmb-flip-grid">
+        <div>
+            <div class="pmb-flip-col-head">
+                <span class="pmb-flip-col-name pmb-p1">@L["Phoenix 1 · your real top 50"]</span>
+            </div>
+            <div class="pmb-flip-bar">
+                @if (Carryover.Phoenix1DoublesInPool > 0)
+                {
+                    <div class="pmb-flip-seg d" style="flex:@Carryover.Phoenix1DoublesInPool">
+                        @Carryover.Phoenix1DoublesInPool D
+                    </div>
+                }
+                @if (Carryover.Phoenix1SinglesInPool > 0)
+                {
+                    <div class="pmb-flip-seg s" style="flex:@Carryover.Phoenix1SinglesInPool">
+                        @Carryover.Phoenix1SinglesInPool S
+                    </div>
+                }
+            </div>
+        </div>
+        <div>
+            <div class="pmb-flip-col-head">
+                <span class="pmb-flip-col-name pmb-p2">@L["Phoenix 2 · same scores, repriced"]</span>
+                <span class="pmb-num pmb-flip-total">@Carryover.Projected.ToString("N0")</span>
+            </div>
+            <div class="pmb-flip-bar">
+                @if (Carryover.DoublesInPool > 0)
+                {
+                    <div class="pmb-flip-seg d" style="flex:@Carryover.DoublesInPool">@Carryover.DoublesInPool D</div>
+                }
+                @if (Carryover.SinglesInPool > 0)
+                {
+                    <div class="pmb-flip-seg s" style="flex:@Carryover.SinglesInPool">@Carryover.SinglesInPool S</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (Flipped)
+    {
+        <p class="pmb-flip-say">
+            @L["Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan."]
+        </p>
+    }
+
+    <div class="pmb-factrow">
+        <div class="pmb-fact">
+            <div class="pmb-fact-num">
+                @Carryover.NotYetScored<span class="pmb-muted pmb-fact-of"> / @Carryover.Entries.Count</span>
+            </div>
+            <div class="pmb-fact-lbl">@L["Not scored yet in Phoenix 2"]</div>
+        </div>
+        @if (Carryover.Unavailable.Count > 0)
+        {
+            @* A chart with no Phoenix 2 appearance is a fact about the pool and never a
+               target -- you cannot go and play it. Stated once, here, and nowhere else. *@
+            <div class="pmb-fact pmb-fact-warn">
+                <div class="pmb-fact-num">@Carryover.Unavailable.Count</div>
+                <div class="pmb-fact-lbl">
+                    @L["No Phoenix 2 chart"]@if (LostName != null)
+                    {
+                        <text> — <strong>@LostName</strong></text>
+                    }
+                </div>
+            </div>
+        }
+        @if (Carryover.Bar > 0)
+        {
+            <div class="pmb-fact">
+                <div class="pmb-fact-num">@Carryover.Bar.ToString("N0")</div>
+                <div class="pmb-fact-lbl">@L["The bar this pool would set"]</div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public Phoenix2CarryoverRecord Carryover { get; set; } = default!;
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    /// <summary>Did the pool actually change hands between types? Only then is the sentence true.</summary>
+    private bool Flipped =>
+        Carryover.Phoenix1SinglesInPool < Carryover.Phoenix1DoublesInPool &&
+        Carryover.SinglesInPool > Carryover.DoublesInPool;
+
+    private string? LostName =>
+        Carryover.Unavailable.Count > 0 && Charts.TryGetValue(Carryover.Unavailable[0], out var chart)
+            ? chart.Song.Name.ToString()
+            : null;
+}

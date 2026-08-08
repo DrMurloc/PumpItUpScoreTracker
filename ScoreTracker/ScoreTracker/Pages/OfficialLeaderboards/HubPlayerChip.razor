@@ -35,11 +35,11 @@
 
     /// <summary>
     ///     Board tags are TAG#1234; lists show the human half only and keep the full tag in
-    ///     the row's tooltip. The digits identify an account, they don't name a person.
+    ///     the row's tooltip. The rule itself lives in the vertical's contracts, because the
+    ///     Discord digest needs it too and cannot reference Web.
     /// </summary>
     public static string NameOf(string username)
     {
-        var hash = username.IndexOf('#');
-        return hash > 0 ? username[..hash] : username;
+        return OfficialPlayerNames.Human(username);
     }
 }
