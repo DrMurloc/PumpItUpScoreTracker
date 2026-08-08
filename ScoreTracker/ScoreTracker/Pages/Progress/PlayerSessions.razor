@@ -129,14 +129,19 @@
     private CancellationTokenSource? _watch;
 
     /// <summary>
-    ///     Capture lands on the bus behind the import, so the page that says "still working out
-    ///     what mattered" owes the player the moment it stops being true. Polls only while the
-    ///     card is up and stops the moment it is not — and needs no upper bound of its own,
-    ///     because the pending state expires on its own clock.
+    ///     Capture lands on the bus behind the import, so a page opened right after one is
+    ///     watching a session that is still being written.
+    ///     <para>
+    ///         Gated on the WINDOW, not on the card. Capture writes in several passes, so a page
+    ///         that opens between two of them already has rows — no card — and would otherwise
+    ///         sit on half a session until someone reloaded by hand. That was the bug: the
+    ///         watcher only started when there was nothing at all, which is the one case where a
+    ///         reload was obviously needed and the least likely one to be hit.
+    ///     </para>
     /// </summary>
     private void StartWatchingForCapture()
     {
-        if (_model.Hero?.CapturePending != true || _watch != null) return;
+        if (_model.Hero?.CaptureWindowOpen != true || _watch != null) return;
 
         var cts = new CancellationTokenSource();
         _watch = cts;
@@ -164,15 +169,13 @@
                 var settled = rows > 0 && rows == previousRows;
                 previousRows = rows;
 
-                // Nothing at all yet: the builder's own window is the backstop, and once it
-                // closes this really was a session with nothing to capture.
-                var giveUp = rows == 0 && refreshed.Hero?.CapturePending != true;
+                // Nothing at all yet: the window is the backstop, and once it closes this really
+                // was a session with nothing to capture.
+                var giveUp = rows == 0 && refreshed.Hero?.CaptureWindowOpen != true;
 
                 await InvokeAsync(() =>
                 {
-                    _model = refreshed.Hero is { } hero && !settled && !giveUp
-                        ? refreshed with { Hero = hero with { CapturePending = true } }
-                        : refreshed;
+                    _model = refreshed;
                     StateHasChanged();
                 });
                 if (settled || giveUp) break;

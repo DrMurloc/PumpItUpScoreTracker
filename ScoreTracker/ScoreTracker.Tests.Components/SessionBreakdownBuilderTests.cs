@@ -148,8 +148,12 @@ public sealed class SessionBreakdownBuilderTests
     }
 
     [Fact]
-    public async Task ASessionWithCapturedRowsIsNeverPending()
+    public async Task ASessionWithCapturedRowsShowsNoCardButStaysWatchable()
     {
+        // The regression this pins: capture writes in several passes, so a page opening between
+        // two of them has rows and shows no card — but the window must stay open, or the page
+        // sits on half a session until someone reloads it by hand. Whether to show the card and
+        // whether to keep watching are different questions.
         var chart = ChartAt(ChartType.Single, 21);
         var rows = new[] { Row(chart.Id, Start, 912400, false, ScoreEventClassification.NewPass) };
 
@@ -157,6 +161,8 @@ public sealed class SessionBreakdownBuilderTests
             captured: true, sessionEndedMinutesAgo: 0);
 
         Assert.False(model.Hero!.CapturePending);
+        Assert.True(model.Hero.CaptureWindowOpen);
+        Assert.True(model.Hero.CapturedRows > 0);
     }
 
     [Fact]

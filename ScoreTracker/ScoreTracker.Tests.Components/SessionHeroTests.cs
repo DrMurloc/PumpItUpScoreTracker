@@ -123,7 +123,7 @@ public sealed class SessionHeroTests : ComponentTestBase
         // replaces the whole region rather than four sections each rendering empty beside it.
         var pending = FullBreakdown() with
         {
-            CapturePending = true,
+            CaptureWindowOpen = true, CapturedRows = 0,
             Milestones = Array.Empty<PlayerMilestoneRecord>(),
             TitleBars = Array.Empty<SessionTitleBarModel>()
         };
@@ -141,7 +141,7 @@ public sealed class SessionHeroTests : ComponentTestBase
     {
         // The band reads your stats row and All plays reads the journal — both true the moment
         // the import lands. Hiding them would take real data away to explain one absence.
-        var pending = FullBreakdown() with { CapturePending = true };
+        var pending = FullBreakdown() with { CaptureWindowOpen = true, CapturedRows = 0 };
 
         var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, pending));
 

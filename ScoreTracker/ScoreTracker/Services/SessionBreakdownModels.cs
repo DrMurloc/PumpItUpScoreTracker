@@ -24,9 +24,16 @@ public sealed record SessionBreakdown(
     IReadOnlyList<SessionTitleBarModel> TitleBars,
     IReadOnlyList<SessionPeerBoard> PeerBoards,
     IReadOnlyDictionary<Guid, User> Peers,
-    bool CapturePending = false,
+    bool CaptureWindowOpen = false,
     int CapturedRows = 0)
 {
+    /// <summary>
+    ///     Show the patience card: capture could still be running AND has produced nothing yet.
+    ///     Narrower than <see cref="CaptureWindowOpen" /> on purpose — a page that opened
+    ///     mid-pipeline already has rows to show, and replacing them with a card would be a
+    ///     backwards step for the reader.
+    /// </summary>
+    public bool CapturePending => CaptureWindowOpen && CapturedRows == 0;
     /// <summary>
     ///     The import's game tag, when this session came from one. The wrong-card case is
     ///     exactly when a player stares at a session thinking "these aren't my scores", so
