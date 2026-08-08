@@ -1,6 +1,8 @@
 using ScoreTracker.OfficialMirror.Contracts.Events;
+using MassTransit;
 using MediatR;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.Randomizer.Contracts.Events;
 
 namespace ScoreTracker.Web.Services.UiNotifications;
@@ -62,6 +64,35 @@ internal sealed class PlayerStatsUiBridge : INotificationHandler<PlayerStatsUpda
     public Task Handle(PlayerStatsUpdatedEvent notification, CancellationToken cancellationToken)
     {
         return _hub.PublishAsync(UiTopics.User(notification.UserId), notification);
+    }
+}
+
+/// <summary>
+///     Carries a finished capture to whichever circuit is watching that player's session.
+///     <para>
+///         A bus consumer rather than a MediatR handler, because capture announces itself on the
+///         bus — and PUBLIC, because the host's own assembly scan only picks up public consumers
+///         (vertical consumers are internal and register through their own hooks).
+///     </para>
+///     <para>
+///         This is the event a page waiting on capture should listen for, and the reason it need
+///         not poll. Scores are held as a batch for two minutes past the LAST of them before
+///         capture even begins, so any timer aimed at that is guessing at someone else's
+///         schedule — and every guess this page made was wrong in a different way.
+///     </para>
+/// </summary>
+public sealed class ScoreHighlightsCapturedUiBridge : IConsumer<ScoreHighlightsCapturedEvent>
+{
+    private readonly IUiNotificationHub _hub;
+
+    public ScoreHighlightsCapturedUiBridge(IUiNotificationHub hub)
+    {
+        _hub = hub;
+    }
+
+    public Task Consume(ConsumeContext<ScoreHighlightsCapturedEvent> context)
+    {
+        return _hub.PublishAsync(UiTopics.User(context.Message.UserId), context.Message);
     }
 }
 

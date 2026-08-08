@@ -41,14 +41,24 @@ public sealed class UndoScoreSessionHandlerTests
 
     private static ScoreSessionRecord Session(DateTimeOffset startedAt, Guid? owner = null)
     {
-        return new ScoreSessionRecord(SessionId, owner ?? UserId, MixEnum.Phoenix,
+        return Session(startedAt, MixEnum.Phoenix, owner);
+    }
+
+    private static ScoreSessionRecord Session(DateTimeOffset startedAt, MixEnum mix, Guid? owner = null)
+    {
+        return new ScoreSessionRecord(SessionId, owner ?? UserId, mix,
             ScoreJournalEntry.OfficialImportSource, "SHIRONEKO", "2", startedAt, startedAt, 2, 1, 1);
     }
 
     private static ScoreJournalEntry Play(Guid chartId, int score, Guid? sessionId, int minute)
     {
+        return PlayIn(MixEnum.Phoenix, chartId, score, sessionId, minute);
+    }
+
+    private static ScoreJournalEntry PlayIn(MixEnum mix, Guid chartId, int score, Guid? sessionId, int minute)
+    {
         return new ScoreJournalEntry(AfterFloor.AddMinutes(minute), ScoreJournalEntry.OfficialImportSource,
-            UserId, chartId, (PhoenixScore)score, null, false, MixEnum.Phoenix, sessionId);
+            UserId, chartId, (PhoenixScore)score, null, false, mix, sessionId);
     }
 
     private void GivenSession(ScoreSessionRecord session)
@@ -79,6 +89,29 @@ public sealed class UndoScoreSessionHandlerTests
         _records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
             It.Is<RecordedPhoenixScore>(s => s.ChartId == ChartA && s.Score == (PhoenixScore)910_000),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheOtherMixesScoreIsNeverReplayedIntoThisMixsRecord()
+    {
+        // A returning song carries ONE ChartId across Phoenix and Phoenix 2, so the chart's
+        // history spans both mixes. Undoing a Phoenix 2 session must not put the player's
+        // Phoenix 1 score in as their Phoenix 2 best — and nothing would correct it afterwards,
+        // because acquisition may only RAISE a record, so the wrong higher number sticks and
+        // every re-imported play then reads as "Played".
+        GivenSession(Session(AfterFloor, MixEnum.Phoenix2));
+        GivenPlays(new[] { PlayIn(MixEnum.Phoenix2, ChartA, 855_000, SessionId, 10) },
+            new[] { PlayIn(MixEnum.Phoenix, ChartA, 995_000, null, 1) });
+
+        var result = await Build().Handle(new UndoScoreSessionCommand(UserId, SessionId), CancellationToken.None);
+
+        // Nothing survives in Phoenix 2, so the chart returns to never having been played there.
+        Assert.Equal(0, result.ChartsRestored);
+        Assert.Equal(1, result.ChartsRemoved);
+        _records.Verify(r => r.DeleteRecord(MixEnum.Phoenix2, UserId, ChartA, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

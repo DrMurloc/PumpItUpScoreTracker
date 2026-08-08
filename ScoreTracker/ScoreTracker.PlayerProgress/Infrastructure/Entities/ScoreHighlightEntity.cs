@@ -67,4 +67,22 @@ internal sealed class ScoreHighlightEntity
 
     /// <summary>The sealed snapshot the placement was estimated against.</summary>
     public DateTimeOffset? OfficialAsOf { get; set; }
+
+    /// <summary>
+    ///     The player's competitive level for THIS chart's type, as it stood when the batch
+    ///     opened — the number the CompetitiveImprover flag compared the score against. Stored
+    ///     because it is per-batch and unrecoverable later: a session drains as several batches,
+    ///     each with its own before and after, and the stats row only remembers the last one.
+    ///     The score's own competitive level stays a pure function of level and score, so one
+    ///     column buys both halves of "23.6 (+0.4)".
+    /// </summary>
+    public double? CompetitiveBaseline { get; set; }
+
+    /// <summary>
+    ///     What this play added to the combined PUMBILITY pool. Null when it added nothing, or
+    ///     when the play predates the capture. Phoenix 2's Singles and Doubles pools are
+    ///     deliberately not measured here — the row reports one number, and the combined pool is
+    ///     the one the ceremony band headlines.
+    /// </summary>
+    public int? PumbilityGain { get; set; }
 }

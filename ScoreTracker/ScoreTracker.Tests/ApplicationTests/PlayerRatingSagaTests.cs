@@ -71,6 +71,74 @@ public sealed class PlayerRatingSagaTests
         Assert.Equal(single.Id, result[0].ChartId);
     }
 
+    // A pool slot is worth having only if the chart in it is. These three rate zero PUMBILITY
+    // for three different reasons and all held slots until they were dropped — and the fiftieth
+    // slot is the bar every projected gain on /Pumbility is measured against, so one of them
+    // sitting there prints every suggestion's whole value as if it displaced nothing.
+    [Fact]
+    public async Task GetTop50ForPlayerExcludesChartsBelowLevelTen()
+    {
+        var counting = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        // DifficultyLevel.BaseRating is zero under level 10, so a perfect run on one pays nothing.
+        var subTen = new ChartBuilder().WithType(ChartType.Single).WithLevel(9).Build();
+        var charts = ChartsMockReturning(new[] { counting, subTen });
+        var scores = ScoresMockReturning(Guid.NewGuid(), new[]
+        {
+            Score(counting.Id, 800000),
+            Score(subTen.Id, 1000000)
+        });
+        var saga = BuildSaga(charts: charts, scores: scores);
+
+        var result = (await saga.Handle(
+            new GetTop50ForPlayerQuery(Guid.NewGuid(), ChartType: null),
+            CancellationToken.None)).ToArray();
+
+        Assert.Single(result);
+        Assert.Equal(counting.Id, result[0].ChartId);
+    }
+
+    [Fact]
+    public async Task GetTop50ForPlayerExcludesHalfDoublePerformanceCharts()
+    {
+        var counting = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var halfDouble = new ChartBuilder().WithType(ChartType.SinglePerformance).WithLevel(20).Build();
+        var charts = ChartsMockReturning(new[] { counting, halfDouble });
+        var scores = ScoresMockReturning(Guid.NewGuid(), new[]
+        {
+            Score(counting.Id, 800000),
+            Score(halfDouble.Id, 1000000)
+        });
+        var saga = BuildSaga(charts: charts, scores: scores);
+
+        var result = (await saga.Handle(
+            new GetTop50ForPlayerQuery(Guid.NewGuid(), ChartType: null),
+            CancellationToken.None)).ToArray();
+
+        Assert.Single(result);
+        Assert.Equal(counting.Id, result[0].ChartId);
+    }
+
+    [Fact]
+    public async Task GetTop50ForPlayerExcludesChartsBelowLevelTenOnPhoenix2()
+    {
+        var counting = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var subTen = new ChartBuilder().WithType(ChartType.Single).WithLevel(9).Build();
+        var charts = ChartsMockReturning(new[] { counting, subTen }, MixEnum.Phoenix2);
+        var scores = ScoresMockReturning(Guid.NewGuid(), new[]
+        {
+            Score(counting.Id, 800000),
+            Score(subTen.Id, 1000000)
+        }, MixEnum.Phoenix2);
+        var saga = BuildSaga(charts: charts, scores: scores);
+
+        var result = (await saga.Handle(
+            new GetTop50ForPlayerQuery(Guid.NewGuid(), ChartType: null, Mix: MixEnum.Phoenix2),
+            CancellationToken.None)).ToArray();
+
+        Assert.Single(result);
+        Assert.Equal(counting.Id, result[0].ChartId);
+    }
+
     [Fact]
     public async Task GetTop50ForPlayerFiltersByChartTypeWhenSpecified()
     {
@@ -213,6 +281,121 @@ public sealed class PlayerRatingSagaTests
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
                 x.ChartId == single.Id && x.SessionId == sessionId
                 && x.Flags == HighlightFlags.CompetitiveImprover)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnImproverRowCarriesTheLevelItWasMeasuredAgainst()
+    {
+        // The flag compares each score against the level as the BATCH opened, then throws that
+        // number away. It is per-batch and nothing downstream can recover it — the stats row
+        // remembers only where the session ended — so the row has to carry it.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var highlights = new Mock<IScoreHighlightRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
+            stats: stats, highlights: highlights);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix, new[] { single.Id }, sessionId),
+            CancellationToken.None);
+
+        // ZeroStats opens at a Singles competitive level of 0, and that is what the row must
+        // report the score against — not the level the session finished on.
+        highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, userId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == single.Id && x.Detail != null && x.Detail.CompetitiveBaseline == 0)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task APumbilityGainIsCapturedForTheChartThatEarnedIt()
+    {
+        // A first score on an empty pool: nothing was displaced, so the chart is worth every
+        // point it brought. Only the change set can say the seat was empty — which is why an
+        // admin recalculation, having none, reports no gain at all.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var highlights = new Mock<IScoreHighlightRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
+            stats: stats, highlights: highlights);
+
+        await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Phoenix,
+                new[] { single.Id }, sessionId,
+                new[] { new PlayerScoresUpdatedEvent.ScoreChange(single.Id, true, null, 950000, null, false) }),
+            CancellationToken.None);
+
+        highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, userId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == single.Id && x.Detail != null && x.Detail.PumbilityGain > 0)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ANewPassAfterAStageBreakEntersThePoolRatherThanImprovingWithinIt()
+    {
+        // The break scored 990,000 and the clear scores 992,445, but the pool counts non-broken
+        // scores only — so the chart held NO seat beforehand and is worth what it displaced, not
+        // the 2,445-point difference between the two scores. Pricing the break as a clean pass
+        // is what made a chart entering at #7 report "+2".
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var highlights = new Mock<IScoreHighlightRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 992445) }),
+            stats: stats, highlights: highlights);
+
+        await saga.Handle(new PlayerRatingSaga.CaptureSessionStats(userId, MixEnum.Phoenix,
+                new[] { single.Id }, sessionId,
+                // IsNewPass with a non-null OldScore: the break that came before it.
+                new[] { new PlayerScoresUpdatedEvent.ScoreChange(single.Id, true, 990000, 992445, null, false) }),
+            CancellationToken.None);
+
+        highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, userId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == single.Id && x.Detail != null && x.Detail.PumbilityGain > 100)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnAdminRecalculationClaimsNoPumbilityGain()
+    {
+        // No change set means no old scores, and pricing every chart as if it had just arrived
+        // would credit the whole pool to a maintenance run.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var highlights = new Mock<IScoreHighlightRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }),
+            scores: ScoresMockReturning(userId, new[] { Score(single.Id, 950000) }),
+            stats: stats, highlights: highlights);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix, new[] { single.Id }, sessionId),
+            CancellationToken.None);
+
+        highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, userId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w =>
+                w.All(x => x.Detail == null || x.Detail.PumbilityGain == null)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

@@ -2,10 +2,14 @@
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Events
+@using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.UiNotifications
 @page "/Player/{UserIdParam:guid}/Sessions"
 @rendermode RenderModes.Interactive
+@implements IDisposable
 
 @if (_user != null)
 {
@@ -72,6 +76,7 @@
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser
 @inject SessionBreakdownBuilder Breakdowns
+@inject IUiNotificationHub UiHub
 @inject IJSRuntime JS
 @code {
     // Two full rows of the desktop grid. The cards are 268px minimum inside a 1132px content
@@ -107,6 +112,7 @@
         var query = System.Web.HttpUtility.ParseQueryString(NavManager.ToAbsoluteUri(NavManager.Uri).Query);
         if (Guid.TryParse(query.Get("session"), out var session)) _selectedSessionId = session;
 
+        ListenForCapture();
         await LoadAsync();
     }
 
@@ -115,6 +121,49 @@
         _model = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page, HistoryPageSize,
             Before, CancellationToken.None);
         _firstLoad = false;
+    }
+
+    private IDisposable? _captured;
+
+    /// <summary>
+    ///     Capture announces itself when it finishes, so the page listens instead of asking.
+    ///     <para>
+    ///         Polling could never work here, and the reason is worth keeping: scores are held as
+    ///         a batch for two minutes past the LAST of them before capture even begins
+    ///         (<see cref="ScoreBatchPolicy" />), an import writes in phases minutes apart, and
+    ///         each phase is a separate batch and a separate capture. Every timer aimed at that
+    ///         was guessing at another component's schedule, and each guess failed differently —
+    ///         clearing the card mid-pipeline, between batches, or never watching at all.
+    ///     </para>
+    ///     <para>
+    ///         Same shape as the randomizer's draw view: a bus consumer bridges the event onto
+    ///         the user's UI topic and whichever circuit cares picks it up. Delivery is
+    ///         best-effort by design — a player who was not on the page simply never receives it
+    ///         and reads the finished article when they arrive.
+    ///     </para>
+    /// </summary>
+    private void ListenForCapture()
+    {
+        if (!CurrentUser.IsLoggedIn || CurrentUser.User.Id != UserIdParam) return;
+
+        _captured = UiHub.Subscribe<ScoreHighlightsCapturedEvent>(UiTopics.User(UserIdParam), async _ =>
+        {
+            // Build, not Reselect: Reselect is PINNED to the id it is handed, so a capture for a
+            // newer session would refresh the older one forever. Build takes the newest, which
+            // is what the hero means when the reader has not chosen one.
+            var refreshed = await Breakdowns.Build(UserIdParam, _selectedSessionId, _page,
+                HistoryPageSize, Before, CancellationToken.None);
+            await InvokeAsync(() =>
+            {
+                _model = refreshed;
+                StateHasChanged();
+            });
+        });
+    }
+
+    public void Dispose()
+    {
+        _captured?.Dispose();
     }
 
     /// <summary>

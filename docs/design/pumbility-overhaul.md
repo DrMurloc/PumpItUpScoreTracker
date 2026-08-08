@@ -1,10 +1,15 @@
-# PUMBILITY page (`/Pumbility`) — design
+# PUMBILITY section (`/Pumbility`) — design
 
 Rebuilds `/Pumbility` from a wall of chart cards into a planner, and replaces the projection
 engine underneath it. Mocked against real data from the owner's own account before any code;
 the mock is the visual authority for §3.
 
-Mock: https://claude.ai/code/artifact/5dded5e4-03d7-4d70-80ed-d5ecfac68aa2
+The **second round** (2026-08-08) splits the result into a three-page section sharing one frame,
+and adds two things the first round never answered: what your number is *made of*, and what it is
+*for*. §2 D13–D20 are that round's rulings.
+
+Mocks: round 1 https://claude.ai/code/artifact/5dded5e4-03d7-4d70-80ed-d5ecfac68aa2 ·
+round 2 https://claude.ai/code/artifact/2196691e-b756-458c-b84c-229061046745
 
 ---
 
@@ -42,24 +47,55 @@ Owner rulings, 2026-08-05. These bind; do not re-litigate them in the build.
 | D4 | **The Phoenix 2 carryover is the full repricing** — every Phoenix 1 score priced under Phoenix 2's rules, ranked by what it would be worth, for all three pools (All, Singles, Doubles) |
 | D5 | **The pool selector re-ranks the whole page** — total, bar, curve, targets and pool board all scope to the chosen pool |
 | D6 | **The page keeps its name.** It is still the PUMBILITY page |
-| D7 | **The top 50 is collapsed and below the fold.** It is a reference, not the answer |
+| D7 | ~~**The top 50 is collapsed and below the fold.**~~ **Superseded by D14.** It was a fold because it shared a page with the answer; on a page of its own it is simply that page's last section |
 | D8 | **No world-rank chip.** Offered and declined |
 | D9 | **"Kind" is not a column.** It restated the cell beside it — see §3.3 |
 | D10 | **A broken run plays no part in this page** (owner, 2026-08-07). *"Failed shit should not show anywhere on here."* A stage break rates zero, so it is not a score the player holds: it cannot occupy a pool slot, cannot set the bar, and does not count as having scored a chart. Enforced at the two top-50 reads rather than per call site, so the queries mean what their names say |
 | D11 | **A carryover target is priced, not gated.** A chart already scored in Phoenix 2 stays a target when the Phoenix 1 repricing beats what it currently contributes — same floor as the peer projection, one ranked list, both sources priced identically |
 | D12 | **The projection does not explain itself** (owner, 2026-08-07). Peer counts, effective voices and spread were printed beside every estimate and told a player nothing they could act on. What survives of the why-line is the **source** — carried from Phoenix 1, or projected — because that is the one thing about a number that changes how far to trust it; what the row is *to you* the card's border and the legend already say. A thin cohort remains a reason to **gate** a suggestion; it is not a caption |
 
-## 3. The page
+Round two, 2026-08-08.
 
-### 3.1 The stack
+| # | Ruling |
+|---|---|
+| D13 | **⚠ A gain is measured against the bar as it stands now, and never against a running sequence.** An ordered "path to your next title" was designed and rejected: *"The top 10 PUMBILITY suggestions I have in my list are NOT ones I'm going to play because I'm out of shape, so you would be taking away meaningful information for me who is playing lower items on the To Play list."* Re-pricing row N as if rows 1…N−1 had already been cleared destroys the column for everyone who plays out of order, which is everyone. **"What to play next" is not to be touched.** Do not rebuild the ordered path — see §3.7 for what replaced it |
+| D14 | **Three routed pages sharing one frame**, the Official Leaderboards pattern: **Play** `/Pumbility` · **Your Pool** `/Pumbility/Pool` · **Phoenix 1** `/Pumbility/Phoenix1`. **One** menu entry, pointing at Play |
+| D15 | **The frame carries the number, the pool selector and the bar**, because all three pages measure from them. Everything in it is **left-aligned** — a bar card pushed right with `margin-left:auto` strands itself against the far edge the moment the row wraps |
+| D16 | **The breakdown measures from pure base (×1.00)**, not from a grade. Owner: *"Pure base is showing more real data on how distribution actually works."* ⚠ If it ever moves to a grade the reference is **900,000** — which is **AA on Phoenix 1 but A+ on Phoenix 2**, since P2 shifted the sub-AAA floors. One score, two grades |
+| D17 | **"Your PUMBILITY titles", never "projected"** — that word is spent on the peer estimator (§8.1), and a title you actually hold is not a projection |
+| D18 | **The what-if calculator is deleted**, moving to the rating-calculator overhaul. ⚠ It loses the "what would this **add**" framing in transit: it prices against *your bar* today, and `/RatingCalculator` has no pool |
+| D19 | **`GetPumbilityPageQuery` stays one query.** Splitting the cheap pool read from the expensive projection was offered and declined — performance gets its own pass. This does **not** worsen the cold read (§6.5) |
+| D20 | **A chart worth zero never occupies a pool slot** — the general rule D10 was one case of. See §3.8 |
+
+## 3. The section
+
+### 3.1 The three pages
+
+One frame, the `OfficialSectionFrame` pattern: shared chrome, each page its own route and circuit,
+nav links as real document loads.
 
 ```
-your number  ·  the bar  ·  the pool curve        ← above the fold
-what Phoenix 1 is worth here                       ← Phoenix 2 only
-what to play next  (density trio)
-your top 50                                        ← collapsed
-what would a clear be worth?                       ← collapsed
+FRAME   your number · pool selector · the bar        ← left-aligned, all three pages
+        [ Play ]  [ Your Pool ]  [ Phoenix 1 ]
+
+Play          what to play next  (density trio)                  /Pumbility
+Your Pool     where your PUMBILITY comes from                    /Pumbility/Pool
+              your PUMBILITY titles
+              the pool curve  ·  your top 50
+Phoenix 1     what Phoenix 1 is worth here                       /Pumbility/Phoenix1
 ```
+
+**Phoenix 1 is a two-page section.** No carryover, no PUMBILITY ladders
+(`Phoenix2PumbilityTitle` is Phoenix-2-only), no pool selector — one pool, and splitting it would
+invent a stat. The frame drops the third chip rather than showing an inert one, exactly as the
+official frame drops What It Takes; `/Pumbility/Phoenix1` reached by URL redirects to Play.
+
+**The frame's nav renders before its data**, like `OfficialSectionFrame`, which skeletons only its
+body. You can change tabs while the number is still arriving rather than facing an inert section.
+
+**The pool selection is a `Pumbility__Pool` UiSetting**, not circuit state: tab links are real
+navigations, so anything held in a circuit dies between them. It persists between visits too, which
+the in-circuit selector never did.
 
 ### 3.2 The bar is the organising device
 
@@ -159,7 +195,7 @@ site does not do that (rule: say what you cannot compute).
 What the estimator can honestly explain is *how many peers it heard from, how recent their
 scores are, and how spread they were* — an evidence line, not an attribution line. What the page
 may still show, separately and unattached to the projection, is the player's own thumbprint as
-descriptive data (§4.3). **Needs an owner call before C6.**
+descriptive data (§4.3). **Still open** — see §9.
 
 Density trio via `Density__Pumbility`, governing the targets only, using the site's standard
 control — a `MudButtonGroup` of `ViewComfy` / `GridView` / `TableRows` icon buttons, the same
@@ -172,13 +208,131 @@ to the top.
 
 ### 3.4 The pool board
 
-Collapsed by default (D7). Board rows wearing `.olb-rank-card` — a ranked list of entities gets
-the leaderboard skin and **no density toggle** (rule 5). The bar renders as a rule in the list.
+Board rows wearing `.olb-rank-card` — a ranked list of entities gets the leaderboard skin and **no
+density toggle** (rule 5). The bar renders as a rule in the list, with the waiting room ghosted
+beneath it.
 
-### 3.5 The what-if calculator
+Open, not folded (D14). It sits on Your Pool beside the curve, which is the same data in the other
+form — and the frame's bar card and the highlighted 50th row are now visibly the same number on the
+same screen, which they never were across a fold.
 
-Unchanged in behaviour, moved to the bottom and collapsed. It is a what-if tool, not an answer;
-today it sits between the pool and the projections, in the middle of the page's argument.
+### 3.5 The what-if calculator — deleted
+
+Moved to the rating-calculator overhaul (D18). What it loses in transit is worth naming: today it
+prices against **your bar**, so it answers *"what would this add"*. `/RatingCalculator` already
+builds a `PumbilityScoring(Phoenix2, false)` config but holds no pool, so it can only answer *"what
+is this worth"* until it picks up the pool read.
+
+### 3.6 Where your PUMBILITY comes from
+
+A band on Your Pool. **The split is exact, not modelled.** A pool entry is
+`Base(level) × grade × plate` and nothing else — `AdjustToTime` is off in both PUMBILITY configs,
+every `SongTypeModifier` is 1.0, and `ChartLevelSnapshot` is null, so the base is a pure function of
+level (plus Phoenix 2's singles bump). The three parts therefore **sum to the real total**, which is
+the invariant the tests pin.
+
+Measured from **pure base, ×1.00** (D16):
+
+| | Level | Score | Plate |
+|---|---|---|---|
+| Phoenix 1, the owner's pool | 58,242 · 90.3% | +6,225 · 9.7% | **0 · exactly zero** |
+| Phoenix 2, the same 50 repriced | 12,442 · 69.0% | +5,524 · 30.6% | +75 · **0.4%** |
+
+**Plate is the reason this exists.** Phoenix 1's plate modifiers are all exactly 1.0 — the plate you
+walked away with never entered the number at all. Phoenix 2's are additive bonuses of 0.000–0.020
+against grade multipliers of 1.08–1.50, so a plate is worth at most **1.3% of a chart**.
+
+Two devices carry that without exaggerating it:
+
+- **The stack is true to scale.** The plate segment renders as a hairline because it *is* a hairline.
+  It is never widened to be visible.
+- **The plate gets its own magnified rail**, running from Rough Game on all fifty to Perfect Game on
+  all fifty, so the sliver can be read on a scale where it has room. The line under it prices the
+  ceiling: Perfect-Gaming every chart in the owner's pool is **+174, or 0.97%** — about **twelve
+  chart swaps**. On Phoenix 1 that line reads *nothing*, flatly.
+
+⚠ **The reference is load-bearing and the note has to stay honest.** Pure base measures from a grade
+nothing can score — Phoenix 2's worst is ×1.08 — so the Score segment carries a floor everybody gets.
+Measured from AA instead, the same pool reads 93.8 / 5.8 / 0.4. On Phoenix 1 the question does not
+arise: AA's modifier is exactly ×1.00, so pure base *is* AA-neutral there. That is also why Level
+reads 90% on one mix and 69% on the other — same pool shape, different zero point.
+
+### 3.7 Your PUMBILITY titles
+
+The section that answers *what is the number for*, and the replacement for the ordered path D13
+killed.
+
+**The device is the ask.** A pool is fifty charts, so a threshold is a flat per-chart value: a title
+at 19,000 asks **380.00 of every chart you hold**. Against the owner's carryover pool averaging
+360.82, that is **+19.18 on every one of fifty**. No ordering, no counting, no reaching into the
+target list.
+
+```
+TOTAL   18,041                              [P.B] RED BERYL   held since 18,000
+[▓░░░░░░░░░░░░░░░░░░░░░░░░░]  RED BERYL 18,000 ──── ALEXANDRITE 19,000
+ALEXANDRITE asks 380.00 │ your charts average 360.82 │ your bar 358.08 │ +19.18 each
+380 a chart is an S25 at AAA — or an S23 played perfectly.
+```
+
+**One rail, following the pool selector** (owner, 2026-08-08). Drawn as three at first, on the
+reasoning that a player holds all three ladders at once — but the selector already re-ranks the
+total, the bar, the curve, the board and the targets, and a control that moves everything in the
+section except this one reads as broken. The other two ladders are one click away, and the totals on
+the selector itself say what they are worth. The rung bar is the device `PumbilityTitleTrack` already
+draws on the tier list, so the two surfaces stay legible as the same idea.
+
+**The ask names three charts, not one**, at SSS+, AAA and A — the shape the title drawer already
+settled ([PR #234](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/234)). Play quality moves the
+answer by several levels, so one reference is right only for the player already performing at it.
+⚠ **A is the floor because it is the lowest multiplier this site has verified**; B and below are the
+unverified −0.05 extrapolation in `Phoenix2PumbilityScoring`, so never anchor lower without live data.
+Best grade first, so levels ascend and the low one reads as the hard one, and the grade stays on the
+same line as its level — in a shared caption underneath, three levels read as a path.
+
+**The fourth cell is the realism check.** `ProjectedAverage` is what the fifty would average if every
+suggestion landed on its projection; read against the ask beside it, that says whether the list on
+Play reaches the rung at all. ⚠ It is a **merge, not a sum** — a chart already in the pool keeps the
+better of its held and projected value — so no gain is ever added to another, which is precisely what
+§8.3 forbids.
+
+**Why the ask and not a count.** It reads correctly at every distance without changing shape: +19.18
+a chart is a whole grade band on all fifty and says so; +2.62 a chart reads as *basically there*.
+Neither number needs a play order to be true, which is exactly what D13 forbids. The translation into
+a real chart — *an S25 at AAA, or an S23 played perfectly* — is the actionable half, and both figures
+are exact against the formula.
+
+**Edge states, both drawn:**
+
+- **A thin pool.** *"Your pool holds 7 of 50. BRONZE asks 200.00 a chart across fifty."* Under what
+  any level-10 chart pays at AA, so until the pool is full the ask is the pool itself. This is the
+  common case for months after a mix launch, not an afterthought.
+- **The top of a ladder.** The rail states that nothing sits above ABYSS ABSOLUTE rather than
+  vanishing, so the section never disappears on the one player it should be congratulating.
+
+### 3.8 A chart worth zero never occupies a pool slot
+
+D10 dropped broken runs from the two top-50 reads. **It was one case of a general rule, and the other
+three were never covered.** Four kinds of chart rate exactly zero and still hold a slot:
+
+| | why it is zero | filtered before? |
+|---|---|---|
+| a broken run | `StageBreakModifier = 0` | yes (D10) |
+| CO-OP | `ChartTypeModifiers[CoOp] = 0` | yes, explicitly |
+| half-double / performance | `ChartTypeModifiers = 0.0` | **no** |
+| **anything below level 10** | `DifficultyLevel.BaseRating` is `_level < 10 ? 0 : …` | **no** |
+
+Zeros sort last, so they surface the moment a player has fifty scores but fewer than fifty that
+count — and then **the 50th slot is the bar**, which reads `0`, and every projected gain prints as if
+it displaced nothing. Confirmed live on the owner's account: the bar was held by a *passed S9*.
+
+The rule is `Rank(s) > 0`, which subsumes all four. Nothing legitimate is caught: the worst grade
+multiplier is ×0.4 on Phoenix 1 and ×1.08 on Phoenix 2, and `MinimumScore` is 0 in both PUMBILITY
+configs. `FolderTitleTrack.Compute` already builds its pool this way (`if (value <= 0) continue;`) —
+this makes the page agree with the tier list's folder track.
+
+⚠ **It is two places, not one.** `ProjectPhoenix2CarryoverQuery` builds `repriced` and `phoenix1Pool`
+with no such filter at all, so an account with fewer than fifty counting Phoenix 1 charts gets a
+corrupted carryover bar and singles/doubles split. The same rule, applied twice.
 
 ## 4. The projection engine
 
@@ -389,10 +543,10 @@ projecting nothing. Their own Phoenix 1 scores still reach the page, but as **ca
 The reference mix runs one way only. A Phoenix 1 projection never reads Phoenix 2: it would add
 nothing, and it would make the older page's numbers drift as the newer mix fills up.
 
-## 5. Phoenix 2 carryover
+## 5. Phoenix 2 carryover — the Phoenix 1 page
 
-Only on the Phoenix 2 view; Phoenix 1 has one pool and no per-type board, so offering a split
-there would invent a stat.
+Its own route since round two (`/Pumbility/Phoenix1`, D14), and only on the Phoenix 2 view; Phoenix 1
+has one pool and no per-type board, so offering a split there would invent a stat.
 
 Every Phoenix 1 score repriced under `Phoenix2PumbilityScoring` — singles priced one level up the
 base curve, sub-10 charts at zero, broken plays at zero — then the top 50 taken for each of All,
@@ -426,8 +580,20 @@ Supporting facts the section renders, all real:
 | No Phoenix 2 chart at all | 1 — Uh-Heung S22, the account's best |
 | Re-played charts scoring lower in P2 | 85% — 2,803 of 3,313 pairs scored on both mixes (owner's 2026-08-01 board recon) |
 
-**A chart with no Phoenix 2 appearance is a fact, not a target.** It is stated once in the fact
-tile and never appears in the target list — you cannot go and play it.
+**A chart with no Phoenix 2 appearance never appears in the target list** — you cannot go and play
+it. ⚠ It is no longer *stated* either: the "No Phoenix 2 chart" fact tile was **cut** in round two
+(owner: it is not actionable information, and it reads as a problem). `Phoenix2CarryoverRecord.Unavailable`
+goes with it — target filtering uses the per-entry `AvailableInPhoenix2` flag, not that list.
+
+**The titles this record would land you** close the panel: three chips, one per ladder, computed from
+the three repriced pools the handler already has in memory. On the owner's account that is
+`[P.B] RED BERYL` · `[S] EXPERT LV.3` · `[D] ADVANCED LV.10`.
+
+⚠ **They must never read as titles held**, which is §8.2 with teeth: the wording is *"where this
+record **would** land you"* and every chip carries its underlying pool value. At a mix launch these
+chips and the §3.7 rails say opposite things about the same three ladders — you hold nothing yet,
+and your Phoenix 1 record is worth RED BERYL — and that contrast is the panel's whole argument, so
+the two surfaces share a chip language deliberately and differ only in that one word.
 
 **A chart already scored here is still a target** (D11). Carryover used to admit only charts with
 no Phoenix 2 score at all, which dropped 985k-there-against-900k-here — a real gain, resting on
@@ -443,147 +609,104 @@ which rows become suggestions moved.
 
 ## 6. Technical scope
 
+Round two. The first round's scope has shipped and is not reproduced here; what it decided that
+still binds lives in §2, §4 and §6.5.
+
 ### 6.1 Verticals and layers
 
-The estimator's inputs collapsed once §4.3 removed every skill term. What it now needs is: peer
-scores on a chart, peer competitive levels, each peer's level *when they set that score*, and
-chart scoring levels. Three of those already have homes.
+**No new table, no new port, no new package, no migration.** Two assemblies move, plus Web.
 
 | Vertical / layer | Change |
 |---|---|
-| **PlayerProgress** | **Owns everything.** `PumbilityProjectionSaga` replaced by the §4.1 estimator. `ProjectPumbilityGainsQuery` gains a pool scope (`ChartType?`). New `GetPumbilityPageQuery` — **one read for the page**, so the hero does not assemble itself from six dispatches. New `ProjectPhoenix2CarryoverQuery` (§5). Also owns `IPlayerHistoryRepository`, which is where the growth weight's raw material already lives |
-| **ScoreLedger** | **Nothing new.** `IScoreReader.GetScores(mix, users, type, lo, hi)` already returns exactly the cohort read step 1 needs |
-| **ChartIntelligence** | **Nothing.** The estimator no longer consumes `PlayerSkillDeviations`. ⚠ N5 (the badge re-key) is still worth doing on D1 and for the tier-list blend — it is simply **no longer this page's dependency**, and should ship on its own schedule |
-| **Catalog** | Chart metadata and `ChartScoringLevel` reads only. **No badge query.** `GetChartBadgeChipsQuery` is needed only if the page shows the thumbprint as descriptive data (§3.3, open) |
-| **Domain** | `PumbilityProjection` loses `SkillAdjustments` entirely; `SkillAdjustmentRecord` is **deleted**, not re-keyed. ⚠ Both live in `Domain/Records/` and should **move to `PlayerProgress/Contracts/`** — a vertical's projection contract has no business in shared Domain |
-| **SharedKernel** | Untouched. N8's deletion of `Skill`/`SkillCategory` is the nuke's tail and out of scope here |
-| **Data** | **Nothing — no migration.** See §6.3; the growth weight is derived at read time from an existing table |
-| **Web** | The page and its components (§6.2) |
-| **ExplorationTests** | The harness (§6.4) |
+| **SharedKernel** | `ScoringConfiguration` gains **`Decompose`** and **`PlateHeadroom`** — the §3.6 split and its ceiling. They belong with the formula because that is the only way they cannot drift from it: the Phoenix 2 grade table still carries unverified TODOs at B and below, and a decomposition written anywhere else would go on answering with the old shape, silently and plausibly |
+| **Domain** | Nothing. `Phoenix2TitleList` / `Phoenix2PumbilityTitle` are read exactly as they stand |
+| **PlayerProgress** | Owns the rest. `PumbilityPageRecord` gains the breakdown, the three pool totals and the title rails; `Phoenix2CarryoverRecord` gains three projected titles and loses `Unavailable`. Two one-line fixes for §3.8 |
+| **ScoreLedger · ChartIntelligence · Catalog · Randomizer** | Nothing |
+| **Data** | Nothing — no schema change, no new repository, no migration |
+| **Web** | The frame, three routes, two new components, the CSS, the deletions |
 
-**No new ports.** Every cross-vertical read is an existing published contract query or an
-existing Domain port.
+**No new ports and no new cross-vertical reads.** Everything flows through contracts PlayerProgress
+already owns, over reads it already performs.
 
 ### 6.2 Classes
 
+**SharedKernel** — `ScoringConfiguration.Decompose(chart, score, plate, isBroken)` →
+`ScoreContribution(Base, FromGrade, FromPlate)`, and `PlateHeadroom(chart, score, plate)`. Both pure.
+Both formulas decompose exactly, and `Base + FromGrade + FromPlate == GetScore(…)` is the invariant:
+
+- `Default` (Phoenix 1): base = scoreless, grade = scoreless × (g − 1), plate = scoreless × g ×
+  (p − 1) — **identically zero**, because every Phoenix 1 plate modifier is 1.0.
+- `GradePlusPlate` (Phoenix 2): base = scoreless′ (singles bump and sub-10 zeroing already applied),
+  grade = scoreless′ × (g − 1), plate = scoreless′ × p.
+
+`PlateHeadroom` asks the config for the best-plate score and subtracts the held one, so it needs no
+knowledge of whether plates multiply or add — the one thing that differs between the two mixes.
+
 **PlayerProgress**
-`Contracts/Queries/`: `ProjectPumbilityGainsQuery` (+ pool), `GetPumbilityPageQuery` →
-`PumbilityPageRecord`, `ProjectPhoenix2CarryoverQuery` → `Phoenix2CarryoverRecord`.
-`Contracts/`: `PumbilityProjection` relocated from Domain and slimmed.
-`Application/`: `PumbilityProjectionSaga` (rewritten), new `PumbilityPageSaga`.
-`Domain/`: new **`CohortEstimator.cs`** — pure, no I/O: takes (peer scores, peer levels now,
-peer levels at record, τ, q) and returns the estimate. The harness and the app share this one
-implementation, which is what stops them drifting.
-`Infrastructure/`: `EFPlayerHistoryRepository` gains a **bulk** read —
-`GetHistory(mix, userIds, ct)` — so a cohort's level series arrives in one query instead of
-N. Additive to `IPlayerHistoryRepository`, which PlayerProgress already owns.
+`Contracts/`: `PumbilityPageRecord` gains `PoolBreakdown`, `PoolTotals` and `IReadOnlyList<TitleRail>`;
+`Phoenix2CarryoverRecord` gains `ProjectedTitles` and drops `Unavailable`.
+`Application/PumbilityPageSaga`: builds the breakdown and the rails, and computes **all three pool
+totals in one pass**. The page currently fills the selector with two extra `GetPumbilityPageQuery`
+dispatches (the third short-circuits on the pool already loaded) — folding them in is strictly fewer
+round trips and feeds the rails for free. It is not the split D19 declined; it is the opposite.
+`Application/PlayerRatingSaga`: `Rank(s) > 0` in `GetTop50ForPlayerQuery` (§3.8), and the same rule
+on `repriced` and `phoenix1Pool` in `ProjectPhoenix2CarryoverQuery`.
 
-**Web** — `Pages/Progress/Pumbility.razor` rewritten. New in `Components/Pumbility/`:
-`PumbilityHero`, `PoolCurve`, `PoolSelector`, `TargetCard`, `TargetStickerSheet`, `TargetTable`,
-`PoolBoard`, `CarryoverPanel`, `GainCalculator`. Reuses `DifficultyBubble`, `LetterGradeIcon`,
-`SongImage`, `ScoreBreakdown` (rule 3 — no page-local restyles).
+**Web** — `Pages/Progress/`: `PumbilitySectionFrame.razor` (a component, so **no** `@rendermode`),
+then `Pumbility.razor` `/Pumbility`, `PumbilityPool.razor` `/Pumbility/Pool` and
+`PumbilityPhoenix1.razor` `/Pumbility/Phoenix1`, each declaring
+`@rendermode RenderModes.Interactive` (`RenderModeDeclarationTests`). Flat rather than a
+`Pumbility/` subfolder, and prefixed rather than named `Play`/`Pool`/`Phoenix1`: components resolve
+by name inside a namespace, and three generic ones in `Pages.Progress` is a collision waiting to
+happen.
+`Components/Pumbility/`: new `PumbilityBreakdown` and `PumbilityTitleRails`; `PumbilityHero` becomes
+the frame's horizontal band; `PoolCurve`, `PoolBoard`, `TargetList`, `CarryoverPanel` move unchanged.
+New `CarryoverSection` wraps the last of those with its own read — the pool it is scoped to arrives
+from the frame, so it is a **parameter**, which is not something the page can dispatch on in
+`OnInitializedAsync`. Re-fetching on a pool change falls out of that for free.
+`site.css`: the `pmb-*` block gains frame, breakdown and rail classes — `var(--mix-*)` only, no
+literals (`UiColorTokenTests`).
+UiSettings: **`Pumbility__Pool`** new. **`Density__Pumbility` unchanged** — the convention is per
+page, but renaming it silently resets the preference for everyone who holds one, and Play is the only
+tab with a toggle.
 
-**Retired**: the eight `GetTierListName`/`GetTierListOrder` band helpers, the
-`TierListProcessor.ProcessIntoTierList("PUMBILITY", …)` call, and the whole skill-adjustment path
-in the saga.
+**Deleted** — the what-if fold with its `Recalculate` and `_whatIf*` state; both
+`<details class="pmb-fold">` wrappers; `CarryoverPanel`'s unavailable tile and `LostName`;
+`Phoenix2CarryoverRecord.Unavailable`; the `.pmb-whatif*`, `.pmb-field` and `.pmb-fact-warn` CSS.
 
-### 6.3 No migration — the join is per-peer, not per-score
-
-An earlier draft of this doc specified a `CompetitiveLevelAtRecord` column on
-`scores.PhoenixRecord`, on the reasoning that resolving "their level when they set it" at query
-time meant joining every candidate score against `PlayerHistory`.
-
-**That was wrong about the shape of the join.** A projection touches the peers inside a ±1
-competitive band — on real data, 150–300 players — and `PlayerHistory` holds ~27 rows per player
-per mix (40,795 rows over 1,509 Phoenix users). So the whole history for a cohort is **one read
-of roughly 8,000 narrow rows**, bisected in memory per score. That is an order of magnitude
-smaller than the cohort score read the estimator already performs.
-
-Storing it would also have coupled the write path across verticals: `PhoenixRecordEntity` belongs
-to **ScoreLedger**, while competitive level is **PlayerProgress** data, so every import path
-would have had to ask another vertical for a number at insert time — to denormalize something
-already derivable.
-
-So: **no migration, no backfill, no nullable-column semantics, no write-path change.** One
-additive method on an existing port (§6.2).
-
-⚠ **`PlayerHistory` begins 2024-06-04.** A score older than that resolves to the player's
-earliest known level, so the growth weight *under-states* how much they have improved on the
-site's oldest records. Same limitation the column would have had; stated, not fixed.
-
-### 6.4 The harness
-
-`ScoreTracker.ExplorationTests/Pumbility/`, config-gated on the existing
-`CatalogProbe:ConnectionString` pattern. Never CI, never a feature guarantee.
-
-**Port the scratchpad harness rather than re-deriving it** — `Downloads/pumbility-harness/`
-holds the scripts that produced every number in §4, including the rejected arms. The C# version
-must reproduce §4.2's table on the same cutoff before it is trusted.
-
-**One pin fact** runs the real `CohortEstimator` against the harness's own for a handful of
-players and asserts they agree. Because `CohortEstimator` is pure, this is a genuine equivalence
-check rather than an end-to-end smoke test.
-
-**Metrics: ρ ahead of MAE**, plus signed bias and coverage. The page's job is ordering what to
-play next; §4.5 is the cautionary tale — every constant in the old formula moved MAE and none
-moved ρ.
-
-⚠ **Known bias, stated not fixed.** `PhoenixRecord` stores only the current best, so a chart
-improved after `T` reads as unplayed at `T` even if it was played earlier. The journal's 29,153
-multi-event pairs are the subset with true history.
-
-### 6.5 Tests
+### 6.3 Tests
 
 | Suite | What |
 |---|---|
-| `ScoreTracker.Tests/DomainTests` | **`CohortEstimatorTests`** — the weighted quantile (including a left-skewed fixture where mean and p65 diverge), the growth weight's self-conditioning (flat player → all weights 1.0), the ±1 gate, empty-cohort behaviour |
-| `ScoreTracker.Tests/ApplicationTests` | `PumbilityProjectionSagaTests` rewritten: pool scoping, no skill dependency, carryover repricing |
-| `ScoreTracker.Tests.Components` | Page and components with mocked data — hero prints the bar, curve renders 50 + waiting room, targets shed by density, carryover hides on Phoenix 1, pool selector re-ranks everything |
-| `ScoreTracker.Tests.Integration` | The bulk history read against a real migrated DB |
-| `ScoreTracker.Tests.E2E` | Nothing new — not a critical whole-workflow path (owner's granularity ladder) |
-| `ScoreTracker.ExplorationTests` | §6.4 |
+| `ScoreTracker.Tests/DomainTests` | `ScoringConfigurationTests` — the decomposition sums to `GetScore` on **both** formulas across levels, grades and plates; `FromPlate` is exactly 0 for every Phoenix 1 plate; `PlateHeadroom` is 0 on Phoenix 1 and equals the RG→PG span on Phoenix 2; the ask (`threshold / 50`) and the rung lookup against the real ladders |
+| `ScoreTracker.Tests/ApplicationTests` | `PumbilityPageSagaTests` — a sub-10 chart, a half-double and a broken run each **never** enter the pool and never set the bar, on both mixes; the carryover's two pools exclude them too; the three pool totals; each rail's held rung, next rung and ask; the top-of-ladder and thin-pool rails |
+| `ScoreTracker.Tests.Components` | The breakdown draws its plate segment true to scale; a plateless mix says so rather than drawing an empty rail; an empty pool renders no band; the carryover chips say "would" and skip a ladder not yet reached; the unplayable tile is gone |
+| `ScoreTracker.Tests.Integration` | Nothing new — the change is saga logic over reads that already have coverage |
+| `ScoreTracker.Tests.E2E` | Nothing new. Not a critical whole-workflow path (owner's granularity ladder) |
 
-### 6.6 Build order
+⚠ **The frame itself has no component test.** Nav-before-data, the Phoenix 1 tab and selector coming
+out, and the redirect behind them are all page-level behaviour needing `IMediator`,
+`IUiSettingsAccessor` and `ICurrentUserAccessor` mocked together, and no page in this section has
+that harness yet. The mix-dependent half is covered one layer down — the saga returns no rails and no
+`PoolTotals` on Phoenix — but the rendering half is currently owner field-testing, not a ratchet.
 
-| # | Commit | Contents | |
-|---|---|---|---|
-| C1 | Bulk history read | `IPlayerHistoryRepository.GetHistory(mix, userIds)` + EF implementation. Additive, no schema change | ✅ |
-| C2 | `CohortEstimator` | Pure domain class + `DomainTests` | ✅ |
-| C5 | Saga rewrite | `PumbilityProjectionSaga` on `CohortEstimator`; skill path deleted; `PumbilityProjection` relocated + slimmed; pool scoping; scoping moved to **scoring** level | ✅ |
-| C6 | Page read model | `GetPumbilityPageQuery`, `ProjectPhoenix2CarryoverQuery`, `PumbilityPageSaga` | ✅ |
-| C7 | The page | Rewrite + `Components/Pumbility/*` + density + the responsive ladder + bUnit facts | ✅ |
-| C8 | l10n | 36 keys × 9 locales, alphabetical, two case collisions caught | ✅ |
-| C9 | Docs | This section, `ARCHITECTURE.md` page row | ✅ |
-| **C3** | **The harness** | Port from `Downloads/pumbility-harness/`, reproduce §4.2, pin fact against C2 | **not done** |
-| **C4** | **Re-fit the calibrations** | p65 against the page's stated truth horizon (§4.4), confirmed at levels 17–19 and 22–24 | **not done** |
+### 6.4 Build order
 
-⚠ **C3 and C4 did not ship and the page is live without them.** C4 was specified as a gate on
-C5 onward and that gate was not honoured — the build ran C5–C9 while the quantile is still the
-one fitted to a **one-year** truth horizon. Consequences, stated plainly:
+| # | Commit | Contents |
+|---|---|---|
+| R1 | **The zero-value fix, alone** | `Rank(s) > 0` in `GetTop50ForPlayerQuery`, and the same rule on the carryover's two pools (§3.8). No UI — it fixes the page as it stands today, and it can ship on its own |
+| R2 | The frame and the routes | `PumbilitySectionFrame` + three pages; `Pumbility__Pool`; the top 50 out of its fold; the what-if deleted; Phoenix 1 dropping its third tab and its selector. Existing content moved, nothing new |
+| R3 | The decomposition | `ScoringConfiguration.Decompose` / `PlateHeadroom` + `DomainTests` |
+| R4 | Where your PUMBILITY comes from | `PumbilityBreakdown` + the record fields (§3.6) |
+| R5 | Your PUMBILITY titles | `PumbilityTitleRails` + the rails and pool totals (§3.7) |
+| R6 | Phoenix 1 | The three chips in, the unplayable tile and `Unavailable` out (§5) |
+| R7 | l10n | ~30 keys × 9 locales, alphabetically inserted, no case variants |
+| R8 | Docs | This section, `ARCHITECTURE.md`'s Progress row |
 
-- Every projected score on the page is calibrated to *"what you would eventually score"*, not
-  *"what you would score now"*. Measured on the old formula, that difference was worth ~2,500
-  points of bias. The direction is known — projections read **high** for a near-term reading.
-- `CohortEstimator.Quantile` is one constant in one pure class, so re-fitting is a one-line
-  change plus a re-run. Nothing built on top of it needs to move.
-- §4.2's numbers are from the scratchpad harness on levels 19–21. Until C3 ports it into
-  `ExplorationTests`, nothing in CI or in the repo can reproduce them, and the ratchet that
-  would catch a drift between the harness and `CohortEstimator` does not exist yet.
+R1 is deliberately first and deliberately alone: it is a live bug, it needs no UI, and every figure
+in R5 divides by fifty — an average over a pool holding a passed S9 is wrong by construction.
 
-### 6.7 What the build changed about the design
-
-- **The migration was dropped** (§6.3). The join is per-peer, not per-score.
-- **Scoping moved from printed level to scoring level.** A chart printed 24 and scored like a 21
-  belongs in a level-20 player's window; the reverse was cluttering the list. Pinned by
-  `AChartIsScopedByItsScoringLevelNotItsPrintedLevel`.
-- **`PumbilityProjection` gained `Evidence`** — peer count, effective peers after growth
-  weighting, and the 10th-to-90th spread — because the page still owed the player a "why" and
-  the honest one is what the estimate heard, not what it attributed (§3.3).
-- ~~**`ProjectionEvidence.Spread` and `EffectivePeers` are computed but not yet rendered.**~~
-  Superseded by D12: the whole evidence line is gone. The growth weighting still does its work
-  inside the quantile; nothing about it reaches the page.
-
-### 6.8 How a projection is held
+### 6.5 How a projection is held
 
 The cached artifact used to be the whole `PumbilityProjection`, keyed by `(user, mix, pool)`.
 That bundled four things with nothing in common:
@@ -624,6 +747,13 @@ watching every import would evict continuously and cache nothing.
 one estimate set has to serve all three selector positions. A merged top fifty is drawn from a
 superset of either single type's, so it never sits below both.
 
+**This is why splitting the page into three did not have to split the query** (D19). The cache keys
+on `(userId, mix)` and is pool-free, so all three pages share one entry: still one sweep per player
+per mix per day, the same wait the single page had. What the section changes is only *which* page can
+be the one that waits — land on Your Pool first and you sit behind the `PatienceCard` for a result
+that page never renders. An inelegance, not a regression, and the reason the card belongs to the
+frame rather than to Play.
+
 ## 7. Responsive
 
 The class ladder in [UX-GUIDELINES.md §1](../UX-GUIDELINES.md), no new numbers:
@@ -641,6 +771,11 @@ stacking** — height is the scarce axis and no width rule can say so.
 The hero goes single-column at **860**, deliberately in the gap between the real tablets (820,
 834) and the 900 rung so a scrollbar cannot flip the same device by platform.
 
+⚠ **The frame wraps rather than reflowing, so everything in it starts at one left edge** (D15). The
+bar card was drawn pushed right with `margin-left:auto`, which reads fine on one line and strands it
+against the far edge with nothing beneath it the moment the row breaks. Left-aligned it simply stacks
+under the number. The nav row underneath fills the air that costs at desktop width.
+
 ## 8. Honesty boundaries
 
 1. **A projection is a projection.** The targets list says what you are *projected* to reach, and
@@ -650,15 +785,36 @@ The hero goes single-column at **860**, deliberately in the gap between the real
    beside it.
 3. **The bar moves under you.** Every gain figure is against the bar as it stands now; clearing
    one target raises it for all the others. The page should not imply the gains sum.
+   **Resolved by the ask** (§3.7), not by a caveat: the reason a title cannot be expressed as a
+   number of charts is exactly that the gains do not sum, so it is expressed as a per-chart value
+   instead — which is order-free and therefore true however you play. D13 is this boundary enforced
+   rather than annotated.
+4. **A title you hold is not a projection.** The rails on Your Pool state what you have and what the
+   next rung asks. The chips on Phoenix 1 state where a record *would* land you. The one word
+   between them is the whole difference, and it is why D17 refuses to spend "projected" twice.
 
 ## 9. Open
 
-- **The page's truth horizon — blocks C4.** Bias is strongly horizon-dependent (the old formula
-  ran +207 at 30 days against −2,300 at a year), and §4.1's `p65` is fitted at one year. *"What
-  would you score if you played this now"* implies a much shorter horizon. Nobody has ruled on
-  it, and the quantile cannot be finalised until someone does.
-- **The "why" line on a target row — blocks C7.** §3.3. The estimator carries no skill term, so
-  badge chips would assert a causal path that does not exist. Evidence line instead, or nothing?
+- **The page's truth horizon.** Bias is strongly horizon-dependent (the old formula ran +207 at 30
+  days against −2,300 at a year), and §4.1's `p65` is fitted at **one year**. *"What would you score
+  if you played this now"* implies a much shorter horizon. Nobody has ruled on it, so every projected
+  score on the page is calibrated to *what you would eventually score*, and reads **high** for a
+  near-term reading. `CohortEstimator.Quantile` is one constant in one pure class — re-fitting is a
+  one-line change and a re-run, and nothing built on top of it has to move.
+- **The harness was never ported.** §4.2's numbers come from the scratchpad scripts in
+  `Downloads/pumbility-harness/` on levels 19–21. Nothing in the repo can reproduce them, and the
+  ratchet that would catch a drift between the harness and `CohortEstimator` does not exist. Its home
+  when it lands is `ScoreTracker.ExplorationTests/Pumbility/`, config-gated like the catalog probes,
+  with one pin fact asserting the real estimator and the harness's agree — a genuine equivalence
+  check, since `CohortEstimator` is pure. Metrics ρ ahead of MAE: §4.5 is the cautionary tale, where
+  every constant moved MAE and none moved ρ.
+- **Two data limits, stated not fixed.** `PlayerHistory` begins **2024-06-04**, so a score older than
+  that resolves to the player's earliest known level and the growth weight under-states how much they
+  improved on the site's oldest records. And `PhoenixRecord` stores only the current best, so a chart
+  improved after the backtest cutoff reads as unplayed at it; the journal's 29,153 multi-event pairs
+  are the subset with true history.
+- **The "why" line on a target row.** §3.3. The estimator carries no skill term, so badge chips would
+  assert a causal path that does not exist. Evidence line instead, or nothing?
 - **Does the page show the thumbprint as descriptive data?** It is a real, stable trait (§4.3)
   with genuine display value and zero predictive value. If yes it needs its own placement and
   copy, and must never sit adjacent to a projection where it reads as the explanation.

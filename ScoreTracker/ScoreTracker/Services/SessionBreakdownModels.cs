@@ -23,8 +23,17 @@ public sealed record SessionBreakdown(
     IReadOnlyList<PlayerMilestoneRecord> Milestones,
     IReadOnlyList<SessionTitleBarModel> TitleBars,
     IReadOnlyList<SessionPeerBoard> PeerBoards,
-    IReadOnlyDictionary<Guid, User> Peers)
+    IReadOnlyDictionary<Guid, User> Peers,
+    bool CaptureWindowOpen = false,
+    int CapturedRows = 0)
 {
+    /// <summary>
+    ///     Show the patience card: capture could still be running AND has produced nothing yet.
+    ///     Narrower than <see cref="CaptureWindowOpen" /> on purpose — a page that opened
+    ///     mid-pipeline already has rows to show, and replacing them with a card would be a
+    ///     backwards step for the reader.
+    /// </summary>
+    public bool CapturePending => CaptureWindowOpen && CapturedRows == 0;
     /// <summary>
     ///     The import's game tag, when this session came from one. The wrong-card case is
     ///     exactly when a player stares at a session thinking "these aren't my scores", so
@@ -48,7 +57,8 @@ public sealed record SessionScore(
     RecentSessionsPage.ScoreEventRecord Row,
     Chart? Chart,
     HighlightFlags Flags,
-    HighlightDetail? Detail)
+    HighlightDetail? Detail,
+    int? Phoenix1Gain = null)
 {
     public bool IsFlagged => Flags != HighlightFlags.None;
 
@@ -58,6 +68,27 @@ public sealed record SessionScore(
     ///     says nothing about it (D11).
     /// </summary>
     public double? PeerPercentile => Detail?.PeerPercentile;
+
+    /// <summary>
+    ///     Your place among the cohort, first being 1. Tie-inclusive, matching the percentile
+    ///     the colour comes from: everyone holding the same score shares the better place.
+    /// </summary>
+    public int? PeerPlace => Detail?.PeerBetterCount is { } better ? better + 1 : null;
+
+    /// <summary>
+    ///     The cohort minus you. Every count the row prints is about OTHER people at your level,
+    ///     but the stored one includes you — you are trivially within ±0.5 competitive of
+    ///     yourself. A place keeps the full cohort as its denominator, because a place is a
+    ///     position inside a population you belong to.
+    /// </summary>
+    public int? PeerCountExcludingYou => Detail?.PeerCount is { } count && count > 0 ? count - 1 : null;
+
+    /// <summary>
+    ///     Peers other than you holding the Perfect Game. Null when nothing measured it AND when
+    ///     nobody else holds it — "0 of 93 peers have it" is a clumsy way of saying first, so the
+    ///     caller falls back to the place, which says it properly.
+    /// </summary>
+    public int? OtherPeersWithPg => Detail?.PeerPgCount is { } pg && pg > 1 ? pg - 1 : null;
 }
 
 /// <summary>The band above the fold: what moved, and how far.</summary>

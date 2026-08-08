@@ -228,6 +228,9 @@
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>다른 {0}명은 이 단계를 더 위까지 올라갔습니다.</value>
   </data>
+  <data name="+{0} over P1" xml:space="preserve">
+    <value>P1 대비 +{0}</value>
+  </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
@@ -350,6 +353,12 @@
   </data>
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>배율 상한에서의 Perfect.</value>
+  </data>
+  <data name="A perfect plate on every chart in your pool would add nothing. Not a rounding argument — every plate here carries a modifier of exactly 1.0, so the plate you walked away with never entered the number." xml:space="preserve">
+    <value>당신의 풀에 있는 모든 차트에서 퍼펙트 플레이트를 받아도 오르는 것은 없습니다. 반올림 문제가 아니라 이 시리즈의 모든 플레이트 보정값이 정확히 1.0이므로, 당신이 받은 플레이트는 애초에 점수에 들어가지 않습니다.</value>
+  </data>
+  <data name="A perfect plate on every chart in your pool would add {0} — {1} of it." xml:space="preserve">
+    <value>풀의 모든 차트에서 퍼펙트 플레이트를 받으면 {0}이(가) 늘어납니다 — 전체의 {1}.</value>
   </data>
   <data name="A player connected" xml:space="preserve">
     <value>플레이어가 연결되었습니다</value>
@@ -1941,6 +1950,9 @@
   <data name="Duration (seconds)" xml:space="preserve">
     <value>시간 (초)</value>
   </data>
+  <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
+    <value>각 단계는 50개 차트 모두에 일정한 값을 요구합니다. 위에서 풀을 바꾸면 다른 사다리를 볼 수 있습니다.</value>
+  </data>
   <data name="Earned" xml:space="preserve">
     <value>획득함</value>
   </data>
@@ -2033,6 +2045,9 @@
   </data>
   <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
     <value>Miss는 회복 배율을 0으로 만듭니다. 상한까지 되돌리려면 Perfect {0}개 또는 Great {1}개가 필요합니다. 그전까지는 라이프가 거의 오르지 않는 노트를 밟게 됩니다.</value>
+  </data>
+  <data name="every plate at once, end to end, is worth {0}" xml:space="preserve">
+    <value>모든 플레이트를 끝에서 끝까지 합치면 {0}</value>
   </data>
   <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>폴더별로 모든 플레이트를 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
@@ -3597,6 +3612,9 @@
   <data name="Newest Score" xml:space="preserve">
     <value>최신 점수</value>
   </data>
+  <data name="next at {0}" xml:space="preserve">
+    <value>다음은 {0}</value>
+  </data>
   <data name="next best candidate {0}" xml:space="preserve">
     <value>다음 후보 {0}</value>
   </data>
@@ -3867,6 +3885,9 @@
   <data name="Not set" xml:space="preserve">
     <value>설정 안 함</value>
   </data>
+  <data name="not started" xml:space="preserve">
+    <value>시작 전</value>
+  </data>
   <data name="Not Tagged" xml:space="preserve">
     <value>태그 없음</value>
   </data>
@@ -3914,6 +3935,9 @@
   </data>
   <data name="Nothing" xml:space="preserve">
     <value>없음</value>
+  </data>
+  <data name="nothing above this" xml:space="preserve">
+    <value>이 위로는 없음</value>
   </data>
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>이 두 시리즈 사이에 바뀐 것이 없습니다.</value>
@@ -4076,6 +4100,9 @@
   </data>
   <data name="on any chart board" xml:space="preserve">
     <value>채보 보드 기준</value>
+  </data>
+  <data name="On every chart" xml:space="preserve">
+    <value>차트당</value>
   </data>
   <data name="on this device only. Useless on its own." xml:space="preserve">
     <value>이 기기에만 있습니다. 그 자체로는 쓸모가 없습니다.</value>
@@ -6158,6 +6185,9 @@
   <data name="The Charts" xml:space="preserve">
     <value>채보 목록</value>
   </data>
+  <data name="the charts themselves" xml:space="preserve">
+    <value>차트 자체</value>
+  </data>
   <data name="The charts your PUMBILITY is made of" xml:space="preserve">
     <value>PUMBILITY를 구성하는 채보</value>
   </data>
@@ -6184,6 +6214,9 @@
   </data>
   <data name="The exact numbers" xml:space="preserve">
     <value>정확한 수치</value>
+  </data>
+  <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
+    <value>Phoenix 1 최고 기록을 처음으로 넘은 Phoenix 2 점수</value>
   </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>첫 주간 스냅샷이 아직 없습니다 - 다음 일요일 가져오기 후 하이라이트가 표시됩니다.</value>
@@ -6232,6 +6265,9 @@
   </data>
   <data name="The piugame.com session key is forwarded so you run your own import." xml:space="preserve">
     <value>piugame.com 세션 키가 전달되어 직접 임포트를 실행할 수 있습니다.</value>
+  </data>
+  <data name="The plate, magnified" xml:space="preserve">
+    <value>플레이트, 확대해서</value>
   </data>
   <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
     <value>POST에는 "이 플레이어가 기록을 가져왔다"만 담깁니다. 필요한 것은 직접 가져가세요.</value>
@@ -6415,6 +6451,9 @@
   </data>
   <data name="this mix only" xml:space="preserve">
     <value>이 시리즈만</value>
+  </data>
+  <data name="this mix's formula has no plate term" xml:space="preserve">
+    <value>이 시리즈의 공식에는 플레이트 항이 없습니다</value>
   </data>
   <data name="This one is different." xml:space="preserve">
     <value>이 모드는 다릅니다.</value>
@@ -6628,9 +6667,6 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>상위 {0}%</value>
-  </data>
-  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
-    <value>같은 실력대 상위 {0}% · {1}명 중</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>동급 상위 {0}%</value>
@@ -7130,6 +7166,12 @@
   <data name="What should they change?" xml:space="preserve">
     <value>무엇을 바꿔야 하나요?</value>
   </data>
+  <data name="What this play added to your PUMBILITY" xml:space="preserve">
+    <value>이 플레이가 PUMBILITY에 더한 값</value>
+  </data>
+  <data name="What this score rates, against your level when the session reached it" xml:space="preserve">
+    <value>이 점수의 평가치와, 세션이 여기 도달했을 때의 레벨 차이</value>
+  </data>
   <data name="What to play next" xml:space="preserve">
     <value>다음에 무엇을 플레이할까</value>
   </data>
@@ -7138,6 +7180,12 @@
   </data>
   <data name="What would a clear be worth?" xml:space="preserve">
     <value>클리어하면 얼마일까요?</value>
+  </data>
+  <data name="what your grades add" xml:space="preserve">
+    <value>등급이 더하는 값</value>
+  </data>
+  <data name="what your plates add" xml:space="preserve">
+    <value>플레이트가 더하는 값</value>
   </data>
   <data name="What your rivals are up to" xml:space="preserve">
     <value>라이벌의 최근 활동</value>
@@ -7166,8 +7214,14 @@
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>이 채보의 클리어가 어느 경쟁 레벨에 있는지 보여줍니다.</value>
   </data>
+  <data name="Where this record would land you" xml:space="preserve">
+    <value>이 기록이 닿게 될 위치</value>
+  </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>내 리스트가 커뮤니티와 다른 곳, 그리고 그걸 밀어낸 스킬. 채보를 탭하면 소스별 전체 분석을 볼 수 있습니다.</value>
+  </data>
+  <data name="Where your PUMBILITY comes from" xml:space="preserve">
+    <value>PUMBILITY가 어디서 오는가</value>
   </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>어떤 채보를 플레이했나요?</value>
@@ -7222,6 +7276,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>없어도 동작합니다 — 여러분 자신의 점수에 대해서는요.</value>
+  </data>
+  <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
+    <value>이 세션이 무엇을 움직였는지 계산 중 — 칭호, 풀, 그리고 동급 플레이어 사이에서 각 점수의 위치.</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>예상치를 계산하는 중입니다. 비슷한 레벨의 플레이어 수백 명을 참조하므로 잠시 걸립니다.</value>
@@ -7424,6 +7481,9 @@
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>한 달 중 매주 상위 4개 점수가 반영됩니다.</value>
   </data>
+  <data name="Your charts average" xml:space="preserve">
+    <value>차트 평균</value>
+  </data>
   <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
     <value>가장 가까운 상대는 1×2 이상 크기에서 표시됩니다.</value>
   </data>
@@ -7532,11 +7592,17 @@
   <data name="Your progress" xml:space="preserve">
     <value>내 진행도</value>
   </data>
+  <data name="Your projected top 50" xml:space="preserve">
+    <value>예상 상위 50</value>
+  </data>
   <data name="Your PUMBILITY" xml:space="preserve">
     <value>내 PUMBILITY</value>
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>당신의 Pumbility와 경쟁 레벨, 그리고 가장 가까운 상대.</value>
+  </data>
+  <data name="Your PUMBILITY titles" xml:space="preserve">
+    <value>나의 PUMBILITY 칭호</value>
   </data>
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility, 칭호, 폴더 램프, 플레이어 통계는 이 데이터에서 계산되므로 자동으로 초기화됩니다. 남길 수 없습니다.</value>
@@ -7670,6 +7736,9 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} 클리어</value>
   </data>
+  <data name="{0} a chart is:" xml:space="preserve">
+    <value>차트당 {0}은(는):</value>
+  </data>
   <data name="{0} added as a rival." xml:space="preserve">
     <value>{0} 을(를) 라이벌로 추가했습니다.</value>
   </data>
@@ -7681,6 +7750,12 @@
   </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0}개 들어옴</value>
+  </data>
+  <data name="{0} asks" xml:space="preserve">
+    <value>{0} 요구</value>
+  </data>
+  <data name="{0} at {1}" xml:space="preserve">
+    <value>{1} 등급의 {0}</value>
   </data>
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0}님이 이 커뮤니티의 개설자가 되고 회원님은 관리자가 됩니다. 개설자 자리는 하나뿐이라 직접 되돌릴 수 없습니다.</value>
@@ -7940,6 +8015,9 @@
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>플레이어 {0}명 · {1} 주</value>
   </data>
+  <data name="{0} PUMBILITY remaining" xml:space="preserve">
+    <value>PUMBILITY {0} 남음</value>
+  </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>이번 주 Pump It Up 챌린지 채보 {0}개, 실시간 순위가 있는 데일리 채보, 그리고 월간 PUMBILITY 보드.</value>
   </data>
@@ -7990,6 +8068,9 @@
   </data>
   <data name="{0} top-board charts" xml:space="preserve">
     <value>랭킹 진입 채보 {0}개</value>
+  </data>
+  <data name="{0} total · {1} charts" xml:space="preserve">
+    <value>총 {0} · 차트 {1}개</value>
   </data>
   <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
     <value>{0}개는 여기서 추적, {1}개는 공식 가져오기</value>

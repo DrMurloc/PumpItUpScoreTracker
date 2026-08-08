@@ -1,0 +1,56 @@
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@page "/Pumbility/Pool"
+@rendermode RenderModes.Interactive
+@namespace ScoreTracker.Web.Pages.Progress
+
+@* What the number is made of and what it is worth. The curve and the board are the same
+   fifty charts in two forms, so they share a page — and the top 50 stops being a fold here,
+   because it was one only for sharing a page with the answer
+   (docs/design/pumbility-overhaul.md D7, D14). *@
+
+<PumbilitySectionFrame Active="pool">
+    <Body Context="ctx">
+        @if (ctx.Page.Rails is { Count: > 0 })
+        {
+            <section class="pmb-block">
+                <div class="pmb-block-head">
+                    <h2 class="pmb-block-title">@L["Your PUMBILITY titles"]</h2>
+                </div>
+                <p class="pmb-block-lede">
+                    @L["Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders."]
+                </p>
+                <PumbilityTitleRails Rails="ctx.Page.Rails"></PumbilityTitleRails>
+            </section>
+        }
+
+        <section class="pmb-block">
+            <PumbilityBreakdown Breakdown="ctx.Page.Breakdown" PoolCount="ctx.Page.Pool.Count"></PumbilityBreakdown>
+        </section>
+
+        <section class="pmb-block">
+            <PoolCurve Page="ctx.Page" Charts="ctx.Charts"></PoolCurve>
+        </section>
+
+        <section class="pmb-block">
+            <div class="pmb-block-head">
+                <h2 class="pmb-block-title">@L["Your top 50"]</h2>
+            </div>
+            <p class="pmb-block-lede">@L["The charts your PUMBILITY is made of"]</p>
+            <PoolBoard Page="ctx.Page" Charts="ctx.Charts" OnOpen="ShowChartDetails"></PoolBoard>
+        </section>
+
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="ctx.Mix"></ChartDetailsDialog>
+    </Body>
+</PumbilitySectionFrame>
+
+@code {
+    private Chart? _detailsChart;
+    private bool _detailsOpen;
+
+    private void ShowChartDetails(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
+}

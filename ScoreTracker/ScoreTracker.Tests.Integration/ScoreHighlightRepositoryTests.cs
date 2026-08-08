@@ -94,6 +94,57 @@ public sealed class ScoreHighlightRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TheCompetitiveBaselineAndPumbilityGainSurviveTheRoundTrip()
+    {
+        // A mocked repository cannot catch a column that never reached the model, and these two
+        // are the whole point of the migration that added them.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var chartId = Guid.NewGuid();
+        var repo = new EFScoreHighlightRepository(_fixture.DbContextFactory);
+        await repo.UpsertFlags(MixEnum.Phoenix, userId, new[]
+        {
+            new ScoreHighlightWrite(chartId, sessionId, Now, HighlightFlags.CompetitiveImprover, 23, 23.4,
+                new HighlightDetail(CompetitiveBaseline: 23.0, PumbilityGain: 112))
+        }, CancellationToken.None);
+
+        var row = Assert.Single(await repo.GetHighlightsBySessions(userId, new[] { sessionId },
+            CancellationToken.None));
+
+        Assert.Equal(23.0, row.Detail!.CompetitiveBaseline);
+        Assert.Equal(112, row.Detail.PumbilityGain);
+    }
+
+    [Fact]
+    public async Task ASecondWriteForTheSameScoreKeepsTheDetailTheFirstOneBrought()
+    {
+        // Capture writes a row per pass — the quality pass, then the rating pass — and each
+        // carries only the fields it computed. A later write must not blank what an earlier one
+        // established, which is what the null-coalescing merge is for.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var chartId = Guid.NewGuid();
+        var repo = new EFScoreHighlightRepository(_fixture.DbContextFactory);
+        await repo.UpsertFlags(MixEnum.Phoenix, userId, new[]
+        {
+            new ScoreHighlightWrite(chartId, sessionId, Now, HighlightFlags.ScoreQuality90, 23, 23.4,
+                new HighlightDetail(PeerCount: 94, PeerBetterCount: 5))
+        }, CancellationToken.None);
+        await repo.UpsertFlags(MixEnum.Phoenix, userId, new[]
+        {
+            new ScoreHighlightWrite(chartId, sessionId, Now, HighlightFlags.CompetitiveImprover, 23, 23.4,
+                new HighlightDetail(CompetitiveBaseline: 23.0, PumbilityGain: 112))
+        }, CancellationToken.None);
+
+        var row = Assert.Single(await repo.GetHighlightsBySessions(userId, new[] { sessionId },
+            CancellationToken.None));
+
+        Assert.Equal(94, row.Detail!.PeerCount);
+        Assert.Equal(23.0, row.Detail.CompetitiveBaseline);
+        Assert.Equal(112, row.Detail.PumbilityGain);
+    }
+
+    [Fact]
     public async Task EmptySessionSetReturnsEmpty()
     {
         var repo = new EFScoreHighlightRepository(_fixture.DbContextFactory);
