@@ -664,9 +664,15 @@ tab with a toggle.
 |---|---|
 | `ScoreTracker.Tests/DomainTests` | `ScoringConfigurationTests` — the decomposition sums to `GetScore` on **both** formulas across levels, grades and plates; `FromPlate` is exactly 0 for every Phoenix 1 plate; `PlateHeadroom` is 0 on Phoenix 1 and equals the RG→PG span on Phoenix 2; the ask (`threshold / 50`) and the rung lookup against the real ladders |
 | `ScoreTracker.Tests/ApplicationTests` | `PumbilityPageSagaTests` — a sub-10 chart, a half-double and a broken run each **never** enter the pool and never set the bar, on both mixes; the carryover's two pools exclude them too; the three pool totals; each rail's held rung, next rung and ask; the top-of-ladder and thin-pool rails |
-| `ScoreTracker.Tests.Components` | The frame renders its nav before its data; Phoenix 1 drops the third tab **and** the pool selector; the breakdown's three segments sum to the printed total; the rails are absent on Phoenix 1; the top 50 renders without a `<details>` |
+| `ScoreTracker.Tests.Components` | The breakdown draws its plate segment true to scale; a plateless mix says so rather than drawing an empty rail; an empty pool renders no band; the carryover chips say "would" and skip a ladder not yet reached; the unplayable tile is gone |
 | `ScoreTracker.Tests.Integration` | Nothing new — the change is saga logic over reads that already have coverage |
 | `ScoreTracker.Tests.E2E` | Nothing new. Not a critical whole-workflow path (owner's granularity ladder) |
+
+⚠ **The frame itself has no component test.** Nav-before-data, the Phoenix 1 tab and selector coming
+out, and the redirect behind them are all page-level behaviour needing `IMediator`,
+`IUiSettingsAccessor` and `ICurrentUserAccessor` mocked together, and no page in this section has
+that harness yet. The mix-dependent half is covered one layer down — the saga returns no rails and no
+`PoolTotals` on Phoenix — but the rendering half is currently owner field-testing, not a ratchet.
 
 ### 6.4 Build order
 

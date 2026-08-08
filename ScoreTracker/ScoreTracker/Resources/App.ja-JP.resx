@@ -351,6 +351,12 @@
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>倍率上限での Perfect。</value>
   </data>
+  <data name="A perfect plate on every chart in your pool would add nothing. Not a rounding argument — every plate here carries a modifier of exactly 1.0, so the plate you walked away with never entered the number." xml:space="preserve">
+    <value>プール内の全譜面でパーフェクトプレートを取っても、増えるものはありません。四捨五入の問題ではなく、このバージョンではすべてのプレート係数が正確に1.0なので、取ったプレートはそもそもスコアに入っていません。</value>
+  </data>
+  <data name="A perfect plate on every chart in your pool would add {0} — {1} of it." xml:space="preserve">
+    <value>プール内の全譜面でパーフェクトプレートを取ると {0} 増えます — 全体の {1}。</value>
+  </data>
   <data name="A player connected" xml:space="preserve">
     <value>プレイヤーが接続しました</value>
   </data>
@@ -2038,6 +2044,9 @@
   <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
     <value>Miss は回復倍率をゼロにします。上限まで戻すには Perfect {0} 回、または Great {1} 回かかります。それまではほとんど体力の増えないノートを叩くことになります。</value>
   </data>
+  <data name="every plate at once, end to end, is worth {0}" xml:space="preserve">
+    <value>全プレートを端から端まで合わせて {0}</value>
+  </data>
   <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>フォルダごとに全プレートを積み上げ、未クリア／未プレイの区分でフォルダ総数も表示。</value>
   </data>
@@ -2494,6 +2503,9 @@
   </data>
   <data name="held by {0} of titled players" xml:space="preserve">
     <value>称号持ちプレイヤーの{0}が保有</value>
+  </data>
+  <data name="held since {0}" xml:space="preserve">
+    <value>{0} から保持</value>
   </data>
   <data name="Help" xml:space="preserve">
     <value>ヘルプ</value>
@@ -3594,6 +3606,9 @@
   <data name="Newest Score" xml:space="preserve">
     <value>最新のスコア</value>
   </data>
+  <data name="next at {0}" xml:space="preserve">
+    <value>次は {0}</value>
+  </data>
   <data name="next best candidate {0}" xml:space="preserve">
     <value>次点の候補 {0}</value>
   </data>
@@ -3861,6 +3876,9 @@
   <data name="Not set" xml:space="preserve">
     <value>未設定</value>
   </data>
+  <data name="not started" xml:space="preserve">
+    <value>未開始</value>
+  </data>
   <data name="Not Tagged" xml:space="preserve">
     <value>タグなし</value>
   </data>
@@ -3909,6 +3927,9 @@
   </data>
   <data name="Nothing" xml:space="preserve">
     <value>なし</value>
+  </data>
+  <data name="nothing above this" xml:space="preserve">
+    <value>これより上はなし</value>
   </data>
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>この2つのバージョンの間に変更はありません。</value>
@@ -4071,6 +4092,9 @@
   </data>
   <data name="on any chart board" xml:space="preserve">
     <value>譜面ボード基準</value>
+  </data>
+  <data name="On every chart" xml:space="preserve">
+    <value>譜面ごと</value>
   </data>
   <data name="on this device only. Useless on its own." xml:space="preserve">
     <value>このデバイスのみ。それ単体では役に立ちません。</value>
@@ -6157,6 +6181,9 @@
   <data name="The Charts" xml:space="preserve">
     <value>課題譜面</value>
   </data>
+  <data name="the charts themselves" xml:space="preserve">
+    <value>譜面そのもの</value>
+  </data>
   <data name="The charts your PUMBILITY is made of" xml:space="preserve">
     <value>PUMBILITY を構成する譜面</value>
   </data>
@@ -6228,6 +6255,9 @@
   </data>
   <data name="The piugame.com session key is forwarded so you run your own import." xml:space="preserve">
     <value>piugame.com のセッションキーが転送され、自分でインポートを実行できます。</value>
+  </data>
+  <data name="The plate, magnified" xml:space="preserve">
+    <value>プレート、拡大</value>
   </data>
   <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
     <value>POST には「このプレイヤーが取り込んだ」だけが入ります。必要なものは取りに来てください。</value>
@@ -6412,6 +6442,9 @@
   <data name="this mix only" xml:space="preserve">
     <value>このバージョンのみ</value>
   </data>
+  <data name="this mix's formula has no plate term" xml:space="preserve">
+    <value>このバージョンの式にプレート項はありません</value>
+  </data>
   <data name="This one is different." xml:space="preserve">
     <value>これだけは別物です。</value>
   </data>
@@ -6477,6 +6510,9 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>3年半のPumpを、ひとつのリキャップに。あなたの記録を見に行こう。いいところはスクショで。</value>
+  </data>
+  <data name="Three ladders run at once. Each asks a flat value of every one of your fifty charts." xml:space="preserve">
+    <value>三つのラダーが同時に進みます。それぞれ50譜面すべてに一定の値を求めます。</value>
   </data>
   <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
     <value>3つのソースが各譜面に投票します。重みの大きいソースほど譜面を大きく動かします。</value>
@@ -7134,6 +7170,12 @@
   <data name="What would a clear be worth?" xml:space="preserve">
     <value>クリアするといくら？</value>
   </data>
+  <data name="what your grades add" xml:space="preserve">
+    <value>グレードが加える分</value>
+  </data>
+  <data name="what your plates add" xml:space="preserve">
+    <value>プレートが加える分</value>
+  </data>
   <data name="What your rivals are up to" xml:space="preserve">
     <value>ライバルの最近の動き</value>
   </data>
@@ -7161,8 +7203,14 @@
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>この譜面のクリアがどの競技レベルにあるかを示します。</value>
   </data>
+  <data name="Where this record would land you" xml:space="preserve">
+    <value>この記録が届く位置</value>
+  </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>あなたのリストとコミュニティの違い、そしてそれを押したスキル。譜面をタップするとソース別の完全な内訳が見られます。</value>
+  </data>
+  <data name="Where your PUMBILITY comes from" xml:space="preserve">
+    <value>PUMBILITYはどこから来るか</value>
   </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>どの譜面をプレイしましたか？</value>
@@ -7299,6 +7347,9 @@
   <data name="You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language." xml:space="preserve">
     <value>あなたは作成者です。コミュニティの譲渡、削除、公開設定の変更、デフォルト管理者権限と通知言語の設定は作成者だけができます。</value>
   </data>
+  <data name="You are {0} short across the pool." xml:space="preserve">
+    <value>プール全体で {0} 足りません。</value>
+  </data>
   <data name="You beat {0}% of Peers on this." xml:space="preserve">
     <value>この譜面で同レベル帯の{0}%に勝っています。</value>
   </data>
@@ -7425,6 +7476,9 @@
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>月内の各週で上位4件のスコアが対象です。</value>
   </data>
+  <data name="Your charts average" xml:space="preserve">
+    <value>譜面の平均</value>
+  </data>
   <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
     <value>最も近いライバルは1×2以上のサイズで表示されます。</value>
   </data>
@@ -7532,6 +7586,9 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>あなたのPumbilityと競技レベル、そして最も近いライバル。</value>
+  </data>
+  <data name="Your PUMBILITY titles" xml:space="preserve">
+    <value>あなたのPUMBILITY称号</value>
   </data>
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Pumbility・称号・フォルダランプ・プレイヤー統計はこれらから計算されるため、自動的にリセットされます。残すことはできません。</value>
@@ -7665,6 +7722,9 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} クリア</value>
   </data>
+  <data name="{0} a chart is a {1} at {2}." xml:space="preserve">
+    <value>譜面ごと {0} は {2} の {1} です。</value>
+  </data>
   <data name="{0} added as a rival." xml:space="preserve">
     <value>{0} をライバルに追加しました。</value>
   </data>
@@ -7676,6 +7736,9 @@
   </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} 件が入った</value>
+  </data>
+  <data name="{0} asks" xml:space="preserve">
+    <value>{0} が求める値</value>
   </data>
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0} がこのコミュニティの作成者になり、あなたは管理者になります。作成者は 1 人だけなので、自分では戻せません。</value>
@@ -7718,6 +7781,9 @@
   </data>
   <data name="{0} charts have no note count recorded, so they aren't compared." xml:space="preserve">
     <value>{0} 件の譜面はノーツ数が未記録のため、比較していません。</value>
+  </data>
+  <data name="{0} charts in the pool" xml:space="preserve">
+    <value>プールに {0} 譜面</value>
   </data>
   <data name="{0} charts match the community tier" xml:space="preserve">
     <value>{0}譜面がコミュニティの評価と一致</value>
@@ -7986,6 +8052,9 @@
   <data name="{0} top-board charts" xml:space="preserve">
     <value>ランキング入り譜面{0}件</value>
   </data>
+  <data name="{0} total · {1} charts" xml:space="preserve">
+    <value>合計 {0} · {1} 譜面</value>
+  </data>
   <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
     <value>{0} 個はここで追跡、{1} 個は公式インポート</value>
   </data>
@@ -8036,6 +8105,9 @@
   </data>
   <data name="~{0} more charts in this folder" xml:space="preserve">
     <value>このフォルダーであと約{0}譜面</value>
+  </data>
+  <data name="— none yet —" xml:space="preserve">
+    <value>— まだなし —</value>
   </data>
   <data name="— optional" xml:space="preserve">
     <value>— 任意</value>

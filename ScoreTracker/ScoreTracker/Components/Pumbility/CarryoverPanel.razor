@@ -71,7 +71,7 @@
                     <span class="pmb-chip">
                         <span class="pmb-chip-t">@projected.Title</span>
                         <span class="pmb-chip-m">
-                            @string.Format(L["{0} {1}"], PoolLabel(projected.Pool), projected.Value.ToString("N0"))
+                            @PoolLabel(projected.Pool) @projected.Value.ToString("N0")
                             @if (projected.Next != null)
                             {
                                 <text> · </text>
