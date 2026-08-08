@@ -30,4 +30,12 @@ internal interface IImportResultRepository
     ///     because a run that dies before its first save legitimately has none.
     /// </summary>
     Task AttachSession(Guid id, Guid sessionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     A player's most recent runs, newest first. ScoreCount comes back null here — the count
+    ///     lives on the Ledger's session, and a vertical never joins onto another's tables; the
+    ///     handler fills it in through a published contract.
+    /// </summary>
+    Task<IReadOnlyList<ImportAttemptRecord>> GetRecent(Guid userId, int take,
+        CancellationToken cancellationToken = default);
 }
