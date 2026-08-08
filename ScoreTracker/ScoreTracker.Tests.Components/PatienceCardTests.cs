@@ -53,18 +53,18 @@ public sealed class PatienceCardTests : ComponentTestBase
     }
 
     [Fact]
-    public void ThePadRunsOneOfTheRealStepPatterns()
+    public void ThePadEntersTheCycleAtOneOfTheRealPatterns()
     {
-        // The pad steps a chart, not a decorative sweep, so the pattern has to reach the markup
-        // — the schedule itself lives in CSS.
+        // All four patterns run back to back as one CSS cycle; what the markup carries is where
+        // that cycle starts. The schedule itself lives in CSS.
         _random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
         var pad = Render("Anything.").Find(".patience-pad");
 
-        Assert.Contains("patience-mrun", pad.ClassList);
+        Assert.Contains("patience-from-mrun", pad.ClassList);
     }
 
     [Fact]
-    public void ThePatternComesFromTheSameSeamAsThePhrase()
+    public void TheEntryPointComesFromTheSameSeamAsThePhrase()
     {
         _random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
         var first = Render("Anything.").Find(".patience-pad").ClassName;

@@ -13492,128 +13492,142 @@ details.pmb-fold > summary:focus-visible {
 .patience-dl { grid-area: 3 / 1; }
 .patience-dr { grid-area: 3 / 3; }
 
-/* Real step patterns, one picked per load (owner, 2026-08-08). Every one starts AND ends on
-   the bottom-left arrow, which is what lets a cycle repeat without a seam — the last step of
-   a pass and the first step of the next are the same foot.
+/* The four step patterns, chained into ONE cycle rather than picked between (owner,
+   2026-08-08). Every pattern begins and ends on the bottom-left arrow, so they run back to
+   back with no seam — and a single cycle covering all four is what lets the pad move through
+   them without JavaScript, which CSS cannot otherwise be made to do at random.
 
-   A panel that lights ONCE gets the shared flash keyframe plus a delay. A panel that lights
-   more than once gets a keyframe of its own, spelling out every beat.
+   Randomness is the ENTRY POINT: the card starts the cycle at one of the four pattern
+   boundaries by way of a negative delay, so which pattern you see first varies per load while
+   the rotation after it is fixed. A panel's whole schedule lives in its own keyframe, because
+   two animations on one element do not merge — they compete, and for any property both touch
+   the last one wins, which is what silently ate half of every pattern when this was five
+   delays instead of five keyframes.
 
-   ⚠ It cannot instead declare the shared keyframe twice with two delays, which is the obvious
-   economy and is wrong: two animations on one element do not merge, they compete, and for any
-   property both of them touch the LAST one in the list wins outright. Since these keyframes
-   span the whole cycle, the second instance overrode the first at every moment and only its
-   delay was ever visible — M run collapsed to a right-to-left sweep and Spin's centre lit once
-   instead of four times.
+   Generated, not hand-counted: 28 beats at 100/28% each, lit for the first nine tenths of the
+   beat. The chain reads
+   M run · Spin · Standard run · Cross overs. */
 
-   The flash lasts exactly one beat, so its width is a fraction of the cycle — hence one shared
-   keyframe per cycle length rather than one overall. */
-@keyframes patience-flash-8 {
-    0% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    11.25% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    12.5%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+/* TL lights on beats 1, 7, 10, 18, 27. */
+@keyframes patience-chain-ul {
+    0% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    3.5714% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    6.7857% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    7.1429% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    25.0000% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    28.2143% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    28.5714% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    35.7143% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    38.9286% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    39.2857% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    64.2857% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    67.5000% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    67.8571% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    96.4286% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    99.6429% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    100.0000% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
 }
 
-@keyframes patience-flash-6 {
-    0% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    15% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    16.667%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+/* TR lights on beats 3, 5, 12, 19, 24. */
+@keyframes patience-chain-ur {
+    0% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    10.7143% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    13.9286% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    14.2857% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    17.8571% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    21.0714% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    21.4286% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    42.8571% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    46.0714% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    46.4286% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    67.8571% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    71.0714% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    71.4286% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    85.7143% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    88.9286% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    89.2857% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
 }
 
-/* Keyframes for the panels that light more than once. Beat i of an eight-step cycle runs from
-   i × 12.5%, and of a six-step cycle from i × 16.667%; the panel is lit for the first nine
-   tenths of its beat and dark the rest of the cycle. */
-@keyframes patience-mrun-ul { /* beats 1 and 7 */
-    0%, 12.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    12.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    23.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    25%, 87.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    87.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    98.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+/* C lights on beats 2, 6, 9, 11, 13, 15, 17, 20, 23, 26. */
+@keyframes patience-chain-ct {
+    0% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    7.1429% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    10.3571% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    10.7143% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    21.4286% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    24.6429% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    25.0000% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    32.1429% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    35.3571% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    35.7143% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    39.2857% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    42.5000% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    42.8571% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    46.4286% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    49.6429% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    50.0000% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    53.5714% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    56.7857% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    57.1429% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    60.7143% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    63.9286% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    64.2857% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    71.4286% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    74.6429% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    75.0000% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    82.1429% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    85.3571% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    85.7143% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    92.8571% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    96.0714% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    96.4286% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
 }
 
-@keyframes patience-mrun-ct { /* beats 2 and 6 */
-    0%, 24.99% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    25% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    36.25% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    37.5%, 74.99% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    75% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    86.25% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    87.5%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+/* BL lights on beats 0, 8, 16, 22. */
+@keyframes patience-chain-dl {
+    0.0000% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    3.2143% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    3.5714% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    28.5714% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    31.7857% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    32.1429% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    57.1429% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    60.3571% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    60.7143% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    78.5714% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    81.7857% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    82.1429% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
 }
 
-@keyframes patience-mrun-ur { /* beats 3 and 5 */
-    0%, 37.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    37.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    48.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    50%, 62.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    62.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    73.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    75%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+/* BR lights on beats 4, 14, 21, 25. */
+@keyframes patience-chain-dr {
+    0% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    14.2857% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    17.5000% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    17.8571% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    50.0000% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    53.2143% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    53.5714% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    75.0000% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    78.2143% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    78.5714% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    89.2857% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    92.5000% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    92.8571% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
 }
 
-@keyframes patience-spin-ct { /* beats 1, 3, 5 and 7 — the centre carries this whole pattern */
-    0%, 12.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    12.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    23.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    25%, 37.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    37.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    48.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    50%, 62.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    62.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    73.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    75%, 87.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    87.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    98.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-}
+.patience-pad .patience-ul { animation-name: patience-chain-ul; }
+.patience-pad .patience-ur { animation-name: patience-chain-ur; }
+.patience-pad .patience-ct { animation-name: patience-chain-ct; }
+.patience-pad .patience-dl { animation-name: patience-chain-dl; }
+.patience-pad .patience-dr { animation-name: patience-chain-dr; }
+.patience-pad .patience-panel { animation-duration: calc(var(--patience-beat) * 28); }
 
-@keyframes patience-six-ct { /* beats 1 and 4 of six — shared by the standard run and cross overs */
-    0%, 16.66% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    16.667% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    31.667% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    33.333%, 66.66% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-    66.667% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
-    81.667% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
-    83.333%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
-}
-
-/* M run — up the left, through the middle, down the right, and back the way it came.
-   BL · TL · C · TR · BR · TR · C · TL */
-.patience-mrun .patience-panel { animation-name: patience-flash-8; animation-duration: calc(var(--patience-beat) * 8); }
-.patience-mrun .patience-dl { animation-delay: 0s; }
-.patience-mrun .patience-ul { animation-name: patience-mrun-ul; }
-.patience-mrun .patience-ct { animation-name: patience-mrun-ct; }
-.patience-mrun .patience-ur { animation-name: patience-mrun-ur; }
-.patience-mrun .patience-dr { animation-delay: calc(var(--patience-beat) * 4); }
-
-/* Spin — back to the centre between every corner.
-   BL · C · TL · C · TR · C · BR · C */
-.patience-spin .patience-panel { animation-name: patience-flash-8; animation-duration: calc(var(--patience-beat) * 8); }
-.patience-spin .patience-dl { animation-delay: 0s; }
-.patience-spin .patience-ct { animation-name: patience-spin-ct; }
-.patience-spin .patience-ul { animation-delay: calc(var(--patience-beat) * 2); }
-.patience-spin .patience-ur { animation-delay: calc(var(--patience-beat) * 4); }
-.patience-spin .patience-dr { animation-delay: calc(var(--patience-beat) * 6); }
-
-/* Standard run — the ordinary way round.
-   BL · C · TL · TR · C · BR */
-.patience-run .patience-panel { animation-name: patience-flash-6; animation-duration: calc(var(--patience-beat) * 6); }
-.patience-run .patience-dl { animation-delay: 0s; }
-.patience-run .patience-ct { animation-name: patience-six-ct; }
-.patience-run .patience-ul { animation-delay: calc(var(--patience-beat) * 2); }
-.patience-run .patience-ur { animation-delay: calc(var(--patience-beat) * 3); }
-.patience-run .patience-dr { animation-delay: calc(var(--patience-beat) * 5); }
-
-/* Cross overs — every step lands on the far side.
-   BL · C · TR · BR · C · TL */
-.patience-cross .patience-panel { animation-name: patience-flash-6; animation-duration: calc(var(--patience-beat) * 6); }
-.patience-cross .patience-dl { animation-delay: 0s; }
-.patience-cross .patience-ct { animation-name: patience-six-ct; }
-.patience-cross .patience-ur { animation-delay: calc(var(--patience-beat) * 2); }
-.patience-cross .patience-dr { animation-delay: calc(var(--patience-beat) * 3); }
-.patience-cross .patience-ul { animation-delay: calc(var(--patience-beat) * 5); }
+/* Where the cycle starts. A negative delay drops the pad straight into that pattern. */
+.patience-from-mrun .patience-panel { animation-delay: 0s; }
+.patience-from-spin .patience-panel { animation-delay: calc(var(--patience-beat) * -8); }
+.patience-from-run .patience-panel { animation-delay: calc(var(--patience-beat) * -16); }
+.patience-from-cross .patience-panel { animation-delay: calc(var(--patience-beat) * -22); }
 
 .patience-line {
     font-family: var(--font-display);
