@@ -250,6 +250,20 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
    avatar column entirely. That reclaims 44px on a phone and makes a note unmistakable
    for a comment at a glance. */
 .cmt.note { grid-template-columns: minmax(0,1fr); }
+/* ⚠ The same rule the composer needs. With the avatar suppressed but the 28px track left in
+   place, the field lands in it and the whole control renders one character wide with its
+   buttons stacked — which is exactly what shipped on the Notes scope. */
+.addline.bare { grid-template-columns: minmax(0,1fr); }
+
+/* Removal asks first, and asks in place. Inline rather than a dialog for the same reason the
+   rules card is: this renders inside the details dialog, and a MudDialog inside one orphans its
+   scrim. The comment stays on screen while you decide — the entire question is whether THIS is
+   the one you meant, and a modal that covers it cannot answer that. */
+.confirm { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 8px;
+           padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(242,85,90,.45);
+           background: rgba(242,85,90,.09); font-size: 12.5px; }
+.confirm .q { color: var(--mix-ink); }
+.confirm .sub { color: var(--mix-ink-muted); font-size: 11.5px; width: 100%; }
 .privately { font-size: 11px; color: var(--mix-ink-muted); display: flex; align-items: center; gap: 5px; }
 .privately::before { content: "🔒"; font-size: 10px; }
 .emptynote { padding: 22px 16px 26px; text-align: center; color: var(--mix-ink-muted); font-size: 12.5px; }
@@ -629,8 +643,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
           <button class="chip">Murloc Lab</button>
           <button class="chip">NYC Pump</button>
         </div>
-        <div class="addline">
-          <span class="av">E</span>
+        <div class="addline bare">
           <div class="line-in">Add a note…</div>
         </div>
         <div class="clist">
@@ -673,7 +686,30 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
       </div>
     </div>
     <div class="note">
-      <h3 style="margin-top:0">Personal notes are an audience of one</h3>
+      <h3 style="margin-top:0">Removal asks first, and asks in place</h3>
+      <div class="app" style="margin:0 0 14px">
+        <div style="background:var(--mix-surface);border:1px solid var(--mix-lines);border-radius:8px;overflow:hidden">
+          <div class="cmt" style="border-top:none">
+            <div class="av">K</div>
+            <div>
+              <div class="chead"><span class="cname">kimchi_stomper 🇰🇷</span><span class="cmeta">2 hours ago</span></div>
+              <div class="cbody"><p>이 채보 만든 사람 진짜…</p></div>
+              <div class="confirm">
+                <span class="q">Remove this comment?</span>
+                <span class="spacer"></span>
+                <button class="btn ghost">Cancel</button>
+                <button class="btn danger">Remove</button>
+                <span class="sub">It stops showing, and the thread keeps its shape. The author is not told.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p>The comment <b>stays on screen</b> while you decide, and the confirm sits under it rather than over it. The whole question a moderator is answering is "is <em>this</em> the one I meant" — a modal that covers the comment cannot answer it, and a <code>MudDialog</code> inside the details dialog orphans its scrim anyway.</p>
+      <p>One line of consequence under the buttons, because removal is not obvious in either direction: it is soft, so nothing is destroyed, but nobody gets told either. <b>Author delete gets the same treatment</b> — same control, different wording.</p>
+      <div class="flag"><b>Only the shield confirms twice.</b> Voting, replying and editing are all reversible in one tap and asking about them would train the reflex that makes a confirm useless.</div>
+
+      <h3 style="margin-top:22px">Personal notes are an audience of one</h3>
       <p>They are not a separate feature bolted beside comments — they are the same row with <code>Audience&nbsp;=&nbsp;Private</code>, which is exactly what the rail was already for. Same table, same aggregate, same parser, same link trust, same 500&nbsp;characters, same purge manifest. What changes is four invariants on the aggregate:</p>
       <ul>
         <li><b>Never translated.</b> Not "not yet" — never. Slice&nbsp;4's submit step skips <code>Private</code>, so a note costs nothing and no badge ever renders on one.</li>
@@ -717,7 +753,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
         </div>
       </div>
 
-      <div class="flag"><b>A deleted comment only leaves a stub when a reply hangs off it</b> — otherwise the thread would fill with headstones for comments nobody answered. Three actors, three wordings: <i>Deleted</i> (the author), <i>Removed by the site admin</i>, <i>Comment from a deleted user</i> (account purge).</div>
+      <div class="flag"><b>A deleted comment only leaves a stub while something living hangs off it.</b> A deleted <em>reply</em> renders nothing at all — it is holding nothing open, so a stub for it is a headstone in the middle of somebody else's conversation. A deleted <em>root</em> leaves one only while at least one surviving reply still needs somewhere to hang from; once the last of them goes, the whole thread disappears. Three actors, three wordings: <i>Deleted</i> (the author), <i>Removed by the site admin</i>, <i>Comment from a deleted user</i> (account purge).</div>
       <div class="flag"><b>Account purge can't use the manifest here.</b> <code>UserDataPurge</code> issues a blanket <code>DELETE … WHERE UserId</code>, which orphans every reply to a purged root — and <code>AccountPurgeTests</code> counts rows, so it would pass green while the tab throws. <code>CommentEntity</code> is exempt with a reason (as <code>ToolEntity</code> already is) and the vertical tombstones roots-with-replies itself: <code>UserId</code> to <code>Guid.Empty</code>, text cleared, <b>revisions deleted by comment id</b> — they carry no <code>UserId</code>, so nothing else would reach them, and they hold the exact text the purge exists to remove.</div>
       <div class="flag"><b>Untrusted links are marked before you click</b>, not just on the way out — the orange treatment on the third URL above. Trusted hosts (YouTube, Reddit, piugame, PIU Center, Pumpout, and every <em>public</em> Community Tool) open straight through. Link trust ships in Slice 2 with the parser; see §04.</div>
       <div class="flag"><b>Bare URLs are long, and a 500-character comment can be one 300-character link.</b> That is what <code>overflow-wrap: anywhere</code> on the comment body is for — without it a single URL decides the dialog's width and the whole thing scrolls sideways on a phone. It is now the most likely thing to fail the §07 measurement.</div>

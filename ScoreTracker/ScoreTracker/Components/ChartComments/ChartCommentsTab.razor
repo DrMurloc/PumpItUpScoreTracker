@@ -85,9 +85,10 @@ else
         else
         {
             <CommentRow Comment="root" IsNote="IsNotes" CanInteract="CurrentUser.IsLoggedIn"
-                        IsFocused="@(FocusCommentId == root.Id)"
-                        OnVote="Vote" OnReply="StartReply" OnEdit="StartEdit" OnDelete="Delete"
-                        OnRemove="Remove" OnUntrustedLink="ShowInterstitial" @key="root.Id"></CommentRow>
+                        IsFocused="@(FocusCommentId == root.Id)" Confirming="ConfirmingFor(root.Id)"
+                        OnVote="Vote" OnReply="StartReply" OnEdit="StartEdit" OnDelete="AskToDelete"
+                        OnRemove="AskToRemove" OnConfirm="Confirmed" OnCancelConfirm="() => _confirming = null"
+                        OnUntrustedLink="ShowInterstitial" @key="root.Id"></CommentRow>
         }
         @if (_replyingTo == root.Id)
         {
@@ -105,8 +106,9 @@ else
             else
             {
                 <CommentRow Comment="reply" IsReply="true" CanInteract="CurrentUser.IsLoggedIn"
-                            IsFocused="@(FocusCommentId == reply.Id)"
-                            OnVote="Vote" OnEdit="StartEdit" OnDelete="Delete" OnRemove="Remove"
+                            IsFocused="@(FocusCommentId == reply.Id)" Confirming="ConfirmingFor(reply.Id)"
+                            OnVote="Vote" OnEdit="StartEdit" OnDelete="AskToDelete" OnRemove="AskToRemove"
+                            OnConfirm="Confirmed" OnCancelConfirm="() => _confirming = null"
                             OnUntrustedLink="ShowInterstitial" @key="reply.Id"></CommentRow>
             }
         }
@@ -150,6 +152,12 @@ else
 
     .cmt-compose-reply {
         padding-left: 40px;
+    }
+
+    /* No avatar means no avatar column. Leaving the 28px track in place puts the field in it,
+       which is what the Notes composer was doing — one character wide, buttons stacked. */
+    .cmt-compose-bare {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .cmt-compose-main {
@@ -332,6 +340,27 @@ else
         padding-left: 10px;
     }
 
+    /* Under the comment, not over it. Error-coloured because removal is the one thing on this
+       surface that takes somebody else's words off the page. */
+    .cmt-confirm {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 7px;
+        padding: 7px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--mud-palette-error);
+        background: var(--mud-palette-error-hover);
+        font-size: .78rem;
+    }
+
+    .cmt-confirm-sub {
+        width: 100%;
+        font-size: .7rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
     .cmt-removed {
         font-size: .78rem;
         font-style: italic;
@@ -384,6 +413,7 @@ else
     private CommentAudience _audience = CommentAudience.Public;
     private CommentSort _sort = CommentSort.Top;
     private Guid? _replyingTo;
+    private (Guid Id, CommentRow.CommentAction Action)? _confirming;
     private Guid _editing = Guid.Empty;
     private string? _editingText;
     private int _take = PageSize;
@@ -532,14 +562,32 @@ else
         return Dispatch(new VoteOnCommentCommand(comment.Id, !comment.ViewerVoted));
     }
 
-    private Task Delete(CommentRecord comment)
+    /// <summary>
+    ///     Both destructive actions ask first, and ask on the row rather than in a dialog over it.
+    ///     Nothing is sent until the second tap.
+    /// </summary>
+    private void AskToDelete(CommentRecord comment)
     {
-        return Dispatch(new DeleteCommentCommand(comment.Id));
+        _confirming = (comment.Id, CommentRow.CommentAction.Delete);
     }
 
-    private Task Remove(CommentRecord comment)
+    private void AskToRemove(CommentRecord comment)
     {
-        return Dispatch(new RemoveCommentCommand(comment.Id));
+        _confirming = (comment.Id, CommentRow.CommentAction.Remove);
+    }
+
+    private Task Confirmed((CommentRecord Comment, CommentRow.CommentAction Action) request)
+    {
+        _confirming = null;
+
+        return request.Action == CommentRow.CommentAction.Remove
+            ? Dispatch(new RemoveCommentCommand(request.Comment.Id))
+            : Dispatch(new DeleteCommentCommand(request.Comment.Id));
+    }
+
+    private CommentRow.CommentAction? ConfirmingFor(Guid commentId)
+    {
+        return _confirming is { } pending && pending.Id == commentId ? pending.Action : null;
     }
 
     private Task AcceptTerms(bool consentedToPublicIdentity)
@@ -552,7 +600,10 @@ else
     ///     so its message is the message — anything else would be an exception string on a
     ///     player's screen, which DiagnosticExposureTests exists to prevent.
     /// </summary>
-    private async Task Dispatch(IRequest request)
+    // Generic rather than taking IRequest: with the parameter typed as the interface, MediatR
+    // binds Send<IRequest> and the concrete command type is erased at the call. The handler is
+    // still resolved by runtime type either way, but nothing downstream can see what was sent.
+    private async Task Dispatch<TRequest>(TRequest request) where TRequest : IRequest
     {
         try
         {

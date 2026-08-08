@@ -1786,6 +1786,9 @@
   <data name="Delete the data I selected" xml:space="preserve">
     <value>Elimina i dati selezionati</value>
   </data>
+  <data name="Delete this comment?" xml:space="preserve">
+    <value>Eliminare questo commento?</value>
+  </data>
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>Eliminare questa comunità e tutto il suo contenuto? Non può essere annullato.</value>
   </data>
@@ -2951,6 +2954,12 @@
   </data>
   <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
     <value>Parte privato e pienamente funzionante. Puoi cambiare tutto questo più avanti.</value>
+  </data>
+  <data name="It stops showing, and the thread keeps its shape. The author is not told." xml:space="preserve">
+    <value>Smette di comparire e il thread mantiene la sua forma. Chi l’ha scritto non viene avvisato.</value>
+  </data>
+  <data name="It stops showing. Anyone who replied keeps their reply." xml:space="preserve">
+    <value>Smette di comparire. Chi ha risposto mantiene la sua risposta.</value>
   </data>
   <data name="It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest." xml:space="preserve">
     <value>Probabilmente è stata interrotta da un aggiornamento del sito. Quello che ha salvato è già sul tuo account: importare di nuovo recupera il resto.</value>
@@ -5239,6 +5248,9 @@
   </data>
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>Rimuovine una con /piu unregister</value>
+  </data>
+  <data name="Remove this comment?" xml:space="preserve">
+    <value>Rimuovere questo commento?</value>
   </data>
   <data name="Remove This Score" xml:space="preserve">
     <value>Rimuovi questo punteggio</value>

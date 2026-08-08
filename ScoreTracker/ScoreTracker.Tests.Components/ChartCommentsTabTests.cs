@@ -9,8 +9,10 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Moq;
+using MudBlazor;
 using MudBlazor.Services;
 using ScoreTracker.ChartComments.Contracts;
+using ScoreTracker.ChartComments.Contracts.Commands;
 using ScoreTracker.ChartComments.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -128,6 +130,29 @@ public sealed class ChartCommentsTabTests : TestContext
     }
 
     [Fact]
+    public async Task ANoteComposerDropsTheAvatarColumnAndNotJustTheAvatar()
+    {
+        // Shipped broken: the grid declares two columns, the avatar was suppressed, and the field
+        // landed in the 28px track — one character wide, buttons stacked underneath it.
+        var page = Render();
+
+        await page.Find("[data-testid='cmt-scope-Notes']").ClickAsync(new MouseEventArgs());
+
+        var composer = page.Find(".cmt-compose");
+        Assert.Contains("cmt-compose-bare", composer.ClassName);
+        Assert.Empty(composer.QuerySelectorAll(".cmt-avatar"));
+    }
+
+    [Fact]
+    public void ThePublicComposerKeepsItsAvatarColumn()
+    {
+        var composer = Render().Find(".cmt-compose");
+
+        Assert.DoesNotContain("cmt-compose-bare", composer.ClassName);
+        Assert.NotEmpty(composer.QuerySelectorAll(".cmt-avatar"));
+    }
+
+    [Fact]
     public void ThePublicComposerSaysWhereItIsGoingAndUnderWhoseName()
     {
         var page = Render();
@@ -136,6 +161,12 @@ public sealed class ChartCommentsTabTests : TestContext
 
         Assert.Contains("Posting to Public as ERRLENA", page.Markup);
     }
+
+    // ----- who gets which control ---------------------------------------------------------------
+    //
+    // The saga decides ViewerMayModerate (CommentSagaTests owns that half). These pin the other
+    // half: that the row draws the shield when and only when it is told to, and that nothing else
+    // on the row is a way into a moderation action.
 
     [Fact]
     public void SomebodyElsesCommentCarriesNoMenuAtAll()
@@ -147,7 +178,107 @@ public sealed class ChartCommentsTabTests : TestContext
 
         Assert.NotEmpty(page.FindAll(".cmt-foot .cmt-act"));
         Assert.Empty(page.FindAll("[data-testid^='own-']"));
-        Assert.DoesNotContain("Shield", page.Markup, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(page.FindComponents<MudMenu>().Where(m => m.Instance.Icon == Icons.Material.Filled.Shield));
+    }
+
+    [Fact]
+    public void TheShieldRendersOnlyWhenTheRecordSaysSo()
+    {
+        Page(Comment("moderatable", mayModerate: true), Comment("not moderatable"));
+        var page = Render();
+
+        var shields = page.FindComponents<MudMenu>()
+            .Where(m => m.Instance.Icon == Icons.Material.Filled.Shield)
+            .ToArray();
+
+        Assert.Single(shields);
+    }
+
+    [Fact]
+    public void ASignedOutReaderIsOfferedNoActionOnAnybodysComment()
+    {
+        _currentUser.Setup(u => u.IsLoggedIn).Returns(false);
+        Page(Comment("public and readable"));
+
+        var page = Render();
+
+        // Vote is rendered but inert, Reply is not rendered, and there is no menu of any kind.
+        Assert.All(page.FindAll(".cmt-foot button"), b => Assert.True(b.HasAttribute("disabled")));
+        Assert.Empty(page.FindAll("[data-testid^='own-']"));
+        Assert.Empty(page.FindComponents<MudMenu>());
+    }
+
+    [Fact]
+    public void ANoteRowOffersNoModerationEvenWhenTheRecordIsWrong()
+    {
+        // Defence in depth against a projection bug: notes are unmoderated by anybody, so the row
+        // must not draw a shield on one even if handed a record claiming otherwise.
+        Page(Comment("left foot", mayModerate: true));
+        var page = Render();
+
+        page.Find("[data-testid='cmt-scope-Notes']");
+        var notes = RenderComponent<CommentRow>(p => p
+            .Add(c => c.Comment, Comment("left foot", mayModerate: true))
+            .Add(c => c.IsNote, true)
+            .Add(c => c.CanInteract, true));
+
+        Assert.Empty(notes.FindComponents<MudMenu>()
+            .Where(m => m.Instance.Icon == Icons.Material.Filled.Shield));
+    }
+
+    // ----- destructive actions confirm ----------------------------------------------------------
+
+    [Fact]
+    public async Task RemovalAsksBeforeItSendsAnything()
+    {
+        var theirs = Comment("someone else's words", mayModerate: true);
+        Page(theirs);
+        var page = Render();
+
+        var row = page.FindComponent<CommentRow>();
+        await page.InvokeAsync(() => row.Instance.OnRemove.InvokeAsync(theirs));
+
+        // Asked, and nothing sent yet — the comment is still on screen while you decide.
+        page.Find($"[data-testid='confirm-{theirs.Id}']");
+        Assert.Contains("someone else's words", page.Markup);
+        _mediator.Verify(m => m.Send(It.IsAny<RemoveCommentCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        await page.Find($"[data-testid='confirm-go-{theirs.Id}']").ClickAsync(new MouseEventArgs());
+
+        _mediator.Verify(m => m.Send(It.Is<RemoveCommentCommand>(c => c.CommentId == theirs.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CancellingAConfirmSendsNothing()
+    {
+        var theirs = Comment("someone else's words", mayModerate: true);
+        Page(theirs);
+        var page = Render();
+
+        var row = page.FindComponent<CommentRow>();
+        await page.InvokeAsync(() => row.Instance.OnRemove.InvokeAsync(theirs));
+        await page.InvokeAsync(() => page.FindComponent<CommentRow>().Instance.OnCancelConfirm.InvokeAsync());
+
+        Assert.Empty(page.FindAll($"[data-testid='confirm-{theirs.Id}']"));
+        _mediator.Verify(m => m.Send(It.IsAny<RemoveCommentCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task DeletingYourOwnAsksTheSameWay()
+    {
+        var mine = Comment("mine", isAuthor: true);
+        Page(mine);
+        var page = Render();
+
+        var row = page.FindComponent<CommentRow>();
+        await page.InvokeAsync(() => row.Instance.OnDelete.InvokeAsync(mine));
+
+        page.Find($"[data-testid='confirm-{mine.Id}']");
+        _mediator.Verify(m => m.Send(It.IsAny<DeleteCommentCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

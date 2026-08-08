@@ -1773,6 +1773,9 @@
   <data name="Delete the data I selected" xml:space="preserve">
     <value>선택한 데이터 삭제</value>
   </data>
+  <data name="Delete this comment?" xml:space="preserve">
+    <value>이 댓글을 지울까요?</value>
+  </data>
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>이 커뮤니티와 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.</value>
   </data>
@@ -2933,6 +2936,12 @@
   </data>
   <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
     <value>비공개 상태로, 기능은 모두 동작하는 채로 시작합니다. 여기 내용은 나중에 바꿀 수 있습니다.</value>
+  </data>
+  <data name="It stops showing, and the thread keeps its shape. The author is not told." xml:space="preserve">
+    <value>더 이상 표시되지 않지만 스레드 모양은 그대로입니다. 작성자에게는 알리지 않습니다.</value>
+  </data>
+  <data name="It stops showing. Anyone who replied keeps their reply." xml:space="preserve">
+    <value>더 이상 표시되지 않습니다. 답글을 단 사람의 답글은 남습니다.</value>
   </data>
   <data name="It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest." xml:space="preserve">
     <value>사이트 업데이트로 중단되었을 가능성이 큽니다. 저장된 부분은 이미 계정에 있으며, 다시 가져오면 나머지를 가져옵니다.</value>
@@ -5197,6 +5206,9 @@
   </data>
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>/piu unregister로 해제할 수 있습니다</value>
+  </data>
+  <data name="Remove this comment?" xml:space="preserve">
+    <value>이 댓글을 삭제할까요?</value>
   </data>
   <data name="Remove This Score" xml:space="preserve">
     <value>이 점수 삭제</value>

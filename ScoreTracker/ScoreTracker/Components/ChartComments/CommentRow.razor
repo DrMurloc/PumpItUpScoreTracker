@@ -47,7 +47,29 @@
             <div class="cmt-body">
                 <CommentTextView Body="Comment.Body" OnUntrustedLink="OnUntrustedLink"></CommentTextView>
             </div>
-            @if (!IsNote)
+            @* Asked in place, under the comment rather than over it: the whole question is
+               whether THIS is the one you meant, and a modal that covers it cannot answer that.
+               Inline also keeps us out of the dialog-inside-a-dialog scrim trap. *@
+            @if (Confirming is { } confirming)
+            {
+                <div class="cmt-confirm" data-testid="@($"confirm-{Comment.Id}")">
+                    <span>@(confirming == CommentAction.Remove ? L["Remove this comment?"] : L["Delete this comment?"])</span>
+                    <MudSpacer></MudSpacer>
+                    <MudButton Size="Size.Small" Variant="Variant.Text"
+                               OnClick="() => OnCancelConfirm.InvokeAsync()">@L["Cancel"]</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error"
+                               data-testid="@($"confirm-go-{Comment.Id}")"
+                               OnClick="() => OnConfirm.InvokeAsync((Comment, confirming))">
+                        @(confirming == CommentAction.Remove ? L["Remove"] : L["Delete"])
+                    </MudButton>
+                    <span class="cmt-confirm-sub">
+                        @(confirming == CommentAction.Remove
+                            ? L["It stops showing, and the thread keeps its shape. The author is not told."]
+                            : L["It stops showing. Anyone who replied keeps their reply."])
+                    </span>
+                </div>
+            }
+            else if (!IsNote)
             {
                 <div class="cmt-foot">
                     @* Your own count is inert rather than a button: you cannot vote on your own,
@@ -83,7 +105,25 @@
 </div>
 
 @code {
+    /// <summary>
+    ///     The two destructive actions, and the only two that confirm. Voting, replying and editing
+    ///     are reversible in one tap; asking about those would train the reflex that makes a confirm
+    ///     useless by the time it matters.
+    /// </summary>
+    public enum CommentAction
+    {
+        Delete,
+        Remove
+    }
+
     [Parameter] [EditorRequired] public CommentRecord Comment { get; set; } = default!;
+
+    /// <summary>Set while this row is asking. The comment stays visible underneath it.</summary>
+    [Parameter] public CommentAction? Confirming { get; set; }
+
+    [Parameter] public EventCallback<(CommentRecord Comment, CommentAction Action)> OnConfirm { get; set; }
+
+    [Parameter] public EventCallback OnCancelConfirm { get; set; }
 
     /// <summary>A reply is indented and cannot itself be replied to — threads are one level.</summary>
     [Parameter] public bool IsReply { get; set; }

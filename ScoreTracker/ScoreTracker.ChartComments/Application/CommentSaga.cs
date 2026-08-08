@@ -181,15 +181,19 @@ internal sealed class CommentSaga :
         var roots = rows.Where(r => r.ParentCommentId == null)
             .Select(root =>
             {
-                var replies = repliesByRoot.TryGetValue(root.Id, out var found) ? found : Array.Empty<CommentRow>();
+                // A deleted reply renders nothing at all — it is not holding anything open, so a
+                // stub for it is a headstone in the middle of somebody else's conversation.
+                var replies = (repliesByRoot.TryGetValue(root.Id, out var found)
+                        ? found.Where(reply => reply.DeletedAt == null)
+                        : Enumerable.Empty<CommentRow>())
+                    .Select(reply => Project(reply, request.Audience, trust, authors, viewer,
+                        Array.Empty<CommentRecord>()))
+                    .ToArray();
 
-                return Project(root, request.Audience, trust, authors, viewer,
-                    replies.Select(reply => Project(reply, request.Audience, trust, authors, viewer,
-                        Array.Empty<CommentRecord>(), false)).ToArray(),
-                    replies.Length > 0);
+                return Project(root, request.Audience, trust, authors, viewer, replies);
             })
-            // A deleted root nobody answered leaves nothing behind: a thread of four should not
-            // fill with headstones for comments that were never part of a conversation.
+            // A deleted root leaves a stub ONLY while something living still hangs off it. Nobody
+            // answered, or every answer is gone too, and the whole thread goes with it.
             .Where(record => record.Deletion == null || record.Replies.Count > 0)
             .ToArray();
 
@@ -259,8 +263,7 @@ internal sealed class CommentSaga :
     // ----- helpers -----------------------------------------------------------------------------
 
     private CommentRecord Project(CommentRow row, CommentAudience audience, LinkTrust trust,
-        IReadOnlyDictionary<Guid, User> authors, Guid viewer, IReadOnlyList<CommentRecord> replies,
-        bool isRoot = true)
+        IReadOnlyDictionary<Guid, User> authors, Guid viewer, IReadOnlyList<CommentRecord> replies)
     {
         var deletion = DeletionOf(row);
         var author = row.UserId != Guid.Empty && authors.TryGetValue(row.UserId, out var found) ? found : null;

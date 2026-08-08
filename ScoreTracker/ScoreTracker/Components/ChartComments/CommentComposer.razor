@@ -8,7 +8,10 @@
    and there is nothing to preview. The counter appears only near the cap; a permanent
    "0 / 500" is a homework assignment on a control whose whole job is to feel like nothing. *@
 
-<div class="cmt-compose @(Reply ? "cmt-compose-reply" : null)">
+@* ⚠ cmt-compose-bare is load-bearing, not decoration. The grid declares two columns; with the
+   avatar suppressed the field would land in the 28px one and the whole composer renders as a
+   one-character-wide column with its buttons stacked. *@
+<div class="cmt-compose @(Reply ? "cmt-compose-reply" : null) @(ShowAvatar ? null : "cmt-compose-bare")">
     @if (ShowAvatar)
     {
         <div class="cmt-avatar cmt-avatar-sm">

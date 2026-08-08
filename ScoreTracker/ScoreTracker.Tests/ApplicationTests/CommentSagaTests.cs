@@ -39,6 +39,10 @@ public sealed class CommentSagaTests
     private readonly User _viewer = new(Guid.NewGuid(), Name.From("ERRLENA"), true, null,
         new Uri("https://example.com/a.png"), Name.From("US"));
 
+    /// <summary>The site admin, whose id User.IsAdmin computes against — no flag, no seed row.</summary>
+    private static readonly User Admin = new(Guid.Parse("E38954C4-B1B1-418A-93F6-C4B25C98B713"),
+        Name.From("DrMurloc"), true, null, new Uri("https://example.com/d.png"), Name.From("US"));
+
     public CommentSagaTests()
     {
         _currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
@@ -181,6 +185,10 @@ public sealed class CommentSagaTests
     }
 
     // ----- moderation ---------------------------------------------------------------------------
+    //
+    // The shield is drawn from ViewerMayModerate, and ViewerMayModerate is computed here — so
+    // these are the tests that decide who can moderate. A component test can only confirm the UI
+    // honours the flag; nothing below the saga sets it.
 
     [Fact]
     public async Task OnlyTheSiteAdminRemoves()
@@ -192,6 +200,125 @@ public sealed class CommentSagaTests
             () => Subject().Handle(new RemoveCommentCommand(comment.Id), CancellationToken.None));
 
         _comments.Verify(c => c.Save(It.IsAny<Comment>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SignedOutRemovesNothing()
+    {
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(false);
+        var comment = Comment.Post(ChartId, Guid.NewGuid(), CommentAudience.Public, "words", Now);
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+
+        await Assert.ThrowsAsync<CommentNotAllowedException>(
+            () => Subject().Handle(new RemoveCommentCommand(comment.Id), CancellationToken.None));
+
+        _comments.Verify(c => c.Save(It.IsAny<Comment>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheSiteAdminRemovesAndTheRowNamesThem()
+    {
+        _currentUser.SetupGet(c => c.User).Returns(Admin);
+        var comment = Comment.Post(ChartId, Guid.NewGuid(), CommentAudience.Public, "words", Now);
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+
+        await Subject().Handle(new RemoveCommentCommand(comment.Id), CancellationToken.None);
+
+        _comments.Verify(c => c.Save(It.Is<Comment>(saved =>
+            saved.IsDeleted && saved.DeletedByUserId == Admin.Id), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(false, false)] // an ordinary reader, on a public comment
+    [InlineData(true, true)]   // the site admin, on the same one
+    public async Task TheShieldIsDrawnForTheSiteAdminAndNobodyElse(bool asAdmin, bool expected)
+    {
+        if (asAdmin) _currentUser.SetupGet(c => c.User).Returns(Admin);
+        SetupRows(Row(Guid.NewGuid()));
+
+        var record = Assert.Single((await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Public), CancellationToken.None)).Roots);
+
+        Assert.Equal(expected, record.ViewerMayModerate);
+    }
+
+    [Fact]
+    public async Task ACommunityAdminHoldsNoShieldYet()
+    {
+        // Community moderation is a later slice. Until ModerateComments exists, a club's own admin
+        // has exactly the powers a member does — asserted rather than assumed, because the day the
+        // flag lands this test is what says the plumbing changed on purpose.
+        Communities(("Murloc Lab", ClubId, false));
+        SetupRows(Row(Guid.NewGuid()));
+
+        var record = Assert.Single((await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Community(ClubId)),
+            CancellationToken.None)).Roots);
+
+        Assert.False(record.ViewerMayModerate);
+    }
+
+    [Fact]
+    public async Task SignedOutNobodyHoldsAShield()
+    {
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(false);
+        SetupRows(Row(Guid.NewGuid()));
+
+        var record = Assert.Single((await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Public), CancellationToken.None)).Roots);
+
+        Assert.False(record.ViewerMayModerate);
+        Assert.False(record.ViewerIsAuthor);
+    }
+
+    [Fact]
+    public async Task EvenTheSiteAdminHoldsNoShieldOnTheirOwnNotes()
+    {
+        // Notes are unmoderated by anybody, including the person who owns the site. The aggregate
+        // refuses it too; this is the half that stops the control being drawn in the first place.
+        _currentUser.SetupGet(c => c.User).Returns(Admin);
+        SetupRows(Row(Admin.Id));
+
+        var record = Assert.Single((await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Private), CancellationToken.None)).Roots);
+
+        Assert.False(record.ViewerMayModerate);
+    }
+
+    [Fact]
+    public async Task ANoteIsRefusedToAModeratorEvenIfOneIsSomehowReached()
+    {
+        // Belt to the query filter's braces: if a note ever did reach a moderator's hand, the
+        // aggregate still will not let them take it down.
+        _currentUser.SetupGet(c => c.User).Returns(Admin);
+        var note = Comment.Post(ChartId, Guid.NewGuid(), CommentAudience.Private, "left foot", Now);
+        _comments.Setup(c => c.GetById(note.Id, It.IsAny<CancellationToken>())).ReturnsAsync(note);
+
+        await Assert.ThrowsAsync<CommentNotAllowedException>(
+            () => Subject().Handle(new RemoveCommentCommand(note.Id), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task AModeratorStillCannotEditSomebodyElsesWords()
+    {
+        _currentUser.SetupGet(c => c.User).Returns(Admin);
+        var comment = Comment.Post(ChartId, Guid.NewGuid(), CommentAudience.Public, "words", Now);
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+
+        await Assert.ThrowsAsync<CommentNotAllowedException>(
+            () => Subject().Handle(new EditCommentCommand(comment.Id, "fixed that"), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task AModeratorCannotReadSomebodyElsesDraftText()
+    {
+        // The edit query is the one place raw comment text leaves the vertical. Holding the
+        // strongest hand on the site does not open it.
+        _currentUser.SetupGet(c => c.User).Returns(Admin);
+        var comment = Comment.Post(ChartId, Guid.NewGuid(), CommentAudience.Public, "words", Now);
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+
+        Assert.Null(await Subject().Handle(new GetMyCommentTextQuery(comment.Id), CancellationToken.None));
     }
 
     // ----- consent ------------------------------------------------------------------------------
@@ -272,6 +399,38 @@ public sealed class CommentSagaTests
         Assert.Equal(CommentDeletion.ByAuthor, root.Deletion);
         Assert.Empty(root.Body);
         Assert.Single(root.Replies);
+    }
+
+    [Fact]
+    public async Task ADeletedReplyRendersNothingAtAll()
+    {
+        // It is holding nothing open, so a stub for it would be a headstone in the middle of
+        // somebody else's conversation.
+        var root = Row(Guid.NewGuid());
+        SetupRows(root, Row(Guid.NewGuid(), parent: root.Id, deleted: true),
+            Row(Guid.NewGuid(), parent: root.Id));
+
+        var record = Assert.Single((await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Public), CancellationToken.None)).Roots);
+
+        Assert.Single(record.Replies);
+        Assert.All(record.Replies, reply => Assert.Null(reply.Deletion));
+    }
+
+    [Fact]
+    public async Task AThreadWhoseEveryCommentIsDeletedDisappearsEntirely()
+    {
+        // The stub exists to hold a surviving reply somewhere. Once the last one goes there is
+        // nothing left to hold, so the thread goes with it rather than leaving a marker for a
+        // conversation nobody can read.
+        var root = Row(Guid.NewGuid(), deleted: true);
+        SetupRows(root, Row(Guid.NewGuid(), parent: root.Id, deleted: true),
+            Row(Guid.NewGuid(), parent: root.Id, deleted: true));
+
+        var page = await Subject().Handle(new GetChartCommentsQuery(ChartId, CommentAudience.Public),
+            CancellationToken.None);
+
+        Assert.Empty(page.Roots);
     }
 
     [Fact]
