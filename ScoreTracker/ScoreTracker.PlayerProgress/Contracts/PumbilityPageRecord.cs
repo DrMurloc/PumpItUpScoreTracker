@@ -68,7 +68,7 @@ public sealed record PoolEntry(int Place, Guid ChartId, PhoenixScore Score, Phoe
 /// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityTarget(Guid ChartId, PhoenixScore Projected, int Gain,
-    PhoenixScore? Current, bool CurrentIsBroken, TierListCategory? Difficulty, ProjectionEvidence? Evidence,
+    PhoenixScore? Current, bool CurrentIsBroken, TierListCategory? Difficulty,
     TargetSource Source = TargetSource.Peers);
 
 /// <summary>

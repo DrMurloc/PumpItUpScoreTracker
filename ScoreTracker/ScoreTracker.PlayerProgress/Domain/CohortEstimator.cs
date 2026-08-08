@@ -79,23 +79,13 @@ internal static class CohortEstimator
     }
 
     /// <summary>
-    ///     exp(−growth / decay). Exposed because the page explains its own evidence, and
-    ///     "how much of what I heard was current" is part of that.
+    ///     exp(−growth / decay). Public so the exploration harness can measure the weighting
+    ///     independently of the estimate it feeds.
     /// </summary>
     public static double GrowthWeight(double growth, double decayLevels = GrowthDecayLevels)
     {
         if (decayLevels <= 0) return 1.0;
         return Math.Exp(-Math.Max(0.0, growth) / decayLevels);
-    }
-
-    /// <summary>
-    ///     Effective sample size behind an estimate — the summed growth weights, not the raw
-    ///     peer count. Ten peers who all levelled past the score they lent are worth about one.
-    /// </summary>
-    public static double Evidence(IEnumerable<PeerScore> peers,
-        double growthDecayLevels = GrowthDecayLevels)
-    {
-        return peers.Sum(p => GrowthWeight(p.Growth, growthDecayLevels));
     }
 
     /// <summary>

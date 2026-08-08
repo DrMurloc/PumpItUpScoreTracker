@@ -140,7 +140,9 @@ public sealed class PumbilityComponentTests : ComponentTestBase
             .Add(x => x.Targets, ThreeKinds(out var charts)).Add(x => x.Charts, charts)
             .Add(x => x.Density, UiDensity.Compact));
 
-        var badges = cut.FindAll(".tier-card-grid .tier-chart-card-corner");
+        // Scoped to the end corner: the jacket carries two badges now, and they share the
+        // treatment on purpose — .tier-chart-card-corner alone would count both.
+        var badges = cut.FindAll(".tier-card-grid .tier-chart-card-compact-grade");
         Assert.Equal(3, badges.Count);
         Assert.All(badges, b => Assert.Contains("pmb-corner-gain", b.ClassName));
         Assert.Contains("+400", badges.Select(b => b.TextContent.Trim()).ToArray());
@@ -163,6 +165,44 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         Assert.Empty(cut.FindAll(".tier-chart-card-todo"));
     }
 
+    [Fact]
+    public void CompactPrintsTheGradeTheProjectionLandsOnOppositeTheGain()
+    {
+        // Two badges on the jacket's bottom edge, one treatment: how much on the right, what
+        // you would come away with on the left. The words for it ride the tooltip, which
+        // renders into the popover provider and so is not assertable from here.
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, ThreeKinds(out var charts)).Add(x => x.Charts, charts)
+            .Add(x => x.Density, UiDensity.Compact));
+
+        var grades = cut.FindAll(".tier-card-grid .tier-chart-card-corner-start");
+        Assert.Equal(3, grades.Count);
+        Assert.All(grades, g => Assert.Contains("pmb-corner-gain", g.ClassName));
+        // The icon, not a specific letter: which grade a score earns is the scoring
+        // configuration's business and pinning one here would test that instead of this.
+        Assert.All(grades, g => Assert.Contains("/letters/", g.InnerHtml));
+    }
+
+    [Fact]
+    public void ABrokenRunGetsItsOwnBorderRatherThanReadingAsAnUpscore()
+    {
+        // A stage break is worth nothing, so the arithmetic prices the chart from the bar as
+        // though it had never been played. A solid "upscore" border would then be describing a
+        // score the page has just decided the player does not hold — and no border at all
+        // would claim they have never touched it.
+        var broke = NewChart(ChartType.Single, 22);
+        var targets = new[] { new PumbilityTarget(broke.Id, 980_000, 300, 640_000, true, null) };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [broke.Id] = broke })
+            .Add(x => x.Density, UiDensity.Compact));
+
+        Assert.Single(cut.FindAll(".tier-card-grid .tier-chart-card-broken"));
+        Assert.Empty(cut.FindAll(".tier-card-grid .tier-chart-card-pass"));
+        Assert.Contains("Played, not passed", cut.Find(".pmb-legend").TextContent);
+    }
+
     /// <summary>One of each kind: carried from another mix, an upscore, and never played.</summary>
     private static PumbilityTarget[] ThreeKinds(out Dictionary<Guid, Chart> charts)
     {
@@ -173,9 +213,9 @@ public sealed class PumbilityComponentTests : ComponentTestBase
             { [carried.Id] = carried, [upscore.Id] = upscore, [unplayed.Id] = unplayed };
         return new[]
         {
-            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, null, TargetSource.Phoenix1),
-            new PumbilityTarget(upscore.Id, 980_000, 200, 930_000, false, null, null),
-            new PumbilityTarget(unplayed.Id, 970_000, 300, null, false, null, null)
+            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, TargetSource.Phoenix1),
+            new PumbilityTarget(upscore.Id, 980_000, 200, 930_000, false, null),
+            new PumbilityTarget(unplayed.Id, 970_000, 300, null, false, null)
         };
     }
 
@@ -188,8 +228,8 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         var unplayed = NewChart(ChartType.Single, 22);
         var targets = new[]
         {
-            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, null, TargetSource.Phoenix1),
-            new PumbilityTarget(unplayed.Id, 970_000, 300, null, false, null, null)
+            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, TargetSource.Phoenix1),
+            new PumbilityTarget(unplayed.Id, 970_000, 300, null, false, null)
         };
 
         var cut = RenderComponent<TargetList>(p => p
@@ -211,9 +251,8 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         var guessed = NewChart(ChartType.Single, 22);
         var targets = new[]
         {
-            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, null, TargetSource.Phoenix1),
-            new PumbilityTarget(guessed.Id, 960_000, 300, null, false, null,
-                new ProjectionEvidence(20, 15, 9_000))
+            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, TargetSource.Phoenix1),
+            new PumbilityTarget(guessed.Id, 960_000, 300, null, false, null)
         };
 
         var cut = RenderComponent<TargetList>(p => p
@@ -233,7 +272,7 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         var chart = NewChart(ChartType.Single, 20);
         var targets = new[]
         {
-            new PumbilityTarget(chart.Id, 970_000, 300, null, false, null, new ProjectionEvidence(20, 15, 9_000))
+            new PumbilityTarget(chart.Id, 970_000, 300, null, false, null)
         };
 
         var cut = RenderComponent<TargetList>(p => p
@@ -245,21 +284,27 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     [Fact]
-    public void TargetsExplainTheirEvidenceAndNeverAttributeSkills()
+    public void TheWhyLineSaysWhereTheNumberCameFromAndNothingElse()
     {
-        var chart = NewChart(ChartType.Single, 20);
+        // Peer counts and spreads used to live here and told a player nothing they could act
+        // on. What is left is the source — the only thing about a projection that changes how
+        // much you should trust it, and the card's border already says the rest.
+        var estimated = NewChart(ChartType.Single, 20);
+        var carried = NewChart(ChartType.Single, 20);
         var targets = new[]
         {
-            new PumbilityTarget(chart.Id, 970_000, 300, null, false, null,
-                new ProjectionEvidence(42, 31.5, 18_000))
+            new PumbilityTarget(estimated.Id, 970_000, 300, null, false, null),
+            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, TargetSource.Phoenix1)
         };
 
         var cut = RenderComponent<TargetList>(p => p
             .Add(x => x.Targets, targets)
-            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [chart.Id] = chart })
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [estimated.Id] = estimated, [carried.Id] = carried })
             .Add(x => x.Density, UiDensity.Comfortable));
 
-        Assert.Contains("42", cut.Find(".pmb-tcard-why").TextContent);
+        var whys = cut.FindAll(".pmb-tcard-why").Select(w => w.TextContent.Trim()).ToArray();
+        Assert.Contains("Carried from Phoenix 1", whys);
+        Assert.Contains("Projected", whys);
     }
 
     [Fact]
@@ -417,7 +462,7 @@ public sealed class PumbilityComponentTests : ComponentTestBase
                 // which capped every fixture at a size too small to page.
                 list.Add(new PumbilityTarget(chart.Id, Math.Max(900_000, 999_000 - i * 1_000),
                     Math.Max(1, 400 - i * 5),
-                    i % 2 == 0 ? null : 930_000, false, null, new ProjectionEvidence(20 + i, 15.5, 12_000)));
+                    i % 2 == 0 ? null : 930_000, false, null));
             }
 
             Pool = pool;

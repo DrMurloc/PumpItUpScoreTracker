@@ -657,6 +657,12 @@
   <data name="Apply" xml:space="preserve">
     <value>Apply</value>
   </data>
+  <data name="Applying baby powder" xml:space="preserve">
+    <value>Applying baby powder</value>
+  </data>
+  <data name="Applying Gorilla Tape to the sensors" xml:space="preserve">
+    <value>Applying Gorilla Tape to the sensors</value>
+  </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Approachable unpassed charts around your level.</value>
   </data>
@@ -1563,6 +1569,9 @@
   <data name="Counting" xml:space="preserve">
     <value>Counting</value>
   </data>
+  <data name="Counting perfects" xml:space="preserve">
+    <value>Counting perfects</value>
+  </data>
   <data name="Counting Toward Your Total" xml:space="preserve">
     <value>Counting toward your total</value>
   </data>
@@ -1629,6 +1638,9 @@
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSV Upload</value>
+  </data>
+  <data name="Cueing the next song" xml:space="preserve">
+    <value>Cueing the next song</value>
   </data>
   <data name="Current" xml:space="preserve">
 	  <value>Current</value>
@@ -2134,6 +2146,9 @@
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>Feedback Submitted, Thank You!</value>
   </data>
+  <data name="Feeding it another credit" xml:space="preserve">
+    <value>Feeding it another credit</value>
+  </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Feeds — register a channel once, the bot keeps it fed</value>
   </data>
@@ -2191,6 +2206,9 @@
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>Find your next pass.</value>
+  </data>
+  <data name="Finding the beat" xml:space="preserve">
+    <value>Finding the beat</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Finish later</value>
@@ -2311,9 +2329,6 @@
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>From {0}</value>
-  </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>from {0} players like you</value>
   </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>From {0} scores</value>
@@ -4566,6 +4581,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>Played, not counting</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>Played, not passed</value>
+  </data>
   <data name="Player" xml:space="preserve">
 	  <value>Player</value>
   </data>
@@ -4721,9 +4739,6 @@
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>projected Doubles PUMBILITY</value>
-  </data>
-  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
-    <value>Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own.</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>projected Singles PUMBILITY</value>
@@ -4930,6 +4945,9 @@
   </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Reading it takes three things at once, held in three different places:</value>
+  </data>
+  <data name="Reading the step chart" xml:space="preserve">
+    <value>Reading the step chart</value>
   </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>That reads as {0}.</value>
@@ -5416,6 +5434,9 @@
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
 	  <value>Search User (Name or UserId)</value>
+  </data>
+  <data name="Searching for Molex connectors" xml:space="preserve">
+    <value>Searching for Molex connectors</value>
   </data>
   <data name="Second" xml:space="preserve">
     <value>Second</value>
@@ -5963,6 +5984,9 @@
   </data>
   <data name="Store" xml:space="preserve">
     <value>Store</value>
+  </data>
+  <data name="Stretching first" xml:space="preserve">
+    <value>Stretching first</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>stronger</value>
@@ -6989,8 +7013,14 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Waiting on a human — give them a nudge</value>
   </data>
+  <data name="Waiting on the sensors" xml:space="preserve">
+    <value>Waiting on the sensors</value>
+  </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Waiting room</value>
+  </data>
+  <data name="Warming up the pad" xml:space="preserve">
+    <value>Warming up the pad</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Watch yourself climb</value>
@@ -7185,6 +7215,9 @@
   <data name="wins in range" xml:space="preserve">
     <value>wins in range</value>
   </data>
+  <data name="Wiping down the sensors" xml:space="preserve">
+    <value>Wiping down the sensors</value>
+  </data>
   <data name="within 1 level" xml:space="preserve">
     <value>within 1 level</value>
   </data>
@@ -7193,6 +7226,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Without them it still works — for you, on your own scores.</value>
+  </data>
+  <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
+    <value>Working out your projections. This reads a few hundred players at your level, so it takes a moment.</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>

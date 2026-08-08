@@ -685,6 +685,55 @@ public sealed class PlayerRatingSagaTests
         Assert.Equal(rough.Id, result[1].ChartId);
     }
 
+    [Theory]
+    [InlineData(MixEnum.Phoenix)]
+    [InlineData(MixEnum.Phoenix2)]
+    public async Task Top50ForPlayerLeavesOutBrokenRuns(MixEnum mix)
+    {
+        // Both mixes, because the two get it wrong differently when the filter is missing:
+        // Phoenix 2 zeroes a stage break and Phoenix rates it as though it passed. Either way
+        // the run occupies a pool slot it has not earned.
+        var userId = Guid.NewGuid();
+        var passed = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var broke = new ChartBuilder().WithType(ChartType.Single).WithLevel(23).Build();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { passed, broke }, mix),
+            scores: ScoresMockReturning(userId, new[]
+            {
+                Score(passed.Id, 900000),
+                Score(broke.Id, 985000, isBroken: true)
+            }, mix));
+
+        var result = (await saga.Handle(
+            new GetTop50ForPlayerQuery(userId, ChartType: null, Mix: mix),
+            CancellationToken.None)).ToArray();
+
+        Assert.Equal(new[] { passed.Id }, result.Select(r => r.ChartId));
+    }
+
+    [Fact]
+    public async Task Top50CompetitiveLeavesOutBrokenRuns()
+    {
+        // A deep partial on a chart well above the player's level would otherwise farm
+        // competitive level without ever passing it.
+        var userId = Guid.NewGuid();
+        var passed = new ChartBuilder().WithType(ChartType.Single).WithLevel(18).Build();
+        var broke = new ChartBuilder().WithType(ChartType.Single).WithLevel(25).Build();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { passed, broke }),
+            scores: ScoresMockReturning(userId, new[]
+            {
+                Score(passed.Id, 900000),
+                Score(broke.Id, 950000, isBroken: true)
+            }));
+
+        var result = (await saga.Handle(
+            new GetTop50CompetitiveQuery(userId, ChartType: null),
+            CancellationToken.None)).ToArray();
+
+        Assert.Equal(new[] { passed.Id }, result.Select(r => r.ChartId));
+    }
+
     private static PlayerRatingSaga BuildSaga(
         Mock<IScoreReader>? scores = null,
         Mock<IChartRepository>? charts = null,

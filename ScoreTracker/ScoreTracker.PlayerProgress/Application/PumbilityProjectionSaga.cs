@@ -60,19 +60,54 @@ namespace ScoreTracker.PlayerProgress.Application
         public async Task<PumbilityProjection> Handle(ProjectPumbilityGainsQuery request,
             CancellationToken cancellationToken)
         {
-            // Held between visits and dropped when this player's scores move
-            // (PumbilityProjectionCacheConsumer). Everything below is sized by the player
-            // population, not by the viewer, so a repeat visit should not pay for it again.
-            if (_cache.TryGet(request.UserId, request.Mix, request.ChartType, out var cached) && cached != null)
-                return cached;
-
-            var projection = await Project(request, cancellationToken);
-            _cache.Set(request.UserId, request.Mix, request.ChartType, projection);
-            return projection;
+            // Two halves with nothing in common. The estimates are the cohort sweep — sized by
+            // the player population, the same for all three pools, and unchanged by anything
+            // the viewer does, since a player's own scores never enter their own cohort. The
+            // pricing is arithmetic over their top hundred, and moves the moment they play.
+            // So one is held for a day and the other is redone on every visit.
+            var estimates = await _cache.GetOrAdd(request.UserId, request.Mix,
+                () => Estimate(request.UserId, request.Mix));
+            return await Price(estimates, request, cancellationToken);
         }
 
-        private async Task<PumbilityProjection> Project(ProjectPumbilityGainsQuery request,
-            CancellationToken cancellationToken)
+        /// <summary>
+        ///     What players around this one score on the charts in range — the expensive half,
+        ///     and the only half worth keeping. Deliberately pool-free: the pool changes which
+        ///     bar an estimate is measured against, never the estimate, so all three selector
+        ///     positions share one sweep instead of paying for three.
+        /// </summary>
+        private async Task<IReadOnlyDictionary<Guid, PhoenixScore>> Estimate(Guid userId, MixEnum mix)
+        {
+            var charts = (await _mediator.Send(new GetChartsQuery(mix), CancellationToken.None))
+                .ToDictionary(c => c.Id);
+            var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+
+            // The most permissive bar any pool could set, because this set has to serve all
+            // three. A merged top fifty is drawn from a superset of either single type's, so
+            // it never sits below both — the lower of the two per-type bars is the floor.
+            var floor = Math.Min(
+                (await BuildPool(ChartType.Single, userId, mix, charts, scoring, CancellationToken.None)).Baseline,
+                (await BuildPool(ChartType.Double, userId, mix, charts, scoring, CancellationToken.None)).Baseline);
+
+            var myStats = await _stats.GetStats(mix, userId, CancellationToken.None);
+            var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(mix), CancellationToken.None);
+
+            var expectedScore = new Dictionary<Guid, PhoenixScore>();
+            var scope = new ProjectionScope(mix, charts, scoringLevels, myStats, scoring, floor);
+
+            foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+                await ProjectType(chartType, userId, scope, expectedScore, CancellationToken.None);
+
+            return expectedScore;
+        }
+
+        /// <summary>
+        ///     What those estimates are worth to this player, in this pool, right now. Cheap —
+        ///     their own top hundred and one tier-list read — and never cached, because the bar
+        ///     it measures against moves every time they play.
+        /// </summary>
+        private async Task<PumbilityProjection> Price(IReadOnlyDictionary<Guid, PhoenixScore> estimates,
+            ProjectPumbilityGainsQuery request, CancellationToken cancellationToken)
         {
             var mix = request.Mix;
             var charts = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken))
@@ -83,21 +118,12 @@ namespace ScoreTracker.PlayerProgress.Application
             // of either type can displace, matching how the game aggregates.
             var pool = await BuildPool(request.ChartType, request.UserId, mix, charts, scoring, cancellationToken);
 
-            var myStats = await _stats.GetStats(mix, request.UserId, cancellationToken);
-            var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(mix), cancellationToken);
-
-            var expectedScore = new Dictionary<Guid, PhoenixScore>();
-            var evidence = new Dictionary<Guid, ProjectionEvidence>();
-
-            var types = request.ChartType is { } only
-                ? new[] { only }
-                : new[] { ChartType.Single, ChartType.Double };
-
-            var scope = new ProjectionScope(mix, charts, scoringLevels, myStats, scoring, pool.Baseline);
-            var into = new ProjectionResults(expectedScore, evidence);
-
-            foreach (var chartType in types)
-                await ProjectType(chartType, request.UserId, scope, into, cancellationToken);
+            // The pool scopes the LIST, where the estimates are deliberately type-blind.
+            var expectedScore = request.ChartType is { } only
+                ? estimates.Where(kv => charts.TryGetValue(kv.Key, out var c) && c.Type == only)
+                    .ToDictionary(kv => kv.Key, kv => kv.Value)
+                : estimates.Where(kv => charts.ContainsKey(kv.Key))
+                    .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count", mix), cancellationToken))
                 .ToDictionary(s => s.ChartId, e => e.Category);
@@ -138,8 +164,7 @@ namespace ScoreTracker.PlayerProgress.Application
             return new PumbilityProjection(
                 expectedScore.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value),
                 ranked,
-                chartDifficulty,
-                evidence.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
+                chartDifficulty);
         }
 
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
@@ -147,12 +172,8 @@ namespace ScoreTracker.PlayerProgress.Application
             IDictionary<Guid, double> ScoringLevels, PlayerStatsRecord MyStats,
             ScoringConfiguration Scoring, int Baseline);
 
-        /// <summary>What it writes. Both types accumulate into one pair, which is why they are passed in.</summary>
-        private sealed record ProjectionResults(IDictionary<Guid, PhoenixScore> ExpectedScore,
-            IDictionary<Guid, ProjectionEvidence> Evidence);
-
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
-            ProjectionResults into, CancellationToken cancellationToken)
+            IDictionary<Guid, PhoenixScore> into, CancellationToken cancellationToken)
         {
             var (mix, charts, scoringLevels, myStats, scoring, baseline) = scope;
 
@@ -227,9 +248,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 var estimate = CohortEstimator.Estimate(peers);
                 if (estimate == null) continue;
 
-                into.ExpectedScore[group.Key] = estimate.Value;
-                into.Evidence[group.Key] = new ProjectionEvidence(peers.Length,
-                    Math.Round(CohortEstimator.Evidence(peers), 2), Spread(peers));
+                into[group.Key] = estimate.Value;
             }
         }
 
@@ -307,16 +326,6 @@ namespace ScoreTracker.PlayerProgress.Application
             var chosen = preceding ?? rows[0];
             var level = chartType == ChartType.Single ? chosen.SinglesLevel : chosen.DoublesLevel;
             return level > 1 ? level : fallback;
-        }
-
-        /// <summary>Points between the 10th and 90th percentile — how much the peers disagreed.</summary>
-        private static int Spread(IReadOnlyCollection<PeerScore> peers)
-        {
-            if (peers.Count < 2) return 0;
-            var ordered = peers.Select(p => p.Score).OrderBy(s => s).ToArray();
-            var low = ordered[(int)Math.Floor(0.10 * (ordered.Length - 1))];
-            var high = ordered[(int)Math.Ceiling(0.90 * (ordered.Length - 1))];
-            return high - low;
         }
 
         private static double ScoringLevelOf(Chart chart, IDictionary<Guid, double> scoringLevels)

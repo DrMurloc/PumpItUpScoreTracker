@@ -654,6 +654,12 @@
   <data name="Apply" xml:space="preserve">
     <value>적용</value>
   </data>
+  <data name="Applying baby powder" xml:space="preserve">
+    <value>베이비파우더 뿌리는 중</value>
+  </data>
+  <data name="Applying Gorilla Tape to the sensors" xml:space="preserve">
+    <value>센서에 고릴라 테이프 붙이는 중</value>
+  </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>내 레벨 주변의 아직 못 깬 만만한 채보.</value>
   </data>
@@ -1551,6 +1557,9 @@
   <data name="Counting" xml:space="preserve">
     <value>반영 중</value>
   </data>
+  <data name="Counting perfects" xml:space="preserve">
+    <value>퍼펙트 세는 중</value>
+  </data>
   <data name="Counting Toward Your Total" xml:space="preserve">
     <value>합계에 반영됨</value>
   </data>
@@ -1616,6 +1625,9 @@
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSV 업로드</value>
+  </data>
+  <data name="Cueing the next song" xml:space="preserve">
+    <value>다음 곡 준비하는 중</value>
   </data>
   <data name="Current" xml:space="preserve">
     <value>현재</value>
@@ -2118,6 +2130,9 @@
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>피드백 감사합니다!</value>
   </data>
+  <data name="Feeding it another credit" xml:space="preserve">
+    <value>크레딧 하나 더 넣는 중</value>
+  </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>피드 — 채널을 한 번 등록하면 봇이 계속 소식을 전합니다</value>
   </data>
@@ -2174,6 +2189,9 @@
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>다음 패스를 찾으세요.</value>
+  </data>
+  <data name="Finding the beat" xml:space="preserve">
+    <value>박자 찾는 중</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>나중에 마무리</value>
@@ -2294,9 +2312,6 @@
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>{0}부터</value>
-  </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>비슷한 플레이어 {0}명 기준</value>
   </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0}개 스코어 기반</value>
@@ -4530,6 +4545,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>플레이함, 미반영</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>플레이함, 미클리어</value>
+  </data>
   <data name="Player" xml:space="preserve">
     <value>플레이어</value>
   </data>
@@ -4685,9 +4703,6 @@
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>예상 더블 PUMBILITY</value>
-  </data>
-  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
-    <value>Phoenix 1 기준 예상입니다 — Phoenix 2에는 본인 점수가 {0}개 있습니다.</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>예상 싱글 PUMBILITY</value>
@@ -4891,6 +4906,9 @@
   </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>이를 읽으려면 세 곳에 나뉘어 보관된 세 가지가 동시에 필요합니다:</value>
+  </data>
+  <data name="Reading the step chart" xml:space="preserve">
+    <value>채보 읽는 중</value>
   </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>{0} 등급입니다.</value>
@@ -5368,6 +5386,9 @@
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
     <value>유저 검색 (이름 또는 유저 ID)</value>
+  </data>
+  <data name="Searching for Molex connectors" xml:space="preserve">
+    <value>몰렉스 커넥터 찾는 중</value>
   </data>
   <data name="Second" xml:space="preserve">
     <value>두 번째</value>
@@ -5905,6 +5926,9 @@
   </data>
   <data name="Store" xml:space="preserve">
     <value>저장</value>
+  </data>
+  <data name="Stretching first" xml:space="preserve">
+    <value>먼저 스트레칭</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>강함</value>
@@ -6926,8 +6950,14 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>사람이 확인해야 합니다 — 한 번 알려 주세요</value>
   </data>
+  <data name="Waiting on the sensors" xml:space="preserve">
+    <value>센서 기다리는 중</value>
+  </data>
   <data name="Waiting room" xml:space="preserve">
     <value>대기실</value>
+  </data>
+  <data name="Warming up the pad" xml:space="preserve">
+    <value>발판 예열하는 중</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>성장하는 자신을 지켜보세요</value>
@@ -7121,6 +7151,9 @@
   <data name="wins in range" xml:space="preserve">
     <value>범위 내 우승</value>
   </data>
+  <data name="Wiping down the sensors" xml:space="preserve">
+    <value>센서 닦는 중</value>
+  </data>
   <data name="within 1 level" xml:space="preserve">
     <value>레벨 ±1 이내</value>
   </data>
@@ -7129,6 +7162,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>없어도 동작합니다 — 여러분 자신의 점수에 대해서는요.</value>
+  </data>
+  <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
+    <value>예상치를 계산하는 중입니다. 비슷한 레벨의 플레이어 수백 명을 참조하므로 잠시 걸립니다.</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>

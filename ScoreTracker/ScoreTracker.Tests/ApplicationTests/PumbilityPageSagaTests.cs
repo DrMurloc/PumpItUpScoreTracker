@@ -230,6 +230,46 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
+    public async Task AChartYouDidBetterOnInPhoenix1IsATargetPricedAtTheDifference()
+    {
+        // 985k there against 900k here is a gain worth playing for. It used to be dropped
+        // outright for the sole reason that the chart already carried a Phoenix 2 score.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 55, 985_000);
+        var contested = ctx.FirstPhoenixChart();
+        ctx.WithPhoenix2Score(contested, 900_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var row = page.Targets.Single(t => t.ChartId == contested);
+        Assert.Equal(TargetSource.Phoenix1, row.Source);
+        Assert.True(row.Gain > 0);
+        // It holds the best Phoenix 1 score of the set, so nothing but the discount for what
+        // the chart is already worth could put another chart's gain above it.
+        Assert.True(row.Gain < page.Targets.Max(t => t.Gain),
+            "the gain was not reduced by what the chart already contributes");
+    }
+
+    [Fact]
+    public async Task ABrokenRunHereDoesNotCountAsHavingScoredTheChart()
+    {
+        // A stage break rates zero, so it displaces nothing — and a chart you broke on is
+        // precisely the one your Phoenix 1 record has something to say about.
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 55, 985_000);
+        var broke = ctx.FirstPhoenixChart();
+        ctx.WithPhoenix2Score(broke, 900_000, true);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+        var carry = await ctx.Saga.Handle(new ProjectPhoenix2CarryoverQuery(ctx.UserId),
+            CancellationToken.None);
+
+        // Undiscounted, so the best Phoenix 1 score of the set still carries the best gain.
+        Assert.Equal(page.Targets.Max(t => t.Gain), page.Targets.Single(t => t.ChartId == broke).Gain);
+        Assert.Equal(0, carry.ScoredHere);
+    }
+
+    [Fact]
     public async Task TheCarryoverCountsWhatYouHaveNotScoredHereYet()
     {
         var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 55, 985_000);
@@ -273,7 +313,7 @@ public sealed class PumbilityPageSagaTests
                 });
             Mediator.Setup(m => m.Send(It.IsAny<ProjectPumbilityGainsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => new PumbilityProjection(_projected, _gains,
-                    new Dictionary<Guid, TierListCategory>(), new Dictionary<Guid, ProjectionEvidence>()));
+                    new Dictionary<Guid, TierListCategory>()));
 
             Scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum mix, Guid _, CancellationToken _) =>
@@ -329,6 +369,14 @@ public sealed class PumbilityPageSagaTests
 
         /// <summary>The first Phoenix 1 chart seeded — something for both sources to contest.</summary>
         public Guid FirstPhoenixChart() => _myBests.Keys.First();
+
+        /// <summary>What the player holds in Phoenix 2 on a chart they also played in Phoenix 1.</summary>
+        public PageContext WithPhoenix2Score(Guid chartId, int score, bool isBroken = false)
+        {
+            _phoenix2Scores[chartId] = new RecordedPhoenixScore(chartId, score, PhoenixPlate.TalentedGame,
+                isBroken, Now.AddDays(-10));
+            return this;
+        }
 
         /// <summary>Gives the peer estimator an opinion on a chart, so precedence is testable.</summary>
         public PageContext WithPeerProjection(Guid chartId, int projected, int gain)

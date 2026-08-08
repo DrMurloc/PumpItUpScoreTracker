@@ -1,64 +1,133 @@
 using Microsoft.Extensions.Caching.Memory;
-using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.PlayerProgress.Application
 {
     /// <summary>
-    ///     Holds a player's Pumbility projection between visits.
+    ///     Holds the cohort sweep behind a player's Pumbility projection between visits.
     ///     <para>
-    ///         The projection is the expensive read on the page by an order of magnitude — a
-    ///         cohort sweep plus a level-history read, both sized by the player population
-    ///         rather than by the viewer. Its inputs change only when somebody's scores do,
-    ///         so recomputing it per visit and per pool switch bought nothing.
+    ///         What is kept is only what the sweep produced — what players around this one
+    ///         score on the charts in range. Everything else the page shows is priced from it
+    ///         on every visit, because the bar those estimates are measured against moves the
+    ///         moment the player does. Keeping the priced result instead meant caching a
+    ///         number that could be wrong by the time it was read, and re-reading the whole
+    ///         Pass Count tier list per player to do it.
     ///     </para>
     ///     <para>
-    ///         Eviction is by the viewer's own score changes (owner, 2026-08-06: an import
-    ///         busts it). Peers' scores moving does NOT evict — a projection that is a few
-    ///         hours behind on other people's play is indistinguishable from one that is not,
-    ///         and watching every player's imports would evict continuously and cache nothing.
-    ///         <see cref="Lifetime" /> is the backstop that bounds that drift.
+    ///         Pool-free by the same reasoning: which pool you are looking at changes the bar,
+    ///         never the estimate, so all three selector positions share one sweep.
+    ///     </para>
+    ///     <para>
+    ///         Eviction is by the viewer's own score changes. Peers' scores moving does NOT
+    ///         evict — a projection a few hours behind on other people's play is
+    ///         indistinguishable from one that is not, and watching every player's imports
+    ///         would evict continuously and cache nothing. <see cref="Lifetime" /> bounds that
+    ///         drift.
     ///     </para>
     /// </summary>
-    internal sealed class PumbilityProjectionCache
+    internal sealed class PumbilityProjectionCache : IDisposable
     {
-        /// <summary>Bounds how far behind peers' play a cached projection can drift.</summary>
-        public static readonly TimeSpan Lifetime = TimeSpan.FromHours(6);
+        /// <summary>Bounds how far behind peers' play a cached sweep can drift.</summary>
+        public static readonly TimeSpan Lifetime = TimeSpan.FromHours(24);
 
-        private readonly IMemoryCache _cache;
+        /// <summary>
+        ///     Entries, not bytes. A backstop rather than a working limit: an entry runs a few
+        ///     tens of kilobytes, so this bounds the cache well past any real day's traffic and
+        ///     exists so a surge cannot grow it without limit. Evicting costs a recomputation,
+        ///     which is what expiry already does.
+        /// </summary>
+        private const int MaxEntries = 5000;
 
-        public PumbilityProjectionCache(IMemoryCache cache)
+        private readonly MemoryCache _cache;
+
+        /// <summary>
+        ///     Guards the check-then-start below. Held only across a dictionary read and the
+        ///     synchronous prologue of the sweep, never across its awaits.
+        /// </summary>
+        private readonly object _gate = new();
+
+        /// <summary>
+        ///     Its own cache, not the shared one. <see cref="MemoryCache.Set{TItem}" /> throws
+        ///     once a SizeLimit is set and an entry omits its size, so bounding the app-wide
+        ///     instance would break every other caller in the solution.
+        /// </summary>
+        public PumbilityProjectionCache()
         {
-            _cache = cache;
+            _cache = new MemoryCache(new MemoryCacheOptions { SizeLimit = MaxEntries });
         }
 
-        public bool TryGet(Guid userId, MixEnum mix, ChartType? pool, out PumbilityProjection? projection)
+        public void Dispose()
         {
-            return _cache.TryGetValue(Key(userId, mix, pool), out projection);
-        }
-
-        public void Set(Guid userId, MixEnum mix, ChartType? pool, PumbilityProjection projection)
-        {
-            _cache.Set(Key(userId, mix, pool), projection, Lifetime);
+            _cache.Dispose();
         }
 
         /// <summary>
-        ///     Drops every pool a player could be looking at. A null mix drops every mix — a
-        ///     score wipe does not say which one it took.
+        ///     The cached sweep, computing it if nobody has. The TASK is what is cached, not
+        ///     its result: the home page's suggestion widget and the Pumbility page ask for the
+        ///     same thing seconds apart, and caching the result would let the second arrival
+        ///     start a second sweep while the first was still running.
+        /// </summary>
+        public Task<IReadOnlyDictionary<Guid, PhoenixScore>> GetOrAdd(Guid userId, MixEnum mix,
+            Func<Task<IReadOnlyDictionary<Guid, PhoenixScore>>> compute)
+        {
+            var key = Key(userId, mix);
+            if (_cache.TryGetValue(key, out Task<IReadOnlyDictionary<Guid, PhoenixScore>>? running) &&
+                running != null)
+                return running;
+
+            lock (_gate)
+            {
+                if (_cache.TryGetValue(key, out running) && running != null) return running;
+
+                var started = Run(key, compute);
+                // A sweep that fails before its first real await is already a faulted task by
+                // the time control returns here, so Run's own cleanup has run and this Set
+                // would put the failure back. Both orderings have to be handled; neither on
+                // its own is enough.
+                if (started.IsFaulted) return started;
+
+                _cache.Set(key, started, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = Lifetime,
+                    Size = 1
+                });
+                return started;
+            }
+        }
+
+        /// <summary>
+        ///     Drops a player's sweep. A null mix drops every mix — a score wipe does not say
+        ///     which one it took.
         /// </summary>
         public void Evict(Guid userId, MixEnum? mix)
         {
             var mixes = mix is { } one ? new[] { one } : Enum.GetValues<MixEnum>();
-            foreach (var m in mixes)
-            foreach (var pool in new ChartType?[] { null, ChartType.Single, ChartType.Double })
-                _cache.Remove(Key(userId, m, pool));
+            foreach (var m in mixes) _cache.Remove(Key(userId, m));
         }
 
-        // Enumerated rather than prefix-scanned: IMemoryCache cannot evict by prefix, and the
-        // key space per player is small and fixed (mixes x the three pools).
-        private static string Key(Guid userId, MixEnum mix, ChartType? pool)
+        /// <summary>
+        ///     A failure must not be cached. Without this the first caller's transient error
+        ///     would be handed to every later one for a day, and the only cure would be a
+        ///     restart.
+        /// </summary>
+        private async Task<IReadOnlyDictionary<Guid, PhoenixScore>> Run(string key,
+            Func<Task<IReadOnlyDictionary<Guid, PhoenixScore>>> compute)
         {
-            return $"pumbility:projection:{userId}:{mix}:{pool?.ToString() ?? "all"}";
+            try
+            {
+                return await compute();
+            }
+            catch
+            {
+                _cache.Remove(key);
+                throw;
+            }
+        }
+
+        private static string Key(Guid userId, MixEnum mix)
+        {
+            return $"pumbility:estimates:{userId}:{mix}";
         }
     }
 }

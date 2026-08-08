@@ -38,7 +38,6 @@ else if (Density == UiDensity.Table)
                 <th>@L["You have"]</th>
                 <th>@L["Projected"]</th>
                 <th class="pmb-r">@L["Gain"]</th>
-                <th class="pmb-col-why">@L["Evidence"]</th>
             </tr>
             </thead>
             <tbody>
@@ -63,7 +62,6 @@ else if (Density == UiDensity.Table)
                         <span class="pmb-num pmb-score-text">@(((int)target.Projected).ToString("N0"))</span>
                     </td>
                     <td class="pmb-r pmb-gain-cell">+@target.Gain.ToString("N0")</td>
-                    <td class="pmb-col-why pmb-muted">@EvidenceLine(target)</td>
                 </tr>
             }
             </tbody>
@@ -89,9 +87,11 @@ else if (Density == UiDensity.Compact)
             var chart = Charts[target.ChartId];
             <TierListChartCard Chart="chart" Density="UiDensity.Compact"
                                CornerBadge="@($"+{target.Gain:N0}")" CornerBadgeClass="pmb-corner-gain"
-                               Passed="target.Current != null"
+                               CornerBadgeStart="@ProjectedGrade(target)" CornerBadgeStartClass="pmb-corner-gain"
+                               Passed="target.Current != null && !target.CurrentIsBroken"
                                PassedInAnotherMix="target.Source == TargetSource.Phoenix1"
-                               TooltipNote="@CornerMeaning(target)"
+                               Broke="target.CurrentIsBroken"
+                               TooltipNote="@CompactNote(target)"
                                ShowName="false" ShowToDo="false"
                                OnOpen="OpenById"></TierListChartCard>
         }
@@ -181,14 +181,28 @@ else
 
     private Task OnPlayById(Guid chartId) => OnPlay.InvokeAsync(Charts[chartId]);
 
-    // Compact hides the body, so the words for the three kinds ride the tooltip and the
-    // legend (rule 8: the border's colour never travels alone).
-    private string CornerMeaning(PumbilityTarget target) => target switch
+    // The grade the projection lands on, opposite the gain in the jacket's other bottom
+    // corner. Compact prints one number, and the number is how much — this says what you
+    // would come away with, which is the other half of deciding whether to go and play it.
+    private RenderFragment ProjectedGrade(PumbilityTarget target) => builder =>
     {
-        { Source: TargetSource.Phoenix1 } => L["Carried from Phoenix 1"],
-        { Current: not null } => L["Upscore"],
-        _ => L["Not yet played"]
+        builder.OpenComponent<LetterGradeIcon>(0);
+        builder.AddComponentParameter(1, nameof(LetterGradeIcon.Grade), target.Projected.LetterGradeFor(Mix));
+        builder.AddComponentParameter(2, nameof(LetterGradeIcon.Height), 14);
+        builder.CloseComponent();
     };
+
+    // The jacket says it in pictures, so the tooltip says it in words — Compact has no body
+    // to carry either (rule 7). The card supplies the state word itself, so this is the
+    // source and the grade and nothing more.
+    private string CompactNote(PumbilityTarget target) =>
+        $"{CornerMeaning(target)} · {target.Projected.LetterGradeFor(Mix).GetName()}";
+
+    // Where the number came from, and only that. What the row is to YOU — upscore, carried,
+    // broke, untouched — is the border's job and the legend names it; saying it twice in
+    // different words was the whole reason the line read as noise (owner, 2026-08-07).
+    private string CornerMeaning(PumbilityTarget target) =>
+        target.Source == TargetSource.Phoenix1 ? L["Carried from Phoenix 1"] : L["Projected"];
 
     private RenderFragment ProjectionBody(PumbilityTarget target) => builder =>
     {
@@ -211,7 +225,7 @@ else
 
         builder.OpenElement(12, "div");
         builder.AddAttribute(13, "class", "pmb-tcard-why pmb-muted");
-        builder.AddContent(14, target.Evidence != null ? EvidenceLine(target) : CornerMeaning(target));
+        builder.AddContent(14, CornerMeaning(target));
         builder.CloseElement();
     };
 
@@ -251,12 +265,4 @@ else
         builder.CloseElement();
     };
 
-    // What the estimate heard, not why it landed there. Effective peers is voices after
-    // growth weighting -- ten people who have all levelled past the score they lent are
-    // worth about one -- so it is the honest number to print.
-    private string EvidenceLine(PumbilityTarget target)
-    {
-        if (target.Evidence is not { } evidence) return string.Empty;
-        return string.Format(L["from {0} players like you"], evidence.PeerCount);
-    }
 }

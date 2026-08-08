@@ -96,8 +96,10 @@ internal sealed class PlayerRatingSaga :
             .ToDictionary(c => c.Id);
         var scoring = ScoringConfiguration.PumbilityScoring(request.Mix, false);
 
-        // Phoenix 2 prices plates and stage breaks into the ranking; Phoenix keeps its
-        // historical plate-blind ordering byte-identical.
+        // Phoenix 2 prices plates into the ranking; Phoenix keeps its historical plate-blind
+        // ordering byte-identical. Stage breaks never reach here — the filter below drops
+        // them, which is why this may not pass IsBroken on the Phoenix branch: the argument
+        // is positional, so supplying it would drag the plate in with it.
         double Rank(RecordedPhoenixScore s)
         {
             return request.Mix == MixEnum.Phoenix2
@@ -106,10 +108,15 @@ internal sealed class PlayerRatingSaga :
                 : scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value);
         }
 
+        // A stage break is worth zero PUMBILITY, so a broken run in the pool holds a slot at
+        // no value. That is not merely wasteful: the PUMBILITY page measures every projected
+        // gain against the pool's MINIMUM, and one such row drives that floor to zero, which
+        // prints every suggestion's whole value as if it displaced nothing. Dropped here
+        // rather than at each call site, so the query means what its name says.
         return (await _scores.GetBestScores(request.Mix, request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
-            .Where(s => s.Score != null && (request.ChartType == null ||
-                                            charts[s.ChartId].Type == request.ChartType))
+            .Where(s => s.Score != null && !s.IsBroken && (request.ChartType == null ||
+                                                           charts[s.ChartId].Type == request.ChartType))
             .OrderByDescending(Rank)
             .Take(request.Count).ToArray();
     }
@@ -128,10 +135,14 @@ internal sealed class PlayerRatingSaga :
             (await _charts.GetCharts(request.Mix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
         var count = request.ChartType == null ? 100 : 50;
+        // Broken attempts never rate, the same rule RecalculateCore applies when it computes
+        // the stored competitive level: a walkoff's partial score deflates small accounts'
+        // averages, and a deep partial on an overrated chart would farm competitive level
+        // without ever passing it. The query and the stored figure have to agree on that.
         return (await _scores.GetBestScores(request.Mix, request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
-            .Where(s => s.Score != null && (request.ChartType == null ||
-                                            charts[s.ChartId].Type == request.ChartType))
+            .Where(s => s.Score != null && !s.IsBroken && (request.ChartType == null ||
+                                                           charts[s.ChartId].Type == request.ChartType))
             .OrderByDescending(s =>
                 ScoringConfiguration.CalculateFungScore(charts[s.ChartId].Level, s.Score!.Value,
                     charts[s.ChartId].Type))
