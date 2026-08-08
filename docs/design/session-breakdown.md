@@ -60,6 +60,9 @@ positions.
 | D33 | **The gain measures the combined pool only.** Phoenix 2 has three (All/Singles/Doubles) and Phoenix has one; the row reports one number, and the combined pool is what the ceremony band headlines. |
 | D34 | **No backfill** (owner, 2026-08-08). Both new captures are forward-only; the maintainer's own most recent session is seeded locally for the field test. The existing `RebuildLatestSessionsCommand` would not have served anyway — it replays the change set through the live pipeline, and a rebuild computes against **today's** stats, so a delta measured old-vs-new comes out zero for a session already applied. |
 | D35 | **The Phoenix 1 delta is computed at render, not captured** (owner, 2026-08-08: *"P1 gonna be frozen in a month"*). A column for a number that stops moving is a column for nothing. The consequence is honest and accepted: it reads today's Phoenix 1 best, so a session viewed later reflects Phoenix 1 as it stands then. |
+| D36 | **A break is never a score that mattered.** D6 already said failures are never highlighted; the section reached one anyway through its **padding** — it tops itself to six rows with unflagged scores, and on a thin session a stage break can be the highest level present. Breaks are filtered from both halves and live only in All plays. |
+| D37 | **Capture in flight gets the patience card** (owner, 2026-08-08). `HighlightCaptureSaga` is a bus consumer, so a page opened right after an import can beat it — which rendered as an empty hero, indistinguishable from a session that earned nothing. The card stands in for the **whole** capture-derived region per UX rule 9; the ceremony band and All plays stay, because they read the stats row and the journal and are true the moment the import lands. |
+| D38 | **The pending state is inferred, and the inference expires.** No `ScoreSession` row ⇒ never pending (historical by definition). Otherwise: nothing captured **and** `LastActivityAt` within **2 minutes**. A session of co-op or far-below-competitive charts legitimately captures nothing and looks identical, so the window is what stops the page telling that player to keep waiting. The exact fix — a `HighlightsCapturedAt` stamp on `ScoreSession`, which would also separate *failed* from *unremarkable* (today identical, though the saga swallows each step's exceptions) — is a migration and stays a follow-up. |
 
 ### Deliberately not decided here
 
@@ -443,3 +446,14 @@ would be a lie:
 6. **The Phoenix 1 delta is measured against Phoenix 1 as it stands now** (D35), not as it stood
    during the session. Phoenix is effectively frozen, which is what makes that acceptable rather
    than merely convenient.
+7. **"Still calculating" is a guess with an expiry** (D38). The page cannot currently distinguish
+   *capture is running*, *capture failed* and *this session earned nothing* — so it only claims
+   the first for two minutes, then stops claiming anything.
+
+⚠ **The undo lesson, for anything that rebuilds a record from history.** A returning song carries
+one ChartId across Phoenix and Phoenix 2, so `GetChartHistories` is **cross-mix by design** —
+reclear detection depends on it. Any replay reconstructing one mix's record must filter by mix
+first. `Classify` and `RebuildLatestSessionsConsumer` always did; `UndoScoreSessionHandler` did
+not, and wrote players' Phoenix 1 scores in as their Phoenix 2 records. Nothing self-corrected,
+because acquisition may only *raise* a record — so the wrong, higher number stuck and every later
+import of the real score journalled as not-best and rendered as "Played" (fixed 2026-08-08).
