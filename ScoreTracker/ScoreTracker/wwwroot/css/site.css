@@ -13470,6 +13470,8 @@ details.pmb-fold > summary:focus-visible {
 /* Five panels stepping in sequence. Motion without a spinner, and the one thing on the page
    that could only belong to this game. */
 .patience-pad {
+    /* One step of the chart. Every pattern below counts its cycle in these. */
+    --patience-beat: .32s;
     display: grid;
     grid-template-columns: repeat(3, 20px);
     grid-template-rows: repeat(3, 20px);
@@ -13480,31 +13482,73 @@ details.pmb-fold > summary:focus-visible {
     display: block;
     border-radius: 3px;
     background: color-mix(in srgb, var(--mix-ink) 13%, transparent);
-    animation: patience-step 2s steps(1, end) infinite;
+    animation-timing-function: steps(1, end);
+    animation-iteration-count: infinite;
 }
 
-.patience-ul { grid-area: 1 / 1; animation-delay: 0s; }
-.patience-ur { grid-area: 1 / 3; animation-delay: .4s; }
-.patience-ct { grid-area: 2 / 2; animation-delay: .8s; }
-.patience-dl { grid-area: 3 / 1; animation-delay: 1.2s; }
-.patience-dr { grid-area: 3 / 3; animation-delay: 1.6s; }
+.patience-ul { grid-area: 1 / 1; }
+.patience-ur { grid-area: 1 / 3; }
+.patience-ct { grid-area: 2 / 2; }
+.patience-dl { grid-area: 3 / 1; }
+.patience-dr { grid-area: 3 / 3; }
 
-@keyframes patience-step {
-    0% {
-        background: var(--mix-primary);
-        box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent);
-    }
+/* Real step patterns, one picked per load (owner, 2026-08-08). Every one starts AND ends on
+   the bottom-left arrow, which is what lets a cycle repeat without a seam — the last step of
+   a pass and the first step of the next are the same foot.
 
-    18% {
-        background: color-mix(in srgb, var(--mix-primary) 45%, transparent);
-        box-shadow: 0 0 0 transparent;
-    }
+   A panel that lights twice in a cycle gets the same keyframe declared twice with two delays,
+   rather than a bespoke keyframe per panel: CSS repeats the single duration and timing across
+   both instances, so the schedule is the only thing that has to be written down.
 
-    20%, 100% {
-        background: color-mix(in srgb, var(--mix-ink) 13%, transparent);
-        box-shadow: 0 0 0 transparent;
-    }
+   The flash lasts exactly one beat, so the width is a function of the cycle length — hence one
+   keyframe per length rather than one shared. */
+@keyframes patience-flash-8 {
+    0% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    11.25% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    12.5%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
 }
+
+@keyframes patience-flash-6 {
+    0% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    15% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    16.667%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+}
+
+/* M run — up the left, through the middle, down the right, and back the way it came.
+   BL · TL · C · TR · BR · TR · C · TL */
+.patience-mrun .patience-panel { animation-name: patience-flash-8; animation-duration: calc(var(--patience-beat) * 8); }
+.patience-mrun .patience-dl { animation-delay: 0s; }
+.patience-mrun .patience-ul { animation-name: patience-flash-8, patience-flash-8; animation-delay: calc(var(--patience-beat) * 1), calc(var(--patience-beat) * 7); }
+.patience-mrun .patience-ct { animation-name: patience-flash-8, patience-flash-8; animation-delay: calc(var(--patience-beat) * 2), calc(var(--patience-beat) * 6); }
+.patience-mrun .patience-ur { animation-name: patience-flash-8, patience-flash-8; animation-delay: calc(var(--patience-beat) * 3), calc(var(--patience-beat) * 5); }
+.patience-mrun .patience-dr { animation-delay: calc(var(--patience-beat) * 4); }
+
+/* Spin — back to the centre between every corner.
+   BL · C · TL · C · TR · C · BR · C */
+.patience-spin .patience-panel { animation-name: patience-flash-8; animation-duration: calc(var(--patience-beat) * 8); }
+.patience-spin .patience-dl { animation-delay: 0s; }
+.patience-spin .patience-ct { animation-name: patience-flash-8, patience-flash-8, patience-flash-8, patience-flash-8; animation-delay: calc(var(--patience-beat) * 1), calc(var(--patience-beat) * 3), calc(var(--patience-beat) * 5), calc(var(--patience-beat) * 7); }
+.patience-spin .patience-ul { animation-delay: calc(var(--patience-beat) * 2); }
+.patience-spin .patience-ur { animation-delay: calc(var(--patience-beat) * 4); }
+.patience-spin .patience-dr { animation-delay: calc(var(--patience-beat) * 6); }
+
+/* Standard run — the ordinary way round.
+   BL · C · TL · TR · C · BR */
+.patience-run .patience-panel { animation-name: patience-flash-6; animation-duration: calc(var(--patience-beat) * 6); }
+.patience-run .patience-dl { animation-delay: 0s; }
+.patience-run .patience-ct { animation-name: patience-flash-6, patience-flash-6; animation-delay: calc(var(--patience-beat) * 1), calc(var(--patience-beat) * 4); }
+.patience-run .patience-ul { animation-delay: calc(var(--patience-beat) * 2); }
+.patience-run .patience-ur { animation-delay: calc(var(--patience-beat) * 3); }
+.patience-run .patience-dr { animation-delay: calc(var(--patience-beat) * 5); }
+
+/* Cross overs — every step lands on the far side.
+   BL · C · TR · BR · C · TL */
+.patience-cross .patience-panel { animation-name: patience-flash-6; animation-duration: calc(var(--patience-beat) * 6); }
+.patience-cross .patience-dl { animation-delay: 0s; }
+.patience-cross .patience-ct { animation-name: patience-flash-6, patience-flash-6; animation-delay: calc(var(--patience-beat) * 1), calc(var(--patience-beat) * 4); }
+.patience-cross .patience-ur { animation-delay: calc(var(--patience-beat) * 2); }
+.patience-cross .patience-dr { animation-delay: calc(var(--patience-beat) * 3); }
+.patience-cross .patience-ul { animation-delay: calc(var(--patience-beat) * 5); }
 
 .patience-line {
     font-family: var(--font-display);
@@ -13524,12 +13568,16 @@ details.pmb-fold > summary:focus-visible {
     max-width: 34ch;
 }
 
+/* Two classes deliberately, not one: the step patterns above select as `.patience-mrun
+   .patience-ul`, and a bare `.patience-panel` here would lose to them on specificity and leave
+   the pad animating for someone who asked it not to. Matching their weight and sitting later in
+   the file is what makes this win. */
 @media (prefers-reduced-motion: reduce) {
-    .patience-panel {
+    .patience-pad .patience-panel {
         animation: none;
     }
 
-    .patience-ct {
+    .patience-pad .patience-ct {
         background: var(--mix-primary);
         box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent);
     }

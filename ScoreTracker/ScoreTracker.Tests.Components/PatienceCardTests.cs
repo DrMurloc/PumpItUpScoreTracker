@@ -52,6 +52,29 @@ public sealed class PatienceCardTests : ComponentTestBase
         Assert.NotEqual(first, second);
     }
 
+    [Fact]
+    public void ThePadRunsOneOfTheRealStepPatterns()
+    {
+        // The pad steps a chart, not a decorative sweep, so the pattern has to reach the markup
+        // — the schedule itself lives in CSS.
+        _random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
+        var pad = Render("Anything.").Find(".patience-pad");
+
+        Assert.Contains("patience-mrun", pad.ClassList);
+    }
+
+    [Fact]
+    public void ThePatternComesFromTheSameSeamAsThePhrase()
+    {
+        _random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
+        var first = Render("Anything.").Find(".patience-pad").ClassName;
+
+        _random.Setup(r => r.Next(It.IsAny<int>())).Returns(2);
+        var second = Render("Anything.").Find(".patience-pad").ClassName;
+
+        Assert.NotEqual(first, second);
+    }
+
     private IRenderedComponent<PatienceCard> Render(string explanation)
     {
         return RenderComponent<PatienceCard>(p => p.Add(x => x.Explanation, explanation));

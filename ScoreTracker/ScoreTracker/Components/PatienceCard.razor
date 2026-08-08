@@ -10,7 +10,7 @@
    knows nothing about the page, so it can never be wrong somewhere it was not written for,
    and the explanation comes from the page, so it is always specific. *@
 <div class="patience-card">
-    <div class="patience-pad" aria-hidden="true">
+    <div class="patience-pad @_pattern" aria-hidden="true">
         <i class="patience-panel patience-ul"></i>
         <i class="patience-panel patience-ur"></i>
         <i class="patience-panel patience-ct"></i>
@@ -52,13 +52,29 @@
         "Wiping down the sensors"
     };
 
-    private string _phrase = string.Empty;
+    // Real step patterns rather than a decorative sweep (owner, 2026-08-08). Each is written in
+    // CSS as a beat schedule, and each starts AND ends on the bottom-left arrow — which is what
+    // lets a cycle repeat without a seam, since the last step of a pass and the first step of
+    // the next are the same foot.
+    private static readonly string[] Patterns =
+    {
+        "patience-mrun", // up the left, through the middle, down the right, and back
+        "patience-spin", // back to the centre between every corner
+        "patience-run", // the ordinary way round
+        "patience-cross" // every step lands on the far side
+    };
 
-    // Once per load, not on a timer: a phrase that changes while you wait pulls your eye back
-    // to the thing you are waiting on.
+    private string _phrase = string.Empty;
+    private string _pattern = string.Empty;
+
+    // Both once per load, not on a timer: something that changes while you wait pulls your eye
+    // back to the thing you are waiting on. The pattern is picked here rather than swapped as
+    // the pad runs for the same reason — a cycle that finishes the way it started is already
+    // seamless on its own.
     protected override void OnInitialized()
     {
         _phrase = L[Phrases[Random.Next(Phrases.Length)]];
+        _pattern = Patterns[Random.Next(Patterns.Length)];
     }
 
 }
