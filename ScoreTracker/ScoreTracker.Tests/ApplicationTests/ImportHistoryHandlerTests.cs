@@ -73,6 +73,36 @@ public sealed class ImportHistoryHandlerTests
         Assert.Null(history.Single().ScoreCount);
     }
 
+    /// <summary>
+    ///     The Ledger's counter is written only when the score batch drains — a ~2 minute
+    ///     debounce — and both drain paths return early on an empty batch, so it can never say
+    ///     zero truthfully. Reading a fresh session's 0 as a fact printed "0 scores" over an
+    ///     import that had just saved six (field test, 2026-08-08).
+    /// </summary>
+    [Fact]
+    public async Task AZeroCountIsTreatedAsNotYetKnownRatherThanAsNoScores()
+    {
+        var sessionId = Guid.NewGuid();
+        var (handler, _) = Build(new[] { Attempt(sessionId, ImportOutcome.Completed, Started) },
+            Session(sessionId, 0));
+
+        var history = await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None);
+
+        Assert.Null(history.Single().ScoreCount);
+    }
+
+    [Fact]
+    public async Task ACountThatHasLandedIsStillReported()
+    {
+        var sessionId = Guid.NewGuid();
+        var (handler, _) = Build(new[] { Attempt(sessionId, ImportOutcome.Completed, Started) },
+            Session(sessionId, 6));
+
+        var history = await handler.Handle(new GetImportHistoryQuery(UserId), CancellationToken.None);
+
+        Assert.Equal(6, history.Single().ScoreCount);
+    }
+
     [Fact]
     public async Task ASessionThatNoLongerExistsKeepsANullCount()
     {

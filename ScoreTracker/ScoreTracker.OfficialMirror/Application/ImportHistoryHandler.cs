@@ -37,8 +37,13 @@ internal sealed class ImportHistoryHandler
         var wanted = attempts.Where(a => a.SessionId is not null).Select(a => a.SessionId!.Value).ToHashSet();
         if (wanted.Count == 0) return attempts;
 
+        // Zero is dropped rather than reported, because the Ledger's counter cannot say zero
+        // truthfully. It is written only when the score batch DRAINS — a ~2 minute debounce — and
+        // both drain paths return early when the batch is empty, so a stored count is either
+        // "at least one" or "we have not been told yet". Reading a fresh session's 0 as a fact
+        // printed "0 scores" over an import that had just saved six.
         var sessions = (await _mediator.Send(new GetScoreSessionsQuery(request.UserId), cancellationToken))
-            .Where(s => wanted.Contains(s.Id))
+            .Where(s => wanted.Contains(s.Id) && s.ScoreCount > 0)
             .ToDictionary(s => s.Id, s => s.ScoreCount);
 
         return attempts
