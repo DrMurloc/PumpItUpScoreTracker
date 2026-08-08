@@ -473,8 +473,8 @@ signed in.
 > invariant, the new Domain port) move to `CLAUDE.md` / `ARCHITECTURE.md` as they land, and do not
 > survive here.
 >
-> §6–§9 are the whole feature. **§11 is the Slice 2 build sheet** — read that one first if you are
-> starting the build.
+> §6–§9 are the whole feature. The Slice 2 build sheet that used to be §11 is gone — it was built;
+> what it got wrong is recorded in §10 instead.
 
 ## 6. Verticals
 
@@ -587,7 +587,7 @@ foundations that already work.
 | | Slice | Tabs | New tables | Spends money |
 |---|---|---|---|---|
 | **1** ✅ | **SHIPPED — [PR #227](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/227)**, eleven commits, all five suites green. Sticky tab strip, `InitialTab`, Chart Stats absorbs the meta/skills/similar charts, Score History tab with the manual score edit | **3** | none | no |
-| **2** | Comments + personal notes — vertical, aggregate, parser, link trust, threads, votes, composer, rules card, site-admin removal, `FocusCommentId` | **4** | yes | no |
+| **2** ✅ | **BUILT** — comments + personal notes: vertical, aggregate, plain-text parser, link trust, threads, votes, composer, rules card, site-admin removal, `FocusCommentId` | **4** | yes | no |
 | **3** | Community moderation — permission flag + backfill, restrictions, reports, queue panels | 4 | yes | no |
 | **4** | Translation — batch client, the four-state pipeline, ceiling, admin page | 4 | yes | **yes** |
 
@@ -611,77 +611,39 @@ with no delete button is a bad week — but site-admin removal costs one `IsAdmi
 along in Slice 2, so every comment has a delete button from the moment it can exist. Shipping them
 together is now a preference. Nothing is public either way until the toggle flips.
 
-## 11. Slice 2 build sheet
+### What Slice 2 learned
 
-### The vertical
+The build sheet that used to sit here has served its purpose and is gone. What it got wrong, or
+could not have known, is worth keeping:
 
-`ScoreTracker.ChartComments`, in `WeeklyChallenge`'s shape. **Nothing new to the solution's package
-set** — one row added to CLAUDE.md's allowlist table.
+- ⚠ **`VerticalAssemblies.All()` needed the new vertical**, and nothing in the build sheet said so —
+  it is a second hand-maintained list beside `VerticalModelContributions.All()`, guarding MediatR
+  rather than EF. `MediatRHandlerRegistrationTests` caught it, but only in the **integration** suite:
+  every fast suite was green with every handler in the vertical unregistered. That is the exact
+  failure CommunityTools shipped with.
+- ⚠ **Comments cannot go in a `UserOwned` manifest, and neither can their votes or consents.** A
+  blanket delete orphans replies; the vertical purges all four tables in one hand-written pass, and
+  three `Exempt` rows carry the reason. Revisions are the easy one to miss — no user key, and they
+  hold the text the purge exists to remove.
+- ⚠ **A resx insert can land inside the ResX schema comment.** It contains example `<data>` elements,
+  so an alphabetical scan matches one and the keys compile to nothing while English looks perfect.
+  `NoResxDataElementsHideInsideTheSchemaComment` catches it. Skip comment ranges, and back up over an
+  explanatory comment so it stays attached to the entry it explains.
+- **`CommunityOverviewRecord` gained a required `CommunityId`.** Required rather than optional turned
+  a silent `Guid.Empty` into nine compile errors — worth the churn for a foreign key.
+- **Domain gained one type after all**: `CommentNotAllowedException`, which Web catches by type to
+  show the reason. The build sheet said "Domain: nothing", which was wrong by one file.
+- **The three "still open" questions were answered before the build**: purge tombstones roots with
+  replies and hard-deletes the rest; comments are cross-mix (one `ChartId` spans mixes, and the steps
+  do not change); leaving a community keeps your comments in it and takes away your ability to read
+  them.
 
-- **Packages**: `MediatR`, `MassTransit` + `MassTransit.Abstractions` (the full package, because
-  `AddChartCommentsConsumers` needs `IRegistrationConfigurator`),
-  `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Caching.Memory`
-  (the tool-host allowlist's short TTL).
-- **Project refs**: `Domain`, `Data` (the shared context, transitionally), `Communities` (the
-  audience list), `CommunityTools` (public tool URLs). No cycle — neither references back.
-  **Not `Catalog`**: a comment stores a `ChartId` and knows nothing about charts. The moderation
-  queue row resolves song and difficulty in Web, which keeps the boundary clean for a join only
-  presentation needs.
-- `InternalsVisibleTo` `ScoreTracker.Tests` + `DynamicProxyGenAssembly2`.
+**Still owed, and only measurable by hand: the 390 px pass.** Open the dialog at 390 with all four
+tabs and confirm `scrollWidth > clientWidth` on the tab strip and nowhere else. Two candidates
+besides the strip: the scope rail, which wraps and so must never scroll, and — the likelier — a bare
+URL in a comment body, which is what `overflow-wrap: anywhere` on `.cmt-body` is for.
 
-| Folder | Contents |
-|---|---|
-| `Contracts/` | **Commands** `PostComment`, `EditComment`, `DeleteComment`, `RemoveComment` (site admin), `VoteOnComment`, `AcceptCommentTerms`. **Queries** `GetChartCommentsQuery(ChartId, Scope, Sort, Take)`, `GetMyCommentScopesQuery`, `GetMyCommentConsentQuery`. **Records** `CommentRecord`, `CommentNode` (the token tree, `IsTrusted` pre-resolved), `CommentScopeRecord`. **No events this slice** — the translation pair is §3. |
-| `Domain/` | `Comment` (the aggregate), `CommentAudience` (`Public` \| `Private` \| `Community(Guid)`), `CommentText` (parser → token tree), `LinkTrust`. Ports `ICommentRepository`, `ICommentConsentRepository`, `IAccountPurgeRepository`. Exceptions on a domain base. All pure — no EF, no clock, no RNG. |
-| `Application/` | `CommentSaga` (write + read handlers, one feature-grouped class) and `AccountPurgeConsumer : IConsumer<AccountPurgeStartedEvent>` — idempotent, because that event re-fires daily for a week. |
-| `Infrastructure/` | The four entities, `EFCommentRepository`, `EFCommentConsentRepository`, `EFAccountPurgeRepository`. `IDbContextFactory<ChartAttemptDbContext>` + `Set<TEntity>()`. |
-| `Wiring/` | `AddChartComments()`, `AddChartCommentsConsumers(IRegistrationConfigurator)`, `ChartCommentsModelContribution`. |
-
-### The four tables
-
-| Table | Shape | Notes |
-|---|---|---|
-| `Comment` | `Id, ChartId, UserId, Audience, CommunityId?, ParentCommentId?, Text(500), SourceLanguage?, CreatedAt, EditedAt?, DeletedAt?, DeletedByUserId?` | Index `(ChartId, Audience, CommunityId)`. `SourceLanguage` stays null all slice. **Exempt from `UserOwned`** — see §2. |
-| `CommentRevision` | `Id, CommentId, Text, ReplacedAt` | No `UserId`, so separately exempt — and deleted by *comment* id during a purge. |
-| `CommentVote` | `Id, CommentId, UserId, CreatedAt` | Unique `(CommentId, UserId)`. |
-| `CommentConsent` | `Id, UserId, AgreedToTermsAt, TermsVersion, ConsentedToPublicIdentityAt?` | One row per user, not per comment. |
-
-**Vote count is a join, not a column.** A denormalised counter is a drift bug waiting; at 100–300
-comments a month a `GROUP BY` for the Top sort costs nothing.
-
-### Everything else
-
-| Layer | Change |
-|---|---|
-| **SharedKernel** | **Nothing.** `ModerateComments` is §4's, and the site admin is computed. |
-| **Domain** | **Nothing.** `ILanguageModelBatchClient` is §3's. |
-| **Application** | **Nothing** — it is shrinking by design and this does not reverse that. |
-| **Data** | One migration. No new client, no new package, no `Anthropic` reference yet. |
-| **Web** | `ChartDetailsDialog` gains `DetailsTab.Comments`, `FocusCommentId`, and the `IsAdmin \|\| ChartComments:Enabled` gate on `AvailableTabs`. New: `ChartCommentsTab`, `CommentRow`, `CommentComposer`, `CommentTextView`, `CommentRulesCard`, `LinkInterstitialDialog`, `Configuration/ChartCommentsConfiguration`. |
-| **CompositionRoot** | `AddChartComments()`; `ChartCommentsModelContribution` into `VerticalModelContributions.All()`. |
-| **AppHost** | `WithEnvironment("ChartComments__Enabled", "true")`, following `DevAuth`. |
-
-⚠ **`CommentTextView` is the only component that touches comment text, and it never sees a string** —
-it walks `CommentNode`s and emits elements. That is what makes `MarkupString` structurally
-unreachable rather than merely discouraged.
-
-### Tests
-
-| Suite | What |
-|---|---|
-| `DomainTests/` | `CommentTests` — audience invariant, reply inherits its root, the four `Private` rules, the 500 cap, no self-vote. `CommentTextTests` — URL detection, blank-run collapse, and that `*` and `_` are **not** interpreted. `LinkTrustTests` — `youtube.com.evil.tld` rejected, `tools.example.com` does not bless `evil.example.com`, `javascript:` and `data:` rejected at parse time. |
-| `ApplicationTests/` | `CommentSagaTests` — mocked ports, `Verify` on the writes. |
-| `Tests.Components/` | `ChartCommentsTabTests` (scope rail, affordances by role, the gate), `CommentComposerTests`. |
-| `Tests.Integration/` | Extend `AccountPurgeTests` with the tombstone case. **New `CommentAudienceIsolationTests`** — the decoy account holding a note and a community comment on every scope, which no other user's query returns under any sort, scope or role. |
-| `ArchitectureTests/` | Two rows only: `AccountPurgeCoverageTests.Exempt` (`CommentEntity`, `CommentRevisionEntity`) and `AppHostForwardingTests.DeliberatelyNotForwarded` (`ChartComments`). |
-
-### Docs in the same PR
-
-`DATABASE-SCHEMA.md` (four rows), `CLAUDE.md` (the vertical's allowlist row), `ARCHITECTURE.md` (the
-vertical joins the list and the solution layout). **Nothing** in `SCHEDULED-JOBS.md` or `API.md` —
-this slice adds no recurring job and no API surface.
-
-### Picking up Slice 2
+### What Slice 1 left open
 
 Everything needed is in this folder: Part 1 for what to build, Part 2 for how, [mock.html](mock.html)
 for what it looks like — including the rules-card copy (§03), which is written, not a placeholder.
