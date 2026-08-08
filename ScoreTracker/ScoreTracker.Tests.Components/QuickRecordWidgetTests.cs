@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Bunit;
 using MediatR;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
@@ -166,7 +167,7 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
         var cut = Render();
         await Pick(cut, _chart);
 
-        cut.Find(".qr-save-btn").Click();
+        await cut.Find(".qr-save-btn").ClickAsync(new MouseEventArgs());
 
         _mediator.Verify(m => m.Send(
             It.Is<UpdatePhoenixBestAttemptCommand>(c =>
@@ -236,7 +237,7 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
             cut.FindComponent<MudSelect<MixEnum?>>().Instance.ValueChanged.InvokeAsync(MixEnum.XX));
         await Pick(cut, xxChart); // legacy prefill sets the letter grade → Save enabled
 
-        cut.Find(".qr-save-btn").Click();
+        await cut.Find(".qr-save-btn").ClickAsync(new MouseEventArgs());
 
         _mediator.Verify(m => m.Send(
             It.Is<UpdateXXBestAttemptCommand>(c =>
@@ -262,9 +263,9 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
         await Pick(cut, xxChart);
 
         // Descending strip → the first image is SSS. Tap it (passing), then again (broken).
-        cut.FindAll(".qr-grade-opt")[0].Click();
-        cut.FindAll(".qr-grade-opt")[0].Click();
-        cut.Find(".qr-save-btn").Click();
+        await cut.FindAll(".qr-grade-opt")[0].ClickAsync(new MouseEventArgs());
+        await cut.FindAll(".qr-grade-opt")[0].ClickAsync(new MouseEventArgs());
+        await cut.Find(".qr-save-btn").ClickAsync(new MouseEventArgs());
 
         _mediator.Verify(m => m.Send(
             It.Is<UpdateXXBestAttemptCommand>(c =>
@@ -282,8 +283,8 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
         var cut = Render();
         await Pick(cut, _chart);
 
-        cut.Find(".qr-grade-toggle").Click();
-        cut.Find(".qr-save-btn").Click();
+        await cut.Find(".qr-grade-toggle").ClickAsync(new MouseEventArgs());
+        await cut.Find(".qr-save-btn").ClickAsync(new MouseEventArgs());
 
         _mediator.Verify(m => m.Send(
             It.Is<UpdatePhoenixBestAttemptCommand>(c =>
@@ -302,7 +303,7 @@ public sealed class QuickRecordWidgetTests : ComponentTestBase
 
         await cut.InvokeAsync(() =>
             cut.FindComponent<MudSelect<string>>().Instance.ValueChanged.InvokeAsync("Broken"));
-        cut.Find(".qr-save-btn").Click();
+        await cut.Find(".qr-save-btn").ClickAsync(new MouseEventArgs());
 
         _mediator.Verify(m => m.Send(
             It.Is<UpdatePhoenixBestAttemptCommand>(c =>
