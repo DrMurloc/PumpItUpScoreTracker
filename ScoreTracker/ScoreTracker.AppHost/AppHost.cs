@@ -34,6 +34,10 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
     // DevAuth login backdoor lights up. Plain `dotnet run` gets neither.
     .WithEnvironment("AutoMigrate", "true")
     .WithEnvironment("DevAuth__Enabled", "true")
+    // Comments ship gated off in production until cost testing says otherwise. Locally there is
+    // nothing to gate against, and a feature the E2E suite cannot see is a feature it cannot
+    // cover — so running under Aspire turns it on, the same way it turns on the login backdoor.
+    .WithEnvironment("ChartComments__Enabled", "true")
     // ...and a webhook may point at localhost, so a maker running the site locally can
     // develop against their own machine. Refused anywhere else: from our servers a private
     // address points at our infrastructure, not theirs.
