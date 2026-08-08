@@ -109,8 +109,13 @@
             .OrderByDescending(s => (int?)s.Chart?.Level ?? 0)
             .ThenByDescending(s => s.Row.OccurredAt)
             .ToArray();
-        Notable = Ordered.Where(s => s.IsFlagged)
-            .Concat(Ordered.Where(s => !s.IsFlagged))
+        // A break is never a score that mattered (D6). It used to reach this section as PADDING
+        // — the list tops itself up with unflagged rows to fill six, and on a thin session the
+        // highest-level row can be a stage break. Breaks belong in All plays, as the neutral
+        // log they are, and nowhere else.
+        var eligible = Ordered.Where(s => !s.Row.IsBroken).ToArray();
+        Notable = eligible.Where(s => s.IsFlagged)
+            .Concat(eligible.Where(s => !s.IsFlagged))
             .Take(NotableRows)
             .ToArray();
         _visiblePlays = InitialPlays;

@@ -80,6 +80,32 @@ public sealed class SessionHeroTests : ComponentTestBase
     }
 
     [Fact]
+    public void ABreakIsNeverAScoreThatMattered()
+    {
+        // The section tops itself up with unflagged rows to fill six, so on a thin session the
+        // highest-level row can be a stage break — which is exactly the thing this page never
+        // highlights (D6). It belongs in All plays and nowhere else.
+        var breakChart = ChartAt(ChartType.Single, 26);
+        var breakRow = Row(breakChart.Id, Start.AddMinutes(20), 794532, ScoreEventClassification.Break);
+        var breakdown = FullBreakdown();
+        var withBreak = breakdown with
+        {
+            Charts = new Dictionary<Guid, Chart>(breakdown.Charts) { [breakChart.Id] = breakChart },
+            Scores = breakdown.Scores
+                .Append(new SessionScore(breakRow with { IsBroken = true }, breakChart,
+                    HighlightFlags.None, null))
+                .ToArray()
+        };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, withBreak));
+
+        var notable = hero.Find("[data-testid='session-notable']");
+        Assert.DoesNotContain("794,532", notable.InnerHtml);
+        // Still present in the neutral log, where the record lives.
+        Assert.Contains("794,532", hero.Find("[data-testid='session-all-plays']").InnerHtml);
+    }
+
+    [Fact]
     public void AQuietSessionStillRendersTheCeremonyBand()
     {
         // The band is the anchor: a session that moved nothing keeps the shape rather than
