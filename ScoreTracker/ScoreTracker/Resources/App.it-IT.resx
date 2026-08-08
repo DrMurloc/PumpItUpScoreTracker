@@ -1711,6 +1711,9 @@
   <data name="Debuted this week" xml:space="preserve">
     <value>Debutti questa settimana</value>
   </data>
+  <data name="Deep scan" xml:space="preserve">
+    <value>Scansione approfondita</value>
+  </data>
   <data name="Default" xml:space="preserve">
     <value>Predefinito</value>
   </data>
@@ -2219,6 +2222,9 @@
   <data name="Finish later" xml:space="preserve">
     <value>Finisci dopo</value>
   </data>
+  <data name="Finished" xml:space="preserve">
+    <value>Conclusa</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>Primo</value>
   </data>
@@ -2677,6 +2683,9 @@
   </data>
   <data name="Import again" xml:space="preserve">
     <value>Importa di nuovo</value>
+  </data>
+  <data name="Import and check" xml:space="preserve">
+    <value>Importa e controlla</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
     <value>Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
@@ -3677,6 +3686,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>Ancora nessuna partecipazione.</value>
+  </data>
+  <data name="No imports yet." xml:space="preserve">
+    <value>Ancora nessuna importazione.</value>
   </data>
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>Nessun link di invito — creane uno per far entrare gente.</value>
@@ -5006,6 +5018,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>Consegne recenti</value>
   </data>
+  <data name="Recent imports" xml:space="preserve">
+    <value>Importazioni recenti</value>
+  </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>Riconnessione…</value>
   </data>
@@ -5772,6 +5787,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Metodi di accesso</value>
+  </data>
+  <data name="Sign-in refused" xml:space="preserve">
+    <value>Accesso rifiutato</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Silenzioso — ancora nessun giocatore nel tuo intervallo competitivo.</value>
@@ -6609,6 +6627,9 @@
   </data>
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>Il Passo di oggi esce a mezzanotte.</value>
+  </data>
+  <data name="Took" xml:space="preserve">
+    <value>Durata</value>
   </data>
   <data name="Tool" xml:space="preserve">
     <value>Strumento</value>

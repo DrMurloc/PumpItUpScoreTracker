@@ -1711,6 +1711,9 @@
   <data name="Debuted this week" xml:space="preserve">
     <value>Blargmurmgl grglmrp plglmorg</value>
   </data>
+  <data name="Deep scan" xml:space="preserve">
+    <value>Grrgl Murgblarg</value>
+  </data>
   <data name="Default" xml:space="preserve">
 	  <value>Plglgrgllurg</value>
   </data>
@@ -2219,6 +2222,9 @@
   <data name="Finish later" xml:space="preserve">
     <value>Golba pragl</value>
   </data>
+  <data name="Finished" xml:space="preserve">
+    <value>Morgrorp</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>Murpargl</value>
   </data>
@@ -2677,6 +2683,9 @@
   </data>
   <data name="Import again" xml:space="preserve">
     <value>Glorggl Murgl</value>
+  </data>
+  <data name="Import and check" xml:space="preserve">
+    <value>Glorggl opa grorp</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
     <value>Lurg murgl gropmur mrgro maglplgl, gromurp mrpblarg morgl blurgmrp murgblarg gromurp blubgrorp. Argl maglplgl mrgmurg grorpgl.</value>
@@ -3677,6 +3686,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>Mrp glplglrgl argl.</value>
+  </data>
+  <data name="No imports yet." xml:space="preserve">
+    <value>Mrp glorggl blurg.</value>
   </data>
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>Mrp blargmurgl grrglglorg argl — mrpmurp argl grgl arglblarg maglblarg mrp.</value>
@@ -5006,6 +5018,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>Murgm murpo</value>
   </data>
+  <data name="Recent imports" xml:space="preserve">
+    <value>Murgblarg Glorggl</value>
+  </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>Urgmaglgrrglmurg…</value>
   </data>
@@ -5772,6 +5787,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Mrpmurp-Mrp Mrglglorggrgl</value>
+  </data>
+  <data name="Sign-in refused" xml:space="preserve">
+    <value>Mrglmrp murgloo</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Morggrgl — mrp morp arglurg mrp gromurp arglrglmrmurm blubmrgl argl.</value>
@@ -6609,6 +6627,9 @@
   </data>
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>Maglrgl Glorgmagl urgmurg mr gromorgblub.</value>
+  </data>
+  <data name="Took" xml:space="preserve">
+    <value>Grogl</value>
   </data>
   <data name="Tool" xml:space="preserve">
     <value>Rorgl</value>

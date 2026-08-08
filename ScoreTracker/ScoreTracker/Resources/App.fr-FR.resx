@@ -1710,6 +1710,9 @@
   <data name="Debuted this week" xml:space="preserve">
     <value>Débuts cette semaine</value>
   </data>
+  <data name="Deep scan" xml:space="preserve">
+    <value>Analyse approfondie</value>
+  </data>
   <data name="Default" xml:space="preserve">
     <value>Par défaut</value>
   </data>
@@ -2218,6 +2221,9 @@
   <data name="Finish later" xml:space="preserve">
     <value>Terminer plus tard</value>
   </data>
+  <data name="Finished" xml:space="preserve">
+    <value>Terminé</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>Premier</value>
   </data>
@@ -2676,6 +2682,9 @@
   </data>
   <data name="Import again" xml:space="preserve">
     <value>Réimporter</value>
+  </data>
+  <data name="Import and check" xml:space="preserve">
+    <value>Importer et vérifier</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
     <value>Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours.</value>
@@ -3676,6 +3685,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>Aucune participation pour le moment.</value>
+  </data>
+  <data name="No imports yet." xml:space="preserve">
+    <value>Aucun import pour l'instant.</value>
   </data>
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>Pas encore de lien d'invitation — créez-en un pour faire venir du monde.</value>
@@ -5005,6 +5017,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>Livraisons récentes</value>
   </data>
+  <data name="Recent imports" xml:space="preserve">
+    <value>Imports récents</value>
+  </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>Reconnexion…</value>
   </data>
@@ -5771,6 +5786,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Méthodes de connexion</value>
+  </data>
+  <data name="Sign-in refused" xml:space="preserve">
+    <value>Connexion refusée</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Silencieux — aucun joueur dans votre plage compétitive pour l'instant.</value>
@@ -6608,6 +6626,9 @@
   </data>
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>Le Pas du jour paraît à minuit.</value>
+  </data>
+  <data name="Took" xml:space="preserve">
+    <value>Durée</value>
   </data>
   <data name="Tool" xml:space="preserve">
     <value>Outil</value>

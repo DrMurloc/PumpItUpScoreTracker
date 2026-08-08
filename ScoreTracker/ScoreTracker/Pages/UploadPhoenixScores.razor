@@ -225,6 +225,10 @@
 <ScoreCheckPanel Mix="_currentMix" CardId="@_selectedId" GameTag="@_selectedGameTag"
                  Busy="_isImporting" Credentials="ResolveCheckCredentials"/>
 
+@* Collapsed, and below the controls: somebody who just wants to import never has to see it,
+   and somebody comparing notes about a bad week can open it. *@
+<ImportHistoryPanel Attempts="_importHistory"/>
+
 @* The technical fallback (design doc D3): everything the script/CSV flow could do, collapsed. *@
 <MudExpansionPanels Class="mt-4">
     <MudExpansionPanel Text="@L["Manual import — console script + CSV"]">
@@ -658,12 +662,14 @@
     }
 
     private ImportAttemptRecord? _lastImport;
+    private IReadOnlyList<ImportAttemptRecord> _importHistory = Array.Empty<ImportAttemptRecord>();
 
     private async Task LoadLastImport()
     {
-        // Take 1: the strip only ever shows the most recent attempt. The full list is the
-        // expander below, which reads its own page.
-        _lastImport = (await Mediator.Send(new GetImportHistoryQuery(_userId, 1))).FirstOrDefault();
+        // One read serves both surfaces: the strip takes the newest row, the collapsed panel
+        // below takes the lot. Ten is what fits a glance without paging.
+        _importHistory = await Mediator.Send(new GetImportHistoryQuery(_userId, 10));
+        _lastImport = _importHistory.FirstOrDefault();
     }
 
     private List<string> _errors = new List<string>();

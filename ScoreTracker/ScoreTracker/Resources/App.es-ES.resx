@@ -1698,6 +1698,9 @@
   <data name="Debuted this week" xml:space="preserve">
     <value>Debutaron esta semana</value>
   </data>
+  <data name="Deep scan" xml:space="preserve">
+    <value>Análisis profundo</value>
+  </data>
   <data name="Default" xml:space="preserve">
     <value>Por defecto</value>
   </data>
@@ -2202,6 +2205,9 @@
   <data name="Finish later" xml:space="preserve">
     <value>Terminar luego</value>
   </data>
+  <data name="Finished" xml:space="preserve">
+    <value>Terminada</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>Primer</value>
   </data>
@@ -2660,6 +2666,9 @@
   </data>
   <data name="Import again" xml:space="preserve">
     <value>Importar de nuevo</value>
+  </data>
+  <data name="Import and check" xml:space="preserve">
+    <value>Importar y comprobar</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
     <value>En charts que nunca has pasado, tu mejor intento con break pasa a ser tu marca. Un pase siempre gana.</value>
@@ -3647,6 +3656,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>Aún no hay participaciones.</value>
+  </data>
+  <data name="No imports yet." xml:space="preserve">
+    <value>Aún no hay importaciones.</value>
   </data>
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>Aún no hay enlaces de invitación — crea uno para traer gente.</value>
@@ -4965,6 +4977,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>Entregas recientes</value>
   </data>
+  <data name="Recent imports" xml:space="preserve">
+    <value>Importaciones recientes</value>
+  </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>Reconectando…</value>
   </data>
@@ -5717,6 +5732,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>Métodos de inicio de sesión</value>
+  </data>
+  <data name="Sign-in refused" xml:space="preserve">
+    <value>Acceso rechazado</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>Inactiva — todavía no hay jugadores en tu rango competitivo.</value>
@@ -6548,6 +6566,9 @@
   </data>
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>El Paso de hoy se publica a medianoche.</value>
+  </data>
+  <data name="Took" xml:space="preserve">
+    <value>Duración</value>
   </data>
   <data name="Tool" xml:space="preserve">
     <value>Herramienta</value>

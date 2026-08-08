@@ -1711,6 +1711,9 @@
   <data name="Debuted this week" xml:space="preserve">
     <value>今週デビュー</value>
   </data>
+  <data name="Deep scan" xml:space="preserve">
+    <value>詳細スキャン</value>
+  </data>
   <data name="Default" xml:space="preserve">
 	  <value>デフォルト</value>
   </data>
@@ -2219,6 +2222,9 @@
   <data name="Finish later" xml:space="preserve">
     <value>あとで仕上げる</value>
   </data>
+  <data name="Finished" xml:space="preserve">
+    <value>完了</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>初</value>
   </data>
@@ -2677,6 +2683,9 @@
   </data>
   <data name="Import again" xml:space="preserve">
     <value>もう一度インポート</value>
+  </data>
+  <data name="Import and check" xml:space="preserve">
+    <value>インポートして確認</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
     <value>まだクリアしていない譜面では、最高のBreak Offスコアが記録になります。クリアは常に優先されます。</value>
@@ -3677,6 +3686,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>まだエントリーがありません。</value>
+  </data>
+  <data name="No imports yet." xml:space="preserve">
+    <value>インポートはまだありません。</value>
   </data>
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>まだ招待リンクがありません。作成してメンバーを招待しましょう。</value>
@@ -5006,6 +5018,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>最近の配信</value>
   </data>
+  <data name="Recent imports" xml:space="preserve">
+    <value>最近のインポート</value>
+  </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>再接続中…</value>
   </data>
@@ -5772,6 +5787,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>ログイン方法</value>
+  </data>
+  <data name="Sign-in refused" xml:space="preserve">
+    <value>ログイン拒否</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>停止中 — 競技レベル帯にまだプレイヤーがいません。</value>
@@ -6609,6 +6627,9 @@
   </data>
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>今日のステップは深夜に公開されます。</value>
+  </data>
+  <data name="Took" xml:space="preserve">
+    <value>所要時間</value>
   </data>
   <data name="Tool" xml:space="preserve">
     <value>ツール</value>

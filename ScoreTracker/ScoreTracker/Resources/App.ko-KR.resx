@@ -1698,6 +1698,9 @@
   <data name="Debuted this week" xml:space="preserve">
     <value>이번 주 데뷔</value>
   </data>
+  <data name="Deep scan" xml:space="preserve">
+    <value>정밀 검사</value>
+  </data>
   <data name="Default" xml:space="preserve">
     <value>기본값</value>
   </data>
@@ -2202,6 +2205,9 @@
   <data name="Finish later" xml:space="preserve">
     <value>나중에 마무리</value>
   </data>
+  <data name="Finished" xml:space="preserve">
+    <value>완료</value>
+  </data>
   <data name="First" xml:space="preserve">
     <value>첫</value>
   </data>
@@ -2660,6 +2666,9 @@
   </data>
   <data name="Import again" xml:space="preserve">
     <value>다시 가져오기</value>
+  </data>
+  <data name="Import and check" xml:space="preserve">
+    <value>가져오고 확인</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
     <value>아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다.</value>
@@ -3647,6 +3656,9 @@
   </data>
   <data name="No entries yet." xml:space="preserve">
     <value>아직 참가 기록이 없습니다.</value>
+  </data>
+  <data name="No imports yet." xml:space="preserve">
+    <value>아직 가져오기가 없습니다.</value>
   </data>
   <data name="No invite links yet — create one to bring people in." xml:space="preserve">
     <value>아직 초대 링크가 없습니다 — 링크를 만들어 멤버를 초대해보세요.</value>
@@ -4967,6 +4979,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>최근 전달</value>
   </data>
+  <data name="Recent imports" xml:space="preserve">
+    <value>최근 가져오기</value>
+  </data>
   <data name="Reconnecting…" xml:space="preserve">
     <value>다시 연결하는 중…</value>
   </data>
@@ -5719,6 +5734,9 @@
   </data>
   <data name="Sign-In Methods" xml:space="preserve">
     <value>로그인 방법</value>
+  </data>
+  <data name="Sign-in refused" xml:space="preserve">
+    <value>로그인 거부</value>
   </data>
   <data name="Silent — no players found in your competitive range yet." xml:space="preserve">
     <value>비활성 — 아직 내 경쟁 레벨 범위에 플레이어가 없습니다.</value>
@@ -6550,6 +6568,9 @@
   </data>
   <data name="Today's Step posts at midnight." xml:space="preserve">
     <value>오늘의 스텝은 자정에 공개됩니다.</value>
+  </data>
+  <data name="Took" xml:space="preserve">
+    <value>소요 시간</value>
   </data>
   <data name="Tool" xml:space="preserve">
     <value>도구</value>
