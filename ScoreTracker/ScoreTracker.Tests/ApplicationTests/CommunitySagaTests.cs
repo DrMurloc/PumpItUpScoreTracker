@@ -347,8 +347,8 @@ public sealed class CommunitySagaTests
         ctx.Communities.Setup(c => c.GetCommunities(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new CommunityOverviewRecord(Name.From("Seoul"), CommunityPrivacyType.Public, 1, false),
-                new CommunityOverviewRecord(Name.From("Acme"), CommunityPrivacyType.Public, 1, false)
+                new CommunityOverviewRecord(Name.From("Seoul"), CommunityPrivacyType.Public, 1, false, Guid.NewGuid()),
+                new CommunityOverviewRecord(Name.From("Acme"), CommunityPrivacyType.Public, 1, false, Guid.NewGuid())
             });
         ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Seoul"),
                 It.IsAny<CancellationToken>()))
@@ -387,7 +387,7 @@ public sealed class CommunitySagaTests
         ctx.Communities.Setup(c => c.GetCommunities(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new CommunityOverviewRecord(Name.From("Tokyo"), CommunityPrivacyType.Public, 1, false)
+                new CommunityOverviewRecord(Name.From("Tokyo"), CommunityPrivacyType.Public, 1, false, Guid.NewGuid())
             });
         ctx.Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == "Tokyo"),
                 It.IsAny<CancellationToken>()))
@@ -1633,7 +1633,7 @@ public sealed class CommunitySagaTests
                 .ReturnsAsync(new[]
                 {
                     new CommunityOverviewRecord(Name.From(communityName), CommunityPrivacyType.Public,
-                        MemberCount: 1, IsRegional: false)
+                        MemberCount: 1, IsRegional: false, CommunityId: Guid.NewGuid())
                 });
             Communities.Setup(c => c.GetCommunityByName(It.Is<Name>(n => (string)n == communityName),
                     It.IsAny<CancellationToken>()))

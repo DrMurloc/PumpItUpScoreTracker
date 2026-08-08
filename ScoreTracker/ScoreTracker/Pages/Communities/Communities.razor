@@ -593,7 +593,10 @@
         try
         {
             await Mediator.Send(new CreateCommunityCommand(_name, _privacyType));
-            _communities = _communities.Append(new CommunityOverviewRecord(_name, _privacyType, 1, false)).ToArray();
+            // Optimistic append so the new club appears without a round trip. Guid.Empty because
+            // the id was assigned server-side and nothing on this page reads it — every control
+            // here is keyed by name, and a reload brings back the real record.
+            _communities = _communities.Append(new CommunityOverviewRecord(_name, _privacyType, 1, false, Guid.Empty)).ToArray();
             _myCommunities.Add(_name);
             _roles[_name] = new MyCommunityRoleRecord(_name, CommunityRole.Creator, CommunityPermission.All);
             _showCreateDialog = false;

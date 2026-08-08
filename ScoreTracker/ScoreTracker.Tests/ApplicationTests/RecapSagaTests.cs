@@ -564,7 +564,7 @@ public sealed class RecapSagaTests
                 .ReturnsAsync(new[]
                 {
                     new CommunityOverviewRecord(Name.From(name), CommunityPrivacyType.Public, members.Length,
-                        false)
+                        false, Guid.NewGuid())
                 });
             Communities.Setup(c => c.GetMembers(Name.From(name), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(members);

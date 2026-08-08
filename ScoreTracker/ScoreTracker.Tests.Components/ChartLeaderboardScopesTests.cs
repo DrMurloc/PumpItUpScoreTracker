@@ -229,7 +229,7 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         CurrentUser.SetupGet(c => c.User).Returns(new User(Guid.NewGuid(), Name.From("ME"), true, null,
             new Uri("https://example.invalid/me.png"), null));
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false) });
+            .ReturnsAsync(new[] { new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false, Guid.NewGuid()) });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { rivalAndClubmate, clubmateOnly });
         _mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
@@ -273,7 +273,7 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             new Uri("https://example.invalid/me.png"), null));
         // Both are clubmates, so both would glow if the link were honoured for either.
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false) });
+            .ReturnsAsync(new[] { new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false, Guid.NewGuid()) });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { publicUser, privateUser });
         _readers.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))

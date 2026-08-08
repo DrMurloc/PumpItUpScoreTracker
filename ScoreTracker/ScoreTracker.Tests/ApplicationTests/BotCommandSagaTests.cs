@@ -264,8 +264,8 @@ public sealed class BotCommandSagaTests
         _communities.Setup(c => c.GetPublicCommunities(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new CommunityOverviewRecord(Name.From("SoCal Pump"), CommunityPrivacyType.Public, 5, false),
-                new CommunityOverviewRecord(Name.From("NorCal"), CommunityPrivacyType.Public, 3, false)
+                new CommunityOverviewRecord(Name.From("SoCal Pump"), CommunityPrivacyType.Public, 5, false, Guid.NewGuid()),
+                new CommunityOverviewRecord(Name.From("NorCal"), CommunityPrivacyType.Public, 3, false, Guid.NewGuid())
             });
 
         var choices = await Saga().Handle(new GetBotAutocompleteQuery(
