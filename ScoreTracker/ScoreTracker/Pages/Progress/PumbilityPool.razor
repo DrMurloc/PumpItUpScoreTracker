@@ -12,6 +12,10 @@
 <PumbilitySectionFrame Active="pool">
     <Body Context="ctx">
         <section class="pmb-block">
+            <PumbilityBreakdown Breakdown="ctx.Page.Breakdown" PoolCount="ctx.Page.Pool.Count"></PumbilityBreakdown>
+        </section>
+
+        <section class="pmb-block">
             <PoolCurve Page="ctx.Page" Charts="ctx.Charts"></PoolCurve>
         </section>
 

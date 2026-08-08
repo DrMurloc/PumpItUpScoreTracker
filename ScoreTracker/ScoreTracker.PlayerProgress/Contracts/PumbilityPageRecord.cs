@@ -20,6 +20,11 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///     the curve draws them ghosted.
 /// </param>
 /// <param name="Targets">What to play next, best gain first.</param>
+/// <param name="Breakdown">
+///     Where the pool's total comes from, split three ways. Null only where a caller does not
+///     need it — the page always has one, and an empty pool decomposes to zeroes rather than to
+///     nothing.
+/// </param>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityPageRecord(
     MixEnum Mix,
@@ -29,7 +34,8 @@ public sealed record PumbilityPageRecord(
     Guid? BarChartId,
     IReadOnlyList<PoolEntry> Pool,
     IReadOnlyList<PoolEntry> WaitingRoom,
-    IReadOnlyList<PumbilityTarget> Targets)
+    IReadOnlyList<PumbilityTarget> Targets,
+    PoolBreakdown? Breakdown = null)
 {
     /// <summary>Highest and lowest values in the pool — the curve's read-out.</summary>
     public int PoolTop => Pool.Count == 0 ? 0 : Pool[0].Value;
@@ -51,6 +57,38 @@ public sealed record PumbilityPageRecord(
 [ExcludeFromCodeCoverage]
 public sealed record PoolEntry(int Place, Guid ChartId, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken,
     DateTimeOffset RecordedDate, int Value);
+
+/// <summary>
+///     Where the pool's total comes from: the charts, the scores on them, and the plates walked
+///     away with (docs/design/pumbility-overhaul.md §3.6). Summed from
+///     <see cref="ScoringConfiguration.Decompose" />, so the parts are the formula's own
+///     arithmetic rather than an attribution over it.
+/// </summary>
+/// <param name="Level">What the fifty charts pay before any score is applied.</param>
+/// <param name="FromScore">What the grades add on top. Can be negative below the reference.</param>
+/// <param name="FromPlate">
+///     What the plates add. Exactly zero on Phoenix, where the plate never entered the formula.
+/// </param>
+/// <param name="PlateHeadroom">
+///     What a perfect plate on every chart in the pool would add — the ceiling on the whole
+///     argument, which is the number the section exists to print.
+/// </param>
+[ExcludeFromCodeCoverage]
+public sealed record PoolBreakdown(double Level, double FromScore, double FromPlate, double PlateHeadroom)
+{
+    public double Total => Level + FromScore + FromPlate;
+
+    /// <summary>Plate floor to plate ceiling: what every plate in the pool is worth end to end.</summary>
+    public double PlateSpan => FromPlate + PlateHeadroom;
+
+    /// <summary>Where the held plates sit on that span, or zero where plates pay nothing at all.</summary>
+    public double PlateProgress => PlateSpan <= 0 ? 0 : FromPlate / PlateSpan;
+
+    /// <summary>Whether plates are worth anything under this mix's formula at all.</summary>
+    public bool PlatesCount => PlateSpan > 0;
+
+    public double ShareOf(double part) => Total <= 0 ? 0 : part / Total;
+}
 
 /// <summary>
 ///     A chart worth playing, with what the player would be projected to score and what that

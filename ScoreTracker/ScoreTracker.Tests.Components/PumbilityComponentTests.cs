@@ -62,6 +62,47 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         Assert.Equal(3, with.FindAll(".pmb-poolsplit-seg").Count);
     }
 
+    // ------------------------------------------------------------------ breakdown
+
+    [Fact]
+    public void TheBreakdownDrawsThePlateSegmentTrueToScale()
+    {
+        // A hairline, because it is a hairline. Widening it to be visible would argue the
+        // opposite of what the section is for.
+        var cut = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(12442, 5524, 75, 174))
+            .Add(x => x.PoolCount, 50));
+
+        var segments = cut.FindAll(".pmb-wpc-seg");
+        Assert.Equal(3, segments.Count);
+        var plate = double.Parse(segments[2].GetAttribute("style")!.Split(':')[1]);
+        var level = double.Parse(segments[0].GetAttribute("style")!.Split(':')[1]);
+        Assert.True(plate * 50 < level, "the plate segment was drawn larger than its own share");
+    }
+
+    [Fact]
+    public void APlatelessMixSaysSoRatherThanDrawingAnEmptyRail()
+    {
+        // Phoenix 1: every plate modifier is exactly 1.0, so there is no span to magnify and a
+        // rail pinned at zero would read as a thing you could move.
+        var cut = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(58242, 6225, 0, 0))
+            .Add(x => x.PoolCount, 50));
+
+        Assert.Empty(cut.FindAll(".pmb-wpc-rail"));
+        Assert.Contains("nothing", cut.Find(".pmb-wpc-say").TextContent);
+    }
+
+    [Fact]
+    public void AnEmptyPoolRendersNoBandAtAll()
+    {
+        var cut = RenderComponent<PumbilityBreakdown>(p => p
+            .Add(x => x.Breakdown, new PoolBreakdown(0, 0, 0, 0))
+            .Add(x => x.PoolCount, 0));
+
+        Assert.Empty(cut.FindAll(".pmb-wpc"));
+    }
+
     // ------------------------------------------------------------------ curve
 
     [Fact]

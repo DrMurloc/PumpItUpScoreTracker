@@ -114,7 +114,29 @@ namespace ScoreTracker.PlayerProgress.Application
                 .ToArray();
 
             return new PumbilityPageRecord(mix, request.Pool, pool.Sum(p => p.Value), bar, barChart,
-                pool, waiting, top);
+                pool, waiting, top, Breakdown(pool, charts, scoring));
+        }
+
+        /// <summary>
+        ///     Where the pool's total comes from, and what a perfect plate on all fifty would add.
+        ///     Both are the scoring configuration's own arithmetic — the page must never carry a
+        ///     second opinion about a formula that still has unverified values in it.
+        /// </summary>
+        private static PoolBreakdown Breakdown(IReadOnlyList<PoolEntry> pool,
+            IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring)
+        {
+            var split = default(ScoreContribution);
+            var headroom = 0d;
+            foreach (var entry in pool)
+            {
+                var chart = charts[entry.ChartId];
+                var plate = entry.Plate ?? PhoenixPlate.RoughGame;
+                split += scoring.Decompose(chart, entry.Score, plate, entry.IsBroken);
+                headroom += scoring.PlateHeadroom(chart, entry.Score, plate, entry.IsBroken);
+            }
+
+            return new PoolBreakdown(Math.Round(split.Base, 2), Math.Round(split.FromGrade, 2),
+                Math.Round(split.FromPlate, 2), Math.Round(headroom, 2));
         }
 
         /// <summary>

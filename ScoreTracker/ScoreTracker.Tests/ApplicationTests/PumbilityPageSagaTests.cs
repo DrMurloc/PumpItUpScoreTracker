@@ -281,6 +281,54 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
+    public async Task OnPhoenixTheBreakdownAttributesNothingToPlates()
+    {
+        // The whole reason the band exists: Phoenix 1's plate modifiers are all 1.0, so there
+        // is no plate term to attribute and no ceiling to chase.
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix),
+            CancellationToken.None);
+
+        Assert.NotNull(page.Breakdown);
+        Assert.Equal(0, page.Breakdown!.FromPlate);
+        Assert.Equal(0, page.Breakdown.PlateHeadroom);
+        Assert.False(page.Breakdown.PlatesCount);
+    }
+
+    [Fact]
+    public async Task TheBreakdownIsTheTotalItSplitsAndTheChartsAreMostOfIt()
+    {
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.NotNull(page.Breakdown);
+        // The pool total truncates each entry to an int, so the split — which does not — sits
+        // between it and one unit per chart above it.
+        Assert.InRange(page.Breakdown!.Total, page.Total, page.Total + page.Pool.Count);
+        Assert.True(page.Breakdown.Level > page.Breakdown.FromScore,
+            "the charts should be the larger share of a pool");
+        Assert.True(page.Breakdown.FromScore > page.Breakdown.FromPlate,
+            "grades should outweigh plates by a wide margin");
+    }
+
+    [Fact]
+    public async Task ThePlateCeilingIsWhatPerfectPlatesOnEveryChartWouldAdd()
+    {
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        // Under a fiftieth of the pool, which is the number the argument turns on.
+        Assert.True(page.Breakdown!.PlateHeadroom > 0);
+        Assert.InRange(page.Breakdown.ShareOf(page.Breakdown.PlateHeadroom), 0, 0.02);
+        Assert.Equal(page.Breakdown.FromPlate + page.Breakdown.PlateHeadroom, page.Breakdown.PlateSpan, 6);
+    }
+
+    [Fact]
     public async Task AChartWorthNothingTakesNoSlotInTheRepricedPool()
     {
         // Forty-five charts that pay and ten that cannot: below level 10 the base rating is
