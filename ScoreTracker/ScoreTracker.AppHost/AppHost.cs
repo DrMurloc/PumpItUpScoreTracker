@@ -34,10 +34,6 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
     // DevAuth login backdoor lights up. Plain `dotnet run` gets neither.
     .WithEnvironment("AutoMigrate", "true")
     .WithEnvironment("DevAuth__Enabled", "true")
-    // Comments ship gated off in production until cost testing says otherwise. Locally there is
-    // nothing to gate against, and a feature the E2E suite cannot see is a feature it cannot
-    // cover — so running under Aspire turns it on, the same way it turns on the login backdoor.
-    .WithEnvironment("ChartComments__Enabled", "true")
     // ...and a webhook may point at localhost, so a maker running the site locally can
     // develop against their own machine. Refused anywhere else: from our servers a private
     // address points at our infrastructure, not theirs.
@@ -56,7 +52,13 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
 // KeyVault:LocalKey (base64 32-byte AES key) to exercise it without a real vault.
 // PiuGame flows through for the login-gated Phoenix 2 leaderboard sweep: set
 // PiuGame:ServiceUsername / PiuGame:ServicePassword to run it from /Admin locally.
-string[] forwardedSections = ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid", "KeyVault", "PiuGame"];
+// ChartComments is not a secret but flows the same way on purpose: it is OFF unless configured,
+// and forwarding is what lets `ChartComments:Enabled=true` in user-secrets turn it on without
+// checking anything in. Setting it here with WithEnvironment instead would be worse than
+// useless — environment variables are read AFTER user-secrets, so it would override the very
+// setting it is meant to be controlled by.
+string[] forwardedSections =
+    ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid", "KeyVault", "PiuGame", "ChartComments"];
 foreach (var sectionName in forwardedSections)
 foreach (var entry in builder.Configuration.GetSection(sectionName).AsEnumerable())
     if (entry.Value is not null)

@@ -31,10 +31,7 @@ public sealed class AppHostForwardingTests
                           "not a secret",
             ["ProdSync"] = "the /Dev/Populate harness: hosts default in code and the API token is " +
                            "pasted on the page per use, never stored",
-            ["PiuCenter"] = "public piucenter hosts with production defaults; nothing secret to forward",
-            ["ChartComments"] = "the comments launch gate: a mode flag, not a secret. The AppHost " +
-                                "sets it explicitly via WithEnvironment so local dev and the E2E " +
-                                "suite see the feature, exactly as DevAuth does"
+            ["PiuCenter"] = "public piucenter hosts with production defaults; nothing secret to forward"
         };
 
     private static readonly Regex GetSectionLiteral = new("GetSection\\(\\s*\"([^\"]+)\"", RegexOptions.Compiled);

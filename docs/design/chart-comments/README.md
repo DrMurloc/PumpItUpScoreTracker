@@ -574,7 +574,7 @@ merely discouraged. The parser stays internal.
 | Purge manifest **plus a real integration test** | A mocked purge test cannot catch over-deletion; only the decoy-account test can |
 | `CommentEntity` in `UserOwned` | A blanket delete orphans every reply to a purged root. It belongs in `AccountPurgeCoverageTests.Exempt` with its reason; the tombstone step in ChartComments' purge repository is what actually clears it (§2) |
 | **The audience filter, tested the same way** | A private note leaking is the worst thing this feature can do. The filter lives in the repository, and the decoy account holds a note on every scope that no other user's query may return |
-| `AppHostForwardingTests` | `Configure<ChartCommentsConfiguration>(GetSection("ChartComments"))` is a newly bound section: it needs a `DeliberatelyNotForwarded` row (a mode flag, not a secret) plus `WithEnvironment` in the AppHost — which turns comments **on** for local dev and the E2E suite, so the E2E dialog tests gain a fourth tab |
+| `AppHostForwardingTests` | `Configure<ChartCommentsConfiguration>(GetSection("ChartComments"))` is a newly bound section, so it must join `forwardedSections` or be recorded as deliberately not forwarded. It is **forwarded**: the flag is off unless configured, and forwarding is what lets `ChartComments:Enabled=true` in AppHost user-secrets turn it on without checking anything in. ⚠ Setting it with `WithEnvironment` instead is worse than useless — environment variables are read *after* user-secrets, so it would override the setting it exists to be controlled by |
 | `[PurgeKey(nameof(UserId))]` on `CommentRestriction` | Two `*UserId` columns — purges the moderator instead of the restricted user |
 | resx in all nine locales, alphabetical, no case-collisions | A case collision renders English in every non-English locale while English itself looks perfect |
 | `SCHEDULED-JOBS.md` + `DATABASE-SCHEMA.md` rows | Same-PR requirement |
@@ -597,10 +597,13 @@ the 390 px tab-strip overflow gets measured twice, at three and again at four.
 
 ### The launch toggle
 
-Slice 2's comment surfaces are gated on `IsAdmin || ChartComments:Enabled`, configuration shipping
-off, so comments are the owner's alone until production cost testing says otherwise. **The toggle
-governs reading as well as writing**, which means flipping it publishes everything written during
-testing at once — deliberate, and a cleanup pass before the flip is the owner's job.
+Slice 2's comment surfaces are gated on `IsAdmin || ChartComments:Enabled`, and the flag is **off
+unless something turns it on** — `appsettings.json` declares `false` so the key is findable, and an
+absent section reads false anyway. Locally it comes from AppHost user-secrets through
+`forwardedSections`, so nothing about the local state is ever checked in; in production it is the
+App Service setting `ChartComments__Enabled`. **The toggle governs reading as well as writing**,
+which means flipping it publishes everything written during testing at once — deliberate, and a
+cleanup pass before the flip is the owner's job.
 
 **Personal notes ship ungated.** Nothing in a private note can go wrong in public, and it is the one
 part of this that works on day one: comments need other people before they are worth reading, a note
