@@ -2,18 +2,22 @@ using System;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.OfficialMirror.Application;
+using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -35,12 +39,17 @@ public sealed class RunImportCheckConsumerTests
         return context.Object;
     }
 
+    private static readonly DateTimeOffset Now = new(2026, 8, 8, 12, 0, 0, TimeSpan.Zero);
+
     private static RunImportCheckConsumer Build(Mock<IMediator> mediator, Mock<ICurrentUserAccessor>? currentUser = null,
-        Mock<IImportConcurrencyGuard>? guard = null)
+        Mock<IImportConcurrencyGuard>? guard = null, Mock<IImportResultRepository>? results = null)
     {
         return new RunImportCheckConsumer(mediator.Object,
             (currentUser ?? new Mock<ICurrentUserAccessor>()).Object,
-            (guard ?? new Mock<IImportConcurrencyGuard>()).Object);
+            (guard ?? new Mock<IImportConcurrencyGuard>()).Object,
+            (results ?? new Mock<IImportResultRepository>()).Object,
+            FakeDateTime.At(Now).Object,
+            NullLogger<RunImportCheckConsumer>.Instance);
     }
 
     [Fact]
@@ -110,5 +119,57 @@ public sealed class RunImportCheckConsumerTests
 
         mediator.Verify(m => m.Publish(It.IsAny<ImportStatusErrorEvent>(), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task ADeepScanIsRecordedAsOneAndACheckIsNot()
+    {
+        var results = new Mock<IImportResultRepository>();
+
+        await Build(new Mock<IMediator>(), results: results).Consume(Context(deepScan: true));
+        await Build(new Mock<IMediator>(), results: results).Consume(Context());
+
+        // A deep scan walks every page and a check counts levels first, so the two cost the site
+        // wildly different amounts — telling them apart is the point of recording the kind.
+        results.Verify(r => r.Open(UserId, MixEnum.Phoenix, ImportKind.DeepScan, "card1", Now,
+            It.IsAny<CancellationToken>()), Times.Once);
+        results.Verify(r => r.Open(UserId, MixEnum.Phoenix, ImportKind.Check, "card1", Now,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ARefusedDeepScanAttachesNoSession()
+    {
+        var mediator = new Mock<IMediator>();
+        // Null is the saga saying it never opened one, because the site-wide deep-scan slot was
+        // taken. Attaching anything here would point the run at somebody else's session.
+        mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCheckCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid?)null);
+        var results = new Mock<IImportResultRepository>();
+
+        await Build(mediator, results: results).Consume(Context(deepScan: true));
+
+        results.Verify(r => r.AttachSession(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        results.Verify(r => r.Close(It.IsAny<Guid>(), Now, ImportOutcome.Completed, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task APiuGameTimeoutClosesTheRunAsTheirsAndTellsThePlayer()
+    {
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<ExecuteImportCheckCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("connection reset"));
+        var results = new Mock<IImportResultRepository>();
+        var guard = new Mock<IImportConcurrencyGuard>();
+
+        await Build(mediator, guard: guard, results: results).Consume(Context(deepScan: true));
+
+        results.Verify(r => r.Close(It.IsAny<Guid>(), Now, ImportOutcome.PiuGameError,
+            It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Publish(It.IsAny<ImportStatusErrorEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        guard.Verify(g => g.End(UserId), Times.Once);
     }
 }
