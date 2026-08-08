@@ -324,10 +324,10 @@ public sealed class PumbilityPageSagaTests
         // replaced counting charts.
         var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
 
-        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
             CancellationToken.None);
 
-        var rail = page.Rails!.Single(r => r.Pool == PumbilityPool.Singles);
+        var rail = Assert.Single(page.Rails!);
         Assert.NotNull(rail.NextThreshold);
         Assert.Equal(rail.NextThreshold!.Value / 50.0, rail.Ask, 6);
         Assert.Equal(rail.Value / 50.0, rail.Average, 6);
@@ -335,24 +335,38 @@ public sealed class PumbilityPageSagaTests
         Assert.InRange(rail.Progress, 0, 1);
     }
 
-    [Fact]
-    public async Task EveryLadderGetsARailWhicheverPoolIsSelected()
+    [Theory]
+    [InlineData(null, PumbilityPool.Total)]
+    [InlineData(ChartType.Single, PumbilityPool.Singles)]
+    [InlineData(ChartType.Double, PumbilityPool.Doubles)]
+    public async Task TheRailFollowsThePoolSelector(ChartType? scope, PumbilityPool expected)
     {
-        // Three goals held at once. Hiding two behind the pool selector would be worse than
-        // showing all three, so the rails ignore it.
+        // The selector already re-ranks the total, the bar, the curve, the board and the
+        // targets. A control that moved everything in the section except this one would read as
+        // broken.
+        var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(
+            new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, scope), CancellationToken.None);
+
+        Assert.Equal(expected, Assert.Single(page.Rails!).Pool);
+    }
+
+    [Fact]
+    public async Task AnEmptyPoolStillGetsItsRailRatherThanNone()
+    {
+        // Nothing scored in Doubles yet is the not-started shape, not an absent section — the
+        // ask is exactly what a player with no doubles pool wants to read.
         var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
 
         var page = await ctx.Saga.Handle(
             new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Double),
             CancellationToken.None);
 
-        Assert.Equal(3, page.Rails!.Count);
-        Assert.Contains(page.Rails, r => r.Pool == PumbilityPool.Total);
-        Assert.Contains(page.Rails, r => r.Pool == PumbilityPool.Singles);
-        Assert.Contains(page.Rails, r => r.Pool == PumbilityPool.Doubles);
-        // The doubles pool is empty here, so its rail is the not-started shape rather than absent.
-        Assert.Equal(0, page.Rails.Single(r => r.Pool == PumbilityPool.Doubles).Value);
-        Assert.Null(page.Rails.Single(r => r.Pool == PumbilityPool.Doubles).Held);
+        var rail = Assert.Single(page.Rails!);
+        Assert.Equal(0, rail.Value);
+        Assert.Null(rail.Held);
+        Assert.NotNull(rail.Next);
     }
 
     [Fact]
@@ -362,10 +376,10 @@ public sealed class PumbilityPageSagaTests
         // it to the easiest level that gets there and the grade it would take.
         var ctx = new PageContext().WithPool(50, ChartType.Single, 21);
 
-        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
             CancellationToken.None);
 
-        var rail = page.Rails!.Single(r => r.Pool == PumbilityPool.Singles);
+        var rail = Assert.Single(page.Rails!);
 
         // Three references, best grade first, so the levels ascend and the low one is the hard
         // one. A is the floor because it is the lowest multiplier this site has verified.
@@ -391,10 +405,10 @@ public sealed class PumbilityPageSagaTests
         // what the list would build.
         var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 24, 55, 995_000);
 
-        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
             CancellationToken.None);
 
-        var rail = page.Rails!.Single(r => r.Pool == PumbilityPool.Singles);
+        var rail = Assert.Single(page.Rails!);
         Assert.Equal(0, rail.Average);
         Assert.NotNull(rail.ProjectedAverage);
         Assert.True(rail.ProjectedAverage!.Value > rail.Average,

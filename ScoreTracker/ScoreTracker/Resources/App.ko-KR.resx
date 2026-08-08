@@ -1935,6 +1935,9 @@
   <data name="Duration (seconds)" xml:space="preserve">
     <value>시간 (초)</value>
   </data>
+  <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
+    <value>각 단계는 50개 차트 모두에 일정한 값을 요구합니다. 위에서 풀을 바꾸면 다른 사다리를 볼 수 있습니다.</value>
+  </data>
   <data name="Earned" xml:space="preserve">
     <value>획득함</value>
   </data>
@@ -6448,9 +6451,6 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>3년 반의 펌프를 하나의 리캡으로. 지금 확인하고 멋진 부분은 스크린샷으로 남기세요.</value>
-  </data>
-  <data name="Three ladders run at once. Each asks a flat value of every one of your fifty charts." xml:space="preserve">
-    <value>세 개의 사다리가 동시에 진행됩니다. 각각 50개 차트 모두에 일정한 값을 요구합니다.</value>
   </data>
   <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
     <value>세 가지 소스가 각 채보에 투표합니다. 가중치가 큰 소스일수록 채보를 더 크게 움직입니다.</value>

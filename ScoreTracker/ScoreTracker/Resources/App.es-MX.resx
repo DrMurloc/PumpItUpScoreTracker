@@ -1935,6 +1935,9 @@
   <data name="Duration (seconds)" xml:space="preserve">
     <value>Duración (segundos)</value>
   </data>
+  <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
+    <value>Cada peldaño exige un valor fijo a cada una de tus cincuenta gráficas. Cambia de grupo arriba para ver las otras escaleras.</value>
+  </data>
   <data name="Earned" xml:space="preserve">
     <value>Conseguidos</value>
   </data>
@@ -6448,9 +6451,6 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Tres años y medio de Pump, un solo resumen. Ve a ver el tuyo — y toma capturas de lo mejor.</value>
-  </data>
-  <data name="Three ladders run at once. Each asks a flat value of every one of your fifty charts." xml:space="preserve">
-    <value>Tres escaleras avanzan a la vez. Cada una exige un valor fijo a cada una de tus cincuenta gráficas.</value>
   </data>
   <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
     <value>Tres fuentes votan por cada chart. Las fuentes con más peso mueven más los charts.</value>

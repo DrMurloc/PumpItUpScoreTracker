@@ -229,16 +229,21 @@ namespace ScoreTracker.PlayerProgress.Application
                 .GroupBy(t => t.Pool)
                 .ToDictionary(g => g.Key, g => g.OrderBy(t => t.CompletionRequired).ToArray());
 
-            var rails = new[]
+            // ONE rail, following the pool selector (owner, 2026-08-08). The selector already
+            // re-ranks the total, the bar, the curve, the board and the targets — a control that
+            // moves everything in the section except this reads as broken. All three ladders
+            // still exist; the other two are one click away, and the totals beside them say so.
+            var rail = scope switch
             {
+                ChartType.Single => Rail(PumbilityPool.Singles, singles, ChartType.Single, ChartType.Single),
+                ChartType.Double => Rail(PumbilityPool.Doubles, doubles, ChartType.Double, ChartType.Double),
                 // The merged ladder can be filled from either side, and Phoenix 2 pays a Singles
                 // chart one level up — so the cheapest route to its ask is a single.
-                Rail(PumbilityPool.Total, all, ChartType.Single, null),
-                Rail(PumbilityPool.Singles, singles, ChartType.Single, ChartType.Single),
-                Rail(PumbilityPool.Doubles, doubles, ChartType.Double, ChartType.Double)
-            }.Where(r => r != null).Select(r => r!).ToArray();
+                _ => Rail(PumbilityPool.Total, all, ChartType.Single, null)
+            };
 
-            return (new PoolTotals(all.Total, singles.Total, doubles.Total), rails);
+            return (new PoolTotals(all.Total, singles.Total, doubles.Total),
+                rail == null ? Array.Empty<TitleRail>() : new[] { rail });
 
             TitleRail? Rail(PumbilityPool pool, (int Total, int? Bar) figures, ChartType exampleType,
                 ChartType? exampleScope)

@@ -274,10 +274,26 @@ ALEXANDRITE asks 380.00 │ your charts average 360.82 │ your bar 358.08 │ +
 380 a chart is an S25 at AAA — or an S23 played perfectly.
 ```
 
-Three rails, one per ladder — Total, Singles, Doubles — **regardless of the pool selector**, because
-they are three goals a player holds simultaneously and hiding two behind a control is worse. The rung
-bar is the device `PumbilityTitleTrack` already draws on the tier list, so the two surfaces stay
-legible as the same idea.
+**One rail, following the pool selector** (owner, 2026-08-08). Drawn as three at first, on the
+reasoning that a player holds all three ladders at once — but the selector already re-ranks the
+total, the bar, the curve, the board and the targets, and a control that moves everything in the
+section except this one reads as broken. The other two ladders are one click away, and the totals on
+the selector itself say what they are worth. The rung bar is the device `PumbilityTitleTrack` already
+draws on the tier list, so the two surfaces stay legible as the same idea.
+
+**The ask names three charts, not one**, at SSS+, AAA and A — the shape the title drawer already
+settled ([PR #234](https://github.com/DrMurloc/PumpItUpScoreTracker/pull/234)). Play quality moves the
+answer by several levels, so one reference is right only for the player already performing at it.
+⚠ **A is the floor because it is the lowest multiplier this site has verified**; B and below are the
+unverified −0.05 extrapolation in `Phoenix2PumbilityScoring`, so never anchor lower without live data.
+Best grade first, so levels ascend and the low one reads as the hard one, and the grade stays on the
+same line as its level — in a shared caption underneath, three levels read as a path.
+
+**The fourth cell is the realism check.** `ProjectedAverage` is what the fifty would average if every
+suggestion landed on its projection; read against the ask beside it, that says whether the list on
+Play reaches the rung at all. ⚠ It is a **merge, not a sum** — a chart already in the pool keeps the
+better of its held and projected value — so no gain is ever added to another, which is precisely what
+§8.3 forbids.
 
 **Why the ask and not a count.** It reads correctly at every distance without changing shape: +19.18
 a chart is a whole grade band on all fifty and says so; +2.62 a chart reads as *basically there*.
