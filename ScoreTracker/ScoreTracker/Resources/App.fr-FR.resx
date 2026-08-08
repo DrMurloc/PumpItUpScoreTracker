@@ -354,6 +354,12 @@
   <data name="A perfect at a capped multiplier." xml:space="preserve">
     <value>Un Perfect avec le multiplicateur au plafond.</value>
   </data>
+  <data name="A perfect plate on every chart in your pool would add nothing. Not a rounding argument — every plate here carries a modifier of exactly 1.0, so the plate you walked away with never entered the number." xml:space="preserve">
+    <value>Une plaque parfaite sur chaque graphique de votre groupe n'ajouterait rien. Ce n'est pas une question d'arrondi : dans ce Mix, tous les modificateurs de plaque valent exactement 1.0, donc la plaque que vous avez obtenue n'est jamais entrée dans le nombre.</value>
+  </data>
+  <data name="A perfect plate on every chart in your pool would add {0} — {1} of it." xml:space="preserve">
+    <value>Une plaque parfaite sur chaque graphique de votre groupe ajouterait {0} — soit {1} du total.</value>
+  </data>
   <data name="A player connected" xml:space="preserve">
     <value>Un joueur s'est connecté</value>
   </data>
@@ -1948,6 +1954,9 @@
   <data name="Duration (seconds)" xml:space="preserve">
     <value>Durée (secondes)</value>
   </data>
+  <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
+    <value>Chaque échelon exige une valeur fixe de chacun de vos cinquante graphiques. Changez de groupe ci-dessus pour voir les autres échelles.</value>
+  </data>
   <data name="Earned" xml:space="preserve">
     <value>Obtenus</value>
   </data>
@@ -2042,6 +2051,9 @@
   </data>
   <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
     <value>Chaque Miss remet le multiplicateur de gain à zéro. Il faut {0} Perfects — ou {1} Greats — pour le ramener au plafond. D'ici là, vous frappez des notes pour presque aucune vie.</value>
+  </data>
+  <data name="every plate at once, end to end, is worth {0}" xml:space="preserve">
+    <value>toutes les plaques ensemble, d'un bout à l'autre, valent {0}</value>
   </data>
   <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>Chaque plaque empilée par dossier, avec un segment cassé / non joué pour le total du dossier.</value>
@@ -3602,6 +3614,9 @@
   <data name="Newest Score" xml:space="preserve">
     <value>Score le plus récent</value>
   </data>
+  <data name="next at {0}" xml:space="preserve">
+    <value>suivant à {0}</value>
+  </data>
   <data name="next best candidate {0}" xml:space="preserve">
     <value>candidat suivant {0}</value>
   </data>
@@ -3869,6 +3884,9 @@
   <data name="Not set" xml:space="preserve">
     <value>Non défini</value>
   </data>
+  <data name="not started" xml:space="preserve">
+    <value>pas commencé</value>
+  </data>
   <data name="Not Tagged" xml:space="preserve">
     <value>Non étiqueté</value>
   </data>
@@ -3917,6 +3935,9 @@
   </data>
   <data name="Nothing" xml:space="preserve">
     <value>Rien</value>
+  </data>
+  <data name="nothing above this" xml:space="preserve">
+    <value>rien au-dessus</value>
   </data>
   <data name="Nothing changed between these two mixes." xml:space="preserve">
     <value>Rien n'a changé entre ces deux mix.</value>
@@ -4079,6 +4100,9 @@
   </data>
   <data name="on any chart board" xml:space="preserve">
     <value>sur au moins un leaderboard de charts</value>
+  </data>
+  <data name="On every chart" xml:space="preserve">
+    <value>Sur chaque graphique</value>
   </data>
   <data name="on this device only. Useless on its own." xml:space="preserve">
     <value>sur cet appareil uniquement. Inutile seule.</value>
@@ -6168,6 +6192,9 @@
   <data name="The Charts" xml:space="preserve">
     <value>Les charts</value>
   </data>
+  <data name="the charts themselves" xml:space="preserve">
+    <value>les graphiques eux-mêmes</value>
+  </data>
   <data name="The charts your PUMBILITY is made of" xml:space="preserve">
     <value>Les charts qui composent ton PUMBILITY</value>
   </data>
@@ -6242,6 +6269,9 @@
   </data>
   <data name="The piugame.com session key is forwarded so you run your own import." xml:space="preserve">
     <value>La clé de session piugame.com est transmise pour que vous fassiez votre propre import.</value>
+  </data>
+  <data name="The plate, magnified" xml:space="preserve">
+    <value>La plaque, agrandie</value>
   </data>
   <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
     <value>Le POST dit seulement « ce joueur a importé ». Vous venez chercher ce dont vous avez besoin.</value>
@@ -6425,6 +6455,9 @@
   </data>
   <data name="this mix only" xml:space="preserve">
     <value>ce Mix uniquement</value>
+  </data>
+  <data name="this mix's formula has no plate term" xml:space="preserve">
+    <value>la formule de ce Mix n'a pas de terme de plaque</value>
   </data>
   <data name="This one is different." xml:space="preserve">
     <value>Celui-ci est différent.</value>
@@ -7151,6 +7184,12 @@
   <data name="What would a clear be worth?" xml:space="preserve">
     <value>Combien vaudrait un clear ?</value>
   </data>
+  <data name="what your grades add" xml:space="preserve">
+    <value>ce qu'ajoutent vos notes</value>
+  </data>
+  <data name="what your plates add" xml:space="preserve">
+    <value>ce qu'ajoutent vos plaques</value>
+  </data>
   <data name="What your rivals are up to" xml:space="preserve">
     <value>Ce que font vos rivaux</value>
   </data>
@@ -7178,8 +7217,14 @@
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Où se situent les passes de ce chart, par niveau compétitif.</value>
   </data>
+  <data name="Where this record would land you" xml:space="preserve">
+    <value>Où ce palmarès vous placerait</value>
+  </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>Là où votre liste diverge de la communauté, et les compétences qui l'ont poussée. Touchez un chart pour son détail complet par source.</value>
+  </data>
+  <data name="Where your PUMBILITY comes from" xml:space="preserve">
+    <value>D'où vient votre PUMBILITY</value>
   </data>
   <data name="Which Chart Did You Play" xml:space="preserve">
     <value>Quelle chart avez-vous jouée ?</value>
@@ -7445,6 +7490,9 @@
   <data name="Your best 4 scores per week of the month count." xml:space="preserve">
     <value>Tes 4 meilleurs scores par semaine du mois comptent.</value>
   </data>
+  <data name="Your charts average" xml:space="preserve">
+    <value>Moyenne de vos graphiques</value>
+  </data>
   <data name="Your closest matches show at 1×2 and taller." xml:space="preserve">
     <value>Tes rivaux les plus proches apparaissent en 1×2 et plus grand.</value>
   </data>
@@ -7547,11 +7595,17 @@
   <data name="Your progress" xml:space="preserve">
     <value>Ta progression</value>
   </data>
+  <data name="Your projected top 50" xml:space="preserve">
+    <value>Votre top 50 projeté</value>
+  </data>
   <data name="Your PUMBILITY" xml:space="preserve">
     <value>Votre PUMBILITY</value>
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>Ton Pumbility et ton niveau compétitif, plus tes rivaux les plus proches.</value>
+  </data>
+  <data name="Your PUMBILITY titles" xml:space="preserve">
+    <value>Vos titres PUMBILITY</value>
   </data>
   <data name="Your Pumbility, titles, folder lamps and player stats are calculated from these — they reset on their own. You can't keep them." xml:space="preserve">
     <value>Votre Pumbility, vos titres, les lampes de dossier et vos statistiques se calculent à partir de ceci : ils se réinitialisent d'eux-mêmes. Vous ne pouvez pas les garder.</value>
@@ -7685,6 +7739,9 @@
   <data name="{0} / {1} cleared" xml:space="preserve">
     <value>{0} / {1} terminés</value>
   </data>
+  <data name="{0} a chart is:" xml:space="preserve">
+    <value>{0} par graphique, c'est :</value>
+  </data>
   <data name="{0} added as a rival." xml:space="preserve">
     <value>{0} ajouté comme rival.</value>
   </data>
@@ -7696,6 +7753,12 @@
   </data>
   <data name="{0} arrived" xml:space="preserve">
     <value>{0} entrés</value>
+  </data>
+  <data name="{0} asks" xml:space="preserve">
+    <value>{0} exige</value>
+  </data>
+  <data name="{0} at {1}" xml:space="preserve">
+    <value>{0} en {1}</value>
   </data>
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0} devient le créateur de cette communauté et vous devenez administrateur. Il n'y a qu'une place de créateur : vous ne pourrez pas la reprendre vous-même.</value>
@@ -7955,6 +8018,9 @@
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} joueurs · semaine du {1}</value>
   </data>
+  <data name="{0} PUMBILITY remaining" xml:space="preserve">
+    <value>{0} PUMBILITY restants</value>
+  </data>
   <data name="{0} Pump It Up challenge charts this week, a daily chart with live standings, and the monthly PUMBILITY board." xml:space="preserve">
     <value>{0} charts défis Pump It Up cette semaine, un chart quotidien avec classements en direct, et le tableau mensuel PUMBILITY.</value>
   </data>
@@ -8005,6 +8071,9 @@
   </data>
   <data name="{0} top-board charts" xml:space="preserve">
     <value>{0} Charts dans le top officiel</value>
+  </data>
+  <data name="{0} total · {1} charts" xml:space="preserve">
+    <value>{0} au total · {1} graphiques</value>
   </data>
   <data name="{0} tracked here, {1} from the official import" xml:space="preserve">
     <value>{0} suivis ici, {1} venus de l'import officiel</value>

@@ -71,6 +71,74 @@ public sealed class PlayerRatingSagaTests
         Assert.Equal(single.Id, result[0].ChartId);
     }
 
+    // A pool slot is worth having only if the chart in it is. These three rate zero PUMBILITY
+    // for three different reasons and all held slots until they were dropped — and the fiftieth
+    // slot is the bar every projected gain on /Pumbility is measured against, so one of them
+    // sitting there prints every suggestion's whole value as if it displaced nothing.
+    [Fact]
+    public async Task GetTop50ForPlayerExcludesChartsBelowLevelTen()
+    {
+        var counting = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        // DifficultyLevel.BaseRating is zero under level 10, so a perfect run on one pays nothing.
+        var subTen = new ChartBuilder().WithType(ChartType.Single).WithLevel(9).Build();
+        var charts = ChartsMockReturning(new[] { counting, subTen });
+        var scores = ScoresMockReturning(Guid.NewGuid(), new[]
+        {
+            Score(counting.Id, 800000),
+            Score(subTen.Id, 1000000)
+        });
+        var saga = BuildSaga(charts: charts, scores: scores);
+
+        var result = (await saga.Handle(
+            new GetTop50ForPlayerQuery(Guid.NewGuid(), ChartType: null),
+            CancellationToken.None)).ToArray();
+
+        Assert.Single(result);
+        Assert.Equal(counting.Id, result[0].ChartId);
+    }
+
+    [Fact]
+    public async Task GetTop50ForPlayerExcludesHalfDoublePerformanceCharts()
+    {
+        var counting = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var halfDouble = new ChartBuilder().WithType(ChartType.SinglePerformance).WithLevel(20).Build();
+        var charts = ChartsMockReturning(new[] { counting, halfDouble });
+        var scores = ScoresMockReturning(Guid.NewGuid(), new[]
+        {
+            Score(counting.Id, 800000),
+            Score(halfDouble.Id, 1000000)
+        });
+        var saga = BuildSaga(charts: charts, scores: scores);
+
+        var result = (await saga.Handle(
+            new GetTop50ForPlayerQuery(Guid.NewGuid(), ChartType: null),
+            CancellationToken.None)).ToArray();
+
+        Assert.Single(result);
+        Assert.Equal(counting.Id, result[0].ChartId);
+    }
+
+    [Fact]
+    public async Task GetTop50ForPlayerExcludesChartsBelowLevelTenOnPhoenix2()
+    {
+        var counting = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var subTen = new ChartBuilder().WithType(ChartType.Single).WithLevel(9).Build();
+        var charts = ChartsMockReturning(new[] { counting, subTen }, MixEnum.Phoenix2);
+        var scores = ScoresMockReturning(Guid.NewGuid(), new[]
+        {
+            Score(counting.Id, 800000),
+            Score(subTen.Id, 1000000)
+        }, MixEnum.Phoenix2);
+        var saga = BuildSaga(charts: charts, scores: scores);
+
+        var result = (await saga.Handle(
+            new GetTop50ForPlayerQuery(Guid.NewGuid(), ChartType: null, Mix: MixEnum.Phoenix2),
+            CancellationToken.None)).ToArray();
+
+        Assert.Single(result);
+        Assert.Equal(counting.Id, result[0].ChartId);
+    }
+
     [Fact]
     public async Task GetTop50ForPlayerFiltersByChartTypeWhenSpecified()
     {

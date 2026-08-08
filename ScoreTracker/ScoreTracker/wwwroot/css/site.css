@@ -12814,13 +12814,40 @@ span.ct-console-pick { cursor: default; }
     margin: 16px 0 8px;
 }
 
-.pmb-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 330px) minmax(0, 1fr);
-    gap: 16px;
+/* The section frame: the number, the pool selector and the bar, above the nav and shared by
+   every page in the section. Everything in it starts at the same left edge — the bar card
+   used to be pushed right, which reads fine on one line and strands it against the far edge
+   with nothing under it the moment the row wraps. */
+.pmb-frame {
+    display: flex;
+    align-items: center;
+    gap: 14px 22px;
+    flex-wrap: wrap;
+    padding-bottom: 14px;
 }
 
-.pmb-hero-figure,
+.pmb-frame-figure {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Holds the band's height while the number is still arriving, so the nav under it does not
+   jump once it lands. */
+.pmb-frame-waiting {
+    min-height: 74px;
+}
+
+.pmb-frame-nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-top: 12px;
+    margin-bottom: 4px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
 .pmb-curve {
     background: var(--mix-surface);
     border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
@@ -12828,13 +12855,8 @@ span.ct-console-pick { cursor: default; }
     padding: 14px 16px 16px;
 }
 
-.pmb-hero-figure {
-    display: flex;
-    flex-direction: column;
-}
-
 .pmb-hero-value {
-    font-size: 56px;
+    font-size: 46px;
     line-height: .96;
 }
 
@@ -12844,15 +12866,14 @@ span.ct-console-pick { cursor: default; }
     margin-top: 4px;
 }
 
-/* Pool selector — Phoenix 2 only, and it re-ranks the whole page. */
+/* Pool selector — Phoenix 2 only, and it re-ranks the whole section. */
 .pmb-poolsplit {
     display: flex;
     gap: 6px;
-    margin-top: 13px;
 }
 
 .pmb-poolsplit-seg {
-    flex: 1;
+    flex: 0 0 auto;
     min-width: 0;
     border-radius: 4px;
     padding: 6px 8px;
@@ -12885,9 +12906,8 @@ span.ct-console-pick { cursor: default; }
     outline-offset: 2px;
 }
 
-/* The bar callout — the mechanic the page is organised around. */
+/* The bar callout — the mechanic the section is organised around. */
 .pmb-barcard {
-    margin-top: 13px;
     padding: 10px 12px;
     border-radius: 4px;
     background: color-mix(in srgb, var(--mix-accent) 9%, transparent);
@@ -12969,10 +12989,12 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-ink-muted);
 }
 
+/* A DEFINITE height, not min-height. Every bar sizes itself with a percentage height, and a
+   percentage resolves against auto as auto — so the whole plot painted empty the moment the
+   curve stopped being a grid cell that stretched to a neighbour's height. */
 .pmb-curve-plot {
     position: relative;
-    flex: 1;
-    min-height: 150px;
+    height: 190px;
     display: flex;
     align-items: flex-end;
     gap: 2px;
@@ -13355,97 +13377,57 @@ span.ct-console-pick { cursor: default; }
     margin-top: 2px;
 }
 
-.pmb-fact-warn .pmb-fact-num {
-    color: var(--mix-accent);
-}
-
-/* --- collapsibles --- */
-details.pmb-fold {
-    margin-top: 26px;
-    border-radius: 6px;
-    background: var(--mix-surface);
-    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
-}
-
-details.pmb-fold > summary {
-    cursor: pointer;
-    list-style: none;
-    padding: 12px 14px;
+/* Where a repriced record would land on each ladder. Never a title held — the label says
+   "would", and every chip carries the pool value that put it there (section 8.2). */
+.pmb-lands {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    gap: 8px;
 }
 
-details.pmb-fold > summary::-webkit-details-marker {
-    display: none;
-}
-
-details.pmb-fold > summary::before {
-    content: "\25B8";
-    color: var(--mix-ink-muted);
-    font-size: 11px;
-    transition: transform .15s ease;
-}
-
-details.pmb-fold[open] > summary::before {
-    transform: rotate(90deg);
-}
-
-details.pmb-fold > summary h3 {
-    font-family: var(--font-display);
-    font-size: 16px;
-    margin: 0;
-}
-
-details.pmb-fold > summary .pmb-sum-note {
-    margin-left: auto;
-    font-size: 12px;
-    color: var(--mix-ink-muted);
-    text-align: right;
-}
-
-details.pmb-fold > summary:focus-visible {
-    outline: 2px solid var(--mix-primary);
-    outline-offset: -2px;
-}
-
-.pmb-fold-body {
-    padding: 0 14px 14px;
-}
-
-.pmb-whatif {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 12px;
-    align-items: end;
-}
-
-.pmb-field label {
-    display: block;
+.pmb-lands-lbl {
     font-family: var(--font-display);
     font-weight: 600;
     font-size: 11px;
-    letter-spacing: .1em;
+    letter-spacing: .12em;
     text-transform: uppercase;
     color: var(--mix-ink-muted);
-    margin-bottom: 4px;
 }
 
-.pmb-whatif-out {
+.pmb-lands-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pmb-chip {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 6px 11px;
+    border-radius: 4px;
+    background: var(--mix-surface-muted);
+    border: 1px solid color-mix(in srgb, var(--mix-primary) 35%, transparent);
+    min-width: 0;
+}
+
+.pmb-chip-t {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 30px;
+    font-size: 14px;
+    letter-spacing: .05em;
     color: var(--mix-primary);
-    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
-.pmb-whatif-out small {
-    display: block;
-    font-family: var(--font-body);
-    font-weight: 400;
-    font-size: 11.5px;
+.pmb-chip-m {
+    font-size: 11px;
     color: var(--mix-ink-muted);
-    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 /* --- the patience card: sitewide, for waits a page cannot shorten --- */
@@ -13675,24 +13657,14 @@ details.pmb-fold > summary:focus-visible {
     .pmb-skeleton {
         animation: none;
     }
-
-    details.pmb-fold > summary::before {
-        transition: none;
-    }
 }
 
 /* --- the class ladder (UX-GUIDELINES section 1): tablet under 900, fold under 700,
        mobile under 500. One class, one shed, least dense information first. --- */
 
-/* The hero is two-up for desktop only; a tablet gets the full-width curve, which its
-   height can afford. 860 sits between the real tablets (820, 834) and the 900 rung,
-   touching neither: a query measures the content box, and a scrollbar would flip a
-   rung sitting on a nominal device width. */
-@media (max-width: 860px) {
-    .pmb-hero {
-        grid-template-columns: 1fr;
-    }
-}
+/* The frame needs no width rung of its own: it is a wrapping row, so a narrow viewport
+   stacks the number, the selector and the bar in that order against one left edge. The
+   860 rung the two-up hero needed went with the hero. */
 
 /* Tablet: the evidence line goes first, least information per pixel on the row. */
 @media (max-width: 899.98px) {
@@ -13723,11 +13695,11 @@ details.pmb-fold > summary:focus-visible {
     }
 
     .pmb-hero-value {
-        font-size: 48px;
+        font-size: 38px;
     }
 
     .pmb-curve-plot {
-        min-height: 118px;
+        height: 128px;
         gap: 1px;
     }
 
@@ -13741,21 +13713,25 @@ details.pmb-fold > summary:focus-visible {
    height is the scarce axis, so this compresses instead. The one rule the width
    ladder cannot express (session-breakdown.md section 5 draws the same line). */
 @media (max-height: 520px) and (min-width: 700px) {
-    .pmb-hero {
-        grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
-    }
-
     .pmb-hero-value {
         font-size: 34px;
     }
 
-    .pmb-hero-figure,
+    .pmb-frame {
+        gap: 8px 16px;
+        padding-bottom: 9px;
+    }
+
+    .pmb-frame-nav {
+        padding-top: 8px;
+    }
+
     .pmb-curve {
         padding: 10px 12px 11px;
     }
 
     .pmb-curve-plot {
-        min-height: 84px;
+        height: 84px;
     }
 
     .pmb-curve-legend {
@@ -13763,7 +13739,6 @@ details.pmb-fold > summary:focus-visible {
     }
 
     .pmb-barcard {
-        margin-top: 9px;
         padding: 7px 10px;
     }
 
@@ -13773,6 +13748,366 @@ details.pmb-fold > summary:focus-visible {
 
     .pmb-barcard-say {
         display: none;
+    }
+}
+
+/* --- your PUMBILITY titles: three ladders and the per-chart ask --- */
+.pmb-rails {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pmb-rail {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 6px;
+    padding: 13px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.pmb-rail-top {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pmb-rail-pool {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    padding: 1px 7px;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 20%, transparent);
+}
+
+.pmb-rail-pool.pmb-rail-s {
+    color: var(--chart-singles);
+    border-color: color-mix(in srgb, var(--chart-singles) 45%, transparent);
+}
+
+.pmb-rail-pool.pmb-rail-d {
+    color: var(--chart-doubles);
+    border-color: color-mix(in srgb, var(--chart-doubles) 45%, transparent);
+}
+
+.pmb-rail-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.pmb-rail-track {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pmb-rail-bar {
+    position: relative;
+    height: 9px;
+    border-radius: 2px;
+    background: var(--mix-surface-muted);
+    overflow: hidden;
+}
+
+.pmb-rail-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--mix-primary);
+}
+
+/* Three cells, so the distance still to travel sits between the two rungs it is the distance
+   across — rather than at the foot of the rail, where it read as a number with no unit beside
+   figures that were all per-chart. */
+.pmb-rail-ends {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 11.5px;
+    letter-spacing: .07em;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-rail-ends > :first-child,
+.pmb-rail-ends > :last-child {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.pmb-rail-ends .pmb-rail-mid {
+    flex: 0 0 auto;
+    text-align: center;
+    color: var(--mix-accent);
+}
+
+.pmb-rail-ends .pmb-rail-next {
+    color: var(--mix-primary);
+    text-align: right;
+}
+
+/* The projected pool clearing the ask is the good answer, so it reads as one — the accent
+   otherwise on this row means "still to find". */
+.pmb-ask-cell.pmb-ask-reach {
+    background: color-mix(in srgb, var(--mix-primary) 14%, transparent);
+}
+
+.pmb-ask-cell.pmb-ask-reach .pmb-ask-num,
+.pmb-ask-cell.pmb-ask-reach .pmb-ask-lbl {
+    color: var(--mix-primary);
+}
+
+/* The grade rides the same line as its level, always: in a shared caption underneath, three
+   levels read as a path — and the low one is the hard one, not the first step. */
+.pmb-rail-eg {
+    display: inline-block;
+    margin-left: 8px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--mix-ink);
+}
+
+/* The ask: what the next rung wants of every chart, against what yours are worth now. It
+   never assumes a play order, which is the whole reason it replaced counting charts. */
+.pmb-ask {
+    display: flex;
+    align-items: stretch;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--mix-surface-muted);
+    flex-wrap: wrap;
+}
+
+.pmb-ask-cell {
+    padding: 7px 12px;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 130px;
+    min-width: 0;
+    border-right: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+.pmb-ask-cell:last-child {
+    border-right: 0;
+}
+
+.pmb-ask-lbl {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pmb-ask-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+}
+
+.pmb-ask-cell.pmb-ask-gap {
+    background: color-mix(in srgb, var(--mix-accent) 14%, transparent);
+}
+
+.pmb-ask-cell.pmb-ask-gap .pmb-ask-num,
+.pmb-ask-cell.pmb-ask-gap .pmb-ask-lbl {
+    color: var(--mix-accent);
+}
+
+.pmb-rail-say {
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+    margin: 0;
+}
+
+.pmb-rail-say b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+/* --- where your PUMBILITY comes from --- */
+.pmb-wpc {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 6px;
+    padding: 15px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pmb-wpc-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.pmb-wpc-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.pmb-wpc-total {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* True to scale. The plate segment is a hairline because it IS a hairline — widening it to
+   be visible would be arguing the opposite of what the section says. It gets its own
+   magnified rail below instead. */
+.pmb-wpc-stack {
+    display: flex;
+    height: 34px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--mix-surface-muted);
+}
+
+.pmb-wpc-seg {
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--mix-primary-contrast);
+}
+
+.pmb-wpc-seg.pmb-wpc-level {
+    background: var(--mix-primary);
+}
+
+.pmb-wpc-seg.pmb-wpc-score {
+    background: var(--mix-secondary);
+}
+
+.pmb-wpc-seg.pmb-wpc-plate {
+    background: var(--mix-accent);
+}
+
+.pmb-wpc-keys {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.pmb-wpc-key {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-left: 10px;
+    border-left: 3px solid var(--mix-ink-muted);
+    min-width: 0;
+}
+
+.pmb-wpc-key.pmb-wpc-level {
+    border-left-color: var(--mix-primary);
+}
+
+.pmb-wpc-key.pmb-wpc-score {
+    border-left-color: var(--mix-secondary);
+}
+
+.pmb-wpc-key.pmb-wpc-plate {
+    border-left-color: var(--mix-accent);
+}
+
+.pmb-wpc-k-lbl {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-wpc-k-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 23px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-wpc-k-pct {
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-wpc-plated {
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    padding-top: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.pmb-wpc-plate-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+}
+
+.pmb-wpc-plate-head strong {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--mix-accent);
+}
+
+/* The sliver, on a scale it can be read on: the worst plate on all fifty to the best. */
+.pmb-wpc-rail {
+    position: relative;
+    height: 12px;
+    border-radius: 2px;
+    background: var(--mix-surface-muted);
+    overflow: hidden;
+}
+
+.pmb-wpc-rail-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--mix-accent);
+    opacity: .85;
+}
+
+.pmb-wpc-say {
+    font-size: 13px;
+    margin: 0;
+}
+
+@media (max-width: 699.98px) {
+    .pmb-wpc-keys {
+        grid-template-columns: 1fr;
     }
 }
 

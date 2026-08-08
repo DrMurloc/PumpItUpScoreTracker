@@ -1,3 +1,4 @@
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
@@ -55,6 +56,34 @@
         </p>
     }
 
+    @* Where the record lands on all three ladders, not just the selected pool -- the argument
+       is what the whole Phoenix 1 account is worth here. The wording is conditional and every
+       chip carries the pool value behind it, because these are emphatically NOT titles held:
+       at a launch these and the rails on Your Pool say opposite things about the same three
+       ladders, and that contrast is the point (§8.2). *@
+    @if (Carryover.ProjectedTitles.Any(t => t.Title != null))
+    {
+        <div class="pmb-lands">
+            <span class="pmb-lands-lbl">@L["Where this record would land you"]</span>
+            <div class="pmb-lands-row">
+                @foreach (var projected in Carryover.ProjectedTitles.Where(t => t.Title != null))
+                {
+                    <span class="pmb-chip">
+                        <span class="pmb-chip-t">@projected.Title</span>
+                        <span class="pmb-chip-m">
+                            @PoolLabel(projected.Pool) @projected.Value.ToString("N0")
+                            @if (projected.Next != null)
+                            {
+                                <text> · </text>
+                                @string.Format(L["next at {0}"], projected.Next.Value.ToString("N0"))
+                            }
+                        </span>
+                    </span>
+                }
+            </div>
+        </div>
+    }
+
     <div class="pmb-factrow">
         <div class="pmb-fact">
             <div class="pmb-fact-num">
@@ -62,20 +91,6 @@
             </div>
             <div class="pmb-fact-lbl">@L["Not scored yet in Phoenix 2"]</div>
         </div>
-        @if (Carryover.Unavailable.Count > 0)
-        {
-            @* A chart with no Phoenix 2 appearance is a fact about the pool and never a
-               target -- you cannot go and play it. Stated once, here, and nowhere else. *@
-            <div class="pmb-fact pmb-fact-warn">
-                <div class="pmb-fact-num">@Carryover.Unavailable.Count</div>
-                <div class="pmb-fact-lbl">
-                    @L["No Phoenix 2 chart"]@if (LostName != null)
-                    {
-                        <text> — <strong>@LostName</strong></text>
-                    }
-                </div>
-            </div>
-        }
         @if (Carryover.Bar > 0)
         {
             <div class="pmb-fact">
@@ -97,8 +112,10 @@
         Carryover.Phoenix1SinglesInPool < Carryover.Phoenix1DoublesInPool &&
         Carryover.SinglesInPool > Carryover.DoublesInPool;
 
-    private string? LostName =>
-        Carryover.Unavailable.Count > 0 && Charts.TryGetValue(Carryover.Unavailable[0], out var chart)
-            ? chart.Song.Name.ToString()
-            : null;
+    private string PoolLabel(PumbilityPool pool) => pool switch
+    {
+        PumbilityPool.Singles => L["Singles"],
+        PumbilityPool.Doubles => L["Doubles"],
+        _ => L["Total"]
+    };
 }

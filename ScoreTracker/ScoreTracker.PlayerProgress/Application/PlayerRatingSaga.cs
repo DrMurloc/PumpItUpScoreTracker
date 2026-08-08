@@ -115,17 +115,28 @@ internal sealed class PlayerRatingSaga :
                 : scoring.GetScore(charts[s.ChartId].Type, charts[s.ChartId].Level, s.Score!.Value);
         }
 
-        // A stage break is worth zero PUMBILITY, so a broken run in the pool holds a slot at
-        // no value. That is not merely wasteful: the PUMBILITY page measures every projected
-        // gain against the pool's MINIMUM, and one such row drives that floor to zero, which
-        // prints every suggestion's whole value as if it displaced nothing. Dropped here
-        // rather than at each call site, so the query means what its name says.
+        // A chart worth zero PUMBILITY holds a slot at no value. That is not merely wasteful:
+        // the PUMBILITY page measures every projected gain against the pool's MINIMUM, and one
+        // such row drives that floor to zero, which prints every suggestion's whole value as if
+        // it displaced nothing. Four kinds rate zero — a stage break (StageBreakModifier), CO-OP
+        // and half-double performance charts (ChartTypeModifiers), and anything below level 10
+        // (DifficultyLevel.BaseRating) — and `Rank(s) > 0` is all four at once. Nothing
+        // legitimate is caught: the worst grade multiplier is .4 on Phoenix and 1.08 on
+        // Phoenix 2, and MinimumScore is 0 in both PUMBILITY configs.
+        //
+        // IsBroken stays an explicit filter rather than folding into the rank: the Phoenix
+        // branch of Rank calls an overload that hardcodes isBroken false, so a stage break
+        // ranks there at its unbroken value and the general rule would not see it.
         return (await _scores.GetBestScores(request.Mix, request.UserId, cancellationToken))
             .Where(s => charts[s.ChartId].Type != ChartType.CoOp)
             .Where(s => s.Score != null && !s.IsBroken && (request.ChartType == null ||
                                                            charts[s.ChartId].Type == request.ChartType))
-            .OrderByDescending(Rank)
-            .Take(request.Count).ToArray();
+            .Select(s => (Score: s, Rank: Rank(s)))
+            .Where(x => x.Rank > 0)
+            .OrderByDescending(x => x.Rank)
+            .Take(request.Count)
+            .Select(x => x.Score)
+            .ToArray();
     }
 
     public async Task Handle(RecalculateStatsCommand request, CancellationToken cancellationToken)
