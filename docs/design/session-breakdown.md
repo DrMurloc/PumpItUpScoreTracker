@@ -32,9 +32,13 @@ positions.
 | D7 | **Community Peers is user-created communities only.** World and the country community are auto-joined system communities — scoping to "all your communities" scopes to everybody. |
 | D8 | **Sort by closeness, do not filter.** Every community member with a score on the chart appears, nearest competitive level first. Precision filtering is Rivals' job. |
 | D9 | **Community Peers covers every highlighted chart** that has at least one peer score; charts with none are skipped silently. |
-| D10 | **Score colour is the competitive cohort, not the community.** ±0.5 competitive is large enough (~90–120 players/chart) for a percentile to mean something; a 7-person club board is not. The percentile always prints beside the colour (UX rule 8). |
+| D10 | **Score colour is the competitive cohort, not the community.** ±0.5 competitive is large enough (~90–120 players/chart) for a percentile to mean something; a 7-person club board is not. The standing always prints beside the colour (UX rule 8) — as a **place**, see D27. |
+| D27 | **Standing prints as a place, never a percentage** (owner, 2026-08-08). The row shipped "top 94% at your level · 94 in cohort" for a score that beat 94% of its cohort: the wording began as `>99%` and drifted to `top`, which inverts the claim for everyone above the median. Rather than repair the percentage, the row prints `#6 of 94 peers` — the same fact, in the words `CommunitySaga.PeerCaption` was already using, and unreadable backwards. The percentile is untouched underneath and still drives the colour. |
+| D28 | **"Peers" means the other people at your level, so counts exclude you — but a place does not.** The captured cohort includes the player (you are trivially within ±0.5 competitive of yourself), so `PeerPgCount`/`PeerCount` drop one when reporting how many *others* did something. A place keeps the whole cohort as its denominator, because a place is a position inside a population you belong to. Both surfaces (row and Discord card) apply this identically; the subtraction is at render, so already-captured rows stay correct. |
+| D29 | **The 📊 badge leaves the row, not the model.** It meant "top 10% among comparable players", which the standing line now states outright. `ScoreQuality90` keeps its flag, its captured history, its Discord caption and its hot-streak seeding — only this row stops drawing it. |
+| D30 | **A Perfect Game reports who shares it, not its place.** A PG cannot be beaten, only tied, so every PG row is `#1` and the place stops distinguishing anything; `PG · 3 of 93 peers have it` is the fact worth the line. When nobody else holds it the row falls back to the place, because "0 of 93 peers have it" is a clumsy way of saying first. |
 | D11 | **No cohort ⇒ no colour and no explanation.** Co-op charts (the cohort is Singles/Doubles only) and charts >5 levels below competitive (capture already skips them) render in plain ink with nothing said. Owner: a "co-op has no competitive cohort" disclaimer *"is going to confuse more than clarify."* |
-| D12 | **`ScoreQuality90` (📊) is untouched.** It stays the anonymous ±0.5 percentile flag it has always been, with its captured history and its Discord caption intact. Community Peers is purely additive. |
+| D12 | **`ScoreQuality90` (📊) is untouched.** It stays the anonymous ±0.5 percentile flag it has always been, with its captured history and its Discord caption intact. Community Peers is purely additive. *(Amended by D29: the flag is still untouched, but the session row no longer draws its glyph.)* |
 | D13 | **Skill focus is composition first**, measured against the folders actually played, with performance as a second line only where evidence supports it. |
 | D14 | **Official chart placement**: any placement inside the mirrored board depth (P1 ≤100, P2 300) flags. **No special treatment for #1** — *"the #1 player in the world is so far ahead of everyone else that that seat doesn't change."* |
 | D15 | **Official PUMBILITY rank is stored** next to competitive level. **Phoenix has one combined board; Phoenix 2 has three** (All/Singles/Doubles). |
@@ -51,6 +55,17 @@ positions.
 | D24 | **No undo affordance on this page.** Owner-settled in the delete work: the undo banner lives on the delete page, *"not on the public Sessions page."* The hero never grows an Undo button. |
 | D25 | **This design's new capture reuses `ScoreHighlight` / `PlayerMilestone`, keyed by `SessionId`** — it needs no new shape, and those two are already wired into undo and the purge. A new table is a perfectly ordinary thing to add; it just inherits both duties explicitly (§2.3). |
 | D26 | **`OfficialPumbilityRank` mints on improvement only**, matching every other rating milestone — otherwise an undo announces the rank it just cost you. |
+| D31 | **⬆ carries the number it was always implying** (owner, 2026-08-08). The flag is unchanged — same rows, same rarity — but it now reads `22.5 (+0.3)`: what the score rates on the competitive scale, and how far above the level the batch opened at. Suppressed under +0.05, silent on co-op. Rejected: printing the diff on *every* positive row. The flag additionally requires that the batch actually raised the level, so "positive" and "flagged" are different sets and neither contains the other — a diff on every positive row would land on most of a good night and retire a mark that is currently rare and earned. |
+| D32 | **A chart's PUMBILITY gain is captured, not derived at render** (owner, 2026-08-08: *"real data"*). 👑 says a chart sits in your top 50 — a standing fact a chart can hold all night having gained you nothing. The gain answers the other question. Render-time reconstruction was rejected because it is wrong precisely on the best case: a chart *entering* the pool displaces the fiftieth, so crediting it its whole value overstates by whatever it pushed out, and the displaced value is not knowable at render. |
+| D33 | **The gain measures the combined pool only.** Phoenix 2 has three (All/Singles/Doubles) and Phoenix has one; the row reports one number, and the combined pool is what the ceremony band headlines. |
+| D34 | **No backfill** (owner, 2026-08-08). Both new captures are forward-only; the maintainer's own most recent session is seeded locally for the field test. The existing `RebuildLatestSessionsCommand` would not have served anyway — it replays the change set through the live pipeline, and a rebuild computes against **today's** stats, so a delta measured old-vs-new comes out zero for a session already applied. |
+| D35 | **The Phoenix 1 delta is computed at render, not captured** (owner, 2026-08-08: *"P1 gonna be frozen in a month"*). A column for a number that stops moving is a column for nothing. The consequence is honest and accepted: it reads today's Phoenix 1 best, so a session viewed later reflects Phoenix 1 as it stands then. |
+| D36 | **A break is never a score that mattered.** D6 already said failures are never highlighted; the section reached one anyway through its **padding** — it tops itself to six rows with unflagged scores, and on a thin session a stage break can be the highest level present. Breaks are filtered from both halves and live only in All plays. |
+| D37 | **Capture in flight gets the patience card** (owner, 2026-08-08). `HighlightCaptureSaga` is a bus consumer, so a page opened right after an import can beat it — which rendered as an empty hero, indistinguishable from a session that earned nothing. The card stands in for the **whole** capture-derived region per UX rule 9; the ceremony band and All plays stay, because they read the stats row and the journal and are true the moment the import lands. |
+| D38 | **The pending state is inferred, and the inference expires.** No `ScoreSession` row ⇒ never pending (historical by definition). Otherwise: nothing captured **and** `LastActivityAt` within **2 minutes**. A session of co-op or far-below-competitive charts legitimately captures nothing and looks identical, so the window is what stops the page telling that player to keep waiting. |
+| D39 | **The page listens for the event; it never polls and never guesses that capture has finished** (owner, 2026-08-08: *"whatever that second event firing is, that's the one we want"*). `ScoreHighlightsCapturedEvent` is published when capture completes, and `ScoreHighlightsCapturedUiBridge` — a **public** bus consumer in Web, so the host's assembly scan finds it — forwards it to the player's UI topic. Same shape as the randomizer's draw view. Delivery is best-effort by design: a player who was not on the page never receives it and simply reads the finished article on arrival. |
+| D39a | **Why polling could not have worked, kept because the shape of the failure is instructive.** Scores are held as a batch for **two minutes past the LATEST of them** (`ScoreBatchPolicy.HoldWindow` — every score pushes the deadline out again), so capture does not begin until well after an import stops writing. Four timers were tried and each failed differently: clearing on the first row (mid-pipeline), on a stable row count (between batches), gating the watch on the card (never ran for the page most likely to need it), and a two-minute window that expired at the exact instant the batch fired. Every one was a guess at another component's schedule. |
+| D40 | **⚠ A `HighlightsCapturedAt` stamp on `ScoreSession` is still worth having**, though no longer to drive the card. It would let the page tell *failed* from *unremarkable* — identical today, even though the capture saga swallows each step's exceptions — and would give a page that missed the event something to read on arrival. The test would be `HighlightsCapturedAt >= LastActivityAt`; anything less is per-batch and says nothing about an import as a whole. |
 
 ### Deliberately not decided here
 
@@ -135,6 +150,38 @@ Two things it is honest about, and both must reach the UI:
 `GetOfficialPlayerStandingQuery` is deliberately not the mechanism here: it resolves a rank by
 pulling the whole rankings list per board and scanning it — fine for a profile page, far too
 heavy per import, and it answers last Sunday's question rather than tonight's.
+
+### 2.2a The second capture pass (2026-08-08)
+
+Two more numbers a batch computes and discards, both landing on `ScoreHighlight`.
+
+**The competitive baseline.** `FlagCompetitiveImprovers` already compares each changed score
+against the competitive level as the batch opened, then drops it. That level is **per-batch** — a
+session drains as several batches, each with its own before and after — and `PlayerStats` keeps
+only the last, so nothing downstream can recover it. The score's own competitive level stays a
+pure function of chart level, score and type (`CalculateFungScore`), so one stored column buys
+both halves of `22.5 (+0.3)`.
+
+**The PUMBILITY gain.** Needs the batch's *old* scores, which only the change set carries, so
+`CaptureSessionStats` now takes the changes rather than just the ids of what moved. An admin
+recalculation has none and therefore claims no gain — pricing every chart as if it had just
+arrived would credit a maintenance run with the whole pool.
+
+Attribution lives in `PumbilityAttribution`, a pure function, because the arithmetic is where
+this could quietly go wrong:
+
+- A chart that **kept its seat** is worth its whole improvement — nothing had to leave.
+- A chart that **took a seat** is worth only what it beat the departure by. The naive reading
+  credits an entrant its full value and overstates by the size of whatever it pushed out.
+- The pool is a fixed fifty, so entrants and leavers always arrive in equal numbers, and the
+  pairing chosen is the order the pool actually falls in: the strongest entrant displaces the
+  weakest seat. **The split reconciles exactly with the total the ceremony band prints above it**,
+  whatever the pairing — a property the tests assert directly at three pool sizes.
+
+⚠ The old value is priced with the chart's **current plate**. Phoenix never reads the plate, so it
+is exact there. On Phoenix 2 it is exact unless the plate improved in the same play that raised
+the score, where the old side prices slightly high and the gain reads slightly low. Closing that
+means carrying the old plate on `ScoreChange`, which does not have it.
 
 ### 2.3 The delete / undo ecosystem
 
@@ -297,6 +344,15 @@ same PR. No table is dropped.
 ⚠ `PlayerStatsRecord` is a **positional record with 18 members** and is constructed in several
 places — adding four is mechanical but touches every call site.
 
+### 4.3a Seeding the second capture pass for a field test
+
+The 2026-08-08 captures are forward-only (D34), so a session that already happened renders a bare
+⬆ and no gain pill. [`session-row-indicators-seed.sql`](session-row-indicators-seed.sql) fills
+both onto one player's most recent session **on a local database** — enough to see the treatments
+without pretending capture ran. It seeds gains only on crowned charts, because a chart outside
+the pool gained nothing and a badge there would misrepresent the exact thing the feature exists
+to get right.
+
 ### 4.4 Backfill
 
 An admin button publishing `RebuildLatestSessionCommand`, scoped to **each player's single most
@@ -387,3 +443,20 @@ would be a lie:
    deliberately reaches exactly one session back.
 4. **A session can be undone out from under a link.** The Discord card outlives the session it
    points at, so the page says "this session was undone" rather than rendering an empty hero.
+5. **The competitive readout and the PUMBILITY gain begin 2026-08-08.** Both are forward-only and
+   there is no backfill (D34), so an older row shows a bare ⬆ and no gain pill. That is the
+   correct rendering of "we did not measure this", not a gap to paper over.
+6. **The Phoenix 1 delta is measured against Phoenix 1 as it stands now** (D35), not as it stood
+   during the session. Phoenix is effectively frozen, which is what makes that acceptable rather
+   than merely convenient.
+7. **"Still calculating" is a guess with an expiry** (D38). The page cannot currently distinguish
+   *capture is running*, *capture failed* and *this session earned nothing* — so it only claims
+   the first for two minutes, then stops claiming anything.
+
+⚠ **The undo lesson, for anything that rebuilds a record from history.** A returning song carries
+one ChartId across Phoenix and Phoenix 2, so `GetChartHistories` is **cross-mix by design** —
+reclear detection depends on it. Any replay reconstructing one mix's record must filter by mix
+first. `Classify` and `RebuildLatestSessionsConsumer` always did; `UndoScoreSessionHandler` did
+not, and wrote players' Phoenix 1 scores in as their Phoenix 2 records. Nothing self-corrected,
+because acquisition may only *raise* a record — so the wrong, higher number stuck and every later
+import of the real score journalled as not-best and rendered as "Played" (fixed 2026-08-08).

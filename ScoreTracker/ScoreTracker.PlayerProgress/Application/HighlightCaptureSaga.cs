@@ -130,7 +130,8 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         try
         {
             var stats = await _mediator.Send(new PlayerRatingSaga.CaptureSessionStats(e.UserId, e.Mix,
-                e.Changes.Select(c => c.ChartId).Distinct().ToArray(), e.SessionId), context.CancellationToken);
+                    e.Changes.Select(c => c.ChartId).Distinct().ToArray(), e.SessionId, e.Changes),
+                context.CancellationToken);
             milestones.AddRange(stats.Milestones);
             foreach (var chartId in stats.ImproverChartIds)
                 flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlags.CompetitiveImprover;

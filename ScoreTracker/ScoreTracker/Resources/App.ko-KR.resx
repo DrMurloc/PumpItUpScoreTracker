@@ -228,6 +228,9 @@
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>다른 {0}명은 이 단계를 더 위까지 올라갔습니다.</value>
   </data>
+  <data name="+{0} over P1" xml:space="preserve">
+    <value>P1 대비 +{0}</value>
+  </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
@@ -6131,6 +6134,9 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>정확한 수치</value>
   </data>
+  <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
+    <value>Phoenix 1 최고 기록을 처음으로 넘은 Phoenix 2 점수</value>
+  </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>첫 주간 스냅샷이 아직 없습니다 - 다음 일요일 가져오기 후 하이라이트가 표시됩니다.</value>
   </data>
@@ -6571,9 +6577,6 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>상위 {0}%</value>
-  </data>
-  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
-    <value>같은 실력대 상위 {0}% · {1}명 중</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>동급 상위 {0}%</value>
@@ -7070,6 +7073,12 @@
   <data name="What should they change?" xml:space="preserve">
     <value>무엇을 바꿔야 하나요?</value>
   </data>
+  <data name="What this play added to your PUMBILITY" xml:space="preserve">
+    <value>이 플레이가 PUMBILITY에 더한 값</value>
+  </data>
+  <data name="What this score rates, against your level when the session reached it" xml:space="preserve">
+    <value>이 점수의 평가치와, 세션이 여기 도달했을 때의 레벨 차이</value>
+  </data>
   <data name="What to play next" xml:space="preserve">
     <value>다음에 무엇을 플레이할까</value>
   </data>
@@ -7162,6 +7171,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>없어도 동작합니다 — 여러분 자신의 점수에 대해서는요.</value>
+  </data>
+  <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
+    <value>이 세션이 무엇을 움직였는지 계산 중 — 칭호, 풀, 그리고 동급 플레이어 사이에서 각 점수의 위치.</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>예상치를 계산하는 중입니다. 비슷한 레벨의 플레이어 수백 명을 참조하므로 잠시 걸립니다.</value>

@@ -86,6 +86,8 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
         row.OfficialPlace ??= detail.OfficialPlace;
         row.OfficialBoardDepth ??= detail.OfficialBoardDepth;
         row.OfficialAsOf ??= detail.OfficialAsOf;
+        row.CompetitiveBaseline ??= detail.CompetitiveBaseline;
+        row.PumbilityGain ??= detail.PumbilityGain;
     }
 
     private static ScoreHighlightRecord ToRecord(ScoreHighlightEntity e)
@@ -93,7 +95,8 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
         return new ScoreHighlightRecord(e.ChartId, e.SessionId, e.OccurredAt, (HighlightFlags)e.Flags, e.Level,
             e.ScoringLevel, new HighlightDetail(e.PumbilityRank, e.FolderDebutOrdinal, e.PeerCount, e.PeerBetterCount,
                 e.PeerPgCount, e.SkillTitleName, e.SkillTitleScore, e.SkillTitleThreshold,
-                e.PeerPercentile, e.AttemptsBeforeClear, e.OfficialPlace, e.OfficialBoardDepth, e.OfficialAsOf));
+                e.PeerPercentile, e.AttemptsBeforeClear, e.OfficialPlace, e.OfficialBoardDepth, e.OfficialAsOf,
+                e.CompetitiveBaseline, e.PumbilityGain));
     }
 
     public async Task<IEnumerable<ScoreHighlightRecord>> GetHighlights(MixEnum mix, Guid userId,

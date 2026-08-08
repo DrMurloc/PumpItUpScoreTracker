@@ -47,7 +47,15 @@ internal sealed class UndoScoreSessionHandler(
             : (await journal.GetChartHistories(request.UserId, chartIds, cancellationToken)).ToArray();
         foreach (var chartId in chartIds)
         {
-            var best = SessionUndoReplay.BestOf(survivors.Where(e => e.ChartId == chartId));
+            // Same mix only. A returning song carries ONE ChartId across Phoenix and Phoenix 2,
+            // so a chart's history spans both — and replaying it unfiltered writes the other
+            // mix's score in as this mix's record. Undoing a Phoenix 2 session then leaves your
+            // Phoenix 1 score standing as your Phoenix 2 best, which a later import cannot
+            // correct: acquisition may only RAISE a record, so the wrong, higher number sticks
+            // and every re-imported play reads as "Played". Classify and the session rebuild
+            // both already carry this filter; this was the one replay that did not.
+            var best = SessionUndoReplay.BestOf(
+                survivors.Where(e => e.ChartId == chartId && e.Mix == session.Mix));
             if (best == null)
             {
                 // Nothing came before, so there is nothing to put back — the chart returns to

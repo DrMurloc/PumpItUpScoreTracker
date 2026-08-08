@@ -52,6 +52,30 @@ public sealed class PatienceCardTests : ComponentTestBase
         Assert.NotEqual(first, second);
     }
 
+    [Fact]
+    public void ThePadStartsOnOneOfTheRealStepPatterns()
+    {
+        // The server picks the opening pattern, and that is not merely an initial value: a pad
+        // whose script never arrives keeps stepping this one. js/patience.js takes over at the
+        // first cycle boundary; the schedules themselves live in CSS.
+        _random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
+        var pad = Render("Anything.").Find(".patience-pad");
+
+        Assert.Contains("patience-mrun", pad.ClassList);
+    }
+
+    [Fact]
+    public void TheStartingPatternComesFromTheSameSeamAsThePhrase()
+    {
+        _random.Setup(r => r.Next(It.IsAny<int>())).Returns(0);
+        var first = Render("Anything.").Find(".patience-pad").ClassName;
+
+        _random.Setup(r => r.Next(It.IsAny<int>())).Returns(2);
+        var second = Render("Anything.").Find(".patience-pad").ClassName;
+
+        Assert.NotEqual(first, second);
+    }
+
     private IRenderedComponent<PatienceCard> Render(string explanation)
     {
         return RenderComponent<PatienceCard>(p => p.Add(x => x.Explanation, explanation));

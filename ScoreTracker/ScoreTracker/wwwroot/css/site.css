@@ -11640,6 +11640,45 @@ button.chart-card-art {
     font-variant-numeric: tabular-nums;
 }
 
+/* "+27,450 over P1". Gold rather than the success green every other gain on this row
+   wears: the tail already prints a green delta over your previous Phoenix 2 score, and
+   two green numbers measuring different baselines a few pixels apart read as one fact
+   repeated. Plain text, not a pill — the pumbility badge is the only outlined thing a
+   row gets. */
+.sbd-p1 {
+    font-size: .72rem;
+    color: var(--rarity-gold);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* What this play added to your PUMBILITY pool. The tier list's gain treatment, moved onto a
+   row: success green on a green hairline over an 82%-black ground, the same build the
+   pumbility page's targets wear so one number means one thing across both pages. The only
+   outlined thing in the strip — everything beside it is a bare glyph, which is the point. */
+.sbd-gain {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .74rem;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    background: rgba(0, 0, 0, .82);
+    color: var(--mud-palette-success);
+    border: 1px solid var(--mud-palette-success);
+    border-radius: 2px;
+    padding: 1px 5px;
+    white-space: nowrap;
+}
+
+/* "23.6 (+0.4)" — the arrow's caption rather than a badge of its own, so it stays quiet
+   next to the glyph it explains. */
+.sbd-comp {
+    font-size: .72rem;
+    color: var(--mud-palette-success);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
 .sbd-row-tail {
     flex: none;
     display: flex;
@@ -13431,6 +13470,8 @@ details.pmb-fold > summary:focus-visible {
 /* Five panels stepping in sequence. Motion without a spinner, and the one thing on the page
    that could only belong to this game. */
 .patience-pad {
+    /* One step of the chart. Every pattern below counts its cycle in these. */
+    --patience-beat: .32s;
     display: grid;
     grid-template-columns: repeat(3, 20px);
     grid-template-rows: repeat(3, 20px);
@@ -13441,31 +13482,139 @@ details.pmb-fold > summary:focus-visible {
     display: block;
     border-radius: 3px;
     background: color-mix(in srgb, var(--mix-ink) 13%, transparent);
-    animation: patience-step 2s steps(1, end) infinite;
+    animation-timing-function: steps(1, end);
+    animation-iteration-count: infinite;
 }
 
-.patience-ul { grid-area: 1 / 1; animation-delay: 0s; }
-.patience-ur { grid-area: 1 / 3; animation-delay: .4s; }
-.patience-ct { grid-area: 2 / 2; animation-delay: .8s; }
-.patience-dl { grid-area: 3 / 1; animation-delay: 1.2s; }
-.patience-dr { grid-area: 3 / 3; animation-delay: 1.6s; }
+.patience-ul { grid-area: 1 / 1; }
+.patience-ur { grid-area: 1 / 3; }
+.patience-ct { grid-area: 2 / 2; }
+.patience-dl { grid-area: 3 / 1; }
+.patience-dr { grid-area: 3 / 3; }
 
-@keyframes patience-step {
-    0% {
-        background: var(--mix-primary);
-        box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent);
-    }
+/* Real step patterns, one per CYCLE (owner, 2026-08-08). Each begins AND ends on the
+   bottom-left arrow, so whichever comes next picks up mid-stride — which is what lets
+   js/patience.js swap the pattern at the cycle boundary with no visible seam. The server picks
+   the first one, so a pad still steps a real chart when the script never arrives.
 
-    18% {
-        background: color-mix(in srgb, var(--mix-primary) 45%, transparent);
-        box-shadow: 0 0 0 transparent;
-    }
+   A panel that lights ONCE gets the shared flash keyframe plus a delay. A panel that lights
+   more than once gets a keyframe of its own, spelling out every beat.
 
-    20%, 100% {
-        background: color-mix(in srgb, var(--mix-ink) 13%, transparent);
-        box-shadow: 0 0 0 transparent;
-    }
+   ⚠ It cannot instead declare the shared keyframe twice with two delays, which is the obvious
+   economy and is wrong: two animations on one element do not merge, they compete, and for any
+   property both of them touch the LAST one in the list wins outright. Since these keyframes
+   span the whole cycle, the second instance overrode the first at every moment and only its
+   delay was ever visible — M run collapsed to a right-to-left sweep and Spin's centre lit once
+   instead of four times.
+
+   The flash lasts exactly one beat, so its width is a fraction of the cycle — hence one shared
+   keyframe per cycle length rather than one overall. */
+@keyframes patience-flash-8 {
+    0% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    11.25% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    12.5%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
 }
+
+@keyframes patience-flash-6 {
+    0% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    15% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    16.667%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+}
+
+/* Keyframes for the panels that light more than once. Beat i of an eight-step cycle runs from
+   i × 12.5%, and of a six-step cycle from i × 16.667%; the panel is lit for the first nine
+   tenths of its beat and dark the rest of the cycle. */
+@keyframes patience-mrun-ul { /* beats 1 and 7 */
+    0%, 12.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    12.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    23.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    25%, 87.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    87.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    98.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+}
+
+@keyframes patience-mrun-ct { /* beats 2 and 6 */
+    0%, 24.99% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    25% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    36.25% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    37.5%, 74.99% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    75% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    86.25% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    87.5%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+}
+
+@keyframes patience-mrun-ur { /* beats 3 and 5 */
+    0%, 37.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    37.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    48.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    50%, 62.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    62.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    73.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    75%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+}
+
+@keyframes patience-spin-ct { /* beats 1, 3, 5 and 7 — the centre carries this whole pattern */
+    0%, 12.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    12.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    23.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    25%, 37.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    37.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    48.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    50%, 62.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    62.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    73.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    75%, 87.49% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    87.5% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    98.75% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+}
+
+@keyframes patience-six-ct { /* beats 1 and 4 of six — shared by the standard run and cross overs */
+    0%, 16.66% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    16.667% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    31.667% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    33.333%, 66.66% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+    66.667% { background: var(--mix-primary); box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent); }
+    81.667% { background: color-mix(in srgb, var(--mix-primary) 45%, transparent); box-shadow: 0 0 0 transparent; }
+    83.333%, 100% { background: color-mix(in srgb, var(--mix-ink) 13%, transparent); box-shadow: 0 0 0 transparent; }
+}
+
+/* M run — up the left, through the middle, down the right, and back the way it came.
+   BL · TL · C · TR · BR · TR · C · TL */
+.patience-mrun .patience-panel { animation-name: patience-flash-8; animation-duration: calc(var(--patience-beat) * 8); }
+.patience-mrun .patience-dl { animation-delay: 0s; }
+.patience-mrun .patience-ul { animation-name: patience-mrun-ul; }
+.patience-mrun .patience-ct { animation-name: patience-mrun-ct; }
+.patience-mrun .patience-ur { animation-name: patience-mrun-ur; }
+.patience-mrun .patience-dr { animation-delay: calc(var(--patience-beat) * 4); }
+
+/* Spin — back to the centre between every corner.
+   BL · C · TL · C · TR · C · BR · C */
+.patience-spin .patience-panel { animation-name: patience-flash-8; animation-duration: calc(var(--patience-beat) * 8); }
+.patience-spin .patience-dl { animation-delay: 0s; }
+.patience-spin .patience-ct { animation-name: patience-spin-ct; }
+.patience-spin .patience-ul { animation-delay: calc(var(--patience-beat) * 2); }
+.patience-spin .patience-ur { animation-delay: calc(var(--patience-beat) * 4); }
+.patience-spin .patience-dr { animation-delay: calc(var(--patience-beat) * 6); }
+
+/* Standard run — the ordinary way round.
+   BL · C · TL · TR · C · BR */
+.patience-run .patience-panel { animation-name: patience-flash-6; animation-duration: calc(var(--patience-beat) * 6); }
+.patience-run .patience-dl { animation-delay: 0s; }
+.patience-run .patience-ct { animation-name: patience-six-ct; }
+.patience-run .patience-ul { animation-delay: calc(var(--patience-beat) * 2); }
+.patience-run .patience-ur { animation-delay: calc(var(--patience-beat) * 3); }
+.patience-run .patience-dr { animation-delay: calc(var(--patience-beat) * 5); }
+
+/* Cross overs — every step lands on the far side.
+   BL · C · TR · BR · C · TL */
+.patience-cross .patience-panel { animation-name: patience-flash-6; animation-duration: calc(var(--patience-beat) * 6); }
+.patience-cross .patience-dl { animation-delay: 0s; }
+.patience-cross .patience-ct { animation-name: patience-six-ct; }
+.patience-cross .patience-ur { animation-delay: calc(var(--patience-beat) * 2); }
+.patience-cross .patience-dr { animation-delay: calc(var(--patience-beat) * 3); }
+.patience-cross .patience-ul { animation-delay: calc(var(--patience-beat) * 5); }
 
 .patience-line {
     font-family: var(--font-display);
@@ -13485,12 +13634,16 @@ details.pmb-fold > summary:focus-visible {
     max-width: 34ch;
 }
 
+/* Two classes deliberately, not one: the step patterns above select as `.patience-mrun
+   .patience-ul`, and a bare `.patience-panel` here would lose to them on specificity and leave
+   the pad animating for someone who asked it not to. Matching their weight and sitting later in
+   the file is what makes this win. */
 @media (prefers-reduced-motion: reduce) {
-    .patience-panel {
+    .patience-pad .patience-panel {
         animation: none;
     }
 
-    .patience-ct {
+    .patience-pad .patience-ct {
         background: var(--mix-primary);
         box-shadow: 0 0 10px color-mix(in srgb, var(--mix-primary) 55%, transparent);
     }

@@ -228,6 +228,9 @@
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>+{0} autres sont montés plus haut sur cette échelle.</value>
   </data>
+  <data name="+{0} over P1" xml:space="preserve">
+    <value>+{0} au-dessus de P1</value>
+  </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
@@ -6189,6 +6192,9 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>Les chiffres exacts</value>
   </data>
+  <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
+    <value>Le premier score Phoenix 2 à battre votre meilleur score Phoenix 1</value>
+  </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>Le premier instantané hebdomadaire n'est pas encore arrivé - les temps forts s'allument après l'import de dimanche prochain.</value>
   </data>
@@ -6629,9 +6635,6 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>Top {0}%</value>
-  </data>
-  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
-    <value>top {0}% à ton niveau · {1} comparables</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>top {0}% des pairs</value>
@@ -7133,6 +7136,12 @@
   <data name="What should they change?" xml:space="preserve">
     <value>Que devraient-ils changer ?</value>
   </data>
+  <data name="What this play added to your PUMBILITY" xml:space="preserve">
+    <value>Ce que cette partie a ajouté à votre PUMBILITY</value>
+  </data>
+  <data name="What this score rates, against your level when the session reached it" xml:space="preserve">
+    <value>Ce que vaut ce score, face à votre niveau quand la session y est arrivée</value>
+  </data>
   <data name="What to play next" xml:space="preserve">
     <value>Que jouer ensuite</value>
   </data>
@@ -7225,6 +7234,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Sans eux il fonctionne quand même — pour vous, sur vos propres scores.</value>
+  </data>
+  <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
+    <value>Calcul de ce que cette session a changé : vos titres, votre pool, et la place de chaque score parmi les joueurs de votre niveau.</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>Calcul de tes projections. Cela consulte quelques centaines de joueurs de ton niveau, donc ça prend un moment.</value>

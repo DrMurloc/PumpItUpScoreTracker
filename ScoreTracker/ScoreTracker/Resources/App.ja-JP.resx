@@ -228,6 +228,9 @@
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>他 {0} 人はこの段位をさらに上まで進んでいます。</value>
   </data>
+  <data name="+{0} over P1" xml:space="preserve">
+    <value>P1 から +{0}</value>
+  </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
@@ -6190,6 +6193,9 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>正確な数値</value>
   </data>
+  <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
+    <value>Phoenix 1 のベストを初めて超えた Phoenix 2 のスコア</value>
+  </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>最初の週次スナップショットはまだありません - 次の日曜のインポート後にハイライトが表示されます。</value>
   </data>
@@ -6630,9 +6636,6 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>上位{0}%</value>
-  </data>
-  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
-    <value>同レベル帯で上位 {0}% · {1} 人中</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>同格プレイヤーの上位{0}%</value>
@@ -7134,6 +7137,12 @@
   <data name="What should they change?" xml:space="preserve">
     <value>何を直すべきですか?</value>
   </data>
+  <data name="What this play added to your PUMBILITY" xml:space="preserve">
+    <value>このプレイが PUMBILITY に加えた分</value>
+  </data>
+  <data name="What this score rates, against your level when the session reached it" xml:space="preserve">
+    <value>このスコアの評価と、セッションがここに達した時点のレベルとの差</value>
+  </data>
   <data name="What to play next" xml:space="preserve">
     <value>次に何をプレイするか</value>
   </data>
@@ -7226,6 +7235,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>なくても動きます — あなた自身の、あなたのスコアに対しては。</value>
+  </data>
+  <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
+    <value>このセッションが動かしたものを計算中 — 称号、プール、そして同レベル帯での各スコアの位置。</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>予測を計算しています。同水準のプレイヤー数百人を参照するため、少し時間がかかります。</value>

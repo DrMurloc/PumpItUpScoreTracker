@@ -228,6 +228,9 @@
   <data name="+{0} others have climbed higher on this ladder." xml:space="preserve">
     <value>+{0} lurgrgl mrglro grogrglro rglrgl lurg grglmrp grorpplgl.</value>
   </data>
+  <data name="+{0} over P1" xml:space="preserve">
+    <value>+{0} mrglrarg P1</value>
+  </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -&gt; 10%</value>
   </data>
@@ -6190,6 +6193,9 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>Mrp murmblub mrpblargro</value>
   </data>
+  <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
+    <value>Blarg murgloo Phoenix 2 glorgmurp mrgl blub Phoenix 1 magloo</value>
+  </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>Mrp murpargl murmmr mrpmaglmurp rgl murm roglorg argl - murmmurmgro urgmurg morg glmrp mrp grorpglorg Lurglurg glorggl.</value>
   </data>
@@ -6630,9 +6636,6 @@
   </data>
   <data name="Top {0}%" xml:space="preserve">
     <value>Blarg {0}%</value>
-  </data>
-  <data name="top {0}% at your level · {1} in cohort" xml:space="preserve">
-    <value>gulp {0}% · {1} murlog</value>
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>blarg {0}% mrgl maglmurp</value>
@@ -7134,6 +7137,12 @@
   <data name="What should they change?" xml:space="preserve">
     <value>Amba golba?</value>
   </data>
+  <data name="What this play added to your PUMBILITY" xml:space="preserve">
+    <value>Murp grolbap mrglaba blub PUMBILITY</value>
+  </data>
+  <data name="What this score rates, against your level when the session reached it" xml:space="preserve">
+    <value>Murp glorgmurp maglro, blub mrgloo momurp gapla urgblarg mrglro</value>
+  </data>
   <data name="What to play next" xml:space="preserve">
     <value>Blarg mrglrlgl mrrgl</value>
   </data>
@@ -7226,6 +7235,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Bam murp mo blorp murgloo — blu murgm, la murgm Mgrlgmrg.</value>
+  </data>
+  <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
+    <value>Glorgmurp murp gapla urgblarg mrglaba — blub maglurp, blub grolba, mrgl brolgo malgo glorgmurprolba maglmurp blub mrgloo.</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>Murgablar promglu. Blub morp mrgl oglu porum, mrogl gaal amur.</value>

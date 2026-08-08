@@ -147,7 +147,11 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
     public async Task<IReadOnlyList<ScoreJournalEntry>> GetChartHistories(Guid userId,
         IEnumerable<Guid> chartIds, CancellationToken cancellationToken)
     {
-        // Chart ids are mix-scoped by construction — no mix filter needed.
+        // ⚠ Deliberately CROSS-MIX, and callers must know it. A returning song carries one
+        // ChartId across Phoenix and Phoenix 2, so this returns both mixes' plays for such a
+        // chart — which is exactly what reclear detection needs, and exactly what a replay
+        // rebuilding one mix's record must filter out first. (This comment used to claim chart
+        // ids were mix-scoped. They are not, and the undo replay trusted that.)
         var ids = chartIds.Distinct().ToArray();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         return (await database.Set<ScoreEventJournalEntity>()
