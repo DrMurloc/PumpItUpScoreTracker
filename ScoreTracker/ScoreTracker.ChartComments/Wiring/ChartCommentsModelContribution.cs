@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ScoreTracker.ChartComments.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence;
 
 namespace ScoreTracker.ChartComments.Wiring;
@@ -12,7 +13,9 @@ public sealed class ChartCommentsModelContribution : IDbModelContribution
 {
     public void Contribute(ModelBuilder modelBuilder)
     {
-        // Tables arrive with the persistence commit; the contribution is registered from the
-        // vertical's first commit so the wiring is never the thing that is missing.
+        modelBuilder.Entity<CommentEntity>().ToTable("ChartComment");
+        modelBuilder.Entity<CommentRevisionEntity>().ToTable("ChartCommentRevision");
+        modelBuilder.Entity<CommentVoteEntity>().ToTable("ChartCommentVote");
+        modelBuilder.Entity<CommentConsentEntity>().ToTable("ChartCommentConsent");
     }
 }

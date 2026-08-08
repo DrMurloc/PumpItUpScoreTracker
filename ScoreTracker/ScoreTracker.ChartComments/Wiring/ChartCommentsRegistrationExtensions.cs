@@ -1,5 +1,8 @@
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
+using ScoreTracker.ChartComments.Application;
+using ScoreTracker.ChartComments.Domain;
+using ScoreTracker.ChartComments.Infrastructure;
 using ScoreTracker.Data.Persistence;
 
 namespace ScoreTracker.ChartComments.Wiring;
@@ -12,6 +15,9 @@ public static class ChartCommentsRegistrationExtensions
     /// </summary>
     public static IServiceCollection AddChartComments(this IServiceCollection services)
     {
+        services.AddTransient<ICommentRepository, EFCommentRepository>();
+        services.AddTransient<ICommentConsentRepository, EFCommentConsentRepository>();
+        services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, ChartCommentsModelContribution>();
         return services;
     }
@@ -24,5 +30,6 @@ public static class ChartCommentsRegistrationExtensions
     /// </summary>
     public static void AddChartCommentsConsumers(this IRegistrationConfigurator configurator)
     {
+        configurator.AddConsumer<AccountPurgeConsumer>();
     }
 }

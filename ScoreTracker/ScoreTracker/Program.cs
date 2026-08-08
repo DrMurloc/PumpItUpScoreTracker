@@ -11,6 +11,7 @@ using Microsoft.OpenApi;
 using MudBlazor.Services;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Catalog.Wiring;
+using ScoreTracker.ChartComments.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.CommunityTools.Wiring;
@@ -101,6 +102,7 @@ builder.Services.AddMassTransit(o =>
     o.AddChartIntelligenceConsumers();
     o.AddWeeklyChallengeConsumers();
     o.AddCommunityToolsConsumers();
+    o.AddChartCommentsConsumers();
     o.AddEventCompetitionConsumers();
     o.AddCommunitiesConsumers();
     o.AddCatalogConsumers();
