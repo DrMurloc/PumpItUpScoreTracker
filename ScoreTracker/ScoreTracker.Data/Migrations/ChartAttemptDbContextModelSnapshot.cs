@@ -2071,6 +2071,50 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("UserImportCredentialKey", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.ImportResultEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CardId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Outcome")
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<int?>("ScoreCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "StartedAt");
+
+                    b.ToTable("ImportResult", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.OfficialMirror.Infrastructure.Entities.OfficialBoardRecordEntity", b =>
                 {
                     b.Property<int>("LeaderboardId")
@@ -2725,6 +2769,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<Guid>("ChartId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<double?>("CompetitiveBaseline")
+                        .HasColumnType("float");
+
                     b.Property<int>("Flags")
                         .HasColumnType("int");
 
@@ -2759,6 +2806,9 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("float");
 
                     b.Property<int?>("PeerPgCount")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PumbilityGain")
                         .HasColumnType("int");
 
                     b.Property<int?>("PumbilityRank")

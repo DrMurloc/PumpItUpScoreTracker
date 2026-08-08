@@ -1,0 +1,44 @@
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+
+@* The carryover's own read, held by a component rather than the page because the pool it is
+   scoped to arrives from the section frame — which means it is a parameter, not something
+   the page knows in OnInitializedAsync. Re-fetching on a pool change falls out of that. *@
+@if (_carryover != null)
+{
+    <section class="pmb-block">
+        <div class="pmb-block-head">
+            <h2 class="pmb-block-title">@L["What Phoenix 1 is worth here"]</h2>
+        </div>
+        <p class="pmb-block-lede">
+            @string.Format(L["You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard."], _carryover.ScoredHere)
+        </p>
+        <CarryoverPanel Carryover="_carryover" Charts="Charts"></CarryoverPanel>
+    </section>
+}
+
+@code {
+    [Parameter] public ChartType? Pool { get; set; }
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    private Phoenix2CarryoverRecord? _carryover;
+    private ChartType? _loadedPool;
+    private bool _loaded;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loaded && _loadedPool == Pool) return;
+        _loaded = true;
+        _loadedPool = Pool;
+        _carryover = await Mediator.Send(new ProjectPhoenix2CarryoverQuery(CurrentUser.User.Id, Pool));
+    }
+}

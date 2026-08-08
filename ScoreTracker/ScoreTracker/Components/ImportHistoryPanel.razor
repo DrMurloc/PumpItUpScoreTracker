@@ -1,0 +1,98 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.SharedKernel.Enums
+
+@* The debugging half of the import record: every recent attempt with when it started, how long
+   it took and how it ended. Collapsed, and below the form — somebody who just wants to import
+   never has to see it, and somebody comparing notes about a bad week can open it.
+
+   Brand names print as literals: rule 7 exempts them from translation, and a resx key whose
+   value is "PIUGame.com" in nine locales is noise. *@
+
+<MudExpansionPanels Class="mt-4">
+    <MudExpansionPanel Text="@L["Recent imports"]" data-testid="import-history-panel">
+        @if (!Attempts.Any())
+        {
+            <MudText Typo="Typo.body2">@L["No imports yet."]</MudText>
+        }
+        else
+        {
+            <MudSimpleTable Dense="true" Hover="true" Striped="false" Elevation="0"
+                            Style="overflow-x:auto;">
+                <thead>
+                <tr>
+                    <th>@L["Started"]</th>
+                    <th>@L["Mix"]</th>
+                    <th>@L["Type"]</th>
+                    <th>@L["Took"]</th>
+                    <th>@L["Scores"]</th>
+                    <th>@L["Result"]</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var attempt in Attempts)
+                {
+                    <tr data-testid="import-history-row">
+                        <td>@attempt.StartedAt.ToLocalTime().ToString("g")</td>
+                        <td>@attempt.Mix.GetName()</td>
+                        <td>@KindLabel(attempt.Kind)</td>
+                        @* An em dash, never a zero: a run that never got far enough to look has
+                           no count, and "0" would read as "piugame says you have nothing new". *@
+                        <td>@(attempt.Duration is { } d ? Took(d) : "—")</td>
+                        <td>@(attempt.ScoreCount?.ToString() ?? "—")</td>
+                        <td>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text"
+                                     Color="@ToneOf(attempt)">@ResultLabel(attempt)</MudChip>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    [Parameter] public IReadOnlyList<ImportAttemptRecord> Attempts { get; set; } = Array.Empty<ImportAttemptRecord>();
+
+    private static string Took(TimeSpan d)
+    {
+        return d.TotalHours >= 1 ? d.ToString(@"h\:mm\:ss") : d.ToString(@"m\:ss");
+    }
+
+    private string KindLabel(ImportKind kind)
+    {
+        return kind switch
+        {
+            ImportKind.Check => L["Import and check"],
+            ImportKind.DeepScan => L["Deep scan"],
+            _ => L["Import"]
+        };
+    }
+
+    private string ResultLabel(ImportAttemptRecord attempt)
+    {
+        return attempt.Outcome switch
+        {
+            ImportOutcome.Completed => L["Finished"],
+            ImportOutcome.PiuGameError => "PIUGame.com",
+            ImportOutcome.CredentialRejected => L["Sign-in refused"],
+            ImportOutcome.PiuScoresError => "PIU Scores",
+            _ => L["Unfinished"]
+        };
+    }
+
+    // Same split as the strip: what piugame did and what the player can fix read as warnings,
+    // and Error is kept for the failures that are ours.
+    private static Color ToneOf(ImportAttemptRecord attempt)
+    {
+        return attempt.Outcome switch
+        {
+            ImportOutcome.Completed => Color.Success,
+            ImportOutcome.PiuGameError => Color.Warning,
+            ImportOutcome.CredentialRejected => Color.Warning,
+            ImportOutcome.PiuScoresError => Color.Error,
+            _ => Color.Default
+        };
+    }
+}

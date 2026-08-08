@@ -52,7 +52,9 @@ PIU's own visual language converges across judgments, grades, and plates: **red 
 | Sapphire | 90–99% | ice blue |
 | Prism | top 1% | near-white chrome + full glow |
 
-Percentile semantics are the established `ScoreRankingRecord.Ranking` convention: fraction of the comparable population at or below you, 1.0 = first place. Because gold is inherently brighter than sapphire, hue luminance can't order the bands — the **glow treatment ramp** (`.rarity-glow-1..3`) does, and the percentile number always renders alongside the color.
+Percentile semantics are the established `ScoreRankingRecord.Ranking` convention: fraction of the comparable population at or below you, 1.0 = first place. Because gold is inherently brighter than sapphire, hue luminance can't order the bands — the **glow treatment ramp** (`.rarity-glow-1..3`) does, and the player's standing always renders alongside the color.
+
+⚠ **A percentile is stored one way and shown the other, so printing it needs the flip.** `1.0` is first place; "top 1%" is first place too — `TopShare` in `PhoenixRecap.razor` takes `1 − percentile` at the call site for exactly this reason. Prefer printing a **place** (`#6 of 94 peers`) where a rank is available: it carries the same fact, cannot be read backwards, and needs no threshold rule for the top of the board. The session score row and the Discord score card both do this, in the same words.
 
 **Difficulty** (how hard is this chart relative to its level — tier lists). The familiar green→red heat, `TierListCategory` → `--diff-*`. Red is at home here exactly because the rarity ramp refuses it.
 
@@ -131,7 +133,7 @@ CSS, never Razor ([static-shell.md §11](design/static-shell.md)).
 
 **7. Design for +40% text.** Eight-plus locales; Portuguese and French run long, CJK runs dense. Every string goes through `L[…]`, new keys land in **every** locale in the same pass (glossaries: `LOCALIZATION-<locale>.md`), no fixed-width labels, no truncation without a tooltip. **Universal terms never translate**: in-game memes ("Why Don't You Get Up and Dance, Man?") and community proper nouns (Chabala, PIU Center, PG) keep their original value in every locale.
 
-**8. Color is never the only channel.** Every color encoding pairs with a second signal: the rarity ramp's monotonic glow + the printed percentile, pass/fail borders + icons, S/D bubbles + the S/D numeral. Verify new encodings under a colorblind simulator before shipping.
+**8. Color is never the only channel.** Every color encoding pairs with a second signal: the rarity ramp's monotonic glow + the printed standing (a place where one exists, a percentile otherwise), pass/fail borders + icons, S/D bubbles + the S/D numeral. Verify new encodings under a colorblind simulator before shipping.
    **The grade ring** (`QualifierChip`, [qualifiers-overhaul.md](design/qualifiers-overhaul.md)) is the worked example of why: a jacket ringed in its letter grade's metal reads at a glance and costs a third of the width that grade art does, which is what lets a ten-chart top N fit a board row. But the ladder is **deliberately not injective** — `MixThemes.GradeColors` gives SS+/SS one metal, as it does S+/S, AA+/AA and A+/A — so the ring can never travel alone. The rating prints under every chip and the exact grade and score ride the `title`. Reuse `MixThemes.GradeVar`; never re-derive the mapping.
 
 **9. Loading looks like the layout.** Skeletons match the shape of the content they become — never a lone centered spinner on a data page. Empty states name the action that fills them ("Import your scores to light this up"), not just the absence.

@@ -12,6 +12,10 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///         (docs/design/session-breakdown.md §2.2). Null means the chart had no cohort — co-op,
 ///         or more than five levels below the player's competitive level.
 ///     </para>
+///     <para>
+///         ⚠ This is a POSITIONAL record. New members append; inserting one silently shifts
+///         every argument after it at each of the several sites that construct it by position.
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record HighlightDetail(
@@ -27,4 +31,6 @@ public sealed record HighlightDetail(
     int? AttemptsBeforeClear = null,
     int? OfficialPlace = null,
     int? OfficialBoardDepth = null,
-    DateTimeOffset? OfficialAsOf = null);
+    DateTimeOffset? OfficialAsOf = null,
+    double? CompetitiveBaseline = null,
+    int? PumbilityGain = null);

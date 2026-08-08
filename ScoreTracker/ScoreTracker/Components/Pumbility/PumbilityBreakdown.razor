@@ -1,0 +1,105 @@
+@using System.Globalization
+@using ScoreTracker.PlayerProgress.Contracts
+@namespace ScoreTracker.Web.Components
+
+@* Where the number comes from: the charts, the scores on them, and the plates. The split is
+   exact rather than modelled -- a pool entry is Base(level) x grade x plate and nothing else,
+   so the three parts sum to the real total (docs/design/pumbility-overhaul.md §3.6).
+
+   Two rules the drawing has to keep. The stack is TRUE TO SCALE, so the plate segment renders
+   as the hairline it is and is never widened to be seen -- that sliver is the whole point,
+   because everyone gets hung up on the plate modifiers. And the plate gets its own magnified
+   rail underneath instead, running the full span from the worst plate on all fifty to the
+   best, which is a scale it can be read on without exaggerating it anywhere. *@
+@if (Breakdown is { Total: > 0 })
+{
+    <div class="pmb-wpc">
+        <div class="pmb-wpc-head">
+            <span class="pmb-wpc-title">@L["Where your PUMBILITY comes from"]</span>
+            <span class="pmb-wpc-total">
+                @string.Format(L["{0} total · {1} charts"], Breakdown.Total.ToString("N0"), PoolCount)
+            </span>
+        </div>
+
+        <div class="pmb-wpc-stack">
+            <div class="pmb-wpc-seg pmb-wpc-level" style="flex-grow:@Grow(Breakdown.Level)">@L["Level"]</div>
+            <div class="pmb-wpc-seg pmb-wpc-score" style="flex-grow:@Grow(Breakdown.FromScore)">@L["Score"]</div>
+            @if (Breakdown.FromPlate > 0)
+            {
+                <div class="pmb-wpc-seg pmb-wpc-plate" style="flex-grow:@Grow(Breakdown.FromPlate)"></div>
+            }
+        </div>
+
+        <div class="pmb-wpc-keys">
+            <div class="pmb-wpc-key pmb-wpc-level">
+                <span class="pmb-wpc-k-lbl">@L["Level"]</span>
+                <span class="pmb-wpc-k-num">@Breakdown.Level.ToString("N0")</span>
+                <span class="pmb-wpc-k-pct">@Share(Breakdown.Level) · @L["the charts themselves"]</span>
+            </div>
+            <div class="pmb-wpc-key pmb-wpc-score">
+                <span class="pmb-wpc-k-lbl">@L["Score"]</span>
+                <span class="pmb-wpc-k-num">@Signed(Breakdown.FromScore)</span>
+                <span class="pmb-wpc-k-pct">@Share(Breakdown.FromScore) · @L["what your grades add"]</span>
+            </div>
+            <div class="pmb-wpc-key pmb-wpc-plate">
+                <span class="pmb-wpc-k-lbl">@L["Plate"]</span>
+                <span class="pmb-wpc-k-num @(Breakdown.PlatesCount ? "" : "pmb-muted")">@Signed(Breakdown.FromPlate)</span>
+                <span class="pmb-wpc-k-pct">
+                    @if (Breakdown.PlatesCount)
+                    {
+                        @($"{Share(Breakdown.FromPlate)} · {L["what your plates add"]}")
+                    }
+                    else
+                    {
+                        @L["this mix's formula has no plate term"]
+                    }
+                </span>
+            </div>
+        </div>
+
+        <div class="pmb-wpc-plated">
+            @if (Breakdown.PlatesCount)
+            {
+                <div class="pmb-wpc-plate-head">
+                    <strong>@L["The plate, magnified"]</strong>
+                    <span class="pmb-muted">
+                        @string.Format(L["every plate at once, end to end, is worth {0}"], Breakdown.PlateSpan.ToString("N0"))
+                    </span>
+                </div>
+                <div class="pmb-wpc-rail">
+                    <span class="pmb-wpc-rail-fill" style="width:@Percent(Breakdown.PlateProgress)%"></span>
+                </div>
+                <p class="pmb-wpc-say">
+                    @string.Format(L["A perfect plate on every chart in your pool would add {0} — {1} of it."],
+                        Breakdown.PlateHeadroom.ToString("N0"), Share(Breakdown.PlateHeadroom))
+                </p>
+            }
+            else
+            {
+                <p class="pmb-wpc-say">
+                    @L["A perfect plate on every chart in your pool would add nothing. Not a rounding argument — every plate here carries a modifier of exactly 1.0, so the plate you walked away with never entered the number."]
+                </p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public PoolBreakdown? Breakdown { get; set; }
+
+    [Parameter] public int PoolCount { get; set; }
+
+    // The stack is drawn true to scale, so a part worth nothing takes no width. Negative is
+    // possible on the score part below the reference grade and draws as nothing rather than
+    // as a segment running the wrong way.
+    private static string Grow(double part) =>
+        Math.Max(0, part).ToString("0.##", CultureInfo.InvariantCulture);
+
+    private static string Percent(double fraction) =>
+        (Math.Clamp(fraction, 0, 1) * 100).ToString("0.#", CultureInfo.InvariantCulture);
+
+    private string Share(double part) =>
+        Breakdown == null ? string.Empty : (Breakdown.ShareOf(part) * 100).ToString("0.0") + "%";
+
+    private static string Signed(double part) => (part >= 0 ? "+" : "") + part.ToString("N0");
+}

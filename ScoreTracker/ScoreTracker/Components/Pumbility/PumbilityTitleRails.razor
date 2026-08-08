@@ -1,0 +1,138 @@
+@using System.Globalization
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* What the number is for. Three ladders at once -- the merged gems, Singles and Doubles --
+   because a player holds all three at the same time and hiding two behind the pool selector
+   would be worse (docs/design/pumbility-overhaul.md §3.7).
+
+   The device is the ASK. A pool is fifty charts, so a threshold is a flat per-chart value:
+   19,000 asks 380.00 of every chart you hold. That is true however you get there, which is
+   exactly why it replaced counting charts -- a count has to assume a play order, and the gain
+   column on the Play tab is deliberately independent of one (D13). *@
+@if (Rails.Count > 0)
+{
+    <div class="pmb-rails">
+        @foreach (var rail in Rails)
+        {
+            <div class="pmb-rail">
+                <div class="pmb-rail-top">
+                    <span class="pmb-rail-pool @PoolClass(rail.Pool)">@PoolLabel(rail.Pool)</span>
+                    <span class="pmb-rail-value">@rail.Value.ToString("N0")</span>
+                </div>
+
+                @if (rail.AtTop)
+                {
+                    @* The rail says so rather than vanishing, so the section never disappears on
+                       the one player it should be congratulating. *@
+                    <div class="pmb-rail-track">
+                        <div class="pmb-rail-bar"><span class="pmb-rail-fill" style="width:100%"></span></div>
+                        <div class="pmb-rail-ends">
+                            <span>@rail.Held</span>
+                            <span class="pmb-rail-mid"></span>
+                            <span class="pmb-rail-next">@L["nothing above this"]</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="pmb-rail-track">
+                        <div class="pmb-rail-bar">
+                            <span class="pmb-rail-fill" style="width:@Percent(rail.Progress)%"></span>
+                        </div>
+                        @* The remaining sits BETWEEN the two rungs, because that is what it is the
+                           distance across. Said as a total at the foot of the rail it read as a
+                           number with no unit, next to figures that were per-chart. *@
+                        <div class="pmb-rail-ends">
+                            <span>@(rail.Held ?? L["not started"]) · @rail.HeldThreshold.ToString("N0")</span>
+                            <span class="pmb-rail-mid">
+                                @string.Format(L["{0} PUMBILITY remaining"], rail.Gap.ToString("N0"))
+                            </span>
+                            <span class="pmb-rail-next">@rail.Next · @rail.NextThreshold!.Value.ToString("N0")</span>
+                        </div>
+                    </div>
+
+                    <div class="pmb-ask">
+                        <div class="pmb-ask-cell">
+                            <span class="pmb-ask-lbl">@string.Format(L["{0} asks"], Strip(rail.Next!))</span>
+                            <span class="pmb-ask-num">@rail.Ask.ToString("N2")</span>
+                        </div>
+                        <div class="pmb-ask-cell">
+                            <span class="pmb-ask-lbl">@L["Your charts average"]</span>
+                            <span class="pmb-ask-num">@rail.Average.ToString("N2")</span>
+                        </div>
+                        @if (rail.Bar != null)
+                        {
+                            <div class="pmb-ask-cell">
+                                <span class="pmb-ask-lbl">@L["Your bar"]</span>
+                                <span class="pmb-ask-num">@rail.Bar.Value.ToString("N0")</span>
+                            </div>
+                        }
+                        @* The realism check, and the reason it earns the highlighted cell: read
+                           against the ask beside it, it says whether the list on Play can reach
+                           this rung at all. *@
+                        @if (rail.ProjectedAverage != null)
+                        {
+                            <div class="pmb-ask-cell @(rail.ProjectionReaches ? "pmb-ask-reach" : "pmb-ask-gap")">
+                                <span class="pmb-ask-lbl">@L["Your projected top 50"]</span>
+                                <span class="pmb-ask-num">@rail.ProjectedAverage.Value.ToString("N2")</span>
+                            </div>
+                        }
+                    </div>
+
+                    @if (rail.Examples.Count > 0)
+                    {
+                        <p class="pmb-rail-say">
+                            @string.Format(L["{0} a chart is:"], rail.Ask.ToString("N0"))
+                            @foreach (var example in rail.Examples)
+                            {
+                                @* The grade rides the same line as its level, always. In a shared
+                                   caption underneath, three levels read as a path -- and the low
+                                   one is the hard one, not the first step. *@
+                                <span class="pmb-rail-eg">
+                                    @string.Format(L["{0} at {1}"], Bubble(example), example.Grade.GetName())
+                                </span>
+                            }
+                        </p>
+                    }
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<TitleRail> Rails { get; set; } = Array.Empty<TitleRail>();
+
+    private static string Percent(double fraction) =>
+        (Math.Clamp(fraction, 0, 1) * 100).ToString("0.#", CultureInfo.InvariantCulture);
+
+    private string PoolLabel(PumbilityPool pool) => pool switch
+    {
+        PumbilityPool.Singles => L["Singles"],
+        PumbilityPool.Doubles => L["Doubles"],
+        _ => L["Total"]
+    };
+
+    private static string PoolClass(PumbilityPool pool) => pool switch
+    {
+        PumbilityPool.Singles => "pmb-rail-s",
+        PumbilityPool.Doubles => "pmb-rail-d",
+        _ => string.Empty
+    };
+
+    private static string Bubble(AskExample example) =>
+        (example.Type == ChartType.Double ? "D" : "S") + (int)example.Level;
+
+    // The pool prefix is redundant on a rail already labelled by its pool: "[S] EXPERT LV.4"
+    // reads as "EXPERT LV.4" beside a Singles chip. The merged gems and the two MASTER
+    // capstones carry no prefix and pass through untouched.
+    private static string Strip(string title) =>
+        title.StartsWith("[S] ", StringComparison.Ordinal) || title.StartsWith("[D] ", StringComparison.Ordinal)
+            ? title[4..]
+            : title;
+}

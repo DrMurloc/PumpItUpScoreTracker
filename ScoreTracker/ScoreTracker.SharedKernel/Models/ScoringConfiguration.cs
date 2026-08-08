@@ -108,33 +108,7 @@ namespace ScoreTracker.SharedKernel.Models
             TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate, bool includeLevelOverride)
         {
             if (score < MinimumScore) return 0;
-            var letterGrade = score.LetterGradeFor(Mix);
-            var letterGradeModifier = LetterGradeModifiers[letterGrade];
-            if (ContinuousLetterGradeScale && score != 1000000)
-            {
-                double nextModifier;
-                PhoenixScore nextThreshold;
-                if (letterGrade != PhoenixLetterGrade.SSSPlus)
-                {
-                    var nextGrade = letterGrade + 1;
-                    nextModifier = LetterGradeModifiers[nextGrade];
-                    nextThreshold = nextGrade.GetMinimumScoreFor(Mix);
-                }
-                else
-                {
-                    nextModifier = PgLetterGradeModifier;
-                    nextThreshold = 1000000;
-                }
-
-                var threshold = letterGrade.GetMinimumScoreFor(Mix);
-                var modifier = LetterGradeModifiers[letterGrade];
-                letterGradeModifier =
-                    modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
-            }
-            else if (score == 1000000)
-            {
-                letterGradeModifier = PgLetterGradeModifier;
-            }
+            var letterGradeModifier = LetterGradeModifierFor(score);
 
             switch (Formula)
             {
@@ -219,6 +193,113 @@ namespace ScoreTracker.SharedKernel.Models
         {
             return GetScore(chart.Id, chart.Level, chart.Type, chart.Song.Type, chart.Song.Duration, isBroken, score,
                 plate, includeLevelOverride);
+        }
+
+        /// <summary>
+        ///     The grade multiplier a score earns under this configuration, including the
+        ///     continuous-scale interpolation and the perfect-game override. Shared with
+        ///     <see cref="Decompose(Chart,PhoenixScore,PhoenixPlate,bool,bool)" /> so the split
+        ///     cannot answer with a different grade than the total it is splitting.
+        /// </summary>
+        private double LetterGradeModifierFor(PhoenixScore score)
+        {
+            var letterGrade = score.LetterGradeFor(Mix);
+            var letterGradeModifier = LetterGradeModifiers[letterGrade];
+            if (ContinuousLetterGradeScale && score != 1000000)
+            {
+                double nextModifier;
+                PhoenixScore nextThreshold;
+                if (letterGrade != PhoenixLetterGrade.SSSPlus)
+                {
+                    var nextGrade = letterGrade + 1;
+                    nextModifier = LetterGradeModifiers[nextGrade];
+                    nextThreshold = nextGrade.GetMinimumScoreFor(Mix);
+                }
+                else
+                {
+                    nextModifier = PgLetterGradeModifier;
+                    nextThreshold = 1000000;
+                }
+
+                var threshold = letterGrade.GetMinimumScoreFor(Mix);
+                var modifier = LetterGradeModifiers[letterGrade];
+                letterGradeModifier =
+                    modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
+            }
+            else if (score == 1000000)
+            {
+                letterGradeModifier = PgLetterGradeModifier;
+            }
+
+            return letterGradeModifier;
+        }
+
+        /// <summary>
+        ///     What a chart contributes, split into the three things a player can change: which
+        ///     chart it is, how well they scored it, and the plate they walked away with. The
+        ///     parts sum to <see cref="GetScore(Chart,PhoenixScore,PhoenixPlate,bool,bool)" />
+        ///     exactly — it is a decomposition of the formula, not a model of it, and it lives
+        ///     beside the formula so the two cannot drift.
+        ///     <para>
+        ///         Measured from a bare base of ×1.00 rather than from a grade, so the level part
+        ///         is the chart's own value and the grade part is everything the score adds on
+        ///         top (docs/design/pumbility-overhaul.md D16). On Phoenix 1 that reference is
+        ///         also AA, whose modifier is exactly 1.0; on Phoenix 2 nothing can score it,
+        ///         since the worst grade there pays 1.08.
+        ///     </para>
+        /// </summary>
+        public ScoreContribution Decompose(Chart chart, PhoenixScore score, PhoenixPlate plate,
+            bool isBroken, bool includeLevelOverride = true)
+        {
+            if (score < MinimumScore) return default;
+
+            var grade = LetterGradeModifierFor(score);
+            var breakModifier = isBroken ? StageBreakModifier : 1.0;
+            var plateModifier = PlateModifiers[plate];
+
+            switch (Formula)
+            {
+                case CalculationType.Default:
+                {
+                    // The chart modifier lands twice in this branch — once inside the scoreless
+                    // score and once after the grade — so the unit carries both, or the parts
+                    // would not sum to the total they are splitting.
+                    var unit = GetScorelessScore(chart, includeLevelOverride) * breakModifier;
+                    if (ChartModifiers.TryGetValue(chart.Id, out var chartModifier)) unit *= chartModifier;
+                    return new ScoreContribution(unit, unit * (grade - 1), unit * grade * (plateModifier - 1));
+                }
+                case CalculationType.GradePlusPlate:
+                {
+                    if (Mix == MixEnum.Phoenix2 && (int)chart.Level < 10) return default;
+                    var scoreless = GetScorelessScore(chart, includeLevelOverride);
+                    if (Mix == MixEnum.Phoenix2 && chart.Type == ChartType.Single && scoreless > 0)
+                        scoreless += (int)chart.Level + 1 > 24 ? 10 : 5;
+                    var unit = scoreless * breakModifier;
+                    return new ScoreContribution(unit, unit * (grade - 1), unit * plateModifier);
+                }
+                default:
+                    // Avalanche and Custom do not separate into these three parts — Avalanche
+                    // folds the stage break into the grade term, and Custom is an expression.
+                    // Answering anyway would mean inventing a split, so it says so instead.
+                    throw new NotSupportedException(
+                        $"{Formula} has no level/grade/plate decomposition");
+            }
+        }
+
+        /// <summary>
+        ///     What the best plate available under this configuration would add on top of the one
+        ///     held. Asks the formula twice rather than reading the plate table, so it needs to
+        ///     know nothing about whether plates multiply (Phoenix) or add (Phoenix 2) — and on
+        ///     Phoenix, where every plate modifier is exactly 1.0, it returns zero for that
+        ///     reason rather than by a special case.
+        /// </summary>
+        public double PlateHeadroom(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken = false,
+            bool includeLevelOverride = true)
+        {
+            var best = PlateModifiers.MaxBy(kv => kv.Value).Key;
+            return Math.Max(0,
+                GetScore(chart, score, best, isBroken, includeLevelOverride)
+                - GetScore(chart, score, plate, isBroken, includeLevelOverride));
         }
 
         public enum CalculationType

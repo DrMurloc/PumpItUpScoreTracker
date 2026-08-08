@@ -80,12 +80,12 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
 
         // Batch up score posts to reduce noise. AddToBatch atomically creates-or-extends
         // the (user, mix) batch; only schedule a drain when this call created the batch.
-        var fireAt = dateTimeOffset.Now.UtcDateTime + TimeSpan.FromMinutes(2);
+        var fireAt = dateTimeOffset.Now.UtcDateTime + ScoreBatchPolicy.HoldWindow;
         PhoenixScore? upscoredFrom = isUpscore ? existing!.Score!.Value : null;
         if (batches.AddToBatch(request.Mix, user.User.Id, fireAt, request.ChartId, isNewScore, upscoredFrom,
                 sessionId))
         {
-            await scheduler.SchedulePublish(fireAt + TimeSpan.FromSeconds(5),
+            await scheduler.SchedulePublish(fireAt + ScoreBatchPolicy.DrainBuffer,
                 new TryFireScoreCommand(user.User.Id, request.Mix),
                 cancellationToken);
         }
@@ -101,9 +101,9 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         if (fireAt is null) return; // batch already drained by a concurrent TryFire/flush
         if (dateTimeOffset.Now.UtcDateTime < fireAt.Value)
         {
-            // Reschedule to the moving target plus a tiny buffer — using a +2min retry
-            // would compound on every reschedule and starve active players.
-            await scheduler.SchedulePublish(fireAt.Value + TimeSpan.FromSeconds(5),
+            // Reschedule to the moving target plus a tiny buffer — using a full hold window as
+            // the retry would compound on every reschedule and starve active players.
+            await scheduler.SchedulePublish(fireAt.Value + ScoreBatchPolicy.DrainBuffer,
                 new TryFireScoreCommand(context.Message.UserId, context.Message.Mix),
                 context.CancellationToken);
             return;

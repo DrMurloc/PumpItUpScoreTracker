@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Bunit;
 using MediatR;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Moq;
@@ -98,12 +99,12 @@ public sealed class ChartCommentsTabTests : TestContext
     }
 
     [Fact]
-    public void TheNotesScopeDropsTheAvatarAndEveryConversationControl()
+    public async Task TheNotesScopeDropsTheAvatarAndEveryConversationControl()
     {
         Page(Comment("left foot leads the drill"), Comment("bpm ramps at 1:40"));
         var page = Render();
 
-        page.Find("[data-testid='cmt-scope-Notes']").Click();
+        await page.Find("[data-testid='cmt-scope-Notes']").ClickAsync(new MouseEventArgs());
 
         // Notes rows are a different shape entirely: no author column, nothing to vote on,
         // nobody to reply to.
@@ -115,11 +116,11 @@ public sealed class ChartCommentsTabTests : TestContext
     }
 
     [Fact]
-    public void ANoteComposerPromisesPrivacyRatherThanNamingYou()
+    public async Task ANoteComposerPromisesPrivacyRatherThanNamingYou()
     {
         var page = Render();
 
-        page.Find("[data-testid='cmt-scope-Notes']").Click();
+        await page.Find("[data-testid='cmt-scope-Notes']").ClickAsync(new MouseEventArgs());
         page.Find(".cmt-line").Focus();
 
         Assert.Contains("Only you can see this", page.Markup);
@@ -175,14 +176,14 @@ public sealed class ChartCommentsTabTests : TestContext
     }
 
     [Fact]
-    public void AnUnknownHostIsWarnedAboutBeforeItIsOpened()
+    public async Task AnUnknownHostIsWarnedAboutBeforeItIsOpened()
     {
         Page(Comment("look here", untrustedLink: true));
         var page = Render();
 
         Assert.Empty(page.FindAll("[data-testid='cmt-interstitial']"));
 
-        page.Find(".cmt-link-untrusted").Click();
+        await page.Find(".cmt-link-untrusted").ClickAsync(new MouseEventArgs());
 
         // The parsed host, never the link text — the text is the author's to choose.
         var interstitial = page.Find("[data-testid='cmt-interstitial']");

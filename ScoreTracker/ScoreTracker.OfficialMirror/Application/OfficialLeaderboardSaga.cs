@@ -27,7 +27,7 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.OfficialMirror.Application
 {
     internal sealed class OfficialLeaderboardSaga : IRequestHandler<ImportOfficialPlayerScoresCommand>,
-        IRequestHandler<ExecuteImportCommand>,
+        IRequestHandler<ExecuteImportCommand, int>,
         IRequestHandler<SaveOfficialScoresCommand, int>,
         IRequestHandler<UpdateSongImagesCommand>,
         IRequestHandler<GetGameCardsQuery, IEnumerable<GameCardRecord>>,
@@ -99,11 +99,11 @@ namespace ScoreTracker.OfficialMirror.Application
         public async Task Handle(ImportOfficialPlayerScoresCommand request, CancellationToken cancellationToken)
         {
             var sid = await _officialSite.SignIn(request.Mix, request.Username, request.Password, cancellationToken);
-            await RunImport(_currentUser.User.Id, request.Mix, sid, request.Id, request.ExpectedGameTag,
+            _ = await RunImport(_currentUser.User.Id, request.Mix, sid, request.Id, request.ExpectedGameTag,
                 request.IncludeBroken, cancellationToken);
         }
 
-        public Task Handle(ExecuteImportCommand request, CancellationToken cancellationToken)
+        public Task<int> Handle(ExecuteImportCommand request, CancellationToken cancellationToken)
         {
             return RunImport(request.UserId, request.Mix, request.Sid, request.CardId, request.ExpectedGameTag,
                 request.IncludeBroken, cancellationToken, request.SessionId);
@@ -112,8 +112,8 @@ namespace ScoreTracker.OfficialMirror.Application
         // Runs the scrape+save for one import off a pre-minted session id and an explicit user id,
         // so the same body serves the synchronous API path and the background consumer (which has
         // no circuit user). One import = one session id for the Session Batcher.
-        internal async Task RunImport(Guid userId, MixEnum mix, string sid, string cardId, string expectedGameTag,
-            bool includeBroken, CancellationToken cancellationToken, Guid? sessionId = null)
+        internal async Task<int> RunImport(Guid userId, MixEnum mix, string sid, string cardId,
+            string expectedGameTag, bool includeBroken, CancellationToken cancellationToken, Guid? sessionId = null)
         {
             // Opened through the Ledger rather than minted here, so the session row carries the
             // game tag and card this run pulled from — the answer to "I imported the wrong card",
@@ -142,7 +142,7 @@ namespace ScoreTracker.OfficialMirror.Application
             {
                 await _mediator.Publish(new ImportStatusErrorEvent(userId, "Invalid Login Information", mix),
                     cancellationToken);
-                return;
+                return 0;
             }
 
             // The import learns the account's game tag authoritatively — the strongest
@@ -222,6 +222,8 @@ namespace ScoreTracker.OfficialMirror.Application
             if (maxPages != null)
                 await _mediator.Send(new SaveUserUiSettingCommand(pageCountSetting, maxPages.Value.ToString()),
                     cancellationToken);
+
+            return toSave.Length;
         }
 
         /// <summary>

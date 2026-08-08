@@ -27,7 +27,8 @@ namespace ScoreTracker.Web.Services;
 ///         anything a vertical should own.
 ///     </para>
 /// </summary>
-public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader users)
+public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader users, IScoreReader ledger,
+    IDateTimeOffsetAccessor clock)
 {
     /// <summary>How many charts get a community-peer board. Every flagged chart qualifies (D9).</summary>
     private const int MaxPeerBoards = 8;
@@ -140,23 +141,107 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
                 Flags: g.Aggregate(HighlightFlags.None, (f, h) => f | h.Flags),
                 Detail: g.OrderByDescending(h => DetailFields(h.Detail)).First().Detail));
 
+        var phoenix1 = await Phoenix1Bests(userId, group.Mix, chartIds, cancellationToken);
         var scores = group.Rows
             .Select(r =>
             {
                 var captured = byChart.GetValueOrDefault(r.ChartId);
-                return new SessionScore(r, charts.GetValueOrDefault(r.ChartId), captured.Flags, captured.Detail);
+                return new SessionScore(r, charts.GetValueOrDefault(r.ChartId), captured.Flags, captured.Detail,
+                    Phoenix1Gain(r, phoenix1));
             })
             .ToArray();
 
         var stats = await mediator.Send(new GetPlayerStatsQuery(userId, group.Mix), cancellationToken);
         var boards = await BuildPeerBoards(userId, group, scores, charts, stats, cancellationToken);
-        return new SessionBreakdown(group, sessions.FirstOrDefault(s => s.Id == group.SessionId), charts, scores,
+        var session = sessions.FirstOrDefault(s => s.Id == group.SessionId);
+        return new SessionBreakdown(group, session, charts, scores,
             BuildCeremony(milestones, stats),
             milestones.Where(m => m.Kind != MilestoneKind.TitleProgress).ToArray(),
             BuildTitleBars(milestones),
             boards,
             (await users.GetUsers(boards.SelectMany(b => b.Peers).Select(p => p.Score.UserId).Distinct(),
-                cancellationToken)).ToDictionary(u => u.Id));
+                cancellationToken)).ToDictionary(u => u.Id),
+            CaptureWindowOpen(session),
+            highlights.Length + milestones.Length);
+    }
+
+    /// <summary>
+    ///     How long after the scores land the page keeps expecting capture. Taken from the
+    ///     Ledger's own batching policy rather than chosen: scores are held as a batch and
+    ///     capture cannot start until it drains, so any duration invented here is a guess about
+    ///     someone else's timer.
+    ///     <para>
+    ///         ⚠ It was originally two minutes, which was the same number for the wrong reason —
+    ///         the hold window exactly, so this expired at the instant the batch fired and the
+    ///         page gave up a heartbeat before its data arrived, every time. The hold is also
+    ///         measured from the LATEST score, so a long import pushes it out repeatedly.
+    ///     </para>
+    /// </summary>
+    private static readonly TimeSpan CaptureWindow = ScoreBatchPolicy.WorkExpectedWithin;
+
+    /// <summary>
+    ///     Whether the scores arrived recently enough that capture could still be running. This
+    ///     says nothing about whether it HAS run — deliberately, because those are different
+    ///     questions and conflating them is what broke this twice.
+    ///     <para>
+    ///         Capture writes in several passes (flags, then folder lamps, then the rating step
+    ///         that produces the competitive baseline and the PUMBILITY gain, then titles), so a
+    ///         read taken between two of them sees rows without seeing all of them. A page that
+    ///         opened at that moment therefore has rows, shows no card — and must STILL watch,
+    ///         or it sits on half a session until someone reloads by hand. Whether to watch is
+    ///         this; whether to show the card is <see cref="SessionBreakdown.CapturePending" />;
+    ///         when to stop is the row count going quiet.
+    ///     </para>
+    ///     <para>
+    ///         Sessions predating the ScoreSession table have no wall clock to test, so their
+    ///         window is never open: they are historical by definition.
+    ///     </para>
+    /// </summary>
+    private bool CaptureWindowOpen(ScoreSessionRecord? session)
+    {
+        return session != null && clock.Now - session.LastActivityAt < CaptureWindow;
+    }
+
+    /// <summary>
+    ///     The player's Phoenix 1 best on each of the session's charts, for the "you passed your
+    ///     Phoenix 1 self" mark. Only a Phoenix 2 session can say it, so a Phoenix session pays
+    ///     nothing. Chart-scoped rather than the whole Phoenix record set: a session touches
+    ///     twenty charts and a long-standing player owns thousands.
+    ///     <para>
+    ///         Broken records are skipped on purpose — the app never rates a broken attempt
+    ///         (a walk-off's partial score is not a result you would claim), so it is not a
+    ///         "best" to have passed either.
+    ///     </para>
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, int>> Phoenix1Bests(Guid userId, MixEnum mix,
+        IReadOnlyList<Guid> chartIds, CancellationToken cancellationToken)
+    {
+        if (mix != MixEnum.Phoenix2 || chartIds.Count == 0) return new Dictionary<Guid, int>();
+
+        return (await ledger.GetPlayerScores(MixEnum.Phoenix, new[] { userId }, chartIds, cancellationToken))
+            .Where(s => !s.IsBroken)
+            .GroupBy(s => s.ChartId)
+            .ToDictionary(g => g.Key, g => g.Max(s => (int)s.Score));
+    }
+
+    /// <summary>
+    ///     How far this play went past the player's Phoenix 1 best — and only the first time it
+    ///     does. Once a previous Phoenix 2 score already cleared that bar the mark is spent: it
+    ///     is about the moment you passed your old self, not a standing comparison that would
+    ///     then ride every later upscore on the same chart.
+    ///     <para>
+    ///         A new pass carries no <c>PreviousBest</c>, and that is exactly the case the mark
+    ///         is for — nothing stood here before, so anything above Phoenix 1 clears it.
+    ///     </para>
+    /// </summary>
+    private static int? Phoenix1Gain(RecentSessionsPage.ScoreEventRecord row,
+        IReadOnlyDictionary<Guid, int> phoenix1)
+    {
+        if (row.IsBroken || row.Score is not { } score) return null;
+        if (!phoenix1.TryGetValue(row.ChartId, out var best)) return null;
+        if (row.PreviousBest >= best) return null;
+
+        return score > best ? score - best : null;
     }
 
     /// <summary>

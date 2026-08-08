@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -13,9 +14,10 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 /// <param name="Bar">What the 50th chart of that repriced pool is worth.</param>
 /// <param name="ScoredHere">How many scores they actually hold in Phoenix 2 today.</param>
 /// <param name="NotYetScored">Pool charts they have not scored in Phoenix 2.</param>
-/// <param name="Unavailable">
-///     Pool charts with no Phoenix 2 appearance at all. These are a fact about the pool, never
-///     a target — you cannot go and play them.
+/// <param name="ProjectedTitles">
+///     Where this record would land on each of the three PUMBILITY ladders. Not titles held —
+///     §8.2 — which is why every consumer of this says "would land you" and prints the pool
+///     value that put it there.
 /// </param>
 /// <param name="SinglesInPool">How many of the repriced fifty are Singles.</param>
 /// <param name="Phoenix1SinglesInPool">
@@ -36,13 +38,27 @@ public sealed record Phoenix2CarryoverRecord(
     double Bar,
     int ScoredHere,
     int NotYetScored,
-    IReadOnlyList<Guid> Unavailable,
+    IReadOnlyList<ProjectedTitle> ProjectedTitles,
     int SinglesInPool,
     int DoublesInPool,
     int Phoenix1SinglesInPool,
     int Phoenix1DoublesInPool,
     IReadOnlyList<CarryoverEntry> Entries,
     IReadOnlyList<CarryoverEntry> Candidates);
+
+/// <summary>
+///     Where a repriced pool would land on one PUMBILITY ladder.
+///     <para>
+///         ⚠ This is not a title held, and no surface may render it as one. At a mix launch it
+///         and the rails on Your Pool say opposite things about the same three ladders — you
+///         hold nothing yet, and your Phoenix 1 record is worth a gem — and that contrast is the
+///         panel's whole argument. The wording carries the difference: "would land you", with
+///         the pool value that put it there beside it (§8.2).
+///     </para>
+/// </summary>
+/// <param name="Next">What the rung above it asks, or null at the top of the ladder.</param>
+[ExcludeFromCodeCoverage]
+public sealed record ProjectedTitle(PumbilityPool Pool, double Value, string? Title, int? Next);
 
 /// <summary>
 ///     One Phoenix 1 score repriced for Phoenix 2, with what it would be worth and whether the
