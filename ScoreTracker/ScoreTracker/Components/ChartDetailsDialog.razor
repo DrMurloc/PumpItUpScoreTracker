@@ -13,9 +13,13 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.Contracts
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@using Microsoft.Extensions.Options
+@using ScoreTracker.Web.Components.ChartComments
+@using ScoreTracker.Web.Configuration
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
+@inject IOptions<ChartCommentsConfiguration> Comments
 
 @* The one shared chart-details surface (design doc §4): leads with the video like
    today's video dialog, then meta, the cross-mix score journey (ScoreEventJournal),
@@ -82,6 +86,18 @@
                             @onclick="() => SelectTab(t)">@TabLabel(t)</button>
                 }
             </div>
+            @* Comments carries the whole conversation surface: the scope rail, the composer, the
+               thread, and personal notes. Gated on IsAdmin || configuration, so it renders for
+               nobody else until the toggle flips — and the panel is keyed on the chart because a
+               drill-down into a neighbour is a different conversation entirely. *@
+            @if (CommentsVisible)
+            {
+                <div class="@PanelClass(DetailsTab.Comments)">
+                    <ChartCommentsTab ChartId="ViewChart.Id" Active="IsLive(DetailsTab.Comments)"
+                                      FocusCommentId="@(IsDrilled ? null : FocusCommentId)"
+                                      @key="(ViewChart.Id, nameof(ChartCommentsTab))"></ChartCommentsTab>
+                </div>
+            }
             @* The chart page's board, unchanged — the dialog is the third host of one component
                rather than a third leaderboard. Active is Visible AND selected, so neither a
                dialog nobody opened nor a tab nobody picked issues a query. Nineteen call sites
@@ -249,12 +265,12 @@
 
 @code {
     /// <summary>
-    ///     The dialog's sections. Comments joins as the first tab when that feature lands
-    ///     (docs/design/chart-comments); until it has something behind it, shipping a fourth
-    ///     tab would just be a dead control.
+    ///     The dialog's sections. Comments is first in the strip and last to be defaulted to —
+    ///     Leaderboard opens unless the reader picked otherwise.
     /// </summary>
     public enum DetailsTab
     {
+        Comments,
         Leaderboard,
         Stats,
         History
@@ -347,11 +363,38 @@
     /// </summary>
     [Parameter] public DetailsTab? InitialTab { get; set; }
 
-    private IReadOnlyList<DetailsTab> AvailableTabs => CurrentUser.IsLoggedIn
-        ? new[] { DetailsTab.Leaderboard, DetailsTab.Stats, DetailsTab.History }
-        // Score History is your journal plus your recording inputs. Signed out it is an empty
-        // box with a heading, which is worse than one fewer tab.
-        : new[] { DetailsTab.Leaderboard, DetailsTab.Stats };
+    /// <summary>
+    ///     A comment to open on. The moderation queue passes this with
+    ///     <see cref="InitialTab" /> = Comments so moderation happens in the surface the comment
+    ///     lives in rather than a second console. Nothing sends one until reports land; the
+    ///     parameter is what that row will hand over.
+    /// </summary>
+    [Parameter] public Guid? FocusCommentId { get; set; }
+
+    /// <summary>
+    ///     Comments ships gated: off in configuration, so the surface is the site admin's alone
+    ///     until production cost testing says otherwise. Unlike Score History, it does NOT hide
+    ///     when logged out — it renders read-only, because a logged-out visitor arriving from a
+    ///     link is exactly who the conversation is for.
+    /// </summary>
+    private bool CommentsVisible => Comments.Value.Enabled ||
+                                    (CurrentUser.IsLoggedIn && CurrentUser.User.IsAdmin);
+
+    private IReadOnlyList<DetailsTab> AvailableTabs
+    {
+        get
+        {
+            var tabs = new List<DetailsTab>();
+            if (CommentsVisible) tabs.Add(DetailsTab.Comments);
+            tabs.Add(DetailsTab.Leaderboard);
+            tabs.Add(DetailsTab.Stats);
+            // Score History is your journal plus your recording inputs. Signed out it is an empty
+            // box with a heading, which is worse than one fewer tab.
+            if (CurrentUser.IsLoggedIn) tabs.Add(DetailsTab.History);
+
+            return tabs;
+        }
+    }
 
     private bool IsLive(DetailsTab tab)
     {
@@ -372,6 +415,7 @@
     {
         return tab switch
         {
+            DetailsTab.Comments => L["Comments"],
             DetailsTab.Stats => L["Chart Stats"],
             DetailsTab.History => L["Score History"],
             _ => L["Leaderboard"]

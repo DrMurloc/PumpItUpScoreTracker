@@ -1,0 +1,92 @@
+@namespace ScoreTracker.Web.Components.ChartComments
+
+@* DrMurloc's rules, shown once before a first comment.
+
+   Rendered inline, in place of the composer, rather than as a dialog over the details dialog:
+   a MudDialog inside a MudDialog is this codebase's most reliable way to orphan a scrim and
+   leave the page dimmed and unclickable, and charts.scss forces max-width: none !important on
+   anything tagged mud-dialog-width-sm. Markup in the panel has neither problem.
+
+   Follows ToolRulesCard exactly — first person and singular, because this is one person's
+   rules rather than the site talking. Nothing here is generated from state. *@
+
+<div class="cmt-rules">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">@L["DrMurloc's Rules for Comments"]</MudText>
+
+    <MudText Typo="Typo.body2" Class="cmt-rules-preamble">
+        @L["PIU Scores exists to bring the Pump It Up community together across distance and language. Comments are where you share what you know and help each other get better at the game."]
+    </MudText>
+
+    <ol>
+        <li>
+            <div>
+                <b>@L["Your community moderates itself."]</b>
+                <MudText Typo="Typo.body2">
+                    @* The quoted server rule stays English in every locale, the way a proper noun does. *@
+                    @L["Community comments belong to that community, and its admins handle them. I stay out of it, except for hate, discrimination, or threats. The rule is \"Don't Be An Asshole\" — where exactly that line sits is your admins' call."]
+                </MudText>
+            </div>
+        </li>
+        <li>
+            <div>
+                <b>@L["Public comments are mine."]</b>
+                <MudText Typo="Typo.body2">
+                    @L["I read generously; different cultures and different people communicate differently. But a public comment reported for bad faith, discrimination, or hate is very likely to come down."]
+                </MudText>
+            </div>
+        </li>
+        <li>
+            <div>
+                <b>@L["Step artists and the PIU devs are community too."]</b>
+                <MudText Typo="Typo.body2">
+                    @L["They're players, same as us. Joking about someone's charting habits is fine. Insults and bad-faith accusations are not."]
+                </MudText>
+            </div>
+        </li>
+        <li>
+            <div>
+                <b>@L["I'm one person."]</b>
+                <MudText Typo="Typo.body2">
+                    @L["I would far rather build features for you than investigate community drama. We play this game because it's fun. Keep it fun."]
+                </MudText>
+            </div>
+        </li>
+    </ol>
+
+    @if (NeedsTerms)
+    {
+        <MudCheckBox T="bool" @bind-Value="_agreed" Color="Color.Primary" Dense="true"
+                     Label=@L["I've read these, and I'll keep it fun."]></MudCheckBox>
+    }
+    @if (NeedsPublicIdentityConsent)
+    {
+        @* Collected when it becomes true, not in advance: post to a community first and you
+           only ever see the checkbox above. *@
+        <MudCheckBox T="bool" @bind-Value="_consentedToIdentity" Color="Color.Secondary" Dense="true"
+                     Label=@L["My profile is private. I understand my username, avatar, and country will be visible on public comments."]></MudCheckBox>
+    }
+
+    <div class="cmt-rules-foot">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="@(!CanContinue)"
+                   data-testid="cmt-rules-continue" OnClick="Continue">@L["Continue"]</MudButton>
+    </div>
+</div>
+
+@code {
+    private bool _agreed;
+    private bool _consentedToIdentity;
+
+    [Parameter] public bool NeedsTerms { get; set; }
+
+    [Parameter] public bool NeedsPublicIdentityConsent { get; set; }
+
+    /// <summary>Carries whether the identity box was the one that mattered, so only true consents are stored.</summary>
+    [Parameter] public EventCallback<bool> OnAccepted { get; set; }
+
+    private bool CanContinue => (!NeedsTerms || _agreed) && (!NeedsPublicIdentityConsent || _consentedToIdentity);
+
+    private Task Continue()
+    {
+        return CanContinue ? OnAccepted.InvokeAsync(NeedsPublicIdentityConsent) : Task.CompletedTask;
+    }
+}

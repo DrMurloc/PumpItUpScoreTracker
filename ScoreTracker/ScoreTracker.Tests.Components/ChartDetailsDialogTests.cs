@@ -228,6 +228,37 @@ public sealed class ChartDetailsDialogTests : TestContext
     }
 
     /// <summary>
+    ///     Comments ship behind ChartComments:Enabled, which is off in configuration until
+    ///     production cost testing says otherwise. No options registered means the default —
+    ///     disabled — which is the state everyone but the owner sees on the day this merges.
+    /// </summary>
+    [Fact]
+    public void TheCommentsTabIsGatedOffByDefault()
+    {
+        var cut = RenderDialog(SetupChart(null));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid='cdt-tab-Leaderboard']")));
+        Assert.Empty(cut.FindAll("[data-testid='cdt-tab-Comments']"));
+    }
+
+    /// <summary>
+    ///     ...and the site admin sees it anyway, which is what makes the gated period useful
+    ///     rather than merely quiet. User.IsAdmin is a computed Guid, so this needs no flag.
+    /// </summary>
+    [Fact]
+    public void TheSiteAdminSeesCommentsWithTheGateStillClosed()
+    {
+        _currentUser.Setup(u => u.IsLoggedIn).Returns(true);
+        _currentUser.Setup(u => u.User).Returns(new User(
+            Guid.Parse("E38954C4-B1B1-418A-93F6-C4B25C98B713"), Name.From("DrMurloc"), true, null,
+            new Uri("https://example.com/d.png"), Name.From("US")));
+
+        var cut = RenderDialog(SetupChart(null));
+
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll("[data-testid='cdt-tab-Comments']")));
+    }
+
+    /// <summary>
     ///     Ten call sites render this dialog, so a closed one must cost nothing. Active follows
     ///     Visible; with it false the board must not reach for a board nobody asked to see.
     /// </summary>
