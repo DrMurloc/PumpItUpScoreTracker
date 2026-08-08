@@ -60,7 +60,7 @@ public sealed class RivalSagaTests
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
-                new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false)
+                new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false, Guid.NewGuid())
             }.AsEnumerable());
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { userId }.AsEnumerable());

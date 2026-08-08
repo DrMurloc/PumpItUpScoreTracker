@@ -150,6 +150,9 @@
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>#{0} PUMBILITY</value>
   </data>
+  <data name="(edited)" xml:space="preserve">
+    <value>(edited)</value>
+  </data>
   <data name="(Optional) Also delete historical data" xml:space="preserve">
 	  <value>(Optional) Also delete historical data</value>
   </data>
@@ -415,8 +418,14 @@
 	  <value>Add</value>
 	  <comment>Add</comment>
   </data>
+  <data name="Add a comment…" xml:space="preserve">
+    <value>Add a comment…</value>
+  </data>
   <data name="Add a description first — it is what a player reads before deciding whether to connect." xml:space="preserve">
     <value>Add a description first — it is what a player reads before deciding whether to connect.</value>
+  </data>
+  <data name="Add a note…" xml:space="preserve">
+    <value>Add a note…</value>
   </data>
   <data name="Add A Photo" xml:space="preserve">
     <value>Add a photo</value>
@@ -1304,6 +1313,15 @@
   <data name="Commands — anyone in the server can use these" xml:space="preserve">
     <value>Commands — anyone in the server can use these</value>
   </data>
+  <data name="Comment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
+  <data name="Comment from a deleted user" xml:space="preserve">
+    <value>Comment from a deleted user</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Comments</value>
+  </data>
   <data name="Communities" xml:space="preserve">
     <value>Communities</value>
   </data>
@@ -1318,6 +1336,9 @@
   </data>
   <data name="Community columns" xml:space="preserve">
     <value>Community columns</value>
+  </data>
+  <data name="Community comments belong to that community, and its admins handle them. I stay out of it, except for hate, discrimination, or threats. The rule is &quot;Don't Be An Asshole&quot; — where exactly that line sits is your admins' call." xml:space="preserve">
+    <value>Community comments belong to that community, and its admins handle them. I stay out of it, except for hate, discrimination, or threats. The rule is "Don't Be An Asshole" — where exactly that line sits is your admins' call.</value>
   </data>
   <data name="Community Highlights" xml:space="preserve">
     <value>Community Highlights</value>
@@ -1928,6 +1949,9 @@
   <data name="Drills" xml:space="preserve">
     <value>Drills</value>
   </data>
+  <data name="DrMurloc's Rules for Comments" xml:space="preserve">
+    <value>DrMurloc's Rules for Comments</value>
+  </data>
   <data name="DrMurloc's Rules for Integrated Toolmakers" xml:space="preserve">
     <value>DrMurloc's Rules for Integrated Toolmakers</value>
   </data>
@@ -2504,6 +2528,9 @@
   <data name="Help" xml:space="preserve">
     <value>Help</value>
   </data>
+  <data name="Helpful" xml:space="preserve">
+    <value>Helpful</value>
+  </data>
   <data name="Hide" xml:space="preserve">
 	  <value>Hide</value>
   </data>
@@ -2633,6 +2660,9 @@
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
 	  <value>I Just Want to Hide The Chart</value>
   </data>
+  <data name="I read generously; different cultures and different people communicate differently. But a public comment reported for bad faith, discrimination, or hate is very likely to come down." xml:space="preserve">
+    <value>I read generously; different cultures and different people communicate differently. But a public comment reported for bad faith, discrimination, or hate is very likely to come down.</value>
+  </data>
   <data name="I store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>I store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime.</value>
   </data>
@@ -2650,6 +2680,15 @@
   </data>
   <data name="I understand — remember it" xml:space="preserve">
     <value>I understand — remember it</value>
+  </data>
+  <data name="I would far rather build features for you than investigate community drama. We play this game because it's fun. Keep it fun." xml:space="preserve">
+    <value>I would far rather build features for you than investigate community drama. We play this game because it's fun. Keep it fun.</value>
+  </data>
+  <data name="I'm one person." xml:space="preserve">
+    <value>I'm one person.</value>
+  </data>
+  <data name="I've read these, and I'll keep it fun." xml:space="preserve">
+    <value>I've read these, and I'll keep it fun.</value>
   </data>
   <data name="I've saved it" xml:space="preserve">
     <value>I've saved it</value>
@@ -2915,6 +2954,9 @@
   </data>
   <data name="Just for you — &quot;Production&quot;, &quot;my laptop&quot;, &quot;the test box&quot;. Nobody else sees it." xml:space="preserve">
     <value>Just for you — "Production", "my laptop", "the test box". Nobody else sees it.</value>
+  </data>
+  <data name="just now" xml:space="preserve">
+    <value>just now</value>
   </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>Just stay alive</value>
@@ -3193,6 +3235,9 @@
   <data name="Make Public Disclaimer 2" xml:space="preserve">
     <value>If your account was previously public and you made it private, making it public again will make anyone following you able to see your progress again.</value>
   </data>
+  <data name="Make sure you trust it before you go." xml:space="preserve">
+    <value>Make sure you trust it before you go.</value>
+  </data>
   <data name="Manage" xml:space="preserve">
     <value>Manage</value>
   </data>
@@ -3376,6 +3421,9 @@
   <data name="Mixes" xml:space="preserve">
     <value>Mixes</value>
   </data>
+  <data name="Moderate" xml:space="preserve">
+    <value>Moderate</value>
+  </data>
   <data name="Modern" xml:space="preserve">
     <value>Modern</value>
   </data>
@@ -3477,6 +3525,9 @@
   </data>
   <data name="My Phoenix score" xml:space="preserve">
     <value>My Phoenix score</value>
+  </data>
+  <data name="My profile is private. I understand my username, avatar, and country will be visible on public comments." xml:space="preserve">
+    <value>My profile is private. I understand my username, avatar, and country will be visible on public comments.</value>
   </data>
   <data name="My Progress" xml:space="preserve">
     <value>My Progress</value>
@@ -3593,6 +3644,9 @@
   </data>
   <data name="New Username" xml:space="preserve">
 	  <value>New Username</value>
+  </data>
+  <data name="Newest" xml:space="preserve">
+    <value>Newest</value>
   </data>
   <data name="Newest content" xml:space="preserve">
     <value>Newest content</value>
@@ -3913,6 +3967,9 @@
   <data name="Notes since your last break" xml:space="preserve">
     <value>Notes since your last break</value>
   </data>
+  <data name="Notes you write here are only ever visible to you." xml:space="preserve">
+    <value>Notes you write here are only ever visible to you.</value>
+  </data>
   <data name="Nothing" xml:space="preserve">
     <value>Nothing</value>
   </data>
@@ -3933,6 +3990,12 @@
   </data>
   <data name="Nothing here clears your bar yet — play a few more charts and check back." xml:space="preserve">
     <value>Nothing here clears your bar yet — play a few more charts and check back.</value>
+  </data>
+  <data name="Nothing here yet." xml:space="preserve">
+    <value>Nothing here yet.</value>
+  </data>
+  <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
+    <value>Nothing here yet. Share what you know about this chart.</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this.</value>
@@ -4132,6 +4195,9 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Only songs with a changed chart are listed.</value>
   </data>
+  <data name="Only you can see this" xml:space="preserve">
+    <value>Only you can see this</value>
+  </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>Only you can use this tool right now.</value>
   </data>
@@ -4153,6 +4219,9 @@
   </data>
   <data name="Open A Row For Its Photos" xml:space="preserve">
     <value>Open a row for its photos</value>
+  </data>
+  <data name="Open anyway" xml:space="preserve">
+    <value>Open anyway</value>
   </data>
   <data name="Open chart details" xml:space="preserve">
     <value>Open chart details</value>
@@ -4466,6 +4535,9 @@
   <data name="PIU Scores" xml:space="preserve">
     <value>PIU Scores</value>
   </data>
+  <data name="PIU Scores exists to bring the Pump It Up community together across distance and language. Comments are where you share what you know and help each other get better at the game." xml:space="preserve">
+    <value>PIU Scores exists to bring the Pump It Up community together across distance and language. Comments are where you share what you know and help each other get better at the game.</value>
+  </data>
   <data name="PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play." xml:space="preserve">
     <value>PIU Scores keeps your whole Pump It Up history, imported straight from your PIUGAME account, and turns it into tier lists, rankings, and recommendations tuned to how you actually play.</value>
   </data>
@@ -4680,6 +4752,9 @@
   <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
     <value>Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way.</value>
   </data>
+  <data name="Posting to {0} as {1}" xml:space="preserve">
+    <value>Posting to {0} as {1}</value>
+  </data>
   <data name="PP" xml:space="preserve">
     <value>PP</value>
   </data>
@@ -4758,6 +4833,9 @@
   <data name="Public" xml:space="preserve">
     <value>Public</value>
     <comment>(on/off, if account is set to public)</comment>
+  </data>
+  <data name="Public comments are mine." xml:space="preserve">
+    <value>Public comments are mine.</value>
   </data>
   <data name="Public players and your community members." xml:space="preserve">
     <value>Public players and your community members.</value>
@@ -5081,6 +5159,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Remove</value>
   </data>
+  <data name="Remove comment" xml:space="preserve">
+    <value>Remove comment</value>
+  </data>
   <data name="Remove from ToDo" xml:space="preserve">
     <value>Remove from To Do List</value>
   </data>
@@ -5095,6 +5176,9 @@
   </data>
   <data name="Removed" xml:space="preserve">
 	  <value>Removed</value>
+  </data>
+  <data name="Removed by the site admin" xml:space="preserve">
+    <value>Removed by the site admin</value>
   </data>
   <data name="Removed from Favorites!" xml:space="preserve">
     <value>Removed from Favorites!</value>
@@ -5116,6 +5200,12 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>Replay</value>
+  </data>
+  <data name="Reply" xml:space="preserve">
+    <value>Reply</value>
+  </data>
+  <data name="Reply…" xml:space="preserve">
+    <value>Reply…</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>Request Header</value>
@@ -5262,6 +5352,9 @@
   </data>
   <data name="Save first." xml:space="preserve">
     <value>Save first.</value>
+  </data>
+  <data name="Save note" xml:space="preserve">
+    <value>Save note</value>
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>Save Scores</value>
@@ -5641,6 +5734,9 @@
   <data name="Show fewer" xml:space="preserve">
     <value>Show fewer</value>
   </data>
+  <data name="Show more comments" xml:space="preserve">
+    <value>Show more comments</value>
+  </data>
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>Show more of {0} scores</value>
   </data>
@@ -5868,6 +5964,9 @@
   <data name="Songs" xml:space="preserve">
     <value>Songs</value>
   </data>
+  <data name="Sort" xml:space="preserve">
+    <value>Sort</value>
+  </data>
   <data name="Sort by" xml:space="preserve">
     <value>Sort by</value>
   </data>
@@ -5951,6 +6050,9 @@
   <data name="Status" xml:space="preserve">
     <value>Status</value>
   </data>
+  <data name="Stay here" xml:space="preserve">
+    <value>Stay here</value>
+  </data>
   <data name="Stay in good standing." xml:space="preserve">
     <value>Stay in good standing.</value>
   </data>
@@ -5966,6 +6068,9 @@
   </data>
   <data name="Step artists" xml:space="preserve">
     <value>Step artists</value>
+  </data>
+  <data name="Step artists and the PIU devs are community too." xml:space="preserve">
+    <value>Step artists and the PIU devs are community too.</value>
   </data>
   <data name="Step on" xml:space="preserve">
     <value>Step on</value>
@@ -6322,6 +6427,9 @@
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>They're already one of your rivals.</value>
   </data>
+  <data name="They're players, same as us. Joking about someone's charting habits is fine. Insults and bad-faith accusations are not." xml:space="preserve">
+    <value>They're players, same as us. Joking about someone's charting habits is fine. Insults and bad-faith accusations are not.</value>
+  </data>
   <data name="Third" xml:space="preserve">
     <value>Third</value>
   </data>
@@ -6414,6 +6522,9 @@
   </data>
   <data name="This key never expires." xml:space="preserve">
     <value>This key never expires.</value>
+  </data>
+  <data name="This link goes to a site I don't know anything about:" xml:space="preserve">
+    <value>This link goes to a site I don't know anything about:</value>
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>This mix isn't score-normalized — only Letter Grade &amp; Pass are available.</value>
@@ -6597,6 +6708,9 @@
   </data>
   <data name="Tools that help players understand the game — score distributions, progress, analysis anyone can use. A tool built for one person's edge, like scouting opponents before a tournament, gets removed, and its maker does not get to make more." xml:space="preserve">
     <value>Tools that help players understand the game — score distributions, progress, analysis anyone can use. A tool built for one person's edge, like scouting opponents before a tournament, gets removed, and its maker does not get to make more.</value>
+  </data>
+  <data name="Top" xml:space="preserve">
+    <value>Top</value>
   </data>
   <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
     <value>Top 100 · Top 1000 floors — 50× SS</value>
@@ -7440,6 +7554,9 @@
   <data name="Your Communities" xml:space="preserve">
     <value>Your Communities</value>
   </data>
+  <data name="Your community moderates itself." xml:space="preserve">
+    <value>Your community moderates itself.</value>
+  </data>
   <data name="Your community tools stop working" xml:space="preserve">
     <value>Your community tools stop working</value>
   </data>
@@ -8028,14 +8145,23 @@
   <data name="{0}% to next title" xml:space="preserve">
     <value>{0}% to next title</value>
   </data>
+  <data name="{0}d ago" xml:space="preserve">
+    <value>{0}d ago</value>
+  </data>
   <data name="{0}d {1}h" xml:space="preserve">
     <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h ago" xml:space="preserve">
+    <value>{0}h ago</value>
   </data>
   <data name="{0}h {1}m" xml:space="preserve">
     <value>{0}h {1}m</value>
   </data>
   <data name="{0}m" xml:space="preserve">
     <value>{0}m</value>
+  </data>
+  <data name="{0}m ago" xml:space="preserve">
+    <value>{0}m ago</value>
   </data>
   <data name="{0}y old" xml:space="preserve">
     <value>{0}y old</value>

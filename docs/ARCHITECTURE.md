@@ -21,7 +21,9 @@ Cross-vertical communication happens two ways, and only two ways:
 
 **Never SQL joins onto another vertical's tables.** A vertical's tables are private storage, not an integration surface. This is what keeps a vertical extractable: its data model can change shape without a ripple, because nothing else touches it below the contract line.
 
-The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, skills), **Randomizer** (chart draw generation, randomizer settings, tournament draws), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **CommunityTools** (registered partner tools, player sharing, API keys, webhook delivery), **Rivals** (the rival graph — a directed edge onto a site player or a board tag, plus the blocks and invite codes that gate it; see [rivals.md](design/rivals.md)), **Identity** (accounts, logins, tokens), and **HomePage** (dashboard layout persistence — pages and widget instances; the widget *render components* live in Web's registry, see [docs/design/HomePageWidgets/README.md](design/HomePageWidgets/README.md)).
+The verticals: **ScoreLedger** (the system of record for scores), **PlayerProgress** (ratings, titles, history), **ChartIntelligence** (tier lists, difficulty analytics), **Catalog** (game content reads, videos, skills), **Randomizer** (chart draw generation, randomizer settings, tournament draws), **OfficialMirror** (the anti-corruption layer against the official PiuGame site), **WeeklyChallenge**, **EventCompetition** (tournaments), **Communities**, **CommunityTools** (registered partner tools, player sharing, API keys, webhook delivery),
+**ChartComments** (comments and personal notes on a chart, their votes, and the plain-text parser
+that autolinks a URL and decides whether its host is trusted), **Rivals** (the rival graph — a directed edge onto a site player or a board tag, plus the blocks and invite codes that gate it; see [rivals.md](design/rivals.md)), **Identity** (accounts, logins, tokens), and **HomePage** (dashboard layout persistence — pages and widget instances; the widget *render components* live in Web's registry, see [docs/design/HomePageWidgets/README.md](design/HomePageWidgets/README.md)).
 
 **Translations** is a vertical in shape only, and deliberately so: it holds the prompts and glossary for rendering community text across locales, owns no tables, references no `Data`, and is wired into nothing. Its one dependency — the `ILanguageModelClient` Domain port — has no registration anywhere in the application, so no shipping code path can spend a metered token. It exists to be experimented against from `ScoreTracker.ExplorationTests`; see [docs/design/comment-translation.md](design/comment-translation.md).
 
@@ -90,6 +92,8 @@ ScoreTracker.sln
 │   ├── ScoreTracker.Communities       communities, memberships, Discord channel feeds
 │   ├── ScoreTracker.CommunityTools    registered tools, player sharing, API keys,
 │   │                                  webhook delivery
+│   ├── ScoreTracker.ChartComments     comments and personal notes on a chart, votes,
+│   │                                  the plain-text parser and its link-trust gate
 │   ├── ScoreTracker.Rivals            the rival graph: directed edges onto site players and
 │   │                                  board tags, blocks, invite codes
 │   ├── ScoreTracker.HomePage          dashboard layout persistence: pages + widget

@@ -1,0 +1,57 @@
+@namespace ScoreTracker.Web.Components.ChartComments
+
+@* Where an unknown host gets a sentence before it gets a click.
+
+   Inline rather than a MudDialog, for the same reason the rules card is: this renders inside
+   the chart details dialog, and a dialog inside a dialog orphans its scrim here. It sits at
+   the top of the panel, which is where the reader's eye already is after a tap that did not
+   navigate.
+
+   The host shown is the PARSED host, never the link text — the text is author-controlled and
+   is exactly what an attacker would make say something reassuring. *@
+
+@if (Url != null)
+{
+    <MudAlert Severity="Severity.Warning" Dense="true" Class="my-2" ShowCloseIcon="true"
+              CloseIconClicked="() => OnDismiss.InvokeAsync()" data-testid="cmt-interstitial">
+        <MudText Typo="Typo.body2">@L["This link goes to a site I don't know anything about:"]</MudText>
+        <MudText Typo="Typo.body2" Class="cmt-interstitial-host">@Host</MudText>
+        <MudText Typo="Typo.caption">@L["Make sure you trust it before you go."]</MudText>
+        <div class="cmt-interstitial-foot">
+            <MudButton Size="Size.Small" Variant="Variant.Text"
+                       OnClick="() => OnDismiss.InvokeAsync()">@L["Stay here"]</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning" Href="@Url"
+                       Target="_blank" rel="noopener noreferrer nofollow ugc"
+                       data-testid="cmt-interstitial-go"
+                       OnClick="() => OnDismiss.InvokeAsync()">@L["Open anyway"]</MudButton>
+        </div>
+    </MudAlert>
+}
+
+<style>
+    .cmt-interstitial-host {
+        font-family: var(--mud-typography-caption-family), monospace;
+        word-break: break-all;
+        padding: 6px 0;
+    }
+
+    .cmt-interstitial-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 6px;
+    }
+</style>
+
+@code {
+    [Parameter] public string? Url { get; set; }
+
+    [Parameter] public EventCallback OnDismiss { get; set; }
+
+    /// <summary>
+    ///     The parsed host. Falls back to the whole string only if it will not parse — which it
+    ///     always will, since nothing became a link without parsing as absolute http(s) first.
+    /// </summary>
+    private string Host =>
+        Uri.TryCreate(Url, UriKind.Absolute, out var uri) ? uri.Host : Url ?? string.Empty;
+}

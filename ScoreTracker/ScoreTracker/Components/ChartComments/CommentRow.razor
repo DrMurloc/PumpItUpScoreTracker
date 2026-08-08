@@ -1,0 +1,145 @@
+@namespace ScoreTracker.Web.Components.ChartComments
+@using ScoreTracker.ChartComments.Contracts
+
+@* One comment, reply or note. Which controls appear IS the permission model: ▲ and Reply for
+   anyone signed in, ⋯ only on your own, 🛡 only for a moderator, and nothing at all on a
+   stub. A note drops the avatar entirely — every one of them is yours, so the column is 44px
+   of nothing, and losing it makes a note unmistakable for a comment at a glance. *@
+
+<div class="cmt @(IsReply ? "cmt-reply" : null) @(IsNote ? "cmt-note" : null) @(IsFocused ? "cmt-focused" : null)"
+     data-testid="@($"comment-{Comment.Id}")" id="@($"comment-{Comment.Id}")">
+    @if (!IsNote)
+    {
+        <div class="cmt-avatar">
+            @if (Comment.Deletion != null || Comment.AuthorImage == null)
+            {
+                <span class="cmt-avatar-gone">?</span>
+            }
+            else
+            {
+                <img src="@Comment.AuthorImage" alt="" loading="lazy"/>
+            }
+        </div>
+    }
+    <div class="cmt-main">
+        @if (Comment.Deletion is { } deletion)
+        {
+            <span class="cmt-removed">@StubText(deletion)</span>
+        }
+        else
+        {
+            <div class="cmt-head">
+                @if (!IsNote)
+                {
+                    <span class="cmt-name">@Comment.AuthorName</span>
+                }
+                <span class="cmt-meta">@Ago(Comment.CreatedAt)</span>
+                @if (Comment.EditedAt != null)
+                {
+                    <span class="cmt-meta">@L["(edited)"]</span>
+                }
+                @if (IsNote)
+                {
+                    <MudSpacer></MudSpacer>
+                    @Menu()
+                }
+            </div>
+            <div class="cmt-body">
+                <CommentTextView Body="Comment.Body" OnUntrustedLink="OnUntrustedLink"></CommentTextView>
+            </div>
+            @if (!IsNote)
+            {
+                <div class="cmt-foot">
+                    @* Your own count is inert rather than a button: you cannot vote on your own,
+                       and a control that refuses every click is worse than a number. *@
+                    <button type="button" class="cmt-act @(Comment.ViewerVoted ? "cmt-act-on" : null)"
+                            disabled="@(!CanVote)" data-testid="@($"vote-{Comment.Id}")"
+                            aria-label="@L["Helpful"]" @onclick="() => OnVote.InvokeAsync(Comment)">
+                        ▲ @Comment.Votes
+                    </button>
+                    @if (CanReply)
+                    {
+                        <button type="button" class="cmt-act" data-testid="@($"reply-{Comment.Id}")"
+                                @onclick="() => OnReply.InvokeAsync(Comment)">@L["Reply"]</button>
+                    }
+                    <MudSpacer></MudSpacer>
+                    @if (Comment.ViewerMayModerate)
+                    {
+                        @* The shield IS the permission — nobody without it renders one. Remove and
+                           only remove: there is no moderator edit, deliberately. *@
+                        <MudMenu Icon="@Icons.Material.Filled.Shield" Size="Size.Small" Dense="true"
+                                 Color="Color.Primary" AriaLabel="@L["Moderate"]">
+                            <MudMenuItem OnClick="() => OnRemove.InvokeAsync(Comment)">@L["Remove comment"]</MudMenuItem>
+                        </MudMenu>
+                    }
+                    @if (Comment.ViewerIsAuthor)
+                    {
+                        @Menu()
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public CommentRecord Comment { get; set; } = default!;
+
+    /// <summary>A reply is indented and cannot itself be replied to — threads are one level.</summary>
+    [Parameter] public bool IsReply { get; set; }
+
+    /// <summary>A personal note: no author, no vote, no reply, no shield.</summary>
+    [Parameter] public bool IsNote { get; set; }
+
+    /// <summary>
+    ///     The comment a moderation queue row named. Marked rather than scrolled to: an anchor is
+    ///     what the row's id is for, and moving somebody's viewport is a bigger promise than
+    ///     "this is the one".
+    /// </summary>
+    [Parameter] public bool IsFocused { get; set; }
+
+    [Parameter] public bool CanInteract { get; set; }
+
+    [Parameter] public EventCallback<CommentRecord> OnVote { get; set; }
+    [Parameter] public EventCallback<CommentRecord> OnReply { get; set; }
+    [Parameter] public EventCallback<CommentRecord> OnEdit { get; set; }
+    [Parameter] public EventCallback<CommentRecord> OnDelete { get; set; }
+    [Parameter] public EventCallback<CommentRecord> OnRemove { get; set; }
+    [Parameter] public EventCallback<string?> OnUntrustedLink { get; set; }
+
+    private bool CanVote => CanInteract && !IsNote && !Comment.ViewerIsAuthor;
+
+    private bool CanReply => CanInteract && !IsNote && !IsReply;
+
+    private RenderFragment Menu()
+    {
+        return @<MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small" Dense="true"
+                         AriaLabel="@L["More"]" data-testid="@($"own-{Comment.Id}")">
+                   <MudMenuItem OnClick="() => OnEdit.InvokeAsync(Comment)">@L["Edit"]</MudMenuItem>
+                   <MudMenuItem OnClick="() => OnDelete.InvokeAsync(Comment)">@L["Delete"]</MudMenuItem>
+               </MudMenu>;
+    }
+
+    private string StubText(CommentDeletion deletion)
+    {
+        return deletion switch
+        {
+            CommentDeletion.ByModerator => L["Removed by the site admin"],
+            CommentDeletion.ByDeletedAccount => L["Comment from a deleted user"],
+            _ => L["Deleted"]
+        };
+    }
+
+    // Relative rather than absolute: "3 days ago" is what a reader wants from a conversation,
+    // and it dodges having to decide whose timezone a comment happened in.
+    private string Ago(DateTimeOffset at)
+    {
+        var elapsed = DateTimeOffset.UtcNow - at;
+        if (elapsed < TimeSpan.FromMinutes(1)) return L["just now"];
+        if (elapsed < TimeSpan.FromHours(1)) return L["{0}m ago", (int)elapsed.TotalMinutes];
+        if (elapsed < TimeSpan.FromDays(1)) return L["{0}h ago", (int)elapsed.TotalHours];
+        if (elapsed < TimeSpan.FromDays(30)) return L["{0}d ago", (int)elapsed.TotalDays];
+
+        return at.ToString("yyyy-MM-dd");
+    }
+}

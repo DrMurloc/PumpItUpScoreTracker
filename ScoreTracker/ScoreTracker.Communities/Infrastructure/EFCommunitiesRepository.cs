@@ -246,17 +246,18 @@ namespace ScoreTracker.Communities.Infrastructure
                 where cm.UserId == userId
                 join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
                 join members in database.Set<CommunityMembershipEntity>() on c.Id equals members.CommunityId
-                group c by new { c.Name, c.IsRegional, c.PrivacyType, cm.UserId }
+                group c by new { c.Id, c.Name, c.IsRegional, c.PrivacyType, cm.UserId }
                 into g
                 select new
                 {
+                    g.Key.Id,
                     g.Key.Name,
                     g.Key.IsRegional,
                     g.Key.PrivacyType,
                     Count = g.Count()
                 }).ToArrayAsync(cancellationToken)).Select(g =>
                 new CommunityOverviewRecord(g.Name, Enum.Parse<CommunityPrivacyType>(g.PrivacyType),
-                    g.Count, g.IsRegional));
+                    g.Count, g.IsRegional, g.Id));
         }
 
         // ICommunityReader (the published port): GetUserCommunities rides the same query
@@ -305,17 +306,18 @@ namespace ScoreTracker.Communities.Infrastructure
             return (await (from c in database.Set<CommunityEntity>()
                 where publicTypes.Contains(c.PrivacyType)
                 join members in database.Set<CommunityMembershipEntity>() on c.Id equals members.CommunityId
-                group c by new { c.Name, c.PrivacyType, c.IsRegional }
+                group c by new { c.Id, c.Name, c.PrivacyType, c.IsRegional }
                 into g
                 select new
                 {
+                    g.Key.Id,
                     g.Key.Name,
                     g.Key.IsRegional,
                     g.Key.PrivacyType,
                     Count = g.Count()
                 }).ToArrayAsync(cancellationToken)).Select(g =>
                 new CommunityOverviewRecord(g.Name, Enum.Parse<CommunityPrivacyType>(g.PrivacyType),
-                    g.Count, g.IsRegional));
+                    g.Count, g.IsRegional, g.Id));
         }
 
         public async Task<IEnumerable<CommunityLeaderboardRecord>> GetLeaderboard(MixEnum mix, Name communityName,

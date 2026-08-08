@@ -87,7 +87,7 @@ public sealed class AccountStatsWidgetTests : ComponentTestBase
             });
         // CommunityGlowReader keeps non-regional, non-"World" crews and their members.
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new CommunityOverviewRecord("Crew", CommunityPrivacyType.Public, 5, false) });
+            .ReturnsAsync(new[] { new CommunityOverviewRecord("Crew", CommunityPrivacyType.Public, 5, false, Guid.NewGuid()) });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { _crewMate });
     }

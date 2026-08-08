@@ -1,0 +1,584 @@
+@namespace ScoreTracker.Web.Components.ChartComments
+@using MediatR
+@using ScoreTracker.ChartComments.Contracts
+@using ScoreTracker.ChartComments.Contracts.Commands
+@using ScoreTracker.ChartComments.Contracts.Queries
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.SecondaryPorts
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+
+@* The Comments tab: scope rail, sort, composer, thread. The rail is the audience picker —
+   it filters what you read AND decides what you post to, so "which community am I posting
+   to" is answered by where you are standing rather than by a second control. *@
+
+@if (_scopes.Count > 1)
+{
+    <div class="cld-scopes" role="tablist">
+        @foreach (var scope in _scopes)
+        {
+            var s = scope;
+            <button type="button" class="@ScopeClass(s)" data-testid="@($"cmt-scope-{s.Label}")"
+                    @onclick="() => SelectScope(s)">@s.Label</button>
+        }
+    </div>
+}
+
+<LinkInterstitial Url="@_pendingLink" OnDismiss="() => _pendingLink = null"></LinkInterstitial>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Class="my-2"></MudProgressLinear>
+}
+else
+{
+    @* No sort control on Notes: with no votes there is only one order. *@
+    @if (!IsNotes && _page.TotalRoots > 1)
+    {
+        <div class="cmt-subbar">
+            <span>@L["Sort"]</span>
+            <MudSelect T="CommentSort" Value="_sort" ValueChanged="SelectSort" Dense="true" Margin="Margin.Dense"
+                       Variant="Variant.Outlined" Class="cmt-sort" data-testid="cmt-sort">
+                <MudSelectItem Value="CommentSort.Top">@L["Top"]</MudSelectItem>
+                <MudSelectItem Value="CommentSort.Newest">@L["Newest"]</MudSelectItem>
+            </MudSelect>
+        </div>
+    }
+
+    @if (CurrentUser.IsLoggedIn)
+    {
+        @if (_consent.NeedsAnything)
+        {
+            @* Rendered where the composer goes rather than as a dialog over this one: a
+               MudDialog inside a MudDialog orphans its scrim and leaves the page unclickable. *@
+            <CommentRulesCard NeedsTerms="_consent.NeedsTerms"
+                              NeedsPublicIdentityConsent="_consent.NeedsPublicIdentityConsent"
+                              OnAccepted="AcceptTerms"></CommentRulesCard>
+        }
+        else
+        {
+            <CommentComposer Placeholder="@(IsNotes ? L["Add a note…"] : L["Add a comment…"])"
+                             SubmitLabel="@(IsNotes ? L["Save note"] : L["Comment"])"
+                             AudienceNote="@AudienceNote" AvatarUrl="@AvatarUrl" ShowAvatar="!IsNotes"
+                             TestId="cmt-root-composer" OnSubmit="Post"></CommentComposer>
+        }
+    }
+
+    @if (_page.Roots.Count == 0)
+    {
+        <div class="cmt-empty">
+            @(IsNotes
+                ? L["Notes you write here are only ever visible to you."]
+                : CurrentUser.IsLoggedIn
+                    ? L["Nothing here yet. Share what you know about this chart."]
+                    : L["Nothing here yet."])
+        </div>
+    }
+
+    @foreach (var root in _page.Roots)
+    {
+        @if (_editing == root.Id)
+        {
+            @EditComposer(root)
+        }
+        else
+        {
+            <CommentRow Comment="root" IsNote="IsNotes" CanInteract="CurrentUser.IsLoggedIn"
+                        IsFocused="@(FocusCommentId == root.Id)"
+                        OnVote="Vote" OnReply="StartReply" OnEdit="StartEdit" OnDelete="Delete"
+                        OnRemove="Remove" OnUntrustedLink="ShowInterstitial" @key="root.Id"></CommentRow>
+        }
+        @if (_replyingTo == root.Id)
+        {
+            <CommentComposer Reply="true" StartOpen="true" Placeholder="@L["Reply…"]"
+                             SubmitLabel="@L["Reply"]" AvatarUrl="@AvatarUrl"
+                             TestId="cmt-reply-composer" OnSubmit="@(text => Reply(root.Id, text))"
+                             OnCancel="() => _replyingTo = null"></CommentComposer>
+        }
+        @foreach (var reply in root.Replies)
+        {
+            @if (_editing == reply.Id)
+            {
+                @EditComposer(reply, true)
+            }
+            else
+            {
+                <CommentRow Comment="reply" IsReply="true" CanInteract="CurrentUser.IsLoggedIn"
+                            IsFocused="@(FocusCommentId == reply.Id)"
+                            OnVote="Vote" OnEdit="StartEdit" OnDelete="Delete" OnRemove="Remove"
+                            OnUntrustedLink="ShowInterstitial" @key="reply.Id"></CommentRow>
+            }
+        }
+    }
+
+    @* Not pagination — a bound on the first render. Replies are never truncated, because a
+       conversation missing its answer is worse than a long page. *@
+    @if (_page.HasMore)
+    {
+        <div class="cmt-more">
+            <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="ShowMore"
+                       data-testid="cmt-show-more">@L["Show more comments"]</MudButton>
+        </div>
+    }
+}
+
+<style>
+    /* Scoped to this render tree on purpose — everything below is rendered by this component
+       or one of its children, so nothing else can pick these class names up unstyled. */
+    .cmt-subbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: .74rem;
+        color: var(--mud-palette-text-secondary);
+        padding: 4px 0 8px;
+    }
+
+    .cmt-sort {
+        max-width: 130px;
+    }
+
+    /* The composer is a LINE, not a box. Its resting state is the field itself. */
+    .cmt-compose {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 2px 0 10px;
+    }
+
+    .cmt-compose-reply {
+        padding-left: 40px;
+    }
+
+    .cmt-compose-main {
+        min-width: 0;
+    }
+
+    .cmt-line {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+        background: none;
+        color: var(--mud-palette-text-primary);
+        font: inherit;
+        font-size: .85rem;
+        padding: 5px 2px;
+        resize: none;
+        outline: none;
+    }
+
+    .cmt-line-open {
+        border-bottom-width: 2px;
+        border-bottom-color: var(--mud-palette-text-primary);
+    }
+
+    .cmt-compose-foot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .cmt-count,
+    .cmt-posting-as {
+        font-size: .7rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .cmt {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 10px;
+        padding: 11px 0;
+        border-top: 1px solid var(--mud-palette-lines-default);
+    }
+
+    /* A note has no author to show, so it drops the avatar column entirely. That is 44px back
+       on a phone, and it makes a note unmistakable for a comment at a glance. */
+    .cmt-note {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* Absolutely positioned rail: a static ::before inside a grid container becomes a THIRD
+       grid item against two columns, which wraps the body onto its own row. */
+    .cmt-reply {
+        padding-left: 40px;
+        position: relative;
+    }
+
+    .cmt-reply::before {
+        content: "";
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        border-radius: 1px;
+        background: var(--mud-palette-lines-default);
+    }
+
+    .cmt-avatar,
+    .cmt-avatar img {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+    }
+
+    .cmt-avatar {
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: var(--mud-palette-background-gray);
+    }
+
+    .cmt-avatar-sm,
+    .cmt-avatar-sm img {
+        width: 28px;
+        height: 28px;
+    }
+
+    .cmt-avatar img {
+        object-fit: cover;
+    }
+
+    .cmt-avatar-gone {
+        opacity: .35;
+    }
+
+    .cmt-main {
+        min-width: 0;
+    }
+
+    .cmt-head {
+        display: flex;
+        align-items: baseline;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-bottom: 3px;
+    }
+
+    .cmt-name {
+        font-weight: 600;
+        font-size: .82rem;
+    }
+
+    .cmt-meta {
+        font-size: .7rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    /* A 500-character comment can be one 300-character URL. Without this it decides the
+       dialog's width and the whole thing scrolls sideways on a phone. */
+    .cmt-body {
+        font-size: .85rem;
+        overflow-wrap: anywhere;
+    }
+
+    .cmt-link {
+        color: var(--mud-palette-primary);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    /* Marked before the click, not only on the way out. */
+    .cmt-link-untrusted {
+        color: var(--mud-palette-secondary);
+    }
+
+    .cmt-link-untrusted::after {
+        content: " ⚠";
+        font-size: .85em;
+    }
+
+    .cmt-foot {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin-top: 5px;
+    }
+
+    .cmt-act {
+        appearance: none;
+        background: none;
+        border: none;
+        font: inherit;
+        font-size: .72rem;
+        color: var(--mud-palette-text-secondary);
+        padding: 3px 7px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .cmt-act:hover:not(:disabled) {
+        color: var(--mud-palette-text-primary);
+        background: var(--mud-palette-action-default-hover);
+    }
+
+    .cmt-act-on {
+        color: var(--mud-palette-warning);
+    }
+
+    .cmt-act:disabled {
+        cursor: default;
+        opacity: .55;
+    }
+
+    /* The comment a moderation queue row named. A left bar rather than a background wash: it
+       survives a theme that has no spare surface colour, and it does not fight the reply rail. */
+    .cmt-focused {
+        border-left: 3px solid var(--mud-palette-primary);
+        padding-left: 10px;
+    }
+
+    .cmt-removed {
+        font-size: .78rem;
+        font-style: italic;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .cmt-empty,
+    .cmt-more {
+        padding: 18px 4px;
+        text-align: center;
+        font-size: .78rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .cmt-rules {
+        border-top: 1px solid var(--mud-palette-lines-default);
+        padding: 12px 0 4px;
+    }
+
+    .cmt-rules-preamble {
+        color: var(--mud-palette-text-secondary);
+        margin-bottom: 10px;
+    }
+
+    .cmt-rules ol {
+        margin: 0;
+        padding-left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .cmt-rules b {
+        display: block;
+    }
+
+    .cmt-rules-foot {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 12px;
+    }
+</style>
+
+@code {
+    private const int PageSize = 20;
+
+    private CommentPageRecord _page = new(Array.Empty<CommentRecord>(), 0, false);
+    private IReadOnlyList<CommentScopeRecord> _scopes = Array.Empty<CommentScopeRecord>();
+    private CommentConsentRecord _consent = new(false, false);
+    private CommentAudience _audience = CommentAudience.Public;
+    private CommentSort _sort = CommentSort.Top;
+    private Guid? _replyingTo;
+    private Guid _editing = Guid.Empty;
+    private string? _editingText;
+    private int _take = PageSize;
+    private bool _loading = true;
+    private (Guid Chart, CommentAudience Audience, CommentSort Sort, int Take)? _loadedFor;
+
+    [Parameter] public Guid ChartId { get; set; }
+
+    /// <summary>False while this sits behind a tab nobody selected, so it issues no reads.</summary>
+    [Parameter] public bool Active { get; set; }
+
+    /// <summary>
+    ///     Opens on the comment a moderation queue row named. Nothing sends one yet — the queue
+    ///     arrives with reports — but the parameter is what that row will hand over.
+    /// </summary>
+    [Parameter] public Guid? FocusCommentId { get; set; }
+
+    private string? _pendingLink;
+
+    private bool IsNotes => _audience.IsPrivate;
+
+    private void ShowInterstitial(string? url)
+    {
+        _pendingLink = url;
+    }
+
+    private string? AvatarUrl => CurrentUser.IsLoggedIn ? CurrentUser.User.ProfileImage.ToString() : null;
+
+    private string AudienceNote => IsNotes
+        ? L["Only you can see this"]
+        : L["Posting to {0} as {1}", ScopeLabel, CurrentUser.User.Name.ToString()];
+
+    private string ScopeLabel =>
+        _scopes.FirstOrDefault(s => s.Audience == _audience)?.Label.ToString() ?? L["Public"].Value;
+
+    private string ScopeClass(CommentScopeRecord scope)
+    {
+        return scope.Audience == _audience ? "cld-chip cld-chip-on" : "cld-chip";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Active) return;
+        if (_scopes.Count == 0 && CurrentUser.IsLoggedIn)
+            _scopes = await Mediator.Send(new GetMyCommentScopesQuery());
+
+        var key = (ChartId, _audience, _sort, _take);
+        if (_loadedFor == key) return;
+        _loadedFor = key;
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _loading = true;
+        _consent = await Mediator.Send(new GetCommentConsentQuery(_audience));
+        _page = await Mediator.Send(new GetChartCommentsQuery(ChartId, _audience, _sort, _take));
+        _loading = false;
+    }
+
+    private async Task SelectScope(CommentScopeRecord scope)
+    {
+        if (scope.Audience == _audience) return;
+        _audience = scope.Audience;
+        // A new audience is a new conversation: the reply box and the page bound both reset,
+        // and Top is meaningless on Notes so it falls back to the only order there is.
+        _replyingTo = null;
+        _take = PageSize;
+        if (_audience.IsPrivate) _sort = CommentSort.Newest;
+        await Reload();
+    }
+
+    private async Task SelectSort(CommentSort sort)
+    {
+        if (_sort == sort) return;
+        _sort = sort;
+        await Reload();
+    }
+
+    private async Task ShowMore()
+    {
+        _take += PageSize;
+        await Reload();
+    }
+
+    private async Task Reload()
+    {
+        _loadedFor = (ChartId, _audience, _sort, _take);
+        await Load();
+    }
+
+    private Task Post(string text)
+    {
+        return Dispatch(new PostCommentCommand(ChartId, _audience, text));
+    }
+
+    private Task Reply(Guid rootId, string text)
+    {
+        _replyingTo = null;
+        return Dispatch(new ReplyToCommentCommand(rootId, text));
+    }
+
+    private void StartReply(CommentRecord comment)
+    {
+        _replyingTo = _replyingTo == comment.Id ? null : comment.Id;
+    }
+
+    /// <summary>
+    ///     Swaps the row for a composer holding the words as they stand. The text comes back through
+    ///     its own author-gated query rather than riding on the render record, so the only raw
+    ///     comment string Web ever holds is one it asked for by name and is about to put in a
+    ///     textarea.
+    /// </summary>
+    private async Task StartEdit(CommentRecord comment)
+    {
+        _editingText = await Mediator.Send(new GetMyCommentTextQuery(comment.Id));
+        // Null means it is not yours, or no longer there. Either way there is nothing to open.
+        _editing = _editingText == null ? Guid.Empty : comment.Id;
+    }
+
+    private RenderFragment EditComposer(CommentRecord comment, bool reply = false)
+    {
+        return @<CommentComposer Reply="reply" StartOpen="true" InitialText="@_editingText"
+                                 Placeholder="@L["Add a comment…"]" SubmitLabel="@L["Save"]"
+                                 AvatarUrl="@AvatarUrl" ShowAvatar="!IsNotes" TestId="cmt-edit-composer"
+                                 OnSubmit="@(text => SaveEdit(comment.Id, text))"
+                                 OnCancel="CancelEdit"></CommentComposer>;
+    }
+
+    private Task SaveEdit(Guid commentId, string text)
+    {
+        _editing = Guid.Empty;
+        _editingText = null;
+
+        return Dispatch(new EditCommentCommand(commentId, text));
+    }
+
+    private void CancelEdit()
+    {
+        _editing = Guid.Empty;
+        _editingText = null;
+    }
+
+    private Task Vote(CommentRecord comment)
+    {
+        return Dispatch(new VoteOnCommentCommand(comment.Id, !comment.ViewerVoted));
+    }
+
+    private Task Delete(CommentRecord comment)
+    {
+        return Dispatch(new DeleteCommentCommand(comment.Id));
+    }
+
+    private Task Remove(CommentRecord comment)
+    {
+        return Dispatch(new RemoveCommentCommand(comment.Id));
+    }
+
+    private Task AcceptTerms(bool consentedToPublicIdentity)
+    {
+        return Dispatch(new AcceptCommentTermsCommand(consentedToPublicIdentity));
+    }
+
+    /// <summary>
+    ///     One place that sends and reloads. A domain refusal is written to be read by a player,
+    ///     so its message is the message — anything else would be an exception string on a
+    ///     player's screen, which DiagnosticExposureTests exists to prevent.
+    /// </summary>
+    private async Task Dispatch(IRequest request)
+    {
+        try
+        {
+            await Mediator.Send(request);
+        }
+        catch (CommentNotAllowedException exception)
+        {
+            Snackbar.Add(exception.Message, Severity.Warning);
+            return;
+        }
+
+        await Reload();
+    }
+
+    private async Task Dispatch<TResponse>(IRequest<TResponse> request)
+    {
+        try
+        {
+            await Mediator.Send(request);
+        }
+        catch (CommentNotAllowedException exception)
+        {
+            Snackbar.Add(exception.Message, Severity.Warning);
+            return;
+        }
+
+        await Reload();
+    }
+}

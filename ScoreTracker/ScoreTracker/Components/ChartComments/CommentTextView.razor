@@ -1,0 +1,47 @@
+@namespace ScoreTracker.Web.Components.ChartComments
+@using ScoreTracker.ChartComments.Contracts
+
+@* The only component that renders comment text, and it never sees a string.
+
+   The vertical hands over a flat list of spans with every link's trust already decided, so
+   this walks them and emits elements. MarkupString is not merely discouraged here, it is
+   unreachable: there is no raw body to pass to it. That is the whole reason a parser exists
+   even though comments carry no formatting — autolinking IS parsing, and the alternative is
+   a string interpolated into markup somewhere down the line. *@
+
+@foreach (var span in Body)
+{
+    switch (span.Kind)
+    {
+        case CommentSpanKind.LineBreak:
+            <br/>
+            break;
+        case CommentSpanKind.Link when span.IsTrusted:
+            @* nofollow ugc on every outbound link: a comment box is not an endorsement, and a
+               500-character field on a chart page is exactly what a link farm looks for. *@
+            <a class="cmt-link" href="@span.Url" target="_blank"
+               rel="noopener noreferrer nofollow ugc">@span.Text</a>
+            break;
+        case CommentSpanKind.Link:
+            @* An unknown host is marked before the click, not only on the way out. The
+               interstitial still fires — this is the warning, not the gate. *@
+            <a class="cmt-link cmt-link-untrusted" href="@span.Url" target="_blank"
+               rel="noopener noreferrer nofollow ugc"
+               @onclick="() => OnUntrustedLink.InvokeAsync(span.Url)" @onclick:preventDefault="true">@span.Text</a>
+            break;
+        default:
+            @span.Text
+            break;
+    }
+}
+
+@code {
+    [Parameter] public IReadOnlyList<CommentSpan> Body { get; set; } = Array.Empty<CommentSpan>();
+
+    /// <summary>
+    ///     Raised instead of navigating when the host is one we know nothing about. The host owns
+    ///     the interstitial, because a dialog inside a dialog is this codebase's most reliable way
+    ///     to orphan a scrim.
+    /// </summary>
+    [Parameter] public EventCallback<string?> OnUntrustedLink { get; set; }
+}

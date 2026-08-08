@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using ScoreTracker.Catalog.Wiring;
+using ScoreTracker.ChartComments.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.CommunityTools.Wiring;
@@ -37,6 +38,7 @@ public static class VerticalAssemblies
         return new[]
         {
             typeof(CatalogRegistrationExtensions).Assembly,
+            typeof(ChartCommentsRegistrationExtensions).Assembly,
             typeof(ChartIntelligenceRegistrationExtensions).Assembly,
             typeof(CommunitiesRegistrationExtensions).Assembly,
             typeof(CommunityToolsRegistrationExtensions).Assembly,

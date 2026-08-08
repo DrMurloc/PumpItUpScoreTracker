@@ -1,0 +1,120 @@
+@namespace ScoreTracker.Web.Components.ChartComments
+
+@* A line, not a box. The resting state IS the field — there is no button that opens a
+   different control — and it grows as you type rather than scrolling, because a phone
+   keyboard over a three-line scroller is unusable.
+
+   No toolbar and no Write/Preview: comments are plain text, so what you type is what posts
+   and there is nothing to preview. The counter appears only near the cap; a permanent
+   "0 / 500" is a homework assignment on a control whose whole job is to feel like nothing. *@
+
+<div class="cmt-compose @(Reply ? "cmt-compose-reply" : null)">
+    @if (ShowAvatar)
+    {
+        <div class="cmt-avatar cmt-avatar-sm">
+            @if (AvatarUrl != null)
+            {
+                <img src="@AvatarUrl" alt="" loading="lazy"/>
+            }
+        </div>
+    }
+    <div class="cmt-compose-main">
+        <textarea class="cmt-line @(_open ? "cmt-line-open" : null)" rows="@(_open ? 2 : 1)"
+                  placeholder="@Placeholder" data-testid="@TestId" maxlength="@MaxLength"
+                  value="@_text" @oninput="OnInput" @onfocus="() => _open = true"></textarea>
+        @if (_open)
+        {
+            <div class="cmt-compose-foot">
+                @if (Remaining <= CounterAppearsAt)
+                {
+                    <span class="cmt-count">@L["{0} left", Remaining]</span>
+                }
+                else if (!string.IsNullOrWhiteSpace(AudienceNote))
+                {
+                    <span class="cmt-posting-as">@AudienceNote</span>
+                }
+                <MudSpacer></MudSpacer>
+                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="Cancel">@L["Cancel"]</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                           Disabled="@(!CanSubmit)" data-testid="@($"{TestId}-submit")"
+                           OnClick="Submit">@SubmitLabel</MudButton>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>Matches CommentText.MaxLength — the aggregate refuses anything longer anyway.</summary>
+    private const int MaxLength = 500;
+
+    /// <summary>
+    ///     How close to the cap the counter waits for. Fifty characters is roughly a sentence of
+    ///     warning, which is enough to finish a thought and rephrase rather than lose one.
+    /// </summary>
+    private const int CounterAppearsAt = 50;
+
+    private bool _open;
+    private string _text = string.Empty;
+
+    [Parameter] public string Placeholder { get; set; } = string.Empty;
+
+    [Parameter] public string SubmitLabel { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     "Posting to Public as ERRLENA", or on the Notes scope simply "Only you can see this" —
+    ///     "as ERRLENA" means nothing to an audience of one.
+    /// </summary>
+    [Parameter] public string? AudienceNote { get; set; }
+
+    [Parameter] public string? AvatarUrl { get; set; }
+
+    [Parameter] public bool ShowAvatar { get; set; } = true;
+
+    /// <summary>A reply composer sits at the reply rail, under the comment it answers.</summary>
+    [Parameter] public bool Reply { get; set; }
+
+    [Parameter] public string TestId { get; set; } = "comment-composer";
+
+    /// <summary>Opens expanded — a reply composer exists because somebody already clicked Reply.</summary>
+    [Parameter] public bool StartOpen { get; set; }
+
+    /// <summary>What the field starts with. Set when editing, so the words are there to change.</summary>
+    [Parameter] public string? InitialText { get; set; }
+
+    [Parameter] public EventCallback<string> OnSubmit { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private int Remaining => MaxLength - _text.Length;
+
+    private bool CanSubmit => !string.IsNullOrWhiteSpace(_text) && _text.Length <= MaxLength;
+
+    protected override void OnInitialized()
+    {
+        _open = StartOpen;
+        _text = InitialText ?? string.Empty;
+    }
+
+    private void OnInput(ChangeEventArgs args)
+    {
+        _text = args.Value?.ToString() ?? string.Empty;
+    }
+
+    private async Task Submit()
+    {
+        if (!CanSubmit) return;
+        var text = _text;
+        // Cleared before the await so a slow round trip cannot be double-submitted from the
+        // same keystrokes; the host re-renders the list when it lands.
+        _text = string.Empty;
+        _open = StartOpen;
+        await OnSubmit.InvokeAsync(text);
+    }
+
+    private async Task Cancel()
+    {
+        _text = string.Empty;
+        _open = false;
+        await OnCancel.InvokeAsync();
+    }
+}
