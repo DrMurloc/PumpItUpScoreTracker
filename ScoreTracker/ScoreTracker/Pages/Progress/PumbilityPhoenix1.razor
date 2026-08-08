@@ -1,0 +1,14 @@
+@using ScoreTracker.Web.Components
+@page "/Pumbility/Phoenix1"
+@rendermode RenderModes.Interactive
+@namespace ScoreTracker.Web.Pages.Progress
+
+@* Your Phoenix 1 record priced under Phoenix 2's rules. Phoenix 2 only — the frame drops
+   both the tab and this route on Phoenix 1, where the comparison has nothing to say
+   (docs/design/pumbility-overhaul.md §5). *@
+
+<PumbilitySectionFrame Active="phoenix1">
+    <Body Context="ctx">
+        <CarryoverSection Pool="ctx.Pool" Charts="ctx.Charts"></CarryoverSection>
+    </Body>
+</PumbilitySectionFrame>

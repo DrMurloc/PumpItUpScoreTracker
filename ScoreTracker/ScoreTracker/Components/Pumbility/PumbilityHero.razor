@@ -7,10 +7,18 @@
 @* The number, then immediately the thing it has to beat. PUMBILITY is the sum of your top
    fifty, so the only way to gain is to displace the fiftieth -- and until this page that
    value was computed as a local and thrown away, leaving the mechanic invisible
-   (docs/design/pumbility-overhaul.md §3.2). *@
-<div class="pmb-hero-figure">
-    <div class="pmb-hero-value stat-display">@Page.Total.ToString("N0")</div>
-    <div class="pmb-hero-sub">@Subtitle</div>
+   (docs/design/pumbility-overhaul.md §3.2).
+
+   It is the section frame's band rather than a card of its own since the split: all three
+   pages measure from these figures, so they sit above the nav and hold across the tabs.
+   Everything in it starts at the same left edge deliberately -- the bar card used to be
+   pushed right, which reads fine on one line and strands it against the far edge with
+   nothing under it the moment the row wraps (D15). *@
+<div class="pmb-frame">
+    <div class="pmb-frame-figure">
+        <div class="pmb-hero-value stat-display">@Page.Total.ToString("N0")</div>
+        <div class="pmb-hero-sub">@Subtitle</div>
+    </div>
 
     @if (Pools.Count > 1)
     {

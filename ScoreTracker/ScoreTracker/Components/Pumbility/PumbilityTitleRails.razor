@@ -1,0 +1,134 @@
+@using System.Globalization
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@namespace ScoreTracker.Web.Components
+
+@* What the number is for. Three ladders at once -- the merged gems, Singles and Doubles --
+   because a player holds all three at the same time and hiding two behind the pool selector
+   would be worse (docs/design/pumbility-overhaul.md §3.7).
+
+   The device is the ASK. A pool is fifty charts, so a threshold is a flat per-chart value:
+   19,000 asks 380.00 of every chart you hold. That is true however you get there, which is
+   exactly why it replaced counting charts -- a count has to assume a play order, and the gain
+   column on the Play tab is deliberately independent of one (D13). *@
+@if (Rails.Count > 0)
+{
+    <div class="pmb-rails">
+        @foreach (var rail in Rails)
+        {
+            <div class="pmb-rail">
+                <div class="pmb-rail-top">
+                    <span class="pmb-rail-pool @PoolClass(rail.Pool)">@PoolLabel(rail.Pool)</span>
+                    <span class="pmb-rail-value">@rail.Value.ToString("N0")</span>
+                    <span class="pmb-rail-have">
+                        <b>@(rail.Held ?? L["— none yet —"])</b>
+                        @if (rail.Held != null)
+                        {
+                            @string.Format(L["held since {0}"], rail.HeldThreshold.ToString("N0"))
+                        }
+                        else
+                        {
+                            @string.Format(L["{0} charts in the pool"], PoolCount)
+                        }
+                    </span>
+                </div>
+
+                @if (rail.AtTop)
+                {
+                    @* The rail says so rather than vanishing, so the section never disappears on
+                       the one player it should be congratulating. *@
+                    <div class="pmb-rail-track">
+                        <div class="pmb-rail-bar"><span class="pmb-rail-fill" style="width:100%"></span></div>
+                        <div class="pmb-rail-ends">
+                            <span>@rail.Held</span>
+                            <span class="pmb-rail-next">@L["nothing above this"]</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="pmb-rail-track">
+                        <div class="pmb-rail-bar">
+                            <span class="pmb-rail-fill" style="width:@Percent(rail.Progress)%"></span>
+                        </div>
+                        <div class="pmb-rail-ends">
+                            <span>@(rail.Held ?? L["not started"]) · @rail.HeldThreshold.ToString("N0")</span>
+                            <span class="pmb-rail-next">@rail.Next · @rail.NextThreshold!.Value.ToString("N0")</span>
+                        </div>
+                    </div>
+
+                    <div class="pmb-ask">
+                        <div class="pmb-ask-cell">
+                            <span class="pmb-ask-lbl">@string.Format(L["{0} asks"], Strip(rail.Next!))</span>
+                            <span class="pmb-ask-num">@rail.Ask.ToString("N2")</span>
+                        </div>
+                        <div class="pmb-ask-cell">
+                            <span class="pmb-ask-lbl">@L["Your charts average"]</span>
+                            <span class="pmb-ask-num">@rail.Average.ToString("N2")</span>
+                        </div>
+                        @if (rail.Bar != null)
+                        {
+                            <div class="pmb-ask-cell">
+                                <span class="pmb-ask-lbl">@L["Your bar"]</span>
+                                <span class="pmb-ask-num">@rail.Bar.Value.ToString("N0")</span>
+                            </div>
+                        }
+                        <div class="pmb-ask-cell pmb-ask-gap">
+                            <span class="pmb-ask-lbl">@L["On every chart"]</span>
+                            <span class="pmb-ask-num">+@rail.PerChartGap.ToString("N2")</span>
+                        </div>
+                    </div>
+
+                    <p class="pmb-rail-say">
+                        @if (rail.ExampleLevel != null && rail.ExampleGrade != null)
+                        {
+                            <b>
+                                @string.Format(L["{0} a chart is a {1} at {2}."], rail.Ask.ToString("N0"),
+                                    Bubble(rail.Pool, rail.ExampleLevel.Value), rail.ExampleGrade.Value.GetName())
+                            </b>
+                            <text> </text>
+                        }
+                        @string.Format(L["You are {0} short across the pool."], rail.Gap.ToString("N0"))
+                    </p>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<TitleRail> Rails { get; set; } = Array.Empty<TitleRail>();
+
+    /// <summary>How many charts the pool actually holds, for a rail with no rung reached yet.</summary>
+    [Parameter] public int PoolCount { get; set; }
+
+    private static string Percent(double fraction) =>
+        (Math.Clamp(fraction, 0, 1) * 100).ToString("0.#", CultureInfo.InvariantCulture);
+
+    private string PoolLabel(PumbilityPool pool) => pool switch
+    {
+        PumbilityPool.Singles => L["Singles"],
+        PumbilityPool.Doubles => L["Doubles"],
+        _ => L["Total"]
+    };
+
+    private static string PoolClass(PumbilityPool pool) => pool switch
+    {
+        PumbilityPool.Singles => "pmb-rail-s",
+        PumbilityPool.Doubles => "pmb-rail-d",
+        _ => string.Empty
+    };
+
+    private static string Bubble(PumbilityPool pool, DifficultyLevel level) =>
+        (pool == PumbilityPool.Doubles ? "D" : "S") + (int)level;
+
+    // The pool prefix is redundant on a rail already labelled by its pool: "[S] EXPERT LV.4"
+    // reads as "EXPERT LV.4" beside a Singles chip. The merged gems and the two MASTER
+    // capstones carry no prefix and pass through untouched.
+    private static string Strip(string title) =>
+        title.StartsWith("[S] ", StringComparison.Ordinal) || title.StartsWith("[D] ", StringComparison.Ordinal)
+            ? title[4..]
+            : title;
+}
