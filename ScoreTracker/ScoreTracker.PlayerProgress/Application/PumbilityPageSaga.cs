@@ -154,12 +154,12 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     </para>
         /// </summary>
         private static IReadOnlyList<ProjectedTitle> ProjectedTitles(
-            IReadOnlyList<RecordedPhoenixScore> everyScore, IReadOnlyDictionary<Guid, Chart> charts,
+            IReadOnlyList<RecordedPhoenixScore> everyScore, Func<Guid, Chart> priced,
             ScoringConfiguration p2Scoring)
         {
             var repriced = everyScore
-                .Select(s => (Chart: charts[s.ChartId],
-                    Value: p2Scoring.GetScore(charts[s.ChartId], s.Score!.Value,
+                .Select(s => (Chart: priced(s.ChartId),
+                    Value: p2Scoring.GetScore(priced(s.ChartId), s.Score!.Value,
                         s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)))
                 .Where(x => x.Value > 0)
                 .ToArray();
@@ -399,11 +399,21 @@ namespace ScoreTracker.PlayerProgress.Application
             var phoenixCharts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix), cancellationToken))
                 .ToDictionary(c => c.Id);
             var phoenix2Charts = (await _mediator.Send(new GetChartsQuery(MixEnum.Phoenix2), cancellationToken))
-                .Select(c => c.Id)
-                .ToHashSet();
+                .ToDictionary(c => c.Id);
 
             var p1Scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false);
             var p2Scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+
+            // Phoenix 2 RERATED the charts it inherited rather than restepping them, so one
+            // chart id carries a different level in each mix. The repricing has to read the
+            // level the chart carries HERE: priced from Phoenix 1, a downrated chart pays a
+            // base it no longer commands and an uprated one is short-changed by the same
+            // arithmetic. A chart with no Phoenix 2 row has no Phoenix 2 level to read, so it
+            // keeps its own — it still counts toward the pool, and it can never be a target.
+            Chart Priced(Guid chartId)
+            {
+                return phoenix2Charts.TryGetValue(chartId, out var here) ? here : phoenixCharts[chartId];
+            }
 
             var everyPhoenixScore =
                 (await _scores.GetBestScores(MixEnum.Phoenix, request.UserId, cancellationToken))
@@ -419,9 +429,10 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Where(s => s is { Score: not null, IsBroken: false })
                 .ToDictionary(s => s.ChartId, s => s.Score!.Value);
 
-            // The repricing: every Phoenix 1 score run through Phoenix 2's formula, which pays
-            // a Singles chart one level up the base curve and zeroes anything under level 10.
-            // That rule alone can turn a doubles pool into a singles pool.
+            // The repricing: every Phoenix 1 score run through Phoenix 2's formula at the level
+            // the chart carries in Phoenix 2, which pays a Singles chart one level up the base
+            // curve and zeroes anything under level 10. The singles bump alone can turn a
+            // doubles pool into a singles pool.
             // Repriced to CandidateDepth, sliced at PoolSize. Every score was already being
             // repriced before the Take, so reading past the fiftieth costs nothing: the pool
             // figures below still come from the first fifty and mean exactly what they did.
@@ -433,8 +444,8 @@ namespace ScoreTracker.PlayerProgress.Application
             // fifty with zeros, which drives the bar this pool would set to zero and miscounts
             // the singles/doubles split the panel is built to show.
             var ranked = phoenixScores
-                .Select(s => (Score: s, Chart: phoenixCharts[s.ChartId],
-                    Value: p2Scoring.GetScore(phoenixCharts[s.ChartId], s.Score!.Value,
+                .Select(s => (Score: s, Chart: Priced(s.ChartId),
+                    Value: p2Scoring.GetScore(Priced(s.ChartId), s.Score!.Value,
                         s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)))
                 .Where(x => x.Value > 0)
                 .OrderByDescending(x => x.Value)
@@ -457,7 +468,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     x.Score.Score!.Value.LetterGradeFor(MixEnum.Phoenix),
                     Math.Round(x.Value, 2),
                     phoenix2Scores.TryGetValue(x.Score.ChartId, out var here) ? here : null,
-                    phoenix2Charts.Contains(x.Score.ChartId));
+                    phoenix2Charts.ContainsKey(x.Score.ChartId));
             }
 
             var entries = repriced.Select(Entry).ToArray();
@@ -471,7 +482,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 repriced.Length >= PoolSize ? Math.Round(repriced.Min(x => x.Value), 2) : 0,
                 phoenix2Scores.Count,
                 entries.Count(e => e.Phoenix2Score == null),
-                ProjectedTitles(everyPhoenixScore, phoenixCharts, p2Scoring),
+                ProjectedTitles(everyPhoenixScore, Priced, p2Scoring),
                 repriced.Count(x => x.Chart.Type == ChartType.Single),
                 repriced.Count(x => x.Chart.Type == ChartType.Double),
                 phoenix1Pool.Count(x => x.Chart.Type == ChartType.Single),

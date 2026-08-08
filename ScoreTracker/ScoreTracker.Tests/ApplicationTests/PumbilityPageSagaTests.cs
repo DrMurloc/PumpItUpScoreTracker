@@ -235,6 +235,29 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
+    public async Task ARepricedScoreIsPricedAtThePhoenix2LevelNotThePhoenix1One()
+    {
+        // Phoenix 2 rerated the charts it inherited rather than restepping them, so the level
+        // a score was set against is not the level it is worth today. Priced from Phoenix 1, a
+        // downrated chart pays a base it no longer commands and floats up the suggestions on
+        // the strength of a rating the mix has taken away from it (owner, Spooky Macaron S23 →
+        // S22, reading +372 where the chart is worth +365).
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 23, 55, 985_000);
+        var downrated = ctx.FirstPhoenixChart();
+        ctx.WithPhoenix2Level(downrated, 22);
+
+        var carry = await ctx.Saga.Handle(new ProjectPhoenix2CarryoverQuery(ctx.UserId), CancellationToken.None);
+
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var row = carry.Entries.Concat(carry.Candidates).Single(e => e.ChartId == downrated);
+        var here = scoring.GetScore(ChartType.Single, 22, row.Phoenix1Score, PhoenixPlate.MarvelousGame);
+        var there = scoring.GetScore(ChartType.Single, 23, row.Phoenix1Score, PhoenixPlate.MarvelousGame);
+
+        Assert.True(here < there, "the two levels must disagree or this asserts nothing");
+        Assert.Equal(here, row.Phoenix2Value, 2);
+    }
+
+    [Fact]
     public async Task TheCarryoverSaysWhereTheRecordWouldLandOnAllThreeLadders()
     {
         var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 24, 55, 995_000);
@@ -509,6 +532,7 @@ public sealed class PumbilityPageSagaTests
         private readonly List<Chart> _charts = new();
         private readonly Dictionary<Guid, RecordedPhoenixScore> _myBests = new();
         private readonly HashSet<Guid> _phoenix2Charts = new();
+        private readonly Dictionary<Guid, int> _phoenix2Levels = new();
         private readonly Dictionary<Guid, RecordedPhoenixScore> _phoenix2Scores = new();
         private readonly Dictionary<Guid, PhoenixScore> _projected = new();
         private readonly Dictionary<Guid, int> _gains = new();
@@ -520,8 +544,15 @@ public sealed class PumbilityPageSagaTests
                 .ReturnsAsync((IRequest<IEnumerable<Chart>> request, CancellationToken _) =>
                 {
                     var mix = ((GetChartsQuery)request).Mix;
+                    // Phoenix 2 rerated charts rather than restepping them, so the same id can
+                    // come back at a different level per mix — which is the whole reason the
+                    // catalog is asked for per mix rather than once.
                     return mix == MixEnum.Phoenix2
-                        ? _charts.Where(c => _phoenix2Charts.Contains(c.Id)).ToArray()
+                        ? _charts.Where(c => _phoenix2Charts.Contains(c.Id))
+                            .Select(c => _phoenix2Levels.TryGetValue(c.Id, out var level)
+                                ? c with { Level = level, Mix = MixEnum.Phoenix2 }
+                                : c with { Mix = MixEnum.Phoenix2 })
+                            .ToArray()
                         : _charts.ToArray();
                 });
             Mediator.Setup(m => m.Send(It.IsAny<GetTop50ForPlayerQuery>(), It.IsAny<CancellationToken>()))
@@ -589,6 +620,13 @@ public sealed class PumbilityPageSagaTests
 
         /// <summary>The first Phoenix 1 chart seeded — something for both sources to contest.</summary>
         public Guid FirstPhoenixChart() => _myBests.Keys.First();
+
+        /// <summary>Rerates a chart for Phoenix 2, which is what Phoenix 2 did to 338 of them.</summary>
+        public PageContext WithPhoenix2Level(Guid chartId, int level)
+        {
+            _phoenix2Levels[chartId] = level;
+            return this;
+        }
 
         /// <summary>What the player holds in Phoenix 2 on a chart they also played in Phoenix 1.</summary>
         public PageContext WithPhoenix2Score(Guid chartId, int score, bool isBroken = false)
