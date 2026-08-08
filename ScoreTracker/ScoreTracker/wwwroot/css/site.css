@@ -13379,15 +13379,19 @@ details.pmb-fold > summary:focus-visible {
 /* --- the patience card: sitewide, for waits a page cannot shorten --- */
 /* Lives here rather than in a Razor <style> block, which is page-scoped — a shared component
    styled that way renders unstyled on every other page that uses it. */
+/* Full width of whatever it is dropped into, with its contents centred: it stands in for a
+   whole region rather than sitting beside one, so anything less than the full width reads as
+   a second thing still loading next to the thing that is telling you so. */
 .patience-card {
     background: var(--mix-surface);
     border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
     border-radius: 6px;
-    padding: 14px 16px 16px;
+    padding: 28px 16px 30px;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
+    text-align: center;
     gap: 14px;
 }
 
@@ -13464,14 +13468,6 @@ details.pmb-fold > summary:focus-visible {
     background: color-mix(in srgb, var(--mix-ink) 8%, transparent);
     border-radius: 6px;
     animation: pmb-pulse 1.4s ease-in-out infinite;
-}
-
-.pmb-skeleton-figure {
-    min-height: 230px;
-}
-
-.pmb-skeleton-curve {
-    min-height: 230px;
 }
 
 .pmb-skeleton-targets {
