@@ -33,8 +33,15 @@ internal sealed class PlayerRatingSaga :
     ///     (this saga no longer consumes the raw score event; ordering comes from
     ///     pipeline shape).
     /// </summary>
+    /// <summary>
+    ///     <paramref name="Changes" /> carries each chart's score on BOTH sides of the batch, not
+    ///     just which charts moved: the old scores are what let the old PUMBILITY pool be priced
+    ///     and the batch's movement split across the charts that caused it. Nothing else can
+    ///     supply them afterwards — by the time the saga runs, the new scores are the record.
+    /// </summary>
     public sealed record CaptureSessionStats(
-        Guid UserId, MixEnum Mix, IReadOnlyList<Guid> ChangedChartIds, Guid? SessionId)
+        Guid UserId, MixEnum Mix, IReadOnlyList<Guid> ChangedChartIds, Guid? SessionId,
+        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? Changes = null)
         : IRequest<SessionStatsResult>;
 
     public sealed record SessionStatsResult(
@@ -82,7 +89,7 @@ internal sealed class PlayerRatingSaga :
         CancellationToken cancellationToken)
     {
         var result = await RecalculateCore(new RecalculateStatsCommand(request.UserId, request.Mix,
-            request.ChangedChartIds, request.SessionId), cancellationToken);
+            request.ChangedChartIds, request.SessionId), request.Changes, cancellationToken);
         await Handle(new RecalculatePumbilityCommand(request.UserId, request.ChangedChartIds.ToArray(),
             request.Mix), cancellationToken);
         return result;
@@ -117,8 +124,10 @@ internal sealed class PlayerRatingSaga :
     public async Task Handle(RecalculateStatsCommand request, CancellationToken cancellationToken)
     {
         // The public recalc entry (admin tools, scheduled maintenance) — the session
-        // pipeline goes through CaptureSessionStats, which needs the core's outputs.
-        await RecalculateCore(request, cancellationToken);
+        // pipeline goes through CaptureSessionStats, which needs the core's outputs. No change
+        // set here, so no old scores, so no per-chart PUMBILITY split: an admin recalculation
+        // already writes no highlight flags for the same reason.
+        await RecalculateCore(request, null, cancellationToken);
     }
 
     public async Task<IEnumerable<RecordedPhoenixScore>> Handle(GetTop50CompetitiveQuery request,
@@ -168,6 +177,7 @@ internal sealed class PlayerRatingSaga :
     }
 
     private async Task<SessionStatsResult> RecalculateCore(RecalculateStatsCommand request,
+        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? changes,
         CancellationToken cancellationToken)
     {
         var mix = request.Mix;
@@ -255,8 +265,9 @@ internal sealed class PlayerRatingSaga :
 
         newStats = await EstimateOfficialRanks(mix, newStats, cancellationToken);
         await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
+        var gains = PumbilityGains(request, changes, scores, recorded, charts, mix, scoring);
         var improvers = await FlagCompetitiveImprovers(request, oldStats, newStats, competitiveScores, charts,
-            cancellationToken);
+            gains, cancellationToken);
         var milestones = await CaptureRatingMilestones(request, oldStats, newStats, cancellationToken);
         if (newStats.SkillRating > oldStats.SkillRating || newStats.SinglesRating > oldStats.SinglesRating ||
             newStats.DoublesRating > oldStats.DoublesRating || newStats.ClearCount > oldStats.ClearCount ||
@@ -422,13 +433,23 @@ internal sealed class PlayerRatingSaga :
     // the OLD level). Written here because this saga owns the old-vs-new numbers; the
     // orchestrator merges the returned ids into the snapshot event's flags, so the ⬆
     // badge rides the Discord card instead of trailing it.
+    //
+    // The flagged rows carry that OLD level with them. It is the number the comparison was
+    // made against, it is per-batch, and nothing downstream can recover it — the stats row
+    // remembers only where the session ended. The score's own competitive level stays a pure
+    // function, so storing the one number is what lets a row read "23.6 (+0.4)".
+    //
+    // PUMBILITY gains ride the same write. They are not tied to the improver flag and reach
+    // charts it never touches, so any chart with a gain and no flag still gets a row.
     private async Task<IReadOnlyList<Guid>> FlagCompetitiveImprovers(RecalculateStatsCommand request,
         PlayerStatsRecord oldStats, PlayerStatsRecord newStats, ChartCompetitive[] competitiveScores,
-        Dictionary<Guid, Chart> charts, CancellationToken cancellationToken)
+        Dictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, int> gains,
+        CancellationToken cancellationToken)
     {
         if (request.ChangedChartIds == null || request.SessionId == null) return Array.Empty<Guid>();
         var changed = request.ChangedChartIds.ToHashSet();
-        var writes = new List<ScoreHighlightWrite>();
+        var improvers = new HashSet<Guid>();
+        var baselines = new Dictionary<Guid, double>();
         foreach (var (type, oldLevel, improved) in new[]
                  {
                      (ChartType.Single, oldStats.SinglesCompetitiveLevel,
@@ -438,14 +459,75 @@ internal sealed class PlayerRatingSaga :
                  })
         {
             if (!improved) continue;
-            writes.AddRange(competitiveScores
-                .Where(s => s.Type == type && changed.Contains(s.ChartId) && s.CompetitiveLevel >= oldLevel)
-                .Select(s => new ScoreHighlightWrite(s.ChartId, request.SessionId, _dateTime.Now,
-                    HighlightFlags.CompetitiveImprover, charts[s.ChartId].Level, null)));
+            foreach (var s in competitiveScores.Where(s =>
+                         s.Type == type && changed.Contains(s.ChartId) && s.CompetitiveLevel >= oldLevel))
+            {
+                improvers.Add(s.ChartId);
+                baselines[s.ChartId] = oldLevel;
+            }
         }
 
-        if (writes.Count > 0)
+        var writes = improvers.Select(chartId => new ScoreHighlightWrite(chartId, request.SessionId,
+                _dateTime.Now, HighlightFlags.CompetitiveImprover, charts[chartId].Level, null,
+                new HighlightDetail(CompetitiveBaseline: baselines[chartId],
+                    PumbilityGain: gains.GetValueOrDefault(chartId) is var g && g > 0 ? g : null)))
+            .Concat(gains.Where(g => !improvers.Contains(g.Key))
+                .Select(g => new ScoreHighlightWrite(g.Key, request.SessionId, _dateTime.Now,
+                    HighlightFlags.None, charts[g.Key].Level, null,
+                    new HighlightDetail(PumbilityGain: g.Value))))
+            .ToArray();
+
+        if (writes.Length > 0)
             await _highlights.UpsertFlags(request.Mix, request.UserId, writes, cancellationToken);
-        return writes.Select(w => w.ChartId).Distinct().ToArray();
+        return improvers.ToArray();
+    }
+
+    /// <summary>
+    ///     What each changed chart added to the combined PUMBILITY pool. Needs the batch's old
+    ///     scores, so an admin recalculation (no change set) reports nothing rather than
+    ///     pretending every chart gained its whole value.
+    ///     <para>
+    ///         ⚠ The old value is priced with the chart's CURRENT plate. On Phoenix that is exact,
+    ///         because its formula never reads the plate. On Phoenix 2 it is exact unless the
+    ///         plate improved in the same play that raised the score, where the old side is
+    ///         priced a little high and the gain reads a little low. Carrying the old plate
+    ///         through the event is what would close that, and the event does not have it.
+    ///     </para>
+    /// </summary>
+    private static IReadOnlyDictionary<Guid, int> PumbilityGains(RecalculateStatsCommand request,
+        IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? changes, ChartRating[] scores,
+        RecordedPhoenixScore[] recorded, Dictionary<Guid, Chart> charts, MixEnum mix,
+        ScoringConfiguration scoring)
+    {
+        if (changes == null || changes.Count == 0 || request.SessionId == null)
+            return new Dictionary<Guid, int>();
+
+        var oldScores = changes.GroupBy(c => c.ChartId)
+            .ToDictionary(g => g.Key, g => g.Select(c => c.OldScore).Max());
+        var bests = recorded.ToDictionary(r => r.ChartId);
+
+        double PriceAt(Guid chartId, int score)
+        {
+            var chart = charts[chartId];
+            if (mix != MixEnum.Phoenix2)
+                return scoring.GetScore(chart.Type, chart.Level, PhoenixScore.From(score));
+
+            var plate = bests.TryGetValue(chartId, out var best) ? best.Plate : null;
+            return scoring.GetScore(chart.Type, chart.Level, PhoenixScore.From(score),
+                plate ?? PhoenixPlate.RoughGame, false);
+        }
+
+        // The pool the ceremony band headlines: non-broken, no CO-OP, top 50 — the same set
+        // SkillRating sums, so the split adds up to the movement the band already reports.
+        var priced = scores
+            .Where(s => !s.IsBroken && s.Type != ChartType.CoOp)
+            .Select(s => new PumbilityAttribution.Priced(s.ChartId,
+                !oldScores.TryGetValue(s.ChartId, out var old) ? s.Rating
+                : old == null ? null
+                : PriceAt(s.ChartId, old.Value),
+                s.Rating))
+            .ToArray();
+
+        return PumbilityAttribution.GainsPerChart(priced, 50);
     }
 }
