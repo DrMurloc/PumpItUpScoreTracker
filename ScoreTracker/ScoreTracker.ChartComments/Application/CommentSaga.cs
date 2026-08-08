@@ -28,7 +28,8 @@ internal sealed class CommentSaga :
     IRequestHandler<AcceptCommentTermsCommand>,
     IRequestHandler<GetChartCommentsQuery, CommentPageRecord>,
     IRequestHandler<GetMyCommentScopesQuery, IReadOnlyList<CommentScopeRecord>>,
-    IRequestHandler<GetCommentConsentQuery, CommentConsentRecord>
+    IRequestHandler<GetCommentConsentQuery, CommentConsentRecord>,
+    IRequestHandler<GetMyCommentTextQuery, string?>
 {
     /// <summary>
     ///     Bumping this re-prompts everyone who agreed to an older wording, which is the whole
@@ -237,6 +238,22 @@ internal sealed class CommentSaga :
                             && consent?.ConsentedToPublicIdentityAt == null;
 
         return new CommentConsentRecord(needsTerms, needsIdentity);
+    }
+
+    /// <summary>
+    ///     The one place raw comment text leaves the vertical, and only ever your own. Silent null
+    ///     rather than a refusal: this answers "can I edit this", and a thrown exception would make
+    ///     a missing comment and somebody else's comment look different to a caller that has no
+    ///     business telling them apart.
+    /// </summary>
+    public async Task<string?> Handle(GetMyCommentTextQuery request, CancellationToken cancellationToken)
+    {
+        if (!_currentUser.IsLoggedIn) return null;
+        var comment = await _comments.GetById(request.CommentId, cancellationToken);
+
+        return comment != null && !comment.IsDeleted && comment.UserId == _currentUser.User.Id
+            ? comment.Text
+            : null;
     }
 
     // ----- helpers -----------------------------------------------------------------------------

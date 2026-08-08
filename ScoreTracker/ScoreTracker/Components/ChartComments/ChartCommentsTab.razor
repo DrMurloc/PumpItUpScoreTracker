@@ -78,9 +78,17 @@ else
 
     @foreach (var root in _page.Roots)
     {
-        <CommentRow Comment="root" IsNote="IsNotes" CanInteract="CurrentUser.IsLoggedIn"
-                    OnVote="Vote" OnReply="StartReply" OnEdit="StartEdit" OnDelete="Delete"
-                    OnRemove="Remove" OnUntrustedLink="ShowInterstitial" @key="root.Id"></CommentRow>
+        @if (_editing == root.Id)
+        {
+            @EditComposer(root)
+        }
+        else
+        {
+            <CommentRow Comment="root" IsNote="IsNotes" CanInteract="CurrentUser.IsLoggedIn"
+                        IsFocused="@(FocusCommentId == root.Id)"
+                        OnVote="Vote" OnReply="StartReply" OnEdit="StartEdit" OnDelete="Delete"
+                        OnRemove="Remove" OnUntrustedLink="ShowInterstitial" @key="root.Id"></CommentRow>
+        }
         @if (_replyingTo == root.Id)
         {
             <CommentComposer Reply="true" StartOpen="true" Placeholder="@L["Reply…"]"
@@ -90,9 +98,17 @@ else
         }
         @foreach (var reply in root.Replies)
         {
-            <CommentRow Comment="reply" IsReply="true" CanInteract="CurrentUser.IsLoggedIn"
-                        OnVote="Vote" OnEdit="StartEdit" OnDelete="Delete" OnRemove="Remove"
-                        OnUntrustedLink="ShowInterstitial" @key="reply.Id"></CommentRow>
+            @if (_editing == reply.Id)
+            {
+                @EditComposer(reply, true)
+            }
+            else
+            {
+                <CommentRow Comment="reply" IsReply="true" CanInteract="CurrentUser.IsLoggedIn"
+                            IsFocused="@(FocusCommentId == reply.Id)"
+                            OnVote="Vote" OnEdit="StartEdit" OnDelete="Delete" OnRemove="Remove"
+                            OnUntrustedLink="ShowInterstitial" @key="reply.Id"></CommentRow>
+            }
         }
     }
 
@@ -309,6 +325,13 @@ else
         opacity: .55;
     }
 
+    /* The comment a moderation queue row named. A left bar rather than a background wash: it
+       survives a theme that has no spare surface colour, and it does not fight the reply rail. */
+    .cmt-focused {
+        border-left: 3px solid var(--mud-palette-primary);
+        padding-left: 10px;
+    }
+
     .cmt-removed {
         font-size: .78rem;
         font-style: italic;
@@ -362,6 +385,7 @@ else
     private CommentSort _sort = CommentSort.Top;
     private Guid? _replyingTo;
     private Guid _editing = Guid.Empty;
+    private string? _editingText;
     private int _take = PageSize;
     private bool _loading = true;
     private (Guid Chart, CommentAudience Audience, CommentSort Sort, int Take)? _loadedFor;
@@ -467,9 +491,40 @@ else
         _replyingTo = _replyingTo == comment.Id ? null : comment.Id;
     }
 
-    private void StartEdit(CommentRecord comment)
+    /// <summary>
+    ///     Swaps the row for a composer holding the words as they stand. The text comes back through
+    ///     its own author-gated query rather than riding on the render record, so the only raw
+    ///     comment string Web ever holds is one it asked for by name and is about to put in a
+    ///     textarea.
+    /// </summary>
+    private async Task StartEdit(CommentRecord comment)
     {
-        _editing = comment.Id;
+        _editingText = await Mediator.Send(new GetMyCommentTextQuery(comment.Id));
+        // Null means it is not yours, or no longer there. Either way there is nothing to open.
+        _editing = _editingText == null ? Guid.Empty : comment.Id;
+    }
+
+    private RenderFragment EditComposer(CommentRecord comment, bool reply = false)
+    {
+        return @<CommentComposer Reply="reply" StartOpen="true" InitialText="@_editingText"
+                                 Placeholder="@L["Add a comment…"]" SubmitLabel="@L["Save"]"
+                                 AvatarUrl="@AvatarUrl" ShowAvatar="!IsNotes" TestId="cmt-edit-composer"
+                                 OnSubmit="@(text => SaveEdit(comment.Id, text))"
+                                 OnCancel="CancelEdit"></CommentComposer>;
+    }
+
+    private Task SaveEdit(Guid commentId, string text)
+    {
+        _editing = Guid.Empty;
+        _editingText = null;
+
+        return Dispatch(new EditCommentCommand(commentId, text));
+    }
+
+    private void CancelEdit()
+    {
+        _editing = Guid.Empty;
+        _editingText = null;
     }
 
     private Task Vote(CommentRecord comment)

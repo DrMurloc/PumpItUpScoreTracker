@@ -78,6 +78,9 @@
     /// <summary>Opens expanded — a reply composer exists because somebody already clicked Reply.</summary>
     [Parameter] public bool StartOpen { get; set; }
 
+    /// <summary>What the field starts with. Set when editing, so the words are there to change.</summary>
+    [Parameter] public string? InitialText { get; set; }
+
     [Parameter] public EventCallback<string> OnSubmit { get; set; }
 
     [Parameter] public EventCallback OnCancel { get; set; }
@@ -89,6 +92,7 @@
     protected override void OnInitialized()
     {
         _open = StartOpen;
+        _text = InitialText ?? string.Empty;
     }
 
     private void OnInput(ChangeEventArgs args)

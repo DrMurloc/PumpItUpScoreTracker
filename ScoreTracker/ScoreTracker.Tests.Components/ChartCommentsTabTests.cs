@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Threading;
 using Bunit;
 using MediatR;
@@ -186,6 +187,39 @@ public sealed class ChartCommentsTabTests : TestContext
         // The parsed host, never the link text — the text is the author's to choose.
         var interstitial = page.Find("[data-testid='cmt-interstitial']");
         Assert.Contains("stepcharts.example.net", interstitial.TextContent);
+    }
+
+    [Fact]
+    public async Task EditOpensAComposerHoldingTheWordsAsTheyStand()
+    {
+        // The text arrives through its own author-gated query rather than riding on the render
+        // record, so this also pins that the tab actually asks for it.
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommentTextQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("the drill at 2:01");
+        var mine = Comment("the drill at 2:01", isAuthor: true);
+        Page(mine);
+        var page = Render();
+
+        // Invoked rather than clicked: the ⋯ is a MudMenu, which is a popover bUnit cannot open.
+        // What is worth pinning is the wiring behind it, which used to set a field nobody read.
+        var row = page.FindComponent<CommentRow>();
+        await page.InvokeAsync(() => row.Instance.OnEdit.InvokeAsync(mine));
+
+        var composer = page.Find("[data-testid='cmt-edit-composer']");
+        Assert.Equal("the drill at 2:01", composer.GetAttribute("value"));
+    }
+
+    [Fact]
+    public void AFocusedCommentIsMarkedRatherThanScrolledTo()
+    {
+        var comment = Comment("the reported one");
+        Page(comment);
+
+        var page = RenderComponent<ChartCommentsTab>(p => p
+            .Add(c => c.ChartId, Chart).Add(c => c.Active, true)
+            .Add(c => c.FocusCommentId, comment.Id));
+
+        Assert.Single(page.FindAll(".cmt-focused"));
     }
 
     [Fact]

@@ -6,7 +6,7 @@
    stub. A note drops the avatar entirely — every one of them is yours, so the column is 44px
    of nothing, and losing it makes a note unmistakable for a comment at a glance. *@
 
-<div class="cmt @(IsReply ? "cmt-reply" : null) @(IsNote ? "cmt-note" : null)"
+<div class="cmt @(IsReply ? "cmt-reply" : null) @(IsNote ? "cmt-note" : null) @(IsFocused ? "cmt-focused" : null)"
      data-testid="@($"comment-{Comment.Id}")" id="@($"comment-{Comment.Id}")">
     @if (!IsNote)
     {
@@ -90,6 +90,13 @@
 
     /// <summary>A personal note: no author, no vote, no reply, no shield.</summary>
     [Parameter] public bool IsNote { get; set; }
+
+    /// <summary>
+    ///     The comment a moderation queue row named. Marked rather than scrolled to: an anchor is
+    ///     what the row's id is for, and moving somebody's viewport is a bigger promise than
+    ///     "this is the one".
+    /// </summary>
+    [Parameter] public bool IsFocused { get; set; }
 
     [Parameter] public bool CanInteract { get; set; }
 
