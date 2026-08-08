@@ -1,4 +1,5 @@
 using Bunit;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -380,7 +381,7 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     [Fact]
     public void TheCarryoverNamesTheFlipOnlyWhenThePoolActuallyChangedHands()
     {
-        var flipped = new Phoenix2CarryoverRecord(18041, 358, 15, 49, Array.Empty<Guid>(),
+        var flipped = new Phoenix2CarryoverRecord(18041, 358, 15, 49, Array.Empty<ProjectedTitle>(),
             32, 18, 4, 46, Array.Empty<CarryoverEntry>(), Array.Empty<CarryoverEntry>());
         var steady = flipped with { SinglesInPool = 4, DoublesInPool = 46 };
 
@@ -394,19 +395,40 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     [Fact]
-    public void AVanishedChartIsReportedAsAFactAndNamed()
+    public void TheCarryoverChipsSayWouldRatherThanClaimingATitleHeld()
     {
-        var lost = NewChart(ChartType.Single, 22);
-        var carry = new Phoenix2CarryoverRecord(18041, 358, 15, 49, new[] { lost.Id },
+        // These and the rails on Your Pool say opposite things about the same three ladders at
+        // a launch, so the conditional wording and the pool value beside each chip are what
+        // keeps them apart (§8.2).
+        var carry = new Phoenix2CarryoverRecord(18041, 358, 15, 49, new[]
+            {
+                new ProjectedTitle(PumbilityPool.Total, 18041, "[P.B] RED BERYL", 19000),
+                new ProjectedTitle(PumbilityPool.Singles, 17969, "[S] EXPERT LV.3", 18100),
+                new ProjectedTitle(PumbilityPool.Doubles, 17864, null, 5000)
+            },
             32, 18, 4, 46, Array.Empty<CarryoverEntry>(), Array.Empty<CarryoverEntry>());
 
         var cut = RenderComponent<CarryoverPanel>(p => p
-            .Add(x => x.Carryover, carry)
-            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [lost.Id] = lost }));
+            .Add(x => x.Carryover, carry).Add(x => x.Charts, new Dictionary<Guid, Chart>()));
 
-        var fact = cut.Find(".pmb-fact-warn");
-        Assert.Contains("No Phoenix 2 chart", fact.TextContent);
-        Assert.Contains(lost.Song.Name.ToString(), fact.TextContent);
+        // A ladder the record does not reach yet gets no chip rather than an empty one.
+        Assert.Equal(2, cut.FindAll(".pmb-chip").Count);
+        Assert.Contains("would land you", cut.Find(".pmb-lands-lbl").TextContent);
+        Assert.Contains("18,041", cut.Find(".pmb-chip-m").TextContent);
+    }
+
+    [Fact]
+    public void TheUnplayableChartTileIsGone()
+    {
+        // Cut for saying something nobody can act on. Nothing renders it any more, and nothing
+        // should start.
+        var carry = new Phoenix2CarryoverRecord(18041, 358, 15, 49, Array.Empty<ProjectedTitle>(),
+            32, 18, 4, 46, Array.Empty<CarryoverEntry>(), Array.Empty<CarryoverEntry>());
+
+        var cut = RenderComponent<CarryoverPanel>(p => p
+            .Add(x => x.Carryover, carry).Add(x => x.Charts, new Dictionary<Guid, Chart>()));
+
+        Assert.Empty(cut.FindAll(".pmb-fact-warn"));
     }
 
     // ------------------------------------------------------------------ helpers

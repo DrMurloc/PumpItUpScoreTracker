@@ -13303,8 +13303,57 @@ span.ct-console-pick { cursor: default; }
     margin-top: 2px;
 }
 
-.pmb-fact-warn .pmb-fact-num {
-    color: var(--mix-accent);
+/* Where a repriced record would land on each ladder. Never a title held — the label says
+   "would", and every chip carries the pool value that put it there (section 8.2). */
+.pmb-lands {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pmb-lands-lbl {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-lands-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pmb-chip {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 6px 11px;
+    border-radius: 4px;
+    background: var(--mix-surface-muted);
+    border: 1px solid color-mix(in srgb, var(--mix-primary) 35%, transparent);
+    min-width: 0;
+}
+
+.pmb-chip-t {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .05em;
+    color: var(--mix-primary);
+    white-space: nowrap;
+}
+
+.pmb-chip-m {
+    font-size: 11px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 /* --- the patience card: sitewide, for waits a page cannot shorten --- */

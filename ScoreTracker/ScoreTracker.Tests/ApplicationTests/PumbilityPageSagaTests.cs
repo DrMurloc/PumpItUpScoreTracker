@@ -220,14 +220,35 @@ public sealed class PumbilityPageSagaTests
     }
 
     [Fact]
-    public async Task AChartWithNoPhoenix2AppearanceIsAFactNotATarget()
+    public async Task AChartWithNoPhoenix2AppearanceIsNeverATarget()
     {
+        // You cannot go and play it. It used to be counted in a fact tile as well, which the
+        // owner cut for saying something nobody can act on — so the only claim left is this one.
         var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 22, 55, 985_000, availableInPhoenix2: false);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+        var carry = await ctx.Saga.Handle(new ProjectPhoenix2CarryoverQuery(ctx.UserId), CancellationToken.None);
+
+        Assert.All(carry.Entries, e => Assert.False(e.AvailableInPhoenix2));
+        Assert.Empty(page.Targets);
+    }
+
+    [Fact]
+    public async Task TheCarryoverSaysWhereTheRecordWouldLandOnAllThreeLadders()
+    {
+        var ctx = new PageContext().WithPhoenixScores(ChartType.Single, 24, 55, 995_000);
 
         var carry = await ctx.Saga.Handle(new ProjectPhoenix2CarryoverQuery(ctx.UserId), CancellationToken.None);
 
-        Assert.NotEmpty(carry.Unavailable);
-        Assert.All(carry.Entries, e => Assert.False(e.AvailableInPhoenix2));
+        // Always all three, whatever pool was asked for: the argument is what the whole record
+        // is worth here, and at a launch this is the only gem a player sees beside their name.
+        Assert.Equal(3, carry.ProjectedTitles.Count);
+        var singles = carry.ProjectedTitles.Single(t => t.Pool == PumbilityPool.Singles);
+        Assert.Equal(carry.Projected, singles.Value, 2);
+        Assert.NotNull(singles.Title);
+        // The doubles pool is empty, so it lands nowhere rather than inventing a rung.
+        Assert.Null(carry.ProjectedTitles.Single(t => t.Pool == PumbilityPool.Doubles).Title);
     }
 
     [Fact]
