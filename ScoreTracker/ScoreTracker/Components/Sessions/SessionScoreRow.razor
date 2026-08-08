@@ -2,9 +2,11 @@
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 
 @* One score, with whatever capture learned about it. The score's colour is its percentile
@@ -26,17 +28,7 @@
                 @foreach (var badge in Badges)
                 {
                     <MudTooltip Text="@badge.Tooltip">
-                        <span tabindex="0" class="sbd-badge">@badge.Glyph@(badge.Suffix == null ? "" : $" {badge.Suffix}")</span>
-                    </MudTooltip>
-                }
-                @if (Score.Phoenix1Gain is { } phoenix1)
-                {
-                    @* Gold, not green: the tail already carries a green delta over your previous
-                       Phoenix 2 score, and a second green number measuring a different baseline
-                       eight pixels away reads as the same fact twice. The words are what keep
-                       them apart, so "over P1" never abbreviates away. *@
-                    <MudTooltip Text="@L["The first Phoenix 2 score to beat your Phoenix 1 best"]">
-                        <span tabindex="0" class="sbd-p1">@L["+{0} over P1", phoenix1.ToString("N0")]</span>
+                        <span tabindex="0" class="@badge.Class">@badge.Text</span>
                     </MudTooltip>
                 }
             </div>
@@ -103,31 +95,83 @@
 
     private const int PerfectGame = 1_000_000;
 
-    private IEnumerable<(string Glyph, string? Suffix, string Tooltip)> Badges
+    /// <summary>
+    ///     One item in the strip. Most are a glyph and an optional suffix; two are numbers that
+    ///     elaborate the glyph beside them and carry their own treatment.
+    /// </summary>
+    private sealed record RowBadge(string Text, string Tooltip, string Class = "sbd-badge");
+
+    private IEnumerable<RowBadge> Badges
     {
         get
         {
             var detail = Score.Detail;
             if (Score.Flags.HasFlag(HighlightFlags.PumbilityTop50))
-                yield return ("👑", detail?.PumbilityRank is { } r ? $"#{r}" : null,
+                yield return new RowBadge(detail?.PumbilityRank is { } r ? $"👑 #{r}" : "👑",
                     L["In your PUMBILITY top 50"].Value);
+            // Straight after the crown, because it answers what the crown does not: the crown
+            // says the chart sits in your pool, which it may have done all night. This says what
+            // tonight's play on it was worth.
+            if (detail?.PumbilityGain is { } gain && gain > 0)
+                yield return new RowBadge($"+{gain:N0}", L["What this play added to your PUMBILITY"].Value,
+                    "sbd-gain");
             // No ScoreQuality90 badge: it said "top 10% among comparable players", and the
             // standing line beneath now says exactly where you placed among them. The flag
             // itself is untouched — it still rides the Discord card and seeds hot streaks.
             if (Score.Flags.HasFlag(HighlightFlags.FolderCompletion90))
-                yield return ("📁", null, L["Nearly complete folder"].Value);
+                yield return new RowBadge("📁", L["Nearly complete folder"].Value);
             if (Score.Flags.HasFlag(HighlightFlags.CompetitiveImprover))
-                yield return ("⬆", null, L["Raised your competitive level"].Value);
+                yield return new RowBadge("⬆", L["Raised your competitive level"].Value);
+            if (CompetitiveReadout is { } readout)
+                yield return new RowBadge(readout,
+                    L["What this score rates, against your level when the session reached it"].Value,
+                    "sbd-comp");
             if (Score.Flags.HasFlag(HighlightFlags.FolderDebut))
-                yield return ("🆕", detail?.FolderDebutOrdinal is { } o ? $"#{o}" : null,
+                yield return new RowBadge(detail?.FolderDebutOrdinal is { } o ? $"🆕 #{o}" : "🆕",
                     L["One of your first passes in this folder"].Value);
             if (Score.Flags.HasFlag(HighlightFlags.OfficialBoardPlacement) && detail?.OfficialPlace is { } place)
-                yield return ("🌐", $"~#{place}", L["Estimated place on the official board"].Value);
+                yield return new RowBadge($"🌐 ~#{place}", L["Estimated place on the official board"].Value);
             // Only ever counted on the clear that ended them, which reads as a win.
             if (detail?.AttemptsBeforeClear is { } attempts && attempts > 0)
-                yield return ("🎯", $"{attempts + 1}", L["Attempts before this clear"].Value);
+                yield return new RowBadge($"🎯 {attempts + 1}", L["Attempts before this clear"].Value);
             if (Score.Row.IsReclear)
-                yield return ("🔁", null, L["Passed in another mix"].Value);
+                yield return new RowBadge("🔁", L["Passed in another mix"].Value);
+            // Gold, not green: the tail already carries a green delta over your previous Phoenix
+            // 2 score, and a second green number measuring a different baseline eight pixels away
+            // reads as the same fact twice. The words keep them apart, so "over P1" never
+            // abbreviates away.
+            if (Score.Phoenix1Gain is { } phoenix1)
+                yield return new RowBadge(L["+{0} over P1", phoenix1.ToString("N0")].Value,
+                    L["The first Phoenix 2 score to beat your Phoenix 1 best"].Value, "sbd-p1");
         }
     }
+
+    /// <summary>
+    ///     "23.6 (+0.4)" — what this score rates on the competitive scale, and how far that sat
+    ///     above the level the batch opened at. Both terms are needed and only one is stored:
+    ///     the score's own rating is a pure function of chart level and score, while the baseline
+    ///     is per-batch and had to be captured.
+    ///     <para>
+    ///         Under a twentieth of a level the difference is recomputation noise wearing a plus
+    ///         sign, so it says nothing rather than "+0.0".
+    ///     </para>
+    /// </summary>
+    private string? CompetitiveReadout
+    {
+        get
+        {
+            if (Score.Detail?.CompetitiveBaseline is not { } baseline) return null;
+            if (Score.Chart is not { } chart || Score.Row.Score is not { } score || Score.Row.IsBroken) return null;
+            // Co-op never has a competitive comparison — the levels are Singles and Doubles only.
+            if (chart.Type == ChartType.CoOp) return null;
+
+            var rated = ScoringConfiguration.CalculateFungScore(chart.Level, PhoenixScore.From(score), chart.Type);
+            var over = rated - baseline;
+            return over < MinimumCompetitiveGain
+                ? null
+                : $"{rated:N1} (+{over:N1})";
+        }
+    }
+
+    private const double MinimumCompetitiveGain = 0.05;
 }

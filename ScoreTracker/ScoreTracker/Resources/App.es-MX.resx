@@ -7034,6 +7034,12 @@
   <data name="What should they change?" xml:space="preserve">
     <value>¿Qué deberían cambiar?</value>
   </data>
+  <data name="What this play added to your PUMBILITY" xml:space="preserve">
+    <value>Lo que este intento añadió a tu PUMBILITY</value>
+  </data>
+  <data name="What this score rates, against your level when the session reached it" xml:space="preserve">
+    <value>Lo que vale esta puntuación, frente a tu nivel cuando la sesión llegó aquí</value>
+  </data>
   <data name="What to play next" xml:space="preserve">
     <value>Qué jugar a continuación</value>
   </data>

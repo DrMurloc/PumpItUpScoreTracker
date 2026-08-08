@@ -105,6 +105,60 @@ public sealed class SessionScoreRowTests : ComponentTestBase
         Assert.DoesNotContain("over P1", row.Markup);
     }
 
+    [Fact]
+    public void TheImproverArrowCarriesWhatTheScoreRatedAndHowFarOver()
+    {
+        // A Single at level 21 scoring 985,000 rates 21 + (985000-965000)/17500 = 22.14, then
+        // the Singles multiplier for 20+ takes it to 22.5. Against a baseline of 22.2 that is
+        // +0.3 — and both halves come from one stored number plus a pure function.
+        var row = Render(Score(985000, new HighlightDetail(CompetitiveBaseline: 22.2),
+            HighlightFlags.CompetitiveImprover));
+
+        Assert.Contains("22.5 (+0.3)", row.Markup);
+    }
+
+    [Fact]
+    public void MovementUnderATwentiethOfALevelIsNotWorthSaying()
+    {
+        // "+0.0" is recomputation noise wearing a plus sign.
+        var row = Render(Score(985000, new HighlightDetail(CompetitiveBaseline: 22.48),
+            HighlightFlags.CompetitiveImprover));
+
+        Assert.DoesNotContain("(+", row.Markup);
+    }
+
+    [Fact]
+    public void WithoutACapturedBaselineTheArrowStaysBare()
+    {
+        // Every session before this capture landed. The arrow still means what it always did.
+        var row = Render(Score(985000, null, HighlightFlags.CompetitiveImprover));
+
+        Assert.Contains("⬆", row.Markup);
+        Assert.DoesNotContain("(+", row.Markup);
+    }
+
+    [Fact]
+    public void APumbilityGainRidesBesideTheCrownItExplains()
+    {
+        var row = Render(Score(972000, new HighlightDetail(PumbilityRank: 12, PumbilityGain: 112),
+            HighlightFlags.PumbilityTop50));
+
+        Assert.Contains("+112", row.Markup);
+        Assert.Contains("sbd-gain", row.Markup);
+    }
+
+    [Fact]
+    public void AChartInThePoolThatGainedNothingWearsNoBadge()
+    {
+        // The crown is a standing fact — a chart can sit in your top 50 all night having added
+        // nothing. That is the whole reason the gain is captured separately.
+        var row = Render(Score(972000, new HighlightDetail(PumbilityRank: 12),
+            HighlightFlags.PumbilityTop50));
+
+        Assert.Contains("👑", row.Markup);
+        Assert.DoesNotContain("sbd-gain", row.Markup);
+    }
+
     private IRenderedComponent<SessionScoreRow> Render(SessionScore score)
     {
         return RenderComponent<SessionScoreRow>(p => p.Add(r => r.Score, score));

@@ -11597,6 +11597,33 @@ button.chart-card-art {
     white-space: nowrap;
 }
 
+/* What this play added to your PUMBILITY pool. The tier list's gain treatment, moved onto a
+   row: success green on a green hairline over an 82%-black ground, the same build the
+   pumbility page's targets wear so one number means one thing across both pages. The only
+   outlined thing in the strip — everything beside it is a bare glyph, which is the point. */
+.sbd-gain {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .74rem;
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+    background: rgba(0, 0, 0, .82);
+    color: var(--mud-palette-success);
+    border: 1px solid var(--mud-palette-success);
+    border-radius: 2px;
+    padding: 1px 5px;
+    white-space: nowrap;
+}
+
+/* "23.6 (+0.4)" — the arrow's caption rather than a badge of its own, so it stays quiet
+   next to the glyph it explains. */
+.sbd-comp {
+    font-size: .72rem;
+    color: var(--mud-palette-success);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
 .sbd-row-tail {
     flex: none;
     display: flex;

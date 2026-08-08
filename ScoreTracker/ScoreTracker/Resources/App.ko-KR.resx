@@ -7034,6 +7034,12 @@
   <data name="What should they change?" xml:space="preserve">
     <value>무엇을 바꿔야 하나요?</value>
   </data>
+  <data name="What this play added to your PUMBILITY" xml:space="preserve">
+    <value>이 플레이가 PUMBILITY에 더한 값</value>
+  </data>
+  <data name="What this score rates, against your level when the session reached it" xml:space="preserve">
+    <value>이 점수의 평가치와, 세션이 여기 도달했을 때의 레벨 차이</value>
+  </data>
   <data name="What to play next" xml:space="preserve">
     <value>다음에 무엇을 플레이할까</value>
   </data>
