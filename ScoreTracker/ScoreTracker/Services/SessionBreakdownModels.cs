@@ -24,7 +24,8 @@ public sealed record SessionBreakdown(
     IReadOnlyList<SessionTitleBarModel> TitleBars,
     IReadOnlyList<SessionPeerBoard> PeerBoards,
     IReadOnlyDictionary<Guid, User> Peers,
-    bool CapturePending = false)
+    bool CapturePending = false,
+    int CapturedRows = 0)
 {
     /// <summary>
     ///     The import's game tag, when this session came from one. The wrong-card case is

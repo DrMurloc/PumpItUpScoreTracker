@@ -145,6 +145,12 @@
 
     private async Task WatchForCapture(CancellationTokenSource cts)
     {
+        // Capture writes in several passes — flags, folder lamps, the rating step that produces
+        // the competitive baseline and the PUMBILITY gain, then titles. So the arrival of rows
+        // does NOT mean capture is done, and clearing the card on the first of them showed the
+        // session stripped of exactly the decorations this work added. What settles it is the
+        // writes STOPPING: the same count twice running means the passes are through.
+        var previousRows = -1;
         try
         {
             using var timer = new PeriodicTimer(CapturePoll);
@@ -154,12 +160,22 @@
 
                 var refreshed = await Breakdowns.Reselect(_model, UserIdParam, sessionId, _page,
                     HistoryPageSize, Before, cts.Token);
+                var rows = refreshed.Hero?.CapturedRows ?? 0;
+                var settled = rows > 0 && rows == previousRows;
+                previousRows = rows;
+
+                // Nothing at all yet: the builder's own window is the backstop, and once it
+                // closes this really was a session with nothing to capture.
+                var giveUp = rows == 0 && refreshed.Hero?.CapturePending != true;
+
                 await InvokeAsync(() =>
                 {
-                    _model = refreshed;
+                    _model = refreshed.Hero is { } hero && !settled && !giveUp
+                        ? refreshed with { Hero = hero with { CapturePending = true } }
+                        : refreshed;
                     StateHasChanged();
                 });
-                if (refreshed.Hero?.CapturePending != true) break;
+                if (settled || giveUp) break;
             }
         }
         catch (Exception) when (cts.IsCancellationRequested)

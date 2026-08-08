@@ -161,7 +161,8 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
             boards,
             (await users.GetUsers(boards.SelectMany(b => b.Peers).Select(p => p.Score.UserId).Distinct(),
                 cancellationToken)).ToDictionary(u => u.Id),
-            CapturePending(session, highlights, milestones));
+            CapturePending(session, highlights.Length + milestones.Length),
+            highlights.Length + milestones.Length);
     }
 
     /// <summary>
@@ -173,21 +174,29 @@ public sealed class SessionBreakdownBuilder(IMediator mediator, IUserReader user
     private static readonly TimeSpan CaptureWindow = TimeSpan.FromMinutes(2);
 
     /// <summary>
-    ///     True while the highlight pipeline has plausibly not finished. An honest inference
-    ///     rather than a fact: what is known is "nothing has been captured and the scores arrived
-    ///     moments ago", and the two coincide nearly always. A session of co-op or
+    ///     True on a FIRST read where nothing has been captured and the scores arrived moments
+    ///     ago. An honest inference rather than a fact: a session of co-op or
     ///     far-below-competitive charts legitimately captures nothing, which is exactly why the
     ///     window exists — it stops claiming after two minutes and the page falls back to its
     ///     ordinary empty state on its own.
+    ///     <para>
+    ///         ⚠ This deliberately answers "has capture STARTED", which is not the same question
+    ///         as "has capture finished" — and the page must not confuse them. Capture writes in
+    ///         several passes (flags, then folder lamps, then the rating step that produces the
+    ///         competitive baseline and the PUMBILITY gain, then titles), so a read taken between
+    ///         two of them sees rows without seeing all of them. Deciding "done" from the first
+    ///         row to land is what left the page showing a session stripped of its decorations.
+    ///         <see cref="SessionBreakdown.CapturedRows" /> is what settles it: the watcher holds
+    ///         the card until that count stops moving.
+    ///     </para>
     ///     <para>
     ///         Sessions predating the ScoreSession table have no wall clock to test, so they are
     ///         never pending: they are historical by definition.
     ///     </para>
     /// </summary>
-    private bool CapturePending(ScoreSessionRecord? session, IReadOnlyList<ScoreHighlightRecord> highlights,
-        IReadOnlyList<PlayerMilestoneRecord> milestones)
+    private bool CapturePending(ScoreSessionRecord? session, int capturedRows)
     {
-        if (session == null || highlights.Count > 0 || milestones.Count > 0) return false;
+        if (session == null || capturedRows > 0) return false;
 
         return clock.Now - session.LastActivityAt < CaptureWindow;
     }
