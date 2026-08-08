@@ -660,6 +660,12 @@
   <data name="Apply" xml:space="preserve">
     <value>Applica</value>
   </data>
+  <data name="Applying baby powder" xml:space="preserve">
+    <value>Applicazione del talco</value>
+  </data>
+  <data name="Applying Gorilla Tape to the sensors" xml:space="preserve">
+    <value>Gorilla Tape sui sensori</value>
+  </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Chart abbordabili non passati intorno al tuo livello.</value>
   </data>
@@ -708,11 +714,14 @@
   <data name="Ask to be listed" xml:space="preserve">
     <value>Chiedi di essere elencato</value>
   </data>
-  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
-    <value>Ipotizzando {0} con plate {1}.</value>
-  </data>
   <data name="At least" xml:space="preserve">
     <value>Almeno</value>
+  </data>
+  <data name="at {0}" xml:space="preserve">
+    <value>con {0}</value>
+  </data>
+  <data name="at {0} or better" xml:space="preserve">
+    <value>con {0} o meglio</value>
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Tentativi prima di superarlo</value>
@@ -1563,6 +1572,9 @@
   <data name="Counting" xml:space="preserve">
     <value>Conta</value>
   </data>
+  <data name="Counting perfects" xml:space="preserve">
+    <value>Conteggio dei perfect</value>
+  </data>
   <data name="Counting Toward Your Total" xml:space="preserve">
     <value>Conta nel tuo totale</value>
   </data>
@@ -1629,6 +1641,9 @@
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>Caricamento CSV</value>
+  </data>
+  <data name="Cueing the next song" xml:space="preserve">
+    <value>Preparazione del brano successivo</value>
   </data>
   <data name="Current" xml:space="preserve">
     <value>Attuale</value>
@@ -2134,11 +2149,17 @@
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>Grazie per il feedback!</value>
   </data>
+  <data name="Feeding it another credit" xml:space="preserve">
+    <value>Ancora un gettone</value>
+  </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Feed — registra un canale una volta e il bot lo tiene aggiornato</value>
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
+  </data>
+  <data name="Fifty charts, {0} plate." xml:space="preserve">
+    <value>Cinquanta chart, plate {0}.</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
     <value>Il file non può superare i 10 MB</value>
@@ -2188,6 +2209,9 @@
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>Trova il tuo prossimo pass.</value>
+  </data>
+  <data name="Finding the beat" xml:space="preserve">
+    <value>Ricerca del ritmo</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Finisci dopo</value>
@@ -2308,9 +2332,6 @@
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>Da {0}</value>
-  </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>da {0} giocatori come te</value>
   </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Da {0} punteggi</value>
@@ -4563,6 +4584,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>Giocata, non conta</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>Giocata, non superata</value>
+  </data>
   <data name="Player" xml:space="preserve">
     <value>Giocatore</value>
   </data>
@@ -4718,9 +4742,6 @@
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY Doubles proiettato</value>
-  </data>
-  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
-    <value>Previsto da Phoenix 1 — hai {0} punteggi tuoi in Phoenix 2.</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY Singles proiettato</value>
@@ -4927,6 +4948,9 @@
   </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Per leggerla servono tre cose contemporaneamente, custodite in tre luoghi diversi:</value>
+  </data>
+  <data name="Reading the step chart" xml:space="preserve">
+    <value>Lettura del pattern</value>
   </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>Corrisponde a {0}.</value>
@@ -5413,6 +5437,9 @@
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
     <value>Cerca utente (nome o UserId)</value>
+  </data>
+  <data name="Searching for Molex connectors" xml:space="preserve">
+    <value>Ricerca di connettori Molex</value>
   </data>
   <data name="Second" xml:space="preserve">
     <value>Secondo</value>
@@ -5949,6 +5976,9 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>step di {0}</value>
   </data>
+  <data name="still isn't enough at {0}" xml:space="preserve">
+    <value>non basta comunque con {0}</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>avaro nel punteggio anche da passato</value>
   </data>
@@ -5957,6 +5987,9 @@
   </data>
   <data name="Store" xml:space="preserve">
     <value>Salva</value>
+  </data>
+  <data name="Stretching first" xml:space="preserve">
+    <value>Prima lo stretching</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>più forte</value>
@@ -6983,8 +7016,14 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Serve che ci guardi una persona — fatti sentire</value>
   </data>
+  <data name="Waiting on the sensors" xml:space="preserve">
+    <value>In attesa dei sensori</value>
+  </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Sala d'attesa</value>
+  </data>
+  <data name="Warming up the pad" xml:space="preserve">
+    <value>Riscaldamento della pedana</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Guardati salire</value>
@@ -7185,6 +7224,9 @@
   <data name="wins in range" xml:space="preserve">
     <value>vittorie nel tuo range</value>
   </data>
+  <data name="Wiping down the sensors" xml:space="preserve">
+    <value>Pulizia dei sensori</value>
+  </data>
   <data name="within 1 level" xml:space="preserve">
     <value>entro ±1 livello</value>
   </data>
@@ -7193,6 +7235,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Senza di essi funziona lo stesso — per te, sui tuoi punteggi.</value>
+  </data>
+  <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
+    <value>Calcolo delle tue proiezioni. Consulta qualche centinaio di giocatori del tuo livello, quindi ci vuole un momento.</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>

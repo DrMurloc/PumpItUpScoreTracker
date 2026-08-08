@@ -112,14 +112,14 @@ public sealed class CohortEstimatorTests
     }
 
     [Fact]
-    public void EvidenceCountsVoicesNotHeads()
+    public void TheWeightingCountsVoicesNotHeads()
     {
-        var peers = new[] { Peer(950_000), Peer(950_000, growth: 3), Peer(950_000, growth: 3) };
+        // Three peers, two of them badly outgrown, are worth about one voice between them.
+        // The page no longer prints that number, but every quantile Estimate reads is taken
+        // over these weights, so the property still has to hold.
+        var voices = new[] { 0.0, 3.0, 3.0 }.Sum(g => CohortEstimator.GrowthWeight(g));
 
-        var evidence = CohortEstimator.Evidence(peers);
-
-        Assert.Equal(3, peers.Length);
-        Assert.True(evidence < 1.2, $"three peers, two badly outgrown, should be worth ~1 voice; got {evidence:N2}");
+        Assert.True(voices < 1.2, $"three peers, two badly outgrown, should be worth ~1 voice; got {voices:N2}");
     }
 
     [Fact]

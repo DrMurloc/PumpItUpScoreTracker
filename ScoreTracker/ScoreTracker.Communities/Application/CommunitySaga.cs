@@ -969,10 +969,19 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
         return await _communities.GetPublicCommunities(cancellationToken);
     }
 
+    /// <summary>
+    ///     A community nobody has created yet is an empty board, not a fault. System communities
+    ///     seed themselves on first join (see <see cref="JoinSystemCommunity" />), so "World" does
+    ///     not exist on a fresh database — and the chart leaderboard reads World on every open,
+    ///     from inside a Blazor render, where a throw tears down the whole circuit rather than
+    ///     leaving one panel empty.
+    /// </summary>
     public async Task<IEnumerable<UserPhoenixScore>> Handle(GetPhoenixRecordsForCommunityQuery request,
         CancellationToken cancellationToken)
     {
-        var community = await GetCommunity(request.CommuityName, cancellationToken);
+        var community = await _communities.GetCommunityByName(request.CommuityName, cancellationToken);
+        if (community == null) return Array.Empty<UserPhoenixScore>();
+
         return await _scores.GetPhoenixScores(request.Mix, community.MemberIds, request.ChartId,
             cancellationToken);
     }

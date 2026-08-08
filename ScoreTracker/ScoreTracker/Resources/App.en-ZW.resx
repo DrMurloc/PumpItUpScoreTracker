@@ -660,6 +660,12 @@
   <data name="Apply" xml:space="preserve">
     <value>Maglmr</value>
   </data>
+  <data name="Applying baby powder" xml:space="preserve">
+    <value>Blorpa mulgub</value>
+  </data>
+  <data name="Applying Gorilla Tape to the sensors" xml:space="preserve">
+    <value>Gorlum arp mrogl</value>
+  </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>Lurggrgllurggl rglgrglblub murgl blubmurm gromurp grorpmurm.</value>
   </data>
@@ -708,11 +714,14 @@
   <data name="Ask to be listed" xml:space="preserve">
     <value>Murgargl blu mrpgrogl</value>
   </data>
-  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
-    <value>Glromrp {0} glgrgl gro {1} murp.</value>
-  </data>
   <data name="At least" xml:space="preserve">
     <value>Mr mggl</value>
+  </data>
+  <data name="at {0}" xml:space="preserve">
+    <value>og {0}</value>
+  </data>
+  <data name="at {0} or better" xml:space="preserve">
+    <value>og {0} ol mrrgl</value>
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Blub arg palo</value>
@@ -1563,6 +1572,9 @@
   <data name="Counting" xml:space="preserve">
     <value>Grogmrgl</value>
   </data>
+  <data name="Counting perfects" xml:space="preserve">
+    <value>Murgla purpul</value>
+  </data>
   <data name="Counting Toward Your Total" xml:space="preserve">
     <value>Grogmrgl ma grogl</value>
   </data>
@@ -1629,6 +1641,9 @@
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSV Grglargl</value>
+  </data>
+  <data name="Cueing the next song" xml:space="preserve">
+    <value>Blub grumo maggl</value>
   </data>
   <data name="Current" xml:space="preserve">
 	  <value>Grglblargblarg</value>
@@ -2134,11 +2149,17 @@
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>Grorpgromurg Arglromurg, Maglargl Blub!</value>
   </data>
+  <data name="Feeding it another credit" xml:space="preserve">
+    <value>Groblu murp</value>
+  </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Glorgmorg — grorpplglblub gro glmurmblarg mrmurm, mrp murg mrpmr gl gro</value>
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Glorgplgl</value>
+  </data>
+  <data name="Fifty charts, {0} plate." xml:space="preserve">
+    <value>Murgro murgl, {0} murp.</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
 	  <value>Mrblub blubmrp glorg blarggrorp grogrgl 10 MB</value>
@@ -2188,6 +2209,9 @@
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>Blubgl gromurp grorpglorg maglplgl.</value>
+  </data>
+  <data name="Finding the beat" xml:space="preserve">
+    <value>Rugbam olo</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>Golba pragl</value>
@@ -2308,9 +2332,6 @@
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>Romurg {0}</value>
-  </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>blarg {0} Morp mrgl morp</value>
   </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Romurg {0} mgrlgmrg</value>
@@ -4563,6 +4584,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>Murpla, blub grogmrgl</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>Blubrgl, blub rglplgl</value>
+  </data>
   <data name="Player" xml:space="preserve">
 	  <value>Morp</value>
   </data>
@@ -4718,9 +4742,6 @@
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>mrglgrrglrgl Groggl PUMBILITY</value>
-  </data>
-  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
-    <value>Mrglrgo blarg Phoenix 1 — morp mrgl {0} Phoenix 2 Mrglrgl.</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>mrglgrrglrgl Mrglrlgl PUMBILITY</value>
@@ -4927,6 +4948,9 @@
   </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>Glmaglplgl gl mrpplgl morgmr gromr mr mrmurm, glorgblgrl mrp morgmr roplglblgrl gromrgl:</value>
+  </data>
+  <data name="Reading the step chart" xml:space="preserve">
+    <value>Mrogla blarp</value>
   </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>Obo blurg {0}.</value>
@@ -5413,6 +5437,9 @@
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
 	  <value>Grrglgro Glorgblarg (Mrg argl Plglmurp)</value>
+  </data>
+  <data name="Searching for Molex connectors" xml:space="preserve">
+    <value>Molgab urrum</value>
   </data>
   <data name="Second" xml:space="preserve">
     <value>Rogro</value>
@@ -5949,6 +5976,9 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>plglmrgl murm {0}</value>
   </data>
+  <data name="still isn't enough at {0}" xml:space="preserve">
+    <value>larg bo blurg og {0}</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>murpmurp grgl mrglrgl mrpplgl mrpgrrgl rglplgl</value>
   </data>
@@ -5957,6 +5987,9 @@
   </data>
   <data name="Store" xml:space="preserve">
     <value>Morgmrgl</value>
+  </data>
+  <data name="Stretching first" xml:space="preserve">
+    <value>Blurgama pol</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>murggroblarg</value>
@@ -6983,8 +7016,14 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Marogl bloop grumba — golba la</value>
   </data>
+  <data name="Waiting on the sensors" xml:space="preserve">
+    <value>Ogul mrogl</value>
+  </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Blargmo Gurg</value>
+  </data>
+  <data name="Warming up the pad" xml:space="preserve">
+    <value>Bramogl uppa</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>Grorplurg lurgblgrlmurm rglmagl</value>
@@ -7185,6 +7224,9 @@
   <data name="wins in range" xml:space="preserve">
     <value>blgrlblarg mrp blubmrgl</value>
   </data>
+  <data name="Wiping down the sensors" xml:space="preserve">
+    <value>Pluggam orlo</value>
+  </data>
   <data name="within 1 level" xml:space="preserve">
     <value>arglblgrl 1 grorpmurm</value>
   </data>
@@ -7193,6 +7235,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Bam murp mo blorp murgloo — blu murgm, la murgm Mgrlgmrg.</value>
+  </data>
+  <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
+    <value>Murgablar promglu. Blub morp mrgl oglu porum, mrogl gaal amur.</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>Grolurg</value>

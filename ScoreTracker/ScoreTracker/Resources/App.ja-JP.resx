@@ -660,6 +660,12 @@
   <data name="Apply" xml:space="preserve">
     <value>適用</value>
   </data>
+  <data name="Applying baby powder" xml:space="preserve">
+    <value>ベビーパウダーを塗っています</value>
+  </data>
+  <data name="Applying Gorilla Tape to the sensors" xml:space="preserve">
+    <value>センサーにゴリラテープを貼っています</value>
+  </data>
   <data name="Approachable unpassed charts around your level." xml:space="preserve">
     <value>自分のレベル前後の、まだクリアしていない取り組みやすい譜面。</value>
   </data>
@@ -708,11 +714,14 @@
   <data name="Ask to be listed" xml:space="preserve">
     <value>掲載を申請</value>
   </data>
-  <data name="Assuming {0} with a {1} plate." xml:space="preserve">
-    <value>{0}、{1}プレート想定です。</value>
-  </data>
   <data name="At least" xml:space="preserve">
     <value>以上</value>
+  </data>
+  <data name="at {0}" xml:space="preserve">
+    <value>{0}で</value>
+  </data>
+  <data name="at {0} or better" xml:space="preserve">
+    <value>{0}以上で</value>
   </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>クリアまでの試行回数</value>
@@ -1563,6 +1572,9 @@
   <data name="Counting" xml:space="preserve">
     <value>対象</value>
   </data>
+  <data name="Counting perfects" xml:space="preserve">
+    <value>PERFECT を数えています</value>
+  </data>
   <data name="Counting Toward Your Total" xml:space="preserve">
     <value>合計に加算</value>
   </data>
@@ -1629,6 +1641,9 @@
   </data>
   <data name="CSV Upload" xml:space="preserve">
     <value>CSVアップロード</value>
+  </data>
+  <data name="Cueing the next song" xml:space="preserve">
+    <value>次の曲を準備しています</value>
   </data>
   <data name="Current" xml:space="preserve">
 	  <value>現在</value>
@@ -2134,11 +2149,17 @@
   <data name="Feedback Submitted, Thank You!" xml:space="preserve">
     <value>フィードバックありがとうございます！</value>
   </data>
+  <data name="Feeding it another credit" xml:space="preserve">
+    <value>もう 1 クレジット入れています</value>
+  </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>フィード — チャンネルを一度登録すれば、ボットが投稿し続けます</value>
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
+  </data>
+  <data name="Fifty charts, {0} plate." xml:space="preserve">
+    <value>譜面50枚、{0}プレート。</value>
   </data>
   <data name="File cannot be larger than 10 MB" xml:space="preserve">
 	  <value>ファイルは10MB以下にしてください</value>
@@ -2188,6 +2209,9 @@
   </data>
   <data name="Find your next pass." xml:space="preserve">
     <value>次のパスを見つけよう。</value>
+  </data>
+  <data name="Finding the beat" xml:space="preserve">
+    <value>リズムを探しています</value>
   </data>
   <data name="Finish later" xml:space="preserve">
     <value>あとで仕上げる</value>
@@ -2308,9 +2332,6 @@
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>{0}から</value>
-  </data>
-  <data name="from {0} players like you" xml:space="preserve">
-    <value>同水準のプレイヤー {0} 人から</value>
   </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0} スコアから算出</value>
@@ -4563,6 +4584,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>プレイ済み、対象外</value>
   </data>
+  <data name="Played, not passed" xml:space="preserve">
+    <value>プレイ済み、未クリア</value>
+  </data>
   <data name="Player" xml:space="preserve">
 	  <value>プレーヤー</value>
   </data>
@@ -4718,9 +4742,6 @@
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>予測ダブルPUMBILITY</value>
-  </data>
-  <data name="Projected from Phoenix 1 — you have {0} Phoenix 2 scores of your own." xml:space="preserve">
-    <value>Phoenix 1 からの予測です。Phoenix 2 での自分のスコアは {0} 件です。</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>予測シングルPUMBILITY</value>
@@ -4927,6 +4948,9 @@
   </data>
   <data name="Reading it takes three things at once, held in three different places:" xml:space="preserve">
     <value>読み解くには、3つの異なる場所に保管された3つのものが同時に必要です：</value>
+  </data>
+  <data name="Reading the step chart" xml:space="preserve">
+    <value>譜面を読んでいます</value>
   </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>{0} 判定になります。</value>
@@ -5413,6 +5437,9 @@
   </data>
   <data name="Search User (Name or UserId)" xml:space="preserve">
 	  <value>ユーザー検索（名前またはユーザーID）</value>
+  </data>
+  <data name="Searching for Molex connectors" xml:space="preserve">
+    <value>Molex コネクタを探しています</value>
   </data>
   <data name="Second" xml:space="preserve">
     <value>2 枚目</value>
@@ -5949,6 +5976,9 @@
   <data name="steps by {0}" xml:space="preserve">
     <value>ステップ：{0}</value>
   </data>
+  <data name="still isn't enough at {0}" xml:space="preserve">
+    <value>{0}では届きません</value>
+  </data>
   <data name="stingy to score even when passed" xml:space="preserve">
     <value>クリアしてもスコアは渋い</value>
   </data>
@@ -5957,6 +5987,9 @@
   </data>
   <data name="Store" xml:space="preserve">
     <value>保存</value>
+  </data>
+  <data name="Stretching first" xml:space="preserve">
+    <value>まずストレッチ</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>強い</value>
@@ -6983,8 +7016,14 @@
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>人の確認待ちです — ひと声かけてください</value>
   </data>
+  <data name="Waiting on the sensors" xml:space="preserve">
+    <value>センサーを待っています</value>
+  </data>
   <data name="Waiting room" xml:space="preserve">
     <value>待機中</value>
+  </data>
+  <data name="Warming up the pad" xml:space="preserve">
+    <value>パッドを温めています</value>
   </data>
   <data name="Watch yourself climb" xml:space="preserve">
     <value>自分の成長を見よう</value>
@@ -7185,6 +7224,9 @@
   <data name="wins in range" xml:space="preserve">
     <value>同範囲内で優勝</value>
   </data>
+  <data name="Wiping down the sensors" xml:space="preserve">
+    <value>センサーを拭いています</value>
+  </data>
   <data name="within 1 level" xml:space="preserve">
     <value>レベル±1以内</value>
   </data>
@@ -7193,6 +7235,9 @@
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>なくても動きます — あなた自身の、あなたのスコアに対しては。</value>
+  </data>
+  <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
+    <value>予測を計算しています。同水準のプレイヤー数百人を参照するため、少し時間がかかります。</value>
   </data>
   <data name="World" xml:space="preserve">
     <value>World</value>

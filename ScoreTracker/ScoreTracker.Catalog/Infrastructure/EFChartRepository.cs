@@ -60,15 +60,24 @@ internal sealed class EFChartRepository : IChartRepository
     public async Task<IEnumerable<ChartVideoInformation>> GetChartVideoInformation(
         IEnumerable<Guid>? chartIds = default, CancellationToken cancellationToken = default)
     {
-        var chartVideos = await _cache.GetOrCreateAsync<IDictionary<Guid, ChartVideoInformation>>(VideoCacheKey,
-            async entry =>
-            {
-                entry.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(14);
-                await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-                return await database.Set<ChartVideoEntity>()
-                    .Select(c => new ChartVideoInformation(c.ChartId, new Uri(c.VideoUrl), c.ChannelName))
-                    .ToDictionaryAsync(c => c.ChartId, cancellationToken);
-            });
+        if (!_cache.TryGetValue<IDictionary<Guid, ChartVideoInformation>>(VideoCacheKey, out var chartVideos)
+            || chartVideos == null)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            chartVideos = await database.Set<ChartVideoEntity>()
+                .Select(c => new ChartVideoInformation(c.ChartId, new Uri(c.VideoUrl), c.ChannelName))
+                .ToDictionaryAsync(c => c.ChartId, cancellationToken);
+
+            // One key holds the whole table, so an empty read asserts "no chart anywhere has a
+            // video" — true only of a database still being filled, and a fortnight's expiry
+            // outlasts the filling: every chart then reports no video until an admin edit evicts
+            // the key. An empty result is therefore left uncached and re-asked on the next call.
+            if (chartVideos.Count > 0)
+                _cache.Set(VideoCacheKey, chartVideos, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(14)
+                });
+        }
 
         return chartIds != null
             ? chartIds.Where(id => chartVideos.ContainsKey(id)).Select(id => chartVideos[id])

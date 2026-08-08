@@ -70,23 +70,6 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task EvidenceReportsVoicesAndSpreadNotJustHeadcount()
-    {
-        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
-        ctx.WithPeerScore(chart, 910_000, levelsGrownSince: 4)
-            .WithPeerScore(chart, 950_000)
-            .WithPeerScore(chart, 990_000);
-
-        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
-
-        var evidence = result.Evidence[chart.Id];
-        Assert.Equal(3, evidence.PeerCount);
-        Assert.True(evidence.EffectivePeers < evidence.PeerCount,
-            "an outgrown peer should be worth less than a whole voice");
-        Assert.True(evidence.Spread > 0, "three different scores should report a spread");
-    }
-
-    [Fact]
     public async Task ChartsOutsideTheScoringLevelWindowAreNotProjected()
     {
         // Competitive level 20, window +/-2: a chart scoring at 24 is out of scope even
@@ -208,7 +191,6 @@ public sealed class PumbilityProjectionSagaTests
         // everything that was dropped.
         Assert.True(result.ProjectedGains.Values.Min() > 0);
         Assert.Equal(100, result.ExpectedScores.Count);
-        Assert.Equal(100, result.Evidence.Count);
     }
 
     [Fact]
@@ -261,9 +243,11 @@ public sealed class PumbilityProjectionSagaTests
         await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
         ctx.Cache.Evict(ctx.UserId, null);
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
-        Assert.False(ctx.Cache.TryGet(ctx.UserId, MixEnum.Phoenix, null, out _));
-        Assert.False(ctx.Cache.TryGet(ctx.UserId, MixEnum.Phoenix2, null, out _));
+        ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -274,8 +258,67 @@ public sealed class PumbilityProjectionSagaTests
         await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
         ctx.Cache.Evict(Guid.NewGuid(), MixEnum.Phoenix);
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
-        Assert.True(ctx.Cache.TryGet(ctx.UserId, MixEnum.Phoenix, null, out _));
+        ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TwoCallersArrivingTogetherShareOneSweep()
+    {
+        // The dashboard's suggestion widget and the page itself ask for the same thing
+        // seconds apart, which is the design rather than an edge case. Caching the RESULT
+        // would let the second arrival start its own sweep while the first was still
+        // running; caching the task is what stops that.
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithPeerScores(chart, 950_000, 955_000, 960_000, 965_000);
+
+        var gate = new TaskCompletionSource();
+        var sweeps = 0;
+        ctx.Scores.Setup(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(async () =>
+            {
+                Interlocked.Increment(ref sweeps);
+                await gate.Task;
+                return Array.Empty<UserPhoenixScore>().AsEnumerable();
+            });
+
+        var first = ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+        var second = ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+        gate.SetResult();
+        await Task.WhenAll(first, second);
+
+        Assert.Equal(1, sweeps);
+    }
+
+    [Fact]
+    public async Task AFailedSweepIsNotHandedToEverybodyForADay()
+    {
+        // A cached failure would outlive its cause by the whole lifetime, and nothing short
+        // of a restart would clear it.
+        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
+        ctx.WithPeerScores(chart, 950_000, 955_000, 960_000, 965_000);
+
+        var attempts = 0;
+        ctx.Scores.Setup(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                attempts++;
+                if (attempts == 1) throw new InvalidOperationException("the ledger was busy");
+                return Task.FromResult(Array.Empty<UserPhoenixScore>().AsEnumerable());
+            });
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None));
+        await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
+
+        Assert.Equal(2, attempts);
     }
 
     [Fact]
@@ -304,7 +347,6 @@ public sealed class PumbilityProjectionSagaTests
             CancellationToken.None);
 
         Assert.True(result.ExpectedScores.ContainsKey(chart.Id));
-        Assert.Equal(4, result.Evidence[chart.Id].PeerCount);
     }
 
     [Fact]
@@ -333,9 +375,10 @@ public sealed class PumbilityProjectionSagaTests
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
 
-        Assert.Equal(2, result.Evidence[chart.Id].PeerCount);
-        Assert.True((int)result.ExpectedScores[chart.Id] > 905_000,
-            "each peer should be represented by what they proved they can score, not by their weaker attempt");
+        // The value IS the proof that each peer spoke once. Two voices at 980k and 985k put
+        // the p65 at 984,000; had the weaker attempts entered as voices of their own, four
+        // values would have dragged it to 980,500.
+        Assert.Equal(984_000, (int)result.ExpectedScores[chart.Id]);
     }
 
     [Fact]
@@ -438,7 +481,7 @@ public sealed class PumbilityProjectionSagaTests
                 .ReturnsAsync(() => Array.Empty<SongTierListEntry>().AsEnumerable());
 
             // A cache per context, so one test's projection can never answer another's.
-            Cache = new PumbilityProjectionCache(new MemoryCache(new MemoryCacheOptions()));
+            Cache = new PumbilityProjectionCache();
             Saga = new PumbilityProjectionSaga(Mediator.Object, Stats.Object, Scores.Object,
                 History.Object, Cache);
         }

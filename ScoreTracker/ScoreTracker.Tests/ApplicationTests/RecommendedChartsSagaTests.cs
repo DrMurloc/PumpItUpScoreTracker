@@ -704,8 +704,7 @@ public sealed class RecommendedChartsSagaTests
                 .ReturnsAsync(new PumbilityProjection(
                     new Dictionary<Guid, PhoenixScore>(),
                     gains.ToDictionary(g => g.ChartId, g => g.Gain),
-                    new Dictionary<Guid, TierListCategory>(),
-                    new Dictionary<Guid, ProjectionEvidence>()));
+                    new Dictionary<Guid, TierListCategory>()));
             return this;
         }
 
@@ -768,7 +767,7 @@ public sealed class RecommendedChartsSagaTests
 
     private static PumbilityProjection EmptyProjection() =>
         new(new Dictionary<Guid, PhoenixScore>(), new Dictionary<Guid, int>(),
-            new Dictionary<Guid, TierListCategory>(), new Dictionary<Guid, ProjectionEvidence>());
+            new Dictionary<Guid, TierListCategory>());
 
     private static PlayerStatsRecord ZeroStats(Guid userId) =>
         new(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0, CoOpRating: 0, CoOpScore: 0,
