@@ -150,12 +150,14 @@
 
     private async Task WatchForCapture(CancellationTokenSource cts)
     {
-        // Capture writes in several passes — flags, folder lamps, the rating step that produces
-        // the competitive baseline and the PUMBILITY gain, then titles. So the arrival of rows
-        // does NOT mean capture is done, and clearing the card on the first of them showed the
-        // session stripped of exactly the decorations this work added. What settles it is the
-        // writes STOPPING: the same count twice running means the passes are through.
-        var previousRows = -1;
+        // Refresh until the window closes, and NOT a moment sooner on a guess about being
+        // finished. An import is many batches over minutes, each running capture separately, so
+        // the row count sitting still for a few seconds means "between batches" just as readily
+        // as "done" — reading it as done is what cleared the page while more was still coming.
+        //
+        // The window needs no such guess because it hangs off LastActivityAt, which advances
+        // every time a batch lands: a live import keeps extending its own deadline, and the
+        // watch outlives the last batch by the window and then stops.
         try
         {
             using var timer = new PeriodicTimer(CapturePoll);
@@ -165,20 +167,12 @@
 
                 var refreshed = await Breakdowns.Reselect(_model, UserIdParam, sessionId, _page,
                     HistoryPageSize, Before, cts.Token);
-                var rows = refreshed.Hero?.CapturedRows ?? 0;
-                var settled = rows > 0 && rows == previousRows;
-                previousRows = rows;
-
-                // Nothing at all yet: the window is the backstop, and once it closes this really
-                // was a session with nothing to capture.
-                var giveUp = rows == 0 && refreshed.Hero?.CaptureWindowOpen != true;
-
                 await InvokeAsync(() =>
                 {
                     _model = refreshed;
                     StateHasChanged();
                 });
-                if (settled || giveUp) break;
+                if (refreshed.Hero?.CaptureWindowOpen != true) break;
             }
         }
         catch (Exception) when (cts.IsCancellationRequested)
