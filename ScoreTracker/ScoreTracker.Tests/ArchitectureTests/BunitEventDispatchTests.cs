@@ -76,7 +76,6 @@ public sealed class BunitEventDispatchTests
         // QuickRecordWidgetTests burned its 8 — it was the loudest file left once the
         // warmup was in (three of its facts chain a grade tap into a save), so it went
         // first — entry removed, ratchet tightened.
-        ["RangeSliderTests.cs"] = 5,
         ["RivalsOfMeListTests.cs"] = 1,
         ["ScoreCheckPanelTests.cs"] = 2,
         ["SessionHeroTests.cs"] = 1,
