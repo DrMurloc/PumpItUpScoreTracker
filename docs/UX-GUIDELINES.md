@@ -163,13 +163,26 @@ at different points disagree about the same account. That is not hypothetical: a
 read 17,195 while the PUMBILITY page read 17,173, because one summed fifty doubles and
 truncated once and the other truncated fifty times and then summed.
 
-Doubles travel all the way to the razor. Then:
+Doubles travel all the way to the razor. What happens there depends on **where**:
 
-| What | How | Why |
+| Where | What | How |
 |---|---|---|
-| A **total** — a pool, a bar, a rail value, a per-chart contribution | `ToString("N2")` | Two decimals is what piugame prints and what our mirror of its board has always rendered |
-| A **gain** — what a play, a week or a suggestion moved you by | `PumbilityFormat.Gain`, or the `PumbilityDelta` component | Gains render in compact places where `+137.00` is four characters of noise around one fact |
-| A **threshold** — a title rung, a "next at" target | `ToString("N0")` | An authored round number, not a measurement |
+| **The PUMBILITY section only** (`/Pumbility`, `/Pumbility/Pool`, `/Pumbility/Phoenix1`) | your total pool, and each chart's contribution | `ToString("N2")` |
+| Everywhere else — sessions, the Account Stats widget, community boards | a pool total | `ToString("N0")` |
+| Anywhere | a **gain** | `PumbilityFormat.Gain`, or the `PumbilityDelta` component |
+| Anywhere | a **threshold** — a title rung, a "next at" target | `ToString("N0")` |
+
+**Decimals are a PUMBILITY-section feature, not a sitewide one** (owner, 2026-08-09, reversing a
+one-day-old sitewide-N2 rule). Two decimals everywhere was tried and it disrupted layout across the
+site: a pool total is a five-figure number and three more glyphs is a real cost in a dashboard tile,
+a board cell or a session band. The section that exists to explain the number is where the precision
+earns its space; everywhere else the figure is an identifier, and the decimals are noise.
+
+The Official Leaderboards pages are a separate case and unchanged: they render `N2` because they
+quote piugame's own board, which prints two decimals.
+
+⚠ **This is a display rule and only a display rule.** Nothing below the razor rounds — the same
+pool feeds an `N0` tile and an `N2` hero from one unrounded double.
 
 The gain rule is **as much precision as the size needs and no more**: whole at 10 and over,
 one decimal from 1 to 10, two below 1 — **truncated** at every rung, because a gain that reads

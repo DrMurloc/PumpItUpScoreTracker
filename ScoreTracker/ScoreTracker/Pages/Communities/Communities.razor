@@ -337,7 +337,7 @@
                 @if (_myPumbility != null)
                 {
                     <div class="communities-stat-row">
-                        <span class="mud-text-secondary">@L["Your PUMBILITY"]</span><b>@_myPumbility.Value.ToString("N2")</b>
+                        <span class="mud-text-secondary">@L["Your PUMBILITY"]</span><b>@_myPumbility.Value.ToString("N0")</b>
                     </div>
                 }
                 @if (_world != null && RangeChip(_world.CommunityName) is { } worldRange)

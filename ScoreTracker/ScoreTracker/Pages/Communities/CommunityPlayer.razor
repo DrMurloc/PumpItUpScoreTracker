@@ -126,7 +126,7 @@ else
     <MudPaper Class="pa-4 mb-4">
         <div class="cmp-hero">
             <div class="cmp-hero-pum">
-                <span class="cmp-hero-num">@_profile.Pumbility.ToString("N2")</span>
+                <span class="cmp-hero-num">@_profile.Pumbility.ToString("N0")</span>
                 <span class="cmp-hero-cap">PUMBILITY</span>
             </div>
             <div style="flex:1;min-width:240px">
@@ -156,8 +156,8 @@ else
                 </div>
                 <div class="cmp-tiles">
                     <div class="cmp-tile"><div class="cmp-tile-label">@L["Total Rating"]</div><div class="cmp-tile-num">@_profile.TotalRating.ToString("N0")</div></div>
-                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Singles"]</div><div class="cmp-tile-num">@_profile.SinglesRating.ToString("N2")</div></div>
-                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Doubles"]</div><div class="cmp-tile-num">@_profile.DoublesRating.ToString("N2")</div></div>
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Singles"]</div><div class="cmp-tile-num">@_profile.SinglesRating.ToString("N0")</div></div>
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Doubles"]</div><div class="cmp-tile-num">@_profile.DoublesRating.ToString("N0")</div></div>
                     <div class="cmp-tile"><div class="cmp-tile-label">@L["Highest Clear"]</div><div class="cmp-tile-num">@L["Lv {0}", _profile.HighestLevel]</div></div>
                 </div>
             </div>

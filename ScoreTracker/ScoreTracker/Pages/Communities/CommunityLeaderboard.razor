@@ -133,7 +133,7 @@
                             @entry.CompetitiveLevel.ToString("0.00")
                         </span>
                     }
-                    <b class="olb-grid-num" style="color:@entry.Color" title="PUMBILITY">@entry.Rating.ToString("N2")</b>
+                    <b class="olb-grid-num" style="color:@entry.Color" title="PUMBILITY">@entry.Rating.ToString("N0")</b>
                 </span>
                 <span>
                     @if (_currentType != LeaderboardType.CoOp)
@@ -158,7 +158,7 @@
                             {
                                 <TierListChartCard Chart="score.Chart"
                                                    Score="new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken, default)"
-                                                   TierLabel="@score.Rating.ToString("N2")"
+                                                   TierLabel="@score.Rating.ToString("N0")"
                                                    ShowToDo="false"/>
                             }
                         </div>

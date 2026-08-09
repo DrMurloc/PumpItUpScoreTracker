@@ -352,8 +352,17 @@ Four more places had independently grown the same defect, and every suite was gr
 | `PumbilityAttribution` | each per-chart gain rounded to whole **and dropped under a point** — which is also why a fractional gain could never be displayed: it did not survive to reach a badge |
 
 The standing rule that came out of it is in [UX-GUIDELINES §2](../UX-GUIDELINES.md): **nothing below
-the presentation layer rounds a PUMBILITY value**, totals render `N2`, gains go through
-`PumbilityFormat`, and `PumbilityPrecisionTests` is the ratchet. Two traps worth remembering —
+the presentation layer rounds a PUMBILITY value**, gains go through `PumbilityFormat`, and
+`PumbilityPrecisionTests` is the ratchet.
+
+⚠ **Two decimals are this section's, not the site's** (owner, 2026-08-09, reversing his own
+one-day-old sitewide rule). Rendering `N2` everywhere was built and then walked back: a pool total
+is a five-figure number, and three more glyphs is a real layout cost in a dashboard tile, a board
+cell and the session ceremony band. **These three pages** print the total and each chart's
+contribution at `N2` — this is where the number is being explained, so the precision earns its
+space. Every other surface prints `N0`. The Official Leaderboards pages keep the `N2` they already
+had, because they quote piugame's board. The storage rule is untouched: one unrounded double feeds
+both. Two traps worth remembering —
 `TiedAtBar` compared pool values to the bar with `==`, which on doubles is a coin toss and would have
 taken the count silently to zero; and three sites rendered a raw `@value` with no format string at
 all, harmless while the value was an int and full-precision noise the moment it stopped being one.

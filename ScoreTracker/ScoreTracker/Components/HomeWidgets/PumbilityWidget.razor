@@ -37,7 +37,7 @@ else
             <div class="dash-acct-eyebrow">@L["PUMBILITY"]</div>
             <div class="dash-acct-hero">
                 <span class="dash-acct-total">
-                    <span class="dash-stat-num rarity-glow-1">@_stats.SkillRating.ToString("N2")</span>
+                    <span class="dash-stat-num rarity-glow-1">@_stats.SkillRating.ToString("N0")</span>
                     @if (_weeklyDelta is > 0)
                     {
                         <PumbilityDelta Value="_weeklyDelta.Value" Marker="▲ " Class="dash-stat-delta"></PumbilityDelta>
@@ -46,11 +46,11 @@ else
                 <div class="dash-acct-pools">
                     <div class="dash-acct-poolrow">
                         <span style="color:var(--chart-singles)">S</span>
-                        <span class="dash-acct-poolnum">@_stats.SinglesRating.ToString("N2")</span>
+                        <span class="dash-acct-poolnum">@_stats.SinglesRating.ToString("N0")</span>
                     </div>
                     <div class="dash-acct-poolrow">
                         <span style="color:var(--chart-doubles)">D</span>
-                        <span class="dash-acct-poolnum">@_stats.DoublesRating.ToString("N2")</span>
+                        <span class="dash-acct-poolnum">@_stats.DoublesRating.ToString("N0")</span>
                     </div>
                 </div>
             </div>
