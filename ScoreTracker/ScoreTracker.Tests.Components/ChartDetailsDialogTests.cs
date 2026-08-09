@@ -66,6 +66,12 @@ public sealed class ChartDetailsDialogTests : TestContext
         _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<UserPhoenixScore>());
+        // That board also asks whether the chart carries a limbo leaderboard. Left unstubbed the
+        // mock hands back null and the component dereferences it during load — which fails every
+        // test in this file, none of which is about leaderboards.
+        _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.ScoreLedger.Contracts.Queries.GetLimboChartsQuery>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<Guid>)new HashSet<Guid>());
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         // The similarity graph is empty on a fresh database and until the nightly rebuild has

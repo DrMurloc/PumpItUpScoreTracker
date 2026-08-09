@@ -3183,6 +3183,9 @@
   <data name="Lowest level" xml:space="preserve">
     <value>최저 레벨</value>
   </data>
+  <data name="Lowest Passing" xml:space="preserve">
+    <value>최저 클리어</value>
+  </data>
   <data name="Lv" xml:space="preserve">
     <value>Lv</value>
   </data>

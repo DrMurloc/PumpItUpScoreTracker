@@ -7,6 +7,7 @@ using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using MediatR;
 using Moq;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Communities.Contracts.Queries;
@@ -50,6 +51,11 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
         _mediator.Setup(m => m.Send(It.IsAny<GetCompetitivePlayersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Guid>());
+        // Every chart view asks whether it carries a limbo board. Unstubbed this hands back null
+        // and the component dereferences it during load, which takes out every test in the file
+        // rather than just the limbo ones.
+        _mediator.Setup(m => m.Send(It.IsAny<GetLimboChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<Guid>)new HashSet<Guid>());
         // DifficultyBubble reads scoring levels through this; an unstubbed mock hands back null
         // and the bubble dereferences it before the dialog's own markup ever renders.
         _mediator.Setup(m => m.Send(It.IsAny<ScoreTracker.ChartIntelligence.Contracts.Queries.GetChartScoringLevelsQuery>(),
@@ -305,6 +311,63 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             Assert.Contains("weekly-lb-community", rows[0].ClassName);
             Assert.DoesNotContain("weekly-lb-community", rows[1].ClassName);
         });
+    }
+
+    [Fact]
+    public void AnUnflaggedChartShowsNoLimboChipAtAll()
+    {
+        var dialog = RenderDialog();
+
+        // The one scope that hides rather than greys: a permanently disabled chip on every chart
+        // in the game is furniture nobody asked for.
+        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll("[data-testid='cld-scope-World']")));
+        Assert.Empty(dialog.FindAll("[data-testid='cld-scope-LowestPassing']"));
+    }
+
+    [Fact]
+    public void AFlaggedChartShowsTheLimboChip()
+    {
+        GivenAFlaggedChart();
+
+        var dialog = RenderDialog();
+
+        dialog.WaitForAssertion(() =>
+            Assert.NotEmpty(dialog.FindAll("[data-testid='cld-scope-LowestPassing']")));
+    }
+
+    [Fact]
+    public async Task TheLimboBoardRanksTheLowestPassFirst()
+    {
+        GivenAFlaggedChart();
+        _mediator.Setup(m => m.Send(It.IsAny<GetLowestPassingScoresQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                Score(640_500, When, "TRIER"),
+                Score(312_004, When, "LOWBALLER"),
+                Score(444_444, When, "BREAKER")
+            });
+        var dialog = RenderDialog();
+        dialog.WaitForAssertion(() =>
+            Assert.NotEmpty(dialog.FindAll("[data-testid='cld-scope-LowestPassing']")));
+
+        // Awaited, never Click(): the synchronous helper posts the event and returns, so the
+        // assertion reads the pre-click render (bunit-apex-click trap).
+        await dialog.Find("[data-testid='cld-scope-LowestPassing']").ClickAsync(new MouseEventArgs());
+
+        dialog.WaitForAssertion(() =>
+        {
+            var names = dialog.FindAll(".weekly-lb-user").Select(e => e.TextContent.Trim()).ToArray();
+            Assert.Equal(new[] { "LOWBALLER", "BREAKER", "TRIER" }, names);
+            // Place still counts up from the top of the board — the board just runs the other way.
+            Assert.Equal(new[] { "#1", "#2", "#3" },
+                dialog.FindAll(".weekly-lb-place").Select(e => e.TextContent.Trim()).ToArray());
+        });
+    }
+
+    private void GivenAFlaggedChart()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetLimboChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<Guid>)new HashSet<Guid> { ChartId });
     }
 
     private static UserPhoenixScore ScoreFor(Guid userId, int score, string name) =>

@@ -3183,6 +3183,9 @@
   <data name="Lowest level" xml:space="preserve">
     <value>Nivel más bajo</value>
   </data>
+  <data name="Lowest Passing" xml:space="preserve">
+    <value>Pass más bajo</value>
+  </data>
   <data name="Lv" xml:space="preserve">
     <value>Nv</value>
   </data>
