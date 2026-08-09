@@ -32,37 +32,39 @@
         </div>
         @if (_editing)
         {
-            <div class="chart-record-inputs">
-                <MudNumericField T="int?" Label="@L["Score"]" @bind-Value="_inputScore" Min="0" Max="1000000"
-                                 HideSpinButtons="true" Margin="Margin.Dense"></MudNumericField>
-                <MudSelect T="PhoenixPlate?" Label="@L["Plate"]" @bind-Value="_inputPlate" Clearable="true"
-                           Margin="Margin.Dense">
-                    @foreach (var plate in Enum.GetValues<PhoenixPlate>())
-                    {
-                        <MudSelectItem T="PhoenixPlate?" Value="plate">@plate.GetName()</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudCheckBox T="bool" @bind-Value="_inputBroken" Label="@L["Broken"]" Dense="true"></MudCheckBox>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="_isSaving" FullWidth="true"
-                           OnClick="SaveScore">@L["Save"]</MudButton>
-            </div>
+            <RecordScoreForm Chart="Chart" Mix="Mix" OnSaved="OnRecordSaved"></RecordScoreForm>
         }
         else
         {
-            @if (_best?.Score != null)
+            @if (_isLegacy && _legacyBest != null)
+            {
+                @* A legacy best leads with its grade: the letter IS the score in every mix
+                   before Phoenix. The era number rides along when the player supplied one,
+                   and stays a plain figure — it is not out of 1,000,000 and there is no
+                   plate or ranking to hang off it. *@
+                <div class="chart-record-score">
+                    <LetterGradeIcon LegacyGrade="_legacyBest.LetterGrade" IsBroken="_legacyBest.IsBroken"
+                                     Height="26"></LetterGradeIcon>
+                    @if (_legacyBest.Score is { } legacyScore)
+                    {
+                        <span class="chart-record-legacy-score">@(((int)legacyScore).ToString("N0"))</span>
+                    }
+                </div>
+            }
+            else if (!_isLegacy && _best?.Score != null)
             {
                 <div class="chart-record-score">
                     <ScoreBreakdown Score="_best.Score.Value" IsBroken="_best.IsBroken" Mix="Mix" OneLine="true"
                                     ShowScore="true" Plate="_best.Plate" Ranking="_ranking"></ScoreBreakdown>
                 </div>
-                @if (_ageDays != null)
-                {
-                    <MudText Typo="Typo.caption" Class="chart-record-age">@L["Recorded {0} days ago", _ageDays]</MudText>
-                }
             }
             else
             {
                 <MudText Typo="Typo.body2" Class="chart-record-empty">@L["No score yet — record your first attempt and this lights up."]</MudText>
+            }
+            @if (_ageDays != null)
+            {
+                <MudText Typo="Typo.caption" Class="chart-record-age">@L["Recorded {0} days ago", _ageDays]</MudText>
             }
             <ScoreJourneyList Entries="_journey"></ScoreJourneyList>
         }
@@ -80,15 +82,14 @@
 
     private Chart? Chart { get; set; }
     private RecordedPhoenixScore? _best;
+    private XXChartAttempt? _legacyBest;
     private ScoreRankingRecord? _ranking;
     private int? _ageDays;
     private IReadOnlyList<ScoreJournalEntry> _journey = Array.Empty<ScoreJournalEntry>();
-    private int? _inputScore;
-    private PhoenixPlate? _inputPlate;
-    private bool _inputBroken;
-    private bool _isSaving;
     private bool _editing;
     private Guid _loadedFor;
+
+    private bool _isLegacy => Mix.UsesLegacyScoring();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -101,41 +102,45 @@
         _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
     }
 
+    /// <summary>
+    ///     Reads the best from the store that mix actually uses. A legacy record lives in
+    ///     BestAttempt as a letter grade; only Phoenix-generation records live in the Phoenix
+    ///     store. Asking the Phoenix store about a legacy mix is what made a real record read
+    ///     as "No score yet" on this very panel.
+    /// </summary>
     private async Task LoadBest()
     {
         if (Chart == null) return;
+        if (_isLegacy)
+        {
+            _legacyBest = (await Mediator.Send(new GetXXBestChartAttemptQuery(Chart.Id, Mix))).BestAttempt;
+            _best = null;
+            // Score rankings are built from Phoenix scores, so there is no legacy percentile
+            // to quote — era scores are note-count dependent and do not compare across charts.
+            _ranking = null;
+            _ageDays = _legacyBest == null ? null : (int)(Clock.Now - _legacyBest.RecordedOn).TotalDays;
+            return;
+        }
+
         _best = await Mediator.Send(new GetPhoenixRecordQuery(Chart.Id, Mix));
+        _legacyBest = null;
         _ranking = (await Mediator.Send(new GetChartScoreRankingsQuery(new[] { Chart.Id }, Mix)))
             .TryGetValue(Chart.Id, out var ranking)
             ? ranking
             : null;
         _ageDays = _best == null ? null : (int)(Clock.Now - _best.RecordedDate).TotalDays;
-        _inputScore = _best?.Score == null ? null : (int)_best.Score.Value;
-        _inputPlate = _best?.Plate;
-        _inputBroken = _best?.IsBroken ?? false;
     }
 
-    private async Task SaveScore()
+    /// <summary>
+    ///     The form owns the write and its own error reporting; the panel re-reads what
+    ///     landed and returns to the score, which is the thing that just changed.
+    /// </summary>
+    private async Task OnRecordSaved(RecordScoreForm.Result result)
     {
         if (Chart == null) return;
-        _isSaving = true;
-        try
-        {
-            var parsedScore = _inputScore == null ? null :
-                PhoenixScore.TryParse(_inputScore.Value, out var score) ? (PhoenixScore?)score : null;
-            await Mediator.Send(new UpdatePhoenixBestAttemptCommand(Chart.Id, _inputBroken, parsedScore,
-                _inputPlate, Mix: Mix));
-            Snackbar.Add(L["Score recorded for {0}", Chart.Song.Name.ToString()].Value, Severity.Success);
-            await LoadBest();
-            _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
-            // Back to the score itself — the thing you just changed is the thing to show.
-            _editing = false;
-        }
-        catch (Exception)
-        {
-            Snackbar.Add(L["There was an error while recording the score"].Value, Severity.Error);
-        }
-
-        _isSaving = false;
+        Snackbar.Add(L["Score recorded for {0}", Chart.Song.Name.ToString()].Value, Severity.Success);
+        await LoadBest();
+        _journey = (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray();
+        _editing = false;
     }
 }

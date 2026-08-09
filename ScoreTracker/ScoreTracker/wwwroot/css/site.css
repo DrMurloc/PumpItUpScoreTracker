@@ -4567,6 +4567,14 @@ html.sheet-open .more-sheet-scrim {
     margin-top: 8px;
 }
 
+/* A legacy best is a grade icon with the era number beside it, when the player gave one.
+   Tabular figures because the number is a measurement, not a label. */
+.chart-record-legacy-score {
+    margin-left: 8px;
+    font-variant-numeric: tabular-nums;
+    vertical-align: middle;
+}
+
 .chart-record-age, .chart-record-note {
     display: block;
     color: var(--mix-ink-muted);
