@@ -1323,6 +1323,9 @@
   <data name="Comments" xml:space="preserve">
     <value>댓글</value>
   </data>
+  <data name="Comments are switched off. You can see this tab because you're the site admin — nobody else has it." xml:space="preserve">
+    <value>댓글은 꺼져 있습니다. 이 탭이 보이는 이유는 사이트 관리자이기 때문이며, 다른 사람에게는 보이지 않습니다.</value>
+  </data>
   <data name="Communities" xml:space="preserve">
     <value>커뮤니티</value>
   </data>

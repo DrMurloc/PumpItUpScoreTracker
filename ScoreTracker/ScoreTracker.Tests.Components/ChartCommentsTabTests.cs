@@ -162,6 +162,24 @@ public sealed class ChartCommentsTabTests : TestContext
         Assert.Contains("Posting to Public as ERRLENA", page.Markup);
     }
 
+    [Fact]
+    public void TheAdminIsToldWhyTheTabIsThereWhileTheFlagIsOff()
+    {
+        // Seeing the tab on a local run reads as "the flag is on" — it usually is not, it is the
+        // IsAdmin half of the gate, and a prod-synced local database means the owner logs in as
+        // himself without thinking about it.
+        var page = RenderComponent<ChartCommentsTab>(p => p
+            .Add(c => c.ChartId, Chart).Add(c => c.Active, true).Add(c => c.AdminPreview, true));
+
+        Assert.NotEmpty(page.FindAll("[data-testid='cmt-admin-preview']"));
+    }
+
+    [Fact]
+    public void OnceTheFlagIsOnNobodyIsToldAnything()
+    {
+        Assert.Empty(Render().FindAll("[data-testid='cmt-admin-preview']"));
+    }
+
     // ----- who gets which control ---------------------------------------------------------------
     //
     // The saga decides ViewerMayModerate (CommentSagaTests owns that half). These pin the other

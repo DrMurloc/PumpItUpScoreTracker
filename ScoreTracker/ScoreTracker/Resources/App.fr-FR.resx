@@ -1334,6 +1334,9 @@
   <data name="Comments" xml:space="preserve">
     <value>Commentaires</value>
   </data>
+  <data name="Comments are switched off. You can see this tab because you're the site admin — nobody else has it." xml:space="preserve">
+    <value>Les commentaires sont désactivés. Vous voyez cet onglet parce que vous êtes l’administrateur du site — personne d’autre ne l’a.</value>
+  </data>
   <data name="Communities" xml:space="preserve">
     <value>Communautés</value>
   </data>

@@ -93,7 +93,10 @@
             @if (CommentsVisible)
             {
                 <div class="@PanelClass(DetailsTab.Comments)">
+                    @* The panel only renders when CommentsVisible, so inside it a disabled flag
+                       means one thing: this tab is here because of who is looking at it. *@
                     <ChartCommentsTab ChartId="ViewChart.Id" Active="IsLive(DetailsTab.Comments)"
+                                      AdminPreview="@(!Comments.Value.Enabled)"
                                       FocusCommentId="@(IsDrilled ? null : FocusCommentId)"
                                       @key="(ViewChart.Id, nameof(ChartCommentsTab))"></ChartCommentsTab>
                 </div>

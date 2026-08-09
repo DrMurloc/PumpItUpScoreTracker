@@ -25,6 +25,16 @@
     </div>
 }
 
+@* The tab is gated on `IsAdmin || ChartComments:Enabled`, so the site admin sees it while the
+   flag is off and everyone else does not. That is easy to mistake for the flag being on — say so
+   rather than leave it to be inferred from a config file. *@
+@if (AdminPreview)
+{
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2" data-testid="cmt-admin-preview">
+        @L["Comments are switched off. You can see this tab because you're the site admin — nobody else has it."]
+    </MudAlert>
+}
+
 <LinkInterstitial Url="@_pendingLink" OnDismiss="() => _pendingLink = null"></LinkInterstitial>
 
 @if (_loading)
@@ -424,6 +434,12 @@ else
 
     /// <summary>False while this sits behind a tab nobody selected, so it issues no reads.</summary>
     [Parameter] public bool Active { get; set; }
+
+    /// <summary>
+    ///     True when the only reason this tab exists is that the reader is the site admin — the
+    ///     launch flag is still off and nobody else has it.
+    /// </summary>
+    [Parameter] public bool AdminPreview { get; set; }
 
     /// <summary>
     ///     Opens on the comment a moderation queue row named. Nothing sends one yet — the queue
