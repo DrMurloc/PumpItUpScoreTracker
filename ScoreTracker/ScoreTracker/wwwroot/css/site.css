@@ -14151,3 +14151,28 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-accent);
 }
 
+
+/* MixUnavailableNotice — what a page says when the mix in view cannot answer it. Shared
+   rather than page-scoped: .tier-list-cta was declared inside ChartSkills' own <style>
+   block, so every other page that reused the class rendered it unstyled. */
+.mix-unavailable {
+    border: 1px dashed var(--mud-palette-lines-default);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.mix-unavailable-detail {
+    color: var(--mix-ink-muted);
+    max-width: 60ch;
+}
+
+.mix-unavailable-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
