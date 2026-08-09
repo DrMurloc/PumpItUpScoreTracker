@@ -25,6 +25,17 @@
 {
     <MudText Typo="Typo.body1">@L["Sign in to track rivals."]</MudText>
 }
+else if (CurrentMix.UsesLegacyScoring())
+{
+    @* Every comparison here is built on normalized scoring — the head-to-head, the feed's
+       "beat your score by", the competitive-level match that decides who is worth rivalling.
+       A legacy mix records a letter grade, and two letter grades on different charts do not
+       compare, so the page would answer every question with nothing. Said plainly rather
+       than rendered as an empty roster that looks like you simply have no rivals. *@
+    <MixUnavailableNotice Mix="CurrentMix" Subject="@L["Rivals"]">
+        @L["Rivalries compare scores, and scores before Phoenix aren't comparable between charts."]
+    </MixUnavailableNotice>
+}
 else
 {
     <MudText Typo="Typo.h5" Class="mb-1">@L["Rivals"]</MudText>
@@ -111,7 +122,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (CurrentUser.IsLoggedIn) await Reload();
+        // Nothing below has an answer on a legacy mix, so none of it is asked for.
+        if (CurrentUser.IsLoggedIn && !CurrentMix.UsesLegacyScoring()) await Reload();
     }
 
     private async Task Reload()
