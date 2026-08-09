@@ -64,23 +64,7 @@
             {
                 <MudText Typo="Typo.body2" Class="chart-record-empty">@L["No score yet — record your first attempt and this lights up."]</MudText>
             }
-            @if (_journey.Any())
-            {
-                <div class="chart-record-journey">
-                    @foreach (var entry in _journey)
-                    {
-                        <div class="chart-record-journey-row">
-                            <span class="chart-record-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.Mix.GetName()</MudChip>
-                            <span class="chart-record-journey-score">@(entry.Score?.ToString() ?? "—")</span>
-                            @if (entry.Score != null)
-                            {
-                                <LetterGradeIcon Grade="entry.Score.Value.LetterGradeFor(Mix)" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
-                            }
-                        </div>
-                    }
-                </div>
-            }
+            <ScoreJourneyList Entries="_journey"></ScoreJourneyList>
         }
     </div>
 }

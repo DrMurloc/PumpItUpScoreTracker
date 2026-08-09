@@ -21,27 +21,7 @@
     {
         <MudText Typo="Typo.overline">@L["Score History"]</MudText>
     }
-    @if (_journey.Any())
-    {
-        <div class="chart-details-journey">
-            @foreach (var entry in _journey)
-            {
-                <div class="chart-details-journey-row">
-                    <span class="chart-details-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
-                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@MixName(entry.Mix)</MudChip>
-                    <span class="chart-details-journey-score">@(entry.Score?.ToString() ?? "—")</span>
-                    @if (entry.Score != null)
-                    {
-                        <LetterGradeIcon Grade="entry.Score.Value.LetterGradeFor(Mix)" IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
-                    }
-                </div>
-            }
-        </div>
-    }
-    else
-    {
-        <MudText Typo="Typo.body2" Class="chart-details-journey-empty">@L["No scores recorded on this chart yet."]</MudText>
-    }
+    <ScoreJourneyList Entries="_journey" ShowWhenEmpty="true"></ScoreJourneyList>
     @* Round 10: buttons never shrink into vertical letter-stacks (nowrap + wrap
        to their own line instead).
        Round 11: the score inputs are always visible (no Record Score toggle) and
@@ -67,29 +47,6 @@
 }
 
 <style>
-    .chart-details-journey-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 2px 0;
-        border-bottom: 1px dashed var(--mud-palette-lines-default);
-    }
-
-    .chart-details-journey-date {
-        color: var(--mud-palette-text-secondary);
-        font-variant-numeric: tabular-nums;
-    }
-
-    /* No flex-grow: the grade icon sits beside the score, not floated to the far
-       right (owner, piucenter round 4). */
-    .chart-details-journey-score {
-        font-variant-numeric: tabular-nums;
-    }
-
-    .chart-details-journey-empty {
-        color: var(--mud-palette-text-secondary);
-    }
-
     .chart-details-record {
         margin-top: 8px;
     }
@@ -155,11 +112,6 @@
         _journey = CurrentUser.IsLoggedIn
             ? (await Mediator.Send(new GetChartScoreJourneyQuery(Chart.Id))).ToArray()
             : Array.Empty<ScoreJournalEntry>();
-    }
-
-    private static string MixName(MixEnum mix)
-    {
-        return mix == MixEnum.Phoenix2 ? "Phoenix 2" : mix.ToString();
     }
 
     private async Task SaveScore()
