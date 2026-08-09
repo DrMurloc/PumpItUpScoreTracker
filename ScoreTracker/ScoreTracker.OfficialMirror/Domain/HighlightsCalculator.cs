@@ -27,7 +27,9 @@ internal sealed record HighlightsResult(
 ///     against the previous sealed snapshot. Pure: every rule that makes the weekly board
 ///     lives here.
 ///     - Movers rank by PUMBILITY-board rank improvement (a mix without that board, i.e.
-///       Phoenix, gets none).
+///       Phoenix, gets none). Entering the board counts as a climb from one place below
+///       last week's last, and the gainers card prices the same entry from last week's
+///       floor value — a debut on the board is movement, not an absence of it.
 ///     - Boards-climbed counts chart boards where a player improved or newly entered.
 ///     - A new #1 must BEAT the all-time record; matching a standing score credits
 ///       nothing, while players sharing the record score in the same week co-credit.
@@ -156,18 +158,27 @@ internal static class HighlightsCalculator
             var previousByPlayer = previousBoard
                 .GroupBy(p => p.PlayerId)
                 .ToDictionary(g => g.Key, g => g.First());
+            // The movers rule priced in PUMBILITY instead of places: someone who was not on
+            // the board last week is measured from its floor, because below the floor is the
+            // only thing the board knows about where they stood. The two cards have to agree
+            // on who arrived from where, or the same week reads two ways.
+            var floorValue = previousBoard.Min(p => p.Score);
+            var floorPlace = previousBoard.Count + 1;
             var gainers = currentBoard
-                .Where(p => previousByPlayer.TryGetValue(p.PlayerId, out var was) && p.Score > was.Score)
-                .OrderByDescending(p => p.Score - previousByPlayer[p.PlayerId].Score)
-                .ThenBy(p => p.Place)
+                .Select(p => previousByPlayer.TryGetValue(p.PlayerId, out var was)
+                    ? (Placement: p, WasScore: was.Score, WasPlace: was.Place)
+                    : (Placement: p, WasScore: floorValue, WasPlace: floorPlace))
+                .Where(g => g.Placement.Score > g.WasScore)
+                .OrderByDescending(g => g.Placement.Score - g.WasScore)
+                .ThenBy(g => g.Placement.Place)
                 .Take(GainersTaken)
                 .ToArray();
             for (var i = 0; i < gainers.Length; i++)
             {
-                var was = previousByPlayer[gainers[i].PlayerId];
-                yield return new HighlightRow(HighlightKinds.PumbilityGainer, i + 1, gainers[i].PlayerId,
-                    null, pumbility.Id, null, null, was.Place, null, gainers[i].Score, was.Score,
-                    gainers[i].Place);
+                var (placement, wasScore, wasPlace) = gainers[i];
+                yield return new HighlightRow(HighlightKinds.PumbilityGainer, i + 1, placement.PlayerId,
+                    null, pumbility.Id, null, null, wasPlace, null, placement.Score, wasScore,
+                    placement.Place);
             }
         }
 
@@ -247,19 +258,26 @@ internal static class HighlightsCalculator
             !previousByBoard.TryGetValue(pumbility.Id, out var previous)) yield break;
 
         var previousPlaces = previous.ToDictionary(p => p.PlayerId, p => p.Place);
+        // Entering the board is a climb from off it, counted the way a chart board counts one:
+        // the place below last week's last is where the board says they were, so landing #42
+        // on a board of 1000 credits 959 and landing last credits 1. Excluding them instead
+        // called the biggest rise of the week nothing at all. Renames settle before the diff
+        // runs, so a tag that only changed spelling arrives carrying its own previous place
+        // rather than claiming a climb nobody made.
+        var enteredFrom = previous.Count + 1;
         var movers = current
-            .Where(p => previousPlaces.ContainsKey(p.PlayerId))
-            .Select(p => (Placement: p, Delta: previousPlaces[p.PlayerId] - p.Place))
-            .Where(m => m.Delta > 0)
-            .OrderByDescending(m => m.Delta).ThenBy(m => m.Placement.Place)
+            .Select(p => (Placement: p,
+                PreviousPlace: previousPlaces.TryGetValue(p.PlayerId, out var was) ? was : enteredFrom))
+            .Where(m => m.PreviousPlace > m.Placement.Place)
+            .OrderByDescending(m => m.PreviousPlace - m.Placement.Place).ThenBy(m => m.Placement.Place)
             .Take(MoversTaken)
             .ToArray();
         for (var i = 0; i < movers.Length; i++)
         {
-            var (placement, _) = movers[i];
+            var (placement, previousPlace) = movers[i];
             yield return new HighlightRow(HighlightKinds.PumbilityMover, i + 1, placement.PlayerId, null,
                 pumbility.Id, null, null, null, null, placement.Score,
-                previousPlaces[placement.PlayerId], placement.Place);
+                previousPlace, placement.Place);
         }
     }
 

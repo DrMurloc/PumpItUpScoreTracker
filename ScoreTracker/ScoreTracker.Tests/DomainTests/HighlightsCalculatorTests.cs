@@ -149,6 +149,88 @@ public sealed class HighlightsCalculatorTests
     }
 
     [Fact]
+    public void EnteringThePumbilityBoardIsCreditedAsAClimbFromOffIt()
+    {
+        // Player 9 was not on last week's five-deep board, so the board puts them 6th at
+        // best: landing 2nd is a four-place climb, and it beats player 5's real 5→3.
+        var result = HighlightsCalculator.Calculate(Input(
+            current: new[]
+            {
+                new PlacementRow(PumbilityBoardId, 1, 1, 18500m),
+                new PlacementRow(PumbilityBoardId, 9, 2, 18400m),
+                new PlacementRow(PumbilityBoardId, 5, 3, 18300m),
+                new PlacementRow(PumbilityBoardId, 2, 4, 18200m),
+                new PlacementRow(PumbilityBoardId, 3, 5, 18100m)
+            },
+            previous: new[]
+            {
+                new PlacementRow(PumbilityBoardId, 1, 1, 18450m),
+                new PlacementRow(PumbilityBoardId, 2, 2, 18350m),
+                new PlacementRow(PumbilityBoardId, 3, 3, 18250m),
+                new PlacementRow(PumbilityBoardId, 4, 4, 18150m),
+                new PlacementRow(PumbilityBoardId, 5, 5, 18050m)
+            }));
+
+        var movers = result.Highlights.Where(h => h.Kind == HighlightKinds.PumbilityMover).ToArray();
+        Assert.Equal(new int?[] { 9, 5 }, movers.Select(m => m.PlayerId).ToArray());
+        Assert.Equal(6, movers[0].PrevValue);
+        Assert.Equal(2, movers[0].NewValue);
+    }
+
+    [Fact]
+    public void EnteringBelowWhereLastWeeksBoardEndedIsNoClimbAtAll()
+    {
+        // The board grew from three rows to five. The two arrivals below the old floor rose
+        // to nowhere it was measuring, so neither is a mover — only player 3's 3→1 is.
+        var result = HighlightsCalculator.Calculate(Input(
+            current: new[]
+            {
+                new PlacementRow(PumbilityBoardId, 3, 1, 18300m),
+                new PlacementRow(PumbilityBoardId, 1, 2, 18200m),
+                new PlacementRow(PumbilityBoardId, 2, 3, 18100m),
+                new PlacementRow(PumbilityBoardId, 8, 4, 18000m),
+                new PlacementRow(PumbilityBoardId, 9, 5, 17900m)
+            },
+            previous: new[]
+            {
+                new PlacementRow(PumbilityBoardId, 1, 1, 18250m),
+                new PlacementRow(PumbilityBoardId, 2, 2, 18150m),
+                new PlacementRow(PumbilityBoardId, 3, 3, 18050m)
+            }));
+
+        var movers = result.Highlights.Where(h => h.Kind == HighlightKinds.PumbilityMover).ToArray();
+        Assert.Equal(new int?[] { 3 }, movers.Select(m => m.PlayerId).ToArray());
+    }
+
+    [Fact]
+    public void AGainerNewToTheBoardIsPricedFromLastWeeksFloor()
+    {
+        // Player 9 arrives at 18,400 on a board whose floor was 16,000 — a 2,400 gain, which
+        // is the week's biggest. Counting them as no gain at all hid it behind player 1's 300.
+        var result = HighlightsCalculator.Calculate(Input(
+            current: new[]
+            {
+                new PlacementRow(PumbilityBoardId, 9, 1, 18400m),
+                new PlacementRow(PumbilityBoardId, 1, 2, 18300m),
+                new PlacementRow(PumbilityBoardId, 2, 3, 17100m),
+                new PlacementRow(PumbilityBoardId, 3, 4, 16050m)
+            },
+            previous: new[]
+            {
+                new PlacementRow(PumbilityBoardId, 1, 1, 18000m),
+                new PlacementRow(PumbilityBoardId, 2, 2, 17000m),
+                new PlacementRow(PumbilityBoardId, 3, 3, 16000m)
+            }));
+
+        var gainers = result.Highlights.Where(h => h.Kind == HighlightKinds.PumbilityGainer).ToArray();
+        Assert.Equal(new int?[] { 9, 1, 2 }, gainers.Select(g => g.PlayerId).ToArray());
+        Assert.Equal(16000m, gainers[0].PrevValue);
+        Assert.Equal(18400m, gainers[0].Score);
+        Assert.Equal(4, gainers[0].Level);
+        Assert.Equal(1, gainers[0].NewValue);
+    }
+
+    [Fact]
     public void FloorMarksCarryBothWeeksValuesAndFiftySsLevels()
     {
         // A 1,200-deep board: each landmark rank stores its floor, last week's floor, and
