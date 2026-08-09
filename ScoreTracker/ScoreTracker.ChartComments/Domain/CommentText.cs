@@ -14,16 +14,24 @@ namespace ScoreTracker.ChartComments.Domain;
 ///         than 500 minus the asterisks.
 ///     </para>
 /// </summary>
-internal static class CommentText
+internal static partial class CommentText
 {
     public const int MaxLength = 500;
 
-    // Deliberately requires an explicit http(s) scheme, which is the whole scheme allowlist: a
-    // "javascript:alert(1)" in a comment is never a link candidate in the first place. The
-    // character class stops at whitespace and at the three characters that could only be there
-    // because someone was aiming at a renderer.
-    private static readonly Regex UrlPattern =
-        new(@"https?://[^\s<>""]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    /// <summary>
+    ///     Deliberately requires an explicit http(s) scheme, which is the whole scheme allowlist: a
+    ///     <c>javascript:alert(1)</c> in a comment is never a link candidate in the first place. The
+    ///     character class stops at whitespace and at the three characters that could only be there
+    ///     because someone was aiming at a renderer.
+    ///     <para>
+    ///         The timeout is belt-and-braces rather than a known fix: this pattern has no nested
+    ///         quantifier and cannot backtrack catastrophically. But it is run against arbitrary
+    ///         text a stranger typed, on every comment render, and a bound costs nothing next to
+    ///         being wrong about that.
+    ///     </para>
+    /// </summary>
+    [GeneratedRegex(@"https?://[^\s<>""]+", RegexOptions.IgnoreCase, 100)]
+    private static partial Regex UrlPattern();
 
     // Sentence punctuation that follows a URL far more often than it belongs to one.
     private static readonly char[] TrailingNoise = { '.', ',', ';', ':', '!', '?', '"', '\'' };
@@ -77,7 +85,7 @@ internal static class CommentText
     private static void AppendLine(string line, LinkTrust trust, List<CommentSpan> spans)
     {
         var cursor = 0;
-        foreach (Match match in UrlPattern.Matches(line))
+        foreach (Match match in UrlPattern().Matches(line))
         {
             var candidate = TrimTrailingNoise(match.Value);
             var uri = LinkTrust.TryParse(candidate);

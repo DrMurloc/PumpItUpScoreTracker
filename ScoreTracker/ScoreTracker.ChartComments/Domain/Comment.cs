@@ -14,21 +14,19 @@ namespace ScoreTracker.ChartComments.Domain;
 /// </summary>
 internal sealed class Comment
 {
-    private Comment(Guid id, Guid chartId, Guid userId, CommentAudience audience, Guid? parentCommentId,
-        string text, DateTimeOffset createdAt, DateTimeOffset? editedAt, DateTimeOffset? deletedAt,
-        Guid? deletedByUserId, string? sourceLanguage)
+    private Comment(CommentState state)
     {
-        Id = id;
-        ChartId = chartId;
-        UserId = userId;
-        Audience = audience;
-        ParentCommentId = parentCommentId;
-        Text = text;
-        CreatedAt = createdAt;
-        EditedAt = editedAt;
-        DeletedAt = deletedAt;
-        DeletedByUserId = deletedByUserId;
-        SourceLanguage = sourceLanguage;
+        Id = state.Id;
+        ChartId = state.ChartId;
+        UserId = state.UserId;
+        Audience = state.Audience;
+        ParentCommentId = state.ParentCommentId;
+        Text = state.Text;
+        CreatedAt = state.CreatedAt;
+        EditedAt = state.EditedAt;
+        DeletedAt = state.DeletedAt;
+        DeletedByUserId = state.DeletedByUserId;
+        SourceLanguage = state.SourceLanguage;
     }
 
     public Guid Id { get; }
@@ -69,8 +67,8 @@ internal sealed class Comment
     public static Comment Post(Guid chartId, Guid userId, CommentAudience audience, string? text,
         DateTimeOffset now)
     {
-        return new Comment(Guid.NewGuid(), chartId, RequireUser(userId), audience, null,
-            RequireText(text), now, null, null, null, null);
+        return new Comment(new CommentState(Guid.NewGuid(), chartId, RequireUser(userId), audience,
+            null, RequireText(text), now));
     }
 
     /// <summary>
@@ -89,8 +87,8 @@ internal sealed class Comment
         if (root.IsDeleted)
             throw new CommentNotAllowedException("That comment is no longer there.");
 
-        return new Comment(Guid.NewGuid(), root.ChartId, RequireUser(userId), root.Audience, root.Id,
-            RequireText(text), now, null, null, null, null);
+        return new Comment(new CommentState(Guid.NewGuid(), root.ChartId, RequireUser(userId),
+            root.Audience, root.Id, RequireText(text), now));
     }
 
     /// <summary>
@@ -98,12 +96,9 @@ internal sealed class Comment
     ///     way in, and re-throwing here would make a row written under an older rule unreadable
     ///     rather than merely old.
     /// </summary>
-    public static Comment FromStorage(Guid id, Guid chartId, Guid userId, CommentAudience audience,
-        Guid? parentCommentId, string text, DateTimeOffset createdAt, DateTimeOffset? editedAt,
-        DateTimeOffset? deletedAt, Guid? deletedByUserId, string? sourceLanguage)
+    public static Comment FromStorage(CommentState state)
     {
-        return new Comment(id, chartId, userId, audience, parentCommentId, text, createdAt, editedAt,
-            deletedAt, deletedByUserId, sourceLanguage);
+        return new Comment(state);
     }
 
     /// <summary>

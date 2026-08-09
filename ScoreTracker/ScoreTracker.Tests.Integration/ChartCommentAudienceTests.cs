@@ -137,11 +137,11 @@ public sealed class ChartCommentAudienceTests : IAsyncLifetime
 
         var rows = await Repository.GetForChart(Chart, CommentAudience.Public, _stranger, CommentSort.Top, 1);
 
-        var root = Assert.Single(rows.Where(r => r.ParentCommentId == null));
+        var root = Assert.Single(rows, r => r.ParentCommentId == null);
         Assert.Equal(loud.Id, root.Id);
         Assert.Equal(1, root.Votes);
         // One root asked for, and its reply still arrives: replies are not what the page bounds.
-        Assert.Single(rows.Where(r => r.ParentCommentId == loud.Id));
+        Assert.Single(rows, r => r.ParentCommentId == loud.Id);
     }
 
     [Fact]
@@ -153,8 +153,8 @@ public sealed class ChartCommentAudienceTests : IAsyncLifetime
         await Repository.AddVote(comment.Id, _decoy, Now);
         await Repository.AddVote(comment.Id, _decoy, Now.AddSeconds(1));
 
-        var row = Assert.Single((await Repository.GetForChart(Chart, CommentAudience.Public, _decoy,
-            CommentSort.Top, 20)).Where(r => r.Id == comment.Id));
+        var row = Assert.Single(await Repository.GetForChart(Chart, CommentAudience.Public, _decoy,
+            CommentSort.Top, 20), r => r.Id == comment.Id);
         Assert.Equal(1, row.Votes);
         Assert.True(row.ViewerVoted);
     }

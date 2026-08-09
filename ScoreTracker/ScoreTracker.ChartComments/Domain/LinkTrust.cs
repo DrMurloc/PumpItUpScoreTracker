@@ -30,7 +30,7 @@ internal sealed class LinkTrust
         "piucenter.com"
     };
 
-    private readonly IReadOnlySet<string> _toolHosts;
+    private readonly HashSet<string> _toolHosts;
 
     public LinkTrust(IEnumerable<string>? toolHosts = null)
     {

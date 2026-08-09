@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ScoreTracker.ChartComments.Contracts;
 using ScoreTracker.ChartComments.Domain;
 using ScoreTracker.ChartComments.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence;
@@ -49,9 +50,11 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
 
         foreach (var root in heldOpen)
         {
-            var comment = Comment.FromStorage(root.Id, root.ChartId, root.UserId, ScoreTracker.ChartComments
-                    .Contracts.CommentAudience.Public, root.ParentCommentId, root.Text, root.CreatedAt,
-                root.EditedAt, root.DeletedAt, root.DeletedByUserId, root.SourceLanguage);
+            // Audience is irrelevant to a tombstone and is not read back out, so the cheapest
+            // legal value stands in rather than re-parsing the stored one.
+            var comment = Comment.FromStorage(new CommentState(root.Id, root.ChartId, root.UserId,
+                CommentAudience.Public, root.ParentCommentId, root.Text, root.CreatedAt, root.EditedAt,
+                root.DeletedAt, root.DeletedByUserId, root.SourceLanguage));
             comment.TombstoneForPurge(now);
 
             root.UserId = comment.UserId;

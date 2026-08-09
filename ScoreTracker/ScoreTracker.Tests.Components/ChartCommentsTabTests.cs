@@ -196,7 +196,8 @@ public sealed class ChartCommentsTabTests : TestContext
 
         Assert.NotEmpty(page.FindAll(".cmt-foot .cmt-act"));
         Assert.Empty(page.FindAll("[data-testid^='own-']"));
-        Assert.Empty(page.FindComponents<MudMenu>().Where(m => m.Instance.Icon == Icons.Material.Filled.Shield));
+        Assert.DoesNotContain(page.FindComponents<MudMenu>(),
+            m => m.Instance.Icon == Icons.Material.Filled.Shield);
     }
 
     [Fact]
@@ -240,8 +241,8 @@ public sealed class ChartCommentsTabTests : TestContext
             .Add(c => c.IsNote, true)
             .Add(c => c.CanInteract, true));
 
-        Assert.Empty(notes.FindComponents<MudMenu>()
-            .Where(m => m.Instance.Icon == Icons.Material.Filled.Shield));
+        Assert.DoesNotContain(notes.FindComponents<MudMenu>(),
+            m => m.Instance.Icon == Icons.Material.Filled.Shield);
     }
 
     // ----- destructive actions confirm ----------------------------------------------------------

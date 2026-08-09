@@ -263,7 +263,7 @@ internal sealed class CommentSaga :
     // ----- helpers -----------------------------------------------------------------------------
 
     private CommentRecord Project(CommentRow row, CommentAudience audience, LinkTrust trust,
-        IReadOnlyDictionary<Guid, User> authors, Guid viewer, IReadOnlyList<CommentRecord> replies)
+        Dictionary<Guid, User> authors, Guid viewer, IReadOnlyList<CommentRecord> replies)
     {
         var deletion = DeletionOf(row);
         var author = row.UserId != Guid.Empty && authors.TryGetValue(row.UserId, out var found) ? found : null;

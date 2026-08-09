@@ -199,8 +199,8 @@ internal sealed class EFCommentRepository : ICommentRepository
             _ => CommentAudience.Public
         };
 
-        return Comment.FromStorage(entity.Id, entity.ChartId, entity.UserId, audience,
+        return Comment.FromStorage(new CommentState(entity.Id, entity.ChartId, entity.UserId, audience,
             entity.ParentCommentId, entity.Text, entity.CreatedAt, entity.EditedAt, entity.DeletedAt,
-            entity.DeletedByUserId, entity.SourceLanguage);
+            entity.DeletedByUserId, entity.SourceLanguage));
     }
 }

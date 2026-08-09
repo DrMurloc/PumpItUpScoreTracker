@@ -463,7 +463,7 @@ public sealed class CommentSagaTests
         Assert.False(record.ViewerMayModerate);
     }
 
-    private CommentRow Row(Guid userId, Guid? parent = null, bool deleted = false)
+    private static CommentRow Row(Guid userId, Guid? parent = null, bool deleted = false)
     {
         return new CommentRow(Guid.NewGuid(), ChartId, userId, parent, "some words", Now, null,
             deleted ? Now : null, deleted ? userId : null, 0, false);

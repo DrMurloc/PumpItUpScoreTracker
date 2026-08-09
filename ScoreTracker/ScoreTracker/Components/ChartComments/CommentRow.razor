@@ -116,7 +116,7 @@
         Remove
     }
 
-    [Parameter] [EditorRequired] public CommentRecord Comment { get; set; } = default!;
+    [Parameter] [EditorRequired] public CommentRecord Comment { get; set; } = default;
 
     /// <summary>Set while this row is asking. The comment stays visible underneath it.</summary>
     [Parameter] public CommentAction? Confirming { get; set; }

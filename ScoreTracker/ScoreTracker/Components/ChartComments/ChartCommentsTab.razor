@@ -77,13 +77,7 @@ else
 
     @if (_page.Roots.Count == 0)
     {
-        <div class="cmt-empty">
-            @(IsNotes
-                ? L["Notes you write here are only ever visible to you."]
-                : CurrentUser.IsLoggedIn
-                    ? L["Nothing here yet. Share what you know about this chart."]
-                    : L["Nothing here yet."])
-        </div>
+        <div class="cmt-empty">@EmptyText</div>
     }
 
     @foreach (var root in _page.Roots)
@@ -461,6 +455,23 @@ else
     private string AudienceNote => IsNotes
         ? L["Only you can see this"]
         : L["Posting to {0} as {1}", ScopeLabel, CurrentUser.User.Name.ToString()];
+
+    /// <summary>
+    ///     Three empty states, because three different things are true: your notes are private and
+    ///     that is worth saying up front, a signed-in reader can do something about the silence, and
+    ///     a signed-out one cannot.
+    /// </summary>
+    private string EmptyText
+    {
+        get
+        {
+            if (IsNotes) return L["Notes you write here are only ever visible to you."];
+
+            return CurrentUser.IsLoggedIn
+                ? L["Nothing here yet. Share what you know about this chart."]
+                : L["Nothing here yet."];
+        }
+    }
 
     private string ScopeLabel =>
         _scopes.FirstOrDefault(s => s.Audience == _audience)?.Label.ToString() ?? L["Public"].Value;

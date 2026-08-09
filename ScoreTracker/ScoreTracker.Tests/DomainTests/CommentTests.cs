@@ -231,7 +231,9 @@ public sealed class CommentTests
     [Fact]
     public void AStrangerMayVote()
     {
-        Root().EnsureCanBeVotedOnBy(Stranger);
+        // The guard throws or it does not, so "does not" is the assertion — said out loud, because
+        // a test body with no Assert in it reads as one somebody forgot to finish.
+        Assert.Null(Record.Exception(() => Root().EnsureCanBeVotedOnBy(Stranger)));
     }
 
     [Fact]

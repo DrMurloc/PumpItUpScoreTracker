@@ -60,7 +60,8 @@ public sealed class CommentTextTests
     [Fact]
     public void AnUnknownHostStillLinksButIsNotTrusted()
     {
-        var link = Assert.Single(Parse("https://stepcharts.example.net/x").Where(s => s.Kind == CommentSpanKind.Link));
+        var link = Assert.Single(Parse("https://stepcharts.example.net/x"),
+            s => s.Kind == CommentSpanKind.Link);
 
         Assert.False(link.IsTrusted);
     }
@@ -77,7 +78,8 @@ public sealed class CommentTextTests
     [Fact]
     public void ABracketTheUrlOpenedItselfIsKept()
     {
-        var link = Assert.Single(Parse("https://example.com/a_(b)").Where(s => s.Kind == CommentSpanKind.Link));
+        var link = Assert.Single(Parse("https://example.com/a_(b)"),
+            s => s.Kind == CommentSpanKind.Link);
 
         Assert.Equal("https://example.com/a_(b)", link.Url);
     }
