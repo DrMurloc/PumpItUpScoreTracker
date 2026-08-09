@@ -471,6 +471,7 @@ internal sealed class PiuGameApi : IPiuGameApi
                     Level = level,
                     NoteCount = perfects + greats + goods + bads + misses,
                     Plate = plate,
+                    Grade = GradeFrom(card.InnerHtml),
                     SongName = songName,
                     IsBroken = isBroken,
                     Score = score,
@@ -1180,7 +1181,13 @@ internal sealed class PiuGameApi : IPiuGameApi
     {
         var match = GradeImageRegex.Match(html);
         if (!match.Success) return null;
-        return match.Groups[1].Value.ToLowerInvariant() switch
+        // A failed stage renders the same grade art under an "x_" prefix (x_aa_p.png). The
+        // grade underneath is real, and a failed stage is where low scores live — the one
+        // place the site ever prints a grade for a sub-800k score. Without the strip those
+        // stems fall through to null and every broken play's grade is silently discarded.
+        var stem = match.Groups[1].Value.ToLowerInvariant();
+        if (stem.StartsWith("x_", StringComparison.Ordinal)) stem = stem[2..];
+        return stem switch
         {
             "f" => PhoenixLetterGrade.F,
             "d" => PhoenixLetterGrade.D,

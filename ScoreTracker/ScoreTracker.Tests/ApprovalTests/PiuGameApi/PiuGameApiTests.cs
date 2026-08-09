@@ -188,6 +188,47 @@ public sealed class PiuGameApiTests
         Assert.Equal(55, result[0].Misses);
     }
 
+    [Fact]
+    public async Task GetRecentScoresKeepsTheGradeTheSiteItselfPrinted()
+    {
+        // A record's stored LetterGrade is computed from its score, so the site's own grade art
+        // is the only channel through which piugame can contradict our cutoff table. The
+        // classic capture carries both shapes: a passed card (aaa_p) and a FAILED one whose
+        // grade art wears an "x_" prefix (x_aa_p) — that failed card has a real score and no
+        // plate, which is exactly the population where sub-800k scores live, and the only place
+        // the site ever prints a grade for one.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetRecentScores_HappyPath.html"));
+        var api = BuildApi(html);
+
+        var result = (await api.GetRecentScores(MixEnum.Phoenix, HttpClientReturning(html), CancellationToken.None))
+            .ToList();
+
+        var broken = Assert.Single(result, r => r.IsBroken);
+        Assert.Equal(940078, (int)broken.Score);
+        Assert.Equal(PhoenixLetterGrade.AAPlus, broken.Grade);
+
+        var passed = Assert.Single(result, r => !r.IsBroken);
+        Assert.Equal(PhoenixLetterGrade.AAAPlus, passed.Grade);
+    }
+
+    [Fact]
+    public async Task GetRecentScoresGradesAgreeWithOurPerMixCutoffTable()
+    {
+        // The Phoenix 2 capture, whose grades are all above the bands we are still guessing at.
+        // If this ever fails, a cutoff moved and the score→grade table is the thing to fix.
+        var html = await File.ReadAllTextAsync(Path.Combine(FixtureRoot, "GetRecentScores_Phoenix2Dated.html"));
+        var api = BuildApi(html);
+
+        var result = (await api.GetRecentScores(MixEnum.Phoenix2, HttpClientReturning(html), CancellationToken.None))
+            .ToList();
+
+        Assert.All(result, r =>
+        {
+            Assert.NotNull(r.Grade);
+            Assert.Equal(r.Score.LetterGradeFor(MixEnum.Phoenix2), r.Grade!.Value);
+        });
+    }
+
     [Theory]
     [InlineData("en-US")]
     [InlineData("pt-BR")]

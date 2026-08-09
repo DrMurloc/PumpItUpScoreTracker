@@ -441,6 +441,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         var recentPlays = await ResolveRecentPlays(mix, sessionId, cancellationToken);
 
         await LearnNoteCounts(mix, recentPlays, cancellationToken);
+        await ObserveScoring(mix, sessionId, recentPlays, cancellationToken);
         await AnnounceDailySteps(mix, userId, recentPlays, cancellationToken);
         EnrichBestsFromRecentPlays(recentPlays, results, includeBroken);
 
@@ -571,6 +572,53 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             if (passed == null) continue;
 
             await _charts.UpdateNoteCount(mix, chart.Id, passed.NoteCount, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    ///     Temporary instrumentation (2026-08-08) — see <see cref="ScoringObservations" />. The
+    ///     whole body is guarded because none of what it collects is worth a failed import: by
+    ///     this point the player's scores have already been scraped, and throwing here would
+    ///     lose them.
+    ///     <para>
+    ///         The PUMBILITY read is one extra GET of a page the player can open themselves, on
+    ///         the session this import already holds. It is fetched here rather than reused from
+    ///         the census because the census only runs when someone presses Score Check, which
+    ///         is far too rare to accumulate the cells that are missing.
+    ///     </para>
+    ///     <para>
+    ///         Phoenix 2 only, both halves. Phoenix 1's per-chart PUMBILITY reconciled exactly
+    ///         and prices no plate at all, so a residual there could only restate what is
+    ///         already known, and its grade cutoffs have been settled since launch. Watching
+    ///         Phoenix 1 for a contradicting grade would be a reasonable tripwire in permanent
+    ///         code, but this is not permanent, and two days is far too short a window for a
+    ///         tripwire to earn anything. What it would cost is unbounded: Phoenix 1 carries an
+    ///         order of magnitude more importers, so if it ever did fire it would fire on the
+    ///         majority path — and because sampling is scoped to the whole operation, a flood of
+    ///         Phoenix 1 operations would crowd out the Phoenix 2 rows this exists to collect.
+    ///     </para>
+    /// </summary>
+    private async Task ObserveScoring(MixEnum mix, HttpClient sessionId,
+        IReadOnlyList<ChartPlays> recentPlays, CancellationToken cancellationToken)
+    {
+        // Phoenix 2 and nothing else, so a Phoenix 1 import does literally none of this. Gating
+        // here rather than inside the detector also means PumbilityScoring is never handed a mix
+        // it has no formula for, instead of relying on the catch to absorb it.
+        if (mix != MixEnum.Phoenix2) return;
+
+        try
+        {
+            ScoringObservations.ObserveGrades(_logger, mix, recentPlays.SelectMany(p => p.Plays));
+
+            var pumbility = await _piuGame.GetPumbility(mix, sessionId, cancellationToken);
+            ScoringObservations.ObservePumbility(_logger, mix, pumbility.Entries);
+        }
+        // Filtering on the token rather than the exception type: a cancelled import does not
+        // reliably surface as OperationCanceledException, and swallowing a cancellation here
+        // would let the import carry on as though nothing had been asked of it.
+        catch (Exception e) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(e, "Scoring observation failed; the import continues");
         }
     }
 
