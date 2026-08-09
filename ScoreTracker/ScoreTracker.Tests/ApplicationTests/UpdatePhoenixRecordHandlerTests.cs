@@ -12,6 +12,7 @@ using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
@@ -855,6 +856,50 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
         ctx.Records.Verify(r => r.GetRecordedScores(MixEnum.Phoenix2, UserId,
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     The Phoenix store is not where a legacy score lives, so a legacy submission is refused
+    ///     rather than written somewhere no legacy read path consults. Two surfaces did exactly
+    ///     this for months and the rows were invisible until someone went looking in SQL.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.XX)]
+    [InlineData(MixEnum.Prime2)]
+    [InlineData(MixEnum.FirstDanceFloor)]
+    public async Task ALegacyMixIsRefusedByThePhoenixRecordPath(MixEnum mix)
+    {
+        var ctx = new HandlerContext();
+
+        await Assert.ThrowsAsync<WrongScoringModelException>(() => ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 232208, Plate: null, Mix: mix),
+            CancellationToken.None));
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Journal.Verify(j => j.Append(It.IsAny<ScoreJournalEntry>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
+    ///     Refused before the session envelope opens — a rejected submission must not leave a
+    ///     session behind for a play that was never recorded.
+    /// </summary>
+    [Fact]
+    public async Task ARefusedLegacySubmissionOpensNoSession()
+    {
+        var ctx = new HandlerContext();
+
+        await Assert.ThrowsAsync<WrongScoringModelException>(() => ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 232208, Plate: null,
+                Mix: MixEnum.Prime2),
+            CancellationToken.None));
+
+        ctx.Batches.Verify(b => b.GetOrExtendSession(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>()), Times.Never);
+        ctx.Sessions.Verify(s => s.Open(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<MixEnum>(),
+            It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private sealed class HandlerContext

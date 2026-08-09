@@ -6,6 +6,7 @@ using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
@@ -30,6 +31,13 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
+        // A legacy mix stores a letter grade in BestAttempt, not a score in PhoenixRecord.
+        // Accepting one here writes a real row into a store no legacy read path consults,
+        // wearing a 1,000,000-scale label an era score does not mean — so it is refused
+        // before a session is opened rather than corrected afterwards.
+        if (request.Mix.UsesLegacyScoring())
+            throw new WrongScoringModelException(request.Mix, "letter grade");
+
         // Every submission — no-ops included — extends the session envelope: activity
         // keeps the session alive even when nothing lands.
         var (sessionId, isNewSession) = batches.GetOrExtendSession(request.Mix, user.User.Id, request.Source,
