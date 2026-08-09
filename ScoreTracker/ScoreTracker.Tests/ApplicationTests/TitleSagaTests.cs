@@ -54,14 +54,40 @@ public sealed class TitleSagaTests
         Assert.NotEmpty(progress);
     }
 
-    [Fact]
-    public async Task TitleProgressForAnUnknownMixThrowsInsteadOfFallingBackToPhoenix()
+    /// <summary>
+    ///     A mix with no ladder returns nothing rather than throwing. It used to throw, which
+    ///     was right when the only way to reach it was a bug; now every mix is browsable, and
+    ///     most of them never awarded a title. The original point of the throw still holds and
+    ///     is what this asserts: it must never quietly fall back to the Phoenix ladder.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.Prime2)]
+    [InlineData(MixEnum.Prex3)]
+    [InlineData((MixEnum)999)]
+    public async Task TitleProgressForAMixWithNoLadderIsEmptyAndNeverPhoenix(MixEnum mix)
     {
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var ctx = new SagaContext(MixEnum.Phoenix, chart);
 
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
-            ctx.Saga.Handle(new GetTitleProgressQuery((MixEnum)999), CancellationToken.None));
+        var progress = await ctx.Saga.Handle(new GetTitleProgressQuery(mix), CancellationToken.None);
+
+        Assert.Empty(progress);
+    }
+
+    /// <summary>
+    ///     "Not built yet" and "never existed" are different sentences to a player, so they are
+    ///     different states rather than one empty list. Prime 2 awarded titles and is buildable;
+    ///     everything older predates the concept.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.Phoenix2, TitleLadderAvailability.Available)]
+    [InlineData(MixEnum.XX, TitleLadderAvailability.Available)]
+    [InlineData(MixEnum.Prime2, TitleLadderAvailability.NotYetBuilt)]
+    [InlineData(MixEnum.Prime, TitleLadderAvailability.NeverExisted)]
+    [InlineData(MixEnum.FirstDanceFloor, TitleLadderAvailability.NeverExisted)]
+    public void ATitleLadderSaysWhyItIsMissing(MixEnum mix, TitleLadderAvailability expected)
+    {
+        Assert.Equal(expected, TitleLadders.For(mix));
     }
 
     [Fact]
