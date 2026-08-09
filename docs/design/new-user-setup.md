@@ -237,7 +237,7 @@ Checkpoint commits, suites green at each. FT = owner field-test checkpoint.
 | C1 | The page, static | `Setup.razor`, hand-styled, live re-theme (D9) |
 | C2 | Save-on-change + snackbars | per-field `UpdateUserCommand` / `SetSetting`, claims refresh, `ISnackbar`; `SuccessContrastText` + `WarningContrastText` (see below) |
 | C3 | Language + mix navigation | `/Culture/Set` round-trip carrying `?from=` (D8), Continue through `/Mix/Set` (D10) |
-| C4 | Entry and exit | four `LoginController` redirects, the `Universal__SetupCompleted` flag, `Setup` added to `LegacyMixGate.ReadySegments` |
+| C4 | Entry and exit | four `LoginController` redirects, the `Universal__SetupCompleted` flag, `Setup` added to `LegacyMixGate.ReadySegments` (that gate was deleted 2026-08-09 — every route reaches every mix now, so the allowlist entry went with it) |
 | C5 | Localization | 26 keys × 9 locales, spliced in alphabetical position (`78 0` per file — pure insertions, no rewrite, no BOM churn) |
 | C6 | Tests | `SetupPageTests` (21 bUnit facts); `PiuGameLoginFlow` walks setup; a new landing fact |
 | C7 | Docs | this doc, ARCHITECTURE.md pages table + login-flow paragraph, [front-door.md](front-door.md)'s `/Welcome` question closed |

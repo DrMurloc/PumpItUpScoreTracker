@@ -102,12 +102,16 @@ why they are `.razor` and not cshtml partial markup** — cshtml markup would be
   prefix rules as `BnClass`, MainLayout 471–478); `nav.js` re-evaluates on SPA navigation by
   wrapping `history.pushState`/`replaceState` + `popstate`. Blazor does go through both (§9).
 - **D13 — MainLayout keeps its non-chrome jobs**: the four Mud providers, `ChartVideoDisplay`,
-  theme resolution for the *Mud* palette, the legacy-mix gate + `RedirectIfGated`, the PageDock
-  slot + Recap popup, `OnLocationChanged`. It is transitional scaffolding with a known
-  demolition date (Stage 2/3) — do not grow new responsibilities on it.
+  theme resolution for the *Mud* palette, ~~the legacy-mix gate + `RedirectIfGated`~~ (gone
+  2026-08-09, see D14), the PageDock slot + Recap popup, `OnLocationChanged`. It is transitional
+  scaffolding with a known demolition date (Stage 2/3) — do not grow new responsibilities on it.
 - **D14 — `LegacyMixGate` applies server-side** to nav filtering (`Services/LegacyMixGate.cs` is
   a static class — trivially callable from a static component). Page-level gating stays in
-  MainLayout (D13).
+  MainLayout (D13). ⚠ **Retired 2026-08-09**: the gate is deleted, `ShellViewModel.IsGatedMix`
+  with it, and every nav destination shows on every mix. A page that cannot answer for the mix
+  in view says so on arrival instead — see [legacy-mixes.md](legacy-mixes.md). The shell keeps
+  exactly one mix conditional: Import Scores points at `/UploadPhoenixScores` or
+  `/UploadXXScores` depending on `CurrentMix.UsesLegacyScoring()`.
 - **D15 — No feature flag.** Straight cutover, FT-gated. A flag would double the test matrix.
 - **D16 — `_Layout.cshtml` retires.** `_SiteLayout.cshtml` becomes the one layout. Audited:
   its only consumers are `_Host.cshtml` and `FrontDoor.cshtml`'s ShowApp branch. `Error.cshtml`
@@ -145,6 +149,7 @@ why they are `.razor` and not cshtml partial markup** — cshtml markup would be
 | Wordmark, nav links/groups | 69–200 | static HTML | no |
 | Mega menus (Play/Progress/Compete/Community/Tools) | `MudMenu` 73–199 | static markup + `nav.js` click-toggle | no |
 | Nav visibility (auth / `LegacyMixGate` / XX-vs-Phoenix) | 78–196 | server-side conditionals | no |
+| ↳ *The `LegacyMixGate` half is gone (2026-08-09, D14); auth and the import-target split remain.* | | | |
 | App-bar chart search (`ChartSelector`) | 204–208 | **island** (owner: no visual changes, so it stays) | **yes** |
 | Mix pill + `MixSelector` menu | 212–219 | static `<details>` menu + `/Mix/Set` links + full reload | no |
 | Avatar + user menu | 221–247 | static HTML (claims + cached settings) | no |
@@ -172,8 +177,8 @@ server HTML.**
 Static-rendered. Markup parity with MainLayout 68–371: wordmark, the same nav groups with the
 same items and the same `L[…]` keys, same auth/gate/mix conditionals (`IsLoggedIn`,
 `IsGatedMix`, XX→`/Progress` vs `/Phoenix/Progress` — *that Player Stats item is gone as of
-2026-07-26, retired for the home-page widgets; the `IsGatedMix` / `IsLoggedIn` conditionals it
-sat inside remain*), avatar block with the `onerror`-fallback
+2026-07-26, retired for the home-page widgets; `IsGatedMix` is gone as of 2026-08-09 with the
+gate itself (D14), leaving `IsLoggedIn` and the import-target split*), avatar block with the `onerror`-fallback
 `<img>` exactly as MainLayout 230–232, the hidden import-pulse span (D11), sign-in icon link
 when anonymous. Then the More sheet and `<nav class="bottom-nav">`.
 
@@ -208,7 +213,7 @@ public sealed class ShellContext
 ```csharp
 public sealed record ShellViewModel(
     bool IsLoggedIn, Guid? UserId, string? DisplayName, string? GamerTag, string? AvatarUrl,
-    MixEnum CurrentMix, MixEnum ThemeMix, bool IsGatedMix, bool HasRecap,
+    MixEnum CurrentMix, MixEnum ThemeMix, bool HasRecap,   // IsGatedMix removed 2026-08-09
     IReadOnlyList<TournamentRecord> HighlightedEvents, string ActivePath);
 ```
 
@@ -221,7 +226,6 @@ call it):
 | GamerTag, AvatarUrl | `GetUserUiSettingsQuery` (keys `GameTag`, `ProfileImage`; same defaults as MainLayout 573–581) | `IMemoryCache` per user, 5 min |
 | CurrentMix | signed-in: same dict, key `Universal__CurrentMix`; anon: `CurrentMix` cookie else `MixEnum.Phoenix` | free / cached |
 | ThemeMix | `MixThemes.ResolveThemeMix(settings[MixThemes.OverrideSettingKey], CurrentMix)`; anon: CurrentMix | cached |
-| IsGatedMix | `LegacyMixGate.IsGatedMix(CurrentMix)` | free |
 | HasRecap | `GetPlayerRecapQuery(userId) != null` | `IMemoryCache` per user, 30 min |
 | HighlightedEvents | `GetAllTournamentsQuery` → `Where(IsHighlighted)` | `IMemoryCache` global, 15 min |
 | ActivePath | `HttpContext.Request.Path` | free |
@@ -407,7 +411,8 @@ today's ~5KB) cost ~4KB on the wire.
 ### UNCHANGED but load-bearing
 
 `wwwroot/js/page-dock.js` (already vanilla; `nav.js` takes over calling `watch()`),
-`Services/LegacyMixGate.cs`, `MixThemes`, `CultureController`, `FrontDoor.cshtml.cs`.
+~~`Services/LegacyMixGate.cs`~~ (deleted 2026-08-09), `MixThemes`, `CultureController`,
+`FrontDoor.cshtml.cs`.
 There is no `_ViewImports.cshtml` — each cshtml declares its own `@using`/`@addTagHelper`.
 Adding one would clean up all five files; optional.
 
