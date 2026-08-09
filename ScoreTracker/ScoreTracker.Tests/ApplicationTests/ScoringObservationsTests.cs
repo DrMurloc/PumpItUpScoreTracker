@@ -20,11 +20,15 @@ public sealed class ScoringObservationsTests
     /// <summary>Captures what would have gone to the telemetry, rendered as the reader sees it.</summary>
     private sealed class CapturingLogger : ILogger
     {
+        public CapturingLogger(bool enabled = true) => Enabled = enabled;
+
+        private bool Enabled { get; }
+
         public List<string> Lines { get; } = new();
 
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
-        public bool IsEnabled(LogLevel logLevel) => true;
+        public bool IsEnabled(LogLevel logLevel) => Enabled;
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
             Func<TState, Exception?, string> formatter) => Lines.Add(formatter(state, exception));
@@ -84,6 +88,27 @@ public sealed class ScoringObservationsTests
 
         ScoringObservations.ObservePumbility(logger, MixEnum.Phoenix2,
             new[] { Row(ChartType.Single, 9, PhoenixLetterGrade.SSSPlus, PhoenixPlate.UltimateGame, 0) });
+
+        Assert.Empty(logger.Lines);
+    }
+
+    [Fact]
+    public void NothingIsFormattedWhenTheLevelIsSwitchedOff()
+    {
+        // Fifty rows of formatting and arithmetic per import, thrown away. Asked once rather
+        // than paid per row, and pinned here so the guard cannot be dropped later.
+        var logger = new CapturingLogger(enabled: false);
+
+        ScoringObservations.ObservePumbility(logger, MixEnum.Phoenix2,
+            new[] { Row(ChartType.Single, 20, PhoenixLetterGrade.SSSPlus, PhoenixPlate.ExtremeGame, 355.79) });
+        ScoringObservations.ObserveGrades(logger, MixEnum.Phoenix2, new[]
+        {
+            new PiuGameGetRecentScoresResult
+            {
+                SongName = "Song", Level = DifficultyLevel.From(21), ChartType = ChartType.Single,
+                Score = PhoenixScore.From(448852), Grade = PhoenixLetterGrade.F, IsBroken = true
+            }
+        });
 
         Assert.Empty(logger.Lines);
     }

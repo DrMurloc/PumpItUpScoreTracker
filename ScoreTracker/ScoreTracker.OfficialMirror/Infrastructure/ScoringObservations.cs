@@ -36,6 +36,11 @@ internal static class ScoringObservations
     public static void ObserveGrades(ILogger logger, MixEnum mix,
         IEnumerable<PiuGameGetRecentScoresResult> plays)
     {
+        // Every line here is built out of formatting and arithmetic that is pure waste if the
+        // level is switched off, and this runs inside an import — so ask once rather than
+        // paying per play (CA1873).
+        if (!logger.IsEnabled(LogLevel.Information)) return;
+
         foreach (var play in plays)
         {
             if (play.Grade == null) continue;
@@ -84,6 +89,10 @@ internal static class ScoringObservations
     public static void ObservePumbility(ILogger logger, MixEnum mix,
         IEnumerable<PiuGameGetPumbilityResult.Entry> entries)
     {
+        // As in ObserveGrades: fifty rows of formatting per import is not worth paying for
+        // when the level is off (CA1873).
+        if (!logger.IsEnabled(LogLevel.Information)) return;
+
         var config = ScoringConfiguration.PumbilityScoring(mix, false);
         foreach (var entry in entries)
         {
@@ -105,7 +114,7 @@ internal static class ScoringObservations
                 "official {Official}, ours {Ours}, delta {Delta}, verdict {Verdict}. " +
                 "implied grade multiplier {ImpliedGrade} (ship {ShippedGrade}), " +
                 "implied plate bonus {ImpliedPlate} (ship {ShippedPlate})",
-                "PumbilityRow", plate.GetShorthand(), entry.ChartType, (int)entry.Level, grade.GetName(),
+                "PumbilityRow", plate.GetShorthand(), entry.ChartType, entry.Level, grade.GetName(),
                 entry.Value.ToString("F2"), ours.ToString("F2"), (ours - entry.Value).ToString("F2"),
                 Math.Abs(ours - entry.Value) <= PumbilityTolerance ? "match" : "MISMATCH",
                 unit <= 0 ? "?" : (entry.Value / unit - config.PlateModifiers[plate]).ToString("F4"),
