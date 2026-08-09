@@ -223,6 +223,88 @@ public sealed class MarchOfMurlocsHandlerTests
             Times.Never);
     }
 
+    /// <summary>
+    ///     Every month maps to the end of the following quarter. Written as a theory over all
+    ///     twelve because the table this covers listed only eleven: month 6 was missing, fell
+    ///     through to the default, and produced a season that had already ended.
+    /// </summary>
+    [Theory]
+    [InlineData(1, 3, 2026)]
+    [InlineData(2, 3, 2026)]
+    [InlineData(3, 6, 2026)]
+    [InlineData(4, 6, 2026)]
+    [InlineData(5, 6, 2026)]
+    [InlineData(6, 9, 2026)]
+    [InlineData(7, 9, 2026)]
+    [InlineData(8, 9, 2026)]
+    [InlineData(9, 12, 2026)]
+    [InlineData(10, 12, 2026)]
+    [InlineData(11, 12, 2026)]
+    [InlineData(12, 3, 2027)]
+    public async Task CycleEndsEverySeasonAtTheNextQuarter(int previousEndMonth, int expectedMonth,
+        int expectedYear)
+    {
+        var previousEnd = new DateTimeOffset(2026, previousEndMonth,
+            DateTime.DaysInMonth(2026, previousEndMonth), 23, 59, 59, TimeSpan.FromHours(-5));
+        var created = await Cycle(previousEnd, previousEnd + TimeSpan.FromDays(1));
+
+        Assert.Equal(2, created.Length);
+        Assert.All(created, t => Assert.Equal(expectedMonth, t.EndDate!.Value.Month));
+        Assert.All(created, t => Assert.Equal(expectedYear, t.EndDate!.Value.Year));
+    }
+
+    [Fact]
+    public async Task CycleFollowsAJuneSeasonWithSeptemberNotTheMarchThatAlreadyPassed()
+    {
+        // The production incident, with its real dates: Spring 2026 ended 2026-06-30 and every
+        // daily tick from 2026-07-01 created a pair of seasons dated to end 2026-03-31. Because
+        // those were already past, the next tick saw no future-dated MoM and did it again.
+        var springEnd = new DateTimeOffset(2026, 6, 30, 23, 59, 59, TimeSpan.FromHours(-5));
+        var created = await Cycle(springEnd, new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero));
+
+        Assert.All(created, t => Assert.Equal(new DateTimeOffset(2026, 9, 30, 23, 59, 59,
+            TimeSpan.FromHours(-5)), t.EndDate));
+        Assert.All(created, t => Assert.Contains("Summer 2026", (string)t.Name));
+    }
+
+    /// <summary>
+    ///     Runs one CycleMoMCommand against a single previous MoM and returns the tournaments it
+    ///     created.
+    /// </summary>
+    private static async Task<TournamentConfiguration[]> Cycle(DateTimeOffset previousEnd,
+        DateTimeOffset now)
+    {
+        var tournaments = new Mock<ITournamentRepository>();
+        var charts = new Mock<IChartRepository>();
+        var bus = new Mock<IBus>();
+        var scheduler = new Mock<IMessageScheduler>();
+
+        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { MoM(previousEnd) });
+        charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build(),
+                new ChartBuilder().WithLevel(20).WithType(ChartType.Double).Build()
+            });
+
+        var saved = new List<TournamentConfiguration>();
+        tournaments.Setup(t => t.CreateOrSaveTournament(It.IsAny<TournamentConfiguration>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<TournamentConfiguration, CancellationToken>((cfg, _) => saved.Add(cfg))
+            .Returns(Task.CompletedTask);
+        tournaments.Setup(t => t.CreateOrSaveTournament(It.IsAny<TournamentRecord>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
+            scheduler.Object, FakeDateTime.At(now).Object, EmptyScoringLevels().Object);
+
+        await handler.Consume(ContextOf(new CycleMoMCommand()).Object);
+
+        return saved.Where(s => s.IsMom).ToArray();
+    }
+
     private static Mock<IChartScoringLevelRepository> EmptyScoringLevels()
     {
         var scoringLevels = new Mock<IChartScoringLevelRepository>();

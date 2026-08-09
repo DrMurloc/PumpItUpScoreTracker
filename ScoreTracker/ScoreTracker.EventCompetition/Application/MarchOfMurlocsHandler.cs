@@ -48,6 +48,22 @@ namespace ScoreTracker.EventCompetition.Application
                     context.CancellationToken);
         }
 
+        /// <summary>
+        ///     The month a season ends in, given the month the previous season ended in. Seasons
+        ///     are quarters ending in March, June, September and December, so the answer is always
+        ///     three months on, wrapping December back to March.
+        ///     <para>
+        ///         Arithmetic rather than a month-to-month table on purpose: the table this
+        ///         replaces listed eleven of the twelve months and fell through to March for the
+        ///         twelfth. A season ending in June therefore came back as one ending in March —
+        ///         already past — and a past-dated season re-triggers this consumer on every tick.
+        ///     </para>
+        /// </summary>
+        private static int NextQuarterEndMonth(int month)
+        {
+            return month / 3 % 4 * 3 + 3;
+        }
+
         public async Task Consume(ConsumeContext<CycleMoMCommand> context)
         {
             var moms = (await _tournaments.GetAllTournaments(context.CancellationToken))
@@ -62,22 +78,7 @@ namespace ScoreTracker.EventCompetition.Application
             var oldEnd = moms.FirstOrDefault()?.EndDate ?? _dateTime.Now - TimeSpan.FromMinutes(1);
             var year = _dateTime.Now.Year;
 
-            var newMonth = oldEnd.Month switch
-
-            {
-                12 => 3,
-                1 => 3,
-                2 => 3,
-                3 => 6,
-                4 => 6,
-                5 => 6,
-                7 => 9,
-                8 => 9,
-                9 => 12,
-                10 => 12,
-                11 => 12,
-                _ => 3
-            };
+            var newMonth = NextQuarterEndMonth(oldEnd.Month);
             var season = newMonth switch
             {
                 3 => "Winter",
