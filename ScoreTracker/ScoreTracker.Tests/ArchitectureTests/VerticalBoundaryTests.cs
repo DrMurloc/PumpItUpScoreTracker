@@ -224,6 +224,11 @@ public sealed class VerticalBoundaryTests
         });
 
         Assert.Contains(services, d => d.ServiceType == typeof(UpdatePhoenixRecordHandler));
+        // SessionRecoverySaga stamps the session's processed marker off
+        // ScoreHighlightsCapturedEvent. Unregistered, NO session is ever marked — so every one of
+        // them looks interrupted and the next boot replays the world
+        // (docs/design/import-restart-recovery.md §4.1).
+        Assert.Contains(services, d => d.ServiceType == typeof(SessionRecoverySaga));
     }
 
     [Fact]

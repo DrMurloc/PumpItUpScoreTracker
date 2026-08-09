@@ -129,17 +129,9 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         var bests = (await records.GetRecordedScores(batch.Mix, userId, cancellationToken) ?? [])
             .Where(r => involved.Contains(r.ChartId))
             .ToDictionary(r => r.ChartId);
-        var changes = involved.Select(chartId =>
-        {
-            var best = bests.GetValueOrDefault(chartId);
-            return new PlayerScoresUpdatedEvent.ScoreChange(
-                chartId,
-                IsNewPass: !batch.UpscoredChartIds.ContainsKey(chartId),
-                OldScore: batch.UpscoredChartIds.TryGetValue(chartId, out var old) ? old : null,
-                NewScore: best?.Score,
-                Plate: best?.Plate?.ToString(),
-                IsBroken: best?.IsBroken ?? false);
-        }).ToArray();
+        // Shared with the restart replay, so a recovered batch announces itself in exactly the
+        // shape a live one would have.
+        var changes = ScoreChangeAssembler.Build(batch, bests);
         // The drain is the session's checkpoint: one write per batch rather than one per score.
         if (batch.SessionId is { } sessionId)
             await sessions.Touch(sessionId, dateTimeOffset.Now, batch.NewChartIds.Length,

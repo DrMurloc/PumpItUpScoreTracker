@@ -44,4 +44,18 @@ internal sealed class ScoreSessionEntity
 
     public int NewCount { get; set; }
     public int UpscoreCount { get; set; }
+
+    /// <summary>
+    ///     When everything downstream of this session's score batch finished — highlights,
+    ///     ratings, titles, the session card. Stamped by consuming ScoreHighlightsCapturedEvent,
+    ///     which the capture chain publishes unconditionally.
+    ///     <para>
+    ///         Null is the recovery signal: the scores landed but nothing derived from them ran,
+    ///         which is what a restart inside the batch hold window leaves behind. Every session
+    ///         predating the column is backfilled as processed, because "unprocessed" must never
+    ///         be able to mean "older than the feature"
+    ///         (docs/design/import-restart-recovery.md §4.1).
+    ///     </para>
+    /// </summary>
+    public DateTimeOffset? ProcessedAt { get; set; }
 }

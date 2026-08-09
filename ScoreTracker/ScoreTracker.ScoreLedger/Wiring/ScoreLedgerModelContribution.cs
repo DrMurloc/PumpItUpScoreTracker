@@ -34,6 +34,11 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
             .IsCreatedOnline();
 
         modelBuilder.Entity<ScoreSessionEntity>().ToTable("ScoreSession");
+        // The restart-recovery pass asks only "which sessions never finished their derived work".
+        // Filtered, so the index holds the handful of in-flight and interrupted sessions rather
+        // than a row per session ever recorded (docs/design/import-restart-recovery.md §5.3).
+        modelBuilder.Entity<ScoreSessionEntity>().HasIndex(e => e.ProcessedAt)
+            .HasFilter("[ProcessedAt] IS NULL");
 
         modelBuilder.Entity<ScoreEventJournalEntity>().ToTable("ScoreEventJournal");
         // Session lookups skip the pre-capture rows (SessionId is never backfilled).
