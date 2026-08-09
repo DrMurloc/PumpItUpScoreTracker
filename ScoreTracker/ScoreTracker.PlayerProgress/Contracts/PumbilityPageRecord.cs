@@ -31,8 +31,8 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 public sealed record PumbilityPageRecord(
     MixEnum Mix,
     ChartType? Pool_,
-    int Total,
-    int? Bar,
+    double Total,
+    double? Bar,
     Guid? BarChartId,
     IReadOnlyList<PoolEntry> Pool,
     IReadOnlyList<PoolEntry> WaitingRoom,
@@ -42,9 +42,9 @@ public sealed record PumbilityPageRecord(
     IReadOnlyList<TitleRail>? Rails = null)
 {
     /// <summary>Highest and lowest values in the pool — the curve's read-out.</summary>
-    public int PoolTop => Pool.Count == 0 ? 0 : Pool[0].Value;
+    public double PoolTop => Pool.Count == 0 ? 0 : Pool[0].Value;
 
-    public int PoolBottom => Pool.Count == 0 ? 0 : Pool[^1].Value;
+    public double PoolBottom => Pool.Count == 0 ? 0 : Pool[^1].Value;
 
     /// <summary>
     ///     How flat the pool is, top to bottom, as a fraction. The one question the pool can
@@ -53,14 +53,26 @@ public sealed record PumbilityPageRecord(
     /// </summary>
     public double PoolSpread => PoolTop <= 0 ? 0 : (PoolTop - PoolBottom) / (double)PoolTop;
 
-    /// <summary>How many charts sit level with the 50th — the traffic jam at the bar.</summary>
-    public int TiedAtBar => Bar == null ? 0 : Pool.Count(p => p.Value == Bar) + WaitingRoom.Count(w => w.Value == Bar);
+    /// <summary>
+    ///     How many charts sit level with the 50th — the traffic jam at the bar. "Level with" is
+    ///     judged at the precision the page prints, not at the precision a double holds: exact
+    ///     equality between two independently-computed doubles is a coin toss, and it would take
+    ///     this count to zero without anything appearing to be wrong.
+    /// </summary>
+    public int TiedAtBar => Bar == null
+        ? 0
+        : Pool.Count(p => LevelWithBar(p.Value)) + WaitingRoom.Count(w => LevelWithBar(w.Value));
+
+    private bool LevelWithBar(double value)
+    {
+        return Math.Abs(value - Bar!.Value) < 0.005;
+    }
 }
 
 /// <summary>One chart in (or just outside) the pool, with what it is currently worth.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record PoolEntry(int Place, Guid ChartId, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken,
-    DateTimeOffset RecordedDate, int Value);
+    DateTimeOffset RecordedDate, double Value);
 
 /// <summary>
 ///     Where the pool's total comes from: the charts, the scores on them, and the plates walked
@@ -100,7 +112,7 @@ public sealed record PoolBreakdown(double Level, double FromScore, double FromPl
 ///     just to fill in the two it is not looking at.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record PoolTotals(int All, int Singles, int Doubles);
+public sealed record PoolTotals(double All, double Singles, double Doubles);
 
 /// <summary>
 ///     One PUMBILITY title ladder against the pool that gates it
@@ -131,14 +143,14 @@ public sealed record PoolTotals(int All, int Singles, int Doubles);
 [ExcludeFromCodeCoverage]
 public sealed record TitleRail(
     PumbilityPool Pool,
-    int Value,
+    double Value,
     string? Held,
     int HeldThreshold,
     string? Next,
     int? NextThreshold,
     double Ask,
     double Average,
-    int? Bar,
+    double? Bar,
     IReadOnlyList<AskExample> Examples,
     double? ProjectedAverage)
 {
@@ -151,7 +163,7 @@ public sealed record TitleRail(
     public double PerChartGap => Math.Max(0, Ask - Average);
 
     /// <summary>What the pool as a whole still has to find.</summary>
-    public int Gap => NextThreshold == null ? 0 : Math.Max(0, NextThreshold.Value - Value);
+    public double Gap => NextThreshold == null ? 0 : Math.Max(0, NextThreshold.Value - Value);
 
     public bool AtTop => Next == null;
 
@@ -185,7 +197,7 @@ public sealed record AskExample(PhoenixLetterGrade Grade, DifficultyLevel Level,
 ///     there is no better evidence than that.
 /// </param>
 [ExcludeFromCodeCoverage]
-public sealed record PumbilityTarget(Guid ChartId, PhoenixScore Projected, int Gain,
+public sealed record PumbilityTarget(Guid ChartId, PhoenixScore Projected, double Gain,
     PhoenixScore? Current, bool CurrentIsBroken, TierListCategory? Difficulty,
     TargetSource Source = TargetSource.Peers);
 

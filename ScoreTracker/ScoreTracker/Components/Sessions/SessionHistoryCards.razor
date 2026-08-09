@@ -1,4 +1,4 @@
-@using ScoreTracker.PlayerProgress.Contracts
+﻿@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Services
@@ -137,7 +137,7 @@
     private string Headline(PlayerMilestoneRecord milestone) => milestone.Kind switch
     {
         MilestoneKind.TitleCompleted => $"🏆 {milestone.Title}",
-        MilestoneKind.PumbilityGain => $"📈 +{milestone.NewValue - milestone.OldValue:N0}",
+        MilestoneKind.PumbilityGain => $"📈 +{PumbilityFormat.Gain(milestone.NewValue!.Value - milestone.OldValue!.Value)}",
         MilestoneKind.FolderPassLamp => $"🎉 {milestone.Detail}",
         _ => $"🏆 {milestone.Detail}"
     };

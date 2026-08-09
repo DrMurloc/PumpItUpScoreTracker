@@ -239,7 +239,7 @@ else
                     <div class="olb-hero-card">
                         <div class="olb-hero-label">@L["Biggest PUMBILITY gainer"]</div>
                         <HubPlayerChip Player="gainer.Player"/>
-                        <div class="olb-hero-gain">+@((gainer.NewPumbility - gainer.PreviousPumbility).ToString("N2"))</div>
+                        <div class="olb-hero-gain"><PumbilityDelta Value="(double)(gainer.NewPumbility - gainer.PreviousPumbility)"></PumbilityDelta></div>
                         <div class="olb-hero-ctx">
                             <b>@gainer.PreviousPumbility.ToString("N2") → @gainer.NewPumbility.ToString("N2")</b>
                             <span class="olb-hero-rankchip ml-1">#@gainer.PreviousRank → #@gainer.NewRank</span>
@@ -311,7 +311,7 @@ else
                                     <b>@floor.Value.ToString("N2")</b>
                                     @if (floor.PreviousValue is { } prev && floor.Value > prev)
                                     {
-                                        <span class="olb-delta-up"> ▲@((floor.Value - prev).ToString("N2"))</span>
+                                        <PumbilityDelta Value="(double)(floor.Value - prev)" Marker="▲" Class="olb-delta-up"></PumbilityDelta>
                                     }
                                 </span>
                             </div>

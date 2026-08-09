@@ -1,4 +1,4 @@
-@page "/Community/Leaderboard"
+﻿@page "/Community/Leaderboard"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.Catalog.Contracts.Queries
@@ -133,7 +133,7 @@
                             @entry.CompetitiveLevel.ToString("0.00")
                         </span>
                     }
-                    <b class="olb-grid-num" style="color:@entry.Color" title="PUMBILITY">@entry.Rating</b>
+                    <b class="olb-grid-num" style="color:@entry.Color" title="PUMBILITY">@entry.Rating.ToString("N0")</b>
                 </span>
                 <span>
                     @if (_currentType != LeaderboardType.CoOp)
@@ -335,7 +335,7 @@
         _currentType = type;
     }
 
-    private LeaderboardEntry Entry(CommunityLeaderboardRecord record, int index, int rating,
+    private LeaderboardEntry Entry(CommunityLeaderboardRecord record, int index, double rating,
         double competitiveLevel, string color) =>
         new(index + 1, record.ProfileImage, record.PlayerName, record.IsPublic, record.UserId, rating,
             competitiveLevel, color);
@@ -362,7 +362,7 @@
         var top50 = await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType, Mix: _currentMix));
         _scores = top50.Where(s => _charts.ContainsKey(s.ChartId))
             .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,
-                (int)scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),
+                scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),
                 ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0, _charts[s.ChartId].Type)))
             .ToArray();
     }
@@ -374,10 +374,10 @@
         NavManager.NavigateTo($"/Community/Members?CommunityName={HttpUtility.UrlEncode(CommunityName)}");
     }
 
-    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken, int Rating, double CompetitiveLevel);
+    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken, double Rating, double CompetitiveLevel);
 
     private sealed record LeaderboardEntry(int Place, Uri ProfileImage, Name PlayerName, bool IsPublic, Guid UserId,
-        int Rating, double CompetitiveLevel, string Color);
+        double Rating, double CompetitiveLevel, string Color);
 
     private enum LeaderboardType
     {

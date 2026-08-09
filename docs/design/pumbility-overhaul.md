@@ -334,6 +334,39 @@ this makes the page agree with the tier list's folder track.
 with no such filter at all, so an account with fewer than fifty counting Phoenix 1 charts gets a
 corrupted carryover bar and singles/doubles split. The same rule, applied twice.
 
+### 3.9 Precision — the page and the card disagreed by 22
+
+Reported by a player 2026-08-09: the session card read **17,195** and this page read **17,173** for
+the same pool on the same account. Neither staleness nor the formula. **The two rounded at different
+points.** `PlayerRatingSaga` summed fifty doubles and truncated once; this page truncated each of the
+fifty and then summed, so it lost the sum of fifty discarded fractions — always low, never high,
+around 20–25 for any full pool.
+
+Four more places had independently grown the same defect, and every suite was green throughout:
+
+| where | what it cost |
+|---|---|
+| `Phoenix2TitleList.BuildProgress` | ladders gated on a truncated pool, so a rung inside the discarded fraction read as unreached here while `/Titles` had already awarded it |
+| `PumbilityProjectionSaga` | every projected gain truncated |
+| `LeaderboardHubSaga` | each board row truncated before the top-50 sum |
+| `PumbilityAttribution` | each per-chart gain rounded to whole **and dropped under a point** — which is also why a fractional gain could never be displayed: it did not survive to reach a badge |
+
+The standing rule that came out of it is in [UX-GUIDELINES §2](../UX-GUIDELINES.md): **nothing below
+the presentation layer rounds a PUMBILITY value**, gains go through `PumbilityFormat`, and
+`PumbilityPrecisionTests` is the ratchet.
+
+⚠ **Two decimals are this section's, not the site's** (owner, 2026-08-09, reversing his own
+one-day-old sitewide rule). Rendering `N2` everywhere was built and then walked back: a pool total
+is a five-figure number, and three more glyphs is a real layout cost in a dashboard tile, a board
+cell and the session ceremony band. **These three pages** print the total and each chart's
+contribution at `N2` — this is where the number is being explained, so the precision earns its
+space. Every other surface prints `N0`. The Official Leaderboards pages keep the `N2` they already
+had, because they quote piugame's board. The storage rule is untouched: one unrounded double feeds
+both. Two traps worth remembering —
+`TiedAtBar` compared pool values to the bar with `==`, which on doubles is a coin toss and would have
+taken the count silently to zero; and three sites rendered a raw `@value` with no format string at
+all, harmless while the value was an int and full-precision noise the moment it stopped being one.
+
 ## 4. The projection engine
 
 Rebuilt from scratch and measured before anything was written. **§4.1 is the formula.**

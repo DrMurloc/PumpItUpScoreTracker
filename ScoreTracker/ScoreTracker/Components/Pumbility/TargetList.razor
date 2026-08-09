@@ -1,4 +1,4 @@
-@using ScoreTracker.PlayerProgress.Contracts
+﻿@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Enums
@@ -61,7 +61,7 @@ else if (Density == UiDensity.Table)
                         <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
                         <span class="pmb-num pmb-score-text">@(((int)target.Projected).ToString("N0"))</span>
                     </td>
-                    <td class="pmb-r pmb-gain-cell">+@target.Gain.ToString("N0")</td>
+                    <td class="pmb-r pmb-gain-cell"><PumbilityDelta Value="target.Gain"></PumbilityDelta></td>
                 </tr>
             }
             </tbody>
@@ -86,7 +86,7 @@ else if (Density == UiDensity.Compact)
         {
             var chart = Charts[target.ChartId];
             <TierListChartCard Chart="chart" Density="UiDensity.Compact"
-                               CornerBadge="@($"+{target.Gain:N0}")" CornerBadgeClass="pmb-corner-gain"
+                               CornerBadge="@($"+{PumbilityFormat.Gain(target.Gain)}")" CornerBadgeClass="pmb-corner-gain"
                                CornerBadgeStart="@ProjectedGrade(target)" CornerBadgeStartClass="pmb-corner-gain"
                                Passed="target.Current != null && !target.CurrentIsBroken"
                                PassedInAnotherMix="target.Source == TargetSource.Phoenix1"
@@ -107,7 +107,7 @@ else
         {
             var chart = Charts[target.ChartId];
             <TierListChartCard Chart="chart" Density="UiDensity.Comfortable"
-                               CornerBadge="@($"+{target.Gain:N0}")" CornerBadgeClass="pmb-corner-gain"
+                               CornerBadge="@($"+{PumbilityFormat.Gain(target.Gain)}")" CornerBadgeClass="pmb-corner-gain"
                                ShowStateBorder="false"
                                ShowPlay="true" OnPlay="OnPlayById"
                                ShowToDo="ShowToDo" IsToDo="ToDos.Contains(target.ChartId)" OnToDo="OnToDo"

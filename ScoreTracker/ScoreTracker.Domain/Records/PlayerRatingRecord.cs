@@ -5,7 +5,7 @@
     [ExcludeFromCodeCoverage]
     public sealed record PlayerRatingRecord(Guid UserId, DateTimeOffset Date, double CompetitiveLevel,
         double SinglesLevel,
-        double DoublesLevel, int CoOpRating, int PassCount, int? SkillRating = null)
+        double DoublesLevel, double CoOpRating, int PassCount, double? SkillRating = null)
     {
     }
 }

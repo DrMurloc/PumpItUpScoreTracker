@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -125,10 +125,13 @@ public sealed class PumbilityProjectionSagaTests
 
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false);
         var projected = result.ExpectedScores[chart.Id];
-        var expected = (int)(scoring.GetScore(chart, projected,
-                                 ScoringConfiguration.ExpectedPlateForScore(projected), false)
-                             - ctx.PoolBaseline(scoring));
-        Assert.Equal(expected, result.ProjectedGains[chart.Id]);
+        // Unrounded on both sides: the saga no longer truncates the gain, so neither does
+        // the expectation. Compared to the cent, because two doubles that took different
+        // routes to the same value are not bit-identical.
+        var expected = scoring.GetScore(chart, projected,
+                           ScoringConfiguration.ExpectedPlateForScore(projected), false)
+                       - ctx.PoolBaseline(scoring);
+        Assert.Equal(expected, result.ProjectedGains[chart.Id], 6);
     }
 
     [Fact]
@@ -145,10 +148,13 @@ public sealed class PumbilityProjectionSagaTests
 
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, false);
         var projected = result.ExpectedScores[weak.Id];
-        var expected = (int)(scoring.GetScore(weak, projected,
-                                 ScoringConfiguration.ExpectedPlateForScore(projected), false)
-                             - ctx.PoolBaseline(scoring));
-        Assert.Equal(expected, result.ProjectedGains[weak.Id]);
+        // Unrounded on both sides: the saga no longer truncates the gain, so neither does
+        // the expectation. Compared to the cent, because two doubles that took different
+        // routes to the same value are not bit-identical.
+        var expected = scoring.GetScore(weak, projected,
+                           ScoringConfiguration.ExpectedPlateForScore(projected), false)
+                       - ctx.PoolBaseline(scoring);
+        Assert.Equal(expected, result.ProjectedGains[weak.Id], 6);
     }
 
     [Fact]

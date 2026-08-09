@@ -33,4 +33,4 @@ public sealed record HighlightDetail(
     int? OfficialBoardDepth = null,
     DateTimeOffset? OfficialAsOf = null,
     double? CompetitiveBaseline = null,
-    int? PumbilityGain = null);
+    double? PumbilityGain = null);

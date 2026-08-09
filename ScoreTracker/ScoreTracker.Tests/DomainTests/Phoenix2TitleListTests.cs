@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
@@ -50,9 +50,12 @@ public sealed class Phoenix2TitleListTests
         var singlesLv1 = progress.Single(p => p.Title.Name == "[S] INTERMEDIATE LV.1");
         var doublesLv1 = progress.Single(p => p.Title.Name == "[D] INTERMEDIATE LV.1");
         var totalTier = progress.Single(p => p.Title.Name == "[P.B] BRONZE");
-        Assert.Equal(784, singlesLv1.CompletionCount);
-        Assert.Equal(377, doublesLv1.CompletionCount);
-        Assert.Equal(784 + 377, totalTier.CompletionCount);
+        // Unrounded. The singles pair prices one level up the base curve and lands on a fraction
+        // — 784.16, where the pool used to report 784. The double sits on a whole number at this
+        // level, which is why only one side of this moved.
+        Assert.Equal(784.16, singlesLv1.CompletionCount, 2);
+        Assert.Equal(377, doublesLv1.CompletionCount, 2);
+        Assert.Equal(784.16 + 377, totalTier.CompletionCount, 2);
         Assert.False(singlesLv1.IsComplete);
     }
 
@@ -83,7 +86,7 @@ public sealed class Phoenix2TitleListTests
         var progress = Phoenix2TitleList.BuildProgress(charts,
             charts.Keys.Select(id => Attempt(id, 995000)).ToArray(), new HashSet<Name>());
 
-        Assert.Equal(19604, progress.Single(p => p.Title.Name == "[S] INTERMEDIATE LV.1").CompletionCount);
+        Assert.Equal(19604, progress.Single(p => p.Title.Name == "[S] INTERMEDIATE LV.1").CompletionCount, 2);
     }
 
     [Theory]

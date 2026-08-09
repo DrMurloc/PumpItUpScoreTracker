@@ -410,11 +410,14 @@ public static class Phoenix2TitleList
             .Select(a => (charts[a.ChartId].Type, Value: scoring.GetScore(charts[a.ChartId].Type,
                 charts[a.ChartId].Level, a.Score!.Value, a.Plate ?? PhoenixPlate.RoughGame, a.IsBroken)))
             .ToArray();
-        var singles = (int)contributions.Where(c => c.Type == ChartType.Single)
+        // Unrounded: a ladder gates on the pool the player actually holds, and a rung sitting
+        // inside the discarded fraction would read as unreached on one screen and earned on
+        // another.
+        var singles = contributions.Where(c => c.Type == ChartType.Single)
             .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
-        var doubles = (int)contributions.Where(c => c.Type == ChartType.Double)
+        var doubles = contributions.Where(c => c.Type == ChartType.Double)
             .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
-        var total = (int)contributions
+        var total = contributions
             .Select(c => c.Value).OrderByDescending(v => v).Take(50).Sum();
         foreach (var title in progress)
             if (title.PhoenixTitle is Phoenix2PumbilityTitle pumbility)

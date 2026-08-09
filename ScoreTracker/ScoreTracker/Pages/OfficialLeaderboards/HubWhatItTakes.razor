@@ -1,4 +1,4 @@
-@using ApexCharts
+﻿@using ApexCharts
 @using MediatR
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
@@ -31,7 +31,7 @@
                     @(board.EntryValue?.ToString("N2") ?? L["not full"].Value)
                     @if (board.WeekDelta is > 0)
                     {
-                        <span class="olb-delta-up">▲@board.WeekDelta.Value.ToString("N0")</span>
+                        <PumbilityDelta Value="(double)board.WeekDelta.Value" Marker="▲" Class="olb-delta-up"></PumbilityDelta>
                     }
                 </span>
             }
@@ -59,7 +59,7 @@ else
                         <b>@_data.Entry.Value.ToString("N2")</b>
                         @if (_data.Entry.WeekDelta is > 0)
                         {
-                            <span class="olb-delta-up" style="font-size:15px"> ▲@_data.Entry.WeekDelta.Value.ToString("N2")</span>
+                            <PumbilityDelta Value="(double)_data.Entry.WeekDelta.Value" Marker="▲" Class="olb-delta-up"></PumbilityDelta>
                         }
                     </MudText>
                     <MudText Typo="Typo.caption">@L["50 charts at, SG plates assumed"]</MudText>
@@ -151,7 +151,7 @@ else
                 <MudTd Style="text-align:right">
                     @if (context.WeekDelta is > 0)
                     {
-                        <span class="olb-delta-up">▲@context.WeekDelta.Value.ToString("N0")</span>
+                        <PumbilityDelta Value="(double)context.WeekDelta.Value" Marker="▲" Class="olb-delta-up"></PumbilityDelta>
                     }
                 </MudTd>
                 <MudTd><b class="num">@LevelLabel(context.LevelForAAA)</b></MudTd>

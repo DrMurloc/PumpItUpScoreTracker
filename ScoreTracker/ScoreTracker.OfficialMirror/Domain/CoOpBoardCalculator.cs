@@ -42,8 +42,8 @@ internal static class CoOpBoardCalculator
         };
     }
 
-    public static int Rating(ScoringConfiguration estimateScoring, PhoenixScore score)
+    public static double Rating(ScoringConfiguration estimateScoring, PhoenixScore score)
     {
-        return (int)estimateScoring.GetScore(ChartType.CoOp, PlaceholderLevel, score, InferredPlate(score));
+        return estimateScoring.GetScore(ChartType.CoOp, PlaceholderLevel, score, InferredPlate(score));
     }
 }

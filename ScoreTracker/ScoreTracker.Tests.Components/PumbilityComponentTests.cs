@@ -26,8 +26,10 @@ public sealed class PumbilityComponentTests : ComponentTestBase
             .Add(x => x.Page, page)
             .Add(x => x.Charts, page.Charts()));
 
-        Assert.Contains(page.Total.ToString("N0"), cut.Find(".pmb-hero-value").TextContent);
-        Assert.Equal(page.Bar!.Value.ToString("N0"), cut.Find(".pmb-barcard-num").TextContent.Trim());
+        // Two decimals, the way piugame prints it — asserted through the same format the
+        // component uses so this says "the hero shows the pool" and not "N2 is two decimals".
+        Assert.Contains(page.Total.ToString("N2"), cut.Find(".pmb-hero-value").TextContent);
+        Assert.Equal(page.Bar!.Value.ToString("N2"), cut.Find(".pmb-barcard-num").TextContent.Trim());
     }
 
     [Fact]
@@ -539,8 +541,8 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         public IReadOnlyList<PoolEntry> Pool { get; }
         public IReadOnlyList<PoolEntry> WaitingRoom { get; }
         public IReadOnlyList<PumbilityTarget> Targets { get; }
-        public int Total { get; }
-        public int? Bar { get; }
+        public double Total { get; }
+        public double? Bar { get; }
         public Guid? BarChartId { get; }
 
         public IReadOnlyDictionary<Guid, Chart> Charts() => _charts;

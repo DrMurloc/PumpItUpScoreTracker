@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -535,7 +535,7 @@ public sealed class PumbilityPageSagaTests
         private readonly Dictionary<Guid, int> _phoenix2Levels = new();
         private readonly Dictionary<Guid, RecordedPhoenixScore> _phoenix2Scores = new();
         private readonly Dictionary<Guid, PhoenixScore> _projected = new();
-        private readonly Dictionary<Guid, int> _gains = new();
+        private readonly Dictionary<Guid, double> _gains = new();
         private readonly List<RecordedPhoenixScore> _top = new();
 
         public PageContext()

@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
@@ -21,7 +21,7 @@
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary"/>
     </div>
 }
-else if (_stats == null || ((int)_stats.SkillRating == 0 && _stats.ClearCount == 0))
+else if (_stats == null || (_stats.SkillRating <= 0 && _stats.ClearCount == 0))
 {
     <div class="dash-widget-message">
         <div>
@@ -37,20 +37,20 @@ else
             <div class="dash-acct-eyebrow">@L["PUMBILITY"]</div>
             <div class="dash-acct-hero">
                 <span class="dash-acct-total">
-                    <span class="dash-stat-num rarity-glow-1">@(((int)_stats.SkillRating).ToString("N0"))</span>
+                    <span class="dash-stat-num rarity-glow-1">@_stats.SkillRating.ToString("N0")</span>
                     @if (_weeklyDelta is > 0)
                     {
-                        <span class="dash-stat-delta">▲ @_weeklyDelta.Value.ToString("N0")</span>
+                        <PumbilityDelta Value="_weeklyDelta.Value" Marker="▲ " Class="dash-stat-delta"></PumbilityDelta>
                     }
                 </span>
                 <div class="dash-acct-pools">
                     <div class="dash-acct-poolrow">
                         <span style="color:var(--chart-singles)">S</span>
-                        <span class="dash-acct-poolnum">@(((int)_stats.SinglesRating).ToString("N0"))</span>
+                        <span class="dash-acct-poolnum">@_stats.SinglesRating.ToString("N0")</span>
                     </div>
                     <div class="dash-acct-poolrow">
                         <span style="color:var(--chart-doubles)">D</span>
-                        <span class="dash-acct-poolnum">@(((int)_stats.DoublesRating).ToString("N0"))</span>
+                        <span class="dash-acct-poolnum">@_stats.DoublesRating.ToString("N0")</span>
                     </div>
                 </div>
             </div>
@@ -137,7 +137,7 @@ else
     private MixEnum _mix;
     private ChartType? _dimension;
     private PlayerStatsRecord? _stats;
-    private int? _weeklyDelta;
+    private double? _weeklyDelta;
     private double _myLevel;
     private List<MatchRow> _matches = new();
     private string? _headerSlotKey;
@@ -175,7 +175,7 @@ else
                 .ToArray();
             var weekAgo = history.LastOrDefault(h => h.Date <= DateTimeOffset.Now.AddDays(-7));
             _weeklyDelta = weekAgo?.SkillRating is { } baseline && _stats != null
-                ? (int)_stats.SkillRating - baseline
+                ? _stats.SkillRating - baseline
                 : null;
 
             _matches = new List<MatchRow>();

@@ -24,11 +24,16 @@ internal static class PumbilityAttribution
     internal sealed record Priced(Guid ChartId, double? Old, double New);
 
     /// <summary>
-    ///     Gain per chart, rounded to whole PUMBILITY and keyed only by the charts that gained.
-    ///     A chart that lost ground, or moved by less than a point, is absent rather than zero —
-    ///     the caller renders a badge for exactly what this returns.
+    ///     Gain per chart, unrounded, keyed only by the charts that gained. A chart that lost
+    ///     ground or moved not at all is absent rather than zero — an unchanged chart is priced
+    ///     identically on both sides, so its difference is exactly zero and it falls out here.
+    ///     <para>
+    ///         Rounding belongs to whatever renders this and nowhere else. Whole PUMBILITY was the
+    ///         wrong unit to settle on down here: a fractional gain is a real gain, and the compact
+    ///         badge is built to say so.
+    ///     </para>
     /// </summary>
-    public static IReadOnlyDictionary<Guid, int> GainsPerChart(IReadOnlyList<Priced> priced, int poolSize)
+    public static IReadOnlyDictionary<Guid, double> GainsPerChart(IReadOnlyList<Priced> priced, int poolSize)
     {
         var newPool = priced.OrderByDescending(p => p.New).Take(poolSize).ToArray();
         var oldPool = priced.Where(p => p.Old != null)
@@ -38,7 +43,7 @@ internal static class PumbilityAttribution
         var heldBefore = oldPool.Select(p => p.ChartId).ToHashSet();
         var heldAfter = newPool.Select(p => p.ChartId).ToHashSet();
 
-        var gains = new Dictionary<Guid, int>();
+        var gains = new Dictionary<Guid, double>();
 
         // Kept its seat and improved: the whole improvement reached your total, because nothing
         // had to leave to make room for it.
@@ -62,9 +67,8 @@ internal static class PumbilityAttribution
         return gains;
     }
 
-    private static void Record(IDictionary<Guid, int> gains, Guid chartId, double gain)
+    private static void Record(IDictionary<Guid, double> gains, Guid chartId, double gain)
     {
-        var whole = (int)Math.Round(gain);
-        if (whole > 0) gains[chartId] = whole;
+        if (gain > 0) gains[chartId] = gain;
     }
 }

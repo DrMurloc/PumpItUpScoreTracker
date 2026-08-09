@@ -1,4 +1,4 @@
-@using ScoreTracker.PlayerProgress.Contracts
+﻿@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
@@ -74,7 +74,7 @@
         builder.CloseElement();
         builder.OpenElement(26, "span");
         builder.AddAttribute(27, "class", "pmb-val");
-        builder.AddContent(28, entry.Value.ToString("N0"));
+        builder.AddContent(28, entry.Value.ToString("N2"));
         builder.CloseElement();
         builder.CloseElement();
 

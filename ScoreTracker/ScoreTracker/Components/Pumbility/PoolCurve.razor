@@ -1,4 +1,4 @@
-@using ScoreTracker.PlayerProgress.Contracts
+﻿@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
@@ -15,7 +15,7 @@
         <div class="pmb-curve-head">
             <span class="pmb-curve-title">@L["Your pool"]</span>
             <span class="pmb-curve-note">
-                @string.Format(L["{0} charts · {1} down to {2}"], Page.Pool.Count, Page.PoolTop.ToString("N0"), Page.PoolBottom.ToString("N0"))
+                @string.Format(L["{0} charts · {1} down to {2}"], Page.Pool.Count, Page.PoolTop.ToString("N2"), Page.PoolBottom.ToString("N2"))
             </span>
         </div>
 
@@ -104,7 +104,7 @@
                            chart.Type == ChartType.Double;
             var name = Charts.TryGetValue(entry.ChartId, out var c) ? c.Song.Name.ToString() : string.Empty;
             return new Bar(Math.Clamp((entry.Value - _floor) / _span * 100, 2, 100), isDouble, ghost, isBar,
-                $"#{entry.Place} {name} — {entry.Value:N0}");
+                $"#{entry.Place} {name} — {entry.Value:N2}");
         }).ToArray();
     }
 

@@ -57,7 +57,13 @@ public sealed class OfficialPlacementDto
     public int? Place { get; set; }
     public int? PlaceDelta { get; set; }
     public int Score { get; set; }
-    public int ComputedRating { get; set; }
+
+    /// <summary>
+    ///     What this placement is worth in PUMBILITY. A double rather than an int: the value has
+    ///     a real fraction, and <see cref="OfficialPlayerProfileDto.Pumbility" /> on the same
+    ///     payload has always carried one.
+    /// </summary>
+    public double ComputedRating { get; set; }
 }
 
 public sealed class OfficialHistoryPointDto

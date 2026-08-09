@@ -17,5 +17,5 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityProjection(
     IReadOnlyDictionary<Guid, PhoenixScore> ExpectedScores,
-    IReadOnlyDictionary<Guid, int> ProjectedGains,
+    IReadOnlyDictionary<Guid, double> ProjectedGains,
     IReadOnlyDictionary<Guid, TierListCategory> ChartDifficulty);
