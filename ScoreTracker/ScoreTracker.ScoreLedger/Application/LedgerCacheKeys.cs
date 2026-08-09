@@ -1,0 +1,36 @@
+using ScoreTracker.SharedKernel.Enums;
+
+namespace ScoreTracker.ScoreLedger.Application;
+
+/// <summary>
+///     The Ledger's cache entries, shared rather than private to their readers — a format only the
+///     reader knows is exactly what leaves an evicting writer guessing (the OfficialCacheKeys
+///     precedent).
+/// </summary>
+internal static class LedgerCacheKeys
+{
+    /// <summary>
+    ///     The charts carrying a limbo leaderboard, per mix. Read on every chart view to decide
+    ///     whether the Lowest Passing chip renders, and written only by hand-run SQL — so there is
+    ///     nothing to evict on and the TTL is short instead of long
+    ///     (docs/design/limbo-leaderboard.md §5).
+    /// </summary>
+    public static string LimboCharts(MixEnum mix)
+    {
+        return $"LimboCharts__{mix}";
+    }
+
+    /// <summary>Five minutes: an INSERT lights its chip on the same visit, not the next restart.</summary>
+    public static readonly TimeSpan LimboChartsTtl = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    ///     One chart's limbo board. Long-lived because every journal write for the chart evicts it
+    ///     — the TTL is the backstop, not the mechanism.
+    /// </summary>
+    public static string LimboBoard(MixEnum mix, Guid chartId)
+    {
+        return $"LimboBoard__{mix}__{chartId}";
+    }
+
+    public static readonly TimeSpan LimboBoardTtl = TimeSpan.FromHours(24);
+}

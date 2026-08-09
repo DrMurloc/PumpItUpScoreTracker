@@ -64,9 +64,16 @@ projection, no recompute, no backfill job.
   takes `TOP N` ascending and the meaningless tail never renders.
 
 - **D7 — rank colour and score furniture are unchanged, deliberately.** `ThemeScales.RarityStyle`
-  reads a percentile derived from *place*, so #1 (the lowest score) takes the top of the rarity ramp.
-  Every row keeps its letter grade and plate, so the board reads as a wall of F grades and Rough
-  Games. Both were raised as possible bugs and both are the point (owner, 2026-08-08).
+  reads a percentile derived from *place*, so #1 (the lowest score) takes the top of the rarity ramp,
+  and every row keeps the letter grade its score earns — so the board reads as a gold-crowned wall of
+  F grades. Both were raised as possible bugs and both are the point (owner, 2026-08-08).
+
+  **Rows carry no plate**, which is the one place the board differs from its siblings. Settled at
+  implementation: `ScoreEventJournal.Plate` is `nvarchar(max)`, so it cannot ride the covering index
+  without a key lookup per row, and picking the plate belonging to the *minimum-score* row needs a
+  correlated per-group aggregate that does not translate. It costs nothing to lose — a limbo pass is
+  a Rough Game by construction, and `ScoreBreakdown` renders no plate image when it has none, so the
+  row simply reads score-and-grade.
 
 - **D8 — no footnote.** The Official scope explains its snapshot date; this one explains nothing.
   Players will work out that a run has to be imported to count (owner, 2026-08-08).

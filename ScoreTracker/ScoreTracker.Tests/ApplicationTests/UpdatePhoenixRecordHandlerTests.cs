@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
@@ -867,13 +868,19 @@ public sealed class UpdatePhoenixRecordHandlerTests
         public Mock<IScoreJournalRepository> Journal { get; } = new();
         public Mock<IScoreSessionRepository> Sessions { get; } = new();
 
+        /// <summary>
+        ///     A real cache, not a mock: it is an in-process dictionary rather than a boundary, and
+        ///     the limbo-board eviction is only observable by reading it back.
+        /// </summary>
+        public MemoryCache Cache { get; } = new(new MemoryCacheOptions());
+
         public UpdatePhoenixRecordHandler Handler { get; }
 
         public HandlerContext()
         {
             CurrentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(UserId).Build());
             Handler = new UpdatePhoenixRecordHandler(Records.Object, CurrentUser.Object, DateTime.Object,
-                Bus.Object, Scheduler.Object, Batches.Object, Journal.Object, Sessions.Object);
+                Bus.Object, Scheduler.Object, Batches.Object, Journal.Object, Sessions.Object, Cache);
         }
 
         public void GivenExistingScore(PhoenixScore score, PhoenixPlate plate, bool isBroken,

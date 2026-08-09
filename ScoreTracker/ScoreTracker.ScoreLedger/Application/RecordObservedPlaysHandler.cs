@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
@@ -12,10 +13,10 @@ namespace ScoreTracker.ScoreLedger.Application;
 ///     <see cref="UpdatePhoenixRecordHandler" />'s job, and a play arriving through both paths
 ///     collapses onto one row by its play key.
 /// </summary>
-internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal)
+internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal, IMemoryCache cache)
     : IRequestHandler<RecordObservedPlaysCommand>
 {
-    public Task Handle(RecordObservedPlaysCommand request, CancellationToken cancellationToken)
+    public async Task Handle(RecordObservedPlaysCommand request, CancellationToken cancellationToken)
     {
         var entries = request.Plays
             // A walk-off is never stored, whether or not it would have been a best.
@@ -25,6 +26,14 @@ internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal
                 request.SessionId, p.Judgements, false))
             .ToArray();
 
-        return journal.AppendObservations(entries, cancellationToken);
+        await journal.AppendObservations(entries, cancellationToken);
+
+        // The limbo board reads exactly these rows, so it goes stale exactly here. Evicted AFTER
+        // the write, which is why this is the hook rather than ScoreImportCompletedEvent — that
+        // one is published before the rows it describes exist, and only for official imports
+        // (docs/design/limbo-leaderboard.md §5). Remove on an absent key is a no-op, so no chart
+        // needs checking against the flag set first.
+        foreach (var chartId in entries.Select(e => e.ChartId).Distinct())
+            cache.Remove(LedgerCacheKeys.LimboBoard(request.Mix, chartId));
     }
 }
