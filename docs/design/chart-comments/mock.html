@@ -83,6 +83,23 @@ section { margin-top: 56px; }
         padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 14px; margin: 0 0 14px; max-width: 66ch; }
 .flag b { font-weight: 700; }
 
+/* Which slice a surface belongs to. The mock outlived its first build, so every frame now
+   says whether it is shipped, being built, or still a drawing. */
+.slice { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+         padding: 2px 8px; border-radius: 999px; border: 1px solid var(--edge); color: var(--note-soft);
+         white-space: nowrap; }
+.slice.now { border-color: var(--mark); color: var(--mark); font-weight: 700; }
+.slice.done { opacity: .65; }
+
+.slices { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+.slices .s { border: 1px solid var(--edge); border-radius: 8px; padding: 8px 12px; font-size: 12.5px;
+             flex: 1 1 190px; }
+.slices .s b { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+               text-transform: uppercase; color: var(--note-soft); margin-bottom: 2px; }
+.slices .s.now { border-color: var(--mark); border-width: 2px; }
+.slices .s.now b { color: var(--mark); }
+.slices .s.done { opacity: .6; }
+
 table.spec { border-collapse: collapse; width: 100%; font-size: 14px; }
 table.spec th, table.spec td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--edge); vertical-align: top; }
 table.spec th { font-family: var(--mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase;
@@ -143,9 +160,6 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
        font-size: 12.5px; padding: 11px 12px 9px; border-bottom: 2px solid transparent; cursor: pointer;
        white-space: nowrap; display: flex; align-items: center; gap: 6px; }
 .tab.on { color: var(--mix-primary); border-bottom-color: var(--mix-primary); }
-.tab .cnt { background: var(--mix-surface-muted); color: var(--mix-ink); border-radius: 9px; padding: 0 6px;
-            font-size: 10.5px; font-variant-numeric: tabular-nums; }
-.tab.on .cnt { background: var(--mix-primary); color: var(--mix-primary-contrast); }
 
 /* scope rail — the .cld-chip vocabulary from ChartLeaderboardScopes */
 .rail { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 14px 8px; }
@@ -180,7 +194,9 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .badge.orig { border-color: rgba(255,210,74,.4); color: var(--mix-accent); }
 .badge.tr { border-color: rgba(63,169,245,.4); color: var(--mix-primary); }
 .badge.q { border-color: rgba(255,107,53,.45); color: var(--mix-secondary); }
-.cbody { font-size: 13.5px; }
+/* A 500-character comment can be one 300-character URL. Without this it decides the dialog's
+   width and the whole thing scrolls sideways on a phone. */
+.cbody { font-size: 13.5px; overflow-wrap: anywhere; }
 .cbody p { margin: 0 0 7px; max-width: none; }
 .cbody p:last-child { margin-bottom: 0; }
 .cbody strong { color: #fff; }
@@ -200,24 +216,8 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .spacer { flex: 1; }
 .removed { font-size: 12.5px; color: var(--mix-ink-muted); font-style: italic; }
 
-/* composer */
-.comp { border-top: 1px solid var(--mix-lines); background: var(--mix-nav); padding: 10px 14px 12px; }
-.comp-tabs { display: flex; gap: 3px; margin-bottom: 8px; }
-.ct { appearance: none; background: none; border: none; font: inherit; font-size: 11.5px; padding: 3px 9px;
-      border-radius: 5px; color: var(--mix-ink-muted); cursor: pointer; }
-.ct.on { background: var(--mix-surface-muted); color: var(--mix-ink); }
-.tools { display: flex; gap: 2px; align-items: center; margin-bottom: 6px; }
-.tbtn { width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--mix-lines); background: transparent;
-        color: var(--mix-ink-muted); font-size: 12px; cursor: pointer; display: grid; place-items: center; }
-.tbtn b, .tbtn i { pointer-events: none; }
-.ta { width: 100%; min-height: 62px; background: var(--mix-surface); border: 1px solid var(--mix-lines);
-      border-radius: 6px; color: var(--mix-ink); font: inherit; font-size: 13px; padding: 8px 10px; resize: vertical; }
-.ta:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 1px; }
-.prev { width: 100%; min-height: 62px; background: var(--mix-surface); border: 1px dashed var(--mix-lines);
-        border-radius: 6px; padding: 8px 10px; font-size: 13.5px; }
-.comp-foot { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+/* composer — the boxed, toolbarred markdown version is gone (§08). What is left is a line. */
 .count { font-size: 11px; color: var(--mix-ink-muted); font-variant-numeric: tabular-nums; }
-.count.warn { color: var(--mix-secondary); }
 .btn { appearance: none; font: inherit; font-size: 12.5px; font-weight: 650; padding: 6px 15px; border-radius: 6px;
        border: 1px solid transparent; cursor: pointer; }
 .btn.primary { background: var(--mix-primary); color: var(--mix-primary-contrast); }
@@ -226,6 +226,58 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .posting-as { font-size: 11px; color: var(--mix-ink-muted); }
 .posting-as b { color: var(--mix-primary); }
+/* The composer opens at the TOP of the thread, so it needs a bottom edge too. */
+.comp.top { border-bottom: 1px solid var(--mix-lines); }
+
+/* The composer is a LINE, not a box, and it is its own resting state — there is no button
+   that opens a different control. Above the thread rather than below it: pinned to the
+   bottom it would mean scrolling past twenty comments to write one. */
+.addline { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 10px; align-items: start;
+           padding: 2px 14px 12px; }
+.addline.reply { padding: 0 14px 12px 40px; }
+.addline .av { width: 28px; height: 28px; font-size: 11px; }
+.line-in { border: none; border-bottom: 1px solid var(--mix-lines); background: none; width: 100%;
+           color: var(--mix-ink-muted); font: inherit; font-size: 13px; padding: 5px 2px; }
+/* Focused: the rule thickens and takes the ink colour. The field grows with the text
+   instead of scrolling — a phone keyboard over a 3-line scroller is unusable. */
+.line-in.on { border-bottom: 2px solid var(--mix-ink); color: var(--mix-ink); min-height: 40px; }
+.line-foot { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
+/* The counter appears near the cap, not at rest. A permanent "0 / 500" is a homework
+   assignment on a control whose whole job is to feel like nothing. */
+.count.late { color: var(--mix-secondary); }
+
+/* A personal note has no author to show — every one of them is yours — so it drops the
+   avatar column entirely. That reclaims 44px on a phone and makes a note unmistakable
+   for a comment at a glance. */
+.cmt.note { grid-template-columns: minmax(0,1fr); }
+/* ⚠ The same rule the composer needs. With the avatar suppressed but the 28px track left in
+   place, the field lands in it and the whole control renders one character wide with its
+   buttons stacked — which is exactly what shipped on the Notes scope. */
+.addline.bare { grid-template-columns: minmax(0,1fr); }
+
+/* Removal asks first, and asks in place. Inline rather than a dialog for the same reason the
+   rules card is: this renders inside the details dialog, and a MudDialog inside one orphans its
+   scrim. The comment stays on screen while you decide — the entire question is whether THIS is
+   the one you meant, and a modal that covers it cannot answer that. */
+.confirm { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 8px;
+           padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(242,85,90,.45);
+           background: rgba(242,85,90,.09); font-size: 12.5px; }
+.confirm .q { color: var(--mix-ink); }
+.confirm .sub { color: var(--mix-ink-muted); font-size: 11.5px; width: 100%; }
+.privately { font-size: 11px; color: var(--mix-ink-muted); display: flex; align-items: center; gap: 5px; }
+.privately::before { content: "🔒"; font-size: 10px; }
+.emptynote { padding: 22px 16px 26px; text-align: center; color: var(--mix-ink-muted); font-size: 12.5px; }
+
+.showmore { border-top: 1px solid var(--mix-lines); padding: 9px 14px; text-align: center; }
+.showmore button { appearance: none; background: none; border: none; font: inherit; font-size: 12px;
+                   color: var(--mix-primary); cursor: pointer; padding: 4px 10px; }
+
+/* The rules card renders inline where the composer would be — not as a second modal over
+   the dialog. MudBlazor dialog-in-dialog is a known scrim trap here. */
+.inline-rules { border-top: 1px solid var(--mix-lines); background: var(--mix-nav); padding: 12px 14px 14px; }
+.inline-rules .rules-h { font-family: var(--cond); font-size: 16px; font-weight: 700; margin-bottom: 5px; }
+.inline-rules .chk { padding: 11px 0 0; }
+.inline-rules .rules-f { display: flex; gap: 8px; justify-content: flex-end; margin-top: 13px; }
 
 /* modal */
 .modal { background: var(--mix-surface); border: 1px solid var(--mix-lines); border-radius: 8px; max-width: 520px; }
@@ -319,13 +371,20 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 <header>
   <div class="eyebrow">PIU Scores · design review</div>
   <h1>Chart details overhaul</h1>
-  <p class="lede">Four tabs, community comments with nightly translation, and moderation that lives where the community does. Mocks are at true width — 572&nbsp;px desktop, 390&nbsp;px mobile — on the real Phoenix palette.</p>
+  <p class="lede">Four tabs, community comments with nightly translation, and moderation that lives where the community does. Mocks are at true width — 572&nbsp;px desktop, 390&nbsp;px mobile — on the real Phoenix palette. Slice&nbsp;1 shipped; these are redrawn against what it actually built.</p>
   <p class="tiny" style="color:var(--note-soft);margin-top:14px">The mocked dialog stays dark in both page themes, because the site is dark-only by design — <code>PaletteLight</code> and <code>PaletteDark</code> are deliberately identical.</p>
+  <div class="slices">
+    <div class="s done"><b>Slice 1 · shipped</b>Tab strip, Chart Stats, Score History. PR&nbsp;#227.</div>
+    <div class="s now"><b>Slice 2 · building</b>Comments and personal notes: vertical, parser, link trust, threads, votes, composer, rules card. Site-admin removal rides along.</div>
+    <div class="s"><b>Slice 3</b>Community moderation: the permission flag, restrictions, reports, queue panels.</div>
+    <div class="s"><b>Slice 4</b>Translation: batch pipeline, language badges, the spend ceiling.</div>
+  </div>
+  <div class="flag" style="margin-top:18px"><b>Every frame is tagged with the slice it belongs to.</b> A Slice&nbsp;2 frame is what actually renders when that PR merges — which is why the comments below are in the languages they were written in, and why there are no badges yet. Slice&nbsp;4 is what makes them readable.</div>
 </header>
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">01</span><h2>Anatomy</h2></div>
+  <div class="sec-head"><span class="n">01</span><h2>Anatomy</h2><span class="slice done">Slice 1 shipped</span><span class="slice now">Slice 2 adds the tab</span></div>
   <div class="cols split" style="--w:424px">
     <div class="frame narrow">
       <div class="cap">Header + tab strip</div>
@@ -342,7 +401,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
           <span class="muted tiny">#84 of 2,317 · recorded 12 days ago</span>
         </div>
         <div class="tabs">
-          <button class="tab on">Comments <span class="cnt">7</span></button>
+          <button class="tab on">Comments</button>
           <button class="tab">Leaderboard</button>
           <button class="tab">Stats</button>
           <button class="tab">History</button>
@@ -355,105 +414,64 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
       <p>Video, identity, and your standing — the three things you want without a click. Everything else moved.</p>
       <ul>
         <li><b>The tab strip is sticky</b> inside the scroll container, so a tall header scrolls away underneath it rather than taking the tabs with it.</li>
-        <li><b>The comment count is the invitation.</b> Default tab is Leaderboard; last choice persists in a <code>ChartDetails__Tab</code> UiSetting. The badge is what makes anyone open Comments the first time.</li>
-        <li><b>Every tab is lazy</b> — no queries until selected. Nineteen call sites render this dialog; the board already gates on <code>Active="Visible"</code> and the rest now follow.</li>
-        <li><b>History hides when logged out.</b> It's your journal plus your score inputs; both are meaningless signed out.</li>
+        <li><b>Every tab is lazy</b> — no queries until selected. Nineteen call sites render this dialog; the board gates on <code>Active="Visible"</code> and the rest follow.</li>
+        <li><b>Default tab is Leaderboard</b>, last choice persisted in a <code>ChartDetails__Tab</code> UiSetting.</li>
+        <li><b>History hides when logged out.</b> It's your journal plus your score inputs; both are meaningless signed out. <b>Comments does not hide</b> — it renders read-only, because a logged-out visitor arriving from a link is exactly who the conversation is for.</li>
       </ul>
-      <div class="flag"><b>Regression to cover:</b> recording a score is now two taps, and several call sites exist only to record — QuickRecordWidget, DailyStepWidget, Charts' quick record. Fix is an <code>InitialTab</code> parameter beside the existing <code>BoardScope</code>, so those callers open straight on History. Round&nbsp;11's "always-visible inputs" decision survives for the people it was made for.</div>
+      <div class="flag"><b>No count badge on the tab.</b> It was the discovery mechanism in the first draft, and it costs a count query <i>on dialog open at every one of the nineteen call sites</i> — which is the one rule the tab strip was built to hold. Behind the launch toggle it would read 0 for everybody but the owner anyway. Adding it later is one <code>COUNT</code> and one span; it is a launch decision, not a build one.</div>
+      <div class="flag"><b>The whole tab is gated:</b> <code>IsAdmin || ChartComments:Enabled</code>. Configuration ships off, so comments are the owner's alone until production cost testing says otherwise — and the toggle governs <em>reading</em> as well as writing, so flipping it publishes everything written during testing at once.</div>
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">02</span><h2>Comments</h2><span class="eyebrow">the main event</span></div>
-  <div class="cols split" style="--w:424px">
+  <div class="sec-head"><span class="n">02</span><h2>Comments</h2><span class="slice now">Slice 2</span><span class="eyebrow">the main event</span></div>
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">
     <div class="frame narrow">
-      <div class="cap">Comments tab · public scope</div>
+      <div class="cap">Comments tab · resting · public scope</div>
       <div class="app"><div class="dlg">
         <div class="tabs">
-          <button class="tab on">Comments <span class="cnt">7</span></button>
+          <button class="tab on">Comments</button>
           <button class="tab">Leaderboard</button>
           <button class="tab">Stats</button>
           <button class="tab">History</button>
         </div>
         <div class="rail">
           <button class="chip on">Public</button>
+          <button class="chip">Notes</button>
           <button class="chip">Murloc Lab</button>
           <button class="chip">NYC Pump</button>
         </div>
         <div class="subbar">
           <span>Sort</span>
-          <select class="select"><option>Top</option><option>Newest</option></select>
-          <span class="spacer" style="flex:1"></span>
-          <span>Read in</span>
-          <select class="select"><option>English</option><option>Original</option></select>
+          <select class="select" aria-label="Sort"><option>Top</option><option>Newest</option></select>
+        </div>
+        <div class="addline">
+          <span class="av">E</span>
+          <div class="line-in">Add a comment…</div>
         </div>
 
         <div class="clist">
-          <!-- native language -->
+          <!-- unsupported source, untranslated: this is what Slice 2 renders -->
           <div class="cmt">
-            <div class="av">E</div>
+            <div class="av">A</div>
             <div>
               <div class="chead">
-                <span class="cname">ERRLENA 🇺🇸</span>
-                <span class="cmeta">3 days ago</span>
+                <span class="cname">andhika 🇮🇩</span>
+                <span class="cmeta">5 days ago</span>
               </div>
               <div class="cbody">
-                <p>The <strong>drill section at 2:01</strong> is the whole chart. If you can hold that you pass — everything after is recovery. Practice it at half speed first.</p>
+                <p>Akhirnya lulus di percobaan ketiga setelah dua bulan stuck. Jangan menyerah — timing window-nya jauh lebih longgar dari kelihatannya.</p>
               </div>
               <div class="cfoot">
-                <button class="act voted">▲ 14</button>
+                <button class="act">▲ 31</button>
                 <button class="act">Reply</button>
-                <span class="spacer"></span>
-                <button class="act">⋯</button>
               </div>
             </div>
           </div>
 
-          <!-- reply -->
-          <div class="cmt reply">
-            <div class="av">T</div>
-            <div>
-              <div class="chead">
-                <span class="cname">TUSA 🇰🇷</span>
-                <span class="cmeta">2 days ago</span>
-                <span class="badge tr">Translated from 한국어</span>
-              </div>
-              <div class="cbody">
-                <p>Agreed, but watch your footing going <em>into</em> it — most people fail because they enter on the wrong foot, not because the drill is too fast.</p>
-              </div>
-              <div class="cfoot">
-                <button class="act">▲ 9</button>
-                <button class="act">Show original</button>
-                <span class="spacer"></span>
-                <button class="act">⋯</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- queued -->
-          <div class="cmt">
-            <div class="av">R</div>
-            <div>
-              <div class="chead">
-                <span class="cname">rafa_pump 🇧🇷</span>
-                <span class="cmeta">14 minutes ago</span>
-                <span class="badge q">Queued for translation</span>
-              </div>
-              <div class="cbody">
-                <p>Alguém sabe se o BPM muda no final? Senti que acelerou mas pode ser impressão minha kkkk</p>
-              </div>
-              <div class="cfoot">
-                <button class="act">▲ 1</button>
-                <button class="act">Reply</button>
-                <span class="spacer"></span>
-                <button class="act">⋯</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- links + edited -->
+          <!-- links + edited; the reader has upvoted this one -->
           <div class="cmt">
             <div class="av">D</div>
             <div>
@@ -462,121 +480,389 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
                 <span class="cmeta">1 week ago · (edited 6 days ago)</span>
               </div>
               <div class="cbody">
-                <p>Best reference run I've found is <a class="lnk" href="#">this one on YouTube</a>. The step data is on <a class="lnk" href="#">PIU Center</a> if you want the breakdown, and someone mirrored the pattern chart at <a class="lnk untrusted" href="#">stepcharts.example.net</a>.</p>
+                <p>Best reference run I've found: <a class="lnk" href="#">https://youtu.be/kQw8ZmVn4rE</a> — step data on <a class="lnk" href="#">https://piucenter.com/chart/baroque-virus-s20</a> if you want the breakdown. Someone mirrored the pattern chart at <a class="lnk untrusted" href="#">https://stepcharts.example.net/pattern/2201/baroque</a> too.</p>
               </div>
               <div class="cfoot">
                 <button class="act voted">▲ 22</button>
                 <button class="act">Reply</button>
-                <span class="spacer"></span>
-                <button class="act shield">🛡</button>
-                <button class="act">⋯</button>
               </div>
             </div>
           </div>
 
-          <!-- unsupported source -->
+          <!-- Reply plops a field open beneath the comment, at the reply rail -->
+          <div class="addline reply">
+            <span class="av">E</span>
+            <div>
+              <div class="line-in on">Which run — the one with the miss at 1:48?</div>
+              <div class="line-foot">
+                <span class="spacer"></span>
+                <button class="btn ghost">Cancel</button>
+                <button class="btn primary">Reply</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- the reader's own comment: the only row carrying ⋯ -->
           <div class="cmt">
-            <div class="av">A</div>
+            <div class="av">E</div>
             <div>
               <div class="chead">
-                <span class="cname">andhika 🇮🇩</span>
-                <span class="cmeta">5 days ago</span>
-                <span class="badge tr">Translated from Indonesian</span>
+                <span class="cname">ERRLENA 🇺🇸</span>
+                <span class="cmeta">3 days ago</span>
               </div>
               <div class="cbody">
-                <p>Passed this on my third try after two months stuck. Don't give up — the timing window is more forgiving than it looks.</p>
+                <p>The drill section at 2:01 is the whole chart. If you can hold that you pass — everything after is recovery. Practice it at half speed first.</p>
               </div>
               <div class="cfoot">
-                <button class="act">▲ 31</button>
-                <button class="act">Show original</button>
+                <button class="act" style="opacity:.45;cursor:default">▲ 14</button>
+                <button class="act">Reply</button>
                 <span class="spacer"></span>
                 <button class="act">⋯</button>
               </div>
             </div>
           </div>
 
-          <!-- removed -->
+          <!-- reply, in the language it was written in -->
+          <div class="cmt reply">
+            <div class="av">T</div>
+            <div>
+              <div class="chead">
+                <span class="cname">TUSA 🇰🇷</span>
+                <span class="cmeta">2 days ago</span>
+              </div>
+              <div class="cbody">
+                <p>맞는 말인데 들어가는 발이 더 중요해요. 드릴이 빨라서 죽는 게 아니라 발 바꿔서 들어가면 그냥 터집니다.</p>
+              </div>
+              <div class="cfoot">
+                <button class="act">▲ 9</button>
+                <button class="act">Reply</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="cmt">
+            <div class="av">R</div>
+            <div>
+              <div class="chead">
+                <span class="cname">rafa_pump 🇧🇷</span>
+                <span class="cmeta">14 minutes ago</span>
+              </div>
+              <div class="cbody">
+                <p>Alguém sabe se o BPM muda no final? Senti que acelerou mas pode ser impressão minha kkkk</p>
+              </div>
+              <div class="cfoot">
+                <button class="act">▲ 1</button>
+                <button class="act">Reply</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- a stub only because a reply hangs off it; three actors, three wordings -->
           <div class="cmt">
             <div class="av" style="opacity:.35">?</div>
             <div>
-              <div class="chead"><span class="removed">Removed by a community admin · 4 days ago</span></div>
+              <div class="chead"><span class="removed">Removed by the site admin · 4 days ago</span></div>
+            </div>
+          </div>
+          <div class="cmt">
+            <div class="av" style="opacity:.35">?</div>
+            <div>
+              <div class="chead"><span class="removed">Comment from a deleted user</span></div>
+            </div>
+          </div>
+          <div class="cmt reply">
+            <div class="av">M</div>
+            <div>
+              <div class="chead"><span class="cname">mint_choco 🇰🇷</span><span class="cmeta">4 days ago</span></div>
+              <div class="cbody"><p>ㅋㅋㅋㅋ 진짜 그건 좀</p></div>
+              <div class="cfoot"><button class="act">▲ 2</button><button class="act">Reply</button></div>
             </div>
           </div>
         </div>
-
-        <!-- composer -->
-        <div class="comp">
-          <div class="posting-as" style="margin-bottom:7px">Posting to <b>Public</b> as ERRLENA</div>
-          <div class="comp-tabs">
-            <button class="ct on">Write</button><button class="ct">Preview</button>
-          </div>
-          <div class="tools">
-            <button class="tbtn" title="Bold"><b>B</b></button>
-            <button class="tbtn" title="Italic"><i>I</i></button>
-            <button class="tbtn" title="Strikethrough"><s>S</s></button>
-            <button class="tbtn" title="Code">&lt;&gt;</button>
-            <button class="tbtn" title="Link">🔗</button>
-            <button class="tbtn" title="Bulleted list">☰</button>
-          </div>
-          <textarea class="ta" placeholder="Share what you know about this chart…">Hold the **drill at 2:01** and the rest is recovery.</textarea>
-          <div class="comp-foot">
-            <span class="count">51 / 500</span>
-            <span class="spacer"></span>
-            <button class="btn ghost">Cancel</button>
-            <button class="btn primary">Post</button>
-          </div>
-        </div>
+        <div class="showmore"><button>Show more comments</button></div>
       </div></div>
     </div>
 
+    <div class="frame narrow">
+      <div class="cap">Writing · the same line, grown</div>
+      <div class="app"><div class="dlg">
+        <div class="tabs">
+          <button class="tab on">Comments</button>
+          <button class="tab">Leaderboard</button>
+          <button class="tab">Stats</button>
+          <button class="tab">History</button>
+        </div>
+        <div class="rail">
+          <button class="chip on">Public</button>
+          <button class="chip">Notes</button>
+          <button class="chip">Murloc Lab</button>
+          <button class="chip">NYC Pump</button>
+        </div>
+        <div class="subbar">
+          <span>Sort</span>
+          <select class="select" aria-label="Sort"><option>Top</option><option>Newest</option></select>
+        </div>
+        <div class="addline">
+          <span class="av">E</span>
+          <div>
+            <div class="line-in on">Hold the drill at 2:01 and the rest is recovery. Half speed until it stops being a coin flip, then take it to 1.0 — the pattern is the same, it just stops giving you time to think about it.</div>
+            <div class="line-foot">
+              <span class="posting-as">Posting to <b>Public</b> as ERRLENA</span>
+              <span class="spacer"></span>
+              <button class="btn ghost">Cancel</button>
+              <button class="btn primary">Comment</button>
+            </div>
+          </div>
+        </div>
+        <div class="clist">
+          <div class="cmt">
+            <div class="av">A</div>
+            <div>
+              <div class="chead"><span class="cname">andhika 🇮🇩</span><span class="cmeta">5 days ago</span></div>
+              <div class="cbody"><p>Akhirnya lulus di percobaan ketiga setelah dua bulan stuck…</p></div>
+              <div class="cfoot"><button class="act">▲ 31</button><button class="act">Reply</button></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div class="cap" style="margin:12px 0 0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px;line-height:1.5">
+        No toolbar, no Write/Preview, no character counter until you are near the cap — at which point
+        <span class="count late">37 left</span> appears where the audience line is. What you type is what
+        posts, so there is nothing to preview.
+      </div>
+    </div>
+  </div>
+
+  <div class="cols split" style="--w:424px;margin-top:30px">
+    <div class="frame narrow">
+      <div class="cap">Notes scope · nobody else sees this</div>
+      <div class="app"><div class="dlg">
+        <div class="rail" style="padding-top:14px">
+          <button class="chip">Public</button>
+          <button class="chip on">Notes</button>
+          <button class="chip">Murloc Lab</button>
+          <button class="chip">NYC Pump</button>
+        </div>
+        <div class="addline bare">
+          <div class="line-in">Add a note…</div>
+        </div>
+        <div class="clist">
+          <div class="cmt note">
+            <div>
+              <div class="chead">
+                <span class="cmeta">3 days ago</span>
+                <span class="spacer"></span>
+                <button class="act">⋯</button>
+              </div>
+              <div class="cbody"><p>Left foot leads into the 2:01 drill. Right foot = death, every single time.</p></div>
+            </div>
+          </div>
+          <div class="cmt note">
+            <div>
+              <div class="chead">
+                <span class="cmeta">2 weeks ago</span>
+                <span class="spacer"></span>
+                <button class="act">⋯</button>
+              </div>
+              <div class="cbody"><p>BPM ramp starts at 1:40, not 1:52 where it feels like it does. Stop panicking early.</p></div>
+            </div>
+          </div>
+          <div class="cmt note">
+            <div>
+              <div class="chead">
+                <span class="cmeta">1 month ago</span>
+                <span class="spacer"></span>
+                <button class="act">⋯</button>
+              </div>
+              <div class="cbody"><p>Run to copy the footwork from: <a class="lnk" href="#">https://youtu.be/kQw8ZmVn4rE</a></p></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div class="cap" style="margin:12px 0 0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px;line-height:1.5">
+        No sort control — with no votes there is only one order. No vote, no Reply, no shield. The
+        <code style="font-size:11px">⋯</code> carries Edit and Delete, and that is the whole surface. Empty, it reads
+        <i>Notes you write here are only ever visible to you.</i>
+      </div>
+    </div>
     <div class="note">
-      <h3>The scope rail is the audience picker</h3>
-      <p>Same <code>.cld-chip</code> vocabulary as the leaderboard's scopes, doing double duty: it filters what you read <em>and</em> decides what you post to. "Which community am I posting to" is answered by where you're standing, not by a second dropdown.</p>
+      <h3 style="margin-top:0">Removal asks first, and asks in place</h3>
+      <div class="app" style="margin:0 0 14px">
+        <div style="background:var(--mix-surface);border:1px solid var(--mix-lines);border-radius:8px;overflow:hidden">
+          <div class="cmt" style="border-top:none">
+            <div class="av">K</div>
+            <div>
+              <div class="chead"><span class="cname">kimchi_stomper 🇰🇷</span><span class="cmeta">2 hours ago</span></div>
+              <div class="cbody"><p>이 채보 만든 사람 진짜…</p></div>
+              <div class="confirm">
+                <span class="q">Remove this comment?</span>
+                <span class="spacer"></span>
+                <button class="btn ghost">Cancel</button>
+                <button class="btn danger">Remove</button>
+                <span class="sub">It stops showing, and the thread keeps its shape. The author is not told.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p>The comment <b>stays on screen</b> while you decide, and the confirm sits under it rather than over it. The whole question a moderator is answering is "is <em>this</em> the one I meant" — a modal that covers the comment cannot answer it, and a <code>MudDialog</code> inside the details dialog orphans its scrim anyway.</p>
+      <p>One line of consequence under the buttons, because removal is not obvious in either direction: it is soft, so nothing is destroyed, but nobody gets told either. <b>Author delete gets the same treatment</b> — same control, different wording.</p>
+      <div class="flag"><b>Only the shield confirms twice.</b> Voting, replying and editing are all reversible in one tap and asking about them would train the reflex that makes a confirm useless.</div>
+
+      <h3 style="margin-top:22px">Personal notes are an audience of one</h3>
+      <p>They are not a separate feature bolted beside comments — they are the same row with <code>Audience&nbsp;=&nbsp;Private</code>, which is exactly what the rail was already for. Same table, same aggregate, same parser, same link trust, same 500&nbsp;characters, same purge manifest. What changes is four invariants on the aggregate:</p>
+      <ul>
+        <li><b>Never translated.</b> Not "not yet" — never. Slice&nbsp;4's submit step skips <code>Private</code>, so a note costs nothing and no badge ever renders on one.</li>
+        <li><b>Never moderated.</b> No report, no shield, <em>and no admin visibility at all</em> — the site admin cannot see them, which is a query rule, not a hidden button.</li>
+        <li><b>Never voted, never replied to.</b> A root with no children, by construction.</li>
+        <li><b>No rules card.</b> The rules are about how you treat other people. <code>AgreedToTermsAt</code> fires on your first <em>public or community</em> comment, so someone who only ever keeps notes is never asked to agree to anything.</li>
+      </ul>
+      <p>Everything else is unchanged, deliberately. Links still autolink and still route through the interstitial when the host is unknown — the gate is about where a link goes, not who wrote it, and a note is a place you paste a URL to your future self.</p>
+
+      <div class="flag"><b>This is the feature that works on day one.</b> Comments need other people before they are worth reading; a note to yourself is useful on an empty site with one user. It is also the thing most likely to survive the toggle being off — which is worth deciding on purpose: <b>should Notes ship ungated while comments stay behind the flag?</b> Nothing in a private note can go wrong in public.</div>
+
+      <div class="flag"><b>The one risk this adds, and where to spend the test budget.</b> Private notes sharing a table with public comments means a wrong audience filter leaks them. That is not a <em>new</em> class of bug — a Murloc Lab comment leaking to a non-member is the same mistake and exists regardless — but it raises the stakes, so the filter belongs in the repository rather than the UI, and it wants the same shape of test <code>AccountPurgeTests</code> uses: a decoy account holding a note on every scope, which no other user's query may ever return.</div>
+
+      <h3 style="margin-top:20px">The scope rail is the audience picker</h3>
+      <p>Same <code>.cld-chip</code> vocabulary as the leaderboard's scopes, doing double duty: it filters what you read <em>and</em> decides what you post to. "Which community am I posting to" is answered by where you're standing, not by a second dropdown — and the composer says it in prose: <i>Posting to <b style="color:var(--mark)">Public</b> as ERRLENA</i>, or on the Notes scope simply <i>Only you can see this</i>, because "as ERRLENA" means nothing to an audience of one.</p>
+      <p><b>Order is Public, Notes, then your clubs</b> — Public because it is the default and the conversation, Notes second because it is the one chip every signed-in player has and it must not get pushed off the end by someone who joins six communities.</p>
+      <p>The list comes from <code>GetMyCommunitiesQuery</code>, filtered exactly the way <code>ChartLeaderboardScopes</code> already filters it: <code>!IsRegional</code> <em>and</em> not the World community, which carries <code>IsRegional&nbsp;=&nbsp;0</code> and would otherwise mean everybody. The comment stores the community's <b>Guid</b>, not its name, so a rename doesn't strand a thread.</p>
       <p>A reply inherits its root's audience as a <b>domain invariant on the aggregate</b> — it isn't a field the UI can set wrong. One level of replies; replying to a reply targets the root.</p>
 
-      <h3 style="margin-top:20px">Every language state on screen</h3>
+      <h3 style="margin-top:20px">The composer is one line</h3>
+      <p>Plain text. It sits above the thread, grows as you type, and there is no second control behind a button — the resting state <em>is</em> the field. <b>Reply</b> opens the identical line directly beneath the comment, at the reply rail. This is YouTube's shape, and YouTube is the closest analogue this feature has: short comments, phones, many languages, no power users.</p>
+      <p>One control, three placeholders — <i>Add a comment…</i>, <i>Reply…</i>, <i>Add a note…</i>. Three resx keys, no branching beyond the string and whether the footer says an audience or a reassurance.</p>
       <ul>
-        <li><b>Reader's own language</b> → no badge. Silence is the common case.</li>
-        <li><b>Translated</b> → <span class="badge tr" style="font-size:10px">Translated from 한국어</span> plus a per-comment <i>Show original</i>. Never rendered back into its own language — that round trip is a measured rewrite, not a no-op.</li>
-        <li><b>Pending</b> → the original text with <span class="badge q" style="font-size:10px">Queued for translation</span>. The comment already exists in <em>some</em> language; an empty box would be worse than the author's own words.</li>
-        <li><b>Unsupported source</b> (Indonesian) → detected by stage one, named from <code>CultureInfo.DisplayName</code>, translated normally.</li>
+        <li><b>Above the thread, not below it.</b> Pinned to the bottom it would mean scrolling past twenty comments to write one, on a screen whose header is already 274&nbsp;px.</li>
+        <li><b>Twenty roots, then Show more.</b> Replies hang off their root and don't count against it. Not pagination — a bound on the first render. Replies are never collapsed: at this volume "1 reply ⌄" hides a conversation to save nothing.</li>
+        <li><b>Sort is Top by default</b> (votes desc, then newest) with a Newest toggle. Thumbs up only, one per user, never on your own — which is why the count on your own comment is inert rather than a button.</li>
+        <li><b>URLs autolink; nothing else is interpreted.</b> Newlines survive, runs of blank lines collapse to one. No bold, no bullets, no code — see §08.</li>
       </ul>
 
-      <div class="flag"><b>Untrusted links are marked before you click</b>, not just on the way out — the orange <span class="lnk untrusted" style="font-size:13px">stepcharts.example.net</span> treatment. Trusted hosts (YouTube, Reddit, piugame, PIU Center, Pumpout, and every <em>public</em> Community Tool) open straight through.</div>
+      <h3 style="margin-top:18px">Who gets which action</h3>
+      <ul>
+        <li><b>Everyone signed in:</b> ▲ and Reply.</li>
+        <li><b>Your own comment:</b> ⋯ → Edit, Delete. An edit writes a revision row and renders <i>(edited …)</i>; delete is soft.</li>
+        <li><b>The site admin:</b> 🛡 → <b>Remove, and only remove.</b> Nobody edits anybody else's words, including the owner's own. Its presence <em>is</em> the permission — nobody else renders it.</li>
+        <li><b>Nothing else in Slice 2.</b> Report and the community shield arrive with moderation (§06), so a normal reader's row carries no ⋯ at all on someone else's comment.</li>
+      </ul>
+      <div class="app" style="margin:10px 0 14px">
+        <div style="background:var(--mix-surface);border:1px solid var(--mix-lines);border-radius:7px;padding:6px 10px">
+          <div class="tiny muted" style="margin-bottom:2px">what DrMurloc sees on the same row</div>
+          <div class="cfoot" style="margin-top:0"><button class="act voted">▲ 22</button><button class="act">Reply</button><span class="spacer"></span><button class="act shield">🛡</button></div>
+        </div>
+      </div>
 
-      <h3 style="margin-top:18px">The shield is the permission</h3>
-      <p>A moderator sees 🛡 on comments they have power over — site admin on everything, a community admin only inside their own club. Its presence <em>is</em> the signal; nobody else renders it. Report lives in the ⋯ for everyone signed in.</p>
+      <div class="flag"><b>A deleted comment only leaves a stub while something living hangs off it.</b> A deleted <em>reply</em> renders nothing at all — it is holding nothing open, so a stub for it is a headstone in the middle of somebody else's conversation. A deleted <em>root</em> leaves one only while at least one surviving reply still needs somewhere to hang from; once the last of them goes, the whole thread disappears. Three actors, three wordings: <i>Deleted</i> (the author), <i>Removed by the site admin</i>, <i>Comment from a deleted user</i> (account purge).</div>
+      <div class="flag"><b>Account purge can't use the manifest here.</b> <code>UserDataPurge</code> issues a blanket <code>DELETE … WHERE UserId</code>, which orphans every reply to a purged root — and <code>AccountPurgeTests</code> counts rows, so it would pass green while the tab throws. <code>CommentEntity</code> is exempt with a reason (as <code>ToolEntity</code> already is) and the vertical tombstones roots-with-replies itself: <code>UserId</code> to <code>Guid.Empty</code>, text cleared, <b>revisions deleted by comment id</b> — they carry no <code>UserId</code>, so nothing else would reach them, and they hold the exact text the purge exists to remove.</div>
+      <div class="flag"><b>Untrusted links are marked before you click</b>, not just on the way out — the orange treatment on the third URL above. Trusted hosts (YouTube, Reddit, piugame, PIU Center, Pumpout, and every <em>public</em> Community Tool) open straight through. Link trust ships in Slice 2 with the parser; see §04.</div>
+      <div class="flag"><b>Bare URLs are long, and a 500-character comment can be one 300-character link.</b> That is what <code>overflow-wrap: anywhere</code> on the comment body is for — without it a single URL decides the dialog's width and the whole thing scrolls sideways on a phone. It is now the most likely thing to fail the §07 measurement.</div>
     </div>
+
+    <div class="frame narrow">
+      <div class="cap"><span style="color:var(--mix-secondary)">Slice 4 adds this</span> · language</div>
+      <div class="app"><div class="dlg">
+        <div class="subbar" style="padding-top:10px">
+          <span>Sort</span>
+          <select class="select" aria-label="Sort"><option>Top</option><option>Newest</option></select>
+          <span class="spacer" style="flex:1"></span>
+          <span>Read in</span>
+          <select class="select" aria-label="Read in"><option>English</option><option>Original</option></select>
+        </div>
+        <div class="clist">
+          <div class="cmt">
+            <div class="av">A</div>
+            <div>
+              <div class="chead"><span class="cname">andhika 🇮🇩</span><span class="cmeta">5 days ago</span><span class="badge tr">Translated from Indonesian</span></div>
+              <div class="cbody"><p>Passed this on my third try after two months stuck. Don't give up — the timing window is more forgiving than it looks.</p></div>
+              <div class="cfoot"><button class="act">▲ 31</button><button class="act">Show original</button></div>
+            </div>
+          </div>
+          <div class="cmt reply">
+            <div class="av">T</div>
+            <div>
+              <div class="chead"><span class="cname">TUSA 🇰🇷</span><span class="cmeta">2 days ago</span><span class="badge tr">Translated from 한국어</span></div>
+              <div class="cbody"><p>Agreed, but watch your footing going <em>into</em> it — most people fail because they enter on the wrong foot, not because the drill is too fast.</p></div>
+              <div class="cfoot"><button class="act">▲ 9</button><button class="act">Show original</button></div>
+            </div>
+          </div>
+          <div class="cmt">
+            <div class="av">R</div>
+            <div>
+              <div class="chead"><span class="cname">rafa_pump 🇧🇷</span><span class="cmeta">14 minutes ago</span><span class="badge q">Queued for translation</span></div>
+              <div class="cbody"><p>Alguém sabe se o BPM muda no final? Senti que acelerou mas pode ser impressão minha kkkk</p></div>
+              <div class="cfoot"><button class="act">▲ 1</button><button class="act">Reply</button></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div class="cap" style="margin:12px 0 0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px;line-height:1.5">
+        Reader's own language → no badge, silence being the common case. Translated → badge plus a per-comment
+        <i>Show original</i>; never rendered back into its own language, because that round trip is a measured
+        rewrite. Pending → the author's own words, badged. Unsupported source detected by stage one and named
+        from <code style="font-size:11px">CultureInfo.DisplayName</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:20px">
+    <div class="flag"><b>Source language is left null in Slice 2</b>, not guessed. Stamping the poster's UI culture looks free and isn't: a Korean player browsing in English gets recorded as <code>en-US</code>, and Slice 4 then renders their comment Korean→Korean — precisely the rewrite <code>TranslationTarget.ForSource</code> exists to prevent. The column ships in the Slice 2 migration so Slice 4 adds no schema; the pivot stage fills it, having detected 34/34 across the corpus.</div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">03</span><h2>First post</h2><span class="eyebrow">the rules card</span></div>
-  <div class="cols split" style="--w:520px">
-    <div class="frame" style="max-width:552px">
-      <div class="cap">Blocking modal · private profile posting publicly</div>
-      <div class="app"><div class="modal">
-        <div class="modal-h">DrMurloc's Rules for Comments</div>
-        <div class="modal-b">
-          <p style="color:var(--mix-ink-muted);font-size:12.5px;margin-bottom:12px">PIU Scores exists to bring the Pump It Up community together across distance and language. Comments are where you share what you know and help each other get better at the game.</p>
+  <div class="sec-head"><span class="n">03</span><h2>First post</h2><span class="slice now">Slice 2</span><span class="eyebrow">the rules card</span></div>
+  <div class="cols split" style="--w:424px">
+    <div class="frame narrow">
+      <div class="cap">Inline, where the composer would be · private profile posting publicly</div>
+      <div class="app"><div class="dlg">
+        <div class="tabs">
+          <button class="tab on">Comments</button>
+          <button class="tab">Leaderboard</button>
+          <button class="tab">Stats</button>
+          <button class="tab">History</button>
+        </div>
+        <div class="rail">
+          <button class="chip on">Public</button>
+          <button class="chip">Notes</button>
+          <button class="chip">Murloc Lab</button>
+          <button class="chip">NYC Pump</button>
+        </div>
+        <div class="inline-rules">
+          <div class="rules-h">DrMurloc's Rules for Comments</div>
+          <p style="color:var(--mix-ink-muted);font-size:12.5px;margin-bottom:11px">PIU Scores exists to bring the Pump It Up community together across distance and language. Comments are where you share what you know and help each other get better at the game.</p>
           <ul class="rules">
             <li><div><b>Your community moderates itself.</b><span>Community comments belong to that community, and its admins handle them. I stay out of it, except for hate, discrimination, or threats. The rule is "Don't Be An Asshole" — where exactly that line sits is your admins' call.</span></div></li>
             <li><div><b>Public comments are mine.</b><span>I read generously; different cultures and different people communicate differently. But a public comment reported for bad faith, discrimination, or hate is very likely to come down.</span></div></li>
             <li><div><b>Step artists and the PIU devs are community too.</b><span>They're players, same as us. Joking about someone's charting habits is fine. Insults and bad-faith accusations are not.</span></div></li>
             <li><div><b>I'm one person.</b><span>I would far rather build features for you than investigate community drama. We play this game because it's fun. Keep it fun.</span></div></li>
           </ul>
+          <div class="chk"><span class="box on">✓</span><span>I've read these, and I'll keep it fun.</span></div>
+          <div class="chk consent"><span class="box"></span><span>My profile is private. I understand my username, avatar, and country will be visible on public comments.</span></div>
+          <div class="rules-f">
+            <button class="btn ghost">Cancel</button>
+            <button class="btn primary" disabled>Continue</button>
+          </div>
         </div>
-        <div class="chk"><span class="box on">✓</span><span>I've read these, and I'll keep it fun.</span></div>
-        <div class="chk consent"><span class="box"></span><span>My profile is private. I understand my username, avatar, and country will be visible on public comments.</span></div>
-        <div class="modal-f">
-          <button class="btn ghost">Cancel</button>
-          <button class="btn primary" disabled>Post comment</button>
+        <div class="clist">
+          <div class="cmt">
+            <div class="av">A</div>
+            <div>
+              <div class="chead"><span class="cname">andhika 🇮🇩</span><span class="cmeta">5 days ago</span></div>
+              <div class="cbody"><p>Akhirnya lulus di percobaan ketiga setelah dua bulan stuck…</p></div>
+              <div class="cfoot"><button class="act">▲ 31</button><button class="act">Reply</button></div>
+            </div>
+          </div>
         </div>
       </div></div>
     </div>
     <div class="note">
-      <h3>Two consents, collected when they're true</h3>
+      <h3>Inline, not a modal over a modal</h3>
+      <p>The first draft drew this as a blocking dialog. It renders <b>in place of the composer</b> instead — tap <i>Add a comment</i> the first time and you get the rules where the textarea would be, Continue swapping them for it.</p>
+      <p>That is not only tidier, it dodges a trap this codebase has already paid for twice: a MudBlazor dialog inside a MudBlazor dialog. A render-gated <code>MudDialog</code> orphans its scrim and leaves the page dimmed and unclickable, and <code>charts.scss</code> line 1 forces <code>max-width: none !important</code> on anything tagged <code>mud-dialog-width-sm</code>. There is no scrim to orphan and no width to fight if it is just markup in the panel.</p>
+
+      <h3 style="margin-top:20px">Two consents, collected when they're true</h3>
       <p>Follows <code>ToolRulesCard</code> exactly — bold lead, body, checkbox at the bottom, every string through <code>L[…]</code>.</p>
       <ul>
         <li><code>AgreedToTermsAt</code> + <code>TermsVersion</code> — once, on the first comment of any kind. Versioned so editing the rules re-prompts.</li>
@@ -590,10 +876,10 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">04</span><h2>Link gate &amp; reports</h2></div>
+  <div class="sec-head"><span class="n">04</span><h2>Link gate &amp; reports</h2><span class="slice now">Slice 2: the gate</span><span class="slice">Slice 3: the report</span></div>
   <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
     <div class="frame">
-      <div class="cap">Untrusted link interstitial</div>
+      <div class="cap">Untrusted link interstitial · Slice 2</div>
       <div class="app"><div class="modal" style="max-width:100%">
         <div class="modal-h">Leaving PIU Scores</div>
         <div class="modal-b">
@@ -608,7 +894,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
       </div></div>
     </div>
     <div class="frame">
-      <div class="cap">Report · closed reason list</div>
+      <div class="cap">Report · closed reason list · Slice 3</div>
       <div class="app"><div class="modal" style="max-width:100%">
         <div class="modal-h">Report this comment</div>
         <div class="modal-b">
@@ -636,13 +922,13 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">05</span><h2>Stats &amp; History</h2></div>
+  <div class="sec-head"><span class="n">05</span><h2>Stats &amp; History</h2><span class="slice done">Slice 1 · shipped</span><span class="eyebrow">PR #227 — drawn here as built</span></div>
   <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">
     <div class="frame narrow">
       <div class="cap">Chart Stats</div>
       <div class="app"><div class="dlg">
         <div class="tabs">
-          <button class="tab">Comments <span class="cnt">7</span></button>
+          <button class="tab">Comments</button>
           <button class="tab">Leaderboard</button>
           <button class="tab on">Stats</button>
           <button class="tab">History</button>
@@ -682,7 +968,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
       <div class="cap">Score History · manual edit at the bottom</div>
       <div class="app"><div class="dlg">
         <div class="tabs">
-          <button class="tab">Comments <span class="cnt">7</span></button>
+          <button class="tab">Comments</button>
           <button class="tab">Leaderboard</button>
           <button class="tab">Stats</button>
           <button class="tab on">History</button>
@@ -710,7 +996,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">06</span><h2>Moderation queue</h2><span class="eyebrow">community admin page &amp; /Admin</span></div>
+  <div class="sec-head"><span class="n">06</span><h2>Moderation queue</h2><span class="slice">Slice 3</span><span class="eyebrow">community admin page &amp; /Admin</span></div>
   <div class="frame">
     <div class="cap">Renders only when that moderator has open reports</div>
     <div class="app">
@@ -733,12 +1019,13 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
   </div>
   <div class="note" style="margin-top:18px">
     <p><b>Open</b> launches the chart details dialog with <code>InitialTab=Comments</code> and <code>FocusCommentId</code>, so moderation happens in the surface where the comment actually lives — no second console to build or maintain. Same row, same behaviour, on <code>/Admin</code> for anything that reaches your desk.</p>
+    <p><b>Personal notes are invisible to all of this.</b> They cannot be reported, they never enter a queue, and no moderator — including the site admin — can read one. That is enforced where the rows are read, not by leaving a button off a screen.</p>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">07</span><h2>390&nbsp;px</h2><span class="eyebrow">where it gets tight</span></div>
+  <div class="sec-head"><span class="n">07</span><h2>390&nbsp;px</h2><span class="slice now">Slice 2 measures it</span><span class="eyebrow">where it gets tight</span></div>
   <div class="cols split" style="--w:424px">
     <div class="frame narrow">
       <div class="cap">Mobile · four tabs</div>
@@ -751,18 +1038,20 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
         </div>
         <div class="scoreline"><span class="grade">AA+</span><span class="score-v">964,102</span><span class="muted tiny">#84 of 2,317</span></div>
         <div class="tabs">
-          <button class="tab on">Comments <span class="cnt">7</span></button>
+          <button class="tab on">Comments</button>
           <button class="tab">Leaderboard</button>
           <button class="tab">Stats</button>
           <button class="tab">History</button>
         </div>
-        <div class="rail"><button class="chip on">Public</button><button class="chip">Murloc Lab</button><button class="chip">NYC Pump</button></div>
+        <div class="rail"><button class="chip on">Public</button><button class="chip">Notes</button><button class="chip">Murloc Lab</button><button class="chip">NYC Pump</button></div>
+        <div class="subbar"><span>Sort</span><select class="select" aria-label="Sort"><option>Top</option><option>Newest</option></select></div>
+        <div class="addline"><span class="av">E</span><div class="line-in">Add a comment…</div></div>
         <div class="cmt" style="border-top:1px solid var(--mix-lines)">
-          <div class="av">E</div>
+          <div class="av">D</div>
           <div>
-            <div class="chead"><span class="cname">ERRLENA 🇺🇸</span><span class="cmeta">3d</span></div>
-            <div class="cbody"><p>The <strong>drill at 2:01</strong> is the whole chart…</p></div>
-            <div class="cfoot"><button class="act voted">▲ 14</button><button class="act">Reply</button><span class="spacer"></span><button class="act">⋯</button></div>
+            <div class="chead"><span class="cname">DrMurloc 🇺🇸</span><span class="cmeta">1w</span></div>
+            <div class="cbody"><p>Step data on <a class="lnk" href="#">https://piucenter.com/chart/baroque-virus-s20</a> if you want the breakdown.</p></div>
+            <div class="cfoot"><button class="act voted">▲ 22</button><button class="act">Reply</button></div>
           </div>
         </div>
       </div></div>
@@ -770,57 +1059,69 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
     <div class="note">
       <h3>The tab strip overflows, on purpose</h3>
       <p>Four labels don't fit 390&nbsp;px. Rather than truncating to jargon ("Boards"), the strip scrolls horizontally and the fourth tab peeks — a standard, legible affordance that keeps every label a real word.</p>
-      <p>The header is 274&nbsp;px before the tabs. That's the argument for moving the record inputs out: with the old always-visible record row the first comment landed below the fold on every phone.</p>
-      <div class="flag"><b>To verify, not assume:</b> open at 390 and check <code>scrollWidth &gt; clientWidth</code> on the strip and nowhere else — the page body must never scroll sideways.</div>
+      <p>The header is 274&nbsp;px before the tabs, and Comments then spends another ~100&nbsp;px on the rail, the sort row and the composer line before the first comment starts. That is the argument for the composer living at the top: from a cold open on a phone you are one tap from writing, and the alternative is scrolling the thread twice. A single line rather than a boxed control is what keeps that ~100&nbsp;px from being ~160.</p>
+      <div class="flag"><b>To verify, not assume</b> — and this is the second time of asking, because Slice 1 shipped three tabs and left it unmeasured. Open at 390 with all four and check <code>scrollWidth&nbsp;&gt;&nbsp;clientWidth</code> on the strip <em>and nowhere else</em>. Two new candidates this slice: the scope rail, which wraps and so must never scroll, and — the likelier of the two — a bare URL in a comment body, which is exactly what <code>overflow-wrap: anywhere</code> on <code>.cbody</code> is for.</div>
     </div>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">08</span><h2>The editor question</h2><span class="eyebrow">own it vs. Froala</span></div>
+  <div class="sec-head"><span class="n">08</span><h2>The editor question</h2><span class="slice now">Slice 2 · settled</span><span class="eyebrow">plain text wins</span></div>
 
   <div class="callout" style="margin-bottom:24px">
-    <h3>The parser isn't optional, so a WYSIWYG library is additive — not a replacement.</h3>
-    <p style="margin-bottom:0">Comments render in five languages from machine-translated text. That rendering has to be safe, and it must never touch <code>MarkupString</code>. So a parser producing a token tree that Blazor renders as real elements exists <b>either way</b>. Once it exists, "the editor" is a textarea, six buttons that wrap the selection, and a preview piped through the renderer you already built.</p>
+    <h3>A renderer is not optional. Formatting is.</h3>
+    <p>Autolinking <em>is</em> parsing: you have to find the URLs, decide each one's trust inside the vertical, and emit nodes Blazor renders as real elements. So a token tree exists whatever we do, and <code>MarkupString</code> stays structurally unreachable either way. The question was only ever how much grammar sits on top of it — and the answer is none.</p>
+    <p style="margin-bottom:0">The first draft reached for markdown because GitHub, Reddit and Discord ship it. Those are long-form surfaces for people who write a lot. <b>YouTube, X, Instagram and Twitch all ship plain text plus autolink</b> — short comments, phones, many languages, no power users. That is this audience exactly.</p>
   </div>
 
   <div class="scroller">
-    <div class="vs">
-      <div class="r h"><div></div><div>Own it</div><div>Froala</div></div>
-      <div class="r"><div class="k">Display renderer</div><div>Needed. ~200 lines, pure, in the vertical's Domain.</div><div>Needed anyway — Froala is an input widget, not a renderer.</div></div>
-      <div class="r"><div class="k">Editor</div><div>Textarea + 6 buttons doing <code>wrapSelection('**')</code> + Write/Preview toggle. ~150 lines, no JS library.</div><div>~100&nbsp;KB of JS, a JS interop bridge, and a MudBlazor dialog host to fight.</div></div>
-      <div class="r"><div class="k">Stored format</div><div>Markdown. 500 characters.</div><div>HTML — or an HTML↔Markdown converter you now own.</div></div>
-      <div class="r"><div class="k">XSS surface</div><div><span class="yes">None by construction.</span> Tokens become elements; no raw string ever reaches the DOM.</div><div><span class="no">Arbitrary user HTML</span> that must be sanitized server-side before it's stored or re-rendered.</div></div>
-      <div class="r"><div class="k">Survives translation</div><div><span class="yes">Measured.</span> The corpus meme comment kept its <code>2:01</code>, its blank line, and its punchline across every arm.</div><div><span class="no">Unmeasured.</span> HTML tags round-tripping through an LLM in five languages.</div></div>
-      <div class="r"><div class="k">Testing</div><div><code>DomainTests</code>, no infrastructure. Link-trust rules unit-tested beside it.</div><div>Playwright, because the behaviour lives in JS.</div></div>
-      <div class="r"><div class="k">Package allowlist</div><div>Nothing new.</div><div>New dependency in <code>ScoreTracker.Web</code> + a CLAUDE.md amendment.</div></div>
-      <div class="r"><div class="k">Licence</div><div>—</div><div><span class="no">Commercial, per-domain</span>, on a free one-person community site.</div></div>
+    <div class="vs" style="grid-template-columns:minmax(0,1fr)">
+      <div class="r h"><div></div><div>Plain text + autolink ← shipping</div><div>Markdown</div></div>
+      <div class="r"><div class="k">Display renderer</div><div>Needed. ~60 lines: split lines, find URLs, resolve trust.</div><div>Needed. ~200 lines, plus a grammar to get wrong.</div></div>
+      <div class="r"><div class="k">Editor</div><div>A line that grows. <span class="yes">No toolbar, no preview, no JS file.</span></div><div>Textarea + 6 buttons doing <code>wrapSelection('**')</code> + a Write/Preview toggle + one JS file through <code>@Assets</code>.</div></div>
+      <div class="r"><div class="k">What 500 characters buys</div><div><span class="yes">500 characters of comment.</span></div><div><span class="no">500 minus syntax</span> — <code>**drill**</code> spends 9 to show 5, so formatting is taxed.</div></div>
+      <div class="r"><div class="k">XSS surface</div><div><span class="yes">None by construction.</span> Tokens become elements; no raw string reaches the DOM.</div><div><span class="yes">None by construction</span> — same mechanism, more of it.</div></div>
+      <div class="r"><div class="k">Survives five translations</div><div><span class="yes">Nothing to corrupt.</span> The corpus already showed <code>2:01</code> and blank lines coming through intact.</div><div><span class="no">Unmeasured.</span> Nobody has watched <code>**drill**</code> go through Sonnet into Korean and come back.</div></div>
+      <div class="r"><div class="k">Link-set invariance check<br><span class="tiny" style="font-weight:400">(the one non-negotiable injection defence)</span></div><div><span class="yes">Set equality on bare URLs.</span> Trivial and total.</div><div><span class="no">Two-part.</span> <code>[label](url)</code> translates the label and not the target, so the check has to reason about a pair.</div></div>
+      <div class="r"><div class="k">Localization</div><div>Nothing new.</div><div>Six toolbar tooltips × nine locales = 54 resx entries, each a chance at a case collision.</div></div>
+      <div class="r"><div class="k">Testing</div><div><code>DomainTests</code>, no infrastructure.</div><div><code>DomainTests</code>, more of them.</div></div>
+      <div class="r"><div class="k">Reversibility</div><div><span class="no">Slightly one-way.</span> Add markdown later and every existing comment containing <code>*</code> or <code>_</code> reinterprets.</div><div>—</div></div>
     </div>
   </div>
 
   <div class="note" style="margin-top:22px">
-    <p><b>And the cap argues on its own.</b> 500 characters is a tweet and a half. A rich-text editor for a 500-character comment is a bigger control than the content it produces — every community that gets this right (GitHub, Reddit, Discord) ships a textarea with a formatting row and a preview toggle, and none of them ship WYSIWYG.</p>
-    <p style="margin-bottom:0">If the Write/Preview split still feels too raw once it's in front of you, the upgrade path is cheap and doesn't touch storage: keep markdown on the wire and swap the input widget for a markdown-native open-source editor (EasyMDE, MIT, ~40&nbsp;KB). What you must not do is store HTML — that's the door that doesn't close again.</p>
+    <p><b>Froala is not in the table any more</b>, because the column it lost is gone: WYSIWYG was always additive rather than a replacement, it stores HTML, it costs ~100&nbsp;KB of JS and a commercial per-domain licence on a free one-person site, and it now sits on top of a control that is one line tall. That decision did not get harder.</p>
+    <p style="margin-bottom:0"><b>The reversibility row is the only real cost, and it is worth naming honestly.</b> Storing plain text means a later markdown pass would reinterpret existing comments — a small migration, nothing like the HTML door that doesn't close again. If formatting is ever genuinely missed, the cheap move is to interpret it <em>only</em> on comments written after the change, which the timestamp already makes possible.</p>
   </div>
 </section>
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">09</span><h2>Before build</h2></div>
+  <div class="sec-head"><span class="n">09</span><h2>Before build</h2><span class="eyebrow">tagged by slice</span></div>
   <div class="scroller">
     <table class="spec">
-      <thead><tr><th>Item</th><th>Where</th><th>Note</th></tr></thead>
+      <thead><tr><th>Slice</th><th>Item</th><th>Where</th><th>Note</th></tr></thead>
       <tbody>
-        <tr><td><code>ModerateComments = 1&nbsp;&lt;&lt;&nbsp;4</code></td><td>SharedKernel</td><td><code>All</code> 15&nbsp;→&nbsp;31, seed 13&nbsp;→&nbsp;29. Creators are computed by <code>PermissionsOf</code>, so they need nothing.</td></tr>
-        <tr><td>Permission backfill</td><td>EF migration</td><td>13&nbsp;→&nbsp;29 and 15&nbsp;→&nbsp;31 across <b>both</b> <code>CommunityMembership.Permissions</code> and <code>Community</code>'s stored default. Missing the second means future admins in existing clubs silently lack the power.</td></tr>
-        <tr><td><code>CommentRestriction</code></td><td>ChartComments</td><td>Two Guid <code>*UserId</code> columns → needs <code>[PurgeKey(nameof(UserId))]</code>, or account deletion purges the wrong person.</td></tr>
-        <tr><td>Purge manifest</td><td>ChartComments</td><td>Comments, votes and restrictions carry <code>UserId</code>. Revisions don't — that table needs an exemption row with its reason.</td></tr>
-        <tr><td>Re-translation cooldown</td><td>ChartComments</td><td>The $30 ceiling is a fuse against bugs. An edit loop is a <i>user-driven</i> cost amplifier the fuse can't see.</td></tr>
-        <tr><td>Regional communities excluded</td><td>domain rule</td><td>World and country boards are ownerless and carry no roles — a comment there would have no moderator. Audiences are Public + your non-regional clubs.</td></tr>
-        <tr><td>Similar-charts empty state</td><td>ChartComments</td><td>Not a deploy step — the graph is live on a daily cron. 139 of 4,426 charts have no piucenter coverage, so the empty state is a real state.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td>Feature toggle</td><td>Web + AppHost</td><td><code>IsAdmin&nbsp;||&nbsp;ChartComments:Enabled</code>, following <code>DevAuthConfiguration</code> + <code>IOptions&lt;T&gt;</code>. ⚠ A new bound section trips <code>AppHostForwardingTests</code> — it needs a <code>DeliberatelyNotForwarded</code> row (a mode flag, not a secret) plus <code>WithEnvironment</code> in the AppHost, which turns comments <b>on</b> for local dev and the E2E suite.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td>Audience list</td><td>Communities</td><td><code>GetMyCommunitiesQuery</code> already returns <code>IsRegional</code>; filter it the way <code>ChartLeaderboardScopes</code> does, World name check included. Add the community's <code>Guid</code> to <code>CommunityOverviewRecord</code> so a comment stores an id, not a name.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td>Private notes never leak</td><td>ChartComments</td><td>The audience filter lives in the repository, not the UI, and wants a decoy-account integration test in the shape of <code>AccountPurgeTests</code>: a stranger holding a note on every scope, which no other user's query may return under any sort, scope or moderator role. Same bug class as a community comment leaking to a non-member — higher stakes.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td><code>Audience = Private</code> invariants</td><td>ChartComments</td><td>No replies, no votes, no reports, no shield, no rules-card consent, and <b>never queued for translation</b> — that last one is a permanent exclusion in Slice 4's submit step, not a Slice 2 deferral.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td>Stored format is plain text</td><td>ChartComments</td><td>URLs autolink, newlines survive, nothing else is interpreted (§08). The token tree still crosses as a contract type with <code>IsTrusted</code> already resolved, so Web makes no policy call and never sees a raw string. No JS file, no <code>@Assets</code> entry, no toolbar strings.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td>Source language stays null</td><td>ChartComments</td><td>Nothing detects it until Slice 4's pivot stage. Stamping the poster's UI culture would record a Korean speaker browsing in English as <code>en-US</code> and get them rewritten Korean→Korean. Column ships now, empty.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td>Purge manifest <i>plus</i> the real integration test</td><td>ChartComments</td><td>Comments, votes and consents carry <code>UserId</code>. Revisions don't — that table needs an exemption row with its reason. A mocked purge test cannot catch over-deletion; only the decoy-account test can.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td>Regional communities excluded</td><td>domain rule</td><td>World and country boards are ownerless and carry no roles — a comment there would have no moderator. Audiences are Public + your non-regional clubs.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td><code>AddChartCommentsConsumers</code></td><td><code>Program.cs</code></td><td>MassTransit's scan skips internal types. CommunityTools once shipped with all 33 handlers unregistered and every suite green.</td></tr>
+        <tr><td><span class="slice now">2</span></td><td><code>VerticalModelContributions.All()</code></td><td>CompositionRoot</td><td>Omit it and scaffolded migrations silently drop every ChartComments table.</td></tr>
+        <tr><td><span class="slice">3</span></td><td><code>ModerateComments = 1&nbsp;&lt;&lt;&nbsp;4</code></td><td>SharedKernel</td><td><code>All</code> 15&nbsp;→&nbsp;31, seed 13&nbsp;→&nbsp;29. Creators are computed by <code>PermissionsOf</code>, so they need nothing. The site admin needs nothing either — <code>User.IsAdmin</code> is computed, which is why removal could ship a slice early.</td></tr>
+        <tr><td><span class="slice">3</span></td><td>Permission backfill</td><td>EF migration</td><td>13&nbsp;→&nbsp;29 and 15&nbsp;→&nbsp;31 across <b>both</b> <code>CommunityMembership.Permissions</code> and <code>Community</code>'s stored default — which is a literal <code>= 13</code> on <code>CommunityEntity</code> as well as the composed <code>DefaultAdminPermissionsSeed</code>. Missing the second means future admins in existing clubs silently lack the power.</td></tr>
+        <tr><td><span class="slice">3</span></td><td><code>CommentRestriction</code></td><td>ChartComments</td><td>Two Guid <code>*UserId</code> columns → needs <code>[PurgeKey(nameof(UserId))]</code>, or account deletion purges the wrong person. Check first whether the existing <code>User.IsContentLocked</code> already covers the site scope.</td></tr>
+        <tr><td><span class="slice">4</span></td><td>Re-translation cooldown</td><td>ChartComments</td><td>The $30 ceiling is a fuse against bugs. An edit loop is a <i>user-driven</i> cost amplifier the fuse can't see.</td></tr>
       </tbody>
     </table>
+  </div>
+  <div class="note" style="margin-top:20px">
+    <div class="flag"><b>Slices 2 and 3 no longer have to ship together.</b> The original constraint was that a UGC surface with no delete button is a bad week — but site-admin removal costs one <code>IsAdmin</code> check and rides along in Slice 2, so every comment has a delete button from the moment it can exist. Shipping them together is now a preference, not a requirement, and the launch toggle means nothing is public either way until it is flipped.</div>
   </div>
 </section>
 

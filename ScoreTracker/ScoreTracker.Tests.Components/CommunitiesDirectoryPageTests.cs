@@ -71,7 +71,7 @@ public sealed class CommunitiesDirectoryPageTests : ComponentTestBase
 
     private static CommunityOverviewRecord Overview(string name, bool regional = false, int members = 5,
         CommunityPrivacyType privacy = CommunityPrivacyType.Public) =>
-        new(Name.From(name), privacy, members, regional);
+        new(Name.From(name), privacy, members, regional, Guid.NewGuid());
 
     private IRenderedComponent<CommunitiesPage> Render() => RenderComponent<CommunitiesPage>();
 

@@ -17,6 +17,7 @@ using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
+using ScoreTracker.ChartComments.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using Xunit;
 
@@ -44,7 +45,8 @@ public sealed class AccountPurgeCoverageTests
         ("Identity", typeof(IdentityModelContribution).Assembly),
         ("Catalog", typeof(CatalogModelContribution).Assembly),
         ("OfficialMirror", typeof(OfficialMirrorModelContribution).Assembly),
-        ("Rivals", typeof(RivalsModelContribution).Assembly)
+        ("Rivals", typeof(RivalsModelContribution).Assembly),
+        ("ChartComments", typeof(ChartCommentsModelContribution).Assembly)
     };
 
     /// <summary>
@@ -71,6 +73,19 @@ public sealed class AccountPurgeCoverageTests
         ["ToolEntity"] =
             "Deleted whole by EFAccountPurgeRepository before the row-level purge runs. Purging it " +
             "by OwnerUserId alone would orphan the tool's keys, shares, deliveries and invite codes.",
+        ["CommentEntity"] =
+            "Purged by hand in ChartComments' EFAccountPurgeRepository, because a blanket delete " +
+            "by UserId would take a root out from under its replies — and this test counts rows, " +
+            "so it would pass green while the Comments tab threw. A root somebody replied to is " +
+            "tombstoned instead (author cleared to Guid.Empty, text cleared); everything else goes " +
+            "outright. It also carries a second user key, DeletedByUserId, which is the moderator " +
+            "rather than the author.",
+        ["CommentVoteEntity"] =
+            "Deleted in the same hand-written step, alongside the votes cast ON the comments that " +
+            "are disappearing — which no purge keyed on the voter would ever reach.",
+        ["CommentConsentEntity"] =
+            "Deleted in the same hand-written step. Kept out of the manifest so that all four " +
+            "comment tables are torn down in one ordered pass rather than two mechanisms.",
         ["ToolApiKeyEntity"] =
             "Keyed to a tool, not a user — it goes with the tool, in the same sweep.",
         ["AccountDeletionRequestEntity"] =
@@ -162,6 +177,7 @@ public sealed class AccountPurgeCoverageTests
             x.AddHomePageConsumers();
             x.AddRivalsConsumers();
             x.AddCommunityToolsConsumers();
+            x.AddChartCommentsConsumers();
             x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
         });
 

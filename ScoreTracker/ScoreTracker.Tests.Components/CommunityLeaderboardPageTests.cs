@@ -51,7 +51,7 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
         _mediator.Setup(m => m.Send(It.IsAny<GetChartsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Chart>());
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new CommunityOverviewRecord(Name.From("Acme"), CommunityPrivacyType.Public, 1, false) });
+            .ReturnsAsync(new[] { new CommunityOverviewRecord(Name.From("Acme"), CommunityPrivacyType.Public, 1, false, Guid.NewGuid()) });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityLeaderboardQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {

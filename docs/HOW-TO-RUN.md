@@ -97,6 +97,13 @@ Caveat: uploaded-image *URLs* are currently hardcoded to the production CDN host
 ### Other knobs
 
 - `PreventRecurringJobs=true` (already set in `appsettings.Development.json`) parks the [Hangfire recurring jobs](SCHEDULED-JOBS.md) on a yearly Jan-1 schedule so they never fire on their own locally — but they still appear in the `/hangfire` dashboard (admin only), where **Trigger now** runs any of them by hand. Remove the flag if you want a job on its real cadence.
+- `ChartComments:Enabled` gates the chart Comments tab, and is **off unless something turns it on** — `appsettings.json` declares it `false` so the key is findable, and an absent section reads false anyway. To see comments locally, set it in AppHost user-secrets like any other forwarded section:
+
+  ```bash
+  dotnet user-secrets set "ChartComments:Enabled" "true" --project ScoreTracker/ScoreTracker.AppHost
+  ```
+
+  It is forwarded rather than set with `WithEnvironment` deliberately: environment variables are read *after* user-secrets, so hard-coding it in the AppHost would override the setting it is meant to be controlled by. In production it is an App Service application setting, `ChartComments__Enabled` (double underscore). The site admin sees comments either way — that is what makes the gated period useful rather than merely quiet. ⚠ It governs **reading as well as writing**, so turning it on publishes everything written while it was off; clear out test comments before flipping it in production.
 - Running the web project directly (`dotnet run` on `ScoreTracker.Web`, without the AppHost) is unsupported for local dev: you'd need to supply your own SQL connection string, apply migrations yourself, and you won't get the dev login. Use the AppHost.
 
 ## Running the tests

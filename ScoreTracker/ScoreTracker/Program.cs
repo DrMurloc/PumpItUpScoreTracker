@@ -11,6 +11,7 @@ using Microsoft.OpenApi;
 using MudBlazor.Services;
 using ScoreTracker.Application.Handlers;
 using ScoreTracker.Catalog.Wiring;
+using ScoreTracker.ChartComments.Wiring;
 using ScoreTracker.ChartIntelligence.Wiring;
 using ScoreTracker.Communities.Wiring;
 using ScoreTracker.CommunityTools.Wiring;
@@ -80,6 +81,7 @@ builder.Services.AddCors(o =>
 });
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
+builder.Services.Configure<ChartCommentsConfiguration>(builder.Configuration.GetSection("ChartComments"));
 builder.Services.Configure<ProdSyncConfiguration>(builder.Configuration.GetSection("ProdSync"));
 builder.Services.Configure<ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration>(
     builder.Configuration.GetSection(
@@ -101,6 +103,7 @@ builder.Services.AddMassTransit(o =>
     o.AddChartIntelligenceConsumers();
     o.AddWeeklyChallengeConsumers();
     o.AddCommunityToolsConsumers();
+    o.AddChartCommentsConsumers();
     o.AddEventCompetitionConsumers();
     o.AddCommunitiesConsumers();
     o.AddCatalogConsumers();

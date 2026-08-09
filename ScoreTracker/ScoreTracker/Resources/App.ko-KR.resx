@@ -150,6 +150,9 @@
   <data name="#{0} PUMBILITY" xml:space="preserve">
     <value>PUMBILITY #{0}</value>
   </data>
+  <data name="(edited)" xml:space="preserve">
+    <value>(수정됨)</value>
+  </data>
   <data name="(Optional) Also delete historical data" xml:space="preserve">
     <value>(선택) 이력 데이터도 삭제</value>
   </data>
@@ -423,8 +426,14 @@
   <data name="Add" xml:space="preserve">
     <value>추가</value>
   </data>
+  <data name="Add a comment…" xml:space="preserve">
+    <value>댓글 추가…</value>
+  </data>
   <data name="Add a description first — it is what a player reads before deciding whether to connect." xml:space="preserve">
     <value>먼저 설명을 적어 주세요 — 플레이어가 연결 여부를 정하기 전에 읽는 내용입니다.</value>
+  </data>
+  <data name="Add a note…" xml:space="preserve">
+    <value>메모 추가…</value>
   </data>
   <data name="Add A Photo" xml:space="preserve">
     <value>사진 추가</value>
@@ -1305,6 +1314,18 @@
   <data name="Commands — anyone in the server can use these" xml:space="preserve">
     <value>명령어 — 서버의 누구나 사용할 수 있습니다</value>
   </data>
+  <data name="Comment" xml:space="preserve">
+    <value>댓글 쓰기</value>
+  </data>
+  <data name="Comment from a deleted user" xml:space="preserve">
+    <value>삭제된 계정의 댓글</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>댓글</value>
+  </data>
+  <data name="Comments are switched off. You can see this tab because you're the site admin — nobody else has it." xml:space="preserve">
+    <value>댓글은 꺼져 있습니다. 이 탭이 보이는 이유는 사이트 관리자이기 때문이며, 다른 사람에게는 보이지 않습니다.</value>
+  </data>
   <data name="Communities" xml:space="preserve">
     <value>커뮤니티</value>
   </data>
@@ -1319,6 +1340,9 @@
   </data>
   <data name="Community columns" xml:space="preserve">
     <value>커뮤니티 열</value>
+  </data>
+  <data name="Community comments belong to that community, and its admins handle them. I stay out of it, except for hate, discrimination, or threats. The rule is &quot;Don't Be An Asshole&quot; — where exactly that line sits is your admins' call." xml:space="preserve">
+    <value>커뮤니티 댓글은 그 커뮤니티의 것이고, 그곳 관리자가 처리합니다. 혐오, 차별, 협박이 아니라면 저는 관여하지 않습니다. 규칙은 "Don't Be An Asshole"이며 — 그 선이 정확히 어디인지는 여러분의 관리자가 정합니다.</value>
   </data>
   <data name="Community Highlights" xml:space="preserve">
     <value>커뮤니티 하이라이트</value>
@@ -1752,6 +1776,9 @@
   <data name="Delete the data I selected" xml:space="preserve">
     <value>선택한 데이터 삭제</value>
   </data>
+  <data name="Delete this comment?" xml:space="preserve">
+    <value>이 댓글을 지울까요?</value>
+  </data>
   <data name="Delete this community and everything in it? This cannot be undone." xml:space="preserve">
     <value>이 커뮤니티와 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.</value>
   </data>
@@ -1931,6 +1958,9 @@
   </data>
   <data name="Drills" xml:space="preserve">
     <value>드릴</value>
+  </data>
+  <data name="DrMurloc's Rules for Comments" xml:space="preserve">
+    <value>DrMurloc의 댓글 규칙</value>
   </data>
   <data name="DrMurloc's Rules for Integrated Toolmakers" xml:space="preserve">
     <value>연동 도구 제작자를 위한 DrMurloc의 규칙</value>
@@ -2514,6 +2544,9 @@
   <data name="Help" xml:space="preserve">
     <value>도움말</value>
   </data>
+  <data name="Helpful" xml:space="preserve">
+    <value>도움돼요</value>
+  </data>
   <data name="Hide" xml:space="preserve">
     <value>숨기기</value>
   </data>
@@ -2643,6 +2676,9 @@
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>그냥 채보를 숨기고 싶음</value>
   </data>
+  <data name="I read generously; different cultures and different people communicate differently. But a public comment reported for bad faith, discrimination, or hate is very likely to come down." xml:space="preserve">
+    <value>저는 너그럽게 읽습니다. 문화가 다르고 사람이 다르면 표현도 다릅니다. 다만 악의, 차별, 혐오로 신고된 공개 댓글은 내려갈 가능성이 매우 큽니다.</value>
+  </data>
   <data name="I store a hash, not the key. If you lose it, create a new one — you can run two keys at once, so replacing one costs no downtime." xml:space="preserve">
     <value>저는 키가 아니라 해시를 저장합니다. 잃어버리면 새로 만드세요 — 키를 두 개까지 동시에 쓸 수 있으므로 교체에 중단 시간이 없습니다.</value>
   </data>
@@ -2660,6 +2696,15 @@
   </data>
   <data name="I understand — remember it" xml:space="preserve">
     <value>이해했습니다 — 기억하기</value>
+  </data>
+  <data name="I would far rather build features for you than investigate community drama. We play this game because it's fun. Keep it fun." xml:space="preserve">
+    <value>커뮤니티 분쟁을 조사하기보다 여러분을 위한 기능을 만드는 쪽이 훨씬 좋습니다. 이 게임은 재미있으니까 하는 겁니다. 계속 재미있게 갑시다.</value>
+  </data>
+  <data name="I'm one person." xml:space="preserve">
+    <value>저는 한 사람입니다.</value>
+  </data>
+  <data name="I've read these, and I'll keep it fun." xml:space="preserve">
+    <value>읽었고, 재미있게 하겠습니다.</value>
   </data>
   <data name="I've saved it" xml:space="preserve">
     <value>저장했습니다</value>
@@ -2895,6 +2940,12 @@
   <data name="It starts private and fully working. You can change any of this later." xml:space="preserve">
     <value>비공개 상태로, 기능은 모두 동작하는 채로 시작합니다. 여기 내용은 나중에 바꿀 수 있습니다.</value>
   </data>
+  <data name="It stops showing, and the thread keeps its shape. The author is not told." xml:space="preserve">
+    <value>더 이상 표시되지 않지만 스레드 모양은 그대로입니다. 작성자에게는 알리지 않습니다.</value>
+  </data>
+  <data name="It stops showing. Anyone who replied keeps their reply." xml:space="preserve">
+    <value>더 이상 표시되지 않습니다. 답글을 단 사람의 답글은 남습니다.</value>
+  </data>
   <data name="It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest." xml:space="preserve">
     <value>사이트 업데이트로 중단되었을 가능성이 큽니다. 저장된 부분은 이미 계정에 있으며, 다시 가져오면 나머지를 가져옵니다.</value>
   </data>
@@ -2933,6 +2984,9 @@
   </data>
   <data name="Just for you — &quot;Production&quot;, &quot;my laptop&quot;, &quot;the test box&quot;. Nobody else sees it." xml:space="preserve">
     <value>본인만 보는 이름입니다 — "운영", "내 노트북", "테스트 서버". 다른 사람에게는 보이지 않습니다.</value>
+  </data>
+  <data name="just now" xml:space="preserve">
+    <value>방금</value>
   </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>그냥 살아남기</value>
@@ -3213,6 +3267,9 @@
   <data name="Make Public Disclaimer 2" xml:space="preserve">
     <value>본인의 계정이 이전에 공개로 설정되었고 비공개로 전환한 경우, 다시 공개로 설정하면 본인을 팔로우하는 누구나 본인의 진행상황을 다시 볼 수 있습니다.</value>
   </data>
+  <data name="Make sure you trust it before you go." xml:space="preserve">
+    <value>이동하기 전에 믿을 수 있는지 확인하세요.</value>
+  </data>
   <data name="Manage" xml:space="preserve">
     <value>관리</value>
   </data>
@@ -3390,6 +3447,9 @@
   <data name="Mixes" xml:space="preserve">
     <value>시리즈</value>
   </data>
+  <data name="Moderate" xml:space="preserve">
+    <value>관리</value>
+  </data>
   <data name="Modern" xml:space="preserve">
     <value>현행</value>
   </data>
@@ -3491,6 +3551,9 @@
   </data>
   <data name="My Phoenix score" xml:space="preserve">
     <value>내 Phoenix 점수</value>
+  </data>
+  <data name="My profile is private. I understand my username, avatar, and country will be visible on public comments." xml:space="preserve">
+    <value>제 프로필은 비공개입니다. 공개 댓글에서는 사용자 이름, 아바타, 국가가 보인다는 점을 이해합니다.</value>
   </data>
   <data name="My Progress" xml:space="preserve">
     <value>내 진행도</value>
@@ -3605,6 +3668,9 @@
   </data>
   <data name="New Username" xml:space="preserve">
     <value>새 아이디</value>
+  </data>
+  <data name="Newest" xml:space="preserve">
+    <value>최신순</value>
   </data>
   <data name="Newest content" xml:space="preserve">
     <value>최신 수록곡</value>
@@ -3933,6 +3999,9 @@
   <data name="Notes since your last break" xml:space="preserve">
     <value>마지막 브레이크 이후 노트 수</value>
   </data>
+  <data name="Notes you write here are only ever visible to you." xml:space="preserve">
+    <value>여기에 적은 메모는 나만 볼 수 있습니다.</value>
+  </data>
   <data name="Nothing" xml:space="preserve">
     <value>없음</value>
   </data>
@@ -3956,6 +4025,12 @@
   </data>
   <data name="Nothing here clears your bar yet — play a few more charts and check back." xml:space="preserve">
     <value>아직 기준선을 넘는 채보가 없습니다 — 채보를 조금 더 플레이한 뒤 다시 확인하세요.</value>
+  </data>
+  <data name="Nothing here yet." xml:space="preserve">
+    <value>아직 아무것도 없습니다.</value>
+  </data>
+  <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
+    <value>아직 아무것도 없습니다. 이 채보에 대해 아는 것을 공유해 보세요.</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>아무것도 삭제되지 않습니다. 도구도, 활동 기록도, 전달 이력도 그대로 남으므로 무슨 일이 있었는지 확인할 수 있고 되돌릴 수도 있습니다.</value>
@@ -4158,6 +4233,9 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>변경된 채보가 있는 노래만 표시됩니다.</value>
   </data>
+  <data name="Only you can see this" xml:space="preserve">
+    <value>나만 볼 수 있습니다</value>
+  </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>지금은 여러분만 이 도구를 쓸 수 있습니다.</value>
   </data>
@@ -4178,6 +4256,9 @@
   </data>
   <data name="Open A Row For Its Photos" xml:space="preserve">
     <value>행을 열어 사진 보기</value>
+  </data>
+  <data name="Open anyway" xml:space="preserve">
+    <value>그래도 열기</value>
   </data>
   <data name="Open chart details" xml:space="preserve">
     <value>채보 상세 보기</value>
@@ -4488,6 +4569,9 @@
   <data name="PIU Scores" xml:space="preserve">
     <value>PIU 점수</value>
   </data>
+  <data name="PIU Scores exists to bring the Pump It Up community together across distance and language. Comments are where you share what you know and help each other get better at the game." xml:space="preserve">
+    <value>PIU Scores는 거리와 언어를 넘어 Pump It Up 커뮤니티를 잇기 위해 존재합니다. 댓글은 아는 것을 나누고 서로 더 잘하도록 돕는 곳입니다.</value>
+  </data>
   <data name="PIU Scores hit an error finishing your last import." xml:space="preserve">
     <value>PIU Scores가 마지막 가져오기를 마치는 중 오류가 났습니다.</value>
   </data>
@@ -4710,6 +4794,9 @@
   <data name="Post qualifier scores for community tournaments right from the site, and take on March of Murlocs — the site-run stamina session series. More formats on the way." xml:space="preserve">
     <value>커뮤니티 토너먼트 예선 스코어를 사이트에서 바로 제출하고, March of Murlocs — 사이트가 운영하는 스태미나 세션 시리즈 — 에 도전하세요. 새로운 포맷도 준비 중입니다.</value>
   </data>
+  <data name="Posting to {0} as {1}" xml:space="preserve">
+    <value>{0}에 {1}(으)로 작성 중</value>
+  </data>
   <data name="PP" xml:space="preserve">
     <value>PP</value>
   </data>
@@ -4787,6 +4874,9 @@
   </data>
   <data name="Public" xml:space="preserve">
     <value>공개</value>
+  </data>
+  <data name="Public comments are mine." xml:space="preserve">
+    <value>공개 댓글은 제 몫입니다.</value>
   </data>
   <data name="Public players and your community members." xml:space="preserve">
     <value>공개 플레이어와 내 커뮤니티 멤버.</value>
@@ -5108,6 +5198,9 @@
   <data name="Remove" xml:space="preserve">
     <value>제거</value>
   </data>
+  <data name="Remove comment" xml:space="preserve">
+    <value>댓글 삭제</value>
+  </data>
   <data name="Remove from ToDo" xml:space="preserve">
     <value>목표 목록에서 빼기</value>
   </data>
@@ -5117,11 +5210,17 @@
   <data name="Remove one with /piu unregister" xml:space="preserve">
     <value>/piu unregister로 해제할 수 있습니다</value>
   </data>
+  <data name="Remove this comment?" xml:space="preserve">
+    <value>이 댓글을 삭제할까요?</value>
+  </data>
   <data name="Remove This Score" xml:space="preserve">
     <value>이 점수 삭제</value>
   </data>
   <data name="Removed" xml:space="preserve">
     <value>제거됨</value>
+  </data>
+  <data name="Removed by the site admin" xml:space="preserve">
+    <value>사이트 관리자가 삭제했습니다</value>
   </data>
   <data name="Removed from Favorites!" xml:space="preserve">
     <value>즐겨찾기에서 제거됨!</value>
@@ -5143,6 +5242,12 @@
   </data>
   <data name="Replay" xml:space="preserve">
     <value>재전송</value>
+  </data>
+  <data name="Reply" xml:space="preserve">
+    <value>답글</value>
+  </data>
+  <data name="Reply…" xml:space="preserve">
+    <value>답글…</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>요청 헤더</value>
@@ -5287,6 +5392,9 @@
   </data>
   <data name="Save first." xml:space="preserve">
     <value>먼저 저장하세요.</value>
+  </data>
+  <data name="Save note" xml:space="preserve">
+    <value>메모 저장</value>
   </data>
   <data name="Save Scores" xml:space="preserve">
     <value>점수 저장</value>
@@ -5660,6 +5768,9 @@
   <data name="Show fewer" xml:space="preserve">
     <value>접기</value>
   </data>
+  <data name="Show more comments" xml:space="preserve">
+    <value>댓글 더 보기</value>
+  </data>
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>{0}개 점수 더 보기</value>
   </data>
@@ -5885,6 +5996,9 @@
   <data name="Songs" xml:space="preserve">
     <value>곡</value>
   </data>
+  <data name="Sort" xml:space="preserve">
+    <value>정렬</value>
+  </data>
   <data name="Sort by" xml:space="preserve">
     <value>정렬</value>
   </data>
@@ -5972,6 +6086,9 @@
   <data name="Status" xml:space="preserve">
     <value>상태</value>
   </data>
+  <data name="Stay here" xml:space="preserve">
+    <value>여기 있기</value>
+  </data>
   <data name="Stay in good standing." xml:space="preserve">
     <value>좋은 평판을 지킬 것.</value>
   </data>
@@ -5986,6 +6103,9 @@
   </data>
   <data name="Step artists" xml:space="preserve">
     <value>스텝 아티스트</value>
+  </data>
+  <data name="Step artists and the PIU devs are community too." xml:space="preserve">
+    <value>스텝 아티스트와 PIU 개발자도 커뮤니티입니다.</value>
   </data>
   <data name="Step on" xml:space="preserve">
     <value>스크롤</value>
@@ -6353,6 +6473,9 @@
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>이미 내 라이벌입니다.</value>
   </data>
+  <data name="They're players, same as us. Joking about someone's charting habits is fine. Insults and bad-faith accusations are not." xml:space="preserve">
+    <value>그들도 우리와 같은 플레이어입니다. 누군가의 채보 습관을 두고 농담하는 건 괜찮습니다. 모욕과 악의적인 비난은 아닙니다.</value>
+  </data>
   <data name="Third" xml:space="preserve">
     <value>세 번째</value>
   </data>
@@ -6445,6 +6568,9 @@
   </data>
   <data name="This key never expires." xml:space="preserve">
     <value>이 키는 만료되지 않습니다.</value>
+  </data>
+  <data name="This link goes to a site I don't know anything about:" xml:space="preserve">
+    <value>이 링크는 제가 전혀 모르는 사이트로 연결됩니다:</value>
   </data>
   <data name="This mix isn't score-normalized — only Letter Grade &amp; Pass are available." xml:space="preserve">
     <value>이 시리즈는 점수 정규화가 없습니다 — 등급과 클리어만 사용할 수 있습니다.</value>
@@ -6634,6 +6760,9 @@
   </data>
   <data name="Tools that help players understand the game — score distributions, progress, analysis anyone can use. A tool built for one person's edge, like scouting opponents before a tournament, gets removed, and its maker does not get to make more." xml:space="preserve">
     <value>게임을 이해하는 데 도움이 되는 도구 — 점수 분포, 진행 상황, 누구나 쓸 수 있는 분석. 한 사람의 유리함을 위해 만든 도구, 이를테면 대회 전에 상대를 정찰하는 도구는 삭제하고, 그 제작자는 더 만들 수 없습니다.</value>
+  </data>
+  <data name="Top" xml:space="preserve">
+    <value>인기순</value>
   </data>
   <data name="Top 100 · Top 1000 floors — 50× SS" xml:space="preserve">
     <value>Top 100 · Top 1000 컷 — 50× SS</value>
@@ -7490,6 +7619,9 @@
   <data name="Your Communities" xml:space="preserve">
     <value>내 커뮤니티</value>
   </data>
+  <data name="Your community moderates itself." xml:space="preserve">
+    <value>커뮤니티는 스스로 관리합니다.</value>
+  </data>
   <data name="Your community tools stop working" xml:space="preserve">
     <value>커뮤니티 도구가 작동을 멈춥니다</value>
   </data>
@@ -8105,14 +8237,23 @@
   <data name="{0}% to next title" xml:space="preserve">
     <value>다음 타이틀까지 {0}%</value>
   </data>
+  <data name="{0}d ago" xml:space="preserve">
+    <value>{0}일 전</value>
+  </data>
   <data name="{0}d {1}h" xml:space="preserve">
     <value>{0}d {1}h</value>
+  </data>
+  <data name="{0}h ago" xml:space="preserve">
+    <value>{0}시간 전</value>
   </data>
   <data name="{0}h {1}m" xml:space="preserve">
     <value>{0}h {1}m</value>
   </data>
   <data name="{0}m" xml:space="preserve">
     <value>{0}m</value>
+  </data>
+  <data name="{0}m ago" xml:space="preserve">
+    <value>{0}분 전</value>
   </data>
   <data name="{0}y old" xml:space="preserve">
     <value>{0}년 전</value>
