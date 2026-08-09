@@ -210,8 +210,8 @@ public sealed class VerticalBoundaryTests
     [Fact]
     public void MassTransitDiscoversTheScoreLedgersInternalConsumers()
     {
-        // UpdatePhoenixRecordHandler is an internal IConsumer<> (TryFireScoreCommand,
-        // FlushOverdueScoreBatchesCommand). MassTransit's AddConsumers assembly scan skips
+        // UpdatePhoenixRecordHandler is an internal IConsumer<TryFireScoreCommand>.
+        // MassTransit's AddConsumers assembly scan skips
         // internal types (verified when this vertical extracted), so the vertical exposes
         // AddScoreLedgerConsumers as the explicit registration hook. If that hook ever
         // stops covering the internal consumers, score-post batching silently stops
