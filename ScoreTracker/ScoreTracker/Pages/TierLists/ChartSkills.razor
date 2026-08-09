@@ -490,6 +490,10 @@ else
                                             {
                                                 <ScoreBreakdown Score="score.Score.Value" IsBroken="score.IsBroken" Mix="_currentMix" OneLine="true" ShowScore="true" Plate="score.Plate"></ScoreBreakdown>
                                             }
+                                            else if (_legacyGrades.TryGetValue(chart.Id, out var rowGrade))
+                                            {
+                                                <LetterGradeIcon LegacyGrade="rowGrade" IsBroken="score?.IsBroken ?? false" Height="18"></LetterGradeIcon>
+                                            }
                                         </td>
                                         <td>
                                             @if (_scoreRankings.TryGetValue(chart.Id, out var rowRank))
@@ -521,6 +525,7 @@ else
                             var score = _scores.TryGetValue(chart.Id, out var scr) ? scr : null;
                             <TierListChartCard Chart="chart"
                                                Score="score"
+                                               LegacyGrade="_legacyGrades.TryGetValue(chart.Id, out var legacyGrade) ? legacyGrade : null"
                                                Ranking="_scoreRankings.TryGetValue(chart.Id, out var rank) ? rank : null"
                                                Passed="score is { IsBroken: false }"
                                                IsToDo="_todos.Contains(chart.Id)"
@@ -946,6 +951,13 @@ else
 
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
     private IDictionary<Guid, RecordedPhoenixScore> _folderScores = new Dictionary<Guid, RecordedPhoenixScore>();
+
+    /// <summary>
+    ///     Legacy bests, where the letter grade IS the score. Held beside _scores rather than
+    ///     inside it: _scores carries the pass/clear state (so lamps, borders and filters work
+    ///     unchanged), and this carries the one datum that has no Phoenix equivalent.
+    /// </summary>
+    private IDictionary<Guid, XXLetterGrade> _legacyGrades = new Dictionary<Guid, XXLetterGrade>();
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
 
     private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
@@ -1170,11 +1182,30 @@ else
         _detailsOpen = true;
     }
 
+    /// <summary>
+    ///     Re-reads the viewer's bests after the details dialog records one — from whichever
+    ///     store this mix uses, so a legacy save lights up its card the same way.
+    /// </summary>
     private async Task RefreshScores()
     {
         if (!CurrentUser.IsLoggedIn) return;
-        _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix)))
-            .ToDictionary(c => c.ChartId);
+        if (IsLegacy)
+        {
+            var attempts = (await Mediator.Send(
+                    new GetXXBestChartAttemptsQuery(CurrentUser.User.Id, _currentMix)))
+                .Where(b => b.BestAttempt != null)
+                .ToArray();
+            _legacyGrades = attempts.ToDictionary(b => b.Chart.Id, b => b.BestAttempt!.LetterGrade);
+            _scores = attempts.ToDictionary(b => b.Chart.Id,
+                b => new RecordedPhoenixScore(b.Chart.Id, null, null, b.BestAttempt!.IsBroken,
+                    b.BestAttempt.RecordedOn));
+        }
+        else
+        {
+            _scores = (await Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix)))
+                .ToDictionary(c => c.ChartId);
+        }
+
         await Recalculate();
     }
 
@@ -1612,13 +1643,15 @@ else
 
         await UiSettings.SetSetting("TierLists__Level", _level.ToString(), cancellationToken);
         await UiSettings.SetSetting("TierLists__ChartType", _chartType.ToString(), cancellationToken);
+        // The view toggle is a real choice on every mix, so it persists on every mix.
+        await UiSettings.SetSetting("TierLists__GroupBy", _groupBy, cancellationToken);
         if (!IsLegacy)
         {
             // "Community" is forced for legacy mixes, never a saved preference — a later
-            // Phoenix session should restore whatever lens the player actually chose.
+            // Phoenix session should restore whatever lens the player actually chose. Same
+            // for personalization, which has no meaning without scoring levels.
             await UiSettings.SetSetting("TierLists__ListType", _tierListType, cancellationToken);
             await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString(), cancellationToken);
-            await UiSettings.SetSetting("TierLists__GroupBy", _groupBy, cancellationToken);
         }
 
         _charts = _allCharts.Values
@@ -2010,6 +2043,27 @@ else
             var communityTask = Mediator.Send(new GetCommunityTierListQuery(_currentMix));
             var legacyLevelTask = UiSettings.GetSetting("TierLists__Level");
             var legacyTypeTask = UiSettings.GetSetting("TierLists__ChartType");
+            var legacyGroupByTask = UiSettings.GetSetting("TierLists__GroupBy");
+
+            if (CurrentUser.IsLoggedIn)
+            {
+                // Legacy bests live in the XX store, keyed per mix. Nothing read them here, so
+                // a player who had recorded on Prime 2 saw a folder of unplayed charts and a
+                // "0 passed" bar over scores the site already had.
+                var legacyBests = await Mediator.Send(
+                    new GetXXBestChartAttemptsQuery(CurrentUser.User.Id, _currentMix));
+                var attempts = legacyBests.Where(b => b.BestAttempt != null).ToArray();
+                _legacyGrades = attempts.ToDictionary(b => b.Chart.Id, b => b.BestAttempt!.LetterGrade);
+                // Projected into the Phoenix-shaped score map WITHOUT a score: everything on
+                // this page that asks "passed?" then works unchanged, and everything that asks
+                // for a number correctly finds none — an era score is not out of 1,000,000 and
+                // would be read as a catastrophic Phoenix result by every consumer here.
+                _scores = attempts.ToDictionary(b => b.Chart.Id,
+                    b => new RecordedPhoenixScore(b.Chart.Id, null, null, b.BestAttempt!.IsBroken,
+                        b.BestAttempt.RecordedOn));
+                _todos = (await Mediator.Send(new GetSavedChartsQuery()))
+                    .Where(c => c.ListType == ChartListType.ToDo).Select(c => c.ChartId).Distinct().ToHashSet();
+            }
 
             _allCharts = (await legacyChartsTask).ToDictionary(c => c.Id);
             _communityEntries = (await communityTask).ToArray();
@@ -2022,6 +2076,10 @@ else
 
             if (Enum.TryParse<ChartType>(await legacyTypeTask, out var savedLegacyType)) _chartType = savedLegacyType;
             if (int.TryParse(await legacyLevelTask, out var savedLegacyLevel)) _level = savedLegacyLevel;
+            // The Tier List / My Progress toggle is remembered here too. Only the LENS stays
+            // unremembered on a legacy mix, because it is forced to Community rather than
+            // chosen; the view a player picked is a real preference.
+            _groupBy = await legacyGroupByTask ?? "Difficulty";
             // Old catalogs don't cover every modern folder — land on the mix's
             // fullest folder when the remembered one doesn't exist here.
             if (!_allCharts.Values.Any(c => c.Type == _chartType && c.Level == _level))
