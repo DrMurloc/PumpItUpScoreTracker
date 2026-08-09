@@ -10,7 +10,7 @@
             <span class="sbd-pumb-big">@Ceremony.HeadlinePumbility.ToString("N2")</span>
             @if (Ceremony.PumbilityGain is > 0)
             {
-                <span class="sbd-delta">+@Ceremony.PumbilityGain!.Value.ToString("N0")</span>
+                <PumbilityDelta Value="Ceremony.PumbilityGain!.Value" Class="sbd-delta"></PumbilityDelta>
             }
         </div>
         @if (Ceremony.PumbilityOld != null)

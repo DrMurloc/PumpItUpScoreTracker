@@ -1,0 +1,22 @@
+@using ScoreTracker.Web.Services
+@namespace ScoreTracker.Web.Components
+
+@* What a play, a week, or a suggestion moved your PUMBILITY by. One concept, one component:
+   the precision rule lives in PumbilityFormat and the affordance lives here, so a gain reads
+   the same on a corner badge, a session row and a board.
+
+   The marker is a parameter rather than a fixed "+" because the surfaces genuinely differ --
+   a badge signs it, a leaderboard points an arrow at it -- and both were already in the
+   codebase before this component existed. *@
+<span class="@Class" title="@Title">@Marker@PumbilityFormat.Gain(Value)</span>
+
+@code {
+    [Parameter] [EditorRequired] public double Value { get; set; }
+
+    /// <summary>What precedes the number: "+" on a badge, "▲" on a board, "" for a bare figure.</summary>
+    [Parameter] public string Marker { get; set; } = "+";
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+}

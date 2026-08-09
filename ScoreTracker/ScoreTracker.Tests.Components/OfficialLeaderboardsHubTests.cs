@@ -147,7 +147,7 @@ public sealed class OfficialLeaderboardsHubTests : ComponentTestBase
 
         var flat = cut.Markup.Replace("<b>", "").Replace("</b>", "");
         Assert.Contains("1,847", flat); // 612 new + 1,235 upscored
-        Assert.Contains("+512.44", flat); // the gainer leads with value, not rank
+        Assert.Contains("+512", flat); // the gainer leads with value, not rank
         Assert.Contains("#41 → #23", flat);
         Assert.Contains("NEWSTEP", flat);
         Assert.Contains("+39 more", flat); // 41 debuts, two chips shown

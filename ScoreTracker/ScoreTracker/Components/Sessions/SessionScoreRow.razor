@@ -1,4 +1,4 @@
-@using ScoreTracker.Domain.Models
+﻿@using ScoreTracker.Domain.Models
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.ScoreLedger.Contracts
 @using ScoreTracker.SharedKernel.Enums
@@ -113,7 +113,7 @@
             // says the chart sits in your pool, which it may have done all night. This says what
             // tonight's play on it was worth.
             if (detail?.PumbilityGain is { } gain && gain > 0)
-                yield return new RowBadge($"+{gain:N0}", L["What this play added to your PUMBILITY"].Value,
+                yield return new RowBadge($"+{PumbilityFormat.Gain(gain)}", L["What this play added to your PUMBILITY"].Value,
                     "sbd-gain");
             // No ScoreQuality90 badge: it said "top 10% among comparable players", and the
             // standing line beneath now says exactly where you placed among them. The flag

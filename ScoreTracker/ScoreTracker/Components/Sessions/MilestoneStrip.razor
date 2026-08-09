@@ -22,11 +22,11 @@
     private string Description => Milestone.Kind switch
     {
         MilestoneKind.PumbilityGain =>
-            $"{Milestone.OldValue:N2} → {Milestone.NewValue:N2} (+{Milestone.NewValue - Milestone.OldValue:N0})",
+            $"{Milestone.OldValue:N2} → {Milestone.NewValue:N2} (+{PumbilityFormat.Gain(Milestone.NewValue!.Value - Milestone.OldValue!.Value)})",
         MilestoneKind.SinglesPumbilityGain =>
-            $"{L["Singles"]} {Milestone.OldValue:N2} → {Milestone.NewValue:N2} (+{Milestone.NewValue - Milestone.OldValue:N0})",
+            $"{L["Singles"]} {Milestone.OldValue:N2} → {Milestone.NewValue:N2} (+{PumbilityFormat.Gain(Milestone.NewValue!.Value - Milestone.OldValue!.Value)})",
         MilestoneKind.DoublesPumbilityGain =>
-            $"{L["Doubles"]} {Milestone.OldValue:N2} → {Milestone.NewValue:N2} (+{Milestone.NewValue - Milestone.OldValue:N0})",
+            $"{L["Doubles"]} {Milestone.OldValue:N2} → {Milestone.NewValue:N2} (+{PumbilityFormat.Gain(Milestone.NewValue!.Value - Milestone.OldValue!.Value)})",
         MilestoneKind.SinglesCompetitiveGain =>
             $"{L["Singles"]} {Milestone.OldValue:0.00} → {Milestone.NewValue:0.00}",
         MilestoneKind.DoublesCompetitiveGain =>

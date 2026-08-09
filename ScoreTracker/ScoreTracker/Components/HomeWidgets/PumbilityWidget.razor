@@ -40,7 +40,7 @@ else
                     <span class="dash-stat-num rarity-glow-1">@_stats.SkillRating.ToString("N2")</span>
                     @if (_weeklyDelta is > 0)
                     {
-                        <span class="dash-stat-delta">▲ @_weeklyDelta.Value.ToString("N0")</span>
+                        <PumbilityDelta Value="_weeklyDelta.Value" Marker="▲ " Class="dash-stat-delta"></PumbilityDelta>
                     }
                 </span>
                 <div class="dash-acct-pools">
