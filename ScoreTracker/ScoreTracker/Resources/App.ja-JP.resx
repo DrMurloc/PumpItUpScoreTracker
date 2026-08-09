@@ -315,6 +315,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>この名前のコミュニティは既に存在します。</value>
   </data>
+  <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
+    <value>配信は2回届くことがあります。インポート中に PIU Scores が再起動すると、復帰後にそのインポートが再送されます。配信が一度きりであることを前提にせず、譜面と記録時刻をキーにしてください。PIUGame セッションの配信は例外で、その時点でセッションは失われているため再送されません。</value>
+  </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>最初に決めておくとよい項目です。この後のすべてがこれに合わせて調整されます。</value>
   </data>

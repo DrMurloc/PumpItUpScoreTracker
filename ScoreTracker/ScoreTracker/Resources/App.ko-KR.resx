@@ -315,6 +315,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>이미 같은 이름의 커뮤니티가 있습니다.</value>
   </data>
+  <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
+    <value>전송이 두 번 도착할 수 있습니다. 가져오기 도중에 PIU Scores가 다시 시작되면 복구 후 해당 가져오기가 다시 전송됩니다. 전송이 한 번뿐이라고 가정하지 말고 차트와 기록 시각을 기준으로 처리하세요. PIUGame 세션 전송은 예외입니다. 그때는 세션이 이미 사라졌기 때문에 다시 보내지 않습니다.</value>
+  </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>먼저 정해두면 좋은 몇 가지입니다. 이후의 모든 것이 여기에 맞춰집니다.</value>
   </data>

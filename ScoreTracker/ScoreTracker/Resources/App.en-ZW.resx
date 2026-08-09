@@ -315,6 +315,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>GRO plglmurgblub glgrgl grglmrp mrg glglgrrgl glmrp.</value>
   </data>
+  <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
+    <value>Murp murlg blub mrgl gropm. Murgl Mgrlgmrg Mrglrlgrlgl murlg, murlg blub argl gro morg — prgl gro brgl mo murgl blarg mrp glub rorg mo murp murlg blub argl. PIUGame murpmurp murlg blub mrp murrgl, argl murpmurp blub mo.</value>
+  </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>Gramol arglu bolgrump — gluru marob apglurg oglam.</value>
   </data>

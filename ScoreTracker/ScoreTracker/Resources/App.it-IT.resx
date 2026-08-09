@@ -315,6 +315,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>Esiste già una comunità con questo nome.</value>
   </data>
+  <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
+    <value>Una consegna può arrivare due volte. Se PIU Scores si riavvia durante un'importazione, quell'importazione viene inviata di nuovo al ritorno: usa la chart e l'ora registrata del punteggio come chiave, invece di dare per scontato che ogni consegna sia unica. Le consegne di sessione PIUGame sono l'eccezione: non vengono mai reinviate, perché la sessione non c'è più.</value>
+  </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>Poche cose da sistemare subito: tutto il resto si adatta a queste.</value>
   </data>
