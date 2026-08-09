@@ -16,7 +16,7 @@ Reader-facing docs live in `docs/` (README.md stays at the root). Keep them curr
 - [docs/HOW-TO-RUN.md](docs/HOW-TO-RUN.md) — prerequisites, Aspire local run, the /Dev/Populate harness, optional secrets
 - [docs/HOW-TO-TEST.md](docs/HOW-TO-TEST.md) — test philosophy + suite commands
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — update in the same PR that changes a structural pattern
-- [docs/UX-GUIDELINES.md](docs/UX-GUIDELINES.md) — the design system (per-mix themes, color tokens, the two semantic ramps) + the ten UX rules; update in the same PR that changes a UI pattern
+- [docs/UX-GUIDELINES.md](docs/UX-GUIDELINES.md) — the design system (per-mix themes, color tokens, the two semantic ramps) + the numbered UX rules; update in the same PR that changes a UI pattern
 - [docs/DATABASE-SCHEMA.md](docs/DATABASE-SCHEMA.md) — new tables get a row
 - [docs/API.md](docs/API.md) — the API surface map; Swagger is shape truth
 - [docs/SCHEDULED-JOBS.md](docs/SCHEDULED-JOBS.md) — new recurring jobs get a row
