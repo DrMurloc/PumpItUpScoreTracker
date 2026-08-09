@@ -1,4 +1,4 @@
-@using ScoreTracker.PlayerProgress.Contracts
+﻿@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
@@ -16,7 +16,7 @@
    nothing under it the moment the row wraps (D15). *@
 <div class="pmb-frame">
     <div class="pmb-frame-figure">
-        <div class="pmb-hero-value stat-display">@Page.Total.ToString("N0")</div>
+        <div class="pmb-hero-value stat-display">@Page.Total.ToString("N2")</div>
         <div class="pmb-hero-sub">@Subtitle</div>
     </div>
 
@@ -28,7 +28,7 @@
                 <button type="button" class="pmb-poolsplit-seg"
                         aria-pressed="@(pool.Value == Selected ? "true" : "false")"
                         @onclick="() => OnPoolChanged.InvokeAsync(pool.Value)">
-                    <strong>@pool.Total.ToString("N0")</strong>@pool.Label
+                    <strong>@pool.Total.ToString("N2")</strong>@pool.Label
                 </button>
             }
         </div>
@@ -38,7 +38,7 @@
     {
         <div class="pmb-barcard">
             <div class="pmb-barcard-top">
-                <span class="pmb-barcard-num">@Page.Bar.Value.ToString("N0")</span>
+                <span class="pmb-barcard-num">@Page.Bar.Value.ToString("N2")</span>
                 <span class="pmb-barcard-label">@L["Your bar"]</span>
             </div>
             @if (BarChart != null)

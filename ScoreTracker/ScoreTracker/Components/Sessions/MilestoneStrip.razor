@@ -1,4 +1,4 @@
-@using ScoreTracker.PlayerProgress.Contracts
+﻿@using ScoreTracker.PlayerProgress.Contracts
 @namespace ScoreTracker.Web.Components
 <div class="d-flex align-center gap-2 px-3 py-0 mud-warning-hover" style="border-left: 3px solid var(--mud-palette-warning); background: rgba(255,196,51,.07)" data-testid="milestone-strip">
     <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">@KindLabel</MudChip>
@@ -22,11 +22,11 @@
     private string Description => Milestone.Kind switch
     {
         MilestoneKind.PumbilityGain =>
-            $"{Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{Milestone.NewValue - Milestone.OldValue:N0})",
+            $"{Milestone.OldValue:N2} → {Milestone.NewValue:N2} (+{Milestone.NewValue - Milestone.OldValue:N0})",
         MilestoneKind.SinglesPumbilityGain =>
-            $"{L["Singles"]} {Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{Milestone.NewValue - Milestone.OldValue:N0})",
+            $"{L["Singles"]} {Milestone.OldValue:N2} → {Milestone.NewValue:N2} (+{Milestone.NewValue - Milestone.OldValue:N0})",
         MilestoneKind.DoublesPumbilityGain =>
-            $"{L["Doubles"]} {Milestone.OldValue:N0} → {Milestone.NewValue:N0} (+{Milestone.NewValue - Milestone.OldValue:N0})",
+            $"{L["Doubles"]} {Milestone.OldValue:N2} → {Milestone.NewValue:N2} (+{Milestone.NewValue - Milestone.OldValue:N0})",
         MilestoneKind.SinglesCompetitiveGain =>
             $"{L["Singles"]} {Milestone.OldValue:0.00} → {Milestone.NewValue:0.00}",
         MilestoneKind.DoublesCompetitiveGain =>

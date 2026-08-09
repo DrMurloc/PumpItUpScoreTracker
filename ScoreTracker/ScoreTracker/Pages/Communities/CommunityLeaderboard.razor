@@ -1,4 +1,4 @@
-@page "/Community/Leaderboard"
+﻿@page "/Community/Leaderboard"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.Catalog.Contracts.Queries
@@ -133,7 +133,7 @@
                             @entry.CompetitiveLevel.ToString("0.00")
                         </span>
                     }
-                    <b class="olb-grid-num" style="color:@entry.Color" title="PUMBILITY">@entry.Rating</b>
+                    <b class="olb-grid-num" style="color:@entry.Color" title="PUMBILITY">@entry.Rating.ToString("N2")</b>
                 </span>
                 <span>
                     @if (_currentType != LeaderboardType.CoOp)
@@ -158,7 +158,7 @@
                             {
                                 <TierListChartCard Chart="score.Chart"
                                                    Score="new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken, default)"
-                                                   TierLabel="@score.Rating.ToString("N0")"
+                                                   TierLabel="@score.Rating.ToString("N2")"
                                                    ShowToDo="false"/>
                             }
                         </div>
@@ -362,7 +362,7 @@
         var top50 = await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType, Mix: _currentMix));
         _scores = top50.Where(s => _charts.ContainsKey(s.ChartId))
             .Select(s => new ScoreEntry(_charts[s.ChartId], s.Score ?? 0, s.Plate, s.IsBroken,
-                (int)scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),
+                scoringConfig.GetScore(_charts[s.ChartId], s.Score ?? 0, s.Plate ?? PhoenixPlate.ExtremeGame, false),
                 ScoringConfiguration.CalculateFungScore(_charts[s.ChartId].Level, s.Score ?? 0, _charts[s.ChartId].Type)))
             .ToArray();
     }
@@ -374,7 +374,7 @@
         NavManager.NavigateTo($"/Community/Members?CommunityName={HttpUtility.UrlEncode(CommunityName)}");
     }
 
-    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken, int Rating, double CompetitiveLevel);
+    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken, double Rating, double CompetitiveLevel);
 
     private sealed record LeaderboardEntry(int Place, Uri ProfileImage, Name PlayerName, bool IsPublic, Guid UserId,
         double Rating, double CompetitiveLevel, string Color);

@@ -1,4 +1,4 @@
-@using System.Globalization
+﻿@using System.Globalization
 @using ScoreTracker.PlayerProgress.Contracts
 @namespace ScoreTracker.Web.Components
 
@@ -17,7 +17,7 @@
         <div class="pmb-wpc-head">
             <span class="pmb-wpc-title">@L["Where your PUMBILITY comes from"]</span>
             <span class="pmb-wpc-total">
-                @string.Format(L["{0} total · {1} charts"], Breakdown.Total.ToString("N0"), PoolCount)
+                @string.Format(L["{0} total · {1} charts"], Breakdown.Total.ToString("N2"), PoolCount)
             </span>
         </div>
 
@@ -33,7 +33,7 @@
         <div class="pmb-wpc-keys">
             <div class="pmb-wpc-key pmb-wpc-level">
                 <span class="pmb-wpc-k-lbl">@L["Level"]</span>
-                <span class="pmb-wpc-k-num">@Breakdown.Level.ToString("N0")</span>
+                <span class="pmb-wpc-k-num">@Breakdown.Level.ToString("N2")</span>
                 <span class="pmb-wpc-k-pct">@Share(Breakdown.Level) · @L["the charts themselves"]</span>
             </div>
             <div class="pmb-wpc-key pmb-wpc-score">
@@ -63,7 +63,7 @@
                 <div class="pmb-wpc-plate-head">
                     <strong>@L["The plate, magnified"]</strong>
                     <span class="pmb-muted">
-                        @string.Format(L["every plate at once, end to end, is worth {0}"], Breakdown.PlateSpan.ToString("N0"))
+                        @string.Format(L["every plate at once, end to end, is worth {0}"], Breakdown.PlateSpan.ToString("N2"))
                     </span>
                 </div>
                 <div class="pmb-wpc-rail">
@@ -71,7 +71,7 @@
                 </div>
                 <p class="pmb-wpc-say">
                     @string.Format(L["A perfect plate on every chart in your pool would add {0} — {1} of it."],
-                        Breakdown.PlateHeadroom.ToString("N0"), Share(Breakdown.PlateHeadroom))
+                        Breakdown.PlateHeadroom.ToString("N2"), Share(Breakdown.PlateHeadroom))
                 </p>
             }
             else
@@ -101,5 +101,5 @@
     private string Share(double part) =>
         Breakdown == null ? string.Empty : (Breakdown.ShareOf(part) * 100).ToString("0.0") + "%";
 
-    private static string Signed(double part) => (part >= 0 ? "+" : "") + part.ToString("N0");
+    private static string Signed(double part) => (part >= 0 ? "+" : "") + part.ToString("N2");
 }

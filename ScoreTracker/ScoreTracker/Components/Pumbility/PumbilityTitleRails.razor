@@ -1,4 +1,4 @@
-@using System.Globalization
+﻿@using System.Globalization
 @using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
@@ -22,7 +22,7 @@
             <div class="pmb-rail">
                 <div class="pmb-rail-top">
                     <span class="pmb-rail-pool @PoolClass(rail.Pool)">@PoolLabel(rail.Pool)</span>
-                    <span class="pmb-rail-value">@rail.Value.ToString("N0")</span>
+                    <span class="pmb-rail-value">@rail.Value.ToString("N2")</span>
                 </div>
 
                 @if (rail.AtTop)
@@ -50,7 +50,7 @@
                         <div class="pmb-rail-ends">
                             <span>@(rail.Held ?? L["not started"]) · @rail.HeldThreshold.ToString("N0")</span>
                             <span class="pmb-rail-mid">
-                                @string.Format(L["{0} PUMBILITY remaining"], rail.Gap.ToString("N0"))
+                                @string.Format(L["{0} PUMBILITY remaining"], rail.Gap.ToString("N2"))
                             </span>
                             <span class="pmb-rail-next">@rail.Next · @rail.NextThreshold!.Value.ToString("N0")</span>
                         </div>
@@ -69,7 +69,7 @@
                         {
                             <div class="pmb-ask-cell">
                                 <span class="pmb-ask-lbl">@L["Your bar"]</span>
-                                <span class="pmb-ask-num">@rail.Bar.Value.ToString("N0")</span>
+                                <span class="pmb-ask-num">@rail.Bar.Value.ToString("N2")</span>
                             </div>
                         }
                         @* The realism check, and the reason it earns the highlighted cell: read
@@ -87,7 +87,7 @@
                     @if (rail.Examples.Count > 0)
                     {
                         <p class="pmb-rail-say">
-                            @string.Format(L["{0} a chart is:"], rail.Ask.ToString("N0"))
+                            @string.Format(L["{0} a chart is:"], rail.Ask.ToString("N2"))
                             @foreach (var example in rail.Examples)
                             {
                                 @* The grade rides the same line as its level, always. In a shared

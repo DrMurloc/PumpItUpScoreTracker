@@ -1,4 +1,4 @@
-@using ScoreTracker.Domain.Models.Titles.Phoenix2
+﻿@using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
@@ -34,7 +34,7 @@
         <div>
             <div class="pmb-flip-col-head">
                 <span class="pmb-flip-col-name pmb-p2">@L["Phoenix 2 · same scores, repriced"]</span>
-                <span class="pmb-num pmb-flip-total">@Carryover.Projected.ToString("N0")</span>
+                <span class="pmb-num pmb-flip-total">@Carryover.Projected.ToString("N2")</span>
             </div>
             <div class="pmb-flip-bar">
                 @if (Carryover.DoublesInPool > 0)
@@ -71,7 +71,7 @@
                     <span class="pmb-chip">
                         <span class="pmb-chip-t">@projected.Title</span>
                         <span class="pmb-chip-m">
-                            @PoolLabel(projected.Pool) @projected.Value.ToString("N0")
+                            @PoolLabel(projected.Pool) @projected.Value.ToString("N2")
                             @if (projected.Next != null)
                             {
                                 <text> · </text>
@@ -94,7 +94,7 @@
         @if (Carryover.Bar > 0)
         {
             <div class="pmb-fact">
-                <div class="pmb-fact-num">@Carryover.Bar.ToString("N0")</div>
+                <div class="pmb-fact-num">@Carryover.Bar.ToString("N2")</div>
                 <div class="pmb-fact-lbl">@L["The bar this pool would set"]</div>
             </div>
         }

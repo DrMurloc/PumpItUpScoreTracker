@@ -1,4 +1,4 @@
-@using ScoreTracker.Web.Services
+﻿@using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 
 @* The answer, above the fold. A session that moved nothing still renders the band — the
@@ -7,7 +7,7 @@
     <div class="sbd-pumb">
         <div class="sbd-eyebrow">PUMBILITY</div>
         <div class="sbd-pumb-lead">
-            <span class="sbd-pumb-big">@Ceremony.HeadlinePumbility.ToString("N0")</span>
+            <span class="sbd-pumb-big">@Ceremony.HeadlinePumbility.ToString("N2")</span>
             @if (Ceremony.PumbilityGain is > 0)
             {
                 <span class="sbd-delta">+@Ceremony.PumbilityGain!.Value.ToString("N0")</span>
@@ -15,7 +15,7 @@
         </div>
         @if (Ceremony.PumbilityOld != null)
         {
-            <div class="sbd-from">@L["From {0}", Ceremony.PumbilityOld.Value.ToString("N0")]</div>
+            <div class="sbd-from">@L["From {0}", Ceremony.PumbilityOld.Value.ToString("N2")]</div>
         }
 
         @if (Ceremony.OfficialRank != null)
