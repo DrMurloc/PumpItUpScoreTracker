@@ -3193,6 +3193,19 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("BestAttempt", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.LimboChartEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("MixId", "ChartId");
+
+                    b.ToTable("LimboChart", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.ScoreLedger.Infrastructure.Entities.PhoenixRecordEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3348,6 +3361,11 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasIndex("SessionId")
                         .HasFilter("[SessionId] IS NOT NULL");
+
+                    b.HasIndex("ChartId", "MixId")
+                        .HasAnnotation("SqlServer:Online", true);
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("ChartId", "MixId"), new[] { "UserId", "Score", "IsBroken", "OccurredAt" });
 
                     b.HasIndex("UserId", "ChartId", "OccurredAt");
 
