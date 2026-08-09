@@ -539,8 +539,8 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         public IReadOnlyList<PoolEntry> Pool { get; }
         public IReadOnlyList<PoolEntry> WaitingRoom { get; }
         public IReadOnlyList<PumbilityTarget> Targets { get; }
-        public int Total { get; }
-        public int? Bar { get; }
+        public double Total { get; }
+        public double? Bar { get; }
         public Guid? BarChartId { get; }
 
         public IReadOnlyDictionary<Guid, Chart> Charts() => _charts;

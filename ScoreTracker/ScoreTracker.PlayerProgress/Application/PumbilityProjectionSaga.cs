@@ -128,7 +128,7 @@ namespace ScoreTracker.PlayerProgress.Application
             var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count", mix), cancellationToken))
                 .ToDictionary(s => s.ChartId, e => e.Category);
 
-            var projectedGains = new Dictionary<Guid, int>();
+            var projectedGains = new Dictionary<Guid, double>();
             foreach (var kv in expectedScore)
             {
                 var chart = charts[kv.Key];
@@ -147,7 +147,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     : pool.Baseline;
                 var gain = expectedPumbility - floor;
                 if (gain <= 0) continue;
-                projectedGains[kv.Key] = (int)gain;
+                projectedGains[kv.Key] = gain;
             }
 
             // Ranked advice, not an inventory. A full window clears the bar on well over a
@@ -170,7 +170,7 @@ namespace ScoreTracker.PlayerProgress.Application
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
         private sealed record ProjectionScope(MixEnum Mix, IReadOnlyDictionary<Guid, Chart> Charts,
             IDictionary<Guid, double> ScoringLevels, PlayerStatsRecord MyStats,
-            ScoringConfiguration Scoring, int Baseline);
+            ScoringConfiguration Scoring, double Baseline);
 
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
             IDictionary<Guid, PhoenixScore> into, CancellationToken cancellationToken)
@@ -351,7 +351,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     new GetTop50ForPlayerQuery(userId, chartType, 100, mix), cancellationToken))
                 .ToDictionary(s => s.ChartId);
             var ratings = topScores.ToDictionary(kv => kv.Key,
-                kv => (int)scoring.GetScore(charts[kv.Key], kv.Value.Score!.Value,
+                kv => scoring.GetScore(charts[kv.Key], kv.Value.Score!.Value,
                     kv.Value.Plate ?? PhoenixPlate.RoughGame, kv.Value.IsBroken));
             var top50 = ratings.OrderByDescending(kv => kv.Value).Take(50).ToArray();
             // A pool that isn't full displaces nothing — a new chart contributes whole. This
@@ -360,6 +360,6 @@ namespace ScoreTracker.PlayerProgress.Application
             return new PoolState(ratings, baseline);
         }
 
-        private sealed record PoolState(IReadOnlyDictionary<Guid, int> Ratings, int Baseline);
+        private sealed record PoolState(IReadOnlyDictionary<Guid, double> Ratings, double Baseline);
     }
 }

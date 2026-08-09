@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.SharedKernel.Enums;
@@ -262,22 +262,24 @@ internal sealed class PlayerRatingSaga :
                 .ToArray());
 
         // Overall rating is the mixed top-50; Singles/Doubles below are the per-type top-50s.
+        // The pools sum whole and stay whole: fifty per-chart values each carry a fraction, and
+        // discarding them here is what put this figure and the PUMBILITY page's out of step.
         var skillPool = top50;
-        var skillRating = (int)top50.Sum(s => s.Rating);
+        var skillRating = top50.Sum(s => s.Rating);
 
         var newStats = new PlayerStatsRecord(request.UserId,
             (int)scores.Where(s => !s.IsBroken).Sum(s => s.Rating),
             recorded.Any(r => !r.IsBroken) ? recorded.Where(r => !r.IsBroken).Max(r => charts[r.ChartId].Level) : 1,
             recorded.Count(r => !r.IsBroken),
-            (int)coOps.Sum(s => s.Rating),
+            coOps.Sum(s => s.Rating),
             (int)AverageOrDefault(coOps.Select(s => (int)s.Score), 0),
             skillRating,
             (int)AverageOrDefault(skillPool.Select(s => (int)s.Score), 0),
             AverageOrDefault(skillPool.Select(s => (int)charts[s.ChartId].Level), 1),
-            (int)top50Singles.Sum(s => s.Rating),
+            top50Singles.Sum(s => s.Rating),
             (int)AverageOrDefault(top50Singles.Select(s => (int)s.Score), 0),
             AverageOrDefault(top50Singles.Select(s => (int)charts[s.ChartId].Level), 1),
-            (int)top50Doubles.Sum(s => s.Rating),
+            top50Doubles.Sum(s => s.Rating),
             (int)AverageOrDefault(top50Doubles.Select(s => (int)s.Score), 0),
             AverageOrDefault(top50Doubles.Select(s => (int)charts[s.ChartId].Level), 1),
             competitive,
@@ -299,7 +301,7 @@ internal sealed class PlayerRatingSaga :
                     newStats.DoublesRating, oldStats.CompetitiveLevel, newStats.CompetitiveLevel,
                     oldStats.SinglesCompetitiveLevel, newStats.SinglesCompetitiveLevel,
                     oldStats.DoublesCompetitiveLevel,
-                    newStats.DoublesCompetitiveLevel, (int)coOps.Sum(s => s.Rating), recorded.Count(r => !r.IsBroken),
+                    newStats.DoublesCompetitiveLevel, coOps.Sum(s => s.Rating), recorded.Count(r => !r.IsBroken),
                     mix, request.SessionId),
                 cancellationToken);
         await _bus.Publish(new PlayerStatsUpdatedEvent(request.UserId, newStats, mix),
@@ -469,7 +471,7 @@ internal sealed class PlayerRatingSaga :
     // charts it never touches, so any chart with a gain and no flag still gets a row.
     private async Task<IReadOnlyList<Guid>> FlagCompetitiveImprovers(RecalculateStatsCommand request,
         PlayerStatsRecord oldStats, PlayerStatsRecord newStats, ChartCompetitive[] competitiveScores,
-        Dictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, int> gains,
+        Dictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, double> gains,
         CancellationToken cancellationToken)
     {
         if (request.ChangedChartIds == null || request.SessionId == null) return Array.Empty<Guid>();
@@ -520,13 +522,13 @@ internal sealed class PlayerRatingSaga :
     ///         through the event is what would close that, and the event does not have it.
     ///     </para>
     /// </summary>
-    private static IReadOnlyDictionary<Guid, int> PumbilityGains(RecalculateStatsCommand request,
+    private static IReadOnlyDictionary<Guid, double> PumbilityGains(RecalculateStatsCommand request,
         IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? changes, ChartRating[] scores,
         RecordedPhoenixScore[] recorded, Dictionary<Guid, Chart> charts, MixEnum mix,
         ScoringConfiguration scoring)
     {
         if (changes == null || changes.Count == 0 || request.SessionId == null)
-            return new Dictionary<Guid, int>();
+            return new Dictionary<Guid, double>();
 
         // A new pass held NO seat, whatever score preceded it. The pool counts non-broken
         // scores only, so a chart whose prior best was a stage break was not in it — and

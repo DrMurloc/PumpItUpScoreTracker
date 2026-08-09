@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -762,12 +762,12 @@ public sealed class PlayerRatingSagaTests
 
         await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2), CancellationToken.None);
 
-        // Singles pool: 354.38 + 349.92 = 704.30 -> 704; Doubles pool: 354.5 + 342.51 = 697.01 -> 697.
-        // Only four charts, so the merged top-50 holds all of them and Total == 704 + 697
-        // here; Phoenix2SkillRatingIsAMergedTop50NotTwoPoolsSummed covers where they diverge.
+        // Singles pool: 354.38 + 349.92 = 704.30; Doubles pool: 354.50 + 342.51 = 697.01. Only
+        // four charts, so the merged top-50 holds all of them and Total is their sum here;
+        // Phoenix2SkillRatingIsAMergedTop50NotTwoPoolsSummed covers where they diverge.
         stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, userId,
-            It.Is<PlayerStatsRecord>(p => p.SinglesRating == 704 && p.DoublesRating == 697
-                                          && p.SkillRating == 704 + 697),
+            It.Is<PlayerStatsRecord>(p => Near(p.SinglesRating, 704.30) && Near(p.DoublesRating, 697.01)
+                                          && Near(p.SkillRating, 704.30 + 697.01)),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -802,14 +802,15 @@ public sealed class PlayerRatingSagaTests
 
         await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2), CancellationToken.None);
 
-        // Accumulate the doubles exactly as production's LINQ Sum does (order + flooring).
-        var expectedSingles = (int)Enumerable.Repeat(vs, 30).Sum();
-        var expectedDoubles = (int)Enumerable.Repeat(vd, 30).Sum();
-        var expectedTotal = (int)Enumerable.Repeat(vs, 30).Concat(Enumerable.Repeat(vd, 20)).Sum();
+        // Accumulate the doubles exactly as production's LINQ Sum does (order matters; nothing
+        // rounds on either side any more).
+        var expectedSingles = Enumerable.Repeat(vs, 30).Sum();
+        var expectedDoubles = Enumerable.Repeat(vd, 30).Sum();
+        var expectedTotal = Enumerable.Repeat(vs, 30).Concat(Enumerable.Repeat(vd, 20)).Sum();
         stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, userId,
-            It.Is<PlayerStatsRecord>(p => p.SinglesRating == expectedSingles
-                                          && p.DoublesRating == expectedDoubles
-                                          && p.SkillRating == expectedTotal
+            It.Is<PlayerStatsRecord>(p => Near(p.SinglesRating, expectedSingles)
+                                          && Near(p.DoublesRating, expectedDoubles)
+                                          && Near(p.SkillRating, expectedTotal)
                                           && p.SkillRating < p.SinglesRating + p.DoublesRating
                                           && p.SkillRating > p.SinglesRating),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -820,7 +821,7 @@ public sealed class PlayerRatingSagaTests
     {
         // A broken 995k would top the singles pool if counted; Phoenix 2 excludes it, so
         // the pool is only the clean 920k AA (P2 AA floor; singles price one level up:
-        // 235 x (1.36 + 0.008) = 321.48 -> 321).
+        // 235 x (1.36 + 0.008) = 321.48).
         var userId = Guid.NewGuid();
         var broken = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
         var clean = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
@@ -839,7 +840,7 @@ public sealed class PlayerRatingSagaTests
         await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2), CancellationToken.None);
 
         stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, userId,
-            It.Is<PlayerStatsRecord>(p => p.SinglesRating == 321 && p.SkillRating == 321
+            It.Is<PlayerStatsRecord>(p => Near(p.SinglesRating, 321.48) && Near(p.SkillRating, 321.48)
                                           && p.DoublesRating == 0),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -1011,6 +1012,16 @@ public sealed class PlayerRatingSagaTests
         PhoenixPlate plate = PhoenixPlate.SuperbGame) =>
         new(chartId, score, plate, isBroken,
             new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+
+    /// <summary>
+    ///     Pool expectations match to the cent, not bit-for-bit. Nothing rounds these any more, and
+    ///     two sums that reach the same value by different accumulation orders are not identical
+    ///     doubles — an == here fails on the last mantissa bit and says nothing useful.
+    /// </summary>
+    private static bool Near(double actual, double expected)
+    {
+        return Math.Abs(actual - expected) < 0.005;
+    }
 
     private static PlayerStatsRecord ZeroStats(Guid userId) =>
         new(userId, TotalRating: 0, HighestLevel: 1, ClearCount: 0, CoOpRating: 0, CoOpScore: 0,

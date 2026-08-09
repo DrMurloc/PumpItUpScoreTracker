@@ -87,7 +87,7 @@
 
     [Parameter] public string? Subtitle { get; set; }
 
-    public sealed record PoolOption(ChartType? Value, string Label, int Total);
+    public sealed record PoolOption(ChartType? Value, string Label, double Total);
 
     private PoolEntry? BarEntry => Page.Pool.Count > 0 && Page.Bar != null ? Page.Pool[^1] : null;
 

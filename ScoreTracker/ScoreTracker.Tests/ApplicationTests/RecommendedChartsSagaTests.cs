@@ -698,7 +698,7 @@ public sealed class RecommendedChartsSagaTests
             return this;
         }
 
-        public RecommendedChartsContext WithPumbilityGains(params (Guid ChartId, int Gain)[] gains)
+        public RecommendedChartsContext WithPumbilityGains(params (Guid ChartId, double Gain)[] gains)
         {
             Mediator.Setup(m => m.Send(It.IsAny<ProjectPumbilityGainsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PumbilityProjection(
@@ -766,7 +766,7 @@ public sealed class RecommendedChartsSagaTests
             new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
     private static PumbilityProjection EmptyProjection() =>
-        new(new Dictionary<Guid, PhoenixScore>(), new Dictionary<Guid, int>(),
+        new(new Dictionary<Guid, PhoenixScore>(), new Dictionary<Guid, double>(),
             new Dictionary<Guid, TierListCategory>());
 
     private static PlayerStatsRecord ZeroStats(Guid userId) =>

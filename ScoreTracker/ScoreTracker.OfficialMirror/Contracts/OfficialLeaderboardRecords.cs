@@ -91,7 +91,7 @@ public sealed record OfficialPlayerHistoryPoint(DateTimeOffset At, decimal? Pumb
 /// <summary>One chart on a player's list — mirrored board rows only, every one with a Place.</summary>
 [ExcludeFromCodeCoverage]
 public sealed record OfficialPlayerChartRecord(Guid ChartId, int? Place, int? PlaceDelta, int Score,
-    int ComputedRating, bool IsSupplemented = false);
+    double ComputedRating, bool IsSupplemented = false);
 
 /// <summary>What the supplemented reading added to the latest sealed snapshot.</summary>
 [ExcludeFromCodeCoverage]

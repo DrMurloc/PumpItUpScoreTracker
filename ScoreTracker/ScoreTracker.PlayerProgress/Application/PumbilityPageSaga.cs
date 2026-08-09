@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
@@ -62,7 +62,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     new GetTop50ForPlayerQuery(request.UserId, request.Pool, PoolSize + WaitingRoomSize, mix),
                     cancellationToken))
                 .Where(s => s.Score != null && charts.ContainsKey(s.ChartId))
-                .Select(s => (Score: s, Value: (int)scoring.GetScore(charts[s.ChartId], s.Score!.Value,
+                .Select(s => (Score: s, Value: scoring.GetScore(charts[s.ChartId], s.Score!.Value,
                     s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken)))
                 .OrderByDescending(x => x.Value)
                 .ToArray();
@@ -78,7 +78,7 @@ namespace ScoreTracker.PlayerProgress.Application
 
             // Until the pool holds fifty, a new chart displaces nothing and contributes whole.
             var full = pool.Length >= PoolSize;
-            var bar = full ? pool[^1].Value : (int?)null;
+            var bar = full ? pool[^1].Value : (double?)null;
             var barChart = full ? pool[^1].ChartId : (Guid?)null;
 
             var projection = await _mediator.Send(
@@ -118,17 +118,17 @@ namespace ScoreTracker.PlayerProgress.Application
             // projection if that beats it. MERGED rather than summed: a chart already in the pool
             // keeps the better of the two, so nothing counts twice and no gain has to be added to
             // another one, which §8.3 forbids.
-            var reachable = new Dictionary<Guid, int>();
+            var reachable = new Dictionary<Guid, double>();
             foreach (var (chartId, score) in mine)
                 if (charts.ContainsKey(chartId))
-                    reachable[chartId] = (int)scoring.GetScore(charts[chartId], score.Score!.Value,
+                    reachable[chartId] = scoring.GetScore(charts[chartId], score.Score!.Value,
                         score.Plate ?? PhoenixPlate.RoughGame, score.IsBroken);
             foreach (var target in targets.Values)
             {
                 var plate = mine.TryGetValue(target.ChartId, out var held)
                     ? held.Plate ?? PhoenixPlate.RoughGame
                     : PhoenixPlate.RoughGame;
-                var projected = (int)scoring.GetScore(charts[target.ChartId], target.Projected, plate, false);
+                var projected = scoring.GetScore(charts[target.ChartId], target.Projected, plate, false);
                 if (projected > reachable.GetValueOrDefault(target.ChartId))
                     reachable[target.ChartId] = projected;
             }
@@ -176,11 +176,11 @@ namespace ScoreTracker.PlayerProgress.Application
                 }
                 .Select(x =>
                 {
-                    var value = Math.Round(repriced
+                    var value = repriced
                         .Where(r => x.Item2 == null || r.Chart.Type == x.Item2)
                         .OrderByDescending(r => r.Value)
                         .Take(PoolSize)
-                        .Sum(r => r.Value), 2);
+                        .Sum(r => r.Value);
 
                     var ladder = ladders.TryGetValue(x.Item1, out var rungs) ? rungs : Array.Empty<Phoenix2PumbilityTitle>();
                     var held = ladder.LastOrDefault(t => t.CompletionRequired <= value);
@@ -198,22 +198,22 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     this whole handler.
         /// </summary>
         private async Task<(PoolTotals Totals, IReadOnlyList<TitleRail> Rails)?> PoolTotalsFor(Guid userId,
-            MixEnum mix, ChartType? scope, int scopeTotal, int? scopeBar,
+            MixEnum mix, ChartType? scope, double scopeTotal, double? scopeBar,
             IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring,
-            IReadOnlyDictionary<Guid, int> reachable, CancellationToken cancellationToken)
+            IReadOnlyDictionary<Guid, double> reachable, CancellationToken cancellationToken)
         {
             // Phoenix 1 has one pool and no PUMBILITY-threshold titles, so there is neither a
             // split to show nor a ladder to show it against.
             if (mix != MixEnum.Phoenix2) return null;
 
-            async Task<(int Total, int? Bar)> PoolFor(ChartType? type)
+            async Task<(double Total, double? Bar)> PoolFor(ChartType? type)
             {
                 if (type == scope) return (scopeTotal, scopeBar);
 
                 var values = (await _mediator.Send(new GetTop50ForPlayerQuery(userId, type, PoolSize, mix),
                         cancellationToken))
                     .Where(s => s.Score != null && charts.ContainsKey(s.ChartId))
-                    .Select(s => (int)scoring.GetScore(charts[s.ChartId], s.Score!.Value,
+                    .Select(s => scoring.GetScore(charts[s.ChartId], s.Score!.Value,
                         s.Plate ?? PhoenixPlate.RoughGame, s.IsBroken))
                     .OrderByDescending(v => v)
                     .ToArray();
@@ -245,7 +245,7 @@ namespace ScoreTracker.PlayerProgress.Application
             return (new PoolTotals(all.Total, singles.Total, doubles.Total),
                 rail == null ? Array.Empty<TitleRail>() : new[] { rail });
 
-            TitleRail? Rail(PumbilityPool pool, (int Total, int? Bar) figures, ChartType exampleType,
+            TitleRail? Rail(PumbilityPool pool, (double Total, double? Bar) figures, ChartType exampleType,
                 ChartType? exampleScope)
             {
                 if (!ladders.TryGetValue(pool, out var ladder) || ladder.Length == 0) return null;
@@ -356,7 +356,7 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     </para>
         /// </summary>
         private async Task<IReadOnlyList<PumbilityTarget>> CarryoverTargets(Guid userId, ChartType? poolScope,
-            IReadOnlyDictionary<Guid, Chart> charts, int? bar, ScoringConfiguration scoring,
+            IReadOnlyDictionary<Guid, Chart> charts, double? bar, ScoringConfiguration scoring,
             PumbilityProjection projection, IReadOnlyDictionary<Guid, RecordedPhoenixScore> mine,
             CancellationToken cancellationToken)
         {
@@ -377,7 +377,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Select(e => new
                 {
                     Entry = e,
-                    Gain = (int)Math.Round(e.Phoenix2Value - Math.Max(Standing(e.ChartId), bottom))
+                    Gain = e.Phoenix2Value - Math.Max(Standing(e.ChartId), bottom)
                 })
                 .Where(x => x.Gain > 0)
                 .Select(x => new PumbilityTarget(x.Entry.ChartId,
@@ -466,7 +466,7 @@ namespace ScoreTracker.PlayerProgress.Application
             {
                 return new CarryoverEntry(index + 1, x.Score.ChartId, x.Score.Score!.Value,
                     x.Score.Score!.Value.LetterGradeFor(MixEnum.Phoenix),
-                    Math.Round(x.Value, 2),
+                    x.Value,
                     phoenix2Scores.TryGetValue(x.Score.ChartId, out var here) ? here : null,
                     phoenix2Charts.ContainsKey(x.Score.ChartId));
             }
@@ -478,8 +478,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 .ToArray();
 
             return new Phoenix2CarryoverRecord(
-                Math.Round(repriced.Sum(x => x.Value), 2),
-                repriced.Length >= PoolSize ? Math.Round(repriced.Min(x => x.Value), 2) : 0,
+                repriced.Sum(x => x.Value),
+                repriced.Length >= PoolSize ? repriced.Min(x => x.Value) : 0,
                 phoenix2Scores.Count,
                 entries.Count(e => e.Phoenix2Score == null),
                 ProjectedTitles(everyPhoenixScore, Priced, p2Scoring),

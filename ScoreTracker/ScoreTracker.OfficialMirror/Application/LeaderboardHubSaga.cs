@@ -616,19 +616,19 @@ internal sealed class LeaderboardHubSaga :
 
     // ── snapshot-scoped stats ────────────────────────────────────────────────
 
-    private sealed record PlayerSnapshotStats(int PlayerId, int BoardsInTop, int RatingAll,
-        int RatingSingles, int RatingDoubles, int RatingCoOp, int BoardsCoOp, RecapPlayerType? PlayerType,
-        IReadOnlyDictionary<Guid, int> ChartRatings)
+    private sealed record PlayerSnapshotStats(int PlayerId, int BoardsInTop, double RatingAll,
+        double RatingSingles, double RatingDoubles, double RatingCoOp, int BoardsCoOp, RecapPlayerType? PlayerType,
+        IReadOnlyDictionary<Guid, double> ChartRatings)
     {
         public decimal RatingFor(string type)
         {
-            return type switch
+            return (decimal)(type switch
             {
                 "Singles" => RatingSingles,
                 "Doubles" => RatingDoubles,
                 CoOpType => RatingCoOp,
                 _ => RatingAll
-            };
+            });
         }
 
         public int BoardsFor(string type)
@@ -677,7 +677,7 @@ internal sealed class LeaderboardHubSaga :
             .GroupBy(d => d.PlayerId)
             .ToDictionary(g => g.Key, g => g
                 .Select(d => (Detail: d,
-                    Rating: (int)scoring.GetScore(DifficultyLevel.From(d.Level!.Value),
+                    Rating: scoring.GetScore(DifficultyLevel.From(d.Level!.Value),
                         PhoenixScore.From((int)d.Score))))
                 .ToArray());
         var coopByPlayer = chartDetails
@@ -693,10 +693,10 @@ internal sealed class LeaderboardHubSaga :
         {
             var contributions = standardByPlayer.TryGetValue(playerId, out var standard)
                 ? standard
-                : Array.Empty<(PlacementDetail Detail, int Rating)>();
+                : Array.Empty<(PlacementDetail Detail, double Rating)>();
             var coop = coopByPlayer.TryGetValue(playerId, out var c)
                 ? c
-                : Array.Empty<(PlacementDetail Detail, int Rating)>();
+                : Array.Empty<(PlacementDetail Detail, double Rating)>();
             var top50 = contributions.OrderByDescending(x => x.Rating).Take(50).ToArray();
             var singles = contributions.Where(x => x.Detail.ChartType == ChartType.Single.ToString())
                 .OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);

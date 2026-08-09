@@ -101,12 +101,14 @@ public sealed class PumbilityAttributionTests
     }
 
     [Fact]
-    public void MovementUnderAWholePointIsNotABadge()
+    public void MovementUnderAWholePointIsStillAGainAndKeepsItsFraction()
     {
+        // A whole point used to be the floor here, which discarded the movement AND the only
+        // evidence that a fractional gain exists at all. The badge reports what it is given.
         var a = Guid.NewGuid();
         var gains = PumbilityAttribution.GainsPerChart(new[] { Priced(a, 800, 800.4) }, Pool);
 
-        Assert.Empty(gains);
+        Assert.Equal(0.4, Assert.Single(gains).Value, 6);
     }
 
     [Fact]
