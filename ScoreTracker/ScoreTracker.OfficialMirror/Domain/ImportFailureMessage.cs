@@ -22,6 +22,8 @@ internal static class ImportFailureMessage
             ImportOutcome.PiuGameError =>
                 "PIUGame.com stopped responding, so this import couldn't finish. Try again in a few minutes.",
             ImportOutcome.CredentialRejected => "Invalid Login Information",
+            ImportOutcome.Interrupted =>
+                "PIU Scores restarted while this import was running. Anything it saved is already in — import again to pick up the rest.",
             _ => "This import couldn't finish. The error has been logged — try again shortly."
         };
     }

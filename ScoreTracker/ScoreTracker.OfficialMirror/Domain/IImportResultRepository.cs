@@ -38,4 +38,34 @@ internal interface IImportResultRepository
     /// </summary>
     Task<IReadOnlyList<ImportAttemptRecord>> GetRecent(Guid userId, int take,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     The runs behind a set of score sessions. The startup recovery pass arrives holding
+    ///     session ids — it reads its candidates from the Ledger, which owns the "did the derived
+    ///     work run" marker — and needs each one's run to decide whether the batch had its chance
+    ///     to drain (docs/design/import-restart-recovery.md §3.1). A session with no run is a
+    ///     manual, CSV or API submission and simply comes back absent.
+    /// </summary>
+    Task<IReadOnlyList<ImportRunForSession>> GetForSessions(IReadOnlyCollection<Guid> sessionIds,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Stamps a run the process abandoned. Only ever closes an OPEN row, like
+    ///     <see cref="Close" /> — a run that reported its own ending keeps that ending.
+    /// </summary>
+    Task MarkInterrupted(Guid id, DateTimeOffset finishedAt, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     The newest interrupted run this player has not yet been told about, or null. Drives the
+    ///     one-time notice.
+    /// </summary>
+    Task<ImportAttemptRecord?> GetUnacknowledgedInterrupted(Guid userId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Records that the player has seen the notice for this run.</summary>
+    Task Acknowledge(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default);
 }
+
+/// <summary>An import run seen from its session — what the recovery pass needs to judge it.</summary>
+internal sealed record ImportRunForSession(Guid Id, Guid SessionId, DateTimeOffset StartedAt,
+    DateTimeOffset? FinishedAt);

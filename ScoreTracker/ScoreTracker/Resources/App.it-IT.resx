@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Microsoft ResX Schema
@@ -2124,6 +2124,9 @@
   </data>
   <data name="Everything it can do in your server" xml:space="preserve">
     <value>Tutto quello che sa fare nel tuo server</value>
+  </data>
+  <data name="Everything it saved is already in — but anything it hadn't reached yet is still missing. Importing again picks up whatever didn't land." xml:space="preserve">
+    <value>Tutto ciò che è stato salvato è già qui, ma manca ciò che non era ancora stato letto. Importare di nuovo recupera il resto.</value>
   </data>
   <data name="Evidence" xml:space="preserve">
     <value>Dati</value>
@@ -4618,6 +4621,12 @@
   </data>
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>mirror ufficiale PIU Scores</value>
+  </data>
+  <data name="PIU Scores restarted while your last import was running." xml:space="preserve">
+    <value>PIU Scores si è riavviato mentre la tua ultima importazione era in corso.</value>
+  </data>
+  <data name="PIU Scores restarted while your scores were still importing. Everything it saved is already in — but anything it hadn't reached yet is still missing. Importing again picks up whatever didn't land." xml:space="preserve">
+    <value>PIU Scores si è riavviato mentre le tue schede venivano importate. Tutto ciò che è stato salvato è già qui, ma manca ciò che non era ancora stato letto. Importare di nuovo recupera il resto.</value>
   </data>
   <data name="PIU Scores Supplemented" xml:space="preserve">
     <value>Integrato con PIU Scores</value>
@@ -7724,6 +7733,9 @@
   </data>
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>I tuoi gruppi, la tua regione e il mondo.</value>
+  </data>
+  <data name="Your import didn't finish" xml:space="preserve">
+    <value>La tua importazione non è terminata</value>
   </data>
   <data name="Your invite code" xml:space="preserve">
     <value>Il tuo codice di invito</value>

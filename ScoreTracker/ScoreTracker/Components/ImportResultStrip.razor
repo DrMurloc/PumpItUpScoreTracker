@@ -1,4 +1,4 @@
-@namespace ScoreTracker.Web.Components
+﻿@namespace ScoreTracker.Web.Components
 @using ScoreTracker.OfficialMirror.Contracts
 
 @* The answer to "did my last import work?", above the form that would start the next one
@@ -25,7 +25,7 @@
         else
         {
             <div class="d-flex flex-column" style="gap:.25rem">
-                <MudText Typo="Typo.overline">@(Attempt.NeverFinished ? L["Unfinished"] : L["Couldn't finish"])</MudText>
+                <MudText Typo="Typo.overline">@Label</MudText>
                 <MudText Typo="Typo.body2" data-testid="import-result-summary"><b>@Headline</b></MudText>
                 <MudText Typo="Typo.body2">@Detail</MudText>
                 <MudText Typo="Typo.caption">@Meta</MudText>
@@ -54,6 +54,13 @@
 
     private bool IsFinishedCleanly => Attempt?.Outcome == ImportOutcome.Completed;
 
+    // An interrupted run DID finish, in the sense that something adjudicated it — it just did not
+    // finish its work. "Unfinished" is the honest word for both that and the never-adjudicated
+    // case; "Couldn't finish" belongs to the runs that actually failed at something.
+    private string Label => Attempt!.NeverFinished || Attempt.Outcome == ImportOutcome.Interrupted
+        ? L["Unfinished"]
+        : L["Couldn't finish"];
+
     // An absolute local timestamp rather than "4 minutes ago": a relative phrase needs a unit
     // vocabulary in nine locales, and the exact time is what anybody comparing this against a
     // piugame play history actually wants.
@@ -68,6 +75,7 @@
         ImportOutcome.PiuGameError => L["PIUGame.com stopped responding partway through your last import."],
         ImportOutcome.CredentialRejected => L["PIUGame.com turned your sign-in away."],
         ImportOutcome.PiuScoresError => L["PIU Scores hit an error finishing your last import."],
+        ImportOutcome.Interrupted => L["PIU Scores restarted while your last import was running."],
         _ => L["Your last import started but never reported back."]
     };
 
@@ -77,6 +85,7 @@
             L["Your game tag and avatar may have been updated, but no scores were read. Nothing was lost — try again in a few minutes."],
         ImportOutcome.CredentialRejected => L["Check your PIUGame.com username and password, then import again."],
         ImportOutcome.PiuScoresError => L["The error is logged and your existing scores are untouched. Try again shortly."],
+        ImportOutcome.Interrupted => L["Everything it saved is already in — but anything it hadn't reached yet is still missing. Importing again picks up whatever didn't land."],
         _ => L["It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest."]
     };
 
@@ -92,6 +101,8 @@
         ImportOutcome.PiuGameError => Severity.Warning,
         ImportOutcome.CredentialRejected => Severity.Warning,
         ImportOutcome.PiuScoresError => Severity.Error,
+        // Not our error and not theirs: a deploy landed at an unlucky moment.
+        ImportOutcome.Interrupted => Severity.Info,
         _ => Severity.Info
     };
 }

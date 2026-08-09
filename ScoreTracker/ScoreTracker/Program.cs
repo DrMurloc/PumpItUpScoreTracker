@@ -253,6 +253,8 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHttpClient()
     .AddHostedService<BotHostedService>()
     .AddHostedService<ChartPageCacheWarmer>()
+    // Restart recovery, once per boot. Not a recurring job on purpose — see the type's remarks.
+    .AddHostedService<StartupRecoveryPublisher>()
     .AddMediatR(o =>
     {
         // Post-processors only run when wired through this configuration (a bare DI

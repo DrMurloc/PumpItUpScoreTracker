@@ -110,3 +110,13 @@ Component behavior lands in `Tests.Components` (bUnit, the lowest rung that catc
 form-first render, the saved-credential variant swapping only the credential fields, the
 expander collapsed by default, the importing state disabling the form, dock registration.
 The existing E2E import workflow test keeps covering the wire-to-ledger path unchanged.
+
+## Interrupted runs
+
+`ImportOutcome.Interrupted` joined the strip's vocabulary with restart recovery
+([import-restart-recovery.md](import-restart-recovery.md)). It reads as **Unfinished** rather than
+"Couldn't finish" — a run the process abandoned failed at nothing — carries `Severity.Info`, and
+says that everything already saved is in while whatever the run had not reached is still missing.
+
+The state is written by the startup recovery pass, not by the run itself, so it only ever appears
+on a run whose own `finally` never got to speak.

@@ -85,6 +85,12 @@ public sealed class VerticalBoundaryTests
         // hook stops covering it, the official-leaderboards feed silently goes quiet.
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.OfficialDigestFeedSaga));
+        // The startup recovery pass. Unregistered, a restart mid-import stays unrecovered forever
+        // and every suite still passes, because nothing else sends its message
+        // (docs/design/import-restart-recovery.md §4).
+        Assert.Contains(services,
+            d => d.ServiceType
+                 == typeof(ScoreTracker.OfficialMirror.Application.RecoverInterruptedImportsConsumer));
     }
 
     [Fact]
