@@ -281,15 +281,19 @@ internal sealed class SupplementRollupSaga : IConsumer<RollUpSupplementedLeaderb
         return results;
     }
 
-    private static readonly (string Name, Func<PlayerRatings, int> Pick)[] RatingBoardValues =
+    private static readonly (string Name, Func<PlayerRatings, double> Pick)[] RatingBoardValues =
     {
         (PumbilityBoards.Combined, r => r.Skill),
         (PumbilityBoards.Singles, r => r.Singles),
         (PumbilityBoards.Doubles, r => r.Doubles)
     };
 
-    /// <summary>The three pool sums a PUMBILITY board can rank on.</summary>
-    private readonly record struct PlayerRatings(int Skill, int Singles, int Doubles);
+    /// <summary>
+    ///     The three pool sums a PUMBILITY board can rank on. Doubles, because the board rows
+    ///     these merge into are decimals — rounding on the way in would seat our players against
+    ///     the official ones at a precision the board itself does not use.
+    /// </summary>
+    private readonly record struct PlayerRatings(double Skill, double Singles, double Doubles);
 
     /// <summary>
     ///     A sealed snapshot is normally immutable, which is what makes keying a cache on its

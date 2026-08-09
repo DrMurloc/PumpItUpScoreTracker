@@ -137,7 +137,7 @@ else
     private MixEnum _mix;
     private ChartType? _dimension;
     private PlayerStatsRecord? _stats;
-    private int? _weeklyDelta;
+    private double? _weeklyDelta;
     private double _myLevel;
     private List<MatchRow> _matches = new();
     private string? _headerSlotKey;
@@ -175,7 +175,7 @@ else
                 .ToArray();
             var weekAgo = history.LastOrDefault(h => h.Date <= DateTimeOffset.Now.AddDays(-7));
             _weeklyDelta = weekAgo?.SkillRating is { } baseline && _stats != null
-                ? (int)_stats.SkillRating - baseline
+                ? _stats.SkillRating - baseline
                 : null;
 
             _matches = new List<MatchRow>();

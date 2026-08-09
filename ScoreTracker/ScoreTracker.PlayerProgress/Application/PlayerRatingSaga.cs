@@ -344,10 +344,14 @@ internal sealed class PlayerRatingSaga :
                 cancellationToken);
             if (combined == null) return stats;
 
-            int? RankOn(OfficialBoardReading? board, int pool)
+            // The board reads in decimals, so the pool is compared to it whole. Narrowing to an
+            // int here would rank a 17,195.42 pool as 17,195 and hand back the place of a player
+            // it does not actually tie.
+            int? RankOn(OfficialBoardReading? board, double pool)
             {
                 if (board == null) return null;
-                return board.IsRanked(pool) ? board.PlaceFor(pool) : null;
+                var value = (decimal)pool;
+                return board.IsRanked(value) ? board.PlaceFor(value) : null;
             }
 
             var singles = mix == MixEnum.Phoenix2
