@@ -8,7 +8,7 @@
 
 <nav class="top-nav shell-desktop-only">
     <ShellMenu Label=@L["Play"]>
-        @if (Model.IsLoggedIn && !Model.IsGatedMix)
+        @if (Model.IsLoggedIn)
         {
             <ShellMenuItem Href="/" Icon="@Icons.Material.Filled.Home">@L["Home"]</ShellMenuItem>
         }
@@ -17,13 +17,12 @@
            one, so only ever one is visible. *@
         <ShellMenuItem Href="/TierLists" Icon="@Icons.Material.Filled.Topic" Class="nav-folded-only">@L["Tier Lists"]</ShellMenuItem>
         <ShellMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</ShellMenuItem>
-        @if (Model.IsLoggedIn && !Model.IsGatedMix)
+        @if (Model.IsLoggedIn)
         {
-            <ShellMenuItem Href="/UploadPhoenixScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</ShellMenuItem>
-        }
-        @if (Model.IsLoggedIn && Model.IsGatedMix)
-        {
-            <ShellMenuItem Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</ShellMenuItem>
+            @* One label, two destinations: importing means scraping the official site on a
+               Phoenix mix and uploading a spreadsheet on every older one, because there is no
+               official site left serving them. *@
+            <ShellMenuItem Href="@ImportHref" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</ShellMenuItem>
         }
     </ShellMenu>
 
@@ -33,10 +32,9 @@
        tablet-landscape width on the folded side and every real laptop on this one. *@
     <a href="/TierLists" class="top-nav-btn nav-wide-only">@L["Tier Lists"]</a>
 
-    @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
-       simply don't show (docs/design/legacy-mixes.md). *@
-    @if (!Model.IsGatedMix)
-    {
+    @* Every destination shows on every mix. A page that cannot answer for the mix in view
+       says so on arrival, rather than being hidden from the nav — hiding it made the site
+       look smaller than it is and left no way to find out why (docs/design/legacy-mixes.md). *@
         <ShellMenu Label=@L["My Progress"]>
             @if (Model.IsLoggedIn)
             {
@@ -85,29 +83,29 @@
             <ShellMenuItem Href="/OfficialLeaderboards/Popularity" Icon="@Icons.Material.Filled.TrendingUp">@L["Popularity"]</ShellMenuItem>
             <ShellMenuItem Href="/OfficialLeaderboards/WhatItTakes" Icon="@Icons.Material.Filled.Stairs">@L["What It Takes"]</ShellMenuItem>
         </ShellMenu>
-    }
 
     <ShellMenu Label=@L["Community"]>
-        @if (!Model.IsGatedMix)
-        {
-            <ShellMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</ShellMenuItem>
-        }
+        <ShellMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</ShellMenuItem>
         <ShellMenuItem Href="/CommunityTools" Icon="@Icons.Material.Filled.Extension">@L["Community Tools"]</ShellMenuItem>
             <ShellMenuItem Href="https://discord.gg/MEYvr3bFte" External="true" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</ShellMenuItem>
     </ShellMenu>
 
     <ShellMenu Label=@L["Tools"]>
-        @if (!Model.IsGatedMix)
-        {
-            <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</ShellMenuItem>
-            <ShellMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</ShellMenuItem>
-            <ShellMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</ShellMenuItem>
-            <ShellMenuItem Href="/MixChanges" Icon="@Icons.Material.Filled.Compare">@L["Mix Changes"]</ShellMenuItem>
-        }
+        <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</ShellMenuItem>
+        <ShellMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</ShellMenuItem>
+        <ShellMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</ShellMenuItem>
+        <ShellMenuItem Href="/MixChanges" Icon="@Icons.Material.Filled.Compare">@L["Mix Changes"]</ShellMenuItem>
         <ShellMenuItem Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</ShellMenuItem>
     </ShellMenu>
 </nav>
 
 @code {
     [Parameter] [EditorRequired] public ShellViewModel Model { get; set; } = null!;
+
+    /// <summary>
+    ///     Phoenix mixes import by scraping the official site; older ones upload a spreadsheet,
+    ///     because no official site still serves them.
+    /// </summary>
+    private string ImportHref =>
+        Model.CurrentMix.UsesLegacyScoring() ? "/UploadXXScores" : "/UploadPhoenixScores";
 }

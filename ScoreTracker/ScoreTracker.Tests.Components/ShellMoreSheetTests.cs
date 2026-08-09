@@ -13,15 +13,14 @@ namespace ScoreTracker.Tests.Components;
 /// <summary>
 ///     The phone's More sheet after the nav restructure. The sheet emits ONE grouped list
 ///     that CSS and nav.js present either as an icon grid or as a drill-down, so what is
-///     worth pinning here is the list itself: which groups exist, in what order, what is in
-///     them, and what the legacy-mix gate leaves out. The layout swap is a viewport
-///     behaviour bUnit cannot see.
+///     worth pinning here is the list itself: which groups exist, in what order, and what is
+///     in them. The layout swap is a viewport behaviour bUnit cannot see.
 /// </summary>
 public sealed class ShellMoreSheetTests : ComponentTestBase
 {
     private static readonly Guid UserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-    private static ShellViewModel Model(bool loggedIn = true, bool gated = false,
+    private static ShellViewModel Model(bool loggedIn = true,
         MixEnum mix = MixEnum.Phoenix, bool hasRecap = false,
         IReadOnlyList<TournamentRecord>? events = null)
     {
@@ -32,7 +31,6 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
             AvatarUrl: "https://piu.test/avatar.png",
             CurrentMix: mix,
             ThemeMix: mix,
-            IsGatedMix: gated,
             HasRecap: hasRecap,
             HighlightedEvents: events ?? Array.Empty<TournamentRecord>(),
             ActivePath: "/",
@@ -181,30 +179,51 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
         Assert.Contains($"/Tournament/Stamina/{stamina.Id}", HrefsUnder(sheet, "Compete"));
     }
 
-    [Fact]
-    public void GatedMixKeepsChartsAndDiscordAndDropsTheGatedGroups()
+    /// <summary>
+    ///     A legacy mix reaches the same sheet as any other. Destinations used to be hidden
+    ///     from the nav on pre-XX mixes, which made the site look smaller than it is and left
+    ///     a player no way to find out why — a page that cannot answer for the mix in view
+    ///     says so on arrival instead (docs/design/legacy-mixes.md).
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.XX)]
+    [InlineData(MixEnum.Prime2)]
+    [InlineData(MixEnum.FirstDanceFloor)]
+    public void ALegacyMixSeesTheWholeSheet(MixEnum mix)
     {
-        // A pre-XX mix can't reach most of the app (docs/design/legacy-mixes.md), but the
-        // chart list is the one door it still needs — and Tools is now where that door is,
-        // so the group has to render for gated viewers carrying Charts alone.
-        var sheet = Render(Model(gated: true, mix: MixEnum.XX));
+        var sheet = Render(Model(mix: mix));
 
-        Assert.Equal(new[] { "Community", "Tools" }, GroupNames(sheet));
-        Assert.Equal(new[] { "/Charts" }, HrefsUnder(sheet, "Tools"));
+        Assert.Equal(new[] { "My Progress", "Compete", "Leaderboards", "Community", "Tools" },
+            GroupNames(sheet));
 
         var hrefs = AllHrefs(sheet);
-        Assert.DoesNotContain("/WeeklyCharts", hrefs);
-        Assert.DoesNotContain("/Communities", hrefs);
-        Assert.DoesNotContain("/PhoenixCalculator", hrefs);
-        Assert.Contains(hrefs, h => h.Contains("discord.gg"));
+        Assert.Contains("/Charts", hrefs);
+        Assert.Contains("/WeeklyCharts", hrefs);
+        Assert.Contains("/Communities", hrefs);
+        Assert.Contains("/PhoenixCalculator", hrefs);
         Assert.Contains("/About", hrefs);
     }
 
-    [Fact]
-    public void GatedMixOffersTheXxImporterToSignedInPlayers()
+    /// <summary>
+    ///     Import points at whichever importer the mix uses — scraping the official site on
+    ///     Phoenix, a spreadsheet on everything older. It reached the sheet ONLY on a gated
+    ///     mix before, so a Phoenix player on a phone had no import link at all.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.Phoenix2, "/UploadPhoenixScores")]
+    [InlineData(MixEnum.XX, "/UploadXXScores")]
+    [InlineData(MixEnum.Prime2, "/UploadXXScores")]
+    public void ImportPointsAtTheImporterThatMixUses(MixEnum mix, string expected)
     {
-        Assert.Contains("/UploadXXScores", AllHrefs(Render(Model(gated: true, mix: MixEnum.XX))));
-        Assert.DoesNotContain("/UploadXXScores",
-            AllHrefs(Render(Model(loggedIn: false, gated: true, mix: MixEnum.XX))));
+        Assert.Contains(expected, AllHrefs(Render(Model(mix: mix))));
+    }
+
+    [Fact]
+    public void ImportIsOfferedOnlyToSignedInPlayers()
+    {
+        var hrefs = AllHrefs(Render(Model(loggedIn: false, mix: MixEnum.XX)));
+
+        Assert.DoesNotContain("/UploadXXScores", hrefs);
+        Assert.DoesNotContain("/UploadPhoenixScores", hrefs);
     }
 }

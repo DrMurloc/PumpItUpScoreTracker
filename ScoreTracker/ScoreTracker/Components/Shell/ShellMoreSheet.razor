@@ -22,15 +22,8 @@
             <span data-more-back-label></span>
         </button>
 
-        @* Nav follows LegacyMixGate: destinations a pre-XX mix can't reach yet
-           simply don't show (docs/design/legacy-mixes.md). *@
-        @if (Model.IsGatedMix && Model.IsLoggedIn)
-        {
-            <ShellMenuItem Href="/UploadXXScores" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</ShellMenuItem>
-        }
-
-        @if (!Model.IsGatedMix)
-        {
+        @* Every destination shows on every mix. A page that cannot answer for the mix in view
+           says so on arrival rather than being hidden (docs/design/legacy-mixes.md). *@
             <div class="more-group" data-more-group>
                 <div class="more-group-head" data-more-group-head>
                     <MudIcon Icon="@Icons.Material.Filled.Grade" Size="Size.Small"></MudIcon>
@@ -97,7 +90,6 @@
                     <ShellMenuItem Href="/OfficialLeaderboards/WhatItTakes" Icon="@Icons.Material.Filled.Stairs">@L["What It Takes"]</ShellMenuItem>
                 </div>
             </div>
-        }
 
         <div class="more-group" data-more-group>
             <div class="more-group-head" data-more-group-head>
@@ -106,19 +98,14 @@
                 <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="more-group-chevron"></MudIcon>
             </div>
             <div class="more-group-body">
-                @if (!Model.IsGatedMix)
-                {
-                    <ShellMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</ShellMenuItem>
-                }
+                <ShellMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</ShellMenuItem>
                 <ShellMenuItem Href="/CommunityTools" Icon="@Icons.Material.Filled.Extension">@L["Community Tools"]</ShellMenuItem>
                 <ShellMenuItem Href="https://discord.gg/MEYvr3bFte" External="true" Icon="@Icons.Custom.Brands.Discord">@L["Discord"]</ShellMenuItem>
             </div>
         </div>
 
         @* Charts lives in Play on desktop but under Tools here — the phone's Tools group is a
-           catch-all in a way the desktop menu isn't. The group renders on gated mixes too,
-           carrying Charts alone: the calculators are gated, but the chart list is the one door
-           a pre-XX viewer still needs, and it used to sit ungrouped at the top of this sheet. *@
+           catch-all in a way the desktop menu isn't. *@
         <div class="more-group" data-more-group>
             <div class="more-group-head" data-more-group-head>
                 <MudIcon Icon="@Icons.Material.Filled.Build" Size="Size.Small"></MudIcon>
@@ -127,13 +114,17 @@
             </div>
             <div class="more-group-body">
                 <ShellMenuItem Href="/Charts" Icon="@Icons.Material.Filled.List">@L["Charts"]</ShellMenuItem>
-                @if (!Model.IsGatedMix)
+                @if (Model.IsLoggedIn)
                 {
-                    <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</ShellMenuItem>
-                    <ShellMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</ShellMenuItem>
-                    <ShellMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</ShellMenuItem>
-                    <ShellMenuItem Href="/MixChanges" Icon="@Icons.Material.Filled.Compare">@L["Mix Changes"]</ShellMenuItem>
+                    @* Import used to appear here only on a gated mix, so on a phone every
+                       Phoenix player had no link to it at all. One entry for everyone, pointed
+                       at whichever import that mix uses. *@
+                    <ShellMenuItem Href="@ImportHref" Icon="@Icons.Material.Filled.CloudDownload">@L["Import Scores"]</ShellMenuItem>
                 }
+                <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</ShellMenuItem>
+                <ShellMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</ShellMenuItem>
+                <ShellMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</ShellMenuItem>
+                <ShellMenuItem Href="/MixChanges" Icon="@Icons.Material.Filled.Compare">@L["Mix Changes"]</ShellMenuItem>
             </div>
         </div>
 
@@ -143,4 +134,8 @@
 
 @code {
     [Parameter] [EditorRequired] public ShellViewModel Model { get; set; } = null!;
+
+    /// <summary>Same split as the desktop nav: scrape on Phoenix, spreadsheet on everything older.</summary>
+    private string ImportHref =>
+        Model.CurrentMix.UsesLegacyScoring() ? "/UploadXXScores" : "/UploadPhoenixScores";
 }
