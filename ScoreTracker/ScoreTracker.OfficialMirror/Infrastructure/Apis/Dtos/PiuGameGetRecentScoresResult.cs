@@ -16,6 +16,15 @@ internal sealed class PiuGameGetRecentScoresResult
     ///     all zero.
     /// </summary>
     public PhoenixPlate? Plate { get; set; }
+
+    /// <summary>
+    ///     The grade the site itself printed on the card, or null where the card carried no
+    ///     grade art. Read but never stored: a record's LetterGrade is computed from its score,
+    ///     so this is the only channel through which the site can contradict our own cutoff
+    ///     table rather than us comparing our answer to itself.
+    /// </summary>
+    public PhoenixLetterGrade? Grade { get; set; }
+
     public int NoteCount { get; set; }
     public bool IsBroken { get; set; }
     public int Perfects { get; set; }
