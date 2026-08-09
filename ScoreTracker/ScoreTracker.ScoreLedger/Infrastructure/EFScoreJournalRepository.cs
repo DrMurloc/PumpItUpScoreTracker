@@ -191,6 +191,46 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId,
+        int limit, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Grouped in SQL and capped there: the aggregate is served entirely out of
+        // IX_ScoreEventJournal_ChartId_MixId, so nothing walks the journal and nothing comes back
+        // that the board will not draw.
+        //
+        // The tie break is the player's FIRST observed clear of the chart, not the timestamp of the
+        // low run itself — picking the producing row's date needs a per-group correlated aggregate
+        // that does not translate, and "who has been at this longest" breaks a tie just as fairly.
+        //
+        // No plate: the column is nvarchar(max) so it cannot ride the index without a key lookup
+        // per row, and a limbo pass is a Rough Game by construction. The letter grade — the part
+        // that actually reads on the board — is derived from the score by ScoreBreakdown.
+        var rows = await (from j in database.Set<ScoreEventJournalEntity>()
+                join u in database.User on j.UserId equals u.Id
+                where j.ChartId == chartId && j.MixId == mixId && !j.IsBroken && j.Score != null
+                      && u.IsPublic
+                group new { j.Score, j.OccurredAt } by new { j.UserId, u.Name }
+                into g
+                select new
+                {
+                    g.Key.UserId,
+                    g.Key.Name,
+                    Lowest = g.Min(x => x.Score!.Value),
+                    FirstClear = g.Min(x => x.OccurredAt)
+                })
+            .OrderBy(r => r.Lowest)
+            .ThenBy(r => r.FirstClear)
+            .Take(limit)
+            .ToArrayAsync(cancellationToken);
+
+        return rows
+            .Select(r => new UserPhoenixScore(r.UserId, chartId, r.Name, r.Lowest, null, false, true,
+                r.FirstClear))
+            .ToArray();
+    }
+
     public async Task DeleteForUser(Guid userId, MixEnum? mix, CancellationToken cancellationToken)
     {
         var mixId = mix == null ? (Guid?)null : MixIds.For(mix.Value);

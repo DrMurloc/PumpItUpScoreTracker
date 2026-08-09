@@ -3259,6 +3259,9 @@
   <data name="Lowest level" xml:space="preserve">
     <value>最低レベル</value>
   </data>
+  <data name="Lowest Passing" xml:space="preserve">
+    <value>最低クリア</value>
+  </data>
   <data name="Lv" xml:space="preserve">
     <value>Lv</value>
   </data>

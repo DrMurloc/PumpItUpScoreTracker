@@ -8,6 +8,7 @@
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.Rivals.Contracts
 @using ScoreTracker.Rivals.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
 
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.Models
@@ -26,7 +27,7 @@
    details page, and in the details dialog without three implementations of it. The dialog is now
    a MudDialog wrapper around this. *@
 <div class="cld-scopes">
-    @foreach (var scope in Scopes)
+    @foreach (var scope in VisibleScopes)
     {
         <button type="button" class="@ScopeClass(scope)" disabled="@(!IsAvailable(scope))"
                 data-testid="@($"cld-scope-{scope}")"
@@ -132,14 +133,28 @@ else
         ///     to a week old, which is why it is its own scope rather than rows mixed into
         ///     another one (D28).
         /// </summary>
-        Official
+        Official,
+
+        /// <summary>
+        ///     How low can you clear it — the limbo board, ranked ASCENDING on each player's lowest
+        ///     observed pass. Only exists on charts flagged by hand, so unlike every scope above it
+        ///     is hidden rather than greyed when it does not apply: a permanently disabled chip on
+        ///     every chart in the game is furniture nobody asked for
+        ///     (docs/design/limbo-leaderboard.md).
+        /// </summary>
+        LowestPassing
     }
 
     private static readonly LeaderboardScope[] Scopes =
     {
         LeaderboardScope.World, LeaderboardScope.Region, LeaderboardScope.Community,
-        LeaderboardScope.Rivals, LeaderboardScope.CompetitivePeers, LeaderboardScope.Official
+        LeaderboardScope.Rivals, LeaderboardScope.CompetitivePeers, LeaderboardScope.Official,
+        LeaderboardScope.LowestPassing
     };
+
+    /// <summary>Limbo is the one scope that vanishes rather than greying — see the enum member.</summary>
+    private IEnumerable<LeaderboardScope> VisibleScopes =>
+        Scopes.Where(s => s != LeaderboardScope.LowestPassing || _isLimboChart);
 
     [Parameter] public Guid ChartId { get; set; }
 
@@ -181,6 +196,7 @@ else
     private IReadOnlyList<RivalSubject> _rivals = Array.Empty<RivalSubject>();
     private IReadOnlySet<Guid> _rivalUserIds = new HashSet<Guid>();
     private IReadOnlySet<string> _rivalGhostNames = new HashSet<string>();
+    private bool _isLimboChart;
     private OfficialChartBoardRecord? _officialBoard;
     private IReadOnlySet<Guid> _officialPublicLinks = new HashSet<Guid>();
     private IReadOnlyDictionary<string, Uri?> _officialAvatars = new Dictionary<string, Uri?>();
@@ -218,6 +234,11 @@ else
         // query measurably delayed everything else the dialogue renders, deterministically enough
         // to fail the video assertion in the E2E suite. The chip is always enabled and the read
         // happens on selection instead, cached for the rest of the chart's life.
+
+        // The limbo flag IS read here, and affordably: it answers from a five-minute cache over a
+        // two-column table, so after the first chart view of the window it is a set lookup. The
+        // Official chip's problem was a mirror query per view, which this is not.
+        _isLimboChart = (await Mediator.Send(new GetLimboChartsQuery(Mix))).Contains(ChartId);
 
         if (CurrentUser.IsLoggedIn)
         {
@@ -276,12 +297,17 @@ else
         // skips the tie block, so five perfect games are five #1s and the best score under
         // them is #6. Within a tie the oldest record leads — whoever got there first reads
         // first, which is the only ordering a tie has any claim to.
+        //
+        // Limbo runs the other way: #1 is the LOWEST pass. The percentile below is derived from
+        // place rather than score, so it needs no arm of its own — the top of the rarity ramp
+        // follows #1 in either direction, which on this board is the point and not a bug.
         _rows = new List<Row>();
         var total = scores.Count;
         var place = 1;
-        foreach (var tie in scores
-                     .GroupBy(s => (int)s.Score)
-                     .OrderByDescending(g => g.Key))
+        var byScore = scores.GroupBy(s => (int)s.Score);
+        foreach (var tie in _scope == LeaderboardScope.LowestPassing
+                     ? byScore.OrderBy(g => g.Key)
+                     : byScore.OrderByDescending(g => g.Key))
         {
             var tiePlace = place;
             foreach (var score in tie.OrderBy(s => s.RecordedAt ?? DateTimeOffset.MaxValue))
@@ -311,6 +337,14 @@ else
                 var peers = (await Mediator.Send(new GetCompetitivePlayersQuery(_chart.Type, Mix))).ToHashSet();
                 _communityUserIds = _clubmates;
                 return _world.Where(s => peers.Contains(s.UserId)).ToArray();
+            }
+            case LeaderboardScope.LowestPassing:
+            {
+                // NOT a filter over _world either — that array is best attempts, and a best is the
+                // one thing a limbo run never is. These rows come off the journal, where the low
+                // pass survives whatever the player scored afterwards.
+                _communityUserIds = _clubmates;
+                return (await Mediator.Send(new GetLowestPassingScoresQuery(ChartId, Mix))).ToArray();
             }
             case LeaderboardScope.Rivals:
             {
@@ -429,6 +463,8 @@ else
         // chart view to grey one chip is not a trade worth making (see LoadChartAsync). A chart
         // the mirror does not cover says so in the empty state instead.
         LeaderboardScope.Official => true,
+        // Never greyed, because it is never shown unless the chart is flagged (VisibleScopes).
+        LeaderboardScope.LowestPassing => _isLimboChart,
         _ => true
     };
 
@@ -487,6 +523,7 @@ else
         LeaderboardScope.Rivals => L["Rivals"],
         LeaderboardScope.CompetitivePeers => L["Competitive Peers"],
         LeaderboardScope.Official => L["Official board"],
+        LeaderboardScope.LowestPassing => L["Lowest Passing"],
         _ => L["World"]
     };
 

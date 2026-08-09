@@ -1,5 +1,6 @@
 using MassTransit;
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
@@ -21,7 +22,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         IMessageScheduler scheduler,
         IPlayerScoreBatchAccumulator batches,
         IScoreJournalRepository journal,
-        IScoreSessionRepository sessions)
+        IScoreSessionRepository sessions,
+        IMemoryCache cache)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
         IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
         IConsumer<FlushOverdueScoreBatchesCommand>
@@ -74,6 +76,10 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         await journal.Append(new ScoreJournalEntry(recordedAt, request.Source, user.User.Id,
                 request.ChartId, request.Score, plate, request.IsBroken, request.Mix, sessionId, judgements),
             cancellationToken);
+        // A first pass on a limbo chart is journaled here rather than as an observation, and it may
+        // be the player's only one — so this path evicts too. Remove on an absent key is a no-op,
+        // which is why nothing checks whether the chart is flagged first.
+        cache.Remove(LedgerCacheKeys.LimboBoard(request.Mix, request.ChartId));
         var isNewScore = (existing?.IsBroken ?? true) && !request.IsBroken;
         var isUpscore = existing?.Score != null && request.Score != null && existing.Score < request.Score;
         if (!isNewScore && !isUpscore) return;
