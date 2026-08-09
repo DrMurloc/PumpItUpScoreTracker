@@ -141,7 +141,11 @@ namespace ScoreTracker.EventCompetition.Application
 
                 var tournament = new TournamentConfiguration(Guid.NewGuid(),
                     $"March of Murlocs {season} {newYear} - {chartType}s",
-                    scoring, false, true)
+                    // Highlighted: the shell's Compete menu lists HighlightedEvents, so this is
+                    // what puts a running season in the nav. The loop at the end of this method
+                    // unhighlights the seasons it replaces, which only means anything if the new
+                    // ones arrive highlighted.
+                    scoring, true, true)
                 {
                     AllowRepeats = false,
                     EndDate = newEndDate,

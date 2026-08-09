@@ -268,6 +268,18 @@ public sealed class MarchOfMurlocsHandlerTests
     }
 
     [Fact]
+    public async Task CycleHighlightsTheSeasonsItCreates()
+    {
+        // The shell's Compete menu renders HighlightedEvents, so an unhighlighted season is one
+        // no player can navigate to. Every MoM row in production carried IsHighlighted = 0.
+        var springEnd = new DateTimeOffset(2026, 6, 30, 23, 59, 59, TimeSpan.FromHours(-5));
+        var created = await Cycle(springEnd, new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero));
+
+        Assert.Equal(2, created.Length);
+        Assert.All(created, t => Assert.True(t.IsHighlighted));
+    }
+
+    [Fact]
     public async Task CycleCatchesUpToTheCurrentQuarterAfterMissingSeveral()
     {
         // Five quarters behind: the quarter following the last season (June 2025) has itself long
