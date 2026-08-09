@@ -1,6 +1,6 @@
 # March of Murlocs Overhaul
 
-Status: **planned**. No code written; this doc is the plan. Exploration session 2026-08-09.
+Status: **Slice 0 landed; Slices 1–5 planned.** Exploration session 2026-08-09.
 
 March of Murlocs is the site's quarterly stamina ladder: 1 hour 45 minutes to bank as many
 points as you can, scored with PUMBILITY+. It has been running on autopilot since
@@ -52,7 +52,7 @@ deletion rather than a rule change (§3).
 
 ## 2. Why now — six defects, all confirmed against production-synced data
 
-### 2.1 The runaway (live, still firing)
+### 2.1 The runaway — **fixed in Slice 0**; the junk rows are still owner-run cleanup
 
 [`MarchOfMurlocsHandler.cs:65`](../../ScoreTracker/ScoreTracker.EventCompetition/Application/MarchOfMurlocsHandler.cs:65)
 maps "month the last season ended" to "month the next season ends" in quarters:
@@ -81,12 +81,17 @@ Once per day at 11:00 UTC since 2026-07-01. Measured blast radius:
 The regression test added with the previous runaway fix covers March→June only, which is why
 this hole survived.
 
-**A second, latent variant:** `newEndDate` is built from `_dateTime.Now.Year` with the computed
-month, so any cycle that runs *late* — missed season, downtime, manual trigger while behind —
-mints another past-dated season and restarts the loop. Fixing only the switch arm leaves this
-in place. §6 removes the whole class.
+**A second, latent variant:** `newEndDate` was built from `_dateTime.Now.Year` with the computed
+month, so any cycle that ran *late* — missed season, downtime, manual trigger while behind —
+minted another past-dated season and restarted the loop. Fixing only the switch arm would have
+left this in place.
 
-### 2.2 MoM has never appeared in the nav
+**Slice 0 fixed both**: the quarter map is arithmetic that cannot omit a month, and the season
+advances a quarter at a time until it lies ahead of now, so a cycle five quarters behind lands
+on the current quarter and creates one season rather than a backlog. §6 then removes the whole
+*class* by making a duplicate season impossible in the schema.
+
+### 2.2 MoM has never appeared in the nav — **fixed in Slice 0**
 
 [`MarchOfMurlocsHandler.cs:114`](../../ScoreTracker/ScoreTracker.EventCompetition/Application/MarchOfMurlocsHandler.cs:114)
 constructs each season with `isHighlighted: false`, and `ShellNav` renders its event links from
@@ -386,7 +391,7 @@ Ordered so that UI decisions can still move the schema.
 
 | Slice | Contents | Depends on |
 |---|---|---|
-| **0 — Stop the bleeding** | Run `mom-cleanup.sql` (incl. the empty-season prune). Fix the `6 => 9` arm **and** the past-date guard on the existing table. Fix `isHighlighted`. | — |
+| **0 — Stop the bleeding** ✅ *code landed* | Quarter map replaced with arithmetic; season year derived from the previous season with catch-up to the current quarter; seasons created highlighted. `MarchOfMurlocsHandler` only — no schema change. **Still owner-run: `mom-cleanup.sql`, including the empty-season prune.** | — |
 | **1 — Settle on mocks** | UX/UI pass: season page, board page, record flow, targets screen. Design only, no code. | 0 |
 | **2 — Own the data** | Five tables, model contribution, purge manifest, repository, migrate five seasons, cycle rewritten onto `MoMSeason`. Pages repointed, visually unchanged. | 1 |
 | **3 — Per-mix boards** | Four boards, mix-correct grading and snapshots, PUMBILITY2+, Phoenix 2 admin-gated. | 2 |
