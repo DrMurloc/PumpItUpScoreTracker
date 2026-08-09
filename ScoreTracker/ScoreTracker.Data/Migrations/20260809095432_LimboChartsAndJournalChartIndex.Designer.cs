@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260809095432_LimboChartsAndJournalChartIndex")]
+    partial class LimboChartsAndJournalChartIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -190,136 +193,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("CultureCode");
 
                     b.ToTable("SongNameLanguage", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.ChartComments.Infrastructure.Entities.CommentConsentEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("AgreedToTermsAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset?>("ConsentedToPublicIdentityAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("TermsVersion")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("ChartCommentConsent", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.ChartComments.Infrastructure.Entities.CommentEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Audience")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<Guid>("ChartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("CommunityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("DeletedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset?>("EditedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid?>("ParentCommentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("SourceLanguage")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentCommentId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("ChartId", "Audience", "CommunityId");
-
-                    b.ToTable("ChartComment", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.ChartComments.Infrastructure.Entities.CommentRevisionEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CommentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("ReplacedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CommentId");
-
-                    b.ToTable("ChartCommentRevision", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.ChartComments.Infrastructure.Entities.CommentVoteEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CommentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("CommentId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("ChartCommentVote", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.ChartDifficultyRatingEntity", b =>
@@ -2580,8 +2453,8 @@ namespace ScoreTracker.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("CoOpRating")
-                        .HasColumnType("float");
+                    b.Property<int>("CoOpRating")
+                        .HasColumnType("int");
 
                     b.Property<double>("CompetitiveLevel")
                         .HasColumnType("float");
@@ -2601,8 +2474,8 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<double>("SinglesLevel")
                         .HasColumnType("float");
 
-                    b.Property<double?>("SkillRating")
-                        .HasColumnType("float");
+                    b.Property<int?>("SkillRating")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -2713,8 +2586,8 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("ClearCount")
                         .HasColumnType("int");
 
-                    b.Property<double>("CoOpRating")
-                        .HasColumnType("float");
+                    b.Property<int>("CoOpRating")
+                        .HasColumnType("int");
 
                     b.Property<double>("CompetitiveLevel")
                         .HasColumnType("float");
@@ -2722,8 +2595,8 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<double>("DoublesCompetitiveLevel")
                         .HasColumnType("float");
 
-                    b.Property<double>("DoublesRating")
-                        .HasColumnType("float");
+                    b.Property<int>("DoublesRating")
+                        .HasColumnType("int");
 
                     b.Property<int?>("EstimatedDoublesPumbilityRank")
                         .HasColumnType("int");
@@ -2743,11 +2616,11 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<double>("SinglesCompetitiveLevel")
                         .HasColumnType("float");
 
-                    b.Property<double>("SinglesRating")
-                        .HasColumnType("float");
+                    b.Property<int>("SinglesRating")
+                        .HasColumnType("int");
 
-                    b.Property<double>("SkillRating")
-                        .HasColumnType("float");
+                    b.Property<int>("SkillRating")
+                        .HasColumnType("int");
 
                     b.Property<int>("TotalRating")
                         .HasColumnType("int");
@@ -2808,8 +2681,8 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int?>("PeerPgCount")
                         .HasColumnType("int");
 
-                    b.Property<double?>("PumbilityGain")
-                        .HasColumnType("float");
+                    b.Property<int?>("PumbilityGain")
+                        .HasColumnType("int");
 
                     b.Property<int?>("PumbilityRank")
                         .HasColumnType("int");

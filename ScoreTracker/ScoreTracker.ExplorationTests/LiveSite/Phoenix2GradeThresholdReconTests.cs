@@ -289,8 +289,20 @@ public sealed class Phoenix2GradeThresholdReconTests : IClassFixture<PiuGameSess
     // The complete set of sub-800k rows in the mirrored 2026-07-19 P2 snapshot (7 B-band, 1
     // C-band across all 1,434 boards' top-300) — the only live rows that can pin the B and C
     // floors, and 799,815 brackets the A floor from below.
+    //
+    // Refreshed from snapshot 9 (2026-08-02): the first three are the ONLY sub-500k rows that
+    // have ever appeared in the mirror, all on Gargoyle - FULL SONG - S21 at places 251–253.
+    // ⚠ A chart board holds TOP 300 and EVICTS as it fills — by 2026-08-08 that board had
+    // reached 300 entries and its cutline had risen to 888,407, so these three are already gone
+    // from the live site. They are kept as targets because "not found" is the informative
+    // result: it dates the eviction, and it is why the mirror snapshot is the only durable
+    // record of a low score. Boards still far from the 300 cap (Gargoyle D20 held 86 rows) keep
+    // their low rows visible, which is where the B floor can still be read.
     private static readonly LowRowTarget[] LowRowTargets =
     {
+        new("SOUND#1770", "Gargoyle", "s", 21, 448852, 253),
+        new("HC#7045", "Gargoyle", "s", 21, 476838, 252),
+        new("XVIRUSX#2791", "Gargoyle", "s", 21, 482128, 251),
         new("SCARFACE#5159", "Gargoyle", "s", 21, 690647, 83),
         new("HAIRDA100#4445", "Gargoyle", "d", 20, 707042, 38),
         new("BKRYU#8351", "Dead End", "s", 25, 781105, 5),
@@ -380,6 +392,115 @@ public sealed class Phoenix2GradeThresholdReconTests : IClassFixture<PiuGameSess
         Assert.True(found >= 5,
             $"Only {found} of {LowRowTargets.Length} targeted sub-800k rows were located — the boards may have " +
             "shifted too much since the mirror snapshot; re-derive targets from a fresh import.");
+    }
+
+    /// <summary>
+    ///     The deepest board in the game, read to the bottom. SQL over the mirror (snapshot 9,
+    ///     2026-08-02) says <c>Gargoyle - FULL SONG - S21</c> is the ONLY Phoenix 2 chart board
+    ///     that reaches below 700k — 255 rows down to 448,852, and every sub-500k row in the
+    ///     entire mirror sits on it. Targeting individual known rows (as the sub800k fact does)
+    ///     wastes that: crawling the whole board yields a dense (score, grade) sample across the
+    ///     one score range where our floors are still guesses.
+    ///     <para>
+    ///         What it can settle: the D floor (500k) and C floor (600k) are owner-ratified
+    ///         working values, unobservable when the deepest row anywhere was 690,647. A row that
+    ///         renders D below 500,000 moves the floor; a row that renders F confirms the floor
+    ///         sits above that score. Anything landing in the 482,128–690,647 gap pins both.
+    ///     </para>
+    /// </summary>
+    [LiveSiteFact]
+    public async Task Phoenix2_deepest_board_read_to_the_bottom_pins_the_low_floors()
+    {
+        var ct = CancellationToken.None;
+        var client = await _fixture.GetAuthenticatedPhoenix2Client(ct);
+        Directory.CreateDirectory(DumpDir);
+
+        // Level 21 has only the FULL SONG cut, so type+level identifies the board unambiguously
+        // among the eight Gargoyle boards.
+        var probe = new LowRowTarget("", "Gargoyle", "s", 21, 0, 0);
+        var listHtml = await Fetch(client,
+            $"https://piugame.com/leaderboard/over_ranking.php?lv=&search={Uri.EscapeDataString(probe.Song)}", ct);
+        var boardId = FindBoardId(listHtml, probe);
+        Assert.True(boardId != null, "Could not locate the Gargoyle - FULL SONG - S21 board from the list search.");
+
+        // ⚠ over_ranking_view.php IGNORES ?page= — it serves the whole board in one document
+        // ("TOP 300" in its own header, and the markup carries no pagination links at all).
+        // Learned 2026-08-08 by crawling 40 pages and getting the identical 300 rows every time;
+        // stop as soon as a page repeats so this stays one request in practice.
+        var observations = new List<Observation>();
+        var seenPages = new HashSet<string>();
+        for (var page = 1; page <= 40; page++)
+        {
+            await Task.Delay(300, ct);
+            var html = await Fetch(client,
+                $"https://piugame.com/leaderboard/over_ranking_view.php?no={boardId}&page={page}", ct);
+            var rows = ExtractRows(html, "//div[contains(@class,'rangking_list_w')]//li", $"deepboard p{page}");
+            if (rows.Count == 0)
+            {
+                _output.WriteLine($"page {page}: no rows — bottom of the board");
+                break;
+            }
+
+            await File.WriteAllTextAsync(Path.Combine(DumpDir, $"p2_deepboard_p{page}.html"), html, ct);
+            var fingerprint = string.Join(",", rows.Select(r => r.Score));
+            if (!seenPages.Add(fingerprint))
+            {
+                _output.WriteLine($"page {page}: identical to a page already read — ?page= is ignored, stopping");
+                break;
+            }
+
+            observations.AddRange(rows);
+            _output.WriteLine($"page {page}: {rows.Count} rows, scores {rows.Min(r => r.Score):N0}–{rows.Max(r => r.Score):N0}");
+        }
+
+        Assert.NotEmpty(observations);
+        _output.WriteLine("");
+        _output.WriteLine($"=== {observations.Count} (score, grade) samples off one board ===");
+
+        _output.WriteLine("");
+        _output.WriteLine("lowest 30 rows, ascending — the boundary is eyeballable here:");
+        foreach (var o in observations.OrderBy(o => o.Score).Take(30))
+        {
+            var ours = PhoenixScore.From(o.Score).LetterGradeFor(MixEnum.Phoenix2);
+            _output.WriteLine($"  {o.Score,9:N0}  site {o.SiteGrade.GetName(),-4} ours {ours.GetName(),-4}" +
+                              (o.SiteGrade == ours ? "" : "   <== FLOOR MISMATCH"));
+        }
+
+        _output.WriteLine("");
+        _output.WriteLine($"{"grade",-6} {"observed min",13} {"observed max",13} {"our floor",11}  n");
+        foreach (var g in observations.Select(o => o.SiteGrade).Distinct().OrderBy(g => g))
+        {
+            var band = observations.Where(o => o.SiteGrade == g).ToList();
+            _output.WriteLine($"{g.GetName(),-6} {band.Min(o => o.Score),13:N0} {band.Max(o => o.Score),13:N0} " +
+                              $"{(int)g.GetMinimumScoreFor(MixEnum.Phoenix2),11:N0}  {band.Count}");
+        }
+
+        // The floor a grade's lowest observed score implies, against the value we ship.
+        _output.WriteLine("");
+        var mismatches = observations
+            .Where(o => o.SiteGrade != PhoenixScore.From(o.Score).LetterGradeFor(MixEnum.Phoenix2))
+            .OrderBy(o => o.Score).ToList();
+        foreach (var o in mismatches)
+            _output.WriteLine($"MISMATCH {o.Score:N0}: site says {o.SiteGrade.GetName()}, " +
+                              $"we say {PhoenixScore.From(o.Score).LetterGradeFor(MixEnum.Phoenix2).GetName()}");
+
+        var below500 = observations.Where(o => o.Score < 500_000).ToList();
+        _output.WriteLine("");
+        _output.WriteLine(below500.Count == 0
+            ? "[D floor] no sub-500k rows on this board today — the D floor stays a working value"
+            : $"[D floor] {below500.Count} sub-500k rows, all rendering " +
+              $"{string.Join("/", below500.Select(o => o.SiteGrade.GetName()).Distinct())} " +
+              $"(lowest {below500.Min(o => o.Score):N0}) — " +
+              (below500.All(o => o.SiteGrade == PhoenixLetterGrade.F)
+                  ? "F, so the D floor is ABOVE " + below500.Max(o => o.Score).ToString("N0")
+                  : "NOT all F, so the D floor is at or BELOW " + below500.Max(o => o.Score).ToString("N0")));
+
+        Assert.True(mismatches.Count == 0,
+            $"{mismatches.Count} of {observations.Count} board rows disagree with our Phoenix 2 grade floors — " +
+            $"listed above, lowest first. This is the instrument reporting a real threshold, not a flake: " +
+            $"the site's own grade art is truth. Dumps in {DumpDir}.");
+        _output.WriteLine("");
+        _output.WriteLine($"every one of {observations.Count} rows agrees with our floors");
     }
 
     private static string? FindBoardId(string listHtml, LowRowTarget target)

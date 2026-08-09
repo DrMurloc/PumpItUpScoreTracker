@@ -39,6 +39,22 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
         // Session lookups skip the pre-capture rows (SessionId is never backfilled).
         modelBuilder.Entity<ScoreEventJournalEntity>().HasIndex(e => e.SessionId)
             .HasFilter("[SessionId] IS NOT NULL");
+        // Covers the limbo board's one read: every player's plays on ONE chart. The three
+        // indexes above all lead with UserId, so without this it scans the whole journal.
+        // Source is deliberately not included — nothing filters on it (limbo-leaderboard D6)
+        // and nvarchar(32) costs a third of the index for nothing. OccurredAt is, because the
+        // board's tie order is by date. Built ONLINE: the bundle applies against the live table.
+        modelBuilder.Entity<ScoreEventJournalEntity>()
+            .HasIndex(e => new { e.ChartId, e.MixId })
+            .IncludeProperties(e => new { e.UserId, e.Score, e.IsBroken, e.OccurredAt })
+            .IsCreatedOnline();
+
+        // Presence-only: the charts carrying a limbo leaderboard, inserted by hand
+        // (docs/design/limbo-leaderboard.md D1). No FK onto Chart — a flag naming a chart that
+        // does not exist yet is inert rather than a failed INSERT, which is the friendlier
+        // shape for a table whose only writer is a person at a SQL prompt.
+        modelBuilder.Entity<LimboChartEntity>().ToTable("LimboChart")
+            .HasKey(e => new { e.MixId, e.ChartId });
         modelBuilder.Entity<PhoenixRecordStatsEntity>().ToTable("PhoenixRecordStats");
 
         modelBuilder.Entity<BestAttemptEntity>().ToTable("BestAttempt")

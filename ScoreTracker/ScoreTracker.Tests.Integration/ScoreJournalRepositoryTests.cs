@@ -266,10 +266,71 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         Assert.All(phoenix, e => Assert.Equal(MixEnum.Phoenix, e.Mix));
     }
 
+    [Fact]
+    public async Task TheLimboBoardTakesEachPlayersLowestPassAscending()
+    {
+        var low = await _seed.SeedUserAsync("LOWBALLER");
+        var higher = await _seed.SeedUserAsync("TRIER");
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        // The lowballer's own best is journaled too — the board must take their MIN, not their best.
+        await repo.Append(Entry(low, chart, Now.AddDays(-3), 962000), CancellationToken.None);
+        await repo.AppendObservations(new[] { Entry(low, chart, Now.AddDays(-1), 312004) },
+            CancellationToken.None);
+        await repo.Append(Entry(higher, chart, Now, 640500), CancellationToken.None);
+
+        var board = await repo.GetLowestPassingPlays(MixEnum.Phoenix, chart, 100, CancellationToken.None);
+
+        Assert.Equal(2, board.Count);
+        Assert.Equal(312004, (int)board[0].Score);
+        Assert.Equal("LOWBALLER", board[0].UserName.ToString());
+        Assert.Equal(640500, (int)board[1].Score);
+    }
+
+    [Fact]
+    public async Task TheLimboBoardExcludesBreaksAndPrivatePlayers()
+    {
+        var hidden = await _seed.SeedUserAsync("HIDDEN", isPublic: false);
+        var breaker = await _seed.SeedUserAsync("BREAKER");
+        var clearer = await _seed.SeedUserAsync("CLEARER");
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        await repo.AppendObservations(new[] { Entry(hidden, chart, Now, 120000) }, CancellationToken.None);
+        // Failing with a low score is not the achievement — surviving with one is (D4).
+        await repo.AppendObservations(new[] { Entry(breaker, chart, Now, 140000, isBroken: true) },
+            CancellationToken.None);
+        await repo.AppendObservations(new[] { Entry(clearer, chart, Now, 480000) }, CancellationToken.None);
+
+        var board = await repo.GetLowestPassingPlays(MixEnum.Phoenix, chart, 100, CancellationToken.None);
+
+        var only = Assert.Single(board);
+        Assert.Equal("CLEARER", only.UserName.ToString());
+    }
+
+    [Fact]
+    public async Task TheLimboBoardIsMixScopedAndCapped()
+    {
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        foreach (var score in new[] { 500000, 400000, 300000 })
+            await repo.AppendObservations(
+                new[] { Entry(await _seed.SeedUserAsync(), chart, Now, score) }, CancellationToken.None);
+        // Same chart id, other mix: a flagged chart on Phoenix 2 must not serve Phoenix's rows.
+        await repo.AppendObservations(
+            new[] { Entry(await _seed.SeedUserAsync(), chart, Now, 100000, mix: MixEnum.Phoenix2) },
+            CancellationToken.None);
+
+        var capped = await repo.GetLowestPassingPlays(MixEnum.Phoenix, chart, 2, CancellationToken.None);
+        var otherMix = await repo.GetLowestPassingPlays(MixEnum.Phoenix2, chart, 100, CancellationToken.None);
+
+        Assert.Equal(new[] { 300000, 400000 }, capped.Select(r => (int)r.Score).ToArray());
+        Assert.Equal(100000, (int)Assert.Single(otherMix).Score);
+    }
+
     private static ScoreJournalEntry Entry(Guid userId, Guid chartId, DateTimeOffset at, int score,
-        Guid? sessionId = null, MixEnum mix = MixEnum.Phoenix)
+        Guid? sessionId = null, MixEnum mix = MixEnum.Phoenix, bool isBroken = false)
     {
         return new ScoreJournalEntry(at, ScoreJournalEntry.ManualSource, userId, chartId,
-            PhoenixScore.From(score), PhoenixPlate.FairGame, false, mix, sessionId);
+            PhoenixScore.From(score), isBroken ? null : PhoenixPlate.FairGame, isBroken, mix, sessionId);
     }
 }

@@ -576,6 +576,16 @@ Noted for the record: the data says 120/min would never be noticed by an honest 
 players means a full sweep is ~500 requests. 600 is the owner's number and it is generous, which is
 the right way to be wrong.
 
+**Superseded 2026-08-09 — personal is 600/min too.** The 60 above was sized for a person making
+occasional reads, which is not the heaviest honest thing a personal token does. The local-dev
+harness rebuilds a database from `api/v2` on a personal token, and that is 483 catalog requests
+(68 song pages, 321 chart pages, 93 tier-list calls across 31 mixes) plus up to 48 pages of the
+caller's own scores — roughly 500, back to back, which 60/min could never fit. It surfaced as
+`/Dev/Populate` failing on a 429 for someone setting the app up for the first time. Two further
+corrections to the text above: it is implemented as a **fixed window**, not the token bucket
+described, and raising the personal tier also raises the shared `"anonymous"` bucket, since an
+unauthenticated request falls into the same tier.
+
 ---
 
 ## 8. The console

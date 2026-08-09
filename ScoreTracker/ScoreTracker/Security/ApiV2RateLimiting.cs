@@ -16,13 +16,19 @@ namespace ScoreTracker.Web.Security;
 ///         Partitioned by the Authorization header rather than by IP: a tool is one caller wherever
 ///         it runs from, and several makers behind one cloud NAT are not each other's problem.
 ///     </para>
+///     <para>
+///         Both tiers sit at the same ceiling because the heaviest honest job on a personal token
+///         is not a trickle of reads — it is a full catalog pull, which is every chart and song and
+///         tier list of all 31 mixes and lands as roughly 500 requests back to back. The two
+///         constants stay separate so the tiers can diverge again without reshaping the policy.
+///     </para>
 /// </summary>
 public static class ApiV2RateLimiting
 {
     public const string PolicyName = "ApiV2";
 
     private const int ToolRequestsPerMinute = 600;
-    private const int PersonalRequestsPerMinute = 60;
+    private const int PersonalRequestsPerMinute = 600;
 
     public static RateLimiterOptions AddApiV2Policy(this RateLimiterOptions options)
     {

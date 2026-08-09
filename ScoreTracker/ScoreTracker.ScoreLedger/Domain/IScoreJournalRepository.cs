@@ -59,6 +59,18 @@ internal interface IScoreJournalRepository
     /// </summary>
     Task DeleteForUser(Guid userId, MixEnum? mix, CancellationToken cancellationToken);
 
+    /// <summary>
+    ///     One row per public player ever observed CLEARING this chart, carrying their lowest such
+    ///     score — the limbo board (docs/design/limbo-leaderboard.md). Ascending, capped.
+    ///     <para>
+    ///         Breaks are excluded outright: failing with a low score is not the achievement,
+    ///         surviving with one is (D4). Private players are dropped rather than masked, which is
+    ///         what the World scope shows too.
+    ///     </para>
+    /// </summary>
+    Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId, int limit,
+        CancellationToken cancellationToken);
+
     /// <summary>Every play one session wrote, for the undo preview and the replay that follows.</summary>
     Task<IReadOnlyList<ScoreJournalEntry>> GetSessionEntries(Guid userId, Guid sessionId,
         CancellationToken cancellationToken);
