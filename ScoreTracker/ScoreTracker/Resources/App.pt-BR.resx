@@ -3900,6 +3900,9 @@
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Não disponível na visualização compacta</value>
   </data>
+  <data name="Not available on {0}." xml:space="preserve">
+    <value>Não disponível em {0}.</value>
+  </data>
   <data name="Not checked" xml:space="preserve">
     <value>Não verificado</value>
   </data>
@@ -4917,6 +4920,9 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>Top 50 de PUMBILITY</value>
   </data>
+  <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
+    <value>O Pump It Up não tinha títulos antes do Prime 2.</value>
+  </data>
   <data name="Push PGs" xml:space="preserve">
     <value>Rumo aos PG</value>
   </data>
@@ -5329,6 +5335,9 @@
   </data>
   <data name="Rival removed." xml:space="preserve">
     <value>Rival removido.</value>
+  </data>
+  <data name="Rivalries compare scores, and scores before Phoenix aren't comparable between charts." xml:space="preserve">
+    <value>As rivalidades comparam pontuações, e pontuações anteriores ao Phoenix não são comparáveis entre charts.</value>
   </data>
   <data name="Rivals" xml:space="preserve">
     <value>Rivais</value>
@@ -6589,9 +6598,6 @@
   </data>
   <data name="This page is full." xml:space="preserve">
     <value>Esta página está cheia.</value>
-  </data>
-  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
-    <value>Esta página ainda não está pronta para versões antigas</value>
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>Este recap ainda não foi calculado — volte em breve.</value>
@@ -8026,6 +8032,12 @@
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} não está em {1} — a música inteira saiu.</value>
+  </data>
+  <data name="{0} isn't a thing in {1}." xml:space="preserve">
+    <value>{0} não existe em {1}.</value>
+  </data>
+  <data name="{0} isn't available for {1} yet." xml:space="preserve">
+    <value>{0} ainda não está disponível para {1}.</value>
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} saíram</value>

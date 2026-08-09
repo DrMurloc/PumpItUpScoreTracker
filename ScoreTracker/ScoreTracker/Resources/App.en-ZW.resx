@@ -3930,6 +3930,9 @@
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Murm blargromrp mrp Murmgrrglblub murmblub</value>
   </data>
+  <data name="Not available on {0}." xml:space="preserve">
+    <value>Mrg groglarglub ur {0}.</value>
+  </data>
   <data name="Not checked" xml:space="preserve">
     <value>Bam murgl</value>
   </data>
@@ -4954,6 +4957,9 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY blarg 50</value>
   </data>
+  <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
+    <value>Pump It Up murgla brogl mrgl golu Prumgl 2.</value>
+  </data>
   <data name="Push PGs" xml:space="preserve">
     <value>Morggrgl Gl</value>
   </data>
@@ -5372,6 +5378,9 @@
   </data>
   <data name="Rival removed." xml:space="preserve">
     <value>Murgmorp plglgrgl.</value>
+  </data>
+  <data name="Rivalries compare scores, and scores before Phoenix aren't comparable between charts." xml:space="preserve">
+    <value>Murgmorp gurgmrgl mgrlgmrg, ur mgrlgmrg blurgo Phoenix mrgla groglarg murgl.</value>
   </data>
   <data name="Rivals" xml:space="preserve">
     <value>Murgmorp</value>
@@ -6648,9 +6657,6 @@
   </data>
   <data name="This page is full." xml:space="preserve">
     <value>Grglmrp urggrgl urg mrglmr.</value>
-  </data>
-  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
-    <value>Grglmrp urggrgl blgrlro blargblgrl ro grrglgro mrgrgl argl</value>
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>Grglmrp grrglmr grogrrgl murmmrp maglmrglplgl argl — urgmurp arglblgrl blarggrorp.</value>
@@ -8096,6 +8102,12 @@
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} urg murm mrp {1} — mrp grorpro mrgl rolurg.</value>
+  </data>
+  <data name="{0} isn't a thing in {1}." xml:space="preserve">
+    <value>{0} mrgla ur blargl mo {1}.</value>
+  </data>
+  <data name="{0} isn't available for {1} yet." xml:space="preserve">
+    <value>{0} mrgla groglarglub gro {1} urg.</value>
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} rolurg</value>

@@ -3930,6 +3930,9 @@
   <data name="Not available in Compact view" xml:space="preserve">
     <value>コンパクト表示では利用できません</value>
   </data>
+  <data name="Not available on {0}." xml:space="preserve">
+    <value>{0}では利用できません。</value>
+  </data>
   <data name="Not checked" xml:space="preserve">
     <value>未確認</value>
   </data>
@@ -4954,6 +4957,9 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY トップ 50</value>
   </data>
+  <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
+    <value>Pump It Upにタイトルが登場したのは Prime 2 からです。</value>
+  </data>
   <data name="Push PGs" xml:space="preserve">
     <value>PGを狙う</value>
   </data>
@@ -5372,6 +5378,9 @@
   </data>
   <data name="Rival removed." xml:space="preserve">
     <value>ライバルを削除しました。</value>
+  </data>
+  <data name="Rivalries compare scores, and scores before Phoenix aren't comparable between charts." xml:space="preserve">
+    <value>ライバル関係はスコアを比較しますが、Phoenix以前のスコアは譜面同士で比較できません。</value>
   </data>
   <data name="Rivals" xml:space="preserve">
     <value>ライバル</value>
@@ -6648,9 +6657,6 @@
   </data>
   <data name="This page is full." xml:space="preserve">
     <value>このページは満杯です。</value>
-  </data>
-  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
-    <value>このページはまだ旧バージョンに対応していません</value>
   </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>このリキャップはまだ計算されていません。後でもう一度お試しください。</value>
@@ -8096,6 +8102,12 @@
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} は {1} に収録されていません — 曲ごと削除されました。</value>
+  </data>
+  <data name="{0} isn't a thing in {1}." xml:space="preserve">
+    <value>{0}は{1}には存在しません。</value>
+  </data>
+  <data name="{0} isn't available for {1} yet." xml:space="preserve">
+    <value>{0}は{1}ではまだ利用できません。</value>
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} 件が出た</value>
