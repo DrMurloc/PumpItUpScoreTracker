@@ -37,29 +37,50 @@ public static class PumbilityFormat
     private const int NoiseFloor = 6;
 
     /// <summary>
+    ///     One per rung, so the scale a magnitude is truncated against is a literal rather than
+    ///     a <see cref="Math.Pow" /> result. See <see cref="Truncated" /> for why that matters.
+    /// </summary>
+    private static readonly decimal[] Scales = { 1m, 10m, 100m };
+
+    /// <summary>
     ///     A gain's magnitude, unsigned. Callers own the sign or the arrow — they do not agree
     ///     on which ("+137" on a badge, "▲137" on a board), and that is a presentation choice
     ///     per surface rather than part of the number.
+    ///     <para>
+    ///         The noise comes off in <c>double</c>, where it was created, and the rung is chosen
+    ///         and applied in <c>decimal</c>. Converting after the round is lossless for what
+    ///         survives it: double-to-decimal is itself a round to fifteen significant digits, and
+    ///         a six-place value is well inside that.
+    ///     </para>
     /// </summary>
     public static string Gain(double value)
     {
-        var magnitude = Math.Round(Math.Abs(value), NoiseFloor, MidpointRounding.AwayFromZero);
+        return Gain((decimal)Math.Round(Math.Abs(value), NoiseFloor, MidpointRounding.AwayFromZero));
+    }
+
+    /// <summary>
+    ///     The mirrored official surfaces carry decimals, because the board they quote does. Those
+    ///     arrive already exact at two places, so they skip the noise floor rather than round-trip
+    ///     through a double that could only lose to it.
+    /// </summary>
+    public static string Gain(decimal value)
+    {
+        var magnitude = Math.Abs(value);
         return magnitude >= 10 ? Truncated(magnitude, 0)
             : magnitude >= 1 ? Truncated(magnitude, 1)
             : Truncated(magnitude, 2);
     }
 
     /// <summary>
-    ///     The mirrored official surfaces carry decimals, because the board they quote does.
+    ///     Truncation happens in decimal because scaling by a power of ten is exact there and is
+    ///     not in binary floating point. The same step in doubles read a gain of 0.29 as "0.28":
+    ///     the nearest double to 0.29 times 100 is 28.999999999999996, and truncating that loses
+    ///     the hundredth the rung exists to show. Cleaning the noise first does not save it —
+    ///     0.29 IS the cleaned value, and the error is reintroduced by the multiply after.
     /// </summary>
-    public static string Gain(decimal value)
+    private static string Truncated(decimal magnitude, int decimals)
     {
-        return Gain((double)value);
-    }
-
-    private static string Truncated(double magnitude, int decimals)
-    {
-        var scale = Math.Pow(10, decimals);
+        var scale = Scales[decimals];
         return (Math.Truncate(magnitude * scale) / scale).ToString("N" + decimals);
     }
 }

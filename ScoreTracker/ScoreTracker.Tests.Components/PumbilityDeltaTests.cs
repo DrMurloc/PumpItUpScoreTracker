@@ -39,6 +39,28 @@ public sealed class PumbilityDeltaTests : ComponentTestBase
         Assert.Equal("430", PumbilityFormat.Gain(429.99999999999994));
     }
 
+    [Theory]
+    // Cleaning the noise cannot be the whole answer, because these values ARE clean and the
+    // error lands after: the nearest double to 0.29 times 100 is 28.999999999999996, so a
+    // truncation done in doubles printed "0.28". The scaling happens in decimal for exactly
+    // these three, which are every value under one that the old arithmetic got wrong.
+    [InlineData(0.29, "0.29")]
+    [InlineData(0.57, "0.57")]
+    [InlineData(0.58, "0.58")]
+    public void ScalingToARungDoesNotReintroduceTheNoiseItJustRemoved(double value, string expected)
+    {
+        Assert.Equal(expected, PumbilityFormat.Gain(value));
+    }
+
+    [Fact]
+    public void AnOfficialDecimalIsNotRoundTrippedThroughADouble()
+    {
+        // The board quotes two places already. Nothing has to be cleaned off one, and going
+        // via double to find that out is the one way to damage it.
+        Assert.Equal("0.29", PumbilityFormat.Gain(0.29m));
+        Assert.Equal("1,255", PumbilityFormat.Gain(1255.87m));
+    }
+
     [Fact]
     public void TruncationIsAppliedToTheMagnitudeSoALossIsNotOverstated()
     {
