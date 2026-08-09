@@ -267,6 +267,55 @@ public sealed class MarchOfMurlocsHandlerTests
         Assert.All(created, t => Assert.Contains("Summer 2026", (string)t.Name));
     }
 
+    [Fact]
+    public async Task CycleCatchesUpToTheCurrentQuarterAfterMissingSeveral()
+    {
+        // Five quarters behind: the quarter following the last season (June 2025) has itself long
+        // since ended, and creating it would leave no future-dated MoM for TryScheduleMoM to wait
+        // on — which is the loop. It must land on the quarter we are actually in.
+        var lastSeason = new DateTimeOffset(2025, 3, 31, 23, 59, 59, TimeSpan.FromHours(-5));
+        var now = new DateTimeOffset(2026, 8, 9, 11, 0, 0, TimeSpan.Zero);
+
+        var created = await Cycle(lastSeason, now);
+
+        Assert.Equal(2, created.Length);
+        Assert.All(created, t => Assert.Equal(new DateTimeOffset(2026, 9, 30, 23, 59, 59,
+            TimeSpan.FromHours(-5)), t.EndDate));
+        Assert.All(created, t => Assert.Contains("Summer 2026", (string)t.Name));
+    }
+
+    [Fact]
+    public async Task CycleNeverCreatesASeasonThatHasAlreadyEnded()
+    {
+        // The invariant the runaway violated, stated directly. Every season the consumer can be
+        // asked to create, from any starting point, must end ahead of now.
+        var now = new DateTimeOffset(2026, 8, 9, 11, 0, 0, TimeSpan.Zero);
+
+        foreach (var monthsBehind in new[] { 1, 2, 3, 6, 9, 12, 18, 24, 40 })
+        {
+            var lastSeason = now.AddMonths(-monthsBehind);
+            var created = await Cycle(lastSeason, now);
+
+            Assert.NotEmpty(created);
+            Assert.All(created, t => Assert.True(t.EndDate > now,
+                $"{monthsBehind} months behind produced a season ending {t.EndDate}"));
+        }
+    }
+
+    [Fact]
+    public async Task CycleRollsTheYearWhenAFallSeasonIsFollowedByWinter()
+    {
+        // December is followed by March in the NEXT year. Reading the year off today's date
+        // instead of off the previous season is the other half of how a past-dated season
+        // got created.
+        var fallEnd = new DateTimeOffset(2026, 12, 31, 23, 59, 59, TimeSpan.FromHours(-5));
+        var created = await Cycle(fallEnd, new DateTimeOffset(2027, 1, 1, 11, 0, 0, TimeSpan.Zero));
+
+        Assert.All(created, t => Assert.Equal(new DateTimeOffset(2027, 3, 31, 23, 59, 59,
+            TimeSpan.FromHours(-5)), t.EndDate));
+        Assert.All(created, t => Assert.Contains("Winter 2027", (string)t.Name));
+    }
+
     /// <summary>
     ///     Runs one CycleMoMCommand against a single previous MoM and returns the tournaments it
     ///     created.

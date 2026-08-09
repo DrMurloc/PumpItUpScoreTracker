@@ -64,6 +64,17 @@ namespace ScoreTracker.EventCompetition.Application
             return month / 3 % 4 * 3 + 3;
         }
 
+        /// <summary>
+        ///     The instant a season closes: the last moment of the last day of its final month,
+        ///     in UTC-5.
+        /// </summary>
+        private static DateTimeOffset EndOfSeason(int year, int month)
+        {
+            return new DateTimeOffset(
+                new DateTime(year, month, DateTime.DaysInMonth(year, month), 23, 59, 59),
+                TimeSpan.FromHours(-5));
+        }
+
         public async Task Consume(ConsumeContext<CycleMoMCommand> context)
         {
             var moms = (await _tournaments.GetAllTournaments(context.CancellationToken))
@@ -76,9 +87,28 @@ namespace ScoreTracker.EventCompetition.Application
             if (moms.Any(m => m.EndDate != null && m.EndDate > _dateTime.Now))
                 return;
             var oldEnd = moms.FirstOrDefault()?.EndDate ?? _dateTime.Now - TimeSpan.FromMinutes(1);
-            var year = _dateTime.Now.Year;
 
+            // The season that follows the last one, advanced until it actually lies ahead of us.
+            // Both halves matter. The year comes from the previous season rather than from today,
+            // because a December season is followed by a March one in the NEXT year. The loop
+            // then covers a cycle that runs late — a missed quarter, downtime, a manual trigger
+            // while behind — where the quarter after the last season has itself already ended.
+            // Creating that season anyway is what made the runaway self-sustaining: a season
+            // ending in the past leaves TryScheduleMoM with no future MoM to wait for, so it
+            // publishes another CycleMoMCommand, forever. Catching up lands on the current
+            // quarter and creates one season, not a backlog.
+            var newYear = oldEnd.Year;
             var newMonth = NextQuarterEndMonth(oldEnd.Month);
+            if (newMonth <= oldEnd.Month) newYear++;
+            var newEndDate = EndOfSeason(newYear, newMonth);
+            while (newEndDate <= _dateTime.Now)
+            {
+                var previousMonth = newMonth;
+                newMonth = NextQuarterEndMonth(previousMonth);
+                if (newMonth <= previousMonth) newYear++;
+                newEndDate = EndOfSeason(newYear, newMonth);
+            }
+
             var season = newMonth switch
             {
                 3 => "Winter",
@@ -87,9 +117,6 @@ namespace ScoreTracker.EventCompetition.Application
                 12 => "Fall",
                 _ => throw new ArgumentOutOfRangeException("Date was invalid somehow 2?")
             };
-            var newEndDate = new DateTimeOffset(new DateTime(_dateTime.Now.Year, newMonth,
-                DateTime.DaysInMonth(_dateTime.Now.Year, newMonth),
-                23, 59, 59), TimeSpan.FromHours(-5));
 
             var charts = (await _charts.GetCharts(MixEnum.Phoenix)).Where(c => c.Type != ChartType.CoOp).ToArray();
 
@@ -113,7 +140,7 @@ namespace ScoreTracker.EventCompetition.Application
                 }
 
                 var tournament = new TournamentConfiguration(Guid.NewGuid(),
-                    $"March of Murlocs {season} {year} - {chartType}s",
+                    $"March of Murlocs {season} {newYear} - {chartType}s",
                     scoring, false, true)
                 {
                     AllowRepeats = false,
