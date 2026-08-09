@@ -134,17 +134,18 @@ public sealed class ScoringObservationsTests
     }
 
     [Fact]
-    public void Phoenix1LowScoresStaySilentBecauseItsFloorsAreSettledAndItCarriesMostImports()
+    public void AnAgreeingScoreAboveTheUnverifiedBandIsNotWorthALine()
     {
         var logger = new CapturingLogger();
 
-        ScoringObservations.ObserveGrades(logger, MixEnum.Phoenix, new[]
+        ScoringObservations.ObserveGrades(logger, MixEnum.Phoenix2, new[]
         {
             new PiuGameGetRecentScoresResult
             {
                 SongName = "Song", Level = DifficultyLevel.From(21), ChartType = ChartType.Single,
-                // 700,000 is a clean B on the Phoenix table, so there is nothing to report.
-                Score = PhoenixScore.From(700000), Grade = PhoenixLetterGrade.B, IsBroken = false
+                // A clean AA on the Phoenix 2 table, well clear of the bands still being guessed
+                // at — nothing to report.
+                Score = PhoenixScore.From(930000), Grade = PhoenixLetterGrade.AA, IsBroken = false
             }
         });
 
@@ -152,19 +153,18 @@ public sealed class ScoringObservationsTests
     }
 
     [Fact]
-    public void AGradeThatContradictsOurTableIsReportedOnEitherMix()
+    public void AGradeThatContradictsOurTableIsReportedEvenAboveTheUnverifiedBand()
     {
-        // The tripwire half, and the reason it runs on Phoenix 1 too: it costs nothing and only
-        // fires when a cutoff has actually moved. 700,000 is a B for us; the site saying C means
-        // the floor moved under us.
+        // The other half: a disagreement is worth a line wherever it lands, because it means a
+        // cutoff moved under us. 930,000 is an AA for us; the site saying A+ would move a floor.
         var logger = new CapturingLogger();
 
-        ScoringObservations.ObserveGrades(logger, MixEnum.Phoenix, new[]
+        ScoringObservations.ObserveGrades(logger, MixEnum.Phoenix2, new[]
         {
             new PiuGameGetRecentScoresResult
             {
                 SongName = "Song", Level = DifficultyLevel.From(21), ChartType = ChartType.Single,
-                Score = PhoenixScore.From(700000), Grade = PhoenixLetterGrade.C, IsBroken = false
+                Score = PhoenixScore.From(930000), Grade = PhoenixLetterGrade.APlus, IsBroken = false
             }
         });
 

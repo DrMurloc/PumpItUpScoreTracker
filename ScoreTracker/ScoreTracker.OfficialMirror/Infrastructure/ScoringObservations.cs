@@ -32,6 +32,10 @@ internal static class ScoringObservations
     ///     the band where that table is unverified. Broken plays count, and are most of the
     ///     point: the game still prints a grade for a failed stage, and a failed stage is where
     ///     low scores live.
+    ///     <para>
+    ///         Which mix to run this for is the caller's call. It is Phoenix 2 only today, since
+    ///         only Phoenix 2's C/D/F floors are still working values.
+    ///     </para>
     /// </summary>
     public static void ObserveGrades(ILogger logger, MixEnum mix,
         IEnumerable<PiuGameGetRecentScoresResult> plays)
@@ -48,12 +52,10 @@ internal static class ScoringObservations
             var ours = play.Score.LetterGradeFor(mix);
             var disagrees = play.Grade.Value != ours;
 
-            // Phoenix 1's cutoffs have been settled since launch and Phoenix 1 carries most of
-            // the site's imports, so only a DISAGREEMENT earns a line there. The sub-800k
-            // corpus is Phoenix 2's alone, because only its C/D/F floors are still guesses —
-            // logging every Phoenix 1 low score would be thousands of lines about a table
-            // nobody is questioning, which is also precisely the volume adaptive sampling eats.
-            if (!disagrees && (mix != MixEnum.Phoenix2 || (int)play.Score >= UnverifiedGradeCeiling)) continue;
+            // A play that agrees with us and sits above the unverified band says nothing worth
+            // a line. WHICH MIX this runs for is the caller's decision, not this method's —
+            // detection here, policy there.
+            if (!disagrees && (int)play.Score >= UnverifiedGradeCeiling) continue;
 
             // Each placeholder appears exactly ONCE. Message templates are positional, not
             // named — repeating one silently demands another argument and throws FormatException

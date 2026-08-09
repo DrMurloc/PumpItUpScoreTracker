@@ -587,22 +587,28 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     ///         is far too rare to accumulate the cells that are missing.
     ///     </para>
     ///     <para>
-    ///         Phoenix 2 only for that half: Phoenix 1's per-chart PUMBILITY reconciled exactly
+    ///         Phoenix 2 only, both halves. Phoenix 1's per-chart PUMBILITY reconciled exactly
     ///         and prices no plate at all, so a residual there could only restate what is
-    ///         already known — and Phoenix 1 carries most of the site's imports, each of which
-    ///         would spend a network call to learn nothing.
+    ///         already known, and its grade cutoffs have been settled since launch. Watching
+    ///         Phoenix 1 for a contradicting grade would be a reasonable tripwire in permanent
+    ///         code, but this is not permanent, and two days is far too short a window for a
+    ///         tripwire to earn anything. What it would cost is unbounded: Phoenix 1 carries an
+    ///         order of magnitude more importers, so if it ever did fire it would fire on the
+    ///         majority path — and because sampling is scoped to the whole operation, a flood of
+    ///         Phoenix 1 operations would crowd out the Phoenix 2 rows this exists to collect.
     ///     </para>
     /// </summary>
     private async Task ObserveScoring(MixEnum mix, HttpClient sessionId,
         IReadOnlyList<ChartPlays> recentPlays, CancellationToken cancellationToken)
     {
+        // Phoenix 2 and nothing else, so a Phoenix 1 import does literally none of this. Gating
+        // here rather than inside the detector also means PumbilityScoring is never handed a mix
+        // it has no formula for, instead of relying on the catch to absorb it.
+        if (mix != MixEnum.Phoenix2) return;
+
         try
         {
             ScoringObservations.ObserveGrades(_logger, mix, recentPlays.SelectMany(p => p.Plays));
-
-            // Gating here rather than inside the detector also means PumbilityScoring is never
-            // handed a mix it has no formula for, instead of relying on the catch to absorb it.
-            if (mix != MixEnum.Phoenix2) return;
 
             var pumbility = await _piuGame.GetPumbility(mix, sessionId, cancellationToken);
             ScoringObservations.ObservePumbility(_logger, mix, pumbility.Entries);
