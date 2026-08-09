@@ -154,9 +154,35 @@ are stated as a consequence, never offered as a checkbox.
 
 ---
 
+### Writing a PUMBILITY figure
+
+**Nothing below the presentation layer rounds a PUMBILITY value. Period, no exceptions**
+(owner standard, 2026-08-09). A pool is fifty per-chart figures that each carry a real
+fraction, so a value rounded early compounds its error and — worse — two surfaces that round
+at different points disagree about the same account. That is not hypothetical: a session card
+read 17,195 while the PUMBILITY page read 17,173, because one summed fifty doubles and
+truncated once and the other truncated fifty times and then summed.
+
+Doubles travel all the way to the razor. Then:
+
+| What | How | Why |
+|---|---|---|
+| A **total** — a pool, a bar, a rail value, a per-chart contribution | `ToString("N2")` | Two decimals is what piugame prints and what our mirror of its board has always rendered |
+| A **gain** — what a play, a week or a suggestion moved you by | `PumbilityFormat.Gain`, or the `PumbilityDelta` component | Gains render in compact places where `+137.00` is four characters of noise around one fact |
+| A **threshold** — a title rung, a "next at" target | `ToString("N0")` | An authored round number, not a measurement |
+
+The gain rule is **as much precision as the size needs and no more**: whole at 10 and over,
+one decimal from 1 to 10, two below 1 — **truncated** at every rung, because a gain that reads
+higher than the pool moved is a promise it did not keep. Truncation applies to the magnitude,
+not the signed value: `Math.Floor(-0.5)` is `-1`, which overstates a loss the same way.
+
+`PumbilityDelta` takes a `Marker` ("+" on a badge, "▲" on a board) because those surfaces
+genuinely differ and both spellings predate the component.
+
 ## 3. Enforcement
 
 - **`UiColorTokenTests`** (ArchitectureTests) scans `Pages/`, `Components/`, `Shared/` for hex literals and `Colors.*` constants against a shrink-only allowlist. Exceeding an allowance fails; dropping *below* one also fails until you lower the entry — that's the ratchet.
+- **`PumbilityPrecisionTests`** (ArchitectureTests) scans every non-Web project for a narrowing cast on a scoring call or a `Math.Round`/`Floor`/`Truncate` on a pool, rating or gain. The allowlist is **empty** and meant to stay so. A second fact asserts the scan still reaches the files that compute PUMBILITY, so a rename cannot leave a green test guarding an empty set. Exemptions (currently just `TournamentSession`, whose scoring is whole points on an unrelated scale) are a separate list from the allowance, so "shrink-only" keeps its meaning.
 - Adding a color: if it's brand, it belongs in a `MixPalette`; if it carries data meaning, it belongs in a semantic token group with a `ThemeScales` accessor. If it's neither, question it.
 - The remaining rules are review discipline today. Candidates for future ratchets: `L[…]` coverage scanning, skeleton-presence checks on data pages.
 
