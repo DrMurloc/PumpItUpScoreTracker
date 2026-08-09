@@ -20,14 +20,11 @@ public sealed class DevEnvironmentSeeder : IDevEnvironmentSeeder
 {
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly IOptions<ProdSyncConfiguration> _options;
 
-    public DevEnvironmentSeeder(IHttpClientFactory httpClientFactory,
-        IDbContextFactory<ChartAttemptDbContext> factory, IOptions<ProdSyncConfiguration> options,
-        IMemoryCache cache)
+    public DevEnvironmentSeeder(IDbContextFactory<ChartAttemptDbContext> factory,
+        IOptions<ProdSyncConfiguration> options, IMemoryCache cache)
     {
-        _httpClientFactory = httpClientFactory;
         _factory = factory;
         _options = options;
         _cache = cache;
@@ -36,7 +33,7 @@ public sealed class DevEnvironmentSeeder : IDevEnvironmentSeeder
     public Task PopulateFromApi(string apiToken, Guid localUserId, Action<string> reportProgress,
         CancellationToken cancellationToken = default)
     {
-        var reader = new DevApiReader(_httpClientFactory, new DevCatalogWriter(_factory),
+        var reader = new DevApiReader(new DevCatalogWriter(_factory),
             _options.Value.BaseUrl, _cache);
         return reader.Populate(apiToken, localUserId, reportProgress, cancellationToken);
     }
