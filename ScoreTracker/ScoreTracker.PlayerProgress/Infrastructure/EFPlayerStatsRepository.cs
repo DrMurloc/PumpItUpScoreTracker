@@ -121,10 +121,11 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                     return new PlayerStatsRecord(userId, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
 
                 return new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
-                    entity.CoOpRating,
-                    entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
-                    entity.SinglesRating,
-                    entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
+                    (int)entity.CoOpRating,
+                    entity.AverageCoOpScore, (int)entity.SkillRating, entity.AverageSkillScore,
+                    entity.AverageSkillLevel,
+                    (int)entity.SinglesRating,
+                    entity.AverageSinglesScore, entity.AverageSinglesLevel, (int)entity.DoublesRating,
                     entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
                     entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel,
                     entity.EstimatedPumbilityRank, entity.EstimatedSinglesPumbilityRank,
@@ -140,10 +141,11 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             return await database.Set<PlayerStatsEntity>()
                 .Where(s => userIds.Contains(s.UserId) && s.MixId == mixId).Select(entity =>
                     new PlayerStatsRecord(entity.UserId, entity.TotalRating, entity.HighestLevel, entity.ClearCount,
-                        entity.CoOpRating,
-                        entity.AverageCoOpScore, entity.SkillRating, entity.AverageSkillScore, entity.AverageSkillLevel,
-                        entity.SinglesRating,
-                        entity.AverageSinglesScore, entity.AverageSinglesLevel, entity.DoublesRating,
+                        (int)entity.CoOpRating,
+                        entity.AverageCoOpScore, (int)entity.SkillRating, entity.AverageSkillScore,
+                        entity.AverageSkillLevel,
+                        (int)entity.SinglesRating,
+                        entity.AverageSinglesScore, entity.AverageSinglesLevel, (int)entity.DoublesRating,
                         entity.AverageDoublesScore, entity.AverageDoublesLevel, entity.CompetitiveLevel,
                         entity.SinglesCompetitiveLevel, entity.DoublesCompetitiveLevel,
                         entity.EstimatedPumbilityRank, entity.EstimatedSinglesPumbilityRank,

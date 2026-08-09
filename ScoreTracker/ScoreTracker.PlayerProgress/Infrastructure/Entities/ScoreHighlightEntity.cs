@@ -84,5 +84,5 @@ internal sealed class ScoreHighlightEntity
     ///     deliberately not measured here — the row reports one number, and the combined pool is
     ///     the one the ceremony band headlines.
     /// </summary>
-    public int? PumbilityGain { get; set; }
+    public double? PumbilityGain { get; set; }
 }

@@ -96,7 +96,7 @@ internal sealed class EFScoreHighlightRepository : IScoreHighlightRepository
             e.ScoringLevel, new HighlightDetail(e.PumbilityRank, e.FolderDebutOrdinal, e.PeerCount, e.PeerBetterCount,
                 e.PeerPgCount, e.SkillTitleName, e.SkillTitleScore, e.SkillTitleThreshold,
                 e.PeerPercentile, e.AttemptsBeforeClear, e.OfficialPlace, e.OfficialBoardDepth, e.OfficialAsOf,
-                e.CompetitiveBaseline, e.PumbilityGain));
+                e.CompetitiveBaseline, (int?)e.PumbilityGain));
     }
 
     public async Task<IEnumerable<ScoreHighlightRecord>> GetHighlights(MixEnum mix, Guid userId,

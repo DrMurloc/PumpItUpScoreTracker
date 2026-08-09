@@ -40,7 +40,7 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             return await database.Set<PlayerHistoryEntity>()
                 .Where(r => r.UserId == request.UserId && r.MixId == mixId)
                 .Select(r => new PlayerRatingRecord(r.UserId, r.Date, r.CompetitiveLevel, r.SinglesLevel,
-                    r.DoublesLevel, r.CoOpRating, r.PassCount, r.SkillRating)).ToArrayAsync(cancellationToken);
+                    r.DoublesLevel, (int)r.CoOpRating, r.PassCount, (int?)r.SkillRating)).ToArrayAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<PlayerRatingRecord>> GetHistory(MixEnum mix, IEnumerable<Guid> userIds,
@@ -55,7 +55,7 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
                 .Where(r => ids.Contains(r.UserId) && r.MixId == mixId)
                 .OrderBy(r => r.UserId).ThenBy(r => r.Date)
                 .Select(r => new PlayerRatingRecord(r.UserId, r.Date, r.CompetitiveLevel, r.SinglesLevel,
-                    r.DoublesLevel, r.CoOpRating, r.PassCount, r.SkillRating))
+                    r.DoublesLevel, (int)r.CoOpRating, r.PassCount, (int?)r.SkillRating))
                 .ToArrayAsync(cancellationToken);
         }
 
