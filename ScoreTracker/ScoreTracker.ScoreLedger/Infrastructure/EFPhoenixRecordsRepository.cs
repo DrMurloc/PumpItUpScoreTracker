@@ -220,6 +220,32 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return _xxAttempts.GetBestAttempts(userId, mix, cancellationToken);
     }
 
+    async Task<IEnumerable<UserLegacyScore>> IScoreReader.GetPlayerLegacyScores(MixEnum mix,
+        IEnumerable<Guid> userIds, IEnumerable<Guid> chartIds, CancellationToken cancellationToken)
+    {
+        var ids = userIds as Guid[] ?? userIds.ToArray();
+        var charts = chartIds as Guid[] ?? chartIds.ToArray();
+        if (ids.Length == 0 || charts.Length == 0) return Array.Empty<UserLegacyScore>();
+
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var mixId = MixIds.For(mix);
+        // Masked exactly as the Phoenix twin masks: a private player's name never leaves here
+        // in the clear, and IsPublic says so outright so no consumer has to recognise the mask.
+        var rows = await (from b in database.Set<BestAttemptEntity>()
+            where b.MixId == mixId && ids.Contains(b.UserId) && charts.Contains(b.ChartId)
+            join u in database.User on b.UserId equals u.Id
+            select new { b.UserId, b.ChartId, u.Name, u.IsPublic, b.LetterGrade, b.Score, b.IsBroken, b.RecordedDate })
+            .ToArrayAsync(cancellationToken);
+
+        return rows
+            .Where(r => Enum.TryParse<XXLetterGrade>(r.LetterGrade, out _))
+            .Select(r => new UserLegacyScore(r.UserId, r.ChartId,
+                r.IsPublic ? Name.From(r.Name) : Name.From("Anonymous"),
+                Enum.Parse<XXLetterGrade>(r.LetterGrade), r.Score, r.IsBroken, r.IsPublic,
+                r.RecordedDate))
+            .ToArray();
+    }
+
     async Task<IReadOnlyDictionary<Guid, LegacyScoreTotals>> IScoreReader.GetLegacyTotals(MixEnum mix,
         IEnumerable<Guid> userIds, CancellationToken cancellationToken)
     {

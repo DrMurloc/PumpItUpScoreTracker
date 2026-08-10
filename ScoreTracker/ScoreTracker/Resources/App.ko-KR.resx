@@ -5357,9 +5357,6 @@
   <data name="Rival removed." xml:space="preserve">
     <value>라이벌을 삭제했습니다.</value>
   </data>
-  <data name="Rivalries compare scores, and scores before Phoenix aren't comparable between charts." xml:space="preserve">
-    <value>라이벌은 점수를 비교하지만, Phoenix 이전의 점수는 채보끼리 비교할 수 없습니다.</value>
-  </data>
   <data name="Rivals" xml:space="preserve">
     <value>라이벌</value>
   </data>

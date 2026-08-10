@@ -138,4 +138,13 @@ public interface IScoreReader
     /// </summary>
     Task<IReadOnlyDictionary<Guid, LegacyScoreTotals>> GetLegacyTotals(MixEnum mix,
         IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Named best attempts for a set of players across a set of charts on XX or older —
+    ///     the legacy twin of <see cref="GetPlayerScores(MixEnum, IEnumerable{Guid}, IEnumerable{Guid}, CancellationToken)" />.
+    ///     Separate because an era score does not fit a PhoenixScore and the letter has no
+    ///     Phoenix column, not because the query differs.
+    /// </summary>
+    Task<IEnumerable<UserLegacyScore>> GetPlayerLegacyScores(MixEnum mix, IEnumerable<Guid> userIds,
+        IEnumerable<Guid> chartIds, CancellationToken cancellationToken = default);
 }

@@ -5400,9 +5400,6 @@
   <data name="Rival removed." xml:space="preserve">
     <value>ライバルを削除しました。</value>
   </data>
-  <data name="Rivalries compare scores, and scores before Phoenix aren't comparable between charts." xml:space="preserve">
-    <value>ライバル関係はスコアを比較しますが、Phoenix以前のスコアは譜面同士で比較できません。</value>
-  </data>
   <data name="Rivals" xml:space="preserve">
     <value>ライバル</value>
   </data>

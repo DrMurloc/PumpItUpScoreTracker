@@ -108,9 +108,19 @@ internal sealed class RivalReadSaga :
         // ledger holds scoreless break rows, and counting a break as a number would report
         // losses nobody played. An official placement is a completed run by construction, so
         // excluding breaks on OUR side only would hand every ghost comparison a free win.
-        var mine = (await _scores.GetBestScores(request.Mix, me, cancellationToken))
+        // Read from whichever store this mix records into. A legacy best has a letter and
+        // usually no number, so "comparable result" there means a pass — the score is a
+        // tiebreak when both sides happen to have typed one.
+        var isLegacy = request.Mix.UsesLegacyScoring();
+        var mine = isLegacy
+            ? (await _scores.GetBestXXAttempts(request.Mix, me, cancellationToken))
+            .Where(b => b.BestAttempt is { IsBroken: false })
+            .ToDictionary(b => b.Chart.Id, b => (Score: (int?)b.BestAttempt!.Score, Plate: (PhoenixPlate?)null,
+                Grade: (XXLetterGrade?)b.BestAttempt.LetterGrade))
+            : (await _scores.GetBestScores(request.Mix, me, cancellationToken))
             .Where(s => s.Score != null && !s.IsBroken)
-            .ToDictionary(s => s.ChartId, s => s);
+            .ToDictionary(s => s.ChartId, s => (Score: (int?)(int)s.Score!.Value, Plate: s.Plate,
+                Grade: (XXLetterGrade?)null));
 
         // A site rival compares within a folder; a board-only one compares on the charts we are
         // BOTH on, because the mirror covers a scattering of level 20+ boards rather than a
@@ -126,17 +136,34 @@ internal sealed class RivalReadSaga :
         {
             var theirScore = scores.FirstOrDefault(s => !s.IsBroken);
             if (theirScore == null) continue;
-            var my = mine.TryGetValue(chartId, out var found) ? found : null;
-            rows.Add(new RivalHeadToHeadRow(chartId, my == null ? null : (int)my.Score!.Value,
-                theirScore.Score, theirScore.Source,
-                my?.Plate, my?.IsBroken ?? false,
-                theirScore.Plate, theirScore.IsBroken));
+            var hasMine = mine.TryGetValue(chartId, out var my);
+            rows.Add(new RivalHeadToHeadRow(chartId, hasMine ? my.Score : null,
+                isLegacy && theirScore.Score == 0 ? null : theirScore.Score, theirScore.Source,
+                hasMine ? my.Plate : null, false,
+                theirScore.Plate, theirScore.IsBroken,
+                hasMine ? my.Grade : null, theirScore.LegacyGrade));
         }
 
-        var shared = rows.Count(r => r.YourScore != null && r.TheirScore != null);
+        // What counts as a comparable row, and who is ahead in it. On Phoenix that is the
+        // score. On a legacy mix it is the LETTER, with the era score as a tiebreak: only 4.8%
+        // of legacy records carry a number, so ranking on the number alone would report a
+        // shared count of nearly zero and call every real rivalry empty.
+        bool Comparable(RivalHeadToHeadRow r) => isLegacy
+            ? r.YourLegacyGrade != null && r.TheirLegacyGrade != null
+            : r.YourScore != null && r.TheirScore != null;
+
+        int Margin(RivalHeadToHeadRow r)
+        {
+            if (!isLegacy) return (r.YourScore ?? 0).CompareTo(r.TheirScore ?? 0);
+            var byGrade = ((int)r.YourLegacyGrade!.Value).CompareTo((int)r.TheirLegacyGrade!.Value);
+            return byGrade != 0 ? byGrade : (r.YourScore ?? 0).CompareTo(r.TheirScore ?? 0);
+        }
+
+        var comparable = rows.Where(Comparable).ToArray();
+        var shared = comparable.Length;
         return new RivalHeadToHeadRecord(subject,
-            rows.Count(r => r.YourScore != null && r.TheirScore != null && r.YourScore > r.TheirScore),
-            rows.Count(r => r.YourScore != null && r.TheirScore != null && r.TheirScore > r.YourScore),
+            comparable.Count(r => Margin(r) > 0),
+            comparable.Count(r => Margin(r) < 0),
             shared, theirs.OfficialAsOf,
             rows.OrderByDescending(r => (r.TheirScore ?? 0) - (r.YourScore ?? 0)).ToArray());
     }
