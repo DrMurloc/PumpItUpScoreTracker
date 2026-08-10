@@ -47,5 +47,9 @@ public static class ScoreLedgerRegistrationExtensions
         configurator.AddConsumer<UpdatePhoenixRecordHandler>();
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<RebuildLatestSessionsConsumer>();
+        // Stamps the session's processed marker off ScoreHighlightsCapturedEvent. Miss this and
+        // NO session is ever marked, so every one of them looks interrupted and the recovery pass
+        // replays the world on the next boot.
+        configurator.AddConsumer<SessionRecoverySaga>();
     }
 }

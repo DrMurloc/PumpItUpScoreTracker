@@ -32,8 +32,14 @@ internal interface IScoreJournalRepository
         int page, int pageSize, DateTimeOffset? before, CancellationToken cancellationToken);
 
     /// <summary>
-    ///     Full journal history for the given charts, oldest first — classification
-    ///     input. Chart ids are mix-scoped by construction, so no mix filter is needed.
+    ///     Full journal history for the given charts, oldest first — classification input.
+    ///     <para>
+    ///         ⚠ <b>CROSS-MIX, and callers must filter.</b> A returning song carries one ChartId
+    ///         across Phoenix and Phoenix 2, so this returns both mixes' plays for such a chart.
+    ///         That is exactly what reclear detection wants and exactly what anything rebuilding
+    ///         one mix's record must drop first. This comment previously claimed chart ids were
+    ///         mix-scoped; they are not, and the undo replay trusted it.
+    ///     </para>
     /// </summary>
     Task<IReadOnlyList<ScoreJournalEntry>> GetChartHistories(Guid userId, IEnumerable<Guid> chartIds,
         CancellationToken cancellationToken);

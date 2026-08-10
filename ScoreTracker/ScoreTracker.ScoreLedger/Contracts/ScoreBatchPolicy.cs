@@ -31,11 +31,15 @@ public static class ScoreBatchPolicy
     ///     How long a reader should keep expecting work after the last score lands: the hold, the
     ///     drain, and enough room for capture itself to run.
     ///     <para>
-    ///         ⚠ Not a guarantee. If the in-memory drain is lost to a restart, the Hangfire
-    ///         safety net (<c>flush-overdue-score-batches</c>, every five minutes) picks the batch
-    ///         up instead and the work lands well outside this. A reader that stops waiting is
+    ///         ⚠ Not a guarantee. A restart erases the accumulator, so a batch caught inside the
+    ///         hold window is gone and its work does not land at all until the next process start
+    ///         recovers it (docs/design/import-restart-recovery.md). A reader that stops waiting is
     ///         then simply early, which is why nothing may treat the end of this as proof that
     ///         there was nothing to wait for.
+    ///     </para>
+    ///     <para>
+    ///         This doubles as the staleness threshold the recovery pass uses: a run that finished
+    ///         longer ago than this had its chance to drain and did not take it.
     ///     </para>
     /// </summary>
     public static readonly TimeSpan WorkExpectedWithin = HoldWindow + DrainBuffer + TimeSpan.FromMinutes(2);

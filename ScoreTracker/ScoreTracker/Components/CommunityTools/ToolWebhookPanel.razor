@@ -27,6 +27,16 @@
             }
         </MudButtonGroup>
         <MudText Typo="Typo.body2" Style="opacity:.75;">@ModeDescription(_mode)</MudText>
+        @* Said rather than suppressed (docs/design/import-restart-recovery.md §8): a restart
+           mid-import is replayed when the app comes back, which re-sends that import's delivery.
+           Suppressing the replay instead would mean a tool silently missing an import PIU Scores
+           recovered — invisible on both sides — where a duplicate is visible and cheap to handle. *@
+        @if (_mode != WebhookMode.None)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true" Class="mt-2">
+                @L["A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then."]
+            </MudAlert>
+        }
     </ConsoleCard>
 
     @if (_mode != WebhookMode.None)

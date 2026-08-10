@@ -32,8 +32,19 @@ internal sealed class ImportResultEntity
     /// </summary>
     public DateTimeOffset? FinishedAt { get; set; }
 
-    /// <summary>Completed | PiuGameError | PiuScoresError. Never exception text.</summary>
-    [MaxLength(16)]
+    /// <summary>
+    ///     Completed | PiuGameError | CredentialRejected | PiuScoresError | Interrupted. Never
+    ///     exception text.
+    ///     <para>
+    ///         ⚠ Sized for the enum's NAMES, which is why 16 was not enough:
+    ///         <c>CredentialRejected</c> is 18 characters, so closing a rejected-credential run
+    ///         threw a truncation error inside the consumer's <c>finally</c> — leaving the run
+    ///         open and reading, on the player's screen, as "never reported back" rather than
+    ///         "check your password". A new member longer than this needs the column widened
+    ///         with it.
+    ///     </para>
+    /// </summary>
+    [MaxLength(32)]
     public string? Outcome { get; set; }
 
     /// <summary>
@@ -56,4 +67,17 @@ internal sealed class ImportResultEntity
     ///     Null on a run that never reported back, which is the one case nobody can count.
     /// </summary>
     public int? ScoreCount { get; set; }
+
+    /// <summary>
+    ///     When the player was told this run was interrupted. Null on every run that never needed
+    ///     saying — which is almost all of them — and on the one interrupted run whose notice is
+    ///     still waiting to be shown.
+    ///     <para>
+    ///         Kept on the run rather than in a UiSetting so it is per-run by construction: a
+    ///         second interruption is a second unacknowledged row and raises the notice again,
+    ///         with no key-naming scheme to get wrong
+    ///         (docs/design/import-restart-recovery.md §7).
+    ///     </para>
+    /// </summary>
+    public DateTimeOffset? AcknowledgedAt { get; set; }
 }

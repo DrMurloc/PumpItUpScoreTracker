@@ -31,5 +31,18 @@ public enum ImportOutcome
     CredentialRejected,
 
     /// <summary>PIU Scores failed the run. Whatever it was, it is ours and it is in the log.</summary>
-    PiuScoresError
+    PiuScoresError,
+
+    /// <summary>
+    ///     The process went away while the run was still going. Not a failure anybody saw and not
+    ///     a success — the scores it had already saved are real and kept, and whatever it had not
+    ///     reached is simply absent.
+    ///     <para>
+    ///         Distinct from the absent outcome above rather than replacing it: a run with no
+    ///         FinishedAt is one nothing has adjudicated <em>yet</em>, and this is the startup
+    ///         recovery pass's verdict once it has
+    ///         (docs/design/import-restart-recovery.md).
+    ///     </para>
+    /// </summary>
+    Interrupted
 }

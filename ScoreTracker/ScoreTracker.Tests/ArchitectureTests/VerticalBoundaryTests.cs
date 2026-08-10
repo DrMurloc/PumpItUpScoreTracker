@@ -85,6 +85,12 @@ public sealed class VerticalBoundaryTests
         // hook stops covering it, the official-leaderboards feed silently goes quiet.
         Assert.Contains(services,
             d => d.ServiceType == typeof(ScoreTracker.OfficialMirror.Application.OfficialDigestFeedSaga));
+        // The startup recovery pass. Unregistered, a restart mid-import stays unrecovered forever
+        // and every suite still passes, because nothing else sends its message
+        // (docs/design/import-restart-recovery.md §4).
+        Assert.Contains(services,
+            d => d.ServiceType
+                 == typeof(ScoreTracker.OfficialMirror.Application.RecoverInterruptedImportsConsumer));
     }
 
     [Fact]
@@ -210,8 +216,8 @@ public sealed class VerticalBoundaryTests
     [Fact]
     public void MassTransitDiscoversTheScoreLedgersInternalConsumers()
     {
-        // UpdatePhoenixRecordHandler is an internal IConsumer<> (TryFireScoreCommand,
-        // FlushOverdueScoreBatchesCommand). MassTransit's AddConsumers assembly scan skips
+        // UpdatePhoenixRecordHandler is an internal IConsumer<TryFireScoreCommand>.
+        // MassTransit's AddConsumers assembly scan skips
         // internal types (verified when this vertical extracted), so the vertical exposes
         // AddScoreLedgerConsumers as the explicit registration hook. If that hook ever
         // stops covering the internal consumers, score-post batching silently stops
@@ -224,6 +230,11 @@ public sealed class VerticalBoundaryTests
         });
 
         Assert.Contains(services, d => d.ServiceType == typeof(UpdatePhoenixRecordHandler));
+        // SessionRecoverySaga stamps the session's processed marker off
+        // ScoreHighlightsCapturedEvent. Unregistered, NO session is ever marked — so every one of
+        // them looks interrupted and the next boot replays the world
+        // (docs/design/import-restart-recovery.md §4.1).
+        Assert.Contains(services, d => d.ServiceType == typeof(SessionRecoverySaga));
     }
 
     [Fact]
