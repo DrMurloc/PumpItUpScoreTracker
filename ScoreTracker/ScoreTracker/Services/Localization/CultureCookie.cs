@@ -16,8 +16,14 @@ namespace ScoreTracker.Web.Services.Localization;
 /// </summary>
 public static class CultureCookie
 {
-    /// <summary>How long an anonymous visitor's choice survives — the auth cookie's lifetime.</summary>
-    private static readonly TimeSpan Lifetime = TimeSpan.FromDays(30);
+    /// <summary>
+    ///     How long an anonymous visitor's choice survives. <c>MaxAge</c> is absolute and nothing
+    ///     renews it — the write-back fires only when the resolved culture differs from the
+    ///     cookie, which it never does once the cookie is the provider that won — so this is the
+    ///     real deadline on a choice, not a sliding window like the auth cookie's. 400 days is
+    ///     the ceiling browsers will honour for a cookie lifetime anyway.
+    /// </summary>
+    private static readonly TimeSpan Lifetime = TimeSpan.FromDays(400);
 
     public static readonly string Name = CookieRequestCultureProvider.DefaultCookieName;
 
