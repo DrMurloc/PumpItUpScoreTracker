@@ -27,7 +27,7 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
     // A fresh real MemoryCache per repository keeps the cached community count from
     // leaking between tests (Respawn resets the DB, not the process).
     private EFCommunitiesRepository BuildRepository() =>
-        new(_fixture.DbContextFactory, Mock.Of<IPlayerStatsReader>(),
+        new(_fixture.DbContextFactory, Mock.Of<IPlayerStatsReader>(), Mock.Of<IScoreReader>(),
             new MemoryCache(new MemoryCacheOptions()),
             Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == DateTimeOffset.UtcNow));
 

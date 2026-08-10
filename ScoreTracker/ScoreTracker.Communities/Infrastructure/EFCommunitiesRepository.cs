@@ -23,13 +23,16 @@ namespace ScoreTracker.Communities.Infrastructure
         private readonly IMemoryCache _cache;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly IPlayerStatsReader _playerStats;
+        private readonly IScoreReader _scores;
         private readonly IDateTimeOffsetAccessor _dateTime;
 
         public EFCommunitiesRepository(IDbContextFactory<ChartAttemptDbContext> factory,
-            IPlayerStatsReader playerStats, IMemoryCache cache, IDateTimeOffsetAccessor dateTime)
+            IPlayerStatsReader playerStats, IScoreReader scores, IMemoryCache cache,
+            IDateTimeOffsetAccessor dateTime)
         {
             _factory = factory;
             _playerStats = playerStats;
+            _scores = scores;
             _cache = cache;
             _dateTime = dateTime;
         }
@@ -331,6 +334,19 @@ namespace ScoreTracker.Communities.Infrastructure
                     join u in database.User on cm.UserId equals u.Id
                     select new { u.Id, u.Name, u.IsPublic, u.ProfileImage })
                 .ToArrayAsync(cancellationToken);
+
+            // XX and older have no PlayerStats at all — every field in one is derived from
+            // Phoenix scoring — so those boards rank on the net score the old arcade boards
+            // used, read from the Ledger's published surface. Same no-SQL-join rule as below.
+            if (mix.UsesLegacyScoring())
+            {
+                var totals = await _scores.GetLegacyTotals(mix, members.Select(m => m.Id).Distinct(),
+                    cancellationToken);
+                return members.Where(m => totals.ContainsKey(m.Id))
+                    .Select(m => CommunityLeaderboardRecord.ForLegacy(m.Name, m.IsPublic,
+                        new Uri(m.ProfileImage, UriKind.Absolute), m.Id, totals[m.Id]))
+                    .ToArray();
+            }
 
             // Stats come from PlayerProgress's published reader — its PlayerStats table is
             // vertical-internal, so no SQL join onto it from here. The reader returns rows

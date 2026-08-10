@@ -9,6 +9,7 @@
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.ScoreLedger.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
@@ -41,8 +42,10 @@
         </div>
     </div>
 
+    @* Singles / Doubles / CoOp split the Phoenix per-type ratings. A legacy mix has one
+       number and one board, so the group would be four buttons that all do the same thing. *@
     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2 mt-2 flex-wrap">
-        <MudButtonGroup OverrideStyles="false">
+        <MudButtonGroup OverrideStyles="false" Class="@(IsLegacy ? "d-none" : null)">
             <MudButton Variant="@(_currentType == LeaderboardType.Combined ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small"
                        OnClick="@(() => SetType(LeaderboardType.Combined))">@L["Combined"]</MudButton>
             <MudButton Variant="@(_currentType == LeaderboardType.Singles ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small"
@@ -85,7 +88,14 @@
                     {
                         <span class="olb-grid-num">@L["Comp Lv"]</span>
                     }
-                    <span class="olb-grid-num">PUMBILITY</span>
+                    @if (IsLegacy)
+                    {
+                        <span class="olb-grid-num" title="@L["Net Score"]">@L["Net Score"]</span>
+                    }
+                    else
+                    {
+                        <span class="olb-grid-num">PUMBILITY</span>
+                    }
                 </span>
                 <span></span>
             </div>
@@ -127,13 +137,31 @@
                                 : "—")
                         </span>
                     }
+                    else if (IsLegacy)
+                    {
+                        @* The grades are what a legacy record usually carries -- only 4.8% of
+                           them have a number -- so the tallies sit where the competitive level
+                           would, and carry the weight the net score cannot yet. *@
+                        <span class="olb-grid-num mud-text-secondary" title="@L["SSS / SS / S / A"]">
+                            @GradeTally(entry)
+                        </span>
+                    }
                     else
                     {
                         <span class="olb-grid-num mud-text-secondary" title="@L["Comp Lv"]">
                             @entry.CompetitiveLevel.ToString("0.00")
                         </span>
                     }
-                    <b class="olb-grid-num" style="color:@entry.Color" title="PUMBILITY">@entry.Rating.ToString("N0")</b>
+                    @if (IsLegacy)
+                    {
+                        @* A zero here is nearly always "recorded grades, never typed a score",
+                           so it says so rather than printing a 0 that reads as a verdict. *@
+                        <b class="olb-grid-num" title="@L["Net Score"]">@NetScoreText(entry)</b>
+                    }
+                    else
+                    {
+                        <b class="olb-grid-num" style="color:@entry.Color" title="PUMBILITY">@entry.Rating.ToString("N0")</b>
+                    }
                 </span>
                 <span>
                     @if (_currentType != LeaderboardType.CoOp)
@@ -157,8 +185,11 @@
                             @foreach (var score in _scores)
                             {
                                 <TierListChartCard Chart="score.Chart"
-                                                   Score="new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken, default)"
-                                                   TierLabel="@score.Rating.ToString("N0")"
+                                                   Score="@(score.LegacyGrade == null
+                                                              ? new RecordedPhoenixScore(score.Chart.Id, score.Score, score.Plate, score.IsBroken, default)
+                                                              : null)"
+                                                   LegacyGrade="score.LegacyGrade"
+                                                   TierLabel="@score.Label"
                                                    ShowToDo="false"/>
                             }
                         </div>
@@ -244,8 +275,11 @@
     protected override async Task OnInitializedAsync()
     {
         var communityName = HttpUtility.UrlDecode(CommunityName);
-        var selectedMix = await UiSettings.GetSelectedMix();
-        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
+        // The board shows the mix you are on. It used to clamp XX to Phoenix, which meant an
+        // XX viewer was shown Phoenix scores and PUMBILITY under an XX heading -- and the
+        // recap button, whose own guard reads _currentMix == Phoenix and only ever passed
+        // because of the clamp. Legacy mixes rank on net score instead (owner, 2026-08-10).
+        _currentMix = await UiSettings.GetSelectedMix();
         var community = await Mediator.Send(new GetCommunityQuery(communityName));
         _community = community;
         _crumbs = new List<BreadcrumbItem>
@@ -319,6 +353,19 @@
         var entries = _leaderboard
             .Where(l => !_noScoreUserIds.Contains(l.UserId))
             .Where(l => !_community.IsRegional || _showGuests || _users[l.UserId].Country == CommunityName);
+        if (IsLegacy)
+        {
+            // One board on a legacy mix, ranked on net score. The Singles/Doubles/CoOp split
+            // is a Phoenix-rating idea -- there are no per-type legacy ratings to split on.
+            _entries = entries.OrderByDescending(l => l.Legacy?.NetScore ?? 0)
+                .ThenByDescending(l => l.Legacy?.TripleS ?? 0)
+                .Select((l, i) => new LeaderboardEntry(i + 1, l.ProfileImage, l.PlayerName, l.IsPublic,
+                    l.UserId, 0, 0, string.Empty, l.Legacy))
+                .ToArray();
+            _currentType = type;
+            return;
+        }
+
         _entries = type switch
         {
             LeaderboardType.Singles => entries.OrderByDescending(l => l.SinglesRating).Select((l, i) =>
@@ -358,6 +405,25 @@
         _expandedUserId = userId;
         _expandedChartType = chartType;
         _scores = null;
+        if (IsLegacy)
+        {
+            // The same fifty the net score is made of, biggest first — a legacy top 50 is
+            // ranked by the era score itself, since there is no rating to price it with.
+            // PumbilityScoring would throw here, which is why the page used to clamp XX away.
+            var legacyBests = (await Mediator.Send(new GetXXBestChartAttemptsQuery(userId, _currentMix)))
+                .Where(b => b.BestAttempt != null)
+                .OrderByDescending(b => b.BestAttempt!.Score == null ? -1 : (int)b.BestAttempt.Score.Value)
+                .ThenByDescending(b => b.BestAttempt!.LetterGrade)
+                .Take(50)
+                .ToArray();
+            _scores = legacyBests.Where(b => _charts.ContainsKey(b.Chart.Id))
+                .Select(b => new ScoreEntry(_charts[b.Chart.Id], 0, null, b.BestAttempt!.IsBroken, 0, 0,
+                    b.BestAttempt.LetterGrade,
+                    b.BestAttempt.Score is { } era ? ((int)era).ToString("N0") : string.Empty))
+                .ToArray();
+            return;
+        }
+
         var scoringConfig = ScoringConfiguration.PumbilityScoring(_currentMix, true);
         var top50 = await Mediator.Send(new GetTop50ForPlayerQuery(userId, chartType, Mix: _currentMix));
         _scores = top50.Where(s => _charts.ContainsKey(s.ChartId))
@@ -369,15 +435,43 @@
 
     private bool IsMe(Guid userId) => CurrentUser.IsLoggedIn && CurrentUser.User.Id == userId;
 
+    private bool IsLegacy => _currentMix.UsesLegacyScoring();
+
+    /// <summary>
+    ///     The old arcade ranking: everything you ever recorded, added up. Most legacy records
+    ///     carry no number, so a total of zero means the player logged grades rather than that
+    ///     they scored nothing — and this says which, instead of printing a 0.
+    /// </summary>
+    private string NetScoreText(LeaderboardEntry entry)
+    {
+        if (entry.Legacy == null) return "—";
+        if (entry.Legacy.Scored == 0) return L["no scores"].Value;
+
+        return entry.Legacy.NetScore.ToString("N0");
+    }
+
+    /// <summary>SSS / SS / S / A, the four grades worth counting (owner, 2026-08-10).</summary>
+    private static string GradeTally(LeaderboardEntry entry)
+    {
+        if (entry.Legacy is not { } legacy) return "—";
+
+        return $"{legacy.TripleS} / {legacy.DoubleS} / {legacy.SingleS} / {legacy.A}";
+    }
+
     private void GoToMembers()
     {
         NavManager.NavigateTo($"/Community/Members?CommunityName={HttpUtility.UrlEncode(CommunityName)}");
     }
 
-    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken, double Rating, double CompetitiveLevel);
+    private sealed record ScoreEntry(Chart Chart, PhoenixScore Score, PhoenixPlate? Plate, bool IsBroken,
+        double Rating, double CompetitiveLevel, XXLetterGrade? LegacyGrade = null, string? LegacyLabel = null)
+    {
+        /// <summary>The card's corner figure: a Phoenix rating, or the era score where there is one.</summary>
+        public string Label => LegacyGrade == null ? Rating.ToString("N0") : LegacyLabel ?? string.Empty;
+    }
 
     private sealed record LeaderboardEntry(int Place, Uri ProfileImage, Name PlayerName, bool IsPublic, Guid UserId,
-        double Rating, double CompetitiveLevel, string Color);
+        double Rating, double CompetitiveLevel, string Color, LegacyScoreTotals? Legacy = null);
 
     private enum LeaderboardType
     {
