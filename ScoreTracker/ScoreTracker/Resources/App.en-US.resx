@@ -1136,6 +1136,9 @@
   <data name="Chart Details" xml:space="preserve">
 	  <value>Chart Details</value>
   </data>
+  <data name="Chart ID" xml:space="preserve">
+    <value>Chart ID</value>
+  </data>
   <data name="Chart leaderboard" xml:space="preserve">
     <value>Chart leaderboard</value>
   </data>
@@ -1163,6 +1166,9 @@
   </data>
   <data name="Chart type (default Singles)" xml:space="preserve">
     <value>Chart type (default Singles)</value>
+  </data>
+  <data name="Chart URL" xml:space="preserve">
+    <value>Chart URL</value>
   </data>
   <data name="Chart view" xml:space="preserve">
     <value>Chart view</value>
@@ -4772,6 +4778,9 @@
   </data>
   <data name="Player" xml:space="preserve">
 	  <value>Player</value>
+  </data>
+  <data name="Player count" xml:space="preserve">
+    <value>Player count</value>
   </data>
   <data name="Player Page" xml:space="preserve">
     <value>Player page</value>

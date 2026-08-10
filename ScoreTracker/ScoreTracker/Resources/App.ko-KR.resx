@@ -1128,6 +1128,9 @@
   <data name="Chart Details" xml:space="preserve">
     <value>채보 세부 정보</value>
   </data>
+  <data name="Chart ID" xml:space="preserve">
+    <value>채보 ID</value>
+  </data>
   <data name="Chart leaderboard" xml:space="preserve">
     <value>채보 리더보드</value>
   </data>
@@ -1154,6 +1157,9 @@
   </data>
   <data name="Chart type (default Singles)" xml:space="preserve">
     <value>채보 종류 (기본 싱글)</value>
+  </data>
+  <data name="Chart URL" xml:space="preserve">
+    <value>채보 URL</value>
   </data>
   <data name="Chart view" xml:space="preserve">
     <value>그래프 보기</value>
@@ -4736,6 +4742,9 @@
   </data>
   <data name="Player" xml:space="preserve">
     <value>플레이어</value>
+  </data>
+  <data name="Player count" xml:space="preserve">
+    <value>플레이어 수</value>
   </data>
   <data name="Player Page" xml:space="preserve">
     <value>참가자 화면</value>

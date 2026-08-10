@@ -1136,6 +1136,9 @@
   <data name="Chart Details" xml:space="preserve">
     <value>Dettagli del chart</value>
   </data>
+  <data name="Chart ID" xml:space="preserve">
+    <value>ID del chart</value>
+  </data>
   <data name="Chart leaderboard" xml:space="preserve">
     <value>Classifica del chart</value>
   </data>
@@ -1163,6 +1166,9 @@
   </data>
   <data name="Chart type (default Singles)" xml:space="preserve">
     <value>Tipo di chart (predefinito Singles)</value>
+  </data>
+  <data name="Chart URL" xml:space="preserve">
+    <value>URL del chart</value>
   </data>
   <data name="Chart view" xml:space="preserve">
     <value>Vista del grafico</value>
@@ -4772,6 +4778,9 @@
   </data>
   <data name="Player" xml:space="preserve">
     <value>Giocatore</value>
+  </data>
+  <data name="Player count" xml:space="preserve">
+    <value>Numero di giocatori</value>
   </data>
   <data name="Player Page" xml:space="preserve">
     <value>Pagina giocatore</value>

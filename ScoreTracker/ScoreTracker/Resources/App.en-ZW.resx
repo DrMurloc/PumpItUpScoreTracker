@@ -1136,6 +1136,9 @@
   <data name="Chart Details" xml:space="preserve">
 	  <value>Murgl Rglrglmrgl</value>
   </data>
+  <data name="Chart ID" xml:space="preserve">
+    <value>Murgl ID</value>
+  </data>
   <data name="Chart leaderboard" xml:space="preserve">
     <value>Murgl mrglrmrgl</value>
   </data>
@@ -1163,6 +1166,9 @@
   </data>
   <data name="Chart type (default Singles)" xml:space="preserve">
     <value>Murgl morg (plglgrgllurg Mrglrlgl)</value>
+  </data>
+  <data name="Chart URL" xml:space="preserve">
+    <value>Murgl URL</value>
   </data>
   <data name="Chart view" xml:space="preserve">
     <value>Murgl murmblub</value>
@@ -4772,6 +4778,9 @@
   </data>
   <data name="Player" xml:space="preserve">
 	  <value>Morp</value>
+  </data>
+  <data name="Player count" xml:space="preserve">
+    <value>Morp glorgmurp</value>
   </data>
   <data name="Player Page" xml:space="preserve">
     <value>Morp Murgla</value>

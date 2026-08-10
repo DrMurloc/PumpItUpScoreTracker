@@ -14,8 +14,15 @@ namespace ScoreTracker.Web.Services;
 /// </summary>
 public static class ChartExport
 {
+    /// <summary>
+    ///     Everything a column can read beyond the row itself. Kept off
+    ///     <see cref="ChartSearchResult" /> deliberately: the page renders that projection on
+    ///     every load and must not pay for reads only the CSV wants.
+    /// </summary>
+    public sealed record ExportContext(string BaseUrl);
+
     public sealed record Column(string Key, bool RequiresUser,
-        Func<ChartSearchResult, string> Value);
+        Func<ChartSearchResult, ExportContext, string> Value);
 
     private static string Num<T>(T? value, string format = "0.##") where T : struct, IFormattable
     {
@@ -24,36 +31,42 @@ public static class ChartExport
 
     public static readonly IReadOnlyList<Column> Columns = new List<Column>
     {
-        new("Song", false, r => r.Chart.Song.Name.ToString()),
-        new("Artist", false, r => r.Chart.Song.Artist.ToString()),
-        new("StepArtist", false, r => r.Chart.StepArtist?.ToString() ?? string.Empty),
-        new("Type", false, r => r.Chart.Type.GetShortHand()),
-        new("Level", false, r => ((int)r.Chart.Level).ToString(CultureInfo.InvariantCulture)),
-        new("Mix", false, r => r.Chart.Mix.GetName()),
-        new("DebutMix", false, r => r.DebutMix.GetName()),
-        new("LegacyDifficulty", false, r => r.Chart.Slot?.GetName() ?? string.Empty),
-        new("SongType", false, r => r.Chart.Song.Type.ToString()),
-        new("BPM", false, r => r.Chart.Song.Bpm?.ToString() ?? string.Empty),
+        // The join key. The export exists so tools can parse it and had none: song plus
+        // type plus level is not stable across a rename.
+        new("ChartId", false, (r, _) => r.Chart.Id.ToString()),
+        new("Song", false, (r, _) => r.Chart.Song.Name.ToString()),
+        new("ChartUrl", false, (r, c) => c.BaseUrl + r.Chart.CanonicalPath()),
+        new("Artist", false, (r, _) => r.Chart.Song.Artist.ToString()),
+        new("StepArtist", false, (r, _) => r.Chart.StepArtist?.ToString() ?? string.Empty),
+        new("Type", false, (r, _) => r.Chart.Type.GetShortHand()),
+        // 1 for everything that is not a CO-OP chart, which is the truth rather than a blank.
+        new("PlayerCount", false, (r, _) => r.Chart.PlayerCount.ToString(CultureInfo.InvariantCulture)),
+        new("Level", false, (r, _) => ((int)r.Chart.Level).ToString(CultureInfo.InvariantCulture)),
+        new("Mix", false, (r, _) => r.Chart.Mix.GetName()),
+        new("DebutMix", false, (r, _) => r.DebutMix.GetName()),
+        new("LegacyDifficulty", false, (r, _) => r.Chart.Slot?.GetName() ?? string.Empty),
+        new("SongType", false, (r, _) => r.Chart.Song.Type.ToString()),
+        new("BPM", false, (r, _) => r.Chart.Song.Bpm?.ToString() ?? string.Empty),
         new("DurationSeconds", false,
-            r => ((int)r.Chart.Song.Duration.TotalSeconds).ToString(CultureInfo.InvariantCulture)),
-        new("NoteCount", false, r => Num(r.Chart.NoteCount, "0")),
-        new("NPS", false, r => Num(r.Nps)),
-        new("Badges", false, r => string.Join("; ", r.Badges.Select(b => b.DisplayName))),
-        new("PassDifficulty", false, r => r.PassDifficulty?.ToString() ?? string.Empty),
-        new("ScoreDifficulty", false, r => r.ScoreDifficulty?.ToString() ?? string.Empty),
-        new("CommunityVote", false, r => r.CommunityVote?.ToString() ?? string.Empty),
-        new("ScoringLevel", false, r => Num(r.ScoringLevel)),
-        new("CommunityVoteRating", false, r => Num(r.CommunityVoteRating)),
-        new("ScoreCount", false, r => r.ScoreCount.ToString(CultureInfo.InvariantCulture)),
-        new("PgCount", false, r => r.PgCount.ToString(CultureInfo.InvariantCulture)),
-        new("MyPhoenixScore", true, r => Mine(r, m => Num(m.PhoenixScore, "0"))),
-        new("MyPhoenixGrade", true, r => Mine(r, m => m.PhoenixGrade?.GetName() ?? string.Empty)),
-        new("MyPhoenixPlate", true, r => Mine(r, m => m.PhoenixPlate?.GetShorthand() ?? string.Empty)),
-        new("MyLegacyGrade", true, r => Mine(r, m => m.LegacyGrade?.ToString() ?? string.Empty)),
-        new("MyLegacyScore", true, r => Mine(r, m => Num(m.LegacyScore, "0"))),
-        new("MyBroken", true, r => Mine(r, m => m.IsBroken ? "true" : "false")),
+            (r, _) => ((int)r.Chart.Song.Duration.TotalSeconds).ToString(CultureInfo.InvariantCulture)),
+        new("NoteCount", false, (r, _) => Num(r.Chart.NoteCount, "0")),
+        new("NPS", false, (r, _) => Num(r.Nps)),
+        new("Badges", false, (r, _) => string.Join("; ", r.Badges.Select(b => b.DisplayName))),
+        new("PassDifficulty", false, (r, _) => r.PassDifficulty?.ToString() ?? string.Empty),
+        new("ScoreDifficulty", false, (r, _) => r.ScoreDifficulty?.ToString() ?? string.Empty),
+        new("CommunityVote", false, (r, _) => r.CommunityVote?.ToString() ?? string.Empty),
+        new("ScoringLevel", false, (r, _) => Num(r.ScoringLevel)),
+        new("CommunityVoteRating", false, (r, _) => Num(r.CommunityVoteRating)),
+        new("ScoreCount", false, (r, _) => r.ScoreCount.ToString(CultureInfo.InvariantCulture)),
+        new("PgCount", false, (r, _) => r.PgCount.ToString(CultureInfo.InvariantCulture)),
+        new("MyPhoenixScore", true, (r, _) => Mine(r, m => Num(m.PhoenixScore, "0"))),
+        new("MyPhoenixGrade", true, (r, _) => Mine(r, m => m.PhoenixGrade?.GetName() ?? string.Empty)),
+        new("MyPhoenixPlate", true, (r, _) => Mine(r, m => m.PhoenixPlate?.GetShorthand() ?? string.Empty)),
+        new("MyLegacyGrade", true, (r, _) => Mine(r, m => m.LegacyGrade?.ToString() ?? string.Empty)),
+        new("MyLegacyScore", true, (r, _) => Mine(r, m => Num(m.LegacyScore, "0"))),
+        new("MyBroken", true, (r, _) => Mine(r, m => m.IsBroken ? "true" : "false")),
         new("MyRecordedOn", true,
-            r => Mine(r, m => m.RecordedOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty))
+            (r, _) => Mine(r, m => m.RecordedOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty))
     };
 
     public static readonly IReadOnlyList<string> DefaultColumns = new[]
@@ -64,12 +77,13 @@ public static class ChartExport
         return result.My == null ? string.Empty : value(result.My);
     }
 
-    public static string Write(IEnumerable<ChartSearchResult> results, IReadOnlyList<Column> columns)
+    public static string Write(IEnumerable<ChartSearchResult> results, IReadOnlyList<Column> columns,
+        ExportContext context)
     {
         var builder = new StringBuilder();
         builder.AppendLine(string.Join(',', columns.Select(c => Escape(c.Key))));
         foreach (var result in results)
-            builder.AppendLine(string.Join(',', columns.Select(c => Escape(c.Value(result)))));
+            builder.AppendLine(string.Join(',', columns.Select(c => Escape(c.Value(result, context)))));
 
         return builder.ToString();
     }

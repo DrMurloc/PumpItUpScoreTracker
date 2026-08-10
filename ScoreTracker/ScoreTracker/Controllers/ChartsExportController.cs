@@ -48,7 +48,8 @@ public class ChartsExportController : Controller
 
 
         var page = await _mediator.Send(query, cancellationToken);
-        var csv = ChartExport.Write(page.Results, columns);
+        var context = new ChartExport.ExportContext($"{Request.Scheme}://{Request.Host}");
+        var csv = ChartExport.Write(page.Results, columns, context);
 
         var scopeSlug = ChartSlugs.MixSlug(mix);
         return File(Encoding.UTF8.GetBytes(csv), "text/csv", $"charts_{scopeSlug}.csv");

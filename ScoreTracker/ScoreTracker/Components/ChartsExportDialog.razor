@@ -57,8 +57,9 @@
     {
         ("Chart columns", new[]
         {
-            "Song", "Artist", "StepArtist", "Type", "Level", "Mix", "DebutMix",
-            "LegacyDifficulty", "SongType", "BPM", "DurationSeconds", "NoteCount", "NPS", "Badges"
+            "ChartId", "Song", "ChartUrl", "Artist", "StepArtist", "Type", "PlayerCount", "Level",
+            "Mix", "DebutMix", "LegacyDifficulty", "SongType", "BPM", "DurationSeconds", "NoteCount",
+            "NPS", "Badges"
         }),
         ("Community columns", new[]
         {
@@ -111,6 +112,9 @@
     {
         return key switch
         {
+            "ChartId" => "Chart ID",
+            "ChartUrl" => "Chart URL",
+            "PlayerCount" => "Player count",
             "StepArtist" => "Step Artist",
             "DebutMix" => "Debut mix",
             "LegacyDifficulty" => "Legacy Difficulty",

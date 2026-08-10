@@ -1136,6 +1136,9 @@
   <data name="Chart Details" xml:space="preserve">
 	  <value>譜面詳細</value>
   </data>
+  <data name="Chart ID" xml:space="preserve">
+    <value>譜面ID</value>
+  </data>
   <data name="Chart leaderboard" xml:space="preserve">
     <value>譜面ランキング</value>
   </data>
@@ -1163,6 +1166,9 @@
   <comment>種類 = single, double, co op</comment></data>
   <data name="Chart type (default Singles)" xml:space="preserve">
     <value>譜面タイプ（既定は Singles）</value>
+  </data>
+  <data name="Chart URL" xml:space="preserve">
+    <value>譜面URL</value>
   </data>
   <data name="Chart view" xml:space="preserve">
     <value>グラフ表示</value>
@@ -4772,6 +4778,9 @@
   </data>
   <data name="Player" xml:space="preserve">
 	  <value>プレーヤー</value>
+  </data>
+  <data name="Player count" xml:space="preserve">
+    <value>プレーヤー数</value>
   </data>
   <data name="Player Page" xml:space="preserve">
     <value>プレイヤー画面</value>
