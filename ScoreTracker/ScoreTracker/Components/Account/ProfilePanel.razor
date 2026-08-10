@@ -243,7 +243,7 @@
         // drops the cookie on the way out — otherwise the cached choice would answer for it.
         if (newCulture == SupportedCultures.Automatic)
         {
-            await Mediator.Send(new ClearUserUiSettingCommand("Culture"));
+            await UiSettings.ClearSetting("Culture");
             NavManager.NavigateTo($"/Culture/Clear?redirectUrl={returnUrl}", forceLoad: true);
             return;
         }

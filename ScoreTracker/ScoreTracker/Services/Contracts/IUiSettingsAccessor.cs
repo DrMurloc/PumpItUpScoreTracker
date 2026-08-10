@@ -40,4 +40,13 @@ public interface IUiSettingsAccessor
     Task SetSelectedMix(MixEnum mix, CancellationToken cancellationToken = default);
     Task<string?> GetSetting(string key, CancellationToken cancellationToken = default, Guid? userId = null);
     Task SetSetting(string key, string value, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Removes a setting, for preferences where absent is a real answer — the language
+    ///     picker's Automatic means "follow the browser", which is the same state as never having
+    ///     chosen. Symmetric with <see cref="SetSetting" /> so a caller never has to know which
+    ///     store it lands in; sending the command straight through MediatR instead skips the
+    ///     anonymous path and throws inside the circuit of a visitor who is not signed in.
+    /// </summary>
+    Task ClearSetting(string key, CancellationToken cancellationToken = default);
 }

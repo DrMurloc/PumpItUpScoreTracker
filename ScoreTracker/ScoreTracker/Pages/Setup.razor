@@ -837,7 +837,7 @@
         if (isAutomatic)
         {
             _culture = SupportedCultures.Automatic;
-            await Mediator.Send(new ClearUserUiSettingCommand("Culture"));
+            await UiSettings.ClearSetting("Culture");
             NavManager.NavigateTo($"/Culture/Clear?redirectUrl={Uri.EscapeDataString(SelfUrl)}", true);
             return;
         }

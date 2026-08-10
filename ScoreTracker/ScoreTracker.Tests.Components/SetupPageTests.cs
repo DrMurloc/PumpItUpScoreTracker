@@ -457,8 +457,7 @@ public sealed class SetupPageTests : ComponentTestBase
 
         await page.Find("#setup-language").ChangeAsync(new() { Value = SupportedCultures.Automatic });
 
-        _mediator.Verify(m => m.Send(It.Is<ClearUserUiSettingCommand>(c => c.SettingName == "Culture"),
-            It.IsAny<CancellationToken>()), Times.Once);
+        _uiSettings.Verify(u => u.ClearSetting("Culture", It.IsAny<CancellationToken>()), Times.Once);
         _uiSettings.Verify(u => u.SetSetting("Culture", It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
         Assert.True(NavigatedTo("/Culture/Clear"), Navigations);
