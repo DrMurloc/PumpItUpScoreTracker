@@ -387,32 +387,7 @@ app.UseAuthentication();
 // replaced by a scheme-specific principal, so an api/* caller authenticating with an ApiToken
 // would start receiving its owner's language in output meant to be stable for machines. Here,
 // HttpContext.User is the cookie principal or nobody.
-var localization = new RequestLocalizationOptions()
-    .AddSupportedCultures(SupportedCultures.Codes())
-    .AddSupportedUICultures(SupportedCultures.Codes())
-    .SetDefaultCulture(SupportedCultures.Default);
-// Rank 2, above the cookie: a signed-in player's saved language is the answer. Insert, not Add —
-// position IS the ranking, and only an explicit ?culture= (index 0, a deliberately one-request
-// preview) may outrank what the account says.
-localization.RequestCultureProviders.Insert(1, new UserSettingRequestCultureProvider());
-// Appended AFTER the three stock providers, so it only speaks when they found nothing: an
-// explicit ?culture= or the saved cookie still wins, and an exactly-supported Accept-Language
-// tag is still matched by the stock header provider. What reaches here is the case that used
-// to fall through to English — a bare "es"/"ja", or a region we carry no catalogue for
-// (es-CL, pt-PT, fr-CA). ResolveClosest maps those down; anything it can't place returns
-// null, which leaves the default culture exactly as before.
-localization.RequestCultureProviders.Add(new CustomRequestCultureProvider(context =>
-{
-    foreach (var language in context.Request.GetTypedHeaders().AcceptLanguage
-                 .OrderByDescending(l => l.Quality ?? 1d))
-    {
-        var resolved = SupportedCultures.ResolveClosest(language.Value.Value);
-        if (resolved != null) return Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult(resolved));
-    }
-
-    return Task.FromResult<ProviderCultureResult?>(null);
-}));
-app.UseRequestLocalization(localization);
+app.UseRequestLocalization(CultureResolution.BuildOptions());
 
 app.UseRateLimiter();
 app.UseAuthorization();
