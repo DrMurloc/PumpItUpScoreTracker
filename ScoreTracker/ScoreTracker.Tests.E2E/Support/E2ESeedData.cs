@@ -180,6 +180,18 @@ public sealed class E2ESeedData
             cancellationToken);
     }
 
+    /// <summary>
+    ///     What choosing Automatic leaves behind: no Culture key at all. Absence is how "follow
+    ///     the browser" is stored, so this is the state, not a reset.
+    /// </summary>
+    public async Task ClearCultureAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE [scores].[UserSettings] SET [UiSettings] = {SeenAnnouncements} WHERE [UserId] = {userId}",
+            cancellationToken);
+    }
+
     /// <summary>A Phoenix best-score row (ScoreLedger-internal entity) — seeded with SQL.</summary>
     public async Task SeedPhoenixScoreAsync(Guid userId, Guid chartId, int score, bool isBroken = false,
         CancellationToken cancellationToken = default)

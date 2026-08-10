@@ -134,6 +134,26 @@ public sealed class CultureResolutionTests : IAsyncLifetime
         Assert.Contains(EnglishNav, body);
     }
 
+    /// <summary>
+    ///     Automatic, end to end: the setting goes, the cached cookie goes with it, and the
+    ///     browser decides again from the very next request. Clearing only one of the two would
+    ///     look fixed until the cookie answered in the browser's place.
+    /// </summary>
+    [Fact]
+    public async Task AutomaticHandsTheLanguageBackToTheBrowser()
+    {
+        var userId = await _fixture.Seed.SeedUserAsync("CultureAutomatic");
+        await _fixture.Seed.SeedCultureAsync(userId, "en-US");
+        await SignInAsync(userId);
+        Assert.Contains(EnglishNav, await GetAsync("/", SpanishBrowser));
+
+        await _fixture.Seed.ClearCultureAsync(userId);
+        _fixture.ClearCaches();
+        using var cleared = await _client.GetAsync("/Culture/Clear?redirectUrl=%2F");
+
+        Assert.Contains(SpanishNav, await GetAsync("/", SpanishBrowser));
+    }
+
     private async Task SignInAsync(Guid userId)
     {
         using var form = new FormUrlEncodedContent(new[]
