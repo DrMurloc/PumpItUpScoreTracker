@@ -149,7 +149,7 @@ why they are `.razor` and not cshtml partial markup** — cshtml markup would be
 | Wordmark, nav links/groups | 69–200 | static HTML | no |
 | Mega menus (Play/Progress/Compete/Community/Tools) | `MudMenu` 73–199 | static markup + `nav.js` click-toggle | no |
 | Nav visibility (auth / `LegacyMixGate` / XX-vs-Phoenix) | 78–196 | server-side conditionals | no |
-| ↳ *The `LegacyMixGate` half is gone (2026-08-09, D14); auth and the import-target split remain.* | | | |
+| ↳ *The `LegacyMixGate` half is gone (2026-08-09, D14). What remains is auth, the import-target split, and per-destination mix scoping from `MixCapabilities` (2026-08-10) — a link hides only when the thing it points at does not exist for that mix.* | | | |
 | App-bar chart search (`ChartSelector`) | 204–208 | **island** (owner: no visual changes, so it stays) | **yes** |
 | Mix pill + `MixSelector` menu | 212–219 | static `<details>` menu + `/Mix/Set` links + full reload | no |
 | Avatar + user menu | 221–247 | static HTML (claims + cached settings) | no |

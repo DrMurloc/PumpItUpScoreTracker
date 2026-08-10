@@ -200,6 +200,52 @@ monthly rollup is already legacy-safe (raw-score pricing, `long` sum), and an em
 no history, so quiet mixes cannot accumulate junk rows once boards do exist.
 
 
+## What a legacy mix reaches, per surface (2026-08-10)
+
+The route gate is gone (see above). Scoping is per destination now, and lives in
+`SharedKernel/Enums/MixCapabilities.cs` so the desktop menu and the phone's More sheet read one
+set of rules rather than a copy each.
+
+| Destination | Mixes | Why |
+|---|---|---|
+| PUMBILITY | Phoenix 1 + 2 | prices a 1,000,000-scale score |
+| My Recap | Phoenix 1 | computed from P1 data, for now |
+| Titles | XX, P1, P2 | follows `TitleLadders` — XX **has** a ladder |
+| Leaderboards (whole section) | Phoenix 1 + 2 | the official site publishes for the current generation |
+| Phoenix + Rating calculators | Phoenix 1 + 2 | they answer Phoenix questions |
+| Weekly Charts | Phoenix 1 + 2 | rotation does not reach older mixes yet (see below) |
+| Everything else | every mix | including Lifebar Calculator and Mix Changes, which never read the selected mix |
+
+Hiding a link is **not** the gate returning: every route stays reachable, and a page that cannot
+answer explains itself on arrival via `MixUnavailableNotice`, which distinguishes *not built yet*
+from *this mix never had it*.
+
+### Surfaces that work on a legacy mix
+
+- **Chart page + details dialog** — record through `RecordScoreForm`, read from `BestAttempt`.
+- **Tier lists** — Community Rating lens, with your legacy scores loaded (lamps, borders,
+  completion filters). The lens **picker and chip do not render** on a legacy mix: there is exactly
+  one lens, so a disabled one-option dropdown read as broken. They return when voting does.
+- **Community leaderboard** — ranks on net score, with SSS/SS/S/A tallies. No PUMBILITY, no
+  Singles/Doubles/CoOp split (those divide Phoenix per-type ratings), no recap button.
+- **Community player page** — folder graphs read the legacy store; PUMBILITY, competitive level,
+  the rating tiles and the official standing are hidden rather than drawn as zeros.
+- **Rivals** — head-to-head compares within a chart, which era scores do fine. Score decides,
+  letter breaks the tie. No official placements, and the folder auto-select is skipped (it centres
+  on competitive levels). The **highlights feed stays empty** — it is built on the Phoenix
+  progression chain.
+- **Dashboard** — widgets declare `SupportedMixes`; the three that work on every mix are Quick
+  Record, Import Scores and By-Level Breakdown. A widget that cannot render says so and keeps its
+  slot.
+
+### Importing on a legacy mix
+
+`/UploadXXScores` takes the CSV. The **overwrite toggle** decides the semantics: off (the default)
+runs `LegacyBestAttemptPolicy` and may only raise a record; on, the file wins outright, which is
+the only way to correct something downward. Overwrite was the unannounced behaviour of every
+upload before 2026-08-10, which is why it is now opt-in. `/UploadPhoenixScores` refuses a legacy
+mix rather than throwing — every write on it goes through the Phoenix command.
+
 ## Delivery plan
 
 **One PR** (owner call 2026-07-11, superseding the earlier 3-PR split), commit series C1–C10 below, each commit building green. **Bulk data never enters the repo** — the extractor tooling is committed; the data it generates ships as idempotent SQL scripts to the owner's Downloads folder, run manually after the PR deploys (migrations applied first).

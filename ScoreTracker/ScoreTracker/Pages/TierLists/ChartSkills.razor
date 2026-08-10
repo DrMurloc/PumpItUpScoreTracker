@@ -50,15 +50,11 @@ else
     @* Round 9: the lens controls render in the desktop content bar AND the compact
        Advanced drawer — one fragment so they can't drift. *@
     RenderFragment lensControls = @<text>
-        @if (IsLegacy)
-        {
-            @* Votes are the only tier data legacy mixes have — one fixed lens,
-               same vocabulary and colors as the Phoenix lenses. *@
-            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="true" Value="_tierListType">
-                <MudSelectItem T="string" Value="@("Community")">@L["Community Rating"]</MudSelectItem>
-            </MudSelect>
-        }
-        else
+        @* A legacy mix gets no lens control at all. It has exactly one — Community Rating,
+           off the vote aggregates — so the picker was a disabled dropdown with a single
+           option, which is a control that looks broken rather than one that explains itself.
+           It comes back when voting does; the lens itself is unchanged (owner, 2026-08-10). *@
+        @if (!IsLegacy)
         {
         <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
             <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
@@ -155,7 +151,11 @@ else
             <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt"
                      OnClick="@(() => NavManager.NavigateTo(BreakdownUrl))">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
         }
-        <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Ranked by"]: @LensDisplayName(_tierListType)</MudChip>
+        @* Same reason as the picker: naming the only lens there is says nothing. *@
+        @if (!IsLegacy)
+        {
+            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Ranked by"]: @LensDisplayName(_tierListType)</MudChip>
+        }
         @if (IsMyProgress)
         {
             <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Grouped by"]: @L[_groupBy]</MudChip>
