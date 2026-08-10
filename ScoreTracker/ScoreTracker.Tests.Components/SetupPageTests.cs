@@ -431,6 +431,40 @@ public sealed class SetupPageTests : ComponentTestBase
         Assert.True(NavigatedTo(Uri.EscapeDataString("/Setup?from=Google")), Navigations);
     }
 
+    /// <summary>
+    ///     A new account has chosen nothing, and Automatic says exactly that — the page is
+    ///     already in the language the browser asked for. Defaulting to a real code would pin
+    ///     whichever browser they happened to sign up on onto the account for good.
+    /// </summary>
+    [Fact]
+    public void StartsOnAutomaticBecauseANewAccountHasChosenNothing()
+    {
+        var page = Render();
+
+        Assert.Equal(SupportedCultures.Automatic, page.Find("#setup-language").GetAttribute("value"));
+    }
+
+    /// <summary>
+    ///     Automatic is stored as absence, so it clears rather than writes — and it drops the
+    ///     cookie too, or a choice made a moment ago answers in the browser's place.
+    /// </summary>
+    [Fact]
+    public async Task ChoosingAutomaticClearsTheSettingAndTheCookie()
+    {
+        _uiSettings.Setup(u => u.GetSetting("Culture", It.IsAny<CancellationToken>(), null))
+            .ReturnsAsync("ko-KR");
+        var page = Render();
+
+        await page.Find("#setup-language").ChangeAsync(new() { Value = SupportedCultures.Automatic });
+
+        _mediator.Verify(m => m.Send(It.Is<ClearUserUiSettingCommand>(c => c.SettingName == "Culture"),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _uiSettings.Verify(u => u.SetSetting("Culture", It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        Assert.True(NavigatedTo("/Culture/Clear"), Navigations);
+        Assert.False(NavigatedTo("/Culture/Set"), Navigations);
+    }
+
     /// <summary>An unsupported culture is not persisted and does not navigate.</summary>
     [Fact]
     public async Task IgnoresAnUnsupportedLanguage()
