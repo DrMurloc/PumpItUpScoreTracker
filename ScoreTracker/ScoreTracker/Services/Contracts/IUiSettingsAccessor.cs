@@ -12,9 +12,19 @@ public interface IUiSettingsAccessor
     const string MixSettingKey = "Universal__CurrentMix";
 
     /// <summary>
-    ///     Set when a new account finishes <c>/Setup</c>. Its presence is the whole "this account
-    ///     is past onboarding" test — <c>LoginController</c> reads it to stop sending them back,
-    ///     and anything that would interrupt a first-run player reads it to stay quiet.
+    ///     Set when a new account finishes <c>/Setup</c>, and read by nothing today.
+    ///     <para>
+    ///         Do not reach for it as a "is this account new?" test. It answers the opposite
+    ///         question and only for accounts that postdate the page: every account created before
+    ///         <c>/Setup</c> existed lacks the key permanently, so absence means "brand new" and
+    ///         "signed up years ago" at the same time. <c>LoginController</c> decides where to send
+    ///         a sign-in from whether the account was just created; the one feature that has to
+    ///         stay quiet for a first-run player recognises them by their arrival on the page.
+    ///     </para>
+    ///     <para>
+    ///         Kept written because it is the only durable record that an account finished
+    ///         onboarding, which is a real question even though nothing asks it yet.
+    ///     </para>
     /// </summary>
     const string SetupCompletedSettingKey = "Universal__SetupCompleted";
 

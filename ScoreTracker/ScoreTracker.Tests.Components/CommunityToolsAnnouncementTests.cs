@@ -84,19 +84,19 @@ public sealed class CommunityToolsAnnouncementTests : ComponentTestBase
     }
 
     /// <summary>
-    ///     The audience test, stated directly: an account old enough to have never seen <c>/Setup</c>
-    ///     carries no completion flag, and still gets the notice.
+    ///     The audience test, stated directly: an account old enough to have never seen
+    ///     <c>/Setup</c> still gets the notice. Its completion flag is deliberately left unstubbed
+    ///     — the component must reach this conclusion without consulting it, because every account
+    ///     that predates the page is missing that flag exactly as a brand-new one is.
     /// </summary>
     [Fact]
     public void ConsidersTheNoticeForAnAccountThatNeverWalkedSetup()
     {
-        _uiSettings.Setup(u => u.GetSetting(IUiSettingsAccessor.SetupCompletedSettingKey,
-                It.IsAny<CancellationToken>(), null))
-            .ReturnsAsync((string?)null);
-
         RenderComponent<CommunityToolsAnnouncement>();
 
         AssertConsidered(Times.Once());
+        _uiSettings.Verify(u => u.GetSetting(IUiSettingsAccessor.SetupCompletedSettingKey,
+            It.IsAny<CancellationToken>(), It.IsAny<Guid?>()), Times.Never);
     }
 
     [Fact]

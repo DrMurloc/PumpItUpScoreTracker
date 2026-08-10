@@ -609,6 +609,7 @@
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
+@inject ILogger<Setup> Logger
 
 @code {
 
@@ -652,12 +653,22 @@
     private string _mergeInviteTag = string.Empty;
 
     /// <summary>
+    ///     This page's own address, carrying the provider through so anything that leaves and comes
+    ///     back keeps the "filled in from PIUGAME" chip. Rebuilt from the whitelisted label rather
+    ///     than echoing the query string, which the player controls.
+    /// </summary>
+    private string SelfUrl =>
+        ProviderLabel == null || From == null
+            ? "/Setup"
+            : $"/Setup?from={Uri.EscapeDataString(From)}";
+
+    /// <summary>
     ///     Back here afterwards: keeping the new account leaves setup unfinished, so the wizard
     ///     returns to it. Keeping the other one retires this account and the wizard forces a
     ///     sign-out instead, which is why this is only ever the survivor's path.
     /// </summary>
     private string MergeUrl =>
-        $"/Account/Merge?with={_mergeInviteUserId}&returnUrl={Uri.EscapeDataString("/Setup")}";
+        $"/Account/Merge?with={_mergeInviteUserId}&returnUrl={Uri.EscapeDataString(SelfUrl)}";
 
     protected override async Task OnInitializedAsync()
     {
@@ -697,12 +708,28 @@
     {
         if (CurrentUser.User.GameTag is not { } tag) return;
 
-        var match = (await Mediator.Send(new GetUsersByGameTagQuery(tag)))
-            .FirstOrDefault(u => u.Id != CurrentUser.User.Id);
-        if (match == null) return;
+        try
+        {
+            // Ordered so the answer is stable. A shared tag can match several accounts and the
+            // query imposes no order, so an unordered pick can name one stranger on arrival and a
+            // different one after the language reload re-runs it.
+            var match = (await Mediator.Send(new GetUsersByGameTagQuery(tag)))
+                .OrderBy(u => u.Id)
+                .FirstOrDefault(u => u.Id != CurrentUser.User.Id);
+            if (match == null) return;
 
-        _mergeInviteUserId = match.Id;
-        _mergeInviteTag = tag;
+            _mergeInviteUserId = match.Id;
+            _mergeInviteTag = tag;
+        }
+        catch (Exception e)
+        {
+            // The lookup materializes other people's rows, and one unusable name or profile-image
+            // URL among them throws while building them. This is an optional invitation on the one
+            // page a new account has to finish, and nothing here catches a circuit-killing throw —
+            // so a stranger's bad row would leave a new player on a dead screen with no way
+            // forward. An invitation that cannot be offered is simply not offered.
+            Logger.LogWarning(e, "Game-tag merge invitation lookup failed for {GameTag}", tag);
+        }
     }
 
     private async Task OnNameChanged(ChangeEventArgs args)
@@ -795,12 +822,8 @@
         _culture = SupportedCultures.Normalize(value);
         await UiSettings.SetSetting("Culture", _culture);
 
-        var from = From;
-        var returnTo = ProviderLabel == null || from == null
-            ? "/Setup"
-            : $"/Setup?from={Uri.EscapeDataString(from)}";
         NavManager.NavigateTo(
-            $"/Culture/Set?culture={_culture}&redirectUrl={Uri.EscapeDataString(returnTo)}",
+            $"/Culture/Set?culture={_culture}&redirectUrl={Uri.EscapeDataString(SelfUrl)}",
             true);
     }
 
