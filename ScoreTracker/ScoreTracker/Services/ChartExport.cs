@@ -2,8 +2,10 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 using ScoreTracker.Catalog.Contracts;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Web.Services;
 
@@ -128,6 +130,12 @@ public static class ChartExport
         new("MyGoods", true, (r, _) => Mine(r, m => Num(m.Judgements?.Goods, "0")), Scope.PhoenixFamily),
         new("MyBads", true, (r, _) => Mine(r, m => Num(m.Judgements?.Bads, "0")), Scope.PhoenixFamily),
         new("MyMisses", true, (r, _) => Mine(r, m => Num(m.Judgements?.Misses, "0")), Scope.PhoenixFamily),
+        // Solved from the score and the breakdown, since no PIU surface reports it. Null
+        // unless the judgements cover the whole chart — see PhoenixComboSolver.
+        new("MyMaxCombo", true, (r, _) => Mine(r,
+            m => Num(PhoenixComboSolver.MaxComboFor(m.Judgements,
+                m.PhoenixScore == null ? null : (PhoenixScore)m.PhoenixScore.Value, r.Chart.NoteCount), "0")),
+            Scope.PhoenixFamily),
         new("MyBroken", true, (r, _) => Mine(r, m => m.IsBroken ? "true" : "false")),
         new("MyRecordedOn", true,
             (r, _) => Mine(r, m => m.RecordedOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty))

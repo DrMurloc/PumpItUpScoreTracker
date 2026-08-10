@@ -3579,6 +3579,9 @@
   <data name="My legacy score" xml:space="preserve">
     <value>내 레거시 점수</value>
   </data>
+  <data name="My max combo" xml:space="preserve">
+    <value>내 최대 콤보</value>
+  </data>
   <data name="My Misses" xml:space="preserve">
     <value>내 미스</value>
   </data>

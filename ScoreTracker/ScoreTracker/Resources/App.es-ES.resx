@@ -3579,6 +3579,9 @@
   <data name="My legacy score" xml:space="preserve">
     <value>Mi score legacy</value>
   </data>
+  <data name="My max combo" xml:space="preserve">
+    <value>Mi combo máximo</value>
+  </data>
   <data name="My Misses" xml:space="preserve">
     <value>Mis Misses</value>
   </data>
