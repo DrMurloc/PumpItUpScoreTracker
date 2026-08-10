@@ -52,15 +52,16 @@ public sealed class ScoringObservationsTests
     {
         // Every row logs, not only the mismatches: a cell that never appears would otherwise be
         // indistinguishable from a cell that is correct, which is how the four plate x type
-        // cells nobody had ever seen were closed. Doubles S23 AA MG = Base(23) 245 x (1.36 + 0.006).
+        // cells nobody had ever seen were closed. A real S22 AA MG row, which prices one level
+        // up at Base(23) 245 x (1.36 + 0.006) — a Single's AA, not the 1.37 a Double reads.
         var logger = new CapturingLogger();
 
         ScoringObservations.ObservePumbility(logger, MixEnum.Phoenix2,
-            new[] { Row(ChartType.Double, 23, PhoenixLetterGrade.AA, PhoenixPlate.MarvelousGame, 334.67) });
+            new[] { Row(ChartType.Single, 22, PhoenixLetterGrade.AA, PhoenixPlate.MarvelousGame, 334.67) });
 
         var line = Assert.Single(logger.Lines);
         Assert.Contains("verdict match", line);
-        Assert.Contains("MG Double", line);
+        Assert.Contains("MG Single", line);
     }
 
     [Fact]

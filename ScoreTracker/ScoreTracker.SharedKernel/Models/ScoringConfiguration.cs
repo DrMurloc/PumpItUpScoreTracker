@@ -288,8 +288,9 @@ namespace ScoreTracker.SharedKernel.Models
         ///         Measured from a bare base of ×1.00 rather than from a grade, so the level part
         ///         is the chart's own value and the grade part is everything the score adds on
         ///         top (docs/design/pumbility-overhaul.md D16). On Phoenix 1 that reference is
-        ///         also AA, whose modifier is exactly 1.0; on Phoenix 2 nothing can score it,
-        ///         since the worst grade there pays 1.08.
+        ///         also AA, whose modifier is exactly 1.0; on Phoenix 2 only an F scores below
+        ///         it, so the grade part is negative for exactly that grade and positive for
+        ///         every other.
         ///     </para>
         /// </summary>
         public ScoreContribution Decompose(Chart chart, PhoenixScore score, PhoenixPlate plate,
@@ -454,7 +455,9 @@ namespace ScoreTracker.SharedKernel.Models
             config.ChartTypeModifiers[ChartType.CoOp] = 0.0;
             // SinglePerformance/DoublePerformance stay 0 from the defaults (half-double excluded).
 
-            // Grade multipliers — verified exact for A+ and above.
+            // Grade multipliers. Like the plate table this is what a DOUBLE prices; AA and A+
+            // are the two grades a Single reads differently, and they are overridden below.
+            // AA+ and up are identical on both types across hundreds of live rows.
             config.LetterGradeModifiers[PhoenixLetterGrade.SSSPlus] = 1.50;
             config.LetterGradeModifiers[PhoenixLetterGrade.SSS] = 1.49;
             config.LetterGradeModifiers[PhoenixLetterGrade.SSPlus] = 1.48;
@@ -464,25 +467,38 @@ namespace ScoreTracker.SharedKernel.Models
             config.LetterGradeModifiers[PhoenixLetterGrade.AAAPlus] = 1.43;
             config.LetterGradeModifiers[PhoenixLetterGrade.AAA] = 1.41;
             config.LetterGradeModifiers[PhoenixLetterGrade.AAPlus] = 1.39;
-            // AA and A+ solved 2026-07-19 from the mirrored boards: reconstructing 19
-            // singles-tab players' pools from their chart-board rows (Base(L+1), known
-            // multipliers) bounds A+ to [1.32, 1.34] and AA to [1.35, 1.37] — the launch-era
-            // pre-rebalance values (1.35/1.37) produce impossible NEGATIVE plate residuals
-            // for stable players (KONA/WONDANG/HNGEAR/HORRORCOMEDY reconstruct with clean
-            // FG/TG-sized residuals at 1.33/1.36). The pre-launch xlsx AA row (D24 AA RG
-            // 342.50 = 250 × 1.37) was location-test tuning, superseded like the singles +1.
-            config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.36;
-            config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.33;
+            // A Double reads these two a notch higher than a Single does. Both are live
+            // per-chart reads: a D25 A+ FG at 351.52 = Base(25) 260 × (1.35 + 0.002), and a
+            // D24 AA RG at 342.50 = Base(24) 250 × 1.37 — the pre-launch value, which turns
+            // out to have been a doubles observation rather than stale tuning.
+            config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
+            config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
             // A verified live 2026-07-19 (my_page/pumbility.php per-chart read: an S14 A TG at
-            // 263.22 = Base(15) × 1.284). Descending steps land at −0.01 (S tier), −0.02
-            // (AAA tier), −0.03 (AA/A+), −0.05 (A+→A).
+            // 263.22 = Base(15) × 1.284); no doubles A row has ever been priced, so both types
+            // read it here.
             config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.28;
-            // TODO(P2-pumbility): B and below are UNVERIFIED — extended at the last observed
-            // −0.05 step pending a live sub-800k sample on a counting chart.
-            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.23;
-            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.18;
-            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.13;
-            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.08;
+            // B and D are live singles reads (2026-08-10): an S18 B at Base(19) 225 × 1.20,
+            // seen twice on two different plates, and an S15 D at Base(16) 210 × 1.00. Neither
+            // has ever been priced on a Double, so both types read the singles value — closer
+            // to the evidence than the −0.05 extrapolation these replace.
+            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.20;
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.00;
+            // C and F have never been priced on either type: a pool holds a player's fifty
+            // BEST charts, and these grades rarely survive into one. They interpolate the
+            // confirmed rungs either side at the 0.10 step B and D describe. Note that F must
+            // move whatever else does — left where it was it would pay MORE than D, and a
+            // worse grade cannot be worth more than a better one.
+            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.10;
+            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 0.90;
+
+            // What a Single reads instead, for the two grades that differ. Singles A+ is
+            // pinned by three live rows and AA by nine, against one doubles chart each — so
+            // the singles side is the better-evidenced half of both splits.
+            config.SinglesLetterGradeModifiers = new Dictionary<PhoenixLetterGrade, double>
+            {
+                [PhoenixLetterGrade.AA] = 1.36,
+                [PhoenixLetterGrade.APlus] = 1.33
+            };
 
             // Plate bonuses (ADDITIVE terms, not multipliers). This table is what a Double
             // prices; Singles differ on two of the eight and say so below.
