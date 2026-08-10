@@ -542,8 +542,9 @@ ours 16.84). They measure different things. It stays inside the passthrough, kee
 - The unstable note lives in the piucenter group, not in this doc alone.
 
 `charts.scss` line 1 sets `.mud-dialog-width-sm { max-width: none !important; }`, so this
-dialog has never actually been `MaxWidth.Small` — there is room for a second chip column on
-desktop if the single column reads long.
+dialog has never actually been `MaxWidth.Small`. The room was already there, so the chips lay
+out in two columns from 700px up (owner call) — a grid rather than a wrapping row, which also
+left-aligns the labels against each other instead of leaving them ragged.
 
 ### Layer scope
 
@@ -552,26 +553,39 @@ desktop if the single column reads long.
 | SharedKernel | none — `PumbilityScoring` already exists and Web already calls it |
 | Domain | one file: the combo solver in `Domain/Services/` |
 | Application, Data | none |
-| Catalog | `ChartSearchMyState` +5 judgement ints; `ChartSearchResult` +metric bag, −`PassCount`; `SearchChartsQuery` −`PassRateMin`; handler carries both through and loses the pass-rate filter. Both additions are free at runtime — already loaded, already cached |
+| Catalog | `ChartSearchMyState` +5 judgement ints (free — the record read already hydrates them); `ChartSearchResult` −`PassCount`; `SearchChartsQuery` −`PassRateMin`; handler loses the pass-rate filter. Plus `GetChartMetricsQuery` / `GetChartMetricNamesQuery` + one handler for the passthrough |
 | ScoreLedger | `GetPlayerChartPlayCountsQuery` + handler + one method on the internal `IScoreJournalRepository` + its EF implementation. Covered by the existing `(UserId, MixId, ChartId, OccurredAt)` index |
 | Web | the registry, the dialog, the controller, and the pass-rate deletions in `ChartSearchCard` / `Charts.razor` / `ChartSearchUrlParser` |
 
-`ChartExport.Column.Value` grows a context record so play count can ride the export without
-the page paying for a read it never renders.
+`ChartExport.Column.Value` grows a context record so play count and the metric map can ride
+the export without the page paying for reads it never renders.
+
+**The passthrough deliberately does NOT ride `ChartSearchResult`.** Two Catalog queries carry
+it instead — names for the picker's chip sizes, values for the endpoint — because the page
+renders that projection on every load and the CSV is the only thing that wants metrics. It
+also keeps `ChartSkillMetric` internal, which a contract field would not.
 
 ### Commit order
 
 | # | Commit | Layer |
 |---|---|---|
 | E1 | This doc section | docs |
-| E2 | Purge pass rate: card fact, table column, drawer control, chip, URL param, `PassRateMin`, `MinScoresForPassRate`, `PassCount`, the export column and its `DefaultColumns` entry; delete `PassRateNeedsTheMinimumSample` | Presentation/Catalog |
-| E3 | `ChartId`, `ChartUrl`, `PlayerCount` — registry only, proves the dialog/controller/test loop | Presentation |
-| E4 | Dialog restructure: group headers, All-*n*, mix-conditional My columns (incl. the legacy-blank fix) + bUnit | Presentation |
+| E2 | Purge pass rate: card fact, table column, chip, URL param, `PassRateMin`, `MinScoresForPassRate`, `PassCount`, the export column and its `DefaultColumns` entry; delete `PassRateNeedsTheMinimumSample` | Presentation/Catalog |
+| E3 | `ChartId`, `ChartUrl`, `PlayerCount` + the `ExportContext` the URL forces | Presentation |
+| E4 | Dialog restructure: group headers, All-*n*, two chip columns from 700px, mix-conditional My columns (incl. the legacy-blank fix) + bUnit | Presentation |
 | E5 | `Pumbility` column + l10n | Presentation |
 | E6 | Judgements through `ChartSearchMyState` + five columns + l10n | Catalog/Presentation |
 | E7 | Combo solver + round-trip unit test + `MyMaxCombo` column | Domain/Presentation |
-| E8 | Play count: ScoreLedger query, handler, repo method, integration test, the `Column` context refactor, the column | ScoreLedger/Presentation |
-| E9 | piucenter bundles: metric bag projection, bundle expansion in `Write`, six chips, the unstable note + l10n | Catalog/Presentation |
+| E8 | Play count: ScoreLedger query, handler, repo method, integration test, the column | ScoreLedger/Presentation |
+| E9 | piucenter passthrough: two Catalog queries, bundle expansion in `Write`, six chips, the unstable note + l10n | Catalog/Presentation |
+
+The drawer needed no change at E2 — the pass-rate slider was already off the pick list. The
+table did: its sortable **Pass Difficulty** header stood over the pass-*rate* cell rather than
+over the Tier cell that renders the pass-difficulty category, so the Tier header carries that
+sort now and the mislabelling went out with the column.
+
+`piucenter` joined the Murloc ratchet's protected proper nouns. The passthrough is attributed
+to the site by name, which is the same standing `PIU Center` already had.
 
 ~20 new l10n keys across nine locales, inserted alphabetically, landing with the commit that
 introduces them. The `Pass rate` key stays — `StaminaTournament.razor` still uses it, and a
@@ -579,8 +593,10 @@ call-site grep scoped to this page would wrongly call it dead.
 
 ### Open
 
-- One chip column or two on desktop.
 - The gate admits ~500 broken Phoenix 2 records whose judgement sums *do* equal the note
   count. Deriving their combo is arithmetically identical; whether a failed stage's score
   is formula-comparable is the part nobody can check. Currently they derive, because the
   gate is the note-count rule and nothing else.
+- `PhoenixComboSolver` is deliberately reusable at ingestion. Capturing max combo on the
+  record instead of solving it needs a column and a source that reports one; neither exists
+  yet, and the solver is what that change would replace itself with.
