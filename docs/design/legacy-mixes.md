@@ -139,6 +139,46 @@ No new tables. `DATABASE-SCHEMA.md` gets column notes in the same PRs.
 
 ---
 
+## Scoring on a legacy mix (2026-08-10)
+
+Two axes, and they are **independent** — a run that beats your score but not your grade raises
+only the score, and the reverse raises only the grade, so a stored best is a composite no single
+play necessarily produced. `LegacyBestAttemptPolicy` owns that rule.
+
+It is the deliberate opposite of `BestAttemptPolicy`, which moves Phoenix's axes together
+because letting a plate win alone dragged scores down (the plate leak). **Do not unify them.**
+Each class names the other. Broken-ness travels with the grade; a pass outranks a break in both.
+
+Manual entry overwrites (a correction must be able to lower a record); every acquisition source
+passes `KeepBestStats` and may only raise.
+
+### Legacy records journal
+
+`ScoreEventJournal` carries `LetterGrade`, and `ScoreJournalEntry` carries `LegacyScore` /
+`LegacyGrade` beside the Phoenix pair. Reusing the Phoenix fields is not possible, not merely
+untidy: `Score` is a `PhoenixScore` capped at 1,000,000, and **76% of scored legacy records in
+production are above that ceiling** (the largest is 45,282,000). The row's mix decides which side
+is live.
+
+### Net score
+
+The legacy community board ranks on **net score** — every recorded era score in the mix, summed,
+which is how the old arcade boards worked. `long`, not `int`: today's heaviest player reaches
+490M from scores on 93 charts, so a full catalogue lands past `int.MaxValue`.
+
+**Only 4.8% of legacy records carry a number at all.** So the board also shows SSS/SS/S/A
+tallies, and a zero total renders as "no scores" rather than a 0 that reads as a verdict.
+
+### What legacy weekly boards still need
+
+Rotation runs Phoenix and Phoenix 2 only. Fanning it wider is blocked on the entry type, not on
+the rotation: `WeeklyTournamentEntry.Score` is a `PhoenixScore`, so a legacy weekly entry above
+1,000,000 cannot be represented, and the entry has no letter-grade field at all. Widening it
+reaches the entity, the placings, the submission dialog and the board rows — its own pass. The
+monthly rollup is already legacy-safe (raw-score pricing, `long` sum), and an empty week persists
+no history, so quiet mixes cannot accumulate junk rows once boards do exist.
+
+
 ## Delivery plan
 
 **One PR** (owner call 2026-07-11, superseding the earlier 3-PR split), commit series C1–C10 below, each commit building green. **Bulk data never enters the repo** — the extractor tooling is committed; the data it generates ships as idempotent SQL scripts to the owner's Downloads folder, run manually after the PR deploys (migrations applied first).
