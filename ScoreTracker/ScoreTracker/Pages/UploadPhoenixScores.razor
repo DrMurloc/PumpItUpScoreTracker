@@ -533,7 +533,10 @@
 
         try
         {
-            _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password))).ToArray();
+            // Cards are listed per mix — each official site knows only the cards registered in
+            // its own game. Omitting the mix reads Phoenix 1's list, so a card that exists only
+            // on Phoenix 2 can never be picked.
+            _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password, _currentMix))).ToArray();
         }
         catch (InvalidCredentialException)
         {
@@ -568,7 +571,9 @@
         {
             if (string.IsNullOrWhiteSpace(_selectedId))
             {
-                _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password))).ToArray();
+                // Per mix, for the same reason as LoadCards: the card being imported has to come
+                // from the site being imported.
+                _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password, _currentMix))).ToArray();
                 if (_cards.Count() > 1)
                 {
                     _selectedId = _cards.First(c => c.IsActive).Id;
