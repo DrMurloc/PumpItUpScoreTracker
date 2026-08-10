@@ -38,7 +38,6 @@ public static class ChartSearchUrlParser
             PassDifficulty = CsvEnum<TierListCategory>(Str(query, "PassDiff")),
             ScoreDifficulty = CsvEnum<TierListCategory>(Str(query, "ScoreDiff")),
             CommunityVote = CsvEnum<TierListCategory>(Str(query, "Vote")),
-            PassRateMin = Int(query, "PassRateMin") is { } rate ? rate / 100.0 : null,
             ScoringLevelMin = Dbl(query, "SlMin"),
             ScoringLevelMax = Dbl(query, "SlMax"),
             ScoreStates = CsvEnum<ChartScoreStateFilter>(Str(query, "State")),

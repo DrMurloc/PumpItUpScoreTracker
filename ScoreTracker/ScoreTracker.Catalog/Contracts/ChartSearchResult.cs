@@ -83,7 +83,6 @@ public sealed record ChartSearchResult(
     double? ScoringLevel,
     double? CommunityVoteRating,
     int ScoreCount,
-    int PassCount,
     int PgCount,
     ChartSearchMyState? My);
 

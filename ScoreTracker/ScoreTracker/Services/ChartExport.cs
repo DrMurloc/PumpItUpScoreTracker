@@ -44,9 +44,6 @@ public static class ChartExport
         new("CommunityVote", false, r => r.CommunityVote?.ToString() ?? string.Empty),
         new("ScoringLevel", false, r => Num(r.ScoringLevel)),
         new("CommunityVoteRating", false, r => Num(r.CommunityVoteRating)),
-        new("PassRatePercent", false, r => r.ScoreCount == 0
-            ? string.Empty
-            : (r.PassCount * 100.0 / r.ScoreCount).ToString("0.#", CultureInfo.InvariantCulture)),
         new("ScoreCount", false, r => r.ScoreCount.ToString(CultureInfo.InvariantCulture)),
         new("PgCount", false, r => r.PgCount.ToString(CultureInfo.InvariantCulture)),
         new("MyPhoenixScore", true, r => Mine(r, m => Num(m.PhoenixScore, "0"))),
@@ -60,7 +57,7 @@ public static class ChartExport
     };
 
     public static readonly IReadOnlyList<string> DefaultColumns = new[]
-        { "Song", "Type", "Level", "NPS", "Badges", "PassDifficulty", "PassRatePercent" };
+        { "Song", "Type", "Level", "NPS", "Badges", "PassDifficulty" };
 
     private static string Mine(ChartSearchResult result, Func<ChartSearchMyState, string> value)
     {

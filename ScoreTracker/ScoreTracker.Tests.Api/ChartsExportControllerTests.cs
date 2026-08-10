@@ -51,7 +51,7 @@ public sealed class ChartsExportControllerTests
                 TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
             ChartType.Double, 19, MixEnum.Phoenix, null, 700, new HashSet<Skill>());
         return new ChartSearchResult(chart, MixEnum.XX,
-            Array.Empty<ChartBadge>(), 10.5m, TierListCategory.Hard, null, null, 19.6, null, 40, 25, 1,
+            Array.Empty<ChartBadge>(), 10.5m, TierListCategory.Hard, null, null, 19.6, null, 40, 1,
             new ChartSearchMyState(950000, PhoenixLetterGrade.AAA, null, null, null, false,
                 true, DateTimeOffset.Parse("2026-06-01T00:00:00Z")));
     }

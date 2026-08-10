@@ -244,30 +244,6 @@ public sealed class SearchChartsHandlerTests
     }
 
     [Fact]
-    public async Task PassRateNeedsTheMinimumSample()
-    {
-        var attested = Guid.NewGuid();
-        var thin = Guid.NewGuid();
-        SeedMix(MixEnum.Phoenix,
-            MakeChart(attested, MixEnum.Phoenix, "Attested", 20),
-            MakeChart(thin, MixEnum.Phoenix, "Thin", 20));
-        _scores.Setup(s => s.GetChartScoreAggregates(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new ChartScoreAggregate(attested, 20, 15),
-                new ChartScoreAggregate(thin, 5, 5)
-            });
-
-        var result = await BuildHandler().Handle(new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix,
-            PassRateMin = 0.5
-        }, CancellationToken.None);
-
-        Assert.Equal(attested, Assert.Single(result.Results).Chart.Id);
-    }
-
-    [Fact]
     public async Task SongNameContainsIsACaseInsensitiveSubstringMatch()
     {
         SeedMix(MixEnum.Phoenix,

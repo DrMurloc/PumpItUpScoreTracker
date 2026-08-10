@@ -126,15 +126,17 @@ else
                         @onclick="() => SelectSort(ChartSearchSort.Name)">@L["Chart"]@SortMark(ChartSearchSort.Name)</th>
                     <th>@L["Song Artist"]</th>
                     <th>@L["Skills"]</th>
-                    <th>@L["Tier"]</th>
+                    @* The Tier cell IS the pass-difficulty category, so it carries that sort.
+                       It used to sit on the pass-rate column next door, which is how a header
+                       reading "Pass Difficulty" came to stand over a percentage. *@
+                    <th class="@SortableHeaderClass(ChartSearchSort.PassDifficulty)" role="button" tabindex="0"
+                        @onclick="() => SelectSort(ChartSearchSort.PassDifficulty)">@L["Tier"]@SortMark(ChartSearchSort.PassDifficulty)</th>
                     <th class="@SortableHeaderClass(ChartSearchSort.ScoringLevel)" role="button" tabindex="0"
                         @onclick="() => SelectSort(ChartSearchSort.ScoringLevel)">@L["Scoring level"]@SortMark(ChartSearchSort.ScoringLevel)</th>
                     <th class="@SortableHeaderClass(ChartSearchSort.Nps)" role="button" tabindex="0"
                         @onclick="() => SelectSort(ChartSearchSort.Nps)">@L["NPS"]@SortMark(ChartSearchSort.Nps)</th>
                     <th class="@SortableHeaderClass(ChartSearchSort.Bpm)" role="button" tabindex="0"
                         @onclick="() => SelectSort(ChartSearchSort.Bpm)">@L["BPM"]@SortMark(ChartSearchSort.Bpm)</th>
-                    <th class="@SortableHeaderClass(ChartSearchSort.PassDifficulty)" role="button" tabindex="0"
-                        @onclick="() => SelectSort(ChartSearchSort.PassDifficulty)">@L["Pass Difficulty"]@SortMark(ChartSearchSort.PassDifficulty)</th>
                     <th class="@SortableHeaderClass(ChartSearchSort.Popularity)" role="button" tabindex="0"
                         @onclick="() => SelectSort(ChartSearchSort.Popularity)">@L["Scores"]@SortMark(ChartSearchSort.Popularity)</th>
                     @if (CurrentUser.IsLoggedIn)
@@ -167,12 +169,6 @@ else
                         <td class="srp-table-num">@((result.Chart.Mix.UsesLegacyScoring() ? result.CommunityVoteRating : result.ScoringLevel)?.ToString("0.0"))</td>
                         <td class="srp-table-num">@result.Nps?.ToString("0.0")</td>
                         <td class="srp-table-num">@result.Chart.Song.Bpm?.ToString()</td>
-                        <td class="srp-table-num">
-                            @if (result.ScoreCount >= 10)
-                            {
-                                @((result.PassCount * 100 / result.ScoreCount))@:%
-                            }
-                        </td>
                         <td class="srp-table-num">@result.ScoreCount</td>
                         @if (CurrentUser.IsLoggedIn)
                         {
@@ -654,7 +650,6 @@ else
     private List<TierListCategory> _passDifficulty = new();
     private List<TierListCategory> _scoreDifficulty = new();
     private List<TierListCategory> _communityVote = new();
-    private int? _passRateMin;
     private double? _scoringLevelMin;
     private double? _scoringLevelMax;
     private List<ChartScoreStateFilter> _scoreStates = new();
@@ -837,7 +832,6 @@ else
     [Parameter] [SupplyParameterFromQuery(Name = "PassDiff")] public string? PassDiffParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "ScoreDiff")] public string? ScoreDiffParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "Vote")] public string? VoteParam { get; set; }
-    [Parameter] [SupplyParameterFromQuery(Name = "PassRateMin")] public int? PassRateMinParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "SlMin")] public double? SlMinParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "SlMax")] public double? SlMaxParam { get; set; }
     [Parameter] [SupplyParameterFromQuery(Name = "PhxGrade")] public string? PhxGradeParam { get; set; }
@@ -885,7 +879,6 @@ else
         _passDifficulty = ParseCsvEnum<TierListCategory>(PassDiffParam);
         _scoreDifficulty = ParseCsvEnum<TierListCategory>(ScoreDiffParam);
         _communityVote = ParseCsvEnum<TierListCategory>(VoteParam);
-        _passRateMin = PassRateMinParam;
         _scoringLevelMin = SlMinParam;
         _scoringLevelMax = SlMaxParam;
         _phoenixGradeMin = Enum.TryParse<PhoenixLetterGrade>(PhxGradeParam, true, out var pg) ? pg : null;
@@ -966,7 +959,6 @@ else
             ["PassDiff"] = Csv(_passDifficulty),
             ["ScoreDiff"] = Csv(_scoreDifficulty),
             ["Vote"] = Csv(_communityVote),
-            ["PassRateMin"] = _passRateMin,
             ["SlMin"] = _scoringLevelMin,
             ["SlMax"] = _scoringLevelMax,
             ["PhxGrade"] = _phoenixGradeMin?.ToString(),
@@ -1071,7 +1063,6 @@ else
             PassDifficulty = _passDifficulty.Count == 0 ? null : _passDifficulty,
             ScoreDifficulty = _scoreDifficulty.Count == 0 ? null : _scoreDifficulty,
             CommunityVote = _communityVote.Count == 0 ? null : _communityVote,
-            PassRateMin = _passRateMin == null ? null : _passRateMin.Value / 100.0,
             ScoringLevelMin = _scoringLevelMin,
             ScoringLevelMax = _scoringLevelMax,
             ScoreStates = CurrentUser.IsLoggedIn && _scoreStates.Count > 0 ? _scoreStates : null,
@@ -1275,8 +1266,6 @@ else
             AddListChips(chips, _passDifficulty, c => $"{L["Pass"]}: {L[ChartSearchCard.CategoryName(c)]}");
             AddListChips(chips, _scoreDifficulty, c => $"{L["Score"]}: {L[ChartSearchCard.CategoryName(c)]}");
             AddListChips(chips, _communityVote, c => $"{L["Community Vote"]}: {L[ChartSearchCard.CategoryName(c)]}");
-            if (_passRateMin != null)
-                chips.Add(new QueryChip($"{L["Pass rate"]} ≥ {_passRateMin}%", false, () => SetPassRateMin(null)));
             if (_scoringLevelMin != null || _scoringLevelMax != null)
                 chips.Add(RangeChip(L["Scoring level"], _scoringLevelMin?.ToString("0.#"),
                     _scoringLevelMax?.ToString("0.#"), async () =>
@@ -1394,7 +1383,6 @@ else
         _passDifficulty.Clear();
         _scoreDifficulty.Clear();
         _communityVote.Clear();
-        _passRateMin = null;
         _scoringLevelMin = null;
         _scoringLevelMax = null;
         _scoreStates.Clear();
@@ -1504,10 +1492,6 @@ else
                     () => _scoreDifficulty.Count > 0, () => _scoreDifficulty.Clear()),
                 new("communityVote", L["Community Vote"], legacy,
                     () => _communityVote.Count > 0, () => _communityVote.Clear()),
-                // Pass rate is off the pick list until the threshold behaviour is tuned
-                // (owner). The query field, the URL parameter and the chip all still work, so
-                // it comes back by re-listing it here.
-
                 // Offered wherever the sort is offered — sorting by scoring level while being
                 // unable to filter by it was the odd bit. The track falls back to the level
                 // scale when the mix has no banked extents; scoring level rides that scale.
@@ -1718,12 +1702,6 @@ else
     private async Task SetCommunityVote(IEnumerable<string>? values)
     {
         _communityVote = ParseCsvEnum<TierListCategory>(values == null ? null : string.Join(',', values));
-        await ApplyChange();
-    }
-
-    private async Task SetPassRateMin(int? value)
-    {
-        _passRateMin = value;
         await ApplyChange();
     }
 

@@ -22,9 +22,6 @@ namespace ScoreTracker.Catalog.Application;
 /// </summary>
 internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, ChartSearchResultPage>
 {
-    /// <summary>Below this many scored records a pass rate is noise — excluded from rate facets and sorted last.</summary>
-    internal const int MinScoresForPassRate = 10;
-
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _clock;
@@ -158,7 +155,6 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             bundle.ScoringLevels.TryGetValue(id, out var level) ? level : null,
             bundle.VoteRatings.TryGetValue(id, out var rating) ? rating : null,
             aggregate?.Count ?? 0,
-            aggregate?.PassCount ?? 0,
             aggregate?.PgCount ?? 0,
             null);
     }
@@ -296,23 +292,12 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             (row.CommunityVote == null || !q.CommunityVote.Contains(row.CommunityVote.Value)))
             return false;
 
-        if (q.PassRateMin != null)
-        {
-            var rate = PassRate(row);
-            if (rate == null || rate < q.PassRateMin) return false;
-        }
-
         if (q.ScoringLevelMin != null && (row.ScoringLevel == null || row.ScoringLevel < q.ScoringLevelMin))
             return false;
         if (q.ScoringLevelMax != null && (row.ScoringLevel == null || row.ScoringLevel > q.ScoringLevelMax))
             return false;
 
         return true;
-    }
-
-    private static double? PassRate(ChartSearchResult row)
-    {
-        return row.ScoreCount >= MinScoresForPassRate ? row.PassCount / (double)row.ScoreCount : null;
     }
 
     private sealed record MyRecord(bool Passed, bool IsBroken, int? PhoenixScore, PhoenixLetterGrade? PhoenixGrade,
