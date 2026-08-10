@@ -41,6 +41,17 @@ body {
     font-family: var(--font-body);
 }
 
+/* MudBlazor 8.15 sizes a temporary drawer `width: var(--mud-drawer-width)` and puts no
+   max-width on it anywhere, so a drawer declared wider than the glass hangs off the edge it
+   is anchored to and nothing brings it back — a drawer scrolls vertically only. /Charts'
+   filter drawer is 420px, which is past a folded Fold's cover screen. max-width beats width
+   whatever the specificity, and a fixed element resolves the percentage against the viewport,
+   so a declared width still applies wherever it fits and only an over-wide drawer is clamped.
+   Site-wide because /Titles' detail drawer (400px) loses the same strip at 360px. */
+.mud-drawer.mud-drawer-temporary {
+    max-width: 100%;
+}
+
 /* Big-number treatment for stats (rating, Pumbility, scores). tabular-nums keeps digit
    columns steady while values tick up live. */
 .stat-display {
@@ -1686,6 +1697,12 @@ html.sheet-open .more-sheet-scrim {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    /* A thumb's centre travels between half a thumb in from each end, never the full box.
+       The fill and the tick rail both measure against that inset so all three agree; the
+       fill's calc lives in RangeSlider.razor because the script painting a drag writes the
+       same expression. One size across engines: Firefox's default thumb is smaller, and a
+       band that reads 20px on one browser and 14px on another is 14px to plan for. */
+    --range-thumb: 20px;
 }
 
 .range-slider-head {
@@ -1749,8 +1766,8 @@ html.sheet-open .more-sheet-scrim {
     -webkit-appearance: none;
     appearance: none;
     pointer-events: auto;
-    width: 20px;
-    height: 20px;
+    width: var(--range-thumb);
+    height: var(--range-thumb);
     border-radius: 50%;
     background: var(--mix-primary);
     border: 3px solid var(--mix-bg);
@@ -1761,8 +1778,9 @@ html.sheet-open .more-sheet-scrim {
 
 .range-slider-track-wrap input[type=range]::-moz-range-thumb {
     pointer-events: auto;
-    width: 14px;
-    height: 14px;
+    box-sizing: border-box;
+    width: var(--range-thumb);
+    height: var(--range-thumb);
     border-radius: 50%;
     background: var(--mix-primary);
     border: 3px solid var(--mix-bg);
@@ -1773,7 +1791,7 @@ html.sheet-open .more-sheet-scrim {
 .range-slider-ticks {
     position: relative;
     height: 14px;
-    margin: 0 10px;
+    margin: 0 calc(var(--range-thumb) / 2);
 }
 
 .range-slider-ticks span {

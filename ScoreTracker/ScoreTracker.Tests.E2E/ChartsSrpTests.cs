@@ -143,6 +143,47 @@ public sealed class ChartsSrpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TheFilterDrawerAndItsSlidersFitOnAPhone()
+    {
+        // Field-test: on a folded Fold the range sliders ran off the left edge of the glass and
+        // the low end of every scale was under the bezel. MudBlazor sizes a temporary drawer
+        // `width: var(--mud-drawer-width)` and puts no max-width on it anywhere, so /Charts'
+        // 420px drawer hangs (420 - viewport)px past the edge it is anchored to — and a drawer
+        // scrolls vertically only, so nothing brings it back. Measured rather than eyeballed:
+        // a cap that silently fails to apply looks exactly like one that works.
+        await _page.SetViewportSizeAsync(390, 844);
+        await _page.GotoAsync("/Charts", new PageGotoOptions { Timeout = 60_000 });
+        await Expect(_page.Locator(".srp-card").First)
+            .ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 });
+
+        await _page.Locator("button[aria-label=Filters]").ClickAsync();
+        var drawer = _page.Locator(".mud-drawer.mud-drawer-temporary").First;
+        await Expect(drawer).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30_000 });
+
+        // The 225ms slide-in parks the drawer a full width off the anchored edge on its first
+        // frame, which measures exactly like a positioning bug and is not one. ToBeVisibleAsync
+        // returns immediately because a drawer is never display:none, so wait for the transition
+        // itself — after a beat, so a transition that has not started yet cannot read as done.
+        await _page.WaitForTimeoutAsync(300);
+        await _page.WaitForFunctionAsync(
+            "() => document.querySelector('.mud-drawer.mud-drawer-temporary')" +
+            "  .getAnimations().every(a => a.playState === 'finished')",
+            null, new PageWaitForFunctionOptions { Timeout = 10_000 });
+
+        var box = await drawer.BoundingBoxAsync();
+        Assert.True(box!.X >= 0,
+            $"the filter drawer starts {box.X:0}px off the left edge of a 390px phone");
+        Assert.True(box.X + box.Width <= 391,
+            $"the filter drawer ends {box.X + box.Width:0}px into a 390px phone");
+
+        // And the control the drawer exists for: a track whose low end is under the bezel
+        // cannot be dragged to its low end.
+        var track = await _page.Locator(".range-slider-track").First.BoundingBoxAsync();
+        Assert.True(track!.X >= 0,
+            $"the range slider's track starts {track.X:0}px off the glass");
+    }
+
+    [Fact]
     public async Task TheMoreFiltersListStaysPutWhenThePageBehindScrolls()
     {
         // Field-test round 4: the open pick list appeared to slide with the background. The

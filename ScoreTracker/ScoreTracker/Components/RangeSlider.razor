@@ -1,4 +1,6 @@
 @namespace ScoreTracker.Web.Components
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
 
 @* Dual-thumb range (docs/design/randomizer-overhaul.md): the primary way to say
    "S16–S18" — two drags instead of a wall of switches. The working range prints beside
@@ -10,32 +12,44 @@
    as an inert tag that looks right and does nothing. Anything wanting two thumbs comes
    here. Non-integer scales ride the track as integers and format back through Format.
 
-   The track moves on every input event but the value is only *published* on release: a
-   drag across a BPM range crosses two hundred steps, and telling the page about each one
-   re-runs the search two hundred times, which fights the thumb. The fill and readout still
-   track the drag, so it stays direct — the caller just hears the answer, not the journey. *@
-<div class="range-slider @(Disabled ? "range-slider-disabled" : string.Empty)">
+   **The drag belongs to the browser.** Blazor renders the *committed* range and hears one
+   change per release; range-slider.js paints the fill and the readout from the inputs' own
+   values in between. Rendering the live value instead put the thumb's position on the wire:
+   the server answers each input event with a value one latency old, Blazor writes it back
+   onto the input, and the thumb is yanked backwards under the finger for as long as the drag
+   lasts. Nothing on a circuit is fast enough to fix that — the drag has to leave the wire.
+
+   **Thumbs cross and swap ends** rather than stopping at each other. Clamping was the same
+   yank by another name, and two thumbs parked on the same value could not be separated at
+   all: the max input is second in the DOM so it wins every overlap, and clamping it against
+   a coincident min left it nowhere to go. Crossing, the pair sorts on release instead. *@
+<div class="range-slider @(Disabled ? "range-slider-disabled" : string.Empty)" @ref="_root"
+     data-range-slider data-range-min="@Min" data-range-max="@Max" data-range-step="@Step"
+     data-range-prefix="@Prefix" data-range-labels="@_labels">
     <div class="range-slider-head">
         <span class="range-slider-label">@Label</span>
-        <span class="range-slider-value">@Display</span>
+        <span class="range-slider-value" data-range-readout>@Display</span>
     </div>
     <div class="range-slider-track-wrap">
         <span class="range-slider-track"></span>
-        <span class="range-slider-fill" style="left:@(Percent(DraggedMin).ToString(System.Globalization.CultureInfo.InvariantCulture))%;right:@((100 - Percent(DraggedMax)).ToString(System.Globalization.CultureInfo.InvariantCulture))%"></span>
-        <input type="range" min="@Min" max="@Max" step="@Step" value="@DraggedMin" disabled="@Disabled"
-               aria-label="@($"{Label} {L["Minimum"]}")" @oninput="DragMin" @onchange="CommitMin"/>
-        <input type="range" min="@Min" max="@Max" step="@Step" value="@DraggedMax" disabled="@Disabled"
-               aria-label="@($"{Label} {L["Maximum"]}")" @oninput="DragMax" @onchange="CommitMax"/>
+        <span class="range-slider-fill" data-range-fill style="@FillStyle"></span>
+        <input type="range" min="@Min" max="@Max" step="@Step" value="@ValueMin" disabled="@Disabled"
+               aria-label="@($"{Label} {L["Minimum"]}")" @onchange="CommitMin"/>
+        <input type="range" min="@Min" max="@Max" step="@Step" value="@ValueMax" disabled="@Disabled"
+               aria-label="@($"{Label} {L["Maximum"]}")" @onchange="CommitMax"/>
     </div>
     <div class="range-slider-ticks">
         @foreach (var tick in Ticks)
         {
-            <span style="left:@(Percent(tick).ToString(System.Globalization.CultureInfo.InvariantCulture))%">@Text(tick)</span>
+            <span style="left:@(Percent(tick).ToString(Invariant))%">@Text(tick)</span>
         }
     </div>
 </div>
 
 @code {
+
+    private static readonly System.Globalization.CultureInfo Invariant =
+        System.Globalization.CultureInfo.InvariantCulture;
 
     [Parameter] public string Label { get; set; } = string.Empty;
 
@@ -75,21 +89,25 @@
     /// </summary>
     [Parameter] public string? ValueText { get; set; }
 
-    // Where the thumbs are right now. Null between drags, so a value pushed in from the
-    // outside (a cleared filter, a shared URL) still wins.
-    private int? _draggingMin;
-    private int? _draggingMax;
-
-    private int DraggedMin => _draggingMin ?? ValueMin;
-    private int DraggedMax => _draggingMax ?? ValueMax;
+    private ElementReference _root;
+    private IJSObjectReference? _module;
 
     private string Display => Disabled
         ? L["Off"]
-        // Mid-drag the readout follows the thumbs; the caller's ValueText only describes the
-        // committed filter, so it would sit frozen at "Any" while you drag.
-        : _draggingMin != null || _draggingMax != null
-            ? $"{Text(DraggedMin)} – {Text(DraggedMax)}"
-            : ValueText ?? $"{Text(ValueMin)} – {Text(ValueMax)}";
+        : ValueText ?? $"{Text(ValueMin)} – {Text(ValueMax)}";
+
+    // A thumb's centre travels between half a thumb in from each end, never the full box, so
+    // the fill measures against that inset too — otherwise its edge drifts up to half a thumb
+    // away from the thumb it is supposed to end at, and the drift changes as you drag. The
+    // tick rail already sits on the same inset (its margin is half a thumb).
+    private string FillStyle =>
+        $"left:calc(var(--range-thumb) / 2 + {Fraction(ValueMin)} * (100% - var(--range-thumb)));"
+        + $"right:calc(100% - var(--range-thumb) / 2 - {Fraction(ValueMax)} * (100% - var(--range-thumb)))";
+
+    private string Fraction(int value)
+    {
+        return (Max == Min ? 0 : (value - Min) / (double)(Max - Min)).ToString("0.######", Invariant);
+    }
 
     private double Percent(int value)
     {
@@ -106,44 +124,106 @@
         }
     }
 
-    // Thumbs never cross: each stops where the other stands.
-    private int ClampMin(ChangeEventArgs e)
+    // The readout's wording is C#'s, mid-drag included: a scale that formats (a clock, a
+    // grade, a tier name) hands down its label for every step it can stop on, so the script
+    // painting the drag never re-implements a format. Plain scales need no table — the script
+    // can put Prefix in front of a number itself.
+    private string? _labels;
+    private (int Min, int Max, int Step, bool Formatted) _labelKey;
+
+    protected override void OnParametersSet()
     {
-        return int.TryParse(e.Value?.ToString(), out var value)
-            ? Math.Clamp(value, Min, DraggedMax)
-            : DraggedMin;
+        var key = (Min, Max, Step, Format != null);
+        if (key == _labelKey) return;
+
+        _labelKey = key;
+        _labels = BuildLabels();
     }
 
-    private int ClampMax(ChangeEventArgs e)
+    private string? BuildLabels()
     {
-        return int.TryParse(e.Value?.ToString(), out var value)
-            ? Math.Clamp(value, DraggedMin, Max)
-            : DraggedMax;
+        if (Format == null) return null;
+
+        var step = Math.Max(1, Step);
+        var stops = (Max - Min) / step;
+        // A scale fine enough to need thousands of stops would cost more to send than the
+        // readout is worth; the script falls back to the bare number.
+        if (stops < 0 || stops > 2000) return null;
+
+        var labels = new string[stops + 1];
+        for (var i = 0; i <= stops; i++) labels[i] = Text(Min + i * step);
+
+        return System.Text.Json.JsonSerializer.Serialize(labels);
     }
 
-    private void DragMin(ChangeEventArgs e)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _draggingMin = ClampMin(e);
+        if (!firstRender) return;
+
+        try
+        {
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/range-slider.js");
+            await _module.InvokeVoidAsync("attach", _root);
+        }
+        catch (JSException)
+        {
+            // Without the script the fill and readout simply wait for the release instead of
+            // following the thumb. The control still filters; it is not worth a failed render.
+        }
     }
 
-    private void DragMax(ChangeEventArgs e)
+    private Task CommitMin(ChangeEventArgs e) => Commit(Parse(e, ValueMin), ValueMax);
+
+    private Task CommitMax(ChangeEventArgs e) => Commit(ValueMin, Parse(e, ValueMax));
+
+    private static int Parse(ChangeEventArgs e, int fallback)
     {
-        _draggingMax = ClampMax(e);
+        return int.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Integer,
+            Invariant, out var value)
+            ? value
+            : fallback;
     }
 
-    private async Task CommitMin(ChangeEventArgs e)
+    private async Task Commit(int a, int b)
     {
-        var clamped = ClampMin(e);
-        _draggingMin = null;
-        ValueMin = clamped;
-        await ValueMinChanged.InvokeAsync(clamped);
+        var low = Math.Clamp(Math.Min(a, b), Min, Max);
+        var high = Math.Clamp(Math.Max(a, b), Min, Max);
+        var wasMin = ValueMin;
+        var wasMax = ValueMax;
+        ValueMin = low;
+        ValueMax = high;
+
+        // A crossed drag moves both ends, and each end is its own callback — so the caller
+        // holds half the new range for one round trip. Publish the widening end first: a
+        // moment of too many results reads better than a moment of none.
+        if (low < wasMin)
+        {
+            await Publish(ValueMinChanged, low, low != wasMin);
+            await Publish(ValueMaxChanged, high, high != wasMax);
+        }
+        else
+        {
+            await Publish(ValueMaxChanged, high, high != wasMax);
+            await Publish(ValueMinChanged, low, low != wasMin);
+        }
     }
 
-    private async Task CommitMax(ChangeEventArgs e)
+    private static Task Publish(EventCallback<int> callback, int value, bool changed)
     {
-        var clamped = ClampMax(e);
-        _draggingMax = null;
-        ValueMax = clamped;
-        await ValueMaxChanged.InvokeAsync(clamped);
+        return changed ? callback.InvokeAsync(value) : Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module == null) return;
+
+        try
+        {
+            await _module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit went first — the browser has already dropped the module with the page.
+        }
     }
 }

@@ -223,6 +223,149 @@ public sealed class MarchOfMurlocsHandlerTests
             Times.Never);
     }
 
+    /// <summary>
+    ///     Every month maps to the end of the following quarter. Written as a theory over all
+    ///     twelve because the table this covers listed only eleven: month 6 was missing, fell
+    ///     through to the default, and produced a season that had already ended.
+    /// </summary>
+    [Theory]
+    [InlineData(1, 3, 2026)]
+    [InlineData(2, 3, 2026)]
+    [InlineData(3, 6, 2026)]
+    [InlineData(4, 6, 2026)]
+    [InlineData(5, 6, 2026)]
+    [InlineData(6, 9, 2026)]
+    [InlineData(7, 9, 2026)]
+    [InlineData(8, 9, 2026)]
+    [InlineData(9, 12, 2026)]
+    [InlineData(10, 12, 2026)]
+    [InlineData(11, 12, 2026)]
+    [InlineData(12, 3, 2027)]
+    public async Task CycleEndsEverySeasonAtTheNextQuarter(int previousEndMonth, int expectedMonth,
+        int expectedYear)
+    {
+        var previousEnd = new DateTimeOffset(2026, previousEndMonth,
+            DateTime.DaysInMonth(2026, previousEndMonth), 23, 59, 59, TimeSpan.FromHours(-5));
+        var created = await Cycle(previousEnd, previousEnd + TimeSpan.FromDays(1));
+
+        Assert.Equal(2, created.Length);
+        Assert.All(created, t => Assert.Equal(expectedMonth, t.EndDate!.Value.Month));
+        Assert.All(created, t => Assert.Equal(expectedYear, t.EndDate!.Value.Year));
+    }
+
+    [Fact]
+    public async Task CycleFollowsAJuneSeasonWithSeptemberNotTheMarchThatAlreadyPassed()
+    {
+        // The production incident, with its real dates: Spring 2026 ended 2026-06-30 and every
+        // daily tick from 2026-07-01 created a pair of seasons dated to end 2026-03-31. Because
+        // those were already past, the next tick saw no future-dated MoM and did it again.
+        var springEnd = new DateTimeOffset(2026, 6, 30, 23, 59, 59, TimeSpan.FromHours(-5));
+        var created = await Cycle(springEnd, new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero));
+
+        Assert.All(created, t => Assert.Equal(new DateTimeOffset(2026, 9, 30, 23, 59, 59,
+            TimeSpan.FromHours(-5)), t.EndDate));
+        Assert.All(created, t => Assert.Contains("Summer 2026", (string)t.Name));
+    }
+
+    [Fact]
+    public async Task CycleHighlightsTheSeasonsItCreates()
+    {
+        // The shell's Compete menu renders HighlightedEvents, so an unhighlighted season is one
+        // no player can navigate to. Every MoM row in production carried IsHighlighted = 0.
+        var springEnd = new DateTimeOffset(2026, 6, 30, 23, 59, 59, TimeSpan.FromHours(-5));
+        var created = await Cycle(springEnd, new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero));
+
+        Assert.Equal(2, created.Length);
+        Assert.All(created, t => Assert.True(t.IsHighlighted));
+    }
+
+    [Fact]
+    public async Task CycleCatchesUpToTheCurrentQuarterAfterMissingSeveral()
+    {
+        // Five quarters behind: the quarter following the last season (June 2025) has itself long
+        // since ended, and creating it would leave no future-dated MoM for TryScheduleMoM to wait
+        // on — which is the loop. It must land on the quarter we are actually in.
+        var lastSeason = new DateTimeOffset(2025, 3, 31, 23, 59, 59, TimeSpan.FromHours(-5));
+        var now = new DateTimeOffset(2026, 8, 9, 11, 0, 0, TimeSpan.Zero);
+
+        var created = await Cycle(lastSeason, now);
+
+        Assert.Equal(2, created.Length);
+        Assert.All(created, t => Assert.Equal(new DateTimeOffset(2026, 9, 30, 23, 59, 59,
+            TimeSpan.FromHours(-5)), t.EndDate));
+        Assert.All(created, t => Assert.Contains("Summer 2026", (string)t.Name));
+    }
+
+    [Fact]
+    public async Task CycleNeverCreatesASeasonThatHasAlreadyEnded()
+    {
+        // The invariant the runaway violated, stated directly. Every season the consumer can be
+        // asked to create, from any starting point, must end ahead of now.
+        var now = new DateTimeOffset(2026, 8, 9, 11, 0, 0, TimeSpan.Zero);
+
+        foreach (var monthsBehind in new[] { 1, 2, 3, 6, 9, 12, 18, 24, 40 })
+        {
+            var lastSeason = now.AddMonths(-monthsBehind);
+            var created = await Cycle(lastSeason, now);
+
+            Assert.NotEmpty(created);
+            Assert.All(created, t => Assert.True(t.EndDate > now,
+                $"{monthsBehind} months behind produced a season ending {t.EndDate}"));
+        }
+    }
+
+    [Fact]
+    public async Task CycleRollsTheYearWhenAFallSeasonIsFollowedByWinter()
+    {
+        // December is followed by March in the NEXT year. Reading the year off today's date
+        // instead of off the previous season is the other half of how a past-dated season
+        // got created.
+        var fallEnd = new DateTimeOffset(2026, 12, 31, 23, 59, 59, TimeSpan.FromHours(-5));
+        var created = await Cycle(fallEnd, new DateTimeOffset(2027, 1, 1, 11, 0, 0, TimeSpan.Zero));
+
+        Assert.All(created, t => Assert.Equal(new DateTimeOffset(2027, 3, 31, 23, 59, 59,
+            TimeSpan.FromHours(-5)), t.EndDate));
+        Assert.All(created, t => Assert.Contains("Winter 2027", (string)t.Name));
+    }
+
+    /// <summary>
+    ///     Runs one CycleMoMCommand against a single previous MoM and returns the tournaments it
+    ///     created.
+    /// </summary>
+    private static async Task<TournamentConfiguration[]> Cycle(DateTimeOffset previousEnd,
+        DateTimeOffset now)
+    {
+        var tournaments = new Mock<ITournamentRepository>();
+        var charts = new Mock<IChartRepository>();
+        var bus = new Mock<IBus>();
+        var scheduler = new Mock<IMessageScheduler>();
+
+        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { MoM(previousEnd) });
+        charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build(),
+                new ChartBuilder().WithLevel(20).WithType(ChartType.Double).Build()
+            });
+
+        var saved = new List<TournamentConfiguration>();
+        tournaments.Setup(t => t.CreateOrSaveTournament(It.IsAny<TournamentConfiguration>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<TournamentConfiguration, CancellationToken>((cfg, _) => saved.Add(cfg))
+            .Returns(Task.CompletedTask);
+        tournaments.Setup(t => t.CreateOrSaveTournament(It.IsAny<TournamentRecord>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
+            scheduler.Object, FakeDateTime.At(now).Object, EmptyScoringLevels().Object);
+
+        await handler.Consume(ContextOf(new CycleMoMCommand()).Object);
+
+        return saved.Where(s => s.IsMom).ToArray();
+    }
+
     private static Mock<IChartScoringLevelRepository> EmptyScoringLevels()
     {
         var scoringLevels = new Mock<IChartScoringLevelRepository>();
