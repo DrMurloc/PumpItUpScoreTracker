@@ -9,6 +9,7 @@
 @using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.WeeklyChallenge.Contracts
 @using ScoreTracker.WeeklyChallenge.Contracts.Queries
+@using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Components.Challenges
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services.Contracts
@@ -33,7 +34,20 @@
     @((MarkupString)$"<script type=\"application/ld+json\">{_jsonLd}</script>")
 }
 
-@if (_pool != null)
+@if (!_hasBoard)
+{
+    @* Every table behind this page is already keyed per mix, and the rotation runs Phoenix 1
+       and Phoenix 2 as genuinely separate boards. Older mixes are a rotation that has not been
+       pointed at them yet — so this is "not built", not "never". *@
+    <div class="challenge-head">
+        <h1>@L["Weekly Charts"]</h1>
+    </div>
+    <MixUnavailableNotice Mix="_mix" Subject="@L["Weekly Charts"]"
+                          Kind="MixUnavailableNotice.NoticeKind.NotYetBuilt">
+        @L["Boards run per mix, and this one doesn't have its own rotation yet."]
+    </MixUnavailableNotice>
+}
+else if (_pool != null)
 {
     <div class="challenge-head">
         <h1>@L["Charts not yet featured"]</h1>
@@ -165,6 +179,13 @@ else
 
     private bool _isLoggedIn;
     private bool _isAdmin;
+
+    /// <summary>
+    ///     Whether this mix runs a board at all. Rotation fans out to Phoenix and Phoenix 2
+    ///     (RecurringJobRunner); an older mix has real per-mix tables waiting and nothing in
+    ///     them, which is a different thing from having no board of its own.
+    /// </summary>
+    private bool _hasBoard = true;
     private Guid? _userId;
     private MixEnum _mix = MixEnum.Phoenix;
     private DateTimeOffset _now;
@@ -202,9 +223,16 @@ else
         _userId = _isLoggedIn ? CurrentUser.User.Id : null;
         _now = Clock.Now;
 
-        // XX and older have no weekly board — those viewers see the Phoenix hub.
-        var selected = await UiSettings.GetSelectedMix();
-        _mix = selected is MixEnum.Phoenix or MixEnum.Phoenix2 ? selected : MixEnum.Phoenix;
+        // Boards are per mix all the way down — the charts, the entries, the placings and the
+        // rotation job all key on MixId, and Phoenix 1 and Phoenix 2 run genuinely separate
+        // boards. This page used to clamp anything older to Phoenix and then render it
+        // unlabelled, so a Prime 2 viewer was shown Phoenix's board and told it was theirs:
+        // that is where DUEL came from as Prime 2's daily step. Rotation does not fan out to
+        // older mixes yet, so they get told that rather than shown somebody else's week.
+        _mix = await UiSettings.GetSelectedMix();
+        _hasBoard = _mix is MixEnum.Phoenix or MixEnum.Phoenix2;
+        if (!_hasBoard) return;
+
         _charts = await ChartCatalog.GetCharts(_mix);
 
         _pastDates = (await Mediator.Send(new GetPastWeeklyDatesQuery(_mix)))
