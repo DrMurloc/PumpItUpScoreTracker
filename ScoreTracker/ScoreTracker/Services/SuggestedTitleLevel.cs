@@ -95,8 +95,12 @@ public static class SuggestedTitleLevel
         int threshold,
         PhoenixLetterGrade grade)
     {
-        var perChart = config.LetterGradeModifiers[grade] + config.PlateModifiers[ReferencePlate];
-        var folders = types.Select(type => Folder(type, threshold, perChart)).ToArray();
+        // Priced per type, not once for both: Phoenix 2 gives Singles their own value for some
+        // grades and plates, so a merged pool's two folders can sit at different levels.
+        var folders = types
+            .Select(type => Folder(type, threshold,
+                config.LetterGradeModifierFor(grade, type) + config.PlateModifierFor(ReferencePlate, type)))
+            .ToArray();
 
         // Both types cap at the same pool — a singles chart prices one level up but clamps at the
         // ceiling — so either every type serves or none does.

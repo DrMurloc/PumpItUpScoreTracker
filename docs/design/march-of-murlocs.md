@@ -40,7 +40,7 @@ deletion rather than a rule change (§3).
   count toward chart count and does not block replaying that chart. It still consumes session
   time.
 - **Phoenix 2: the "A or below" rule is unsettled** and will be decided after the scoring
-  experiment (§10). P2 ships on stock P2 pumbility, where the worst grade still pays 1.08.
+  experiment (§10). P2 ships on stock P2 pumbility, where the worst grade still pays 0.90.
 - Song length scales value, with a 2-minute baseline.
 - Charts 22+ carry an exponential bonus (Phoenix 1 only — see §5).
 - **Stage break is deliberately outside the algorithm, on both mixes.** Passing and scoring are
@@ -262,9 +262,9 @@ six levels pays whenever `grade(26) > 0.852 × grade(20)`:
 
 | Play | vs a clean AAA level 20 |
 |---|---|
-| 26 at A+ (1.33) | wins — ratio 0.94 |
+| 26 at A+ (1.33 on a Single, 1.35 on a Double) | wins — ratio 0.94 / 0.96 |
 | 26 at A (1.28) | wins, barely — 0.91 |
-| 26 at F (1.08) | **loses** — 0.77 |
+| 26 at F (0.90) | **loses** — 0.64 |
 
 Phoenix 2 says *go as hard as you can still play competently*. Phoenix 1 with the kicker says
 *go as hard as you can survive at all* — even A+ at 0.50 wins by 1.7×.
@@ -275,7 +275,7 @@ below 950,000, which bounds the behavioural change precisely:
 | | Phoenix 1 | Phoenix 2 |
 |---|---|---|
 | Zero cliff | < 825,000 | *none in this pass* |
-| 0.50 → 1.00 ramp | 825k → 950k | *n/a — P2 uses its own 1.08 → 1.50* |
+| 0.50 → 1.00 ramp | 825k → 950k | *n/a — P2 uses its own 0.90 → 1.50* |
 
 Implementation: keep the parameterless `ScoringConfiguration.PumbilityPlus` **exactly as it is**
 and add a mix-aware factory beside it that only MoM calls (§9.5). Write P1's corrections as an

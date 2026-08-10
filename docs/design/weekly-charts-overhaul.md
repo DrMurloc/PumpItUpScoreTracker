@@ -181,7 +181,10 @@ markup with jump links + the next-reset countdown.
    action. Anonymous visitors get a sign-in CTA card instead.
 6. **Scoring legend** — rendered from the active mix's `ScoringConfiguration` (never
    hand-copied): grade multipliers, Phoenix 2's additive plate bonuses, and the rules
-   sentences (§6).
+   sentences (§6). A board holds both pooled types, and Phoenix 2 prices four cells
+   differently on each, so a row the two disagree on prints both values against the type's
+   shorthand (`S 0.014 / D 0.012`) rather than one number that would be wrong for half the
+   board.
 7. **The pool** (`?pool=1`) — the not-yet-featured chart list, server-rendered on its own URL.
 8. **Admin** — the rotate trigger via the dialog host's confirm; a quiet card at the bottom,
    admin-only.

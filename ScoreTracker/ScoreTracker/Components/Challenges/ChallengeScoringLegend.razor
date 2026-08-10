@@ -2,6 +2,8 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
+@* ApexCharts ships its own ChartType into the Web project's global usings. *@
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 
 @* How scoring works (weekly-charts-overhaul.md §4.6): rendered straight from the active mix's
    ScoringConfiguration so the page can never drift from the engine. Phoenix 2 prices grade and
@@ -11,10 +13,10 @@
     <div>
         <h3>@L["Grade multipliers"]</h3>
         <div class="challenge-ladder">
-            @foreach (var kv in _scoring.LetterGradeModifiers.OrderByDescending(kv => (int)kv.Key))
+            @foreach (var grade in _scoring.LetterGradeModifiers.Keys.OrderByDescending(g => (int)g))
             {
-                <span><LetterGradeIcon Grade="kv.Key" Height="18"></LetterGradeIcon></span>
-                <span>× @kv.Value.ToString("0.00")</span>
+                <span><LetterGradeIcon Grade="grade" Height="18"></LetterGradeIcon></span>
+                <span>× @PerType(t => _scoring.LetterGradeModifierFor(grade, t), "0.00")</span>
             }
         </div>
     </div>
@@ -23,10 +25,10 @@
         <div>
             <h3>@L["Plate bonuses"]</h3>
             <div class="challenge-ladder">
-                @foreach (var kv in _scoring.PlateModifiers.OrderByDescending(kv => kv.Value))
+                @foreach (var plate in _scoring.PlateModifiers.OrderByDescending(kv => kv.Value).Select(kv => kv.Key))
                 {
-                    <span>@kv.Key.GetShorthand()</span>
-                    <span>+ @kv.Value.ToString("0.000")</span>
+                    <span>@plate.GetShorthand()</span>
+                    <span>+ @PerType(t => _scoring.PlateModifierFor(plate, t), "0.000")</span>
                 }
             </div>
         </div>
@@ -52,5 +54,19 @@
     {
         _scoring = ScoringConfiguration.PumbilityScoring(Mix, includeCoOp: false);
         _isAdditive = _scoring.Formula == ScoringConfiguration.CalculationType.GradePlusPlate;
+    }
+
+    // A board holds both pooled types, so a constant the two price differently cannot render as
+    // one number without being wrong for half the board. Where they agree — nearly every row —
+    // it prints once; where they differ it prints both against the type's own shorthand, which
+    // is domain notation rather than copy, so this needs no localized string.
+    private static string PerType(Func<ChartType, double> valueFor, string format)
+    {
+        var singles = valueFor(ChartType.Single);
+        var doubles = valueFor(ChartType.Double);
+        return Math.Abs(singles - doubles) < 1e-9
+            ? singles.ToString(format)
+            : $"{ChartType.Single.GetShortHand()} {singles.ToString(format)}" +
+              $" / {ChartType.Double.GetShortHand()} {doubles.ToString(format)}";
     }
 }

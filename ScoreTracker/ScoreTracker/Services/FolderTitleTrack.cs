@@ -50,10 +50,20 @@ public sealed record FolderTitleTrackResult(
 /// </summary>
 public static class FolderTitleTrack
 {
-    // The "serves" yardstick is an AA (925k) clear; a chart's ceiling is SSS+ (1.50) on a Perfect
-    // Game plate (+0.020). Both come straight from the shipped Phoenix2PumbilityScoring config.
-    private const double AaModifier = 1.36;
-    private const double PgCeiling = 1.52;
+    // The "serves" yardstick is an AA (925k) clear; a chart's ceiling is SSS+ on a Perfect Game
+    // plate. Both are read from the shipped Phoenix2PumbilityScoring config for the folder's own
+    // chart type rather than hand-copied, because Phoenix 2 prices some of them differently on
+    // Singles than on Doubles and a copied number cannot follow that.
+    private static double AaModifierFor(ScoringConfiguration config, ChartType type)
+    {
+        return config.LetterGradeModifierFor(PhoenixLetterGrade.AA, type);
+    }
+
+    private static double PgCeilingFor(ScoringConfiguration config, ChartType type)
+    {
+        return config.LetterGradeModifierFor(PhoenixLetterGrade.SSSPlus, type)
+               + config.PlateModifierFor(PhoenixPlate.PerfectGame, type);
+    }
 
     public static FolderTitleTrackResult? Compute(
         MixEnum mix, ChartType folderType, DifficultyLevel folderLevel,
@@ -109,7 +119,7 @@ public static class FolderTitleTrack
             ? Math.Min((int)folderLevel + 1, (int)DifficultyLevel.Max)
             : (int)folderLevel;
         var effBase = ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(effLevel));
-        var servesPoolValue = 50.0 * effBase * AaModifier;
+        var servesPoolValue = 50.0 * effBase * AaModifierFor(config, folderType);
         var servesTitle = ladder.LastOrDefault(t => t.CompletionRequired <= servesPoolValue);
         var servesName = servesTitle?.Name.ToString();
         var servesAbove = servesTitle != null && servesTitle.CompletionRequired > target.CompletionRequired;
@@ -119,7 +129,7 @@ public static class FolderTitleTrack
         // ABOVE your level (high base, few charts) clears this test and keeps its bar — it must not
         // read as "behind you" just because it's too thin to finish a title single-handed.
         var folderCount = allCharts.Values.Count(c => c.Type == folderType && (int)c.Level == (int)folderLevel);
-        if (effBase * PgCeiling <= floor)
+        if (effBase * PgCeilingFor(config, folderType) <= floor)
             return new FolderTitleTrackResult(false, from?.Name.ToString() ?? "", target.Name.ToString(),
                 progress, FolderTrackMode.GradeUp, 0, PhoenixLetterGrade.A, servesName, servesAbove, folderCount);
 
@@ -139,7 +149,7 @@ public static class FolderTitleTrack
         // SSS+ on grade alone can't beat it, only a Perfect Game plate can — fall to SSS+ on the ceiling.
         var (baseGrade, basePer) = contributing.Length > 0
             ? contributing[0]
-            : (PhoenixLetterGrade.SSSPlus, effBase * PgCeiling);
+            : (PhoenixLetterGrade.SSSPlus, effBase * PgCeilingFor(config, folderType));
         var baseCount = Math.Max(1, (int)Math.Ceiling(deficit / (basePer - floor)));
 
         // The first grade whose full-folder count fits the folder is the achievable ask — we only

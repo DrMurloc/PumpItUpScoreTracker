@@ -5099,6 +5099,12 @@
   <data name="Rating Calculator" xml:space="preserve">
     <value>評定の計算</value>
   </data>
+  <data name="Re-price {0} ratings" xml:space="preserve">
+    <value>{0} の評定を再計算</value>
+  </data>
+  <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
+    <value>保存された {0} の評定を再計算しています。通知は行われません。</value>
+  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>難度変更</value>
   </data>

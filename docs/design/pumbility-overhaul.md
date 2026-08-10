@@ -240,7 +240,7 @@ Measured from **pure base, ×1.00** (D16):
 
 **Plate is the reason this exists.** Phoenix 1's plate modifiers are all exactly 1.0 — the plate you
 walked away with never entered the number at all. Phoenix 2's are additive bonuses of 0.000–0.020
-against grade multipliers of 1.08–1.50, so a plate is worth at most **1.3% of a chart**.
+against grade multipliers of 0.90–1.50, so a plate is worth at most **1.3% of a chart**.
 
 Two devices carry that without exaggerating it:
 
@@ -251,8 +251,9 @@ Two devices carry that without exaggerating it:
   ceiling: Perfect-Gaming every chart in the owner's pool is **+174, or 0.97%** — about **twelve
   chart swaps**. On Phoenix 1 that line reads *nothing*, flatly.
 
-⚠ **The reference is load-bearing and the note has to stay honest.** Pure base measures from a grade
-nothing can score — Phoenix 2's worst is ×1.08 — so the Score segment carries a floor everybody gets.
+⚠ **The reference is load-bearing and the note has to stay honest.** Pure base measures from ×1.00,
+which on Phoenix 2 is exactly what a **D** pays — every grade above it adds and only an F (×0.90)
+subtracts, so the Score segment carries a floor all but the worst play gets.
 Measured from AA instead, the same pool reads 93.8 / 5.8 / 0.4. On Phoenix 1 the question does not
 arise: AA's modifier is exactly ×1.00, so pure base *is* AA-neutral there. That is also why Level
 reads 90% on one mix and 69% on the other — same pool shape, different zero point.
@@ -326,7 +327,7 @@ count — and then **the 50th slot is the bar**, which reads `0`, and every proj
 it displaced nothing. Confirmed live on the owner's account: the bar was held by a *passed S9*.
 
 The rule is `Rank(s) > 0`, which subsumes all four. Nothing legitimate is caught: the worst grade
-multiplier is ×0.4 on Phoenix 1 and ×1.08 on Phoenix 2, and `MinimumScore` is 0 in both PUMBILITY
+multiplier is ×0.4 on Phoenix 1 and ×0.90 on Phoenix 2, and `MinimumScore` is 0 in both PUMBILITY
 configs. `FolderTitleTrack.Compute` already builds its pool this way (`if (value <= 0) continue;`) —
 this makes the page agree with the tier list's folder track.
 

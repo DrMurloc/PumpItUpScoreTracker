@@ -106,9 +106,15 @@ internal static class ScoringObservations
             var grade = entry.Grade.Value;
             var ours = config.GetScore(entry.ChartType, entry.Level, grade.GetMinimumScoreFor(mix), plate);
 
+            // Both tables answer per chart type, so every constant on this line reads the one
+            // that actually priced the row — otherwise a type-split cell reports an implied
+            // value solved against a multiplier it was never scored with.
+            var shippedGrade = config.LetterGradeModifierFor(grade, entry.ChartType);
+            var shippedPlate = config.PlateModifierFor(plate, entry.ChartType);
+
             // The unit the multipliers apply to, recovered from our own formula rather than
             // recomputed here, so the singles level shift cannot drift out of step with it.
-            var divisor = config.LetterGradeModifiers[grade] + config.PlateModifiers[plate];
+            var divisor = shippedGrade + shippedPlate;
             var unit = divisor > 0 ? ours / divisor : 0;
 
             logger.LogInformation(
@@ -119,10 +125,10 @@ internal static class ScoringObservations
                 "PumbilityRow", plate.GetShorthand(), entry.ChartType, entry.Level, grade.GetName(),
                 entry.Value.ToString("F2"), ours.ToString("F2"), (ours - entry.Value).ToString("F2"),
                 Math.Abs(ours - entry.Value) <= PumbilityTolerance ? "match" : "MISMATCH",
-                unit <= 0 ? "?" : (entry.Value / unit - config.PlateModifiers[plate]).ToString("F4"),
-                config.LetterGradeModifiers[grade].ToString("F2"),
-                unit <= 0 ? "?" : (entry.Value / unit - config.LetterGradeModifiers[grade]).ToString("F4"),
-                config.PlateModifiers[plate].ToString("F3"));
+                unit <= 0 ? "?" : (entry.Value / unit - shippedPlate).ToString("F4"),
+                shippedGrade.ToString("F2"),
+                unit <= 0 ? "?" : (entry.Value / unit - shippedGrade).ToString("F4"),
+                shippedPlate.ToString("F3"));
         }
     }
 }

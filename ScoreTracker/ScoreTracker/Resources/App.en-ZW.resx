@@ -5099,6 +5099,12 @@
   <data name="Rating Calculator" xml:space="preserve">
     <value>Mrglrg Grglmurgmorg</value>
   </data>
+  <data name="Re-price {0} ratings" xml:space="preserve">
+    <value>Mralg {0} Mrglrg</value>
+  </data>
+  <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
+    <value>Mralg {0} mrglrg. Ulg morp gramb.</value>
+  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Gl-maglmr</value>
   </data>

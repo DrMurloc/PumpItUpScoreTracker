@@ -23,7 +23,8 @@ internal sealed class PlayerRatingSaga :
     IRequestHandler<RecalculateStatsCommand>,
     IRequestHandler<RecalculatePumbilityCommand>,
     IRequestHandler<PlayerRatingSaga.CaptureSessionStats, PlayerRatingSaga.SessionStatsResult>,
-    IConsumer<UserCreatedEvent>
+    IConsumer<UserCreatedEvent>,
+    IConsumer<RecalculateMixRatingsCommand>
 {
     /// <summary>
     ///     The rating step of the session-snapshot pipeline: recalculates stats and
@@ -189,6 +190,42 @@ internal sealed class PlayerRatingSaga :
         await _recordStats.UpdateScoreStats(mix, request.UserId, ratings, cancellationToken);
     }
 
+    /// <summary>
+    ///     The exit path for a formula change: re-price every player of one mix with the
+    ///     constants now shipping. Stored stats and per-chart PUMBILITY are the only things a
+    ///     formula correction leaves stale — every player-facing PUMBILITY figure is computed
+    ///     from raw scores at read time and is already right — so this sweep writes those two
+    ///     and announces nothing (see <see cref="RecalculateCore" />'s quiet mode).
+    ///     <para>
+    ///         One player's failure must not cost the rest of the sweep: a single account with
+    ///         unresolvable data would otherwise abort the run partway through and leave the
+    ///         mix half re-priced, with no way to tell which half.
+    ///     </para>
+    /// </summary>
+    public async Task Consume(ConsumeContext<RecalculateMixRatingsCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var userIds = (await _stats.GetUserIdsWithStats(mix, context.CancellationToken)).ToArray();
+        var chartIds = (await _charts.GetCharts(mix, cancellationToken: context.CancellationToken))
+            .Select(c => c.Id).ToArray();
+
+        var repriced = 0;
+        foreach (var userId in userIds)
+            try
+            {
+                await RecalculateCore(new RecalculateStatsCommand(userId, mix), null,
+                    context.CancellationToken, quiet: true);
+                await Handle(new RecalculatePumbilityCommand(userId, chartIds, mix), context.CancellationToken);
+                repriced++;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Re-pricing failed for user {UserId} ({Mix})", userId, mix);
+            }
+
+        _logger.LogInformation("Re-priced {Count} of {Total} players on {Mix}", repriced, userIds.Length, mix);
+    }
+
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
         // New users start with a Phoenix stats row (default mix at release); other mixes'
@@ -198,9 +235,22 @@ internal sealed class PlayerRatingSaga :
             context.CancellationToken);
     }
 
+    /// <summary>
+    ///     Recomputes and stores one player's stats.
+    ///     <para>
+    ///         <paramref name="quiet" /> stores the new numbers and announces nothing: no
+    ///         milestones, no CompetitiveImprover flags, no ratings-improved or stats-updated
+    ///         events. A formula correction moves every player at once, and the announcements
+    ///         are written for a player who just PLAYED — minted in bulk they would tell
+    ///         thousands of people they gained PUMBILITY on a day they did not play, write a
+    ///         history row saying so, and hang highlight flags on scores that never changed.
+    ///         The stored numbers are what a formula sweep is for; the announcements are what
+    ///         make it invasive.
+    ///     </para>
+    /// </summary>
     private async Task<SessionStatsResult> RecalculateCore(RecalculateStatsCommand request,
         IReadOnlyList<PlayerScoresUpdatedEvent.ScoreChange>? changes,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, bool quiet = false)
     {
         var mix = request.Mix;
         var oldStats = await _stats.GetStats(mix, request.UserId, cancellationToken);
@@ -289,6 +339,8 @@ internal sealed class PlayerRatingSaga :
 
         newStats = await EstimateOfficialRanks(mix, newStats, cancellationToken);
         await _stats.SaveStats(mix, request.UserId, newStats, cancellationToken);
+        if (quiet) return new SessionStatsResult(Array.Empty<PlayerMilestoneRecord>(), Array.Empty<Guid>());
+
         var gains = PumbilityGains(request, changes, scores, recorded, charts, mix, scoring);
         var improvers = await FlagCompetitiveImprovers(request, oldStats, newStats, competitiveScores, charts,
             gains, cancellationToken);

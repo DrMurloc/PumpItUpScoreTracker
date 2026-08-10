@@ -35,7 +35,51 @@ namespace ScoreTracker.SharedKernel.Models
         public IDictionary<PhoenixPlate, double> PlateModifiers { get; set; } = Enum.GetValues<PhoenixPlate>()
             .ToDictionary(p => p, p => 1.0);
 
+        /// <summary>
+        ///     What a Single prices a grade at when it disagrees with <see cref="LetterGradeModifiers" />.
+        ///     Sparse: a grade with no entry here takes the shared value, so only the grades that
+        ///     actually differ appear and the two tables cannot drift on the ones that don't.
+        ///     <para>
+        ///         Null on every configuration that prices both types alike. Serialized
+        ///         configurations carry only the shared tables, so one written before a type split
+        ///         existed still deserializes and still scores exactly as it did.
+        ///     </para>
+        /// </summary>
+        public IDictionary<PhoenixLetterGrade, double>? SinglesLetterGradeModifiers { get; set; }
+
+        /// <summary>
+        ///     What a Single prices a plate at when it disagrees with <see cref="PlateModifiers" />.
+        ///     Sparse and optional on the same terms as <see cref="SinglesLetterGradeModifiers" />.
+        /// </summary>
+        public IDictionary<PhoenixPlate, double>? SinglesPlateModifiers { get; set; }
+
         public double PgLetterGradeModifier { get; set; } = PhoenixLetterGrade.SSSPlus.GetModifier();
+
+        /// <summary>
+        ///     The multiplier a grade earns on a chart of this type — the Singles override when one
+        ///     is present for that grade, the shared table otherwise. Every read of the grade table
+        ///     inside the formula goes through here, so a type split cannot be honoured on one code
+        ///     path and missed on another.
+        /// </summary>
+        public double LetterGradeModifierFor(PhoenixLetterGrade grade, ChartType chartType)
+        {
+            return chartType == ChartType.Single && SinglesLetterGradeModifiers != null &&
+                   SinglesLetterGradeModifiers.TryGetValue(grade, out var singles)
+                ? singles
+                : LetterGradeModifiers[grade];
+        }
+
+        /// <summary>
+        ///     The bonus a plate earns on a chart of this type, resolved exactly as
+        ///     <see cref="LetterGradeModifierFor(PhoenixLetterGrade,ChartType)" /> resolves a grade.
+        /// </summary>
+        public double PlateModifierFor(PhoenixPlate plate, ChartType chartType)
+        {
+            return chartType == ChartType.Single && SinglesPlateModifiers != null &&
+                   SinglesPlateModifiers.TryGetValue(plate, out var singles)
+                ? singles
+                : PlateModifiers[plate];
+        }
 
         // The mix whose grade cutoffs price score→grade in this config. Phoenix 2 shifted the
         // sub-AAA thresholds, so a P2 config must grade against the P2 table; everything else
@@ -108,7 +152,7 @@ namespace ScoreTracker.SharedKernel.Models
             TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate, bool includeLevelOverride)
         {
             if (score < MinimumScore) return 0;
-            var letterGradeModifier = LetterGradeModifierFor(score);
+            var letterGradeModifier = LetterGradeModifierFor(score, chartType);
 
             switch (Formula)
             {
@@ -117,7 +161,7 @@ namespace ScoreTracker.SharedKernel.Models
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration, includeLevelOverride);
                     result *=
                         letterGradeModifier
-                        * PlateModifiers[plate];
+                        * PlateModifierFor(plate, chartType);
                     if (ChartModifiers.TryGetValue(chartId, out var chartModifier)) result *= chartModifier;
                     if (isBroken) result *= StageBreakModifier;
 
@@ -126,7 +170,7 @@ namespace ScoreTracker.SharedKernel.Models
                 case CalculationType.Avalanche:
                 {
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration, includeLevelOverride);
-                    result *= PlateModifiers[plate];
+                    result *= PlateModifierFor(plate, chartType);
                     var scoreModifier = letterGradeModifier;
                     if (isBroken) scoreModifier -= StageBreakModifier;
                     return result * scoreModifier;
@@ -143,7 +187,7 @@ namespace ScoreTracker.SharedKernel.Models
                         includeLevelOverride);
                     if (Mix == MixEnum.Phoenix2 && chartType == ChartType.Single && result > 0)
                         result += (int)level + 1 > 24 ? 10 : 5;
-                    result *= letterGradeModifier + PlateModifiers[plate];
+                    result *= letterGradeModifier + PlateModifierFor(plate, chartType);
                     if (isBroken) result *= StageBreakModifier;
 
                     return result;
@@ -156,7 +200,7 @@ namespace ScoreTracker.SharedKernel.Models
                     var songTypeModifier = SongTypeModifiers[songType];
                     var timeModifier = duration / BaseAverageTime;
                     var scoreModifier = letterGradeModifier;
-                    var plateModifier = PlateModifiers[plate];
+                    var plateModifier = PlateModifierFor(plate, chartType);
                     var chartModifier = ChartModifiers.TryGetValue(chartId, out var chartModResult)
                         ? chartModResult
                         : 1.0;
@@ -201,10 +245,10 @@ namespace ScoreTracker.SharedKernel.Models
         ///     <see cref="Decompose(Chart,PhoenixScore,PhoenixPlate,bool,bool)" /> so the split
         ///     cannot answer with a different grade than the total it is splitting.
         /// </summary>
-        private double LetterGradeModifierFor(PhoenixScore score)
+        private double LetterGradeModifierFor(PhoenixScore score, ChartType chartType)
         {
             var letterGrade = score.LetterGradeFor(Mix);
-            var letterGradeModifier = LetterGradeModifiers[letterGrade];
+            var letterGradeModifier = LetterGradeModifierFor(letterGrade, chartType);
             if (ContinuousLetterGradeScale && score != 1000000)
             {
                 double nextModifier;
@@ -212,7 +256,7 @@ namespace ScoreTracker.SharedKernel.Models
                 if (letterGrade != PhoenixLetterGrade.SSSPlus)
                 {
                     var nextGrade = letterGrade + 1;
-                    nextModifier = LetterGradeModifiers[nextGrade];
+                    nextModifier = LetterGradeModifierFor(nextGrade, chartType);
                     nextThreshold = nextGrade.GetMinimumScoreFor(Mix);
                 }
                 else
@@ -222,7 +266,7 @@ namespace ScoreTracker.SharedKernel.Models
                 }
 
                 var threshold = letterGrade.GetMinimumScoreFor(Mix);
-                var modifier = LetterGradeModifiers[letterGrade];
+                var modifier = LetterGradeModifierFor(letterGrade, chartType);
                 letterGradeModifier =
                     modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
             }
@@ -244,8 +288,9 @@ namespace ScoreTracker.SharedKernel.Models
         ///         Measured from a bare base of ×1.00 rather than from a grade, so the level part
         ///         is the chart's own value and the grade part is everything the score adds on
         ///         top (docs/design/pumbility-overhaul.md D16). On Phoenix 1 that reference is
-        ///         also AA, whose modifier is exactly 1.0; on Phoenix 2 nothing can score it,
-        ///         since the worst grade there pays 1.08.
+        ///         also AA, whose modifier is exactly 1.0; on Phoenix 2 only an F scores below
+        ///         it, so the grade part is negative for exactly that grade and positive for
+        ///         every other.
         ///     </para>
         /// </summary>
         public ScoreContribution Decompose(Chart chart, PhoenixScore score, PhoenixPlate plate,
@@ -253,9 +298,9 @@ namespace ScoreTracker.SharedKernel.Models
         {
             if (score < MinimumScore) return default;
 
-            var grade = LetterGradeModifierFor(score);
+            var grade = LetterGradeModifierFor(score, chart.Type);
             var breakModifier = isBroken ? StageBreakModifier : 1.0;
-            var plateModifier = PlateModifiers[plate];
+            var plateModifier = PlateModifierFor(plate, chart.Type);
 
             switch (Formula)
             {
@@ -296,7 +341,7 @@ namespace ScoreTracker.SharedKernel.Models
         public double PlateHeadroom(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken = false,
             bool includeLevelOverride = true)
         {
-            var best = PlateModifiers.MaxBy(kv => kv.Value).Key;
+            var best = PlateModifiers.Keys.MaxBy(p => PlateModifierFor(p, chart.Type));
             return Math.Max(0,
                 GetScore(chart, score, best, isBroken, includeLevelOverride)
                 - GetScore(chart, score, plate, isBroken, includeLevelOverride));
@@ -410,7 +455,9 @@ namespace ScoreTracker.SharedKernel.Models
             config.ChartTypeModifiers[ChartType.CoOp] = 0.0;
             // SinglePerformance/DoublePerformance stay 0 from the defaults (half-double excluded).
 
-            // Grade multipliers — verified exact for A+ and above.
+            // Grade multipliers. Like the plate table this is what a DOUBLE prices; AA and A+
+            // are the two grades a Single reads differently, and they are overridden below.
+            // AA+ and up are identical on both types across hundreds of live rows.
             config.LetterGradeModifiers[PhoenixLetterGrade.SSSPlus] = 1.50;
             config.LetterGradeModifiers[PhoenixLetterGrade.SSS] = 1.49;
             config.LetterGradeModifiers[PhoenixLetterGrade.SSPlus] = 1.48;
@@ -420,31 +467,41 @@ namespace ScoreTracker.SharedKernel.Models
             config.LetterGradeModifiers[PhoenixLetterGrade.AAAPlus] = 1.43;
             config.LetterGradeModifiers[PhoenixLetterGrade.AAA] = 1.41;
             config.LetterGradeModifiers[PhoenixLetterGrade.AAPlus] = 1.39;
-            // AA and A+ solved 2026-07-19 from the mirrored boards: reconstructing 19
-            // singles-tab players' pools from their chart-board rows (Base(L+1), known
-            // multipliers) bounds A+ to [1.32, 1.34] and AA to [1.35, 1.37] — the launch-era
-            // pre-rebalance values (1.35/1.37) produce impossible NEGATIVE plate residuals
-            // for stable players (KONA/WONDANG/HNGEAR/HORRORCOMEDY reconstruct with clean
-            // FG/TG-sized residuals at 1.33/1.36). The pre-launch xlsx AA row (D24 AA RG
-            // 342.50 = 250 × 1.37) was location-test tuning, superseded like the singles +1.
-            config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.36;
-            config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.33;
+            // A Double reads these two a notch higher than a Single does. Both are live
+            // per-chart reads: a D25 A+ FG at 351.52 = Base(25) 260 × (1.35 + 0.002), and a
+            // D24 AA RG at 342.50 = Base(24) 250 × 1.37 — the pre-launch value, which turns
+            // out to have been a doubles observation rather than stale tuning.
+            config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
+            config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
             // A verified live 2026-07-19 (my_page/pumbility.php per-chart read: an S14 A TG at
-            // 263.22 = Base(15) × 1.284). Descending steps land at −0.01 (S tier), −0.02
-            // (AAA tier), −0.03 (AA/A+), −0.05 (A+→A).
+            // 263.22 = Base(15) × 1.284); no doubles A row has ever been priced, so both types
+            // read it here.
             config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.28;
-            // TODO(P2-pumbility): B and below are UNVERIFIED — extended at the last observed
-            // −0.05 step pending a live sub-800k sample on a counting chart.
-            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.23;
-            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.18;
-            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.13;
-            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.08;
+            // B and D are live singles reads (2026-08-10): an S18 B at Base(19) 225 × 1.20,
+            // seen twice on two different plates, and an S15 D at Base(16) 210 × 1.00. Neither
+            // has ever been priced on a Double, so both types read the singles value — closer
+            // to the evidence than the −0.05 extrapolation these replace.
+            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.20;
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.00;
+            // C and F have never been priced on either type: a pool holds a player's fifty
+            // BEST charts, and these grades rarely survive into one. They interpolate the
+            // confirmed rungs either side at the 0.10 step B and D describe. Note that F must
+            // move whatever else does — left where it was it would pay MORE than D, and a
+            // worse grade cannot be worth more than a better one.
+            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.10;
+            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 0.90;
 
-            // Plate bonuses (ADDITIVE terms, not multipliers).
-            // TODO(P2-pumbility): community data suggested singles-specific UG/EG/RG values
-            // (.017/.014/−.010); treated as a data error for now (owner call 2026-07-09) —
-            // the doubles-verified table applies to both types. Adjust here if live singles
-            // data disagrees, then run the P2 recalculation job.
+            // What a Single reads instead, for the two grades that differ. Singles A+ is
+            // pinned by three live rows and AA by nine, against one doubles chart each — so
+            // the singles side is the better-evidenced half of both splits.
+            config.SinglesLetterGradeModifiers = new Dictionary<PhoenixLetterGrade, double>
+            {
+                [PhoenixLetterGrade.AA] = 1.36,
+                [PhoenixLetterGrade.APlus] = 1.33
+            };
+
+            // Plate bonuses (ADDITIVE terms, not multipliers). This table is what a Double
+            // prices; Singles differ on two of the eight and say so below.
             config.PlateModifiers[PhoenixPlate.RoughGame] = 0.000;
             config.PlateModifiers[PhoenixPlate.FairGame] = 0.002;
             config.PlateModifiers[PhoenixPlate.TalentedGame] = 0.004;
@@ -453,6 +510,17 @@ namespace ScoreTracker.SharedKernel.Models
             config.PlateModifiers[PhoenixPlate.ExtremeGame] = 0.012;
             config.PlateModifiers[PhoenixPlate.UltimateGame] = 0.016;
             config.PlateModifiers[PhoenixPlate.PerfectGame] = 0.020;
+
+            // Singles pay more for the two best-but-imperfect plates. Read off the official
+            // per-chart breakdown page during live imports: 21 Extreme Game rows and 60
+            // Ultimate Game rows, every one of them implying these values and no other.
+            // The remaining six plates land identically on both types, so they are absent
+            // here and answer from the table above.
+            config.SinglesPlateModifiers = new Dictionary<PhoenixPlate, double>
+            {
+                [PhoenixPlate.ExtremeGame] = 0.014,
+                [PhoenixPlate.UltimateGame] = 0.017
+            };
             return config;
         }
 

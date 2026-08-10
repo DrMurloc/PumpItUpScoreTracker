@@ -14,9 +14,11 @@ namespace ScoreTracker.Tests.DomainTests;
 ///     per-chart breakdown page my_page/pumbility.php (2026-07-19), which exposed the
 ///     singles +1-level pricing, the sub-10 zero, and the real A multiplier (1.28) — the
 ///     xlsx-era singles rows priced at Base(level) are superseded and re-derived at
-///     Base(level+1) here. Rows that used the community's singles-specific UG/EG/RG plate
-///     values are deliberately absent: the shared (doubles-verified) plate table is an owner
-///     decision, see the TODO in ScoringConfiguration.Phoenix2PumbilityScoring.
+///     Base(level+1) here. A third era follows: production import telemetry (2026-08-10),
+///     which priced all sixteen plate × chart-type cells from live pools and showed Singles
+///     paying their own Extreme and Ultimate Game bonuses. Singles Rough Game is NOT among
+///     them — it pays the same 0.000 a Double does, so the community table's −0.010 stays
+///     refuted while its other two singles values are now pinned below.
 /// </summary>
 public sealed class Phoenix2PumbilityScoringTests
 {
@@ -67,6 +69,12 @@ public sealed class Phoenix2PumbilityScoringTests
     [InlineData(ChartType.Single, 24, PhoenixLetterGrade.AAAPlus, PhoenixPlate.TalentedGame, 372.84)]
     [InlineData(ChartType.Single, 24, PhoenixLetterGrade.SPlus, PhoenixPlate.TalentedGame, 380.64)]
     [InlineData(ChartType.Single, 24, PhoenixLetterGrade.SSS, PhoenixPlate.MarvelousGame, 388.96)]
+    // Singles Extreme and Ultimate Game — the two plates a Single prices differently from a
+    // Double, observed on live pools 2026-08-10. Base(21) 235 x (1.50 + 0.014) = 355.79 and
+    // Base(20) 230 x (1.50 + 0.017) = 348.91; at the doubles bonuses these would read 355.32
+    // and 348.22, so these rows are what hold the two tables apart.
+    [InlineData(ChartType.Single, 20, PhoenixLetterGrade.SSSPlus, PhoenixPlate.ExtremeGame, 355.79)]
+    [InlineData(ChartType.Single, 19, PhoenixLetterGrade.SSSPlus, PhoenixPlate.UltimateGame, 348.91)]
     // Doubles — observed live values (xlsx 2026-07 + my_page/pumbility.php 2026-07-19; a D(L)
     // prices at Base(L) — no level bump, verified to the cent against the live page)
     [InlineData(ChartType.Double, 12, PhoenixLetterGrade.SSSPlus, PhoenixPlate.PerfectGame, 288.80)]
@@ -86,9 +94,11 @@ public sealed class Phoenix2PumbilityScoringTests
     [InlineData(ChartType.Double, 23, PhoenixLetterGrade.S, PhoenixPlate.TalentedGame, 356.23)]
     [InlineData(ChartType.Double, 23, PhoenixLetterGrade.SPlus, PhoenixPlate.FairGame, 358.19)]
     [InlineData(ChartType.Double, 23, PhoenixLetterGrade.SSS, PhoenixPlate.MarvelousGame, 366.52)]
-    // AA re-derived at the launch value 1.36 (SQL board reconstruction 2026-07-19); the xlsx
-    // observation 342.50 = 250 x 1.37 was pre-launch tuning.
-    [InlineData(ChartType.Double, 24, PhoenixLetterGrade.AA, PhoenixPlate.RoughGame, 340.00)]
+    // A Double reads AA at 1.37, so this is 250 x 1.37 — the pre-launch xlsx value, which the
+    // live page served again on 2026-08-10 and which the 1.36 re-derivation had written off.
+    // The board reconstruction that produced 1.36 was singles-tab only, so it was answering
+    // for the other chart type all along.
+    [InlineData(ChartType.Double, 24, PhoenixLetterGrade.AA, PhoenixPlate.RoughGame, 342.50)]
     [InlineData(ChartType.Double, 24, PhoenixLetterGrade.S, PhoenixPlate.RoughGame, 362.50)]
     [InlineData(ChartType.Double, 24, PhoenixLetterGrade.SPlus, PhoenixPlate.FairGame, 365.50)]
     [InlineData(ChartType.Double, 24, PhoenixLetterGrade.SPlus, PhoenixPlate.TalentedGame, 366.00)]
@@ -101,10 +111,39 @@ public sealed class Phoenix2PumbilityScoringTests
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.AAAPlus, PhoenixPlate.FairGame, 372.32)]
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.SS, PhoenixPlate.MarvelousGame, 383.76)]
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.SSPlus, PhoenixPlate.MarvelousGame, 386.36)]
+    // The sub-AAA rungs, all live per-chart reads from production pools (2026-08-10). A+ on a
+    // Double is 1.35 against the 1.33 a Single reads; B and D are singles reads that both types
+    // now use, since no Double has ever been priced at either.
+    [InlineData(ChartType.Double, 25, PhoenixLetterGrade.APlus, PhoenixPlate.FairGame, 351.52)]
+    [InlineData(ChartType.Single, 18, PhoenixLetterGrade.B, PhoenixPlate.FairGame, 270.45)]
+    [InlineData(ChartType.Single, 18, PhoenixLetterGrade.B, PhoenixPlate.RoughGame, 270.00)]
+    [InlineData(ChartType.Single, 15, PhoenixLetterGrade.D, PhoenixPlate.MarvelousGame, 211.26)]
     public void MatchesRealPerChartPumbilityObservedOnTheLiveSite(ChartType type, int level,
         PhoenixLetterGrade grade, PhoenixPlate plate, double expected)
     {
         Assert.Equal(expected, Contribution(type, level, grade, plate), 2);
+    }
+
+    [Theory]
+    // The four cells where the two chart types disagree. A Single and a Double are compared at
+    // the level that gives them the SAME base — a Single prices one level up, so an S(L-1) and
+    // a D(L) share a base and any difference left is the table's alone.
+    [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.ExtremeGame, 0.002)]
+    [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.UltimateGame, 0.001)]
+    [InlineData(PhoenixLetterGrade.APlus, PhoenixPlate.RoughGame, -0.02)]
+    [InlineData(PhoenixLetterGrade.AA, PhoenixPlate.RoughGame, -0.01)]
+    public void SinglesAndDoublesPriceTheSplitCellsDifferently(PhoenixLetterGrade grade, PhoenixPlate plate,
+        double expectedGapPerBasePoint)
+    {
+        // Guards the split itself, not any one number: collapsing the two tables back into one
+        // would zero every gap here while leaving each type's own golden rows intact.
+        const int doublesLevel = 20;
+        var expectedBase = ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(doublesLevel));
+
+        var singles = Contribution(ChartType.Single, doublesLevel - 1, grade, plate);
+        var doubles = Contribution(ChartType.Double, doublesLevel, grade, plate);
+
+        Assert.Equal(expectedGapPerBasePoint * expectedBase, singles - doubles, 2);
     }
 
     [Theory]
