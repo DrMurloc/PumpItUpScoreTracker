@@ -129,4 +129,13 @@ public interface IScoreReader
     /// <summary>A player's best legacy-scoring attempt per chart in a specific XX-or-older mix.</summary>
     Task<IEnumerable<BestXXChartAttempt>> GetBestXXAttempts(MixEnum mix, Guid userId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     What each player's legacy record in a mix adds up to: the net score old arcade
+    ///     boards ranked on, plus the SSS/SS/S/A tallies, which is what most legacy records
+    ///     actually carry. One pass over the mix's rows — the sum and the tallies come off the
+    ///     same scan rather than four round trips. Players with no records are absent.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, LegacyScoreTotals>> GetLegacyTotals(MixEnum mix,
+        IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
 }

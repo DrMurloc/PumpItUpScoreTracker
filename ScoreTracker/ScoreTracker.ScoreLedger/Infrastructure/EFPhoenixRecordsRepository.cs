@@ -220,6 +220,38 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return _xxAttempts.GetBestAttempts(userId, mix, cancellationToken);
     }
 
+    async Task<IReadOnlyDictionary<Guid, LegacyScoreTotals>> IScoreReader.GetLegacyTotals(MixEnum mix,
+        IEnumerable<Guid> userIds, CancellationToken cancellationToken)
+    {
+        var ids = userIds as Guid[] ?? userIds.ToArray();
+        if (ids.Length == 0) return new Dictionary<Guid, LegacyScoreTotals>();
+
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var mixId = MixIds.For(mix);
+        // One grouped pass: the sum and the four tallies come off the same scan. The cast to
+        // long happens in SQL — a full-catalogue player's era scores overflow int, which is
+        // exactly how the old boards were won.
+        var rows = await database.Set<BestAttemptEntity>()
+            .Where(b => b.MixId == mixId && ids.Contains(b.UserId))
+            .GroupBy(b => b.UserId)
+            .Select(g => new
+            {
+                UserId = g.Key,
+                NetScore = g.Sum(b => (long?)b.Score) ?? 0L,
+                Scored = g.Count(b => b.Score != null),
+                Recorded = g.Count(),
+                TripleS = g.Count(b => b.LetterGrade == "SSS"),
+                DoubleS = g.Count(b => b.LetterGrade == "SS"),
+                SingleS = g.Count(b => b.LetterGrade == "S"),
+                A = g.Count(b => b.LetterGrade == "A")
+            })
+            .ToArrayAsync(cancellationToken);
+
+        return rows.ToDictionary(r => r.UserId,
+            r => new LegacyScoreTotals(r.UserId, r.NetScore, r.Scored, r.Recorded,
+                r.TripleS, r.DoubleS, r.SingleS, r.A));
+    }
+
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;
