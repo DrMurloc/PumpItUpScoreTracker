@@ -19,7 +19,13 @@ public sealed record ScoreSessionRecord(
     DateTimeOffset LastActivityAt,
     int ScoreCount,
     int NewCount,
-    int UpscoreCount)
+    int UpscoreCount,
+    /// <summary>
+    ///     When everything downstream of this session's batch finished. Null means it never did —
+    ///     a restart inside the batch hold window
+    ///     (docs/design/import-restart-recovery.md).
+    /// </summary>
+    DateTimeOffset? ProcessedAt = null)
 {
     /// <summary>
     ///     Nothing before this was recorded as a session, so nothing before it can be undone.

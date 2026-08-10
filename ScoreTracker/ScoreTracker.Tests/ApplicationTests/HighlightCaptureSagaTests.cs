@@ -510,6 +510,34 @@ public sealed class HighlightCaptureSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    ///     ⚠ Load-bearing far beyond the Discord card. SessionRecoverySaga stamps a session's
+    ///     "derived work finished" marker by consuming this event, so a session that produces no
+    ///     flags, no milestones and no title movement must STILL publish — otherwise it is never
+    ///     marked, looks interrupted forever, and the next process start replays it
+    ///     (docs/design/import-restart-recovery.md §4.1).
+    ///     <para>
+    ///         An early return added to Consume for a quiet batch would be invisible in the UI and
+    ///         would turn every ordinary session into a recovery candidate. This is the tripwire.
+    ///     </para>
+    /// </summary>
+    [Fact]
+    public async Task ASnapshotWithNothingNoteworthyStillPublishes()
+    {
+        // Nothing set up: no charts, no bests, no rating or title output. ComputeFlags bails on
+        // the first read and every step contributes nothing, which is as quiet as a batch gets.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var sessionId = Guid.NewGuid();
+        var ctx = new HandlerContext();
+        var context = ctx.Context(NewPassEvent(chart, sessionId));
+
+        await ctx.Saga.Consume(context);
+
+        Mock.Get(context).Verify(c => c.Publish(
+            It.Is<ScoreHighlightsCapturedEvent>(e => e.SessionId == sessionId),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task AFailedStepShipsTheSnapshotWithoutItsSection()
     {

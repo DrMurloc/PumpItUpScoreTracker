@@ -1,0 +1,60 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Commands
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+
+@* The one-time notice for an import the process abandoned mid-scrape
+   (docs/design/import-restart-recovery.md §7). Raised once per interrupted run, never repeated:
+   the flag is AcknowledgedAt on the run row itself, so it is per-run by construction and a second
+   interruption raises it again with no key naming to get wrong.
+
+   Deliberately NOT raised for the case the startup pass recovered on its own — nothing was lost
+   there, so saying anything would be noise. Interim until a notifications system exists.
+
+   A render-nothing-until-relevant island, modelled on DeletionNoticeHost: MainLayout renders
+   statically, so this cannot be a plain dialog sitting in it. *@
+@if (_run is not null)
+{
+    <MudDialog @bind-Visible="_show" Options="_options">
+        <TitleContent>
+            <MudText Typo="Typo.h6">@L["Your import didn't finish"]</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudText Typo="Typo.body2">
+                @L["PIU Scores restarted while your scores were still importing. Everything it saved is already in — but anything it hadn't reached yet is still missing. Importing again picks up whatever didn't land."]
+            </MudText>
+        </DialogContent>
+        <DialogActions>
+            <MudSpacer/>
+            <MudButton Variant="Variant.Text" OnClick="@(() => _show = false)">@L["Dismiss"]</MudButton>
+            @* Navigates rather than starting a run: the PIUGame password lives in the player's
+               browser, so nothing here can re-run the import on their behalf. *@
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/UploadPhoenixScores">
+                @L["Import again"]
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+    private ImportAttemptRecord? _run;
+    private bool _show;
+
+    private readonly DialogOptions _options = new() { BackdropClick = false };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.IsLoggedIn) return;
+        _run = await Mediator.Send(new GetUnacknowledgedInterruptedImportQuery(CurrentUser.User.Id));
+        if (_run is null) return;
+
+        _show = true;
+        // Acknowledged as it OPENS, not as it closes. A dismissal the player never made — closing
+        // the tab, navigating away — must not bring the same notice back on the next page load.
+        await Mediator.Send(new AcknowledgeImportInterruptionCommand(_run.Id));
+    }
+}

@@ -2077,6 +2077,9 @@ namespace ScoreTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("CardId")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -2093,8 +2096,8 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Outcome")
-                        .HasMaxLength(16)
-                        .HasColumnType("nvarchar(16)");
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<int?>("ScoreCount")
                         .HasColumnType("int");
@@ -2109,6 +2112,8 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
 
                     b.HasIndex("UserId", "StartedAt");
 
@@ -3397,6 +3402,9 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("NewCount")
                         .HasColumnType("int");
 
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<int>("ScoreCount")
                         .HasColumnType("int");
 
@@ -3415,6 +3423,9 @@ namespace ScoreTracker.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProcessedAt")
+                        .HasFilter("[ProcessedAt] IS NULL");
 
                     b.HasIndex("UserId", "StartedAt");
 

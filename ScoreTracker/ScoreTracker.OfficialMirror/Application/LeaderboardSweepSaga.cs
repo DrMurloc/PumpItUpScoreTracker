@@ -146,10 +146,25 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
     private async Task ComputeHighlights(int snapshotId, MixEnum mix, bool isBaseline, CancellationToken ct)
     {
         var previous = await _snapshots.GetSealedBefore(mix, snapshotId, ct);
-        var input = new HighlightsInput(mix, snapshotId, isBaseline,
-            await _snapshots.GetBoards(mix, ct),
-            await _snapshots.GetPlacements(snapshotId, PlacementScope.OfficialOnly, ct),
-            previous == null ? null : await _snapshots.GetPlacements(previous.Id, PlacementScope.OfficialOnly, ct),
+        var boards = await _snapshots.GetBoards(mix, ct);
+        var current = await _snapshots.GetPlacements(snapshotId, PlacementScope.OfficialOnly, ct);
+        var previousPlacements = previous == null
+            ? null
+            : await _snapshots.GetPlacements(previous.Id, PlacementScope.OfficialOnly, ct);
+
+        // Renames settle BEFORE the diff, not after it. A tag that only changed spelling has
+        // to reach the calculator carrying its own history, or it reads as a stranger who
+        // turned up this week: a debut it never made and — now that entering a board credits
+        // the climb from off it — a rank rise nobody climbed. The merge re-points placements
+        // onto the surviving id, so anything read before it ran is stale and gets read again.
+        if (!isBaseline && previousPlacements != null &&
+            await ExplainVanishedTags(snapshotId, mix, boards, current, previousPlacements, ct) > 0)
+        {
+            current = await _snapshots.GetPlacements(snapshotId, PlacementScope.OfficialOnly, ct);
+            previousPlacements = await _snapshots.GetPlacements(previous!.Id, PlacementScope.OfficialOnly, ct);
+        }
+
+        var input = new HighlightsInput(mix, snapshotId, isBaseline, boards, current, previousPlacements,
             await _records.GetBoardRecords(mix, ct),
             await _records.GetFolderRecords(mix, ct),
             await _records.GetCrossMixHighs(mix, ct),
@@ -161,22 +176,21 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
         await _records.UpsertFolderRecords(mix, result.UpdatedFolderRecords, ct);
         _logger.LogInformation("{Mix} snapshot {SnapshotId}: {Count} highlights", mix, snapshotId,
             result.Highlights.Count);
-
-        if (!input.IsBaseline && input.Previous != null)
-            await ExplainVanishedTags(snapshotId, mix, input, ct);
     }
 
     /// <summary>
     ///     Accounts for every tag that left the boards this week and merges the ones the
     ///     evidence settles. The rest land on the admin desk with their verdict — including
     ///     the ones that merged themselves, which is how anyone can tell the rule is still
-    ///     working rather than silently finding nothing.
+    ///     working rather than silently finding nothing. Returns how many merged, because the
+    ///     caller's copy of the placements is stale the moment one does.
     /// </summary>
-    private async Task ExplainVanishedTags(int snapshotId, MixEnum mix, HighlightsInput input,
-        CancellationToken ct)
+    private async Task<int> ExplainVanishedTags(int snapshotId, MixEnum mix,
+        IReadOnlyList<BoardDimension> boards, IReadOnlyList<PlacementRow> current,
+        IReadOnlyList<PlacementRow> previous, CancellationToken ct)
     {
         var findings = VanishedTagAnalyzer.Analyze(snapshotId, await _snapshots.GetPlayers(mix, ct),
-            input.Boards, input.Current, input.Previous!);
+            boards, current, previous);
         var written = await _identity.WriteFindings(mix, findings, ct);
 
         // Driven off everything still unresolved, not off what was just written. A sweep that
@@ -209,6 +223,7 @@ internal sealed class LeaderboardSweepSaga : IConsumer<StartLeaderboardImportCom
             _logger.LogInformation(
                 "{Mix} snapshot {SnapshotId}: {Found} tags left the boards ({New} new), {Merged} of {Eligible} merged",
                 mix, snapshotId, findings.Count, written.Count, merged, pending.Length);
+        return merged;
     }
 
     /// <summary>

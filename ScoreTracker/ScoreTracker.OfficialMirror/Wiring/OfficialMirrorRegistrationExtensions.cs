@@ -57,5 +57,9 @@ public static class OfficialMirrorRegistrationExtensions
         configurator.AddConsumer<RunOfficialImportConsumer>();
         configurator.AddConsumer<RunImportCheckConsumer>();
         configurator.AddConsumer<AccountPurgeConsumer>();
+        // The startup recovery pass. Unregistered, a restart mid-import stays silently
+        // unrecovered — every suite still passes, because nothing else sends its message
+        // (docs/design/import-restart-recovery.md §4).
+        configurator.AddConsumer<RecoverInterruptedImportsConsumer>();
     }
 }

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -314,6 +314,9 @@
   </data>
   <data name="A community with this name already exists." xml:space="preserve">
     <value>Une communauté avec ce nom existe déjà.</value>
+  </data>
+  <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
+    <value>Une livraison peut arriver deux fois. Si PIU Scores redémarre pendant un import, cet import est renvoyé à son retour : base ton traitement sur le chart et l'heure enregistrée du score plutôt que sur l'unicité de chaque livraison. Les livraisons de session PIUGame font exception : elles ne sont jamais renvoyées, car la session a disparu.</value>
   </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>Quelques réglages à faire dès maintenant : tout le reste s'y adapte.</value>
@@ -2123,6 +2126,9 @@
   </data>
   <data name="Everything it can do in your server" xml:space="preserve">
     <value>Tout ce qu'il sait faire sur votre serveur</value>
+  </data>
+  <data name="Everything it saved is already in — but anything it hadn't reached yet is still missing. Importing again picks up whatever didn't land." xml:space="preserve">
+    <value>Tout ce qui a été enregistré est déjà là, mais ce qui n'avait pas encore été lu manque toujours. Réimporter récupère le reste.</value>
   </data>
   <data name="Evidence" xml:space="preserve">
     <value>Données</value>
@@ -4620,6 +4626,12 @@
   </data>
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>miroir officiel PIU Scores</value>
+  </data>
+  <data name="PIU Scores restarted while your last import was running." xml:space="preserve">
+    <value>PIU Scores a redémarré pendant que ton dernier import était en cours.</value>
+  </data>
+  <data name="PIU Scores restarted while your scores were still importing. Everything it saved is already in — but anything it hadn't reached yet is still missing. Importing again picks up whatever didn't land." xml:space="preserve">
+    <value>PIU Scores a redémarré pendant l'import de tes scores. Tout ce qui a été enregistré est déjà là, mais ce qui n'avait pas encore été lu manque toujours. Réimporter récupère le reste.</value>
   </data>
   <data name="PIU Scores Supplemented" xml:space="preserve">
     <value>Complété par PIU Scores</value>
@@ -7729,6 +7741,9 @@
   </data>
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>Vos groupes, votre région et le monde.</value>
+  </data>
+  <data name="Your import didn't finish" xml:space="preserve">
+    <value>Ton import ne s'est pas terminé</value>
   </data>
   <data name="Your invite code" xml:space="preserve">
     <value>Votre code d'invitation</value>

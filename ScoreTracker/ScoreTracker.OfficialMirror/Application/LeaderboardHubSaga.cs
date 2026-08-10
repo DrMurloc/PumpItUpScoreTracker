@@ -231,16 +231,24 @@ internal sealed class LeaderboardHubSaga :
         IReadOnlyList<OfficialRankingRecord> rankings;
         if (pumbilityBoard != null)
         {
-            var previousPlaces = previous == null
-                ? new Dictionary<int, int>()
-                : (await GetSnapshotStats(request.Mix, previous.Id, request.Supplemented, cancellationToken))
-                .RatingBoards.TryGetValue(boardName, out var prevBoard)
-                    ? prevBoard.ToDictionary(p => p.PlayerId, p => p.Place)
-                    : new Dictionary<int, int>();
+            IReadOnlyList<PlacementRow>? previousBoard = null;
+            if (previous != null)
+                previousBoard =
+                    (await GetSnapshotStats(request.Mix, previous.Id, request.Supplemented, cancellationToken))
+                    .RatingBoards.TryGetValue(boardName, out var prevBoard)
+                        ? prevBoard
+                        : null;
+            var previousPlaces = previousBoard?.ToDictionary(p => p.PlayerId, p => p.Place)
+                                 ?? new Dictionary<int, int>();
+            // Someone who wasn't on last week's board did not come from nowhere — the board
+            // places them below its last row, so the cell reads the rise from there, the same
+            // credit This Week's movers card gives an entry. Only a week with no board at all
+            // leaves the cell bare, because then there is nothing to have risen from.
+            var enteredFrom = previousBoard is { Count: > 0 } ? previousBoard.Count + 1 : (int?)null;
             rankings = pumbilityBoard
                 .OrderBy(p => p.Place)
                 .Select(p => BuildRanking(p.Place,
-                    previousPlaces.TryGetValue(p.PlayerId, out var prev) ? prev : (int?)null,
+                    previousPlaces.TryGetValue(p.PlayerId, out var prev) ? prev : enteredFrom,
                     p.PlayerId, p.Score, stats, request.Type))
                 .ToArray();
         }
@@ -251,10 +259,11 @@ internal sealed class LeaderboardHubSaga :
                 : ComputedRanks(await GetSnapshotStats(request.Mix, previous.Id, request.Supplemented, cancellationToken),
                     request.Type);
             var currentRanks = ComputedRanks(stats, request.Type);
+            var enteredFrom = previousRanks.Count > 0 ? previousRanks.Count + 1 : (int?)null;
             rankings = currentRanks
                 .OrderBy(kv => kv.Value)
                 .Select(kv => BuildRanking(kv.Value,
-                    previousRanks.TryGetValue(kv.Key, out var prev) ? prev : (int?)null,
+                    previousRanks.TryGetValue(kv.Key, out var prev) ? prev : enteredFrom,
                     kv.Key, stats.ByPlayer[kv.Key].RatingFor(request.Type), stats, request.Type))
                 .ToArray();
         }
@@ -347,8 +356,12 @@ internal sealed class LeaderboardHubSaga :
                 .Where(r => r.LeaderboardType == LeaderboardTypes.Chart && r.ChartId != null)
                 .GroupBy(r => r.ChartId!.Value)
                 .ToDictionary(g => g.Key, g => g.First().Place);
+            // Not on the board that week means below its last row, not unmeasurable — the
+            // same entry credit the rankings cell and the movers card both give.
             previousPumbilityRank = previousRows.FirstOrDefault(r =>
-                r.LeaderboardType == LeaderboardTypes.Rating && r.BoardName == PumbilityAll)?.Place;
+                    r.LeaderboardType == LeaderboardTypes.Rating && r.BoardName == PumbilityAll)?.Place
+                ?? await RankBelowBoard(request.Mix, previous.Id, PumbilityAll, request.Supplemented,
+                    cancellationToken);
         }
 
         var currentRows = timeline.Where(r => r.SnapshotId == latest.Id).ToArray();
@@ -646,6 +659,20 @@ internal sealed class LeaderboardHubSaga :
     ///     before computing anything, because a merged board's places are not the stored ones —
     ///     on a rating board an official row's place moves when ours land around it.
     /// </summary>
+    /// <summary>
+    ///     Where a ranked board says a player stood the week they were not on it: one place
+    ///     below its last row. Null when that week has no such board, which is the only case
+    ///     where "they were not on it" carries no information about where they were.
+    /// </summary>
+    private async Task<int?> RankBelowBoard(MixEnum mix, int snapshotId, string boardName, bool supplemented,
+        CancellationToken ct)
+    {
+        var stats = await GetSnapshotStats(mix, snapshotId, supplemented, ct);
+        return stats.RatingBoards.TryGetValue(boardName, out var board) && board.Count > 0
+            ? board.Count + 1
+            : null;
+    }
+
     private async Task<SnapshotStats> GetSnapshotStats(MixEnum mix, int snapshotId, bool supplemented,
         CancellationToken ct)
     {

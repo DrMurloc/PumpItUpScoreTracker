@@ -113,6 +113,20 @@ the other on Windows. Leave a margin, and never sit a rung directly on a device'
 circuit to re-render it, so anything that must survive an unfold has to be a media query —
 CSS, never Razor ([static-shell.md §11](design/static-shell.md)).
 
+⚠ **A fixed-width overlay has to fit the narrowest rung, and nothing checks that for you.**
+MudBlazor 8.15 sizes a temporary drawer `width: var(--mud-drawer-width)` and puts no `max-width`
+on it anywhere, so a drawer declared wider than the glass hangs off the edge it is anchored to —
+and a drawer scrolls vertically only, so nothing brings it back. `/Charts`' 420px filter drawer
+sat **30px** past the left edge of a 390px phone, taking the low end of every range slider's track
+with it; the same 420px fits a fold's *unfolded* screen exactly, which is how it read as a
+mobile-only slider bug. `site.css` now caps every temporary drawer at `max-width: 100%` sitewide
+(`max-width` beats `width` whatever the specificity, and a fixed element resolves the percentage
+against the viewport, so a declared width still applies wherever it fits). Measure any new overlay
+against the Mobile rung anyway — and note that **measuring a drawer the moment it opens reads its
+225ms slide-in's first frame**, which parks it a full width off the anchored edge and looks exactly
+like the bug. Wait for `getAnimations().every(a => a.playState === 'finished')` first; an empty
+list settles immediately, which is right under reduced motion.
+
 ---
 
 ## 2. The rules
@@ -151,6 +165,21 @@ what is about to happen — *Delete my Phoenix scores* — rather than *Confirm*
 scope outperform another acknowledgement checkbox, and they fix the failure mode where nobody can
 tell what a control is about to take. Derived values that are recomputed from what is being deleted
 are stated as a consequence, never offered as a checkbox.
+
+**12. A control the finger is holding never round-trips.** For the length of a gesture the
+browser owns the control's position; the circuit hears the release and nothing before it.
+Rendering the live value instead puts the thumb on the wire, and the failure is not slowness but
+*wrongness*: the server answers each `input` event with a value one latency old, Blazor writes it
+back onto the input, and the thumb is pulled backwards under the finger for as long as the drag
+lasts. Throttling cannot fix it — the stale write is the bug — and it is invisible on localhost,
+where the round trip is a millisecond, so it only ever shows up in a field test. `RangeSlider` is
+the worked example: Blazor renders the *committed* range, [range-slider.js](../ScoreTracker/ScoreTracker/wwwroot/js/range-slider.js)
+paints the fill and the readout from the inputs' own values in between, and C# ships its wording
+for every stop on the track so the script never re-implements a format. Its thumbs also **cross and
+swap ends** rather than clamping against each other, because clamping mid-drag was the same
+backwards yank by another name — and two thumbs parked on the same value could not be separated at
+all, the second input in the DOM winning every overlap and having nowhere to go. The rule
+generalizes to anything that follows a finger: a scrub bar, a reorder drag, a resize handle.
 
 ---
 

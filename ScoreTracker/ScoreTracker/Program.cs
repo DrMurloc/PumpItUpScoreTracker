@@ -253,6 +253,8 @@ builder.Services.AddBlazorApplicationInsights()
     .AddHttpClient()
     .AddHostedService<BotHostedService>()
     .AddHostedService<ChartPageCacheWarmer>()
+    // Restart recovery, once per boot. Not a recurring job on purpose — see the type's remarks.
+    .AddHostedService<StartupRecoveryPublisher>()
     .AddMediatR(o =>
     {
         // Post-processors only run when wired through this configuration (a bare DI
@@ -446,7 +448,6 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     // (the P2 boards are login-gated) — without them the import fails loudly naming the keys.
     ("start-phoenix2-leaderboard-import", r => r.PublishStartPhoenix2LeaderboardImport(),  "30 16 * * 0"), // Sundays 16:30 UTC
     ("try-schedule-mom",                 r => r.PublishTryScheduleMoM(),                  "0 11 * * *"), // 06:00 ET
-    ("flush-overdue-score-batches",      r => r.PublishFlushOverdueScoreBatches(),        "*/5 * * * *"), // every 5 min — safety net for stuck batches
     ("process-account-purges",           r => r.PublishProcessAccountPurges(),            "30 11 * * *"), // 06:30 ET — merged-account grace-window purges
     ("crawl-piucenter",                  r => r.PublishCrawlPiuCenter(),                  "0 6 * * 1"),  // Mondays 01:00 ET — gap-driven, near no-op unless piucenter shipped a new data release
     ("purge-player-highlights",          r => r.PublishPurgePlayerHighlights(),           "0 9 * * 0"),  // Sundays 09:00 UTC — 30-day significant-wins retention (payload + community index)

@@ -70,9 +70,6 @@ public sealed class RecurringJobRunner
     public Task PublishTryScheduleMoM() =>
         _bus.Publish(new TryScheduleMoMCommand());
 
-    public Task PublishFlushOverdueScoreBatches() =>
-        _bus.Publish(new FlushOverdueScoreBatchesCommand());
-
     public Task PublishProcessAccountPurges() =>
         _bus.Publish(new ProcessAccountPurgesCommand());
 

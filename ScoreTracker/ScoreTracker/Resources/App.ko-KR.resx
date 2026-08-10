@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -314,6 +314,9 @@
   </data>
   <data name="A community with this name already exists." xml:space="preserve">
     <value>이미 같은 이름의 커뮤니티가 있습니다.</value>
+  </data>
+  <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
+    <value>전송이 두 번 도착할 수 있습니다. 가져오기 도중에 PIU Scores가 다시 시작되면 복구 후 해당 가져오기가 다시 전송됩니다. 전송이 한 번뿐이라고 가정하지 말고 차트와 기록 시각을 기준으로 처리하세요. PIUGame 세션 전송은 예외입니다. 그때는 세션이 이미 사라졌기 때문에 다시 보내지 않습니다.</value>
   </data>
   <data name="A few things worth getting right up front — everything after this is tuned to them." xml:space="preserve">
     <value>먼저 정해두면 좋은 몇 가지입니다. 이후의 모든 것이 여기에 맞춰집니다.</value>
@@ -2108,6 +2111,9 @@
   </data>
   <data name="Everything it can do in your server" xml:space="preserve">
     <value>서버에서 할 수 있는 모든 것</value>
+  </data>
+  <data name="Everything it saved is already in — but anything it hadn't reached yet is still missing. Importing again picks up whatever didn't land." xml:space="preserve">
+    <value>저장된 것은 이미 반영되어 있지만, 아직 읽지 못한 기록은 빠져 있습니다. 다시 가져오면 누락된 기록을 채웁니다.</value>
   </data>
   <data name="Evidence" xml:space="preserve">
     <value>근거</value>
@@ -4586,6 +4592,12 @@
   </data>
   <data name="PIU Scores official mirror" xml:space="preserve">
     <value>PIU Scores 공식 미러</value>
+  </data>
+  <data name="PIU Scores restarted while your last import was running." xml:space="preserve">
+    <value>마지막 가져오기가 실행되는 중에 PIU Scores가 다시 시작되었습니다.</value>
+  </data>
+  <data name="PIU Scores restarted while your scores were still importing. Everything it saved is already in — but anything it hadn't reached yet is still missing. Importing again picks up whatever didn't land." xml:space="preserve">
+    <value>점수를 가져오는 중에 PIU Scores가 다시 시작되었습니다. 저장된 것은 이미 반영되어 있지만, 아직 읽지 못한 기록은 빠져 있습니다. 다시 가져오면 누락된 기록을 채웁니다.</value>
   </data>
   <data name="PIU Scores Supplemented" xml:space="preserve">
     <value>PIU Scores 보완</value>
@@ -7660,6 +7672,9 @@
   </data>
   <data name="Your groups, your region, and the world." xml:space="preserve">
     <value>나의 그룹, 나의 지역, 그리고 전 세계까지.</value>
+  </data>
+  <data name="Your import didn't finish" xml:space="preserve">
+    <value>가져오기가 끝나지 않았습니다</value>
   </data>
   <data name="Your invite code" xml:space="preserve">
     <value>내 초대 코드</value>

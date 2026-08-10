@@ -26,8 +26,7 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         IScoreSessionRepository sessions,
         IMemoryCache cache)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
-        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
-        IConsumer<FlushOverdueScoreBatchesCommand>
+        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
@@ -138,17 +137,9 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         var bests = (await records.GetRecordedScores(batch.Mix, userId, cancellationToken) ?? [])
             .Where(r => involved.Contains(r.ChartId))
             .ToDictionary(r => r.ChartId);
-        var changes = involved.Select(chartId =>
-        {
-            var best = bests.GetValueOrDefault(chartId);
-            return new PlayerScoresUpdatedEvent.ScoreChange(
-                chartId,
-                IsNewPass: !batch.UpscoredChartIds.ContainsKey(chartId),
-                OldScore: batch.UpscoredChartIds.TryGetValue(chartId, out var old) ? old : null,
-                NewScore: best?.Score,
-                Plate: best?.Plate?.ToString(),
-                IsBroken: best?.IsBroken ?? false);
-        }).ToArray();
+        // Shared with the restart replay, so a recovered batch announces itself in exactly the
+        // shape a live one would have.
+        var changes = ScoreChangeAssembler.Build(batch, bests);
         // The drain is the session's checkpoint: one write per batch rather than one per score.
         if (batch.SessionId is { } sessionId)
             await sessions.Touch(sessionId, dateTimeOffset.Now, batch.NewChartIds.Length,
@@ -156,20 +147,5 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         await bus.Publish(
             PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes, batch.SessionId),
             cancellationToken);
-    }
-
-    // Safety net for batches whose scheduled TryFireScoreCommand was lost
-    // (in-memory MassTransit transport drops in-flight messages on restart).
-    public async Task Consume(ConsumeContext<FlushOverdueScoreBatchesCommand> context)
-    {
-        var now = dateTimeOffset.Now.UtcDateTime;
-        foreach (var entry in batches.Dump())
-        {
-            if (entry.FireAt > now) continue;
-            var batch = batches.TakeBatch(entry.Mix, entry.UserId);
-            if (batch is null) continue;
-            if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) continue;
-            await PublishScoreEvents(entry.UserId, batch, context.CancellationToken);
-        }
     }
 }

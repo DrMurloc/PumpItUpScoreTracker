@@ -32,6 +32,11 @@
     <!-- Vertical→vertical contracts: the completion-leaderboard aggregate resolves community
          membership through GetCommunityMembersQuery instead of joining Community tables. -->
     <ProjectReference Include="..\ScoreTracker.Communities\ScoreTracker.Communities.csproj" />
+    <!-- Vertical→vertical contracts: SessionRecoverySaga consumes ScoreHighlightsCapturedEvent to
+         learn that a session's derived work finished. Explicit rather than transitive (Communities
+         already brings it in), and acyclic — PlayerProgress reaches only Domain, Identity, Data,
+         Catalog and ChartIntelligence, none of which reach back here. -->
+    <ProjectReference Include="..\ScoreTracker.PlayerProgress\ScoreTracker.PlayerProgress.csproj" />
   </ItemGroup>
 
 </Project>

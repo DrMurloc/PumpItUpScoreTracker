@@ -370,7 +370,9 @@ One `ImportResult` row per press of Import, Import and check, or Deep scan.
   an empty session row every time a scan lost the race.
 - **`ScoreCount` is stamped by the run itself**, at close. It was originally read off the
   Ledger's `ScoreSession.ScoreCount` through the published `GetScoreSessionsQuery` — correct on
-  paper, wrong in practice: that counter is written when the score **batch drains**, on a
+  paper, wrong in practice (a restart-recovered session has its counts set from the journal
+afterwards, but the run itself cannot wait for that): that counter is written when the score
+**batch drains**, on a
   ~2 minute in-memory debounce, so it cannot answer for a run that just finished, and an app
   restart inside the window leaves it at zero *permanently*. Field-observed 2026-08-08: a check
   that saved seven scores sat at `ScoreCount` 0 with seven journal rows behind it, and the Undo
@@ -393,6 +395,13 @@ comparing against a piugame play history wants), and the strip is **not** refres
 ends — the consumer closes its row in a `finally`, *after* the status event that would trigger
 the reload, so refreshing on that event races the close and would flash "never reported back" at
 somebody whose import had just succeeded. It is hidden while a run is in flight instead.
+
+⚠ Hiding it *only* while in flight was not enough (field-tested 2026-08-10): the flag clears on
+"Charts finished saving", at which point the strip returns showing the **previous** run — so a
+player who had just recovered from an interrupted import, and imported successfully, was still
+being told their import didn't finish. Both halves of that race end with the same wrong sentence
+on screen, so the strip now also stands down once a run has completed on this page, and waits for
+the next page load to have the truth ([import-restart-recovery.md](import-restart-recovery.md)).
 
 ### Still open
 
