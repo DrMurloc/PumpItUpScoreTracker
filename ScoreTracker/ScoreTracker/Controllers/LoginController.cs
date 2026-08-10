@@ -17,9 +17,6 @@ using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.Services;
-using ScoreTracker.Web.Services.Contracts;
-using ScoreTracker.Web.Services.Localization;
-
 namespace ScoreTracker.Web.Controllers;
 
 [Route("[controller]")]
@@ -34,19 +31,16 @@ public sealed class LoginController : Controller
 
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
-    private readonly IUiSettingsAccessor _uiSettings;
     private readonly IOptions<DevAuthConfiguration> _devAuth;
     private readonly AccountProofService _proofs;
 
     public LoginController(IMediator mediator,
         ICurrentUserAccessor currentUser,
-        IUiSettingsAccessor uiSettings,
         IOptions<DevAuthConfiguration> devAuth,
         AccountProofService proofs)
     {
         _mediator = mediator;
         _currentUser = currentUser;
-        _uiSettings = uiSettings;
         _devAuth = devAuth;
         _proofs = proofs;
     }
@@ -99,9 +93,6 @@ public sealed class LoginController : Controller
 
         await _currentUser.SetCurrentUser(user);
 
-        var culture = await _uiSettings.GetSetting("Culture", HttpContext.RequestAborted, user.Id);
-        if (culture != null)
-            CultureCookie.Write(HttpContext.Response, CultureCookie.ValueFor(culture));
         var url = isNewUser ? SetupUrl(providerName) : returnUrl;
 
         return LocalRedirect(url ?? "/");
@@ -165,10 +156,6 @@ public sealed class LoginController : Controller
             HttpContext.RequestAborted);
 
         await _currentUser.SetCurrentUser(resolution.User);
-
-        var culture = await _uiSettings.GetSetting("Culture", HttpContext.RequestAborted, resolution.User.Id);
-        if (culture != null)
-            CultureCookie.Write(HttpContext.Response, CultureCookie.ValueFor(culture));
 
         // Aliases held by a different account were proven by the same credentials — record
         // that so a drifted-identifier merge is friction-free.
