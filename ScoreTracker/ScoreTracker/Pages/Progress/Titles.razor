@@ -29,6 +29,23 @@
         }
     </div>
 }
+else if (_ladder != TitleLadderAvailability.Available)
+{
+    @* Titles are per-mix and a title's name is its key, so this page cannot fall back to
+       another mix's ladder the way the Pumbility and Official frames fall back to Phoenix —
+       showing Phoenix rungs to a Prime 2 player would be showing them someone else's game.
+       Which of the two sentences it is matters: Prime 2 awarded titles and simply has no
+       ladder here, while everything older never had them at all. *@
+    <MixUnavailableNotice Mix="_currentMix" Subject="@L["Titles"]"
+                          Kind="@(_ladder == TitleLadderAvailability.NotYetBuilt
+                                    ? MixUnavailableNotice.NoticeKind.NotYetBuilt
+                                    : MixUnavailableNotice.NoticeKind.Unsupported)">
+        @if (_ladder == TitleLadderAvailability.NeverExisted)
+        {
+            @L["Pump It Up didn't award titles until Prime 2."]
+        }
+    </MixUnavailableNotice>
+}
 else
 {
     @if (CurrentUser.IsLoggedIn)
@@ -158,6 +175,7 @@ else
     };
 
     private MixEnum _currentMix;
+    private TitleLadderAvailability _ladder = TitleLadderAvailability.Available;
     private bool _loading = true;
     private IReadOnlyList<TitleSectionRows> _sections = Array.Empty<TitleSectionRows>();
     private TitleRung? _selected;
@@ -175,7 +193,15 @@ else
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
+        _ladder = TitleLadders.For(_currentMix);
         _currentUserId = CurrentUser.IsLoggedIn ? CurrentUser.User.Id : null;
+        // No ladder means nothing below has anything to read; the rarity and holder queries
+        // would each go to the database to come back empty.
+        if (_ladder != TitleLadderAvailability.Available)
+        {
+            _loading = false;
+            return;
+        }
 
         var progress = (await Mediator.Send(new GetTitleProgressQuery(_currentMix))).ToArray();
         var rarity = await Mediator.Send(new GetTitleRarityQuery(_currentMix));

@@ -167,18 +167,10 @@ public sealed class LoginController : Controller
                 _proofs.RecordProof(resolution.User.Id, aliasOwner.Id);
         }
 
-        // Game-tag doorway: a fresh piugame account whose tag another account already carries
-        // gets the merge invitation (invitation only — the wizard's prove step is the gate).
-        if (resolution.IsNew)
-        {
-            var tagMatch =
-                (await _mediator.Send(new GetUsersByGameTagQuery(identity.GameTag), HttpContext.RequestAborted))
-                .FirstOrDefault(u => u.Id != resolution.User.Id);
-            if (tagMatch != null)
-                return LocalRedirect(
-                    $"/Account/Merge?with={tagMatch.Id}&returnUrl={Uri.EscapeDataString(SetupUrl(PiuGameProvider))}");
-        }
-
+        // The game-tag doorway lives on the setup step itself, as an invitation the player can
+        // walk past. A tag is self-reported and non-unique, so a match cannot be allowed to
+        // decide where a brand-new account lands — every new account goes to setup, and setup
+        // asks the question.
         if (resolution.IsNew) return LocalRedirect(SetupUrl(PiuGameProvider));
 
         return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl);

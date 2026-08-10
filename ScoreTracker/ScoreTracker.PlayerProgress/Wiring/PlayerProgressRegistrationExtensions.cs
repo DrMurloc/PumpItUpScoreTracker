@@ -50,7 +50,8 @@ public static class PlayerProgressRegistrationExtensions
     {
         // PlayerRatingSaga and TitleSaga run their score-batch work as in-process steps
         // of the HighlightCaptureSaga orchestration (revision 2) — as bus consumers they
-        // only handle UserCreated and TitlesDetected respectively.
+        // handle UserCreated and TitlesDetected respectively, plus the rating saga's
+        // mix-wide re-pricing sweep, which is admin-triggered and never part of a batch.
         configurator.AddConsumer<PlayerRatingSaga>();
         configurator.AddConsumer<TitleSaga>();
         configurator.AddConsumer<PlayerHistorySaga>();

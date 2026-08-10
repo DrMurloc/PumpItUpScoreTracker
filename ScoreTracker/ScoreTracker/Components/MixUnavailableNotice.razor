@@ -1,0 +1,64 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
+
+@* What a page says when the mix in view cannot answer it. Every mix is browsable, and
+   plenty of pages are about something a given mix does not have — a Pumbility pool needs
+   1,000,000-scale scores, an official board needs an official site that still serves one.
+
+   Two shapes, because they are two different promises:
+     Unsupported — the concept does not apply to this mix, and never will. Final.
+     NotYetBuilt — it applies and simply is not built. An honest "later".
+   Saying the second where the first is true invites a player to wait for something that
+   is never coming; saying the first where the second is true writes off real work. The
+   caller picks, because only the caller knows which one it is.
+
+   Charts is the way out in both cases: it is the one page every mix renders fully, and
+   the one a player who came here for their own scores actually wants. *@
+<div class="mix-unavailable">
+    <MudIcon Icon="@(Kind == NoticeKind.NotYetBuilt ? Icons.Material.Filled.Construction : Icons.Material.Filled.DoNotDisturb)"></MudIcon>
+    <MudText Typo="Typo.h5">@Headline</MudText>
+    @if (ChildContent != null)
+    {
+        <MudText Typo="Typo.body2" Class="mix-unavailable-detail">@ChildContent</MudText>
+    }
+    <div class="mix-unavailable-actions">
+        <MudButton Href="/Charts" Color="Color.Primary" Variant="Variant.Outlined"
+                   StartIcon="@Icons.Material.Filled.QueueMusic">@L["Charts"]</MudButton>
+        @if (ShowTierLists)
+        {
+            <MudButton Href="/TierLists" Color="Color.Primary" Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.Topic">@L["Tier Lists"]</MudButton>
+        }
+    </div>
+</div>
+
+@code {
+    public enum NoticeKind
+    {
+        /// <summary>The mix never had this. Nothing is coming.</summary>
+        Unsupported,
+
+        /// <summary>The mix has this and the site does not, yet.</summary>
+        NotYetBuilt
+    }
+
+    [Parameter] [EditorRequired] public MixEnum Mix { get; set; }
+
+    [Parameter] public NoticeKind Kind { get; set; } = NoticeKind.Unsupported;
+
+    /// <summary>
+    ///     What this page is, in the player's words — "PUMBILITY", "Official leaderboards".
+    ///     It goes in the headline, so it reads as a sentence about the thing they asked for
+    ///     rather than a generic refusal.
+    /// </summary>
+    [Parameter] [EditorRequired] public string Subject { get; set; } = "";
+
+    /// <summary>Optional sentence explaining why, when the reason is worth knowing.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public bool ShowTierLists { get; set; } = true;
+
+    private string Headline => Kind == NoticeKind.NotYetBuilt
+        ? L["{0} isn't available for {1} yet.", Subject, Mix.GetName()].Value
+        : L["{0} isn't a thing in {1}.", Subject, Mix.GetName()].Value;
+}

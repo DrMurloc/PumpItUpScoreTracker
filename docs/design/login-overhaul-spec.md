@@ -163,7 +163,14 @@ and dropped" below.)
   2. **Game-tag match**: `GetUsersByGameTagQuery` (Identity contracts + `IUserRepository`
      method); after a PIUGAME login or import completes, a match on another account prompts
      "An account with game tag X already exists. Is that you?" → deep link, `returnUrl` back to
-     the import. Invitation only — the wizard's prove step is the security gate.
+     where it was asked. Invitation only — the wizard's prove step is the security gate.
+
+     **A doorway never redirects, it only offers** (2026-08-10). The login path originally sent a
+     new account straight to the wizard, which spent a brand-new player's first screen on a merge
+     decision. Tags are self-reported and non-unique, so the match is a guess and is sometimes
+     about a stranger; it may prompt, never navigate. The invitation now renders on `/Setup`
+     itself and on the import page, and it never names the matched account — naming it tells
+     someone who merely shares a nickname that the account exists.
   3. **Manual**: "Merge another account" button in the settings panel.
 - **Tests**: query handler test; prompt logic covered at handler level.
 

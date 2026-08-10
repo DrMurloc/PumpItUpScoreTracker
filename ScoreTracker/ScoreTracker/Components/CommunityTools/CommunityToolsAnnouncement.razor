@@ -4,7 +4,9 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Web.Services.Contracts
 
-@* The one-time rollout notice, shown once per signed-in player.
+@* The one-time rollout notice, shown once to each player who already had an account when the
+   rollout ran. It is addressed to them alone: it reports a change made to a profile that existed
+   before it, which is not something a new account has.
 
    The public-profile branch has to confess a setting that was turned on FOR them — the only
    sentence in this feature that could read as a bait-and-switch — so it leads with that and links
@@ -80,17 +82,33 @@
     private bool _show;
     private bool _isPublic;
 
+    /// <summary>
+    ///     Whether this render is happening on the new-account setup step. Every navigation is a
+    ///     full document load, so the island re-initializes per page and the address is current.
+    /// </summary>
+    private bool IsSetupPage =>
+        new Uri(NavManager.Uri).AbsolutePath.TrimEnd('/')
+            .Equals("/Setup", StringComparison.OrdinalIgnoreCase);
+
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn) return;
 
         if (await UiSettings.GetSetting(SeenKey) is not null) return;
 
-        // Not while they are still setting the account up. This is a "what's new" notice, and a
-        // brand-new player has no "before" to compare it to — meanwhile it is a modal, so on
-        // /Setup it covers the one screen they have to use. Deliberately not marked seen: they
-        // meet it on the dashboard a moment later, which is where it always used to fire.
-        if (await UiSettings.GetSetting(IUiSettingsAccessor.SetupCompletedSettingKey) is null) return;
+        // A brand-new account is one that lands on /Setup, and the notice is not addressed to it:
+        // it reports that the rollout switched sharing on for a profile that already existed, and
+        // an account created afterwards was never switched. So arriving here retires the notice
+        // outright rather than deferring it to the dashboard a moment later.
+        //
+        // Keyed on the page rather than on whether setup is finished: an account that predates
+        // /Setup carries no completion flag either, so reading a missing flag as "brand new" takes
+        // every long-standing player for one and silences the notice for its entire audience.
+        if (IsSetupPage)
+        {
+            await UiSettings.SetSetting(SeenKey, "true");
+            return;
+        }
 
         _isPublic = CurrentUser.User.IsPublic;
         // Reading the preference rather than assuming it: a player who already found the toggle

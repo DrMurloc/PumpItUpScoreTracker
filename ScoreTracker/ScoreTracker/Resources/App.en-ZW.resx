@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -948,6 +948,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Grrglplgl</value>
+  </data>
+  <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
+    <value>Mrglrmrgl gurgl blub Mrg, ur mrgla brogl gromrgl arglub mrgl urg.</value>
   </data>
   <data name="Boards you're both on" xml:space="preserve">
     <value>Grrglplgl blub mrogl mrp</value>
@@ -2104,6 +2107,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>Murgglorg blubgrorp glorgblgrl grglmrp plglmorg.</value>
   </data>
+  <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
+    <value>Grorp mrogl blub murgblub grolub, gro rorgl mrrgl morgl blurgo mrgl grgl.</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Alu morp blurpa, murglub apa oru. Groblu blab mo murpalu problu blaru puru gala, gorap oru bralu alu.</value>
   </data>
@@ -3111,6 +3117,9 @@
   <data name="Legacy grade" xml:space="preserve">
     <value>Rogrrgl rorgl</value>
   </data>
+  <data name="Let this file replace my records" xml:space="preserve">
+    <value>Grolub blarg murgblub mrgl Mgrlgmrg</value>
+  </data>
   <data name="Letter Grade" xml:space="preserve">
     <value>Mrlurg Rorgl</value>
   </data>
@@ -3650,6 +3659,9 @@
   <data name="net" xml:space="preserve">
     <value>glorg</value>
   </data>
+  <data name="Net Score" xml:space="preserve">
+    <value>Mrgl Mgrlgmrg</value>
+  </data>
   <data name="Never" xml:space="preserve">
 	  <value>Glargl</value>
 	  <comment>Fallback for tournament EndDate when not set.</comment>
@@ -3825,6 +3837,9 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>Mrp mrglrgl argl — blubgrorp gromurp murpargl glorgrglmurp ro grglmrp murpmagl morg.</value>
   </data>
+  <data name="no scores" xml:space="preserve">
+    <value>urgl mgrlgmrg</value>
+  </data>
   <data name="No scores in this mix yet" xml:space="preserve">
     <value>Mrp mgrlgmrg mrp grglmrp mrg argl</value>
   </data>
@@ -3935,6 +3950,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Murm blargromrp mrp Murmgrrglblub murmblub</value>
+  </data>
+  <data name="Not available on {0}." xml:space="preserve">
+    <value>Mrg groglarglub ur {0}.</value>
   </data>
   <data name="Not checked" xml:space="preserve">
     <value>Bam murgl</value>
@@ -4269,6 +4287,9 @@
   </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Bam murpo murgblub blu murgl gromurp murgargl. Murgl murmo murgm blarglurp murm bo 1M murgloo — murpo murgm murgblarg murmo.</value>
+  </data>
+  <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
+    <value>Marg mrrglub grorp. Mgrlgmrg blub rorgl murgl blargl.</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Mrpmurg mrgl glgrgl gro maglrogrorp murgl mrp glorgmurg.</value>
@@ -4966,6 +4987,9 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY blarg 50</value>
   </data>
+  <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
+    <value>Pump It Up murgla brogl mrgl golu Prumgl 2.</value>
+  </data>
   <data name="Push PGs" xml:space="preserve">
     <value>Morggrgl Gl</value>
   </data>
@@ -5098,6 +5122,12 @@
   </data>
   <data name="Rating Calculator" xml:space="preserve">
     <value>Mrglrg Grglmurgmorg</value>
+  </data>
+  <data name="Re-price {0} ratings" xml:space="preserve">
+    <value>Mralg {0} Mrglrg</value>
+  </data>
+  <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
+    <value>Mralg {0} mrglrg. Ulg morp gramb.</value>
   </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Gl-maglmr</value>
@@ -6661,9 +6691,6 @@
   <data name="This page is full." xml:space="preserve">
     <value>Grglmrp urggrgl urg mrglmr.</value>
   </data>
-  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
-    <value>Grglmrp urggrgl blgrlro blargblgrl ro grrglgro mrgrgl argl</value>
-  </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>Grglmrp grrglmr grogrrgl murmmrp maglmrglplgl argl — urgmurp arglblgrl blarggrorp.</value>
   </data>
@@ -8111,6 +8138,12 @@
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} urg murm mrp {1} — mrp grorpro mrgl rolurg.</value>
+  </data>
+  <data name="{0} isn't a thing in {1}." xml:space="preserve">
+    <value>{0} mrgla ur blargl mo {1}.</value>
+  </data>
+  <data name="{0} isn't available for {1} yet." xml:space="preserve">
+    <value>{0} mrgla groglarglub gro {1} urg.</value>
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} rolurg</value>

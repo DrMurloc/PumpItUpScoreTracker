@@ -29,6 +29,20 @@
 @implements IDisposable
 <PageTitle>@L["Import Scores"]</PageTitle>
 
+@if (_currentMix.UsesLegacyScoring())
+{
+    @* Every write on this page goes through UpdatePhoenixBestAttemptCommand, which refuses a
+       legacy mix outright — so without this the page threw out of an event handler and took
+       the circuit with it. The nav already points legacy players at the spreadsheet importer;
+       this is for a bookmark or a mix switched after the page loaded. *@
+    <MixUnavailableNotice Mix="_currentMix" Subject="@L["Import Scores"]">
+        @L["{0} scores import from a spreadsheet.", _currentMix.GetName()]
+    </MixUnavailableNotice>
+    <MudButton Href="/UploadXXScores" Color="Color.Primary" Variant="Variant.Filled"
+               StartIcon="@Icons.Material.Filled.UploadFile" Class="mt-2">@L["Upload file"]</MudButton>
+    return;
+}
+
 @* The form is the page (design doc D1/D2): credentials, options and Import sit above the fold;
    the script/CSV flow lives in the manual-import expander below. *@
 <MudCard Class="mt-4">
@@ -533,7 +547,10 @@
 
         try
         {
-            _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password))).ToArray();
+            // Cards are listed per mix — each official site knows only the cards registered in
+            // its own game. Omitting the mix reads Phoenix 1's list, so a card that exists only
+            // on Phoenix 2 can never be picked.
+            _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password, _currentMix))).ToArray();
         }
         catch (InvalidCredentialException)
         {
@@ -568,7 +585,9 @@
         {
             if (string.IsNullOrWhiteSpace(_selectedId))
             {
-                _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password))).ToArray();
+                // Per mix, for the same reason as LoadCards: the card being imported has to come
+                // from the site being imported.
+                _cards = (await Mediator.Send(new GetGameCardsQuery(_username, _password, _currentMix))).ToArray();
                 if (_cards.Count() > 1)
                 {
                     _selectedId = _cards.First(c => c.IsActive).Id;

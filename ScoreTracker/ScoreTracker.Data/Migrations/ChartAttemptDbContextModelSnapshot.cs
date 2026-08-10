@@ -3330,6 +3330,10 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<bool>("IsBroken")
                         .HasColumnType("bit");
 
+                    b.Property<string>("LetterGrade")
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
                     b.Property<int?>("Misses")
                         .HasColumnType("int");
 

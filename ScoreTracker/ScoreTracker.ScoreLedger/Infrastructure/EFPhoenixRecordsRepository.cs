@@ -220,6 +220,68 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return _xxAttempts.GetBestAttempts(userId, mix, cancellationToken);
     }
 
+    async Task<IEnumerable<UserLegacyScore>> IScoreReader.GetPlayerLegacyScores(MixEnum mix,
+        IEnumerable<Guid> userIds, IEnumerable<Guid> chartIds, CancellationToken cancellationToken)
+    {
+        var ids = userIds as Guid[] ?? userIds.ToArray();
+        var charts = chartIds as Guid[] ?? chartIds.ToArray();
+        if (ids.Length == 0 || charts.Length == 0) return Array.Empty<UserLegacyScore>();
+
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var mixId = MixIds.For(mix);
+        // Masked exactly as the Phoenix twin masks: a private player's name never leaves here
+        // in the clear, and IsPublic says so outright so no consumer has to recognise the mask.
+        var rows = await (from b in database.Set<BestAttemptEntity>()
+            where b.MixId == mixId && ids.Contains(b.UserId) && charts.Contains(b.ChartId)
+            join u in database.User on b.UserId equals u.Id
+            select new { b.UserId, b.ChartId, u.Name, u.IsPublic, b.LetterGrade, b.Score, b.IsBroken, b.RecordedDate })
+            .ToArrayAsync(cancellationToken);
+
+        return rows
+            .Where(r => Enum.TryParse<XXLetterGrade>(r.LetterGrade, out _))
+            .Select(r => new UserLegacyScore(r.UserId, r.ChartId,
+                r.IsPublic ? Name.From(r.Name) : Name.From("Anonymous"),
+                Enum.Parse<XXLetterGrade>(r.LetterGrade), r.Score, r.IsBroken, r.IsPublic,
+                r.RecordedDate))
+            .ToArray();
+    }
+
+    async Task<IReadOnlyDictionary<Guid, LegacyScoreTotals>> IScoreReader.GetLegacyTotals(MixEnum mix,
+        IEnumerable<Guid> userIds, CancellationToken cancellationToken)
+    {
+        var ids = userIds as Guid[] ?? userIds.ToArray();
+        if (ids.Length == 0) return new Dictionary<Guid, LegacyScoreTotals>();
+
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var mixId = MixIds.For(mix);
+        // One grouped pass: the sum and the four tallies come off the same scan. The cast to
+        // long happens in SQL — a full-catalogue player's era scores overflow int, which is
+        // exactly how the old boards were won.
+        var rows = await database.Set<BestAttemptEntity>()
+            .Where(b => b.MixId == mixId && ids.Contains(b.UserId))
+            .GroupBy(b => b.UserId)
+            .Select(g => new
+            {
+                UserId = g.Key,
+                NetScore = g.Sum(b => (long?)b.Score) ?? 0L,
+                Scored = g.Count(b => b.Score != null),
+                Recorded = g.Count(),
+                Passed = g.Count(b => !b.IsBroken),
+                // Passing only. A broken run still carries a letter — a broken SSS is possible
+                // on a mission zone — but a grade you did not clear is not one to tally, and the
+                // player page's folder graphs one click away have always counted it this way.
+                TripleS = g.Count(b => b.LetterGrade == "SSS" && !b.IsBroken),
+                DoubleS = g.Count(b => b.LetterGrade == "SS" && !b.IsBroken),
+                SingleS = g.Count(b => b.LetterGrade == "S" && !b.IsBroken),
+                A = g.Count(b => b.LetterGrade == "A" && !b.IsBroken)
+            })
+            .ToArrayAsync(cancellationToken);
+
+        return rows.ToDictionary(r => r.UserId,
+            r => new LegacyScoreTotals(r.UserId, r.NetScore, r.Scored, r.Recorded, r.Passed,
+                r.TripleS, r.DoubleS, r.SingleS, r.A));
+    }
+
     private readonly IMemoryCache _cache;
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IChartRepository _charts;

@@ -6,10 +6,16 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.ScoreLedger.Contracts;
 
 /// <summary>
-///     What counts as a personal best (docs/design/score-truth-model.md). The Ledger owns the
-///     rule and publishes it, because the acquisition side has to page exactly as far as there
-///     is new work to save — and a second, hand-written copy of the rule out there is what let
-///     plate improvements drag scores down.
+///     What counts as a personal best on the Phoenix generation (docs/design/score-truth-model.md).
+///     The Ledger owns the rule and publishes it, because the acquisition side has to page exactly
+///     as far as there is new work to save — and a second, hand-written copy of the rule out there
+///     is what let plate improvements drag scores down.
+///
+///     <para>
+///         XX and older use <see cref="LegacyBestAttemptPolicy" />, whose axes move independently.
+///         The two are opposite by design and must stay separate: unifying them either reopens
+///         the plate leak here or discards real improvements there.
+///     </para>
 /// </summary>
 public static class BestAttemptPolicy
 {

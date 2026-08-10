@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -948,6 +948,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>ボード</value>
+  </data>
+  <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
+    <value>ボードはバージョンごとに動いており、このバージョンにはまだ専用のローテーションがありません。</value>
   </data>
   <data name="Boards you're both on" xml:space="preserve">
     <value>二人とも載っているボード</value>
@@ -2104,6 +2107,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>今週はすべての記録が守られました。</value>
   </data>
+  <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
+    <value>ファイルのすべての行が優先されます。今の記録より悪くても上書きされます。</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>自動で統合されたものも含め、消えたタグのすべてです。改名を見つけられなくなった規則は、全体を見なければ静かな週と区別がつきません。</value>
   </data>
@@ -3111,6 +3117,9 @@
   <data name="Legacy grade" xml:space="preserve">
     <value>レガシーランク</value>
   </data>
+  <data name="Let this file replace my records" xml:space="preserve">
+    <value>このファイルで記録を置き換える</value>
+  </data>
   <data name="Letter Grade" xml:space="preserve">
     <value>ランク</value>
   </data>
@@ -3650,6 +3659,9 @@
   <data name="net" xml:space="preserve">
     <value>合計</value>
   </data>
+  <data name="Net Score" xml:space="preserve">
+    <value>総スコア</value>
+  </data>
   <data name="Never" xml:space="preserve">
 	  <value>なし</value>
 	  
@@ -3825,6 +3837,9 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>まだ記録がありません——最初の挑戦を記録するとここが灯ります。</value>
   </data>
+  <data name="no scores" xml:space="preserve">
+    <value>スコアなし</value>
+  </data>
   <data name="No scores in this mix yet" xml:space="preserve">
     <value>このバージョンのスコアはまだありません</value>
   </data>
@@ -3935,6 +3950,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>コンパクト表示では利用できません</value>
+  </data>
+  <data name="Not available on {0}." xml:space="preserve">
+    <value>{0}では利用できません。</value>
   </data>
   <data name="Not checked" xml:space="preserve">
     <value>未確認</value>
@@ -4269,6 +4287,9 @@
   </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>選んだバージョンのインポートだけが送られます。古いバージョンは1Mスケールではなく グレードで採点され、ペイロードがどちらのモデルかを示します。</value>
+  </data>
+  <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
+    <value>更新された記録のみ保存されます。スコアとグレードは別々に上がります。</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>変更があった譜面を持つ曲のみ表示しています。</value>
@@ -4966,6 +4987,9 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY トップ 50</value>
   </data>
+  <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
+    <value>Pump It Upにタイトルが登場したのは Prime 2 からです。</value>
+  </data>
   <data name="Push PGs" xml:space="preserve">
     <value>PGを狙う</value>
   </data>
@@ -5098,6 +5122,12 @@
   <comment>レーティング</comment></data>
   <data name="Rating Calculator" xml:space="preserve">
     <value>評定の計算</value>
+  </data>
+  <data name="Re-price {0} ratings" xml:space="preserve">
+    <value>{0} の評定を再計算</value>
+  </data>
+  <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
+    <value>保存された {0} の評定を再計算しています。通知は行われません。</value>
   </data>
   <data name="Re-rated" xml:space="preserve">
     <value>難度変更</value>
@@ -6661,9 +6691,6 @@
   <data name="This page is full." xml:space="preserve">
     <value>このページは満杯です。</value>
   </data>
-  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
-    <value>このページはまだ旧バージョンに対応していません</value>
-  </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>このリキャップはまだ計算されていません。後でもう一度お試しください。</value>
   </data>
@@ -8111,6 +8138,12 @@
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} は {1} に収録されていません — 曲ごと削除されました。</value>
+  </data>
+  <data name="{0} isn't a thing in {1}." xml:space="preserve">
+    <value>{0}は{1}には存在しません。</value>
+  </data>
+  <data name="{0} isn't available for {1} yet." xml:space="preserve">
+    <value>{0}は{1}ではまだ利用できません。</value>
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} 件が出た</value>

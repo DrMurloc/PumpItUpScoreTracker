@@ -221,6 +221,35 @@ not the signed value: `Math.Floor(-0.5)` is `-1`, which overstates a loss the sa
 `PumbilityDelta` takes a `Marker` ("+" on a badge, "▲" on a board) because those surfaces
 genuinely differ and both spellings predate the component.
 
+## 2b. When a mix cannot answer the page
+
+Every route reaches every mix. A page that has nothing to say for the mix in view says so on
+arrival — it is never hidden behind a redirect, and it never renders zeros as though they were
+measurements. `MixUnavailableNotice` (`Components/`) is the one component for this, and it takes a
+**kind**, because the two sentences are different promises:
+
+| Kind | Reads | Use when |
+|---|---|---|
+| `Unsupported` | "PUMBILITY isn't a thing in Prex 3." | the concept does not exist for that mix and never will |
+| `NotYetBuilt` | "Titles aren't available for Prime 2 yet." | it exists for that mix and the site has not built it |
+
+Telling a Prex 3 player to come back for titles that are never coming is a lie; telling a Prime 2
+player the concept never existed writes off real work. The caller picks, because only the caller
+knows which it is.
+
+Three things follow:
+
+- **Prefer a working answer to a refusal.** Where a fallback is honest, clamp instead of refusing —
+  the Official Leaderboards and PUMBILITY frames show Phoenix for every older mix, which is what
+  XX has always done there. The notice is for pages that cannot fall back without lying, which in
+  practice means anything per-mix by identity (Titles: a title's name is its key).
+- **Hiding a nav link is a separate decision from blocking a route.** Nav scoping lives in
+  `MixCapabilities`; the route still works, and the page still explains itself to anyone arriving
+  by bookmark.
+- **Widgets degrade one card at a time**, not a page at a time — `WidgetHost` reads the
+  descriptor's `SupportedMixes` and keeps the card's slot. A card that vanished on one mix and
+  returned on another would read as a bug rather than a rule.
+
 ## 3. Enforcement
 
 - **`UiColorTokenTests`** (ArchitectureTests) scans `Pages/`, `Components/`, `Shared/` for hex literals and `Colors.*` constants against a shrink-only allowlist. Exceeding an allowance fails; dropping *below* one also fails until you lower the entry — that's the ratchet.

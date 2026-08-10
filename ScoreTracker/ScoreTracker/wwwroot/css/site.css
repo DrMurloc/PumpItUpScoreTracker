@@ -4585,6 +4585,14 @@ html.sheet-open .more-sheet-scrim {
     margin-top: 8px;
 }
 
+/* A legacy best is a grade icon with the era number beside it, when the player gave one.
+   Tabular figures because the number is a measurement, not a label. */
+.chart-record-legacy-score {
+    margin-left: 8px;
+    font-variant-numeric: tabular-nums;
+    vertical-align: middle;
+}
+
 .chart-record-age, .chart-record-note {
     display: block;
     color: var(--mix-ink-muted);
@@ -4596,26 +4604,35 @@ html.sheet-open .more-sheet-scrim {
     margin-top: 8px;
 }
 
-.chart-record-journey {
+/* ScoreJourneyList — shared by the chart page's record panel and the details dialog's
+   History tab. It lives here rather than in the component's own <style> block because a
+   style block only reaches the DOM on the renders that include it, and this component has
+   two hosts. No flex-grow on the score: the grade icon sits beside the number rather than
+   floating to the far right (owner, piucenter round 4). */
+.score-journey {
     margin-top: 12px;
     border-top: 1px dashed rgba(255, 255, 255, .14);
     padding-top: 9px;
 }
 
-.chart-record-journey-row {
+.score-journey-row {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 2px 0;
 }
 
-.chart-record-journey-date {
+.score-journey-date {
     color: var(--mix-ink-muted);
     font-variant-numeric: tabular-nums;
 }
 
-.chart-record-journey-score {
+.score-journey-score {
     font-variant-numeric: tabular-nums;
+}
+
+.score-journey-empty {
+    color: var(--mix-ink-muted);
 }
 
 .chart-record-row {
@@ -14152,3 +14169,28 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-accent);
 }
 
+
+/* MixUnavailableNotice — what a page says when the mix in view cannot answer it. Shared
+   rather than page-scoped: .tier-list-cta was declared inside ChartSkills' own <style>
+   block, so every other page that reused the class rendered it unstyled. */
+.mix-unavailable {
+    border: 1px dashed var(--mud-palette-lines-default);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.mix-unavailable-detail {
+    color: var(--mix-ink-muted);
+    max-width: 60ch;
+}
+
+.mix-unavailable-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

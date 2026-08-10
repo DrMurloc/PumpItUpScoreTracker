@@ -44,6 +44,12 @@
                         <LetterGradeIcon Grade="Score.Score.Value.LetterGradeFor(Chart.Mix)" IsBroken="Score.IsBroken" Height="16"></LetterGradeIcon>
                     </div>
                 }
+                else if (LegacyGrade != null)
+                {
+                    <div class="tier-chart-card-compact-grade">
+                        <LetterGradeIcon LegacyGrade="LegacyGrade" IsBroken="Score?.IsBroken ?? false" Height="16"></LetterGradeIcon>
+                    </div>
+                }
             </div>
         </div>
     </MudTooltip>
@@ -87,6 +93,15 @@ else
             <div class="tier-chart-card-scoreline">
                 <ScoreBreakdown Score="Score.Score.Value" IsBroken="Score.IsBroken" Mix="Chart.Mix" OneLine="true" ShowScore="true"
                                 Plate="Score.Plate" Ranking="Ranking"></ScoreBreakdown>
+            </div>
+        }
+        else if (LegacyGrade != null)
+        {
+            @* A legacy best is its letter and nothing else: no plate, no percentile, and no
+               number, because an era score is note-count dependent and means nothing beside
+               another chart's. ScoreBreakdown is built around the 1,000,000 scale. *@
+            <div class="tier-chart-card-scoreline">
+                <LetterGradeIcon LegacyGrade="LegacyGrade" IsBroken="Score?.IsBroken ?? false" Height="20"></LetterGradeIcon>
             </div>
         }
         @if (TierLabel != null)
@@ -144,6 +159,12 @@ else
     [Parameter] public Chart Chart { get; set; } = null!;
 
     [Parameter] public RecordedPhoenixScore? Score { get; set; }
+
+    /// <summary>
+    ///     The best on a legacy mix, where the letter grade IS the score. Supplied instead of
+    ///     a numeric Score, never alongside one — the two scoring models never share a mix.
+    /// </summary>
+    [Parameter] public XXLetterGrade? LegacyGrade { get; set; }
 
     [Parameter] public ScoreRankingRecord? Ranking { get; set; }
 

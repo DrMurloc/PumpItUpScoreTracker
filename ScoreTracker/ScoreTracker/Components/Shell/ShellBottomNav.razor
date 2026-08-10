@@ -1,4 +1,5 @@
 @namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services
 
 @* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav. Pages may register
@@ -7,25 +8,22 @@
    affordance. The active slot is rendered from the request path and kept honest across
    client-side navigation by nav.js, which the shell never re-renders for. *@
 <nav class="bottom-nav shell-mobile-only">
-    @if (Model.IsLoggedIn && !Model.IsGatedMix)
+    @if (Model.IsLoggedIn)
     {
         <a href="/" data-href="/" class="@BnClass("/")"><MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small"></MudIcon><span>@L["Play"]</span></a>
     }
     <a href="/TierLists" data-href="/TierLists" class="@BnClass("/TierLists")"><MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small"></MudIcon><span>@L["Tiers"]</span></a>
-    @if (!Model.IsGatedMix)
+    @if (Model.CurrentMix.HasWeeklyBoard())
     {
-        <a href="/WeeklyCharts" data-href="/WeeklyCharts" class="@BnClass("/WeeklyCharts")"><MudIcon Icon="@Icons.Material.Filled.ViewWeek" Size="Size.Small"></MudIcon><span>@L["Weekly"]</span></a>
+    <a href="/WeeklyCharts" data-href="/WeeklyCharts" class="@BnClass("/WeeklyCharts")"><MudIcon Icon="@Icons.Material.Filled.ViewWeek" Size="Size.Small"></MudIcon><span>@L["Weekly"]</span></a>
     }
     @if (!Model.IsLoggedIn)
     {
         @* The front door is a Razor Page, not a Blazor route. *@
         <a href="/Login" data-href="/Login" target="_top" class="@BnClass("/Login")"><MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small"></MudIcon><span>@L["Login"]</span></a>
     }
-    @if (!Model.IsGatedMix)
-    {
-        @* Extra slot for squarish viewports (fold phones, landscape) — hidden on tall phones. *@
-        <a href="/Communities" data-href="/Communities" class="@($"{BnClass("/Communities")} bn-wide")"><MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small"></MudIcon><span>@L["Communities"]</span></a>
-    }
+    @* Extra slot for squarish viewports (fold phones, landscape) — hidden on tall phones. *@
+    <a href="/Communities" data-href="/Communities" class="@($"{BnClass("/Communities")} bn-wide")"><MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small"></MudIcon><span>@L["Communities"]</span></a>
     @* The phone's only door to a chart page. The full list took its slot into More: browsing
        4,400 charts is rare and deliberate, while "take me to THIS chart" is the trip people
        actually make — and it had no door here at all. Slot count is unchanged, so the wide-only

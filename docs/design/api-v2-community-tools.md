@@ -362,7 +362,10 @@ two places, both deliberate:
   sharing is what going public unlocks — a lot of players do not know public is an option.
 - **Going public turns all-tools on, every time.** Not "only if never set" — the owner's call, on
   the grounds that people do not flip privacy back and forth and remembering a prior choice is the
-  more confusing behaviour.
+  more confusing behaviour. This binds **every** surface that flips visibility, not just
+  `/Account`: the rule lives in the pages, so a page that forgets it silently keeps its players
+  out of the pool. `/Setup` did exactly that from 2026-08-03 until it was fixed on 2026-08-10 —
+  public on the site, no preference row, invisible to tools.
 
 Consequences that must ship with it:
 
@@ -711,7 +714,7 @@ grouping is right.
 `/Developers` gets **no nav entry of its own**. It is reached from `/CommunityTools`, which carries
 a "Make a tool" entry point. A permanent menu item for a page serving twenty people is clutter, and
 hiding it until you own a tool is a chicken-and-egg — routing through the player page solves both.
-Unlike `/Communities`, neither route is wrapped in `IsGatedMix`: tool sharing is account-level, so a
+Unlike `/Communities`, neither route was wrapped in `IsGatedMix`: tool sharing is account-level, so a
 player browsing Fiesta EX must not lose access to their own privacy controls.
 
 `/CommunityTools` leads with *who can read my scores*, not the catalogue: the page's job is the

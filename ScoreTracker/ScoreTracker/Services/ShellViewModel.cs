@@ -20,7 +20,6 @@ public sealed record ShellViewModel(
     string AvatarUrl,
     MixEnum CurrentMix,
     MixEnum ThemeMix,
-    bool IsGatedMix,
     bool HasRecap,
     IReadOnlyList<TournamentRecord> HighlightedEvents,
     string ActivePath,

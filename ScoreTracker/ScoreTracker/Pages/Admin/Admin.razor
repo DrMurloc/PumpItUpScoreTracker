@@ -8,6 +8,8 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts.Commands
 @using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts.Messages
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.Contracts
 
@@ -29,6 +31,16 @@
    collides on every event id and changes nothing. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="BackfillPlayerHighlights"
            data-testid="backfill-player-highlights">@L["Backfill Highlights"]</MudButton>
+@* The exit path for a scoring-formula change. Every PUMBILITY figure a player can see is
+   computed from raw scores at read time and is already correct on deploy; what a formula
+   change leaves stale is the STORED ratings and per-chart values, which otherwise refresh
+   only when that player next imports. Deliberately silent — no milestones, no history rows,
+   no Discord — because a formula moving is not something a player did. Safe to re-run. *@
+@foreach (var mix in RepriceableMixes)
+{
+    <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="@(() => RepriceRatings(mix))"
+               data-testid="@($"reprice-ratings-{mix}")">@L["Re-price {0} ratings", mix.GetName()]</MudButton>
+}
 
 <MudCard>
     <MudCardHeader>@L["Credential security"]</MudCardHeader>
@@ -205,6 +217,16 @@
     {
         await Bus.Publish(new BackfillPlayerHighlightsCommand());
         Snackbar.Add(L["Copying existing highlights into the new feed store."].Value, Severity.Success);
+    }
+
+    // The two mixes with a PUMBILITY formula. A legacy mix has no stored rating to re-price.
+    private static readonly MixEnum[] RepriceableMixes = { MixEnum.Phoenix, MixEnum.Phoenix2 };
+
+    private async Task RepriceRatings(MixEnum mix)
+    {
+        await Bus.Publish(new RecalculateMixRatingsCommand(mix));
+        Snackbar.Add(L["Re-pricing stored {0} ratings. Nothing is announced.", mix.GetName()].Value,
+            Severity.Success);
     }
 
     private bool _confirmingCycle;

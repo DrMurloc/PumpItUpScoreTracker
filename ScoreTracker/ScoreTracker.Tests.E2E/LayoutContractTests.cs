@@ -7,8 +7,8 @@ namespace ScoreTracker.Tests.E2E;
 /// <summary>
 ///     The contracts MainLayout and the mix seed own, pinned so the per-page render-mode
 ///     flip has to keep them true: the page dock registers and reaches the shell, a page
-///     drawer opens against its drawer container, the legacy-mix gate lands on the tier
-///     lists, and an anonymous visitor's mix cookie reaches page content — not just the
+///     drawer opens against its drawer container, a legacy mix reaches the page it asked
+///     for, and an anonymous visitor's mix cookie reaches page content — not just the
 ///     shell. Every fact is written against behavior, never implementation, so they must
 ///     pass identically on both sides of the flip.
 /// </summary>
@@ -77,17 +77,19 @@ public sealed class LayoutContractTests : IAsyncLifetime
     }
 
     /// <summary>
-    ///     Gated legacy mixes never begin loading pages that predate them — they land on
-    ///     the tier lists, the one destination every mix renders.
+    ///     A legacy mix reaches the page it asked for. This used to assert the opposite: every
+    ///     route outside a hand-maintained allowlist redirected to the tier lists, which is how
+    ///     the home dashboard — carrying the one record widget that works on every mix — came
+    ///     to be unreachable for the players the feature was built for.
     /// </summary>
     [Fact]
-    public async Task TheLegacyMixGateLandsOnTierLists()
+    public async Task ALegacyMixReachesThePageItAskedFor()
     {
         await SetMixCookieAsync("Prime");
 
         await _page.GotoAsync("/LifeCalculator");
 
-        await Expect(_page).ToHaveURLAsync($"{_fixture.BaseUrl}/TierLists",
+        await Expect(_page).ToHaveURLAsync($"{_fixture.BaseUrl}/LifeCalculator",
             new PageAssertionsToHaveURLOptions { Timeout = 60_000 });
     }
 

@@ -618,3 +618,30 @@ Three things moved during the build and the decisions above already reflect them
   the shape the field test should judge before that read gets added.
 - **Rival scores are `IN (…)`, not a TVP** (§2.5). Correct at any size, and the shape to revisit
   if a three-hundred-rival roster proves slow in the field.
+
+## Legacy mixes (2026-08-10)
+
+Rivals works on XX and older. The objection that stopped it briefly — "era scores are not
+comparable" — is true **across** charts and irrelevant here: the head-to-head compares two players
+on ONE chart, where era scores compare directly.
+
+- **Score decides a row; the letter breaks the tie.** Same rule for the win/loss counts and for the
+  sort. A legacy row where both sides have a grade and neither typed a number still counts as
+  comparable — only 4.8% of legacy records carry a number, so requiring one would report almost
+  every rivalry as empty. Those tie at 0 and the letter settles them.
+- **Both sides read the legacy store.** Yours through `GetBestXXAttempts`; the rival's through
+  `IScoreReader.GetPlayerLegacyScores`, added because the Phoenix multi-user read returns
+  `UserPhoenixScore` and an era score does not fit a `PhoenixScore`.
+- **No official placements** — the mirror covers the current generation only.
+- **The folder auto-select is skipped**: it centres on competitive levels, which a legacy mix has
+  none of, so the compare opens unfiltered exactly as a ghost's does.
+- **The highlights feed stays empty.** It reads player highlights, which come off the Phoenix
+  progression chain. It only renders once you have rivals, so it degrades quietly — but it will not
+  populate until that chain has a legacy equivalent.
+
+⚠ **The mix was never reaching this page.** `Rivals.razor` and `AddRivalPanel` declared
+`[CascadingParameter(Name = "Mix")]` and nothing in the application has ever provided a cascading
+value by that name, so `CurrentMix` sat on its `MixEnum.Phoenix` default — the page compared
+Phoenix scores whatever mix you were on, and rival tag search queried Phoenix too. It reads
+`UiSettings.GetSelectedMix()` now. A default that is also a plausible value is why it went
+unnoticed for so long.

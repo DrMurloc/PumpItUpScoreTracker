@@ -125,10 +125,13 @@ else
 
     <MudPaper Class="pa-4 mb-4">
         <div class="cmp-hero">
-            <div class="cmp-hero-pum">
-                <span class="cmp-hero-num">@_profile.Pumbility.ToString("N0")</span>
-                <span class="cmp-hero-cap">PUMBILITY</span>
-            </div>
+            @if (!IsLegacy)
+            {
+                <div class="cmp-hero-pum">
+                    <span class="cmp-hero-num">@_profile.Pumbility.ToString("N0")</span>
+                    <span class="cmp-hero-cap">PUMBILITY</span>
+                </div>
+            }
             <div style="flex:1;min-width:240px">
                 <div style="display:flex;align-items:center;gap:14px">
                     <MudImage Src="@_profile.ProfileImage.ToString()" Height="56" ObjectFit="ObjectFit.ScaleDown"
@@ -140,7 +143,11 @@ else
                             {
                                 <span>@((string)_profile.Country.Value) · </span>
                             }
-                            @L["Competitive Level"] <b>@_profile.CompetitiveLevel.ToString("0.00")</b>
+                            @if (!IsLegacy)
+                            {
+                                @L["Competitive Level"]
+                                <b>@_profile.CompetitiveLevel.ToString("0.00")</b>
+                            }
                         </MudText>
                         @if (_standing != null)
                         {
@@ -155,10 +162,15 @@ else
                     </div>
                 </div>
                 <div class="cmp-tiles">
-                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Total Rating"]</div><div class="cmp-tile-num">@_profile.TotalRating.ToString("N0")</div></div>
-                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Singles"]</div><div class="cmp-tile-num">@_profile.SinglesRating.ToString("N0")</div></div>
-                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Doubles"]</div><div class="cmp-tile-num">@_profile.DoublesRating.ToString("N0")</div></div>
-                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Highest Clear"]</div><div class="cmp-tile-num">@L["Lv {0}", _profile.HighestLevel]</div></div>
+                    @* Ratings are Phoenix-lineage. Highest Clear is not — it is the top level
+                       with a pass, which every mix has. *@
+                    @if (!IsLegacy)
+                    {
+                        <div class="cmp-tile"><div class="cmp-tile-label">@L["Total Rating"]</div><div class="cmp-tile-num">@_profile.TotalRating.ToString("N0")</div></div>
+                        <div class="cmp-tile"><div class="cmp-tile-label">@L["Singles"]</div><div class="cmp-tile-num">@_profile.SinglesRating.ToString("N0")</div></div>
+                        <div class="cmp-tile"><div class="cmp-tile-label">@L["Doubles"]</div><div class="cmp-tile-num">@_profile.DoublesRating.ToString("N0")</div></div>
+                        <div class="cmp-tile"><div class="cmp-tile-label">@L["Highest Clear"]</div><div class="cmp-tile-num">@L["Lv {0}", _profile.HighestLevel]</div></div>
+                    }
                 </div>
             </div>
         </div>
@@ -339,6 +351,8 @@ else
     private List<BreadcrumbItem> _crumbs = new();
     private MixEnum _currentMix = MixEnum.Phoenix;
 
+    private bool IsLegacy => _currentMix.UsesLegacyScoring();
+
     private ChartType _compareType = ChartType.Double;
     private int? _compareLevel;
     private bool _comparing;
@@ -441,9 +455,11 @@ else
             return;
         }
 
-        // Community stats are Phoenix-lineage — XX viewers keep seeing Phoenix, as before.
-        var selectedMix = await UiSettings.GetSelectedMix();
-        _currentMix = selectedMix == MixEnum.XX ? MixEnum.Phoenix : selectedMix;
+        // The page shows the mix you are on. It used to clamp XX to Phoenix, which showed an
+        // XX viewer a Phoenix player. The folder graphs read the legacy store now; the
+        // Phoenix-lineage figures (PUMBILITY, competitive level, ratings, official boards)
+        // have no legacy counterpart and are hidden rather than drawn as zeros.
+        _currentMix = await UiSettings.GetSelectedMix();
 
         try
         {
@@ -464,7 +480,11 @@ else
                 new((string)_profile.PlayerName, null, true)
             };
             // Official tiles are strictly if-applicable: no import-stamped link → no tiles.
-            _standing = await Mediator.Send(new GetOfficialPlayerStandingQuery(_currentMix, UserId));
+            // The official site publishes boards for the current generation only, so an older
+            // mix has no standing to ask about.
+            _standing = IsLegacy
+                ? null
+                : await Mediator.Send(new GetOfficialPlayerStandingQuery(_currentMix, UserId));
             _charts = (await Mediator.Send(new Catalog.Contracts.Queries.GetChartsQuery(_currentMix)))
                 .ToDictionary(c => c.Id);
         }

@@ -1,8 +1,10 @@
 @page "/Setup"
 @rendermode RenderModes.Interactive
 @using MediatR
+@using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.Contracts
@@ -152,6 +154,44 @@
     .setup-lede b {
         color: var(--mix-ink);
         font-weight: 600;
+    }
+
+    /* The game-tag invitation. Sits above the fields and reads as a question, not a warning —
+       a self-reported tag match is a guess, and the mix primary carries that better than an
+       alert colour would. */
+    .setup-merge {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        margin: 0 0 26px;
+        padding: 14px 16px;
+        border: 1px solid color-mix(in srgb, var(--mix-primary) 40%, transparent);
+        border-radius: 11px;
+        background: color-mix(in srgb, var(--mix-primary) 8%, transparent);
+    }
+
+    .setup-merge-text {
+        flex: 1 1 260px;
+        margin: 0;
+        font-size: 14.5px;
+        color: var(--mix-ink);
+    }
+
+    .setup-merge-link {
+        flex: 0 0 auto;
+        padding: 8px 15px;
+        border-radius: 999px;
+        font-size: 13.5px;
+        font-weight: 700;
+        text-decoration: none;
+        color: var(--mix-primary-contrast);
+        background: var(--mix-primary);
+        transition: filter .15s ease;
+    }
+
+    .setup-merge-link:hover {
+        filter: brightness(1.12);
     }
 
     .setup-fields {
@@ -450,6 +490,20 @@
             <b>@L["All of it is changeable later in your account."]</b>
         </p>
 
+        @if (_mergeInviteUserId != null)
+        {
+            @* The game-tag doorway (login-overhaul-spec C6). It asks rather than asserts, because
+               a game tag is self-reported and non-unique, and it never names the account it
+               matched: a shared nickname would otherwise tell a stranger that account exists and
+               who it is. The wizard's prove step is the security gate. *@
+            <div class="setup-merge">
+                <p class="setup-merge-text">
+                    @L["An account with game tag {0} already exists, is that you?", _mergeInviteTag]
+                </p>
+                <a class="setup-merge-link" href="@MergeUrl">@L["Review and merge"]</a>
+            </div>
+        }
+
         <div class="setup-fields">
 
             <div class="setup-field">
@@ -555,6 +609,7 @@
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
+@inject ILogger<Setup> Logger
 
 @code {
 
@@ -588,6 +643,33 @@
     private bool _isSaving;
     private bool _isFinishing;
 
+    /// <summary>
+    ///     The account this player may already have, matched on game tag, and the tag that matched.
+    ///     Null unless another account carries it — an OAuth sign-in creates an account with no
+    ///     game tag at all, so those never ask.
+    /// </summary>
+    private Guid? _mergeInviteUserId;
+
+    private string _mergeInviteTag = string.Empty;
+
+    /// <summary>
+    ///     This page's own address, carrying the provider through so anything that leaves and comes
+    ///     back keeps the "filled in from PIUGAME" chip. Rebuilt from the whitelisted label rather
+    ///     than echoing the query string, which the player controls.
+    /// </summary>
+    private string SelfUrl =>
+        ProviderLabel == null || From == null
+            ? "/Setup"
+            : $"/Setup?from={Uri.EscapeDataString(From)}";
+
+    /// <summary>
+    ///     Back here afterwards: keeping the new account leaves setup unfinished, so the wizard
+    ///     returns to it. Keeping the other one retires this account and the wizard forces a
+    ///     sign-out instead, which is why this is only ever the survivor's path.
+    /// </summary>
+    private string MergeUrl =>
+        $"/Account/Merge?with={_mergeInviteUserId}&returnUrl={Uri.EscapeDataString(SelfUrl)}";
+
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -611,6 +693,43 @@
             : MixEnum.Phoenix2;
 
         _countries = (await Users.GetCountries()).OrderBy(c => c.Name).ToArray();
+
+        await CheckMergeInvite();
+    }
+
+    /// <summary>
+    ///     Invitation only — the merge wizard's prove step is the security gate
+    ///     (docs/design/login-overhaul-spec.md C6). A game tag is self-reported and non-unique, so
+    ///     a match is a question asked on the way past, never a redirect: intercepting onboarding
+    ///     to demand a merge decision spends a brand-new player's first screen on a guess that is
+    ///     sometimes about somebody else entirely.
+    /// </summary>
+    private async Task CheckMergeInvite()
+    {
+        if (CurrentUser.User.GameTag is not { } tag) return;
+
+        try
+        {
+            // Ordered so the answer is stable. A shared tag can match several accounts and the
+            // query imposes no order, so an unordered pick can name one stranger on arrival and a
+            // different one after the language reload re-runs it.
+            var match = (await Mediator.Send(new GetUsersByGameTagQuery(tag)))
+                .OrderBy(u => u.Id)
+                .FirstOrDefault(u => u.Id != CurrentUser.User.Id);
+            if (match == null) return;
+
+            _mergeInviteUserId = match.Id;
+            _mergeInviteTag = tag;
+        }
+        catch (Exception e)
+        {
+            // The lookup materializes other people's rows, and one unusable name or profile-image
+            // URL among them throws while building them. This is an optional invitation on the one
+            // page a new account has to finish, and nothing here catches a circuit-killing throw —
+            // so a stranger's bad row would leave a new player on a dead screen with no way
+            // forward. An invitation that cannot be offered is simply not offered.
+            Logger.LogWarning(e, "Game-tag merge invitation lookup failed for {GameTag}", tag);
+        }
     }
 
     private async Task OnNameChanged(ChangeEventArgs args)
@@ -645,10 +764,23 @@
             : L["Country saved"], Severity.Success);
     }
 
+    /// <summary>
+    ///     Sharing follows privacy in both directions, the same rule the Account page carries:
+    ///     going public turns the all-tools grant on, going private turns it off. Without it a
+    ///     brand-new account that opens its profile here is public but carries no share
+    ///     preference, which reads as "off" — so it sits outside the pool that every account
+    ///     going public from /Account joins.
+    ///     <para>
+    ///         Visibility commits first. The pool is not joined on IsPublic, so writing the
+    ///         preference first would leave the account shared-with-everyone while still private
+    ///         for as long as the second call takes — and permanently if it throws.
+    ///     </para>
+    /// </summary>
     private async Task TogglePublic()
     {
         _isPublic = !_isPublic;
         await SaveProfile();
+        await Mediator.Send(new SetShareWithAllToolsCommand(_isPublic));
         Snackbar.Add(_isPublic
             ? L["Your profile is public"]
             : L["Your profile is private"], Severity.Success);
@@ -690,12 +822,8 @@
         _culture = SupportedCultures.Normalize(value);
         await UiSettings.SetSetting("Culture", _culture);
 
-        var from = From;
-        var returnTo = ProviderLabel == null || from == null
-            ? "/Setup"
-            : $"/Setup?from={Uri.EscapeDataString(from)}";
         NavManager.NavigateTo(
-            $"/Culture/Set?culture={_culture}&redirectUrl={Uri.EscapeDataString(returnTo)}",
+            $"/Culture/Set?culture={_culture}&redirectUrl={Uri.EscapeDataString(SelfUrl)}",
             true);
     }
 

@@ -140,7 +140,9 @@ else if (_loaded)
             {
                 <MudText Typo="Typo.body2">@L["This page is full."]</MudText>
             }
-            @foreach (var category in WidgetRegistry.All.GroupBy(d => d.Category))
+            @* Only what this page's mix can actually render — offering a Pumbility card to a
+               Prime 2 dashboard is offering an empty card. *@
+            @foreach (var category in AddableWidgets.GroupBy(d => d.Category))
             {
                 <MudText Typo="Typo.overline" Class="mt-3">@category.Key</MudText>
                 @foreach (var descriptor in category)
@@ -442,7 +444,12 @@ else if (_loaded)
         // than seeded blank — the template stays valid if a widget is ever pulled.
         foreach (var entry in DefaultDashboardTemplate.Entries)
         {
-            if (WidgetRegistry.TryGet(entry.TypeId) == null) continue;
+            var descriptor = WidgetRegistry.TryGet(entry.TypeId);
+            if (descriptor == null) continue;
+            // A first dashboard built under a legacy mix seeds only what that mix renders.
+            // The curated eight are Phoenix-shaped, so seeding them wholesale would greet a
+            // Prime 2 player with a grid of "Not available" cards on their first visit.
+            if (!descriptor.SupportedMixes.Contains(_currentMix)) continue;
             await Mediator.Send(new AddHomePageWidgetCommand(page.Id, entry.TypeId,
                 entry.SizeToken, null, entry.ConfigJson, 1));
         }
@@ -525,6 +532,20 @@ else if (_loaded)
     private MixEnum EffectiveMixFor(HomePageRecord page)
     {
         return page.DefaultMix ?? _currentMix;
+    }
+
+    /// <summary>
+    ///     The widgets this page's mix can render. A widget already on the page and no longer
+    ///     supported keeps its slot and says so (WidgetHost) rather than disappearing — but
+    ///     there is no reason to offer a new one that would arrive empty.
+    /// </summary>
+    private IEnumerable<WidgetDescriptor> AddableWidgets
+    {
+        get
+        {
+            var mix = _selectedPage == null ? _currentMix : EffectiveMixFor(_selectedPage);
+            return WidgetRegistry.All.Where(d => d.SupportedMixes.Contains(mix));
+        }
     }
 
     private async Task AddWidget(WidgetDescriptor descriptor, string configJson = "{}")

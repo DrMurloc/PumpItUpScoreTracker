@@ -24,11 +24,29 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var chartId = chart.Id;
         var mixId = MixIds.For(chart.Mix);
-        return await (
+        var row = await (
             from ba in database.Set<BestAttemptEntity>()
             where ba.ChartId == chartId && ba.UserId == userId && ba.MixId == mixId
-            select new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score, ba.RecordedDate)
+            select new { ba.LetterGrade, ba.IsBroken, ba.Score, ba.RecordedDate }
         ).FirstOrDefaultAsync(cancellationToken);
+
+        return row == null ? null : Attempt(row.LetterGrade, row.IsBroken, row.Score, row.RecordedDate);
+    }
+
+    /// <summary>
+    ///     Builds an attempt from a stored row, tolerating a LetterGrade the enum does not know.
+    ///     The column is a bare required string with no check constraint, and this feature ships
+    ///     its data as hand-run SQL — so one row reading 'sss' or 'AA' used to throw out of every
+    ///     read that touched it, taking the chart page, the rivals compare, the tier list's score
+    ///     map and the community top 50 with it for that player. A row we cannot read is one
+    ///     record missing, not a dead page; the newer legacy reads already filter this way.
+    /// </summary>
+    private static XXChartAttempt? Attempt(string letterGrade, bool isBroken, int? score,
+        DateTimeOffset recordedOn)
+    {
+        return Enum.TryParse<XXLetterGrade>(letterGrade, out var grade)
+            ? new XXChartAttempt(grade, isBroken, score, recordedOn)
+            : null;
     }
 
     public async Task RemoveBestAttempt(Guid userId, Chart chart, CancellationToken cancellationToken = default)
@@ -105,10 +123,7 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                             Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type), c.Level, MixEnum.XX, c.StepArtist, null,
                         new HashSet<Skill>()),
-                    ba == null
-                        ? null
-                        : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
-                            ba.RecordedDate)))
+                    ba == null ? null : Attempt(ba.LetterGrade, ba.IsBroken, ba.Score, ba.RecordedDate)))
             .ToArray();
         return result;
     }
@@ -135,10 +150,7 @@ internal sealed class EFXXChartAttemptRepository : IXXChartAttemptRepository
                             Bpm.From(s.MinBpm, s.MaxBpm)),
                         Enum.Parse<ChartType>(c.Type), c.Level, mix, c.StepArtist, null,
                         new HashSet<Skill>()),
-                    ba == null
-                        ? null
-                        : new XXChartAttempt(Enum.Parse<XXLetterGrade>(ba.LetterGrade), ba.IsBroken, ba.Score,
-                            ba.RecordedDate)))
+                    ba == null ? null : Attempt(ba.LetterGrade, ba.IsBroken, ba.Score, ba.RecordedDate)))
             .ToArrayAsync(cancellationToken);
     }
 

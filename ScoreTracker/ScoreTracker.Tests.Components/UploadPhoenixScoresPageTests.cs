@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Bunit;
 using MediatR;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -190,6 +192,36 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             Assert.NotEmpty(cut.FindAll(".mud-skeleton"));
         });
         _mediator.Verify(m => m.Send(It.IsAny<StartOfficialImportCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData(MixEnum.Phoenix)]
+    [InlineData(MixEnum.Phoenix2)]
+    public async Task ChangeCardListsTheSelectedMixesCards(MixEnum mix)
+    {
+        // Each official site lists only the cards registered in its own game, so asking Phoenix 1
+        // for a Phoenix 2 player's cards returns their old card and nothing else — which is what
+        // "Change Card only shows my first card" looked like from a Phoenix 2 import.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
+        // A remembered card with no loaded list is the state that offers the button.
+        _uiSettings.Setup(u => u.GetSetting("PhoenixScoreUpload__LastGameId", It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>())).ReturnsAsync("9990001");
+        _uiSettings.Setup(u => u.GetSetting("PhoenixScoreUpload__LastGameTag", It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>())).ReturnsAsync("OLDCARD");
+        _mediator.Setup(m => m.Send(It.IsAny<GetGameCardsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new GameCardRecord("NEWCARD", "9990002", true) });
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+        cut.WaitForAssertion(() => Assert.Contains("Change Card", cut.Markup));
+        // The button gates on typed credentials. MudTextField binds on change, not input.
+        await cut.Find("input[type=text]").ChangeAsync(new ChangeEventArgs { Value = "player" });
+        await cut.Find("input[type=password]").ChangeAsync(new ChangeEventArgs { Value = "hunter2" });
+
+        await cut.FindAll("button").First(b => b.TextContent.Contains("Change Card"))
+            .ClickAsync(new MouseEventArgs());
+
+        _mediator.Verify(m => m.Send(It.Is<GetGameCardsQuery>(q => q.Mix == mix), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 }

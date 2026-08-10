@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -948,6 +948,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Boards</value>
+  </data>
+  <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
+    <value>Boards run per mix, and this one doesn't have its own rotation yet.</value>
   </data>
   <data name="Boards you're both on" xml:space="preserve">
     <value>Boards you're both on</value>
@@ -2104,6 +2107,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>Every record held this week.</value>
   </data>
+  <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
+    <value>Every row in the file wins, even where it is worse than what you have.</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it.</value>
   </data>
@@ -3111,6 +3117,9 @@
   <data name="Legacy grade" xml:space="preserve">
     <value>Legacy grade</value>
   </data>
+  <data name="Let this file replace my records" xml:space="preserve">
+    <value>Let this file replace my records</value>
+  </data>
   <data name="Letter Grade" xml:space="preserve">
     <value>Letter Grade</value>
   </data>
@@ -3650,6 +3659,9 @@
   <data name="net" xml:space="preserve">
     <value>net</value>
   </data>
+  <data name="Net Score" xml:space="preserve">
+    <value>Net Score</value>
+  </data>
   <data name="Never" xml:space="preserve">
 	  <value>Never</value>
 	  <comment>Fallback for tournament EndDate when not set.</comment>
@@ -3825,6 +3837,9 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>No score yet — record your first attempt and this lights up.</value>
   </data>
+  <data name="no scores" xml:space="preserve">
+    <value>no scores</value>
+  </data>
   <data name="No scores in this mix yet" xml:space="preserve">
     <value>No scores in this mix yet</value>
   </data>
@@ -3935,6 +3950,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Not available in Compact view</value>
+  </data>
+  <data name="Not available on {0}." xml:space="preserve">
+    <value>Not available on {0}.</value>
   </data>
   <data name="Not checked" xml:space="preserve">
     <value>Not checked</value>
@@ -4269,6 +4287,9 @@
   </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using.</value>
+  </data>
+  <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
+    <value>Only improvements are kept. Score and grade rise separately.</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Only songs with a changed chart are listed.</value>
@@ -4966,6 +4987,9 @@
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY top 50</value>
   </data>
+  <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
+    <value>Pump It Up didn't award titles until Prime 2.</value>
+  </data>
   <data name="Push PGs" xml:space="preserve">
     <value>Push PGs</value>
   </data>
@@ -5098,6 +5122,12 @@
   </data>
   <data name="Rating Calculator" xml:space="preserve">
     <value>Rating Calculator</value>
+  </data>
+  <data name="Re-price {0} ratings" xml:space="preserve">
+    <value>Re-price {0} ratings</value>
+  </data>
+  <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
+    <value>Re-pricing stored {0} ratings. Nothing is announced.</value>
   </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Re-rated</value>
@@ -6661,9 +6691,6 @@
   <data name="This page is full." xml:space="preserve">
     <value>This page is full.</value>
   </data>
-  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
-    <value>This page isn't ready for older mixes yet</value>
-  </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>This recap hasn&apos;t been computed yet — check back soon.</value>
   </data>
@@ -8111,6 +8138,12 @@
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} is not in {1} — the whole song left.</value>
+  </data>
+  <data name="{0} isn't a thing in {1}." xml:space="preserve">
+    <value>{0} isn't a thing in {1}.</value>
+  </data>
+  <data name="{0} isn't available for {1} yet." xml:space="preserve">
+    <value>{0} isn't available for {1} yet.</value>
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} left</value>

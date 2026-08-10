@@ -1,59 +1,28 @@
 @using ScoreTracker.Web.Components.CommunityTools
-@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Components
-@using ScoreTracker.Web.Services
-@using ScoreTracker.Web.Services.Contracts
 @inherits LayoutComponentBase
-@inject IUiSettingsAccessor UiSettings
-@inject NavigationManager NavManager
 
 @* The layout renders statically around every page (the page itself is the island). Shell
    chrome — nav, mix pill, bottom nav, More sheet — is server-rendered by App.razor
-   (docs/design/static-shell.md). What stays here is the legacy-mix gate, evaluated per
-   request, and the two islands: the dock slot's host and the recap pointer. The drawer
-   host went with the drawers: the three pages that open one wrap it in their own
-   MudLayout.
+   (docs/design/static-shell.md). What stays here is the two islands: the dock slot's host
+   and the recap pointer. The drawer host went with the drawers: the three pages that open
+   one wrap it in their own MudLayout.
+
+   The legacy-mix route gate is gone (docs/design/legacy-mixes.md). It was born as a crash
+   guard for one page that threw on an old mix and grew into an allowlist that had to be
+   maintained by field-testing, which is how it came to block the home dashboard — the one
+   page carrying the record widget that works on every mix. A page that cannot answer for
+   a mix now says so itself, which is a decision the page can keep correct.
 
    The Mud providers are NOT here. They mount ahead of the shell as their own root, and an
    island in the app bar would ask for a popover before a provider this late existed. *@
 <PageDockHost @rendermode="RenderModes.Interactive"></PageDockHost>
 
 <MudContainer>
-    @if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
-    {
-        @* One render frame at most — RedirectIfGated is already navigating to
-           /TierLists. The panel is the backstop, not the destination. *@
-        <div class="tier-list-cta">
-            <MudIcon Icon="@Icons.Material.Filled.Construction"></MudIcon>
-            <MudText Typo="Typo.h5">@L["This page isn't ready for older mixes yet"]</MudText>
-            <MudButton Href="/Charts" Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.QueueMusic">@L["Charts"]</MudButton>
-        </div>
-    }
-    else
-    {
-        @Body
-    }
+    @Body
 </MudContainer>
 
 <RecapPointer @rendermode="RenderModes.Interactive"></RecapPointer>
 <DeletionNoticeHost @rendermode="RenderModes.Interactive"></DeletionNoticeHost>
 <InterruptedImportPointer @rendermode="RenderModes.Interactive"></InterruptedImportPointer>
 <CommunityToolsAnnouncement @rendermode="RenderModes.Interactive"></CommunityToolsAnnouncement>
-
-@code
-{
-    // Resolved from the request by the shell, so the gate can evaluate on the first render.
-    private MixEnum _currentMix = MixEnum.Phoenix;
-
-    protected override async Task OnInitializedAsync()
-    {
-        _currentMix = await UiSettings.GetSelectedMix();
-        // Gated routes redirect to the tier lists (the one destination every mix can
-        // render) instead of loading — pages that predate legacy mixes throw on them, so
-        // they must never begin initializing (docs/design/legacy-mixes.md). Under static
-        // SSR this NavigateTo is a real HTTP redirect, issued before anything paints;
-        // every navigation is a full request, so it runs per page view.
-        if (LegacyMixGate.IsGated(_currentMix, new Uri(NavManager.Uri).AbsolutePath))
-            NavManager.NavigateTo("/TierLists");
-    }
-}

@@ -129,7 +129,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _currentMix = await UiSettings.GetSelectedMix();
+        var selected = await UiSettings.GetSelectedMix();
+        // The tool computes a Phoenix score from judgements, so it stays on a Phoenix cutoff
+        // table whatever the site mix is. A legacy viewer still gets a working calculator
+        // instead of a locked door — the answer is simply about Phoenix, as the name says.
+        _currentMix = selected.UsesLegacyScoring() ? MixEnum.Phoenix : selected;
     }
 
     private sealed record JudgementAllocation(string Type, int Count)

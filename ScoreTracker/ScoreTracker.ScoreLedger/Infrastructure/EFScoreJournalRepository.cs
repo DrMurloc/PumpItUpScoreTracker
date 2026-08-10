@@ -3,6 +3,7 @@ using ScoreTracker.Data.Persistence;
 using ScoreTracker.ScoreLedger.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.ScoreLedger.Domain;
 
@@ -81,8 +82,13 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             MixId = mixId,
             UserId = entry.UserId,
             ChartId = entry.ChartId,
-            Score = entry.Score,
+            // One column per axis, fed from whichever scoring model this entry belongs to.
+            // A legacy number is an int rather than a PhoenixScore precisely because it can
+            // exceed 1,000,000; the column has always been a plain int and holds it fine.
+            Score = entry.Score != null ? (int?)entry.Score.Value
+                : entry.LegacyScore != null ? (int?)entry.LegacyScore.Value : null,
             Plate = entry.Plate?.GetName(),
+            LetterGrade = entry.LegacyGrade?.ToString(),
             IsBroken = entry.IsBroken,
             IsBest = isBest,
             SessionId = entry.SessionId,
@@ -194,6 +200,13 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
     public async Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId,
         int limit, CancellationToken cancellationToken)
     {
+        // The board's row type is a UserPhoenixScore, whose score caps at 1,000,000 — and a
+        // legacy journal row's Score is an era score, three quarters of which are above that.
+        // Empty rather than a throw: nothing returns rows for a legacy mix today (LimboChart
+        // rows are inserted by hand and only for Phoenix charts), but the chart page passes the
+        // chart's own mix, so one hand-run INSERT on a legacy chart is all it would take.
+        if (mix.UsesLegacyScoring()) return Array.Empty<UserPhoenixScore>();
+
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         // Grouped in SQL and capped there: the aggregate is served entirely out of
@@ -261,9 +274,17 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
 
     private static ScoreJournalEntry Map(ScoreEventJournalEntity e)
     {
-        return new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId, e.Score,
-            PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId), e.SessionId,
-            JudgementsOf(e), e.IsBest);
+        var mix = MixIds.ToEnum(e.MixId);
+        // The mix decides which side the stored number is. Reading a legacy row's score as a
+        // PhoenixScore would throw on most of them -- 76% of the scored ones are above the
+        // 1,000,000 ceiling.
+        var isLegacy = mix.UsesLegacyScoring();
+        return new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId,
+            isLegacy ? null : e.Score,
+            isLegacy ? null : PhoenixPlateHelperMethods.TryParse(e.Plate),
+            e.IsBroken, mix, e.SessionId, JudgementsOf(e), e.IsBest,
+            isLegacy && e.Score != null ? (XXScore?)e.Score.Value : null,
+            Enum.TryParse<XXLetterGrade>(e.LetterGrade, out var grade) ? grade : null);
     }
 
     internal static JudgementCounts? JudgementsOf(ScoreEventJournalEntity e)

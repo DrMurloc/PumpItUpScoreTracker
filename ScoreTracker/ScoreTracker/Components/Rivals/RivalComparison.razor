@@ -4,6 +4,7 @@
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using Microsoft.AspNetCore.Components.Web
+@using ScoreTracker.Web.Components
 @namespace ScoreTracker.Web.Components.Rivals
 
 @* One rival, compared. Takes a RESOLVED SUBJECT rather than a user id, so the sections it can't
@@ -122,19 +123,38 @@ else
                         </MudTd>
                         <MudTd Style="text-align:right">
                             <span class="@YoursClass(context.Row) sbd-score-stack">
-                                <ScoreBreakdown Score="@(context.Row.YourScore == null ? null : PhoenixScore.From(context.Row.YourScore.Value))"
-                                                Plate="context.Row.YourPlate" IsBroken="context.Row.YourIsBroken"
-                                                Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
+                                @if (context.Row.YourLegacyGrade != null)
+                                {
+                                    @* ScoreBreakdown is built around the 1,000,000 scale, and
+                                       PhoenixScore.From throws on an era score — which three
+                                       scored legacy records in four are. *@
+                                    <LetterGradeIcon LegacyGrade="context.Row.YourLegacyGrade"
+                                                     IsBroken="context.Row.YourIsBroken" Height="18"></LetterGradeIcon>
+                                }
+                                else
+                                {
+                                    <ScoreBreakdown Score="@(context.Row.YourScore == null ? null : PhoenixScore.From(context.Row.YourScore.Value))"
+                                                    Plate="context.Row.YourPlate" IsBroken="context.Row.YourIsBroken"
+                                                    Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
+                                }
                             </span>
                         </MudTd>
                         <MudTd Style="text-align:right">
                             <span class="@TheirsClass(context.Row) sbd-score-stack">
                                 @* The mirror records no plates, so an official row must not be
                                    handed an inferred one. *@
-                                <ScoreBreakdown Score="@(context.Row.TheirScore == null ? null : PhoenixScore.From(context.Row.TheirScore.Value))"
-                                                Plate="context.Row.TheirPlate" IsBroken="context.Row.TheirIsBroken"
-                                                InferPlate="@(context.Row.TheirSource != RivalScoreSource.Official)"
-                                                Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
+                                @if (context.Row.TheirLegacyGrade != null)
+                                {
+                                    <LetterGradeIcon LegacyGrade="context.Row.TheirLegacyGrade"
+                                                     IsBroken="context.Row.TheirIsBroken" Height="18"></LetterGradeIcon>
+                                }
+                                else
+                                {
+                                    <ScoreBreakdown Score="@(context.Row.TheirScore == null ? null : PhoenixScore.From(context.Row.TheirScore.Value))"
+                                                    Plate="context.Row.TheirPlate" IsBroken="context.Row.TheirIsBroken"
+                                                    InferPlate="@(context.Row.TheirSource != RivalScoreSource.Official)"
+                                                    Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
+                                }
                                 @if (context.Row.TheirSource == RivalScoreSource.Official)
                                 {
                                     <span class="rival-official-mark" title="@L["Official board data"]">*</span>

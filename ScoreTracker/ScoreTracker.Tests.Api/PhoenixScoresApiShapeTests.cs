@@ -282,7 +282,8 @@ public sealed class PhoenixScoresApiShapeTests
 
         // Phoenix2-mix pumbility uses the official Phoenix 2 formula (additive
         // Base x (grade + plate), singles priced one level up): S20 SS+ EG = Base(21)=235 x
-        // (1.48 + 0.012) = 350.62.
+        // (1.48 + 0.014) = 351.09 — Extreme Game pays a Single 0.014 where it pays a Double
+        // 0.012, so the chart type picks the bonus.
         // Same wire shape as Phoenix; only this mix's formula differs.
         JsonApproval.AssertWireShape("""
             {
@@ -294,7 +295,7 @@ public sealed class PhoenixScoresApiShapeTests
                   "plate": "Extreme Game",
                   "letterGrade": "SS\u002B",
                   "score": 985000,
-                  "pumbility": 350.62,
+                  "pumbility": 351.09,
                   "pumbilityPlus": 897,
                   "isBroken": false,
                   "recordedDate": "2026-02-20T00:00:00+00:00",
