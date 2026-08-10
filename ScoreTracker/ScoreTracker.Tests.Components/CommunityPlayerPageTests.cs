@@ -17,6 +17,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Pages.Communities;
+using ScoreTracker.Web.Services.Contracts;
 using Xunit;
 
 namespace ScoreTracker.Tests.Components;
@@ -33,6 +34,13 @@ public sealed class CommunityPlayerPageTests : ComponentTestBase
 
     public CommunityPlayerPageTests()
     {
+        // Explicit: the page reads the viewer's mix now, and the ratings it asserts on are
+        // Phoenix-lineage. These used to pass on the enum's default (XX) only because the
+        // page clamped XX to Phoenix — the clamp that was showing XX viewers a Phoenix player.
+        var settings = new Mock<IUiSettingsAccessor>();
+        settings.Setup(u => u.GetSelectedMix()).ReturnsAsync(MixEnum.Phoenix);
+        Services.AddSingleton(settings.Object);
+
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityPlayerProfileQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CommunityPlayerProfileRecord(TargetId, Name.From("Reno"),
                 new Uri("https://piu.test/avatar.png"), Name.From("United States"), true,
