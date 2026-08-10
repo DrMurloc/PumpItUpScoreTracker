@@ -13,7 +13,8 @@ namespace ScoreTracker.Tests.ApplicationTests;
 ///     The detector's arithmetic, pinned before it goes anywhere near a real import. What the
 ///     telemetry is for is the IMPLIED constant on each line — if that number is wrong the whole
 ///     exercise reads back a wrong answer with total confidence, so it is asserted directly
-///     against a row whose value is known to be mispriced today.
+///     against rows whose official value is known, both ones the shipped table reproduces and
+///     one it deliberately does not.
 /// </summary>
 public sealed class ScoringObservationsTests
 {
@@ -50,8 +51,8 @@ public sealed class ScoringObservationsTests
     public void PumbilityRowThatMatchesTheShippedTableStillLogsWithItsVerdict()
     {
         // Every row logs, not only the mismatches: a cell that never appears would otherwise be
-        // indistinguishable from a cell that is correct, and four plate x type cells have never
-        // been observed at all. Doubles S23 AA MG = Base(23) 245 x (1.36 + 0.006).
+        // indistinguishable from a cell that is correct, which is how the four plate x type
+        // cells nobody had ever seen were closed. Doubles S23 AA MG = Base(23) 245 x (1.36 + 0.006).
         var logger = new CapturingLogger();
 
         ScoringObservations.ObservePumbility(logger, MixEnum.Phoenix2,
@@ -65,18 +66,38 @@ public sealed class ScoringObservationsTests
     [Fact]
     public void PumbilityRowNamesTheImpliedPlateBonusWhenOursIsWrong()
     {
-        // The real 2026-08-08 finding: singles Extreme Game pays 0.014, not the 0.012 we ship.
-        // Curiosity Overdrive S20 SSS+ EG prices at 355.79 officially, and singles price one
-        // level up, so the unit is Base(21) = 235 and 355.79 / 235 = 1.514 = 1.50 + 0.014.
+        // A hypothetical disagreement, since every plate the live page has priced now matches:
+        // a Doubles chart pays 0.012 for Extreme Game, so a D20 SSS+ EG worth 349.60 against a
+        // Base(20) of 230 implies 1.52 - 1.50 = 0.020 instead. The arithmetic is what is under
+        // test, so the row only has to be one the shipped table prices differently.
         var logger = new CapturingLogger();
 
         ScoringObservations.ObservePumbility(logger, MixEnum.Phoenix2,
-            new[] { Row(ChartType.Single, 20, PhoenixLetterGrade.SSSPlus, PhoenixPlate.ExtremeGame, 355.79) });
+            new[] { Row(ChartType.Double, 20, PhoenixLetterGrade.SSSPlus, PhoenixPlate.ExtremeGame, 349.60) });
 
         var line = Assert.Single(logger.Lines);
         Assert.Contains("verdict MISMATCH", line);
-        Assert.Contains("implied plate bonus 0.0140", line);
+        Assert.Contains("implied plate bonus 0.0200", line);
         Assert.Contains("ship 0.012", line);
+    }
+
+    [Theory]
+    // Curiosity Overdrive S20 SSS+ EG: singles price one level up, so Base(21) = 235 and
+    // 355.79 / 235 = 1.514 = 1.50 + 0.014 -- the singles Extreme Game bonus, not the 0.012
+    // a Double pays. Every one of the 21 EG and 60 UG singles rows the live page served
+    // implied these two and no others.
+    [InlineData(20, PhoenixPlate.ExtremeGame, 355.79)]
+    // S19 SSS+ UG at Base(20) = 230: 348.91 / 230 = 1.517 = 1.50 + 0.017.
+    [InlineData(19, PhoenixPlate.UltimateGame, 348.91)]
+    public void SinglesPlateRowsThatUsedToMispriceNowReconcile(int level, PhoenixPlate plate, double official)
+    {
+        var logger = new CapturingLogger();
+
+        ScoringObservations.ObservePumbility(logger, MixEnum.Phoenix2,
+            new[] { Row(ChartType.Single, level, PhoenixLetterGrade.SSSPlus, plate, official) });
+
+        var line = Assert.Single(logger.Lines);
+        Assert.Contains("verdict match", line);
     }
 
     [Fact]

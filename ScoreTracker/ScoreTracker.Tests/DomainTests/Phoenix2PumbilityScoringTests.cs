@@ -14,9 +14,11 @@ namespace ScoreTracker.Tests.DomainTests;
 ///     per-chart breakdown page my_page/pumbility.php (2026-07-19), which exposed the
 ///     singles +1-level pricing, the sub-10 zero, and the real A multiplier (1.28) — the
 ///     xlsx-era singles rows priced at Base(level) are superseded and re-derived at
-///     Base(level+1) here. Rows that used the community's singles-specific UG/EG/RG plate
-///     values are deliberately absent: the shared (doubles-verified) plate table is an owner
-///     decision, see the TODO in ScoringConfiguration.Phoenix2PumbilityScoring.
+///     Base(level+1) here. A third era follows: production import telemetry (2026-08-10),
+///     which priced all sixteen plate × chart-type cells from live pools and showed Singles
+///     paying their own Extreme and Ultimate Game bonuses. Singles Rough Game is NOT among
+///     them — it pays the same 0.000 a Double does, so the community table's −0.010 stays
+///     refuted while its other two singles values are now pinned below.
 /// </summary>
 public sealed class Phoenix2PumbilityScoringTests
 {
@@ -67,6 +69,12 @@ public sealed class Phoenix2PumbilityScoringTests
     [InlineData(ChartType.Single, 24, PhoenixLetterGrade.AAAPlus, PhoenixPlate.TalentedGame, 372.84)]
     [InlineData(ChartType.Single, 24, PhoenixLetterGrade.SPlus, PhoenixPlate.TalentedGame, 380.64)]
     [InlineData(ChartType.Single, 24, PhoenixLetterGrade.SSS, PhoenixPlate.MarvelousGame, 388.96)]
+    // Singles Extreme and Ultimate Game — the two plates a Single prices differently from a
+    // Double, observed on live pools 2026-08-10. Base(21) 235 x (1.50 + 0.014) = 355.79 and
+    // Base(20) 230 x (1.50 + 0.017) = 348.91; at the doubles bonuses these would read 355.32
+    // and 348.22, so these rows are what hold the two tables apart.
+    [InlineData(ChartType.Single, 20, PhoenixLetterGrade.SSSPlus, PhoenixPlate.ExtremeGame, 355.79)]
+    [InlineData(ChartType.Single, 19, PhoenixLetterGrade.SSSPlus, PhoenixPlate.UltimateGame, 348.91)]
     // Doubles — observed live values (xlsx 2026-07 + my_page/pumbility.php 2026-07-19; a D(L)
     // prices at Base(L) — no level bump, verified to the cent against the live page)
     [InlineData(ChartType.Double, 12, PhoenixLetterGrade.SSSPlus, PhoenixPlate.PerfectGame, 288.80)]

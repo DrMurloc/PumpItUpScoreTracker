@@ -484,11 +484,8 @@ namespace ScoreTracker.SharedKernel.Models
             config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.13;
             config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.08;
 
-            // Plate bonuses (ADDITIVE terms, not multipliers).
-            // TODO(P2-pumbility): community data suggested singles-specific UG/EG/RG values
-            // (.017/.014/−.010); treated as a data error for now (owner call 2026-07-09) —
-            // the doubles-verified table applies to both types. Adjust here if live singles
-            // data disagrees, then run the P2 recalculation job.
+            // Plate bonuses (ADDITIVE terms, not multipliers). This table is what a Double
+            // prices; Singles differ on two of the eight and say so below.
             config.PlateModifiers[PhoenixPlate.RoughGame] = 0.000;
             config.PlateModifiers[PhoenixPlate.FairGame] = 0.002;
             config.PlateModifiers[PhoenixPlate.TalentedGame] = 0.004;
@@ -497,6 +494,17 @@ namespace ScoreTracker.SharedKernel.Models
             config.PlateModifiers[PhoenixPlate.ExtremeGame] = 0.012;
             config.PlateModifiers[PhoenixPlate.UltimateGame] = 0.016;
             config.PlateModifiers[PhoenixPlate.PerfectGame] = 0.020;
+
+            // Singles pay more for the two best-but-imperfect plates. Read off the official
+            // per-chart breakdown page during live imports: 21 Extreme Game rows and 60
+            // Ultimate Game rows, every one of them implying these values and no other.
+            // The remaining six plates land identically on both types, so they are absent
+            // here and answer from the table above.
+            config.SinglesPlateModifiers = new Dictionary<PhoenixPlate, double>
+            {
+                [PhoenixPlate.ExtremeGame] = 0.014,
+                [PhoenixPlate.UltimateGame] = 0.017
+            };
             return config;
         }
 
