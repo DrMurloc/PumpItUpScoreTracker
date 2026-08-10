@@ -255,15 +255,20 @@ namespace ScoreTracker.WeeklyChallenge.Application
                                              ? chart.Type != ChartType.CoOp
                                              : chart.Type == request.Type)).ToList();
 
-            var scoring = ScoringConfiguration.PumbilityScoring(request.Mix, false);
+            // PumbilityScoring throws for a mix that has none, so it is only built when one
+            // exists. XX and older join the raw-score branch CoOp already uses: an era score
+            // is a point total, which is the thing being summed, and there is no rating to
+            // price it with.
+            var isLegacy = request.Mix.UsesLegacyScoring();
+            var scoring = isLegacy ? null : ScoringConfiguration.PumbilityScoring(request.Mix, false);
             double Price(WeeklyTournamentEntry entry)
             {
                 var chart = chartDict[entry.ChartId];
-                return request.Type == ChartType.CoOp
+                return request.Type == ChartType.CoOp || isLegacy
                     ? (int)entry.Score
                     // A broken entry has no plate and prices at zero either way, so the
                     // placeholder never reaches a counted score.
-                    : scoring.GetScore(chart.Type, chart.Level, entry.Score,
+                    : scoring!.GetScore(chart.Type, chart.Level, entry.Score,
                         entry.Plate ?? PhoenixPlate.RoughGame, entry.IsBroken);
             }
 
@@ -275,7 +280,9 @@ namespace ScoreTracker.WeeklyChallenge.Application
                         .Take(countedPerPlayer).ToArray();
                     return (UserId: g.Key, Counted: counted,
                         Total: counted.Sum(m => m.Points),
-                        RawSum: counted.Sum(m => (int)m.Score),
+                        // long: on a legacy mix these are era scores, and a month of them
+                        // passes int well before a player runs out of charts.
+                        RawSum: counted.Sum(m => (long)(int)m.Score),
                         CompetitiveLevel: g.Max(e => e.CompetitiveLevel));
                 })
                 // Stepped grade multipliers tie more often than the old continuous scale;
