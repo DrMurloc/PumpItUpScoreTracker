@@ -1,6 +1,7 @@
 @page "/Setup"
 @rendermode RenderModes.Interactive
 @using MediatR
+@using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
@@ -645,10 +646,23 @@
             : L["Country saved"], Severity.Success);
     }
 
+    /// <summary>
+    ///     Sharing follows privacy in both directions, the same rule the Account page carries:
+    ///     going public turns the all-tools grant on, going private turns it off. Without it a
+    ///     brand-new account that opens its profile here is public but carries no share
+    ///     preference, which reads as "off" — so it sits outside the pool that every account
+    ///     going public from /Account joins.
+    ///     <para>
+    ///         Visibility commits first. The pool is not joined on IsPublic, so writing the
+    ///         preference first would leave the account shared-with-everyone while still private
+    ///         for as long as the second call takes — and permanently if it throws.
+    ///     </para>
+    /// </summary>
     private async Task TogglePublic()
     {
         _isPublic = !_isPublic;
         await SaveProfile();
+        await Mediator.Send(new SetShareWithAllToolsCommand(_isPublic));
         Snackbar.Add(_isPublic
             ? L["Your profile is public"]
             : L["Your profile is private"], Severity.Success);

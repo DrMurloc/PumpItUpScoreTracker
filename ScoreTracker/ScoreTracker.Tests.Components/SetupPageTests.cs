@@ -8,6 +8,7 @@ using Bunit.TestDoubles;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using ScoreTracker.CommunityTools.Contracts.Commands;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -236,6 +237,36 @@ public sealed class SetupPageTests : ComponentTestBase
         Assert.Contains("--mix-primary: #FF2FA0", page.Markup);
         Assert.DoesNotContain("--mix-primary: #4FE33F", page.Markup);
         Assert.Equal(before, NavigationCount);
+    }
+
+    /// <summary>
+    ///     Sharing follows privacy here as it does on /Account. A public profile with no share
+    ///     preference reads as "not shared", so an account that opens up during setup would
+    ///     otherwise sit outside the pool every other public account belongs to.
+    /// </summary>
+    [Fact]
+    public async Task OpeningTheProfileGrantsTheAllToolsShare()
+    {
+        var page = Render();
+
+        await page.Find("button.setup-switch").ClickAsync(new());
+
+        _mediator.Verify(m => m.Send(It.Is<SetShareWithAllToolsCommand>(c => c.Share),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>…and closing it again withdraws the grant, so the two never disagree.</summary>
+    [Fact]
+    public async Task ClosingTheProfileWithdrawsTheAllToolsShare()
+    {
+        CurrentUser.Setup(c => c.User).Returns(new User(UserId, Name.From("Jordan Alvarez"), true, null,
+            new Uri("https://example.invalid/a.png"), null));
+        var page = Render();
+
+        await page.Find("button.setup-switch").ClickAsync(new());
+
+        _mediator.Verify(m => m.Send(It.Is<SetShareWithAllToolsCommand>(c => !c.Share),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
