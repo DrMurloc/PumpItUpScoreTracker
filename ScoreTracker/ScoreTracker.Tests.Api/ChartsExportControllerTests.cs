@@ -132,4 +132,39 @@ public sealed class ChartsExportControllerTests
         Assert.Equal("Level,Mix,MyPhoenixScore", lines[0]);
         Assert.Equal("19,Phoenix,950000", lines[1]);
     }
+
+    /// <summary>
+    ///     The fixture is a D19 AAA on a 125-second Arcade chart. Phoenix prices that at
+    ///     LevelRatings[19] x the AAA modifier, with no time adjustment — the number the
+    ///     /Pumbility pool would give the same record.
+    /// </summary>
+    [Fact]
+    public async Task PumbilityPricesTheRecordWithTheMixFormula()
+    {
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        _currentUser.SetupGet(c => c.User).Returns(new User(
+            Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/a.png"), null));
+
+        var result = await BuildController("?Columns=Pumbility").Export(CancellationToken.None);
+
+        var lines = Content(result).TrimEnd().Split('\n').Select(l => l.TrimEnd()).ToArray();
+        Assert.Equal("Pumbility", lines[0]);
+        var expected = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, true)
+            .GetScore(MakeResult().Chart, 950000, PhoenixPlate.RoughGame, false);
+        Assert.Equal(expected.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture), lines[1]);
+    }
+
+    [Fact]
+    public async Task PumbilityIsNotOfferedOnALegacyMixWhereItHasNoFormula()
+    {
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        _currentUser.SetupGet(c => c.User).Returns(new User(
+            Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/a.png"), null));
+
+        // PumbilityScoring throws outside the Phoenix family, so the scope has to drop the
+        // column rather than the endpoint 500 on a saved setting naming it.
+        var result = await BuildController("?Mix=XX&Columns=Song,Pumbility").Export(CancellationToken.None);
+
+        Assert.Equal("Song", Content(result).Split('\n')[0].TrimEnd());
+    }
 }

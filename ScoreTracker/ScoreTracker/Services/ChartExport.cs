@@ -1,7 +1,9 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 
 namespace ScoreTracker.Web.Services;
 
@@ -53,6 +55,22 @@ public static class ChartExport
         return value?.ToString(format, CultureInfo.InvariantCulture) ?? string.Empty;
     }
 
+    /// <summary>
+    ///     Built once per mix — the configuration allocates several dictionaries, and an
+    ///     unpaged export prices four thousand rows through it.
+    ///     <para>
+    ///         includeCoOp is true because Phoenix 1 CO-OP charts really do earn PUMBILITY.
+    ///         Phoenix 2 needs no opinion here: its configuration zeroes CO-OP itself, so the
+    ///         argument reaches nothing.
+    ///     </para>
+    /// </summary>
+    private static readonly ConcurrentDictionary<MixEnum, ScoringConfiguration> PumbilityConfigs = new();
+
+    private static ScoringConfiguration PumbilityFor(MixEnum mix)
+    {
+        return PumbilityConfigs.GetOrAdd(mix, m => ScoringConfiguration.PumbilityScoring(m, true));
+    }
+
     public static readonly IReadOnlyList<Column> Columns = new List<Column>
     {
         // The join key. The export exists so tools can parse it and had none: song plus
@@ -83,6 +101,15 @@ public static class ChartExport
         new("CommunityVoteRating", false, (r, _) => Num(r.CommunityVoteRating)),
         new("ScoreCount", false, (r, _) => r.ScoreCount.ToString(CultureInfo.InvariantCulture)),
         new("PgCount", false, (r, _) => r.PgCount.ToString(CultureInfo.InvariantCulture)),
+        // What this chart's record is worth under the mix's PUMBILITY formula, whether or not
+        // it is in the player's top fifty. Blank means no record; 0.00 means the formula
+        // genuinely prices it at nothing (Phoenix 2 pays zero below level 10, and neither mix
+        // pays for a break). Two decimals here and only here — Web is the layer that rounds.
+        new("Pumbility", true, (r, _) => Mine(r, m => m.PhoenixScore == null
+            ? string.Empty
+            : PumbilityFor(r.Chart.Mix)
+                .GetScore(r.Chart, m.PhoenixScore.Value, m.PhoenixPlate ?? PhoenixPlate.RoughGame, m.IsBroken)
+                .ToString("0.00", CultureInfo.InvariantCulture)), Scope.PhoenixFamily),
         // Family-scoped: a Phoenix column on an XX search only ever produced a blank column,
         // and offering it read as a bug rather than as absence.
         new("MyPhoenixScore", true, (r, _) => Mine(r, m => Num(m.PhoenixScore, "0")), Scope.PhoenixFamily),
