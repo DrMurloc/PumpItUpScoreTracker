@@ -45,6 +45,12 @@ downward mapping is documented in `SupportedCultures.ResolveClosest`; it constru
 | `CultureController` | the picker's `/Culture/Set` navigation |
 | `App.razor` | every document render — write-back, only when it differs, and **only for anonymous visitors, and never for a query-string preview** |
 
+**Signing in deletes it**, in every `LoginController` path. It is a cache of the browser header
+for visitors with nowhere to store a choice, and there is no anonymous language picker for it to
+be anything else. Left in place it outranks the browser for an account that has chosen no
+language — pinning whichever browser they first arrived in, permanently, because a signed-in
+request never rewrites it.
+
 Both write through `CultureCookie`, which sets an explicit `MaxAge`. Nothing gives a cookie an
 expiry for free here: `AddCookiePolicy` is registered but `app.UseCookiePolicy()` is never
 called, so a bare `Response.Cookies.Append` writes a **session** cookie that dies when the
@@ -105,6 +111,14 @@ Two things follow from Automatic being the default:
   the field at all.
 - **A new account finishes `/Setup` with no `Culture` row** unless they pick a language, so it
   follows their browser rather than pinning whichever one they signed up on.
+
+⚠ **Automatic is a web answer, and Discord has no browser to follow.** `BotCommandSaga` reads the
+same `Culture` key and treats absence as English, so a player who was on `es-ES` and picks
+Automatic keeps Spanish on the site — resolved from their browser — and silently drops to English
+on every `/piu` reply. There is no separate control to get it back. Channel feeds are unaffected;
+they carry their own `Culture` column. Closing this means storing something for non-browser
+surfaces, which is a decision about what Automatic *means*, not a bug fix — it is open, not
+overlooked.
 
 `ClearUserUiSettingCommand` needs its own line in `UiSettingCacheEviction`'s registration —
 post-processors are registered per closed type, so the save registration does nothing for it, and
