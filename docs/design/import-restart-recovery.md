@@ -77,10 +77,28 @@ player start a fresh import immediately.
 before the drain. Because the drain deadline is measured from the *latest* score in the batch,
 `FinishedAt` and the batch's deadline are effectively the same instant.
 
-The staleness threshold is `ScoreBatchPolicy.WorkExpectedWithin` — already published as "how long
-a reader should keep expecting work after the last score lands" (hold + drain buffer + room for
-capture, 4 m 05 s). Reusing it means the recovery pass tracks the hold window automatically if it ever
-changes, and there is no second number to keep in agreement with the first.
+It is not, however, compared against a clock — see §3.0. `FinishedAt` answers *what happened to
+the run* (did it report an ending, or did something take it away mid-scrape); `StartedAt` against
+the boot instant answers *whether its batch can still be alive*. Both are needed and they answer
+different questions.
+
+### 3.0 ⚠ Age is not the test — the boot is
+
+> **Field-observed 2026-08-10, and the first shape of this design got it wrong.** The pass
+> originally skipped any run younger than `WorkExpectedWithin`, reasoning that its batch might
+> still drain. That guard excluded **exactly the runs this feature exists for**: a run the restart
+> itself killed is, at the moment the pass runs, seconds old. Three interrupted runs sat at a null
+> outcome with the notice never firing, and nothing would have looked at them again until the next
+> restart.
+>
+> At boot the accumulator is empty. Nothing from the previous process can drain, however recently
+> it ran. So the test is **"did this run begin before this process did"**, not "how old is it" —
+> and the boot instant is stamped by the publisher in `StartAsync` rather than read from the clock
+> in the consumer, so a genuinely live import cannot land on the wrong side of it while the bus
+> gets round to the message.
+>
+> `WorkExpectedWithin` is still the right constant for a *reader* deciding how long to keep
+> waiting. It was never the right one for deciding what is orphaned.
 
 ### 3.1 Start from the marker, not from the clock
 
@@ -94,9 +112,9 @@ changes, and there is no second number to keep in agreement with the first.
 
 | Run state | Action |
 |---|---|
-| `FinishedAt < now - WorkExpectedWithin` | replay |
-| `FinishedAt IS NULL` and `StartedAt < now - WorkExpectedWithin` | replay **and** close `Interrupted` |
-| finished inside the window, or still running | skip — the drain has not had its chance yet |
+| started before this boot, `FinishedAt` set | replay |
+| started before this boot, `FinishedAt IS NULL` | replay **and** close `Interrupted` |
+| started at or after this boot | skip — it is live, and its batch is really in memory (§3.0) |
 | no run at all | skip — a manual, CSV or API session (§3) |
 
 Driving it the other way — enumerate runs by time, then ask whether each session is processed —

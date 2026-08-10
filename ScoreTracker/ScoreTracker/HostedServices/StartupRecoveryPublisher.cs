@@ -1,4 +1,5 @@
-using MassTransit;
+﻿using MassTransit;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 
 namespace ScoreTracker.Web.HostedServices;
@@ -16,11 +17,14 @@ namespace ScoreTracker.Web.HostedServices;
 public sealed class StartupRecoveryPublisher : IHostedService
 {
     private readonly IBus _bus;
+    private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly ILogger<StartupRecoveryPublisher> _logger;
 
-    public StartupRecoveryPublisher(IBus bus, ILogger<StartupRecoveryPublisher> logger)
+    public StartupRecoveryPublisher(IBus bus, IDateTimeOffsetAccessor dateTime,
+        ILogger<StartupRecoveryPublisher> logger)
     {
         _bus = bus;
+        _dateTime = dateTime;
         _logger = logger;
     }
 
@@ -28,7 +32,11 @@ public sealed class StartupRecoveryPublisher : IHostedService
     {
         try
         {
-            await _bus.Publish(new RecoverInterruptedImportsCommand(), cancellationToken);
+            // Stamped HERE, not in the consumer. This is the line that divides "belonged to the
+            // process that just died" from "started under this one", and reading the clock later —
+            // after the bus has got round to the message — would let a genuinely live import fall
+            // on the wrong side of it.
+            await _bus.Publish(new RecoverInterruptedImportsCommand(_dateTime.Now), cancellationToken);
         }
         catch (Exception e)
         {

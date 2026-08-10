@@ -1,10 +1,9 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
-using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 
@@ -40,6 +39,7 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
     public async Task Consume(ConsumeContext<RecoverInterruptedImportsCommand> context)
     {
         var token = context.CancellationToken;
+        var message = context.Message;
         var unprocessed = await _mediator.Send(new GetUnprocessedSessionsQuery(), token);
         if (unprocessed.Count == 0) return;
 
@@ -57,12 +57,16 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
             // had its chance yet, and they are deliberately out of scope.
             if (!runs.TryGetValue(session.Id, out var run)) continue;
 
-            // WorkExpectedWithin is the hold window plus the drain plus room for capture — a run
-            // that finished longer ago than that had its chance to announce itself and did not
-            // take it. Measured from the run's end because that is effectively the instant the
-            // batch's deadline was last pushed out.
-            var reference = run.FinishedAt ?? run.StartedAt;
-            if (now - reference < ScoreBatchPolicy.WorkExpectedWithin) continue;
+            // Orphaned means "began before this process did", NOT "is older than the batch hold
+            // window". At startup the accumulator is empty, so nothing from a previous process can
+            // ever drain no matter how recently it ran — and the run this boot actually
+            // interrupted is, at this moment, seconds old. An age-based guard skips precisely the
+            // runs the restart just killed and nothing looks again until the next restart, which
+            // is the bug this shape replaced (docs/design/import-restart-recovery.md §4.2).
+            //
+            // A run that started AFTER this boot is live: its batch is in memory with a real
+            // deadline, and a future restart will recover it if one interrupts it.
+            if (run.StartedAt >= message.BootedAt) continue;
 
             if (run.FinishedAt is null)
             {

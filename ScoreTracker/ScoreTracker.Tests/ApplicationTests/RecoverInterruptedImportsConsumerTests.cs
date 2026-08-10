@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -30,7 +30,9 @@ public sealed class RecoverInterruptedImportsConsumerTests
     private static readonly DateTimeOffset Now = new(2026, 8, 9, 12, 0, 0, TimeSpan.Zero);
     private static readonly Guid UserId = Guid.NewGuid();
 
-    // Comfortably past ScoreBatchPolicy.WorkExpectedWithin (hold + drain + capture room).
+    // The pass runs at boot; anything that began before that instant belonged to the process
+    // that just died.
+    private static readonly DateTimeOffset BootedAt = Now;
     private static readonly TimeSpan LongAgo = TimeSpan.FromMinutes(30);
 
     private sealed class PassContext
@@ -72,7 +74,7 @@ public sealed class RecoverInterruptedImportsConsumerTests
         public Task Run()
         {
             var ctx = new Mock<ConsumeContext<RecoverInterruptedImportsCommand>>();
-            ctx.SetupGet(c => c.Message).Returns(new RecoverInterruptedImportsCommand());
+            ctx.SetupGet(c => c.Message).Returns(new RecoverInterruptedImportsCommand(BootedAt));
             ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
             return Consumer.Consume(ctx.Object);
         }
@@ -93,17 +95,44 @@ public sealed class RecoverInterruptedImportsConsumerTests
     }
 
     /// <summary>
-    ///     The batch has not had its chance yet — this is a live import, mid-hold-window. Replaying
-    ///     it would announce a session that is about to announce itself.
+    ///     ⚠ The regression that shipped. A run the restart itself killed is, at the moment the
+    ///     pass runs, SECONDS old — so an age-based guard ("younger than the batch hold window,
+    ///     leave it alone") skipped precisely the runs this feature exists for, and nothing looked
+    ///     again until the next restart. Observed in the field 2026-08-10: three interrupted runs
+    ///     sitting at a null outcome with the dialog never firing.
+    ///     <para>
+    ///         Age is the wrong test. At boot the accumulator is empty, so nothing from the
+    ///         previous process can drain however recently it ran.
+    ///     </para>
     /// </summary>
     [Fact]
-    public async Task ARunThatJustFinishedIsLeftAlone()
+    public async Task ARunTheRestartItselfKilledSecondsAgoIsStillRecovered()
+    {
+        var ctx = new PassContext();
+        var session = Guid.NewGuid();
+        var runId = Guid.NewGuid();
+        ctx.WithUnprocessed(session);
+        ctx.WithRuns(new ImportRunForSession(runId, session, BootedAt.AddSeconds(-10), null));
+
+        await ctx.Run();
+
+        ctx.Results.Verify(r => r.MarkInterrupted(runId, Now, It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == session),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     A run that began AFTER this boot is live: its batch is in memory with a real deadline,
+    ///     and replaying it would announce a session about to announce itself. A future restart
+    ///     recovers it if one interrupts it.
+    /// </summary>
+    [Fact]
+    public async Task ARunThatStartedAfterThisBootIsLeftAlone()
     {
         var ctx = new PassContext();
         var session = Guid.NewGuid();
         ctx.WithUnprocessed(session);
-        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now.AddMinutes(-2),
-            Now.AddSeconds(-30)));
+        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, BootedAt.AddSeconds(5), null));
 
         await ctx.Run();
 

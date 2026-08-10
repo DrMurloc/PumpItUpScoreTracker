@@ -9,5 +9,12 @@ namespace ScoreTracker.OfficialMirror.Contracts.Messages;
 ///         look. Do not add a cadence to it without revisiting that design.
 ///     </para>
 /// </summary>
+/// <param name="BootedAt">
+///     When this process started. The pass's whole test for "orphaned" — a run that began before
+///     this boot cannot possibly still drain, because the accumulator holding its batch died with
+///     the previous process. Carried on the message rather than read from the clock in the
+///     consumer, which would measure the moment the pass RUNS and drift with whatever else the
+///     bus is doing at startup.
+/// </param>
 [ExcludeFromCodeCoverage]
-public sealed record RecoverInterruptedImportsCommand;
+public sealed record RecoverInterruptedImportsCommand(DateTimeOffset BootedAt);
