@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Bunit;
+using Bunit.TestDoubles;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -14,10 +15,15 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     The Community Tools rollout notice is modal, so where it is allowed to fire matters as
-///     much as who sees it. It must stay quiet for an account that has not finished
-///     <c>/Setup</c> — that player's first screen is the setup card, and a scrim over it makes
-///     the one thing they have to do unclickable.
+///     The Community Tools rollout notice reports a change the rollout made to a profile that
+///     already existed, so it is addressed to accounts that predate it and to nobody else. A new
+///     account is recognised by its arrival on <c>/Setup</c>, where the notice retires itself: it
+///     is modal, and a scrim there covers the one screen a first-run player has to use.
+///     <para>
+///         An account that predates <c>/Setup</c> has no completion flag either, so the audience
+///         test cannot be "has this account finished setup?" — that question reads every
+///         long-standing player as brand new, which is the whole point of the pair of facts below.
+///     </para>
 ///     <para>
 ///         Rendered markup is NOT the observable here: an inline MudDialog portals through
 ///         MudDialogProvider, which a component-under-test's tree does not have, so the markup is
@@ -46,19 +52,17 @@ public sealed class CommunityToolsAnnouncementTests : ComponentTestBase
         Services.AddSingleton(_uiSettings.Object);
     }
 
-    private void SetupCompleted(bool completed) =>
-        _uiSettings.Setup(u => u.GetSetting(IUiSettingsAccessor.SetupCompletedSettingKey,
-                It.IsAny<CancellationToken>(), null))
-            .ReturnsAsync(completed ? "true" : null);
+    private void ArriveAt(string url) =>
+        Services.GetRequiredService<FakeNavigationManager>().NavigateTo(url);
 
     private void AssertConsidered(Times times) =>
         _mediator.Verify(m => m.Send(It.IsAny<GetShareWithAllToolsQuery>(), It.IsAny<CancellationToken>()),
             times);
 
     [Fact]
-    public void StaysQuietWhileAnAccountIsStillInSetup()
+    public void StaysQuietForANewAccountOnTheSetupPage()
     {
-        SetupCompleted(false);
+        ArriveAt("/Setup?from=Discord");
 
         RenderComponent<CommunityToolsAnnouncement>();
 
@@ -66,24 +70,29 @@ public sealed class CommunityToolsAnnouncementTests : ComponentTestBase
     }
 
     /// <summary>
-    ///     …and is not marked seen while suppressed, so the notice is deferred rather than
-    ///     burned: the player meets it on the dashboard, which is where it always fired.
+    ///     …and retires it there rather than deferring it, so finishing setup does not hand the
+    ///     player a rollout notice about a change that was never made to their account.
     /// </summary>
     [Fact]
-    public void DoesNotBurnTheNoticeItSuppressed()
+    public void RetiresTheNoticeForANewAccount()
     {
-        SetupCompleted(false);
+        ArriveAt("/Setup?from=Discord");
 
         RenderComponent<CommunityToolsAnnouncement>();
 
-        _uiSettings.Verify(u => u.SetSetting(SeenKey, It.IsAny<string>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        _uiSettings.Verify(u => u.SetSetting(SeenKey, "true", It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    ///     The audience test, stated directly: an account old enough to have never seen <c>/Setup</c>
+    ///     carries no completion flag, and still gets the notice.
+    /// </summary>
     [Fact]
-    public void ConsidersTheNoticeOnceSetupIsDone()
+    public void ConsidersTheNoticeForAnAccountThatNeverWalkedSetup()
     {
-        SetupCompleted(true);
+        _uiSettings.Setup(u => u.GetSetting(IUiSettingsAccessor.SetupCompletedSettingKey,
+                It.IsAny<CancellationToken>(), null))
+            .ReturnsAsync((string?)null);
 
         RenderComponent<CommunityToolsAnnouncement>();
 
@@ -93,7 +102,6 @@ public sealed class CommunityToolsAnnouncementTests : ComponentTestBase
     [Fact]
     public void StaysQuietForAnAccountThatAlreadySawIt()
     {
-        SetupCompleted(true);
         _uiSettings.Setup(u => u.GetSetting(SeenKey, It.IsAny<CancellationToken>(), null))
             .ReturnsAsync("true");
 
@@ -106,7 +114,6 @@ public sealed class CommunityToolsAnnouncementTests : ComponentTestBase
     public void StaysQuietForAnAnonymousVisitor()
     {
         CurrentUser.Setup(c => c.IsLoggedIn).Returns(false);
-        SetupCompleted(true);
 
         RenderComponent<CommunityToolsAnnouncement>();
 
