@@ -44,7 +44,12 @@ public static class CultureCookie
             // MaxAge rather than Expires: browsers prefer it, and it needs no clock reading.
             MaxAge = Lifetime,
             IsEssential = true,
-            SameSite = SameSiteMode.Lax
+            SameSite = SameSiteMode.Lax,
+            // Only the culture providers read this, server-side, and the site is HTTPS-only — so
+            // it has no reason to travel in the clear or to be visible to script. Browsers treat
+            // localhost as trustworthy, so a plain-HTTP dev run still gets it.
+            Secure = true,
+            HttpOnly = true
         });
     }
 

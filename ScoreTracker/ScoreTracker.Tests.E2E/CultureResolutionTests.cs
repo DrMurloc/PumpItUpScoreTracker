@@ -102,11 +102,18 @@ public sealed class CultureResolutionTests : IAsyncLifetime
         await _fixture.Seed.SeedCultureAsync(userId, "en-US");
         await SignInAsync(userId);
 
-        Assert.Contains(SpanishNav, await GetAsync("/?culture=es-ES", SpanishBrowser));
-        Assert.Contains(EnglishNav, await GetAsync("/", SpanishBrowser));
+        using var preview = await RequestAsync("/?culture=es-ES", SpanishBrowser);
+        Assert.Contains(SpanishNav, await preview.Content.ReadAsStringAsync());
 
-        var cookies = _handler.CookieContainer.GetCookies(new Uri(_fixture.BaseUrl));
-        Assert.DoesNotContain(cookies.Cast<Cookie>(), c => c.Name == ".AspNetCore.Culture");
+        // Read off the wire, not out of the cookie jar: the cookie is Secure and the test host
+        // speaks plain HTTP, so a jar that never held it looks identical to one the response
+        // never tried to fill — the assertion would pass without proving anything.
+        var setCookies = preview.Headers.TryGetValues("Set-Cookie", out var values)
+            ? values
+            : Array.Empty<string>();
+        Assert.DoesNotContain(setCookies, c => c.StartsWith(".AspNetCore.Culture", StringComparison.Ordinal));
+
+        Assert.Contains(EnglishNav, await GetAsync("/", SpanishBrowser));
     }
 
     /// <summary>
@@ -142,12 +149,18 @@ public sealed class CultureResolutionTests : IAsyncLifetime
 
     private async Task<string> GetAsync(string path, string acceptLanguage)
     {
+        using var response = await RequestAsync(path, acceptLanguage);
+        return await response.Content.ReadAsStringAsync();
+    }
+
+    private async Task<HttpResponseMessage> RequestAsync(string path, string acceptLanguage)
+    {
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         request.Headers.TryAddWithoutValidation("Accept-Language", acceptLanguage);
 
         var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        return await response.Content.ReadAsStringAsync();
+        return response;
     }
 }
