@@ -13,6 +13,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Pages;
@@ -54,6 +55,24 @@ public sealed class SetupPageTests : ComponentTestBase
     }
 
     private IRenderedComponent<Setup> Render() => RenderComponent<Setup>();
+
+    /// <summary>
+    ///     Puts a game tag on the account and answers the doorway lookup with
+    ///     <paramref name="tagIsAlsoCarriedBy" /> — the accounts a self-reported tag collides with.
+    /// </summary>
+    private IRenderedComponent<Setup> RenderCarryingGameTag(string tag,
+        params User[] tagIsAlsoCarriedBy)
+    {
+        CurrentUser.Setup(c => c.User).Returns(new User(UserId, Name.From("Jordan Alvarez"), false,
+            Name.From(tag), new Uri("https://example.invalid/a.png"), null));
+        _mediator.Setup(m => m.Send(It.IsAny<GetUsersByGameTagQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tagIsAlsoCarriedBy);
+        return Render();
+    }
+
+    private static User AccountNamed(string name) =>
+        new(Guid.NewGuid(), Name.From(name), true, Name.From(name),
+            new Uri("https://example.invalid/b.png"), null);
 
     /// <summary>
     ///     [SupplyParameterFromQuery] only binds from the address, so the provider has to arrive
@@ -237,6 +256,59 @@ public sealed class SetupPageTests : ComponentTestBase
         Assert.Contains("--mix-primary: #FF2FA0", page.Markup);
         Assert.DoesNotContain("--mix-primary: #4FE33F", page.Markup);
         Assert.Equal(before, NavigationCount);
+    }
+
+    /// <summary>
+    ///     The game-tag doorway asks on the way past instead of intercepting the sign-in
+    ///     (docs/design/login-overhaul-spec.md C6), and hands the wizard both the account to
+    ///     compare against and the way back to setup.
+    /// </summary>
+    [Fact]
+    public void AGameTagAnotherAccountCarriesOffersTheMerge()
+    {
+        var other = AccountNamed("Cassandra Vex");
+
+        var page = RenderCarryingGameTag("ERRLENA", other);
+
+        var href = page.Find(".setup-merge-link").GetAttribute("href")!;
+        Assert.Contains($"with={other.Id}", href);
+        Assert.Contains("returnUrl=%2FSetup", href);
+    }
+
+    /// <summary>
+    ///     …and never names what it matched. A game tag is self-reported and non-unique, so the
+    ///     invitation reaches strangers who share a nickname; naming the account would tell them
+    ///     it exists and who it belongs to.
+    /// </summary>
+    [Fact]
+    public void TheInvitationNeverNamesTheMatchedAccount()
+    {
+        var page = RenderCarryingGameTag("ERRLENA", AccountNamed("Cassandra Vex"));
+
+        Assert.Contains("ERRLENA", page.Markup);
+        Assert.DoesNotContain("Cassandra Vex", page.Markup);
+    }
+
+    [Fact]
+    public void AGameTagNobodyElseCarriesAsksNothing()
+    {
+        var page = RenderCarryingGameTag("ERRLENA");
+
+        Assert.Empty(page.FindAll(".setup-merge"));
+    }
+
+    /// <summary>
+    ///     An OAuth sign-in creates an account with no game tag, so there is nothing to collide
+    ///     with and the lookup never runs.
+    /// </summary>
+    [Fact]
+    public void AnAccountWithNoGameTagIsNeverAsked()
+    {
+        var page = Render();
+
+        Assert.Empty(page.FindAll(".setup-merge"));
+        _mediator.Verify(m => m.Send(It.IsAny<GetUsersByGameTagQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     /// <summary>
