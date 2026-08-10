@@ -82,8 +82,8 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   to move regardless — at its old 1.08 it would pay more than a confirmed D.
   `SkillRating` on P2 rows is the merged top-50, so it no longer equals
   `SinglesRating + DoublesRating`; S/D pool gains mint their own
-  milestones (P2 only). Exit path for constant adjustments: edit the config, hit the admin
-  "Recalculate Phoenix 2 Player Ratings" button (`RecalculateMixRatingsCommand` bus sweep).
+  milestones (P2 only). Exit path for constant adjustments: edit the config, then press
+  **Re-price {mix} ratings** on `/Admin` (`RecalculateMixRatingsCommand` bus sweep).
 - **All 272 Phoenix 2 titles landed** (crawled authenticated from my_page/title.php 2026-07-09):
   [S]/[D] ladders + 8 hidden total tiers gate on the pool values (`Phoenix2PumbilityTitle`;
   `[P.B] BRONZE`..`ALEXANDRITE` (10000..19000) confirmed from worn titles on the live PUMBILITY
@@ -122,12 +122,24 @@ Fixed: `PlayerRatingSaga.RecalculateCore` (`SkillRating` = merged top-50, same s
 `Phoenix2TitleList.BuildProgress` (Total ladder = merged top-50), and `PumbilityProjectionSaga`
 (one mixed pool). The per-chart formula, `SinglesRating`, and `DoublesRating` are unchanged.
 Locked by a live canary (`Phoenix2PumbilityAggregationTests`) and a >50-chart unit test
-(`Phoenix2SkillRatingIsAMergedTop50NotTwoPoolsSummed`). **Post-deploy: press the admin
-"Recalculate Phoenix 2 Player Ratings" button once** — stored P2 `SkillRating` and Total-tier
-titles carry the old inflated two-pool total until the sweep recomputes them. The season-recap
-finale's projected total has its own targeted **"Rebuild Recap Total PUMBILITY"** admin button
-(`RebuildRecapTotalPumbilityCommand` — patches just that field on stored recaps; new recaps are
-already correct); cosmetic, so run it only if you want existing recaps updated.
+(`Phoenix2SkillRatingIsAMergedTop50NotTwoPoolsSummed`). **Post-deploy: press
+"Re-price Phoenix 2 ratings" on `/Admin` once** — stored P2 `SkillRating` and Total-tier
+titles carry the old inflated two-pool total until the sweep recomputes them.
+
+> **What a formula change does and does not leave stale.** Every PUMBILITY figure a player can
+> see — the `/Pumbility` pages, the pool, the title track, `api/phoenixScores` — is computed
+> from raw scores at read time, so it is correct the moment the release deploys. Only the
+> STORED aggregates go stale: `PlayerStats` ratings and the per-chart `PhoenixRecordStats`.
+> Those refresh when that player next imports and never otherwise, which is why the sweep
+> exists. It is deliberately **silent** — no milestones, no history rows, no ratings-improved
+> event, nothing to Discord — because a constant moving is not something a player did, and
+> announcing it would tell thousands of people they gained PUMBILITY on a day they did not
+> play. Safe to re-run; it recomputes rather than accumulates.
+>
+> The season-recap finale's projected total was patched by a separate
+> `RebuildRecapTotalPumbilityCommand`, which **no longer has a consumer or a button** (deleted
+> with the other one-time admin presses). New recaps compute correctly; existing ones keep
+> their old projected total unless that path is rebuilt.
 
 ## Commit sequence
 

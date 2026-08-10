@@ -428,6 +428,86 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
+    public async Task RepricingSweepStoresEveryPlayerAndAnnouncesNothing()
+    {
+        // The sweep's whole purpose is the stored numbers, and its whole risk is the
+        // announcements. Every player here recomputes UPWARD from zero stored stats — the
+        // exact condition that mints a PUMBILITY-gain milestone, a ratings-improved event
+        // and a history row on the session path — so a sweep that forgot to stay quiet
+        // would tell two players they gained on a day neither of them played.
+        const MixEnum mix = MixEnum.Phoenix2;
+        var userA = Guid.NewGuid();
+        var userB = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetUserIdsWithStats(mix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { userA, userB });
+        stats.Setup(s => s.GetStats(mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, Guid id, CancellationToken _) => ZeroStats(id));
+
+        var bus = new Mock<IBus>();
+        var milestones = new Mock<IPlayerMilestoneRepository>();
+        var highlights = new Mock<IScoreHighlightRepository>();
+        var recordStats = new Mock<IPhoenixRecordStatsRepository>();
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }, mix),
+            scores: ScoresMockReturning(userA, new[] { Score(single.Id, 950000) }, mix),
+            stats: stats, bus: bus, milestones: milestones, highlights: highlights,
+            recordStats: recordStats);
+
+        await saga.Consume(BuildContext(new RecalculateMixRatingsCommand(mix)));
+
+        // Both players re-priced, and their per-chart values with them.
+        stats.Verify(s => s.SaveStats(mix, userA, It.IsAny<PlayerStatsRecord>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        stats.Verify(s => s.SaveStats(mix, userB, It.IsAny<PlayerStatsRecord>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+        recordStats.Verify(r => r.UpdateScoreStats(mix, It.IsAny<Guid>(),
+            It.IsAny<IEnumerable<PhoenixRecordStats>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+
+        // And nothing said about it.
+        milestones.Verify(m => m.Append(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<IEnumerable<PlayerMilestoneWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
+        bus.Verify(b => b.Publish(It.IsAny<PlayerRatingsImprovedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        bus.Verify(b => b.Publish(It.IsAny<PlayerStatsUpdatedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<IEnumerable<ScoreHighlightWrite>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RepricingSweepKeepsGoingWhenOnePlayerFails()
+    {
+        // A mix-wide sweep that aborts on one bad account leaves the mix half re-priced with
+        // no record of which half, and the operator's only recourse is to run it again and
+        // hope. The failing player is simply skipped.
+        const MixEnum mix = MixEnum.Phoenix2;
+        var doomed = Guid.NewGuid();
+        var healthy = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetUserIdsWithStats(mix, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { doomed, healthy });
+        stats.Setup(s => s.GetStats(mix, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MixEnum _, Guid id, CancellationToken _) => ZeroStats(id));
+        stats.Setup(s => s.SaveStats(mix, doomed, It.IsAny<PlayerStatsRecord>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("this one account is broken"));
+
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single }, mix),
+            scores: ScoresMockReturning(healthy, new[] { Score(single.Id, 950000) }, mix),
+            stats: stats);
+
+        await saga.Consume(BuildContext(new RecalculateMixRatingsCommand(mix)));
+
+        stats.Verify(s => s.SaveStats(mix, healthy, It.IsAny<PlayerStatsRecord>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AdminRecalculationWithoutASessionWritesNoImproverFlags()
     {
         var userId = Guid.NewGuid();

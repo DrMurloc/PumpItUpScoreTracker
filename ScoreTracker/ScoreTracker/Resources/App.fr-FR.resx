@@ -5098,6 +5098,12 @@
   <data name="Rating Calculator" xml:space="preserve">
     <value>Calculateur de Rating</value>
   </data>
+  <data name="Re-price {0} ratings" xml:space="preserve">
+    <value>Recalculer les ratings {0}</value>
+  </data>
+  <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
+    <value>Recalcul des ratings {0} enregistrés. Rien n’est annoncé.</value>
+  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Reclassés</value>
   </data>

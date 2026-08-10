@@ -5060,6 +5060,12 @@
   <data name="Rating Calculator" xml:space="preserve">
     <value>레이팅 계산기</value>
   </data>
+  <data name="Re-price {0} ratings" xml:space="preserve">
+    <value>{0} 레이팅 재계산</value>
+  </data>
+  <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
+    <value>저장된 {0} 레이팅을 재계산합니다. 알림은 전송되지 않습니다.</value>
+  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>난이도 변경</value>
   </data>
