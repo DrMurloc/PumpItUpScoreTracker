@@ -41,6 +41,10 @@
     </MudItem>
     <MudItem xs="12" sm="6">
         <MudSelect T="string" Disabled="_isUpdatingUser" Label="@L["Language"]" Value="_currentCulture" ValueChanged="UpdateCulture">
+            @* First, and the value a player who has never chosen sits on: it is what they are
+               already getting, and picking a real language from here is a genuine change — a
+               preselected browser language would be one the picker could not act on. *@
+            <MudSelectItem T="string" Value="@SupportedCultures.Automatic">@L["Automatic"]</MudSelectItem>
             @foreach (var culture in SupportedCultures.All)
             {
                 <MudSelectItem T="string" Value="@culture.Code">@culture.NativeName</MudSelectItem>
@@ -209,8 +213,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var culture = await UiSettings.GetSetting("Culture");
-        _currentCulture = culture ?? CultureInfo.CurrentUICulture.ToString();
+        // Resolved, not raw: a row written before the es → es-ES split still reads "es", which
+        // matches no item and would render the field blank. No row at all means Automatic.
+        _currentCulture = SupportedCultures.ResolveClosest(await UiSettings.GetSetting("Culture"))
+                          ?? SupportedCultures.Automatic;
         _themeOverride = await UiSettings.GetSetting(MixThemes.OverrideSettingKey) ?? MixThemes.MatchMixValue;
         _id = CurrentUser.User.Id.ToString();
         _name = CurrentUser.User.Name;
@@ -223,11 +229,27 @@
         await RefreshToolCount();
     }
 
+    /// <summary>
+    ///     A language cannot change inside a live circuit — IStringLocalizer reads the ambient
+    ///     UI culture, which the localization middleware sets per request — so both paths end in
+    ///     a real navigation and the page comes back in the new language.
+    /// </summary>
     private async Task UpdateCulture(string newCulture)
     {
         _isUpdatingUser = true;
+        var returnUrl = HttpUtility.UrlEncode("/Account");
+
+        // Automatic is stored as absence, so it removes the setting rather than writing one, and
+        // drops the cookie on the way out — otherwise the cached choice would answer for it.
+        if (newCulture == SupportedCultures.Automatic)
+        {
+            await Mediator.Send(new ClearUserUiSettingCommand("Culture"));
+            NavManager.NavigateTo($"/Culture/Clear?redirectUrl={returnUrl}", forceLoad: true);
+            return;
+        }
+
         await UiSettings.SetSetting("Culture", newCulture);
-        NavManager.NavigateTo($"/Culture/Set?culture={newCulture}&redirectUrl=" + HttpUtility.UrlEncode("/Account"), forceLoad: true);
+        NavManager.NavigateTo($"/Culture/Set?culture={newCulture}&redirectUrl={returnUrl}", forceLoad: true);
     }
 
     private async Task UpdateThemeOverride(string newValue)
