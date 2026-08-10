@@ -3580,6 +3580,9 @@
   <data name="Must give the community a name." xml:space="preserve">
     <value>Devi dare un nome alla comunità.</value>
   </data>
+  <data name="My Bads" xml:space="preserve">
+    <value>I miei Bad</value>
+  </data>
   <data name="My broken flag" xml:space="preserve">
     <value>Broken (sì/no)</value>
   </data>
@@ -3589,14 +3592,26 @@
   <data name="My data" xml:space="preserve">
     <value>I miei dati</value>
   </data>
+  <data name="My Goods" xml:space="preserve">
+    <value>I miei Good</value>
+  </data>
   <data name="My grade" xml:space="preserve">
     <value>Il mio grado</value>
+  </data>
+  <data name="My Greats" xml:space="preserve">
+    <value>I miei Great</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>Il mio grado legacy</value>
   </data>
   <data name="My legacy score" xml:space="preserve">
     <value>Il mio punteggio legacy</value>
+  </data>
+  <data name="My Misses" xml:space="preserve">
+    <value>I miei Miss</value>
+  </data>
+  <data name="My Perfects" xml:space="preserve">
+    <value>I miei Perfect</value>
   </data>
   <data name="My Phoenix grade" xml:space="preserve">
     <value>Il mio grado Phoenix</value>

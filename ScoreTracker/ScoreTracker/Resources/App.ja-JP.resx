@@ -3580,6 +3580,9 @@
   <data name="Must give the community a name." xml:space="preserve">
     <value>コミュニティ名を入力してください。</value>
   </data>
+  <data name="My Bads" xml:space="preserve">
+    <value>自分のBAD</value>
+  </data>
   <data name="My broken flag" xml:space="preserve">
     <value>ブレイク状態</value>
   </data>
@@ -3589,14 +3592,26 @@
   <data name="My data" xml:space="preserve">
     <value>自分の記録</value>
   </data>
+  <data name="My Goods" xml:space="preserve">
+    <value>自分のGOOD</value>
+  </data>
   <data name="My grade" xml:space="preserve">
     <value>自分のランク</value>
+  </data>
+  <data name="My Greats" xml:space="preserve">
+    <value>自分のGREAT</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>自分のレガシーランク</value>
   </data>
   <data name="My legacy score" xml:space="preserve">
     <value>自分のレガシースコア</value>
+  </data>
+  <data name="My Misses" xml:space="preserve">
+    <value>自分のMISS</value>
+  </data>
+  <data name="My Perfects" xml:space="preserve">
+    <value>自分のPERFECT</value>
   </data>
   <data name="My Phoenix grade" xml:space="preserve">
     <value>自分のPhoenixランク</value>

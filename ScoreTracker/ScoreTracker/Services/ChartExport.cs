@@ -120,6 +120,14 @@ public static class ChartExport
         new("MyLegacyGrade", true, (r, _) => Mine(r, m => m.LegacyGrade?.ToString() ?? string.Empty),
             Scope.LegacyFamily),
         new("MyLegacyScore", true, (r, _) => Mine(r, m => Num(m.LegacyScore, "0")), Scope.LegacyFamily),
+        // The breakdown of the play that set the record. Null where it was never observed —
+        // manual and CSV entries never carry one, and an import only attaches one when the
+        // producing play was still on the recently-played list.
+        new("MyPerfects", true, (r, _) => Mine(r, m => Num(m.Judgements?.Perfects, "0")), Scope.PhoenixFamily),
+        new("MyGreats", true, (r, _) => Mine(r, m => Num(m.Judgements?.Greats, "0")), Scope.PhoenixFamily),
+        new("MyGoods", true, (r, _) => Mine(r, m => Num(m.Judgements?.Goods, "0")), Scope.PhoenixFamily),
+        new("MyBads", true, (r, _) => Mine(r, m => Num(m.Judgements?.Bads, "0")), Scope.PhoenixFamily),
+        new("MyMisses", true, (r, _) => Mine(r, m => Num(m.Judgements?.Misses, "0")), Scope.PhoenixFamily),
         new("MyBroken", true, (r, _) => Mine(r, m => m.IsBroken ? "true" : "false")),
         new("MyRecordedOn", true,
             (r, _) => Mine(r, m => m.RecordedOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty))

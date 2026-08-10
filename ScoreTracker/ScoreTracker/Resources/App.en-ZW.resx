@@ -3580,6 +3580,9 @@
   <data name="Must give the community a name." xml:space="preserve">
     <value>Romurm blgrlgro mrp plglmurgblub gro mrg.</value>
   </data>
+  <data name="My Bads" xml:space="preserve">
+    <value>Malo Blarg</value>
+  </data>
   <data name="My broken flag" xml:space="preserve">
     <value>Blgrl morgl grglgl</value>
   </data>
@@ -3589,14 +3592,26 @@
   <data name="My data" xml:space="preserve">
     <value>Blgrl gromurm</value>
   </data>
+  <data name="My Goods" xml:space="preserve">
+    <value>Malo Gorbul</value>
+  </data>
   <data name="My grade" xml:space="preserve">
     <value>Blgrl rorgl</value>
+  </data>
+  <data name="My Greats" xml:space="preserve">
+    <value>Malo Grumba</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>Blgrl rogrrgl rorgl</value>
   </data>
   <data name="My legacy score" xml:space="preserve">
     <value>Blgrl rogrrgl mrglrgl</value>
+  </data>
+  <data name="My Misses" xml:space="preserve">
+    <value>Malo Murgab</value>
+  </data>
+  <data name="My Perfects" xml:space="preserve">
+    <value>Malo Purbogla</value>
   </data>
   <data name="My Phoenix grade" xml:space="preserve">
     <value>Blgrl Phoenix rorgl</value>
