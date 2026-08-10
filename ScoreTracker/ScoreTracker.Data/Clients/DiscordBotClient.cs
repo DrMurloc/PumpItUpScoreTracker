@@ -148,7 +148,8 @@ public sealed class DiscordBotClient : IBotClient
                         guildUser.GetPermissions(guildChannel).ManageChannel;
         var display = guildUser?.DisplayName ?? command.User.GlobalName ?? command.User.Username;
         return new BotInteraction(path, options, command.Channel.Id,
-            (command.Channel as IGuildChannel)?.GuildId, command.User.Id, display, canManage);
+            (command.Channel as IGuildChannel)?.GuildId, command.User.Id, display, canManage,
+            command.UserLocale);
     }
 
     private async Task Followup(SocketSlashCommand command, BotReply reply, bool ephemeral)

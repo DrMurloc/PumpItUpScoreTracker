@@ -112,13 +112,13 @@ Two things follow from Automatic being the default:
 - **A new account finishes `/Setup` with no `Culture` row** unless they pick a language, so it
   follows their browser rather than pinning whichever one they signed up on.
 
-⚠ **Automatic is a web answer, and Discord has no browser to follow.** `BotCommandSaga` reads the
-same `Culture` key and treats absence as English, so a player who was on `es-ES` and picks
-Automatic keeps Spanish on the site — resolved from their browser — and silently drops to English
-on every `/piu` reply. There is no separate control to get it back. Channel feeds are unaffected;
-they carry their own `Culture` column. Closing this means storing something for non-browser
-surfaces, which is a decision about what Automatic *means*, not a bug fix — it is open, not
-overlooked.
+**Discord follows the same order, with its own indicator in place of the browser**: the account's
+`Culture` setting, then `BotInteraction.UserLocale` — the language the invoker's Discord client is
+set to, which is this surface's `Accept-Language` — then English. Without that middle rank an
+account on Automatic would read Spanish on the site and answer in English on every `/piu` reply,
+because "follow the browser" means nothing in a chat client. An unlinked invoker gets their client
+language too. Channel feeds are unaffected; they carry their own `Culture` column, chosen when the
+feed was registered.
 
 `ClearUserUiSettingCommand` needs its own line in `UiSettingCacheEviction`'s registration —
 post-processors are registered per closed type, so the save registration does nothing for it, and

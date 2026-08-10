@@ -5,6 +5,12 @@ namespace ScoreTracker.Domain.Records;
 ///     <see cref="CommandPath" /> is the subcommand path below the top-level command (e.g.
 ///     <c>["register","weekly"]</c> or <c>["chart"]</c>); <see cref="Options" /> holds the
 ///     leaf option values as strings, keyed by option name.
+///     <para>
+///         <see cref="UserLocale" /> is the language the invoker's own Discord client is set to.
+///         It is the closest thing this surface has to an Accept-Language header, and it is what
+///         answers when the account has chosen no language — or when we do not know the account
+///         at all (docs/design/culture-resolution.md).
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record BotInteraction(
@@ -14,7 +20,8 @@ public sealed record BotInteraction(
     ulong? GuildId,
     ulong UserId,
     string UserDisplayName,
-    bool InvokerCanManageChannels);
+    bool InvokerCanManageChannels,
+    string? UserLocale = null);
 
 /// <summary>
 ///     A live autocomplete request for the focused option. Handlers typically switch on
