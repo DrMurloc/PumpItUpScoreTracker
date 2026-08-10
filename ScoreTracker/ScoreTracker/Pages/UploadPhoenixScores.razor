@@ -43,7 +43,12 @@
            reload, so refreshing on that event races the close and would flash "never reported
            back" at somebody whose import had in fact just succeeded. A live run narrates itself
            through the status line and the score table right below this. *@
-        <ImportResultStrip Attempt="@(_isImporting ? null : _lastImport)" CanRetry="@(!ImportDisabled)"
+        @* Hidden while a run is in flight AND once one has finished on this page. The row is
+           closed by the consumer's finally, AFTER the status event that would trigger a reload,
+           so refreshing on that event races the close; not refreshing leaves the PREVIOUS run on
+           screen. Either way somebody whose import just succeeded gets told the last one failed,
+           so the strip simply stands down until the next page load has the truth. *@
+        <ImportResultStrip Attempt="@(_isImporting || _importCompleted ? null : _lastImport)" CanRetry="@(!ImportDisabled)"
                            OnRetry="ImportScores"/>
         <MudGrid Spacing="3">
             <MudItem xs="12" sm="6">
