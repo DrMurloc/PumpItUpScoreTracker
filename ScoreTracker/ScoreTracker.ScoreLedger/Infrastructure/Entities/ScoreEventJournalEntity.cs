@@ -34,6 +34,15 @@ internal sealed class ScoreEventJournalEntity
 
     public string? Plate { get; set; }
 
+    /// <summary>
+    ///     The XX-and-older letter grade. Legacy has no plate: the letter IS the plate
+    ///     equivalent, and it is the axis most legacy records carry — the numeric Score is
+    ///     usually absent. It gets its own column rather than riding in Plate, because a
+    ///     Phoenix reader parsing "SSS" as a PhoenixPlate throws, and storing one scoring
+    ///     model's data in another's column is the defect this whole effort removed.
+    /// </summary>
+    public string? LetterGrade { get; set; }
+
     [Required] public bool IsBroken { get; set; }
 
     /// <summary>
