@@ -9,11 +9,10 @@
    A/A+/AA/AA+ floors, so a Phoenix 1 row shown on a Phoenix 2 page and graded with the
    page's mix reports a grade the player never got.
 
-   A row from a legacy mix shows its number without a grade icon. Those numbers are
-   era-scale — note-count dependent, not out of 1,000,000 — so a Phoenix letter grade
-   derived from one is arithmetic on a quantity that does not mean what the formula
-   assumes. The journal keeps them because they were really submitted; the reader is
-   simply not told a grade nobody earned. *@
+   A legacy row carries its own recorded letter rather than one derived from its number:
+   era scores are note-count dependent and run past 1,000,000, so the Phoenix grade formula
+   says nothing true about one. Legacy rows with no letter are the historical misfiled
+   writes, which predate legacy journaling — they keep their number and get no icon. *@
 @if (Entries.Any())
 {
     <div class="score-journey">
@@ -22,8 +21,16 @@
             <div class="score-journey-row">
                 <span class="score-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.Mix.GetName()</MudChip>
-                <span class="score-journey-score">@(entry.Score?.ToString() ?? "—")</span>
-                @if (entry.Score != null && !entry.Mix.UsesLegacyScoring())
+                <span class="score-journey-score">@ScoreText(entry)</span>
+                @if (entry.Mix.UsesLegacyScoring())
+                {
+                    @if (entry.LegacyGrade != null)
+                    {
+                        <LetterGradeIcon LegacyGrade="entry.LegacyGrade" IsBroken="entry.IsBroken"
+                                         Height="16"></LetterGradeIcon>
+                    }
+                }
+                else if (entry.Score != null)
                 {
                     <LetterGradeIcon Grade="entry.Score.Value.LetterGradeFor(entry.Mix)"
                                      IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
@@ -46,4 +53,16 @@ else if (ShowWhenEmpty)
     ///     that folds the journey under a record it already describes says it once instead.
     /// </summary>
     [Parameter] public bool ShowWhenEmpty { get; set; }
+
+    /// <summary>
+    ///     Whichever number this row's scoring model uses, formatted with separators — an era
+    ///     score can run to eight digits and is unreadable without them.
+    /// </summary>
+    private static string ScoreText(ScoreJournalEntry entry)
+    {
+        if (entry.Mix.UsesLegacyScoring())
+            return entry.LegacyScore is { } legacy ? ((int)legacy).ToString("N0") : "—";
+
+        return entry.Score?.ToString() ?? "—";
+    }
 }
