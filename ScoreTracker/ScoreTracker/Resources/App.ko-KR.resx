@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -941,6 +941,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>보드</value>
+  </data>
+  <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
+    <value>보드는 시리즈별로 운영되며, 이 시리즈는 아직 자체 로테이션이 없습니다.</value>
   </data>
   <data name="Boards you're both on" xml:space="preserve">
     <value>둘 다 오른 보드</value>
@@ -3621,6 +3624,9 @@
   <data name="net" xml:space="preserve">
     <value>합계</value>
   </data>
+  <data name="Net Score" xml:space="preserve">
+    <value>총 점수</value>
+  </data>
   <data name="Never" xml:space="preserve">
     <value>미정</value>
   </data>
@@ -3794,6 +3800,9 @@
   </data>
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>아직 기록이 없습니다 — 첫 시도를 기록하면 여기가 채워집니다.</value>
+  </data>
+  <data name="no scores" xml:space="preserve">
+    <value>점수 없음</value>
   </data>
   <data name="No scores in this mix yet" xml:space="preserve">
     <value>이 시리즈에는 아직 점수가 없습니다</value>

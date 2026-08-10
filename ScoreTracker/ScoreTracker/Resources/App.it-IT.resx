@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!--
     Microsoft ResX Schema
@@ -948,6 +948,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Classifiche</value>
+  </data>
+  <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
+    <value>Le classifiche sono per Mix, e questo non ha ancora la sua rotazione.</value>
   </data>
   <data name="Boards you're both on" xml:space="preserve">
     <value>Classifiche in cui siete entrambi</value>
@@ -3650,6 +3653,9 @@
   <data name="net" xml:space="preserve">
     <value>totale</value>
   </data>
+  <data name="Net Score" xml:space="preserve">
+    <value>Punteggio totale</value>
+  </data>
   <data name="Never" xml:space="preserve">
     <value>Mai</value>
     <comment>Fallback for tournament EndDate when not set.</comment>
@@ -3824,6 +3830,9 @@
   </data>
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>Ancora nessun punteggio — registra il primo tentativo e questo si accende.</value>
+  </data>
+  <data name="no scores" xml:space="preserve">
+    <value>nessun punteggio</value>
   </data>
   <data name="No scores in this mix yet" xml:space="preserve">
     <value>Ancora nessun punteggio in questo Mix</value>

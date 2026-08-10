@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -941,6 +941,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Leaderboards</value>
+  </data>
+  <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
+    <value>Las tablas van por versión, y esta todavía no tiene su propia rotación.</value>
   </data>
   <data name="Boards you're both on" xml:space="preserve">
     <value>Marcadores en los que estáis los dos</value>
@@ -3621,6 +3624,9 @@
   <data name="net" xml:space="preserve">
     <value>neto</value>
   </data>
+  <data name="Net Score" xml:space="preserve">
+    <value>Score total</value>
+  </data>
   <data name="Never" xml:space="preserve">
     <value>Nunca</value>
   </data>
@@ -3794,6 +3800,9 @@
   </data>
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>Aún sin puntuación — registra tu primer intento y esto se enciende.</value>
+  </data>
+  <data name="no scores" xml:space="preserve">
+    <value>sin scores</value>
   </data>
   <data name="No scores in this mix yet" xml:space="preserve">
     <value>Aún no hay scores en esta versión</value>
