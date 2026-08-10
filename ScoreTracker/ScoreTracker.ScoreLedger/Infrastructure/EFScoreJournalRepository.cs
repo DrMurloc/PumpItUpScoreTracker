@@ -200,6 +200,13 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
     public async Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId,
         int limit, CancellationToken cancellationToken)
     {
+        // The board's row type is a UserPhoenixScore, whose score caps at 1,000,000 — and a
+        // legacy journal row's Score is an era score, three quarters of which are above that.
+        // Empty rather than a throw: nothing returns rows for a legacy mix today (LimboChart
+        // rows are inserted by hand and only for Phoenix charts), but the chart page passes the
+        // chart's own mix, so one hand-run INSERT on a legacy chart is all it would take.
+        if (mix.UsesLegacyScoring()) return Array.Empty<UserPhoenixScore>();
+
         var mixId = MixIds.For(mix);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         // Grouped in SQL and capped there: the aggregate is served entirely out of

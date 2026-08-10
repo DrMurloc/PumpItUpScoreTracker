@@ -3,6 +3,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.ScoreLedger.Contracts.Commands
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.SharedKernel.Models
 @using MediatR
 @using ScoreTracker.Application.Commands
@@ -367,7 +368,12 @@
             try
             {
                 var chart = await Mediator.Send(new GetChartQuery(_targetMix, best.Chart.Song.Name,best.Chart.Level,best.Chart.Type), cancellationToken);
-                await Mediator.Send(new UpdateXXBestAttemptCommand(chart.Id, best.BestAttempt?.LetterGrade, best.BestAttempt?.IsBroken ?? true,null, Mix: _targetMix), cancellationToken);
+                // Source is what tells the journal a bulk upload from a hand entry; the Phoenix
+                // twin passes CsvSource for the same reason. Without it every imported row reads
+                // as something the player typed, and "manual is authoritative" stops being true.
+                await Mediator.Send(new UpdateXXBestAttemptCommand(chart.Id, best.BestAttempt?.LetterGrade,
+                    best.BestAttempt?.IsBroken ?? true, null, Mix: _targetMix,
+                    Source: ScoreJournalEntry.CsvSource), cancellationToken);
             }
             catch (OperationCanceledException)
             {

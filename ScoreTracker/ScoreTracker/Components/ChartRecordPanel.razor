@@ -62,7 +62,9 @@
             {
                 <MudText Typo="Typo.body2" Class="chart-record-empty">@L["No score yet — record your first attempt and this lights up."]</MudText>
             }
-            @if (_ageDays != null)
+            @* Only ever under a score. A Phoenix record can exist with a null score, and the age
+               was rendering beneath "No score yet" for those. *@
+            @if (_ageDays != null && (_legacyBest != null || _best?.Score != null))
             {
                 <MudText Typo="Typo.caption" Class="chart-record-age">@L["Recorded {0} days ago", _ageDays]</MudText>
             }

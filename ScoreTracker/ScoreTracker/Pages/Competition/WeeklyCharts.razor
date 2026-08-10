@@ -230,7 +230,7 @@ else
         // that is where DUEL came from as Prime 2's daily step. Rotation does not fan out to
         // older mixes yet, so they get told that rather than shown somebody else's week.
         _mix = await UiSettings.GetSelectedMix();
-        _hasBoard = _mix is MixEnum.Phoenix or MixEnum.Phoenix2;
+        _hasBoard = _mix.HasWeeklyBoard();
         if (!_hasBoard) return;
 
         _charts = await ChartCatalog.GetCharts(_mix);
