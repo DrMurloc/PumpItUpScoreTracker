@@ -23,7 +23,8 @@ public static class ChartExport
     ///     <see cref="ChartSearchResult" /> deliberately: the page renders that projection on
     ///     every load and must not pay for reads only the CSV wants.
     /// </summary>
-    public sealed record ExportContext(string BaseUrl);
+    public sealed record ExportContext(string BaseUrl,
+        IReadOnlyDictionary<Guid, int>? PlayCounts = null);
 
     /// <summary>
     ///     Which mixes a column means anything on. Both the dialog and the endpoint resolve
@@ -34,7 +35,10 @@ public static class ChartExport
     {
         Always,
         PhoenixFamily,
-        LegacyFamily
+        LegacyFamily,
+
+        /// <summary>Phoenix 2 alone: the only mix whose journal is a gap-free play log.</summary>
+        Phoenix2Only
     }
 
     public sealed record Column(string Key, bool RequiresUser,
@@ -48,6 +52,7 @@ public static class ChartExport
         {
             Scope.PhoenixFamily => !legacy,
             Scope.LegacyFamily => legacy,
+            Scope.Phoenix2Only => mix == MixEnum.Phoenix2,
             _ => true
         }).ToArray();
     }
@@ -136,6 +141,12 @@ public static class ChartExport
             m => Num(PhoenixComboSolver.MaxComboFor(m.Judgements,
                 m.PhoenixScore == null ? null : (PhoenixScore)m.PhoenixScore.Value, r.Chart.NoteCount), "0")),
             Scope.PhoenixFamily),
+        // Journal rows for this chart. Absent from the sidecar means no rows at all, which is
+        // 0 rather than blank — the player holds a record here but nothing journaled it.
+        new("MyPlayCount", true, (r, c) => c.PlayCounts == null
+            ? string.Empty
+            : (c.PlayCounts.TryGetValue(r.Chart.Id, out var plays) ? plays : 0)
+            .ToString(CultureInfo.InvariantCulture), Scope.Phoenix2Only),
         new("MyBroken", true, (r, _) => Mine(r, m => m.IsBroken ? "true" : "false")),
         new("MyRecordedOn", true,
             (r, _) => Mine(r, m => m.RecordedOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty))

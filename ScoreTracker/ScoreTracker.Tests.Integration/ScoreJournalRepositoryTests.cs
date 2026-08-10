@@ -327,6 +327,41 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         Assert.Equal(100000, (int)Assert.Single(otherMix).Score);
     }
 
+    /// <summary>
+    ///     The count is per chart within one mix, and a chart nobody journaled is absent rather
+    ///     than zero. Mix scoping matters more than it looks: a returning song carries one
+    ///     ChartId across Phoenix and Phoenix 2, so an unscoped count would add the two eras
+    ///     together on exactly the charts a player is most likely to have played in both.
+    /// </summary>
+    [Fact]
+    public async Task ChartPlayCountsGroupPerChartWithinTheMix()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var stranger = await _seed.SeedUserAsync();
+        var played = await _seed.SeedChartAsync();
+        var once = await _seed.SeedChartAsync();
+        var untouched = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+
+        await repo.Append(Entry(userId, played, Now.AddDays(-2), 900000, mix: MixEnum.Phoenix2),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, played, Now.AddDays(-1), 920000, mix: MixEnum.Phoenix2),
+            CancellationToken.None);
+        await repo.Append(Entry(userId, played, Now, 950000, mix: MixEnum.Phoenix2), CancellationToken.None);
+        await repo.Append(Entry(userId, once, Now, 910000, mix: MixEnum.Phoenix2), CancellationToken.None);
+        // Same chart, other era — must not be counted into Phoenix 2's total.
+        await repo.Append(Entry(userId, played, Now, 880000), CancellationToken.None);
+        // Somebody else's plays on the same chart.
+        await repo.Append(Entry(stranger, played, Now, 870000, mix: MixEnum.Phoenix2), CancellationToken.None);
+
+        var counts = await repo.GetChartPlayCounts(userId, MixEnum.Phoenix2, CancellationToken.None);
+
+        Assert.Equal(3, counts[played]);
+        Assert.Equal(1, counts[once]);
+        Assert.DoesNotContain(untouched, counts.Keys);
+        Assert.Equal(2, counts.Count);
+    }
+
     private static ScoreJournalEntry Entry(Guid userId, Guid chartId, DateTimeOffset at, int score,
         Guid? sessionId = null, MixEnum mix = MixEnum.Phoenix, bool isBroken = false)
     {

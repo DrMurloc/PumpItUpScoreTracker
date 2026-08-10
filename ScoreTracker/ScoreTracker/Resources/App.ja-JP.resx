@@ -3625,6 +3625,9 @@
   <data name="My Phoenix score" xml:space="preserve">
     <value>自分のPhoenixスコア</value>
   </data>
+  <data name="My play count" xml:space="preserve">
+    <value>自分のプレー回数</value>
+  </data>
   <data name="My profile is private. I understand my username, avatar, and country will be visible on public comments." xml:space="preserve">
     <value>私のプロフィールは非公開です。公開コメントではユーザー名・アバター・国が表示されることを理解しています。</value>
   </data>

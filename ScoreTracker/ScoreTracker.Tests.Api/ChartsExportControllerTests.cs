@@ -11,6 +11,7 @@ using Moq;
 using ScoreTracker.Catalog.Contracts;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -44,9 +45,9 @@ public sealed class ChartsExportControllerTests
             .ReturnsAsync(new ChartSearchResultPage(new[] { MakeResult() }, 1));
     }
 
-    private static ChartSearchResult MakeResult()
+    private static ChartSearchResult MakeResult(Guid? chartId = null)
     {
-        var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix,
+        var chart = new Chart(chartId ?? Guid.NewGuid(), MixEnum.Phoenix,
             new Song("=SUM(A1), \"Danger\"", SongType.Arcade, new Uri("https://piu.test/a.png"),
                 TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
             ChartType.Double, 19, MixEnum.Phoenix, null, 700, new HashSet<Skill>());
@@ -152,6 +153,45 @@ public sealed class ChartsExportControllerTests
         var expected = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, true)
             .GetScore(MakeResult().Chart, 950000, PhoenixPlate.RoughGame, false);
         Assert.Equal(expected.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture), lines[1]);
+    }
+
+    [Fact]
+    public async Task PlayCountReadsTheJournalOnPhoenix2Only()
+    {
+        var user = Guid.NewGuid();
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        _currentUser.SetupGet(c => c.User).Returns(new User(
+            user, "Tester", true, null, new Uri("https://piu.test/a.png"), null));
+        var chartId = Guid.NewGuid();
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartSearchResultPage(new[] { MakeResult(chartId) }, 1));
+        _mediator.Setup(m => m.Send(It.IsAny<GetPlayerChartPlayCountsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, int> { [chartId] = 7 });
+
+        var result = await BuildController("?Mix=Phoenix2&Columns=MyPlayCount").Export(CancellationToken.None);
+
+        var lines = Content(result).TrimEnd().Split('\n').Select(l => l.TrimEnd()).ToArray();
+        Assert.Equal("MyPlayCount", lines[0]);
+        Assert.Equal("7", lines[1]);
+    }
+
+    /// <summary>
+    ///     Phoenix's journal is mostly 2026-06 backfill — one row per record — so a count there
+    ///     would read 1 for a chart played two hundred times. The column is not offered, and
+    ///     the journal is not read at all.
+    /// </summary>
+    [Fact]
+    public async Task PlayCountIsNotOfferedOnPhoenixAndCostsNoRead()
+    {
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        _currentUser.SetupGet(c => c.User).Returns(new User(
+            Guid.NewGuid(), "Tester", true, null, new Uri("https://piu.test/a.png"), null));
+
+        var result = await BuildController("?Mix=Phoenix&Columns=Song,MyPlayCount").Export(CancellationToken.None);
+
+        Assert.Equal("Song", Content(result).Split('\n')[0].TrimEnd());
+        _mediator.Verify(m => m.Send(It.IsAny<GetPlayerChartPlayCountsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

@@ -3597,6 +3597,9 @@
   <data name="My Phoenix score" xml:space="preserve">
     <value>내 Phoenix 점수</value>
   </data>
+  <data name="My play count" xml:space="preserve">
+    <value>내 플레이 횟수</value>
+  </data>
   <data name="My profile is private. I understand my username, avatar, and country will be visible on public comments." xml:space="preserve">
     <value>제 프로필은 비공개입니다. 공개 댓글에서는 사용자 이름, 아바타, 국가가 보인다는 점을 이해합니다.</value>
   </data>

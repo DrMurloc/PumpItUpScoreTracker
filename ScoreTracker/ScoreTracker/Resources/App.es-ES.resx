@@ -3597,6 +3597,9 @@
   <data name="My Phoenix score" xml:space="preserve">
     <value>Mi score de Phoenix</value>
   </data>
+  <data name="My play count" xml:space="preserve">
+    <value>Mis intentos</value>
+  </data>
   <data name="My profile is private. I understand my username, avatar, and country will be visible on public comments." xml:space="preserve">
     <value>Mi perfil es privado. Entiendo que mi nombre de usuario, mi avatar y mi país serán visibles en los comentarios públicos.</value>
   </data>

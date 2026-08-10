@@ -77,6 +77,14 @@ internal interface IScoreJournalRepository
     Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId, int limit,
         CancellationToken cancellationToken);
 
+    /// <summary>
+    ///     Journal rows per chart for one player in one mix. Charts with no row are absent, not
+    ///     zero. Reads the (UserId, MixId, ChartId, OccurredAt) index end to end, so the whole
+    ///     mix costs one grouped scan of that player's slice.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> GetChartPlayCounts(Guid userId, MixEnum mix,
+        CancellationToken cancellationToken);
+
     /// <summary>Every play one session wrote, for the undo preview and the replay that follows.</summary>
     Task<IReadOnlyList<ScoreJournalEntry>> GetSessionEntries(Guid userId, Guid sessionId,
         CancellationToken cancellationToken);

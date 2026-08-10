@@ -2,6 +2,7 @@ using System.Text;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
@@ -50,7 +51,12 @@ public class ChartsExportController : Controller
 
 
         var page = await _mediator.Send(query, cancellationToken);
-        var context = new ChartExport.ExportContext($"{Request.Scheme}://{Request.Host}");
+        // Only when a column actually asked: the journal read is the one thing here that is
+        // not already in hand, and most exports never want it.
+        var playCounts = columns.Any(c => c.Scope == ChartExport.Scope.Phoenix2Only) && userId != null
+            ? await _mediator.Send(new GetPlayerChartPlayCountsQuery(userId.Value, mix), cancellationToken)
+            : null;
+        var context = new ChartExport.ExportContext($"{Request.Scheme}://{Request.Host}", playCounts);
         var csv = ChartExport.Write(page.Results, columns, context);
 
         var scopeSlug = ChartSlugs.MixSlug(mix);
