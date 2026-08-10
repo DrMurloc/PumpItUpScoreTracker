@@ -53,7 +53,9 @@ pool contribution and no title to chase. `PumbilityTitleTrack.razor` renders it;
   - `fitGrade ≤ what you already score here` (median, needs 5+ scored charts) → **on pace**;
     *"~N more charts"* at your own pace.
   - otherwise → **grade up**: *"Pass N charts … with {fitGrade} or better."*
-- **serves** = the rung a folder of **AA** clears lands on (`50 × Base(effL) × 1.36`). AA (925k) is
+- **serves** = the rung a folder of **AA** clears lands on (`50 × Base(effL) × AA`, where AA is 1.36
+  on a Single and 1.37 on a Double — read from the config for the folder's own type, never
+  hand-copied, because the two disagree). AA (925k) is
   the realistic average pass — not A (900k). Reference grade is deliberately different from the
   personalized median: "serves" is the folder's objective ladder slot, the caption is yours.
 - **Base curve:** `Phoenix2BaseRating` (linear +5/level, kink to +10 above 24); singles price one

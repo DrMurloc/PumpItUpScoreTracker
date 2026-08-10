@@ -48,17 +48,38 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   per-chart off the official breakdown page `my_page/pumbility.php` and reproduced to the
   cent by `LiveSite/PumbilityOfficialReconciliationTests`): singles price one level UP the
   base curve (an S17 is worth `Base(18)`; the pre-launch xlsx singles rows priced at
-  `Base(level)` are superseded), charts below level 10 price at ZERO, and the sub-AAA ladder
-  re-tuned: A = 1.28 (live per-chart read), A+ = 1.33 and AA = 1.36 (solved the same day by
-  reconstructing 19 mirrored singles-tab players' pools from their chart-board rows in SQL —
-  the pre-launch 1.35/1.37 produce impossible negative plate residuals for stable players).
-  Descending steps: −0.01 (S tier), −0.02 (AAA tier), −0.03 (AA/A+), −0.05 (A+→A).** Ladder
-  now 1.28 (A) → 1.50 (SSS+); plates RG 0.000 → PG +0.020
-  (doubles-verified table applied to both types — the community's singles-specific UG/EG/RG values
-  treated as data error, owner call 2026-07-09; TODO in `ScoringConfiguration`). Grades below A
-  extended at the last observed −0.05 step, unverified. Broken plays never count (owner-confirmed,
-  and the breakdown page prices them 0.00). Everything dispatches
+  `Base(level)` are superseded), charts below level 10 price at ZERO.** Broken plays never
+  count (owner-confirmed, and the breakdown page prices them 0.00). Everything dispatches
   through `ScoringConfiguration.PumbilityScoring(mix, …)`; Phoenix arm byte-identical.
+
+- **BOTH constant tables are per chart type (2026-08-10).** Production import telemetry
+  (`ScoringObservations`, 705 per-chart rows off live pools) priced all sixteen plate ×
+  chart-type cells and settled the sub-AAA ladder. A Single and a Double disagree in four
+  places and nowhere else:
+
+  | | Singles | Doubles |
+  |---|---|---|
+  | Extreme Game | **0.014** | 0.012 |
+  | Ultimate Game | **0.017** | 0.016 |
+  | A+ | **1.33** | 1.35 |
+  | AA | **1.36** | 1.37 |
+
+  Everything else is shared: plates RG 0.000 → PG +0.020, and the ladder F 0.90 · D 1.00 ·
+  C 1.10 · B 1.20 · A 1.28 · AA+ 1.39 · AAA 1.41 · AAA+ 1.43 · S 1.45 → SSS+ 1.50.
+
+  Two July conclusions were wrong for one type each, and in the same way. The community's
+  singles plate values were called a data error (owner call 2026-07-09) — two of the three
+  were right, and only the Rough Game −0.010 stays refuted. The A+/AA re-derivation to
+  1.33/1.36 was reconstructed from **singles-tab** players, so it was answering for one chart
+  type while overwriting the value of the other; the pre-launch 1.35/1.37 it dismissed as
+  location-test tuning were doubles observations, and the live page served them again
+  unprompted. **A pool reconstructed from one chart type cannot settle a constant for both.**
+
+  Confidence is not uniform. The plate split rests on 81 rows with zero variance; each
+  doubles grade rests on a single chart. B (1.20) and D (1.00) are live singles reads that
+  both types use because no Double has ever been priced at either; C and F have never been
+  priced at all and interpolate the confirmed rungs at the 0.10 step B and D describe. F had
+  to move regardless — at its old 1.08 it would pay more than a confirmed D.
   `SkillRating` on P2 rows is the merged top-50, so it no longer equals
   `SinglesRating + DoublesRating`; S/D pool gains mint their own
   milestones (P2 only). Exit path for constant adjustments: edit the config, hit the admin
