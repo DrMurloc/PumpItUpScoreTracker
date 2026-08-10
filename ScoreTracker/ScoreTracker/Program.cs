@@ -40,6 +40,7 @@ using ScoreTracker.Web.HostedServices;
 using ScoreTracker.Web.Security;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
+using ScoreTracker.Web.Services.Localization;
 using ScoreTracker.Web.Services.UiNotifications;
 using ScoreTracker.Web.Shared;
 using ScoreTracker.Web.Swagger;
@@ -390,6 +391,10 @@ var localization = new RequestLocalizationOptions()
     .AddSupportedCultures(SupportedCultures.Codes())
     .AddSupportedUICultures(SupportedCultures.Codes())
     .SetDefaultCulture(SupportedCultures.Default);
+// Rank 2, above the cookie: a signed-in player's saved language is the answer. Insert, not Add —
+// position IS the ranking, and only an explicit ?culture= (index 0, a deliberately one-request
+// preview) may outrank what the account says.
+localization.RequestCultureProviders.Insert(1, new UserSettingRequestCultureProvider());
 // Appended AFTER the three stock providers, so it only speaks when they found nothing: an
 // explicit ?culture= or the saved cookie still wins, and an exactly-supported Accept-Language
 // tag is still matched by the stock header provider. What reaches here is the case that used
