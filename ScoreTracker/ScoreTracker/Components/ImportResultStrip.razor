@@ -57,7 +57,14 @@
     // An interrupted run DID finish, in the sense that something adjudicated it — it just did not
     // finish its work. "Unfinished" is the honest word for both that and the never-adjudicated
     // case; "Couldn't finish" belongs to the runs that actually failed at something.
-    private string Label => Attempt.NeverFinished || Attempt.Outcome == ImportOutcome.Interrupted
+    //
+    // Pattern-matched rather than dereferenced through `Attempt!` like the members below: the two
+    // analyzers disagree about this file. Sonar's S8970 reads .razor as having nullable warnings
+    // off and objects to the `!`; Roslyn compiles the generated C# with them on and raises CS8602
+    // without it. A pattern needs neither, so it satisfies both instead of trading one for the
+    // other. Null cannot actually reach here — the whole block renders inside `Attempt is not
+    // null` — so the false arm is unreachable rather than a fallback.
+    private string Label => Attempt is { NeverFinished: true } or { Outcome: ImportOutcome.Interrupted }
         ? L["Unfinished"]
         : L["Couldn't finish"];
 
