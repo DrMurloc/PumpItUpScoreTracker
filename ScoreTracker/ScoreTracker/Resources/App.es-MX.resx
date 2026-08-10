@@ -573,6 +573,9 @@
   <data name="All tools · {0}" xml:space="preserve">
     <value>Todas las herramientas · {0}</value>
   </data>
+  <data name="All {0}" xml:space="preserve">
+    <value>Todo ({0})</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>Todas las {0} en {1} o mejor</value>
   </data>

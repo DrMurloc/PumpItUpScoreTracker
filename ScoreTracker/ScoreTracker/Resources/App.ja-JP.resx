@@ -575,6 +575,9 @@
   <data name="All tools · {0}" xml:space="preserve">
     <value>すべてのツール · {0}</value>
   </data>
+  <data name="All {0}" xml:space="preserve">
+    <value>すべて {0}</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>{0} すべて {1} 以上</value>
   </data>

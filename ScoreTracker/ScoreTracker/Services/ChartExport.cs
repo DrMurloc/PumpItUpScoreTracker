@@ -21,8 +21,32 @@ public static class ChartExport
     /// </summary>
     public sealed record ExportContext(string BaseUrl);
 
+    /// <summary>
+    ///     Which mixes a column means anything on. Both the dialog and the endpoint resolve
+    ///     through <see cref="ColumnsFor" />, so a column the picker hides can never arrive in
+    ///     the file through a saved setting.
+    /// </summary>
+    public enum Scope
+    {
+        Always,
+        PhoenixFamily,
+        LegacyFamily
+    }
+
     public sealed record Column(string Key, bool RequiresUser,
-        Func<ChartSearchResult, ExportContext, string> Value);
+        Func<ChartSearchResult, ExportContext, string> Value, Scope Scope = Scope.Always);
+
+    /// <summary>The columns that carry meaning in this mix, in registry order.</summary>
+    public static IReadOnlyList<Column> ColumnsFor(MixEnum mix)
+    {
+        var legacy = mix.UsesLegacyScoring();
+        return Columns.Where(c => c.Scope switch
+        {
+            Scope.PhoenixFamily => !legacy,
+            Scope.LegacyFamily => legacy,
+            _ => true
+        }).ToArray();
+    }
 
     private static string Num<T>(T? value, string format = "0.##") where T : struct, IFormattable
     {
@@ -59,11 +83,16 @@ public static class ChartExport
         new("CommunityVoteRating", false, (r, _) => Num(r.CommunityVoteRating)),
         new("ScoreCount", false, (r, _) => r.ScoreCount.ToString(CultureInfo.InvariantCulture)),
         new("PgCount", false, (r, _) => r.PgCount.ToString(CultureInfo.InvariantCulture)),
-        new("MyPhoenixScore", true, (r, _) => Mine(r, m => Num(m.PhoenixScore, "0"))),
-        new("MyPhoenixGrade", true, (r, _) => Mine(r, m => m.PhoenixGrade?.GetName() ?? string.Empty)),
-        new("MyPhoenixPlate", true, (r, _) => Mine(r, m => m.PhoenixPlate?.GetShorthand() ?? string.Empty)),
-        new("MyLegacyGrade", true, (r, _) => Mine(r, m => m.LegacyGrade?.ToString() ?? string.Empty)),
-        new("MyLegacyScore", true, (r, _) => Mine(r, m => Num(m.LegacyScore, "0"))),
+        // Family-scoped: a Phoenix column on an XX search only ever produced a blank column,
+        // and offering it read as a bug rather than as absence.
+        new("MyPhoenixScore", true, (r, _) => Mine(r, m => Num(m.PhoenixScore, "0")), Scope.PhoenixFamily),
+        new("MyPhoenixGrade", true, (r, _) => Mine(r, m => m.PhoenixGrade?.GetName() ?? string.Empty),
+            Scope.PhoenixFamily),
+        new("MyPhoenixPlate", true, (r, _) => Mine(r, m => m.PhoenixPlate?.GetShorthand() ?? string.Empty),
+            Scope.PhoenixFamily),
+        new("MyLegacyGrade", true, (r, _) => Mine(r, m => m.LegacyGrade?.ToString() ?? string.Empty),
+            Scope.LegacyFamily),
+        new("MyLegacyScore", true, (r, _) => Mine(r, m => Num(m.LegacyScore, "0")), Scope.LegacyFamily),
         new("MyBroken", true, (r, _) => Mine(r, m => m.IsBroken ? "true" : "false")),
         new("MyRecordedOn", true,
             (r, _) => Mine(r, m => m.RecordedOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty))

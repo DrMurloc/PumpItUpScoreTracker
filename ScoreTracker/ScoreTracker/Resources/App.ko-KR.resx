@@ -573,6 +573,9 @@
   <data name="All tools · {0}" xml:space="preserve">
     <value>모든 도구 · {0}</value>
   </data>
+  <data name="All {0}" xml:space="preserve">
+    <value>전체 {0}개</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>{0} 모두 {1} 이상</value>
   </data>

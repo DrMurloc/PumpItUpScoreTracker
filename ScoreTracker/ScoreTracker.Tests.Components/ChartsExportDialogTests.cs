@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -31,7 +32,8 @@ public sealed class ChartsExportDialogTests : ComponentTestBase
     }
 
     /// <summary>Inline MudDialogs render through the provider, so the fragment hosts both.</summary>
-    private IRenderedFragment RenderDialog(bool signedIn, IReadOnlyDictionary<string, object?>? filters = null)
+    private IRenderedFragment RenderDialog(bool signedIn, IReadOnlyDictionary<string, object?>? filters = null,
+        MixEnum mix = MixEnum.Phoenix)
     {
         return Render(builder =>
         {
@@ -42,7 +44,7 @@ public sealed class ChartsExportDialogTests : ComponentTestBase
             builder.AddAttribute(3, nameof(ChartsExportDialog.FilterParameters),
                 filters ?? new Dictionary<string, object?> { ["LevelMin"] = 19, ["Type"] = "Double" });
             builder.AddAttribute(4, nameof(ChartsExportDialog.TotalCount), 212);
-            builder.AddAttribute(5, nameof(ChartsExportDialog.Mix), MixEnum.Phoenix);
+            builder.AddAttribute(5, nameof(ChartsExportDialog.Mix), mix);
             builder.AddAttribute(6, nameof(ChartsExportDialog.SignedIn), signedIn);
             builder.CloseComponent();
         });
@@ -98,5 +100,61 @@ public sealed class ChartsExportDialogTests : ComponentTestBase
         var cut = RenderDialog(signedIn: true);
 
         cut.WaitForAssertion(() => Assert.Contains("My Phoenix score", cut.Markup));
+    }
+
+    [Fact]
+    public async Task AGroupHeaderCountsWhatItOffersAndTicksAllOfIt()
+    {
+        var cut = RenderDialog(signedIn: false);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-export-all")));
+
+        var chartGroup = cut.FindAll(".srp-export-all")[0];
+        Assert.Equal("All 17", chartGroup.TextContent.Trim());
+
+        await chartGroup.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        cut.WaitForAssertion(() =>
+        {
+            var href = cut.FindAll("a").Single(a => a.TextContent.Contains("Download CSV")).GetAttribute("href")!;
+            // Every chart column, still in registry order rather than press order.
+            Assert.Contains(Uri.EscapeDataString("ChartId,Song,ChartUrl,Artist"), href);
+            Assert.Contains(Uri.EscapeDataString("NPS,Badges"), href);
+        });
+    }
+
+    [Fact]
+    public async Task PressingAFullGroupAgainClearsIt()
+    {
+        var cut = RenderDialog(signedIn: false);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-export-all")));
+
+        var chartGroup = cut.FindAll(".srp-export-all")[0];
+        await chartGroup.ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+        await cut.FindAll(".srp-export-all")[0].ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        // Only that group empties — the Community default is untouched, so this is not a
+        // reset button wearing a group's label.
+        cut.WaitForAssertion(() =>
+        {
+            var selected = cut.FindAll(".srp-badge-opt-sel").Select(o => o.TextContent.Trim()).ToArray();
+            Assert.Equal(new[] { "✓ Pass Difficulty" }, selected);
+        });
+    }
+
+    /// <summary>
+    ///     The group used to offer both families on every mix and return the wrong one blank.
+    ///     A column the picker hides must also be undownloadable, which is why both sides
+    ///     resolve through ChartExport.ColumnsFor.
+    /// </summary>
+    [Fact]
+    public void MyColumnsAreScopedToTheSearchedMixScoringFamily()
+    {
+        var phoenix = RenderDialog(signedIn: true);
+        phoenix.WaitForAssertion(() => Assert.Contains("My Phoenix score", phoenix.Markup));
+        Assert.DoesNotContain("My legacy grade", phoenix.Markup);
+
+        var legacy = RenderDialog(signedIn: true, mix: MixEnum.XX);
+        legacy.WaitForAssertion(() => Assert.Contains("My legacy grade", legacy.Markup));
+        Assert.DoesNotContain("My Phoenix score", legacy.Markup);
     }
 }

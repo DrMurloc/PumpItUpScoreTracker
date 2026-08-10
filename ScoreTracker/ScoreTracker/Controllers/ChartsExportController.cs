@@ -40,7 +40,9 @@ public class ChartsExportController : Controller
         var requested = Request.Query["Columns"].ToString()
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var wanted = requested.Length == 0 ? ChartExport.DefaultColumns : requested;
-        var columns = ChartExport.Columns
+        // ColumnsFor drops what the mix cannot carry, so a stale saved setting naming a
+        // Phoenix column cannot put an empty column into an XX file.
+        var columns = ChartExport.ColumnsFor(mix)
             .Where(c => wanted.Contains(c.Key, StringComparer.OrdinalIgnoreCase))
             .Where(c => !c.RequiresUser || userId != null)
             .ToArray();

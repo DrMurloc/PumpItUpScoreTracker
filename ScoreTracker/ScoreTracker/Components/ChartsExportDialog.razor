@@ -15,10 +15,14 @@
     <DialogContent>
         <div class="srp-export">
             <MudText Typo="Typo.body2" Class="srp-export-count">@L["{0} charts · current filters", TotalCount.ToString("N0")]</MudText>
-            @foreach (var (group, keys) in Groups)
+            @foreach (var (group, keys) in VisibleGroups)
             {
-                if (group == "My columns" && !SignedIn) continue;
-                <MudText Typo="Typo.overline">@L[group]</MudText>
+                <div class="srp-export-grp">
+                    <MudText Typo="Typo.overline">@L[group]</MudText>
+                    <button type="button" class="srp-export-all" @onclick="() => ToggleGroup(keys)">
+                        @L["All {0}", keys.Count]
+                    </button>
+                </div>
                 <div class="srp-export-columns">
                     @foreach (var key in keys)
                     {
@@ -31,13 +35,13 @@
                     }
                 </div>
             }
-            <MudText Typo="Typo.caption" Class="srp-export-file">@FileName · @L["{0} columns", _columns.Count]</MudText>
+            <MudText Typo="Typo.caption" Class="srp-export-file">@FileName · @L["{0} columns", _selectedCount]</MudText>
         </div>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Text" OnClick="() => VisibleChanged.InvokeAsync(false)">@L["Close"]</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
-                   Href="@ExportUrl" Target="_top" Disabled="_columns.Count == 0">@L["Download CSV"]</MudButton>
+                   Href="@ExportUrl" Target="_top" Disabled="_selectedCount == 0">@L["Download CSV"]</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -53,6 +57,11 @@
 
     private HashSet<string> _columns = new(ChartExport.DefaultColumns, StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    ///     Group membership only — which of a group's keys are offered is
+    ///     <see cref="ChartExport.ColumnsFor" />'s call, so the picker and the endpoint can
+    ///     never disagree about what a mix carries.
+    /// </summary>
     private static readonly (string Group, string[] Keys)[] Groups =
     {
         ("Chart columns", new[]
@@ -73,6 +82,19 @@
         })
     };
 
+    private IReadOnlyList<(string Group, IReadOnlyList<string> Keys)> VisibleGroups
+    {
+        get
+        {
+            var offered = ChartExport.ColumnsFor(Mix).Select(c => c.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return Groups
+                .Where(g => g.Group != "My columns" || SignedIn)
+                .Select(g => (g.Group, (IReadOnlyList<string>)g.Keys.Where(offered.Contains).ToArray()))
+                .Where(g => g.Item2.Count > 0)
+                .ToArray();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         var savedColumns = await UiSettings.GetSetting(ColumnsSettingKey);
@@ -84,6 +106,14 @@
     private async Task ToggleColumn(string key)
     {
         if (!_columns.Remove(key)) _columns.Add(key);
+        await UiSettings.SetSetting(ColumnsSettingKey, string.Join(',', _columns));
+    }
+
+    /// <summary>All-or-none for a group: anything unticked means the press ticks the rest.</summary>
+    private async Task ToggleGroup(IReadOnlyList<string> keys)
+    {
+        if (keys.All(_columns.Contains)) _columns.ExceptWith(keys);
+        else _columns.UnionWith(keys);
         await UiSettings.SetSetting(ColumnsSettingKey, string.Join(',', _columns));
     }
 
@@ -104,9 +134,12 @@
         }
     }
 
+    /// <summary>What the file will actually carry — the picks this mix offers, not every pick held.</summary>
+    private int _selectedCount => OrderedColumns.Count();
+
     /// <summary>Registry order, so the file's column order is stable regardless of click order.</summary>
     private IEnumerable<string> OrderedColumns =>
-        ChartExport.Columns.Where(c => _columns.Contains(c.Key)).Select(c => c.Key);
+        ChartExport.ColumnsFor(Mix).Where(c => _columns.Contains(c.Key)).Select(c => c.Key);
 
     internal static string ColumnLabel(string key)
     {
