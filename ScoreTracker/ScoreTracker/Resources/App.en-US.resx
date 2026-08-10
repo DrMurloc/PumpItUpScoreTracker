@@ -759,6 +759,9 @@
   <data name="Auto Submit Turned On" xml:space="preserve">
     <value>Auto-submit is on. Imports will post here for you.</value>
   </data>
+  <data name="Automatic" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
   <data name="Avatar" xml:space="preserve">
 	  <value>Avatar</value>
 	  <comment>Avatar</comment>
