@@ -47,6 +47,18 @@ public static class MixCapabilities
     }
 
     /// <summary>
+    ///     Whether a weekly board rotates for this mix. Every table behind the feature is
+    ///     already keyed per mix and the rollup runs on any of them, but rotation publishes to
+    ///     the Phoenix generation only — and the entry type cannot hold an era score yet
+    ///     (docs/design/legacy-mixes.md). Off the nav until it can, rather than a link to a
+    ///     board that will not exist for a while.
+    /// </summary>
+    public static bool HasWeeklyBoard(this MixEnum mix)
+    {
+        return !mix.UsesLegacyScoring();
+    }
+
+    /// <summary>
     ///     The Phoenix score and rating calculators answer Phoenix questions. The lifebar
     ///     calculator and the mix diff are deliberately absent: neither reads the selected mix,
     ///     so both stand on every mix.

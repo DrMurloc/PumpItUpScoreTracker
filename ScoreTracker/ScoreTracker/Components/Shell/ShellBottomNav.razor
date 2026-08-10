@@ -1,4 +1,5 @@
 @namespace ScoreTracker.Web.Components
+@using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services
 
 @* Thumb-reach primary nav at phone/tablet widths; desktop uses the top nav. Pages may register
@@ -12,7 +13,10 @@
         <a href="/" data-href="/" class="@BnClass("/")"><MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small"></MudIcon><span>@L["Play"]</span></a>
     }
     <a href="/TierLists" data-href="/TierLists" class="@BnClass("/TierLists")"><MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small"></MudIcon><span>@L["Tiers"]</span></a>
+    @if (Model.CurrentMix.HasWeeklyBoard())
+    {
     <a href="/WeeklyCharts" data-href="/WeeklyCharts" class="@BnClass("/WeeklyCharts")"><MudIcon Icon="@Icons.Material.Filled.ViewWeek" Size="Size.Small"></MudIcon><span>@L["Weekly"]</span></a>
+    }
     @if (!Model.IsLoggedIn)
     {
         @* The front door is a Razor Page, not a Blazor route. *@

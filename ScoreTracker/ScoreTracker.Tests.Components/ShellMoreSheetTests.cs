@@ -194,7 +194,6 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
 
         var hrefs = AllHrefs(sheet);
         Assert.Contains("/Charts", hrefs);
-        Assert.Contains("/WeeklyCharts", hrefs);
         Assert.Contains("/Communities", hrefs);
         Assert.Contains("/ChartRandomizer", hrefs);
         Assert.Contains("/Rivals", hrefs);
@@ -223,6 +222,9 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
         Assert.DoesNotContain("/PhoenixCalculator", hrefs);
         Assert.DoesNotContain("/RatingCalculator", hrefs);
         Assert.DoesNotContain("Leaderboards", GroupNames(sheet));
+        // Rotation publishes to the Phoenix generation only, and the entry type cannot hold
+        // an era score yet — off the nav rather than a link to a board that is not coming soon.
+        Assert.DoesNotContain("/WeeklyCharts", hrefs);
     }
 
     /// <summary>
@@ -251,6 +253,7 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
             GroupNames(sheet));
 
         var hrefs = AllHrefs(sheet);
+        Assert.Contains("/WeeklyCharts", hrefs);
         Assert.Contains("/Pumbility", hrefs);
         Assert.Contains("/Titles", hrefs);
         Assert.Contains("/PhoenixCalculator", hrefs);

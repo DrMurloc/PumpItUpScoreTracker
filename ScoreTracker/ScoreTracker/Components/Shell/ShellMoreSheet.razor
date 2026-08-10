@@ -59,7 +59,10 @@
                 </div>
                 <div class="more-group-body">
                     <ShellMenuItem Href="/Rivals" Icon="@Icons.Material.Filled.Whatshot">@L["Rivals"]</ShellMenuItem>
-                    <ShellMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</ShellMenuItem>
+                    @if (Model.CurrentMix.HasWeeklyBoard())
+                    {
+                        <ShellMenuItem Href="/WeeklyCharts" Icon="@Icons.Material.Filled.ViewWeek">@L["Weekly Charts"]</ShellMenuItem>
+                    }
                     <ShellMenuItem Href="/ChartRandomizer" Icon="@Icons.Material.Filled.Casino">@L["Chart Randomizer"]</ShellMenuItem>
                     <ShellMenuItem Href="/Tournaments/MarchOfMurlocs" Icon="@Icons.Material.Filled.Alarm">March of Murlocs</ShellMenuItem>
                     @foreach (var tourney in Model.HighlightedEvents)
