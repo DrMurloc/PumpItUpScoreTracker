@@ -56,8 +56,14 @@ internal interface IImportResultRepository
     Task MarkInterrupted(Guid id, DateTimeOffset finishedAt, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     The newest interrupted run this player has not yet been told about, or null. Drives the
+    ///     The interrupted run this player has not yet been told about, or null. Drives the
     ///     one-time notice.
+    ///     <para>
+    ///         Only ever their **most recent** run qualifies. The notice says "import again", so a
+    ///         later run of any kind makes it stale advice — and since a run is only marked
+    ///         Interrupted at the next boot, a player who imports again before that boot would
+    ///         otherwise be told to do the thing they just did.
+    ///     </para>
     /// </summary>
     Task<ImportAttemptRecord?> GetUnacknowledgedInterrupted(Guid userId,
         CancellationToken cancellationToken = default);

@@ -85,12 +85,17 @@ internal sealed class EFImportResultRepository : IImportResultRepository
         CancellationToken cancellationToken = default)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        var interrupted = ImportOutcome.Interrupted.ToString();
+        // The player's LATEST run, then a check on what it is — not "their latest interrupted
+        // run". The notice tells somebody to import again, so any run after the interrupted one
+        // makes it stale advice: they already did, and being told otherwise reads as the site
+        // having lost track. Marking Interrupted happens at the next boot, so a player who
+        // imports again before that boot lands exactly here.
         var row = await database.Set<ImportResultEntity>()
-            .Where(r => r.UserId == userId && r.Outcome == interrupted && r.AcknowledgedAt == null)
+            .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.StartedAt)
             .FirstOrDefaultAsync(cancellationToken);
-        return row is null ? null : Map(row);
+        if (row is null || row.AcknowledgedAt != null) return null;
+        return row.Outcome == ImportOutcome.Interrupted.ToString() ? Map(row) : null;
     }
 
     public async Task Acknowledge(Guid id, DateTimeOffset at, CancellationToken cancellationToken = default)

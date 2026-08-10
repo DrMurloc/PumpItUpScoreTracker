@@ -32,8 +32,19 @@ internal sealed class ImportResultEntity
     /// </summary>
     public DateTimeOffset? FinishedAt { get; set; }
 
-    /// <summary>Completed | PiuGameError | PiuScoresError. Never exception text.</summary>
-    [MaxLength(16)]
+    /// <summary>
+    ///     Completed | PiuGameError | CredentialRejected | PiuScoresError | Interrupted. Never
+    ///     exception text.
+    ///     <para>
+    ///         ⚠ Sized for the enum's NAMES, which is why 16 was not enough:
+    ///         <c>CredentialRejected</c> is 18 characters, so closing a rejected-credential run
+    ///         threw a truncation error inside the consumer's <c>finally</c> — leaving the run
+    ///         open and reading, on the player's screen, as "never reported back" rather than
+    ///         "check your password". A new member longer than this needs the column widened
+    ///         with it.
+    ///     </para>
+    /// </summary>
+    [MaxLength(32)]
     public string? Outcome { get; set; }
 
     /// <summary>
