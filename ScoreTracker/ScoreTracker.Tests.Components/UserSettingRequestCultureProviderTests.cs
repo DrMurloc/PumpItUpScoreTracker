@@ -114,6 +114,25 @@ public sealed class UserSettingRequestCultureProviderTests
     }
 
     /// <summary>
+    ///     A stored value is not always one of the nine exact tags: rows written before the
+    ///     es → es-ES split still read "es". Declining on those would drop the player back to
+    ///     their browser, which is the symptom this provider exists to remove.
+    /// </summary>
+    [Theory]
+    [InlineData("es", "es-ES")]
+    [InlineData(" es-ES ", "es-ES")]
+    [InlineData("pt-PT", "pt-BR")]
+    public async Task PlacesALegacyOrUnlistedStoredCode(string stored, string expected)
+    {
+        var context = Context(SignedIn(Guid.NewGuid()),
+            new Dictionary<string, string> { ["Culture"] = stored });
+
+        var result = await new UserSettingRequestCultureProvider().DetermineProviderCultureResult(context);
+
+        Assert.Equal(expected, Assert.Single(result!.UICultures).Value);
+    }
+
+    /// <summary>
     ///     This runs on every request, static assets included, so it has to be a cache read. The
     ///     entry is the shell's own — evicted together whenever a setting is saved.
     /// </summary>

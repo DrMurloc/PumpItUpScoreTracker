@@ -29,8 +29,12 @@ public sealed class UserSettingRequestCultureProvider : RequestCultureProvider
         if (userId == null) return null;
 
         var settings = await Settings(httpContext, userId.Value);
+        // ResolveClosest rather than NormalizeOrNull: a stored value is not always one of the
+        // nine exact tags. It can predate the es → es-ES split, or carry whitespace, and a row
+        // reading "es" that resolves to nothing would drop that player back to their browser —
+        // the exact symptom this provider exists to fix. Genuine nonsense still returns null.
         var saved = settings.TryGetValue(SettingKey, out var stored)
-            ? SupportedCultures.NormalizeOrNull(stored)
+            ? SupportedCultures.ResolveClosest(stored)
             : null;
 
         // Declining leaves the rest of the chain exactly as it was: cookie, then browser.
