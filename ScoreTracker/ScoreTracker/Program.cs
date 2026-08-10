@@ -318,28 +318,6 @@ app.Use(async (context, next) =>
 await app.Services.ApplyOrReportMigrationsAsync(builder.Configuration["AutoMigrate"] == "true");
 
 
-var localization = new RequestLocalizationOptions()
-    .AddSupportedCultures(SupportedCultures.Codes())
-    .AddSupportedUICultures(SupportedCultures.Codes())
-    .SetDefaultCulture(SupportedCultures.Default);
-// Appended AFTER the three stock providers, so it only speaks when they found nothing: an
-// explicit ?culture= or the saved cookie still wins, and an exactly-supported Accept-Language
-// tag is still matched by the stock header provider. What reaches here is the case that used
-// to fall through to English — a bare "es"/"ja", or a region we carry no catalogue for
-// (es-CL, pt-PT, fr-CA). ResolveClosest maps those down; anything it can't place returns
-// null, which leaves the default culture exactly as before.
-localization.RequestCultureProviders.Add(new CustomRequestCultureProvider(context =>
-{
-    foreach (var language in context.Request.GetTypedHeaders().AcceptLanguage
-                 .OrderByDescending(l => l.Quality ?? 1d))
-    {
-        var resolved = SupportedCultures.ResolveClosest(language.Value.Value);
-        if (resolved != null) return Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult(resolved));
-    }
-
-    return Task.FromResult<ProviderCultureResult?>(null);
-}));
-app.UseRequestLocalization(localization);
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -401,6 +379,36 @@ app.UseRouting();
 
 app.UseCors();
 app.UseAuthentication();
+
+// Between authentication and authorization, deliberately (docs/design/culture-resolution.md §4).
+// Above UseAuthentication a culture provider cannot see who is asking, which is why a player's
+// saved language had no say for years. Below UseAuthorization, HttpContext.User may have been
+// replaced by a scheme-specific principal, so an api/* caller authenticating with an ApiToken
+// would start receiving its owner's language in output meant to be stable for machines. Here,
+// HttpContext.User is the cookie principal or nobody.
+var localization = new RequestLocalizationOptions()
+    .AddSupportedCultures(SupportedCultures.Codes())
+    .AddSupportedUICultures(SupportedCultures.Codes())
+    .SetDefaultCulture(SupportedCultures.Default);
+// Appended AFTER the three stock providers, so it only speaks when they found nothing: an
+// explicit ?culture= or the saved cookie still wins, and an exactly-supported Accept-Language
+// tag is still matched by the stock header provider. What reaches here is the case that used
+// to fall through to English — a bare "es"/"ja", or a region we carry no catalogue for
+// (es-CL, pt-PT, fr-CA). ResolveClosest maps those down; anything it can't place returns
+// null, which leaves the default culture exactly as before.
+localization.RequestCultureProviders.Add(new CustomRequestCultureProvider(context =>
+{
+    foreach (var language in context.Request.GetTypedHeaders().AcceptLanguage
+                 .OrderByDescending(l => l.Quality ?? 1d))
+    {
+        var resolved = SupportedCultures.ResolveClosest(language.Value.Value);
+        if (resolved != null) return Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult(resolved));
+    }
+
+    return Task.FromResult<ProviderCultureResult?>(null);
+}));
+app.UseRequestLocalization(localization);
+
 app.UseRateLimiter();
 app.UseAuthorization();
 // Required by MapRazorComponents: a static-rendered form posts back to its own endpoint, so the
