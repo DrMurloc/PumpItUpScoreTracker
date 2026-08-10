@@ -262,7 +262,9 @@ builder.Services.AddBlazorApplicationInsights()
         // registration is never invoked): the shell-settings cache eviction makes a
         // settings save visible on the very next request.
         o.AddRequestPostProcessor<IRequestPostProcessor<SaveUserUiSettingCommand, Unit>,
-            UiSettingSavedCacheEviction>();
+            UiSettingCacheEviction>();
+        o.AddRequestPostProcessor<IRequestPostProcessor<ClearUserUiSettingCommand, Unit>,
+            UiSettingCacheEviction>();
         // Application + Web, then every vertical. The vertical list is NOT written out here: it
         // used to be, and CommunityTools was left off it — 33 handlers silently unregistered, found
         // by a page throwing at runtime. VerticalAssemblies.All() is the one place, and a ratchet

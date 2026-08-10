@@ -31,7 +31,7 @@ public sealed class ShellModelFactory
     ///     How long a user's settings dictionary is held. Public because
     ///     <see cref="Localization.UserSettingRequestCultureProvider" /> reads the same entry —
     ///     one cached dictionary answers both the shell and the language, and both are evicted
-    ///     together by <see cref="UiSettingSavedCacheEviction" />.
+    ///     together by <see cref="UiSettingCacheEviction" />.
     /// </summary>
     public static readonly TimeSpan SettingsTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan RecapTtl = TimeSpan.FromMinutes(30);
@@ -110,7 +110,7 @@ public sealed class ShellModelFactory
     }
 
     /// <summary>
-    ///     Cache key for a user's shell settings. <see cref="UiSettingSavedCacheEviction" />
+    ///     Cache key for a user's shell settings. <see cref="UiSettingCacheEviction" />
     ///     evicts it whenever a UI setting is saved, so a mix switch (or theme/game-tag
     ///     change) is visible on the very next request instead of after the TTL.
     /// </summary>

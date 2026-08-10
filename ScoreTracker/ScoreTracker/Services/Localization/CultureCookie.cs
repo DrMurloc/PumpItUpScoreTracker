@@ -53,6 +53,16 @@ public static class CultureCookie
         });
     }
 
+    /// <summary>
+    ///     Drops the cached choice so the browser decides again — what Automatic means on the
+    ///     wire. Only an HTTP response can do this, which is why it is an endpoint and not
+    ///     something the picker's circuit handles itself.
+    /// </summary>
+    public static void Clear(HttpResponse response)
+    {
+        response.Cookies.Delete(Name);
+    }
+
     private static string Value(RequestCulture culture)
     {
         return CookieRequestCultureProvider.MakeCookieValue(culture);

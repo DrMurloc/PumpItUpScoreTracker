@@ -45,6 +45,12 @@ downward mapping is documented in `SupportedCultures.ResolveClosest`; it constru
 | `CultureController` | the picker's `/Culture/Set` navigation |
 | `App.razor` | every document render — write-back, only when it differs, and **only for anonymous visitors, and never for a query-string preview** |
 
+**Signing in deletes it**, in every `LoginController` path. It is a cache of the browser header
+for visitors with nowhere to store a choice, and there is no anonymous language picker for it to
+be anything else. Left in place it outranks the browser for an account that has chosen no
+language — pinning whichever browser they first arrived in, permanently, because a signed-in
+request never rewrites it.
+
 Both write through `CultureCookie`, which sets an explicit `MaxAge`. Nothing gives a cookie an
 expiry for free here: `AddCookiePolicy` is registered but `app.UseCookiePolicy()` is never
 called, so a bare `Response.Cookies.Append` writes a **session** cookie that dies when the
@@ -82,8 +88,38 @@ A live circuit cannot change its own culture: the middleware sets it per request
 `IStringLocalizer` resolves off the ambient value. So every language change is a real navigation
 (`forceLoad`) through `/Culture/Set`, not a re-render.
 
-## 7. Not built yet
+## 7. Automatic
 
-`<Match Browser>` — a picker entry that clears the SQL key and hands the decision back to rank
-4/5. Needs a clear path (`SaveUserUiSettingCommand` can only ever set a key), its own cache
-eviction, and a `/Culture/Clear` action, since a circuit cannot delete a cookie.
+The picker's first entry, and the value a player sits on when they have never chosen. It is
+**stored as absence**: choosing it sends `ClearUserUiSettingCommand` to remove the `Culture` key
+and navigates through `/Culture/Clear` to drop the cached cookie. Rank 2 then declines and the
+browser decides again, which is the same state as an account that never touched the field.
+
+`SupportedCultures.Automatic` is deliberately not a culture tag, so `IsSupported` and
+`ResolveClosest` both reject it — the sentinel can never be mistaken for a language on its way to
+the cookie or the resolution chain.
+
+Both halves are load-bearing. Clearing the setting without dropping the cookie leaves the old
+language answering in the browser's place until the cookie expires; dropping the cookie without
+clearing the setting changes nothing at all, because rank 2 outranks rank 3.
+
+Two things follow from Automatic being the default:
+
+- **The picker can always act on what it shows.** It used to preselect the browser-resolved
+  language for a player with no row — and MudSelect raises nothing for an unchanged value, so
+  picking the entry already selected wrote no setting. That player could never create a row from
+  the field at all.
+- **A new account finishes `/Setup` with no `Culture` row** unless they pick a language, so it
+  follows their browser rather than pinning whichever one they signed up on.
+
+**Discord follows the same order, with its own indicator in place of the browser**: the account's
+`Culture` setting, then `BotInteraction.UserLocale` — the language the invoker's Discord client is
+set to, which is this surface's `Accept-Language` — then English. Without that middle rank an
+account on Automatic would read Spanish on the site and answer in English on every `/piu` reply,
+because "follow the browser" means nothing in a chat client. An unlinked invoker gets their client
+language too. Channel feeds are unaffected; they carry their own `Culture` column, chosen when the
+feed was registered.
+
+`ClearUserUiSettingCommand` needs its own line in `UiSettingCacheEviction`'s registration —
+post-processors are registered per closed type, so the save registration does nothing for it, and
+without it Automatic would take up to five minutes to apply.

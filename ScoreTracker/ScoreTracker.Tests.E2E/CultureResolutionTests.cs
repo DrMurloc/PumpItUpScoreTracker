@@ -134,6 +134,40 @@ public sealed class CultureResolutionTests : IAsyncLifetime
         Assert.Contains(EnglishNav, body);
     }
 
+    /// <summary>
+    ///     Automatic, end to end: the setting goes, the cached cookie goes with it, and the
+    ///     browser decides again from the very next request. Clearing only one of the two would
+    ///     look fixed until the cookie answered in the browser's place.
+    /// </summary>
+    [Fact]
+    public async Task AutomaticHandsTheLanguageBackToTheBrowser()
+    {
+        var userId = await _fixture.Seed.SeedUserAsync("CultureAutomatic");
+        await _fixture.Seed.SeedCultureAsync(userId, "en-US");
+        await SignInAsync(userId);
+        // Hand-built, so Secure defaults false and it actually travels to the plain-HTTP test
+        // host. Without a cookie genuinely in play the rest of this proves nothing: clearing the
+        // setting alone would look like a pass however broken /Culture/Clear was.
+        _handler.CookieContainer.Add(new Cookie(".AspNetCore.Culture", "c%3Den-US%7Cuic%3Den-US", "/",
+            new Uri(_fixture.BaseUrl).Host));
+        Assert.Contains(EnglishNav, await GetAsync("/", SpanishBrowser));
+
+        await _fixture.Seed.ClearCultureAsync(userId);
+        _fixture.ClearCaches();
+
+        // The setting is gone but the cookie is not, and the cookie outranks the browser — so
+        // this still reads English. That is the half a clear-only fix would leave behind.
+        Assert.Contains(EnglishNav, await GetAsync("/", SpanishBrowser));
+
+        using var cleared = await _client.GetAsync("/Culture/Clear?redirectUrl=%2F");
+        Assert.Equal(HttpStatusCode.Redirect, cleared.StatusCode);
+        Assert.Contains(cleared.Headers.TryGetValues("Set-Cookie", out var expiring)
+            ? expiring
+            : Array.Empty<string>(), c => c.StartsWith(".AspNetCore.Culture", StringComparison.Ordinal));
+
+        Assert.Contains(SpanishNav, await GetAsync("/", SpanishBrowser));
+    }
+
     private async Task SignInAsync(Guid userId)
     {
         using var form = new FormUrlEncodedContent(new[]

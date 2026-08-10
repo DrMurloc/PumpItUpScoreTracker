@@ -57,7 +57,7 @@ namespace ScoreTracker.Communities.Application
         {
             var interaction = request.Interaction;
             var command = interaction.CommandPath.Count > 0 ? interaction.CommandPath[0] : string.Empty;
-            var (user, culture) = await ResolveInvoker(interaction.UserId, cancellationToken);
+            var (user, culture) = await ResolveInvoker(interaction, cancellationToken);
             return command switch
             {
                 "calc" => Calc(interaction, culture),
@@ -71,19 +71,28 @@ namespace ScoreTracker.Communities.Application
             };
         }
 
-        // Every reply composes in the invoker's site language: their linked account's
-        // Culture setting, English when unlinked or unset. Resolving here also scopes the
-        // user once for the engine paths (suggest, presets).
-        private async Task<(User? User, string? Culture)> ResolveInvoker(ulong discordUserId,
+        // Every reply composes in the invoker's language, in the same order the site resolves it
+        // (docs/design/culture-resolution.md): their account's Culture setting first, then the
+        // language their Discord client is set to, then English. The client locale is this
+        // surface's Accept-Language — without it, an account following its browser on the web
+        // would silently drop to English here, because "follow the browser" has no meaning in a
+        // chat client. Resolving here also scopes the user once for the engine paths (suggest,
+        // presets).
+        private async Task<(User? User, string? Culture)> ResolveInvoker(BotInteraction interaction,
             CancellationToken cancellationToken)
         {
-            var user = await ResolveUser(discordUserId, cancellationToken);
-            if (user == null) return (null, null);
+            var fromDiscord = SupportedCultures.ResolveClosest(interaction.UserLocale);
+
+            var user = await ResolveUser(interaction.UserId, cancellationToken);
+            if (user == null) return (null, fromDiscord);
+
             _currentUser.SetScopedUser(user);
             var settings = await _mediator.Send(new GetUserUiSettingsQuery(user.Id), cancellationToken);
-            return (user, settings.TryGetValue("Culture", out var culture)
+            var saved = settings.TryGetValue("Culture", out var culture)
                 ? SupportedCultures.NormalizeOrNull(culture)
-                : null);
+                : null;
+
+            return (user, saved ?? fromDiscord);
         }
 
         public async Task<IReadOnlyList<BotOptionChoice>> Handle(GetBotAutocompleteQuery request,

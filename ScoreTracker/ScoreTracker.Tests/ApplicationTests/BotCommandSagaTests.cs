@@ -56,9 +56,9 @@ public sealed class BotCommandSagaTests
             _localizer.Object);
 
     private static HandleBotInteractionCommand Invoke(string[] path, Dictionary<string, string> options,
-        bool canManage = false) =>
+        bool canManage = false, string? userLocale = null) =>
         new(new BotInteraction(path, options, ChannelId: 100, GuildId: 200, UserId: 300,
-            UserDisplayName: "Tester", InvokerCanManageChannels: canManage));
+            UserDisplayName: "Tester", InvokerCanManageChannels: canManage, UserLocale: userLocale));
 
     [Fact]
     public async Task CalcReturnsAScoreBreakdownCarryingGradeAndPlateTokens()
@@ -112,6 +112,58 @@ public sealed class BotCommandSagaTests
         _localizer.Verify(l => l.Get(null, "Give a song name."), Times.Once);
         _mediator.Verify(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    /// <summary>
+    ///     An account set to Automatic stores no language at all, and "follow the browser" means
+    ///     nothing in a chat client — so without this the site would speak Spanish and every
+    ///     /piu reply would answer in English. Discord sends the invoker's own client language,
+    ///     which is this surface's Accept-Language.
+    /// </summary>
+    [Fact]
+    public async Task AnAccountWithNoSavedLanguageFollowsItsDiscordClient()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserBuilder().WithName("alice").Build());
+
+        await Saga().Handle(Invoke(new[] { "chart" }, new Dictionary<string, string>(), userLocale: "es-ES"),
+            CancellationToken.None);
+
+        _localizer.Verify(l => l.Get("es-ES", "Give a song name."), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnUnlinkedInvokerStillGetsTheirDiscordClientsLanguage()
+    {
+        await Saga().Handle(Invoke(new[] { "chart" }, new Dictionary<string, string>(), userLocale: "ja-JP"),
+            CancellationToken.None);
+
+        _localizer.Verify(l => l.Get("ja-JP", "Give a song name."), Times.Once);
+    }
+
+    /// <summary>A stated choice outranks a client setting, exactly as it does on the site.</summary>
+    [Fact]
+    public async Task ASavedLanguageOutranksTheDiscordClient()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserByExternalLoginQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserBuilder().WithName("alice").Build());
+        _mediator.Setup(m => m.Send(It.IsAny<GetUserUiSettingsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<string, string> { ["Culture"] = "ko-KR" });
+
+        await Saga().Handle(Invoke(new[] { "chart" }, new Dictionary<string, string>(), userLocale: "es-ES"),
+            CancellationToken.None);
+
+        _localizer.Verify(l => l.Get("ko-KR", "Give a song name."), Times.Once);
+    }
+
+    /// <summary>A locale we ship no catalogue for is not a language — English, not a throw.</summary>
+    [Fact]
+    public async Task ADiscordLocaleWeCannotPlaceFallsBackToEnglish()
+    {
+        await Saga().Handle(Invoke(new[] { "chart" }, new Dictionary<string, string>(), userLocale: "de-DE"),
+            CancellationToken.None);
+
+        _localizer.Verify(l => l.Get(null, "Give a song name."), Times.Once);
     }
 
     [Fact]

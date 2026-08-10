@@ -4,6 +4,7 @@
 @using ScoreTracker.CommunityTools.Contracts.Commands
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts.Commands
 @using ScoreTracker.Identity.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
@@ -527,6 +528,13 @@
                     <label class="setup-label" for="setup-language">@L["Language"]</label>
                     <select id="setup-language" class="setup-input" disabled="@_isSaving"
                             value="@_culture" @onchange="OnCultureChanged">
+                        @* Where a new account starts: the page is already in the language their
+                           browser asked for, and leaving this alone keeps it that way rather than
+                           pinning today's browser onto the account forever. *@
+                        <option value="@SupportedCultures.Automatic"
+                                selected="@(SupportedCultures.Automatic == _culture)">
+                            @L["Automatic"]
+                        </option>
                         @foreach (var culture in SupportedCultures.All)
                         {
                             <option value="@culture.Code" selected="@(culture.Code == _culture)">
@@ -635,7 +643,7 @@
 
     private string _name = string.Empty;
     private string _country = string.Empty;
-    private string _culture = SupportedCultures.Default;
+    private string _culture = SupportedCultures.Automatic;
     private bool _isPublic;
     private MixEnum _mix = MixEnum.Phoenix2;
     private IReadOnlyList<CountryRecord> _countries = Array.Empty<CountryRecord>();
@@ -683,8 +691,11 @@
         _isPublic = CurrentUser.User.IsPublic;
         // Whatever a reload left behind — the language field causes one on purpose, and every
         // field is already persisted by then, so the page rebuilds itself exactly (D6/D8).
-        _culture = await UiSettings.GetSetting("Culture") ?? SupportedCultures.Normalize(
-            System.Globalization.CultureInfo.CurrentUICulture.Name);
+        // A new account has chosen nothing, and Automatic says exactly that — the page is
+        // already in the language the browser asked for. Resolved rather than raw so a legacy
+        // stored code still selects the entry that represents it.
+        _culture = SupportedCultures.ResolveClosest(await UiSettings.GetSetting("Culture"))
+                   ?? SupportedCultures.Automatic;
         // Phoenix 2 unless they already chose — GetSelectedMix answers Phoenix for "unset",
         // and a new account pointed at the previous game is the wrong opening move (D5).
         var savedMix = await UiSettings.GetSetting(IUiSettingsAccessor.MixSettingKey);
@@ -817,7 +828,19 @@
     private async Task OnCultureChanged(ChangeEventArgs args)
     {
         var value = args.Value as string ?? SupportedCultures.Default;
-        if (!SupportedCultures.IsSupported(value) || value == _culture) return;
+        var isAutomatic = value == SupportedCultures.Automatic;
+        if (!isAutomatic && !SupportedCultures.IsSupported(value)) return;
+        if (value == _culture) return;
+
+        // Automatic is stored as absence, so it removes the setting and drops the cookie —
+        // otherwise a choice made a moment ago would keep answering in the browser's place.
+        if (isAutomatic)
+        {
+            _culture = SupportedCultures.Automatic;
+            await UiSettings.ClearSetting("Culture");
+            NavManager.NavigateTo($"/Culture/Clear?redirectUrl={Uri.EscapeDataString(SelfUrl)}", true);
+            return;
+        }
 
         _culture = SupportedCultures.Normalize(value);
         await UiSettings.SetSetting("Culture", _culture);

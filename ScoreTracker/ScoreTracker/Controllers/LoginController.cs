@@ -17,6 +17,8 @@ using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.Services;
+using ScoreTracker.Web.Services.Localization;
+
 namespace ScoreTracker.Web.Controllers;
 
 [Route("[controller]")]
@@ -78,6 +80,11 @@ public sealed class LoginController : Controller
                    "Unknown Name";
         await HttpContext.SignOutAsync("ExternalAuthentication");
 
+        // Signing in drops the anonymous language cookie (docs/design/culture-resolution.md §3).
+        // It is a cache of the browser header for visitors with nowhere to store a choice, and
+        // there is no anonymous language picker for it to be anything else. Left in place it
+        // outranks the browser for an account that has chosen no language — pinning whichever
+        // browser they first arrived in, permanently, since a signed-in request never rewrites it.
         var user = await _mediator.Send(new GetUserByExternalLoginQuery(id, providerName),
             HttpContext.RequestAborted);
 
@@ -92,6 +99,7 @@ public sealed class LoginController : Controller
         }
 
         await _currentUser.SetCurrentUser(user);
+        CultureCookie.Clear(HttpContext.Response);
 
         var url = isNewUser ? SetupUrl(providerName) : returnUrl;
 
@@ -156,6 +164,7 @@ public sealed class LoginController : Controller
             HttpContext.RequestAborted);
 
         await _currentUser.SetCurrentUser(resolution.User);
+        CultureCookie.Clear(HttpContext.Response);
 
         // Aliases held by a different account were proven by the same credentials — record
         // that so a drifted-identifier merge is friction-free.
@@ -285,6 +294,7 @@ public sealed class LoginController : Controller
         if (user == null) return BadRequest("User not found");
 
         await _currentUser.SetCurrentUser(user);
+        CultureCookie.Clear(HttpContext.Response);
         return LocalRedirect(await DevLandingPage());
     }
 
@@ -295,6 +305,7 @@ public sealed class LoginController : Controller
 
         var user = await _mediator.Send(new CreateUserCommand("Dev User"), HttpContext.RequestAborted);
         await _currentUser.SetCurrentUser(user);
+        CultureCookie.Clear(HttpContext.Response);
         // A bootstrapped dev account is a new account, so it walks the real flow — but only
         // once the catalog exists, since setup is pointless on a database with no charts.
         var landing = await DevLandingPage();

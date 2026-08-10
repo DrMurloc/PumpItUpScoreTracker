@@ -753,6 +753,9 @@
   <data name="Auto Submit Turned On" xml:space="preserve">
     <value>자동 제출을 켰습니다. 가져오기가 여기에 올라갑니다.</value>
   </data>
+  <data name="Automatic" xml:space="preserve">
+    <value>자동</value>
+  </data>
   <data name="Avatar" xml:space="preserve">
     <value>아바타</value>
   </data>

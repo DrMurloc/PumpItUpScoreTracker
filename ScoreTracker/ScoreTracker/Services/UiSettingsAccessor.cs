@@ -73,4 +73,15 @@ public sealed class UiSettingsAccessor : IUiSettingsAccessor
 
         await _browserStorage.SetAsync(key, value);
     }
+
+    public async Task ClearSetting(string key, CancellationToken cancellationToken = default)
+    {
+        if (_currentUser.IsLoggedIn)
+        {
+            await _mediator.Send(new ClearUserUiSettingCommand(key), cancellationToken);
+            return;
+        }
+
+        await _browserStorage.DeleteAsync(key);
+    }
 }

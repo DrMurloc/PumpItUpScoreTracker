@@ -103,6 +103,14 @@ sign-in into a returning user.
   *is* the confirmation — and a toast reading "language saved" in the language just left would be
   the wrong string in the wrong language at the wrong moment.
 
+  **The field starts on Automatic** (owner, 2026-08-10), not on the browser-resolved code. A new
+  account has chosen nothing, and the page is already rendering in the language the browser asked
+  for, so a real code here would pin whichever browser they signed up on onto the account
+  permanently. The consequence is deliberate: leaving the field alone finishes setup with **no
+  `Culture` row**, and the account follows its browser until someone picks a language. Choosing
+  Automatic later clears the row and navigates through `/Culture/Clear` instead — see
+  [culture-resolution.md §7](culture-resolution.md).
+
 - **D9 — The mix re-themes the page live, with no reload.** `MixThemes.CssVariablesFor(mix)`
   *generates* the `--mix-*` block as a string; [App.razor:28](../../ScoreTracker/ScoreTracker/App.razor)
   merely emits it into the head. `/Setup` emits its own copy from page state —

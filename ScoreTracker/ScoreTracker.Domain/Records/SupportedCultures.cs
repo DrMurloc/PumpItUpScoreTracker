@@ -16,6 +16,15 @@ public static class SupportedCultures
 {
     public const string Default = "en-US";
 
+    /// <summary>
+    ///     The language picker's "Automatic" entry — follow the browser. A picker value only,
+    ///     never a stored one: choosing it <em>removes</em> the saved setting, because absent is
+    ///     already how "follow the browser" is spelled (docs/design/culture-resolution.md). It is
+    ///     deliberately not a culture tag, so <see cref="IsSupported" /> and
+    ///     <see cref="ResolveClosest" /> both reject it and no code path can mistake it for one.
+    /// </summary>
+    public const string Automatic = "__automatic";
+
     public static readonly IReadOnlyList<SupportedCulture> All = new SupportedCulture[]
     {
         new("en-US", "English"),
