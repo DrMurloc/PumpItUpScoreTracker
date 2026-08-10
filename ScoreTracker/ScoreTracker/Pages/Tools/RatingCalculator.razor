@@ -168,7 +168,8 @@
                 {
                     Level = level.ToString(),
                     ChartCount = levels[level],
-                    Ratings = grades.ToDictionary(g => g, g => (int)(baseRating * config.LetterGradeModifiers[g]))
+                    Ratings = grades.ToDictionary(g => g,
+                        g => (int)(baseRating * config.LetterGradeModifierFor(g, _type)))
                 };
             }).ToArray();
     }
