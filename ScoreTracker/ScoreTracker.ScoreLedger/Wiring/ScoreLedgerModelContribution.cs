@@ -41,6 +41,8 @@ public sealed class ScoreLedgerModelContribution : IDbModelContribution
             .HasFilter("[ProcessedAt] IS NULL");
 
         modelBuilder.Entity<ScoreEventJournalEntity>().ToTable("ScoreEventJournal");
+        // F, D, C, B, A, S, SS, SSS — three characters is the longest there is.
+        modelBuilder.Entity<ScoreEventJournalEntity>().Property(e => e.LetterGrade).HasMaxLength(4);
         // Session lookups skip the pre-capture rows (SessionId is never backfilled).
         modelBuilder.Entity<ScoreEventJournalEntity>().HasIndex(e => e.SessionId)
             .HasFilter("[SessionId] IS NOT NULL");

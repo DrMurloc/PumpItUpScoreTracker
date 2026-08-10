@@ -679,7 +679,10 @@
         _communities = (await Mediator.Send(new GetPublicCommunitiesQuery())).ToArray();
         _countryImages = (await Users.GetCountries()).ToDictionary(c => c.Name, c => c.ImagePath);
         var mix = await UiSettings.GetSelectedMix();
-        var dataMix = mix == MixEnum.XX ? MixEnum.Phoenix : mix;
+        // The competitive range on each card is derived from Phoenix ratings, which no older
+        // mix has. XX has read the Phoenix ranges here since the directory was built; every
+        // legacy mix does the same, so a card shows a real range instead of a blank.
+        var dataMix = mix.UsesLegacyScoring() ? MixEnum.Phoenix : mix;
         _ranges = (await Mediator.Send(new GetCommunityCompetitiveRangesQuery(dataMix)))
             .ToDictionary(r => r.CommunityName);
         if (CurrentUser.IsLoggedIn)

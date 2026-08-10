@@ -60,10 +60,14 @@ public sealed record RivalChartScore(
     string? Tag,
     string DisplayName,
     Uri? Avatar,
+    // An era score fits here already — this has always been an int rather than a PhoenixScore.
+    // LegacyGrade is what Phoenix has no column for: on XX and older the letter IS the result,
+    // and most legacy records carry no number at all.
     int Score,
     PhoenixPlate? Plate,
     bool IsBroken,
-    RivalScoreSource Source);
+    RivalScoreSource Source,
+    XXLetterGrade? LegacyGrade = null);
 
 public enum RivalScoreSource
 {
@@ -102,4 +106,9 @@ public sealed record RivalHeadToHeadRow(
     PhoenixPlate? YourPlate = null,
     bool YourIsBroken = false,
     PhoenixPlate? TheirPlate = null,
-    bool TheirIsBroken = false);
+    bool TheirIsBroken = false,
+    // On a legacy mix the letter is the result and the plate columns stay null. The scores
+    // above still rank the row: era scores ARE comparable within one chart, which is the only
+    // comparison this table makes.
+    XXLetterGrade? YourLegacyGrade = null,
+    XXLetterGrade? TheirLegacyGrade = null);

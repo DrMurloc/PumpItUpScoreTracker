@@ -370,3 +370,26 @@ references Identity, so the assemblies would cycle.
 **Make Creator now confirms.** It used to dispatch on a single click and hand away the only creator
 seat. That was survivable while the members page was somewhere you went on purpose; account
 deletion routes people there deliberately now, so a mistap costs somebody their community.
+
+## Legacy mixes (2026-08-10)
+
+Both community surfaces read the mix you are on. They used to clamp XX to Phoenix, which showed an
+XX viewer a Phoenix player — and, on the leaderboard, let the Phoenix Recap button through, since
+its own guard reads `_currentMix == Phoenix` and only ever passed because of the clamp.
+
+**The leaderboard** ranks a legacy mix on **net score**: every recorded era score in the mix,
+summed, which is how the old arcade boards worked. `long`, not `int` — a full-catalogue player
+passes `int.MaxValue`. Beside it sit SSS/SS/S/A tallies, because only 4.8% of legacy records carry
+a number and net score alone would rank nearly everyone at zero; a zero total renders "no scores"
+rather than a `0` that reads as a verdict. The tallies count **passing** records only, while net
+score sums broken ones too — a failed run scored points, but a grade you did not clear is not an
+achievement (see [legacy-mixes.md](legacy-mixes.md) for the grade table). The
+Singles/Doubles/CoOp group hides: it splits the Phoenix per-type ratings, and a legacy mix has one
+number and one board. The top-50 expander reads the legacy store, biggest era score first.
+
+**The player page** keeps its folder graphs, which now read whichever store the mix records into —
+they read the Phoenix one unconditionally before, so a legacy mix drew every folder at zero passes
+while the scores sat in `BestAttempt`. A legacy pass maps onto the Phoenix letter for the
+breakdown; the two ladders share every letter XX uses. Hidden rather than drawn as zeros: the
+PUMBILITY hero, competitive level, the three rating tiles, and the official-board standing. Highest
+Clear stays — the top level with a pass is a fact every mix has.

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -948,6 +948,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Leaderboards</value>
+  </data>
+  <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
+    <value>Les tableaux sont propres à chaque Mix, et celui-ci n'a pas encore sa rotation.</value>
   </data>
   <data name="Boards you're both on" xml:space="preserve">
     <value>Classements où vous figurez tous les deux</value>
@@ -2103,6 +2106,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>Tous les records ont tenu cette semaine.</value>
   </data>
+  <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
+    <value>Chaque ligne du fichier l'emporte, même si elle est moins bonne que la vôtre.</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Tous les tags disparus, y compris ceux qui ont fusionné d'eux-mêmes. Une règle qui ne trouve plus de changements de nom ressemble à une semaine calme si vous ne voyez pas l'ensemble.</value>
   </data>
@@ -3110,6 +3116,9 @@
   <data name="Legacy grade" xml:space="preserve">
     <value>Grade legacy</value>
   </data>
+  <data name="Let this file replace my records" xml:space="preserve">
+    <value>Laisser ce fichier remplacer mes enregistrements</value>
+  </data>
   <data name="Letter Grade" xml:space="preserve">
     <value>Rang (lettres)</value>
   </data>
@@ -3649,6 +3658,9 @@
   <data name="net" xml:space="preserve">
     <value>net</value>
   </data>
+  <data name="Net Score" xml:space="preserve">
+    <value>Score total</value>
+  </data>
   <data name="Never" xml:space="preserve">
     <value>Jamais</value>
     <comment>Valeur par défaut pour EndDate de tournoi quand non définie.</comment>
@@ -3824,6 +3836,9 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>Pas encore de score — enregistrez votre premier essai et ceci s'allume.</value>
   </data>
+  <data name="no scores" xml:space="preserve">
+    <value>aucun score</value>
+  </data>
   <data name="No scores in this mix yet" xml:space="preserve">
     <value>Aucun score dans ce Mix pour l'instant</value>
   </data>
@@ -3934,6 +3949,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Indisponible en vue compacte</value>
+  </data>
+  <data name="Not available on {0}." xml:space="preserve">
+    <value>Non disponible sur {0}.</value>
   </data>
   <data name="Not checked" xml:space="preserve">
     <value>Non vérifié</value>
@@ -4268,6 +4286,9 @@
   </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Seuls les imports des mix que vous choisissez sont envoyés. Les mix anciens sont notés en lettres et non sur l'échelle du million — le payload indique quel modèle est utilisé.</value>
+  </data>
+  <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
+    <value>Seules les améliorations sont conservées. Le score et la note montent séparément.</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Seules les chansons dont un chart a changé sont listées.</value>
@@ -4964,6 +4985,9 @@
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>Top 50 PUMBILITY</value>
+  </data>
+  <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
+    <value>Pump It Up n'avait pas de titres avant Prime 2.</value>
   </data>
   <data name="Push PGs" xml:space="preserve">
     <value>Visez les PG</value>
@@ -6666,9 +6690,6 @@
   <data name="This page is full." xml:space="preserve">
     <value>Cette page est pleine.</value>
   </data>
-  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
-    <value>Cette page n'est pas encore prête pour les anciens Mix</value>
-  </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>Ce récap n&apos;a pas encore été calculé — reviens bientôt.</value>
   </data>
@@ -8116,6 +8137,12 @@
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} n'est pas dans {1} — toute la chanson est partie.</value>
+  </data>
+  <data name="{0} isn't a thing in {1}." xml:space="preserve">
+    <value>{0} n'existe pas dans {1}.</value>
+  </data>
+  <data name="{0} isn't available for {1} yet." xml:space="preserve">
+    <value>{0} n'est pas encore disponible pour {1}.</value>
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} sortis</value>

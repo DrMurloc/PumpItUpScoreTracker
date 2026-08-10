@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -941,6 +941,9 @@
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Placares</value>
+  </data>
+  <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
+    <value>Os quadros são por versão, e esta ainda não tem a sua própria rotação.</value>
   </data>
   <data name="Boards you're both on" xml:space="preserve">
     <value>Placares em que vocês dois estão</value>
@@ -2088,6 +2091,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>Todos os recordes resistiram esta semana.</value>
   </data>
+  <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
+    <value>Cada linha do arquivo vence, mesmo onde for pior que a sua atual.</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Todas as tags que sumiram, incluindo as que se mesclaram sozinhas. Uma regra que parou de encontrar mudanças de nome parece uma semana calma se você não conseguir ver tudo.</value>
   </data>
@@ -3093,6 +3099,9 @@
   <data name="Legacy grade" xml:space="preserve">
     <value>Grau legacy</value>
   </data>
+  <data name="Let this file replace my records" xml:space="preserve">
+    <value>Deixar este arquivo substituir meus registros</value>
+  </data>
   <data name="Letter Grade" xml:space="preserve">
     <value>Letras de nota</value>
   </data>
@@ -3621,6 +3630,9 @@
   <data name="net" xml:space="preserve">
     <value>saldo de</value>
   </data>
+  <data name="Net Score" xml:space="preserve">
+    <value>Pontuação total</value>
+  </data>
   <data name="Never" xml:space="preserve">
     <value>Nunca</value>
   </data>
@@ -3795,6 +3807,9 @@
   <data name="No score yet — record your first attempt and this lights up." xml:space="preserve">
     <value>Ainda sem pontuação — registre sua primeira tentativa e isto acende.</value>
   </data>
+  <data name="no scores" xml:space="preserve">
+    <value>sem pontuações</value>
+  </data>
   <data name="No scores in this mix yet" xml:space="preserve">
     <value>Ainda sem pontuações nesta versão</value>
   </data>
@@ -3905,6 +3920,9 @@
   </data>
   <data name="Not available in Compact view" xml:space="preserve">
     <value>Não disponível na visualização compacta</value>
+  </data>
+  <data name="Not available on {0}." xml:space="preserve">
+    <value>Não disponível em {0}.</value>
   </data>
   <data name="Not checked" xml:space="preserve">
     <value>Não verificado</value>
@@ -4238,6 +4256,9 @@
   </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Só são enviadas importações das versões que você escolher. Versões antigas pontuam por letra em vez da escala de 1M — o payload diz qual modelo está usando.</value>
+  </data>
+  <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
+    <value>Só as melhorias são mantidas. Pontuação e nota sobem separadamente.</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Só aparecem as músicas com alguma chart que mudou.</value>
@@ -4928,6 +4949,9 @@
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>Top 50 de PUMBILITY</value>
+  </data>
+  <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
+    <value>O Pump It Up não tinha títulos antes do Prime 2.</value>
   </data>
   <data name="Push PGs" xml:space="preserve">
     <value>Rumo aos PG</value>
@@ -6608,9 +6632,6 @@
   <data name="This page is full." xml:space="preserve">
     <value>Esta página está cheia.</value>
   </data>
-  <data name="This page isn't ready for older mixes yet" xml:space="preserve">
-    <value>Esta página ainda não está pronta para versões antigas</value>
-  </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>Este recap ainda não foi calculado — volte em breve.</value>
   </data>
@@ -8047,6 +8068,12 @@
   </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} não está em {1} — a música inteira saiu.</value>
+  </data>
+  <data name="{0} isn't a thing in {1}." xml:space="preserve">
+    <value>{0} não existe em {1}.</value>
+  </data>
+  <data name="{0} isn't available for {1} yet." xml:space="preserve">
+    <value>{0} ainda não está disponível para {1}.</value>
   </data>
   <data name="{0} left" xml:space="preserve">
     <value>{0} saíram</value>

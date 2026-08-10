@@ -88,10 +88,28 @@ Verified against [NamuWiki's Basic System page](https://en.namu.wiki/w/%ED%8E%8C
   - Modern branch unchanged; **Exceed → Prime 2 route to the XX image folder** (same trick as the existing SP/DP special case).
   - Legacy branch renders a CSS chip when the chart carries a slot: `CRAZY 7`, `NIGHTMARE 9`, `ANOTHER CRAZY 7`; also Infinity `HDB12`, levelled co-ops (`CO-OP ×2 · 15`), and unrated `??`. Colors via a new **`--slot-*` semantic token group** + `ThemeScales.SlotColor(...)` accessor (classic wheel colors — Crazy red, Freestyle green, Nightmare purple), satisfying the `UiColorTokenTests` ratchet. Tooltip: "Crazy 7 — The Premiere 2 scale; not comparable to modern levels."
 - **`MixSelector`** shared component: Phoenix 2 / Phoenix / XX visible, "More Mixes" expands into **collections** (Prime, Fiesta, NX, Exceed / Zero, Premiere / Prex, Classic, American) that open in place on click — a flat list of 28 was unusable (owner field-test round 1), and click-not-hover keeps the same interaction on mobile.
-- **`LegacyMixGate`** (Services/): pre-XX mixes only reach routes validated for them — everything else renders a construction panel from `MainLayout` (owner call, field-test round 1: pages assume Phoenix-family data and range from quietly empty to throwing, e.g. `TitleSaga` has no title list for old mixes). **XX is deliberately not gated** — it predates the feature and keeps today's behavior. Nav (desktop mega-menus, bottom nav, More sheet) hides gated destinations off the same flag. Validating a page = field-test it under a pre-XX mix, then add its first route segment to the allowlist. Currently allowed: Charts, Chart/Record, UploadXXScores, TierLists, plus the mix-independent surfaces (Login/Logout/Welcome/Account/About/Dev).
+- **Route gating: removed 2026-08-09.** `LegacyMixGate` (Services/) was a route allowlist: pre-XX mixes reached only validated routes and everything else redirected to `/TierLists`, with the nav hiding the rest off the same flag. It was born as a crash guard — field-test round 1 found `TitleSaga` throwing under Prime — and grew, because the only way off the list was to field-test a page and add a line, and nobody did.
+
+  What it cost: the **home dashboard was gated**, so the Quick Record widget, the Import Scores widget and the By-Level Breakdown — all three already legacy-aware — were unreachable from the mixes they were built for, and signing in on Prime bounced you to the tier lists. `/CommunityTools` was linked in the nav but was not on the allowlist, so it was a dead link. Import Scores reached the phone's More sheet **only** on a gated mix, so a Phoenix player on a phone had no import link at all.
+
+  **The replacement is per-page, and there are only three shapes:**
+
+  | Shape | When | Example |
+  |---|---|---|
+  | Just works | The page is about the catalogue, or already mix-generic | `/Charts`, `/ChartRandomizer`, `/MixChanges`, `/Player/{id}/Sessions` |
+  | Clamp to Phoenix | The page is about something only the Phoenix generation has, and an answer beats a refusal | `/OfficialLeaderboards/*` and `/Pumbility/*` (both already clamped XX), `/PhoenixCalculator`, the Communities directory's competitive range |
+  | Say so | The page cannot fall back without lying | `/Titles` (titles are per-mix; a title's name is its key), `/Rivals` (every comparison is score-normalized) |
+
+  `MixUnavailableNotice` renders the third, and distinguishes **NotYetBuilt** ("we have not built this") from **Unsupported** ("this mix never had it") — see `TitleLadders` for the titles case. Widgets declare `SupportedMixes` on their descriptor and `WidgetHost` reads it, so a dashboard degrades card by card instead of a page at a time.
+
+  Two things at the source made the gate unnecessary: `GetTitleProgressQuery` returns empty rather than throwing, and `UpdatePhoenixBestAttemptCommand` refuses a legacy mix outright.
 - **Community Rating lens** (`GetCommunityTierListQuery`, ChartIntelligence): legacy mixes on /TierLists render one fixed lens computed from the vote aggregates — delta = adjusted difficulty − (level + .5), banded nearest onto the standard `TierListCategory` vocabulary (the ±1-level vote extremes collapse into Overrated/Underrated; no votes → Unrecorded). Whole-mix fetch at init, folder filters client-side; no popularity/personal/share phases run for legacy mixes (that's also what fixed the init path calling `GetTitleProgressQuery` for mixes it must not). Coming-soon still renders when a legacy mix has zero vote data — impossible after S4.
 - **Chart details**: "Debuted in {mix}" from `OriginalMix.GetName()`.
 - **Score entry**: chart-page manual entry becomes mix-aware; `UploadXXScores` generalizes to a mix-parameterized legacy upload page reusing its CSV parsing + `NameMappings` aliases. For slot-era mixes, CSV matching keys on (song, slot, level) — mode+level alone is ambiguous (decision 7).
+
+  **One form, and only one** (2026-08-09). `RecordScoreForm` is the single recording component: it adapts by scoring model, reads its own prefill from the store that mix uses, and returns a family-shaped result. Its hosts are the SRP's quick-record dialog, the Quick Record widget, the chart page's record panel and the details dialog's manual edit.
+
+  This is a rule with a scar behind it. `EditChartGrid` had a correct legacy branch and was replaced by three components that each re-implemented the form; two dropped the branch and went on sending `UpdatePhoenixBestAttemptCommand` whatever the mix. Legacy records live in `BestAttempt` and Phoenix records in `PhoenixRecord`, so those writes produced real rows in a store no legacy read path consults — a player's Prime 2 score read as "No score yet" on the page that had just saved it. Five rows in production, from two players, both of whom re-recorded through the working path afterwards. The ledger now refuses the wrong model rather than trusting call sites to pick.
 - Localization: all new strings through `L[…]`, every locale in the same pass; mix and slot names remain untranslated proper nouns.
 
 ### Domain / SharedKernel
@@ -120,6 +138,113 @@ Unrated (`??`) levels are almost entirely co-ops (already sidestepped by player-
 No new tables. `DATABASE-SCHEMA.md` gets column notes in the same PRs.
 
 ---
+
+## Scoring on a legacy mix (2026-08-10)
+
+Two axes, and they are **independent** — a run that beats your score but not your grade raises
+only the score, and the reverse raises only the grade, so a stored best is a composite no single
+play necessarily produced. `LegacyBestAttemptPolicy` owns that rule.
+
+It is the deliberate opposite of `BestAttemptPolicy`, which moves Phoenix's axes together
+because letting a plate win alone dragged scores down (the plate leak). **Do not unify them.**
+Each class names the other. Broken-ness travels with the grade; a pass outranks a break in both.
+
+Manual entry overwrites (a correction must be able to lower a record); every acquisition source
+passes `KeepBestStats` and may only raise.
+
+### Legacy records journal
+
+`ScoreEventJournal` carries `LetterGrade`, and `ScoreJournalEntry` carries `LegacyScore` /
+`LegacyGrade` beside the Phoenix pair. Reusing the Phoenix fields is not possible, not merely
+untidy: `Score` is a `PhoenixScore` capped at 1,000,000, and **76% of scored legacy records in
+production are above that ceiling** (the largest is 45,282,000). The row's mix decides which side
+is live.
+
+### What the legacy letters actually meant (owner, 2026-08-10)
+
+Recorded because it is nowhere else and it explains why a broken SSS is a real thing:
+
+| Grade | Condition |
+|---|---|
+| SSS | all perfects |
+| SS | no misses, bads or goods — perfects and greats only |
+| S | no misses |
+| A | a low score threshold |
+| B / C / D / F | not a score threshold at all: an algorithm nobody ever reverse-engineered, mixing judgement distribution with percentage of possible score |
+
+**A broken run still earns a letter.** A broken SSS was possible on mission zones, where you
+could die for reasons other than the lifebar; a broken S or above otherwise meant you badded
+yourself to death, and was rare.
+
+That is why the community board's SSS/SS/S/A tallies count **passing records only** while its
+net score sums **everything** — a failed run scored points, so it belongs in the total, but a
+grade you did not clear is not an achievement to tally. `ClearCount` on a legacy row means
+clears for the same reason.
+
+### Net score
+
+The legacy community board ranks on **net score** — every recorded era score in the mix, summed,
+which is how the old arcade boards worked. `long`, not `int`: today's heaviest player reaches
+490M from scores on 93 charts, so a full catalogue lands past `int.MaxValue`.
+
+**Only 4.8% of legacy records carry a number at all.** So the board also shows SSS/SS/S/A
+tallies, and a zero total renders as "no scores" rather than a 0 that reads as a verdict.
+
+### What legacy weekly boards still need
+
+Rotation runs Phoenix and Phoenix 2 only. Fanning it wider is blocked on the entry type, not on
+the rotation: `WeeklyTournamentEntry.Score` is a `PhoenixScore`, so a legacy weekly entry above
+1,000,000 cannot be represented, and the entry has no letter-grade field at all. Widening it
+reaches the entity, the placings, the submission dialog and the board rows — its own pass. The
+monthly rollup is already legacy-safe (raw-score pricing, `long` sum), and an empty week persists
+no history, so quiet mixes cannot accumulate junk rows once boards do exist.
+
+
+## What a legacy mix reaches, per surface (2026-08-10)
+
+The route gate is gone (see above). Scoping is per destination now, and lives in
+`SharedKernel/Enums/MixCapabilities.cs` so the desktop menu and the phone's More sheet read one
+set of rules rather than a copy each.
+
+| Destination | Mixes | Why |
+|---|---|---|
+| PUMBILITY | Phoenix 1 + 2 | prices a 1,000,000-scale score |
+| My Recap | Phoenix 1 | computed from P1 data, for now |
+| Titles | XX, P1, P2 | follows `TitleLadders` — XX **has** a ladder |
+| Leaderboards (whole section) | Phoenix 1 + 2 | the official site publishes for the current generation |
+| Phoenix + Rating calculators | Phoenix 1 + 2 | they answer Phoenix questions |
+| Weekly Charts | Phoenix 1 + 2 | rotation does not reach older mixes yet (see below) |
+| Everything else | every mix | including Lifebar Calculator and Mix Changes, which never read the selected mix |
+
+Hiding a link is **not** the gate returning: every route stays reachable, and a page that cannot
+answer explains itself on arrival via `MixUnavailableNotice`, which distinguishes *not built yet*
+from *this mix never had it*.
+
+### Surfaces that work on a legacy mix
+
+- **Chart page + details dialog** — record through `RecordScoreForm`, read from `BestAttempt`.
+- **Tier lists** — Community Rating lens, with your legacy scores loaded (lamps, borders,
+  completion filters). The lens **picker and chip do not render** on a legacy mix: there is exactly
+  one lens, so a disabled one-option dropdown read as broken. They return when voting does.
+- **Community leaderboard** — ranks on net score, with SSS/SS/S/A tallies. No PUMBILITY, no
+  Singles/Doubles/CoOp split (those divide Phoenix per-type ratings), no recap button.
+- **Community player page** — folder graphs read the legacy store; PUMBILITY, competitive level,
+  the rating tiles and the official standing are hidden rather than drawn as zeros.
+- **Rivals** — head-to-head compares within a chart, which era scores do fine. Score decides,
+  letter breaks the tie. No official placements, and the folder auto-select is skipped (it centres
+  on competitive levels). The **highlights feed stays empty** — it is built on the Phoenix
+  progression chain.
+- **Dashboard** — widgets declare `SupportedMixes`; the three that work on every mix are Quick
+  Record, Import Scores and By-Level Breakdown. A widget that cannot render says so and keeps its
+  slot.
+
+### Importing on a legacy mix
+
+`/UploadXXScores` takes the CSV. The **overwrite toggle** decides the semantics: off (the default)
+runs `LegacyBestAttemptPolicy` and may only raise a record; on, the file wins outright, which is
+the only way to correct something downward. Overwrite was the unannounced behaviour of every
+upload before 2026-08-10, which is why it is now opt-in. `/UploadPhoenixScores` refuses a legacy
+mix rather than throwing — every write on it goes through the Phoenix command.
 
 ## Delivery plan
 

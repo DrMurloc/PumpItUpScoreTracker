@@ -1,0 +1,68 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.SharedKernel.Enums
+
+@* Your record's history on one chart, read from the ScoreEventJournal: one row per state
+   the record ever held, oldest first, each stamped with the mix it happened in.
+
+   Every row is graded against ITS OWN mix, never the host page's. Phoenix 2 moved the
+   A/A+/AA/AA+ floors, so a Phoenix 1 row shown on a Phoenix 2 page and graded with the
+   page's mix reports a grade the player never got.
+
+   A legacy row carries its own recorded letter rather than one derived from its number:
+   era scores are note-count dependent and run past 1,000,000, so the Phoenix grade formula
+   says nothing true about one. Legacy rows with no letter are the historical misfiled
+   writes, which predate legacy journaling — they keep their number and get no icon. *@
+@if (Entries.Any())
+{
+    <div class="score-journey">
+        @foreach (var entry in Entries)
+        {
+            <div class="score-journey-row">
+                <span class="score-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.Mix.GetName()</MudChip>
+                <span class="score-journey-score">@ScoreText(entry)</span>
+                @if (entry.Mix.UsesLegacyScoring())
+                {
+                    @if (entry.LegacyGrade != null)
+                    {
+                        <LetterGradeIcon LegacyGrade="entry.LegacyGrade" IsBroken="entry.IsBroken"
+                                         Height="16"></LetterGradeIcon>
+                    }
+                }
+                else if (entry.Score != null)
+                {
+                    <LetterGradeIcon Grade="entry.Score.Value.LetterGradeFor(entry.Mix)"
+                                     IsBroken="entry.IsBroken" Height="16"></LetterGradeIcon>
+                }
+            </div>
+        }
+    </div>
+}
+else if (ShowWhenEmpty)
+{
+    <MudText Typo="Typo.body2" Class="score-journey-empty">@L["No scores recorded on this chart yet."]</MudText>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<ScoreJournalEntry> Entries { get; set; } = Array.Empty<ScoreJournalEntry>();
+
+    /// <summary>
+    ///     Whether an empty journey says so. A host that renders this under its own "Score
+    ///     History" heading needs the sentence, or the heading stands over nothing; a host
+    ///     that folds the journey under a record it already describes says it once instead.
+    /// </summary>
+    [Parameter] public bool ShowWhenEmpty { get; set; }
+
+    /// <summary>
+    ///     Whichever number this row's scoring model uses, formatted with separators — an era
+    ///     score can run to eight digits and is unreadable without them.
+    /// </summary>
+    private static string ScoreText(ScoreJournalEntry entry)
+    {
+        if (entry.Mix.UsesLegacyScoring())
+            return entry.LegacyScore is { } legacy ? ((int)legacy).ToString("N0") : "—";
+
+        return entry.Score?.ToString() ?? "—";
+    }
+}

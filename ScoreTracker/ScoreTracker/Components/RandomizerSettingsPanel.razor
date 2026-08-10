@@ -15,9 +15,14 @@
    while weighted mode owns the levels, the basic controls disable. *@
 <div class="rand-settings">
     <div class="rand-settings-row">
+        @* Every mix, newest first. This listed MixThemes.ThemedMixes — the three mixes with a
+           brand palette — which is a fact about theming, not about catalogues: the randomizer
+           draws charts, and every mix has those. Legacy mixes were the ones a draw is most fun
+           on and they were the ones missing. The player filters below already disable
+           themselves off Phoenix, so nothing downstream assumed the short list. *@
         <MudSelect T="MixEnum" Value="Mix" ValueChanged="SetMix" Label="@L["Mix"]" Dense="true"
                    Variant="Variant.Outlined" Margin="Margin.Dense">
-            @foreach (var mix in MixThemes.ThemedMixes)
+            @foreach (var mix in DrawableMixes)
             {
                 <MudSelectItem T="MixEnum" Value="mix">@mix.GetName()</MudSelectItem>
             }
@@ -364,6 +369,11 @@
     // Score filters ride Phoenix scoring (PhoenixLetterGrade, Phoenix records); older
     // scales don't translate (legacy-mixes design).
     private bool PlayerFiltersAvailable => Mix is MixEnum.Phoenix or MixEnum.Phoenix2;
+
+    /// <summary>Newest first, matching the shell's mix picker.</summary>
+    private static readonly MixEnum[] DrawableMixes = Enum.GetValues<MixEnum>()
+        .OrderByDescending(m => m.DisplayOrder())
+        .ToArray();
 
     private bool SinglesOn => Settings.LevelWeights.Any(kv => kv.Value > 0);
     private bool DoublesOn => Settings.DoubleLevelWeights.Any(kv => kv.Value > 0);

@@ -78,6 +78,19 @@
                 <MudText Typo="Typo.body2">@L["This widget is no longer available."]</MudText>
             </div>
         }
+        else if (!SupportsMix)
+        {
+            @* Most widgets read normalized Phoenix scoring — a competitive level, a Pumbility
+               pool, a weekly board — and none of that exists in a mix whose scores are era-scale
+               numbers with a letter grade. The widget says so and stays put rather than
+               vanishing: a dashboard the player built should still be theirs when they come
+               back, and a card that disappears on one mix and returns on another reads as a
+               bug. Quick Record, Import Scores and By-Level Breakdown declare every mix and
+               never land here. *@
+            <div class="dash-widget-message">
+                <MudText Typo="Typo.body2">@L["Not available on {0}.", EffectiveMix.GetName()]</MudText>
+            </div>
+        }
         else
         {
             <ErrorBoundary>
@@ -141,6 +154,13 @@
                                     ? Widget.WidgetType
                                     : L[_descriptor.DynamicNameKey?.Invoke(Widget.ConfigJson)
                                         ?? _descriptor.NameKey].Value);
+
+    /// <summary>
+    ///     Whether this widget declares the mix it is about to render in. The descriptors have
+    ///     carried SupportedMixes since the registry was written; nothing read it, so every
+    ///     widget rendered on every mix and the Phoenix-only ones came up empty or worse.
+    /// </summary>
+    private bool SupportsMix => _descriptor == null || _descriptor.SupportedMixes.Contains(EffectiveMix);
 
     protected override void OnParametersSet()
     {

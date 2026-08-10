@@ -714,7 +714,7 @@ grouping is right.
 `/Developers` gets **no nav entry of its own**. It is reached from `/CommunityTools`, which carries
 a "Make a tool" entry point. A permanent menu item for a page serving twenty people is clutter, and
 hiding it until you own a tool is a chicken-and-egg — routing through the player page solves both.
-Unlike `/Communities`, neither route is wrapped in `IsGatedMix`: tool sharing is account-level, so a
+Unlike `/Communities`, neither route was wrapped in `IsGatedMix`: tool sharing is account-level, so a
 player browsing Fiesta EX must not lose access to their own privacy controls.
 
 `/CommunityTools` leads with *who can read my scores*, not the catalogue: the page's job is the

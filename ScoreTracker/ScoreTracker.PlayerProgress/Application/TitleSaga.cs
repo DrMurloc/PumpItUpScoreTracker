@@ -119,8 +119,11 @@ internal sealed class TitleSaga : IRequestHandler<GetTitleProgressQuery, IEnumer
                     : Phoenix2TitleList.BuildProgress(charts, scores, completedTitles);
             }
             default:
-                throw new ArgumentOutOfRangeException(nameof(request.Mix), request.Mix,
-                    "No title list is known for this mix");
+                // No ladder for this mix, which is a state the reader has to be able to
+                // render rather than a programming error: every mix is browsable now, and
+                // most of them never awarded a title at all. TitleLadders says which case
+                // this is so the page can tell "not built yet" from "never existed".
+                return Array.Empty<TitleProgress>();
         }
     }
 

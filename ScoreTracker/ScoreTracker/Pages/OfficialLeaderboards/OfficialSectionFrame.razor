@@ -172,7 +172,12 @@
     protected override async Task OnInitializedAsync()
     {
         _mix = await UiSettings.GetSelectedMix();
-        if (_mix == MixEnum.XX) _mix = MixEnum.Phoenix;
+        // These are the official site's own boards, and it publishes them for the current
+        // generation only — there is no Prime 2 ranking to mirror and never will be. XX has
+        // clamped to Phoenix here since the section was built; every older mix does the same,
+        // because a board that exists beats a refusal on a page that is about someone else's
+        // numbers anyway.
+        if (_mix.UsesLegacyScoring()) _mix = MixEnum.Phoenix;
         _supplemented = await UiSettings.GetSetting(SupplementedSetting) == bool.TrueString;
         _summary = await Mediator.Send(new GetSupplementedSummaryQuery(_mix));
 

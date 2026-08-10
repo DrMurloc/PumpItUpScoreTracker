@@ -13,15 +13,14 @@ namespace ScoreTracker.Tests.Components;
 /// <summary>
 ///     The phone's More sheet after the nav restructure. The sheet emits ONE grouped list
 ///     that CSS and nav.js present either as an icon grid or as a drill-down, so what is
-///     worth pinning here is the list itself: which groups exist, in what order, what is in
-///     them, and what the legacy-mix gate leaves out. The layout swap is a viewport
-///     behaviour bUnit cannot see.
+///     worth pinning here is the list itself: which groups exist, in what order, and what is
+///     in them. The layout swap is a viewport behaviour bUnit cannot see.
 /// </summary>
 public sealed class ShellMoreSheetTests : ComponentTestBase
 {
     private static readonly Guid UserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
-    private static ShellViewModel Model(bool loggedIn = true, bool gated = false,
+    private static ShellViewModel Model(bool loggedIn = true,
         MixEnum mix = MixEnum.Phoenix, bool hasRecap = false,
         IReadOnlyList<TournamentRecord>? events = null)
     {
@@ -32,7 +31,6 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
             AvatarUrl: "https://piu.test/avatar.png",
             CurrentMix: mix,
             ThemeMix: mix,
-            IsGatedMix: gated,
             HasRecap: hasRecap,
             HighlightedEvents: events ?? Array.Empty<TournamentRecord>(),
             ActivePath: "/",
@@ -181,30 +179,118 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
         Assert.Contains($"/Tournament/Stamina/{stamina.Id}", HrefsUnder(sheet, "Compete"));
     }
 
-    [Fact]
-    public void GatedMixKeepsChartsAndDiscordAndDropsTheGatedGroups()
+    /// <summary>
+    ///     A legacy mix keeps everything that is not about a Phoenix-only concept. The old
+    ///     route gate hid nearly the whole sheet off one flag; scoping is per destination now,
+    ///     and most destinations are not scoped at all (docs/design/legacy-mixes.md).
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.XX)]
+    [InlineData(MixEnum.Prime2)]
+    [InlineData(MixEnum.FirstDanceFloor)]
+    public void ALegacyMixKeepsEverythingThatIsNotPhoenixOnly(MixEnum mix)
     {
-        // A pre-XX mix can't reach most of the app (docs/design/legacy-mixes.md), but the
-        // chart list is the one door it still needs — and Tools is now where that door is,
-        // so the group has to render for gated viewers carrying Charts alone.
-        var sheet = Render(Model(gated: true, mix: MixEnum.XX));
-
-        Assert.Equal(new[] { "Community", "Tools" }, GroupNames(sheet));
-        Assert.Equal(new[] { "/Charts" }, HrefsUnder(sheet, "Tools"));
+        var sheet = Render(Model(mix: mix));
 
         var hrefs = AllHrefs(sheet);
-        Assert.DoesNotContain("/WeeklyCharts", hrefs);
-        Assert.DoesNotContain("/Communities", hrefs);
-        Assert.DoesNotContain("/PhoenixCalculator", hrefs);
-        Assert.Contains(hrefs, h => h.Contains("discord.gg"));
+        Assert.Contains("/Charts", hrefs);
+        Assert.Contains("/Communities", hrefs);
+        Assert.Contains("/ChartRandomizer", hrefs);
+        Assert.Contains("/Rivals", hrefs);
+        Assert.Contains("/LifeCalculator", hrefs);
+        Assert.Contains("/MixChanges", hrefs);
         Assert.Contains("/About", hrefs);
     }
 
-    [Fact]
-    public void GatedMixOffersTheXxImporterToSignedInPlayers()
+    /// <summary>
+    ///     A link is hidden only when the thing it points at does not exist for that mix
+    ///     (owner, 2026-08-10). Offering PUMBILITY to a Prime 2 player offers a number they
+    ///     cannot have; the official boards are the current generation's only.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.XX)]
+    [InlineData(MixEnum.Prime2)]
+    [InlineData(MixEnum.FirstDanceFloor)]
+    public void ALegacyMixIsOfferedNoPhoenixOnlyDestination(MixEnum mix)
     {
-        Assert.Contains("/UploadXXScores", AllHrefs(Render(Model(gated: true, mix: MixEnum.XX))));
-        Assert.DoesNotContain("/UploadXXScores",
-            AllHrefs(Render(Model(loggedIn: false, gated: true, mix: MixEnum.XX))));
+        var sheet = Render(Model(mix: mix, hasRecap: true));
+
+        var hrefs = AllHrefs(sheet);
+        Assert.DoesNotContain("/Pumbility", hrefs);
+        Assert.DoesNotContain(hrefs, h => h.Contains("PhoenixRecap"));
+        Assert.DoesNotContain(hrefs, h => h.StartsWith("/OfficialLeaderboards"));
+        Assert.DoesNotContain("/PhoenixCalculator", hrefs);
+        Assert.DoesNotContain("/RatingCalculator", hrefs);
+        Assert.DoesNotContain("Leaderboards", GroupNames(sheet));
+        // Rotation publishes to the Phoenix generation only, and the entry type cannot hold
+        // an era score yet — off the nav rather than a link to a board that is not coming soon.
+        Assert.DoesNotContain("/WeeklyCharts", hrefs);
+    }
+
+    /// <summary>
+    ///     Titles follow the ladder rather than the scoring model: XX has one, everything else
+    ///     older does not. This is the one rule where XX and Prime 2 part company.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.XX, true)]
+    [InlineData(MixEnum.Phoenix2, true)]
+    [InlineData(MixEnum.Prime2, false)]
+    [InlineData(MixEnum.Prex3, false)]
+    public void TitlesAreOfferedOnlyWhereALadderExists(MixEnum mix, bool expected)
+    {
+        var hrefs = AllHrefs(Render(Model(mix: mix)));
+
+        Assert.Equal(expected, hrefs.Contains("/Titles"));
+    }
+
+    /// <summary>Phoenix keeps the whole sheet — the scoping must not cost the current mixes.</summary>
+    [Fact]
+    public void PhoenixKeepsEveryGroupAndDestination()
+    {
+        var sheet = Render(Model(mix: MixEnum.Phoenix, hasRecap: true));
+
+        Assert.Equal(new[] { "My Progress", "Compete", "Leaderboards", "Community", "Tools" },
+            GroupNames(sheet));
+
+        var hrefs = AllHrefs(sheet);
+        Assert.Contains("/WeeklyCharts", hrefs);
+        Assert.Contains("/Pumbility", hrefs);
+        Assert.Contains("/Titles", hrefs);
+        Assert.Contains("/PhoenixCalculator", hrefs);
+        Assert.Contains("/RatingCalculator", hrefs);
+        Assert.Contains(hrefs, h => h.Contains("PhoenixRecap"));
+    }
+
+    /// <summary>The recap is Phoenix 1 only for now, even for a player who has one.</summary>
+    [Fact]
+    public void TheRecapIsOfferedOnPhoenixOneOnly()
+    {
+        Assert.Contains(AllHrefs(Render(Model(mix: MixEnum.Phoenix, hasRecap: true))),
+            h => h.Contains("PhoenixRecap"));
+        Assert.DoesNotContain(AllHrefs(Render(Model(mix: MixEnum.Phoenix2, hasRecap: true))),
+            h => h.Contains("PhoenixRecap"));
+    }
+
+    /// <summary>
+    ///     Import points at whichever importer the mix uses — scraping the official site on
+    ///     Phoenix, a spreadsheet on everything older. It reached the sheet ONLY on a gated
+    ///     mix before, so a Phoenix player on a phone had no import link at all.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.Phoenix2, "/UploadPhoenixScores")]
+    [InlineData(MixEnum.XX, "/UploadXXScores")]
+    [InlineData(MixEnum.Prime2, "/UploadXXScores")]
+    public void ImportPointsAtTheImporterThatMixUses(MixEnum mix, string expected)
+    {
+        Assert.Contains(expected, AllHrefs(Render(Model(mix: mix))));
+    }
+
+    [Fact]
+    public void ImportIsOfferedOnlyToSignedInPlayers()
+    {
+        var hrefs = AllHrefs(Render(Model(loggedIn: false, mix: MixEnum.XX)));
+
+        Assert.DoesNotContain("/UploadXXScores", hrefs);
+        Assert.DoesNotContain("/UploadPhoenixScores", hrefs);
     }
 }

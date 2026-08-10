@@ -79,7 +79,6 @@ public sealed class ShellModelFactory
             Setting(settings, ProfileImageKey) is { Length: > 0 } image ? image : DefaultAvatar,
             currentMix,
             themeMix,
-            LegacyMixGate.IsGatedMix(currentMix),
             loggedIn && await HasRecap(userId!.Value, cancellationToken),
             await GetHighlightedEvents(cancellationToken),
             http.Request.Path.HasValue ? http.Request.Path.Value! : "/",

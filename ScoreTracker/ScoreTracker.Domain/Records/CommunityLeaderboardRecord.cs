@@ -15,7 +15,30 @@ namespace ScoreTracker.Domain.Records
         PhoenixScore CoOpScore, double SkillRating, PhoenixScore SkillScore, double SkillLevel,
         double SinglesRating, PhoenixScore SinglesScore, double SinglesLevel, double DoublesRating,
         PhoenixScore DoublesScore, double DoublesLevel, double CompetitiveLevel, double SinglesCompetitiveLevel,
-        double DoublesCompetitiveLevel)
+        double DoublesCompetitiveLevel,
+        // Non-null on XX and older, and then it is the ONLY meaningful half of this record:
+        // every field above is derived from Phoenix scoring, which those mixes do not have.
+        LegacyScoreTotals? Legacy = null)
     {
+        /// <summary>
+        ///     A row for a mix with no Phoenix scoring. The fields above are filled with the
+        ///     smallest values their types permit and are never read — Legacy being non-null is
+        ///     what tells a reader which half of this record is real. They are placeholders
+        ///     rather than zeros throughout because DifficultyLevel refuses to be zero.
+        /// </summary>
+        public static CommunityLeaderboardRecord ForLegacy(Name playerName, bool isPublic, Uri profileImage,
+            Guid userId, LegacyScoreTotals totals)
+        {
+            return new CommunityLeaderboardRecord(playerName, isPublic, profileImage, userId,
+                // ClearCount means clears. It carried Recorded, which counts failed runs too --
+                // and the board uses ClearCount > 0 to decide who ranks versus who drops to the
+                // roll-call, so a player with nothing but breaks was ranking on the strength of
+                // having failed.
+                Rating.Min, DifficultyLevel.Min, totals.Passed,
+                0, PhoenixScore.Min, 0, PhoenixScore.Min, 0,
+                0, PhoenixScore.Min, 0, 0,
+                PhoenixScore.Min, 0, 0, 0, 0,
+                totals);
+        }
     }
 }

@@ -89,7 +89,9 @@ else if (_mixKnown)
 
     [Parameter] [EditorRequired] public RenderFragment<SectionContext> Body { get; set; } = null!;
 
-    // PUMBILITY is a Phoenix-lineage stat — XX viewers keep seeing Phoenix, as before.
+    // PUMBILITY is a Phoenix-lineage stat: it prices a 1,000,000-scale score against a
+    // chart's level, and no older mix has one of those. Every legacy viewer keeps seeing
+    // Phoenix, which is what XX has always done here.
     private MixEnum _currentMix = MixEnum.Phoenix;
 
     private bool _mixKnown;
@@ -116,7 +118,7 @@ else if (_mixKnown)
         }
 
         var selected = await UiSettings.GetSelectedMix();
-        _currentMix = selected == MixEnum.XX ? MixEnum.Phoenix : selected;
+        _currentMix = selected.UsesLegacyScoring() ? MixEnum.Phoenix : selected;
 
         // Reached by URL on a mix that has no such page — send them somewhere that means
         // something rather than rendering an empty argument.

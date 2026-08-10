@@ -34,7 +34,11 @@ internal sealed class RivalScoreReader
 
         var byChart = new Dictionary<Guid, List<RivalChartScore>>();
         await AddSiteScores(rivals, mix, chartIds, byChart, cancellationToken);
-        var asOf = await AddOfficialScores(rivals, mix, chartIds, byChart, cancellationToken);
+        // The official mirror covers the current generation only, so there are no board
+        // placements to fold in on an older mix — a legacy comparison is site scores alone.
+        var asOf = mix.UsesLegacyScoring()
+            ? null
+            : await AddOfficialScores(rivals, mix, chartIds, byChart, cancellationToken);
 
         return new RivalChartScores(asOf,
             byChart.ToDictionary(kv => kv.Key,
@@ -49,6 +53,23 @@ internal sealed class RivalScoreReader
     {
         var byUserId = rivals.Where(r => r.UserId != null).ToDictionary(r => r.UserId!.Value);
         if (byUserId.Count == 0) return;
+
+        if (mix.UsesLegacyScoring())
+        {
+            // Legacy bests live in their own store, and their scores exceed a PhoenixScore in
+            // three cases out of four — reading them through the Phoenix path returned nothing
+            // at best and would have thrown at worst.
+            var legacy = await _scores.GetPlayerLegacyScores(mix, byUserId.Keys, chartIds, cancellationToken);
+            foreach (var score in legacy)
+            {
+                if (!byUserId.TryGetValue(score.UserId, out var legacyRival)) continue;
+                Add(byChart, score.ChartId, new RivalChartScore(legacyRival.EdgeId, legacyRival.UserId,
+                    legacyRival.Tag, legacyRival.DisplayName, legacyRival.Avatar, score.Score ?? 0,
+                    null, score.IsBroken, RivalScoreSource.Site, score.LetterGrade));
+            }
+
+            return;
+        }
 
         var scores = await _scores.GetPlayerScores(mix, byUserId.Keys, chartIds, cancellationToken);
         foreach (var score in scores)

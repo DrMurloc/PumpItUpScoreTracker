@@ -41,7 +41,11 @@
 @code {
     [Parameter] public EventCallback OnAdded { get; set; }
 
-    [CascadingParameter(Name = "Mix")] public MixEnum CurrentMix { get; set; } = MixEnum.Phoenix;
+    /// <summary>
+    ///     Supplied by the host. This was a [CascadingParameter(Name = "Mix")] that nothing in
+    ///     the app ever provided, so tag search always ran against Phoenix.
+    /// </summary>
+    [Parameter] public MixEnum CurrentMix { get; set; } = MixEnum.Phoenix;
 
     private Task<IEnumerable<RivalCandidateRecord>> SearchPlayers(string term, CancellationToken token) =>
         Abandonable<RivalCandidateRecord>(

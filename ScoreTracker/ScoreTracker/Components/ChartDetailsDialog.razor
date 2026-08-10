@@ -126,8 +126,10 @@
                recording inputs it feeds — past scores directly above the new one. The tab is
                the heading now, so the panel no longer prints one of its own. *@
             <div class="@PanelClass(DetailsTab.History)">
+                @* No Score passed: the tab's form reads its own prefill from the store its
+                   mix uses, which is also what makes it right on a legacy mix. Drilling to a
+                   sibling chart needs no special case for the same reason. *@
                 <ChartScoreHistoryTab Chart="ViewChart" Mix="Mix" ShowHeading="false"
-                                      Score="@(IsDrilled ? null : Score)"
                                       OnScoreRecorded="OnScoreRecorded"
                                       Active="IsLive(DetailsTab.History)"
                                       @key="(ViewChart.Id, nameof(ChartScoreHistoryTab))"></ChartScoreHistoryTab>
