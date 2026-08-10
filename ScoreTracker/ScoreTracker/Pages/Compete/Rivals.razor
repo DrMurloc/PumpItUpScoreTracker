@@ -58,7 +58,7 @@ else
             else
             {
                 <RivalRoster Rivals="_rivals" OnCompare="Compare" OnRemove="RemoveRival"></RivalRoster>
-                <AddRivalPanel OnAdded="Reload"></AddRivalPanel>
+                <AddRivalPanel CurrentMix="CurrentMix" OnAdded="Reload"></AddRivalPanel>
                 <RivalInviteCard Code="@_inviteCode" OnRecycle="RecycleCode"></RivalInviteCard>
             }
         </MudTabPanel>
@@ -79,10 +79,15 @@ else
 @inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
 @inject ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache ChartCatalog
+@inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings
 @code {
     private const int FeedTake = 30;
 
-    [CascadingParameter(Name = "Mix")] public MixEnum CurrentMix { get; set; } = MixEnum.Phoenix;
+    // Read, never cascaded. This was a [CascadingParameter(Name = "Mix")] and NOTHING in the
+    // app has ever provided one, so it silently sat on its Phoenix default: the page compared
+    // Phoenix scores whatever mix you were on. The mix reaches a circuit through the settings
+    // accessor (ShellContext seeds it from the request), which is how every other page reads it.
+    private MixEnum CurrentMix = MixEnum.Phoenix;
 
     private ChartType _compareType = ChartType.Double;
     private int? _compareLevel;
@@ -111,6 +116,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        CurrentMix = await UiSettings.GetSelectedMix();
         if (CurrentUser.IsLoggedIn) await Reload();
     }
 

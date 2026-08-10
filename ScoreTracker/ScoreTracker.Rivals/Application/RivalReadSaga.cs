@@ -144,19 +144,25 @@ internal sealed class RivalReadSaga :
                 hasMine ? my.Grade : null, theirScore.LegacyGrade));
         }
 
-        // What counts as a comparable row, and who is ahead in it. On Phoenix that is the
-        // score. On a legacy mix it is the LETTER, with the era score as a tiebreak: only 4.8%
-        // of legacy records carry a number, so ranking on the number alone would report a
-        // shared count of nearly zero and call every real rivalry empty.
+        // The score is the comparison, on every mix. Two era scores on the SAME chart are
+        // directly comparable — it is only across charts that they mean nothing, and this
+        // table never compares across charts. The letter breaks a tie, which on a raw point
+        // total is close to a never.
+        //
+        // A legacy row still counts as comparable when both sides recorded a grade and
+        // neither typed a number: only 4.8% of legacy records carry one, so requiring a score
+        // would report almost every real rivalry as empty. Those rows tie on 0 and the letter
+        // decides them, which is the case the tiebreak actually exists for.
         bool Comparable(RivalHeadToHeadRow r) => isLegacy
             ? r.YourLegacyGrade != null && r.TheirLegacyGrade != null
             : r.YourScore != null && r.TheirScore != null;
 
         int Margin(RivalHeadToHeadRow r)
         {
-            if (!isLegacy) return (r.YourScore ?? 0).CompareTo(r.TheirScore ?? 0);
-            var byGrade = ((int)r.YourLegacyGrade!.Value).CompareTo((int)r.TheirLegacyGrade!.Value);
-            return byGrade != 0 ? byGrade : (r.YourScore ?? 0).CompareTo(r.TheirScore ?? 0);
+            var byScore = (r.YourScore ?? 0).CompareTo(r.TheirScore ?? 0);
+            if (!isLegacy || byScore != 0) return byScore;
+
+            return ((int)r.YourLegacyGrade!.Value).CompareTo((int)r.TheirLegacyGrade!.Value);
         }
 
         var comparable = rows.Where(Comparable).ToArray();
