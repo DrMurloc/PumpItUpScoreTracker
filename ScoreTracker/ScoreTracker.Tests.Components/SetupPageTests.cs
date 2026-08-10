@@ -8,10 +8,13 @@ using Bunit.TestDoubles;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using ScoreTracker.CommunityTools.Contracts.Commands;
+using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Identity.Contracts.Commands;
+using ScoreTracker.Identity.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Pages;
@@ -53,6 +56,24 @@ public sealed class SetupPageTests : ComponentTestBase
     }
 
     private IRenderedComponent<Setup> Render() => RenderComponent<Setup>();
+
+    /// <summary>
+    ///     Puts a game tag on the account and answers the doorway lookup with
+    ///     <paramref name="tagIsAlsoCarriedBy" /> — the accounts a self-reported tag collides with.
+    /// </summary>
+    private IRenderedComponent<Setup> RenderCarryingGameTag(string tag,
+        params User[] tagIsAlsoCarriedBy)
+    {
+        CurrentUser.Setup(c => c.User).Returns(new User(UserId, Name.From("Jordan Alvarez"), false,
+            Name.From(tag), new Uri("https://example.invalid/a.png"), null));
+        _mediator.Setup(m => m.Send(It.IsAny<GetUsersByGameTagQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tagIsAlsoCarriedBy);
+        return Render();
+    }
+
+    private static User AccountNamed(string name) =>
+        new(Guid.NewGuid(), Name.From(name), true, Name.From(name),
+            new Uri("https://example.invalid/b.png"), null);
 
     /// <summary>
     ///     [SupplyParameterFromQuery] only binds from the address, so the provider has to arrive
@@ -236,6 +257,146 @@ public sealed class SetupPageTests : ComponentTestBase
         Assert.Contains("--mix-primary: #FF2FA0", page.Markup);
         Assert.DoesNotContain("--mix-primary: #4FE33F", page.Markup);
         Assert.Equal(before, NavigationCount);
+    }
+
+    /// <summary>
+    ///     The game-tag doorway asks on the way past instead of intercepting the sign-in
+    ///     (docs/design/login-overhaul-spec.md C6), and hands the wizard both the account to
+    ///     compare against and the way back to setup.
+    /// </summary>
+    [Fact]
+    public void AGameTagAnotherAccountCarriesOffersTheMerge()
+    {
+        var other = AccountNamed("Cassandra Vex");
+
+        var page = RenderCarryingGameTag("ERRLENA", other);
+
+        var href = page.Find(".setup-merge-link").GetAttribute("href")!;
+        Assert.Contains($"with={other.Id}", href);
+        Assert.Contains("returnUrl=%2FSetup", href);
+    }
+
+    /// <summary>
+    ///     …and never names what it matched. A game tag is self-reported and non-unique, so the
+    ///     invitation reaches strangers who share a nickname; naming the account would tell them
+    ///     it exists and who it belongs to.
+    /// </summary>
+    [Fact]
+    public void TheInvitationNeverNamesTheMatchedAccount()
+    {
+        var page = RenderCarryingGameTag("ERRLENA", AccountNamed("Cassandra Vex"));
+
+        Assert.Contains("ERRLENA", page.Markup);
+        Assert.DoesNotContain("Cassandra Vex", page.Markup);
+    }
+
+    /// <summary>
+    ///     The way back carries the provider, or the wizard would strip the "filled in from
+    ///     PIUGAME" chip off the username field — and PIUGAME is the only sign-in that sets a game
+    ///     tag, so every player who uses this banner arrived through it.
+    /// </summary>
+    [Fact]
+    public void TheWayBackFromTheWizardKeepsTheProvider()
+    {
+        Services.GetRequiredService<FakeNavigationManager>().NavigateTo("/Setup?from=PiuGame");
+        var page = RenderCarryingGameTag("ERRLENA", AccountNamed("Cassandra Vex"));
+
+        var href = page.Find(".setup-merge-link").GetAttribute("href")!;
+        Assert.Contains("returnUrl=%2FSetup%3Ffrom%3DPiuGame", href);
+    }
+
+    /// <summary>
+    ///     The lookup materializes other people's rows, so a single unusable name or profile-image
+    ///     URL among them throws. This is the one page a new account has to finish and nothing
+    ///     catches a circuit-killing throw here, so the invitation gives up rather than stranding
+    ///     them on a dead screen over a stranger's bad data.
+    /// </summary>
+    [Fact]
+    public void AFailingLookupCostsTheInvitationAndNothingElse()
+    {
+        CurrentUser.Setup(c => c.User).Returns(new User(UserId, Name.From("Jordan Alvarez"), false,
+            Name.From("ERRLENA"), new Uri("https://example.invalid/a.png"), null));
+        _mediator.Setup(m => m.Send(It.IsAny<GetUsersByGameTagQuery>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidNameException("A name cannot be empty."));
+
+        var page = Render();
+
+        Assert.Empty(page.FindAll(".setup-merge"));
+        Assert.NotNull(page.Find("button.setup-continue"));
+    }
+
+    /// <summary>
+    ///     A shared tag can match several accounts and the query imposes no order, so the pick is
+    ///     made deterministic here — the language picker reloads this page, and an unordered pick
+    ///     could name a different stranger on the way back.
+    /// </summary>
+    [Fact]
+    public void TheSameTagOffersTheSameAccountEveryRender()
+    {
+        var accounts = new[]
+        {
+            AccountNamed("Cassandra Vex"), AccountNamed("Bo Ryu"), AccountNamed("Ada Quill")
+        };
+        var first = RenderCarryingGameTag("ERRLENA", accounts)
+            .Find(".setup-merge-link").GetAttribute("href");
+
+        // The same set, handed back in a different order — as an unordered query legitimately may.
+        var second = RenderCarryingGameTag("ERRLENA", accounts.Reverse().ToArray())
+            .Find(".setup-merge-link").GetAttribute("href");
+
+        Assert.Equal(first, second);
+    }
+
+    [Fact]
+    public void AGameTagNobodyElseCarriesAsksNothing()
+    {
+        var page = RenderCarryingGameTag("ERRLENA");
+
+        Assert.Empty(page.FindAll(".setup-merge"));
+    }
+
+    /// <summary>
+    ///     An OAuth sign-in creates an account with no game tag, so there is nothing to collide
+    ///     with and the lookup never runs.
+    /// </summary>
+    [Fact]
+    public void AnAccountWithNoGameTagIsNeverAsked()
+    {
+        var page = Render();
+
+        Assert.Empty(page.FindAll(".setup-merge"));
+        _mediator.Verify(m => m.Send(It.IsAny<GetUsersByGameTagQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
+    ///     Sharing follows privacy here as it does on /Account. A public profile with no share
+    ///     preference reads as "not shared", so an account that opens up during setup would
+    ///     otherwise sit outside the pool every other public account belongs to.
+    /// </summary>
+    [Fact]
+    public async Task OpeningTheProfileGrantsTheAllToolsShare()
+    {
+        var page = Render();
+
+        await page.Find("button.setup-switch").ClickAsync(new());
+
+        _mediator.Verify(m => m.Send(It.Is<SetShareWithAllToolsCommand>(c => c.Share),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>…and closing it again withdraws the grant, so the two never disagree.</summary>
+    [Fact]
+    public async Task ClosingTheProfileWithdrawsTheAllToolsShare()
+    {
+        CurrentUser.Setup(c => c.User).Returns(new User(UserId, Name.From("Jordan Alvarez"), true, null,
+            new Uri("https://example.invalid/a.png"), null));
+        var page = Render();
+
+        await page.Find("button.setup-switch").ClickAsync(new());
+
+        _mediator.Verify(m => m.Send(It.Is<SetShareWithAllToolsCommand>(c => !c.Share),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>

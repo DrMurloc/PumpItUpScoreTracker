@@ -362,7 +362,10 @@ two places, both deliberate:
   sharing is what going public unlocks — a lot of players do not know public is an option.
 - **Going public turns all-tools on, every time.** Not "only if never set" — the owner's call, on
   the grounds that people do not flip privacy back and forth and remembering a prior choice is the
-  more confusing behaviour.
+  more confusing behaviour. This binds **every** surface that flips visibility, not just
+  `/Account`: the rule lives in the pages, so a page that forgets it silently keeps its players
+  out of the pool. `/Setup` did exactly that from 2026-08-03 until it was fixed on 2026-08-10 —
+  public on the site, no preference row, invisible to tools.
 
 Consequences that must ship with it:
 

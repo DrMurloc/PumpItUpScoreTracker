@@ -164,6 +164,30 @@ sign-in into a returning user.
   This is independent of the rest of the design and shipped first — the language picker on
   `/Setup` should be a preference, not a workaround for a front door the visitor could not read.
 
+- **D11 — nothing intercepts a new account on its way here, and the page asks the questions
+  instead.** A fresh PIUGAME account whose game tag another account already carries used to be
+  redirected into the merge wizard *before* setup, so a brand-new player's first screen was a
+  merge decision. A game tag is self-reported and non-unique — `GetUsersByGameTagQuery` says so
+  in its own doc comment — so the match is a guess, and it is sometimes about a stranger who
+  shares a nickname. A guess cannot be allowed to decide where an account lands.
+
+  The doorway is a banner at the top of the card instead (`setup-merge`), reusing the copy the
+  import page already carries in all nine locales. It **asks** ("is that you?") rather than
+  telling, it **never names the account it matched** — naming it would tell a stranger that
+  account exists and who it belongs to — and it links to the wizard, whose prove step remains
+  the security gate. An OAuth account has no game tag, so the lookup never runs for one.
+
+  The consequence beyond this page: `/Setup` is now the unconditional first screen of every new
+  account, which makes "is on `/Setup`" the one reliable signal that an account is brand new.
+  The Community Tools rollout notice keys on exactly that to stay out of their way.
+
+- **D12 — sharing follows privacy here, the same as on `/Account`.** The visibility toggle sends
+  `SetShareWithAllToolsCommand` alongside `UpdateUserCommand`. The all-tools pool is not joined
+  on `IsPublic`; it reads a share preference, so a page that flips visibility without writing one
+  leaves the account public on the site and invisible to community tools. Visibility commits
+  first — the reverse order would put an account that is still private into the pool for as long
+  as the second call takes, and permanently if it throws.
+
 ## Technical scope
 
 **Presentation only.** Every new line lands in `ScoreTracker.Web`. No vertical gains a type, no
@@ -203,7 +227,7 @@ manifest already covers it — `AccountPurgeCoverageTests` needs nothing.
 | File | Change |
 |---|---|
 | `Pages/Setup.razor` | **new.** `@page "/Setup"`, `@rendermode RenderModes.Interactive`, hand-styled against `--mix-*` (D9), page-scoped `<style>` block |
-| `Controllers/LoginController.cs` | three redirects: OAuth `isNewUser` → `/Setup`; PIUGAME `resolution.IsNew` → `/Setup`; the PIUGAME tag-match merge's `returnUrl` → `/Setup`. Plus `DevLoginBootstrap`, so the dev path exercises the real flow |
+| `Controllers/LoginController.cs` | two redirects: OAuth `isNewUser` → `/Setup`; PIUGAME `resolution.IsNew` → `/Setup`. Plus `DevLoginBootstrap`, so the dev path exercises the real flow. **Nothing else may intercept a new account** — see D11 |
 | `Resources/App.*.resx` | new keys in **all nine** locales, inserted in alphabetical position (`ResxKeysAreStoredAlphabetically`), per-locale glossaries, Murloc from its own alphabet |
 | `Services/Theming/MixThemes.cs` | one line: `SuccessContrastText`, see Open questions |
 
