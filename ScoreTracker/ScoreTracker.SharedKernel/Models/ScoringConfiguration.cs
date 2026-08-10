@@ -35,7 +35,51 @@ namespace ScoreTracker.SharedKernel.Models
         public IDictionary<PhoenixPlate, double> PlateModifiers { get; set; } = Enum.GetValues<PhoenixPlate>()
             .ToDictionary(p => p, p => 1.0);
 
+        /// <summary>
+        ///     What a Single prices a grade at when it disagrees with <see cref="LetterGradeModifiers" />.
+        ///     Sparse: a grade with no entry here takes the shared value, so only the grades that
+        ///     actually differ appear and the two tables cannot drift on the ones that don't.
+        ///     <para>
+        ///         Null on every configuration that prices both types alike. Serialized
+        ///         configurations carry only the shared tables, so one written before a type split
+        ///         existed still deserializes and still scores exactly as it did.
+        ///     </para>
+        /// </summary>
+        public IDictionary<PhoenixLetterGrade, double>? SinglesLetterGradeModifiers { get; set; }
+
+        /// <summary>
+        ///     What a Single prices a plate at when it disagrees with <see cref="PlateModifiers" />.
+        ///     Sparse and optional on the same terms as <see cref="SinglesLetterGradeModifiers" />.
+        /// </summary>
+        public IDictionary<PhoenixPlate, double>? SinglesPlateModifiers { get; set; }
+
         public double PgLetterGradeModifier { get; set; } = PhoenixLetterGrade.SSSPlus.GetModifier();
+
+        /// <summary>
+        ///     The multiplier a grade earns on a chart of this type — the Singles override when one
+        ///     is present for that grade, the shared table otherwise. Every read of the grade table
+        ///     inside the formula goes through here, so a type split cannot be honoured on one code
+        ///     path and missed on another.
+        /// </summary>
+        public double LetterGradeModifierFor(PhoenixLetterGrade grade, ChartType chartType)
+        {
+            return chartType == ChartType.Single && SinglesLetterGradeModifiers != null &&
+                   SinglesLetterGradeModifiers.TryGetValue(grade, out var singles)
+                ? singles
+                : LetterGradeModifiers[grade];
+        }
+
+        /// <summary>
+        ///     The bonus a plate earns on a chart of this type, resolved exactly as
+        ///     <see cref="LetterGradeModifierFor(PhoenixLetterGrade,ChartType)" /> resolves a grade.
+        /// </summary>
+        public double PlateModifierFor(PhoenixPlate plate, ChartType chartType)
+        {
+            return chartType == ChartType.Single && SinglesPlateModifiers != null &&
+                   SinglesPlateModifiers.TryGetValue(plate, out var singles)
+                ? singles
+                : PlateModifiers[plate];
+        }
 
         // The mix whose grade cutoffs price score→grade in this config. Phoenix 2 shifted the
         // sub-AAA thresholds, so a P2 config must grade against the P2 table; everything else
@@ -108,7 +152,7 @@ namespace ScoreTracker.SharedKernel.Models
             TimeSpan duration, bool isBroken, PhoenixScore score, PhoenixPlate plate, bool includeLevelOverride)
         {
             if (score < MinimumScore) return 0;
-            var letterGradeModifier = LetterGradeModifierFor(score);
+            var letterGradeModifier = LetterGradeModifierFor(score, chartType);
 
             switch (Formula)
             {
@@ -117,7 +161,7 @@ namespace ScoreTracker.SharedKernel.Models
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration, includeLevelOverride);
                     result *=
                         letterGradeModifier
-                        * PlateModifiers[plate];
+                        * PlateModifierFor(plate, chartType);
                     if (ChartModifiers.TryGetValue(chartId, out var chartModifier)) result *= chartModifier;
                     if (isBroken) result *= StageBreakModifier;
 
@@ -126,7 +170,7 @@ namespace ScoreTracker.SharedKernel.Models
                 case CalculationType.Avalanche:
                 {
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration, includeLevelOverride);
-                    result *= PlateModifiers[plate];
+                    result *= PlateModifierFor(plate, chartType);
                     var scoreModifier = letterGradeModifier;
                     if (isBroken) scoreModifier -= StageBreakModifier;
                     return result * scoreModifier;
@@ -143,7 +187,7 @@ namespace ScoreTracker.SharedKernel.Models
                         includeLevelOverride);
                     if (Mix == MixEnum.Phoenix2 && chartType == ChartType.Single && result > 0)
                         result += (int)level + 1 > 24 ? 10 : 5;
-                    result *= letterGradeModifier + PlateModifiers[plate];
+                    result *= letterGradeModifier + PlateModifierFor(plate, chartType);
                     if (isBroken) result *= StageBreakModifier;
 
                     return result;
@@ -156,7 +200,7 @@ namespace ScoreTracker.SharedKernel.Models
                     var songTypeModifier = SongTypeModifiers[songType];
                     var timeModifier = duration / BaseAverageTime;
                     var scoreModifier = letterGradeModifier;
-                    var plateModifier = PlateModifiers[plate];
+                    var plateModifier = PlateModifierFor(plate, chartType);
                     var chartModifier = ChartModifiers.TryGetValue(chartId, out var chartModResult)
                         ? chartModResult
                         : 1.0;
@@ -201,10 +245,10 @@ namespace ScoreTracker.SharedKernel.Models
         ///     <see cref="Decompose(Chart,PhoenixScore,PhoenixPlate,bool,bool)" /> so the split
         ///     cannot answer with a different grade than the total it is splitting.
         /// </summary>
-        private double LetterGradeModifierFor(PhoenixScore score)
+        private double LetterGradeModifierFor(PhoenixScore score, ChartType chartType)
         {
             var letterGrade = score.LetterGradeFor(Mix);
-            var letterGradeModifier = LetterGradeModifiers[letterGrade];
+            var letterGradeModifier = LetterGradeModifierFor(letterGrade, chartType);
             if (ContinuousLetterGradeScale && score != 1000000)
             {
                 double nextModifier;
@@ -212,7 +256,7 @@ namespace ScoreTracker.SharedKernel.Models
                 if (letterGrade != PhoenixLetterGrade.SSSPlus)
                 {
                     var nextGrade = letterGrade + 1;
-                    nextModifier = LetterGradeModifiers[nextGrade];
+                    nextModifier = LetterGradeModifierFor(nextGrade, chartType);
                     nextThreshold = nextGrade.GetMinimumScoreFor(Mix);
                 }
                 else
@@ -222,7 +266,7 @@ namespace ScoreTracker.SharedKernel.Models
                 }
 
                 var threshold = letterGrade.GetMinimumScoreFor(Mix);
-                var modifier = LetterGradeModifiers[letterGrade];
+                var modifier = LetterGradeModifierFor(letterGrade, chartType);
                 letterGradeModifier =
                     modifier + (nextModifier - modifier) * (score - threshold) / (nextThreshold - threshold);
             }
@@ -253,9 +297,9 @@ namespace ScoreTracker.SharedKernel.Models
         {
             if (score < MinimumScore) return default;
 
-            var grade = LetterGradeModifierFor(score);
+            var grade = LetterGradeModifierFor(score, chart.Type);
             var breakModifier = isBroken ? StageBreakModifier : 1.0;
-            var plateModifier = PlateModifiers[plate];
+            var plateModifier = PlateModifierFor(plate, chart.Type);
 
             switch (Formula)
             {
@@ -296,7 +340,7 @@ namespace ScoreTracker.SharedKernel.Models
         public double PlateHeadroom(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken = false,
             bool includeLevelOverride = true)
         {
-            var best = PlateModifiers.MaxBy(kv => kv.Value).Key;
+            var best = PlateModifiers.Keys.MaxBy(p => PlateModifierFor(p, chart.Type));
             return Math.Max(0,
                 GetScore(chart, score, best, isBroken, includeLevelOverride)
                 - GetScore(chart, score, plate, isBroken, includeLevelOverride));
