@@ -35,9 +35,9 @@ flips the model:
 | Score state | Unplayed / Played / Passed / Failed as **multi-select chips** ("Unplayed or Failed" = everything you haven't beaten), plus per-family grade ≥ / plate ≥ / score range / recorded date. |
 | Popularity | Site score counts for the searched mix drive the sort; official mirror rank renders as a badge when present (display-only, never a filter). |
 | Default sort | **Level descending**; within-level tiebreak = **Scoring Level** (score-derived) in a Phoenix-family mix, Community Vote average in XX and older. Vote data never orders modern-mix results, tiebreaks included. |
-| Sorts | Level · scoring level · popularity · pass rate · newest content (debut era) · name · BPM · NPS · duration · my grade · my recent (Community Vote replaces scoring level as the difficulty sort in XX and older). |
+| Sorts | Level · scoring level · popularity · **pass difficulty** · newest content (debut era) · name · BPM · NPS · duration · my grade · my recent (Community Vote replaces scoring level as the difficulty sort in XX and older). The difficulty sort is the community *lens*, never the raw rate — the ramp already encodes "hard for its level", where a rate needs a sample floor to mean anything. (This row said "pass rate" through round 5; the code never did.) |
 | Card display | Fixed core card + a small curated **Display switch set** in Comfortable (the tier-lists idiom: step artist, duration, note count). **The active sort key always auto-surfaces on the card/table and cannot be hidden** — sorting by an invisible value is impossible by construction; the sort menu never greys out. Table shows the full fact set with the sort column highlighted. No column pickers anywhere on the page. |
-| Export | Toolbar **⤓ Export** button → dialog: column picker over the full inventory (this is where column freedom lives), downloading a CSV of the **entire filtered set** via an endpoint reusing the page's query-string contract. Column picks persist as a UiSetting; My columns signed-in only; stable English headers in registry order (convenience surface, outside the versioned `api/*` contract); Excel formula-injection hygiene on values. |
+| Export | Toolbar **⤓ Export** button → dialog: column picker over the full inventory (this is where column freedom lives), downloading a CSV of the **entire filtered set** via an endpoint reusing the page's query-string contract. Column picks persist as a UiSetting; My columns signed-in only *and mix-conditional* (§8); stable English headers in registry order (convenience surface, outside the versioned `api/*` contract), except the `pc:` passthrough which is deliberately unstable (§8); Excel formula-injection hygiene on values. |
 | Dropped | Has-video, recently-added (needs version/date backfill the owner defers), letter-grade percentiles, single-select level (→ range), the `/{userId}/Charts` share view, UCS (separate rethink). |
 | Nulls | Facets with gappy coverage (NPS, badges, BPM on legacy) silently exclude unmatched charts. |
 | Rendering | Interactive circuit page. Load state from the query string, filter live without reloads, write state back via the history interop (the PR #164 pattern — no programmatic `NavigateTo` for filter state). SSR/SEO facets are explicitly not v1. |
@@ -58,7 +58,7 @@ backfilled catalogue answers for itself.
 | **Community Vote** | The voted difficulty list — the only difficulty signal for XX and older. Never abbreviated, never "Community" alone, never "Difficulty". | Tier-list rows named `Difficulty` (storage name stays; display name never uses it) |
 | **Pass Difficulty** | Tier bucket (Overrated → Underrated): how hard the chart is to *pass* relative to its level, from weighted recorded passes. Modern mixes. | `Pass Count` tier list |
 | **Score Difficulty** | Tier bucket: how hard it is to *score well* on, relative to its level. Modern mixes. | `Scores` tier list |
-| **Pass Rate** | Raw percentage of recorded scores that are passes. Not relative to anything. | `PassCount ÷ Count` from score aggregates |
+| ~~**Pass Rate**~~ | **Removed from this page entirely (§8).** A raw percentage relative to nothing, on a self-selected population — it looked authoritative and meant nothing, which is how a page loses a player's trust. Card fact, table column, drawer filter, export column and `SearchChartsQuery.PassRateMin` all gone; `ChartSearchResult.PassCount` went with them. The `Pass rate` l10n key **stays** — `StaminaTournament.razor` still uses it. | — |
 | **Scoring Level** | Score-derived decimal difficulty estimate; the Phoenix-family difficulty sort and the default-sort tiebreak. | `IChartScoringLevelRepository` |
 
 ### The page stack (locked, toolbar rounds 3–5)
@@ -148,7 +148,7 @@ references.**
      entries (Pass/Score Difficulty) for Phoenix-family mixes, `Difficulty` entries
      (**Community Vote**) for XX-and-older;
      `IChartScoringLevelRepository`; `IScoreReader.GetChartScoreAggregates` (popularity,
-     pass rate, PG).
+     PG — the pass half of the aggregate is no longer projected, §8).
   3. User facets when signed in: `IScoreReader` best-scores per family; saved-lists arrive
      from the page as `RestrictToChartIds` (Catalog stays agnostic of list storage).
   4. Sort, tiebreak, page slice. An unpaged path serves the CSV export — bounded by
@@ -218,7 +218,8 @@ No new scheduled jobs, no migrations expected, no post-deploy owner presses.
   equivalent it is dropped silently.
 - **Export headers**: stable English by design (community tools will parse them), but the
   endpoint is a convenience surface — explicitly outside the `Tests.Api` wire contract.
-  Values are formula-injection escaped (`=`, `+`, `-`, `@` starts).
+  Values are formula-injection escaped (`=`, `+`, `-`, `@` starts). The `pc:` group added in
+  §8 is the one deliberate exception and says so in the dialog.
 - **`/TierLists` XX divergence**: the SRP will show XX tiers vote-sourced while the tier
   page still runs XX through score-derived lenses. Owner decides separately whether to
   align the page.
@@ -416,3 +417,170 @@ they are the exact vocabulary the redesign will want back, and re-translating th
 more than an unreferenced key does.
 
 When cross-mix returns it gets a full mock from the start, not a flag on this page.
+
+## 8. Export column set — second pass (workshop, owner-confirmed)
+
+The C9 export shipped seven default columns over a 28-column inventory. This pass adds what
+the data already holds, deletes what never should have been there, and opens a passthrough
+for piucenter's raw metrics. **No migration, no new table, no new entity, no new Domain
+port** — every column here reads something that already exists.
+
+### What lands
+
+| Column | Group | Scope | Source |
+|---|---|---|---|
+| `Pumbility` | My | Phoenix + Phoenix 2 | `ScoringConfiguration.PumbilityScoring(mix, includeCoOp).GetScore(...)` on the row — pure, no read. `N2` in the export, which is presentation and therefore the one layer allowed to round (`PumbilityPrecisionTests` scans every project except Web) |
+| `MyPerfects/Greats/Goods/Bads/Misses` | My | Phoenix family | already hydrated by `GetBestScores`; the search handler was dropping them in `MyRecord` |
+| `MyMaxCombo` | My | Phoenix family | derived — see the gate below |
+| `MyPlayCount` | My | **Phoenix 2 only** | new ScoreLedger query over the journal |
+| `ChartId` | Chart | all | `Chart.Id`. The export exists so tools can parse it and had no join key; song+type+level is not stable across renames |
+| `ChartUrl` | Chart | all | `ChartSlugs.CanonicalPath` + request base |
+| `PlayerCount` | Chart | all | `Chart.PlayerCount` — a drawer facet that was never exportable |
+| six `pc:` bundles | piucenter | all | banked `ChartSkillMetric` rows, already loaded and cached by the handler |
+
+**CO-OP in PUMBILITY**: `includeCoOp: true` on Phoenix 1, where CO-OP charts genuinely
+score. Phoenix 2 needs no argument — `Phoenix2PumbilityScoring` zeroes CO-OP itself, and
+nothing on the official site prices a CO-OP chart there.
+
+### `MyMaxCombo` — the gate
+
+Combo is the only unknown in the Phoenix formula once the five judgement counts and the
+score are known, so it inverts:
+
+```
+MaxCombo = 200 × (score × T / 1e6 − .995 × (P + .6G + .2Go + .1B))     where T = P+G+Go+B+M
+```
+
+**It derives only when `T` equals the chart's stored note count. Otherwise the column is
+null.** The inversion needs the denominator the game scored against; a judgement set that
+does not cover the whole chart is not that denominator, and a stage break is the case where
+it most obviously isn't. Measured against production (2026-08-10): all 6,066 non-broken
+Phoenix 2 records carrying judgements satisfy the gate, and on full-combo rows — where the
+answer is known in advance, since `Goods=Bads=Misses=0` implies combo equals note count —
+the inversion lands (3,333 → 3333.00; worst of twenty sampled, a 3,500-note chart, 3499.60).
+Note the two known-short Phoenix note counts (`Simon Says, EURODANCE!!` S20, `Over the
+Horizon` S20 — stored counts that predate a re-step) fail the gate and correctly return null
+rather than a wrong number.
+
+The solver lives in `Domain/Services/`, **not** beside `ScoreScreen` in `Domain/Records/`,
+because Records is a coverage-excluded folder and a formula inversion is exactly what
+coverage is for. Same assembly as the forward formula so a round-trip test pins the pair —
+the reasoning `ScoringConfiguration.Decompose` already uses.
+
+The site never reports max combo (the recently-played card carries five `data-th` cells:
+PERFECT/GREAT/GOOD/BAD/MISS, and the best-score page carries none), so capturing it at
+ingestion instead is a separate, later change. This solver is what that change would reuse.
+
+### `MyPlayCount` — why Phoenix 2 only
+
+The journal shipped 2026-06-12; Phoenix 2's first import was 2026-07-11. **Phoenix 2 has no
+backfill rows** — its sources are `officialImport` / `manual` / `csv` only, so the journal
+is a genuine gap-free personal play log. Phoenix 1 is the opposite: 939,395 of its 1.09M
+rows are `backfill`, one per record dated at the record's last update, so a count there
+reads 1 for a chart played two hundred times. That number would be worse than no column.
+
+Honest even where it ships: this counts plays *we observed* — best-list changes plus
+whatever the recently-played window caught. 91% of Phoenix 2 user-chart pairs sit at exactly
+1 today. That is a month-old mix, not a defect, and the column gets more interesting monthly.
+
+### Judgement density (why five columns earn their width)
+
+| Mix | Records | With judgements |
+|---|---|---|
+| Phoenix 2 | 11,923 | 6,678 (**56%**; 71% of officially-imported records; 80–98% per active importer) |
+| Phoenix 1 | 1,051,226 | 10,867 (1.0%) |
+
+Structural, not accidental: capture landed 2026-07-17 and judgements are written only when
+the record *changes* (`UpdatePhoenixRecordHandler` — the previous play's counts describe the
+old result and would be a lie on the new one). Phoenix 2 records were nearly all created
+through the capturing path; Phoenix 1's mostly predate it and fill in as people upscore.
+Manual and CSV entries carry none by construction. Columns ship on both mixes and are null
+where absent.
+
+### The piucenter passthrough
+
+136 metric names over 4,411 charts. `data_version` is bookkeeping and never ships; `nps`
+already has its own column. The remaining 134 group into six checkboxes:
+
+| Checkbox | Columns | Family |
+|---|---|---|
+| Chart analysis | 4 | `difficulty_prediction`, `sustain_time`, `time_under_tension`, `last_segment_is_peak` |
+| Skill emphasis | 29 | `badge_fraction:*` |
+| Top-3 skills | 29 | `top3:*` — the same data the `Badges` column renders, as a matrix |
+| Practice ranks | 32 | `practice_rank:*` |
+| Chart ending | 29 | `last_segment_badge:*` |
+| Rare patterns | 11 | `rare:*` |
+
+Rules: headers carry a `pc:` prefix; ticking a family emits **every name in that family**
+whether or not the current filter contains a chart holding it, so the header set does not
+shift between two exports of different filters; and the group is labelled unstable **in the
+dialog**, because it is a third-party passthrough and the promise the rest of the file makes
+does not extend to it.
+
+**`difficulty_prediction` is not a difficulty projection and is not Scoring Level.** It is
+piucenter's own `page-content/tierlists.json` — folder → NPS-cluster → predicted value —
+and it behaves like a within-folder refinement of the *printed* level, never leaving it by
+more than +0.5 when averaged per folder (S1 → 1.28, S17 → 17.28, S25 → 25.27). Our Scoring
+Level is score-derived and roams: across the 3,616 Phoenix charts holding both, mean absolute
+gap 1.40 levels, 31% more than two levels apart (*Pump me Amadeus* S13 — piucenter 12.26,
+ours 16.84). They measure different things. It stays inside the passthrough, keeps its
+`pc:` prefix, and **nothing calls it a projection**. (It already ships publicly as
+`DifficultyPrediction` on the api/v2 catalog DTO; that name is spent.)
+
+### Dialog
+
+37 single columns plus 6 bundles does not fit the flat chip rows C9 shipped. Changes:
+
+- **An "All *n*" per group** — with 17 chart columns and 13 personal ones, ticking one at a
+  time is the common case going wrong.
+- **Bundle chips read differently**: dashed edge and an explicit `×29`, because one tap is
+  not one column. Ticking Practice ranks moves the footer from 6 columns to 38, and the
+  footer count is the only thing that says so.
+- **My columns is mix-conditional** — 13 on Phoenix 2, 12 on Phoenix 1, 4 on XX and older.
+  This also fixes an existing wart: the group currently offers *My legacy grade* on Phoenix
+  and *My Phoenix score* on XX and returns them blank.
+- The unstable note lives in the piucenter group, not in this doc alone.
+
+`charts.scss` line 1 sets `.mud-dialog-width-sm { max-width: none !important; }`, so this
+dialog has never actually been `MaxWidth.Small` — there is room for a second chip column on
+desktop if the single column reads long.
+
+### Layer scope
+
+| Layer | Change |
+|---|---|
+| SharedKernel | none — `PumbilityScoring` already exists and Web already calls it |
+| Domain | one file: the combo solver in `Domain/Services/` |
+| Application, Data | none |
+| Catalog | `ChartSearchMyState` +5 judgement ints; `ChartSearchResult` +metric bag, −`PassCount`; `SearchChartsQuery` −`PassRateMin`; handler carries both through and loses the pass-rate filter. Both additions are free at runtime — already loaded, already cached |
+| ScoreLedger | `GetPlayerChartPlayCountsQuery` + handler + one method on the internal `IScoreJournalRepository` + its EF implementation. Covered by the existing `(UserId, MixId, ChartId, OccurredAt)` index |
+| Web | the registry, the dialog, the controller, and the pass-rate deletions in `ChartSearchCard` / `Charts.razor` / `ChartSearchUrlParser` |
+
+`ChartExport.Column.Value` grows a context record so play count can ride the export without
+the page paying for a read it never renders.
+
+### Commit order
+
+| # | Commit | Layer |
+|---|---|---|
+| E1 | This doc section | docs |
+| E2 | Purge pass rate: card fact, table column, drawer control, chip, URL param, `PassRateMin`, `MinScoresForPassRate`, `PassCount`, the export column and its `DefaultColumns` entry; delete `PassRateNeedsTheMinimumSample` | Presentation/Catalog |
+| E3 | `ChartId`, `ChartUrl`, `PlayerCount` — registry only, proves the dialog/controller/test loop | Presentation |
+| E4 | Dialog restructure: group headers, All-*n*, mix-conditional My columns (incl. the legacy-blank fix) + bUnit | Presentation |
+| E5 | `Pumbility` column + l10n | Presentation |
+| E6 | Judgements through `ChartSearchMyState` + five columns + l10n | Catalog/Presentation |
+| E7 | Combo solver + round-trip unit test + `MyMaxCombo` column | Domain/Presentation |
+| E8 | Play count: ScoreLedger query, handler, repo method, integration test, the `Column` context refactor, the column | ScoreLedger/Presentation |
+| E9 | piucenter bundles: metric bag projection, bundle expansion in `Write`, six chips, the unstable note + l10n | Catalog/Presentation |
+
+~20 new l10n keys across nine locales, inserted alphabetically, landing with the commit that
+introduces them. The `Pass rate` key stays — `StaminaTournament.razor` still uses it, and a
+call-site grep scoped to this page would wrongly call it dead.
+
+### Open
+
+- One chip column or two on desktop.
+- The gate admits ~500 broken Phoenix 2 records whose judgement sums *do* equal the note
+  count. Deriving their combo is arithmetically identical; whether a failed stage's score
+  is formula-comparable is the part nobody can check. Currently they derive, because the
+  gate is the note-count rule and nothing else.
