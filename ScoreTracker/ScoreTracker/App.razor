@@ -1,7 +1,7 @@
 @using System.Globalization
-@using Microsoft.AspNetCore.Localization
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Localization
 @using ScoreTracker.Web.Services.Theming
 @inject ShellModelFactory ShellFactory
 @inject StaticHeadResolver HeadResolver
@@ -331,9 +331,8 @@
             HttpContext.RequestAborted);
         // Only when it is missing or stale: an unconditional Set-Cookie makes every response
         // uncacheable, and explicit changes already go through /Culture/Set.
-        var resolved = CookieRequestCultureProvider.MakeCookieValue(
-            new RequestCulture(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture));
-        if (HttpContext.Request.Cookies[CookieRequestCultureProvider.DefaultCookieName] != resolved)
-            HttpContext.Response.Cookies.Append(CookieRequestCultureProvider.DefaultCookieName, resolved);
+        var resolved = CultureCookie.ValueFor(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
+        if (HttpContext.Request.Cookies[CultureCookie.Name] != resolved)
+            CultureCookie.Write(HttpContext.Response, resolved);
     }
 }

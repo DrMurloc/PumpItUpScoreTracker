@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -19,6 +18,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.Contracts;
+using ScoreTracker.Web.Services.Localization;
 
 namespace ScoreTracker.Web.Controllers;
 
@@ -101,10 +101,7 @@ public sealed class LoginController : Controller
 
         var culture = await _uiSettings.GetSetting("Culture", HttpContext.RequestAborted, user.Id);
         if (culture != null)
-            HttpContext.Response.Cookies.Append(
-                CookieRequestCultureProvider.DefaultCookieName,
-                CookieRequestCultureProvider.MakeCookieValue(
-                    new RequestCulture(culture, culture)));
+            CultureCookie.Write(HttpContext.Response, CultureCookie.ValueFor(culture));
         var url = isNewUser ? SetupUrl(providerName) : returnUrl;
 
         return LocalRedirect(url ?? "/");
@@ -171,10 +168,7 @@ public sealed class LoginController : Controller
 
         var culture = await _uiSettings.GetSetting("Culture", HttpContext.RequestAborted, resolution.User.Id);
         if (culture != null)
-            HttpContext.Response.Cookies.Append(
-                CookieRequestCultureProvider.DefaultCookieName,
-                CookieRequestCultureProvider.MakeCookieValue(
-                    new RequestCulture(culture, culture)));
+            CultureCookie.Write(HttpContext.Response, CultureCookie.ValueFor(culture));
 
         // Aliases held by a different account were proven by the same credentials — record
         // that so a drifted-identifier merge is friction-free.

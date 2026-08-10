@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Web.Services.Localization;
 
 namespace ScoreTracker.Web.Controllers;
 
@@ -13,10 +13,7 @@ public class CultureController : Controller
         [FromQuery(Name = "redirectUrl")] string redirectUri)
     {
         if (SupportedCultures.IsSupported(culture))
-            HttpContext.Response.Cookies.Append(
-                CookieRequestCultureProvider.DefaultCookieName,
-                CookieRequestCultureProvider.MakeCookieValue(
-                    new RequestCulture(culture, culture)));
+            CultureCookie.Write(HttpContext.Response, CultureCookie.ValueFor(culture));
 
         return LocalRedirect(redirectUri);
     }
