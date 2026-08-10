@@ -7239,6 +7239,32 @@ button.chart-card-art {
     text-decoration: underline;
 }
 
+/* A bundle is not a column. The dashed edge and the multiplier say so before the footer
+   count has to: one press of Practice ranks moves the file by thirty-two columns. */
+.srp-export-bundle {
+    border: 1px dashed var(--mix-ink-muted);
+    background: transparent;
+}
+
+.srp-export-bundle.srp-badge-opt-sel {
+    border-color: var(--mix-primary);
+    outline: none;
+    background: var(--mix-surface-muted);
+}
+
+.srp-export-mult {
+    margin-left: 7px;
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-export-unstable {
+    color: var(--mix-ink-muted);
+    border-top: 1px dashed var(--mix-surface-muted);
+    padding-top: 7px;
+}
+
 .srp-export-hint {
     color: var(--mix-ink-muted);
 }

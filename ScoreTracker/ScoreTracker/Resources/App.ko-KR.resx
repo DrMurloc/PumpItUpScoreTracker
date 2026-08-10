@@ -1104,6 +1104,9 @@
   <data name="Chart Age by Level" xml:space="preserve">
     <value>Chart Age by Level</value>
   </data>
+  <data name="Chart analysis" xml:space="preserve">
+    <value>채보 분석</value>
+  </data>
   <data name="Chart analysis made possible by" xml:space="preserve">
     <value>채보 분석 제공</value>
   </data>
@@ -1130,6 +1133,9 @@
   </data>
   <data name="Chart Details" xml:space="preserve">
     <value>채보 세부 정보</value>
+  </data>
+  <data name="Chart ending" xml:space="preserve">
+    <value>채보 후반부</value>
   </data>
   <data name="Chart ID" xml:space="preserve">
     <value>채보 ID</value>
@@ -4665,6 +4671,9 @@
   <data name="PIU Tier List" xml:space="preserve">
     <value>PIU 서열표</value>
   </data>
+  <data name="piucenter columns" xml:space="preserve">
+    <value>piucenter 열</value>
+  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4871,6 +4880,9 @@
   </data>
   <data name="PR" xml:space="preserve">
     <value>PR</value>
+  </data>
+  <data name="Practice ranks" xml:space="preserve">
+    <value>연습 순위</value>
   </data>
   <data name="PreBuilt Tournament Configuration" xml:space="preserve">
     <value>사전 설정 대회 구성</value>
@@ -5086,6 +5098,9 @@
   </data>
   <data name="Rankings" xml:space="preserve">
     <value>랭킹</value>
+  </data>
+  <data name="Rare patterns" xml:space="preserve">
+    <value>희귀 패턴</value>
   </data>
   <data name="Rare PG" xml:space="preserve">
     <value>희귀 PG</value>
@@ -6008,6 +6023,9 @@
   <data name="Skill data: PIU Center — maintained by aesthete" xml:space="preserve">
     <value>스킬 데이터: PIU Center — 관리자 aesthete</value>
   </data>
+  <data name="Skill emphasis" xml:space="preserve">
+    <value>스킬 비중</value>
+  </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>스킬 지문</value>
   </data>
@@ -6533,6 +6551,9 @@
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>이 주소에는 아무것도 없습니다 — 시리즈와 함께 이동했거나, 처음부터 존재하지 않았을 수 있습니다. 검색은 모든 채보를 알고 있습니다.</value>
   </data>
+  <data name="These come straight from piucenter. Header names can change when their data changes." xml:space="preserve">
+    <value>piucenter에서 그대로 가져온 값입니다. 데이터가 바뀌면 헤더 이름도 바뀔 수 있습니다.</value>
+  </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>이 공식들은 Team Infinitesimal이 NX2와 Prime에서 데이터마이닝한 것입니다. Phoenix나 Phoenix 2에서 재검증한 사람은 없으므로, 이 수치는 정확한 기체 값이 아니라 시스템의 형태로 받아들이세요.</value>
   </data>
@@ -6874,6 +6895,9 @@
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>동급 상위 {0}%</value>
+  </data>
+  <data name="Top-3 skills" xml:space="preserve">
+    <value>상위 3개 스킬</value>
   </data>
   <data name="Top-50 average score {0} — {1}" xml:space="preserve">
     <value>톱50 평균 점수 {0} — {1}</value>

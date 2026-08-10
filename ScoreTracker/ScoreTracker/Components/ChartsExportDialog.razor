@@ -1,9 +1,12 @@
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @namespace ScoreTracker.Web.Components
 @inject IUiSettingsAccessor UiSettings
 @inject NavigationManager NavManager
+@inject IMediator Mediator
 
 @* The export dialog (docs/design/charts-srp.md §2 Export): full column freedom lives
    HERE, not on the page. Downloads the entire filtered set via the CSV endpoint, which
@@ -34,6 +37,32 @@
                         </span>
                     }
                 </div>
+            }
+            @if (_metricNames.Count > 0)
+            {
+                <div class="srp-export-grp">
+                    <MudText Typo="Typo.overline">@L["piucenter columns"]</MudText>
+                    <button type="button" class="srp-export-all" @onclick="ToggleAllBundles">
+                        @L["All {0}", BundleColumnCount]
+                    </button>
+                </div>
+                <div class="srp-export-columns">
+                    @foreach (var bundle in ChartExport.Bundles)
+                    {
+                        var captured = bundle;
+                        var count = captured.Expand(_metricNames).Count;
+                        if (count == 0) continue;
+                        var selected = _columns.Contains(captured.Key);
+                        <span class="srp-badge-opt srp-export-bundle @(selected ? "srp-badge-opt-sel" : "")"
+                              role="button" tabindex="0" @onclick="() => ToggleColumn(captured.Key)">
+                            @(selected ? "✓ " : string.Empty)@L[BundleLabel(captured.Key)]
+                            <span class="srp-export-mult">×@count</span>
+                        </span>
+                    }
+                </div>
+                <MudText Typo="Typo.caption" Class="srp-export-unstable">
+                    @L["These come straight from piucenter. Header names can change when their data changes."]
+                </MudText>
             }
             <MudText Typo="Typo.caption" Class="srp-export-file">@FileName · @L["{0} columns", _selectedCount]</MudText>
         </div>
@@ -95,8 +124,15 @@
         }
     }
 
+    /// <summary>Catalog metric names, for the family counts. Cached behind the query.</summary>
+    private IReadOnlyList<string> _metricNames = Array.Empty<string>();
+
+    private int BundleColumnCount => ChartExport.Bundles.Sum(b => b.Expand(_metricNames).Count);
+
     protected override async Task OnInitializedAsync()
     {
+        _metricNames = ChartExport.ExportableMetricNames(
+            await Mediator.Send(new GetChartMetricNamesQuery()));
         var savedColumns = await UiSettings.GetSetting(ColumnsSettingKey);
         if (!string.IsNullOrWhiteSpace(savedColumns))
             _columns = savedColumns.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -117,6 +153,28 @@
         await UiSettings.SetSetting(ColumnsSettingKey, string.Join(',', _columns));
     }
 
+    private async Task ToggleAllBundles()
+    {
+        var keys = ChartExport.Bundles.Select(b => b.Key).ToArray();
+        if (keys.All(_columns.Contains)) _columns.ExceptWith(keys);
+        else _columns.UnionWith(keys);
+        await UiSettings.SetSetting(ColumnsSettingKey, string.Join(',', _columns));
+    }
+
+    internal static string BundleLabel(string key)
+    {
+        return key switch
+        {
+            "ChartAnalysis" => "Chart analysis",
+            "SkillEmphasis" => "Skill emphasis",
+            "TopSkills" => "Top-3 skills",
+            "PracticeRanks" => "Practice ranks",
+            "ChartEnding" => "Chart ending",
+            "RarePatterns" => "Rare patterns",
+            _ => key
+        };
+    }
+
     private string FileName => $"charts_{ChartSlugs.MixSlug(Mix)}.csv";
 
     private string ExportUrl
@@ -135,11 +193,14 @@
     }
 
     /// <summary>What the file will actually carry — the picks this mix offers, not every pick held.</summary>
-    private int _selectedCount => OrderedColumns.Count();
+    private int _selectedCount =>
+        ChartExport.ColumnsFor(Mix).Count(c => _columns.Contains(c.Key))
+        + ChartExport.Bundles.Where(b => _columns.Contains(b.Key)).Sum(b => b.Expand(_metricNames).Count);
 
     /// <summary>Registry order, so the file's column order is stable regardless of click order.</summary>
     private IEnumerable<string> OrderedColumns =>
-        ChartExport.ColumnsFor(Mix).Where(c => _columns.Contains(c.Key)).Select(c => c.Key);
+        ChartExport.ColumnsFor(Mix).Where(c => _columns.Contains(c.Key)).Select(c => c.Key)
+            .Concat(ChartExport.Bundles.Where(b => _columns.Contains(b.Key)).Select(b => b.Key));
 
     internal static string ColumnLabel(string key)
     {

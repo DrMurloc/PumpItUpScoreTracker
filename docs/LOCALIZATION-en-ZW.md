@@ -52,8 +52,8 @@ exists because a rule with no ratchet is what produced the five dialects.
 - **Acronyms and brand names stay English.** Any all-caps token of two or more characters is left
   alone (`BPM`, `NPS`, `CSV`, `URL`, `MB`, `SSS`, `AA`, `PG`, `MG`, `UG`, `API`, `PUMBILITY`), as
   are the protected proper nouns: `Pump It Up`, `Phoenix`, `Discord`, `PIUGame.com`, `piugame.com`,
-  `PIU Center`, `Start.GG`, `SkillAttack`, `piuscores`, `DrMurloc`, `YouTube`, `Iolite Sky`, `BITE`,
-  `Murloc`. A Murloc still has to be able to find the login page.
+  `PIU Center`, `piucenter`, `Start.GG`, `SkillAttack`, `piuscores`, `DrMurloc`, `YouTube`,
+  `Iolite Sky`, `BITE`, `Murloc`. A Murloc still has to be able to find the login page.
 
 ## Syllable inventory
 

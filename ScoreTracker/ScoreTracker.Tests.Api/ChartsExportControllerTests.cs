@@ -194,6 +194,52 @@ public sealed class ChartsExportControllerTests
             Times.Never);
     }
 
+    /// <summary>
+    ///     A bundle is not a column: one key expands to its whole family. Headers come from the
+    ///     CATALOG's names rather than the filtered set's, so two exports of different filters
+    ///     agree about the header row, and a chart missing a metric leaves the cell empty
+    ///     rather than shifting the row.
+    /// </summary>
+    [Fact]
+    public async Task APiuCenterBundleExpandsToItsWholeFamilyFromTheCatalog()
+    {
+        var chartId = Guid.NewGuid();
+        _mediator.Setup(m => m.Send(It.IsAny<SearchChartsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChartSearchResultPage(new[] { MakeResult(chartId) }, 1));
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartMetricNamesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                "data_version", "nps", "difficulty_prediction", "sustain_time",
+                "time_under_tension", "last_segment_is_peak", "badge_fraction:run"
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetChartMetricsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, IReadOnlyDictionary<string, decimal>>
+            {
+                [chartId] = new Dictionary<string, decimal>
+                {
+                    ["difficulty_prediction"] = 18.42m,
+                    ["sustain_time"] = 61m
+                }
+            });
+
+        var result = await BuildController("?Columns=Level,ChartAnalysis").Export(CancellationToken.None);
+
+        var lines = Content(result).TrimEnd().Split('\n').Select(l => l.TrimEnd()).ToArray();
+        // Ordinal-sorted family, prefixed, with data_version and nps never exported.
+        Assert.Equal("Level,pc:difficulty_prediction,pc:last_segment_is_peak,pc:sustain_time,pc:time_under_tension",
+            lines[0]);
+        Assert.Equal("19,18.42,,61,", lines[1]);
+    }
+
+    [Fact]
+    public async Task NoBundleMeansTheMetricMapIsNeverRead()
+    {
+        await BuildController("?Columns=Song").Export(CancellationToken.None);
+
+        _mediator.Verify(m => m.Send(It.IsAny<GetChartMetricsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     [Fact]
     public async Task PumbilityIsNotOfferedOnALegacyMixWhereItHasNoFormula()
     {

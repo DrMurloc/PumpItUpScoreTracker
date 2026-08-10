@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Bunit;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services.Contracts;
@@ -146,6 +148,41 @@ public sealed class ChartsExportDialogTests : ComponentTestBase
     ///     A column the picker hides must also be undownloadable, which is why both sides
     ///     resolve through ChartExport.ColumnsFor.
     /// </summary>
+    /// <summary>
+    ///     A bundle chip is one press and many columns, so it prints its multiplier and the
+    ///     footer counts the expansion — otherwise ticking Practice ranks silently moves the
+    ///     file by thirty-two columns.
+    /// </summary>
+    [Fact]
+    public async Task PiuCenterBundlesPrintTheirSizeAndCountIntoTheFooter()
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetChartMetricNamesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                "data_version", "nps", "difficulty_prediction", "sustain_time",
+                "badge_fraction:run", "badge_fraction:jump", "badge_fraction:jack"
+            });
+
+        var cut = RenderDialog(signedIn: false);
+        cut.WaitForAssertion(() => Assert.NotEmpty(cut.FindAll(".srp-export-bundle")));
+
+        var bundles = cut.FindAll(".srp-export-bundle")
+            .Select(b => string.Join(' ', b.TextContent.Split((char[]?)null,
+                StringSplitOptions.RemoveEmptyEntries)))
+            .ToArray();
+        // data_version and nps never reach a bundle; empty families do not render a chip.
+        Assert.Contains("Chart analysis ×2", bundles);
+        Assert.Contains("Skill emphasis ×3", bundles);
+        Assert.DoesNotContain(bundles, b => b.StartsWith("Practice ranks"));
+
+        await cut.FindAll(".srp-export-bundle").First(b => b.TextContent.Contains("Skill emphasis"))
+            .ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        // Six defaults on Phoenix, plus the three the bundle expands to.
+        cut.WaitForAssertion(() =>
+            Assert.Contains("9 columns", cut.Find(".srp-export-file").TextContent));
+    }
+
     [Fact]
     public void MyColumnsAreScopedToTheSearchedMixScoringFamily()
     {

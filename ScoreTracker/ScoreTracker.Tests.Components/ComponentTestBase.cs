@@ -23,6 +23,12 @@ public abstract class ComponentTestBase : TestContext
     /// <summary>Configure before rendering; components see it through DI.</summary>
     protected Mock<ICurrentUserAccessor> CurrentUser { get; } = new();
 
+    /// <summary>
+    ///     The shared dispatcher. Tests add setups to THIS rather than registering their own:
+    ///     bunit freezes the service provider on first render, so a late AddSingleton throws.
+    /// </summary>
+    protected Mock<IMediator> Mediator { get; } = new();
+
     protected ComponentTestBase()
     {
         Services.AddSingleton(CurrentUser.Object);
@@ -31,10 +37,9 @@ public abstract class ComponentTestBase : TestContext
         // activator content regardless, which is all these facts assert on.
         Services.AddMudServices(o => o.PopoverOptions.CheckForPopoverProvider = false);
 
-        var mediator = new Mock<IMediator>();
-        mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
+        Mediator.Setup(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, double>());
-        Services.AddSingleton(mediator.Object);
+        Services.AddSingleton(Mediator.Object);
         Services.AddScoped<ChartScoringLevels>();
 
         // The shared LeaderboardDialog reads the relevant-players setting; a loose stub keeps

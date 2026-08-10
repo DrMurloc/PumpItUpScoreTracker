@@ -1112,6 +1112,9 @@
   <data name="Chart Age by Level" xml:space="preserve">
     <value>Chart Age by Level</value>
   </data>
+  <data name="Chart analysis" xml:space="preserve">
+    <value>Chart analysis</value>
+  </data>
   <data name="Chart analysis made possible by" xml:space="preserve">
     <value>Chart analysis made possible by</value>
   </data>
@@ -1138,6 +1141,9 @@
   </data>
   <data name="Chart Details" xml:space="preserve">
 	  <value>Chart Details</value>
+  </data>
+  <data name="Chart ending" xml:space="preserve">
+    <value>Chart ending</value>
   </data>
   <data name="Chart ID" xml:space="preserve">
     <value>Chart ID</value>
@@ -4700,6 +4706,9 @@
   <data name="PIU Tier List" xml:space="preserve">
 	  <value>PIU Tier List</value>
   </data>
+  <data name="piucenter columns" xml:space="preserve">
+    <value>piucenter columns</value>
+  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4907,6 +4916,9 @@
   </data>
   <data name="PR" xml:space="preserve">
     <value>PR</value>
+  </data>
+  <data name="Practice ranks" xml:space="preserve">
+    <value>Practice ranks</value>
   </data>
   <data name="PreBuilt Tournament Configuration" xml:space="preserve">
 	  <value>PreBuilt Tournament Configuration</value>
@@ -5124,6 +5136,9 @@
   </data>
   <data name="Rankings" xml:space="preserve">
     <value>Rankings</value>
+  </data>
+  <data name="Rare patterns" xml:space="preserve">
+    <value>Rare patterns</value>
   </data>
   <data name="Rare PG" xml:space="preserve">
     <value>Rare PG</value>
@@ -6062,6 +6077,9 @@
   <data name="Skill data: PIU Center — maintained by aesthete" xml:space="preserve">
     <value>Skill data: PIU Center — maintained by aesthete</value>
   </data>
+  <data name="Skill emphasis" xml:space="preserve">
+    <value>Skill emphasis</value>
+  </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>Skill fingerprint</value>
   </data>
@@ -6592,6 +6610,9 @@
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart.</value>
   </data>
+  <data name="These come straight from piucenter. Header names can change when their data changes." xml:space="preserve">
+    <value>These come straight from piucenter. Header names can change when their data changes.</value>
+  </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values.</value>
   </data>
@@ -6933,6 +6954,9 @@
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>top {0}% of peers</value>
+  </data>
+  <data name="Top-3 skills" xml:space="preserve">
+    <value>Top-3 skills</value>
   </data>
   <data name="Top-50 average score {0} — {1}" xml:space="preserve">
     <value>Top-50 average score {0} — {1}</value>

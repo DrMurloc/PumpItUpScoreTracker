@@ -1112,6 +1112,9 @@
   <data name="Chart Age by Level" xml:space="preserve">
     <value>Chart Age by Level</value>
   </data>
+  <data name="Chart analysis" xml:space="preserve">
+    <value>譜面分析</value>
+  </data>
   <data name="Chart analysis made possible by" xml:space="preserve">
     <value>譜面分析の提供</value>
   </data>
@@ -1138,6 +1141,9 @@
   </data>
   <data name="Chart Details" xml:space="preserve">
 	  <value>譜面詳細</value>
+  </data>
+  <data name="Chart ending" xml:space="preserve">
+    <value>譜面の終盤</value>
   </data>
   <data name="Chart ID" xml:space="preserve">
     <value>譜面ID</value>
@@ -4700,6 +4706,9 @@
   <data name="PIU Tier List" xml:space="preserve">
 	  <value>PIUティアリスト</value>
   </data>
+  <data name="piucenter columns" xml:space="preserve">
+    <value>piucenter 列</value>
+  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4907,6 +4916,9 @@
   </data>
   <data name="PR" xml:space="preserve">
     <value>PR</value>
+  </data>
+  <data name="Practice ranks" xml:space="preserve">
+    <value>練習ランク</value>
   </data>
   <data name="PreBuilt Tournament Configuration" xml:space="preserve">
 	  <value>大会設定プリセット</value>
@@ -5124,6 +5136,9 @@
   </data>
   <data name="Rankings" xml:space="preserve">
     <value>ランキング</value>
+  </data>
+  <data name="Rare patterns" xml:space="preserve">
+    <value>レアパターン</value>
   </data>
   <data name="Rare PG" xml:space="preserve">
     <value>珍しいPG</value>
@@ -6062,6 +6077,9 @@
   <data name="Skill data: PIU Center — maintained by aesthete" xml:space="preserve">
     <value>スキルデータ：PIU Center — 管理者 aesthete</value>
   </data>
+  <data name="Skill emphasis" xml:space="preserve">
+    <value>スキル比重</value>
+  </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>スキルの指紋</value>
   </data>
@@ -6592,6 +6610,9 @@
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>このアドレスには何もありません — バージョンとともに移動したか、最初から存在しなかったのかもしれません。検索はすべての譜面を知っています。</value>
   </data>
+  <data name="These come straight from piucenter. Header names can change when their data changes." xml:space="preserve">
+    <value>piucenter からそのまま取得した値です。データが変わるとヘッダー名も変わることがあります。</value>
+  </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>これらの計算式は Team Infinitesimal が NX2 と Prime からデータマインしたものです。Phoenix や Phoenix 2 での再検証は誰も行っていないため、数値は正確な筐体値ではなく仕組みの形として捉えてください。</value>
   </data>
@@ -6933,6 +6954,9 @@
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>同格プレイヤーの上位{0}%</value>
+  </data>
+  <data name="Top-3 skills" xml:space="preserve">
+    <value>上位3スキル</value>
   </data>
   <data name="Top-50 average score {0} — {1}" xml:space="preserve">
     <value>トップ50平均スコア {0} — {1}</value>

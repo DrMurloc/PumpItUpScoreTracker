@@ -1,6 +1,7 @@
 using System.Text;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -47,7 +48,23 @@ public class ChartsExportController : Controller
             .Where(c => wanted.Contains(c.Key, StringComparer.OrdinalIgnoreCase))
             .Where(c => !c.RequiresUser || userId != null)
             .ToArray();
-        if (columns.Length == 0) return BadRequest("No exportable columns requested.");
+        // Bundles ride the same Columns parameter — one key expands to a whole metric family,
+        // so they are resolved separately from the single columns.
+        var bundles = ChartExport.Bundles
+            .Where(b => wanted.Contains(b.Key, StringComparer.OrdinalIgnoreCase))
+            .ToArray();
+        IReadOnlyList<string> metricNames = Array.Empty<string>();
+        IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, decimal>>? metrics = null;
+        if (bundles.Length > 0)
+        {
+            var catalog = ChartExport.ExportableMetricNames(
+                await _mediator.Send(new GetChartMetricNamesQuery(), cancellationToken));
+            metricNames = bundles.SelectMany(b => b.Expand(catalog)).Distinct(StringComparer.Ordinal).ToArray();
+            metrics = await _mediator.Send(new GetChartMetricsQuery(), cancellationToken);
+        }
+
+        if (columns.Length == 0 && metricNames.Count == 0)
+            return BadRequest("No exportable columns requested.");
 
 
         var page = await _mediator.Send(query, cancellationToken);
@@ -56,8 +73,8 @@ public class ChartsExportController : Controller
         var playCounts = columns.Any(c => c.Scope == ChartExport.Scope.Phoenix2Only) && userId != null
             ? await _mediator.Send(new GetPlayerChartPlayCountsQuery(userId.Value, mix), cancellationToken)
             : null;
-        var context = new ChartExport.ExportContext($"{Request.Scheme}://{Request.Host}", playCounts);
-        var csv = ChartExport.Write(page.Results, columns, context);
+        var context = new ChartExport.ExportContext($"{Request.Scheme}://{Request.Host}", playCounts, metrics);
+        var csv = ChartExport.Write(page.Results, columns, context, metricNames);
 
         var scopeSlug = ChartSlugs.MixSlug(mix);
         return File(Encoding.UTF8.GetBytes(csv), "text/csv", $"charts_{scopeSlug}.csv");

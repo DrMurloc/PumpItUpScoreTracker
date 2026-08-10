@@ -159,7 +159,10 @@ public sealed class LocalizationKeyTests
         const string alphabet = "abglmopru";
         string[] protectedNouns =
         [
-            "Pump It Up", "PIUGame.com", "PIUGAME.com", "piugame.com", "PIU Center", "Iolite Sky",
+            // "piucenter" is how the site spells itself, and the export's passthrough columns
+            // are attributed to it by name — same standing as the "PIU Center" spelling above.
+            "Pump It Up", "PIUGame.com", "PIUGAME.com", "piugame.com", "PIU Center", "piucenter",
+            "Iolite Sky",
             "Start.GG", "SkillAttack", "DrMurloc", "PUMBILITY", "Pumbility", "piuscores", "PIUGAME",
             "PIUGame", "YouTube", "Youtube", "Discord", "Phoenix", "Murloc", "BITE",
             // The API docs surface names an external tool by its brand, same standing as Discord.

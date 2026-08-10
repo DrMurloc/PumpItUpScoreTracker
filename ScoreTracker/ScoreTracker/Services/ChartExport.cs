@@ -24,7 +24,60 @@ public static class ChartExport
     ///     every load and must not pay for reads only the CSV wants.
     /// </summary>
     public sealed record ExportContext(string BaseUrl,
-        IReadOnlyDictionary<Guid, int>? PlayCounts = null);
+        IReadOnlyDictionary<Guid, int>? PlayCounts = null,
+        IReadOnlyDictionary<Guid, IReadOnlyDictionary<string, decimal>>? Metrics = null);
+
+    /// <summary>
+    ///     A family of piucenter metrics, ticked as one. Unlike a <see cref="Column" /> this is
+    ///     NOT one column — it expands to every metric name in its family, which is why the
+    ///     picker draws it differently and prints a multiplier.
+    ///     <para>
+    ///         Headers carry a <c>pc:</c> prefix and are deliberately <b>unstable</b>: the set is
+    ///         whatever piucenter last gave us, so the promise the rest of the file makes does
+    ///         not extend here. The dialog says so where a person can read it.
+    ///     </para>
+    /// </summary>
+    public sealed record Bundle(string Key, Func<string, bool> Matches)
+    {
+        public const string HeaderPrefix = "pc:";
+
+        /// <summary>
+        ///     The family's names from the whole catalog, ordinal-sorted — not just the names the
+        ///     current filter happens to contain. Two exports of different filters must not
+        ///     disagree about the header row.
+        /// </summary>
+        public IReadOnlyList<string> Expand(IReadOnlyList<string> catalogNames)
+        {
+            return catalogNames.Where(Matches).OrderBy(n => n, StringComparer.Ordinal).ToArray();
+        }
+    }
+
+    /// <summary>
+    ///     Bookkeeping and the metric that already has a first-class column of its own. Neither
+    ///     belongs in a passthrough a person ticks.
+    /// </summary>
+    private static readonly HashSet<string> NeverExported =
+        new(new[] { "data_version", "nps" }, StringComparer.Ordinal);
+
+    public static readonly IReadOnlyList<Bundle> Bundles = new[]
+    {
+        new Bundle("ChartAnalysis", n => n is "difficulty_prediction" or "sustain_time"
+            or "time_under_tension" or "last_segment_is_peak"),
+        new Bundle("SkillEmphasis", n => n.StartsWith("badge_fraction:", StringComparison.Ordinal)),
+        new Bundle("TopSkills", n => n.StartsWith("top3:", StringComparison.Ordinal)),
+        new Bundle("PracticeRanks", n => n.StartsWith("practice_rank:", StringComparison.Ordinal)),
+        new Bundle("ChartEnding", n => n.StartsWith("last_segment_badge:", StringComparison.Ordinal)),
+        new Bundle("RarePatterns", n => n.StartsWith("rare:", StringComparison.Ordinal))
+    };
+
+    /// <summary>
+    ///     Every catalog metric name a bundle is allowed to emit. No catalog is an empty one:
+    ///     an absent passthrough hides the group rather than breaking the picker.
+    /// </summary>
+    public static IReadOnlyList<string> ExportableMetricNames(IEnumerable<string>? catalogNames)
+    {
+        return catalogNames?.Where(n => !NeverExported.Contains(n)).ToArray() ?? Array.Empty<string>();
+    }
 
     /// <summary>
     ///     Which mixes a column means anything on. Both the dialog and the endpoint resolve
@@ -161,12 +214,23 @@ public static class ChartExport
     }
 
     public static string Write(IEnumerable<ChartSearchResult> results, IReadOnlyList<Column> columns,
-        ExportContext context)
+        ExportContext context, IReadOnlyList<string>? metricNames = null)
     {
         var builder = new StringBuilder();
-        builder.AppendLine(string.Join(',', columns.Select(c => Escape(c.Key))));
+        var metrics = metricNames ?? Array.Empty<string>();
+        builder.AppendLine(string.Join(',', columns.Select(c => Escape(c.Key))
+            .Concat(metrics.Select(n => Escape(Bundle.HeaderPrefix + n)))));
+
         foreach (var result in results)
-            builder.AppendLine(string.Join(',', columns.Select(c => Escape(c.Value(result, context)))));
+        {
+            var banked = context.Metrics != null && context.Metrics.TryGetValue(result.Chart.Id, out var m)
+                ? m
+                : null;
+            builder.AppendLine(string.Join(',', columns.Select(c => Escape(c.Value(result, context)))
+                .Concat(metrics.Select(n => banked != null && banked.TryGetValue(n, out var v)
+                    ? Escape(v.ToString("0.####", CultureInfo.InvariantCulture))
+                    : string.Empty))));
+        }
 
         return builder.ToString();
     }
