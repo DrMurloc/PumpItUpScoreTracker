@@ -30,7 +30,11 @@ namespace ScoreTracker.Domain.Records
             Guid userId, LegacyScoreTotals totals)
         {
             return new CommunityLeaderboardRecord(playerName, isPublic, profileImage, userId,
-                Rating.Min, DifficultyLevel.Min, totals.Recorded,
+                // ClearCount means clears. It carried Recorded, which counts failed runs too --
+                // and the board uses ClearCount > 0 to decide who ranks versus who drops to the
+                // roll-call, so a player with nothing but breaks was ranking on the strength of
+                // having failed.
+                Rating.Min, DifficultyLevel.Min, totals.Passed,
                 0, PhoenixScore.Min, 0, PhoenixScore.Min, 0,
                 0, PhoenixScore.Min, 0, 0,
                 PhoenixScore.Min, 0, 0, 0, 0,

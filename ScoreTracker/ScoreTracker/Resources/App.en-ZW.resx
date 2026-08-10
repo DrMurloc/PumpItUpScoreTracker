@@ -2107,6 +2107,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>Murgglorg blubgrorp glorgblgrl grglmrp plglmorg.</value>
   </data>
+  <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
+    <value>Grorp mrogl blub murgblub grolub, gro rorgl mrrgl morgl blurgo mrgl grgl.</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Alu morp blurpa, murglub apa oru. Groblu blab mo murpalu problu blaru puru gala, gorap oru bralu alu.</value>
   </data>
@@ -3113,6 +3116,9 @@
   </data>
   <data name="Legacy grade" xml:space="preserve">
     <value>Rogrrgl rorgl</value>
+  </data>
+  <data name="Let this file replace my records" xml:space="preserve">
+    <value>Grolub blarg murgblub mrgl Mgrlgmrg</value>
   </data>
   <data name="Letter Grade" xml:space="preserve">
     <value>Mrlurg Rorgl</value>
@@ -4281,6 +4287,9 @@
   </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Bam murpo murgblub blu murgl gromurp murgargl. Murgl murmo murgm blarglurp murm bo 1M murgloo — murpo murgm murgblarg murmo.</value>
+  </data>
+  <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
+    <value>Marg mrrglub grorp. Mgrlgmrg blub rorgl murgl blargl.</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Mrpmurg mrgl glgrgl gro maglrogrorp murgl mrp glorgmurg.</value>

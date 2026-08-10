@@ -39,6 +39,17 @@
                         <MudSelectItem Value="@mix">@mix.GetName()</MudSelectItem>
                     }
                 </MudSelect>
+                @* Off by default, because the destructive reading of an upload is the surprising
+                   one: a partial or older sheet would otherwise lower grades, flip passes to
+                   breaks, and wipe era scores typed by hand. On, the file is the authority --
+                   which is how you fix a mistake you already uploaded. *@
+                <MudSwitch T="bool" @bind-Value="_overwriteExisting" Color="Color.Primary"
+                           Label="@L["Let this file replace my records"]"></MudSwitch>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @(_overwriteExisting
+                        ? L["Every row in the file wins, even where it is worse than what you have."]
+                        : L["Only improvements are kept. Score and grade rise separately."])
+                </MudText>
                 break;
             case Step.Uploading:
                 <p>
@@ -255,6 +266,13 @@
 
     private MixEnum _targetMix = MixEnum.XX;
 
+    /// <summary>
+    ///     False runs LegacyBestAttemptPolicy: an upload may only raise a record, and raises the
+    ///     score and the grade independently. True overwrites, which is the only way to correct
+    ///     something downward — and was the unannounced behaviour of every upload before this.
+    /// </summary>
+    private bool _overwriteExisting;
+
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUser.IsLoggedIn)
@@ -371,8 +389,13 @@
                 // Source is what tells the journal a bulk upload from a hand entry; the Phoenix
                 // twin passes CsvSource for the same reason. Without it every imported row reads
                 // as something the player typed, and "manual is authoritative" stops being true.
+                // The parsed era score travels. XXScoreFile reads a Score column and reports
+                // "Could not parse Score Column" when it cannot — and the call site used to
+                // hand the command a hardcoded null, so every upload silently discarded it and
+                // wiped any number already stored.
                 await Mediator.Send(new UpdateXXBestAttemptCommand(chart.Id, best.BestAttempt?.LetterGrade,
-                    best.BestAttempt?.IsBroken ?? true, null, Mix: _targetMix,
+                    best.BestAttempt?.IsBroken ?? true, best.BestAttempt?.Score, Mix: _targetMix,
+                    KeepBestStats: !_overwriteExisting,
                     Source: ScoreJournalEntry.CsvSource), cancellationToken);
             }
             catch (OperationCanceledException)

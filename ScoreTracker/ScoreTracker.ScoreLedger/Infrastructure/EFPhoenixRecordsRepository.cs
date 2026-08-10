@@ -266,15 +266,19 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 NetScore = g.Sum(b => (long?)b.Score) ?? 0L,
                 Scored = g.Count(b => b.Score != null),
                 Recorded = g.Count(),
-                TripleS = g.Count(b => b.LetterGrade == "SSS"),
-                DoubleS = g.Count(b => b.LetterGrade == "SS"),
-                SingleS = g.Count(b => b.LetterGrade == "S"),
-                A = g.Count(b => b.LetterGrade == "A")
+                Passed = g.Count(b => !b.IsBroken),
+                // Passing only. A broken run still carries a letter — a broken SSS is possible
+                // on a mission zone — but a grade you did not clear is not one to tally, and the
+                // player page's folder graphs one click away have always counted it this way.
+                TripleS = g.Count(b => b.LetterGrade == "SSS" && !b.IsBroken),
+                DoubleS = g.Count(b => b.LetterGrade == "SS" && !b.IsBroken),
+                SingleS = g.Count(b => b.LetterGrade == "S" && !b.IsBroken),
+                A = g.Count(b => b.LetterGrade == "A" && !b.IsBroken)
             })
             .ToArrayAsync(cancellationToken);
 
         return rows.ToDictionary(r => r.UserId,
-            r => new LegacyScoreTotals(r.UserId, r.NetScore, r.Scored, r.Recorded,
+            r => new LegacyScoreTotals(r.UserId, r.NetScore, r.Scored, r.Recorded, r.Passed,
                 r.TripleS, r.DoubleS, r.SingleS, r.A));
     }
 

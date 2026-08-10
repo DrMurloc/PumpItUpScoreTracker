@@ -160,6 +160,27 @@ untidy: `Score` is a `PhoenixScore` capped at 1,000,000, and **76% of scored leg
 production are above that ceiling** (the largest is 45,282,000). The row's mix decides which side
 is live.
 
+### What the legacy letters actually meant (owner, 2026-08-10)
+
+Recorded because it is nowhere else and it explains why a broken SSS is a real thing:
+
+| Grade | Condition |
+|---|---|
+| SSS | all perfects |
+| SS | no misses, bads or goods — perfects and greats only |
+| S | no misses |
+| A | a low score threshold |
+| B / C / D / F | not a score threshold at all: an algorithm nobody ever reverse-engineered, mixing judgement distribution with percentage of possible score |
+
+**A broken run still earns a letter.** A broken SSS was possible on mission zones, where you
+could die for reasons other than the lifebar; a broken S or above otherwise meant you badded
+yourself to death, and was rare.
+
+That is why the community board's SSS/SS/S/A tallies count **passing records only** while its
+net score sums **everything** — a failed run scored points, so it belongs in the total, but a
+grade you did not clear is not an achievement to tally. `ClearCount` on a legacy row means
+clears for the same reason.
+
 ### Net score
 
 The legacy community board ranks on **net score** — every recorded era score in the mix, summed,

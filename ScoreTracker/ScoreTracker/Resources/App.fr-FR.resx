@@ -2106,6 +2106,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>Tous les records ont tenu cette semaine.</value>
   </data>
+  <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
+    <value>Chaque ligne du fichier l'emporte, même si elle est moins bonne que la vôtre.</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>Tous les tags disparus, y compris ceux qui ont fusionné d'eux-mêmes. Une règle qui ne trouve plus de changements de nom ressemble à une semaine calme si vous ne voyez pas l'ensemble.</value>
   </data>
@@ -3112,6 +3115,9 @@
   </data>
   <data name="Legacy grade" xml:space="preserve">
     <value>Grade legacy</value>
+  </data>
+  <data name="Let this file replace my records" xml:space="preserve">
+    <value>Laisser ce fichier remplacer mes enregistrements</value>
   </data>
   <data name="Letter Grade" xml:space="preserve">
     <value>Rang (lettres)</value>
@@ -4280,6 +4286,9 @@
   </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>Seuls les imports des mix que vous choisissez sont envoyés. Les mix anciens sont notés en lettres et non sur l'échelle du million — le payload indique quel modèle est utilisé.</value>
+  </data>
+  <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
+    <value>Seules les améliorations sont conservées. Le score et la note montent séparément.</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Seules les chansons dont un chart a changé sont listées.</value>

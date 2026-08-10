@@ -2091,6 +2091,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>이번 주에는 모든 기록이 유지되었습니다.</value>
   </data>
+  <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
+    <value>파일의 모든 행이 우선합니다. 지금 기록보다 나빠도 덮어씁니다.</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>스스로 병합된 것을 포함해 사라진 모든 태그입니다. 닉네임 변경을 더 이상 찾지 못하는 규칙은, 전체를 보지 않으면 그냥 조용한 주와 똑같아 보입니다.</value>
   </data>
@@ -3095,6 +3098,9 @@
   </data>
   <data name="Legacy grade" xml:space="preserve">
     <value>레거시 등급</value>
+  </data>
+  <data name="Let this file replace my records" xml:space="preserve">
+    <value>이 파일로 기록을 덮어쓰기</value>
   </data>
   <data name="Letter Grade" xml:space="preserve">
     <value>랭크</value>
@@ -4250,6 +4256,9 @@
   </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>선택한 시리즈의 임포트만 전송됩니다. 옛 시리즈는 1M 척도가 아니라 등급으로 채점되며, 페이로드가 어떤 모델인지 알려줍니다.</value>
+  </data>
+  <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
+    <value>향상된 기록만 저장됩니다. 점수와 등급은 각각 올라갑니다.</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>변경된 채보가 있는 노래만 표시됩니다.</value>

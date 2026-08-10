@@ -171,7 +171,13 @@ internal sealed class RivalReadSaga :
             comparable.Count(r => Margin(r) > 0),
             comparable.Count(r => Margin(r) < 0),
             shared, theirs.OfficialAsOf,
-            rows.OrderByDescending(r => (r.TheirScore ?? 0) - (r.YourScore ?? 0)).ToArray());
+            // Biggest deficit first — the table's job is to lead with where you are behind.
+            // Score decides, grade breaks the tie, matching Margin() exactly: on a legacy mix
+            // nearly every row ties at 0 on the number, and without the grade term the order
+            // there was arbitrary.
+            rows.OrderByDescending(r => (r.TheirScore ?? 0) - (r.YourScore ?? 0))
+                .ThenByDescending(r => ((int?)r.TheirLegacyGrade ?? 0) - ((int?)r.YourLegacyGrade ?? 0))
+                .ToArray());
     }
 
     /// <summary>

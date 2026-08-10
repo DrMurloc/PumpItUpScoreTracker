@@ -2107,6 +2107,9 @@
   <data name="Every record held this week." xml:space="preserve">
     <value>今週はすべての記録が守られました。</value>
   </data>
+  <data name="Every row in the file wins, even where it is worse than what you have." xml:space="preserve">
+    <value>ファイルのすべての行が優先されます。今の記録より悪くても上書きされます。</value>
+  </data>
   <data name="Every tag that vanished, including the ones that merged themselves. A rule that has stopped finding renames looks like a quiet week unless you can see all of it." xml:space="preserve">
     <value>自動で統合されたものも含め、消えたタグのすべてです。改名を見つけられなくなった規則は、全体を見なければ静かな週と区別がつきません。</value>
   </data>
@@ -3113,6 +3116,9 @@
   </data>
   <data name="Legacy grade" xml:space="preserve">
     <value>レガシーランク</value>
+  </data>
+  <data name="Let this file replace my records" xml:space="preserve">
+    <value>このファイルで記録を置き換える</value>
   </data>
   <data name="Letter Grade" xml:space="preserve">
     <value>ランク</value>
@@ -4281,6 +4287,9 @@
   </data>
   <data name="Only imports for the mixes you pick are sent. Older mixes score on letter grades rather than the 1M scale — the payload says which model it's using." xml:space="preserve">
     <value>選んだバージョンのインポートだけが送られます。古いバージョンは1Mスケールではなく グレードで採点され、ペイロードがどちらのモデルかを示します。</value>
+  </data>
+  <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
+    <value>更新された記録のみ保存されます。スコアとグレードは別々に上がります。</value>
   </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>変更があった譜面を持つ曲のみ表示しています。</value>
