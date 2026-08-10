@@ -220,10 +220,19 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var settings = await database.UserSettings.FirstOrDefaultAsync(us => us.UserId == userId, cancellationToken);
 
-        if (settings == null) return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (settings == null) return result;
 
-        return JsonSerializer.Deserialize<Dictionary<string, string>>(settings.UiSettings) ??
-               new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        // Case-insensitive either way. Deserializing straight into a Dictionary gives an ordinal
+        // one, so a key whose casing had drifted resolved for a player with no settings row and
+        // not for a player with one — the same lookup answering differently by population. Copied
+        // key by key rather than through the copy constructor, which throws on a case collision
+        // and would take a player's whole session down with it.
+        foreach (var (key, value) in
+                 JsonSerializer.Deserialize<Dictionary<string, string>>(settings.UiSettings) ?? new())
+            result[key] = value;
+
+        return result;
     }
 
     public async Task SaveUserUiSettings(Guid userId, IDictionary<string, string> settings,
