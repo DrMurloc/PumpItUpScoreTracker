@@ -167,6 +167,19 @@ public sealed class E2ESeedData
     /// </summary>
     private const string SeenAnnouncements = """{"CommunityToolsAnnouncementSeen":"true"}""";
 
+    /// <summary>
+    ///     The language a player chose on /Account, which outranks their browser on every
+    ///     request. Rewrites the whole blob, so it keeps the announcement key alongside.
+    /// </summary>
+    public async Task SeedCultureAsync(Guid userId, string culture, CancellationToken cancellationToken = default)
+    {
+        var settings = $$"""{"CommunityToolsAnnouncementSeen":"true","Culture":"{{culture}}"}""";
+        await using var context = await _factory.CreateDbContextAsync(cancellationToken);
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE [scores].[UserSettings] SET [UiSettings] = {settings} WHERE [UserId] = {userId}",
+            cancellationToken);
+    }
+
     /// <summary>A Phoenix best-score row (ScoreLedger-internal entity) — seeded with SQL.</summary>
     public async Task SeedPhoenixScoreAsync(Guid userId, Guid chartId, int score, bool isBroken = false,
         CancellationToken cancellationToken = default)

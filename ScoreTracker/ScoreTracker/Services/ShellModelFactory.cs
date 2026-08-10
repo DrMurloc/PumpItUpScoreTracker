@@ -27,7 +27,13 @@ public sealed class ShellModelFactory
     private const string DefaultAvatar =
         "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
 
-    private static readonly TimeSpan SettingsTtl = TimeSpan.FromMinutes(5);
+    /// <summary>
+    ///     How long a user's settings dictionary is held. Public because
+    ///     <see cref="Localization.UserSettingRequestCultureProvider" /> reads the same entry —
+    ///     one cached dictionary answers both the shell and the language, and both are evicted
+    ///     together by <see cref="UiSettingSavedCacheEviction" />.
+    /// </summary>
+    public static readonly TimeSpan SettingsTtl = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan RecapTtl = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan EventsTtl = TimeSpan.FromMinutes(15);
 

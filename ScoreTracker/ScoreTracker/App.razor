@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Localization
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Localization
 @using ScoreTracker.Web.Services.Theming
 @inject ShellModelFactory ShellFactory
 @inject StaticHeadResolver HeadResolver
@@ -329,11 +330,21 @@
         _shell = await ShellFactory.BuildAsync(HttpContext);
         _head = await HeadResolver.Resolve(HttpContext.Request.Path, _shell.CurrentMix,
             HttpContext.RequestAborted);
+        // The cookie is a cache, and only an anonymous visitor depends on it — a signed-in
+        // player's language comes from their saved setting, which nothing here can outrank
+        // (docs/design/culture-resolution.md).
+        if (HttpContext.User.Identity?.IsAuthenticated == true) return;
+        // A ?culture= preview lasts exactly one request by design. Writing it down is how a
+        // shared "?culture=en-ZW" link used to change the recipient's language for their whole
+        // browser session.
+        if (HttpContext.Features.Get<IRequestCultureFeature>()?.Provider is QueryStringRequestCultureProvider) return;
+
         // Only when it is missing or stale: an unconditional Set-Cookie makes every response
-        // uncacheable, and explicit changes already go through /Culture/Set.
-        var resolved = CookieRequestCultureProvider.MakeCookieValue(
-            new RequestCulture(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture));
-        if (HttpContext.Request.Cookies[CookieRequestCultureProvider.DefaultCookieName] != resolved)
-            HttpContext.Response.Cookies.Append(CookieRequestCultureProvider.DefaultCookieName, resolved);
+        // uncacheable. An anonymous visitor's explicit change is written by /Culture/Set — which
+        // writes the cookie and nothing else, so it is the picker's job, not the endpoint's, to
+        // persist a signed-in player's choice to their settings.
+        var resolved = CultureCookie.ValueFor(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
+        if (HttpContext.Request.Cookies[CultureCookie.Name] != resolved)
+            CultureCookie.Write(HttpContext.Response, resolved);
     }
 }

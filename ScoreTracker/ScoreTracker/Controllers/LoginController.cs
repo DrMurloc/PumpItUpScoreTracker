@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -18,8 +17,6 @@ using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.Services;
-using ScoreTracker.Web.Services.Contracts;
-
 namespace ScoreTracker.Web.Controllers;
 
 [Route("[controller]")]
@@ -34,19 +31,16 @@ public sealed class LoginController : Controller
 
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
-    private readonly IUiSettingsAccessor _uiSettings;
     private readonly IOptions<DevAuthConfiguration> _devAuth;
     private readonly AccountProofService _proofs;
 
     public LoginController(IMediator mediator,
         ICurrentUserAccessor currentUser,
-        IUiSettingsAccessor uiSettings,
         IOptions<DevAuthConfiguration> devAuth,
         AccountProofService proofs)
     {
         _mediator = mediator;
         _currentUser = currentUser;
-        _uiSettings = uiSettings;
         _devAuth = devAuth;
         _proofs = proofs;
     }
@@ -99,12 +93,6 @@ public sealed class LoginController : Controller
 
         await _currentUser.SetCurrentUser(user);
 
-        var culture = await _uiSettings.GetSetting("Culture", HttpContext.RequestAborted, user.Id);
-        if (culture != null)
-            HttpContext.Response.Cookies.Append(
-                CookieRequestCultureProvider.DefaultCookieName,
-                CookieRequestCultureProvider.MakeCookieValue(
-                    new RequestCulture(culture, culture)));
         var url = isNewUser ? SetupUrl(providerName) : returnUrl;
 
         return LocalRedirect(url ?? "/");
@@ -168,13 +156,6 @@ public sealed class LoginController : Controller
             HttpContext.RequestAborted);
 
         await _currentUser.SetCurrentUser(resolution.User);
-
-        var culture = await _uiSettings.GetSetting("Culture", HttpContext.RequestAborted, resolution.User.Id);
-        if (culture != null)
-            HttpContext.Response.Cookies.Append(
-                CookieRequestCultureProvider.DefaultCookieName,
-                CookieRequestCultureProvider.MakeCookieValue(
-                    new RequestCulture(culture, culture)));
 
         // Aliases held by a different account were proven by the same credentials — record
         // that so a drifted-identifier merge is friction-free.
