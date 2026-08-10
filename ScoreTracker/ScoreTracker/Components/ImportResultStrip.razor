@@ -57,7 +57,7 @@
     // An interrupted run DID finish, in the sense that something adjudicated it — it just did not
     // finish its work. "Unfinished" is the honest word for both that and the never-adjudicated
     // case; "Couldn't finish" belongs to the runs that actually failed at something.
-    private string Label => Attempt!.NeverFinished || Attempt.Outcome == ImportOutcome.Interrupted
+    private string Label => Attempt.NeverFinished || Attempt.Outcome == ImportOutcome.Interrupted
         ? L["Unfinished"]
         : L["Couldn't finish"];
 

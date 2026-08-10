@@ -57,18 +57,6 @@ internal sealed class SessionRecoverySaga :
         return _sessions.ListUnprocessed(cancellationToken);
     }
 
-    /// <summary>
-    ///     The capture chain reached the end for this session, so it never needs replaying.
-    ///     ScoreHighlightsCapturedEvent is the right signal because HighlightCaptureSaga publishes
-    ///     it unconditionally — every inner step is failure-isolated, so a session with nothing
-    ///     noteworthy in it still gets stamped.
-    /// </summary>
-    public async Task Consume(ConsumeContext<ScoreHighlightsCapturedEvent> context)
-    {
-        if (context.Message.SessionId is not { } sessionId) return;
-        await _sessions.MarkProcessed(sessionId, _dateTime.Now, context.CancellationToken);
-    }
-
     public async Task<int> Handle(ReplaySessionCommand request, CancellationToken cancellationToken)
     {
         var session = await _sessions.Get(request.SessionId, cancellationToken);
@@ -111,10 +99,12 @@ internal sealed class SessionRecoverySaga :
         await _sessions.SetCounts(request.SessionId, _dateTime.Now, batch.NewChartIds.Length,
             batch.UpscoredChartIds.Count, cancellationToken);
 
-        _logger.LogInformation(
-            "Replaying session {SessionId} for {UserId} on {Mix}: {New} new, {Upscored} upscored",
-            request.SessionId, request.UserId, session.Mix, batch.NewChartIds.Length,
-            batch.UpscoredChartIds.Count);
+        // Ask before boxing five arguments for a line nobody may be listening to (CA1873).
+        if (_logger.IsEnabled(LogLevel.Information))
+            _logger.LogInformation(
+                "Replaying session {SessionId} for {UserId} on {Mix}: {New} new, {Upscored} upscored",
+                request.SessionId, request.UserId, session.Mix, batch.NewChartIds.Length,
+                batch.UpscoredChartIds.Count);
 
         // The marker is NOT stamped here — the capture chain stamps it when it finishes, the same
         // way a live batch does. Stamping on publish would mark a session processed whose work is
@@ -123,5 +113,17 @@ internal sealed class SessionRecoverySaga :
             ScoreChangeAssembler.Build(batch, bests), request.SessionId), cancellationToken);
 
         return replayed.Count;
+    }
+
+    /// <summary>
+    ///     The capture chain reached the end for this session, so it never needs replaying.
+    ///     ScoreHighlightsCapturedEvent is the right signal because HighlightCaptureSaga publishes
+    ///     it unconditionally — every inner step is failure-isolated, so a session with nothing
+    ///     noteworthy in it still gets stamped.
+    /// </summary>
+    public async Task Consume(ConsumeContext<ScoreHighlightsCapturedEvent> context)
+    {
+        if (context.Message.SessionId is not { } sessionId) return;
+        await _sessions.MarkProcessed(sessionId, _dateTime.Now, context.CancellationToken);
     }
 }

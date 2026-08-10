@@ -83,7 +83,8 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
             if (count > 0) replayed++;
         }
 
-        if (replayed > 0 || closed > 0)
+        // Ask before boxing for a line nobody may be listening to (CA1873).
+        if ((replayed > 0 || closed > 0) && _logger.IsEnabled(LogLevel.Information))
             _logger.LogInformation(
                 "Startup recovery: replayed {Replayed} interrupted session(s), closed {Closed} run(s) that never reported back",
                 replayed, closed);

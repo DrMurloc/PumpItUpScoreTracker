@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Events;
+﻿using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.SharedKernel.Enums;
 
@@ -85,7 +85,7 @@ internal static class SessionReplayBuilder
     ///     history row older than the session's first row for that chart. Null means the session
     ///     is the first thing that ever recorded it.
     /// </summary>
-    private static ScoreJournalEntry? StateBefore(IReadOnlyDictionary<Guid, ScoreJournalEntry[]> byChart,
+    private static ScoreJournalEntry? StateBefore(Dictionary<Guid, ScoreJournalEntry[]> byChart,
         Guid chartId, ScoreJournalEntry firstInSession)
     {
         if (!byChart.TryGetValue(chartId, out var rows)) return null;
