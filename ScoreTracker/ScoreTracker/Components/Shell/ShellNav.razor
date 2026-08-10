@@ -1,4 +1,5 @@
 @namespace ScoreTracker.Web.Components
+@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services
 
@@ -32,23 +33,28 @@
        tablet-landscape width on the folded side and every real laptop on this one. *@
     <a href="/TierLists" class="top-nav-btn nav-wide-only">@L["Tier Lists"]</a>
 
-    @* Every destination shows on every mix. A page that cannot answer for the mix in view
-       says so on arrival, rather than being hidden from the nav — hiding it made the site
-       look smaller than it is and left no way to find out why (docs/design/legacy-mixes.md). *@
+    @* Mix scoping here is per destination, not per site: a link is hidden only when the thing
+       it points at does not exist for this mix (MixCapabilities / TitleLadders). Everything
+       else shows everywhere and explains itself on arrival. The old route gate hid the whole
+       site off one flag, which made it look smaller than it is and left no way to find out
+       why (docs/design/legacy-mixes.md). *@
         <ShellMenu Label=@L["My Progress"]>
             @if (Model.IsLoggedIn)
             {
-                @if (Model.CurrentMix != MixEnum.XX)
+                @if (Model.CurrentMix.HasPumbility())
                 {
                     <ShellMenuItem Href="/Pumbility" Icon="@Icons.Material.Filled.Star">@L["PUMBILITY"]</ShellMenuItem>
                 }
-                @if (Model.HasRecap)
+                @if (Model.HasRecap && Model.CurrentMix.HasRecap())
                 {
                     <ShellMenuItem Href=@($"/Player/{Model.UserId}/PhoenixRecap") Icon="@Icons.Material.Filled.LocalFireDepartment">@L["My Recap"]</ShellMenuItem>
                 }
                 <ShellMenuItem Href=@($"/Player/{Model.UserId}/Sessions") Icon="@Icons.Material.Filled.History">@L["My Sessions"]</ShellMenuItem>
             }
-            <ShellMenuItem Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</ShellMenuItem>
+            @if (TitleLadders.HasLadder(Model.CurrentMix))
+            {
+                <ShellMenuItem Href="/Titles" Icon="@Icons.Material.Filled.Grade">@L["Titles"]</ShellMenuItem>
+            }
         </ShellMenu>
 
         <ShellMenu Label=@L["Compete"]>
@@ -75,14 +81,19 @@
         </ShellMenu>
 
         @* The official boards are the only leaderboards left, so they get the top-level
-           slot under their plain name rather than a column inside Compete. *@
-        <ShellMenu Label=@L["Leaderboards"]>
-            <ShellMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Whatshot">@L["This Week"]</ShellMenuItem>
-            <ShellMenuItem Href="/OfficialLeaderboards/Rankings" Icon="@Icons.Material.Filled.Leaderboard">@L["Rankings"]</ShellMenuItem>
-            <ShellMenuItem Href="/OfficialLeaderboards/Players" Icon="@Icons.Material.Filled.PersonSearch">@L["Players"]</ShellMenuItem>
-            <ShellMenuItem Href="/OfficialLeaderboards/Popularity" Icon="@Icons.Material.Filled.TrendingUp">@L["Popularity"]</ShellMenuItem>
-            <ShellMenuItem Href="/OfficialLeaderboards/WhatItTakes" Icon="@Icons.Material.Filled.Stairs">@L["What It Takes"]</ShellMenuItem>
-        </ShellMenu>
+           slot under their plain name rather than a column inside Compete. The whole section
+           is about the official site's own boards, which exist for the current generation
+           only — an older mix gets no section rather than five clamped links. *@
+        @if (Model.CurrentMix.HasOfficialBoards())
+        {
+            <ShellMenu Label=@L["Leaderboards"]>
+                <ShellMenuItem Href="/OfficialLeaderboards" Icon="@Icons.Material.Filled.Whatshot">@L["This Week"]</ShellMenuItem>
+                <ShellMenuItem Href="/OfficialLeaderboards/Rankings" Icon="@Icons.Material.Filled.Leaderboard">@L["Rankings"]</ShellMenuItem>
+                <ShellMenuItem Href="/OfficialLeaderboards/Players" Icon="@Icons.Material.Filled.PersonSearch">@L["Players"]</ShellMenuItem>
+                <ShellMenuItem Href="/OfficialLeaderboards/Popularity" Icon="@Icons.Material.Filled.TrendingUp">@L["Popularity"]</ShellMenuItem>
+                <ShellMenuItem Href="/OfficialLeaderboards/WhatItTakes" Icon="@Icons.Material.Filled.Stairs">@L["What It Takes"]</ShellMenuItem>
+            </ShellMenu>
+        }
 
     <ShellMenu Label=@L["Community"]>
         <ShellMenuItem Href="/Communities" Icon="@Icons.Material.Filled.Group">@L["Communities"]</ShellMenuItem>
@@ -91,8 +102,13 @@
     </ShellMenu>
 
     <ShellMenu Label=@L["Tools"]>
-        <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</ShellMenuItem>
-        <ShellMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</ShellMenuItem>
+        @if (Model.CurrentMix.HasPhoenixCalculators())
+        {
+            <ShellMenuItem Href="/PhoenixCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Phoenix Score Calculator"]</ShellMenuItem>
+            <ShellMenuItem Href="/RatingCalculator" Icon="@Icons.Material.Filled.Calculate">@L["Rating Calculator"]</ShellMenuItem>
+        }
+        @* Neither of these reads the selected mix: the lifebar maths is self-contained and
+           the diff picks its own pair, so both stand on every mix. *@
         <ShellMenuItem Href="/LifeCalculator" Icon="@Icons.Material.Filled.Battery4Bar">@L["Lifebar Calculator"]</ShellMenuItem>
         <ShellMenuItem Href="/MixChanges" Icon="@Icons.Material.Filled.Compare">@L["Mix Changes"]</ShellMenuItem>
         <ShellMenuItem Href="/About" Icon="@Icons.Material.Filled.Info">@L["About"]</ShellMenuItem>

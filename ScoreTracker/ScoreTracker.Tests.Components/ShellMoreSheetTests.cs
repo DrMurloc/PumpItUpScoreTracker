@@ -180,28 +180,92 @@ public sealed class ShellMoreSheetTests : ComponentTestBase
     }
 
     /// <summary>
-    ///     A legacy mix reaches the same sheet as any other. Destinations used to be hidden
-    ///     from the nav on pre-XX mixes, which made the site look smaller than it is and left
-    ///     a player no way to find out why — a page that cannot answer for the mix in view
-    ///     says so on arrival instead (docs/design/legacy-mixes.md).
+    ///     A legacy mix keeps everything that is not about a Phoenix-only concept. The old
+    ///     route gate hid nearly the whole sheet off one flag; scoping is per destination now,
+    ///     and most destinations are not scoped at all (docs/design/legacy-mixes.md).
     /// </summary>
     [Theory]
     [InlineData(MixEnum.XX)]
     [InlineData(MixEnum.Prime2)]
     [InlineData(MixEnum.FirstDanceFloor)]
-    public void ALegacyMixSeesTheWholeSheet(MixEnum mix)
+    public void ALegacyMixKeepsEverythingThatIsNotPhoenixOnly(MixEnum mix)
     {
         var sheet = Render(Model(mix: mix));
-
-        Assert.Equal(new[] { "My Progress", "Compete", "Leaderboards", "Community", "Tools" },
-            GroupNames(sheet));
 
         var hrefs = AllHrefs(sheet);
         Assert.Contains("/Charts", hrefs);
         Assert.Contains("/WeeklyCharts", hrefs);
         Assert.Contains("/Communities", hrefs);
-        Assert.Contains("/PhoenixCalculator", hrefs);
+        Assert.Contains("/ChartRandomizer", hrefs);
+        Assert.Contains("/Rivals", hrefs);
+        Assert.Contains("/LifeCalculator", hrefs);
+        Assert.Contains("/MixChanges", hrefs);
         Assert.Contains("/About", hrefs);
+    }
+
+    /// <summary>
+    ///     A link is hidden only when the thing it points at does not exist for that mix
+    ///     (owner, 2026-08-10). Offering PUMBILITY to a Prime 2 player offers a number they
+    ///     cannot have; the official boards are the current generation's only.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.XX)]
+    [InlineData(MixEnum.Prime2)]
+    [InlineData(MixEnum.FirstDanceFloor)]
+    public void ALegacyMixIsOfferedNoPhoenixOnlyDestination(MixEnum mix)
+    {
+        var sheet = Render(Model(mix: mix, hasRecap: true));
+
+        var hrefs = AllHrefs(sheet);
+        Assert.DoesNotContain("/Pumbility", hrefs);
+        Assert.DoesNotContain(hrefs, h => h.Contains("PhoenixRecap"));
+        Assert.DoesNotContain(hrefs, h => h.StartsWith("/OfficialLeaderboards"));
+        Assert.DoesNotContain("/PhoenixCalculator", hrefs);
+        Assert.DoesNotContain("/RatingCalculator", hrefs);
+        Assert.DoesNotContain("Leaderboards", GroupNames(sheet));
+    }
+
+    /// <summary>
+    ///     Titles follow the ladder rather than the scoring model: XX has one, everything else
+    ///     older does not. This is the one rule where XX and Prime 2 part company.
+    /// </summary>
+    [Theory]
+    [InlineData(MixEnum.XX, true)]
+    [InlineData(MixEnum.Phoenix2, true)]
+    [InlineData(MixEnum.Prime2, false)]
+    [InlineData(MixEnum.Prex3, false)]
+    public void TitlesAreOfferedOnlyWhereALadderExists(MixEnum mix, bool expected)
+    {
+        var hrefs = AllHrefs(Render(Model(mix: mix)));
+
+        Assert.Equal(expected, hrefs.Contains("/Titles"));
+    }
+
+    /// <summary>Phoenix keeps the whole sheet — the scoping must not cost the current mixes.</summary>
+    [Fact]
+    public void PhoenixKeepsEveryGroupAndDestination()
+    {
+        var sheet = Render(Model(mix: MixEnum.Phoenix, hasRecap: true));
+
+        Assert.Equal(new[] { "My Progress", "Compete", "Leaderboards", "Community", "Tools" },
+            GroupNames(sheet));
+
+        var hrefs = AllHrefs(sheet);
+        Assert.Contains("/Pumbility", hrefs);
+        Assert.Contains("/Titles", hrefs);
+        Assert.Contains("/PhoenixCalculator", hrefs);
+        Assert.Contains("/RatingCalculator", hrefs);
+        Assert.Contains(hrefs, h => h.Contains("PhoenixRecap"));
+    }
+
+    /// <summary>The recap is Phoenix 1 only for now, even for a player who has one.</summary>
+    [Fact]
+    public void TheRecapIsOfferedOnPhoenixOneOnly()
+    {
+        Assert.Contains(AllHrefs(Render(Model(mix: MixEnum.Phoenix, hasRecap: true))),
+            h => h.Contains("PhoenixRecap"));
+        Assert.DoesNotContain(AllHrefs(Render(Model(mix: MixEnum.Phoenix2, hasRecap: true))),
+            h => h.Contains("PhoenixRecap"));
     }
 
     /// <summary>
