@@ -95,7 +95,7 @@ internal sealed class ImportCheckSaga :
             }
 
             await _bus.Publish(new RunImportCheckCommand(userId, request.Mix, sid, request.CardId,
-                request.ExpectedGameTag, request.DeepScan), cancellationToken);
+                request.ExpectedGameTag, request.DeepScan, request.IncludeBroken), cancellationToken);
             handedOff = true;
             return new ImportCheckStartResult(ImportCheckStartOutcome.Started, left);
         }
@@ -148,8 +148,11 @@ internal sealed class ImportCheckSaga :
                     ScoreJournalEntry.OfficialImportSource, request.ExpectedGameTag, request.CardId),
                 cancellationToken);
 
+            // The player's choice, not a literal: this half writes records, so a hardcoded true
+            // re-recorded every break somebody had just cleaned up — press Score check and they
+            // were all back. Both halves of the run read the same flag.
             var imported = await _mediator.Send(new ExecuteImportCommand(request.UserId, request.Mix, request.Sid,
-                request.CardId, request.ExpectedGameTag, true, sessionId), cancellationToken);
+                request.CardId, request.ExpectedGameTag, request.IncludeBroken, sessionId), cancellationToken);
 
             var (added, checkedCount) = request.DeepScan
                 ? await DeepScan(request, sessionId, cancellationToken)
@@ -199,7 +202,7 @@ internal sealed class ImportCheckSaga :
         CancellationToken cancellationToken)
     {
         var found = await _officialSite.GetBestScoresIn(request.Mix, request.UserId, request.Sid,
-            Array.Empty<string>(), false, cancellationToken);
+            Array.Empty<string>(), request.IncludeBroken, cancellationToken);
         return (await SaveFound(request, found, sessionId, cancellationToken), found.Count);
     }
 
@@ -207,7 +210,7 @@ internal sealed class ImportCheckSaga :
         Guid sessionId, CancellationToken cancellationToken)
     {
         var found = await _officialSite.GetBestScoresIn(request.Mix, request.UserId, request.Sid, buckets,
-            false, cancellationToken);
+            request.IncludeBroken, cancellationToken);
         return await SaveFound(request, found, sessionId, cancellationToken);
     }
 

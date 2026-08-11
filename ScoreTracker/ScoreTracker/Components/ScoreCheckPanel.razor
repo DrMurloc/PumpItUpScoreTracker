@@ -123,7 +123,11 @@
         _finished = null;
         StateHasChanged();
 
-        var result = await Mediator.Send(new StartImportCheckCommand(source, Mix, CardId, GameTag, deepScan));
+        // Read here rather than taken as a parameter: the box above this panel writes the account
+        // setting on change, so the panel always repairs on whatever the player last chose.
+        var includeBroken = await BrokenScores.AppliesTo(Mix);
+        var result = await Mediator.Send(
+            new StartImportCheckCommand(source, Mix, CardId, GameTag, deepScan, includeBroken));
         _deepScansLeft = result.DeepScansLeft;
         if (result.Outcome == ImportCheckStartOutcome.Started) return;
 
@@ -175,6 +179,7 @@
 }
 
 @inject IMediator Mediator;
+@inject ScoreTracker.Web.Services.BrokenScorePreference BrokenScores;
 @inject ICurrentUserAccessor CurrentUser;
 @inject IUiNotificationHub UiHub;
 @inject ISnackbar Snackbar;

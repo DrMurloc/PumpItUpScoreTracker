@@ -990,6 +990,18 @@
   <data name="Broken" xml:space="preserve">
     <value>Roto</value>
   </data>
+  <data name="Broken Best Cleanup Empty" xml:space="preserve">
+    <value>Ninguna de tus marcas es un intento roto. Aquí no hay nada que limpiar.</value>
+  </data>
+  <data name="Broken Best Cleanup Explainer" xml:space="preserve">
+    <value>En estos charts tu marca es un intento que falló el stage, porque "Record broken scores as your best" estaba activado cuando importaste. Quitarlas no toca tu historial: los intentos siguen en el historial de cada chart, nomás dejan de ser tu marca.</value>
+  </data>
+  <data name="Broken Best Cleanup Reversible" xml:space="preserve">
+    <value>Si vuelves a activar la opción e importas otra vez, regresan — piugame.com todavía los muestra.</value>
+  </data>
+  <data name="Broken personal bests" xml:space="preserve">
+    <value>Marcas rotas</value>
+  </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Los intentos rotos valen 0 — pásalo para puntuar.</value>
   </data>
@@ -2761,7 +2773,13 @@
     <value>Importar y revisar</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana.</value>
+    <value>En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana. Seguir al mix quiere decir activado en Phoenix 2 y desactivado en Phoenix.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix" xml:space="preserve">
+    <value>Phoenix no guarda marca personal para los intentos rotos, así que esto viene desactivado por defecto. En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
+    <value>Phoenix 2 sí guarda marca personal para los intentos rotos, así que esto viene activado por defecto. En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importación completada</value>
@@ -5294,6 +5312,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Quitar</value>
   </data>
+  <data name="Remove broken records" xml:space="preserve">
+    <value>Quitar marcas rotas</value>
+  </data>
   <data name="Remove comment" xml:space="preserve">
     <value>Eliminar comentario</value>
   </data>
@@ -5312,6 +5333,9 @@
   <data name="Remove This Score" xml:space="preserve">
     <value>Quitar esta puntuación</value>
   </data>
+  <data name="Remove {0} broken records" xml:space="preserve">
+    <value>Quitar {0} marcas rotas</value>
+  </data>
   <data name="Removed" xml:space="preserve">
     <value>Borrado</value>
   </data>
@@ -5326,6 +5350,9 @@
   </data>
   <data name="Removed the {0} community feed from this channel." xml:space="preserve">
     <value>Se quitó el feed de la comunidad {0} de este canal.</value>
+  </data>
+  <data name="Removed {0} broken records" xml:space="preserve">
+    <value>Se quitaron {0} marcas rotas</value>
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>Se quitó {0} para {1} de este canal.</value>
@@ -5729,8 +5756,8 @@
   <data name="Send it like this" xml:space="preserve">
     <value>Envíalo así</value>
   </data>
-  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
-    <value>El envío de tus puntajes a PIU Tracker u otra herramienta de la comunidad se gestiona desde</value>
+  <data name="Sending your scores to {0} or another community tool is managed from {1}." xml:space="preserve">
+    <value>El envío de tus puntajes a {0} u otra herramienta de la comunidad se gestiona desde {1}.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Series</value>
@@ -8230,6 +8257,9 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} en el tablero</value>
+  </data>
+  <data name="{0} only" xml:space="preserve">
+    <value>Solo {0}</value>
   </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>{0} paragons</value>

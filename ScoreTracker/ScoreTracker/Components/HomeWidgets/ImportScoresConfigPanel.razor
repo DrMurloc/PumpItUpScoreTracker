@@ -13,6 +13,7 @@
 @inject IDialogService DialogService
 @inject IImportCredentialClientStore ClientStore
 @inject IUiSettingsAccessor UiSettings
+@inject BrokenScorePreference BrokenScores
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiNotificationHub UiHub
 @inject ISnackbar Snackbar
@@ -34,7 +35,9 @@
 </MudText>
 
 @* Three states, not a checkbox: "follow the mix" is the shipped default and a checkbox would
-   have to render it as one of the other two, silently changing what the widget does on save. *@
+   have to render it as one of the other two, silently changing what the widget does on save.
+   Saved to the account, not this widget's config — the import page's checkbox is the same
+   preference wearing two of these three faces. *@
 <MudSelect T="BrokenMode" @bind-Value="_recordBroken" Label="@L["Record broken scores as your best"]" Class="mb-1">
     <MudSelectItem T="BrokenMode" Value="BrokenMode.FollowMix">@L["Follow current mix"]</MudSelectItem>
     <MudSelectItem T="BrokenMode" Value="BrokenMode.Always">@L["Always"]</MudSelectItem>
@@ -47,8 +50,7 @@
 @* Sending your session to another site is a consent decision, not an import option, so it
    lives with every other tool rather than as a checkbox here. *@
 <MudText Typo="Typo.caption" Class="d-block mb-3" Style="opacity:.75;">
-    @L["Sending your scores to PIU Tracker or another community tool is managed from"]
-    <MudLink Href="/CommunityTools">@L["Community Tools"]</MudLink>.
+    @ToolsSentence
 </MudText>
 
 <MudCheckBox T="bool" Value="_remember" ValueChanged="OnRememberChanged"
@@ -113,6 +115,13 @@ else if (_hasStoredCredential)
     private const string ConsentKey = "RememberPasswordConsent";
     private const string ConsentVersion = "1";
 
+    // Same sentence, same two links as the import page — see UploadPhoenixScores for why it is
+    // composed as markup rather than assembled from fragments.
+    private MarkupString ToolsSentence => (MarkupString)L[
+        "Sending your scores to {0} or another community tool is managed from {1}.",
+        CommunityToolLinks.Anchor(CommunityToolLinks.PiuTracker, "PIU Tracker"),
+        CommunityToolLinks.InternalAnchor("/CommunityTools", L["Community Tools"].Value)].Value;
+
     private MixMode _mode;
     private bool _skipGameTag = true;
     private BrokenMode _recordBroken;
@@ -135,7 +144,7 @@ else if (_hasStoredCredential)
                 _ => MixMode.Follow
             };
         _skipGameTag = config.SkipGameTag;
-        _recordBroken = config.RecordBrokenAsBest switch
+        _recordBroken = await BrokenScores.GetChoice() switch
         {
             true => BrokenMode.Always,
             false => BrokenMode.Never,
@@ -225,12 +234,12 @@ else if (_hasStoredCredential)
 
     private async Task Save()
     {
-        bool? recordBroken = _recordBroken switch
+        await BrokenScores.Set(_recordBroken switch
         {
             BrokenMode.Always => true,
             BrokenMode.Never => false,
-            _ => null
-        };
+            _ => (bool?)null
+        });
         var config = _mode switch
         {
             MixMode.All => new ImportScoresConfig { AllMixes = true, SkipGameTag = _skipGameTag },
@@ -240,7 +249,6 @@ else if (_hasStoredCredential)
                 { Mix = MixEnum.Phoenix2, SkipGameTag = _skipGameTag },
             _ => new ImportScoresConfig { SkipGameTag = _skipGameTag }
         };
-        config.RecordBrokenAsBest = recordBroken;
         await OnSave.InvokeAsync((WidgetConfigJson.Write(config), 1));
     }
 

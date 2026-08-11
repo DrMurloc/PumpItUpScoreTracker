@@ -998,6 +998,18 @@
   <data name="Broken" xml:space="preserve">
     <value>Rotto</value>
   </data>
+  <data name="Broken Best Cleanup Empty" xml:space="preserve">
+    <value>Nessuno dei tuoi record è un tentativo rotto. Qui non c'è nulla da pulire.</value>
+  </data>
+  <data name="Broken Best Cleanup Explainer" xml:space="preserve">
+    <value>Su questi chart il tuo record è un run finito in Stage Break, perché "Record broken scores as your best" era attivo quando hai importato. Rimuoverli non tocca la tua cronologia: i run restano nella cronologia di ogni chart, smettono solo di essere il tuo record.</value>
+  </data>
+  <data name="Broken Best Cleanup Reversible" xml:space="preserve">
+    <value>Riattiva l'opzione e importa di nuovo: torneranno, piugame.com li elenca ancora.</value>
+  </data>
+  <data name="Broken personal bests" xml:space="preserve">
+    <value>Record rotti</value>
+  </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Le giocate rotte valgono 0 — superala per fare punti.</value>
   </data>
@@ -2778,7 +2790,13 @@
     <value>Importa e controlla</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
+    <value>Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre. Seguire il mix vuol dire attivo su Phoenix 2 e disattivo su Phoenix.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix" xml:space="preserve">
+    <value>Phoenix non tiene un record personale per i tentativi rotti, quindi questa opzione è disattivata per impostazione predefinita. Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
+    <value>Phoenix 2 tiene un record personale per i tentativi rotti, quindi questa opzione è attiva per impostazione predefinita. Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importazione completata</value>
@@ -5336,6 +5354,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Rimuovi</value>
   </data>
+  <data name="Remove broken records" xml:space="preserve">
+    <value>Rimuovi i record rotti</value>
+  </data>
   <data name="Remove comment" xml:space="preserve">
     <value>Rimuovi commento</value>
   </data>
@@ -5354,6 +5375,9 @@
   <data name="Remove This Score" xml:space="preserve">
     <value>Rimuovi questo punteggio</value>
   </data>
+  <data name="Remove {0} broken records" xml:space="preserve">
+    <value>Rimuovi {0} record rotti</value>
+  </data>
   <data name="Removed" xml:space="preserve">
     <value>Rimosso</value>
   </data>
@@ -5368,6 +5392,9 @@
   </data>
   <data name="Removed the {0} community feed from this channel." xml:space="preserve">
     <value>Feed della community {0} rimosso da questo canale.</value>
+  </data>
+  <data name="Removed {0} broken records" xml:space="preserve">
+    <value>Rimossi {0} record rotti</value>
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>{0} per {1} rimosso da questo canale.</value>
@@ -5777,8 +5804,8 @@
   <data name="Send it like this" xml:space="preserve">
     <value>Invialo così</value>
   </data>
-  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
-    <value>L'invio dei tuoi punteggi a PIU Tracker o a un altro strumento della community si gestisce da</value>
+  <data name="Sending your scores to {0} or another community tool is managed from {1}." xml:space="preserve">
+    <value>L'invio dei tuoi punteggi a {0} o a un altro strumento della community si gestisce da {1}.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Serie</value>
@@ -8300,6 +8327,9 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} in classifica</value>
+  </data>
+  <data name="{0} only" xml:space="preserve">
+    <value>Solo {0}</value>
   </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>{0} paragon</value>

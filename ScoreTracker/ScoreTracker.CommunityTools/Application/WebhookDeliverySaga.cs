@@ -44,6 +44,14 @@ internal sealed class WebhookDeliverySaga : IConsumer<PlayerScoresUpdatedEvent>
     public async Task Consume(ConsumeContext<PlayerScoresUpdatedEvent> context)
     {
         var message = context.Message;
+        // A player removing their own data is nobody else's notification (owner, 2026-08-11). An
+        // empty change set is exactly that and only that: every publisher of one is a removal —
+        // the scoped wipe, an undone session, and the broken-best cleanup — while every path that
+        // adds or raises a score guards against publishing empty. So a delivery here would tell a
+        // maker "something happened" about the one thing they should not be told about, and a
+        // ScorePush tool would receive an empty changes array saying nothing at all.
+        if (message.Changes.Count == 0) return;
+
         var toolIds = await _tools.GetToolIdsReading(message.UserId, context.CancellationToken);
         if (toolIds.Count == 0) return;
 

@@ -21,4 +21,14 @@ public sealed record StartImportCheckCommand(
     /// <summary>Read every page of the best-score list instead of counting levels. Costs one of
     /// the month's allowance, and is the only way to find a score improved without changing grade
     /// or plate.</summary>
-    bool DeepScan) : IRequest<ImportCheckStartResult>;
+    bool DeepScan,
+    /// <summary>The player's broken-scores choice, applied to both halves of the run — the import
+    /// it starts with and the repair that follows. A repair that ignored it would skip exactly the
+    /// charts their imports save.
+    /// <para>
+    /// It does not make the ordinary census <em>find</em> a missing break: both sides of that
+    /// count are pass-only (locally <c>LocalCensusBuilder</c> skips broken records, remotely
+    /// <c>TotalPasses</c>), so a level whose only gap is a broken best never disagrees and is
+    /// never re-read. Deep scan is what finds those.
+    /// </para></summary>
+    bool IncludeBroken) : IRequest<ImportCheckStartResult>;

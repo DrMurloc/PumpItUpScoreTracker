@@ -1,4 +1,5 @@
 ﻿using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Web.Services;
 
 namespace ScoreTracker.Web.Components.HomeWidgets;
 
@@ -14,13 +15,16 @@ public sealed record ImportScoresConfig
     // On: use the saved game tag and import immediately. Off: pick a card after sign-in.
     public bool SkipGameTag { get; set; } = true;
 
-    // On a chart you've never passed, save your best broken attempt as the record. NULL follows
-    // the mix (on for Phoenix 2, whose best list carries broken attempts; off for Phoenix), which
-    // is what every widget saved before this setting existed — so no config migration.
+    /// <summary>
+    ///     Superseded and no longer read. The choice moved to the account
+    ///     (<see cref="BrokenScorePreference" />) because a player means the same thing whichever
+    ///     surface they import from, and two widgets could otherwise hold opposite answers.
+    ///     Kept so an instance saved before the move still deserializes.
+    ///     <para>
+    ///         Retired outright rather than migrated because there was nothing to migrate: of the
+    ///         311 <c>import-scores</c> widgets in production on 2026-08-11, zero carried this key
+    ///         in their config blob. Nobody ever moved it off "follow the mix".
+    ///     </para>
+    /// </summary>
     public bool? RecordBrokenAsBest { get; set; }
-
-    public bool RecordsBrokenFor(MixEnum mix)
-    {
-        return RecordBrokenAsBest ?? mix == MixEnum.Phoenix2;
-    }
 }

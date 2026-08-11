@@ -715,6 +715,45 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         _cache.Remove(ScoreCache(userId, mix));
     }
 
+    // Imported breaks only, and the same predicate on both the count and the delete so the number
+    // on the button is the number that goes. Spelled out inline rather than shared through a
+    // helper: EF has to translate it, so it cannot be a method call on the entity.
+    public async Task<int> CountBrokenRecords(MixEnum mix, Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<PhoenixRecordEntity>()
+            .CountAsync(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
+                             && p.Source == ScoreJournalEntry.OfficialImportSource, cancellationToken);
+    }
+
+    public async Task<int> DeleteBrokenRecords(MixEnum mix, Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // The charts are read before the delete because the stats row is keyed by chart, not by
+        // brokenness — once the records are gone there is nothing left to say which stats rows
+        // belonged to them.
+        var chartIds = await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
+                        && p.Source == ScoreJournalEntry.OfficialImportSource)
+            .Select(p => p.ChartId)
+            .ToArrayAsync(cancellationToken);
+        if (chartIds.Length == 0) return 0;
+
+        var removed = await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId && p.MixId == mixId && p.IsBroken
+                        && p.Source == ScoreJournalEntry.OfficialImportSource)
+            .ExecuteDeleteAsync(cancellationToken);
+        await database.Set<PhoenixRecordStatsEntity>()
+            .Where(p => p.UserId == userId && p.MixId == mixId && chartIds.Contains(p.ChartId))
+            .ExecuteDeleteAsync(cancellationToken);
+        _cache.Remove(ScoreCache(userId, mix));
+        return removed;
+    }
+
     public async Task DeleteAllForUser(Guid userId, MixEnum? mix = null,
         CancellationToken cancellationToken = default)
     {

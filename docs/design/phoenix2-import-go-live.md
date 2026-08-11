@@ -3,8 +3,9 @@
 > **Partly superseded by [score-truth-model.md](score-truth-model.md) (2026-07-30).** Four items
 > below no longer describe the code: §2's *"broken detection … never on `score == 0`"* still holds
 > for detection, but a broken best scoring 0 is now dropped rather than stored; §3.3/§4.5's
-> Include-Broken control keeps its Phoenix-2 default but is renamed and gains a per-widget
-> setting; §4.3's *"KeepBestStats broken-over-pass rule extends to judgements"* is restated by the
+> Include-Broken control keeps its Phoenix-2 default but is renamed and, as of 2026-08-10, is one
+> **account-wide** preference rather than derived per page or per widget; §4.3's
+> *"KeepBestStats broken-over-pass rule extends to judgements"* is restated by the
 > best-attempt policy, under which everything travels with the winning play; and §3.2/§4.2's
 > watermark cutoff **was already removed** before that effort — the best page's displayed date is
 > the chart's first play, so it truncated every import after the first, and `WalkDatedBestScores`
@@ -174,6 +175,13 @@ surfaces that label broken deliberately, Experiments pages (consume filtered pro
   once the mix loads (checkbox stays user-overridable).
 - `ImportScoresWidget`: the hardcoded `false` in its `StartOfficialImportCommand` becomes
   `_mix == MixEnum.Phoenix2`.
+
+> **Superseded 2026-08-10.** Both defaults survive unchanged, but neither surface derives them
+> any more: the choice is one account-wide preference resolved by `BrokenScorePreference`, where
+> absence means "follow the mix" ([score-truth-model.md D2a](score-truth-model.md)). The
+> per-widget `ImportScoresConfig.RecordBrokenAsBest` this doc's revision introduced is retired —
+> the property stays for deserialization and is no longer read. Deriving it on every page load
+> and never storing it is what made Phoenix 2 players untick the box before every import.
 
 ### 4.6 Mix-switch fix (Presentation)
 

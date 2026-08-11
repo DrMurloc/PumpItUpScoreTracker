@@ -37,6 +37,10 @@
         </div>
     </MudPaper>
 
+    @* Between the undo banner and the arm gate: it is the second-narrowest thing this page can
+       do, and the only one that is re-derivable. *@
+    <BrokenBestCleanupPanel OnCleaned="ReloadMixes"/>
+
     <MudPaper Outlined="true" Class="pa-3 mb-4">
         <MudCheckBox T="bool" @bind-Value="_armed" Color="Color.Error" Dense="true">
             <b>@L["No — I want to permanently delete data."]</b>
@@ -203,6 +207,13 @@
 
 
     protected override async Task OnInitializedAsync()
+    {
+        await ReloadMixes();
+    }
+
+    // The chips below carry per-mix score counts, and a cleanup above has just changed some of
+    // them — a stale count would invite a delete scoped to rows that are already gone.
+    private async Task ReloadMixes()
     {
         _mixes = await Mediator.Send(new GetMixesWithScoresQuery(CurrentUser.User.Id));
     }

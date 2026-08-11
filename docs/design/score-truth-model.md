@@ -33,6 +33,22 @@ This doc replaces four rules with one, and states what each store is for.
   Scores". It governs whether a break may *become* the record on a chart you have never passed.
   It never lets a break displace a pass.
 
+  **D2a (2026-08-10) — the choice is one account-wide value, and absence means "follow the
+  mix."** It was re-derived from the mix on every page load and never written down, so a Phoenix
+  2 player unticked it before every import. The default is unchanged and now says why on screen:
+  Phoenix 2 keeps a personal best for a failed stage and Phoenix does not, and the site mirrors
+  the official one. Absence is stored as absence rather than as the resolved default, so
+  "follow the mix" keeps tracking the mix instead of freezing a snapshot of it. `BrokenScorePreference`
+  in `Web/Services` is the one resolver; the import page's checkbox writes an explicit choice,
+  the widget configurator's three-option select can also write "follow", and the completeness
+  check reads it rather than the `false` it used to hardcode.
+
+  **D2b — the opt-in is withdrawable.** Turning it off leaves the records earlier imports
+  already made, so Your Data carries a cleanup that removes them
+  ([delete-my-data.md §18](delete-my-data.md)). It withdraws the *record* only: the journal keeps
+  every play, which is what makes the cleanup re-derivable rather than a deletion — the official
+  best list still carries the run.
+
 - **D3 — the official site's My Best Scores page is the source of truth for your best.** The
   import's best-page walk is primary; recently-played is a supplement, never an override.
 

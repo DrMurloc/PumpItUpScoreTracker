@@ -226,6 +226,39 @@ public sealed class ImportCheckSagaTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task TheRepairReadsBrokenBestsExactlyWhenTheImportWould(bool includeBroken)
+    {
+        // The check told the player their account was complete while walking past every broken
+        // best a Phoenix 2 import saves — the two reads have to agree or the count is a lie.
+        var site = Site(Census(("18", 2)));
+
+        await Build(site: site, records: Records(1))
+            .Handle(Execute(includeBroken: includeBroken), CancellationToken.None);
+
+        site.Verify(s => s.GetBestScoresIn(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyCollection<string>>(), includeBroken, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task TheImportInsideTheRunHonoursTheChoiceToo(bool includeBroken)
+    {
+        // The run imports before it counts, and that half passed a hardcoded true — so pressing
+        // Score check re-recorded every break the Your Data cleanup had just withdrawn. Verifying
+        // only the repair's read walked straight past it.
+        var mediator = Mediator();
+
+        await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
+            .Handle(Execute(includeBroken: includeBroken), CancellationToken.None);
+
+        mediator.Verify(m => m.Send(It.Is<ExecuteImportCommand>(c => c.IncludeBroken == includeBroken),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task TheImportAndTheDeeperReadShareOneSession()
     {
@@ -283,15 +316,16 @@ public sealed class ImportCheckSagaTests
 
     // ---- builders ----
 
-    private static StartImportCheckCommand Start(bool deepScan = false)
+    private static StartImportCheckCommand Start(bool deepScan = false, bool includeBroken = false)
     {
         return new StartImportCheckCommand(new TypedCredentialSource("user", "pass"), MixEnum.Phoenix,
-            "card", "TAG #1", deepScan);
+            "card", "TAG #1", deepScan, includeBroken);
     }
 
-    private static ExecuteImportCheckCommand Execute(bool deepScan = false)
+    private static ExecuteImportCheckCommand Execute(bool deepScan = false, bool includeBroken = false)
     {
-        return new ExecuteImportCheckCommand(UserId, MixEnum.Phoenix, "sid", "card", "TAG #1", deepScan);
+        return new ExecuteImportCheckCommand(UserId, MixEnum.Phoenix, "sid", "card", "TAG #1", deepScan,
+            includeBroken);
     }
 
     private static Chart Chart(Guid id)

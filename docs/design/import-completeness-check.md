@@ -212,9 +212,23 @@ without touching piugame.
 
 ## 7. Explicitly out of scope
 
-- **The broken-best delta.** We can compute exactly how many stage breaks the site holds that we
-  do not, and it is noise for a player who opted out of importing them. Not shown. (Owner call,
-  2026-08-02.)
+- **The broken-best delta.** The site's stage-break count is computable and is noise for a player
+  who opted out of importing them. Not shown. (Owner call, 2026-08-02.)
+
+  This is about *reporting* the delta, and says nothing about what the run fetches. **Amended
+  2026-08-10:** both halves of a run had the flag wrong in opposite directions. The repair's two
+  `GetBestScoresIn` reads passed `includeBroken: false` hardcoded, so on Phoenix 2 — where the box
+  starts on — the check walked past exactly the charts a normal import saves and then reported the
+  account complete. The import the run *starts* with passed a hardcoded `true`, so it recorded
+  breaks for a player who had turned them off; with the Your Data cleanup shipping alongside, that
+  closed a loop where cleaning up and then pressing Score check brought every one of them back.
+  Both now read the player's account-wide choice
+  ([score-truth-model.md D2a](score-truth-model.md)).
+
+  **Known limit.** Honouring the flag does not make the ordinary census *find* a missing break.
+  Both sides of that count are pass-only — `LocalCensusBuilder` skips broken records, and the
+  remote side reads `TotalPasses` — so a level whose only gap is a broken best never disagrees and
+  is never re-read. Deep scan finds those; the census cannot, by construction.
 - **A single-request "quick check".** §3.2 — it is wrong often enough to be worse than nothing.
 - **Repairing scores below the top 50 automatically.** The census names them; the player presses
   the button.

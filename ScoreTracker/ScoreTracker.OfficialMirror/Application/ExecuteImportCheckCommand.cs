@@ -19,4 +19,4 @@ internal sealed record ImportCheckRun(Guid? SessionId, int Saved);
 // Internal — not a cross-vertical contract.
 [ExcludeFromCodeCoverage]
 internal sealed record ExecuteImportCheckCommand(Guid UserId, MixEnum Mix, string Sid, string CardId,
-    string ExpectedGameTag, bool DeepScan) : IRequest<ImportCheckRun>;
+    string ExpectedGameTag, bool DeepScan, bool IncludeBroken) : IRequest<ImportCheckRun>;
