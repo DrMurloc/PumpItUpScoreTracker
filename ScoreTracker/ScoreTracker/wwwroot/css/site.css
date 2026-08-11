@@ -7202,21 +7202,6 @@ button.chart-card-art {
     gap: 5px;
 }
 
-/* Two columns of chips once there is room. The inventory passed thirty options and a
-   single wrapping row stopped being scannable; a grid also keeps the labels
-   left-aligned against each other instead of ragged. */
-@media (min-width: 700px) {
-    .srp-export-columns {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        align-items: start;
-    }
-
-    .srp-export-columns > .srp-badge-opt {
-        justify-content: flex-start;
-    }
-}
-
 .srp-export-grp {
     display: flex;
     align-items: baseline;
@@ -7239,19 +7224,8 @@ button.chart-card-art {
     text-decoration: underline;
 }
 
-/* A bundle is not a column. The dashed edge and the multiplier say so before the footer
-   count has to: one press of Practice ranks moves the file by thirty-two columns. */
-.srp-export-bundle {
-    border: 1px dashed var(--mix-ink-muted);
-    background: transparent;
-}
-
-.srp-export-bundle.srp-badge-opt-sel {
-    border-color: var(--mix-primary);
-    outline: none;
-    background: var(--mix-surface-muted);
-}
-
+/* A bundle chip wears the ordinary chip. Its multiplier is what says it is worth many
+   columns, and that reads without a second visual language on top. */
 .srp-export-mult {
     margin-left: 7px;
     font-size: .74rem;

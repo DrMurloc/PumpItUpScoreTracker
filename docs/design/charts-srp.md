@@ -533,18 +533,22 @@ ours 16.84). They measure different things. It stays inside the passthrough, kee
 
 - **An "All *n*" per group** — with 17 chart columns and 13 personal ones, ticking one at a
   time is the common case going wrong.
-- **Bundle chips read differently**: dashed edge and an explicit `×29`, because one tap is
-  not one column. Ticking Practice ranks moves the footer from 6 columns to 38, and the
-  footer count is the only thing that says so.
+- **Bundle chips print a multiplier** — `×29` — because one tap is not one column: ticking
+  Practice ranks moves the footer from 6 columns to 38. They wear the **ordinary chip**
+  otherwise. A dashed edge was tried and cut (owner, field test): the multiplier already
+  says it, and a second visual language for one group cost more than it explained.
 - **My columns is mix-conditional** — 13 on Phoenix 2, 12 on Phoenix 1, 4 on XX and older.
   This also fixes an existing wart: the group currently offers *My legacy grade* on Phoenix
   and *My Phoenix score* on XX and returns them blank.
 - The unstable note lives in the piucenter group, not in this doc alone.
 
-`charts.scss` line 1 sets `.mud-dialog-width-sm { max-width: none !important; }`, so this
-dialog has never actually been `MaxWidth.Small`. The room was already there, so the chips lay
-out in two columns from 700px up (owner call) — a grid rather than a wrapping row, which also
-left-aligns the labels against each other instead of leaving them ragged.
+**Chips stay loosely organized** — one wrapping row per group, each chip sized by its own
+label. A two-column grid was built and cut (owner, field test): it lined the labels up, and
+lost the scannability of a ragged row whose widths tell you how many options are short ones.
+The group headers are what made the long inventory navigable, not the alignment.
+
+(`charts.scss` line 1 sets `.mud-dialog-width-sm { max-width: none !important; }`, so this
+dialog has never actually been `MaxWidth.Small` — the room is there if a future pass wants it.)
 
 ### Layer scope
 
@@ -572,7 +576,7 @@ also keeps `ChartSkillMetric` internal, which a contract field would not.
 | E1 | This doc section | docs |
 | E2 | Purge pass rate: card fact, table column, chip, URL param, `PassRateMin`, `MinScoresForPassRate`, `PassCount`, the export column and its `DefaultColumns` entry; delete `PassRateNeedsTheMinimumSample` | Presentation/Catalog |
 | E3 | `ChartId`, `ChartUrl`, `PlayerCount` + the `ExportContext` the URL forces | Presentation |
-| E4 | Dialog restructure: group headers, All-*n*, two chip columns from 700px, mix-conditional My columns (incl. the legacy-blank fix) + bUnit | Presentation |
+| E4 | Dialog restructure: group headers, All-*n*, mix-conditional My columns (incl. the legacy-blank fix) + bUnit | Presentation |
 | E5 | `Pumbility` column + l10n | Presentation |
 | E6 | Judgements through `ChartSearchMyState` + five columns + l10n | Catalog/Presentation |
 | E7 | Combo solver + round-trip unit test + `MyMaxCombo` column | Domain/Presentation |
