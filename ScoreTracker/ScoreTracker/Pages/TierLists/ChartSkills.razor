@@ -56,15 +56,48 @@ else
            It comes back when voting does; the lens itself is unchanged (owner, 2026-08-10). *@
         @if (!IsLegacy)
         {
-        <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-            <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
-            <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-            @if (ChabalaAvailable)
-            {
-                <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
-            }
-            <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
-        </MudSelect>
+        @* Three shapes, because the lens means three different things. On the tier views it
+           RANKS, so Community offers every community list and Personalized offers only the two
+           that have a personalized recipe. On My Scores and Skill Breakdown something else does
+           the sectioning and the lens only annotates each card — so it is labelled for what it
+           does there, and it can name a personalized reading outright, which is the one place
+           those are reachable from. *@
+        @if (_groupBy == "Personalized")
+        {
+            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
+                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+            </MudSelect>
+        }
+        else if (IsTierView)
+        {
+            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
+                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                @if (ChabalaAvailable)
+                {
+                    <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
+                }
+                <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
+            </MudSelect>
+        }
+        else
+        {
+            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Shown Difficulty"]" Disabled="_isLoading" Value="ShownDifficultyValue" ValueChanged="ChangeShownDifficulty">
+                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                @if (CanPersonalize)
+                {
+                    <MudSelectItem T="string" Value="@("Personalized Pass")">@L["Personalized Pass"]</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("Personalized Score")">@L["Personalized Score"]</MudSelectItem>
+                }
+                @if (ChabalaAvailable)
+                {
+                    <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
+                }
+                <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
+            </MudSelect>
+        }
         }
         @if (IsMyProgress)
         {
@@ -89,28 +122,34 @@ else
     <div class="tier-toolbar">
         <div class="tier-toolbar-row">
             <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
+            @* Four views, one visible answer to "what am I looking at". Personalized was a
+               switch riding on top of this group until 2026-08-11, which meant the state was
+               spread across two controls and one of them was invisible in screenshots. *@
             <MudButtonGroup OverrideStyles="false" Class="tier-views-group">
-                <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Tier List"]</MudButton>
-                <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Progress"]</MudButton>
+                <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Community"]</MudButton>
+                @if (CanPersonalize)
+                {
+                    <MudButton Variant="@(_groupBy == "Personalized" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Personalized"))">@L["Personalized"]</MudButton>
+                }
+                <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Scores"]</MudButton>
                 @if (_currentMix.HasSkillData())
                 {
-                    <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["By Skill"]</MudButton>
+                    <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["Skill Breakdown"]</MudButton>
                 }
             </MudButtonGroup>
+            @if (_groupBy == "Personalized")
+            {
+                @* The only thing the retired "Personalized for {gametag}" chip did that the
+                   selected view button does not: get you to the breakdown. *@
+                <MudTooltip Text="@L["How is this personalized?"]">
+                    <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
+                                   aria-label="@L["How is this personalized?"]"></MudIconButton>
+                </MudTooltip>
+            }
             <MudButton Class="tier-compact-only tier-advanced-btn" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Tune" OnClick="() => _advancedOpen = true">@L["Advanced"]</MudButton>
         </div>
         <div class="tier-toolbar-row tier-desktop-only">
-            @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
-            {
-                <div class="tier-personalized-cell">
-                    <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
-                    <MudTooltip Text="@L["How is this personalized?"]">
-                        <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
-                                       aria-label="@L["How is this personalized?"]"></MudIconButton>
-                    </MudTooltip>
-                </div>
-            }
             <MudSpacer></MudSpacer>
             @if (CurrentUser.IsLoggedIn)
             {
@@ -143,17 +182,10 @@ else
         {
             <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
         }
-        @if (PersonalizedActive)
-        {
-            @* The chip doubles as the door to the breakdown page — same destination as
-               the "How is this personalized?" links by the switch. *@
-            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt"
-                     OnClick="@(() => NavManager.NavigateTo(BreakdownUrl))">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
-        }
         @* Same reason as the picker: naming the only lens there is says nothing. *@
         @if (!IsLegacy)
         {
-            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Ranked by"]: @LensDisplayName(_tierListType)</MudChip>
+            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@(IsTierView ? L["Ranked by"] : L["Shown Difficulty"]): @LensDisplayName(_tierListType)</MudChip>
         }
         @if (IsMyProgress)
         {
@@ -404,7 +436,7 @@ else
             <MudText>@L["Nobody near your level has scored enough of this folder yet."]</MudText>
             <MudText Typo="Typo.caption">@L["Your version of this folder is built from what players within half a competitive level of you score here."]</MudText>
             <div class="tier-list-cta-actions">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SetUsePersonalized(false))">@L["Show the community list"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Show the community list"]</MudButton>
             </div>
         </div>
     }
@@ -668,16 +700,6 @@ else
                                aria-label="@L["Close"]"></MudIconButton>
             </div>
             @lensControls
-            @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
-            {
-                <div class="tier-personalized-cell">
-                    <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
-                    <MudTooltip Text="@L["How is this personalized?"]">
-                        <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
-                                       aria-label="@L["How is this personalized?"]"></MudIconButton>
-                    </MudTooltip>
-                </div>
-            }
             <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
                        StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
                        Disabled="_isBuildingImage || _isLoading">
@@ -736,14 +758,6 @@ else
 
     .tier-compact-only {
         display: none;
-    }
-
-    /* The Personalized switch and its breakdown ?-icon ride as one toolbar cell
-       (field-test round: the full "How is this personalized?" string was text bloat). */
-    .tier-personalized-cell {
-        display: flex;
-        align-items: center;
-        gap: 0;
     }
 
     @@media (max-width: 959.98px) {
@@ -1481,7 +1495,12 @@ else
     private double _doublesCompetitive = 1;
     private bool _statsOpen = false;
     private bool _advancedOpen = false;
-    private bool _usePersonalizedData = true;
+    /// <summary>
+    ///     Whether the Shown Difficulty picker is on one of its personalized readings. It only
+    ///     applies to My Scores and Skill Breakdown, where the lens annotates cards rather than
+    ///     sectioning them — the tier views carry that choice in the view itself.
+    /// </summary>
+    private bool _shownPersonalized;
     private IReadOnlyList<TierGroup> _groups = Array.Empty<TierGroup>();
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
     private bool _isProvisionalFallback = false;
@@ -1492,7 +1511,12 @@ else
     private static readonly string[] LensKeys = { "Pass", "Score", "Chabala", "PG" };
     private static readonly string[] ValidGroupings = { "Difficulty", "Score", "Age", "Score Ranking", "Scoring Level", "Skill" };
 
-    private bool IsMyProgress => _groupBy is not "Difficulty" and not "Skill";
+    private bool IsMyProgress => _groupBy is not "Difficulty" and not "Personalized" and not "Skill";
+
+    /// <summary>Community and Personalized both section by the lens; they differ only in data.</summary>
+    private bool IsTierView => _groupBy is "Difficulty" or "Personalized";
+
+    private bool CanPersonalize => CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && !IsLegacy;
 
     private bool IsSkillView => _groupBy == "Skill";
 
@@ -1502,7 +1526,17 @@ else
 
     private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
 
-    private bool PersonalizedActive => _usePersonalizedData && CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score";
+    // Personalization is a VIEW now, not a switch riding on top of one (owner, 2026-08-11) —
+    // except on the two views that don't section by the lens, where the Shown Difficulty picker
+    // names the personalized reading outright rather than a hidden modifier deciding it.
+    private bool PersonalizedActive => CanPersonalize && _tierListType is "Pass" or "Score"
+                                       && (_groupBy == "Personalized"
+                                           || ((IsMyProgress || IsSkillView) && _shownPersonalized));
+
+    /// <summary>The Shown Difficulty picker's value: a lens, or a lens read personally.</summary>
+    private string ShownDifficultyValue => _shownPersonalized && _tierListType is "Pass" or "Score"
+        ? $"Personalized {_tierListType}"
+        : _tierListType;
 
     /// <summary>
     ///     Personalized Score has one source, so "the projection said nothing" and "the list is
@@ -1547,20 +1581,33 @@ else
         await Recalculate();
     }
 
-    private async Task SetUsePersonalized(bool newUse)
+    private async Task ChangeShownDifficulty(string value)
     {
-        _usePersonalizedData = newUse;
+        const string prefix = "Personalized ";
+        _shownPersonalized = value.StartsWith(prefix, StringComparison.Ordinal);
+        _tierListType = _shownPersonalized ? value[prefix.Length..] : value;
+        await UiSettings.SetSetting("TierLists__ShownPersonalized", _shownPersonalized.ToString());
+        await SetQueryString();
         await Recalculate();
     }
 
-    // View and grouping changes never refetch — they re-group in memory only.
+    // Grouping changes re-group in memory. Crossing between Community and Personalized is the
+    // exception: those are different blends, so that one refetches.
     private async Task ChangeGrouping(string newGrouping)
     {
         if (newGrouping == _groupBy)
         {
             return;
         }
+        var crossesPersonalized = (_groupBy == "Personalized") != (newGrouping == "Personalized");
         _groupBy = newGrouping;
+        if (crossesPersonalized)
+        {
+            await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
+            await Recalculate();
+            return;
+        }
+
         await ApplyGroupingChange();
     }
 
@@ -1672,7 +1719,6 @@ else
             // Phoenix session should restore whatever lens the player actually chose. Same
             // for personalization, which has no meaning without scoring levels.
             await UiSettings.SetSetting("TierLists__ListType", _tierListType, cancellationToken);
-            await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString(), cancellationToken);
         }
 
         _charts = _allCharts.Values
@@ -2134,7 +2180,7 @@ else
         var levelSettingTask = UiSettings.GetSetting("TierLists__Level");
         var chartTypeSettingTask = UiSettings.GetSetting("TierLists__ChartType");
         var listTypeSettingTask = UiSettings.GetSetting("TierLists__ListType");
-        var personalizedSettingTask = UiSettings.GetSetting("TierLists__UsePersonalized");
+        var shownPersonalizedTask = UiSettings.GetSetting("TierLists__ShownPersonalized");
         var groupBySettingTask = UiSettings.GetSetting("TierLists__GroupBy");
         var densitySettingTask = UiSettings.GetSetting(DensitySettingKey);
         var legacyTextViewTask = UiSettings.GetSetting("TierLists__TextView");
@@ -2201,7 +2247,9 @@ else
         _chartType = Enum.TryParse<ChartType>(await chartTypeSettingTask, out var savedType) ? savedType : _chartType;
         var savedLens = await listTypeSettingTask;
         _tierListType = LensKeys.FirstOrDefault(k => string.Equals(k, savedLens, StringComparison.OrdinalIgnoreCase)) ?? "Pass";
-        _usePersonalizedData = (await personalizedSettingTask ?? true.ToString()) == true.ToString();
+        // No migration from TierLists__UsePersonalized, which defaulted ON: nobody chose that,
+        // and everyone lands on Community now (owner). The key simply stops being read.
+        _shownPersonalized = (await shownPersonalizedTask ?? false.ToString()) == true.ToString();
         _groupBy = await groupBySettingTask ?? "Difficulty";
 
         // Legacy query params, then the canonical C3 path route, win over saved state.
@@ -2241,7 +2289,8 @@ else
             _tierListType = "Pass";
         }
         if (!ValidGroupings.Contains(_groupBy) || (!CurrentUser.IsLoggedIn && _groupBy is "Score" or "Age" or "Score Ranking")
-            || (_groupBy == "Skill" && !_currentMix.HasSkillData()))
+            || (_groupBy == "Skill" && !_currentMix.HasSkillData())
+            || (_groupBy == "Personalized" && !CanPersonalize))
         {
             _groupBy = "Difficulty";
         }
