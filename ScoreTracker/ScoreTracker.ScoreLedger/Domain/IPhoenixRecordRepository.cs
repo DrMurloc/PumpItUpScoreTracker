@@ -68,6 +68,20 @@ internal interface IPhoenixRecordRepository
     /// <summary>Removes one chart's record — the undo case where no earlier play survives.</summary>
     Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     How many of this player's records on a mix are failed runs rather than passes. A
+    ///     record is broken only when they have no pass on that chart, so this is also the count
+    ///     of charts that would go back to having no record at all.
+    /// </summary>
+    Task<int> CountBrokenRecords(MixEnum mix, Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Removes every broken record on a mix and returns how many went. The journal is not
+    ///     touched: the runs happened, and they stay in each chart's history — only their standing
+    ///     as the record is withdrawn.
+    /// </summary>
+    Task<int> DeleteBrokenRecords(MixEnum mix, Guid userId, CancellationToken cancellationToken = default);
+
     /// <summary>Deletes the user's records and per-score stats. Null mix means every mix.</summary>
     Task DeleteAllForUser(Guid userId, MixEnum? mix = null, CancellationToken cancellationToken = default);
 }
