@@ -163,10 +163,8 @@ internal sealed class TierListBlendBuilder
     // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
     // under 900,000 = 0%. Deviations pool over this floored scale so sub-900k scores
     // read as zero proficiency instead of dragging skill estimates linearly.
-    // SkillScoreRange is public: PlayerSkillDeviationsHandler converts pooled
-    // deviations to score units with it (proficiency × range).
     private const double SkillScoreFloor = 900_000;
-    public const double SkillScoreRange = 100_000;
+    private const double SkillScoreRange = 100_000;
 
     private static double Proficiency(int score)
     {
@@ -174,11 +172,10 @@ internal sealed class TierListBlendBuilder
     }
 
     /// <summary>
-    ///     The pooled per-skill evidence around an anchor folder — the reusable core of
-    ///     the Skill source, also served cross-vertical through
-    ///     GetPlayerSkillDeviationsQuery (Pumbility projections v2). extraChipChartIds
-    ///     lets ComputeSkillSource keep its single bulk chips fetch for the
-    ///     folder-estimate stage that follows.
+    ///     The pooled per-skill evidence around an anchor folder — the core of the Skill
+    ///     source, and nothing outside this class reads it. extraChipChartIds lets
+    ///     ComputeSkillSource keep its single bulk chips fetch for the folder-estimate
+    ///     stage that follows.
     /// </summary>
     public async Task<SkillEvidencePool> ComputeSkillEvidence(ChartType chartType, DifficultyLevel anchorLevel,
         MixEnum mix, Guid userId, IReadOnlyCollection<Guid> extraChipChartIds, CancellationToken cancellationToken)
