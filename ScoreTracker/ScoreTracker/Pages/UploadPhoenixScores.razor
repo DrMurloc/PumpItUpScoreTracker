@@ -122,12 +122,19 @@
                    has to happen on change rather than being read back off the field at import. *@
                 <MudCheckBox T="bool" Label="@L["Record broken scores as your best"]" Value="_includeBroken"
                              ValueChanged="ChooseIncludeBroken" Disabled="_isImporting"></MudCheckBox>
-                @* Both keys spelled out rather than composed: a key built at run time is
+                @* The mix-specific copy explains a DEFAULT, so it only tells the truth while the
+                   player is still on one. Once they have chosen, an explicit tick outranks the
+                   mix — and a ticked box over "Phoenix keeps no personal best for those, so this
+                   starts off" reads as a bug in the page. The mix-agnostic key asserts no default.
+
+                   Both keys spelled out rather than composed: a key built at run time is
                    invisible to an L["…"] grep, which is how live keys get deleted as orphans. *@
                 <MudText Typo="Typo.caption" Class="ml-10 d-block">
-                    @(_currentMix == MixEnum.Phoenix2
-                        ? L["Import Broken Helper Phoenix 2"]
-                        : L["Import Broken Helper Phoenix"])
+                    @(_brokenChoice != null
+                        ? L["Import Broken Helper"]
+                        : _currentMix == MixEnum.Phoenix2
+                            ? L["Import Broken Helper Phoenix 2"]
+                            : L["Import Broken Helper Phoenix"])
                 </MudText>
                 @* Sending your session to another site is a consent decision, not an import
                    option, so it lives with every other tool rather than as a checkbox here. *@
@@ -398,6 +405,10 @@
     private string _password = "";
     private bool _includeBroken = false;
 
+    // Null while the player is still following the mix. Kept so the caption knows whether it may
+    // talk about a default.
+    private bool? _brokenChoice;
+
     /// <summary>
     ///     Ticking the box IS the choice — it is kept on the account and outranks the mix default
     ///     everywhere afterwards, which is why this page offers two states where the widget's
@@ -406,6 +417,7 @@
     private async Task ChooseIncludeBroken(bool value)
     {
         _includeBroken = value;
+        _brokenChoice = value;
         await BrokenScores.Choose(value);
     }
 
@@ -685,13 +697,16 @@
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        _includeBroken = await BrokenScores.AppliesTo(_currentMix);
         _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
         if (!CurrentUser.IsLoggedIn)
         {
             NavManager.NavigateTo("/Login");
             return;
         }
+        // Below the redirect: signed out, the preference reads through browser storage, and
+        // spending a JS round trip on a page we are about to leave buys nothing.
+        _brokenChoice = await BrokenScores.GetChoice();
+        _includeBroken = _brokenChoice ?? BrokenScorePreference.DefaultFor(_currentMix);
         _userId = CurrentUser.User.Id;
         // This user's import feed, routed by user topic (no cross-user status/culture leak).
         _subscriptions.Add(UiHub.Subscribe<ImportStatusUpdatedEvent>(UiTopics.User(_userId), StatusUpdate));
