@@ -5,6 +5,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.ChartIntelligence.Application;
@@ -29,9 +30,11 @@ internal sealed class PersonalizedBreakdownHandler
 
     public PersonalizedBreakdownHandler(IMediator mediator, IChartRepository charts, IScoreReader scores,
         IPlayerStatsReader playerStats, IUserTierListRepository userTierLists,
-        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock)
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock,
+        IScoreProjector projector)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock);
+        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock,
+            projector);
         _currentUser = currentUser;
         _cache = cache;
     }
@@ -72,7 +75,8 @@ internal sealed class PersonalizedBreakdownHandler
                 TierListBlendBuilder.Combine("Final", c.Id, computation.Sources, computation.Modifiers)
                     .Category,
                 CategoryFor(computation.Skill?.Entries, c.Id),
-                CategoryFor(computation.Similar?.Entries, c.Id)))
+                CategoryFor(computation.Similar?.Entries, c.Id),
+                CategoryFor(computation.Projection?.Entries, c.Id)))
             .ToArray();
 
         var skills = (computation.Skill?.PooledSkills ?? new Dictionary<Skill, SkillEvidence>())
@@ -91,6 +95,9 @@ internal sealed class PersonalizedBreakdownHandler
             communityModifiers.Values.Sum(),
             computation.Modifiers.GetValueOrDefault("Skill"),
             computation.Modifiers.GetValueOrDefault("Similar Players"),
+            computation.Modifiers.GetValueOrDefault("Projection"),
+            computation.Projection?.ProjectedChartCount ?? 0,
+            computation.Projection?.FolderChartCount ?? computation.FolderCharts.Count,
             computation.IsProvisionalFallback);
     }
 

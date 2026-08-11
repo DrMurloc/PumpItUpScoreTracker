@@ -15,6 +15,7 @@ using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -154,13 +155,54 @@ public sealed class PersonalizedBreakdownHandlerTests
             .ReturnsAsync(new[] { StatsFor(neighbor, doublesCompetitive: 17.5) });
         var handler = BuildHandler(charts: charts, mediator: mediator, playerStats: playerStats);
 
-        var result = await handler.Handle(Query("Score", userId), CancellationToken.None);
+        var result = await handler.Handle(Query("Pass", userId), CancellationToken.None);
 
-        // Score lens: Scores x2 + Official Scores x1 fold into the community column.
-        Assert.Equal(3, result.CommunityWeight);
+        // Pass lens: Pass Count is the community column; Skill and Similar Players are the
+        // personal half, and the projection does not vote here at all.
+        Assert.Equal(2, result.CommunityWeight);
         Assert.Equal(2, result.SkillWeight);
         Assert.Equal(1, result.SimilarPlayersWeight);
         Assert.Equal(1, result.SimilarPlayerCount);
+        Assert.Equal(0, result.ProjectionWeight);
+    }
+
+    [Fact]
+    public async Task ScoreLensPersonalizesThroughTheProjectionAlone()
+    {
+        var chart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var charts = ChartsMock(new[] { chart });
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Scores", Array.Empty<SongTierListEntry>());
+        var handler = BuildHandler(charts: charts, mediator: mediator);
+
+        var result = await handler.Handle(Query("Score", Guid.NewGuid()), CancellationToken.None);
+
+        // Scores x2 + Official Scores x1 on the community side, and the projection carrying the
+        // whole personal side at the weight Skill and Similar Players used to split between them.
+        Assert.Equal(3, result.CommunityWeight);
+        Assert.Equal(3, result.ProjectionWeight);
+        Assert.Equal(0, result.SkillWeight);
+        Assert.Equal(0, result.SimilarPlayersWeight);
+    }
+
+    [Fact]
+    public async Task AProjectionNoPeerCanAnswerReportsSilenceRatherThanAgreement()
+    {
+        // The default fixture parks every player at the competitive-level-1 no-data floor, so the
+        // projector declines. Silence has to be visible AS silence: a personalized column that
+        // simply equals the community one is the failure this count exists to expose.
+        var chart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var charts = ChartsMock(new[] { chart });
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Scores", Array.Empty<SongTierListEntry>());
+        var handler = BuildHandler(charts: charts, mediator: mediator);
+
+        var result = await handler.Handle(Query("Score", Guid.NewGuid()), CancellationToken.None);
+
+        Assert.Equal(0, result.ProjectedChartCount);
+        Assert.Equal(1, result.FolderChartCount);
+        Assert.Equal(TierListCategory.Unrecorded,
+            result.Charts.Single(c => c.ChartId == chart.Id).ProjectionCategory);
     }
 
     [Fact]
@@ -384,6 +426,7 @@ public sealed class PersonalizedBreakdownHandlerTests
         userTierLists ??= new Mock<IUserTierListRepository>();
         return new PersonalizedBreakdownHandler(mediator.Object, charts.Object, scores.Object,
             playerStats.Object, userTierLists.Object, new Mock<ICurrentUserAccessor>().Object,
-            new MemoryCache(new MemoryCacheOptions()), (clock ?? FakeDateTime.At(2026, 7, 12)).Object);
+            new MemoryCache(new MemoryCacheOptions()), (clock ?? FakeDateTime.At(2026, 7, 12)).Object,
+            new ScoreProjector(scores.Object, playerStats.Object, new Mock<IPlayerHistoryRepository>().Object));
     }
 }

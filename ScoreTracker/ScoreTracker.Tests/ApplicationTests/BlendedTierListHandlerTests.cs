@@ -15,6 +15,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -308,7 +309,9 @@ public sealed class BlendedTierListHandlerTests
             .ReturnsAsync(scores);
         var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader);
 
-        var result = await handler.Handle(Query("Score", personalized: true, userId: userId),
+        // Pass, because that is the lens the Skill source votes on now: Score personalizes
+        // through the projection alone.
+        var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
             CancellationToken.None);
 
         var runsEntry = result.Entries.Single(e => e.ChartId == runsFolderChart.Id);
@@ -358,6 +361,110 @@ public sealed class BlendedTierListHandlerTests
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             handler.Handle(Query("Wombo Combo"), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ScoreLensRanksTheFolderByWhatPeersAtYourLevelActuallyScore()
+    {
+        var comfortable = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var ordinary = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var punishing = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var userId = Guid.NewGuid();
+        var peer = Guid.NewGuid();
+        var otherPeer = Guid.NewGuid();
+
+        var charts = ChartsMock(new[] { comfortable, ordinary, punishing });
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Scores", Array.Empty<SongTierListEntry>());
+
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(StatsFor(userId, doublesCompetitive: 17.5));
+        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Double, 17.5,
+                TierListBlendBuilder.ProjectionCompetitiveWindow, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { peer, otherPeer });
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                StatsFor(peer, doublesCompetitive: 17.5), StatsFor(otherPeer, doublesCompetitive: 17.5)
+            });
+
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetPlayerScoresInLevelRange(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                ChartType.Double, It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                PeerScoreOn(peer, comfortable, 985_000), PeerScoreOn(otherPeer, comfortable, 980_000),
+                PeerScoreOn(peer, ordinary, 950_000), PeerScoreOn(otherPeer, ordinary, 945_000),
+                PeerScoreOn(peer, punishing, 910_000), PeerScoreOn(otherPeer, punishing, 905_000)
+            });
+
+        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scores,
+            playerStats: playerStats);
+
+        var result = await handler.Handle(Query("Score", personalized: true, userId: userId),
+            CancellationToken.None);
+
+        var comfortableEntry = result.Entries.Single(e => e.ChartId == comfortable.Id);
+        var punishingEntry = result.Entries.Single(e => e.ChartId == punishing.Id);
+        Assert.True(comfortableEntry.Category < punishingEntry.Category,
+            $"the chart peers score 985k on ({comfortableEntry.Category}) should rank easier " +
+            $"than the one they score 910k on ({punishingEntry.Category})");
+    }
+
+    [Fact]
+    public async Task TooFewProjectedChartsToHaveASpreadStaySilent()
+    {
+        // One projection has no spread, so it sits at its own mean and comes out stamped the
+        // easiest chart in the folder — at full weight, off a single peer's single score. Below
+        // the floor the source says nothing and the community list carries the folder alone.
+        var reached = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var unreached = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var userId = Guid.NewGuid();
+        var peer = Guid.NewGuid();
+
+        var charts = ChartsMock(new[] { reached, unreached });
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Scores", new[]
+        {
+            new SongTierListEntry("Scores", reached.Id, TierListCategory.Hard, 0),
+            new SongTierListEntry("Scores", unreached.Id, TierListCategory.Hard, 1)
+        });
+
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(StatsFor(userId, doublesCompetitive: 17.5));
+        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Double, 17.5,
+                TierListBlendBuilder.ProjectionCompetitiveWindow, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { peer });
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { StatsFor(peer, doublesCompetitive: 17.5) });
+
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetPlayerScoresInLevelRange(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                ChartType.Double, It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { PeerScoreOn(peer, reached, 985_000) });
+
+        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scores,
+            playerStats: playerStats);
+
+        var result = await handler.Handle(Query("Score", personalized: true, userId: userId),
+            CancellationToken.None);
+
+        // Both charts keep the community's Hard: the one peer-played chart did not become the
+        // folder's easiest on the strength of being the only one anybody had played.
+        Assert.Equal(TierListCategory.Hard, result.Entries.Single(e => e.ChartId == reached.Id).Category);
+        Assert.Equal(TierListCategory.Hard, result.Entries.Single(e => e.ChartId == unreached.Id).Category);
+    }
+
+    private static UserPhoenixScore PeerScoreOn(Guid userId, Chart chart, int score)
+    {
+        return new UserPhoenixScore(userId, chart.Id, "Peer", score, null, false, true,
+            new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero));
     }
 
     private static GetBlendedTierListQuery Query(string lens, bool personalized = false, Guid? userId = null)
@@ -421,8 +528,11 @@ public sealed class BlendedTierListHandlerTests
                 .ReturnsAsync((MixEnum _, Guid id, CancellationToken _) => StatsFor(id));
         }
         userTierLists ??= new Mock<IUserTierListRepository>();
+        // The real projector over the same stubbed ports: the Projection source is driven by
+        // cohort membership and peer scores, which is what these fixtures already set up.
         return new BlendedTierListHandler(mediator.Object, charts.Object, scores.Object, playerStats.Object,
             userTierLists.Object, new Mock<ICurrentUserAccessor>().Object,
-            new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(2026, 7, 12).Object);
+            new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(2026, 7, 12).Object,
+            new ScoreProjector(scores.Object, playerStats.Object, new Mock<IPlayerHistoryRepository>().Object));
     }
 }

@@ -4,6 +4,7 @@ using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services.Contracts;
 
 namespace ScoreTracker.ChartIntelligence.Application;
 
@@ -23,9 +24,11 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
 
     public BlendedTierListHandler(IMediator mediator, IChartRepository charts, IScoreReader scores,
         IPlayerStatsReader playerStats, IUserTierListRepository userTierLists,
-        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock)
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock,
+        IScoreProjector projector)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock);
+        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock,
+            projector);
         _currentUser = currentUser;
         _cache = cache;
     }

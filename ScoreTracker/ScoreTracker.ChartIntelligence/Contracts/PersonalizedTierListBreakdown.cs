@@ -9,6 +9,12 @@ namespace ScoreTracker.ChartIntelligence.Contracts
     ///     source actually used, and each source's status so silent degradation is
     ///     visible instead of quietly matching the community list.
     /// </summary>
+    /// <param name="ProjectedChartCount">
+    ///     How many of the folder's charts the projection could answer for, out of
+    ///     <paramref name="FolderChartCount" />. Zero means nobody near this player's competitive
+    ///     level has scored anything here — the source is silent, and the page has to say so
+    ///     rather than let it read as agreement with the community.
+    /// </param>
     [ExcludeFromCodeCoverage]
     public sealed record PersonalizedTierListBreakdown(
         IReadOnlyList<BreakdownChartRecord> Charts,
@@ -21,6 +27,9 @@ namespace ScoreTracker.ChartIntelligence.Contracts
         double CommunityWeight,
         double SkillWeight,
         double SimilarPlayersWeight,
+        double ProjectionWeight,
+        int ProjectedChartCount,
+        int FolderChartCount,
         bool IsProvisionalFallback);
 
     /// <summary>
@@ -34,7 +43,8 @@ namespace ScoreTracker.ChartIntelligence.Contracts
         TierListCategory CommunityCategory,
         TierListCategory PersonalizedCategory,
         TierListCategory SkillCategory,
-        TierListCategory SimilarPlayersCategory);
+        TierListCategory SimilarPlayersCategory,
+        TierListCategory ProjectionCategory);
 
     /// <summary>
     ///     One skill's pooled estimate: deviation from the player's own baseline on
