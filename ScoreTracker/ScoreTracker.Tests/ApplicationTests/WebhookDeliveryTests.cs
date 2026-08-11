@@ -70,6 +70,25 @@ public sealed class WebhookDeliveryTests
         _tools.Setup(t => t.GetTool(ToolId, It.IsAny<CancellationToken>())).ReturnsAsync(tool);
     }
 
+    [Theory]
+    [InlineData(WebhookMode.ScorePush)]
+    [InlineData(WebhookMode.PlayerPing)]
+    public async Task APlayerRemovingTheirOwnDataTellsNobody(WebhookMode mode)
+    {
+        // Owner, 2026-08-11. Every publisher of an empty change set is a removal — the scoped
+        // wipe, an undone session, the broken-best cleanup — and every path that adds or raises a
+        // score refuses to publish one, so this is exactly the deletion guard and nothing wider.
+        // The event still goes out: Pumbility and titles have to recompute from what is left.
+        SetupTool(ToolWith(mode));
+
+        await Saga().Consume(Batch(MixEnum.Phoenix, 0));
+
+        _dispatcher.Verify(d => d.Dispatch(It.IsAny<Tool>(), It.IsAny<DeliveryPayload.PlayerBlock>(),
+                It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<DeliveryPayload.Change>>(),
+                It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
     [Fact]
     public async Task ScorePushCarriesTheChangesAndPingCarriesNone()
     {

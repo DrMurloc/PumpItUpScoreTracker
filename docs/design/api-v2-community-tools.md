@@ -257,6 +257,14 @@ problem the data does not have.
 Ping and score-push deliveries are easy: CommunityTools consumes `PlayerScoresUpdatedEvent` and
 `ScoreImportCompletedEvent` off the bus and fans out. No reference to anything.
 
+**Except when the player removed something** (owner, 2026-08-11). `PlayerScoresUpdatedEvent` also
+carries "recompute from what is left" after a scoped wipe, an undone session, or the broken-best
+cleanup ([delete-my-data.md §18](delete-my-data.md)) — those publish an **empty change set**, and
+every path that adds or raises a score refuses to publish one, so empty means a deletion and
+nothing else. `WebhookDeliverySaga` returns on it: a player deleting their own data is not a
+notification anyone else is owed, and a score-push tool would receive an empty `changes` array
+saying nothing at all. The event itself still goes out — Pumbility and titles have to recompute.
+
 **Session mode cannot work that way.** The piugame sid exists only inside OfficialMirror, only during
 the import, and must never ride a broadcast event or reach a table (§5). So OfficialMirror has to
 hand it off — but OfficialMirror must not reference CommunityTools.

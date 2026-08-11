@@ -912,6 +912,7 @@ than it is. The count is its guard, the same principle as the blast-radius butto
 | `ScoreEventJournal` | **untouched** | The run happened. It stays in the chart's history and in session breakdowns; only its standing as the record is withdrawn (D8 permits the delete, it does not require it) |
 | Pumbility, titles, folder lamps | recomputed | Derived state is never a checkbox (D9). Announced with an empty-change `PlayerScoresUpdatedEvent` per mix that actually lost rows — the same signal a scoped wipe publishes |
 | Competitive level, total rating | no change expected | Broken scores are excluded from every rating pool ([phoenix2-import-go-live.md §3.4](phoenix2-import-go-live.md)) |
+| Connected community tools | **not notified** | A player removing their own data is nobody else's notification (owner, 2026-08-11). `WebhookDeliverySaga` returns on an empty change set, which fixes the same leak for the scoped wipe and for undo — see [api-v2-community-tools.md §4.2](api-v2-community-tools.md) |
 
 Legacy mixes never appear: they record a letter grade in `BestAttempt`, which has no failed-stage
 flag to read or clear. The card lists the Phoenix-scoring mixes only, and lists them **at zero
