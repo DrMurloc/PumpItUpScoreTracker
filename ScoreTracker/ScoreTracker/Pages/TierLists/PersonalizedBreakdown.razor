@@ -53,9 +53,11 @@ else
             </div>
         </div>
 
+        @* Always the card here: this page only exists for a signed-in player on a personalizing
+           lens, so its wait is the slow one every time. *@
         @if (_isLoading)
         {
-            <TierListSkeleton></TierListSkeleton>
+            <PatienceCard Explanation="@L["Working out what went into your version of this folder, and which charts it moved."]"></PatienceCard>
         }
         else if (_breakdown == null)
         {

@@ -388,8 +388,18 @@ else
             }
         </div>
     }
-    @* 5/6/7 — the answer: tier sections, skeleton while loading, honest empty state. *@
-    @if (_isLoading)
+    @* 5/6/7 — the answer: tier sections, a loading state matched to the wait, honest empty state.
+
+       Two loaders, because there are two waits. The community list is cached population data and
+       lands in well under a second, where a card that appears and vanishes draws the eye to a wait
+       that already ended — a skeleton is right for that. Personalized is the slow path: it reads
+       every player near your level, and the skeleton's four rows of grey sitting still for several
+       seconds read as a page that has stalled rather than one that is working. *@
+    @if (_isLoading && PersonalizedActive)
+    {
+        <PatienceCard Explanation="@L["Working out where this folder sits for you. That means reading everyone near your level who has played it."]"></PatienceCard>
+    }
+    else if (_isLoading)
     {
         <TierListSkeleton></TierListSkeleton>
     }
