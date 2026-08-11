@@ -922,6 +922,22 @@ and this is what a player goes hunting for immediately after unticking the box.
 Phoenix-blue beside Phoenix-2-green is not expressible under `UiColorTokenTests`. The mix chips in
 §5 already solve this by carrying no per-mix colour at all; the card follows them.
 
+### Deliberately not done
+
+- **No stats-row or highest-title reset before the announcement**, which is the one thing the
+  scoped wipe does that this does not (`WipeUserScoresHandler` clears both, because `TitleSaga`
+  only ever writes a title and never clears one). It is unnecessary here rather than an oversight:
+  every clear, grade, difficulty and co-op title already gates on `!attempt.IsBroken`, and the
+  PUMBILITY title track prices a break at exactly zero (`StageBreakModifier = 0.0` in
+  `Phoenix2PumbilityScoring`). A row that contributes nothing to a title cannot lower one by
+  leaving. The wipe needs the reset because it also removes passes.
+- **No personalized-tier-list rebuild.** `GetMyRelativeTierListQuery` filters on `Score != null`
+  and not on `IsBroken`, so a Phoenix 2 break with a real partial score does sit in its folder's
+  mean and standard deviation, and `UserTierListSaga` ignores an empty change list — so a cleanup
+  leaves those folders stale. Left alone on the owner's call (2026-08-11): the personalized
+  algorithm is being rewritten in parallel and ships behind a manual rebuild-everyone button,
+  which subsumes this.
+
 ### Known interaction: undo can resurrect a cleaned-up break
 
 D6's replay recomputes each affected chart's best from the **surviving journal rows**, and this

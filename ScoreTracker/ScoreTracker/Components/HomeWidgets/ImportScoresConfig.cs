@@ -20,6 +20,11 @@ public sealed record ImportScoresConfig
     ///     (<see cref="BrokenScorePreference" />) because a player means the same thing whichever
     ///     surface they import from, and two widgets could otherwise hold opposite answers.
     ///     Kept so an instance saved before the move still deserializes.
+    ///     <para>
+    ///         Retired outright rather than migrated because there was nothing to migrate: of the
+    ///         311 <c>import-scores</c> widgets in production on 2026-08-11, zero carried this key
+    ///         in their config blob. Nobody ever moved it off "follow the mix".
+    ///     </para>
     /// </summary>
     public bool? RecordBrokenAsBest { get; set; }
 }
