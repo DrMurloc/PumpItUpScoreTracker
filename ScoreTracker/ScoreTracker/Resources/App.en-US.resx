@@ -2763,7 +2763,13 @@
     <value>Import and check</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>On charts you've never passed, your best broken attempt becomes your record. A pass always wins.</value>
+    <value>A broken score is a run that failed the stage. On charts you've never passed, your best break becomes your record — a pass always wins. Following the mix means on for Phoenix 2, off for Phoenix.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix" xml:space="preserve">
+    <value>A broken score is a run that failed the stage. Phoenix keeps no personal best for those, so this starts off. On charts you've never passed, your best break becomes your record — a pass always wins.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
+    <value>A broken score is a run that failed the stage. Phoenix 2 keeps a personal best for those, so this starts on. On charts you've never passed, your best break becomes your record — a pass always wins.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Import complete</value>

@@ -2763,7 +2763,13 @@
     <value>Importa e controlla</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
+    <value>Un tentativo rotto è un run finito in Stage Break. Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre. Seguire il mix vuol dire attivo su Phoenix 2 e disattivo su Phoenix.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix" xml:space="preserve">
+    <value>Un tentativo rotto è un run finito in Stage Break. Phoenix non tiene un record personale per quelli, quindi questa opzione parte disattivata. Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
+    <value>Un tentativo rotto è un run finito in Stage Break. Phoenix 2 tiene un record personale per quelli, quindi questa opzione parte attivata. Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importazione completata</value>

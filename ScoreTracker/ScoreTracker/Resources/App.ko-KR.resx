@@ -2746,7 +2746,13 @@
     <value>가져오고 확인</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다.</value>
+    <value>브레이크 오프는 스테이지에 실패한 플레이를 말합니다. 아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다. 시리즈를 따르면 Phoenix 2에서는 켜지고 Phoenix에서는 꺼집니다.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix" xml:space="preserve">
+    <value>브레이크 오프는 스테이지에 실패한 플레이를 말합니다. Phoenix는 그 기록을 개인 최고 기록으로 저장하지 않으므로 이 설정은 기본적으로 꺼져 있습니다. 아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
+    <value>브레이크 오프는 스테이지에 실패한 플레이를 말합니다. Phoenix 2는 그 기록을 개인 최고 기록으로 저장하므로 이 설정은 기본적으로 켜져 있습니다. 아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>가져오기 완료</value>

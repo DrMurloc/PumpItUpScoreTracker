@@ -2746,7 +2746,13 @@
     <value>Importar e conferir</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence.</value>
+    <value>Uma tentativa quebrada é um run que falhou o stage. Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence. Seguir a versão quer dizer ligado no Phoenix 2 e desligado no Phoenix.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix" xml:space="preserve">
+    <value>Uma tentativa quebrada é um run que falhou o stage. O Phoenix não guarda recorde pessoal para essas, então isso começa desligado. Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
+    <value>Uma tentativa quebrada é um run que falhou o stage. O Phoenix 2 guarda recorde pessoal para essas, então isso começa ligado. Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importação concluída</value>

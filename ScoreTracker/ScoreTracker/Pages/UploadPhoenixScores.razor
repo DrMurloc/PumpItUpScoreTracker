@@ -122,7 +122,13 @@
                    has to happen on change rather than being read back off the field at import. *@
                 <MudCheckBox T="bool" Label="@L["Record broken scores as your best"]" Value="_includeBroken"
                              ValueChanged="ChooseIncludeBroken" Disabled="_isImporting"></MudCheckBox>
-                <MudText Typo="Typo.caption" Class="ml-10 d-block">@L["Import Broken Helper"]</MudText>
+                @* Both keys spelled out rather than composed: a key built at run time is
+                   invisible to an L["…"] grep, which is how live keys get deleted as orphans. *@
+                <MudText Typo="Typo.caption" Class="ml-10 d-block">
+                    @(_currentMix == MixEnum.Phoenix2
+                        ? L["Import Broken Helper Phoenix 2"]
+                        : L["Import Broken Helper Phoenix"])
+                </MudText>
                 @* Sending your session to another site is a consent decision, not an import
                    option, so it lives with every other tool rather than as a checkbox here. *@
                 <MudText Typo="Typo.caption" Class="d-block mt-1" Style="opacity:.75;">

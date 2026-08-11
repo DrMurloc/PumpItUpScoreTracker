@@ -2746,7 +2746,13 @@
     <value>Importar y comprobar</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>En charts que nunca has pasado, tu mejor intento con break pasa a ser tu marca. Un pase siempre gana.</value>
+    <value>Un intento con break es cuando has fallado el stage. En charts que nunca has pasado, tu mejor intento con break pasa a ser tu marca. Un pase siempre gana. Seguir al mix significa activado en Phoenix 2 y desactivado en Phoenix.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix" xml:space="preserve">
+    <value>Un intento con break es cuando has fallado el stage. Phoenix no guarda marca personal para esos, así que esto empieza desactivado. En charts que nunca has pasado, tu mejor intento con break pasa a ser tu marca. Un pase siempre gana.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
+    <value>Un intento con break es cuando has fallado el stage. Phoenix 2 sí guarda marca personal para esos, así que esto empieza activado. En charts que nunca has pasado, tu mejor intento con break pasa a ser tu marca. Un pase siempre gana.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importación completada</value>

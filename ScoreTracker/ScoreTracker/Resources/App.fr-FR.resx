@@ -2762,7 +2762,13 @@
     <value>Importer et vérifier</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours.</value>
+    <value>Un essai cassé, c'est un run qui a fini en Stage Break. Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours. Suivre le mix veut dire activé sur Phoenix 2 et désactivé sur Phoenix.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix" xml:space="preserve">
+    <value>Un essai cassé, c'est un run qui a fini en Stage Break. Phoenix ne garde aucun record personnel pour ceux-là, donc cette option démarre désactivée. Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours.</value>
+  </data>
+  <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
+    <value>Un essai cassé, c'est un run qui a fini en Stage Break. Phoenix 2 garde un record personnel pour ceux-là, donc cette option démarre activée. Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importation terminée</value>
