@@ -1,4 +1,5 @@
 ﻿using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Web.Services;
 
 namespace ScoreTracker.Web.Components.HomeWidgets;
 
@@ -21,6 +22,6 @@ public sealed record ImportScoresConfig
 
     public bool RecordsBrokenFor(MixEnum mix)
     {
-        return RecordBrokenAsBest ?? mix == MixEnum.Phoenix2;
+        return RecordBrokenAsBest ?? BrokenScorePreference.DefaultFor(mix);
     }
 }
