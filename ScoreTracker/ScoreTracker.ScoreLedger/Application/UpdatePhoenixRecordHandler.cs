@@ -2,6 +2,7 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.ScoreLedger.Contracts;
+using ScoreTracker.ScoreLedger.Contracts.Events;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.SharedKernel.Enums;
@@ -167,19 +168,21 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
     /// </summary>
     public async Task Consume(ConsumeContext<FlushOverdueScoreBatchesCommand> context)
     {
-        // Past the deadline AND past the buffer the scheduled drain gets: inside that slack the
-        // real drain is simply on its way, and claiming the batch here would just race it. Beyond
-        // it, the schedule is not late — it is not coming.
+        // Past the deadline and past the buffer the scheduled drain gets. Inside that slack a
+        // drain may still be in flight; beyond it the schedule is not late, it is not coming.
         var claimBefore = dateTimeOffset.Now.UtcDateTime - ScoreBatchPolicy.DrainBuffer;
-        foreach (var entry in batches.Dump())
+        foreach (var due in batches.TakeDueBatches(claimBefore))
         {
-            if (entry.FireAt > claimBefore) continue;
-            // TakeBatch is atomic, so a drain that does arrive mid-sweep takes the batch or finds
-            // it gone — one of the two publishes, never both.
-            var batch = batches.TakeBatch(entry.Mix, entry.UserId);
-            if (batch is null) continue;
-            if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) continue;
-            await PublishScoreEvents(entry.UserId, batch, context.CancellationToken);
+            if (due.Batch.NewChartIds.Length == 0 && due.Batch.UpscoredChartIds.Count == 0) continue;
+            await PublishScoreEvents(due.UserId, due.Batch, context.CancellationToken);
         }
+
+        // The journal-replay half runs only now, never alongside. Both halves are in scope for the
+        // very same sessions on the tick this job exists for, and a session stays unprocessed until
+        // its capture chain ends — so a replay racing this drain would find the session still
+        // unmarked and announce the batch a second time. Publishing the second half from the end of
+        // the first is what makes their "disjoint" claim true rather than merely likely.
+        await bus.Publish(new OverdueScoreBatchesFlushedEvent(dateTimeOffset.Now),
+            context.CancellationToken);
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ScoreTracker.ScoreLedger.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Records;
@@ -163,5 +164,55 @@ public sealed class PlayerScoreBatchAccumulatorTests
 
         Assert.Empty(batcher.TakeDetectedTitles(MixEnum.Phoenix2, UserId));
         Assert.Single(batcher.TakeDetectedTitles(MixEnum.Phoenix, UserId));
+    }
+
+    [Fact]
+    public void TakeDueBatchesTakesOnlyWhatIsDueAndRemovesIt()
+    {
+        var batcher = new PlayerScoreBatchAccumulator();
+        var dueUser = Guid.NewGuid();
+        var waitingUser = Guid.NewGuid();
+        batcher.AddToBatch(MixEnum.Phoenix, dueUser, Now.UtcDateTime.AddMinutes(-5), Guid.NewGuid(), true,
+            null, Guid.NewGuid());
+        batcher.AddToBatch(MixEnum.Phoenix, waitingUser, Now.UtcDateTime.AddMinutes(5), Guid.NewGuid(), true,
+            null, Guid.NewGuid());
+
+        var taken = batcher.TakeDueBatches(Now.UtcDateTime);
+
+        Assert.Equal(new[] { dueUser }, taken.Select(t => t.UserId));
+        // Taken means gone: a second sweep, or the scheduled drain arriving late, finds nothing.
+        Assert.Empty(batcher.TakeDueBatches(Now.UtcDateTime));
+        Assert.Null(batcher.TakeBatch(MixEnum.Phoenix, dueUser));
+        Assert.NotNull(batcher.GetFireAt(MixEnum.Phoenix, waitingUser));
+    }
+
+    /// <summary>
+    ///     ⚠ AddToBatch publishes the state into the dictionary before it takes the gate that
+    ///     stamps FireAt, so a sweep can observe a batch that has no deadline yet. Treating
+    ///     default(DateTime) as a date in the past seizes a batch that is microseconds old and
+    ///     announces one score mid-set, debounce defeated.
+    /// </summary>
+    [Fact]
+    public void ABatchWithNoDeadlineYetIsNotDue()
+    {
+        var batcher = new PlayerScoreBatchAccumulator();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, default, Guid.NewGuid(), true, null, Guid.NewGuid());
+
+        Assert.Empty(batcher.TakeDueBatches(Now.UtcDateTime));
+        Assert.NotNull(batcher.TakeBatch(MixEnum.Phoenix, UserId));
+    }
+
+    [Fact]
+    public void TakeDueBatchesKeepsEachMixSeparate()
+    {
+        var batcher = new PlayerScoreBatchAccumulator();
+        batcher.AddToBatch(MixEnum.Phoenix, UserId, Now.UtcDateTime.AddMinutes(-5), Guid.NewGuid(), true,
+            null, Guid.NewGuid());
+        batcher.AddToBatch(MixEnum.Phoenix2, UserId, Now.UtcDateTime.AddMinutes(5), Guid.NewGuid(), true,
+            null, Guid.NewGuid());
+
+        var taken = batcher.TakeDueBatches(Now.UtcDateTime);
+
+        Assert.Equal(new[] { MixEnum.Phoenix }, taken.Select(t => t.Batch.Mix));
     }
 }

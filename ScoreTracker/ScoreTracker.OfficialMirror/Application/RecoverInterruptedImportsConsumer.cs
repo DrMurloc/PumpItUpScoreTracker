@@ -6,7 +6,7 @@ using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
-using ScoreTracker.ScoreLedger.Contracts.Messages;
+using ScoreTracker.ScoreLedger.Contracts.Events;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 
 namespace ScoreTracker.OfficialMirror.Application;
@@ -26,8 +26,16 @@ namespace ScoreTracker.OfficialMirror.Application;
 ///     </para>
 /// </summary>
 internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInterruptedImportsCommand>,
-    IConsumer<FlushOverdueScoreBatchesCommand>
+    IConsumer<OverdueScoreBatchesFlushedEvent>
 {
+    /// <summary>
+    ///     Sessions a single pass will replay before leaving the rest to the next one. Every replay
+    ///     drops a whole capture chain — rating recalc plus every title ladder — onto the bus, and
+    ///     the failure this recovers from strands sessions site-wide, so an uncapped first tick
+    ///     after a long outage would herd the entire site through at once.
+    /// </summary>
+    private const int MaxSessionsPerPass = 25;
+
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly ILogger<RecoverInterruptedImportsConsumer> _logger;
     private readonly IMediator _mediator;
@@ -44,13 +52,12 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
 
     /// <summary>
     ///     The mid-life sweep: sessions whose run finished long enough ago that its batch has
-    ///     demonstrably had its chance to drain and did not take it.
+    ///     demonstrably had its chance to drain and did not take it. Runs after the in-memory half,
+    ///     never beside it — see <see cref="OverdueScoreBatchesFlushedEvent" />.
     ///     <para>
     ///         Staleness is the right test here and the boot instant is not, for the mirror image
     ///         of §3.0's reason: mid-life, <em>every</em> run started after the boot, so the boot
-    ///         test would skip all of them. <see cref="ScoreBatchPolicy.WorkExpectedWithin" /> is
-    ///         the constant that answers "has this had its chance", and past it a live batch cannot
-    ///         still be holding — the drain deadline is two minutes from the run's last score.
+    ///         test would skip all of them.
     ///     </para>
     ///     <para>
     ///         Only runs that reported an ending are in scope. A run with no <c>FinishedAt</c> is
@@ -59,9 +66,9 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
     ///         not this one's. So this half never closes a run, it only replays.
     ///     </para>
     /// </summary>
-    public Task Consume(ConsumeContext<FlushOverdueScoreBatchesCommand> context)
+    public Task Consume(ConsumeContext<OverdueScoreBatchesFlushedEvent> context)
     {
-        var staleBefore = _dateTime.Now - ScoreBatchPolicy.WorkExpectedWithin;
+        var staleBefore = context.Message.FlushedAt - ScoreBatchPolicy.StaleAfter;
         return Sweep(run => run.FinishedAt is { } finished && finished < staleBefore,
             closeUnfinished: false, "Stalled-batch", context.CancellationToken);
     }
@@ -85,20 +92,33 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
     private async Task Sweep(Func<ImportRunForSession, bool> isOrphaned, bool closeUnfinished,
         string pass, CancellationToken token)
     {
-        // Sessions the Ledger reports as unprocessed AND not held by a live batch, so a mid-flight
-        // import is never replayed underneath itself.
         var unprocessed = await _mediator.Send(new GetUnprocessedSessionsQuery(), token);
         if (unprocessed.Count == 0) return;
 
-        var runs = (await _results.GetForSessions(unprocessed.Select(s => s.Id).ToArray(), token))
+        // Oldest first, so a backlog drains in the order it accumulated rather than by whatever
+        // the index hands back — and so the cap below sheds the newest, which the next tick
+        // reaches soonest.
+        var candidates = unprocessed.OrderBy(s => s.StartedAt).ToArray();
+        var deferred = Math.Max(0, candidates.Length - MaxSessionsPerPass);
+        if (deferred > 0) candidates = candidates.Take(MaxSessionsPerPass).ToArray();
+
+        var runs = (await _results.GetForSessions(candidates.Select(s => s.Id).ToArray(), token))
             .GroupBy(r => r.SessionId)
             .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.StartedAt).First());
 
         var now = _dateTime.Now;
         var replayed = 0;
         var closed = 0;
-        foreach (var session in unprocessed)
+        foreach (var session in candidates)
         {
+            // ⚠ The drain marker, and the reason a session can be unprocessed yet out of scope.
+            // ProcessedAt is an END marker — the capture chain stamps it when it finishes — so on
+            // its own it cannot tell "the batch never drained" from "the batch drained and capture
+            // is still working". Touch and SetCounts both write these counts at the moment a batch
+            // is announced, so a non-zero count means the announcement already happened and the
+            // only thing outstanding is the chain that follows it. Replaying on top of that
+            // publishes the same scores twice and posts a second card.
+            if (session.NewCount > 0 || session.UpscoreCount > 0) continue;
             // No run behind it: a manual entry, a CSV upload or an API submission. Those never
             // mint an ImportResult, so there is nothing here that can say whether their batch has
             // had its chance yet, and they are deliberately out of scope.
@@ -122,9 +142,11 @@ internal sealed class RecoverInterruptedImportsConsumer : IConsumer<RecoverInter
         }
 
         // Ask before boxing for a line nobody may be listening to (CA1873).
-        if ((replayed > 0 || closed > 0) && _logger.IsEnabled(LogLevel.Information))
+        if ((replayed > 0 || closed > 0 || deferred > 0) && _logger.IsEnabled(LogLevel.Information))
+            // A pass that silently stops at the cap reads exactly like a pass that found nothing
+            // left, so what was left behind is said out loud.
             _logger.LogInformation(
-                "{Pass} recovery: replayed {Replayed} interrupted session(s), closed {Closed} run(s) that never reported back",
-                pass, replayed, closed);
+                "{Pass} recovery: replayed {Replayed} interrupted session(s), closed {Closed} run(s) that never reported back, deferred {Deferred} to the next pass",
+                pass, replayed, closed, deferred);
     }
 }

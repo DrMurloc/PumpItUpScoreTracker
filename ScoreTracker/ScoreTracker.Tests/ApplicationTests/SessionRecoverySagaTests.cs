@@ -40,29 +40,18 @@ public sealed class SessionRecoverySagaTests
         public readonly Mock<IScoreJournalRepository> Journal = new();
         public readonly Mock<IPhoenixRecordRepository> Records = new();
         public readonly Mock<IScoreSessionRepository> Sessions = new();
-        public readonly Mock<IPlayerScoreBatchAccumulator> Batches = new();
         public readonly SessionRecoverySaga Saga;
 
         public SagaContext()
         {
-            Batches.Setup(b => b.Dump()).Returns(Array.Empty<BatchAccumulatorSnapshotEntry>());
             Saga = new SessionRecoverySaga(Sessions.Object, Journal.Object, Records.Object, Bus.Object,
-                Batches.Object, FakeDateTime.At(Now).Object, NullLogger<SessionRecoverySaga>.Instance);
+                FakeDateTime.At(Now).Object, NullLogger<SessionRecoverySaga>.Instance);
         }
 
         public void WithUnprocessed(params ScoreSessionRecord[] sessions)
         {
             Sessions.Setup(s => s.ListUnprocessed(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sessions);
-        }
-
-        public void WithLiveBatch(Guid userId, MixEnum mix)
-        {
-            Batches.Setup(b => b.Dump()).Returns(new[]
-            {
-                new BatchAccumulatorSnapshotEntry(userId, mix, Now.UtcDateTime, Array.Empty<Guid>(),
-                    new Dictionary<Guid, int>())
-            });
         }
 
         public static ScoreSessionRecord Session(Guid userId, MixEnum mix) =>
@@ -256,46 +245,12 @@ public sealed class SessionRecoverySagaTests
     }
 
     /// <summary>
-    ///     A batch still in the accumulator is mid-flight, not orphaned. Offering its session to a
-    ///     replay would announce the same scores twice and post a duplicate card.
+    ///     ⚠ The query reports candidates and gates none of them. It is shared with the boot pass,
+    ///     where an in-memory filter would let a player's fresh submission hide their own
+    ///     prior-process orphan — and an orphan never seen is never closed and never disclosed.
     /// </summary>
     [Fact]
-    public async Task UnprocessedExcludesSessionsAnOpenBatchStillHolds()
-    {
-        var ctx = new SagaContext();
-        var held = SagaContext.Session(UserId, MixEnum.Phoenix);
-        var orphan = SagaContext.Session(Guid.NewGuid(), MixEnum.Phoenix);
-        ctx.WithUnprocessed(held, orphan);
-        ctx.WithLiveBatch(UserId, MixEnum.Phoenix);
-
-        var result = await ctx.Saga.Handle(new GetUnprocessedSessionsQuery(), CancellationToken.None);
-
-        Assert.Equal(new[] { orphan.Id }, result.Select(s => s.Id));
-    }
-
-    /// <summary>
-    ///     The accumulator is keyed per (user, mix), so a batch open on one mix says nothing about
-    ///     the same player's session on another.
-    /// </summary>
-    [Fact]
-    public async Task ABatchOnAnotherMixDoesNotShieldTheSession()
-    {
-        var ctx = new SagaContext();
-        var session = SagaContext.Session(UserId, MixEnum.Phoenix2);
-        ctx.WithUnprocessed(session);
-        ctx.WithLiveBatch(UserId, MixEnum.Phoenix);
-
-        var result = await ctx.Saga.Handle(new GetUnprocessedSessionsQuery(), CancellationToken.None);
-
-        Assert.Equal(new[] { session.Id }, result.Select(s => s.Id));
-    }
-
-    /// <summary>
-    ///     At process start the accumulator is empty, so the boot pass sees every candidate — the
-    ///     filter must not swallow the runs a restart just killed.
-    /// </summary>
-    [Fact]
-    public async Task AnEmptyAccumulatorFiltersNothing()
+    public async Task UnprocessedReportsEverySessionTheLedgerHasNotStamped()
     {
         var ctx = new SagaContext();
         var a = SagaContext.Session(UserId, MixEnum.Phoenix);

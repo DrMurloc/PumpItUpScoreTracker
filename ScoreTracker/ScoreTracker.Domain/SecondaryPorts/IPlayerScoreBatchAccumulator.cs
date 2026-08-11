@@ -71,6 +71,22 @@ public interface IPlayerScoreBatchAccumulator
     string[] TakeDetectedTitles(MixEnum mix, Guid userId);
 
     /// <summary>
+    /// Atomically removes and returns every batch whose fire-at has passed
+    /// <paramref name="dueBefore"/>. The recovery sweep's entry point.
+    ///
+    /// One call rather than Dump-then-TakeBatch because those two decide and act against
+    /// different instants: the sweep awaits a publish per batch, so by the tenth entry the
+    /// snapshot's fire-at is seconds stale and a player who resumed playing has their extended,
+    /// still-live batch seized and announced mid-set. Here the due test and the removal happen
+    /// under the same gate, so a batch is only ever taken on a fire-at that is true right then.
+    ///
+    /// A batch whose fire-at is still unset is never due: AddToBatch publishes the state into
+    /// the dictionary before it takes the gate to stamp it, so a read that wins that race sees
+    /// default(DateTime), which is not "infinitely overdue".
+    /// </summary>
+    IReadOnlyCollection<DueScoreBatch> TakeDueBatches(DateTime dueBefore);
+
+    /// <summary>
     /// Diagnostic snapshot of every active batch. Best-effort — entries may be
     /// added or removed concurrently with the read.
     /// </summary>

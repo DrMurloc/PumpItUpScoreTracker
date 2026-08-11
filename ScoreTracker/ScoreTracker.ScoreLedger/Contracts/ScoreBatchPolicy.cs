@@ -38,12 +38,27 @@ public static class ScoreBatchPolicy
     ///         waiting is simply early, which is why nothing may treat the end of this as proof
     ///         that there was nothing to wait for.
     ///     </para>
-    ///     <para>
-    ///         This doubles as the staleness threshold the mid-life sweep uses: a run that finished
-    ///         longer ago than this had its chance to drain and did not take it. The boot pass
-    ///         deliberately does NOT use it — at boot the accumulator is empty, so the question
-    ///         there is "did this run begin before this process did", not how old it is.
-    ///     </para>
     /// </summary>
     public static readonly TimeSpan WorkExpectedWithin = HoldWindow + DrainBuffer + TimeSpan.FromMinutes(2);
+
+    /// <summary>
+    ///     How long after a run reports its ending the mid-life sweep waits before treating its
+    ///     session as stranded.
+    ///     <para>
+    ///         ⚠ Deliberately NOT <see cref="WorkExpectedWithin" />, though it looks like the same
+    ///         question. That constant is a *reader's* patience — how long a page keeps a spinner
+    ///         up — and its two minutes of headroom past the drain is an assumption about how long
+    ///         capture takes. The sweep needs the opposite bias: capture is what eventually stamps
+    ///         the session processed, so anything short enough to be a good spinner is short enough
+    ///         to declare a chain stranded while it is still running, and announce over the top of
+    ///         it. Sharing one constant means every change to the spinner silently retunes the
+    ///         double-announcement window.
+    ///     </para>
+    ///     <para>
+    ///         Generous on purpose. The failure it recovers from ran eleven hours undetected, so
+    ///         the difference between four minutes and half an hour costs nothing that matters,
+    ///         and buys room for a first full-account import whose capture legitimately runs long.
+    ///     </para>
+    /// </summary>
+    public static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(30);
 }

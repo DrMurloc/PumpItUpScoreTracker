@@ -144,6 +144,29 @@ internal sealed class PlayerScoreBatchAccumulator : IPlayerScoreBatchAccumulator
         lock (state.Gate) return state.Titles.ToArray();
     }
 
+    public IReadOnlyCollection<DueScoreBatch> TakeDueBatches(DateTime dueBefore)
+    {
+        var taken = new List<DueScoreBatch>();
+        foreach (var (key, state) in _batches.ToArray())
+            lock (state.Gate)
+            {
+                // Same orphaned-state guard as AddToBatch: a concurrent TakeBatch may have
+                // removed and replaced this state between the snapshot and the gate.
+                if (!_batches.TryGetValue(key, out var current) || !ReferenceEquals(current, state))
+                    continue;
+                // FireAt is stamped under this gate, and AddToBatch publishes the state before
+                // taking it — so an unstamped batch is brand new, not overdue since year one.
+                if (state.FireAt == default || state.FireAt > dueBefore) continue;
+                var newCharts = state.NewCharts.ToArray();
+                var upscores = state.UpscoreCharts.ToDictionary(kv => kv.Key, kv => (int)kv.Value);
+                _batches.TryRemove(key, out _);
+                taken.Add(new DueScoreBatch(key.UserId,
+                    new PendingScoreBatch(key.Mix, newCharts, upscores, state.SessionId)));
+            }
+
+        return taken;
+    }
+
     public IReadOnlyCollection<BatchAccumulatorSnapshotEntry> Dump()
     {
         return _batches.ToArray().Select(kv =>

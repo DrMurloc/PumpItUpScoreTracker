@@ -200,27 +200,70 @@ never be able to mean "predates the feature".
 ### 4.3 The mid-life sweep
 
 The boot pass answers "the process died". `flush-overdue-score-batches` (every 5 minutes, §1.1)
-answers the other one: **the process is fine and the drain still never happened.** Same
-`FlushOverdueScoreBatchesCommand`, two consumers, covering the two places the work can be sitting:
+answers the other one: **the process is fine and the drain still never happened.** Two halves,
+covering the two places the work can be sitting:
 
 | Where the work is | Consumer | What it does |
 |---|---|---|
 | Batch still in the accumulator, past its deadline | `UpdatePhoenixRecordHandler` (ScoreLedger) | Takes it and publishes, exactly as the drain would have |
 | Batch gone, session still unprocessed | `RecoverInterruptedImportsConsumer` (OfficialMirror) | Replays it from the journal, as §5 |
 
-**Staleness is the gate here, and the boot instant is not** — the exact mirror of §3.0. Mid-life
+#### They run in sequence, not in parallel
+
+`FlushOverdueScoreBatchesCommand` reaches ScoreLedger only. When its drain finishes it publishes
+`OverdueScoreBatchesFlushedEvent`, and *that* is what OfficialMirror consumes.
+
+> ⚠ **Fanning one message out to both is wrong, and looks fine.** `ConfigureEndpoints` gives each
+> consumer its own endpoint, so a `Publish` runs them concurrently. The ledger half is pure
+> in-memory and finishes in microseconds; the mirror half opens with a database query. On the exact
+> tick this job exists for — stuck batch, run long finished — **both halves are in scope for the
+> same sessions**, so the batch is normally already drained by the time the mirror half looks, its
+> guard matches nothing, and the session is replayed on top of the drain that just published it.
+> That is the expected path, not a corner.
+
+#### The gate: stale, and not yet drained
+
+**Staleness is the test here and the boot instant is not** — the exact mirror of §3.0. Mid-life
 every run started after the boot, so the boot test would skip every one of them.
-`WorkExpectedWithin` is the constant that answers *has this had its chance*, and past it a live
-batch cannot still be holding, because the deadline is two minutes from the run's last score. This
-is the use its own doc comment names.
 
-Two guards keep the halves from colliding:
+The constant is **`ScoreBatchPolicy.StaleAfter` (30 min), not `WorkExpectedWithin`**, even though
+that one reads like it fits. `WorkExpectedWithin` is a *reader's* patience — how long a page holds
+a spinner — and its two minutes of headroom past the drain is an assumption about how long capture
+takes. The sweep needs the opposite bias, because sharing the constant means every change to the
+spinner silently retunes the double-announcement window (and lowering it to make pages feel
+responsive would make double-announcement routine).
 
-- **The drain half waits out `DrainBuffer`.** Inside that slack the real drain is in flight;
-  claiming the batch there only races a publish already on its way.
-- **A session an open batch still holds is filtered out of `GetUnprocessedSessionsQuery`.**
-  ScoreLedger owns the accumulator, so it answers this itself and OfficialMirror never has to see
-  it. At boot the accumulator is empty, so this filters nothing and §4 is unaffected.
+Staleness alone is still not enough, because **`ProcessedAt` is an END marker**: the capture chain
+stamps it when it finishes, so it cannot distinguish *"the batch never drained"* from *"the batch
+drained and capture is still working"*. A first full-account import — thousands of charts through
+`ComputeFlags`, a full rating recalc, then every title ladder — can legitimately sit in that state.
+
+So the sweep also requires **no evidence of a drain**: `NewCount` and `UpscoreCount` are both zero.
+`Touch` writes those the moment a batch announces, long before `ProcessedAt` lands, and the replay's
+`SetCounts` writes them too — which is what also makes overlapping sweeps safe.
+
+**Consequence, stated plainly:** a session whose batch drained but whose capture chain then *failed*
+is out of scope for the sweep. That is deliberate — an unbounded 5-minute retry of a deterministic
+failure is worse than not retrying — and it is `HighlightCaptureSaga`'s failure isolation to fix,
+not this pass's.
+
+#### The rest of the guards
+
+- **The drain half waits out `DrainBuffer`,** so a batch whose scheduled drain is merely in flight
+  is left to it.
+- **The accumulator decides what is due, atomically.** `TakeDueBatches(dueBefore)` tests the
+  deadline and removes the batch under one gate. A `Dump()`-then-`TakeBatch` pair decides and acts
+  against different instants — the sweep awaits a publish per batch, so a player who resumes
+  playing mid-walk gets their extended, still-live batch seized and announced mid-set.
+- **A pass replays at most 25 sessions, oldest first,** and logs what it deferred. Every replay
+  drops a whole capture chain on the bus; the failure this recovers from strands sessions
+  site-wide, so an uncapped first tick after a long outage would herd the entire site through at
+  once. A pass that silently stops at a cap reads exactly like a pass that found nothing.
+- **`GetUnprocessedSessionsQuery` gates nothing** — it reports, callers decide. It is shared with
+  the boot pass, and an in-memory filter there is keyed (user, mix) while a session is
+  (user, mix, source): a player who submits anything in the seconds between Kestrel accepting
+  traffic and the startup publisher firing would bury their own prior-process orphan, and an orphan
+  never seen is never closed and never disclosed (§7).
 
 **The sweep never closes a run.** A run with no `FinishedAt` is either still scraping — a deep scan
 legitimately outlives this window before its first batch exists — or it died with its process,
@@ -228,8 +271,10 @@ which is the boot pass's candidate. Marking it `Interrupted` on a five-minute ti
 §7 dialog underneath a player mid-import. Only §4's boot pass closes.
 
 `/Admin` carries the same publish as a **Flush Stuck Score Batches** button, for a report that
-arrives before the next tick. Idempotent: it touches only batches already past their deadline and
-sessions the ledger still calls unprocessed, so a press with nothing wrong changes nothing.
+arrives before the next tick. Safe to press: it touches only batches already past their deadline
+and sessions that are stale, undrained and unprocessed, so a press with nothing wrong changes
+nothing — and a press *during* a running sweep cannot double-announce, because the first pass's
+`SetCounts` has already taken those sessions out of scope.
 
 ## 5. Reconstruction
 

@@ -32,7 +32,6 @@ internal sealed class SessionRecoverySaga :
     IRequestHandler<GetUnprocessedSessionsQuery, IReadOnlyList<ScoreSessionRecord>>,
     IConsumer<ScoreHighlightsCapturedEvent>
 {
-    private readonly IPlayerScoreBatchAccumulator _batches;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IScoreJournalRepository _journal;
     private readonly ILogger<SessionRecoverySaga> _logger;
@@ -41,42 +40,34 @@ internal sealed class SessionRecoverySaga :
     private readonly IBus _bus;
 
     public SessionRecoverySaga(IScoreSessionRepository sessions, IScoreJournalRepository journal,
-        IPhoenixRecordRepository records, IBus bus, IPlayerScoreBatchAccumulator batches,
-        IDateTimeOffsetAccessor dateTime, ILogger<SessionRecoverySaga> logger)
+        IPhoenixRecordRepository records, IBus bus, IDateTimeOffsetAccessor dateTime,
+        ILogger<SessionRecoverySaga> logger)
     {
         _sessions = sessions;
         _journal = journal;
         _records = records;
         _bus = bus;
-        _batches = batches;
         _dateTime = dateTime;
         _logger = logger;
     }
 
     /// <summary>
-    ///     Unprocessed sessions that no live batch is still holding.
+    ///     Every session whose derived work never ran. Callers gate them; this reports them.
     ///     <para>
-    ///         A session whose batch is in the accumulator is not orphaned — it is mid-flight, and
-    ///         the drain will announce it. Replaying it in parallel would publish the same scores a
-    ///         second time and produce a duplicate card, so the accumulator gets the final say and
-    ///         the two recovery halves stay disjoint by construction.
-    ///     </para>
-    ///     <para>
-    ///         At process start this filters nothing, because the accumulator is empty — which is
-    ///         exactly right for the boot pass, whose candidates are all from a process that is
-    ///         gone.
+    ///         ⚠ Deliberately does not consult the accumulator. Filtering on a live batch here
+    ///         reads as a safety net and is one for the sweep, but it is keyed on (user, mix) while
+    ///         a session is (user, mix, source) — so a manual entry opening a batch hides that
+    ///         player's unrelated import orphan from the <em>boot</em> pass, which shares this
+    ///         query. A player who submits anything in the seconds between Kestrel accepting
+    ///         traffic and the startup publisher firing would bury their own interrupted run, and
+    ///         an interrupted run that is never seen is never closed and never disclosed. The
+    ///         sweep gets its ordering from pipeline shape instead (OverdueScoreBatchesFlushedEvent).
     ///     </para>
     /// </summary>
-    public async Task<IReadOnlyList<ScoreSessionRecord>> Handle(GetUnprocessedSessionsQuery request,
+    public Task<IReadOnlyList<ScoreSessionRecord>> Handle(GetUnprocessedSessionsQuery request,
         CancellationToken cancellationToken)
     {
-        var unprocessed = await _sessions.ListUnprocessed(cancellationToken);
-        if (unprocessed.Count == 0) return unprocessed;
-
-        var held = _batches.Dump().Select(b => (b.UserId, b.Mix)).ToHashSet();
-        if (held.Count == 0) return unprocessed;
-
-        return unprocessed.Where(s => !held.Contains((s.UserId, s.Mix))).ToArray();
+        return _sessions.ListUnprocessed(cancellationToken);
     }
 
     public async Task<int> Handle(ReplaySessionCommand request, CancellationToken cancellationToken)
