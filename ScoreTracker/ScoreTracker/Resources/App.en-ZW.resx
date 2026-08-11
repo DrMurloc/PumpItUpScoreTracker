@@ -2775,13 +2775,13 @@
     <value>Glorggl opa grorp</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Morgl mrglrgl urg mrgro blarg mrpblarg glorg. Lurg murgl gropmur mrgro maglplgl, gromurp mrpblarg morgl blurgmrp murgblarg gromurp blubgrorp. Argl maglplgl mrgmurg grorpgl. Mrgro mrg blarg argl Phoenix 2, bo Phoenix.</value>
+    <value>Lurg murgl gropmur mrgro maglplgl, gromurp mrpblarg morgl blurgmrp murgblarg gromurp blubgrorp. Argl maglplgl mrgmurg grorpgl. Mrgro mrg blarg argl Phoenix 2, bo Phoenix.</value>
   </data>
   <data name="Import Broken Helper Phoenix" xml:space="preserve">
-    <value>Morgl mrglrgl urg mrgro blarg mrpblarg glorg. Phoenix mrp glarg morgl blurgmrp, mrgro grorp mrgl bo. Lurg murgl gropmur mrgro maglplgl, gromurp mrpblarg morgl blurgmrp murgblarg gromurp blubgrorp. Argl maglplgl mrgmurg grorpgl.</value>
+    <value>Phoenix mrp glarg morgl blurgmrp, mrgro grorp mrgl bo. Lurg murgl gropmur mrgro maglplgl, gromurp mrpblarg morgl blurgmrp murgblarg gromurp blubgrorp. Argl maglplgl mrgmurg grorpgl.</value>
   </data>
   <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
-    <value>Morgl mrglrgl urg mrgro blarg mrpblarg glorg. Phoenix 2 glarg morgl blurgmrp, mrgro grorp mrgl argl. Lurg murgl gropmur mrgro maglplgl, gromurp mrpblarg morgl blurgmrp murgblarg gromurp blubgrorp. Argl maglplgl mrgmurg grorpgl.</value>
+    <value>Phoenix 2 glarg morgl blurgmrp, mrgro grorp mrgl argl. Lurg murgl gropmur mrgro maglplgl, gromurp mrpblarg morgl blurgmrp murgblarg gromurp blubgrorp. Argl maglplgl mrgmurg grorpgl.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Glorggl roarglgrorp</value>
@@ -5756,8 +5756,8 @@
   <data name="Send it like this" xml:space="preserve">
     <value>Blorp mo golba</value>
   </data>
-  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
-    <value>Grumba PIU Tracker olo maglub bloop, roggl argla:</value>
+  <data name="Sending your scores to {0} or another community tool is managed from {1}." xml:space="preserve">
+    <value>Grumba {0} olo maglub bloop, roggl {1}.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Morggrorp</value>

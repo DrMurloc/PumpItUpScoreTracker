@@ -50,8 +50,7 @@
 @* Sending your session to another site is a consent decision, not an import option, so it
    lives with every other tool rather than as a checkbox here. *@
 <MudText Typo="Typo.caption" Class="d-block mb-3" Style="opacity:.75;">
-    @L["Sending your scores to PIU Tracker or another community tool is managed from"]
-    <MudLink Href="/CommunityTools">@L["Community Tools"]</MudLink>.
+    @ToolsSentence
 </MudText>
 
 <MudCheckBox T="bool" Value="_remember" ValueChanged="OnRememberChanged"
@@ -115,6 +114,13 @@ else if (_hasStoredCredential)
 
     private const string ConsentKey = "RememberPasswordConsent";
     private const string ConsentVersion = "1";
+
+    // Same sentence, same two links as the import page — see UploadPhoenixScores for why it is
+    // composed as markup rather than assembled from fragments.
+    private MarkupString ToolsSentence => (MarkupString)L[
+        "Sending your scores to {0} or another community tool is managed from {1}.",
+        CommunityToolLinks.Anchor(CommunityToolLinks.PiuTracker, "PIU Tracker"),
+        CommunityToolLinks.InternalAnchor("/CommunityTools", L["Community Tools"].Value)].Value;
 
     private MixMode _mode;
     private bool _skipGameTag = true;

@@ -2774,13 +2774,13 @@
     <value>Importer et vérifier</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Un essai cassé, c'est un run qui a fini en Stage Break. Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours. Suivre le mix veut dire activé sur Phoenix 2 et désactivé sur Phoenix.</value>
+    <value>Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours. Suivre le mix veut dire activé sur Phoenix 2 et désactivé sur Phoenix.</value>
   </data>
   <data name="Import Broken Helper Phoenix" xml:space="preserve">
-    <value>Un essai cassé, c'est un run qui a fini en Stage Break. Phoenix ne garde aucun record personnel pour ceux-là, donc cette option démarre désactivée. Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours.</value>
+    <value>Phoenix ne garde aucun record personnel pour les essais cassés, donc cette option est désactivée par défaut. Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours.</value>
   </data>
   <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
-    <value>Un essai cassé, c'est un run qui a fini en Stage Break. Phoenix 2 garde un record personnel pour ceux-là, donc cette option démarre activée. Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours.</value>
+    <value>Phoenix 2 garde un record personnel pour les essais cassés, donc cette option est activée par défaut. Sur les charts jamais réussis, votre meilleur essai cassé devient votre record. Un score réussi gagne toujours.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importation terminée</value>
@@ -5755,8 +5755,8 @@
   <data name="Send it like this" xml:space="preserve">
     <value>Envoyez-le comme ceci</value>
   </data>
-  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
-    <value>L'envoi de vos scores vers PIU Tracker ou un autre outil communautaire se gère depuis</value>
+  <data name="Sending your scores to {0} or another community tool is managed from {1}." xml:space="preserve">
+    <value>L'envoi de vos scores vers {0} ou un autre outil communautaire se gère depuis {1}.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Séries</value>

@@ -124,8 +124,9 @@
                              ValueChanged="ChooseIncludeBroken" Disabled="_isImporting"></MudCheckBox>
                 @* The mix-specific copy explains a DEFAULT, so it only tells the truth while the
                    player is still on one. Once they have chosen, an explicit tick outranks the
-                   mix — and a ticked box over "Phoenix keeps no personal best for those, so this
-                   starts off" reads as a bug in the page. The mix-agnostic key asserts no default.
+                   mix — and a ticked box over "Phoenix keeps no personal best for broken scores,
+                   so this defaults to off" reads as a bug in the page. The mix-agnostic key
+                   asserts no default.
 
                    Both keys spelled out rather than composed: a key built at run time is
                    invisible to an L["…"] grep, which is how live keys get deleted as orphans. *@
@@ -139,8 +140,7 @@
                 @* Sending your session to another site is a consent decision, not an import
                    option, so it lives with every other tool rather than as a checkbox here. *@
                 <MudText Typo="Typo.caption" Class="d-block mt-1" Style="opacity:.75;">
-                    @L["Sending your scores to PIU Tracker or another community tool is managed from"]
-                    <MudLink Href="/CommunityTools">@L["Community Tools"]</MudLink>.
+                    @ToolsSentence
                 </MudText>
             </MudItem>
             @if (_mergeInviteUserId != null)
@@ -408,6 +408,17 @@
     // Null while the player is still following the mix. Kept so the caption knows whether it may
     // talk about a default.
     private bool? _brokenChoice;
+
+    /// <summary>
+    ///     One localized sentence carrying two links. Composed as markup rather than split into
+    ///     three fragments because word order is not ours to assume — ja-JP puts the destination
+    ///     first and the verb last, and a hand-assembled sentence would read as machine output in
+    ///     half the locales. Nothing here is user input; both hrefs are ours.
+    /// </summary>
+    private MarkupString ToolsSentence => (MarkupString)L[
+        "Sending your scores to {0} or another community tool is managed from {1}.",
+        CommunityToolLinks.Anchor(CommunityToolLinks.PiuTracker, "PIU Tracker"),
+        CommunityToolLinks.InternalAnchor("/CommunityTools", L["Community Tools"].Value)].Value;
 
     /// <summary>
     ///     Ticking the box IS the choice — it is kept on the account and outranks the mix default

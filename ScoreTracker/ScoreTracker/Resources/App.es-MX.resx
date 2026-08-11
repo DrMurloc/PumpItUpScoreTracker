@@ -2758,13 +2758,13 @@
     <value>Importar y revisar</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Un intento roto es cuando fallaste el stage. En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana. Seguir al mix quiere decir activado en Phoenix 2 y desactivado en Phoenix.</value>
+    <value>En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana. Seguir al mix quiere decir activado en Phoenix 2 y desactivado en Phoenix.</value>
   </data>
   <data name="Import Broken Helper Phoenix" xml:space="preserve">
-    <value>Un intento roto es cuando fallaste el stage. Phoenix no guarda marca personal para esos, así que esto empieza desactivado. En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana.</value>
+    <value>Phoenix no guarda marca personal para los intentos rotos, así que esto viene desactivado por defecto. En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana.</value>
   </data>
   <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
-    <value>Un intento roto es cuando fallaste el stage. Phoenix 2 sí guarda marca personal para esos, así que esto empieza activado. En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana.</value>
+    <value>Phoenix 2 sí guarda marca personal para los intentos rotos, así que esto viene activado por defecto. En charts que nunca has pasado, tu mejor intento roto pasa a ser tu marca. Un pase siempre gana.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importación completada</value>
@@ -5708,8 +5708,8 @@
   <data name="Send it like this" xml:space="preserve">
     <value>Envíalo así</value>
   </data>
-  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
-    <value>El envío de tus puntajes a PIU Tracker u otra herramienta de la comunidad se gestiona desde</value>
+  <data name="Sending your scores to {0} or another community tool is managed from {1}." xml:space="preserve">
+    <value>El envío de tus puntajes a {0} u otra herramienta de la comunidad se gestiona desde {1}.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Series</value>

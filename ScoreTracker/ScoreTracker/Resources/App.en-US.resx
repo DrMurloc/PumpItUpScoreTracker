@@ -2775,13 +2775,13 @@
     <value>Import and check</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>A broken score is a run that failed the stage. On charts you've never passed, your best break becomes your record — a pass always wins. Following the mix means on for Phoenix 2, off for Phoenix.</value>
+    <value>On charts you've never passed, your best break becomes your record — a pass always wins. Following the mix means on for Phoenix 2, off for Phoenix.</value>
   </data>
   <data name="Import Broken Helper Phoenix" xml:space="preserve">
-    <value>A broken score is a run that failed the stage. Phoenix keeps no personal best for those, so this starts off. On charts you've never passed, your best break becomes your record — a pass always wins.</value>
+    <value>Phoenix keeps no personal best for broken scores, so this defaults to off. On charts you've never passed, your best break becomes your record — a pass always wins.</value>
   </data>
   <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
-    <value>A broken score is a run that failed the stage. Phoenix 2 keeps a personal best for those, so this starts on. On charts you've never passed, your best break becomes your record — a pass always wins.</value>
+    <value>Phoenix 2 keeps a personal best for broken scores, so this defaults to on. On charts you've never passed, your best break becomes your record — a pass always wins.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Import complete</value>
@@ -5756,8 +5756,8 @@
   <data name="Send it like this" xml:space="preserve">
     <value>Send it like this</value>
   </data>
-  <data name="Sending your scores to PIU Tracker or another community tool is managed from" xml:space="preserve">
-    <value>Sending your scores to PIU Tracker or another community tool is managed from</value>
+  <data name="Sending your scores to {0} or another community tool is managed from {1}." xml:space="preserve">
+    <value>Sending your scores to {0} or another community tool is managed from {1}.</value>
   </data>
   <data name="Series" xml:space="preserve">
     <value>Series</value>
