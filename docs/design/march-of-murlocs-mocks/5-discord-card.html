@@ -1,0 +1,285 @@
+<title>MoM — Discord card mock</title>
+<style>
+  :root {
+    /* Discord's own dark surface, so the card can be judged where it will actually live. */
+    --dc-bg:#313338; --dc-raised:#2B2D31; --dc-input:#1E1F22; --dc-text:#DBDEE1;
+    --dc-muted:#949BA4; --dc-link:#00A8FC; --dc-btn:#4E5058; --dc-rule:#3F4147;
+    /* the site's Phoenix palette, for the page chrome around the mock */
+    --mix-bg:#070B15; --mix-surface:#161E2C; --mix-raised:#1E2A3D;
+    --mix-primary:#3FA9F5; --mix-accent:#FFD24A; --mix-ink:#E9EFF7; --mix-muted:#93A3B8;
+    --chart-double:#38B6FF;
+    --diff-easy:#7CB342; --diff-medium:#FDD835; --diff-hard:#FB8C00; --diff-veryhard:#E53935;
+    --rar-gold:#FFD24A; --rar-silver:#CBD5E1; --rar-sapphire:#38B6FF; --rar-common:#8B98A9;
+    --plate-copper:#B87333; --plate-silver:#CBD5E1;
+    --line:rgba(233,239,247,.12); --line-strong:rgba(233,239,247,.22);
+    --display:"Barlow Condensed","Oswald","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  :root[data-theme="light"], :root[data-theme="dark"] { color-scheme: dark; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--mix-bg); color:var(--mix-ink); font-family:var(--body);
+         font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:900px; margin:0 auto; padding:16px 16px 70px; }
+  .num { font-variant-numeric:tabular-nums; }
+
+  .mockbar { background:#12203a; border-bottom:1px solid var(--line); padding:9px 16px; font-size:12.5px;
+             color:var(--mix-muted); display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; }
+  .mockbar b { color:var(--mix-ink); font-weight:600; }
+  .note { border-left:2px solid var(--mix-accent); background:rgba(255,210,74,.06); padding:9px 13px;
+          margin:0; border-radius:0 5px 5px 0; font-size:13px; color:#E4D9BC; }
+  .note b { color:var(--mix-accent); font-weight:600; }
+  h1 { font-family:var(--display); font-size:34px; font-weight:700; margin:0; line-height:1; }
+  h2.sec { font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--mix-muted);
+           font-weight:600; margin:30px 0 11px; display:flex; align-items:center; gap:10px; }
+  h2.sec::after { content:""; flex:1; height:1px; background:var(--line); }
+  .lede { color:var(--mix-muted); font-size:13.5px; margin:4px 0 0; max-width:72ch; }
+
+  /* ---------- discord surface ---------- */
+  .discord { background:var(--dc-bg); border-radius:9px; padding:16px 18px 18px; color:var(--dc-text);
+             font-size:15px; line-height:1.375; }
+  .msg { display:grid; grid-template-columns:40px 1fr; gap:14px; }
+  .botav { width:40px; height:40px; border-radius:50%; background:linear-gradient(140deg,#2C7FBF,#3FA9F5);
+           display:grid; place-items:center; font-size:19px; overflow:hidden; line-height:1; }
+  .msghead { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:3px; }
+  .botname { font-weight:600; color:#fff; }
+  .bottag { background:#5865F2; color:#fff; font-size:10px; font-weight:600; border-radius:3px;
+            padding:1px 4px; text-transform:uppercase; letter-spacing:.02em; }
+  .stamp { color:var(--dc-muted); font-size:12px; }
+
+  /* Components V2 container: an accent bar down the left of a rounded panel. */
+  .cv2 { background:var(--dc-raised); border-radius:8px; border-left:4px solid var(--mix-primary);
+         padding:14px 16px; max-width:560px; }
+  .cv2-section { display:grid; grid-template-columns:1fr auto; gap:14px; align-items:start; }
+  .cv2-thumb { width:64px; height:64px; border-radius:8px; flex:none;
+               background:linear-gradient(140deg,#4B5566,#2A323F); display:grid; place-items:center;
+               font-size:9px; color:#8C97A6; letter-spacing:.04em; }
+  .h3 { font-size:20px; font-weight:700; color:#fff; line-height:1.25; }
+  .small { font-size:12.5px; color:var(--dc-muted); }
+  .divider { height:1px; background:var(--dc-rule); margin:12px 0; }
+  .row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:2px 0; }
+  .statline { display:flex; gap:6px 18px; flex-wrap:wrap; }
+  .statline b { color:#fff; }
+  .btnrow { display:flex; gap:8px; margin-top:12px; }
+  .dcbtn { background:var(--dc-btn); color:#fff; border:0; border-radius:4px; font:inherit; font-size:14px;
+           font-weight:500; padding:8px 16px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .dcbtn:hover { filter:brightness(1.12); }
+
+  /* emoji stand-ins — the real card ships custom Discord emoji through the #TOKEN# vocabulary */
+  .em { display:inline-grid; place-items:center; border-radius:3px; font-family:var(--display);
+        font-weight:700; color:#0B0F17; height:19px; padding:0 5px; font-size:12.5px; vertical-align:-4px; }
+  .emg { display:inline-grid; place-items:center; height:19px; padding:0 4px; border-radius:3px;
+         font-family:var(--display); font-weight:700; font-size:12.5px; vertical-align:-4px;
+         border:1px solid currentColor; }
+  .emp { display:inline-grid; place-items:center; height:19px; padding:0 4px; border-radius:3px;
+         font-family:var(--display); font-weight:700; font-size:11.5px; vertical-align:-4px;
+         border:1px solid currentColor; }
+  .emmix { display:inline-grid; place-items:center; height:18px; padding:0 5px; border-radius:3px;
+           font-size:10.5px; font-weight:700; letter-spacing:.04em; vertical-align:-3px;
+           background:rgba(56,182,255,.18); color:#7FCBFF; }
+  .songname { color:#fff; }
+  .pts { font-weight:700; color:#fff; font-variant-numeric:tabular-nums; }
+
+  /* ---------- code / fallback panels ---------- */
+  pre { background:var(--mix-surface); border:1px solid var(--line); border-radius:8px; padding:13px 15px;
+        overflow-x:auto; font-size:12.5px; line-height:1.55; margin:0;
+        font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:#C9D6E4; }
+  pre .k { color:#7FCBFF; } pre .s { color:#C3E88D; } pre .c { color:#6E7F91; font-style:italic; }
+  .plain { background:var(--dc-bg); border-radius:8px; padding:14px 16px; color:var(--dc-text);
+           font-size:14.5px; line-height:1.45; }
+  .plain .small { display:block; }
+
+  /* ---------- slash command ---------- */
+  .cmd { background:var(--dc-bg); border-radius:9px; padding:14px 16px; }
+  .cmdline { display:flex; align-items:center; gap:8px; flex-wrap:wrap; color:var(--dc-muted); font-size:14px; }
+  .slash { background:rgba(88,101,242,.16); color:#A5B0FF; border-radius:4px; padding:1px 6px; font-weight:600; }
+  .cmdreply { margin-top:11px; padding-left:12px; border-left:2px solid var(--dc-rule); color:var(--dc-text); font-size:14.5px; }
+
+  @media (max-width:619.98px) {
+    h1 { font-size:27px; }
+    .msg { grid-template-columns:1fr; }
+    .botav { display:none; }
+    .cv2-section { grid-template-columns:1fr; }
+    .cv2-thumb { display:none; }
+  }
+</style>
+
+<div class="mockbar">
+  <b>Slice 1 mock 5 of 6 — Discord card</b>
+  <span>one card per published session</span>
+  <span>김재현's real Winter 2025 Doubles session</span>
+</div>
+
+<div class="wrap">
+
+  <h1>Discord card</h1>
+  <p class="lede">
+    What a channel sees when someone publishes a session. Composed as a <code>RichBotMessage</code> like
+    every other card on the site, so the Discord adapter owns the emoji swap and the Components V2
+    rendering — and gets the plain-text fallback for free.
+  </p>
+
+  <h2 class="sec">In the channel</h2>
+  <div class="discord">
+    <div class="msg">
+      <div class="botav">🐟</div>
+      <div>
+        <div class="msghead">
+          <span class="botname">PIU Scores</span>
+          <span class="bottag">App</span>
+          <span class="stamp">Today at 8:14 PM</span>
+        </div>
+
+        <div class="cv2">
+          <div class="cv2-section">
+            <div>
+              <div class="h3"><span class="emmix">PHX</span> 김재현 — 59,319 points</div>
+              <div class="small">March of Murlocs · Winter 2025 · Doubles · 1st of 11</div>
+            </div>
+            <div class="cv2-thumb">AVATAR</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="statline">
+            <span><b>39</b> charts</span>
+            <span><b>24.22</b> avg balanced level</span>
+            <span><span class="em" style="background:var(--diff-easy)">D21</span>
+                  → <span class="em" style="background:var(--diff-veryhard)">D26</span></span>
+          </div>
+          <div class="statline" style="margin-top:4px">
+            <span><b>22:04</b> downtime</span>
+            <span><span class="emg" style="color:var(--rar-gold)">AAA</span> average grade</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="small" style="margin-bottom:5px">Biggest five</div>
+          <div id="topfive"></div>
+
+          <div class="divider"></div>
+          <div class="small"><span class="emmix">PHX</span> Phoenix · PIU Scores</div>
+
+          <div class="btnrow"><a class="dcbtn" href="#">See the session</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note" style="margin-top:14px">
+    <b>Two judgement calls to check.</b> <b>“Top five”</b> is ranked by <b>points</b>, not raw score —
+    points are what the session is made of, and the score rides each row anyway. Ranked by score you would
+    get his five cleanest plays, which on this session are all 21s and 22s and say nothing about the session.
+    And <b>“1st of 11”</b> is an addition to your field list: a result card with no placement felt
+    odd, but it is one clause to cut.
+  </p>
+
+  <h2 class="sec">How it is composed</h2>
+  <pre id="compose"></pre>
+
+  <h2 class="sec">Plain-text fallback</h2>
+  <p class="lede" style="margin-bottom:11px">
+    What the adapter flattens to when a channel cannot take Components V2. The emoji tokens still
+    resolve; the container, thumbnail and button do not.
+  </p>
+  <div class="plain" id="plain"></div>
+
+  <h2 class="sec">Turning it on</h2>
+  <p class="lede" style="margin-bottom:11px">
+    A fourth <code>DiscordFeedKind</code> beside Weekly Charts, Daily Step and Official Leaderboards
+    — the same per-mix, community-independent subscription, so a channel opts in once and gets every
+    session on that mix. No community filtering: the event is not popular enough to need it.
+  </p>
+  <div class="cmd">
+    <div class="cmdline"><span class="slash">/piu feed</span> <b style="color:var(--dc-text)">mom</b>
+      <span>mix:</span> <b style="color:var(--dc-text)">Phoenix</b></div>
+    <div class="cmdreply">🐟 <b>March of Murlocs</b> results will post here for <b>Phoenix</b>.
+      One card each time somebody publishes a session.</div>
+  </div>
+
+  <p class="note" style="margin-top:24px">
+    <b>A published session only.</b> A draft never fires a card, and because a published session cannot be
+    edited there is never a second card correcting the first. Deleting a session leaves its card behind —
+    Discord messages cannot be unsent, and the link 404s, which you decided was fine for how rare
+    it is.
+  </p>
+</div>
+
+<script>
+  // 김재현's Winter 2025 Doubles session, top five by the points each chart banked.
+  // [title, level, score, points, grade, plate]
+  var TOP5 = [
+    ["Gargoyle - FULL SONG -",25,844710,3207,"A+","RG"],
+    ["8 6 - FULL SONG -",23,962566,2990,"AAA+","RG"],
+    ["Papasito (feat.  KuTiNA) - FULL SONG -",23,974365,2966,"S","FG"],
+    ["Leather",26,888018,2327,"A+","RG"],
+    ["Darkside of The Mind",25,941887,1741,"AA+","RG"]
+  ];
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+  function n(v){ return v.toLocaleString("en-US"); }
+  function levelColor(l){
+    if (l<=21) return "var(--diff-easy)";
+    if (l<=22) return "var(--diff-medium)";
+    if (l<=24) return "var(--diff-hard)";
+    return "var(--diff-veryhard)";
+  }
+  function gradeColor(g){
+    if (g[0]==="S") return "var(--rar-sapphire)";
+    if (g.indexOf("AAA")===0) return "var(--rar-gold)";
+    if (g.indexOf("AA")===0) return "var(--rar-silver)";
+    return "var(--rar-common)";
+  }
+  var PLATECOLOR = {RG:"var(--plate-copper)",FG:"var(--plate-copper)",TG:"var(--plate-silver)",
+                    MG:"var(--plate-silver)",SG:"var(--rar-gold)",EG:"var(--rar-gold)",
+                    UG:"#9BE9FF",PG:"#9BE9FF"};
+
+  document.getElementById("topfive").innerHTML = TOP5.map(function(t){
+    return '<div class="row">'
+      + '<span class="em" style="background:'+levelColor(t[1])+'">D'+t[1]+'</span>'
+      + '<span class="songname">'+esc(t[0])+'</span> — '
+      + '<span class="pts">'+n(t[3])+'</span>'
+      + '<span class="small num">'+n(t[2])+'</span>'
+      + '<span class="emg" style="color:'+gradeColor(t[4])+'">'+t[4]+'</span>'
+      + '<span class="emp" style="color:'+(PLATECOLOR[t[5]]||"var(--rar-common)")+'">'+t[5]+'</span>'
+      + '</div>';
+  }).join("");
+
+  // The composition, in the shape the sagas already use. Tokens stay untouched — the Discord
+  // adapter swaps #DIFFICULTY|…#, #LETTERGRADE|…#, #PLATE|…# and #MIX|…# for custom emoji.
+  var CODE =
+'<span class="c">// MoMPublishedSaga — one card per published session</span>\n' +
+'<span class="k">new</span> RichBotMessage(\n' +
+'  Header: <span class="k">new</span> RichBotSection(\n' +
+'    <span class="s">$"### #MIX|{mix}#**{user.Name}** — {total:N0} points\\n"</span> +\n' +
+'    <span class="s">$"-# March of Murlocs · {season.Name} · {board.ChartType} · {place.Ordinal()} of {board.Count}"</span>,\n' +
+'    user.ProfileImage),\n' +
+'  Blocks: [\n' +
+'    <span class="k">new</span> RichBotDivider(),\n' +
+'    <span class="k">new</span> RichBotText(\n' +
+'      <span class="s">$"**{charts:N0}** charts · **{avgBalanced:N2}** avg balanced level · "</span> +\n' +
+'      <span class="s">$"#DIFFICULTY|{lowest}# → #DIFFICULTY|{highest}#\\n"</span> +\n' +
+'      <span class="s">$"**{downtime:m\\\\:ss}** downtime · #LETTERGRADE|{avgGrade}|False# average grade"</span>),\n' +
+'    <span class="k">new</span> RichBotDivider(),\n' +
+'    <span class="k">new</span> RichBotText(\n' +
+'      <span class="s">"-# Biggest five\\n"</span> + <span class="k">string</span>.Join(<span class="s">"\\n"</span>, top5.Select(e =>\n' +
+'        <span class="s">$"#DIFFICULTY|{e.Chart.DifficultyString}# {e.Chart.Song.Name} — "</span> +\n' +
+'        <span class="s">$"**{e.SessionScore:N0}** -# {e.Score:N0} #- "</span> +\n' +
+'        <span class="s">$"#LETTERGRADE|{e.Grade}|{e.IsBroken}##PLATE|{e.Plate}#"</span>)))\n' +
+'  ],\n' +
+'  Footer: <span class="s">$"#MIX|{mix}# {mix.GetName()} · PIU Scores"</span>,\n' +
+'  AccentColor: <span class="c">/* the mix primary */</span> 0x3FA9F5,\n' +
+'  Links: [<span class="k">new</span> RichBotLink(<span class="s">"See the session"</span>,\n' +
+'    <span class="k">new</span> Uri(<span class="s">$"{SiteBase}/MarchOfMurlocs/Session/{session.Id}"</span>))])';
+  document.getElementById("compose").innerHTML = CODE;
+
+  document.getElementById("plain").innerHTML =
+      '<div style="font-weight:700;color:#fff;font-size:17px"><span class="emmix">PHX</span> 김재현 — 59,319 points</div>'
+    + '<span class="small">March of Murlocs · Winter 2025 · Doubles · 1st of 11</span>'
+    + '<div style="margin-top:7px"><b style="color:#fff">39</b> charts · <b style="color:#fff">24.22</b> avg balanced level · '
+    + '<span class="em" style="background:var(--diff-easy)">D21</span> → '
+    + '<span class="em" style="background:var(--diff-veryhard)">D26</span><br>'
+    + '<b style="color:#fff">22:04</b> downtime · <span class="emg" style="color:var(--rar-gold)">AAA</span> average grade</div>'
+    + '<div class="small" style="margin-top:7px">Biggest five</div>'
+    + document.getElementById("topfive").innerHTML
+    + '<div class="small" style="margin-top:7px"><span class="emmix">PHX</span> Phoenix · PIU Scores<br>'
+    + '<a href="#" style="color:var(--dc-link)">piuscores.arroweclip.se/MarchOfMurlocs/Session/8f3c…</a></div>';
+</script>
