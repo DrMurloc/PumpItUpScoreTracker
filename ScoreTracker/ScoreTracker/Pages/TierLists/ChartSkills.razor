@@ -59,7 +59,6 @@ else
         <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
             <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
             <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-            <MudSelectItem T="string" Value="@("Popularity")">@L["Popularity"]</MudSelectItem>
             @if (ChabalaAvailable)
             {
                 <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
@@ -1003,8 +1002,6 @@ else
     }
     private IDictionary<Guid, double> _scoringLevels = new Dictionary<Guid, double>();
     private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
-    private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
-    private ISet<Guid> _popularCharts = new HashSet<Guid>();
     private IReadOnlySet<Guid> _otherMixPasses = new HashSet<Guid>();
     private bool _otherMixPassesLoaded = false;
 
@@ -1344,7 +1341,6 @@ else
     {
         "Pass" => L["Pass Difficulty"],
         "Score" => L["Score Difficulty"],
-        "Popularity" => L["Popularity"],
         "Community" => L["Community Rating"],
         _ => lens
     };
@@ -1493,7 +1489,7 @@ else
     private int _averageRating = 1;
     private CancellationTokenSource? _reloadCts;
 
-    private static readonly string[] LensKeys = { "Pass", "Score", "Popularity", "Chabala", "PG" };
+    private static readonly string[] LensKeys = { "Pass", "Score", "Chabala", "PG" };
     private static readonly string[] ValidGroupings = { "Difficulty", "Score", "Age", "Score Ranking", "Scoring Level", "Skill" };
 
     private bool IsMyProgress => _groupBy is not "Difficulty" and not "Skill";
@@ -1727,21 +1723,15 @@ else
         }
 
         // Population phase — works logged-out, renders as soon as it lands.
-        var blendTask = Mediator.Send(new GetBlendedTierListQuery(_chartType, _level, _tierListType,
+        var blended = await Mediator.Send(new GetBlendedTierListQuery(_chartType, _level, _tierListType,
             PersonalizedActive, Mix: _currentMix), cancellationToken);
-        var popularityTask = Mediator.Send(new GetTierListWithFallbackQuery("Popularity", _currentMix), cancellationToken);
-        var blended = await blendTask;
-        var popularityResult = await popularityTask;
         cancellationToken.ThrowIfCancellationRequested();
 
         // The blank-page guard is dead (rule 9): render every chart we can resolve and
         // silently drop entries whose chart no longer exists.
         _finalEntries = blended.Entries.Where(e => _charts.ContainsKey(e.ChartId)).ToArray();
-        _isProvisionalFallback = blended.IsProvisionalFallback || popularityResult.IsProvisionalFallback;
+        _isProvisionalFallback = blended.IsProvisionalFallback;
         _chartDifficulties = _finalEntries.ToDictionary(e => e.ChartId, e => e.Category);
-        var popularity = popularityResult.Entries.GroupBy(e => e.ChartId).ToDictionary(g => g.Key, g => g.First());
-        _popularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Overrated).Select(kv => kv.Key).ToHashSet();
-        _unPopularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Underrated).Select(kv => kv.Key).ToHashSet();
 
         ComputeFolderFilterRanges(_finalEntries.Select(e => _charts[e.ChartId]).ToArray());
 
@@ -1844,17 +1834,6 @@ else
         { TierListCategory.Underrated, "Most Recent" },
         { TierListCategory.Unrecorded, "Not Recorded" }
     };
-    private static readonly IDictionary<TierListCategory, string> _popularityNames = new Dictionary<TierListCategory, string>()
-    {
-        { TierListCategory.Unrecorded, "Unknown" },
-        { TierListCategory.Overrated, "Ultra Popular" },
-        { TierListCategory.VeryEasy, "Very Popular" },
-        { TierListCategory.Easy, "Popular" },
-        { TierListCategory.Medium, "Average" },
-        { TierListCategory.Hard, "Unpopular" },
-        { TierListCategory.VeryHard, "Very Unpopular" },
-        { TierListCategory.Underrated, "Ultra Unpopular" }
-    };
 
     private void RegroupEntries()
     {
@@ -1870,14 +1849,13 @@ else
     }
 
     private string TierName(TierListCategory category) =>
-        _tierListType == "Popularity" ? _popularityNames[category] :
         _tierListType == "Chabala" && category == TierListCategory.Unrecorded ? "Subjective" :
         _tierNames[category];
 
-    // Round 7: the lens always orders cards within a section, in every view — easiest first
-    // (most-popular first under the Popularity lens, which is the same direction), scoring
-    // level as the tiebreaker, blend order as the final stabilizer. Unrecorded sinks to the
-    // bottom. The category enum already runs easiest to hardest, so this is its own order.
+    // Round 7: the lens always orders cards within a section, in every view — easiest first,
+    // scoring level as the tiebreaker, blend order as the final stabilizer. Unrecorded sinks
+    // to the bottom. The category enum already runs easiest to hardest, so this is its own
+    // order.
     private IEnumerable<SongTierListEntry> LensOrdered(IEnumerable<SongTierListEntry> entries)
     {
         return entries
