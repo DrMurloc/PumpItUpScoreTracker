@@ -420,6 +420,95 @@ public sealed class ByLevelAggregatorTests
         Assert.Equal(900_000, s.Values[0]); // the doubles chart is out of scope
     }
 
+    // A stacked Breakdown pools S and D into one stack per level, but a single-type scope is
+    // ALREADY one stack — pooling it too silently dropped the S/D filter, so every Breakdown
+    // preset (Grade / Plate / Clear Progress) rendered identically for Singles and Doubles.
+
+    [Theory]
+    [InlineData(BreakdownChartScope.Singles, ChartType.Single, 1, 2)]
+    [InlineData(BreakdownChartScope.Doubles, ChartType.Double, 3, 1)]
+    [InlineData(BreakdownChartScope.SinglesDoubles, null, 4, 3)]
+    public void BreakdownScopeFiltersChartType(
+        BreakdownChartScope scope, ChartType? expectedType, double expectedPassed, double expectedUnpassed)
+    {
+        var records = new[]
+        {
+            Passed(ChartType.Single, 20, 900_000, 5),
+            Failed(ChartType.Single, 20),
+            Unplayed(ChartType.Single, 20),
+            Passed(ChartType.Double, 20, 800_000, 4),
+            Passed(ChartType.Double, 20, 850_000, 4),
+            Passed(ChartType.Double, 20, 870_000, 4),
+            Failed(ChartType.Double, 20),
+            new BreakdownRecord(ChartType.CoOp, 20, true, true, 900_000, 5, 5) // never in an S/D scope
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Scope = scope,
+            Metric = BreakdownMetric.Pass,
+            Aggregation = BreakdownAggregation.Breakdown,
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Equal(expectedPassed, Value(result, "Passed"));
+        Assert.Equal(expectedUnpassed, Value(result, "Unpassed")); // fails + unplayed
+        // One stack per level either way — the scope narrows the population, never the grouping.
+        Assert.False(result.SeparateTypes);
+        Assert.All(result.Series, s => Assert.Equal(expectedType, s.Type));
+    }
+
+    [Fact]
+    public void BreakdownGradeSegmentsHonorTheDoublesScope()
+    {
+        var records = new[]
+        {
+            Passed(ChartType.Single, 20, 900_000, 5),
+            Passed(ChartType.Single, 20, 950_000, 6),
+            Passed(ChartType.Double, 20, 800_000, 5)
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Scope = BreakdownChartScope.Doubles,
+            Metric = BreakdownMetric.LetterGrade,
+            Aggregation = BreakdownAggregation.Breakdown,
+            Normalize = false, IncludeUnplayed = true,
+            MinLevel = 20, MaxLevel = 20
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Equal(1, Value(result, "S")); // rank 5, the one doubles chart
+        Assert.Equal(0, Value(result, "SS")); // rank 6 is singles-only — out of scope
+        Assert.Equal(0, Value(result, "Not cleared"));
+    }
+
+    [Fact]
+    public void BreakdownCoOpScopeStillCoversOnlyCoOp()
+    {
+        var records = new[]
+        {
+            new BreakdownRecord(ChartType.CoOp, 2, true, true, 900_000, 5, 5),
+            new BreakdownRecord(ChartType.CoOp, 2, true, false, null, null, null),
+            Passed(ChartType.Single, 2, 900_000, 5) // a level-2 single is not a 2-player co-op
+        };
+        var config = new ByLevelBreakdownConfig
+        {
+            Scope = BreakdownChartScope.CoOp,
+            Metric = BreakdownMetric.Pass,
+            Aggregation = BreakdownAggregation.Breakdown,
+            MinPlayers = 2, MaxPlayers = 2
+        };
+
+        var result = ByLevelAggregator.Aggregate(config, records, Scales);
+
+        Assert.Equal("Players", result.XAxisTitle);
+        Assert.Equal(1, Value(result, "Passed"));
+        Assert.Equal(1, Value(result, "Unpassed"));
+        Assert.All(result.Series, s => Assert.Equal(ChartType.CoOp, s.Type));
+    }
+
     [Fact]
     public void SeparateMinMaxRangeEmitsOneBandPerType()
     {

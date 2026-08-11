@@ -7,10 +7,16 @@ decisions (D1–D19), the widget registry contract, and the widget index. **Stat
 **Render notes:** the shaded distribution band draws as a native `ApexRangeAreaSeries`
 (Blazor-ApexCharts 6.1.0 `Top`/`Bottom`), muted and translucent behind the stat lines. **Separate
 S/D is a Distribution-only opt-in** — Blazor-ApexCharts 6.1.0 ignores `ApexBaseSeries.Group`, so
-grouped S/D bars render as duplicate-labelled overlaps; the stacked aggregations (Breakdown,
-Completion) therefore stay combined ("S + D") and S/D separation lives only in the line
-distributions. When separated, each type reads by **color** (red Singles / green Doubles), showing
-one stat line or a shaded range per type (§ UX iterations).
+grouped S/D bars render as duplicate-labelled overlaps; a stacked aggregation therefore draws one
+stack per level, and drawing *both* types at once lives only in the line distributions. When
+separated, each type reads by **color** (red Singles / green Doubles), showing one stat line or a
+shaded range per type (§ UX iterations).
+
+That limit is about drawing **two** groups side by side, and it is not the chart **scope**. A
+Singles-only or Doubles-only scope is one stack either way, so every aggregation — Distribution,
+Breakdown and Completion alike — narrows to the chosen type. Conflating the two is what made the
+Breakdown presets (Grade / Plate / Clear Progress) ignore the Charts dropdown and render Singles,
+Doubles and Singles + Doubles identically; Co-Op escaped only because it was special-cased.
 
 Mock (interactive config flow, fake data): https://claude.ai/code/artifact/77692444-46e8-451c-ac17-f3f5e2ba6604
 
@@ -219,9 +225,10 @@ Field-test rounds after the C0–C7 build; the owner runs, these are the ratifie
   IQR / Min–Max / ±1σ, with dotted min/max outside a range band); **Chart Age** metric added, then given
   **Completion** parity with Score (recency tiers); four-option Charts dropdown.
 - **Grouped S/D bars: shelved.** Blazor-ApexCharts 6.1.0 ignores `ApexBaseSeries.Group`, so a grouped
-  stacked bar renders as duplicate-labelled overlaps. Stacked aggregations stay combined; the
-  "separate data" toggle is Distribution-only and self-hides elsewhere. Revisit if the wrapper gains real
-  grouped-bar support.
+  stacked bar renders as duplicate-labelled overlaps. A stacked aggregation under the Singles + Doubles
+  scope therefore pools into one stack; the "separate data" toggle is Distribution-only and self-hides
+  elsewhere. This never applied to the single-type scopes — see the render note. Revisit if the wrapper
+  gains real grouped-bar support.
 - **Round 3 (V1 lock)** — preset roster trimmed to the six above: Score Completion dropped (it overlaps a
   normalized Grade Distribution), Chart Age dropped as a *suggested* graph (kept configurable); added
   **Singles vs Doubles** (separated Score, IQR shaded) and **Co-Op Completion** (Co-Op Pass breakdown).

@@ -444,16 +444,15 @@ public static class ByLevelAggregator
     {
         if (config.Metric is BreakdownMetric.Score) return BreakdownResult.Empty; // grades ARE the score bands
 
-        // Breakdown renders one stack per level (grouped stacked bars are a later UX
-        // iteration); S/D separation lives in the line aggregations.
-        draws = new[]
+        // One stack per level: grouped stacked bars render as duplicate-labelled overlaps
+        // (ApexCharts ignores series Group), so a separated S/D config pools to a single draw.
+        // A single-type scope is already one stack and keeps its type — and with it its filter.
+        if (draws.Length > 1)
         {
-            config.Scope == BreakdownChartScope.CoOp
-                ? new Draw(ChartType.CoOp, "Co-Op", 'C', false)
-                : new Draw(null, "S + D", ' ', false)
-        };
-        separate = false;
-        legendNote = null;
+            draws = new[] { new Draw(null, "S + D", ' ', false) };
+            separate = false;
+            legendNote = null;
+        }
 
         var series = new List<BreakdownSeries>();
 
