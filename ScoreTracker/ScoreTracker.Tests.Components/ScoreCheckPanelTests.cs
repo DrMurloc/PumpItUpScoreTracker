@@ -16,6 +16,7 @@ using ScoreTracker.OfficialMirror.Contracts.Commands;
 using ScoreTracker.OfficialMirror.Contracts.Events;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Web.Components;
+using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.UiNotifications;
 using Xunit;
 
@@ -40,6 +41,9 @@ public sealed class ScoreCheckPanelTests : ComponentTestBase
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton<IUiNotificationHub>(_hub);
         Services.AddSingleton(Mock.Of<ISnackbar>());
+        // The panel reads the player's broken-scores choice at press time, so a run can repair
+        // exactly what an import would have saved.
+        Services.AddScoped<BrokenScorePreference>();
         Scans(3);
     }
 
