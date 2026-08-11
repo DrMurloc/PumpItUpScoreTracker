@@ -53,8 +53,10 @@
                         var count = captured.Expand(_metricNames).Count;
                         if (count == 0) continue;
                         var selected = _columns.Contains(captured.Key);
-                        @* srp-export-bundle carries no styling — it is the hook the tests select on. *@
-                        <span class="srp-badge-opt srp-export-bundle @(selected ? "srp-badge-opt-sel" : "")"
+                        @* Same two classes as a column chip — tier-chart-card-skill is where the
+                           rounding comes from, and omitting it left these square.
+                           srp-export-bundle carries no styling; it is the hook the tests select on. *@
+                        <span class="srp-badge-opt tier-chart-card-skill srp-export-bundle @(selected ? "srp-badge-opt-sel" : "")"
                               role="button" tabindex="0" @onclick="() => ToggleColumn(captured.Key)">
                             @(selected ? "✓ " : string.Empty)@L[BundleLabel(captured.Key)]
                             <span class="srp-export-mult">×@count</span>
