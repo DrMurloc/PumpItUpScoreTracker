@@ -1851,16 +1851,15 @@ else
         _tierListType == "Chabala" && category == TierListCategory.Unrecorded ? "Subjective" :
         _tierNames[category];
 
-    // Round 7: the lens always orders cards within a section, in every view — hardest
-    // first (most-popular first under the Popularity lens), scoring level as the
-    // tiebreaker, blend order as the final stabilizer. Unrecorded sinks to the bottom.
+    // Round 7: the lens always orders cards within a section, in every view — easiest first
+    // (most-popular first under the Popularity lens, which is the same direction), scoring
+    // level as the tiebreaker, blend order as the final stabilizer. Unrecorded sinks to the
+    // bottom. The category enum already runs easiest to hardest, so this is its own order.
     private IEnumerable<SongTierListEntry> LensOrdered(IEnumerable<SongTierListEntry> entries)
     {
-        var byCategory = _tierListType == "Popularity"
-            ? entries.OrderBy(e => e.Category == TierListCategory.Unrecorded ? int.MaxValue : (int)e.Category)
-            : entries.OrderByDescending(e => e.Category == TierListCategory.Unrecorded ? int.MinValue : (int)e.Category);
-        return byCategory
-            .ThenByDescending(e => _scoringLevels.TryGetValue(e.ChartId, out var sl) ? sl : 0)
+        return entries
+            .OrderBy(e => e.Category == TierListCategory.Unrecorded ? int.MaxValue : (int)e.Category)
+            .ThenBy(e => _scoringLevels.TryGetValue(e.ChartId, out var sl) ? sl : 0)
             .ThenBy(e => e.Order);
     }
 
@@ -1868,11 +1867,10 @@ else
     {
         var groups = LensOrdered(_finalEntries)
             .GroupBy(e => e.Category);
-        // Hardest-first is the community-image convention; the popularity lens reads
+        // Easiest first (owner, 2026-08-11), which the popularity lens already read as
         // most-popular first. Not Rated always sinks to the bottom.
-        var ordered = _tierListType == "Popularity"
-            ? groups.OrderBy(g => g.Key == TierListCategory.Unrecorded ? int.MaxValue : (int)g.Key)
-            : groups.OrderByDescending(g => g.Key == TierListCategory.Unrecorded ? int.MinValue : (int)g.Key);
+        var ordered = groups
+            .OrderBy(g => g.Key == TierListCategory.Unrecorded ? int.MaxValue : (int)g.Key);
         return ordered
             .Select(g =>
             {
@@ -1884,17 +1882,33 @@ else
     }
 
     private TierGroup ToNeutralGroup(IGrouping<string, SongTierListEntry> group) =>
-        new(group.Key, L[group.Key], NeutralSectionColor, MixThemes.PaletteFor(_currentMix).InkMuted, group.ToArray());
+        ToNeutralGroup(group.Key, group);
+
+    private TierGroup ToNeutralGroup(string key, IEnumerable<SongTierListEntry> entries) =>
+        new(key, L[key], NeutralSectionColor, MixThemes.PaletteFor(_currentMix).InkMuted, entries.ToArray());
+
+    /// <summary>
+    ///     Sections for a My Scores bucketing, ordered by the bucket's own rank rather than by
+    ///     whichever chart happened to sort first. Both dictionaries run best-to-worst with the
+    ///     enum — Amazing to "Why Don't You Get Up and Dance, Man?", Ancient to Most Recent —
+    ///     so ascending is the order in both cases, with the unrecorded bucket last.
+    /// </summary>
+    private IReadOnlyList<TierGroup> ByCategoryBuckets(
+        IEnumerable<SongTierListEntry> ordered, Func<SongTierListEntry, TierListCategory> bucket,
+        IDictionary<TierListCategory, string> names) =>
+        ordered.GroupBy(bucket)
+            .OrderBy(g => g.Key == TierListCategory.Unrecorded ? int.MaxValue : (int)g.Key)
+            .Select(g => ToNeutralGroup(names[g.Key], g))
+            .ToArray();
 
     private IReadOnlyList<TierGroup> GroupByScore()
     {
         var tierList = TierListProcessor
             .ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (int)kv.Value.Score!.Value))
             .ToDictionary(e => e.ChartId);
-        return LensOrdered(_finalEntries)
-            .GroupBy(e => _scoreNames[tierList.TryGetValue(e.ChartId, out var t) ? t.Category : TierListCategory.Unrecorded])
-            .Select(ToNeutralGroup)
-            .ToArray();
+        return ByCategoryBuckets(LensOrdered(_finalEntries),
+            e => tierList.TryGetValue(e.ChartId, out var t) ? t.Category : TierListCategory.Unrecorded,
+            _scoreNames);
     }
 
     private IReadOnlyList<TierGroup> GroupByAge()
@@ -1909,13 +1923,22 @@ else
         var tierList = TierListProcessor
             .ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (_now - kv.Value.RecordedDate).TotalDays))
             .ToDictionary(e => e.ChartId);
-        return LensOrdered(_finalEntries)
-            .GroupBy(e => _scores.ContainsKey(e.ChartId)
-                ? _ageNames[tierList.TryGetValue(e.ChartId, out var t) ? t.Category : TierListCategory.Unrecorded]
-                : _ageNames[TierListCategory.Unrecorded])
-            .Select(ToNeutralGroup)
-            .ToArray();
+        // Oldest first (owner): the stale end of the folder is the actionable one.
+        return ByCategoryBuckets(LensOrdered(_finalEntries),
+            e => _scores.ContainsKey(e.ChartId) && tierList.TryGetValue(e.ChartId, out var t)
+                ? t.Category
+                : TierListCategory.Unrecorded,
+            _ageNames);
     }
+
+    // Best percentile first, unrecorded last. The bands are ordered explicitly because they
+    // are strings — grouping alone emits them in order of first appearance, which followed the
+    // lens and reshuffled the page whenever the lens changed.
+    private static readonly string[] RankingBands =
+    {
+        "The Best", "90% -> 99.9%", "75% -> 90%", "50% -> 75%", "25% -> 50%", "10% -> 25%",
+        "0 -> 10%", "Last Place", "Not Recorded"
+    };
 
     private IReadOnlyList<TierGroup> GroupByScoreRanking()
     {
@@ -1938,6 +1961,7 @@ else
                                         "90% -> 99.9%"
                     )
                 : "Not Recorded")
+            .OrderBy(g => Array.IndexOf(RankingBands, g.Key))
             .Select(ToNeutralGroup)
             .ToArray();
     }
