@@ -1,0 +1,375 @@
+<title>MoM — Season page mock</title>
+<style>
+  /* Phoenix mix palette, verbatim from Services/Theming/MixThemes.cs. Dark-only, as the site is. */
+  :root {
+    --mix-bg:#070B15; --mix-surface:#161E2C; --mix-raised:#1E2A3D; --mix-nav:#0D1626;
+    --mix-primary:#3FA9F5; --mix-secondary:#FF6B35; --mix-accent:#FFD24A;
+    --mix-ink:#E9EFF7; --mix-muted:#93A3B8;
+    --chart-single:#FF6B35; --chart-double:#38B6FF;
+    --rar-gold:#FFD24A; --rar-silver:#CBD5E1;
+    /* Row-highlight tokens, verbatim from site.css: mix-invariant, because a rival reads as a
+       rival in every theme. --daily-rival is deliberately not MixPalette.Error. */
+    --daily-you:#4bb8ff; --daily-community:#43dc86; --daily-rival:#FF3B5C;
+    --line:rgba(233,239,247,.12); --line-strong:rgba(233,239,247,.22);
+    --display:"Barlow Condensed","Oswald","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  :root[data-theme="light"], :root[data-theme="dark"] { color-scheme: dark; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--mix-bg); color:var(--mix-ink); font-family:var(--body);
+         font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1060px; margin:0 auto; padding:16px 16px 80px; }
+  .num { font-variant-numeric:tabular-nums; }
+  h1,h2,h3 { font-family:var(--display); font-weight:600; margin:0; text-wrap:balance; }
+
+  .mockbar { background:#12203a; border-bottom:1px solid var(--line); padding:9px 16px;
+             font-size:12.5px; color:var(--mix-muted); display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; }
+  .mockbar b { color:var(--mix-ink); font-weight:600; }
+  .mockbar button { background:var(--mix-raised); color:var(--mix-ink); border:1px solid var(--line-strong);
+                    border-radius:5px; font:inherit; font-size:12px; padding:4px 10px; cursor:pointer; }
+  .mockbar button:hover { border-color:var(--mix-primary); }
+  .note { border-left:2px solid var(--mix-accent); background:rgba(255,210,74,.06);
+          padding:9px 13px; margin:0; border-radius:0 5px 5px 0; font-size:13px; color:#E4D9BC; }
+  .note b { color:var(--mix-accent); font-weight:600; }
+
+  /* ---------- section frame ---------- */
+  .frame-head { display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap;
+                border-bottom:1px solid var(--line); padding-bottom:11px; }
+  .frame-title { font-family:var(--display); font-size:34px; font-weight:700; line-height:1; }
+  .frame-nav { display:flex; gap:4px; margin-left:auto; flex-wrap:wrap; }
+  .frame-nav a { color:var(--mix-muted); text-decoration:none; font-size:13px; padding:5px 10px; border-radius:5px; }
+  .frame-nav a:hover { color:var(--mix-ink); background:var(--mix-raised); }
+  .frame-nav a[aria-current] { color:var(--mix-ink); background:var(--mix-raised); }
+
+  /* ---------- season strip ---------- */
+  .season { display:flex; align-items:center; gap:14px 20px; flex-wrap:wrap; margin-top:16px; }
+  .season-name { font-family:var(--display); font-size:26px; font-weight:600; line-height:1; }
+  .season-dates { font-size:13px; color:var(--mix-muted); }
+  .countdown { margin-left:auto; text-align:right; min-width:150px; }
+  .countdown .n { font-family:var(--display); font-size:26px; font-weight:700; line-height:1; color:var(--mix-accent); }
+  .countdown .l { font-size:11px; letter-spacing:.11em; text-transform:uppercase; color:var(--mix-muted); }
+  .seasonbar { height:4px; border-radius:2px; background:var(--mix-raised); margin-top:11px; overflow:hidden; }
+  .seasonbar i { display:block; height:100%; background:linear-gradient(90deg,var(--mix-primary),var(--mix-accent)); }
+
+  /* ---------- your standing ---------- */
+  .standing { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:18px; }
+  .stand { background:var(--mix-surface); border:1px solid var(--line); border-radius:8px; padding:13px 15px;
+           display:flex; align-items:center; gap:14px; text-decoration:none; color:inherit;
+           cursor:pointer; font:inherit; text-align:left; width:100%; }
+  .stand:hover { border-color:var(--line-strong); }
+  .stand:focus-visible { outline:2px solid var(--mix-primary); outline-offset:2px; }
+  .stand.entered { border-color:rgba(63,169,245,.42); }
+  .stand.showing { box-shadow:0 0 0 1px var(--mix-primary) inset; }
+  .stand-place { font-family:var(--display); line-height:1; color:var(--mix-accent); display:flex; align-items:baseline; gap:3px; }
+  .stand-place .n { font-size:40px; font-weight:700; }
+  .stand-place .o { font-size:16px; font-weight:600; }
+  .stand-main { min-width:0; flex:1; display:flex; flex-direction:column; gap:1px; }
+  .stand-type { font-size:11px; letter-spacing:.11em; text-transform:uppercase; color:var(--mix-muted); }
+  .stand-score { font-family:var(--display); font-size:27px; font-weight:700; line-height:1.05; }
+  .stand-sub { font-size:12px; color:var(--mix-muted); }
+  .stand-cta { font-size:13.5px; color:var(--mix-primary); font-weight:600; }
+  .stand.empty { border-style:dashed; }
+
+  /* ---------- board toolbar ---------- */
+  .boardbar { display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap; margin:26px 0 10px; }
+  /* The tier lists' view group: joined buttons, active filled, inactive outlined. */
+  .typegroup { display:inline-flex; }
+  .typegroup button {
+    background:transparent; color:var(--mix-primary); border:1px solid var(--mix-primary);
+    font:inherit; font-size:13px; font-weight:600; padding:5px 15px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:6px; letter-spacing:.02em;
+  }
+  .typegroup button:first-child { border-radius:5px 0 0 5px; }
+  .typegroup button:last-child { border-radius:0 5px 5px 0; margin-left:-1px; }
+  .typegroup button[aria-pressed="true"] { background:var(--mix-primary); color:#06101C; }
+  .typegroup button:focus-visible { outline:2px solid var(--mix-ink); outline-offset:-2px; z-index:1; }
+  .boardcount { font-size:12.5px; color:var(--mix-muted); }
+  .legend { display:flex; gap:12px; flex-wrap:wrap; margin-left:auto; font-size:11.5px; color:var(--mix-muted); }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .legend i { width:9px; height:9px; border-radius:2px; display:inline-block; }
+
+  /* ---------- board rows ---------- */
+  .rows { display:flex; flex-direction:column; gap:3px; }
+  .row { display:grid; grid-template-columns:42px 1fr auto; align-items:center; gap:12px;
+         padding:6px 10px; border-radius:6px; background:var(--mix-surface);
+         border:1px solid transparent; text-decoration:none; color:inherit; }
+  .row:hover { border-color:var(--line-strong); }
+  .row:focus-visible { outline:2px solid var(--mix-primary); outline-offset:1px; }
+
+  /* ONE GEOMETRY for every relationship state: a tint plus a bar down each edge, colour the
+     only variable. Lifted from site.css so a MoM board wears the standard rather than
+     re-deriving it. Precedence is you → both → rival → community. */
+  .is-me { background:color-mix(in srgb, var(--daily-you) 15%, transparent);
+           box-shadow:inset 3px 0 0 var(--daily-you), inset -3px 0 0 var(--daily-you), 0 0 12px -4px var(--daily-you); }
+  .is-rival { background:color-mix(in srgb, var(--daily-rival) 13%, transparent);
+              box-shadow:inset 3px 0 0 var(--daily-rival), inset -3px 0 0 var(--daily-rival); }
+  .is-community { background:color-mix(in srgb, var(--daily-community) 13%, transparent);
+                  box-shadow:inset 3px 0 0 var(--daily-community), inset -3px 0 0 var(--daily-community); }
+  .is-both { background:linear-gradient(90deg,
+               color-mix(in srgb, var(--daily-rival) 14%, transparent) 0 50%,
+               color-mix(in srgb, var(--daily-community) 14%, transparent) 50% 100%);
+             box-shadow:inset 3px 0 0 var(--daily-rival), inset -3px 0 0 var(--daily-community); }
+
+  .rowplace { font-family:var(--display); font-size:22px; font-weight:700; text-align:center;
+              color:var(--mix-muted); font-variant-numeric:tabular-nums; }
+  .row.p1 .rowplace { color:var(--rar-gold); }
+  .row.p2 .rowplace { color:var(--rar-silver); }
+  .row.p3 .rowplace { color:#C58A5B; }
+
+  .rowid { min-width:0; display:flex; align-items:center; gap:8px; }
+  /* Avatar art is external and blocked here; the disc holds the real 30px budget. */
+  .avatar { width:30px; height:30px; border-radius:50%; flex:none; display:grid; place-items:center;
+            font-family:var(--display); font-weight:700; font-size:14px; color:#0B0F17; }
+  .userlabel { display:flex; align-items:center; gap:5px; min-width:0; }
+  .flag { font-size:14px; line-height:1; flex:none; }
+  .rowname { font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:20ch; }
+  .runchip { font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--mix-muted);
+             border:1px solid var(--line-strong); border-radius:3px; padding:0 5px; white-space:nowrap; flex:none; }
+
+  .rowtail { display:flex; align-items:center; gap:14px; justify-self:end; font-variant-numeric:tabular-nums; }
+  .stat { text-align:right; }
+  .stat .v { font-size:14px; }
+  .stat .k { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--mix-muted); }
+  .rowdate { font-size:12px; color:var(--mix-muted); white-space:nowrap; }
+  .vid { display:grid; place-items:center; width:26px; height:26px; border-radius:5px;
+         color:var(--mix-muted); border:1px solid var(--line-strong); flex:none; }
+  .vid:hover { color:var(--mix-ink); border-color:var(--mix-primary); }
+  .vid svg { width:14px; height:14px; fill:currentColor; }
+  .vid.none { opacity:0; pointer-events:none; }
+  .rowtotal { font-family:var(--display); font-size:24px; font-weight:700; min-width:78px; text-align:right; }
+
+  .empty-board { border:1px dashed var(--line-strong); border-radius:8px; padding:22px 18px;
+                 text-align:center; background:rgba(22,30,44,.5); }
+  .empty-board .big { font-family:var(--display); font-size:21px; font-weight:600; }
+  .empty-board p { color:var(--mix-muted); font-size:13.5px; margin:5px 0 13px; }
+  .btn { background:var(--mix-primary); color:#06101C; border:0; border-radius:6px; font:inherit;
+         font-size:13.5px; font-weight:600; padding:8px 16px; cursor:pointer; text-decoration:none; display:inline-block; }
+  .btn.ghost { background:transparent; color:var(--mix-ink); border:1px solid var(--line-strong); }
+  .btn:focus-visible { outline:2px solid var(--mix-primary); outline-offset:2px; }
+
+  .gated { border:1px solid var(--line); border-radius:8px; padding:18px; background:var(--mix-surface); margin-top:26px; }
+  .gated .big { font-family:var(--display); font-size:19px; font-weight:600; }
+  .gated p { color:var(--mix-muted); font-size:13.5px; margin:5px 0 0; max-width:64ch; }
+  .footlinks { display:flex; gap:10px; flex-wrap:wrap; margin-top:26px; }
+
+  @media (max-width:859.98px) { .standing { grid-template-columns:1fr; } }
+  @media (max-width:699.98px) {
+    .row { grid-template-columns:38px 1fr; row-gap:5px; }
+    .rowtail { grid-column:2; justify-self:start; gap:12px; flex-wrap:wrap; }
+    .rowtotal { min-width:0; }
+    .frame-nav { margin-left:0; width:100%; }
+    .countdown { margin-left:0; text-align:left; }
+    .legend { margin-left:0; width:100%; }
+  }
+  @media (max-width:499.98px) {
+    .frame-title { font-size:28px; }
+    .season-name { font-size:22px; }
+    .stat.diff { display:none; }
+    .rowname { max-width:11ch; }
+    .rowtotal { font-size:20px; }
+    .rowplace { font-size:18px; }
+    .avatar { width:26px; height:26px; font-size:12px; }
+  }
+</style>
+
+<div class="mockbar">
+  <b>Slice 1 mock 1 of 6 — Season</b>
+  <span>/MarchOfMurlocs</span>
+  <span>Real Winter 2025 boards · real communities · real rivals</span>
+  <button type="button" id="flip">Show opening week</button>
+</div>
+
+<div class="wrap">
+
+  <div class="frame-head">
+    <div>
+      <div class="frame-title">March of Murlocs</div>
+      <div class="season-dates" style="margin-top:3px">1 hour 45 minutes. Bank as many points as you can.</div>
+    </div>
+    <nav class="frame-nav">
+      <a href="#" aria-current="page">This season</a>
+      <a href="#">Planner</a>
+      <a href="#">Past seasons</a>
+      <a href="#">Rules</a>
+    </nav>
+  </div>
+
+  <div class="season">
+    <div>
+      <div class="season-name" id="seasonname">Winter 2025</div>
+      <div class="season-dates" id="seasondates">2 February – 31 March 2025</div>
+    </div>
+    <div class="countdown">
+      <div class="n num" id="cdn">27</div>
+      <div class="l">days left</div>
+    </div>
+  </div>
+  <div class="seasonbar"><i id="seasonbar" style="width:53%"></i></div>
+
+  <div class="standing" id="standing"></div>
+
+  <div class="boardbar">
+    <div class="typegroup" role="group" aria-label="Chart type">
+      <button type="button" data-type="D" aria-pressed="true">Doubles</button>
+      <button type="button" data-type="S" aria-pressed="false">Singles</button>
+    </div>
+    <span class="boardcount" id="boardcount"></span>
+    <div class="legend">
+      <span><i style="background:var(--daily-you)"></i>You</span>
+      <span><i style="background:var(--daily-rival)"></i>Rival</span>
+      <span><i style="background:var(--daily-community)"></i>Your communities</span>
+    </div>
+  </div>
+  <div id="board"></div>
+
+  <div class="gated">
+    <div class="big">Phoenix 2 scoring is still being tuned.</div>
+    <p>Phoenix 2 gets its own Doubles and Singles boards, on Phoenix 2’s own rating system.
+       They open once the scoring is settled — this season runs on Phoenix.</p>
+  </div>
+
+  <div class="footlinks">
+    <a class="btn ghost" href="#">Past seasons</a>
+    <a class="btn ghost" href="#">Plan a session</a>
+  </div>
+
+  <p class="note" style="margin-top:26px">
+    <b>The highlights are real, not staged.</b> DrMurloc’s actual rivals include <b>Elixir</b> and
+    <b>uhtreyu</b>, and he really does share <em>When the north is eastern pump</em> with 김재현,
+    Litenang, uhtreyu, Cherry, ddrlevelasian and GODDISH — so uhtreyu lands on <b>is-both</b>, the
+    split-fill case, without anything being invented. Two things still are staged: the season runs
+    <b>mid-flight</b> (it ended 31 March 2025), and <b>tieny’s second Doubles session</b> is his real
+    March of Murlocs 2 session moved here, since multiple sessions per season postdate all real data.
+    Avatars are external images the sandbox blocks, so each disc holds the real 30px budget.
+  </p>
+</div>
+
+<script>
+  // [name, total, charts, avgDifficulty, restSecs, dateISO, videoUrl, runIndex, country, rel]
+  // rel: "me" | "rival" | "community" | "both" | null — all from the live database.
+  var DOUBLES = [
+    ["김재현",59319,39,24.22,1324,"2025-02-14",null,0,null,"community"],
+    ["yimmythe42",57325,36,23.96,1619,"2025-02-22",null,0,null,null],
+    ["tieny",52979,31,24.18,2105,"2025-02-09",null,0,null,null],
+    ["tieny",49757,31,23.02,1884,"2025-03-01",null,1,null,null],
+    ["Redviper",47940,31,23.41,2235,"2025-02-18",null,0,null,null],
+    ["Elixir",38788,36,22.76,2195,"2025-02-11",null,0,"KR","rival"],
+    ["Litenang",37495,36,23.17,1577,"2025-02-25",null,0,null,"community"],
+    ["uhtreyu",37035,30,23.78,2611,"2025-02-16",null,0,null,"both"],
+    ["Selofeals",31399,27,22.86,2207,"2025-03-02",null,0,null,null],
+    ["Badkitty",26954,35,21.02,1985,"2025-02-08",null,0,"MY",null],
+    ["Tink",25191,35,19.89,1844,"2025-02-20",null,0,null,null],
+    ["Cherry",12688,32,18.43,2130,"2025-02-27",null,0,null,"community"]
+  ];
+  var SINGLES = [
+    ["ddrlevelasian",54431,32,24.1,2161,"2025-02-19","https://www.youtube.com/watch?v=c_79DBGN_WA",0,"US","community"],
+    ["DrMurloc",42596,36,22.32,1486,"2025-02-06","https://youtu.be/f16o-yGc_S8",0,"US","me"],
+    ["GODDISH",36684,36,23.51,2282,"2025-02-23","https://www.twitch.tv/videos/2382236206",0,null,"community"],
+    ["Badkitty",34158,35,22.17,1507,"2025-02-12","https://www.youtube.com/watch?v=OY-woXx9U_E",0,"MY",null],
+    ["DrMurloc - Random Step",24435,35,21.12,1917,"2025-03-03",null,0,null,null]
+  ];
+  var YOU = "DrMurloc";
+  var FLAGS = { KR:"🇰🇷", MY:"🇲🇾", US:"🇺🇸" };
+  var AVCOLORS = ["#7FB2E5","#E5A87F","#9BE5A0","#E5D77F","#C79BE5","#7FE5D9","#E58FA6","#B5C77F"];
+
+  function n(v){ return v.toLocaleString("en-US"); }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+  function mmss(s){ var m=Math.floor(s/60), r=Math.round(s%60); return m+":"+(r<10?"0":"")+r; }
+  function ord(i){ return i + (["th","st","nd","rd"][(i%100-i%10!=10)*(i%10<4)*i%10] || "th"); }
+  function niceDate(iso){
+    var p=iso.split("-"), mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return parseInt(p[2],10)+" "+mo[parseInt(p[1],10)-1];
+  }
+  function avatarFor(name){
+    var h=0; for (var i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0;
+    var ch = name.trim().charAt(0).toUpperCase();
+    return '<span class="avatar" style="background:'+AVCOLORS[h%AVCOLORS.length]+'" aria-hidden="true">'+esc(ch)+'</span>';
+  }
+  var VIDICON = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+  var RELWORD = { me:"You", rival:"Your rival", community:"In your communities", both:"Your rival, and in your communities" };
+
+  function boardHtml(list){
+    return '<div class="rows">' + list.map(function(r,i){
+      var rel = r[9];
+      var cls = "row p"+(i+1<=3?(i+1):0) + (rel ? " is-"+rel : "");
+      var relTitle = rel ? " — "+RELWORD[rel] : "";
+      return '<a class="'+cls+'" href="#" title="'+esc(r[0])+relTitle+'" aria-label="'+esc(r[0])+', '+ord(i+1)+', '+n(r[1])+' points'+relTitle+'">'
+        + '<span class="rowplace num">'+(i+1)+'</span>'
+        + '<span class="rowid">'+avatarFor(r[0])
+          + '<span class="userlabel">'
+            + (r[8] ? '<span class="flag" title="'+r[8]+'">'+FLAGS[r[8]]+'</span>' : '')
+            + '<span class="rowname">'+esc(r[0])+'</span></span>'
+          + (r[7] ? '<span class="runchip">'+ord(r[7]+1)+' session</span>' : '')
+          + '</span>'
+        + '<span class="rowtail">'
+          + '<span class="stat"><span class="v num">'+r[2]+'</span><span class="k">charts</span></span>'
+          + '<span class="stat diff" title="Average balanced level — the season\'s frozen scoring '
+            + 'difficulty, which is what actually priced each chart."><span class="v num">'
+            + r[3].toFixed(2)+'</span><span class="k">avg lvl</span></span>'
+          + '<span class="stat"><span class="v num">'+mmss(r[4])+'</span><span class="k">downtime</span></span>'
+          + '<span class="rowdate">'+niceDate(r[5])+'</span>'
+          + (r[6] ? '<span class="vid" title="Watch this session">'+VIDICON+'</span>' : '<span class="vid none">'+VIDICON+'</span>')
+          + '<span class="rowtotal num">'+n(r[1])+'</span>'
+        + '</span></a>';
+    }).join("") + '</div>';
+  }
+
+  function emptyBoardHtml(type){
+    return '<div class="empty-board"><div class="big">Nobody has played '+type+' yet this season.'</div>'
+      + '<p>Be the first. One session, one hour forty-five, as many points as you can bank.</p>'
+      + '<a class="btn" href="#">Record a session</a></div>';
+  }
+
+  function standHtml(type, key, list, showing){
+    var mine = list.map(function(r,i){ return {r:r,place:i+1}; }).filter(function(x){ return x.r[0]===YOU; });
+    var sel = showing===key ? " showing" : "";
+    if (!mine.length){
+      return '<button type="button" class="stand empty'+sel+'" data-type="'+key+'"><span class="stand-main">'
+        + '<span class="stand-type">'+type+'</span>'
+        + '<span class="stand-cta">Record your first session →</span>'
+        + '<span class="stand-sub">You have not played this board this season.</span></span></button>';
+    }
+    var best = mine[0];
+    return '<button type="button" class="stand entered'+sel+'" data-type="'+key+'">'
+      + '<span class="stand-place"><span class="n num">'+best.place+'</span>'
+        + '<span class="o">'+ord(best.place).replace(/^\d+/,"")+'</span></span>'
+      + '<span class="stand-main"><span class="stand-type">'+type+'</span>'
+      + '<span class="stand-score num">'+n(best.r[1])+'</span>'
+      + '<span class="stand-sub">'+best.r[2]+' charts · '+mmss(best.r[4])+' downtime · '
+        + (mine.length>1 ? 'your best of '+mine.length+' sessions' : 'your only session this season')+'</span></span></button>';
+  }
+
+  var opening = false, showing = "D";
+
+  function render(){
+    var dbl = opening ? DOUBLES.slice(0,1) : DOUBLES;
+    var sgl = opening ? [] : SINGLES;
+    var list = showing==="D" ? dbl : sgl;
+
+    document.getElementById("standing").innerHTML =
+      standHtml("Doubles","D",dbl,showing) + standHtml("Singles","S",sgl,showing);
+    document.getElementById("board").innerHTML =
+      list.length ? boardHtml(list) : emptyBoardHtml(showing==="D"?"Doubles":"Singles");
+    document.getElementById("boardcount").textContent =
+      list.length ? list.length+(list.length===1?" session":" sessions") : "no sessions yet";
+
+    Array.prototype.forEach.call(document.querySelectorAll(".typegroup button"), function(b){
+      b.setAttribute("aria-pressed", String(b.dataset.type===showing));
+    });
+    document.getElementById("seasonname").textContent = opening ? "Summer 2026" : "Winter 2025";
+    document.getElementById("seasondates").textContent = opening ? "1 July – 30 September 2026" : "2 February – 31 March 2025";
+    document.getElementById("cdn").textContent = opening ? "51" : "27";
+    document.getElementById("seasonbar").style.width = opening ? "44%" : "53%";
+    document.getElementById("flip").textContent = opening ? "Show mid-season" : "Show opening week";
+  }
+
+  // One delegated listener: the type group and the standing cards both select a board, and the
+  // standing cards are re-rendered on every switch so direct binding would go stale.
+  document.addEventListener("click", function(e){
+    var t = e.target.closest ? e.target.closest("[data-type]") : null;
+    if (!t) return;
+    showing = t.dataset.type; render();
+  });
+  document.getElementById("flip").addEventListener("click", function(){ opening = !opening; render(); });
+  render();
+</script>

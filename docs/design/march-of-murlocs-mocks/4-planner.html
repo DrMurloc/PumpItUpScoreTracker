@@ -1,0 +1,927 @@
+<title>MoM — Planner mock</title>
+<style>
+  :root {
+    --mix-bg:#070B15; --mix-surface:#161E2C; --mix-raised:#1E2A3D; --mix-nav:#0D1626;
+    --mix-primary:#3FA9F5; --mix-secondary:#FF6B35; --mix-accent:#FFD24A;
+    --mix-ink:#E9EFF7; --mix-muted:#93A3B8;
+    --chart-single:#FF6B35; --chart-double:#38B6FF;
+    --rar-emerald:#3FD35A; --rar-gold:#FFD24A; --rar-silver:#CBD5E1; --rar-sapphire:#38B6FF; --rar-common:#8B98A9;
+    --diff-easy:#7CB342; --diff-medium:#FDD835; --diff-hard:#FB8C00; --diff-veryhard:#E53935;
+    --warn:#FFB020; --bad:#FF3B5C;
+    --line:rgba(233,239,247,.12); --line-strong:rgba(233,239,247,.22);
+    --display:"Barlow Condensed","Oswald","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+    --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  :root[data-theme="light"], :root[data-theme="dark"] { color-scheme: dark; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--mix-bg); color:var(--mix-ink); font-family:var(--body);
+         font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:1060px; margin:0 auto; padding:16px 16px 110px; }
+  .num { font-variant-numeric:tabular-nums; }
+  h1,h2,h3 { font-family:var(--display); font-weight:600; margin:0; text-wrap:balance; }
+
+  .mockbar { background:#12203a; border-bottom:1px solid var(--line); padding:9px 16px; font-size:12.5px;
+             color:var(--mix-muted); display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; }
+  .mockbar b { color:var(--mix-ink); font-weight:600; }
+  .note { border-left:2px solid var(--mix-accent); background:rgba(255,210,74,.06); padding:9px 13px;
+          margin:0; border-radius:0 5px 5px 0; font-size:13px; color:#E4D9BC; }
+  .note b { color:var(--mix-accent); font-weight:600; }
+
+  .frame-head { display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap;
+                border-bottom:1px solid var(--line); padding-bottom:11px; }
+  .frame-title { font-family:var(--display); font-size:34px; font-weight:700; line-height:1; }
+  .frame-nav { display:flex; gap:4px; margin-left:auto; flex-wrap:wrap; }
+  .frame-nav a { color:var(--mix-muted); text-decoration:none; font-size:13px; padding:5px 10px; border-radius:5px; }
+  .frame-nav a:hover { color:var(--mix-ink); background:var(--mix-raised); }
+  .frame-nav a[aria-current] { color:var(--mix-ink); background:var(--mix-raised); }
+
+  h2.sec { font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--mix-muted);
+           font-family:var(--body); font-weight:600; margin:26px 0 11px;
+           display:flex; align-items:center; gap:10px; }
+  h2.sec::after { content:""; flex:1; height:1px; background:var(--line); }
+
+  /* ---------- controls ---------- */
+  .controls { display:flex; align-items:flex-end; gap:16px 22px; flex-wrap:wrap; margin-top:16px;
+              background:var(--mix-surface); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
+  .ctl label { display:block; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+               color:var(--mix-muted); margin-bottom:5px; }
+  .typegroup { display:inline-flex; }
+  .typegroup button { background:transparent; color:var(--mix-primary); border:1px solid var(--mix-primary);
+    font:inherit; font-size:13px; font-weight:600; padding:5px 15px; cursor:pointer; letter-spacing:.02em; }
+  .typegroup button:first-child { border-radius:5px 0 0 5px; }
+  .typegroup button:last-child { border-radius:0 5px 5px 0; margin-left:-1px; }
+  .typegroup button[aria-pressed="true"] { background:var(--mix-primary); color:#06101C; }
+  .typegroup button:focus-visible { outline:2px solid var(--mix-ink); outline-offset:-2px; z-index:1; }
+  .restwrap { display:flex; align-items:center; gap:11px; }
+  input[type=range] { width:200px; accent-color:var(--mix-primary); }
+  .restval { font-family:var(--display); font-size:24px; font-weight:700; min-width:52px; font-variant-numeric:tabular-nums; }
+  .btn { background:var(--mix-primary); color:#06101C; border:0; border-radius:6px; font:inherit;
+         font-size:13.5px; font-weight:600; padding:9px 16px; cursor:pointer; white-space:nowrap; }
+  .btn.ghost { background:transparent; color:var(--mix-ink); border:1px solid var(--line-strong); }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .btn:focus-visible { outline:2px solid var(--mix-primary); outline-offset:2px; }
+
+  /* ---------- projection ---------- */
+  .proj { display:grid; grid-template-columns:auto 1fr; gap:18px 24px; align-items:center;
+          background:linear-gradient(180deg,rgba(63,169,245,.10),var(--mix-surface) 70%);
+          border:1px solid rgba(63,169,245,.34); border-radius:9px; padding:16px 18px; margin-top:14px; }
+  .proj-total { font-family:var(--display); line-height:1; }
+  .proj-total .n { font-size:50px; font-weight:700; color:var(--mix-accent); }
+  .proj-total .k { font-family:var(--body); font-size:11px; letter-spacing:.11em; text-transform:uppercase;
+                   color:var(--mix-muted); margin-top:5px; }
+  .proj-nums { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .pn .k { font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--mix-muted); }
+  .pn .v { font-family:var(--display); font-size:25px; font-weight:700; line-height:1.05; font-variant-numeric:tabular-nums; }
+  .pn .d { font-size:11.5px; font-variant-numeric:tabular-nums; }
+  .up { color:var(--rar-emerald); } .down { color:var(--mix-secondary); } .flat { color:var(--mix-muted); }
+  .overwarn { margin-top:11px; padding:9px 13px; border-radius:6px; font-size:13px;
+              background:rgba(255,176,32,.09); border:1px solid rgba(255,176,32,.35); color:#E8CF9E; }
+  .overwarn b { color:var(--warn); }
+
+  .versus { margin-top:12px; background:var(--mix-surface); border:1px solid var(--line);
+            border-radius:8px; padding:13px 16px; font-size:13.5px; color:#C6D3E2; }
+  .versus b { color:var(--mix-ink); }
+  .conv { display:flex; align-items:center; gap:12px; margin-top:9px; flex-wrap:wrap; }
+  .convbar { flex:1; min-width:170px; height:9px; border-radius:5px; background:var(--mix-raised); overflow:hidden; }
+  .convbar i { display:block; height:100%; background:linear-gradient(90deg,var(--mix-primary),var(--mix-accent)); }
+  .convpct { font-family:var(--display); font-size:22px; font-weight:700; font-variant-numeric:tabular-nums; }
+
+  /* ---------- list toolbar ---------- */
+  .listbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:11px; }
+  .denbtns { display:inline-flex; gap:2px; }
+  .denbtns button { background:transparent; border:0; border-radius:5px; padding:5px; color:var(--mix-muted);
+                    cursor:pointer; display:grid; place-items:center; }
+  .denbtns button svg { width:19px; height:19px; fill:currentColor; }
+  .denbtns button:hover { color:var(--mix-ink); }
+  .denbtns button[aria-pressed="true"] { color:var(--mix-primary); }
+  .denbtns button:focus-visible { outline:2px solid var(--mix-primary); outline-offset:1px; }
+  .segmented { display:inline-flex; border:1px solid var(--line-strong); border-radius:6px; overflow:hidden; }
+  .segmented button { background:transparent; border:0; color:var(--mix-muted); font:inherit; font-size:12.5px;
+                      padding:6px 12px; cursor:pointer; }
+  .segmented button[aria-pressed="true"] { background:var(--mix-raised); color:var(--mix-ink); }
+  .segmented button:focus-visible { outline:2px solid var(--mix-primary); outline-offset:-2px; }
+  .sortwrap { position:relative; }
+  .sortbtn { display:inline-flex; align-items:center; gap:6px; background:transparent;
+             border:1px solid var(--line-strong); border-radius:6px; color:var(--mix-ink); font:inherit;
+             font-size:12.5px; padding:6px 11px; cursor:pointer; }
+  .sortbtn:hover { border-color:var(--mix-primary); }
+  .sortbtn svg { width:15px; height:15px; fill:currentColor; }
+  .sortbtn .cur { color:var(--mix-muted); }
+  .sortmenu { position:absolute; z-index:40; top:calc(100% + 5px); left:0; min-width:210px;
+              background:var(--mix-raised); border:1px solid var(--line-strong); border-radius:7px;
+              padding:5px; box-shadow:0 10px 26px rgba(0,0,0,.5); }
+  .sortmenu[hidden] { display:none; }
+  .sortmenu button { display:flex; width:100%; align-items:center; gap:8px; background:transparent; border:0;
+                     color:var(--mix-ink); font:inherit; font-size:13px; text-align:left; padding:7px 9px;
+                     border-radius:5px; cursor:pointer; }
+  .sortmenu button:hover { background:rgba(63,169,245,.14); }
+  .sortmenu button .tick { width:12px; color:var(--mix-primary); }
+  .listnote { font-size:12.5px; color:var(--mix-muted); flex:1 1 200px; }
+
+  /* ---------- shared chart bits ---------- */
+  .jacket { background:repeating-linear-gradient(135deg,#1B2637 0 6px,#16202F 6px 12px);
+            border:1px solid var(--line); display:grid; place-items:center; font-size:8px;
+            color:#4E6076; letter-spacing:.04em; border-radius:4px; flex:none; }
+  .bub { border-radius:4px; display:grid; place-items:center; font-family:var(--display); font-weight:700;
+         color:#0B0F17; flex:none; }
+  .gradeicon { font-family:var(--display); font-weight:700; line-height:1; }
+
+  /* ---------- comfortable ---------- */
+  .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(178px,1fr)); gap:12px; }
+  .ccard { background:var(--mix-surface); border:1px solid var(--line); border-radius:8px; overflow:hidden;
+           display:flex; flex-direction:column; }
+  .ccard.on { opacity:1; border-color:rgba(63,169,245,.5); }
+  .ccard-jacket { position:relative; aspect-ratio:1; width:100%; cursor:pointer; }
+  .ccard-jacket .jacket { width:100%; height:100%; border:0; border-radius:0; }
+  .ccard-jacket .bub { position:absolute; top:5px; left:5px; width:38px; height:25px; font-size:14px; }
+  /* Revealed on hover, always present for keyboard — the tier card's play treatment. */
+  .playbtn { position:absolute; inset:0; margin:auto; width:42px; height:42px; border-radius:50%;
+             background:rgba(0,0,0,.62); border:1px solid rgba(233,239,247,.5); color:var(--mix-ink);
+             display:grid; place-items:center; cursor:pointer; opacity:0; transition:opacity .12s; }
+  .ccard-jacket:hover .playbtn, .playbtn:focus-visible { opacity:1; }
+  .playbtn:focus-visible { outline:2px solid var(--mix-primary); outline-offset:2px; }
+  .playbtn svg { width:17px; height:17px; fill:currentColor; margin-left:2px; }
+  .ccard-pick { display:flex; align-items:center; gap:7px; margin-top:3px; padding-top:7px;
+                border-top:1px solid var(--line); font-size:12.5px; color:var(--mix-muted); cursor:pointer; }
+  .ccard.on .ccard-pick { color:var(--mix-primary); }
+  .ccard-body { padding:8px 10px 10px; display:flex; flex-direction:column; gap:4px; }
+  .ccard-name { font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ccard-meta { display:flex; align-items:center; gap:6px; font-variant-numeric:tabular-nums; font-size:12.5px; flex-wrap:wrap; }
+  .ccard-pts { font-family:var(--display); font-size:20px; font-weight:700; line-height:1; }
+  .ccard-sub { font-size:11.5px; color:var(--mix-muted); font-variant-numeric:tabular-nums; }
+
+  /* ---------- compact ---------- */
+  .stickers { display:grid; grid-template-columns:repeat(auto-fill,minmax(78px,1fr)); gap:7px; }
+  .sticker { position:relative; aspect-ratio:1; cursor:pointer; border:0; padding:0; background:none; }
+  .sticker:focus-visible { outline:2px solid var(--mix-primary); outline-offset:2px; }
+  .sticker .jacket { width:100%; height:100%; }
+  .sticker.on .jacket { border-color:var(--mix-primary); box-shadow:0 0 0 1px var(--mix-primary); }
+  .sticker .bub { position:absolute; top:3px; left:3px; width:30px; height:20px; font-size:12px; }
+  .corner { position:absolute; bottom:3px; right:3px; font-family:var(--display); font-weight:700;
+            font-size:12px; line-height:1.25; font-variant-numeric:tabular-nums;
+            background:rgba(0,0,0,.82); padding:1px 5px; border-radius:4px;
+            border:1px solid var(--mix-primary); color:var(--mix-primary); }
+  .corner-start { position:absolute; bottom:3px; left:3px; display:flex; align-items:center; gap:3px;
+                  background:rgba(0,0,0,.82); border:1px solid var(--mix-primary); border-radius:4px; padding:1px 3px; }
+  /* overflow:hidden because the checkmark's ADVANCE width runs wider than its ink, so a 19px
+     circle reports a 22px scroll width while looking perfectly centred. */
+  .sticker .tick { position:absolute; top:3px; right:3px; width:19px; height:19px; border-radius:50%;
+                   display:grid; place-items:center; overflow:hidden; line-height:1;
+                   background:rgba(0,0,0,.7); border:1px solid var(--line-strong);
+                   color:transparent; font-size:11px; font-weight:700; }
+  .sticker.on .tick { background:var(--mix-primary); border-color:var(--mix-primary); color:#06101C; }
+
+  /* ---------- table ---------- */
+  .tablewrap { overflow-x:auto; }
+  table.run { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+  table.run th { text-align:left; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+                 color:var(--mix-muted); font-weight:600; padding:6px 10px 6px 0;
+                 border-bottom:1px solid var(--line-strong); white-space:nowrap; }
+  table.run th button { background:none; border:0; color:inherit; font:inherit; letter-spacing:inherit;
+                        text-transform:inherit; cursor:pointer; padding:0; }
+  table.run th[aria-sort] button { color:var(--mix-ink); }
+  table.run td { padding:4px 10px 4px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  table.run tbody tr { cursor:pointer; }
+  table.run tbody tr.on td { box-shadow:inset 2px 0 0 var(--mix-primary); }
+  table.run tbody tr:hover td { background:rgba(63,169,245,.07); }
+  .t-ident { display:flex; align-items:center; gap:8px; min-width:0; }
+  .t-ident .jacket { width:30px; height:30px; }
+  .t-ident .bub { width:34px; height:22px; font-size:12.5px; }
+  .t-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .t-r { text-align:right; }
+  .t-grade { display:flex; align-items:center; gap:5px; }
+  .t-score { color:var(--mix-muted); font-size:12.5px; }
+  .cb { width:16px; height:16px; accent-color:var(--mix-primary); }
+
+  /* ---------- action bar ---------- */
+  .actions { position:sticky; bottom:0; margin-top:24px;
+             background:linear-gradient(180deg,rgba(7,11,21,0),var(--mix-bg) 34%); padding-top:18px; }
+  .actions-inner { display:flex; align-items:center; gap:11px; flex-wrap:wrap; background:var(--mix-surface);
+                   border:1px solid var(--line-strong); border-radius:9px; padding:12px 15px; }
+  .actions-sum { font-size:13px; color:var(--mix-muted); }
+  .actions-sum b { color:var(--mix-ink); }
+  .actions-act { margin-left:auto; display:flex; gap:9px; flex-wrap:wrap; }
+  .savedchip { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--rar-emerald); }
+
+  /* ---------- dialogs ---------- */
+  dialog { background:var(--mix-surface); color:var(--mix-ink); border:1px solid var(--line-strong);
+           border-radius:10px; padding:0; max-width:520px; width:calc(100% - 32px); }
+  dialog::backdrop { background:rgba(3,6,12,.72); }
+  .dlg-head { display:flex; align-items:center; gap:10px; padding:13px 15px; border-bottom:1px solid var(--line); }
+  .dlg-head .bub { width:42px; height:27px; font-size:15px; }
+  .dlg-title { font-family:var(--display); font-size:21px; font-weight:600; line-height:1.15; min-width:0; }
+  .dlg-body { padding:14px 15px; display:flex; flex-direction:column; gap:12px; }
+  .dlg-video { aspect-ratio:16/9; border-radius:6px; display:grid; place-items:center; text-align:center;
+               background:repeating-linear-gradient(135deg,#101A28 0 8px,#0D1522 8px 16px);
+               border:1px solid var(--line); color:var(--mix-muted); font-size:12.5px; padding:12px; }
+  .dlg-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(94px,1fr)); gap:10px; }
+  .dlg-stat .k { font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--mix-muted); }
+  .dlg-stat .v { font-family:var(--display); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .dlg-actions { display:flex; justify-content:flex-end; gap:9px; padding:0 15px 14px; }
+  .field label { display:block; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+                 color:var(--mix-muted); margin-bottom:4px; }
+  .field input[type=text] { width:100%; background:var(--mix-raised); color:var(--mix-ink);
+    border:1px solid var(--line-strong); border-radius:6px; padding:9px 11px; font:inherit; font-size:14.5px; }
+  .field input[type=text]:focus { outline:2px solid var(--mix-primary); outline-offset:-1px; }
+  .setrow { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:5px; }
+  .setrow:hover { background:rgba(63,169,245,.12); }
+  .setrow .load { flex:1; min-width:0; background:none; border:0; color:var(--mix-ink); font:inherit;
+                  font-size:13px; text-align:left; cursor:pointer; padding:0; }
+  .setrow .load small { display:block; color:var(--mix-muted); font-size:11.5px; }
+  .setrow .kill { background:none; border:0; color:var(--mix-muted); cursor:pointer; font-size:15px;
+                  line-height:1; padding:2px 5px; border-radius:4px; }
+  .setrow .kill:hover { color:var(--bad); background:rgba(255,59,92,.12); }
+  .setsempty { padding:9px; font-size:12.5px; color:var(--mix-muted); }
+
+  @media (max-width:859.98px) { .proj { grid-template-columns:1fr; } .proj-nums { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:699.98px) { .t-name, .ccard-name { display:none; } .col-pps { display:none; } }
+  @media (max-width:499.98px) {
+    .frame-title { font-size:28px; }
+    .proj-total .n { font-size:38px; }
+    input[type=range] { width:140px; }
+    .t-score { display:none; }
+    .t-grade { flex-direction:column; align-items:flex-start; gap:2px; }
+    .stickers { grid-template-columns:repeat(auto-fill,minmax(70px,1fr)); }
+    .cards { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); }
+  }
+</style>
+
+<div class="mockbar">
+  <b>Slice 1 mock 4 of 6 — Planner</b>
+  <span>/MarchOfMurlocs/Planner</span>
+  <span>김재현's real Phoenix Doubles bests · 129 charts · Winter 2025 balance</span>
+</div>
+
+<div class="wrap">
+
+  <div class="frame-head">
+    <div>
+      <div class="frame-title">Planner</div>
+      <div style="font-size:13px;color:var(--mix-muted);margin-top:3px">
+        Build a set, tune it, and take it to the machine.
+      </div>
+    </div>
+    <nav class="frame-nav">
+      <a href="#">This season</a>
+      <a href="#" aria-current="page">Planner</a>
+      <a href="#">Past seasons</a>
+      <a href="#">Rules</a>
+    </nav>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label>Board</label>
+      <div class="typegroup" role="group" aria-label="Chart type">
+        <button type="button" data-type="D" aria-pressed="true">Doubles</button>
+        <button type="button" data-type="S" aria-pressed="false">Singles</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label for="rest">Rest you need between charts</label>
+      <div class="restwrap">
+        <input id="rest" type="range" min="10" max="120" step="5" value="35"/>
+        <span class="restval num" id="restval">35s</span>
+      </div>
+    </div>
+    <button type="button" class="btn ghost" id="rebuild">Suggest a set</button>
+  </div>
+
+  <div class="proj">
+    <div class="proj-total"><div class="n num" id="ptotal">0</div><div class="k">projected points</div></div>
+    <div class="proj-nums" id="pnums"></div>
+  </div>
+  <div id="overwarn"></div>
+
+  <div class="versus" id="versus"></div>
+
+  <h2 class="sec">Your set</h2>
+  <div class="listbar">
+    <div class="denbtns" role="group" aria-label="Density">
+      <button type="button" data-den="Comfortable" aria-pressed="false" title="Comfortable" aria-label="Comfortable">
+        <svg viewBox="0 0 24 24"><path d="M3 9h4V5H3v4zm0 5h4v-4H3v4zm5 0h4v-4H8v4zm5 0h4v-4h-4v4zM8 9h4V5H8v4zm5-4v4h4V5h-4zm5 9h3v-4h-3v4zm0-9v4h3V5h-3z"/></svg></button>
+      <button type="button" data-den="Compact" aria-pressed="true" title="Compact" aria-label="Compact">
+        <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg></button>
+      <button type="button" data-den="Table" aria-pressed="false" title="Table" aria-label="Table">
+        <svg viewBox="0 0 24 24"><path d="M21 8H3V4h18v4zm0 2H3v4h18v-4zm0 6H3v4h18v-4z"/></svg></button>
+    </div>
+    <!-- Everything leads and is the default: the page opens as your record book to browse, with
+       an empty set you fill by hand. Suggesting a set is an offer, not the starting position. -->
+    <div class="segmented" role="group" aria-label="Which charts">
+      <button type="button" data-scope="all" aria-pressed="true">Everything</button>
+      <button type="button" data-scope="set" aria-pressed="false">In your set</button>
+    </div>
+    <div class="sortwrap" id="sortwrap">
+      <button type="button" class="sortbtn" id="sortbtn" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><path d="M3 6h12v2H3zm0 5h9v2H3zm0 5h6v2H3zm15-9v9.2l3-3 1.4 1.4-5.4 5.4-5.4-5.4L13 12.2l3 3V7z"/></svg>
+        Sort by <span class="cur" id="sortcur">set order</span>
+      </button>
+      <div class="sortmenu" id="sortmenu" hidden role="menu"></div>
+    </div>
+    <span class="listnote" id="listnote"></span>
+  </div>
+  <div id="list"></div>
+
+  <div class="actions">
+    <div class="actions-inner">
+      <span class="actions-sum" id="asum"></span>
+      <span class="actions-act">
+        <div class="sortwrap">
+          <button type="button" class="btn ghost" id="setsbtn" aria-haspopup="true" aria-expanded="false">Saved sets</button>
+          <div class="sortmenu" id="setsmenu" hidden role="menu" style="left:auto;right:0;bottom:calc(100% + 5px);top:auto;min-width:280px"></div>
+        </div>
+        <button type="button" class="btn ghost" id="csv">Download CSV</button>
+        <button type="button" class="btn" id="save">Save this set</button>
+      </span>
+    </div>
+  </div>
+
+  <dialog class="chart" id="dlg" aria-labelledby="dlgtitle">
+    <div class="dlg-head" id="dlghead"></div>
+    <div class="dlg-body" id="dlgbody"></div>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" id="dlgpick"></button>
+      <button type="button" class="btn ghost" id="dlgclose">Close</button>
+    </div>
+  </dialog>
+
+  <dialog id="savedlg" aria-labelledby="savetitle">
+    <div class="dlg-body">
+      <h3 id="savetitle" style="font-family:var(--display);font-size:21px;margin-bottom:4px">Name this set</h3>
+      <p style="font-size:13px;color:var(--mix-muted);margin:0 0 11px">
+        Saved sets live with your account, so you can keep a few and pick one on the day.</p>
+      <div class="field"><label for="setname">Set name</label>
+        <input id="setname" type="text" maxlength="60" placeholder="Doubles — all out"/></div>
+    </div>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" id="savecancel">Cancel</button>
+      <button type="button" class="btn" id="savego">Save</button>
+    </div>
+  </dialog>
+
+  <p class="note" style="margin-top:22px">
+    <b>This is a ceiling, not a prediction.</b> It prices every chart at your best score, and nobody
+    plays their best ninety minutes into a stamina session — which is what makes the gap worth
+    printing. Everything here is 김재현's real Phoenix Doubles record book under Winter 2025's frozen
+    balance, so the set and his actual session are directly comparable. Jacket art is external and the
+    sandbox blocks it, so each tile holds the real budget.
+  </p>
+</div>
+
+<script>
+  /* ---- Winter 2025's frozen config, straight out of Tournament.Configuration ---- */
+  var LR = {20:650,21:760,22:930,23:1160,24:1450,25:1800,26:2210,27:2680,28:3210,29:3800};
+  var G  = {A:0,APlus:0.5,AA:0.75,AAPlus:0.9,AAA:1.0,AAAPlus:1.15,S:1.2,SPlus:1.26,SS:1.32,
+            SSPlus:1.38,SSS:1.44,SSSPlus:1.5};
+  var LADDER = [["F",0],["D",450000],["C",550000],["B",650000],["A",750000],["APlus",825000],
+                ["AA",900000],["AAPlus",925000],["AAA",950000],["AAAPlus",960000],["S",970000],
+                ["SPlus",975000],["SS",980000],["SSPlus",985000],["SSS",990000],["SSSPlus",995000]];
+  var LABEL = {APlus:"A+",AAPlus:"AA+",AAAPlus:"AAA+",SPlus:"S+",SSPlus:"SS+",SSSPlus:"SSS+"};
+  var MAXTIME = 6300;
+  var STAGE_BREAK = 1.0;   // MoM keeps stage break out of the algorithm
+
+  function gradeKey(s){ for (var i=LADDER.length-1;i>=0;i--) if (s>=LADDER[i][1]) return LADDER[i][0]; return "F"; }
+  function grade(s){ var k=gradeKey(s); return LABEL[k]||k; }
+  function gradeColor(g){
+    if (g[0]==="S") return "var(--rar-sapphire)";
+    if (g.indexOf("AAA")===0) return "var(--rar-gold)";
+    if (g.indexOf("AA")===0) return "var(--rar-silver)";
+    return "var(--rar-common)";
+  }
+  function gradeMod(score){
+    var k=gradeKey(score), i=0;
+    for (var x=0;x<LADDER.length;x++) if (LADDER[x][0]===k) i=x;
+    var m = G[k]!==undefined ? G[k] : 0;
+    if (i>=LADDER.length-1 || score>=1000000) return m;
+    var nk=LADDER[i+1][0], nm = G[nk]!==undefined ? G[nk] : m;
+    return m + (nm-m)*(score-LADDER[i][1])/(LADDER[i+1][1]-LADDER[i][1]);
+  }
+  function levelRating(nominal, eff){ var f=eff-nominal, a=LR[nominal], b=LR[nominal+1]; return a+(b-a)*(f-0.5); }
+  function points(c){ return Math.round(levelRating(c.level,c.eff)*(c.secs/120)*gradeMod(c.score)*(c.brk?STAGE_BREAK:1)); }
+
+  function mmss(s){ var m=Math.floor(s/60), r=Math.round(s%60); return m+":"+(r<10?"0":"")+r; }
+  function hms(s){ var h=Math.floor(s/3600), m=Math.floor(s%3600/60), r=Math.round(s%60);
+                   return h+":"+(m<10?"0":"")+m+":"+(r<10?"0":"")+r; }
+  function n(v){ return v.toLocaleString("en-US"); }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+  function levelColor(l){
+    if (l<=21) return "var(--diff-easy)";
+    if (l<=22) return "var(--diff-medium)";
+    if (l<=24) return "var(--diff-hard)";
+    return "var(--diff-veryhard)";
+  }
+  function bub(l,w,h,f){ return '<span class="bub" style="background:'+levelColor(l)
+    +(w?';width:'+w+'px;height:'+h+'px;font-size:'+f+'px':'')+'">D'+l+'</span>'; }
+
+  var POOL = [
+    ["Can-can ~Orpheus in The Party Mix~ - SHORT CUT -", 25, 51, 968935, "TG", 0, 25.5],
+    ["Paradoxx - SHORT CUT -", 26, 64, 915960, null, 1, 26.5],
+    ["Jupin - SHORT CUT -", 24, 48, 983108, "MG", 0, 24.5],
+    ["Neo Catharsis - SHORT CUT -", 25, 74, 934009, "RG", 0, 25.5],
+    ["Jupin - SHORT CUT -", 23, 48, 990296, "MG", 0, 23.5],
+    ["Murdoch vs Otada - SHORT CUT -", 24, 65, 942050, "FG", 0, 24.5],
+    ["Hymn of Golden Glory - SHORT CUT -", 24, 67, 984026, "MG", 0, 24.5],
+    ["Neo Catharsis", 27, 125, 823287, null, 1, 27.7264],
+    ["1948", 27, 125, 798181, null, 1, 27.5],
+    ["Repentance", 26, 105, 925031, "RG", 0, 26.5],
+    ["1949", 26, 106, 906924, "RG", 0, 26.5119],
+    ["Catastrophe", 26, 107, 917189, null, 1, 26.5],
+    ["Nyarlathotep - SHORT CUT -", 24, 72, 948296, "RG", 0, 25.3248],
+    ["Dignity", 26, 110, 8379, null, 1, 26.5773],
+    ["Dignity", 26, 110, 904251, null, 1, 26.5773],
+    ["Love is a Danger Zone pt. 2 - SHORT CUT -", 23, 58, 991240, "MG", 0, 23.5],
+    ["Shub Niggurath - SHORT CUT -", 23, 58, 951309, "FG", 0, 23.8091],
+    ["Chimera", 26, 112, 935477, "RG", 0, 26.5],
+    ["Kokugen Kairou Labyrinth", 26, 112, 938067, "FG", 0, 26.5],
+    ["Will-O-The-Wisp", 25, 92, 946306, "RG", 0, 25.5],
+    ["Telling Fortune Flower", 26, 113, 908814, "RG", 0, 26.5],
+    ["Shub Niggurath", 26, 113, 912455, null, 1, 26.5],
+    ["Cleaner", 26, 114, 923783, "RG", 0, 26.5],
+    ["Hercules", 26, 117, 901264, null, 1, 26.7275],
+    ["DUEL - SHORT CUT -", 23, 62, 987612, "MG", 0, 23.5],
+    ["Escape", 26, 119, 917751, "RG", 0, 26.5],
+    ["Conflict", 26, 120, 846029, null, 1, 26.5],
+    ["Doppelganger", 26, 120, 943793, "FG", 0, 26.5],
+    ["Dement ~After Legend~", 26, 121, 916114, null, 1, 26.5],
+    ["Aragami", 26, 121, 920563, null, 1, 26.6845],
+    ["Crimson Hood", 26, 122, 936208, "RG", 0, 26.5],
+    ["Achluoias", 26, 122, 920835, "FG", 0, 26.5],
+    ["* this game does not exist *", 26, 126, 866196, null, 1, 27.1809],
+    ["Super Akuma Emperor", 26, 127, 887295, null, 1, 26.5],
+    ["PRiMA MATERiA", 26, 127, 898160, null, 1, 27.0037],
+    ["Extreme Music School 2nd period feat. Nanahira", 26, 128, 832928, null, 1, 27.2006],
+    ["iRELLiA", 26, 128, 903605, null, 1, 26.5916],
+    ["Solfeggietto", 25, 105, 951612, "FG", 0, 25.5],
+    ["Moonlight - SHORT CUT -", 20, 38, 946969, "TG", 0, 20.8459],
+    ["Death Moon - SHORT CUT -", 23, 68, 969885, "TG", 0, 23.5],
+    ["CHAOS AGAIN", 26, 131, 913698, "RG", 0, 26.6542],
+    ["Human Extinction (PIU Edit.)", 25, 107, 904027, "RG", 0, 25.5],
+    ["Xeroize", 25, 107, 927476, "RG", 0, 25.96],
+    ["Murdoch vs Otada", 25, 108, 955407, "FG", 0, 25.5],
+    ["Cleaner - SHORT CUT -", 22, 56, 980925, "MG", 0, 22.5],
+    ["Indestructible", 25, 109, 952453, "FG", 0, 25.5],
+    ["F(R)IEND", 25, 109, 913808, "FG", 0, 26.0436],
+    ["Bee", 24, 88, 945720, "FG", 0, 25.5],
+    ["Skeptic", 25, 110, 952506, "FG", 0, 25.5],
+    ["Underworld ft. Skizzo (PIU Edit.)", 25, 111, 971254, "FG", 0, 25.5],
+    ["Heart Rabbit Coaster", 25, 111, 938475, "RG", 0, 25.5],
+    ["Mopemope", 25, 111, 889205, "RG", 0, 26.5],
+    ["PRiMA MATERiA - SHORT CUT -", 22, 58, 975203, "MG", 0, 22.5],
+    ["Papa Gonzales", 24, 91, 959582, "TG", 0, 25.0071],
+    ["Eternal Universe", 25, 113, 950267, "FG", 0, 25.5],
+    ["Cleaner", 25, 114, 929778, "RG", 0, 25.5],
+    ["Pumptris 8Bit ver. - SHORT CUT -", 22, 59, 972639, "FG", 0, 22.5],
+    ["Neo Catharsis - SHORT CUT -", 23, 74, 959158, "FG", 0, 23.5],
+    ["Vacuum", 25, 115, 934016, "FG", 0, 25.5446],
+    ["Beat of The War", 24, 93, 947315, "RG", 0, 24.5],
+    ["GLORIA", 25, 116, 941003, "RG", 0, 25.5],
+    ["Ghroth", 25, 116, 925563, "RG", 0, 25.5],
+    ["Spooky Macaron", 25, 116, 955037, "FG", 0, 25.5],
+    ["Jupin", 25, 117, 923229, "FG", 0, 25.8123],
+    ["Ultimatum", 25, 118, 934303, "RG", 0, 25.8939],
+    ["Further", 25, 118, 931181, "FG", 0, 25.5],
+    ["Etude OP 10-4", 25, 118, 918769, "RG", 0, 26.1077],
+    ["INVASION", 25, 118, 949819, "FG", 0, 25.5],
+    ["Poseidon - SHORT CUT -", 21, 50, 950349, "MG", 0, 21.5],
+    ["Nyarlathotep", 25, 119, 918506, "FG", 0, 25.5],
+    ["Ignis Fatuus(DM Ashura Mix)", 25, 119, 933179, "RG", 0, 25.5],
+    ["Brown Sky", 26, 147, 891326, null, 1, 26.5],
+    ["Darkside of The Mind", 25, 120, 963329, "FG", 0, 25.5],
+    ["Conflict", 25, 120, 954555, "FG", 0, 25.5],
+    ["MEGAHEARTZ", 25, 120, 962299, "TG", 0, 25.5],
+    ["1950", 25, 120, 911810, "RG", 0, 25.8053],
+    ["Can-can ~Orpheus in The Party Mix~ - SHORT CUT -", 21, 51, 982647, "MG", 0, 21.5],
+    ["Hymn of Golden Glory", 25, 121, 916805, "RG", 0, 25.6422],
+    ["Appassionata", 25, 121, 915297, "RG", 0, 26.0535],
+    ["†DOOF†SENC†", 25, 121, 940029, "FG", 0, 25.5],
+    ["Avalanche", 25, 121, 944369, "FG", 0, 25.5],
+    ["Pump me Amadeus", 24, 98, 961196, "TG", 0, 25.2221],
+    ["Yog-Sothoth", 25, 122, 928628, "RG", 0, 25.5721],
+    ["Slam", 24, 99, 991591, "MG", 0, 24.5],
+    ["A Site De La Rue", 24, 99, 974930, "TG", 0, 24.5],
+    ["Hyperion - SHORT CUT -", 21, 52, 983774, "MG", 0, 21.5],
+    ["Beethoven Virus", 24, 100, 972024, "TG", 0, 24.5],
+    ["Gun Rock", 24, 100, 956386, "FG", 0, 24.5],
+    ["SONIC BOOM", 25, 125, 948481, "FG", 0, 25.5],
+    ["Extreme Music School 1st period feat. Nanahira", 25, 125, 918010, "RG", 0, 25.9216],
+    ["Robot battle", 24, 101, 930565, "FG", 0, 24.9969],
+    ["MURDOCH", 24, 101, 967685, "TG", 0, 24.795],
+    ["Harmagedon", 24, 101, 948467, "FG", 0, 24.6741],
+    ["Break Through Myself feat. Risa Yuzuki", 25, 126, 937121, "RG", 0, 25.5],
+    ["Vacuum Cleaner", 26, 155, 908938, null, 1, 26.564],
+    ["Moonlight", 24, 102, 864821, null, 1, 25.5],
+    ["Odin", 25, 127, 912080, "RG", 0, 25.5],
+    ["TRICKL4SH 220", 25, 127, 949632, "FG", 0, 25.5032],
+    ["Kugutsu", 25, 127, 939537, "FG", 0, 25.6411],
+    ["Final Audition Ep. 2-2", 24, 103, 944347, "FG", 0, 25.3166],
+    ["That Kitty (PIU Edit.)", 24, 103, 962369, "TG", 0, 24.5],
+    ["Ignis Fatuus(DM Ashura Mix) - SHORT CUT -", 21, 54, 944676, "TG", 0, 21.5],
+    ["Destination - SHORT CUT -", 21, 54, 965467, "MG", 0, 21.5],
+    ["Viyella's Nightmare", 25, 128, 939513, "RG", 0, 25.5],
+    ["Boca", 25, 129, 950559, "FG", 0, 25.5],
+    ["Pupa", 25, 129, 949618, "RG", 0, 25.5872],
+    ["Final Audition Ep. 2-X", 24, 104, 964360, "TG", 0, 25.4216],
+    ["Love is a Danger Zone pt. 2", 24, 104, 984251, "MG", 0, 24.5],
+    ["Mental Rider", 24, 104, 954971, "FG", 0, 25.5],
+    ["Hymn of Golden Glory - SHORT CUT -", 22, 67, 981225, "FG", 0, 22.5],
+    ["Imperium", 25, 130, 898866, "RG", 0, 25.8523],
+    ["Just Hold On (To All Fighters)", 25, 130, 940351, "FG", 0, 25.5],
+    ["4NT", 24, 105, 972893, "FG", 0, 24.5],
+    ["ESP", 24, 105, 955776, "FG", 0, 24.5],
+    ["Ultimate Eyes", 24, 106, 959257, "FG", 0, 24.5],
+    ["Stardream -Eurobeat Remix- - SHORT CUT -", 22, 68, 991786, "MG", 0, 22.5],
+    ["BEMERA", 26, 163, 841104, null, 1, 26.7039],
+    ["Paved Garden", 24, 107, 966038, "TG", 0, 24.5],
+    ["Jupin - SHORT CUT -", 20, 48, 962031, "MG", 0, 21.5],
+    ["Murdoch vs Otada", 24, 108, 974023, "TG", 0, 24.5],
+    ["Kasou Shinja - SHORT CUT -", 21, 57, 996463, "SG", 0, 22.065],
+    ["Perpetual", 24, 109, 964526, "FG", 0, 24.5],
+    ["The Quick Brown Fox Jumps Over The Lazy Dog", 24, 110, 965382, "TG", 0, 24.5],
+    ["Dignity", 24, 110, 943451, "FG", 0, 25.5],
+    ["Bee", 23, 88, 969988, "TG", 0, 24.2046],
+    ["BEDLAM", 24, 110, 925652, "RG", 0, 25.5],
+    ["Yoropiku Pikuyoro !", 24, 110, 938269, "FG", 0, 24.5],
+    ["V3", 24, 110, 952987, "RG", 0, 24.7358],
+    ["Annihilator Method", 24, 110, 965564, "TG", 0, 24.5],
+    ["FFF - SHORT CUT -", 21, 58, 951216, "TG", 0, 21.5]
+  ];
+
+
+  var CHARTS = POOL.map(function(r,i){
+    var c = { id:i, title:r[0], level:r[1], secs:r[2], score:r[3], plate:r[4], brk:!!r[5], eff:r[6] };
+    c.pts = points(c); c.pps = c.pts / c.secs;
+    return c;
+  }).filter(function(c){ return c.pts > 0; });
+
+  var ACTUAL = { total:59319, charts:39, avgDiff:24.22, rest:1324, avgScore:951755 };
+
+  /* ---- the set is a SELECTION over the pool ----
+     Build solves one; everything after that is the player editing it, and every number on the
+     page recomputes from what is ticked. That is what makes the CSV worth downloading: it is
+     the set you decided on, not the set the greedy algorithm decided on. */
+  var chosen = {};        // id -> true
+  var order = [];         // set order, as built then edited
+
+  function build(minRest){
+    var ordered = CHARTS.slice().sort(function(a,b){ return b.pps - a.pps; });
+    var plan = [], play = 0;
+    ordered.forEach(function(c){
+      if (play >= MAXTIME) return;
+      var newPlay = play + c.secs, newCount = plan.length + 1;
+      if ((MAXTIME - newPlay) / newCount < minRest) return;
+      plan.push(c); play = newPlay;
+    });
+    // The window governs when a song may START, so once nothing else fits the rest budget you
+    // may still open one more — and the right one is the biggest you can still bank.
+    if (play < MAXTIME){
+      var taken = {}; plan.forEach(function(c){ taken[c.id]=1; });
+      var closer = CHARTS.filter(function(c){ return !taken[c.id]; })
+                         .sort(function(a,b){ return b.pts-a.pts; })[0];
+      if (closer) plan.push(closer);
+    }
+    chosen = {}; order = plan.map(function(c){ chosen[c.id]=true; return c.id; });
+    suggested = true;
+  }
+
+  function setCharts(){
+    var byId = {}; CHARTS.forEach(function(c){ byId[c.id]=c; });
+    return order.filter(function(id){ return chosen[id]; }).map(function(id){ return byId[id]; });
+  }
+  function avg(a,f){ return a.length ? a.reduce(function(x,y){ return x+f(y); },0)/a.length : 0; }
+
+  var density="Compact", scope="all", sortKey="order", minRest=35, suggested=false;
+  // Named, plural, and kept with the account — one example so the menu is not empty on arrival.
+  var savedSets = [{ name:"Doubles — all out", ids:null, when:"saved 6 Feb" }];
+  var SORTS=[{key:"order",label:"Set order",note:"As the set was solved — best value per second first, which is also a sensible play order while you are fresh."},
+             {key:"pps",label:"Points per second",note:"What each chart banks per second of song."},
+             {key:"pts",label:"Points",note:"Biggest single hauls. Long songs win here, which is not the same as being efficient."},
+             {key:"level",label:"Difficulty",note:"Hardest first, by balanced level."},
+             {key:"secs",label:"Length",note:"Shortest first."}];
+  function sortMeta(){ return SORTS.filter(function(s){return s.key===sortKey;})[0]; }
+
+  function visible(){
+    var list = scope==="set" ? setCharts() : CHARTS.slice();
+    if (sortKey==="pps") list.sort(function(a,b){ return b.pps-a.pps; });
+    else if (sortKey==="pts") list.sort(function(a,b){ return b.pts-a.pts; });
+    else if (sortKey==="level") list.sort(function(a,b){ return b.eff-a.eff || b.pts-a.pts; });
+    else if (sortKey==="secs") list.sort(function(a,b){ return a.secs-b.secs; });
+    else if (scope==="all") list.sort(function(a,b){
+      var ai=order.indexOf(a.id), bi=order.indexOf(b.id);
+      if (ai<0 && bi<0) return b.pps-a.pps;
+      if (ai<0) return 1; if (bi<0) return -1; return ai-bi;
+    });
+    return list;
+  }
+  function ordOf(c){ var i = order.indexOf(c.id); return chosen[c.id] && i>=0 ? setCharts().indexOf(c)+1 : null; }
+
+  function renderComfortable(list){
+    // The jacket is the video affordance, as /Pumbility renders it — jacket and play button both
+    // open the chart dialog, the button just autoplays. Picking lives in the body, so the two
+    // gestures never fight over the same pixels.
+    return '<div class="cards">' + list.map(function(c){
+      var on = !!chosen[c.id], g = grade(c.score);
+      return '<div class="ccard'+(on?" on":"")+'">'
+        + '<div class="ccard-jacket" role="button" tabindex="0" data-open="'+c.id+'" aria-label="Open '+esc(c.title)+'">'
+          + '<span class="jacket">ART</span>'+bub(c.level,38,25,14)
+          + '<button type="button" class="playbtn" data-play="'+c.id+'" aria-label="Play video for '+esc(c.title)+'">'
+            + '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>'
+        + '</div>'
+        + '<div class="ccard-body">'
+          + '<div class="ccard-name" title="'+esc(c.title)+'">'+esc(c.title)+'</div>'
+          + '<div class="ccard-meta"><span class="gradeicon" style="color:'+gradeColor(g)+';font-size:16px">'+g+'</span>'
+            + '<span class="num" style="color:var(--mix-muted);font-size:12px">'+n(c.score)+'</span></div>'
+          + '<div class="ccard-meta"><span class="ccard-pts num">'+n(c.pts)+'</span>'
+            + '<span class="ccard-sub">pts · '+c.pps.toFixed(1)+' pps · '+mmss(c.secs)+'</span></div>'
+          + '<label class="ccard-pick" data-pick="'+c.id+'">'
+            + '<input type="checkbox" class="cb" '+(on?"checked":"")+' tabindex="-1"/>'
+            + '<span>'+(on?"In your set":"Add to set")+'</span></label>'
+        + '</div></div>';
+    }).join("") + '</div>';
+  }
+
+  function renderCompact(list){
+    var extra = { pps:function(c){return c.pps.toFixed(1)+" pps";}, secs:function(c){return mmss(c.secs);} }[sortKey];
+    return '<div class="stickers">' + list.map(function(c){
+      var on = !!chosen[c.id], g = grade(c.score);
+      return '<button type="button" class="sticker'+(on?" on":"")+'" data-pick="'+c.id+'" aria-pressed="'+on+'"'
+        + ' title="'+esc(c.title)+' · '+n(c.pts)+' pts · '+n(c.score)+' · '+mmss(c.secs)+'">'
+        + '<span class="jacket">ART</span>'+bub(c.level,30,20,12)
+        + '<span class="tick">✓</span>'
+        + '<span class="corner-start"><span class="gradeicon" style="color:'+gradeColor(g)+';font-size:12px">'
+          + g+'</span></span>'
+        + '<span class="corner">'+(extra?extra(c):n(c.pts))+'</span>'
+        + '</button>';
+    }).join("") + '</div>';
+  }
+
+  function renderTable(list){
+    var head = '<th style="width:26px"></th>'
+      + '<th><button type="button" data-sort="level">Chart</button></th>'
+      + '<th><button type="button" data-sort="pts">Grade &amp; score</button></th>'
+      + '<th class="t-r"><button type="button" data-sort="pts">Points</button></th>'
+      + '<th class="t-r col-pps"><button type="button" data-sort="pps">PPS</button></th>'
+      + '<th class="t-r col-pps"><button type="button" data-sort="secs">Length</button></th>';
+    var body = list.map(function(c){
+      var on = !!chosen[c.id], g = grade(c.score), o = ordOf(c);
+      return '<tr class="'+(on?"on":"")+'" data-pick="'+c.id+'">'
+        + '<td><input type="checkbox" class="cb" '+(on?"checked":"")+' tabindex="-1" aria-label="'+esc(c.title)+'"/></td>'
+        + '<td><span class="t-ident">'+(o?'<span class="num" style="color:var(--mix-muted);font-size:11.5px;width:18px;text-align:right">'+o+'</span>':'<span style="width:18px"></span>')
+          + '<span class="jacket">ART</span>'+bub(c.level,34,22,12.5)
+          + '<span class="t-name">'+esc(c.title)+'</span></span></td>'
+        + '<td><span class="t-grade"><span class="gradeicon" style="color:'+gradeColor(g)+';font-size:15px">'+g+'</span>'
+          + '<span class="t-score num">'+n(c.score)+'</span></span></td>'
+        + '<td class="t-r num" style="font-family:var(--display);font-size:17px;font-weight:600">'+n(c.pts)+'</td>'
+        + '<td class="t-r num col-pps">'+c.pps.toFixed(1)+'</td>'
+        + '<td class="t-r num col-pps" style="color:var(--mix-muted)">'+mmss(c.secs)+'</td></tr>';
+    }).join("");
+    return '<div class="tablewrap"><table class="run"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  }
+
+  function render(){
+    var set = setCharts();
+    var total = set.reduce(function(a,c){ return a+c.pts; }, 0);
+    var play = set.reduce(function(a,c){ return a+c.secs; }, 0);
+    var restLeft = Math.max(0, MAXTIME - play);
+    var perGap = set.length>1 ? restLeft/(set.length-1) : restLeft;
+    // Everything before the last chart has to start inside the window (§1).
+    var beforeLast = set.length ? play - set[set.length-1].secs : 0;
+    var over = beforeLast > MAXTIME;
+
+    document.getElementById("ptotal").textContent = n(total);
+    var nums = [
+      { k:"Charts", v:n(set.length), a:set.length, b:ACTUAL.charts, fmt:function(x){return n(x);} },
+      { k:"Avg difficulty", v:avg(set,function(c){return c.eff;}).toFixed(2),
+        a:avg(set,function(c){return c.eff;}), b:ACTUAL.avgDiff, fmt:function(x){return x.toFixed(2);} },
+      { k:"Avg grade", v:set.length?grade(Math.round(avg(set,function(c){return c.score;}))):"—",
+        a:avg(set,function(c){return c.score;}), b:ACTUAL.avgScore, fmt:function(x){return n(Math.round(x));} },
+      { k:"Downtime", v:hms(restLeft), a:restLeft, b:ACTUAL.rest, fmt:hms, lowerBetter:true }
+    ];
+    document.getElementById("pnums").innerHTML = nums.map(function(x){
+      var d = x.a-x.b, good = x.lowerBetter ? d<0 : d>0;
+      var cls = Math.abs(d)<0.005 ? "flat" : (good?"up":"down");
+      var shown = Math.abs(d)<0.005 ? "same as your session" : (d>0?"+":"−")+x.fmt(Math.abs(d))+" vs your session";
+      return '<div class="pn"><div class="k">'+x.k+'</div><div class="v">'+x.v+'</div>'
+        + '<div class="d '+cls+'">'+shown+'</div></div>';
+    }).join("");
+
+    document.getElementById("overwarn").innerHTML = over
+      ? '<div class="overwarn"><b>This set does not fit.</b> Everything before the last chart is '
+        + hms(beforeLast)+' of songs, past the 1:45:00 window. Take something out.</div>' : "";
+
+    var conv = total ? ACTUAL.total/total : 0;
+    document.getElementById("versus").innerHTML = set.length
+      ? 'Your best Winter 2025 session banked <b>'+n(ACTUAL.total)+'</b> across <b>'+ACTUAL.charts
+        + '</b> charts. This set is worth <b>'+n(total)+'</b> on paper, at <b>'+mmss(Math.round(perGap))
+        + '</b> of rest between charts.'
+        + '<div class="conv"><span>You converted</span><span class="convbar"><i style="width:'
+        + (Math.min(conv,1)*100).toFixed(1)+'%"></i></span><span class="convpct">'+(conv*100).toFixed(0)
+        + '%</span><span style="color:var(--mix-muted);font-size:12.5px">of your record book last time'
+        + ' — the rest is what stamina costs.</span></div>'
+      : 'Nothing selected. Rebuild the set, or tick charts from <b>Everything</b>.';
+
+    var list = visible();
+    document.getElementById("list").innerHTML =
+      density==="Comfortable" ? renderComfortable(list)
+      : density==="Table" ? renderTable(list) : renderCompact(list);
+    document.getElementById("listnote").textContent =
+      (scope==="set" ? set.length+" charts in your set. " : "All "+CHARTS.length+" charts you hold a scoring record on. ")
+      + sortMeta().note;
+    document.getElementById("sortcur").textContent = sortMeta().label.toLowerCase();
+
+    document.getElementById("asum").innerHTML = set.length
+      ? '<b>'+set.length+'</b> charts · <b>'+n(total)+'</b> points · '+hms(play)+' of songs'
+      : 'Nothing in your set yet — tick charts below, or press <b>Suggest a set</b>.';
+    document.getElementById("csv").disabled = !set.length;
+    document.getElementById("save").disabled = !set.length;
+    renderSets();
+  }
+
+  /* ---- CSV: the point of the whole page is walking to a machine with this ---- */
+  function csv(){
+    var rows = [["#","Song","Difficulty","Length","Your best","Grade","Projected points","Points per second"]];
+    setCharts().forEach(function(c,i){
+      rows.push([i+1, c.title, "D"+c.level, mmss(c.secs), c.score, grade(c.score), c.pts, c.pps.toFixed(1)]);
+    });
+    var body = rows.map(function(r){
+      return r.map(function(v){
+        v = String(v);
+        return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
+      }).join(",");
+    }).join("\r\n");
+    // A BOM so Excel opens the Korean and Japanese song titles as UTF-8 instead of mojibake.
+    var blob = new Blob(["﻿"+body], {type:"text/csv;charset=utf-8"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "march-of-murlocs-winter-2025-doubles-set.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  /* ---- wiring ---- */
+  document.getElementById("sortmenu").innerHTML = SORTS.map(function(s){
+    return '<button type="button" role="menuitem" data-sort="'+s.key+'"><span class="tick" data-tick="'+s.key+'"></span>'+s.label+'</button>';
+  }).join("");
+  function paintTicks(){
+    Array.prototype.forEach.call(document.querySelectorAll("[data-tick]"), function(t){
+      t.textContent = t.dataset.tick===sortKey ? "✓" : "";
+    });
+  }
+  var sortbtn=document.getElementById("sortbtn"), sortmenu=document.getElementById("sortmenu");
+  function closeMenu(){ sortmenu.hidden=true; sortbtn.setAttribute("aria-expanded","false"); }
+  sortbtn.addEventListener("click", function(e){
+    e.stopPropagation(); sortmenu.hidden=!sortmenu.hidden;
+    sortbtn.setAttribute("aria-expanded", String(!sortmenu.hidden));
+  });
+  document.addEventListener("keydown", function(e){ if (e.key==="Escape") closeMenu(); });
+
+  // One delegated listener: rows, stickers, cards and table headers all re-render on every
+  // change, so anything bound directly would go stale on the first click.
+  document.addEventListener("click", function(e){
+    var s = e.target.closest ? e.target.closest("[data-sort]") : null;
+    if (s){ sortKey=s.dataset.sort; paintTicks(); closeMenu(); render(); return; }
+    if (!sortmenu.hidden && !sortmenu.contains(e.target) && e.target!==sortbtn) closeMenu();
+
+    var p = e.target.closest ? e.target.closest("[data-pick]") : null;
+    if (p){
+      var id = +p.dataset.pick;
+      if (chosen[id]) delete chosen[id];
+      else { chosen[id] = true; if (order.indexOf(id) < 0) order.push(id); }
+      suggested = false; render();
+    }
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key!=="Enter" && e.key!==" ") return;
+    var p = e.target.closest ? e.target.closest("[data-pick]") : null;
+    if (p && p.getAttribute("role")==="button"){ e.preventDefault(); p.click(); }
+  });
+
+  // Dragging retunes a SUGGESTED set live, which is the good interaction — but it must never
+  // rewrite a set someone picked by hand, so a manual tick takes the set off autopilot.
+  document.getElementById("rest").addEventListener("input", function(){
+    minRest = +this.value;
+    document.getElementById("restval").textContent = minRest+"s";
+    if (suggested) build(minRest);
+    render();
+  });
+  document.getElementById("rebuild").addEventListener("click", function(){ build(minRest); render(); });
+  Array.prototype.forEach.call(document.querySelectorAll(".denbtns button"), function(b){
+    b.addEventListener("click", function(){
+      density=b.dataset.den;
+      Array.prototype.forEach.call(document.querySelectorAll(".denbtns button"), function(x){
+        x.setAttribute("aria-pressed", String(x===b)); });
+      render();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-scope]"), function(b){
+    b.addEventListener("click", function(){
+      scope=b.dataset.scope;
+      Array.prototype.forEach.call(document.querySelectorAll("[data-scope]"), function(x){
+        x.setAttribute("aria-pressed", String(x===b)); });
+      render();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".typegroup button"), function(b){
+    b.addEventListener("click", function(){
+      Array.prototype.forEach.call(document.querySelectorAll(".typegroup button"), function(x){
+        x.setAttribute("aria-pressed", String(x===b)); });
+    });
+  });
+  document.getElementById("csv").addEventListener("click", csv);
+
+  /* ---- named saved sets ---- */
+  function renderSets(){
+    document.getElementById("setsmenu").innerHTML = savedSets.length
+      ? savedSets.map(function(s,i){
+          var count = s.ids ? s.ids.length : 45;
+          return '<div class="setrow"><button type="button" class="load" data-load="'+i+'">'
+            + esc(s.name)+'<small>'+count+' charts · '+esc(s.when)+'</small></button>'
+            + '<button type="button" class="kill" data-kill="'+i+'" aria-label="Delete '+esc(s.name)+'">×</button></div>';
+        }).join("")
+      : '<div class="setsempty">No saved sets yet. Build one and press Save.</div>';
+  }
+  var setsbtn = document.getElementById("setsbtn"), setsmenu = document.getElementById("setsmenu");
+  setsbtn.addEventListener("click", function(e){
+    e.stopPropagation(); setsmenu.hidden = !setsmenu.hidden;
+    setsbtn.setAttribute("aria-expanded", String(!setsmenu.hidden));
+  });
+  document.addEventListener("click", function(e){
+    if (!setsmenu.hidden && !setsmenu.contains(e.target) && e.target!==setsbtn){
+      setsmenu.hidden = true; setsbtn.setAttribute("aria-expanded","false");
+    }
+    var l = e.target.closest ? e.target.closest("[data-load]") : null;
+    if (l){
+      var s = savedSets[+l.dataset.load];
+      if (s.ids){ chosen={}; order=s.ids.slice(); s.ids.forEach(function(id){ chosen[id]=true; }); }
+      else build(minRest);                       // the seeded example stands in for a solved set
+      setsmenu.hidden = true; scope="set";
+      Array.prototype.forEach.call(document.querySelectorAll("[data-scope]"), function(x){
+        x.setAttribute("aria-pressed", String(x.dataset.scope==="set")); });
+      render(); return;
+    }
+    var k = e.target.closest ? e.target.closest("[data-kill]") : null;
+    if (k){ savedSets.splice(+k.dataset.kill,1); renderSets(); }
+  });
+
+  var savedlg = document.getElementById("savedlg");
+  document.getElementById("save").addEventListener("click", function(){
+    var set = setCharts();
+    // A default worth keeping: the hardest thing in the set is what the set is about.
+    var top = set.slice().sort(function(a,b){ return b.eff-a.eff; })[0];
+    document.getElementById("setname").value =
+      "Doubles — " + set.length + " charts" + (top ? ", up to D"+top.level : "");
+    savedlg.showModal();
+    document.getElementById("setname").select();
+  });
+  document.getElementById("savecancel").addEventListener("click", function(){ savedlg.close(); });
+  document.getElementById("savego").addEventListener("click", function(){
+    var name = document.getElementById("setname").value.trim() || "Untitled set";
+    savedSets.unshift({ name:name, ids:setCharts().map(function(c){ return c.id; }), when:"saved just now" });
+    savedlg.close(); render();
+  });
+
+  /* ---- chart dialog: the jacket and the play button open the same thing ---- */
+  var dlg = document.getElementById("dlg"), dlgId = null;
+  function openChart(id, autoplay){
+    var c = CHARTS.filter(function(x){ return x.id===id; })[0];
+    if (!c) return;
+    dlgId = id;
+    var g = grade(c.score);
+    document.getElementById("dlghead").innerHTML = bub(c.level,42,27,15)
+      + '<span class="dlg-title" id="dlgtitle">'+esc(c.title)+'</span>';
+    document.getElementById("dlgbody").innerHTML =
+      '<div class="dlg-video">'+(autoplay
+        ? "▶ Chart video would autoplay here — the play button and the jacket open this same dialog, the button just starts it."
+        : "Chart video — press play. External embeds are blocked in this sandbox.")+'</div>'
+      + '<div class="dlg-stats">'
+      + '<div class="dlg-stat"><div class="k">Your best</div><div class="v">'+n(c.score)+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Grade</div><div class="v" style="color:'+gradeColor(g)+'">'+g+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Worth</div><div class="v">'+n(c.pts)+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Per second</div><div class="v">'+c.pps.toFixed(1)+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Length</div><div class="v">'+mmss(c.secs)+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Balanced</div><div class="v">'+c.eff.toFixed(2)+'</div></div>'
+      + '</div>';
+    document.getElementById("dlgpick").textContent = chosen[id] ? "Remove from set" : "Add to set";
+    if (!dlg.open) dlg.showModal();
+  }
+  document.addEventListener("click", function(e){
+    var p = e.target.closest ? e.target.closest("[data-play]") : null;
+    if (p){ e.stopPropagation(); openChart(+p.dataset.play, true); return; }
+    var o = e.target.closest ? e.target.closest("[data-open]") : null;
+    if (o) openChart(+o.dataset.open, false);
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key!=="Enter" && e.key!==" ") return;
+    var o = e.target.closest ? e.target.closest("[data-open]") : null;
+    if (o && o.getAttribute("role")==="button"){ e.preventDefault(); openChart(+o.dataset.open, false); }
+  });
+  document.getElementById("dlgclose").addEventListener("click", function(){ dlg.close(); });
+  document.getElementById("dlgpick").addEventListener("click", function(){
+    if (dlgId==null) return;
+    if (chosen[dlgId]) delete chosen[dlgId];
+    else { chosen[dlgId]=true; if (order.indexOf(dlgId)<0) order.push(dlgId); }
+    this.textContent = chosen[dlgId] ? "Remove from set" : "Add to set";
+    render();
+  });
+
+  paintTicks(); render();
+</script>

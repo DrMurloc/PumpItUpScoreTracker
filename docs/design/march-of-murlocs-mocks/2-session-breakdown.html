@@ -1,0 +1,1117 @@
+<title>MoM — Session Breakdown mock</title>
+<style>
+  /* ------------------------------------------------------------------
+     Phoenix mix palette, lifted verbatim from Services/Theming/MixThemes.cs
+     so this mock can be judged as if it were already on the site.
+     Dark-only on purpose: the site's two Mud palettes are deliberately identical.
+     ------------------------------------------------------------------ */
+  :root {
+    --mix-bg:        #070B15;
+    --mix-surface:   #161E2C;
+    --mix-raised:    #1E2A3D;
+    --mix-nav:       #0D1626;
+    --mix-primary:   #3FA9F5;
+    --mix-secondary: #FF6B35;
+    --mix-accent:    #FFD24A;
+    --mix-ink:       #E9EFF7;
+    --mix-muted:     #93A3B8;
+    --chart-double:  #38B6FF;
+
+    --rar-common:   #8B98A9;
+    --rar-silver:   #CBD5E1;
+    --rar-emerald:  #3FD35A;
+    --rar-gold:     #FFD24A;
+    --rar-sapphire: #38B6FF;
+
+    --diff-easy:     #7CB342;
+    --diff-medium:   #FDD835;
+    --diff-hard:     #FB8C00;
+    --diff-veryhard: #E53935;
+
+    /* plate metals, per the Play Data ladder: copper RG/FG, silver TG/MG, gold EG, ice UG/PG */
+    --plate-copper: #B87333;
+    --plate-silver: #CBD5E1;
+    --plate-gold:   #FFD24A;
+    --plate-ice:    #9BE9FF;
+
+    --line: rgba(233,239,247,.12);
+    --line-strong: rgba(233,239,247,.22);
+
+    --display: "Barlow Condensed", "Oswald", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+    --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  :root[data-theme="light"], :root[data-theme="dark"] { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--mix-bg); color: var(--mix-ink);
+    font-family: var(--body); font-size: 15px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 16px 16px 80px; }
+  .num { font-variant-numeric: tabular-nums; }
+  h1,h2,h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; }
+
+  .mockbar {
+    background: #12203a; border-bottom: 1px solid var(--line); padding: 9px 16px;
+    font-size: 12.5px; color: var(--mix-muted);
+    display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline;
+  }
+  .mockbar b { color: var(--mix-ink); font-weight: 600; }
+  .note {
+    border-left: 2px solid var(--mix-accent); background: rgba(255,210,74,.06);
+    padding: 9px 13px; margin: 0; border-radius: 0 5px 5px 0;
+    font-size: 13px; color: #E4D9BC;
+  }
+  .note b { color: var(--mix-accent); font-weight: 600; }
+
+  h2.sec {
+    font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--mix-muted);
+    font-family: var(--body); font-weight: 600; margin: 30px 0 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2.sec::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  /* ---------------- board identity + result ---------------- */
+  .board-id {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 0 0 10px; border-bottom: 1px solid var(--line); margin-bottom: 14px;
+  }
+  .crumb { color: var(--mix-muted); font-size: 13px; text-decoration: none; }
+  .crumb:hover { color: var(--mix-primary); }
+  .typechip {
+    display: inline-flex; align-items: center; gap: 6px; font-family: var(--display);
+    font-size: 14px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 4px; color: var(--chart-double);
+    border: 1px solid rgba(56,182,255,.45); background: rgba(56,182,255,.10);
+  }
+  .result { display: grid; grid-template-columns: auto 1fr auto; gap: 8px 20px; align-items: end; }
+  .placebox { font-family: var(--display); line-height: 1; display: flex; align-items: baseline; gap: 4px; color: var(--mix-accent); }
+  .placebox .n { font-size: 58px; font-weight: 700; }
+  .placebox .o { font-size: 22px; font-weight: 600; }
+  .whoami .name { font-family: var(--display); font-size: 30px; font-weight: 600; line-height: 1.1; }
+  .whoami .meta { color: var(--mix-muted); font-size: 13px; margin-top: 3px; }
+  .totalbox { text-align: right; font-family: var(--display); line-height: 1; }
+  .totalbox .n { font-size: 46px; font-weight: 700; }
+  .totalbox .l { font-family: var(--body); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--mix-muted); margin-top: 5px; }
+
+  .equation {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--mix-surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 13px 16px; margin: 16px 0 0;
+  }
+  .eq-term { display: flex; flex-direction: column; gap: 1px; }
+  .eq-term .v { font-family: var(--display); font-size: 26px; font-weight: 600; line-height: 1; }
+  .eq-term .k { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--mix-muted); }
+  .eq-op { font-family: var(--display); font-size: 24px; color: var(--mix-muted); }
+  .eq-note { margin-left: auto; font-size: 12.5px; color: var(--mix-muted); max-width: 30ch; }
+
+  /* ---------------- point-source tiles ---------------- */
+  .levers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .lever {
+    background: var(--mix-surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 13px 14px 15px; display: flex; flex-direction: column; gap: 9px;
+  }
+  .lever.lead { border-color: rgba(255,210,74,.42); background: linear-gradient(180deg, rgba(255,210,74,.055), var(--mix-surface) 60%); }
+  .lever .k { font-size: 11px; letter-spacing: .11em; text-transform: uppercase; color: var(--mix-muted); }
+  .lever .v { font-family: var(--display); font-size: 38px; font-weight: 700; line-height: .95; }
+  .lever .vsub { font-size: 12.5px; color: var(--mix-muted); margin-top: -4px; font-variant-numeric: tabular-nums; }
+  .lever .rank { font-size: 12px; color: var(--mix-muted); }
+  .lever .rank b { color: var(--mix-ink); font-weight: 600; }
+  .lever.lead .rank b { color: var(--mix-accent); }
+  .rail .track { position: relative; height: 5px; border-radius: 3px; background: var(--mix-raised); margin: 9px 0 5px; }
+  .rail .med { position: absolute; top: -3px; width: 1px; height: 11px; background: var(--line-strong); }
+  .rail .you {
+    position: absolute; top: 50%; width: 11px; height: 11px; border-radius: 50%;
+    transform: translate(-50%,-50%); background: var(--mix-accent); box-shadow: 0 0 0 3px rgba(255,210,74,.18);
+  }
+  .lever:not(.lead) .rail .you { background: var(--mix-primary); box-shadow: 0 0 0 3px rgba(63,169,245,.18); }
+  .rail .ends { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--mix-muted); font-variant-numeric: tabular-nums; }
+
+  /* ---------------- shared controls ---------------- */
+  .segmented { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 6px; overflow: hidden; }
+  .segmented button {
+    background: transparent; border: 0; color: var(--mix-muted); font: inherit; font-size: 12.5px;
+    padding: 6px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .segmented button[aria-pressed="true"] { background: var(--mix-raised); color: var(--mix-ink); }
+  .segmented button:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: -2px; }
+  .segmented button svg { width: 15px; height: 15px; fill: currentColor; }
+  select {
+    background: var(--mix-raised); color: var(--mix-ink); border: 1px solid var(--line-strong);
+    border-radius: 5px; padding: 6px 9px; font: inherit; font-size: 13px;
+  }
+  select:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 1px; }
+
+  /* ---------------- compare ---------------- */
+  .cmp { background: var(--mix-surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .cmp-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 11px 14px; border-bottom: 1px solid var(--line); background: var(--mix-nav); }
+  .cmp-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .cmp-cell { padding: 13px 14px; border-right: 1px solid var(--line); }
+  .cmp-cell:last-child { border-right: 0; }
+  .cmp-cell .k { font-size: 11px; letter-spacing: .11em; text-transform: uppercase; color: var(--mix-muted); }
+  .cmp-row { display: flex; align-items: baseline; gap: 8px; margin-top: 7px; font-variant-numeric: tabular-nums; }
+  .cmp-row .who { font-size: 11.5px; color: var(--mix-muted); width: 62px; flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cmp-row .val { font-family: var(--display); font-size: 21px; font-weight: 600; line-height: 1; }
+  .delta { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .up { color: var(--rar-emerald); } .down { color: var(--mix-secondary); } .flat { color: var(--mix-muted); }
+  .cmp-verdict { padding: 11px 14px; border-top: 1px solid var(--line); font-size: 13.5px; color: #C6D3E2; background: rgba(63,169,245,.05); }
+  .cmp-verdict b { color: var(--mix-ink); font-weight: 600; }
+
+  /* head-to-head on the charts both sessions contain */
+  .h2h { border-top: 1px solid var(--line); padding: 12px 14px 14px; }
+  .h2h h3 { font-size: 12px; letter-spacing: .11em; text-transform: uppercase; font-family: var(--body); color: var(--mix-muted); }
+  .h2h .lede { font-size: 12.5px; color: var(--mix-muted); margin: 3px 0 10px; }
+  .h2hrow {
+    display: grid; grid-template-columns: 34px 1fr 96px 96px 62px; gap: 10px; align-items: center;
+    padding: 5px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; font-size: 13px;
+  }
+  .h2hrow:last-child { border-bottom: 0; }
+  .h2hrow .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .h2hrow .sc { text-align: right; }
+  .h2hrow .sc small { color: var(--mix-muted); font-size: 11px; display: block; }
+  .h2hrow .win { font-weight: 700; text-align: right; }
+  .h2h-tally { margin-top: 10px; font-size: 13px; color: #C6D3E2; }
+  .h2h-tally b { color: var(--mix-ink); }
+
+  /* ---------------- rebasing ledger ---------------- */
+  .ledger { border-top: 1px solid var(--line); padding: 13px 14px 14px; }
+  .ledger h3 { font-size: 12px; letter-spacing: .11em; text-transform: uppercase; font-family: var(--body); color: var(--mix-muted); }
+  .ledger .why { font-size: 12.5px; color: var(--mix-muted); margin: 4px 0 12px; max-width: 72ch; }
+  .lrow { display: grid; grid-template-columns: 1fr auto 132px; gap: 6px 14px; align-items: baseline; padding: 7px 0; border-bottom: 1px dashed var(--line); font-variant-numeric: tabular-nums; }
+  .lrow.sub { padding: 3px 0 3px 16px; border-bottom: 0; color: var(--mix-muted); font-size: 13px; }
+  .lrow.sub .amt { font-family: var(--body); font-size: 13px; font-weight: 400; }
+  .lrow .lbl { font-size: 13.5px; }
+  .lrow .lbl small { display: block; font-size: 11.5px; color: var(--mix-muted); }
+  .lrow .amt { font-family: var(--display); font-size: 22px; font-weight: 600; }
+  .lrow .chg { font-size: 12.5px; font-weight: 600; text-align: right; }
+  .lrow.total .amt { color: var(--mix-accent); }
+  details.disc { margin-top: 11px; }
+  details.disc summary { cursor: pointer; font-size: 12.5px; color: var(--mix-primary); list-style: none; display: inline-flex; align-items: center; gap: 5px; }
+  details.disc summary::-webkit-details-marker { display: none; }
+  details.disc summary::before { content: "▸"; font-size: 10px; }
+  details.disc[open] summary::before { content: "▾"; }
+  details.disc summary:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 2px; }
+  .rrow { display: grid; grid-template-columns: 1fr auto 66px; gap: 10px; align-items: baseline; padding: 4px 0; font-size: 12.5px; font-variant-numeric: tabular-nums; border-bottom: 1px solid var(--line); }
+  .rrow .mv { color: var(--mix-muted); }
+  .rrow .mv b { color: var(--rar-emerald); font-weight: 600; }
+  .rrow .gain { text-align: right; font-weight: 600; }
+
+  /* ---------------- the session: toolbar ---------------- */
+  .runbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 11px; }
+  .denbtns { display: inline-flex; gap: 2px; }
+  .denbtns button {
+    background: transparent; border: 0; border-radius: 5px; padding: 5px;
+    color: var(--mix-muted); cursor: pointer; display: grid; place-items: center;
+  }
+  .denbtns button svg { width: 19px; height: 19px; fill: currentColor; }
+  .denbtns button:hover { color: var(--mix-ink); }
+  .denbtns button[aria-pressed="true"] { color: var(--mix-primary); }
+  .denbtns button:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 1px; }
+  .sortwrap { position: relative; }
+  .sortbtn {
+    display: inline-flex; align-items: center; gap: 6px; background: transparent;
+    border: 1px solid var(--line-strong); border-radius: 6px; color: var(--mix-ink);
+    font: inherit; font-size: 12.5px; padding: 6px 11px; cursor: pointer;
+  }
+  .sortbtn:hover { border-color: var(--mix-primary); }
+  .sortbtn:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 1px; }
+  .sortbtn svg { width: 15px; height: 15px; fill: currentColor; }
+  .sortbtn .cur { color: var(--mix-muted); }
+  .sortmenu {
+    position: absolute; z-index: 40; top: calc(100% + 5px); left: 0; min-width: 218px;
+    background: var(--mix-raised); border: 1px solid var(--line-strong); border-radius: 7px;
+    padding: 5px; box-shadow: 0 10px 26px rgba(0,0,0,.5);
+  }
+  .sortmenu[hidden] { display: none; }
+  .sortmenu button {
+    display: flex; width: 100%; align-items: center; gap: 8px; background: transparent;
+    border: 0; color: var(--mix-ink); font: inherit; font-size: 13px; text-align: left;
+    padding: 7px 9px; border-radius: 5px; cursor: pointer;
+  }
+  .sortmenu button:hover { background: rgba(63,169,245,.14); }
+  .sortmenu button:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: -2px; }
+  .sortmenu button .tick { width: 12px; color: var(--mix-primary); }
+  .runnote { font-size: 12.5px; color: var(--mix-muted); flex: 1 1 240px; min-width: 0; }
+
+  /* ---------------- shared chart bits ---------------- */
+  .jacket {
+    background: repeating-linear-gradient(135deg, #1B2637 0 6px, #16202F 6px 12px);
+    border: 1px solid var(--line); display: grid; place-items: center;
+    font-size: 8px; color: #4E6076; letter-spacing: .04em; border-radius: 4px; flex: none;
+  }
+  .bub {
+    border-radius: 4px; display: grid; place-items: center; font-family: var(--display);
+    font-weight: 700; color: #0B0F17; letter-spacing: .02em; flex: none;
+  }
+  .gradeicon { font-family: var(--display); font-weight: 700; line-height: 1; }
+  .plate {
+    font-family: var(--display); font-weight: 700; font-size: 11px; line-height: 1;
+    border: 1px solid currentColor; border-radius: 3px; padding: 1px 3px; letter-spacing: .04em;
+  }
+
+  /* ---------------- comfortable ---------------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 12px; }
+  .ccard {
+    background: var(--mix-surface); border: 1px solid var(--line); border-radius: 8px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .ccard-jacket { position: relative; aspect-ratio: 1; width: 100%; }
+  .ccard-jacket .jacket { width: 100%; height: 100%; border: 0; border-radius: 0; }
+  .ccard-jacket .bub { position: absolute; top: 5px; left: 5px; width: 38px; height: 25px; font-size: 14px; }
+  .ccard-ord {
+    position: absolute; top: 5px; right: 6px; font-family: var(--display); font-weight: 700;
+    font-size: 12px; color: var(--mix-muted); background: rgba(0,0,0,.7); border-radius: 3px; padding: 0 5px;
+  }
+  /* The play affordance: same dialog as the jacket, only autoplaying. Always present for
+     keyboard; the jacket brightens on hover to say the whole tile is a target. */
+  .playbtn {
+    position: absolute; inset: 0; margin: auto; width: 42px; height: 42px; border-radius: 50%;
+    background: rgba(0,0,0,.62); border: 1px solid rgba(233,239,247,.5); color: var(--mix-ink);
+    display: grid; place-items: center; cursor: pointer; opacity: 0; transition: opacity .12s;
+  }
+  .ccard-jacket:hover .playbtn, .playbtn:focus-visible { opacity: 1; }
+  .playbtn:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 2px; }
+  .playbtn svg { width: 17px; height: 17px; fill: currentColor; margin-left: 2px; }
+  .ccard-body { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .ccard-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ccard-meta { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; font-size: 13px; flex-wrap: wrap; }
+  .ccard-pts { font-family: var(--display); font-size: 21px; font-weight: 700; line-height: 1; }
+  .ccard-sub { font-size: 11.5px; color: var(--mix-muted); font-variant-numeric: tabular-nums; }
+
+  /* ---------------- compact (the sticker sheet) ---------------- */
+  .stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 7px; }
+  .sticker { position: relative; aspect-ratio: 1; cursor: pointer; border: 0; padding: 0; background: none; }
+  .sticker:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 2px; }
+  .sticker .jacket { width: 100%; height: 100%; }
+  .sticker .bub { position: absolute; top: 3px; left: 3px; width: 30px; height: 20px; font-size: 12px; }
+  /* The corner badge, exactly .tier-chart-card-corner + .pmb-corner-gain from site.css:
+     opaque black backdrop so it stays legible over any album art, outlined in the mix
+     primary. One printed value, and the value is the score. */
+  .corner {
+    position: absolute; bottom: 3px; right: 3px; font-family: var(--display); font-weight: 700;
+    font-size: 12px; line-height: 1.25; font-variant-numeric: tabular-nums;
+    background: rgba(0,0,0,.82); padding: 1px 5px; border-radius: 4px;
+    border: 1px solid var(--mix-primary); color: var(--mix-primary);
+  }
+  .corner-start {
+    position: absolute; bottom: 3px; left: 3px; display: flex; align-items: center; gap: 3px;
+    background: rgba(0,0,0,.82); border: 1px solid var(--mix-primary); border-radius: 4px; padding: 1px 3px;
+  }
+  /* Only present when the active sort is on a value the sticker does not otherwise print. */
+  .corner-2 { display: block; font-size: 9.5px; opacity: .72; font-weight: 600; }
+
+  /* ---------------- table ---------------- */
+  .tablewrap { overflow-x: auto; }
+  table.run { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  table.run th {
+    text-align: left; font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--mix-muted); font-weight: 600; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line-strong);
+    white-space: nowrap;
+  }
+  table.run th button {
+    background: none; border: 0; color: inherit; font: inherit; letter-spacing: inherit;
+    text-transform: inherit; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 4px;
+  }
+  table.run th button:hover { color: var(--mix-ink); }
+  table.run th button:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 2px; }
+  table.run th[aria-sort] button { color: var(--mix-ink); }
+  table.run td { padding: 4px 10px 4px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  table.run tbody tr { cursor: pointer; }
+  table.run tbody tr:hover td { background: rgba(63,169,245,.07); }
+  .t-ident { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .t-ident .jacket { width: 30px; height: 30px; }
+  .t-ident .bub { width: 34px; height: 22px; font-size: 12.5px; }
+  .t-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .t-r { text-align: right; }
+  /* Grade art and plate ride side by side while there is room, and stack when there is not
+     — the pumbility table's own ladder (site.css @499.98). */
+  .t-grade { display: flex; align-items: center; gap: 5px; }
+  .t-score { color: var(--mix-muted); font-size: 12.5px; }
+
+  /* ---------------- timeline ---------------- */
+  .tl { background: var(--mix-surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+  .tl-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--mix-muted); margin-bottom: 8px; }
+  .tl-legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 5px; }
+  .tl-scroll { overflow-x: auto; }
+  svg { display: block; }
+
+  /* ---------------- dialog ---------------- */
+  dialog.chart {
+    background: var(--mix-surface); color: var(--mix-ink); border: 1px solid var(--line-strong);
+    border-radius: 10px; padding: 0; max-width: 560px; width: calc(100% - 32px);
+  }
+  dialog.chart::backdrop { background: rgba(3,6,12,.72); }
+  .dlg-head { display: flex; align-items: center; gap: 10px; padding: 13px 15px; border-bottom: 1px solid var(--line); }
+  .dlg-head .bub { width: 42px; height: 27px; font-size: 15px; }
+  .dlg-title { font-family: var(--display); font-size: 21px; font-weight: 600; line-height: 1.15; min-width: 0; }
+  .dlg-body { padding: 14px 15px; display: flex; flex-direction: column; gap: 13px; }
+  .dlg-video {
+    aspect-ratio: 16/9; border-radius: 6px; display: grid; place-items: center; text-align: center;
+    background: repeating-linear-gradient(135deg, #101A28 0 8px, #0D1522 8px 16px);
+    border: 1px solid var(--line); color: var(--mix-muted); font-size: 12.5px; padding: 12px;
+  }
+  .dlg-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px; }
+  .dlg-stat .k { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--mix-muted); }
+  .dlg-stat .v { font-family: var(--display); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 0 15px 14px; }
+  .btn {
+    background: var(--mix-primary); color: #06101C; border: 0; border-radius: 6px;
+    font: inherit; font-size: 13px; font-weight: 600; padding: 7px 14px; cursor: pointer;
+  }
+  .btn.ghost { background: transparent; color: var(--mix-ink); border: 1px solid var(--line-strong); }
+  .btn:focus-visible { outline: 2px solid var(--mix-primary); outline-offset: 2px; }
+
+  /* ---------------- width ladder ---------------- */
+  @media (max-width: 899.98px) {
+    .levers { grid-template-columns: repeat(2, 1fr); }
+    .cmp-grid { grid-template-columns: repeat(2, 1fr); }
+    .cmp-cell:nth-child(2) { border-right: 0; }
+    .cmp-cell:nth-child(1), .cmp-cell:nth-child(2) { border-bottom: 1px solid var(--line); }
+    /* first column to go: points-per-second, least information per pixel */
+    .col-pps { display: none; }
+  }
+  @media (max-width: 699.98px) {
+    /* the jacket and the bubble already say which chart it is */
+    .t-name, .ccard-name { display: none; }
+    .h2hrow { grid-template-columns: 30px 1fr 78px 78px; }
+    .h2hrow .win { display: none; }
+  }
+  @media (max-width: 619.98px) {
+    .result { grid-template-columns: auto 1fr; }
+    .totalbox { grid-column: 1 / -1; text-align: left; margin-top: 4px; }
+    .totalbox .n { font-size: 38px; }
+    .placebox .n { font-size: 44px; }
+    .whoami .name { font-size: 24px; }
+    .eq-note { margin-left: 0; }
+    .lrow { grid-template-columns: 1fr auto; }
+    .lrow .chg { grid-column: 2; font-size: 11.5px; }
+  }
+  @media (max-width: 499.98px) {
+    /* Scores drop to grade art alone; the number rides the row's tooltip. Grade and plate
+       stack rather than shrink, so neither becomes unreadable. */
+    .t-score { display: none; }
+    .t-grade { flex-direction: column; align-items: flex-start; gap: 2px; }
+    .stickers { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+    .cards { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  }
+</style>
+
+<div class="mockbar">
+  <b>Slice 1 mock 2 of 6 — Session Breakdown</b>
+  <span>/MarchOfMurlocs/Session/{id}</span>
+  <span>Real data: 김재현, Winter 2025 · Doubles, 1st of 11</span>
+</div>
+
+<div class="wrap">
+
+  <div class="board-id">
+    <a class="crumb" href="#">March of Murlocs</a>
+    <span style="color:var(--mix-muted)">/</span>
+    <a class="crumb" href="#">Winter 2025</a>
+    <span style="color:var(--mix-muted)">/</span>
+    <span class="typechip">D Doubles · Phoenix</span>
+  </div>
+
+  <div class="result">
+    <div class="placebox"><span class="n num">1</span><span class="o">st</span></div>
+    <div class="whoami">
+      <div class="name">김재현</div>
+      <div class="meta">Recorded 14 February 2025 · 39 charts · 1:45:00 window</div>
+    </div>
+    <div class="totalbox"><div class="n num">59,319</div><div class="l">Total points</div></div>
+  </div>
+
+  <div class="equation">
+    <div class="eq-term"><span class="v num">39</span><span class="k">charts</span></div>
+    <span class="eq-op">×</span>
+    <div class="eq-term"><span class="v num">1,521</span><span class="k">avg per chart</span></div>
+    <span class="eq-op">=</span>
+    <div class="eq-term"><span class="v num" style="color:var(--mix-accent)">59,319</span><span class="k">total</span></div>
+    <p class="eq-note">Volume and value are the only two things a session is. The four numbers below set each one.</p>
+  </div>
+
+  <h2 class="sec">Where the points came from</h2>
+  <div class="levers" id="levers"></div>
+
+  <p class="note" style="margin-top:14px">
+    <b>This is why the page exists.</b> 김재현 won this board with the <b>6th-best average score on it</b>.
+    Redviper played the cleanest session of anyone here — averaged an S — and finished <b>4th</b>, because he
+    played 8 fewer charts, nearly a level easier, and left 15 more minutes on the floor. Flip the compare
+    below to him.
+  </p>
+
+  <h2 class="sec">Compare</h2>
+  <div class="cmp">
+    <div class="cmp-head">
+      <div class="segmented" role="group" aria-label="Comparison source">
+        <button type="button" data-mode="board" aria-pressed="true">This board</button>
+        <button type="button" data-mode="season" aria-pressed="false">My past seasons</button>
+      </div>
+      <select id="cmpsel" aria-label="Session to compare against"></select>
+      <span style="font-size:12px;color:var(--mix-muted)" id="cmpscope"></span>
+    </div>
+    <div class="cmp-grid" id="cmpgrid"></div>
+    <div class="cmp-verdict" id="cmpverdict"></div>
+    <div id="h2h"></div>
+    <div id="rebase"></div>
+  </div>
+
+  <h2 class="sec">The session</h2>
+  <div class="runbar">
+    <!-- Bare icon buttons, the way /Pumbility does it: no segmented chrome, the active one
+       carries the mix primary, and the name lives in the tooltip and the aria-label.
+       Icons match its MudIconButtons — ViewComfy, GridView, TableRows. -->
+    <div class="denbtns" role="group" aria-label="Density">
+      <button type="button" data-den="Comfortable" aria-pressed="false" title="Comfortable" aria-label="Comfortable">
+        <svg viewBox="0 0 24 24"><path d="M3 9h4V5H3v4zm0 5h4v-4H3v4zm5 0h4v-4H8v4zm5 0h4v-4h-4v4zM8 9h4V5H8v4zm5-4v4h4V5h-4zm5 9h3v-4h-3v4zm0-9v4h3V5h-3z"/></svg></button>
+      <button type="button" data-den="Compact" aria-pressed="true" title="Compact" aria-label="Compact">
+        <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/></svg></button>
+      <button type="button" data-den="Table" aria-pressed="false" title="Table" aria-label="Table">
+        <svg viewBox="0 0 24 24"><path d="M21 8H3V4h18v4zm0 2H3v4h18v-4zm0 6H3v4h18v-4z"/></svg></button>
+    </div>
+    <div class="sortwrap" id="sortwrap">
+      <button type="button" class="sortbtn" id="sortbtn" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><path d="M3 6h12v2H3zm0 5h9v2H3zm0 5h6v2H3zm15-9v9.2l3-3 1.4 1.4-5.4 5.4-5.4-5.4L13 12.2l3 3V7z"/></svg>
+        Sort by <span class="cur" id="sortcur">play order</span>
+      </button>
+      <div class="sortmenu" id="sortmenu" hidden role="menu"></div>
+    </div>
+    <span class="runnote" id="runnote"></span>
+  </div>
+  <div id="run"></div>
+
+  <h2 class="sec">Pace</h2>
+  <div class="tl">
+    <div class="tl-legend">
+      <span><i style="background:var(--mix-primary)"></i>Points per second</span>
+      <span><i style="background:var(--mix-accent)"></i>Session average</span>
+      <span style="color:var(--mix-muted)">Gaps are rest between charts</span>
+    </div>
+    <div class="tl-scroll"><svg id="tl" viewBox="0 0 1000 220" width="100%" height="220" role="img"
+      aria-label="Points per second across the 1 hour 45 minute session, with rest gaps between charts."></svg></div>
+  </div>
+
+  <p class="note" style="margin-top:22px">
+    <b>Two things this mock cannot show, by design.</b> Jacket art is served from an external host the
+    artifact sandbox blocks, so every jacket is a placeholder holding the real layout budget — on the site
+    the jacket is the identifier. And <b>downtime is derived, not measured</b>: today it is
+    <span class="num">1:45:00</span> minus how long your songs ran, which is why 82:56 of play and 22:04 of
+    rest add up to exactly the window. Slice 5's timestamps make it an observation instead.
+  </p>
+</div>
+
+<dialog class="chart" id="dlg" aria-labelledby="dlgtitle">
+  <div class="dlg-head" id="dlghead"></div>
+  <div class="dlg-body" id="dlgbody"></div>
+  <div class="dlg-actions"><button type="button" class="btn ghost" id="dlgclose">Close</button></div>
+</dialog>
+
+<script>
+  /* ==================================================================
+     All figures below are real, pulled from the local prod-synced SQL.
+     ================================================================== */
+
+  // 김재현's Winter 2025 Doubles session. [title, level, seconds, score, points, bonus, plate]
+  var RAW = [
+    ["Love is a Danger Zone pt. 2 - SHORT CUT -",23,58,973872,698,0,"FG"],
+    ["Slam",24,99,976489,1528,0,"FG"],
+    ["DUEL",24,111,955044,1442,0,"FG"],
+    ["Adrenaline Blaster",23,119,976959,1653,176,"TG"],
+    ["Queencard",22,102,991718,1154,0,"MG"],
+    ["Telling Fortune Flower",23,113,979705,1438,0,"MG"],
+    ["8 6 - FULL SONG -",23,266,962566,2990,0,"RG"],
+    ["FLVSH OUT",23,127,979784,1617,0,"TG"],
+    ["Pop Sequence",23,119,960218,1324,0,"RG"],
+    ["Final Audition Ep. 2-X",24,104,927315,1393,250,"RG"],
+    ["Meteo5cience (GADGET mix)",22,158,950141,1301,74,"RG"],
+    ["Point Break",23,101,971005,1183,0,"FG"],
+    ["Annihilator Method",24,110,958243,1493,0,"FG"],
+    ["Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI",22,121,972450,1152,0,"RG"],
+    ["Can-can ~Orpheus in The Party Mix~ - SHORT CUT -",25,51,952491,793,0,"FG"],
+    ["MEGAHEARTZ",25,120,902836,1380,0,"RG"],
+    ["Boca",25,129,915890,1635,0,"RG"],
+    ["Odin",23,127,976240,1565,0,"TG"],
+    ["Underworld ft. Skizzo (PIU Edit.)",23,111,984346,1472,0,"MG"],
+    ["Underworld ft. Skizzo (PIU Edit.)",25,111,941971,1611,0,"RG"],
+    ["GLORIA",25,116,945885,1711,0,"RG"],
+    ["Kokugen Kairou Labyrinth",26,112,906317,1625,0,"RG"],
+    ["BRAIN POWER",24,112,943862,1376,56,"RG"],
+    ["Tomboy",22,120,962577,1081,0,"RG"],
+    ["Goodtek",24,126,928890,1393,0,"RG"],
+    ["Leather",26,178,888018,2327,0,"RG"],
+    ["Perpetual",24,109,945530,1293,0,"FG"],
+    ["Big Daddy",23,122,964066,1380,0,"MG"],
+    ["Pirate",21,130,987859,1164,0,"MG"],
+    ["Darkside of The Mind",25,120,941887,1741,0,"RG"],
+    ["Break Through Myself feat. Risa Yuzuki",25,126,919911,1643,0,"RG"],
+    ["Jupin - SHORT CUT -",23,48,982585,626,0,"TG"],
+    ["MURDOCH",24,101,938435,1246,82,"RG"],
+    ["Papasito (feat.  KuTiNA) - FULL SONG -",23,245,974365,2966,0,"FG"],
+    ["Gargoyle - FULL SONG -",25,378,844710,3207,0,"RG"],
+    ["Nade Nade",24,122,950843,1492,0,"FG"],
+    ["Kasou Shinja",24,119,969602,1722,0,"TG"],
+    ["New Rose",23,119,960378,1325,0,"FG"],
+    ["Festival of Death Moon",23,116,953445,1179,0,"RG"]
+  ];
+
+  // The whole Winter 2025 Doubles board. [name, total, charts, avgDifficulty, restSecs, avgScore]
+  var BOARD = [
+    ["김재현",59319,39,24.22,1324,951755],["yimmythe42",57325,36,23.96,1619,958673],
+    ["tieny",52979,31,24.18,2105,963510],["Redviper",47940,31,23.41,2235,972857],
+    ["Elixir",38788,36,22.76,2195,960122],["Litenang",37495,36,23.17,1577,928867],
+    ["uhtreyu",37035,30,23.78,2611,941368],["Selofeals",31399,27,22.86,2207,927988],
+    ["Badkitty",26954,35,21.02,1985,950397],["Tink",25191,35,19.89,1844,961890],
+    ["Cherry",12688,32,18.43,2130,904722]
+  ];
+  var ME = BOARD[0];
+
+  // Charts each opponent also played. [title, level, myScore, myPts, theirScore, theirPts]
+  var SHARED = {
+    "yimmythe42":[["Gargoyle - FULL SONG -",25,844710,3207,924890,5099],["8 6 - FULL SONG -",23,962566,2990,977661,3321],["Festival of Death Moon",23,953445,1179,974697,1408],["Slam",24,976489,1528,983047,1622],["Break Through Myself feat. Risa Yuzuki",25,919911,1643,922230,1669],["Underworld ft. Skizzo (PIU Edit.)",25,941971,1611,941589,1608],["FLVSH OUT",23,979784,1617,979213,1608],["GLORIA",25,945885,1711,943963,1697],["Pop Sequence",23,960218,1324,958573,1298],["Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI",22,972450,1152,966636,1109],["Darkside of The Mind",25,941887,1741,924976,1619],["Big Daddy",23,964066,1380,946152,1161]],
+    "tieny":[["8 6 - FULL SONG -",23,962566,2990,981796,3449],["Perpetual",24,945530,1293,977318,1696],["Boca",25,915890,1635,951768,1986],["Nade Nade",24,950843,1492,970523,1778],["GLORIA",25,945885,1711,958126,1952],["Slam",24,976489,1528,982811,1619],["Telling Fortune Flower",23,979705,1438,981140,1456],["FLVSH OUT",23,979784,1617,975352,1552],["Adrenaline Blaster",23,976959,1653,964369,1509],["Gargoyle - FULL SONG -",25,844710,3207,786446,1377]],
+    "Redviper":[["Leather",26,888018,2327,904508,2547],["Perpetual",24,945530,1293,955330,1422],["Big Daddy",23,964066,1380,972913,1456],["Underworld ft. Skizzo (PIU Edit.)",23,984346,1472,985853,1491],["Can-can ~Orpheus in The Party Mix~ - SHORT CUT -",25,952491,793,952989,799],["Queencard",22,991718,1154,979251,1036]],
+    "Elixir":[["8 6 - FULL SONG -",23,962566,2990,955084,2767],["Telling Fortune Flower",23,979705,1438,958186,1226],["Nade Nade",24,950843,1492,903142,1133],["Point Break",23,971005,1183,934749,916],["Festival of Death Moon",23,953445,1179,945707,1102],["Tomboy",22,962577,1081,961037,1074],["Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI",22,972450,1152,968865,1119],["Can-can ~Orpheus in The Party Mix~ - SHORT CUT -",25,952491,793,936789,724],["Queencard",22,991718,1154,948839,786],["Love is a Danger Zone pt. 2 - SHORT CUT -",23,973872,698,962494,651]],
+    "Litenang":[["8 6 - FULL SONG -",23,962566,2990,949840,2569],["Pirate",21,987859,1164,987493,1160],["Odin",23,976240,1565,937714,1167],["Meteo5cience (GADGET mix)",22,950141,1301,924080,1161],["Underworld ft. Skizzo (PIU Edit.)",23,984346,1472,941355,1035],["Slam",24,976489,1528,926907,1085],["Nade Nade",24,950843,1492,893786,1075],["Tomboy",22,962577,1081,954818,997],["Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI",22,972450,1152,946785,925],["Queencard",22,991718,1154,953696,834],["Can-can ~Orpheus in The Party Mix~ - SHORT CUT -",25,952491,793,926186,692],["Jupin - SHORT CUT -",23,982585,626,938239,442]],
+    "uhtreyu":[["Slam",24,976489,1528,939288,1144],["Underworld ft. Skizzo (PIU Edit.)",23,984346,1472,956269,1173],["Nade Nade",24,950843,1492,900784,1112],["GLORIA",25,945885,1711,924061,1556],["Annihilator Method",24,958243,1493,942552,1289],["Point Break",23,971005,1183,946924,964],["Kokugen Kairou Labyrinth",26,906317,1625,897578,1530],["Tomboy",22,962577,1081,966397,1099],["Meteo5cience (GADGET mix)",22,950141,1301,949691,1297],["Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI",22,972450,1152,964525,1099]],
+    "Selofeals":[["Papasito (feat.  KuTiNA) - FULL SONG -",23,974365,2966,809725,942],["FLVSH OUT",23,979784,1617,938572,1171],["Odin",23,976240,1565,936017,1159],["8 6 - FULL SONG -",23,962566,2990,953488,2705],["Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI",22,972450,1152,951691,961],["Tomboy",22,962577,1081,967797,1105]],
+    "Badkitty":[["Pirate",21,987859,1164,944585,805],["Pneumonoultramicroscopicsilicovolcanoconiosis ft. Kagamine Len/GUMI",22,972450,1152,922459,829]],
+    "Tink":[],
+    "Cherry":[["8 6 - FULL SONG -",23,962566,2990,841115,1423]]
+  };
+
+  // His OTHER Doubles session — March of Murlocs 2, August 2024. Same mix, same chart type: the
+  // only lineage a season comparison may walk (D15).
+  var PRIOR = { name:"March of Murlocs 2", short:"MoM 2", when:"August 2024",
+                stats:[44139,32,24.63,2199,929644] };   // 24.63 balanced (24.13 by folder number)
+
+  // [title, nominal, seconds, score, pointsThen, levelInMoM2, levelInWinter2025]
+  var PRIOR_CHARTS = [
+    ["Chobit Flavor",24,113,938635,1290,24.5,24.513702204840666],
+    ["Pump me Amadeus",24,98,923654,1047,24.5,25.222064603513772],
+    ["Destr0yer",24,161,930409,1781,24.5,24.73058865912763],
+    ["Galaxy Collapse",24,124,909027,1128,24.5,25.5],
+    ["Imprinting",24,117,927040,1277,24.5,24.633222599285297],
+    ["Canon D - FULL SONG -",24,198,930880,2195,24.5,25.004943372690946],
+    ["Dignity",24,110,889258,851,24.5,25.5],
+    ["Allegro Con Fuoco - FULL SONG -",25,275,896718,2540,25.5,25.623592651907416],
+    ["BRAIN POWER",24,112,939830,1285,24.5,24.677471121464244],
+    ["MURDOCH",24,101,919830,1037,24.5,24.794983706029925],
+    ["Baroque Virus - FULL SONG -",23,318,979407,3861,23.5,23.5],
+    ["Love is a Danger Zone pt. 2",24,104,961337,1303,24.5,24.5],
+    ["R.I.P",24,127,927340,1388,24.5,24.5],
+    ["Uh-Heung",24,120,937515,1365,24.5,24.5],
+    ["Gun Rock",24,100,925521,1085,24.5,24.5],
+    ["Fire Noodle Challenge",25,150,875795,1254,25.5,25.5],
+    ["PRiMA MATERiA",24,127,936521,1439,24.5,24.5],
+    ["Horang Pungryuga",24,126,940987,1452,24.5,24.5],
+    ["Further",25,118,899473,1103,25.5,25.5],
+    ["Beethoven Virus",24,100,955432,1221,24.5,24.5],
+    ["MEGAHEARTZ",25,120,897306,1111,25.5,25.5],
+    ["Love is a Danger Zone pt. 2 - SHORT CUT -",23,58,976199,683,23.5,23.5],
+    ["Solfeggietto",25,105,897335,972,25.5,25.5],
+    ["Phalanx \"RS2018 edit\"",24,118,955034,1438,24.5,24.5],
+    ["Kasou Shinja",24,119,942707,1380,24.5,24.5],
+    ["The Quick Brown Fox Jumps Over The Lazy Dog",24,110,925720,1195,24.5,24.5],
+    ["Hercules",24,117,928554,1285,24.5,24.5],
+    ["ERRORCODE: 0",24,182,914721,1768,24.5,24.5],
+    ["Can-can ~Orpheus in The Party Mix~ - SHORT CUT -",25,51,938453,671,25.5,25.5],
+    ["Annihilator Method",24,110,940900,1267,24.5,24.5],
+    ["A Site De La Rue",24,99,943306,1151,24.5,24.5],
+    ["Vector",24,113,943765,1316,24.5,24.5]
+  ];
+
+  // The seven charts he played in BOTH seasons. [title, level, thenScore, thenPts, nowScore, nowPts]
+  var CROSS_SHARED = [
+    ["Kasou Shinja",24,942707,1380,969602,1722],
+    ["MURDOCH",24,919830,1037,938435,1246],
+    ["Annihilator Method",24,940900,1267,958243,1493],
+    ["Can-can ~Orpheus in The Party Mix~ - SHORT CUT -",25,938453,671,952491,793],
+    ["MEGAHEARTZ",25,897306,1111,902836,1380],
+    ["BRAIN POWER",24,939830,1285,943862,1376],
+    ["Love is a Danger Zone pt. 2 - SHORT CUT -",23,976199,683,973872,698]
+  ];
+
+  /* ---- the two seasons' frozen scoring configs, straight out of Tournament.Configuration ---- */
+  var CFG = {
+    mom2:   { LR:{20:650,21:760,22:930,23:1110,24:1300,25:1500,26:1710,27:1930},
+              G:{A:0.25,APlus:0.5,AA:0.75,AAPlus:1.0,AAA:1.1,AAAPlus:1.15,S:1.2,SPlus:1.26,SS:1.32,SSPlus:1.38,SSS:1.44,SSSPlus:1.5} },
+    w2025:  { LR:{20:650,21:760,22:930,23:1160,24:1450,25:1800,26:2210,27:2680},
+              G:{A:0,APlus:0.5,AA:0.75,AAPlus:0.9,AAA:1.0,AAAPlus:1.15,S:1.2,SPlus:1.26,SS:1.32,SSPlus:1.38,SSS:1.44,SSSPlus:1.5} }
+  };
+  // Phoenix 1 score→grade floors, from the ScoreRange attributes on PhoenixLetterGrade.
+  // NOT Phoenix 2's — P2 moved every floor below AAA.
+  var LADDER = [["F",0],["D",450000],["C",550000],["B",650000],["A",750000],["APlus",825000],
+                ["AA",900000],["AAPlus",925000],["AAA",950000],["AAAPlus",960000],["S",970000],
+                ["SPlus",975000],["SS",980000],["SSPlus",985000],["SSS",990000],["SSSPlus",995000]];
+  var LABEL = {APlus:"A+",AAPlus:"AA+",AAAPlus:"AAA+",SPlus:"S+",SSPlus:"SS+",SSSPlus:"SSS+"};
+  function gradeKey(score){
+    for (var i=LADDER.length-1;i>=0;i--) if (score>=LADDER[i][1]) return LADDER[i][0];
+    return "F";
+  }
+  function grade(score){ var k=gradeKey(score); return LABEL[k]||k; }
+  function gradeColor(g){
+    if (g[0]==="S") return "var(--rar-sapphire)";
+    if (g.indexOf("AAA")===0) return "var(--rar-gold)";
+    if (g.indexOf("AA")===0) return "var(--rar-silver)";
+    return "var(--rar-common)";
+  }
+  var PLATECOLOR = {RG:"var(--plate-copper)",FG:"var(--plate-copper)",TG:"var(--plate-silver)",
+                    MG:"var(--plate-silver)",EG:"var(--plate-gold)",UG:"var(--plate-ice)",PG:"var(--plate-ice)"};
+
+  // MoM runs a continuous grade scale, so a score between two rungs takes a modifier between
+  // the two rungs' — which is why a re-cut grade table moves every score, not just boundary ones.
+  function gradeModifier(cfg, score){
+    var k = gradeKey(score), i = 0;
+    for (var x=0;x<LADDER.length;x++) if (LADDER[x][0]===k) i=x;
+    var mod = cfg.G[k] !== undefined ? cfg.G[k] : 0;
+    if (i >= LADDER.length-1 || score >= 1000000) return mod;
+    var nextKey = LADDER[i+1][0], nextMod = cfg.G[nextKey] !== undefined ? cfg.G[nextKey] : mod;
+    return mod + (nextMod - mod) * (score - LADDER[i][1]) / (LADDER[i+1][1] - LADDER[i][1]);
+  }
+  // A snapshot of L+f (f in 0.5..1.5) interpolates between L and L+1, so L+0.5 pays exactly
+  // level L and L+1.5 pays the full next level (plan doc §4, §9.3).
+  function levelRating(cfg, nominal, eff){
+    var f = eff - nominal, a = cfg.LR[nominal], b = cfg.LR[nominal+1];
+    return a + (b - a) * (f - 0.5);
+  }
+  // points = level rating × song length against a 2-minute baseline × grade modifier.
+  // Verified against every stored row: Dignity 1300 × 110/120 × 0.71419 = 851, exactly as stored.
+  function pointsUnder(cfg, nominal, eff, secs, score){
+    return levelRating(cfg, nominal, eff) * (secs/120) * gradeModifier(cfg, score);
+  }
+
+  function mmss(sec){ var m=Math.floor(sec/60), s=Math.round(sec%60); return m+":"+(s<10?"0":"")+s; }
+  function n(v){ return v.toLocaleString("en-US"); }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); }
+  function ord(i){ return i + (["th","st","nd","rd"][(i%100-i%10!=10)*(i%10<4)*i%10] || "th"); }
+  function levelColor(l){
+    if (l<=21) return "var(--diff-easy)";
+    if (l<=22) return "var(--diff-medium)";
+    if (l<=24) return "var(--diff-hard)";
+    return "var(--diff-veryhard)";
+  }
+
+  var CHARTS = RAW.map(function(r,i){
+    return { ord:i+1, title:r[0], level:r[1], secs:r[2], score:r[3], pts:r[4], bonus:r[5],
+             plate:r[6], pps:r[4]/r[2] };
+  });
+  var seen={}; CHARTS.forEach(function(c){ if (seen[c.title]) c.repeat=true; seen[c.title]=1; });
+  var maxPps = Math.max.apply(null, CHARTS.map(function(c){return c.pps;}));
+
+  /* ================= where the points came from ================= */
+  function rankOf(vals, mine, lowerIsBetter){
+    return vals.slice().sort(function(a,b){ return lowerIsBetter?a-b:b-a; }).indexOf(mine)+1;
+  }
+  var LEVERS = [
+    { k:"Charts played", vals:BOARD.map(function(b){return b[2];}), mine:ME[2], fmt:n, better:"high" },
+    // Balanced difficulty, not the folder number: the season's frozen effective level is what
+    // actually priced each chart, so it is what the session was worth playing. It reads about half
+    // a level above the folder because a chart with no override sits at nominal + 0.5.
+    { k:"Avg difficulty", vals:BOARD.map(function(b){return b[3];}), mine:ME[3],
+      fmt:function(v){return v.toFixed(2);}, sub:function(){return "balanced for this season";},
+      better:"high" },
+    { k:"Avg grade", vals:BOARD.map(function(b){return b[5];}), mine:ME[5], fmt:grade,
+      sub:function(v){return n(Math.round(v))+" average score";}, better:"high" },
+    { k:"Downtime", vals:BOARD.map(function(b){return b[4];}), mine:ME[4], fmt:mmss, better:"low" }
+  ];
+  document.getElementById("levers").innerHTML = LEVERS.map(function(L){
+    var lo=Math.min.apply(null,L.vals), hi=Math.max.apply(null,L.vals);
+    var lowerBetter = L.better==="low", r = rankOf(L.vals,L.mine,lowerBetter);
+    var f = hi===lo?.5:(L.mine-lo)/(hi-lo);
+    var med = L.vals.slice().sort(function(a,b){return a-b;})[Math.floor(L.vals.length/2)];
+    var medF = hi===lo?.5:(med-lo)/(hi-lo);
+    var at = function(x){ return "calc(9px + (100% - 18px) * "+x.toFixed(4)+")"; };
+    var lead = r===1;
+    var verdict = lead ? (lowerBetter?"Least on this board":"Most on this board")
+                       : "<b>"+ord(r)+"</b> of "+L.vals.length+" on this board";
+    return '<div class="lever'+(lead?" lead":"")+'"><div class="k">'+L.k+'</div>'
+      + '<div class="v num">'+L.fmt(L.mine)+'</div>'
+      + (L.sub?'<div class="vsub">'+L.sub(L.mine)+'</div>':'')
+      + '<div class="rank">'+(lead?'<b>'+verdict+'</b>':verdict)+'</div>'
+      + '<div class="rail"><div class="track"><span class="med" style="left:'+at(medF)+'"></span>'
+      + '<span class="you" style="left:'+at(f)+'"></span></div>'
+      + '<div class="ends"><span>'+L.fmt(lo)+'</span><span>'+L.fmt(hi)+'</span></div></div></div>';
+  }).join("");
+
+  /* ================= compare ================= */
+  var sel = document.getElementById("cmpsel"), mode = "board";
+
+  function fillSelect(){
+    sel.innerHTML = "";
+    if (mode==="board"){
+      BOARD.slice(1).forEach(function(b,i){
+        var o=document.createElement("option");
+        o.value=i+1; o.textContent=ord(i+2)+" — "+b[0]+" ("+n(b[1])+")";
+        sel.appendChild(o);
+      });
+      sel.value="1";
+      document.getElementById("cmpscope").textContent = "Same board only — Singles and Doubles are never compared.";
+    } else {
+      var o=document.createElement("option");
+      o.value="prior"; o.textContent=PRIOR.name+" — "+PRIOR.when+" ("+n(PRIOR.stats[0])+")";
+      sel.appendChild(o);
+      document.getElementById("cmpscope").textContent = "Your Doubles sessions on Phoenix only — another chart type or mix is a different sport.";
+    }
+  }
+
+  function drawCompare(){
+    var them = mode==="board" ? BOARD[parseInt(sel.value,10)] : [PRIOR.short].concat(PRIOR.stats);
+    var cells = [
+      { k:"Charts played", a:ME[2], b:them[2], fmt:n, better:"high" },
+      { k:"Avg difficulty", a:ME[3], b:them[3], fmt:function(v){return v.toFixed(2);}, better:"high" },
+      { k:"Avg grade", a:ME[5], b:them[5], fmt:grade, better:"high", raw:true },
+      { k:"Downtime", a:ME[4], b:them[4], fmt:mmss, better:"low" }
+    ];
+    document.getElementById("cmpgrid").innerHTML = cells.map(function(c){
+      var diff=c.a-c.b, good = c.better==="low" ? diff<0 : diff>0;
+      var cls = diff===0?"flat":(good?"up":"down");
+      var shown = diff===0 ? "even"
+        : c.raw ? (diff>0?"+":"")+n(Math.round(diff))
+        : (diff>0?"+":"-")+c.fmt(Math.abs(diff)).replace("-","");
+      return '<div class="cmp-cell"><div class="k">'+c.k+'</div>'
+        + '<div class="cmp-row"><span class="who">김재현</span><span class="val num">'+c.fmt(c.a)+'</span>'
+        + '<span class="delta '+cls+'">'+shown+'</span></div>'
+        + '<div class="cmp-row"><span class="who">'+esc(them[0])+'</span>'
+        + '<span class="val num" style="color:var(--mix-muted)">'+c.fmt(c.b)+'</span></div></div>';
+    }).join("");
+
+    var dc=ME[2]-them[2], dd=ME[3]-them[3], dr=them[4]-ME[4], dg=ME[5]-them[5], parts=[];
+    if (dc!==0) parts.push("<b>"+Math.abs(dc)+" "+(dc>0?"more":"fewer")+" charts</b>");
+    if (Math.abs(dd)>=0.05) parts.push("<b>"+Math.abs(dd).toFixed(2)+" "+(dd>0?"harder":"easier")+"</b> on average");
+    if (Math.abs(dr)>=30) parts.push("<b>"+mmss(Math.abs(dr))+" "+(dr>0?"less":"more")+"</b> downtime");
+    if (Math.abs(dg)>=1000) parts.push("<b>"+n(Math.abs(Math.round(dg)))+" "+(dg>0?"higher":"lower")+"</b> average score");
+    var phrase = parts.length===0 ? "no meaningful difference"
+      : parts.length===1 ? parts[0]
+      : parts.slice(0,-1).join(", ")+" and "+parts[parts.length-1];
+    document.getElementById("cmpverdict").innerHTML = "Against "+esc(them[0])+", "+phrase
+      + " — worth <b>"+(ME[1]-them[1]>0?"+":"")+n(ME[1]-them[1])+" points</b>.";
+
+    document.getElementById("h2h").innerHTML = mode==="board"
+      ? h2hHtml(them[0], SHARED[them[0]]||[], them[0])
+      : h2hHtml(PRIOR.name, CROSS_SHARED.map(function(c){return [c[0],c[1],c[4],c[5],c[2],c[3]];}), PRIOR.short);
+    document.getElementById("rebase").innerHTML = mode==="season" ? ledgerHtml() : "";
+  }
+
+  // The charts both sessions contain. A total says who won; this says where.
+  function h2hHtml(whoLabel, rows, shortLabel){
+    if (!rows.length){
+      return '<div class="h2h"><h3>Charts you both played</h3>'
+        + '<p class="lede">Nothing in common — '+esc(whoLabel)+' picked an entirely different set.</p></div>';
+    }
+    var wins = rows.filter(function(r){ return r[2] > r[4]; }).length;
+    var sorted = rows.slice().sort(function(a,b){ return (b[5]-b[3]) - (a[5]-a[3]); });
+    var body = sorted.map(function(r){
+      var mine=r[2], theirs=r[4], myPts=r[3], theirPts=r[5];
+      var d = myPts-theirPts, iWin = mine>theirs;
+      return '<div class="h2hrow">'
+        + '<span class="bub" style="background:'+levelColor(r[1])+';width:30px;height:20px;font-size:12px">D'+r[1]+'</span>'
+        + '<span class="nm" title="'+esc(r[0])+'">'+esc(r[0])+'</span>'
+        + '<span class="sc"><span style="color:'+(iWin?"var(--rar-emerald)":"var(--mix-ink)")+'">'+n(mine)+'</span>'
+          + '<small>you · '+n(myPts)+' pts</small></span>'
+        + '<span class="sc"><span style="color:'+(!iWin?"var(--rar-emerald)":"var(--mix-muted)")+'">'+n(theirs)+'</span>'
+          + '<small>'+esc(shortLabel)+' · '+n(theirPts)+' pts</small></span>'
+        + '<span class="win '+(d>0?"up":d<0?"down":"flat")+'">'+(d>0?"+":"")+n(d)+'</span></div>';
+    }).join("");
+    // Rows lead with the charts that cost the most ground, so sorted[0] is the widest gap
+    // against you — not sorted[last], which is your best chart of the set.
+    var worst = sorted[0], swing = worst ? (worst[3]-worst[5]) : 0;
+    return '<div class="h2h"><h3>Charts you both played</h3>'
+      + '<p class="lede">'+rows.length+' in common, worst first. You scored higher on <b>'+wins+'</b> of them'
+      + (swing < 0 ? ', and <b>'+esc(worst[0])+'</b> alone cost you '+n(Math.abs(swing))+' points.' : '.')
+      + '</p>' + body + '</div>';
+  }
+
+  // A cross-season delta carries a confound a same-board delta does not: BOTH the chart balance
+  // and the scoring rules were re-frozen between the two seasons. Re-pricing the old session under
+  // the new season's config splits the difference into what changed underneath and what you did.
+  function ledgerHtml(){
+    var then=0, balanceOnly=0, rulesOnly=0, now=0, moved=[];
+    PRIOR_CHARTS.forEach(function(c){
+      var nom=c[1], secs=c[2], score=c[3], oldEff=c[5], newEff=c[6];
+      var a = pointsUnder(CFG.mom2,  nom, oldEff, secs, score);   // as it scored then
+      var b = pointsUnder(CFG.mom2,  nom, newEff, secs, score);   // new snapshot only
+      var d = pointsUnder(CFG.w2025, nom, oldEff, secs, score);   // new rules only
+      var e = pointsUnder(CFG.w2025, nom, newEff, secs, score);   // both
+      then+=a; balanceOnly+=b-a; rulesOnly+=d-a; now+=e;
+      if (Math.abs(newEff-oldEff) > 0.001) moved.push({title:c[0], from:oldEff, to:newEff, gain:b-a});
+    });
+    moved.sort(function(a,b){ return b.gain-a.gain; });
+    var rebased = PRIOR.stats[0] + (now - then);       // anchor on the stored total
+    var you = ME[1] - rebased;
+    var sg = function(v){ return (v>0?"+":"")+n(Math.round(v)); };
+    var cls = function(v){ return v>0?"up":v<0?"down":"flat"; };
+
+    return '<div class="ledger"><h3>What changed underneath you</h3>'
+      + '<p class="why">Every season freezes its own chart balance <em>and</em> its own scoring'
+      + ' tables at creation, so the same session is worth different totals in different seasons.'
+      + ' Re-pricing your ' + esc(PRIOR.name) + ' session — the same ' + PRIOR.stats[1] + ' charts,'
+      + ' the same scores — under Winter 2025 separates what moved underneath you from what you earned.</p>'
+      + '<div class="lrow"><span class="lbl">'+esc(PRIOR.name)
+        + '<small>'+PRIOR.when+', as it scored then</small></span>'
+        + '<span class="amt num">'+n(PRIOR.stats[0])+'</span><span class="chg"></span></div>'
+      + '<div class="lrow sub"><span class="lbl">Charts re-rated by the community</span>'
+        + '<span class="amt num"></span><span class="chg '+cls(balanceOnly)+'">'+sg(balanceOnly)+'</span></div>'
+      + '<div class="lrow sub"><span class="lbl">Scoring tables re-cut'
+        + '<small>the two multiply, so they come to more together than apart</small></span>'
+        + '<span class="amt num"></span><span class="chg '+cls(rulesOnly)+'">'+sg(rulesOnly)+'</span></div>'
+      + '<div class="lrow"><span class="lbl">The same session, scored as Winter 2025'
+        + '<small>'+moved.length+' of '+PRIOR.stats[1]+' charts re-rated; every level 23+ rating raised and the grade table tightened</small></span>'
+        + '<span class="amt num">'+n(Math.round(rebased))+'</span>'
+        + '<span class="chg '+cls(now-then)+'">'+sg(now-then)+' total</span></div>'
+      + '<div class="lrow total"><span class="lbl">Winter 2025<small>February 2025, this session</small></span>'
+        + '<span class="amt num">'+n(ME[1])+'</span>'
+        + '<span class="chg '+cls(you)+'">'+sg(you)+' you</span></div>'
+      + '<details class="disc"><summary>'+moved.length+' re-rated charts</summary>'
+      + moved.map(function(m){
+          return '<div class="rrow"><span>'+esc(m.title)+'</span>'
+            + '<span class="mv num">'+m.from.toFixed(2)+' → <b>'+m.to.toFixed(2)+'</b></span>'
+            + '<span class="gain '+cls(m.gain)+'">'+sg(m.gain)+'</span></div>';
+        }).join("")
+      + '</details>'
+      + '<details class="disc"><summary>what the scoring tables did</summary>'
+      + '<div class="rrow"><span>Level 23 rating</span><span class="mv num">1,110 → <b>1,160</b></span><span class="gain up">+4.5%</span></div>'
+      + '<div class="rrow"><span>Level 24 rating</span><span class="mv num">1,300 → <b>1,450</b></span><span class="gain up">+11.5%</span></div>'
+      + '<div class="rrow"><span>Level 25 rating</span><span class="mv num">1,500 → <b>1,800</b></span><span class="gain up">+20.0%</span></div>'
+      + '<div class="rrow"><span>Level 26 rating</span><span class="mv num">1,710 → <b>2,210</b></span><span class="gain up">+29.2%</span></div>'
+      + '<div class="rrow"><span>AAA multiplier</span><span class="mv num">1.10 → <b>1.00</b></span><span class="gain down">−9.1%</span></div>'
+      + '<div class="rrow"><span>AA+ multiplier</span><span class="mv num">1.00 → <b>0.90</b></span><span class="gain down">−10.0%</span></div>'
+      + '<div class="rrow"><span>A multiplier</span><span class="mv num">0.25 → <b>0.00</b></span><span class="gain down">zeroed</span></div>'
+      + '</details></div>';
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.cmp-head .segmented button'), function(btn){
+    btn.addEventListener("click", function(){
+      mode = btn.dataset.mode;
+      Array.prototype.forEach.call(document.querySelectorAll('.cmp-head .segmented button'), function(b){
+        b.setAttribute("aria-pressed", String(b===btn));
+      });
+      fillSelect(); drawCompare();
+    });
+  });
+  sel.addEventListener("change", drawCompare);
+  fillSelect(); drawCompare();
+
+  /* ================= the session ================= */
+  var SORTS = [
+    { key:"ord",  label:"Play order", note:"As played, first to last." },
+    { key:"pts",  label:"Points",     note:"Biggest single scores — the long songs win, which is not the same as being efficient." },
+    { key:"pps",  label:"Points per second", note:"Points banked per second of song. Short cuts top this list; Gargoyle sits near the bottom despite being the session's biggest score." },
+    { key:"level",label:"Difficulty",  note:"Hardest first." },
+    { key:"score",label:"Score",      note:"Cleanest play first." }
+  ];
+  var density = "Compact", sortKey = "ord";
+
+  function sorted(){
+    var l = CHARTS.slice();
+    if (sortKey==="pts")   l.sort(function(a,b){return b.pts-a.pts;});
+    if (sortKey==="pps")   l.sort(function(a,b){return b.pps-a.pps;});
+    if (sortKey==="level") l.sort(function(a,b){return b.level-a.level || b.pts-a.pts;});
+    if (sortKey==="score") l.sort(function(a,b){return b.score-a.score;});
+    return l;
+  }
+  function sortMeta(){ return SORTS.filter(function(s){return s.key===sortKey;})[0]; }
+
+  function gradeSpan(c, size){
+    var g = grade(c.score);
+    return '<span class="gradeicon" style="color:'+gradeColor(g)+';font-size:'+size+'px">'+g+'</span>';
+  }
+  function plateSpan(c){
+    return '<span class="plate" style="color:'+(PLATECOLOR[c.plate]||"var(--rar-common)")+'">'+c.plate+'</span>';
+  }
+
+  function renderComfortable(list){
+    return '<div class="cards">' + list.map(function(c){
+      return '<div class="ccard">'
+        + '<div class="ccard-jacket" role="button" tabindex="0" data-open="'+c.ord+'" aria-label="Open '+esc(c.title)+'">'
+          + '<span class="jacket">ART</span>'
+          + '<span class="bub" style="background:'+levelColor(c.level)+'">D'+c.level+'</span>'
+          + '<span class="ccard-ord num">'+c.ord+'</span>'
+          + '<button type="button" class="playbtn" data-play="'+c.ord+'" aria-label="Play video for '+esc(c.title)+'">'
+            + '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>'
+        + '</div>'
+        + '<div class="ccard-body">'
+          + '<div class="ccard-name" title="'+esc(c.title)+'">'+esc(c.title)+'</div>'
+          + '<div class="ccard-meta">'+gradeSpan(c,17)+plateSpan(c)
+            + '<span class="num" style="color:var(--mix-muted);font-size:12.5px">'+n(c.score)+'</span></div>'
+          + '<div class="ccard-meta"><span class="ccard-pts num">'+n(c.pts)+'</span>'
+            + '<span class="ccard-sub">pts · '+c.pps.toFixed(1)+' pps · '+mmss(c.secs)+'</span></div>'
+          + (c.bonus?'<div class="ccard-sub" style="color:var(--mix-accent)">+'+c.bonus+' chart bonus</div>':'')
+        + '</div></div>';
+    }).join("") + '</div>';
+  }
+
+  function renderCompact(list){
+    // One printed value per sticker, and the value is the MoM score — the points this chart
+    // put on the board, which is the currency the whole page is denominated in. The PIU score
+    // is not it: the grade in the other corner already says how cleanly it was played.
+    // When the list is ranked by something the sticker does not show, that value joins as a
+    // second line, so Compact never sorts by an invisible number.
+    var extra = { pps:function(c){return c.pps.toFixed(1)+" pps";},
+                  score:function(c){return n(c.score);} }[sortKey];
+    return '<div class="stickers">' + list.map(function(c){
+      return '<button type="button" class="sticker" data-open="'+c.ord+'" title="'+esc(c.title)
+          + ' · '+n(c.pts)+' pts · '+n(c.score)+' · '+c.pps.toFixed(1)+' pps">'
+        + '<span class="jacket">ART</span>'
+        + '<span class="bub" style="background:'+levelColor(c.level)+'">D'+c.level+'</span>'
+        + '<span class="corner-start">'+gradeSpan(c,12)+'</span>'
+        + '<span class="corner">'+n(c.pts)
+          + (extra?'<span class="corner-2">'+extra(c)+'</span>':'')+'</span>'
+        + '</button>';
+    }).join("") + '</div>';
+  }
+
+  function renderTable(list){
+    var cols = [["level","Chart"],["score","Score"],["pts","Points"],["pps","PPS"]];
+    var head = '<th><button type="button" data-sort="level">Chart</button></th>'
+      + '<th><button type="button" data-sort="score">Grade &amp; score</button></th>'
+      + '<th class="t-r"><button type="button" data-sort="pts">Points</button></th>'
+      + '<th class="t-r col-pps"><button type="button" data-sort="pps">PPS</button></th>'
+      + '<th class="t-r col-pps"><button type="button" data-sort="ord">Length</button></th>';
+    var body = list.map(function(c){
+      return '<tr data-open="'+c.ord+'" title="'+esc(c.title)+' · '+n(c.score)+'">'
+        + '<td><span class="t-ident"><span class="jacket">ART</span>'
+          + '<span class="bub" style="background:'+levelColor(c.level)+'">D'+c.level+'</span>'
+          + '<span class="t-name">'+esc(c.title)+(c.repeat?' <span style="color:var(--rar-sapphire);font-size:11px">2nd chart, same song</span>':'')+'</span></span></td>'
+        + '<td><span class="t-grade">'+gradeSpan(c,16)+plateSpan(c)
+          + '<span class="t-score num">'+n(c.score)+'</span></span></td>'
+        + '<td class="t-r num" style="font-family:var(--display);font-size:17px;font-weight:600">'+n(c.pts)
+          + (c.bonus?'<span style="color:var(--mix-accent);font-size:11px"> +'+c.bonus+'</span>':'')+'</td>'
+        + '<td class="t-r num col-pps">'+c.pps.toFixed(1)+'</td>'
+        + '<td class="t-r num col-pps" style="color:var(--mix-muted)">'+mmss(c.secs)+'</td></tr>';
+    }).join("");
+    return '<div class="tablewrap"><table class="run"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>';
+  }
+
+  function drawRun(){
+    var list = sorted();
+    document.getElementById("run").innerHTML =
+      density==="Comfortable" ? renderComfortable(list)
+      : density==="Table" ? renderTable(list)
+      : renderCompact(list);
+    document.getElementById("runnote").textContent = sortMeta().note;
+    // Table sorts from its own headers, so the popover would be a second control for one job.
+    document.getElementById("sortwrap").style.display = density==="Table" ? "none" : "";
+    document.getElementById("sortcur").textContent = sortMeta().label.toLowerCase();
+    if (density==="Table"){
+      var th = document.querySelectorAll("table.run th");
+      Array.prototype.forEach.call(th, function(h){
+        var b = h.querySelector("button");
+        if (b && b.dataset.sort===sortKey) h.setAttribute("aria-sort","descending");
+        else h.removeAttribute("aria-sort");
+      });
+    }
+  }
+
+  document.getElementById("sortmenu").innerHTML = SORTS.map(function(s){
+    return '<button type="button" role="menuitem" data-sort="'+s.key+'">'
+      + '<span class="tick" data-tick="'+s.key+'"></span>'+s.label+'</button>';
+  }).join("");
+
+  function paintTicks(){
+    Array.prototype.forEach.call(document.querySelectorAll("[data-tick]"), function(t){
+      t.textContent = t.dataset.tick===sortKey ? "✓" : "";
+    });
+  }
+  paintTicks();
+
+  var sortbtn = document.getElementById("sortbtn"), sortmenu = document.getElementById("sortmenu");
+  function closeMenu(){ sortmenu.hidden = true; sortbtn.setAttribute("aria-expanded","false"); }
+  sortbtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    sortmenu.hidden = !sortmenu.hidden;
+    sortbtn.setAttribute("aria-expanded", String(!sortmenu.hidden));
+  });
+  document.addEventListener("click", function(e){
+    if (!sortmenu.hidden && !sortmenu.contains(e.target)) closeMenu();
+  });
+  document.addEventListener("keydown", function(e){ if (e.key==="Escape") closeMenu(); });
+
+  // One delegated listener for every sort trigger — the popover's items and, in Table, the
+  // column headers. Re-rendering the session replaces those headers, so binding them directly
+  // would go stale on the first sort.
+  document.addEventListener("click", function(e){
+    var t = e.target.closest ? e.target.closest("[data-sort]") : null;
+    if (!t) return;
+    sortKey = t.dataset.sort; paintTicks(); closeMenu(); drawRun();
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.denbtns button'), function(btn){
+    btn.addEventListener("click", function(){
+      density = btn.dataset.den;
+      Array.prototype.forEach.call(document.querySelectorAll('.denbtns button'), function(b){
+        b.setAttribute("aria-pressed", String(b===btn));
+      });
+      drawRun();
+    });
+  });
+  drawRun();
+
+  /* ================= chart dialog ================= */
+  // The jacket and the play button open the SAME dialog; only the play button autoplays —
+  // the pattern ChartDetailsDialog already runs on (Pumbility.razor's AutoPlay binding).
+  var dlg = document.getElementById("dlg");
+  function openChart(ordinal, autoplay){
+    var c = CHARTS.filter(function(x){return x.ord===ordinal;})[0];
+    if (!c) return;
+    document.getElementById("dlghead").innerHTML =
+      '<span class="bub" style="background:'+levelColor(c.level)+'">D'+c.level+'</span>'
+      + '<span class="dlg-title" id="dlgtitle">'+esc(c.title)+'</span>';
+    document.getElementById("dlgbody").innerHTML =
+      '<div class="dlg-video">'+(autoplay
+        ? "▶ Chart video would autoplay here — the play button and the jacket open this same dialog, the button just starts it."
+        : "Chart video — press play. External embeds are blocked in this sandbox.")+'</div>'
+      + '<div class="dlg-stats">'
+      + '<div class="dlg-stat"><div class="k">Score</div><div class="v">'+n(c.score)+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Grade</div><div class="v" style="color:'+gradeColor(grade(c.score))+'">'+grade(c.score)+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Plate</div><div class="v" style="color:'+(PLATECOLOR[c.plate]||"")+'">'+c.plate+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Points</div><div class="v">'+n(c.pts)+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Per second</div><div class="v">'+c.pps.toFixed(1)+'</div></div>'
+      + '<div class="dlg-stat"><div class="k">Length</div><div class="v">'+mmss(c.secs)+'</div></div>'
+      + '</div>'
+      + (c.bonus?'<p style="margin:0;font-size:12.5px;color:var(--mix-accent)">+'+c.bonus+' chart bonus for playing level 22 or above.</p>':'')
+      + '<p style="margin:0;font-size:12.5px;color:var(--mix-muted)">Played '+ord(c.ord)+' of 39 in this session.</p>';
+    if (!dlg.open) dlg.showModal();
+  }
+  document.addEventListener("click", function(e){
+    var play = e.target.closest ? e.target.closest("[data-play]") : null;
+    if (play){ e.stopPropagation(); openChart(parseInt(play.dataset.play,10), true); return; }
+    var open = e.target.closest ? e.target.closest("[data-open]") : null;
+    if (open) openChart(parseInt(open.dataset.open,10), false);
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key!=="Enter" && e.key!==" ") return;
+    var open = e.target.closest ? e.target.closest("[data-open]") : null;
+    if (open && open.getAttribute("role")==="button"){ e.preventDefault(); openChart(parseInt(open.dataset.open,10), false); }
+  });
+  document.getElementById("dlgclose").addEventListener("click", function(){ dlg.close(); });
+
+  /* ================= pace ================= */
+  (function(){
+    var W=1000,H=220,PL=42,PR=12,PT=12,PB=26;
+    var restEach = ME[4]/(CHARTS.length-1), t=0, segs=[];
+    CHARTS.forEach(function(c,i){
+      segs.push({x0:t,x1:t+c.secs,y:c.pps,c:c});
+      t += c.secs + (i<CHARTS.length-1?restEach:0);
+    });
+    var total=t, maxY=Math.ceil(maxPps/5)*5;
+    var sx=function(v){return PL+v/total*(W-PL-PR);}, sy=function(v){return H-PB-v/maxY*(H-PT-PB);};
+    var avg = CHARTS.reduce(function(a,c){return a+c.pts;},0)/total;
+    var out="";
+    for (var g=0;g<=maxY;g+=5){
+      out += '<line x1="'+PL+'" y1="'+sy(g)+'" x2="'+(W-PR)+'" y2="'+sy(g)+'" stroke="rgba(233,239,247,.09)"/>'
+           + '<text x="'+(PL-7)+'" y="'+(sy(g)+4)+'" fill="#93A3B8" font-size="11" text-anchor="end">'+g+'</text>';
+    }
+    for (var m=0;m<=105;m+=15){
+      out += '<text x="'+sx(m*60)+'" y="'+(H-7)+'" fill="#93A3B8" font-size="11" text-anchor="middle">'+m+'m</text>';
+    }
+    out += '<line x1="'+PL+'" y1="'+sy(avg)+'" x2="'+(W-PR)+'" y2="'+sy(avg)+'" stroke="#FFD24A" stroke-width="1.5" stroke-dasharray="5 4" opacity=".85"/>';
+    segs.forEach(function(s){
+      var w=Math.max(sx(s.x1)-sx(s.x0),1.5);
+      out += '<rect x="'+sx(s.x0)+'" y="'+sy(s.y)+'" width="'+w+'" height="'+(sy(0)-sy(s.y))+'" fill="#3FA9F5" opacity=".22"/>'
+           + '<line x1="'+sx(s.x0)+'" y1="'+sy(s.y)+'" x2="'+sx(s.x1)+'" y2="'+sy(s.y)+'" stroke="#3FA9F5" stroke-width="2.5"><title>'
+           + esc(s.c.title)+' · D'+s.c.level+' · '+s.c.pps.toFixed(1)+' pps</title></line>';
+    });
+    out += '<text x="'+(W-PR)+'" y="'+(sy(avg)-6)+'" fill="#FFD24A" font-size="11" text-anchor="end">avg '+avg.toFixed(2)+' pps</text>';
+    document.getElementById("tl").innerHTML = out;
+  })();
+</script>
