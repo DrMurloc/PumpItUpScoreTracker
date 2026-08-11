@@ -1,4 +1,4 @@
-﻿/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
    Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
    (see --font-display), which keeps mixed-script headings from going anemic. */
 @font-face {
@@ -2037,10 +2037,6 @@ html.sheet-open .more-sheet-scrim {
 
 .tier-chart-card-extra {
     margin-top: 2px;
-}
-
-.tier-chart-card-skeleton {
-    border-radius: 8px;
 }
 
 .tier-chart-card-lens-dot {

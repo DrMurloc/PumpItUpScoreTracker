@@ -1485,6 +1485,12 @@
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>singles compétitif, tous joueurs PIUScores</value>
   </data>
+  <data name="Compiling your personalized breakdown." xml:space="preserve">
+    <value>Compilation du détail de la personnalisation.</value>
+  </data>
+  <data name="Compiling your personalized tier list." xml:space="preserve">
+    <value>Compilation de ta Tier List personnalisée.</value>
+  </data>
   <data name="Completed" xml:space="preserve">
     <value>Terminé</value>
   </data>
@@ -7589,12 +7595,6 @@
   </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>Calcul de ce que cette session a changé : vos titres, votre pool, et la place de chaque score parmi les joueurs de votre niveau.</value>
-  </data>
-  <data name="Working out what went into your version of this folder, and which charts it moved." xml:space="preserve">
-    <value>Calcul de ce qui compose ta version de ce dossier, et des charts qu'elle a déplacés.</value>
-  </data>
-  <data name="Working out where this folder sits for you. That means reading everyone near your level who has played it." xml:space="preserve">
-    <value>Calcul de la place de ce dossier pour toi. Cela consulte tous les joueurs de ton niveau qui l'ont joué.</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>Calcul de tes projections. Cela consulte quelques centaines de joueurs de ton niveau, donc ça prend un moment.</value>

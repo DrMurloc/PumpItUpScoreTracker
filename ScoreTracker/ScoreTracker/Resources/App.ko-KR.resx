@@ -1474,6 +1474,12 @@
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>싱글 경쟁 레벨 (PIUScores 전체)</value>
   </data>
+  <data name="Compiling your personalized breakdown." xml:space="preserve">
+    <value>개인화 분석을 만드는 중입니다.</value>
+  </data>
+  <data name="Compiling your personalized tier list." xml:space="preserve">
+    <value>개인화된 티어리스트를 만드는 중입니다.</value>
+  </data>
   <data name="Completed" xml:space="preserve">
     <value>완료</value>
   </data>
@@ -7526,12 +7532,6 @@
   </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>이 세션이 무엇을 움직였는지 계산 중 — 칭호, 풀, 그리고 동급 플레이어 사이에서 각 점수의 위치.</value>
-  </data>
-  <data name="Working out what went into your version of this folder, and which charts it moved." xml:space="preserve">
-    <value>이 폴더의 내 버전에 무엇이 들어갔고 어떤 채보가 움직였는지 계산하는 중입니다.</value>
-  </data>
-  <data name="Working out where this folder sits for you. That means reading everyone near your level who has played it." xml:space="preserve">
-    <value>이 폴더가 내게 어느 정도인지 계산하는 중입니다. 비슷한 레벨에서 이를 플레이한 모든 사람을 참조합니다.</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>예상치를 계산하는 중입니다. 비슷한 레벨의 플레이어 수백 명을 참조하므로 잠시 걸립니다.</value>

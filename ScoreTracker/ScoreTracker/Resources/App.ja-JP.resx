@@ -1485,6 +1485,12 @@
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>シングル競争力（PIUScores全体）</value>
   </data>
+  <data name="Compiling your personalized breakdown." xml:space="preserve">
+    <value>パーソナライズの内訳を作成しています。</value>
+  </data>
+  <data name="Compiling your personalized tier list." xml:space="preserve">
+    <value>パーソナライズされたティアリストを作成しています。</value>
+  </data>
   <data name="Completed" xml:space="preserve">
     <value>完了</value>
   </data>
@@ -7590,12 +7596,6 @@
   </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>このセッションが動かしたものを計算中 — 称号、プール、そして同レベル帯での各スコアの位置。</value>
-  </data>
-  <data name="Working out what went into your version of this folder, and which charts it moved." xml:space="preserve">
-    <value>このフォルダーのあなた専用版に何が入ったか、どの譜面が動いたかを計算しています。</value>
-  </data>
-  <data name="Working out where this folder sits for you. That means reading everyone near your level who has played it." xml:space="preserve">
-    <value>このフォルダーがあなたにとってどうかを計算しています。同水準でこれをプレイした全員を参照します。</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>予測を計算しています。同水準のプレイヤー数百人を参照するため、少し時間がかかります。</value>
