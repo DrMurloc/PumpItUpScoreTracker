@@ -177,10 +177,10 @@ public sealed class PersonalizedBreakdownHandlerTests
 
         var result = await handler.Handle(Query("Score", Guid.NewGuid()), CancellationToken.None);
 
-        // Scores x2 + Official Scores x1 on the community side, and the projection carrying the
-        // whole personal side at the weight Skill and Similar Players used to split between them.
-        Assert.Equal(3, result.CommunityWeight);
-        Assert.Equal(3, result.ProjectionWeight);
+        // The projection is the whole recipe: no community share, and neither of the two
+        // personal sources it replaced.
+        Assert.Equal(1, result.ProjectionWeight);
+        Assert.Equal(0, result.CommunityWeight);
         Assert.Equal(0, result.SkillWeight);
         Assert.Equal(0, result.SimilarPlayersWeight);
     }

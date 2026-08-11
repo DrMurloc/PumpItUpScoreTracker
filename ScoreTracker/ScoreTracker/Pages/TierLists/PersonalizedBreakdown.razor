@@ -102,6 +102,11 @@ else
                     <span class="bd-w-projection" style="flex:@_breakdown.ProjectionWeight"></span>
                 </div>
                 <div class="bd-recipe-cards">
+                    @* Every card follows its own weight, the community one included: Score's
+                       personalized recipe is the projection alone, so there is no community
+                       vote to describe there. *@
+                    @if (_breakdown.CommunityWeight > 0)
+                    {
                     <div class="bd-card">
                         <div class="bd-card-head">
                             <MudText Typo="Typo.subtitle1">@L["Community Tier List"]</MudText>
@@ -113,6 +118,7 @@ else
                             <span>@L["{0} / {1} charts rated", CommunityRatedCount, _breakdown.Charts.Count]</span>
                         </div>
                     </div>
+                    }
                     @* The personal sources differ by lens, so each card follows its own weight
                        rather than a hardcoded lens name — if the recipe changes, the page does
                        too instead of describing a blend that no longer runs. *@

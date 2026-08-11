@@ -63,14 +63,19 @@ internal sealed class PersonalizedBreakdownHandler
     {
         var computation = await _builder.Compute(request.ChartType, request.Level, lens, userId, request.Mix,
             cancellationToken);
-        var communityModifiers = computation.Modifiers
-            .Where(kv => TierListBlendBuilder.IsStoredSource(kv.Key))
-            .ToDictionary(kv => kv.Key, kv => kv.Value);
+        // The community column is the Community VIEW, computed as such, rather than the
+        // personalized recipe filtered down to its stored sources. Since Score's personalized
+        // recipe is the projection alone, that filter now yields nothing — the column, and with
+        // it the whole moved-charts diff this page exists for, would have gone blank. Two
+        // computations on a page that is cached for six hours and read far less than the tier
+        // list itself.
+        var community = await _builder.Compute(request.ChartType, request.Level, lens, null, request.Mix,
+            cancellationToken);
 
         var charts = computation.FolderCharts
             .Select(c => new BreakdownChartRecord(
                 c.Id,
-                TierListBlendBuilder.Combine("Community", c.Id, computation.Sources, communityModifiers)
+                TierListBlendBuilder.Combine("Community", c.Id, community.Sources, community.Modifiers)
                     .Category,
                 TierListBlendBuilder.Combine("Final", c.Id, computation.Sources, computation.Modifiers)
                     .Category,
@@ -92,7 +97,9 @@ internal sealed class PersonalizedBreakdownHandler
             computation.Skill?.ScoredChartCount ?? 0,
             computation.Skill?.OutdatedScoreCount ?? 0,
             computation.Similar?.NeighborCount ?? 0,
-            communityModifiers.Values.Sum(),
+            // How much of YOUR list is community, which is 0 on Score — not the weight of the
+            // community column, which is computed separately and exists only to diff against.
+            TierListBlendBuilder.CommunityWeightIn(computation.Modifiers),
             computation.Modifiers.GetValueOrDefault("Skill"),
             computation.Modifiers.GetValueOrDefault("Similar Players"),
             computation.Modifiers.GetValueOrDefault("Projection"),

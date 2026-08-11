@@ -417,9 +417,10 @@ public sealed class BlendedTierListHandlerTests
     [Fact]
     public async Task TooFewProjectedChartsToHaveASpreadStaySilent()
     {
-        // One projection has no spread, so it sits at its own mean and comes out stamped the
-        // easiest chart in the folder — at full weight, off a single peer's single score. Below
-        // the floor the source says nothing and the community list carries the folder alone.
+        // One projection has no spread, so it sits at its own mean and would come out stamped
+        // the easiest chart in the folder off a single peer's single score. Below the floor the
+        // source says nothing — and since it is the whole recipe on Score, saying nothing means
+        // an empty list rather than a quiet fallback to the community's.
         var reached = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
         var unreached = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
         var userId = Guid.NewGuid();
@@ -455,10 +456,10 @@ public sealed class BlendedTierListHandlerTests
         var result = await handler.Handle(Query("Score", personalized: true, userId: userId),
             CancellationToken.None);
 
-        // Both charts keep the community's Hard: the one peer-played chart did not become the
-        // folder's easiest on the strength of being the only one anybody had played.
-        Assert.Equal(TierListCategory.Hard, result.Entries.Single(e => e.ChartId == reached.Id).Category);
-        Assert.Equal(TierListCategory.Hard, result.Entries.Single(e => e.ChartId == unreached.Id).Category);
+        // Nothing is rated: the one peer-played chart did not become the folder's easiest on the
+        // strength of being the only one anybody had played, and the community's Hard does not
+        // stand in for it either — the page shows its "nobody near your level" state instead.
+        Assert.All(result.Entries, e => Assert.Equal(TierListCategory.Unrecorded, e.Category));
     }
 
     private static UserPhoenixScore PeerScoreOn(Guid userId, Chart chart, int score)

@@ -22,23 +22,42 @@ namespace ScoreTracker.ChartIntelligence.Application;
 /// </summary>
 internal sealed class TierListBlendBuilder
 {
-    // Source weights per lens — ported verbatim from the page's modifier table.
-    private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, double>> LensModifiers =
+    /// <summary>
+    ///     What the shared, community view of a lens is made of — stored lists only. This is
+    ///     also what a signed-out visitor sees, and what the personalized view is diffed against.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, double>> CommunityModifiers =
         new Dictionary<string, IReadOnlyDictionary<string, double>>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Pass"] = new Dictionary<string, double>
-                { ["Skill"] = 2, ["Similar Players"] = 1, ["Pass Count"] = 2 },
-            // Score personalizes through one source. Skill and Similar Players both used to vote
-            // here, and both answered "what would this player score" worse than the projection
-            // does: the skill nudge correlates 0.071 with the residual it exists to correct, and
-            // Similar Players reads the same competitive cohort but aggregates their bucketed
-            // tiers instead of the scores those buckets came from (pumbility-overhaul.md §4.3).
-            // Weight 3 is their combined weight, so the community half carries what it always did.
-            ["Score"] = new Dictionary<string, double>
-                { ["Official Scores"] = 1, ["Scores"] = 2, ["Projection"] = 3 },
+            ["Pass"] = new Dictionary<string, double> { ["Pass Count"] = 2 },
+            ["Score"] = new Dictionary<string, double> { ["Official Scores"] = 1, ["Scores"] = 2 },
             ["Popularity"] = new Dictionary<string, double> { ["Popularity"] = 1 },
             ["Chabala"] = new Dictionary<string, double> { ["Chabala"] = 1 },
             ["PG"] = new Dictionary<string, double> { ["PG"] = 1 }
+        };
+
+    /// <summary>
+    ///     What the personalized view of a lens is made of. Only Pass and Score have one; every
+    ///     other lens is community-only and personalizing it would mean nothing.
+    ///     <para>
+    ///         Score is the projection and nothing else (owner, 2026-08-11). Blending the stored
+    ///         score lists back in would count the same evidence twice: the projection is built
+    ///         from peers' actual scores, so those lists are an echo of its own input, bucketed —
+    ///         not a second opinion. It also means the standard-deviation banding happens once,
+    ///         inside the projection, rather than being averaged with other bandings and re-cut.
+    ///     </para>
+    ///     <para>
+    ///         Pass still blends, and deliberately keeps exactly what it had: there is no
+    ///         pass-projection engine, so its personal half is still the skill estimate and the
+    ///         similar-players aggregation.
+    ///     </para>
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, double>> PersonalizedModifiers =
+        new Dictionary<string, IReadOnlyDictionary<string, double>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Pass"] = new Dictionary<string, double>
+                { ["Pass Count"] = 2, ["Skill"] = 2, ["Similar Players"] = 1 },
+            ["Score"] = new Dictionary<string, double> { ["Projection"] = 1 }
         };
 
     private static readonly string[] StoredSources =
@@ -65,25 +84,33 @@ internal sealed class TierListBlendBuilder
         _projector = projector;
     }
 
+    /// <summary>How much of a recipe is stored community lists — 0 when none of it is.</summary>
+    public static double CommunityWeightIn(IReadOnlyDictionary<string, double> modifiers)
+    {
+        return modifiers.Where(kv => StoredSources.Contains(kv.Key)).Sum(kv => kv.Value);
+    }
+
     public static bool IsKnownLens(string lens)
     {
-        return LensModifiers.ContainsKey(lens);
+        return CommunityModifiers.ContainsKey(lens);
     }
 
-    public static IReadOnlyDictionary<string, double> ModifiersFor(string lens)
+    /// <summary>
+    ///     The weights in play for a lens as one view or the other. A lens with no personalized
+    ///     recipe falls back to its community one, so asking for a personalized Popularity list
+    ///     gets the community answer rather than an empty page.
+    /// </summary>
+    public static IReadOnlyDictionary<string, double> ModifiersFor(string lens, bool personalized)
     {
-        return LensModifiers[lens];
-    }
-
-    public static bool IsStoredSource(string sourceName)
-    {
-        return StoredSources.Contains(sourceName);
+        return personalized && PersonalizedModifiers.TryGetValue(lens, out var mine)
+            ? mine
+            : CommunityModifiers[lens];
     }
 
     public async Task<BlendComputation> Compute(ChartType chartType, DifficultyLevel level, string lens,
         Guid? userId, MixEnum mix, CancellationToken cancellationToken)
     {
-        var modifiers = LensModifiers[lens];
+        var modifiers = ModifiersFor(lens, userId != null);
         var folderCharts =
             (await _charts.GetCharts(mix, level, chartType, cancellationToken: cancellationToken)).ToArray();
 

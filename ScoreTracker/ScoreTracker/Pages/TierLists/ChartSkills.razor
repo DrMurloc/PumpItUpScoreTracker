@@ -395,6 +395,20 @@ else
     {
         <PatienceCard Explanation="@L["Compiling your personalized tier list."]"></PatienceCard>
     }
+    else if (ProjectionTooThin)
+    {
+        @* Personalized Score is the projection and nothing else, so when nobody near this
+           player's level has scored the folder there is no list to show — and a screen of
+           Not Rated cards would be a worse way of saying that than saying it. Community is
+           one button away and has the answer. *@
+        <div class="tier-list-cta">
+            <MudText>@L["Nobody near your level has scored enough of this folder yet."]</MudText>
+            <MudText Typo="Typo.caption">@L["Your version of this folder is built from what players within half a competitive level of you score here."]</MudText>
+            <div class="tier-list-cta-actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SetUsePersonalized(false))">@L["Show the community list"]</MudButton>
+            </div>
+        </div>
+    }
     else if (_groups.All(g => !g.Entries.Any(ShouldChartShow)))
     {
         <div class="tier-list-cta">
@@ -1493,6 +1507,15 @@ else
     private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
 
     private bool PersonalizedActive => _usePersonalizedData && CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score";
+
+    /// <summary>
+    ///     Personalized Score has one source, so "the projection said nothing" and "the list is
+    ///     empty" are the same state. Pass still blends, so it can never land here — its
+    ///     community source carries the folder whatever the personal ones do.
+    /// </summary>
+    private bool ProjectionTooThin => PersonalizedActive && _tierListType == "Score"
+                                      && _finalEntries.Any()
+                                      && _finalEntries.All(e => e.Category == TierListCategory.Unrecorded);
 
     private string BreakdownUrl => $"/TierLists/{_chartType}/{_level}/Breakdown?Lens={_tierListType}";
 
