@@ -3671,6 +3671,9 @@
   <data name="My Score" xml:space="preserve">
     <value>Blgrl Mrglrgl</value>
   </data>
+  <data name="My Scores" xml:space="preserve">
+    <value>Gromurp Mgrlgmrg</value>
+  </data>
   <data name="My Sessions" xml:space="preserve">
     <value>Blgrl Glorgmaglgro</value>
   </data>
@@ -3984,6 +3987,9 @@
   </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Urggro maglgrorp morg mrp PUMBILITY mrglblarg grglmrp plglmorg.</value>
+  </data>
+  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
+    <value>Mrp morp blarg gromurp grorpmurm mgrlgmrg blugmr murgl gaal.</value>
   </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Urggro Murgmorp blub argl</value>
@@ -4573,6 +4579,12 @@
   <data name="Personalized for {0}" xml:space="preserve">
     <value>Urgblargmurmmorg ro {0}</value>
   </data>
+  <data name="Personalized Pass" xml:space="preserve">
+    <value>Urgblargmurmmorg Maglplgl</value>
+  </data>
+  <data name="Personalized Score" xml:space="preserve">
+    <value>Urgblargmurmmorg Mrglrgl</value>
+  </data>
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
@@ -5001,6 +5013,12 @@
   </data>
   <data name="projected total" xml:space="preserve">
     <value>mrglgrrglrgl urgargl</value>
+  </data>
+  <data name="projected: no data" xml:space="preserve">
+    <value>purgmorgl: mrp obla</value>
+  </data>
+  <data name="projected: {0}" xml:space="preserve">
+    <value>purgmorgl: {0}</value>
   </data>
   <data name="Promote other admins" xml:space="preserve">
     <value>Plglmaglmagl mrpblgrl glorgrgl</value>
@@ -5945,6 +5963,9 @@
   <data name="Show per type" xml:space="preserve">
     <value>Romorg morg morg</value>
   </data>
+  <data name="Show Projected Score" xml:space="preserve">
+    <value>Romorg Purgmorgl Mrglrgl</value>
+  </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>Romorg Glorgmurpmrgl Mrglargl</value>
   </data>
@@ -5975,6 +5996,9 @@
   <data name="show suggested only" xml:space="preserve">
     <value>romorg romorgrgl mrpmurg</value>
   </data>
+  <data name="Show the community list" xml:space="preserve">
+    <value>Romorg plglmurgblub grog</value>
+  </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Romorg mrp mggl grrglarglblarg murgl grrglmurpblgrl</value>
   </data>
@@ -5986,6 +6010,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>mrarglblgrl romorgrgl</value>
+  </data>
+  <data name="Shown Difficulty" xml:space="preserve">
+    <value>Romorg Glorgmurpgrrgl</value>
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>Murgl blu Rorgl grog. Morp murp blurgl blorm murgargl galm.</value>
@@ -6095,6 +6122,9 @@
   <data name="Skill" xml:space="preserve">
 	  <value>Morgmurm</value>
 	  <comment>Skill</comment>
+  </data>
+  <data name="Skill Breakdown" xml:space="preserve">
+    <value>Morgmurm Maglgrogrrgl</value>
   </data>
   <data name="Skill data: PIU Center" xml:space="preserve">
     <value>Morgmurm gromurm: PIU Center</value>
@@ -8022,6 +8052,9 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Gromurp grrmrrgl ro glorgmrpmurm mrp mrpmurg grorpmrglblgrl grgl piugame.com ro mrp glargl morgro</value>
+  </data>
+  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
+    <value>Gromurp murgl gaal blarg murgablar urg morp arglblgrl parg arglrglmrmurm grorpmurm mrgl blub.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>Murgm bo. Murp blorp murmo la rorgl grog.</value>

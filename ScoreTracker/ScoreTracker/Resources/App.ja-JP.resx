@@ -3671,6 +3671,9 @@
   <data name="My Score" xml:space="preserve">
     <value>自分のスコア</value>
   </data>
+  <data name="My Scores" xml:space="preserve">
+    <value>マイスコア</value>
+  </data>
   <data name="My Sessions" xml:space="preserve">
     <value>マイセッション</value>
   </data>
@@ -3984,6 +3987,9 @@
   </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>今週はPUMBILITYボードで順位を上げたプレイヤーはいません。</value>
+  </data>
+  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
+    <value>同水準のプレイヤーがこのフォルダーをまだ十分にプレイしていません。</value>
   </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>まだ誰もあなたをライバルにしていません</value>
@@ -4573,6 +4579,12 @@
   <data name="Personalized for {0}" xml:space="preserve">
     <value>{0}向けにパーソナライズ</value>
   </data>
+  <data name="Personalized Pass" xml:space="preserve">
+    <value>パーソナライズ パス</value>
+  </data>
+  <data name="Personalized Score" xml:space="preserve">
+    <value>パーソナライズ スコア</value>
+  </data>
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
@@ -5001,6 +5013,12 @@
   </data>
   <data name="projected total" xml:space="preserve">
     <value>予測合計</value>
+  </data>
+  <data name="projected: no data" xml:space="preserve">
+    <value>予測: データなし</value>
+  </data>
+  <data name="projected: {0}" xml:space="preserve">
+    <value>予測: {0}</value>
   </data>
   <data name="Promote other admins" xml:space="preserve">
     <value>他の管理者を昇格</value>
@@ -5945,6 +5963,9 @@
   <data name="Show per type" xml:space="preserve">
     <value>Show per type</value>
   </data>
+  <data name="Show Projected Score" xml:space="preserve">
+    <value>予測スコアを表示</value>
+  </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>地域ゲスト表示</value>
   </data>
@@ -5975,6 +5996,9 @@
   <data name="show suggested only" xml:space="preserve">
     <value>おすすめのみ表示</value>
   </data>
+  <data name="Show the community list" xml:space="preserve">
+    <value>コミュニティのリストを表示</value>
+  </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>最も似ていない譜面を表示</value>
   </data>
@@ -5986,6 +6010,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>おすすめを表示中</value>
+  </data>
+  <data name="Shown Difficulty" xml:space="preserve">
+    <value>表示する難易度</value>
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>ツール一覧に表示されます。プレイヤーは接続前にこれを読みます。</value>
@@ -6096,6 +6123,9 @@
 	  <value>スキル</value>
 	  
   <comment>Skill</comment></data>
+  <data name="Skill Breakdown" xml:space="preserve">
+    <value>スキル別の内訳</value>
+  </data>
   <data name="Skill data: PIU Center" xml:space="preserve">
     <value>スキルデータ：PIU Center</value>
   </data>
@@ -8022,6 +8052,9 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>ユーザー名とパスワードはpiugame.comへ直接送信され、保存されることはありません</value>
+  </data>
+  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
+    <value>このフォルダーのあなた専用版は、競技レベルが0.5以内のプレイヤーのスコアから作られます。</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>あなた専用です。あとからツール一覧で編集できます。</value>

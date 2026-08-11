@@ -3643,6 +3643,9 @@
   <data name="My Score" xml:space="preserve">
     <value>내 점수</value>
   </data>
+  <data name="My Scores" xml:space="preserve">
+    <value>내 점수</value>
+  </data>
   <data name="My Sessions" xml:space="preserve">
     <value>내 세션</value>
   </data>
@@ -3954,6 +3957,9 @@
   </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>이번 주에는 PUMBILITY 보드에서 상승한 플레이어가 없습니다.</value>
+  </data>
+  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
+    <value>내 레벨의 플레이어가 이 폴더를 아직 충분히 플레이하지 않았습니다.</value>
   </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>아직 아무도 나를 라이벌로 등록하지 않았습니다</value>
@@ -4540,6 +4546,12 @@
   <data name="Personalized for {0}" xml:space="preserve">
     <value>{0}님을 위한 개인화</value>
   </data>
+  <data name="Personalized Pass" xml:space="preserve">
+    <value>개인화 패스</value>
+  </data>
+  <data name="Personalized Score" xml:space="preserve">
+    <value>개인화 스코어</value>
+  </data>
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
@@ -4965,6 +4977,12 @@
   </data>
   <data name="projected total" xml:space="preserve">
     <value>예상 합계</value>
+  </data>
+  <data name="projected: no data" xml:space="preserve">
+    <value>예상: 데이터 없음</value>
+  </data>
+  <data name="projected: {0}" xml:space="preserve">
+    <value>예상: {0}</value>
   </data>
   <data name="Promote other admins" xml:space="preserve">
     <value>다른 관리자 승급</value>
@@ -5895,6 +5913,9 @@
   <data name="Show per type" xml:space="preserve">
     <value>Show per type</value>
   </data>
+  <data name="Show Projected Score" xml:space="preserve">
+    <value>예상 점수 표시</value>
+  </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>지역 게스트 표시</value>
   </data>
@@ -5922,6 +5943,9 @@
   <data name="show suggested only" xml:space="preserve">
     <value>추천만 보기</value>
   </data>
+  <data name="Show the community list" xml:space="preserve">
+    <value>커뮤니티 목록 보기</value>
+  </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>가장 안 닮은 채보 보기</value>
   </data>
@@ -5933,6 +5957,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>추천 표시 중</value>
+  </data>
+  <data name="Shown Difficulty" xml:space="preserve">
+    <value>표시할 난이도</value>
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>도구 목록에 표시됩니다. 플레이어가 연결 전에 읽습니다.</value>
@@ -6041,6 +6068,9 @@
   </data>
   <data name="Skill" xml:space="preserve">
     <value>스킬</value>
+  </data>
+  <data name="Skill Breakdown" xml:space="preserve">
+    <value>스킬별 분석</value>
   </data>
   <data name="Skill data: PIU Center" xml:space="preserve">
     <value>스킬 데이터: PIU Center</value>
@@ -7952,6 +7982,9 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>아이디와 비밀번호는 piugame.com으로 직접 전송되며 절대 저장되지 않습니다</value>
+  </data>
+  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
+    <value>이 폴더의 내 버전은 경쟁 레벨이 0.5 이내인 플레이어의 점수로 만들어집니다.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>본인만 봅니다. 나중에 도구 목록에서 수정할 수 있습니다.</value>

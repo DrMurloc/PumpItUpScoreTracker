@@ -3670,6 +3670,9 @@
   <data name="My Score" xml:space="preserve">
     <value>Mon score</value>
   </data>
+  <data name="My Scores" xml:space="preserve">
+    <value>Mes scores</value>
+  </data>
   <data name="My Sessions" xml:space="preserve">
     <value>Mes sessions</value>
   </data>
@@ -3983,6 +3986,9 @@
   </data>
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Personne n'a grimpé sur le leaderboard PUMBILITY cette semaine.</value>
+  </data>
+  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
+    <value>Personne de ton niveau n'a encore joué assez de ce dossier.</value>
   </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Personne ne vous a encore en rival</value>
@@ -4572,6 +4578,12 @@
   <data name="Personalized for {0}" xml:space="preserve">
     <value>Personnalisé pour {0}</value>
   </data>
+  <data name="Personalized Pass" xml:space="preserve">
+    <value>Passes personnalisé</value>
+  </data>
+  <data name="Personalized Score" xml:space="preserve">
+    <value>Scores personnalisé</value>
+  </data>
   <data name="PF" xml:space="preserve">
     <value>PF</value>
   </data>
@@ -5000,6 +5012,12 @@
   </data>
   <data name="projected total" xml:space="preserve">
     <value>total projeté</value>
+  </data>
+  <data name="projected: no data" xml:space="preserve">
+    <value>projeté : aucune donnée</value>
+  </data>
+  <data name="projected: {0}" xml:space="preserve">
+    <value>projeté : {0}</value>
   </data>
   <data name="Promote other admins" xml:space="preserve">
     <value>Promouvoir d'autres admins</value>
@@ -5944,6 +5962,9 @@
   <data name="Show per type" xml:space="preserve">
     <value>Show per type</value>
   </data>
+  <data name="Show Projected Score" xml:space="preserve">
+    <value>Afficher le score projeté</value>
+  </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>Montrer les invités régionaux</value>
   </data>
@@ -5974,6 +5995,9 @@
   <data name="show suggested only" xml:space="preserve">
     <value>voir les suggérés</value>
   </data>
+  <data name="Show the community list" xml:space="preserve">
+    <value>Voir la liste de la communauté</value>
+  </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Afficher les charts les moins ressemblants</value>
   </data>
@@ -5985,6 +6009,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>suggérés affichés</value>
+  </data>
+  <data name="Shown Difficulty" xml:space="preserve">
+    <value>Difficulté affichée</value>
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>Affiché dans l'annuaire. Les joueurs le lisent avant de se connecter.</value>
@@ -6094,6 +6121,9 @@
   <data name="Skill" xml:space="preserve">
 	  <value>Compétence</value>
 	  <comment>Compétence</comment>
+  </data>
+  <data name="Skill Breakdown" xml:space="preserve">
+    <value>Détail par compétence</value>
   </data>
   <data name="Skill data: PIU Center" xml:space="preserve">
     <value>Données de compétences : PIU Center</value>
@@ -8021,6 +8051,9 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Votre identifiant et votre mot de passe sont envoyés directement à piugame.com et ne sont jamais conservés</value>
+  </data>
+  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
+    <value>Ta version de ce dossier est construite à partir des scores des joueurs situés à un demi-niveau compétitif de toi.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>Pour vous seul. Modifiable ensuite depuis la liste des outils.</value>
