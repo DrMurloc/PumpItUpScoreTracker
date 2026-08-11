@@ -995,6 +995,18 @@
   <data name="Broken" xml:space="preserve">
     <value>Broken</value>
   </data>
+  <data name="Broken Best Cleanup Empty" xml:space="preserve">
+    <value>None of your records are failed runs. Nothing to clean up here.</value>
+  </data>
+  <data name="Broken Best Cleanup Explainer" xml:space="preserve">
+    <value>On these charts your record is a run that failed the stage, because "Record broken scores as your best" was on when you imported. Removing them leaves your play history alone — the runs still show in each chart's history, they just stop being your record.</value>
+  </data>
+  <data name="Broken Best Cleanup Reversible" xml:space="preserve">
+    <value>Turning the setting back on and importing again will bring them back — piugame still lists them.</value>
+  </data>
+  <data name="Broken personal bests" xml:space="preserve">
+    <value>Broken personal bests</value>
+  </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Broken plays score 0 — pass it to score it.</value>
   </data>
@@ -5294,6 +5306,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Remove</value>
   </data>
+  <data name="Remove broken records" xml:space="preserve">
+    <value>Remove broken records</value>
+  </data>
   <data name="Remove comment" xml:space="preserve">
     <value>Remove comment</value>
   </data>
@@ -5312,6 +5327,9 @@
   <data name="Remove This Score" xml:space="preserve">
     <value>Remove this score</value>
   </data>
+  <data name="Remove {0} broken records" xml:space="preserve">
+    <value>Remove {0} broken records</value>
+  </data>
   <data name="Removed" xml:space="preserve">
 	  <value>Removed</value>
   </data>
@@ -5326,6 +5344,9 @@
   </data>
   <data name="Removed the {0} community feed from this channel." xml:space="preserve">
     <value>Removed the {0} community feed from this channel.</value>
+  </data>
+  <data name="Removed {0} broken records" xml:space="preserve">
+    <value>Removed {0} broken records</value>
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>Removed {0} for {1} from this channel.</value>
@@ -8249,6 +8270,9 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} on the board</value>
+  </data>
+  <data name="{0} only" xml:space="preserve">
+    <value>{0} only</value>
   </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>{0} paragons</value>

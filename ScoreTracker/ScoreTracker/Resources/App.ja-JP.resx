@@ -995,6 +995,18 @@
   <data name="Broken" xml:space="preserve">
     <value>Break Off</value>
   </data>
+  <data name="Broken Best Cleanup Empty" xml:space="preserve">
+    <value>Break Offの記録はありません。ここで整理するものはありません。</value>
+  </data>
+  <data name="Broken Best Cleanup Explainer" xml:space="preserve">
+    <value>これらの譜面では、インポート時に「Record broken scores as your best」がオンだったため、記録がステージ失敗のプレイになっています。削除してもプレイ履歴はそのままで、各譜面の履歴には残り、記録ではなくなるだけです。</value>
+  </data>
+  <data name="Broken Best Cleanup Reversible" xml:space="preserve">
+    <value>設定をオンに戻して再度インポートすれば元に戻ります。piugame.comには残っています。</value>
+  </data>
+  <data name="Broken personal bests" xml:space="preserve">
+    <value>Break Offの自己ベスト</value>
+  </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>ブロークンは0点です — クリアして初めて加算されます。</value>
   </data>
@@ -5294,6 +5306,9 @@
   <data name="Remove" xml:space="preserve">
     <value>削除</value>
   </data>
+  <data name="Remove broken records" xml:space="preserve">
+    <value>Break Offの記録を削除</value>
+  </data>
   <data name="Remove comment" xml:space="preserve">
     <value>コメントを削除</value>
   </data>
@@ -5312,6 +5327,9 @@
   <data name="Remove This Score" xml:space="preserve">
     <value>このスコアを削除</value>
   </data>
+  <data name="Remove {0} broken records" xml:space="preserve">
+    <value>Break Offの記録を{0}件削除</value>
+  </data>
   <data name="Removed" xml:space="preserve">
 	  <value>削除済</value>
   </data>
@@ -5326,6 +5344,9 @@
   </data>
   <data name="Removed the {0} community feed from this channel." xml:space="preserve">
     <value>このチャンネルから {0} コミュニティのフィードを解除しました。</value>
+  </data>
+  <data name="Removed {0} broken records" xml:space="preserve">
+    <value>Break Offの記録を{0}件削除しました</value>
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>このチャンネルから {1} の {0} を解除しました。</value>
@@ -8249,6 +8270,9 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0}人が参加中</value>
+  </data>
+  <data name="{0} only" xml:space="preserve">
+    <value>{0}のみ</value>
   </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>パラゴン {0} 件</value>

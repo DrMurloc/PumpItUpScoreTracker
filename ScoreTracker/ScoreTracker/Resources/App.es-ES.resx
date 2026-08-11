@@ -987,6 +987,18 @@
   <data name="Broken" xml:space="preserve">
     <value>Broken</value>
   </data>
+  <data name="Broken Best Cleanup Empty" xml:space="preserve">
+    <value>Ninguna de tus marcas es un intento con break. Aquí no hay nada que limpiar.</value>
+  </data>
+  <data name="Broken Best Cleanup Explainer" xml:space="preserve">
+    <value>En estos charts tu marca es un intento que falló el stage, porque «Record broken scores as your best» estaba activado al importar. Quitarlas no toca tu historial: los intentos siguen en el historial de cada chart, solo dejan de ser tu marca.</value>
+  </data>
+  <data name="Broken Best Cleanup Reversible" xml:space="preserve">
+    <value>Si vuelves a activar la opción e importas otra vez, volverán — piugame.com sigue mostrándolos.</value>
+  </data>
+  <data name="Broken personal bests" xml:space="preserve">
+    <value>Marcas con break</value>
+  </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Los intentos rotos valen 0 — pásalo para puntuar.</value>
   </data>
@@ -5250,6 +5262,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Quitar</value>
   </data>
+  <data name="Remove broken records" xml:space="preserve">
+    <value>Quitar marcas con break</value>
+  </data>
   <data name="Remove comment" xml:space="preserve">
     <value>Eliminar comentario</value>
   </data>
@@ -5268,6 +5283,9 @@
   <data name="Remove This Score" xml:space="preserve">
     <value>Quitar esta puntuación</value>
   </data>
+  <data name="Remove {0} broken records" xml:space="preserve">
+    <value>Quitar {0} marcas con break</value>
+  </data>
   <data name="Removed" xml:space="preserve">
     <value>Eliminado</value>
   </data>
@@ -5282,6 +5300,9 @@
   </data>
   <data name="Removed the {0} community feed from this channel." xml:space="preserve">
     <value>Se ha quitado el feed de la comunidad {0} de este canal.</value>
+  </data>
+  <data name="Removed {0} broken records" xml:space="preserve">
+    <value>Se quitaron {0} marcas con break</value>
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>Se ha quitado {0} para {1} de este canal.</value>
@@ -8177,6 +8198,9 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} en el tablero</value>
+  </data>
+  <data name="{0} only" xml:space="preserve">
+    <value>Solo {0}</value>
   </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>{0} paragons</value>

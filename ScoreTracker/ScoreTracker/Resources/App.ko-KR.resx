@@ -987,6 +987,18 @@
   <data name="Broken" xml:space="preserve">
     <value>브레이크 오프</value>
   </data>
+  <data name="Broken Best Cleanup Empty" xml:space="preserve">
+    <value>브레이크 오프 기록이 없습니다. 여기서 정리할 것이 없습니다.</value>
+  </data>
+  <data name="Broken Best Cleanup Explainer" xml:space="preserve">
+    <value>이 채보들은 가져올 때 "Record broken scores as your best"가 켜져 있어서 기록이 스테이지 실패 플레이로 남아 있습니다. 삭제해도 플레이 기록은 그대로이며, 각 채보의 기록에는 남고 개인 최고 기록에서만 빠집니다.</value>
+  </data>
+  <data name="Broken Best Cleanup Reversible" xml:space="preserve">
+    <value>설정을 다시 켜고 가져오면 돌아옵니다. piugame.com에는 그대로 남아 있습니다.</value>
+  </data>
+  <data name="Broken personal bests" xml:space="preserve">
+    <value>브레이크 오프 개인 최고 기록</value>
+  </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>브로큰 플레이는 0점입니다 — 클리어해야 점수가 인정됩니다.</value>
   </data>
@@ -5252,6 +5264,9 @@
   <data name="Remove" xml:space="preserve">
     <value>제거</value>
   </data>
+  <data name="Remove broken records" xml:space="preserve">
+    <value>브레이크 오프 기록 삭제</value>
+  </data>
   <data name="Remove comment" xml:space="preserve">
     <value>댓글 삭제</value>
   </data>
@@ -5270,6 +5285,9 @@
   <data name="Remove This Score" xml:space="preserve">
     <value>이 점수 삭제</value>
   </data>
+  <data name="Remove {0} broken records" xml:space="preserve">
+    <value>브레이크 오프 기록 {0}개 삭제</value>
+  </data>
   <data name="Removed" xml:space="preserve">
     <value>제거됨</value>
   </data>
@@ -5284,6 +5302,9 @@
   </data>
   <data name="Removed the {0} community feed from this channel." xml:space="preserve">
     <value>이 채널에서 {0} 커뮤니티 피드를 해제했습니다.</value>
+  </data>
+  <data name="Removed {0} broken records" xml:space="preserve">
+    <value>브레이크 오프 기록 {0}개를 삭제했습니다</value>
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>이 채널에서 {1}의 {0} 알림을 해제했습니다.</value>
@@ -8179,6 +8200,9 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0}명 참여 중</value>
+  </data>
+  <data name="{0} only" xml:space="preserve">
+    <value>{0}만</value>
   </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>파라곤 {0}개</value>

@@ -1,0 +1,103 @@
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.ScoreLedger.Contracts
+@using ScoreTracker.ScoreLedger.Contracts.Commands
+@using ScoreTracker.ScoreLedger.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@inject IStringLocalizer<App> L
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject ISnackbar Snackbar
+
+@* Above the arm gate on purpose. What this removes is re-derivable — piugame still lists the
+   run, so turning the setting back on and importing again restores it — and putting a recoverable
+   cleanup behind "I want to permanently delete data" would read as more final than it is.
+   See docs/design/delete-my-data.md §10. *@
+<MudPaper Outlined="true" Class="pa-4 mb-4">
+    <MudText Typo="Typo.subtitle1"><b>@L["Broken personal bests"]</b></MudText>
+    <MudText Typo="Typo.body2" Class="mb-3" Style="opacity:.8;">
+        @(Total > 0 ? L["Broken Best Cleanup Explainer"] : L["Broken Best Cleanup Empty"])
+    </MudText>
+
+    @* Every Phoenix-scoring mix, including the ones at zero: a card that renders only what it
+       found is indistinguishable from one that forgot to look, and this is what somebody goes
+       hunting for right after they untick the import box. No per-mix colour — the mix chips
+       below carry none either, and --mix-* only ever emits the mix you are currently in. *@
+    <MudSimpleTable Dense="true" Bordered="false" Striped="false" Class="mb-3">
+        <tbody>
+        @foreach (var count in _counts)
+        {
+            <tr>
+                <td>@count.Mix.GetName()</td>
+                <td style="text-align:right; font-variant-numeric:tabular-nums;">@count.Count.ToString("N0")</td>
+            </tr>
+        }
+        </tbody>
+    </MudSimpleTable>
+
+    @if (Total > 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">@L["Broken Best Cleanup Reversible"]</MudAlert>
+    }
+
+    <div class="d-flex flex-wrap align-center" style="gap:.5rem">
+        <MudButton Variant="Variant.Filled" Color="Color.Error" Disabled="@(_busy || Total == 0)"
+                   OnClick="@(() => Remove(_counts.Where(c => c.Count > 0).Select(c => c.Mix).ToArray()))">
+            @(Total > 0 ? L["Remove {0} broken records", Total.ToString("N0")] : L["Remove broken records"])
+        </MudButton>
+        @* Only worth offering when the single button above would not already do exactly this. *@
+        @if (_counts.Count(c => c.Count > 0) > 1)
+        {
+            @foreach (var count in _counts.Where(c => c.Count > 0))
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Error" Disabled="_busy"
+                           OnClick="@(() => Remove(new[] { count.Mix }))">
+                    @L["{0} only", count.Mix.GetName()]
+                </MudButton>
+            }
+        }
+    </div>
+</MudPaper>
+
+@code {
+
+    /// <summary>Raised after rows go, so the page can refresh anything counting scores.</summary>
+    [Parameter] public EventCallback OnCleaned { get; set; }
+
+    private IReadOnlyList<BrokenRecordCount> _counts = Array.Empty<BrokenRecordCount>();
+    private bool _busy;
+
+    private int Total => _counts.Sum(c => c.Count);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _counts = await Mediator.Send(new GetBrokenRecordCountsQuery(CurrentUser.User.Id));
+    }
+
+    private async Task Remove(IReadOnlyCollection<MixEnum> mixes)
+    {
+        if (_busy || mixes.Count == 0) return;
+
+        // Painted before the round trip: a delete that walks a few hundred rows is long enough
+        // for an un-disabled button to be pressed twice.
+        _busy = true;
+        StateHasChanged();
+        try
+        {
+            var removed = await Mediator.Send(new DeleteBrokenRecordsCommand(CurrentUser.User.Id, mixes));
+            Snackbar.Add(L["Removed {0} broken records", removed.ToString("N0")], Severity.Success);
+            await Load();
+            await OnCleaned.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+}

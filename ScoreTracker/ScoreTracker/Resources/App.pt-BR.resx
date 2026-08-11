@@ -987,6 +987,18 @@
   <data name="Broken" xml:space="preserve">
     <value>Quebrada</value>
   </data>
+  <data name="Broken Best Cleanup Empty" xml:space="preserve">
+    <value>Nenhum dos seus recordes é uma tentativa quebrada. Não há nada para limpar aqui.</value>
+  </data>
+  <data name="Broken Best Cleanup Explainer" xml:space="preserve">
+    <value>Nesses charts seu recorde é um run que falhou o stage, porque "Record broken scores as your best" estava ligado quando você importou. Removê-los não mexe no seu histórico: os runs continuam no histórico de cada chart, só deixam de ser o seu recorde.</value>
+  </data>
+  <data name="Broken Best Cleanup Reversible" xml:space="preserve">
+    <value>Ligue a opção de novo e importe outra vez que eles voltam — o piugame.com ainda lista eles.</value>
+  </data>
+  <data name="Broken personal bests" xml:space="preserve">
+    <value>Recordes quebrados</value>
+  </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Jogadas quebradas valem 0 — passe para pontuar.</value>
   </data>
@@ -5252,6 +5264,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Remover</value>
   </data>
+  <data name="Remove broken records" xml:space="preserve">
+    <value>Remover recordes quebrados</value>
+  </data>
   <data name="Remove comment" xml:space="preserve">
     <value>Remover comentário</value>
   </data>
@@ -5270,6 +5285,9 @@
   <data name="Remove This Score" xml:space="preserve">
     <value>Remover esta pontuação</value>
   </data>
+  <data name="Remove {0} broken records" xml:space="preserve">
+    <value>Remover {0} recordes quebrados</value>
+  </data>
   <data name="Removed" xml:space="preserve">
     <value>Removido</value>
   </data>
@@ -5284,6 +5302,9 @@
   </data>
   <data name="Removed the {0} community feed from this channel." xml:space="preserve">
     <value>Feed da comunidade {0} removido deste canal.</value>
+  </data>
+  <data name="Removed {0} broken records" xml:space="preserve">
+    <value>{0} recordes quebrados removidos</value>
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>{0} para {1} removido deste canal.</value>
@@ -8179,6 +8200,9 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} no ranking</value>
+  </data>
+  <data name="{0} only" xml:space="preserve">
+    <value>Somente {0}</value>
   </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>{0} paragons</value>

@@ -995,6 +995,18 @@
   <data name="Broken" xml:space="preserve">
     <value>Morgl</value>
   </data>
+  <data name="Broken Best Cleanup Empty" xml:space="preserve">
+    <value>Mrp morgl mrglrgl blub. Momurgl gropmur blarg.</value>
+  </data>
+  <data name="Broken Best Cleanup Explainer" xml:space="preserve">
+    <value>Lurg murgl gromurp mrglrgl urg morgl, mrgro "Morgl mrglrgl blurgmrp" argl blub murgblarg. Momurgl gromurp mrp murgloo gromurp mrogl — mrglrgl blub grorpgl murgl mrogl, glarg mo gromurp blubgrorp.</value>
+  </data>
+  <data name="Broken Best Cleanup Reversible" xml:space="preserve">
+    <value>Argl blub mrglrgl opa murgblarg blarg, gropmur blarg — piugame.com grorp mrglrgl blub.</value>
+  </data>
+  <data name="Broken personal bests" xml:space="preserve">
+    <value>Morgl blurgmrp</value>
+  </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Morgl mrpplgl mrglrgl 0 — maglplgl gl grgl mrglrgl gl.</value>
   </data>
@@ -5294,6 +5306,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Plglgrgl</value>
   </data>
+  <data name="Remove broken records" xml:space="preserve">
+    <value>Momurgl morgl blubgrorp</value>
+  </data>
   <data name="Remove comment" xml:space="preserve">
     <value>Grombo blurp</value>
   </data>
@@ -5312,6 +5327,9 @@
   <data name="Remove This Score" xml:space="preserve">
     <value>Gora Obo Mrglrgl</value>
   </data>
+  <data name="Remove {0} broken records" xml:space="preserve">
+    <value>Momurgl {0} morgl blubgrorp</value>
+  </data>
   <data name="Removed" xml:space="preserve">
 	  <value>Grorpmorglurg</value>
   </data>
@@ -5326,6 +5344,9 @@
   </data>
   <data name="Removed the {0} community feed from this channel." xml:space="preserve">
     <value>Grorpmorglurg mrp {0} plglmurgblub grglgrrgl romurg grglmrp glmurmblarg.</value>
+  </data>
+  <data name="Removed {0} broken records" xml:space="preserve">
+    <value>Momurglrgl {0} morgl blubgrorp</value>
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>Grorpmorglurg {0} ro {1} romurg grglmrp glmurmblarg.</value>
@@ -8249,6 +8270,9 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} lurg mrp mrglblarg</value>
+  </data>
+  <data name="{0} only" xml:space="preserve">
+    <value>{0} glub</value>
   </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>{0} urggrorprgl</value>

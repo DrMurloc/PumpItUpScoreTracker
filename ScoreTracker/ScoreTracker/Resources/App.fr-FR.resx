@@ -995,6 +995,18 @@
   <data name="Broken" xml:space="preserve">
     <value>Cassé</value>
   </data>
+  <data name="Broken Best Cleanup Empty" xml:space="preserve">
+    <value>Aucun de vos records n'est un essai cassé. Rien à nettoyer ici.</value>
+  </data>
+  <data name="Broken Best Cleanup Explainer" xml:space="preserve">
+    <value>Sur ces charts votre record est un run fini en Stage Break, parce que « Record broken scores as your best » était activé au moment de l'import. Les retirer ne touche pas votre historique : les runs restent dans l'historique de chaque chart, ils cessent simplement d'être votre record.</value>
+  </data>
+  <data name="Broken Best Cleanup Reversible" xml:space="preserve">
+    <value>Réactivez l'option et relancez un import : ils reviendront, piugame.com les liste toujours.</value>
+  </data>
+  <data name="Broken personal bests" xml:space="preserve">
+    <value>Records cassés</value>
+  </data>
   <data name="Broken plays score 0 — pass it to score it." xml:space="preserve">
     <value>Un jeu cassé vaut 0 — réussis-le pour marquer.</value>
   </data>
@@ -5293,6 +5305,9 @@
   <data name="Remove" xml:space="preserve">
     <value>Retirer</value>
   </data>
+  <data name="Remove broken records" xml:space="preserve">
+    <value>Retirer les records cassés</value>
+  </data>
   <data name="Remove comment" xml:space="preserve">
     <value>Supprimer le commentaire</value>
   </data>
@@ -5311,6 +5326,9 @@
   <data name="Remove This Score" xml:space="preserve">
     <value>Retirer ce score</value>
   </data>
+  <data name="Remove {0} broken records" xml:space="preserve">
+    <value>Retirer {0} records cassés</value>
+  </data>
   <data name="Removed" xml:space="preserve">
     <value>Supprimé</value>
   </data>
@@ -5325,6 +5343,9 @@
   </data>
   <data name="Removed the {0} community feed from this channel." xml:space="preserve">
     <value>Flux de la communauté {0} retiré de ce salon.</value>
+  </data>
+  <data name="Removed {0} broken records" xml:space="preserve">
+    <value>{0} records cassés retirés</value>
   </data>
   <data name="Removed {0} for {1} from this channel." xml:space="preserve">
     <value>{0} pour {1} retiré de ce salon.</value>
@@ -8248,6 +8269,9 @@
   </data>
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} au classement</value>
+  </data>
+  <data name="{0} only" xml:space="preserve">
+    <value>{0} uniquement</value>
   </data>
   <data name="{0} paragons" xml:space="preserve">
     <value>{0} paragons</value>
