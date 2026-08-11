@@ -118,7 +118,10 @@
                 }
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudCheckBox T="bool" Label="@L["Record broken scores as your best"]" @bind-Value="_includeBroken" Disabled="_isImporting"></MudCheckBox>
+                @* Not @bind-Value: ticking this is a preference the account keeps, so the write
+                   has to happen on change rather than being read back off the field at import. *@
+                <MudCheckBox T="bool" Label="@L["Record broken scores as your best"]" Value="_includeBroken"
+                             ValueChanged="ChooseIncludeBroken" Disabled="_isImporting"></MudCheckBox>
                 <MudText Typo="Typo.caption" Class="ml-10 d-block">@L["Import Broken Helper"]</MudText>
                 @* Sending your session to another site is a consent decision, not an import
                    option, so it lives with every other tool rather than as a checkbox here. *@
@@ -359,6 +362,7 @@
 @inject NavigationManager NavManager
 @inject ICurrentUserAccessor CurrentUser;
 @inject IUiSettingsAccessor UiSettings;
+@inject BrokenScorePreference BrokenScores;
 @inject IMediator Mediator;
 @inject ISnackbar Snackbar;
 @inject IPhoenixScoreFileExtractor Extractor;
@@ -387,6 +391,18 @@
     private string _username = "";
     private string _password = "";
     private bool _includeBroken = false;
+
+    /// <summary>
+    ///     Ticking the box IS the choice — it is kept on the account and outranks the mix default
+    ///     everywhere afterwards, which is why this page offers two states where the widget's
+    ///     configurator offers three. Coming back to "follow the mix" is that select's job.
+    /// </summary>
+    private async Task ChooseIncludeBroken(bool value)
+    {
+        _includeBroken = value;
+        await BrokenScores.Choose(value);
+    }
+
     private bool _hasStoredCredential = false;
     private const string RememberConsentKey = "RememberPasswordConsent";
     private const string RememberConsentVersion = "1";
@@ -663,7 +679,7 @@
     protected override async Task OnInitializedAsync()
     {
         _currentMix = await UiSettings.GetSelectedMix();
-        _includeBroken = BrokenScorePreference.DefaultFor(_currentMix);
+        _includeBroken = await BrokenScores.AppliesTo(_currentMix);
         _charts = (await Mediator.Send(new GetChartsQuery(_currentMix))).ToDictionary(c => c.Id);
         if (!CurrentUser.IsLoggedIn)
         {

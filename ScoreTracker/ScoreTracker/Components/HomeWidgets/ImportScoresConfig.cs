@@ -15,13 +15,11 @@ public sealed record ImportScoresConfig
     // On: use the saved game tag and import immediately. Off: pick a card after sign-in.
     public bool SkipGameTag { get; set; } = true;
 
-    // On a chart you've never passed, save your best broken attempt as the record. NULL follows
-    // the mix (on for Phoenix 2, whose best list carries broken attempts; off for Phoenix), which
-    // is what every widget saved before this setting existed — so no config migration.
+    /// <summary>
+    ///     Superseded and no longer read. The choice moved to the account
+    ///     (<see cref="BrokenScorePreference" />) because a player means the same thing whichever
+    ///     surface they import from, and two widgets could otherwise hold opposite answers.
+    ///     Kept so an instance saved before the move still deserializes.
+    /// </summary>
     public bool? RecordBrokenAsBest { get; set; }
-
-    public bool RecordsBrokenFor(MixEnum mix)
-    {
-        return RecordBrokenAsBest ?? BrokenScorePreference.DefaultFor(mix);
-    }
 }

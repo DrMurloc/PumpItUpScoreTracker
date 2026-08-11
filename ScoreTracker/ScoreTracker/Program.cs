@@ -295,6 +295,7 @@ builder.Services.AddScoped<ScoreTracker.Web.Services.SessionBreakdownBuilder>();
 builder.Services.AddScoped<ChartUrlResolver>();
 builder.Services.AddScoped<StaticHeadResolver>();
 builder.Services.AddScoped<IImportCredentialClientStore, ImportCredentialClientStore>();
+builder.Services.AddScoped<BrokenScorePreference>();
 // Circuit-scoped: widgets on a home-page board share one chart catalog per mix (§2.5).
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache>();
 builder.Services.AddScoped<ScoreTracker.Web.Services.HomeDashboard.ByLevelDataSource>();

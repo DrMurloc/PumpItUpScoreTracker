@@ -64,6 +64,7 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
             .ReturnsAsync(Array.Empty<ImportAttemptRecord>());
         Services.AddSingleton(_mediator.Object);
         Services.AddScoped<ChartScoringLevels>();
+        Services.AddScoped<BrokenScorePreference>();
 
         // No stored credential unless a test says otherwise.
         _clientStore.Setup(s => s.Read(It.IsAny<CancellationToken>()))
@@ -139,17 +140,50 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
     [InlineData(MixEnum.Phoenix2, true)]
     public void RecordBrokenAsBestDefaultsOnOnlyForPhoenix2(MixEnum mix, bool expectedChecked)
     {
-        // Phoenix 2's best-scores list carries broken attempts with real partial scores, so
-        // including them is that mix's default; Phoenix keeps the opt-in. The box stays
-        // user-overridable either way.
+        // With no stored choice the box mirrors the official site: Phoenix 2 keeps a personal
+        // best for a failed stage and Phoenix does not.
         _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
 
         var cut = RenderComponent<UploadPhoenixScores>();
 
+        Assert.Equal(expectedChecked, BrokenBox(cut).HasAttribute("checked"));
+    }
+
+    [Theory]
+    [InlineData(MixEnum.Phoenix, "True", true)]
+    [InlineData(MixEnum.Phoenix2, "False", false)]
+    public void AStoredBrokenScoreChoiceOutranksTheMixDefault(MixEnum mix, string stored, bool expectedChecked)
+    {
+        // The bug this page had: the box was re-derived from the mix on every load and never
+        // written down, so a Phoenix 2 player unticked it before every single import.
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(mix);
+        _uiSettings.Setup(u => u.GetSetting(BrokenScorePreference.SettingKey, It.IsAny<CancellationToken>(),
+            It.IsAny<Guid?>())).ReturnsAsync(stored);
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+
+        Assert.Equal(expectedChecked, BrokenBox(cut).HasAttribute("checked"));
+    }
+
+    [Fact]
+    public async Task TickingTheBrokenScoreBoxRecordsTheChoiceOnTheAccount()
+    {
+        _uiSettings.Setup(u => u.GetSelectedMix(It.IsAny<CancellationToken>())).ReturnsAsync(MixEnum.Phoenix);
+
+        var cut = RenderComponent<UploadPhoenixScores>();
+        await BrokenBox(cut).ChangeAsync(new ChangeEventArgs { Value = true });
+
+        // Account-wide and explicit — "True" outranks the mix default on Phoenix 2 as well.
+        _uiSettings.Verify(u => u.SetSetting(BrokenScorePreference.SettingKey, "True",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static AngleSharp.Dom.IElement BrokenBox(IRenderedComponent<UploadPhoenixScores> cut)
+    {
         var label = cut.FindAll("label").First(l => l.TextContent.Contains("Record broken scores as your best"));
         var input = label.QuerySelector("input");
         Assert.NotNull(input);
-        Assert.Equal(expectedChecked, input!.HasAttribute("checked"));
+        return input!;
     }
 
     [Fact]
