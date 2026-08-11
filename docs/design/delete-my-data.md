@@ -906,7 +906,8 @@ than it is. The count is its guard, the same principle as the blast-radius butto
 
 | Store | Cleanup | Why |
 |---|---|---|
-| `PhoenixRecord` where `IsBroken` | removed | The chart goes back to no record, exactly as if the box had been off all along. A record is broken only when the player has no pass on it, so no pass is ever at risk |
+| `PhoenixRecord` where `IsBroken` **and `Source = officialImport`** | removed | The chart goes back to no record, exactly as if the box had been off all along. A record is broken only when the player has no pass on it, so no pass is ever at risk |
+| `PhoenixRecord` where `IsBroken` and the source is `manual`, `csv`, or null | **left alone** | A hand-entered or CSV-uploaded break is the player's own submission, and this card's promise — turn the setting back on, import again, they come back — is true of nothing a human typed. Null predates source capture, so its origin is unknown and gets the same benefit of the doubt. The count and the delete share one predicate, so the number on the button is the number that goes |
 | `PhoenixRecordStats` for those charts | removed | Keyed by chart, not by brokenness — read the chart ids **before** the delete or there is nothing left to say which rows belonged to them |
 | `ScoreEventJournal` | **untouched** | The run happened. It stays in the chart's history and in session breakdowns; only its standing as the record is withdrawn (D8 permits the delete, it does not require it) |
 | Pumbility, titles, folder lamps | recomputed | Derived state is never a checkbox (D9). Announced with an empty-change `PlayerScoresUpdatedEvent` per mix that actually lost rows — the same signal a scoped wipe publishes |

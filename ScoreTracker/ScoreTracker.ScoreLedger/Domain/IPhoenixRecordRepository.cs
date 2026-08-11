@@ -69,16 +69,28 @@ internal interface IPhoenixRecordRepository
     Task DeleteRecord(MixEnum mix, Guid userId, Guid chartId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     How many of this player's records on a mix are failed runs rather than passes. A
-    ///     record is broken only when they have no pass on that chart, so this is also the count
-    ///     of charts that would go back to having no record at all.
+    ///     How many of this player's records on a mix are <em>imported</em> failed runs rather
+    ///     than passes. A record is broken only when they have no pass on that chart, so this is
+    ///     also the count of charts that would go back to having no record at all.
+    ///     <para>
+    ///         Manual and CSV breaks are excluded, and so are the null-Source rows that predate
+    ///         capture — see <see cref="DeleteBrokenRecords" />. The count and the delete share
+    ///         one predicate so the number on the button is the number that goes.
+    ///     </para>
     /// </summary>
     Task<int> CountBrokenRecords(MixEnum mix, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Removes every broken record on a mix and returns how many went. The journal is not
-    ///     touched: the runs happened, and they stay in each chart's history — only their standing
-    ///     as the record is withdrawn.
+    ///     Removes this player's imported broken records on a mix and returns how many went. The
+    ///     journal is not touched: the runs happened, and they stay in each chart's history — only
+    ///     their standing as the record is withdrawn.
+    ///     <para>
+    ///         <b>Imported only.</b> A hand-entered or CSV-uploaded break is the player's own
+    ///         submission, and the cleanup's promise is that turning the setting back on and
+    ///         importing again restores what it took — which is true of nothing a human typed. A
+    ///         null Source predates capture, so its origin is unknown and it is left alone on the
+    ///         same reasoning.
+    ///     </para>
     /// </summary>
     Task<int> DeleteBrokenRecords(MixEnum mix, Guid userId, CancellationToken cancellationToken = default);
 

@@ -156,6 +156,47 @@ public sealed class BrokenRecordCleanupTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AHandEnteredBreakIsNeverTouched()
+    {
+        // Manual data is the player's own submission, and the card's promise — turn the setting
+        // back on, import again, they come back — is true of nothing a human typed. A CSV upload
+        // counts as manual for the same reason (score-truth-model.md D9).
+        var userId = await _seed.SeedUserAsync();
+        var typed = await _seed.SeedPhoenixChartAsync(20);
+        var uploaded = await _seed.SeedPhoenixChartAsync(21);
+        var imported = await _seed.SeedPhoenixChartAsync(22);
+
+        var writer = BuildRepository();
+        await Record(writer, userId, typed, 812_345, isBroken: true, source: ScoreJournalEntry.ManualSource);
+        await Record(writer, userId, uploaded, 700_000, isBroken: true, source: ScoreJournalEntry.CsvSource);
+        await Record(writer, userId, imported, 654_321, isBroken: true,
+            source: ScoreJournalEntry.OfficialImportSource);
+
+        var counted = await BuildRepository().CountBrokenRecords(MixEnum.Phoenix, userId);
+        var removed = await BuildRepository().DeleteBrokenRecords(MixEnum.Phoenix, userId);
+
+        // The count is what the button prints, so it has to agree with the delete.
+        Assert.Equal(1, counted);
+        Assert.Equal(1, removed);
+        var left = (await BuildRepository().GetRecordedScores(MixEnum.Phoenix, userId)).ToArray();
+        Assert.Equal(new[] { typed, uploaded }.OrderBy(g => g), left.Select(s => s.ChartId).OrderBy(g => g));
+    }
+
+    [Fact]
+    public async Task ABreakThatPredatesSourceCaptureIsLeftAlone()
+    {
+        // A null Source could be anything, including something a human typed years ago. Unknown
+        // origin gets the same benefit of the doubt as a known-manual one.
+        var userId = await _seed.SeedUserAsync();
+        var chartId = await _seed.SeedPhoenixChartAsync(20);
+        await Record(BuildRepository(), userId, chartId, 812_345, isBroken: true, source: null);
+
+        Assert.Equal(0, await BuildRepository().CountBrokenRecords(MixEnum.Phoenix, userId));
+        Assert.Equal(0, await BuildRepository().DeleteBrokenRecords(MixEnum.Phoenix, userId));
+        Assert.Single(await BuildRepository().GetRecordedScores(MixEnum.Phoenix, userId));
+    }
+
+    [Fact]
     public async Task AnAccountWithNothingBrokenIsANoOp()
     {
         var userId = await _seed.SeedUserAsync();
@@ -168,11 +209,11 @@ public sealed class BrokenRecordCleanupTests : IAsyncLifetime
     }
 
     private static Task Record(EFPhoenixRecordsRepository repository, Guid userId, Guid chartId, int score,
-        bool isBroken, MixEnum mix = MixEnum.Phoenix)
+        bool isBroken, MixEnum mix = MixEnum.Phoenix, string? source = ScoreJournalEntry.OfficialImportSource)
     {
         // Plate is null on anything that is not a pass (score-truth-model.md D8).
         return repository.UpdateBestAttempt(mix, userId, new RecordedPhoenixScore(chartId,
-            PhoenixScore.From(score), isBroken ? null : PhoenixPlate.SuperbGame, isBroken, RecordedAt));
+            PhoenixScore.From(score), isBroken ? null : PhoenixPlate.SuperbGame, isBroken, RecordedAt, source));
     }
 
     private async Task SeedStatsAsync(Guid userId, Guid chartId, double pumbility)
