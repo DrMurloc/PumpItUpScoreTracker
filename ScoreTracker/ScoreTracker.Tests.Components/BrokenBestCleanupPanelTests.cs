@@ -19,7 +19,7 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     The Your Data cleanup card (docs/design/delete-my-data.md §10). What it removes is
+///     The Your Data cleanup card (docs/design/delete-my-data.md §18). What it removes is
 ///     re-derivable, so it sits above the arm gate and leans on the count as its guard.
 /// </summary>
 public sealed class BrokenBestCleanupPanelTests : ComponentTestBase

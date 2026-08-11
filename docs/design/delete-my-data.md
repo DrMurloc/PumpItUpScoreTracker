@@ -883,3 +883,56 @@ TECHNOLOGIES, CONTRIBUTING, DOMAIN.
 - **Official imports record the game tag** they pulled from (§4).
 - **Owning a community blocks account deletion** (§8.2) — hand it over or delete it first; the
   system never picks an heir. A flagged account also cannot create a community or be handed one.
+
+## 18. Broken personal bests (2026-08-10)
+
+A fourth operation, added after the three above shipped. "Record broken scores as your best"
+became an account-wide preference that a player can actually turn off
+([score-truth-model.md D2a](score-truth-model.md)) — and turning it off leaves standing every
+record their earlier imports already made. Without this there is no way to withdraw them short of
+deleting every score on the mix.
+
+**It is not a sixth item under Scores.** Those five are *kinds* of data — records, journal, rating
+history, highlights, milestones — and each takes all of its kind for the selected mixes. Broken
+personal bests are a slice of the first one, so ticking both would be redundant and ticking only
+the second would be a partial delete of the same kind: precisely the unreadable second checkbox §1
+exists to escape. `ScoreDeletionItems` is a `[Flags]` enum with no way to say "subset of
+`BestScores`", and teaching it one would be the wrong lesson.
+
+**It sits above the arm gate.** What it removes is re-derivable — the official best list still
+carries the run, so turning the setting back on and importing again restores it — and putting a
+recoverable cleanup behind *"No — I want to permanently delete data."* would read as more final
+than it is. The count is its guard, the same principle as the blast-radius button (§5).
+
+| Store | Cleanup | Why |
+|---|---|---|
+| `PhoenixRecord` where `IsBroken` | removed | The chart goes back to no record, exactly as if the box had been off all along. A record is broken only when the player has no pass on it, so no pass is ever at risk |
+| `PhoenixRecordStats` for those charts | removed | Keyed by chart, not by brokenness — read the chart ids **before** the delete or there is nothing left to say which rows belonged to them |
+| `ScoreEventJournal` | **untouched** | The run happened. It stays in the chart's history and in session breakdowns; only its standing as the record is withdrawn (D8 permits the delete, it does not require it) |
+| Pumbility, titles, folder lamps | recomputed | Derived state is never a checkbox (D9). Announced with an empty-change `PlayerScoresUpdatedEvent` per mix that actually lost rows — the same signal a scoped wipe publishes |
+| Competitive level, total rating | no change expected | Broken scores are excluded from every rating pool ([phoenix2-import-go-live.md §3.4](phoenix2-import-go-live.md)) |
+
+Legacy mixes never appear: they record a letter grade in `BestAttempt`, which has no failed-stage
+flag to read or clear. The card lists the Phoenix-scoring mixes only, and lists them **at zero
+too** — a card that renders only what it found is indistinguishable from one that forgot to look,
+and this is what a player goes hunting for immediately after unticking the box.
+
+**No per-mix colour on the rows.** `--mix-*` only ever emits the mix you are currently in, so
+Phoenix-blue beside Phoenix-2-green is not expressible under `UiColorTokenTests`. The mix chips in
+§5 already solve this by carrying no per-mix colour at all; the card follows them.
+
+### Known interaction: undo can resurrect a cleaned-up break
+
+D6's replay recomputes each affected chart's best from the **surviving journal rows**, and this
+cleanup deliberately leaves the journal alone. So undoing a session that touched one of those
+charts can hand it its break back. That is the replay rule working as specified rather than a
+defect in either feature, and the alternative — teaching replay to consult a preference — would
+make undo's result depend on a setting the player may have changed since. Accepted (2026-08-10);
+the cleanup is one press away for anyone who hits it.
+
+### Ratchets
+
+Real-database coverage lives in `Tests.Integration/BrokenRecordCleanupTests`, cut before any UI
+could reach the delete, for the same reason `AccountPurgeTests` exists: a mocked repository cannot
+over-delete, so the failure that matters here is invisible to the handler suite. A decoy account
+holds a broken record on the same chart.

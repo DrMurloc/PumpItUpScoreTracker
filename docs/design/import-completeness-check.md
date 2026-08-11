@@ -212,9 +212,15 @@ without touching piugame.
 
 ## 7. Explicitly out of scope
 
-- **The broken-best delta.** We can compute exactly how many stage breaks the site holds that we
-  do not, and it is noise for a player who opted out of importing them. Not shown. (Owner call,
-  2026-08-02.)
+- **The broken-best delta.** The site's stage-break count is computable and is noise for a player
+  who opted out of importing them. Not shown. (Owner call, 2026-08-02.)
+
+  This is about *reporting* the delta, and says nothing about what the repair fetches. **Amended
+  2026-08-10:** the repair's two `GetBestScoresIn` reads passed `includeBroken: false` hardcoded,
+  on both mixes — so on Phoenix 2, where the box starts on, the check walked past exactly the
+  charts a normal import saves and then reported the account complete. It now reads the player's
+  account-wide choice, the same one the import uses
+  ([score-truth-model.md D2a](score-truth-model.md)).
 - **A single-request "quick check".** §3.2 — it is wrong often enough to be worse than nothing.
 - **Repairing scores below the top 50 automatically.** The census names them; the player presses
   the button.

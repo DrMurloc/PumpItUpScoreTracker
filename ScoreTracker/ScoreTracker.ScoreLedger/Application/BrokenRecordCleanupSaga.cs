@@ -12,7 +12,7 @@ namespace ScoreTracker.ScoreLedger.Application;
 
 /// <summary>
 ///     Counting and withdrawing broken personal bests — the Your Data cleanup for records made
-///     while "Record broken scores as your best" was on (docs/design/delete-my-data.md §10).
+///     while "Record broken scores as your best" was on (docs/design/delete-my-data.md §18).
 /// </summary>
 internal sealed class BrokenRecordCleanupSaga : IRequestHandler<GetBrokenRecordCountsQuery,
         IReadOnlyList<BrokenRecordCount>>,

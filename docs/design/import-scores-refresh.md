@@ -92,6 +92,12 @@ with the truth-model work.
   Scores" — the old label said what was fetched, not what it did to your records. Its helper
   states the rule the label cannot: *"On charts you've never passed, your best broken attempt
   becomes your record. A pass always wins."*
+
+  **Amended 2026-08-10.** The box is now backed by an account-wide preference instead of being
+  re-derived from the mix on every load ([score-truth-model.md D2a](score-truth-model.md)), and
+  the helper splits per mix so it can say *why* it starts where it starts — Phoenix 2 keeps a
+  personal best for a failed stage and Phoenix does not. It also leads with the definition, which
+  the old helper never gave: a broken score is a run that failed the stage.
 - **A CSV upload is a manual submission** (D9), so it is authoritative and may lower a record.
   The confirm step's "Only new or improved scores will be saved" was true and is not any more;
   it now reads *"Your file becomes your records, even where it scores lower."*
