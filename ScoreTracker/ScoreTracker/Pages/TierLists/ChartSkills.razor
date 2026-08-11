@@ -585,6 +585,8 @@ else
                                                StepArtist="@(_settings.ShowStepArtist ? chart.StepArtist?.ToString() : null)"
                                                Skills="@(_settings.ShowSkills ? SkillChipsFor(chart) : null)"
                                                AgeDays="@(_showAge && score != null ? (int)(_now - score.RecordedDate).TotalDays : null)"
+                                               ShowProjectedScore="@(_settings.ShowProjectedScore && _density != UiDensity.Compact)"
+                                               ProjectedScore="@(_projectedScores.TryGetValue(chart.Id, out var projected) ? projected : null)"
                                                OnToDo="ToggleToDo"
                                                OnOpen="OpenDetails"></TierListChartCard>
                         }
@@ -670,6 +672,11 @@ else
                    switches above — this one stays live in every density. *@
                 <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowOtherMixPasses" ValueChanged="SetShowOtherMixPasses"
                            Label=@L["Show Passed in Another Mix"]></MudSwitch>
+                @if (!IsLegacy && _chartType != ChartType.CoOp)
+                {
+                    <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowProjectedScore" ValueChanged="SetShowProjectedScore"
+                               Disabled="_density == UiDensity.Compact" Label=@L["Show Projected Score"]></MudSwitch>
+                }
             }
         </text>;
     }
@@ -1044,6 +1051,7 @@ else
         public bool ShowSkillMetric { get; set; }
         // Defaults on, so an existing player's folder looks the same until they turn it off.
         public bool ShowOtherMixPasses { get; set; } = true;
+        public bool ShowProjectedScore { get; set; }
         public int? MinNoteCount { get; set; }
         public int? MaxNoteCount { get; set; }
         public HashSet<string> StepArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1187,6 +1195,19 @@ else
             _otherMixPassesLoaded = true;
         }
     }
+    private async Task SetShowProjectedScore(bool show)
+    {
+        _settings.ShowProjectedScore = show;
+        await SaveSettings();
+        // Same shape as the cross-mix switch: the folder load skips the read when the switch is
+        // off, so turning it back on inside a folder backfills what that load never fetched.
+        if (show && CurrentUser.IsLoggedIn && !IsLegacy && _chartType != ChartType.CoOp)
+        {
+            _projectedScores = await Mediator.Send(
+                new GetProjectedScoresQuery(_chartType, _level, _currentMix));
+        }
+    }
+
     private async Task SetShowName(bool show)
     {
         _settings.ShowSongName = show;
@@ -1501,6 +1522,7 @@ else
     ///     sectioning them — the tier views carry that choice in the view itself.
     /// </summary>
     private bool _shownPersonalized;
+    private IReadOnlyDictionary<Guid, PhoenixScore> _projectedScores = new Dictionary<Guid, PhoenixScore>();
     private IReadOnlyList<TierGroup> _groups = Array.Empty<TierGroup>();
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
     private bool _isProvisionalFallback = false;
@@ -1773,6 +1795,12 @@ else
         var blended = await Mediator.Send(new GetBlendedTierListQuery(_chartType, _level, _tierListType,
             PersonalizedActive, Mix: _currentMix), cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
+
+        // Only when the switch asks for it: this is a peer sweep, and no other part of the page
+        // needs it. SetShowProjectedScore backfills when it comes back on inside a folder.
+        _projectedScores = _settings.ShowProjectedScore && CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp
+            ? await Mediator.Send(new GetProjectedScoresQuery(_chartType, _level, _currentMix), cancellationToken)
+            : new Dictionary<Guid, PhoenixScore>();
 
         // The blank-page guard is dead (rule 9): render every chart we can resolve and
         // silently drop entries whose chart no longer exists.
