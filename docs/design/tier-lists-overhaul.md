@@ -127,7 +127,8 @@ One flag set, resolved per `ListMix`:
 | Skill tags on cards / By-Skill view (radar charts retired — round 4) | ✅ | ❌ off until piucenter data covers P2 | n/a — page shows "coming soon" |
 | Chabala lens | ✅ (existing links; becomes imported difficulty attribution later) | ❌ | n/a — page shows "coming soon" |
 | Paragon / title progress strip | ✅ unchanged | ❌ (Folder Level doc will fill this) | n/a — page shows "coming soon" |
-| Personalized blend inputs | Pass Count + Skill + Similar Players | Pass Count + Similar Players | n/a |
+| Personalized blend inputs (Pass) | Pass Count + Skill + Similar Players | Pass Count + Similar Players | n/a |
+| Personalized blend inputs (Score) | Scores + Official Scores + Projection | same | n/a |
 | Provisional-fallback badge | n/a | ✅ stays | n/a |
 
 XX and older mixes get the whole-page **"Tier lists for XX and older coming soon"** state (round 5) — the per-capability XX column is moot for this page.

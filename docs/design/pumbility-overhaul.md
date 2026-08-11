@@ -523,7 +523,7 @@ cohort percentile interpolation, no skill adjustment — MAE 10,491, bias −2,8
 
 | lever | result |
 |---|---|
-| Cohort window ±1.0 | **already optimal** — ±0.5 costs +3.1%, ±2.0 +3.1%, ±3.0 +12.4% |
+| Cohort window ±1.0 | **already optimal** — ±0.5 costs +3.1%, ±2.0 +3.1%, ±3.0 +12.4%. ⚠ Measured on **accuracy of the number**, which is this page's job. A tier list only ranks a folder against itself, so the personalized Score lens asks for ±0.5 — the window the rest of the site means by a competitive peer — and the window is a parameter of `IScoreProjector` rather than a site-wide constant (owner, 2026-08-11) |
 | Percentile `×0.95` | moves MAE ±8% and bias by 5,000, but **ρ never leaves 0.680–0.682**. Pure calibration |
 | Minimum cohort depth | **selection, not accuracy** — like-for-like on the same targets, a raised gate is *worse* |
 | Per-player offset calibration | **+9.1% worse**. Charts you have played are self-selected, so the offset does not transfer |

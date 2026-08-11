@@ -78,10 +78,41 @@ attribution is the headline win.
 ## The two windows (deliberate)
 
 - **Vs. Peers column**: ±0.5 competitive level — reuses the Better-Than data.
-- **Players Like You blend source**: ±1.0 competitive level with closeness falloff.
+- **Players Like You blend source** (Pass only): ±1.0 competitive level with closeness falloff.
+- **Projection source** (Score only): ±0.5, the window the rest of the site means by a
+  competitive peer.
 
-Same spirit, different sources; aligning them would mean new cohort aggregation for
-no user-visible gain.
+Same spirit, different sources; aligning the first two would mean new cohort
+aggregation for no user-visible gain.
+
+## The two lenses stopped sharing a recipe (2026-08-11)
+
+Score's personal half is now a single source: what players within ±0.5 competitive
+level actually score on the folder's charts, growth-discounted and σ-bucketed like
+every other tier list — `IScoreProjector`, shared with the PUMBILITY page so the two
+surfaces cannot answer "what would you score here" differently.
+
+It replaced both of Score's old personal sources. The Skill nudge measured **0.071**
+correlation with the residual it existed to correct (pumbility-overhaul.md §4.3 —
+worse than not adjusting), and Similar Players read the same competitive cohort the
+projection reads, then discarded the scores in favour of the tier buckets they had
+been sorted into. **Pass keeps both, unchanged**: there is no pass-projection engine,
+so the Skill source is still the only thing doing per-player work there.
+
+Two consequences the page has to carry:
+
+- **Each recipe card follows its own weight**, never a lens name, so the page tracks
+  the modifier table instead of a snapshot of it. The skill profile section goes with
+  the Skill source — on Score those deviations feed nothing.
+- **The claim is bounded.** The estimator depends on the player only through their
+  competitive level, so the card says *what players at your level score here* and may
+  not say *this chart suits you*.
+
+A projection reaching fewer than **3** of a folder's charts stays silent. Tier bands
+are cut from the spread of the values handed in, so one projection has a standard
+deviation of zero and lands on the easiest band by construction — at full weight, off
+one peer's one score. The floor is provisional; `ScoreProjectionCostProbeTests`
+(exploration) exists to settle it along with the on-demand cost.
 
 ## Data flow
 

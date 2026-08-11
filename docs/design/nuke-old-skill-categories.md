@@ -75,7 +75,7 @@ The similar-charts algorithm is **already pure granular** (`GetChartBadgeCoverag
 | `ChartIntelligence/TierListBlendBuilder.cs` | `WeightsFor` → `(string, double)` from real coverage; `pooled` / `skillDeviations` re-keyed; **delete the `chart.Skills` fallback** |
 | `ChartIntelligence/Contracts/PlayerSkillDeviations.cs` | `IReadOnlyDictionary<string, SkillDeviationRecord>` |
 | `ChartIntelligence/PlayerSkillDeviationsHandler.cs`, `PersonalizedBreakdownHandler.cs`, `Contracts/PersonalizedTierListBreakdown.cs` | re-key |
-| `PlayerProgress/PumbilityProjectionSaga.cs` | `profile.Skills[c.Skill]` → badge key |
+| ~~`PlayerProgress/PumbilityProjectionSaga.cs`~~ | **Done, by deletion.** The PUMBILITY rewrite dropped the skill adjustment entirely rather than re-keying it — the estimator takes no argument describing the player it predicts for (pumbility-overhaul.md §4.3). Nothing to migrate. |
 | `Catalog/PiuCenterCrawlSaga.cs` | stop writing abstract skills; metrics only |
 
 ### Infrastructure
