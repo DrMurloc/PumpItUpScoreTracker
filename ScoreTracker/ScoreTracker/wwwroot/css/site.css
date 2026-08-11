@@ -13498,6 +13498,196 @@ span.ct-console-pick { cursor: default; }
     white-space: nowrap;
 }
 
+/* --- the projection spread: a folder laid out on what your level scores there --- */
+/* Lives here rather than in a Razor <style> block, which is page-scoped — a shared component
+   styled that way renders unstyled on every other page that picks it up. */
+.spread-scroll {
+    overflow-x: auto;
+}
+
+.spread {
+    /* The region overlay derives its inset from the same two numbers as the grid below, because
+       pixel-guessing the alignment is exactly what breaks when a column width changes. */
+    --spread-namecol: 190px;
+    --spread-valcol: 96px;
+    --spread-gap: 12px;
+    min-width: 660px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+}
+
+.spread-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--spread-namecol) 1fr var(--spread-valcol);
+    align-items: center;
+    gap: var(--spread-gap);
+    height: 30px;
+}
+
+.spread-regions {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--spread-namecol) + var(--spread-gap));
+    right: calc(var(--spread-valcol) + var(--spread-gap));
+    pointer-events: none;
+}
+
+.spread-region {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+
+.spread-region i {
+    position: absolute;
+    inset: 0;
+    opacity: .13;
+}
+
+.spread-region b {
+    position: absolute;
+    top: 2px;
+    left: 6px;
+    font-size: 9.5px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.spread-edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: color-mix(in srgb, var(--mix-ink) 22%, transparent);
+}
+
+.spread-name {
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.spread-name.spread-unplayed {
+    font-style: italic;
+}
+
+.spread-track {
+    position: relative;
+    height: 100%;
+}
+
+.spread-dot {
+    position: absolute;
+    top: 50%;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 2px var(--mix-bg);
+}
+
+/* Unplayed loses its fill and nothing else — the projection is just as real there. */
+.spread-dot.spread-unplayed {
+    background: var(--mix-bg) !important;
+    border: 2px solid;
+    box-shadow: none;
+}
+
+.spread-mine {
+    position: absolute;
+    top: 50%;
+    width: 9px;
+    height: 9px;
+    transform: translate(-50%, -50%) rotate(45deg);
+    border: 1.5px solid var(--mix-ink);
+    background: var(--mix-bg);
+}
+
+.spread-value {
+    font-size: 12.5px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--mix-ink);
+}
+
+.spread-you {
+    display: block;
+    font-size: 11px;
+    color: var(--mix-ink-muted);
+}
+
+.spread-rowtier {
+    display: none;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Below this the name sits above a full-width track, so nothing scrolls sideways. Seven band
+   labels across a phone are unreadable, so they give way to the tier printed on each row —
+   which is also what keeps the dot's colour from being the only channel. */
+@media (max-width: 700px) {
+    .spread {
+        --spread-namecol: 0px;
+        --spread-valcol: 0px;
+        --spread-gap: 0px;
+        min-width: 0;
+        padding-top: 0;
+    }
+
+    .spread-row {
+        display: block;
+        height: auto;
+        padding: 7px 0 9px;
+        border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    }
+
+    .spread-name {
+        display: block;
+        white-space: normal;
+        color: var(--mix-ink);
+        font-size: 13px;
+    }
+
+    .spread-value {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        text-align: left;
+        font-size: 12px;
+        padding-bottom: 5px;
+    }
+
+    .spread-you {
+        display: inline;
+    }
+
+    .spread-track {
+        display: block;
+        height: 16px;
+    }
+
+    .spread-regions {
+        left: 0;
+        right: 0;
+    }
+
+    .spread-region b {
+        display: none;
+    }
+
+    .spread-rowtier {
+        display: inline;
+    }
+}
+
 /* --- the patience card: sitewide, for waits a page cannot shorten --- */
 /* Lives here rather than in a Razor <style> block, which is page-scoped — a shared component
    styled that way renders unstyled on every other page that uses it. */

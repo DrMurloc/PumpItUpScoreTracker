@@ -1,0 +1,133 @@
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* The folder laid out on what a player at this level would score, with the tier bands drawn
+   behind it. The bands were always cut from a spread; this is the first surface that shows the
+   spread they were cut from — which is the whole reason the breakdown page exists.
+
+   The cuts come from TierListProcessor.StdDev, the same function the bucketing itself uses, so
+   a band edge here can never sit somewhere the tier list disagrees with. *@
+@if (Rows.Count == 0)
+{
+    return;
+}
+
+<div class="spread-scroll">
+    <div class="spread">
+        <div class="spread-regions" aria-hidden="true">
+            @foreach (var band in Bands)
+            {
+                <span class="spread-region" style="left:@Pct(band.From)%;width:@(Pct(band.To) - Pct(band.From))%">
+                    <i style="background:@ThemeScales.DifficultyColor(band.Category)"></i>
+                    <b style="color:@ThemeScales.DifficultyColor(band.Category)">@L[TierNames[band.Category]]</b>
+                </span>
+                @if (band.To < Max)
+                {
+                    <span class="spread-edge" style="left:@Pct(band.To)%"></span>
+                }
+            }
+        </div>
+        @foreach (var row in Rows)
+        {
+            var band = BandFor(row.Projected);
+            <div class="spread-row">
+                <span class="spread-name @(row.Mine == null ? "spread-unplayed" : "")">@row.Name</span>
+                <span class="spread-track">
+                    @* Unplayed keeps its position and colour and loses only its fill: the
+                       projection is exactly as real there, and what is missing is the player's
+                       marker, not the number. *@
+                    <span class="spread-dot @(row.Mine == null ? "spread-unplayed" : "")"
+                          style="left:@Pct(row.Projected)%;background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>
+                    @if (row.Mine != null)
+                    {
+                        <span class="spread-mine" style="left:@Pct((int)row.Mine.Value)%"></span>
+                    }
+                </span>
+                <span class="spread-value">
+                    <span>
+                        @row.Projected.ToString("N0")
+                        @* The band name rides the row because the region labels have to go at
+                           phone widths, and colour is never the only channel (rule 8). *@
+                        <span class="spread-rowtier" style="color:@ThemeScales.DifficultyColor(band)">@L[TierNames[band]]</span>
+                    </span>
+                    <span class="spread-you">
+                        @(row.Mine != null ? L["you {0}", ((int)row.Mine.Value).ToString("N0")] : L["not played"])
+                    </span>
+                </span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+
+    /// <summary>One chart on the spread: what this level scores there, and what the player did.</summary>
+    public sealed record SpreadRow(string Name, int Projected, PhoenixScore? Mine);
+
+    /// <summary>
+    ///     Charts with a projection, hardest first. A chart no peer has played has no position on
+    ///     this axis and belongs in the page's own not-enough-data list, not here.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public IReadOnlyList<SpreadRow> Rows { get; set; } = Array.Empty<SpreadRow>();
+
+    private static readonly IReadOnlyDictionary<TierListCategory, string> TierNames =
+        new Dictionary<TierListCategory, string>
+        {
+            [TierListCategory.Overrated] = "1+ Level Easier",
+            [TierListCategory.VeryEasy] = "Very Easy",
+            [TierListCategory.Easy] = "Easy",
+            [TierListCategory.Medium] = "Medium",
+            [TierListCategory.Hard] = "Hard",
+            [TierListCategory.VeryHard] = "Very Hard",
+            [TierListCategory.Underrated] = "1+ Level Harder"
+        };
+
+    private sealed record Band(TierListCategory Category, double From, double To);
+
+    private double Min => Math.Min(Rows.Min(r => (double)r.Projected),
+        Rows.Where(r => r.Mine != null).Select(r => (double)(int)r.Mine!.Value).DefaultIfEmpty(double.MaxValue).Min());
+
+    private double Max => Math.Max(Rows.Max(r => (double)r.Projected),
+        Rows.Where(r => r.Mine != null).Select(r => (double)(int)r.Mine!.Value).DefaultIfEmpty(double.MinValue).Max());
+
+    // A little air at both ends so a dot at the extreme is not half off the track.
+    private double Low => Min - (Max - Min) * 0.06;
+    private double High => Max + (Max - Min) * 0.06;
+
+    /// <summary>
+    ///     The same cuts the tier list makes: mean ± ½σ, σ, 1½σ over the projections, via the
+    ///     shared StdDev so the two cannot drift.
+    /// </summary>
+    private IReadOnlyList<Band> Bands
+    {
+        get
+        {
+            var values = Rows.Select(r => (double)r.Projected).ToArray();
+            var mean = values.Average();
+            var sd = TierListProcessor.StdDev(values, false);
+            return new[]
+            {
+                new Band(TierListCategory.Underrated, Low, mean - 1.5 * sd),
+                new Band(TierListCategory.VeryHard, mean - 1.5 * sd, mean - sd),
+                new Band(TierListCategory.Hard, mean - sd, mean - sd / 2),
+                new Band(TierListCategory.Medium, mean - sd / 2, mean + sd / 2),
+                new Band(TierListCategory.Easy, mean + sd / 2, mean + sd),
+                new Band(TierListCategory.VeryEasy, mean + sd, mean + 1.5 * sd),
+                new Band(TierListCategory.Overrated, mean + 1.5 * sd, High)
+            }.Where(b => b.To > Low && b.From < High)
+                .Select(b => new Band(b.Category, Math.Max(b.From, Low), Math.Min(b.To, High)))
+                .ToArray();
+        }
+    }
+
+    private TierListCategory BandFor(int projected) =>
+        Bands.FirstOrDefault(b => projected < b.To)?.Category ?? TierListCategory.Overrated;
+
+    private double Pct(double value) => High - Low < 0.0001 ? 0 : (value - Low) / (High - Low) * 100.0;
+
+}
