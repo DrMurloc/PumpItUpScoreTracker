@@ -14,7 +14,7 @@ For solution layout and patterns, see [ARCHITECTURE.md](ARCHITECTURE.md). For pr
 
 ## Scoring
 
-- **Phoenix score** — the current scoring scheme. 0–1,000,000 points, accuracy-based rather than combo-based: judgements carry 99.5% of it and max combo the remaining 0.5%. That residual term is small but real, and it is what makes **max combo** recoverable from a score plus its judgement counts. See [`PhoenixScore`](../ScoreTracker/ScoreTracker.SharedKernel/ValueTypes/PhoenixScore.cs) and [`ScoreScreen`](../ScoreTracker/ScoreTracker.Domain/Records/ScoreScreen.cs).
+- **Phoenix score** — the current scoring scheme. 0–1,000,000 points, **accuracy-based and not combo-based** — that is the break from XX, which was almost entirely combo-driven. What you are graded on is how you hit the notes. Combo survives only as a 0.5% residual term in the formula: nothing to play around, but enough that **max combo** can be recovered from a score plus its judgement counts. See [`PhoenixScore`](../ScoreTracker/ScoreTracker.SharedKernel/ValueTypes/PhoenixScore.cs) and [`ScoreScreen`](../ScoreTracker/ScoreTracker.Domain/Records/ScoreScreen.cs).
 - **XX score** — the pre-Phoenix scoring scheme (combo and letter based). **Legacy** — retained for historical data; new feature work targets Phoenix only.
 - **Letter grade** — end-of-chart performance rating. Phoenix and XX have separate letter-grade systems (`PhoenixLetterGrade`, `XXLetterGrade`).
 - **Plate** — Phoenix-only secondary rating, based on per-step accuracy distribution. Modeled by `PhoenixPlate`. Awarded only on a **pass**: a broken attempt has no plate anywhere in the system ([score-truth-model.md](design/score-truth-model.md) D8).
