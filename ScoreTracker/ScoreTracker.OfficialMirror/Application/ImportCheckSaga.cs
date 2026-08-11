@@ -148,8 +148,11 @@ internal sealed class ImportCheckSaga :
                     ScoreJournalEntry.OfficialImportSource, request.ExpectedGameTag, request.CardId),
                 cancellationToken);
 
+            // The player's choice, not a literal: this half writes records, so a hardcoded true
+            // re-recorded every break somebody had just cleaned up — press Score check and they
+            // were all back. Both halves of the run read the same flag.
             var imported = await _mediator.Send(new ExecuteImportCommand(request.UserId, request.Mix, request.Sid,
-                request.CardId, request.ExpectedGameTag, true, sessionId), cancellationToken);
+                request.CardId, request.ExpectedGameTag, request.IncludeBroken, sessionId), cancellationToken);
 
             var (added, checkedCount) = request.DeepScan
                 ? await DeepScan(request, sessionId, cancellationToken)

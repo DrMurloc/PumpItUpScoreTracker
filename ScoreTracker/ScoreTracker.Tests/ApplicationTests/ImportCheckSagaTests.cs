@@ -242,6 +242,23 @@ public sealed class ImportCheckSagaTests
             It.IsAny<IReadOnlyCollection<string>>(), includeBroken, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task TheImportInsideTheRunHonoursTheChoiceToo(bool includeBroken)
+    {
+        // The run imports before it counts, and that half passed a hardcoded true — so pressing
+        // Score check re-recorded every break the Your Data cleanup had just withdrawn. Verifying
+        // only the repair's read walked straight past it.
+        var mediator = Mediator();
+
+        await Build(mediator: mediator, site: Site(Census(("18", 1))), records: Records(1))
+            .Handle(Execute(includeBroken: includeBroken), CancellationToken.None);
+
+        mediator.Verify(m => m.Send(It.Is<ExecuteImportCommand>(c => c.IncludeBroken == includeBroken),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     [Fact]
     public async Task TheImportAndTheDeeperReadShareOneSession()
     {
