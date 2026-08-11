@@ -62,7 +62,8 @@ internal sealed class RunImportCheckConsumer : IConsumer<RunImportCheckCommand>
             // session AFTER the deep-scan slot gate, so a refused scan leaves no empty session row
             // in the player's list. Null means exactly that — refused, nothing opened.
             var run = await _mediator.Send(new ExecuteImportCheckCommand(message.UserId, message.Mix,
-                message.Sid, message.CardId, message.ExpectedGameTag, message.DeepScan), context.CancellationToken);
+                message.Sid, message.CardId, message.ExpectedGameTag, message.DeepScan, message.IncludeBroken),
+                context.CancellationToken);
             saved = run.Saved;
             if (run.SessionId is { } session)
                 await _results.AttachSession(resultId, session, context.CancellationToken);

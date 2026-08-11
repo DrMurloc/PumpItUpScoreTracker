@@ -30,11 +30,12 @@ public sealed class RunImportCheckConsumerTests
 {
     private static readonly Guid UserId = Guid.NewGuid();
 
-    private static ConsumeContext<RunImportCheckCommand> Context(bool deepScan = false)
+    private static ConsumeContext<RunImportCheckCommand> Context(bool deepScan = false,
+        bool includeBroken = false)
     {
         var context = new Mock<ConsumeContext<RunImportCheckCommand>>();
         context.SetupGet(c => c.Message).Returns(new RunImportCheckCommand(UserId, MixEnum.Phoenix, "sid123",
-            "card1", "TAG #1", deepScan));
+            "card1", "TAG #1", deepScan, includeBroken));
         context.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
         return context.Object;
     }

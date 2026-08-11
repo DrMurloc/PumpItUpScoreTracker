@@ -21,4 +21,8 @@ public sealed record StartImportCheckCommand(
     /// <summary>Read every page of the best-score list instead of counting levels. Costs one of
     /// the month's allowance, and is the only way to find a score improved without changing grade
     /// or plate.</summary>
-    bool DeepScan) : IRequest<ImportCheckStartResult>;
+    bool DeepScan,
+    /// <summary>The player's broken-scores choice, same as an import's. A repair that ignored it
+    /// would skip exactly the charts their imports save, while telling them their account is
+    /// complete.</summary>
+    bool IncludeBroken) : IRequest<ImportCheckStartResult>;

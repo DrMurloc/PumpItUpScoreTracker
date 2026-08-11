@@ -95,7 +95,7 @@ internal sealed class ImportCheckSaga :
             }
 
             await _bus.Publish(new RunImportCheckCommand(userId, request.Mix, sid, request.CardId,
-                request.ExpectedGameTag, request.DeepScan), cancellationToken);
+                request.ExpectedGameTag, request.DeepScan, request.IncludeBroken), cancellationToken);
             handedOff = true;
             return new ImportCheckStartResult(ImportCheckStartOutcome.Started, left);
         }
@@ -199,7 +199,7 @@ internal sealed class ImportCheckSaga :
         CancellationToken cancellationToken)
     {
         var found = await _officialSite.GetBestScoresIn(request.Mix, request.UserId, request.Sid,
-            Array.Empty<string>(), false, cancellationToken);
+            Array.Empty<string>(), request.IncludeBroken, cancellationToken);
         return (await SaveFound(request, found, sessionId, cancellationToken), found.Count);
     }
 
@@ -207,7 +207,7 @@ internal sealed class ImportCheckSaga :
         Guid sessionId, CancellationToken cancellationToken)
     {
         var found = await _officialSite.GetBestScoresIn(request.Mix, request.UserId, request.Sid, buckets,
-            false, cancellationToken);
+            request.IncludeBroken, cancellationToken);
         return await SaveFound(request, found, sessionId, cancellationToken);
     }
 
