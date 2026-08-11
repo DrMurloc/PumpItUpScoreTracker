@@ -108,6 +108,26 @@ Two consequences the page has to carry:
   competitive level, so the card says *what players at your level score here* and may
   not say *this chart suits you*.
 
+### Score dropped its community half (2026-08-11)
+
+Personalized Score is the projection **alone** — the stored score lists no longer vote.
+Blending them back in counted the same evidence twice: the projection is built from
+peers' actual scores, so those lists are an echo of its own input, bucketed, not a
+second opinion. It also means the standard-deviation banding happens once inside the
+projection rather than being averaged with other bandings and re-cut.
+
+Two consequences:
+
+- **No fallback.** A chart no peer near the player's level has played is Not Rated
+  rather than quietly the community's tier, and under the floor the whole folder is —
+  so the page says so, with the Community view one button away, instead of showing a
+  screen of grey cards.
+- **The breakdown's community column is computed as the Community view**, not as the
+  personalized recipe filtered to its stored sources. That filter now yields nothing on
+  Score, which would have blanked the moved-charts diff the page exists for.
+  `CommunityWeight` means the community share of *your* list — 0 on Score — so the
+  recipe card follows it.
+
 A projection reaching fewer than **3** of a folder's charts stays silent. Tier bands
 are cut from the spread of the values handed in, so one projection has a standard
 deviation of zero and lands on the easiest band by construction — at full weight, off
