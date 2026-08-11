@@ -80,10 +80,6 @@
                 <span>@L["BPM"] @Result.Chart.Song.Bpm.Value.ToString()</span>
             }
             <span>@Result.Chart.Song.Duration.ToString(@"m\:ss")</span>
-            @if (Result.ScoreCount >= PassRateSampleFloor)
-            {
-                <span>@L["Pass rate"] @((Result.PassCount * 100 / Result.ScoreCount))%</span>
-            }
             @if (Result.ScoreCount > 0)
             {
                 <span>@L["{0} scores", Result.ScoreCount]</span>
@@ -143,9 +139,6 @@
 </div>
 
 @code {
-    /// <summary>Mirror of the handler's minimum-sample floor for rate display.</summary>
-    private const int PassRateSampleFloor = 10;
-
     [Parameter] public ChartSearchResult Result { get; set; } = null!;
 
     /// <summary>The active sort's printed value — always visible, per the page-stack rules.</summary>

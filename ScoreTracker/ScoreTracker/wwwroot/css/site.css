@@ -7202,6 +7202,43 @@ button.chart-card-art {
     gap: 5px;
 }
 
+.srp-export-grp {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.srp-export-all {
+    background: none;
+    border: 0;
+    padding: 2px 4px;
+    font: inherit;
+    font-size: .72rem;
+    color: var(--mix-primary);
+    cursor: pointer;
+}
+
+.srp-export-all:hover,
+.srp-export-all:focus-visible {
+    text-decoration: underline;
+}
+
+/* A bundle chip wears the ordinary chip. Its multiplier is what says it is worth many
+   columns, and that reads without a second visual language on top. */
+.srp-export-mult {
+    margin-left: 7px;
+    font-size: .74rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.srp-export-unstable {
+    color: var(--mix-ink-muted);
+    border-top: 1px dashed var(--mix-surface-muted);
+    padding-top: 7px;
+}
+
 .srp-export-hint {
     color: var(--mix-ink-muted);
 }

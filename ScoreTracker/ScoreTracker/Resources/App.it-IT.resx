@@ -575,6 +575,9 @@
   <data name="All tools · {0}" xml:space="preserve">
     <value>Tutti gli strumenti · {0}</value>
   </data>
+  <data name="All {0}" xml:space="preserve">
+    <value>Tutto ({0})</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>Tutte le {0} a {1} o meglio</value>
   </data>
@@ -1112,6 +1115,9 @@
   <data name="Chart Age by Level" xml:space="preserve">
     <value>Chart Age by Level</value>
   </data>
+  <data name="Chart analysis" xml:space="preserve">
+    <value>Analisi del chart</value>
+  </data>
   <data name="Chart analysis made possible by" xml:space="preserve">
     <value>Analisi delle chart resa possibile da</value>
   </data>
@@ -1138,6 +1144,12 @@
   </data>
   <data name="Chart Details" xml:space="preserve">
     <value>Dettagli del chart</value>
+  </data>
+  <data name="Chart ending" xml:space="preserve">
+    <value>Finale del chart</value>
+  </data>
+  <data name="Chart ID" xml:space="preserve">
+    <value>ID del chart</value>
   </data>
   <data name="Chart leaderboard" xml:space="preserve">
     <value>Classifica del chart</value>
@@ -1166,6 +1178,9 @@
   </data>
   <data name="Chart type (default Singles)" xml:space="preserve">
     <value>Tipo di chart (predefinito Singles)</value>
+  </data>
+  <data name="Chart URL" xml:space="preserve">
+    <value>URL del chart</value>
   </data>
   <data name="Chart view" xml:space="preserve">
     <value>Vista del grafico</value>
@@ -3574,6 +3589,9 @@
   <data name="Must give the community a name." xml:space="preserve">
     <value>Devi dare un nome alla comunità.</value>
   </data>
+  <data name="My Bads" xml:space="preserve">
+    <value>I miei Bad</value>
+  </data>
   <data name="My broken flag" xml:space="preserve">
     <value>Broken (sì/no)</value>
   </data>
@@ -3583,14 +3601,29 @@
   <data name="My data" xml:space="preserve">
     <value>I miei dati</value>
   </data>
+  <data name="My Goods" xml:space="preserve">
+    <value>I miei Good</value>
+  </data>
   <data name="My grade" xml:space="preserve">
     <value>Il mio grado</value>
+  </data>
+  <data name="My Greats" xml:space="preserve">
+    <value>I miei Great</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>Il mio grado legacy</value>
   </data>
   <data name="My legacy score" xml:space="preserve">
     <value>Il mio punteggio legacy</value>
+  </data>
+  <data name="My max combo" xml:space="preserve">
+    <value>Il mio combo massimo</value>
+  </data>
+  <data name="My Misses" xml:space="preserve">
+    <value>I miei Miss</value>
+  </data>
+  <data name="My Perfects" xml:space="preserve">
+    <value>I miei Perfect</value>
   </data>
   <data name="My Phoenix grade" xml:space="preserve">
     <value>Il mio grado Phoenix</value>
@@ -3600,6 +3633,9 @@
   </data>
   <data name="My Phoenix score" xml:space="preserve">
     <value>Il mio punteggio Phoenix</value>
+  </data>
+  <data name="My play count" xml:space="preserve">
+    <value>I miei tentativi</value>
   </data>
   <data name="My profile is private. I understand my username, avatar, and country will be visible on public comments." xml:space="preserve">
     <value>Il mio profilo è privato. Capisco che il mio nome utente, il mio avatar e il mio paese saranno visibili sui commenti pubblici.</value>
@@ -4673,6 +4709,9 @@
   <data name="PIU Tier List" xml:space="preserve">
     <value>Tier List PIU</value>
   </data>
+  <data name="piucenter columns" xml:space="preserve">
+    <value>Colonne piucenter</value>
+  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4776,6 +4815,9 @@
   <data name="Player" xml:space="preserve">
     <value>Giocatore</value>
   </data>
+  <data name="Player count" xml:space="preserve">
+    <value>Numero di giocatori</value>
+  </data>
   <data name="Player Page" xml:space="preserve">
     <value>Pagina giocatore</value>
   </data>
@@ -4877,6 +4919,9 @@
   </data>
   <data name="PR" xml:space="preserve">
     <value>PR</value>
+  </data>
+  <data name="Practice ranks" xml:space="preserve">
+    <value>Ranghi di pratica</value>
   </data>
   <data name="PreBuilt Tournament Configuration" xml:space="preserve">
     <value>Configurazione del torneo predefinita</value>
@@ -5094,6 +5139,9 @@
   </data>
   <data name="Rankings" xml:space="preserve">
     <value>Classifiche</value>
+  </data>
+  <data name="Rare patterns" xml:space="preserve">
+    <value>Pattern rari</value>
   </data>
   <data name="Rare PG" xml:space="preserve">
     <value>PG raro</value>
@@ -6032,6 +6080,9 @@
   <data name="Skill data: PIU Center — maintained by aesthete" xml:space="preserve">
     <value>Dati delle abilità: PIU Center — mantenuto da aesthete</value>
   </data>
+  <data name="Skill emphasis" xml:space="preserve">
+    <value>Peso delle abilità</value>
+  </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>Impronta delle skill</value>
   </data>
@@ -6562,6 +6613,9 @@
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>Non c'è nulla a questo indirizzo — forse è cambiato con un Mix, o non è mai esistito. La ricerca conosce tutti i chart.</value>
   </data>
+  <data name="These come straight from piucenter. Header names can change when their data changes." xml:space="preserve">
+    <value>Vengono direttamente da piucenter. I nomi delle intestazioni possono cambiare quando cambiano i loro dati.</value>
+  </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>Team Infinitesimal ha estratto queste formule dal codice di NX2 e Prime. Nessuno le ha riverificate su Phoenix o Phoenix 2, quindi considera i numeri come la forma del sistema e non come valori esatti del cabinato.</value>
   </data>
@@ -6903,6 +6957,9 @@
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>top {0}% tra i pari</value>
+  </data>
+  <data name="Top-3 skills" xml:space="preserve">
+    <value>3 abilità principali</value>
   </data>
   <data name="Top-50 average score {0} — {1}" xml:space="preserve">
     <value>Punteggio medio della top 50: {0} — {1}</value>

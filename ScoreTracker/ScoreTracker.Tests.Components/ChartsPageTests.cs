@@ -104,7 +104,7 @@ public sealed class ChartsPageTests : ComponentTestBase
             ChartType.Double, level, mix, "SUNNY", 700, new HashSet<Skill>());
         return new ChartSearchResult(chart, mix,
             badges ?? Array.Empty<ChartBadge>(), 11.2m,
-            passDifficulty, null, communityVote, 21.4, null, 40, 25, 2, my);
+            passDifficulty, null, communityVote, 21.4, null, 40, 2, my);
     }
 
     [Fact]

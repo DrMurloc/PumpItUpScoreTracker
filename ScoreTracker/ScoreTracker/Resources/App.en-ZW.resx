@@ -575,6 +575,9 @@
   <data name="All tools · {0}" xml:space="preserve">
     <value>Alla rorgl · {0}</value>
   </data>
+  <data name="All {0}" xml:space="preserve">
+    <value>Blurp {0}</value>
+  </data>
   <data name="All {0} at {1} or better" xml:space="preserve">
     <value>Rgl {0} mr {1} argl morgmrp</value>
   </data>
@@ -1112,6 +1115,9 @@
   <data name="Chart Age by Level" xml:space="preserve">
     <value>Murgl Urg murm Grorpmurm</value>
   </data>
+  <data name="Chart analysis" xml:space="preserve">
+    <value>Murgl gloprab</value>
+  </data>
   <data name="Chart analysis made possible by" xml:space="preserve">
     <value>Murgl grrglarglmurm grglgrrgl grorpglorgblub murm</value>
   </data>
@@ -1138,6 +1144,12 @@
   </data>
   <data name="Chart Details" xml:space="preserve">
 	  <value>Murgl Rglrglmrgl</value>
+  </data>
+  <data name="Chart ending" xml:space="preserve">
+    <value>Murgl blorup</value>
+  </data>
+  <data name="Chart ID" xml:space="preserve">
+    <value>Murgl ID</value>
   </data>
   <data name="Chart leaderboard" xml:space="preserve">
     <value>Murgl mrglrmrgl</value>
@@ -1166,6 +1178,9 @@
   </data>
   <data name="Chart type (default Singles)" xml:space="preserve">
     <value>Murgl morg (plglgrgllurg Mrglrlgl)</value>
+  </data>
+  <data name="Chart URL" xml:space="preserve">
+    <value>Murgl URL</value>
   </data>
   <data name="Chart view" xml:space="preserve">
     <value>Murgl murmblub</value>
@@ -3574,6 +3589,9 @@
   <data name="Must give the community a name." xml:space="preserve">
     <value>Romurm blgrlgro mrp plglmurgblub gro mrg.</value>
   </data>
+  <data name="My Bads" xml:space="preserve">
+    <value>Malo Blarg</value>
+  </data>
   <data name="My broken flag" xml:space="preserve">
     <value>Blgrl morgl grglgl</value>
   </data>
@@ -3583,14 +3601,29 @@
   <data name="My data" xml:space="preserve">
     <value>Blgrl gromurm</value>
   </data>
+  <data name="My Goods" xml:space="preserve">
+    <value>Malo Gorbul</value>
+  </data>
   <data name="My grade" xml:space="preserve">
     <value>Blgrl rorgl</value>
+  </data>
+  <data name="My Greats" xml:space="preserve">
+    <value>Malo Grumba</value>
   </data>
   <data name="My legacy grade" xml:space="preserve">
     <value>Blgrl rogrrgl rorgl</value>
   </data>
   <data name="My legacy score" xml:space="preserve">
     <value>Blgrl rogrrgl mrglrgl</value>
+  </data>
+  <data name="My max combo" xml:space="preserve">
+    <value>Malo groblam</value>
+  </data>
+  <data name="My Misses" xml:space="preserve">
+    <value>Malo Murgab</value>
+  </data>
+  <data name="My Perfects" xml:space="preserve">
+    <value>Malo Purbogla</value>
   </data>
   <data name="My Phoenix grade" xml:space="preserve">
     <value>Blgrl Phoenix rorgl</value>
@@ -3600,6 +3633,9 @@
   </data>
   <data name="My Phoenix score" xml:space="preserve">
     <value>Blgrl Phoenix mrglrgl</value>
+  </data>
+  <data name="My play count" xml:space="preserve">
+    <value>Malo blarg glorgmurp</value>
   </data>
   <data name="My profile is private. I understand my username, avatar, and country will be visible on public comments." xml:space="preserve">
     <value>Mrgl murgblub mrgl morgl. Mrgl mrglup grrmrrgl, murgla blub murgblarg mrgla murp opa mrglrgll blurpgl.</value>
@@ -4673,6 +4709,9 @@
   <data name="PIU Tier List" xml:space="preserve">
 	  <value>PIU Mrpgrrgl Grog</value>
   </data>
+  <data name="piucenter columns" xml:space="preserve">
+    <value>piucenter murgblam</value>
+  </data>
   <data name="PIUGAME" xml:space="preserve">
     <value>PIUGAME</value>
   </data>
@@ -4776,6 +4815,9 @@
   <data name="Player" xml:space="preserve">
 	  <value>Morp</value>
   </data>
+  <data name="Player count" xml:space="preserve">
+    <value>Morp glorgmurp</value>
+  </data>
   <data name="Player Page" xml:space="preserve">
     <value>Morp Murgla</value>
   </data>
@@ -4877,6 +4919,9 @@
   </data>
   <data name="PR" xml:space="preserve">
     <value>PR</value>
+  </data>
+  <data name="Practice ranks" xml:space="preserve">
+    <value>Molgab rumal</value>
   </data>
   <data name="PreBuilt Tournament Configuration" xml:space="preserve">
 	  <value>Urgmurpurg Mrllrlrlrlgl Grgllurgblubblub</value>
@@ -5094,6 +5139,9 @@
   </data>
   <data name="Rankings" xml:space="preserve">
     <value>Maglmrpplgl</value>
+  </data>
+  <data name="Rare patterns" xml:space="preserve">
+    <value>Ograb malub</value>
   </data>
   <data name="Rare PG" xml:space="preserve">
     <value>Maglmurg PG</value>
@@ -6032,6 +6080,9 @@
   <data name="Skill data: PIU Center — maintained by aesthete" xml:space="preserve">
     <value>Morgmurm gromurm: PIU Center — grglarglurg murm morglurgurg</value>
   </data>
+  <data name="Skill emphasis" xml:space="preserve">
+    <value>Grumbal apo</value>
+  </data>
   <data name="Skill fingerprint" xml:space="preserve">
     <value>Morgmurm mrglroglmurm</value>
   </data>
@@ -6562,6 +6613,9 @@
   <data name="There's nothing at this address — it may have moved with a mix, or it never existed. The search knows every chart." xml:space="preserve">
     <value>Glargl blarggllurg mr grglmrp glorgmaglglorg — gl murg mrglro maglgrorp glgrgl gro mrg, argl gl glargl mrglrglmagl. Mrp grrglgro mrpgrorp murgglorg murgl.</value>
   </data>
+  <data name="These come straight from piucenter. Header names can change when their data changes." xml:space="preserve">
+    <value>Prambo piucenter mogla. Gloprab murgblam pola blurgab.</value>
+  </data>
   <data name="These formulas were data-mined from NX2 and Prime by Team Infinitesimal. Nobody has re-verified them against Phoenix or Phoenix 2, so treat the numbers as the shape of the system rather than exact cabinet values." xml:space="preserve">
     <value>Blgrlmrp glorgglorgargl glmagl gromurm-murpmurp romurg NX2 ro Grorpmrp murm Rglmrgl Murgmrmrpmagl. Urggro rgl gl-murplurgmagl gllurg murmlurgmurp Phoenix argl Phoenix 2, blarg morgblgrl mrp mrpblargro lurg mrp murggrgl mrgl mrp blubmorg groblgrl grogrgl murmblub mrglglmorg morggro.</value>
   </data>
@@ -6903,6 +6957,9 @@
   </data>
   <data name="top {0}% of peers" xml:space="preserve">
     <value>blarg {0}% mrgl maglmurp</value>
+  </data>
+  <data name="Top-3 skills" xml:space="preserve">
+    <value>Bralo grumbal</value>
   </data>
   <data name="Top-50 average score {0} — {1}" xml:space="preserve">
     <value>Blarg-50 rorg mrglrgl {0} — {1}</value>

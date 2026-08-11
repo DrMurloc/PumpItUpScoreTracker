@@ -253,6 +253,17 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ExecuteDeleteAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, int>> GetChartPlayCounts(Guid userId, MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.UserId == userId && e.MixId == mixId)
+            .GroupBy(e => e.ChartId)
+            .ToDictionaryAsync(g => g.Key, g => g.Count(), cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ScoreJournalEntry>> GetSessionEntries(Guid userId, Guid sessionId,
         CancellationToken cancellationToken)
     {

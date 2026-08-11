@@ -49,7 +49,6 @@ public sealed record SearchChartsQuery : IQuery<ChartSearchResultPage>
     public IReadOnlyList<TierListCategory>? PassDifficulty { get; init; }
     public IReadOnlyList<TierListCategory>? ScoreDifficulty { get; init; }
     public IReadOnlyList<TierListCategory>? CommunityVote { get; init; }
-    public double? PassRateMin { get; init; }
     public double? ScoringLevelMin { get; init; }
     public double? ScoringLevelMax { get; init; }
 

@@ -22,9 +22,6 @@ namespace ScoreTracker.Catalog.Application;
 /// </summary>
 internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, ChartSearchResultPage>
 {
-    /// <summary>Below this many scored records a pass rate is noise — excluded from rate facets and sorted last.</summary>
-    internal const int MinScoresForPassRate = 10;
-
     private readonly IMemoryCache _cache;
     private readonly IChartRepository _charts;
     private readonly IDateTimeOffsetAccessor _clock;
@@ -158,7 +155,6 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             bundle.ScoringLevels.TryGetValue(id, out var level) ? level : null,
             bundle.VoteRatings.TryGetValue(id, out var rating) ? rating : null,
             aggregate?.Count ?? 0,
-            aggregate?.PassCount ?? 0,
             aggregate?.PgCount ?? 0,
             null);
     }
@@ -296,12 +292,6 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             (row.CommunityVote == null || !q.CommunityVote.Contains(row.CommunityVote.Value)))
             return false;
 
-        if (q.PassRateMin != null)
-        {
-            var rate = PassRate(row);
-            if (rate == null || rate < q.PassRateMin) return false;
-        }
-
         if (q.ScoringLevelMin != null && (row.ScoringLevel == null || row.ScoringLevel < q.ScoringLevelMin))
             return false;
         if (q.ScoringLevelMax != null && (row.ScoringLevel == null || row.ScoringLevel > q.ScoringLevelMax))
@@ -310,13 +300,9 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
         return true;
     }
 
-    private static double? PassRate(ChartSearchResult row)
-    {
-        return row.ScoreCount >= MinScoresForPassRate ? row.PassCount / (double)row.ScoreCount : null;
-    }
-
     private sealed record MyRecord(bool Passed, bool IsBroken, int? PhoenixScore, PhoenixLetterGrade? PhoenixGrade,
-        PhoenixPlate? PhoenixPlate, XXLetterGrade? LegacyGrade, int? LegacyScore, DateTimeOffset? RecordedOn);
+        PhoenixPlate? PhoenixPlate, XXLetterGrade? LegacyGrade, int? LegacyScore, DateTimeOffset? RecordedOn,
+        JudgementCounts? Judgements);
 
     /// <summary>The visitor's best per chart in this mix, family-shaped by its scoring model.</summary>
     private async Task<IReadOnlyDictionary<Guid, MyRecord>> LoadMyRecords(MixEnum mix, Guid userId,
@@ -328,8 +314,9 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
             {
                 var best = attempt.BestAttempt;
                 if (best == null) continue;
+                // A legacy result screen has no judgement breakdown to observe.
                 records[attempt.Chart.Id] = new MyRecord(!best.IsBroken, best.IsBroken, null, null, null,
-                    best.LetterGrade, best.Score, best.RecordedOn);
+                    best.LetterGrade, best.Score, best.RecordedOn, null);
             }
         else
             foreach (var record in await _scores.GetBestScores(mix, userId, cancellationToken))
@@ -337,7 +324,7 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
                 // so a shared score means different letters per mix.
                 records[record.ChartId] = new MyRecord(!record.IsBroken, record.IsBroken,
                     record.Score == null ? null : (int)record.Score.Value, record.Score?.LetterGradeFor(mix),
-                    record.Plate, null, null, record.RecordedDate);
+                    record.Plate, null, null, record.RecordedDate, record.Judgements);
 
         return records;
     }
@@ -348,7 +335,8 @@ internal sealed class SearchChartsHandler : IRequestHandler<SearchChartsQuery, C
         if (!records.TryGetValue(row.Chart.Id, out var record)) return null;
 
         return new ChartSearchMyState(record.PhoenixScore, record.PhoenixGrade, record.PhoenixPlate,
-            record.LegacyGrade, record.LegacyScore, record.IsBroken, record.Passed, record.RecordedOn);
+            record.LegacyGrade, record.LegacyScore, record.IsBroken, record.Passed, record.RecordedOn,
+            record.Judgements);
     }
 
     private static bool MatchesUser(ChartSearchResult row, SearchChartsQuery q,

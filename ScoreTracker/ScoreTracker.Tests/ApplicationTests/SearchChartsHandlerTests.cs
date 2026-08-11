@@ -244,30 +244,6 @@ public sealed class SearchChartsHandlerTests
     }
 
     [Fact]
-    public async Task PassRateNeedsTheMinimumSample()
-    {
-        var attested = Guid.NewGuid();
-        var thin = Guid.NewGuid();
-        SeedMix(MixEnum.Phoenix,
-            MakeChart(attested, MixEnum.Phoenix, "Attested", 20),
-            MakeChart(thin, MixEnum.Phoenix, "Thin", 20));
-        _scores.Setup(s => s.GetChartScoreAggregates(MixEnum.Phoenix, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new ChartScoreAggregate(attested, 20, 15),
-                new ChartScoreAggregate(thin, 5, 5)
-            });
-
-        var result = await BuildHandler().Handle(new SearchChartsQuery
-        {
-            Mix = MixEnum.Phoenix,
-            PassRateMin = 0.5
-        }, CancellationToken.None);
-
-        Assert.Equal(attested, Assert.Single(result.Results).Chart.Id);
-    }
-
-    [Fact]
     public async Task SongNameContainsIsACaseInsensitiveSubstringMatch()
     {
         SeedMix(MixEnum.Phoenix,
@@ -281,6 +257,37 @@ public sealed class SearchChartsHandlerTests
         }, CancellationToken.None);
 
         Assert.Equal("District 1", Assert.Single(result.Results).Chart.Song.Name.ToString());
+    }
+
+    /// <summary>
+    ///     The breakdown reaches the projection intact, and its absence stays absent — the
+    ///     record read already hydrates it, so dropping it here was the whole gap.
+    /// </summary>
+    [Fact]
+    public async Task JudgementsRideTheRecordIntoMyState()
+    {
+        var observed = Guid.NewGuid();
+        var unobserved = Guid.NewGuid();
+        SeedMix(MixEnum.Phoenix,
+            MakeChart(observed, MixEnum.Phoenix, "Observed", 20),
+            MakeChart(unobserved, MixEnum.Phoenix, "Unobserved", 20));
+        SeedPhoenixRecords(MixEnum.Phoenix,
+            new RecordedPhoenixScore(observed, 985000, PhoenixPlate.MarvelousGame, false,
+                DateTimeOffset.Parse("2026-08-01T00:00:00Z"), "officialImport",
+                new JudgementCounts(900, 40, 5, 2, 3)),
+            new RecordedPhoenixScore(unobserved, 970000, PhoenixPlate.FairGame, false,
+                DateTimeOffset.Parse("2026-08-01T00:00:00Z"), "manual"));
+
+        var result = await BuildHandler().Handle(new SearchChartsQuery
+        {
+            Mix = MixEnum.Phoenix,
+            UserId = User
+        }, CancellationToken.None);
+
+        var rows = result.Results.ToDictionary(r => r.Chart.Id);
+        Assert.Equal(900, rows[observed].My!.Judgements!.Perfects);
+        Assert.Equal(3, rows[observed].My!.Judgements!.Misses);
+        Assert.Null(rows[unobserved].My!.Judgements);
     }
 
     private static readonly Guid User = Guid.NewGuid();

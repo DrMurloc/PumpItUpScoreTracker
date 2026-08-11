@@ -83,7 +83,6 @@ public sealed record ChartSearchResult(
     double? ScoringLevel,
     double? CommunityVoteRating,
     int ScoreCount,
-    int PassCount,
     int PgCount,
     ChartSearchMyState? My);
 
@@ -94,6 +93,12 @@ public sealed record ChartBadge(string Key, string DisplayName, BadgeCategory? C
 /// <summary>
 ///     The signed-in visitor's best on this chart, family-shaped: Phoenix fields for
 ///     Phoenix-family mixes, Legacy fields for XX and older — never both.
+///     <para>
+///         Judgements describe the play that produced the current best, and are null wherever
+///         that play's breakdown was never observed: manual and CSV entries never carry one,
+///         and an import only attaches one when the producing play was still on the
+///         recently-played list. Dense on Phoenix 2, thin on Phoenix, absent on legacy.
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record ChartSearchMyState(
@@ -104,4 +109,5 @@ public sealed record ChartSearchMyState(
     int? LegacyScore,
     bool IsBroken,
     bool Passed,
-    DateTimeOffset? RecordedOn);
+    DateTimeOffset? RecordedOn,
+    JudgementCounts? Judgements = null);
