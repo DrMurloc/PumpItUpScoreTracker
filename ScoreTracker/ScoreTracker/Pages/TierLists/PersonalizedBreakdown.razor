@@ -144,8 +144,8 @@ else
                     <ProjectionSpread Rows="SpreadRows"></ProjectionSpread>
                     <div class="bd-spread-legend">
                         <span><span class="bd-legend-dot"></span> @L["projected for your level"]</span>
-                        <span><span class="bd-legend-diamond"></span> @L["your score"]</span>
-                        <span><span class="bd-legend-hollow"></span> @L["not played yet"]</span>
+                        <span><span class="bd-legend-diamond"></span> @L["Your Score"]</span>
+                        <span><span class="bd-legend-hollow"></span> @L["Not played yet"]</span>
                     </div>
                 </section>
             }
@@ -217,7 +217,7 @@ else
                         {
                             <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
                                        OnClick="() => ToggleShowAll(group.Key)">
-                                @(_showAllGroups.Contains(group.Key) ? L["Show fewer"] : L["Show all {0}", group.Movers.Count])
+                                @(_showAllGroups.Contains(group.Key) ? L["Show fewer"] : L["Show all {0} charts", group.Movers.Count])
                             </MudButton>
                         }
                     </div>

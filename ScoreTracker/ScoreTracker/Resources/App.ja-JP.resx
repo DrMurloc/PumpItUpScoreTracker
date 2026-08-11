@@ -307,6 +307,9 @@
   <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
     <value>Bad。およそ22ノート分の積み上げが消えます。</value>
   </data>
+  <data name="A breakdown for Pass Difficulty is coming." xml:space="preserve">
+    <value>パス難易度の内訳は準備中です。</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>譜面</value>
   </data>
@@ -2105,6 +2108,9 @@
     <value>イベントリンク</value>
     
   <comment>イベントリンク</comment></data>
+  <data name="Every chart placed on what you would be expected to score. The tiers are cut from the spread of these numbers, which is why the bands sit where they do." xml:space="preserve">
+    <value>各譜面をあなたの予測スコアの位置に並べています。ティアはこれらの数値のばらつきから切られるため、帯の位置もそこで決まります。</value>
+  </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>{0}から{1}の間に難度が変わった・追加された・削除された譜面のすべて。</value>
   </data>
@@ -2158,6 +2164,9 @@
   </data>
   <data name="Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it." xml:space="preserve">
     <value>競技レベルが0.5以内で、これらの譜面をプレイした全員です。記録後にそのプレイヤーが上達しているほど、そのスコアの重みは下がります。</value>
+  </data>
+  <data name="Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it. Nothing else votes: the community score lists are built from the same scores this reads, so blending them in would count the same evidence twice." xml:space="preserve">
+    <value>競技レベルが0.5以内で、これらの譜面をプレイした全員です。記録後にそのプレイヤーが上達しているほど、そのスコアの重みは下がります。他には何も投票しません。コミュニティのスコアリストはこれが読むのと同じスコアから作られているため、混ぜると同じ根拠を二重に数えることになります。</value>
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>この下はすべてサイトの実データです — スクリーンショットではなく、実際のプロダクトです。</value>
@@ -2720,6 +2729,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>採点方法</value>
+  </data>
+  <data name="How you're doing against your level" xml:space="preserve">
+    <value>同水準に対する現在地</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>まだこのチャンネルに投稿できません。「チャンネルを見る」と「メッセージを送信」の権限を付与してから、もう一度コマンドを実行してください。</value>
@@ -3982,6 +3994,9 @@
   <data name="Nobody here holds this title yet." xml:space="preserve">
     <value>この称号の保持者はまだいません。</value>
   </data>
+  <data name="Nobody is above the line on every chart in their folder. If you were, your competitive level would climb and you would be measured against stronger scores instead — the bar moves with you." xml:space="preserve">
+    <value>フォルダー内のすべての譜面でラインを上回る人はいません。もしそうなら競技レベルが上がり、より強いスコアと比較されます。ラインはあなたと一緒に動きます。</value>
+  </data>
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>この譜面ボードにはまだ誰もいません。</value>
   </data>
@@ -4867,6 +4882,9 @@
   <data name="Players at your level" xml:space="preserve">
     <value>同水準のプレイヤー</value>
   </data>
+  <data name="Players at your level score {0}" xml:space="preserve">
+    <value>同水準のプレイヤーのスコアは {0}</value>
+  </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>PIUコミュニティのプレイヤーが、あなたのスコアを使っていろいろなものを作っています — PUMBILITYプランナー、譜面分析、Discordのランクボットなど。今後はそれらを見て、誰に許可するかを選べるページがあります。</value>
   </data>
@@ -5007,6 +5025,9 @@
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>予測ダブルPUMBILITY</value>
+  </data>
+  <data name="projected for your level" xml:space="preserve">
+    <value>同水準の予測</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>予測シングルPUMBILITY</value>
@@ -5772,6 +5793,9 @@
   <data name="See the full board" xml:space="preserve">
     <value>ボード全体を見る</value>
   </data>
+  <data name="See the Score breakdown" xml:space="preserve">
+    <value>スコアの内訳を見る</value>
+  </data>
   <data name="See their boards" xml:space="preserve">
     <value>このプレイヤーのボードを見る</value>
   </data>
@@ -5939,6 +5963,9 @@
   <data name="show all {0}" xml:space="preserve">
     <value>すべて{0}件を表示</value>
   </data>
+  <data name="Show all {0} charts" xml:space="preserve">
+    <value>{0} 譜面をすべて表示</value>
+  </data>
   <data name="Show all {0} plays" xml:space="preserve">
     <value>{0} 件すべて表示</value>
   </data>
@@ -6013,6 +6040,9 @@
   </data>
   <data name="Shown Difficulty" xml:space="preserve">
     <value>表示する難易度</value>
+  </data>
+  <data name="Shown for comparison only — your own scores are not an input to the ranking above. The charts you sit furthest below are the ones with the most left in them." xml:space="preserve">
+    <value>比較のための表示です。あなた自身のスコアは上のランキングには入りません。下回っている幅が大きい譜面ほど伸びしろがあります。</value>
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>ツール一覧に表示されます。プレイヤーは接続前にこれを読みます。</value>
@@ -6637,6 +6667,12 @@
   </data>
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>ティアリスト、ランキング、計算機は誰でも見られます — 自分のスコアを重ねたくなったらログインを。</value>
+  </data>
+  <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
+    <value>パスのパーソナライズは作り直し中です。置き換わる版を説明するより、このページは待ちます。</value>
+  </data>
+  <data name="the whole list" xml:space="preserve">
+    <value>リスト全体</value>
   </data>
   <data name="Their tools stop working immediately." xml:space="preserve">
     <value>その人のツールはただちに動かなくなります。</value>
@@ -7510,6 +7546,9 @@
   <data name="What Players at Your Level Score" xml:space="preserve">
     <value>同水準のプレイヤーのスコア</value>
   </data>
+  <data name="What players at your level score here" xml:space="preserve">
+    <value>同水準のプレイヤーのここでのスコア</value>
+  </data>
   <data name="What should they change?" xml:space="preserve">
     <value>何を直すべきですか?</value>
   </data>
@@ -7563,6 +7602,9 @@
   </data>
   <data name="Where this record would land you" xml:space="preserve">
     <value>この記録が届く位置</value>
+  </data>
+  <data name="Where your list disagrees with the community's, and the number behind it." xml:space="preserve">
+    <value>あなたのリストがコミュニティ版と異なる箇所と、その根拠となる数値です。</value>
   </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>あなたのリストとコミュニティの違い、そしてそれを押したスキル。譜面をタップするとソース別の完全な内訳が見られます。</value>
@@ -7776,6 +7818,9 @@
   </data>
   <data name="You will no longer be able to sign in with this method" xml:space="preserve">
     <value>この方法ではログインできなくなります</value>
+  </data>
+  <data name="you {0}" xml:space="preserve">
+    <value>あなた {0}</value>
   </data>
   <data name="You'll come back here after signing in. Nothing is shared until you press Connect." xml:space="preserve">
     <value>ログイン後このページに戻ります。接続を押すまで何も共有されません。</value>
@@ -8244,6 +8289,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>あなたに難しいのは{0}譜面 — 主に{1}</value>
+  </data>
+  <data name="{0} have no projection yet — nobody near your level has scored them:" xml:space="preserve">
+    <value>{0} はまだ予測がありません。同水準のプレイヤーがプレイしていません:</value>
   </data>
   <data name="{0} hours, {1} minutes" xml:space="preserve">
     <value>{0} 時間 {1} 分</value>

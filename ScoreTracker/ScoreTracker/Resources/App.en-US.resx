@@ -307,6 +307,9 @@
   <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
     <value>A bad. Roughly 22 notes of progress gone.</value>
   </data>
+  <data name="A breakdown for Pass Difficulty is coming." xml:space="preserve">
+    <value>A breakdown for Pass Difficulty is coming.</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>a chart</value>
   </data>
@@ -2105,6 +2108,9 @@
     <value>Event Links</value>
     <comment>Event Links</comment>
   </data>
+  <data name="Every chart placed on what you would be expected to score. The tiers are cut from the spread of these numbers, which is why the bands sit where they do." xml:space="preserve">
+    <value>Every chart placed on what you would be expected to score. The tiers are cut from the spread of these numbers, which is why the bands sit where they do.</value>
+  </data>
   <data name="Every chart that moved, arrived, or left between {0} and {1}." xml:space="preserve">
     <value>Every chart that moved, arrived, or left between {0} and {1}.</value>
   </data>
@@ -2158,6 +2164,9 @@
   </data>
   <data name="Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it." xml:space="preserve">
     <value>Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it.</value>
+  </data>
+  <data name="Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it. Nothing else votes: the community score lists are built from the same scores this reads, so blending them in would count the same evidence twice." xml:space="preserve">
+    <value>Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it. Nothing else votes: the community score lists are built from the same scores this reads, so blending them in would count the same evidence twice.</value>
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>Everything below is live site data — the actual product, not screenshots.</value>
@@ -2720,6 +2729,9 @@
   </data>
   <data name="How This Is Scored" xml:space="preserve">
     <value>How this is scored</value>
+  </data>
+  <data name="How you're doing against your level" xml:space="preserve">
+    <value>How you're doing against your level</value>
   </data>
   <data name="I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again." xml:space="preserve">
     <value>I can't post in this channel yet — give me the View Channel and Send Messages permissions here, then run the command again.</value>
@@ -3982,6 +3994,9 @@
   <data name="Nobody here holds this title yet." xml:space="preserve">
     <value>Nobody here holds this title yet.</value>
   </data>
+  <data name="Nobody is above the line on every chart in their folder. If you were, your competitive level would climb and you would be measured against stronger scores instead — the bar moves with you." xml:space="preserve">
+    <value>Nobody is above the line on every chart in their folder. If you were, your competitive level would climb and you would be measured against stronger scores instead — the bar moves with you.</value>
+  </data>
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Nobody is on this chart board yet.</value>
   </data>
@@ -4867,6 +4882,9 @@
   <data name="Players at your level" xml:space="preserve">
     <value>Players at your level</value>
   </data>
+  <data name="Players at your level score {0}" xml:space="preserve">
+    <value>Players at your level score {0}</value>
+  </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access.</value>
   </data>
@@ -5007,6 +5025,9 @@
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>projected Doubles PUMBILITY</value>
+  </data>
+  <data name="projected for your level" xml:space="preserve">
+    <value>projected for your level</value>
   </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>projected Singles PUMBILITY</value>
@@ -5772,6 +5793,9 @@
   <data name="See the full board" xml:space="preserve">
     <value>See the full board</value>
   </data>
+  <data name="See the Score breakdown" xml:space="preserve">
+    <value>See the Score breakdown</value>
+  </data>
   <data name="See their boards" xml:space="preserve">
     <value>See their boards</value>
   </data>
@@ -5939,6 +5963,9 @@
   <data name="show all {0}" xml:space="preserve">
     <value>show all {0}</value>
   </data>
+  <data name="Show all {0} charts" xml:space="preserve">
+    <value>Show all {0} charts</value>
+  </data>
   <data name="Show all {0} plays" xml:space="preserve">
     <value>Show all {0} plays</value>
   </data>
@@ -6013,6 +6040,9 @@
   </data>
   <data name="Shown Difficulty" xml:space="preserve">
     <value>Shown Difficulty</value>
+  </data>
+  <data name="Shown for comparison only — your own scores are not an input to the ranking above. The charts you sit furthest below are the ones with the most left in them." xml:space="preserve">
+    <value>Shown for comparison only — your own scores are not an input to the ranking above. The charts you sit furthest below are the ones with the most left in them.</value>
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>Shown in the tool directory. Players read this before they connect.</value>
@@ -6637,6 +6667,12 @@
   </data>
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture.</value>
+  </data>
+  <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
+    <value>The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced.</value>
+  </data>
+  <data name="the whole list" xml:space="preserve">
+    <value>the whole list</value>
   </data>
   <data name="Their tools stop working immediately." xml:space="preserve">
     <value>Their tools stop working immediately.</value>
@@ -7510,6 +7546,9 @@
   <data name="What Players at Your Level Score" xml:space="preserve">
     <value>What Players at Your Level Score</value>
   </data>
+  <data name="What players at your level score here" xml:space="preserve">
+    <value>What players at your level score here</value>
+  </data>
   <data name="What should they change?" xml:space="preserve">
     <value>What should they change?</value>
   </data>
@@ -7563,6 +7602,9 @@
   </data>
   <data name="Where this record would land you" xml:space="preserve">
     <value>Where this record would land you</value>
+  </data>
+  <data name="Where your list disagrees with the community's, and the number behind it." xml:space="preserve">
+    <value>Where your list disagrees with the community's, and the number behind it.</value>
   </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown.</value>
@@ -7776,6 +7818,9 @@
   </data>
   <data name="You will no longer be able to sign in with this method" xml:space="preserve">
     <value>You will no longer be able to sign in with this method</value>
+  </data>
+  <data name="you {0}" xml:space="preserve">
+    <value>you {0}</value>
   </data>
   <data name="You'll come back here after signing in. Nothing is shared until you press Connect." xml:space="preserve">
     <value>You'll come back here after signing in. Nothing is shared until you press Connect.</value>
@@ -8244,6 +8289,9 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0} harder for you — mostly {1}</value>
+  </data>
+  <data name="{0} have no projection yet — nobody near your level has scored them:" xml:space="preserve">
+    <value>{0} have no projection yet — nobody near your level has scored them:</value>
   </data>
   <data name="{0} hours, {1} minutes" xml:space="preserve">
     <value>{0} hours, {1} minutes</value>
