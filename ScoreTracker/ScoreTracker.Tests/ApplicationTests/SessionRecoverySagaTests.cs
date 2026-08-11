@@ -15,6 +15,7 @@ using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -39,13 +40,34 @@ public sealed class SessionRecoverySagaTests
         public readonly Mock<IScoreJournalRepository> Journal = new();
         public readonly Mock<IPhoenixRecordRepository> Records = new();
         public readonly Mock<IScoreSessionRepository> Sessions = new();
+        public readonly Mock<IPlayerScoreBatchAccumulator> Batches = new();
         public readonly SessionRecoverySaga Saga;
 
         public SagaContext()
         {
+            Batches.Setup(b => b.Dump()).Returns(Array.Empty<BatchAccumulatorSnapshotEntry>());
             Saga = new SessionRecoverySaga(Sessions.Object, Journal.Object, Records.Object, Bus.Object,
-                FakeDateTime.At(Now).Object, NullLogger<SessionRecoverySaga>.Instance);
+                Batches.Object, FakeDateTime.At(Now).Object, NullLogger<SessionRecoverySaga>.Instance);
         }
+
+        public void WithUnprocessed(params ScoreSessionRecord[] sessions)
+        {
+            Sessions.Setup(s => s.ListUnprocessed(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(sessions);
+        }
+
+        public void WithLiveBatch(Guid userId, MixEnum mix)
+        {
+            Batches.Setup(b => b.Dump()).Returns(new[]
+            {
+                new BatchAccumulatorSnapshotEntry(userId, mix, Now.UtcDateTime, Array.Empty<Guid>(),
+                    new Dictionary<Guid, int>())
+            });
+        }
+
+        public static ScoreSessionRecord Session(Guid userId, MixEnum mix) =>
+            new(Guid.NewGuid(), userId, mix, ScoreJournalEntry.OfficialImportSource, null, null,
+                Now.AddMinutes(-30), Now.AddMinutes(-10), 0, 0, 0);
 
         public void WithSession(DateTimeOffset? processedAt = null, MixEnum mix = MixEnum.Phoenix)
         {
@@ -231,5 +253,57 @@ public sealed class SessionRecoverySagaTests
 
         ctx.Sessions.Verify(s => s.MarkProcessed(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     A batch still in the accumulator is mid-flight, not orphaned. Offering its session to a
+    ///     replay would announce the same scores twice and post a duplicate card.
+    /// </summary>
+    [Fact]
+    public async Task UnprocessedExcludesSessionsAnOpenBatchStillHolds()
+    {
+        var ctx = new SagaContext();
+        var held = SagaContext.Session(UserId, MixEnum.Phoenix);
+        var orphan = SagaContext.Session(Guid.NewGuid(), MixEnum.Phoenix);
+        ctx.WithUnprocessed(held, orphan);
+        ctx.WithLiveBatch(UserId, MixEnum.Phoenix);
+
+        var result = await ctx.Saga.Handle(new GetUnprocessedSessionsQuery(), CancellationToken.None);
+
+        Assert.Equal(new[] { orphan.Id }, result.Select(s => s.Id));
+    }
+
+    /// <summary>
+    ///     The accumulator is keyed per (user, mix), so a batch open on one mix says nothing about
+    ///     the same player's session on another.
+    /// </summary>
+    [Fact]
+    public async Task ABatchOnAnotherMixDoesNotShieldTheSession()
+    {
+        var ctx = new SagaContext();
+        var session = SagaContext.Session(UserId, MixEnum.Phoenix2);
+        ctx.WithUnprocessed(session);
+        ctx.WithLiveBatch(UserId, MixEnum.Phoenix);
+
+        var result = await ctx.Saga.Handle(new GetUnprocessedSessionsQuery(), CancellationToken.None);
+
+        Assert.Equal(new[] { session.Id }, result.Select(s => s.Id));
+    }
+
+    /// <summary>
+    ///     At process start the accumulator is empty, so the boot pass sees every candidate — the
+    ///     filter must not swallow the runs a restart just killed.
+    /// </summary>
+    [Fact]
+    public async Task AnEmptyAccumulatorFiltersNothing()
+    {
+        var ctx = new SagaContext();
+        var a = SagaContext.Session(UserId, MixEnum.Phoenix);
+        var b = SagaContext.Session(Guid.NewGuid(), MixEnum.Phoenix2);
+        ctx.WithUnprocessed(a, b);
+
+        var result = await ctx.Saga.Handle(new GetUnprocessedSessionsQuery(), CancellationToken.None);
+
+        Assert.Equal(new[] { a.Id, b.Id }, result.Select(s => s.Id));
     }
 }

@@ -629,6 +629,9 @@
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>ro {0} roblub mrgl glmurmargl</value>
   </data>
+  <data name="Announcing score batches that never fired, and replaying sessions whose batch is gone." xml:space="preserve">
+    <value>Murglorp mrglrgl blargrogl mo momrgl grogla, ur mrgloru glorgmaglgro mopa blargrog ol murpo.</value>
+  </data>
   <data name="Anonymous" xml:space="preserve">
 	  <value>Murpgromrp</value>
 	  <comment>Display name shown for users who have set their profile private.</comment>
@@ -2329,6 +2332,9 @@
   </data>
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>murpargl-urgmorg murgblargmurg lurg ro murgl mrglblarg</value>
+  </data>
+  <data name="Flush Stuck Score Batches" xml:space="preserve">
+    <value>Glurgo Gromurg Mrglrgl Blargrogl</value>
   </data>
   <data name="Folder" xml:space="preserve">
     <value>Grrgllurg</value>

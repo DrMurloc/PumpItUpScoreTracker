@@ -864,4 +864,113 @@ public sealed class UpdatePhoenixRecordHandlerTests
         ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
         return ctx.Object;
     }
+
+    /// <summary>
+    ///     The sweep announces batches the scheduled drain never came for, and leaves the ones
+    ///     whose deadline has not arrived.
+    /// </summary>
+    [Fact]
+    public async Task FlushDrainsOverdueBatchesAndPublishesPlayerScoreUpdated()
+    {
+        var ctx = new HandlerContext();
+        var overdueUserA = Guid.NewGuid();
+        var overdueUserB = Guid.NewGuid();
+        var futureUser = Guid.NewGuid();
+        var newChartA = Guid.NewGuid();
+        var upscoreChartB = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.Dump()).Returns(new[]
+        {
+            new BatchAccumulatorSnapshotEntry(overdueUserA, MixEnum.Phoenix,
+                Now.UtcDateTime - TimeSpan.FromMinutes(1),
+                new[] { newChartA }, new Dictionary<Guid, int>()),
+            new BatchAccumulatorSnapshotEntry(overdueUserB, MixEnum.Phoenix,
+                Now.UtcDateTime - TimeSpan.FromMinutes(10),
+                Array.Empty<Guid>(), new Dictionary<Guid, int> { { upscoreChartB, 850000 } }),
+            new BatchAccumulatorSnapshotEntry(futureUser, MixEnum.Phoenix,
+                Now.UtcDateTime + TimeSpan.FromMinutes(1),
+                new[] { Guid.NewGuid() }, new Dictionary<Guid, int>())
+        });
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, overdueUserA))
+            .Returns(new PendingScoreBatch(MixEnum.Phoenix, new[] { newChartA }, new Dictionary<Guid, int>()));
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, overdueUserB))
+            .Returns(new PendingScoreBatch(MixEnum.Phoenix, Array.Empty<Guid>(),
+                new Dictionary<Guid, int> { { upscoreChartB, 850000 } }));
+
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
+
+        ctx.Batches.Verify(b => b.TakeBatch(MixEnum.Phoenix, overdueUserA), Times.Once);
+        ctx.Batches.Verify(b => b.TakeBatch(MixEnum.Phoenix, overdueUserB), Times.Once);
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<MixEnum>(), futureUser), Times.Never);
+        ctx.Bus.Verify(b => b.Publish(
+            It.Is<PlayerScoresUpdatedEvent>(e => e.UserId == overdueUserA
+                                                 && e.Changes.Count == 1
+                                                 && e.Changes.Single(c => c.IsNewPass).ChartId == newChartA),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bus.Verify(b => b.Publish(
+            It.Is<PlayerScoresUpdatedEvent>(e => e.UserId == overdueUserB
+                                                 && e.Changes.Any(c => !c.IsNewPass && c.ChartId == upscoreChartB)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Bus.Verify(b => b.Publish(
+            It.Is<PlayerScoresUpdatedEvent>(e => e.UserId == futureUser),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     Inside the drain buffer the real drain is simply in flight. Claiming the batch there
+    ///     buys nothing and races a publish that is already on its way.
+    /// </summary>
+    [Fact]
+    public async Task FlushLeavesABatchOnlyJustPastItsDeadline()
+    {
+        var ctx = new HandlerContext();
+        var user = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.Dump()).Returns(new[]
+        {
+            new BatchAccumulatorSnapshotEntry(user, MixEnum.Phoenix,
+                Now.UtcDateTime - TimeSpan.FromSeconds(1),
+                new[] { Guid.NewGuid() }, new Dictionary<Guid, int>())
+        });
+
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
+
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>()), Times.Never);
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     If the scheduled drain wins the race between Dump() and TakeBatch(), TakeBatch returns
+    ///     null — and a noisy empty event must not follow.
+    /// </summary>
+    [Fact]
+    public async Task FlushSkipsRacedBatchesWhenTakeBatchReturnsNull()
+    {
+        var ctx = new HandlerContext();
+        var racedUser = Guid.NewGuid();
+        ctx.Batches.Setup(b => b.Dump()).Returns(new[]
+        {
+            new BatchAccumulatorSnapshotEntry(racedUser, MixEnum.Phoenix,
+                Now.UtcDateTime - TimeSpan.FromMinutes(1),
+                new[] { Guid.NewGuid() }, new Dictionary<Guid, int>())
+        });
+        ctx.Batches.Setup(b => b.TakeBatch(MixEnum.Phoenix, racedUser)).Returns((PendingScoreBatch?)null);
+
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
+
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FlushDoesNothingWhenNoBatchesActive()
+    {
+        var ctx = new HandlerContext();
+        ctx.Batches.Setup(b => b.Dump()).Returns(Array.Empty<BatchAccumulatorSnapshotEntry>());
+
+        await ctx.Handler.Consume(BuildContext(new FlushOverdueScoreBatchesCommand()));
+
+        ctx.Batches.Verify(b => b.TakeBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>()), Times.Never);
+        ctx.Bus.Verify(b => b.Publish(It.IsAny<PlayerScoresUpdatedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

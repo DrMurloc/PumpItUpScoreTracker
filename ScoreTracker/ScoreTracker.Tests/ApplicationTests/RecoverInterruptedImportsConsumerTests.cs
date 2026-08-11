@@ -13,6 +13,7 @@ using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.TestHelpers;
@@ -78,6 +79,74 @@ public sealed class RecoverInterruptedImportsConsumerTests
             ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
             return Consumer.Consume(ctx.Object);
         }
+
+        public Task Sweep()
+        {
+            var ctx = new Mock<ConsumeContext<FlushOverdueScoreBatchesCommand>>();
+            ctx.SetupGet(c => c.Message).Returns(new FlushOverdueScoreBatchesCommand());
+            ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+            return Consumer.Consume(ctx.Object);
+        }
+    }
+
+    /// <summary>
+    ///     The mid-life sweep replays a run whose batch has had its whole window to drain and did
+    ///     not — the shape of a lost drain schedule inside a process that never restarted.
+    /// </summary>
+    [Fact]
+    public async Task TheSweepReplaysARunWhoseDrainWindowHasPassed()
+    {
+        var ctx = new PassContext();
+        var session = Guid.NewGuid();
+        ctx.WithUnprocessed(session);
+        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, Now - LongAgo));
+
+        await ctx.Sweep();
+
+        ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == session),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     ⚠ The mirror of the boot pass's guard. Mid-life every run began after the boot, so the
+    ///     boot test would skip all of them — but staleness cuts the other way too: a run that
+    ///     finished a minute ago still has a live batch counting down, and replaying it would
+    ///     announce the same scores the drain is about to.
+    /// </summary>
+    [Fact]
+    public async Task TheSweepLeavesARunWhoseBatchIsStillCountingDown()
+    {
+        var ctx = new PassContext();
+        var session = Guid.NewGuid();
+        var justFinished = Now - TimeSpan.FromMinutes(1);
+        ctx.WithUnprocessed(session);
+        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, justFinished));
+
+        await ctx.Sweep();
+
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
+    ///     A run with no ending is either still scraping — a deep scan outlives this window with no
+    ///     batch open yet — or died with its process, which is the boot pass's candidate. Either
+    ///     way the sweep must not close it out from under a player mid-import.
+    /// </summary>
+    [Fact]
+    public async Task TheSweepNeitherClosesNorReplaysARunThatNeverReportedAnEnding()
+    {
+        var ctx = new PassContext();
+        var session = Guid.NewGuid();
+        ctx.WithUnprocessed(session);
+        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, null));
+
+        await ctx.Sweep();
+
+        ctx.Results.Verify(r => r.MarkInterrupted(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

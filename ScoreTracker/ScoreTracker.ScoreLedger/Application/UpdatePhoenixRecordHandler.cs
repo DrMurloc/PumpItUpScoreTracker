@@ -26,7 +26,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         IScoreSessionRepository sessions,
         IMemoryCache cache)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
-        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>
+        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
+        IConsumer<FlushOverdueScoreBatchesCommand>
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
@@ -147,5 +148,38 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         await bus.Publish(
             PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes, batch.SessionId),
             cancellationToken);
+    }
+
+    /// <summary>
+    ///     Drains batches that are past their deadline and still sitting in the accumulator.
+    ///     <para>
+    ///         Covers one specific failure: the scheduled <see cref="TryFireScoreCommand" /> never
+    ///         arrived, inside a process that is still running. The scores are safe either way —
+    ///         they were written on submission — but everything derived from them (highlights,
+    ///         folder lamps, ratings, titles, the session card) hangs off the drain, so a lost
+    ///         schedule strands all of it while the import reports success.
+    ///     </para>
+    ///     <para>
+    ///         It does NOT cover a restart: the accumulator is in memory, so a batch caught by one
+    ///         is already gone by the time this runs and there is nothing here to find. That half
+    ///         is the session replay in OfficialMirror, on the same message.
+    ///     </para>
+    /// </summary>
+    public async Task Consume(ConsumeContext<FlushOverdueScoreBatchesCommand> context)
+    {
+        // Past the deadline AND past the buffer the scheduled drain gets: inside that slack the
+        // real drain is simply on its way, and claiming the batch here would just race it. Beyond
+        // it, the schedule is not late — it is not coming.
+        var claimBefore = dateTimeOffset.Now.UtcDateTime - ScoreBatchPolicy.DrainBuffer;
+        foreach (var entry in batches.Dump())
+        {
+            if (entry.FireAt > claimBefore) continue;
+            // TakeBatch is atomic, so a drain that does arrive mid-sweep takes the batch or finds
+            // it gone — one of the two publishes, never both.
+            var batch = batches.TakeBatch(entry.Mix, entry.UserId);
+            if (batch is null) continue;
+            if (batch.NewChartIds.Length == 0 && batch.UpscoredChartIds.Count == 0) continue;
+            await PublishScoreEvents(entry.UserId, batch, context.CancellationToken);
+        }
     }
 }

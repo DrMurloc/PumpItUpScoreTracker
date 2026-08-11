@@ -627,6 +627,9 @@
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>y {0} notas de multiplicador</value>
   </data>
+  <data name="Announcing score batches that never fired, and replaying sessions whose batch is gone." xml:space="preserve">
+    <value>Anunciando los lotes de puntuaciones que nunca se enviaron y repitiendo las sesiones cuyo lote ya no existe.</value>
+  </data>
   <data name="Anonymous" xml:space="preserve">
     <value>Anónimo</value>
   </data>
@@ -2312,6 +2315,9 @@
   </data>
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>primera aparición en un leaderboard de charts</value>
+  </data>
+  <data name="Flush Stuck Score Batches" xml:space="preserve">
+    <value>Vaciar lotes de puntuaciones atascados</value>
   </data>
   <data name="Folder" xml:space="preserve">
     <value>Carpeta</value>

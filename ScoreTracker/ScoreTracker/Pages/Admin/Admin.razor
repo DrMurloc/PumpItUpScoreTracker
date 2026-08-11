@@ -26,6 +26,12 @@
    the further back it reaches the less that resembles the state it is claiming to restore. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="RebuildLatestSessions"
            data-testid="rebuild-latest-sessions">@L["Rebuild Latest Sessions"]</MudButton>
+@* The manual trigger for the same sweep the five-minute job runs, for when a player reports a
+   silent import before the next tick. Safe to press at any time: it only touches batches already
+   past their deadline and sessions the ledger still calls unprocessed, so a press with nothing
+   wrong changes nothing. *@
+<MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="FlushStuckScoreBatches"
+           data-testid="flush-stuck-score-batches">@L["Flush Stuck Score Batches"]</MudButton>
 @* One-shot for the highlights cutover: copies pre-move win payloads into the player-keyed
    ledger so feeds keep their history instead of starting empty. Idempotent — a second run
    collides on every event id and changes nothing. *@
@@ -211,6 +217,13 @@
     {
         await Bus.Publish(new RebuildLatestSessionsCommand());
         Snackbar.Add(L["Rebuilding the latest session for every player."].Value, Severity.Success);
+    }
+
+    private async Task FlushStuckScoreBatches()
+    {
+        await Bus.Publish(new FlushOverdueScoreBatchesCommand());
+        Snackbar.Add(L["Announcing score batches that never fired, and replaying sessions whose batch is gone."].Value,
+            Severity.Success);
     }
 
     private async Task BackfillPlayerHighlights()

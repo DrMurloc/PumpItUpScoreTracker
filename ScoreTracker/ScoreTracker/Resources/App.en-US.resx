@@ -629,6 +629,9 @@
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>and {0} notes of multiplier</value>
   </data>
+  <data name="Announcing score batches that never fired, and replaying sessions whose batch is gone." xml:space="preserve">
+    <value>Announcing score batches that never fired, and replaying sessions whose batch is gone.</value>
+  </data>
   <data name="Anonymous" xml:space="preserve">
 	  <value>Anonymous</value>
 	  <comment>Display name shown for users who have set their profile private.</comment>
@@ -2329,6 +2332,9 @@
   </data>
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>first-ever appearance on any chart board</value>
+  </data>
+  <data name="Flush Stuck Score Batches" xml:space="preserve">
+    <value>Flush Stuck Score Batches</value>
   </data>
   <data name="Folder" xml:space="preserve">
     <value>Folder</value>

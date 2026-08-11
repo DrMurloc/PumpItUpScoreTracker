@@ -32,14 +32,17 @@ public static class ScoreBatchPolicy
     ///     drain, and enough room for capture itself to run.
     ///     <para>
     ///         ⚠ Not a guarantee. A restart erases the accumulator, so a batch caught inside the
-    ///         hold window is gone and its work does not land at all until the next process start
-    ///         recovers it (docs/design/import-restart-recovery.md). A reader that stops waiting is
-    ///         then simply early, which is why nothing may treat the end of this as proof that
-    ///         there was nothing to wait for.
+    ///         hold window is gone and its work does not land until the next process start recovers
+    ///         it; a drain lost without a restart waits for the five-minute sweep instead
+    ///         (docs/design/import-restart-recovery.md §4 and §4.3). Either way a reader that stops
+    ///         waiting is simply early, which is why nothing may treat the end of this as proof
+    ///         that there was nothing to wait for.
     ///     </para>
     ///     <para>
-    ///         This doubles as the staleness threshold the recovery pass uses: a run that finished
-    ///         longer ago than this had its chance to drain and did not take it.
+    ///         This doubles as the staleness threshold the mid-life sweep uses: a run that finished
+    ///         longer ago than this had its chance to drain and did not take it. The boot pass
+    ///         deliberately does NOT use it — at boot the accumulator is empty, so the question
+    ///         there is "did this run begin before this process did", not how old it is.
     ///     </para>
     /// </summary>
     public static readonly TimeSpan WorkExpectedWithin = HoldWindow + DrainBuffer + TimeSpan.FromMinutes(2);
