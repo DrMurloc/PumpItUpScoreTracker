@@ -1520,9 +1520,10 @@ else
 
     private bool IsSkillView => _groupBy == "Skill";
 
-    // When grouping isn't the lens itself, each card/row carries its lens tier —
-    // word + color, never color alone (rule 8; round-6 field test).
-    private bool ShowLensAnnotation => _groupBy != "Difficulty";
+    // When the grouping isn't the lens itself, each card/row carries its lens tier — word +
+    // color, never color alone (rule 8; round-6 field test). Both tier views section BY the
+    // lens, so there the annotation would only repeat the heading the card already sits under.
+    private bool ShowLensAnnotation => !IsTierView;
 
     private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
 
