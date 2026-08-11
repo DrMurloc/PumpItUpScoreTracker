@@ -94,11 +94,12 @@ else
                this folder — a silent source is a diagnostic, not a mystery. *@
             <section class="bd-block">
                 <MudText Typo="Typo.h5">@L["What goes into your list"]</MudText>
-                <MudText Typo="Typo.caption" Class="bd-caption">@L["Three sources vote on every chart. Sources with more weight move charts further."]</MudText>
+                <MudText Typo="Typo.caption" Class="bd-caption">@L["Each source votes on every chart. Sources with more weight move charts further."]</MudText>
                 <div class="bd-weightbar" aria-hidden="true">
                     <span class="bd-w-community" style="flex:@_breakdown.CommunityWeight"></span>
                     <span class="bd-w-skill" style="flex:@_breakdown.SkillWeight"></span>
                     <span class="bd-w-similar" style="flex:@_breakdown.SimilarPlayersWeight"></span>
+                    <span class="bd-w-projection" style="flex:@_breakdown.ProjectionWeight"></span>
                 </div>
                 <div class="bd-recipe-cards">
                     <div class="bd-card">
@@ -112,6 +113,11 @@ else
                             <span>@L["{0} / {1} charts rated", CommunityRatedCount, _breakdown.Charts.Count]</span>
                         </div>
                     </div>
+                    @* The personal sources differ by lens, so each card follows its own weight
+                       rather than a hardcoded lens name — if the recipe changes, the page does
+                       too instead of describing a blend that no longer runs. *@
+                    @if (_breakdown.SkillWeight > 0)
+                    {
                     <div class="bd-card">
                         <div class="bd-card-head">
                             <MudText Typo="Typo.subtitle1">@L["Your Skill Estimate"]</MudText>
@@ -143,6 +149,9 @@ else
                             </div>
                         }
                     </div>
+                    }
+                    @if (_breakdown.SimilarPlayersWeight > 0)
+                    {
                     <div class="bd-card">
                         <div class="bd-card-head">
                             <MudText Typo="Typo.subtitle1">@L["Players Like You"]</MudText>
@@ -164,6 +173,33 @@ else
                             </div>
                         }
                     </div>
+                    }
+                    @if (_breakdown.ProjectionWeight > 0)
+                    {
+                    <div class="bd-card">
+                        <div class="bd-card-head">
+                            <MudText Typo="Typo.subtitle1">@L["What Players at Your Level Score"]</MudText>
+                            <span class="bd-weight bd-w-projection">×@_breakdown.ProjectionWeight</span>
+                        </div>
+                        @* The honest claim, and the limit of it: this says what players at your
+                           level score here, never that a chart suits you personally. *@
+                        <MudText Typo="Typo.body2" Class="bd-caption">@L["Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it."]</MudText>
+                        @if (_breakdown.ProjectionWeight > 0 && _breakdown.ProjectedChartCount >= 3)
+                        {
+                            <div class="bd-status">
+                                <span class="bd-status-ok">●</span>
+                                <span>@L["Active — {0} / {1} charts covered", _breakdown.ProjectedChartCount, _breakdown.FolderChartCount]</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="bd-status">
+                                <span class="bd-status-off">●</span>
+                                <span>@L["Silent — players at your level have only scored {0} of these charts. Your list currently matches the community's.", _breakdown.ProjectedChartCount]</span>
+                            </div>
+                        }
+                    </div>
+                    }
                 </div>
             </section>
 
@@ -171,6 +207,8 @@ else
                cross-folder deviations the blend actually uses (owner: users should
                come out going "oh, that's what all that meant"). Right: the Folder
                Stats view of this folder, restated so the two connect. *@
+            @if (_breakdown.SkillWeight > 0)
+            {
             <section class="bd-block">
                 <MudText Typo="Typo.h5">@L["Your skill profile"]</MudText>
                 <MudText Typo="Typo.caption" Class="bd-caption">@L["Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it."]</MudText>
@@ -221,6 +259,7 @@ else
                 </div>
                 <MudText Typo="Typo.caption" Class="bd-attribution">@L["Skill data: PIU Center — maintained by aesthete"]</MudText>
             </section>
+            }
 
             @* Charts that moved — the reason this page exists. Simple rows (jacket,
                movement in ramp-colored words, top contribution chips); tapping a row
@@ -282,6 +321,7 @@ else
                                         @SourceSegment(L["Community"], _breakdown.CommunityWeight, mover.CommunityCategory)
                                         @SourceSegment(L["Players Like You"], _breakdown.SimilarPlayersWeight, mover.SimilarPlayersCategory)
                                         @SourceSegment(L["Your skills"], _breakdown.SkillWeight, mover.SkillCategory)
+                                        @SourceSegment(L["Players at your level"], _breakdown.ProjectionWeight, mover.ProjectionCategory)
                                         <span class="bd-src-final">= <span style="color:@ThemeScales.DifficultyColor(mover.PersonalizedCategory)">@L[TierNameFor(mover.PersonalizedCategory)]</span></span>
                                     </div>
                                 }
@@ -405,6 +445,10 @@ else
 
     .bd-w-similar {
         background: var(--mix-secondary);
+    }
+
+    .bd-w-projection {
+        background: var(--mix-accent);
     }
 
     span.bd-weight {
