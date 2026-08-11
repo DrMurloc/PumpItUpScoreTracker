@@ -128,6 +128,39 @@ Two consequences:
   `CommunityWeight` means the community share of *your* list — 0 on Score — so the
   recipe card follows it.
 
+### The page rebuilt on the number (2026-08-11)
+
+With one source there is no blend to explain, so the page stopped explaining one.
+
+- **The recipe collapses to a card.** One source is not a weighing, and a weight bar
+  with a single bar in it says nothing. What matters is what the source is and how
+  much of the folder it reached.
+- **The spread replaces the skill profile.** `ProjectionSpread` (a component, so its
+  CSS can live in `site.css` — a Razor `<style>` block is page-scoped) lays every
+  chart out on what this level would score, with the tier bands drawn behind it. The
+  cuts come from `TierListProcessor.StdDev`, the same function the bucketing runs, so
+  a band edge cannot sit where the tier list disagrees. Below 700px the name moves
+  above a full-width track and the band labels give way to the tier printed per row —
+  which is also what keeps colour from being the only channel there.
+- **An unplayed chart keeps its position and loses only its fill.** The projection is
+  exactly as real for a chart nobody has touched; what is missing is the player's
+  marker, not the number. It is also the case the number is most useful for, so there
+  is a *Not played yet* list beside the gap list.
+- **Mover rows carry the projection, with no editorial clause.** Four rows reading
+  "above the folder mean for your level" would be filler.
+- **Two comparison sections, labelled as such**, because the player's own scores never
+  enter the ranking — plus the note that stops a column of red reading as a verdict:
+  nobody is above the line on every chart, because if they were their competitive
+  level would climb and the line would move with them.
+- **Retired with the skill profile:** the Vs. Peers column and the whole dependency
+  chain behind it, including the `GetChartSkillChipsQuery` and
+  `GetPlayerScoreQualityQuery` reads the page made on every visit to feed it.
+
+**Pass is on hold** (owner, 2026-08-11): it renders a coming-soon state rather than
+explaining a blend that is about to be reworked. The handler still computes it and the
+contract still carries it — that work is early, not wrong — so the follow-up session
+starts from a page that is honest about not being ready.
+
 A projection reaching fewer than **3** of a folder's charts stays silent. Tier bands
 are cut from the spread of the values handed in, so one projection has a standard
 deviation of zero and lands on the easiest band by construction — at full weight, off
