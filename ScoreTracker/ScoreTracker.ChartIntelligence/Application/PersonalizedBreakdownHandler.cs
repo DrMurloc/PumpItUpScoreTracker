@@ -81,7 +81,10 @@ internal sealed class PersonalizedBreakdownHandler
                     .Category,
                 CategoryFor(computation.Skill?.Entries, c.Id),
                 CategoryFor(computation.Similar?.Entries, c.Id),
-                CategoryFor(computation.Projection?.Entries, c.Id)))
+                CategoryFor(computation.Projection?.Entries, c.Id),
+                computation.Projection != null && computation.Projection.Scores.TryGetValue(c.Id, out var projected)
+                    ? projected
+                    : null))
             .ToArray();
 
         var skills = (computation.Skill?.PooledSkills ?? new Dictionary<Skill, SkillEvidence>())

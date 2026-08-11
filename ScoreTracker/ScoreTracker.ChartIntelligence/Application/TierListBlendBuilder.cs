@@ -414,14 +414,19 @@ internal sealed class TierListBlendBuilder
                 ProjectionCompetitiveWindow),
             cancellationToken);
 
+        // The raw scores travel with the buckets: the breakdown page is built on the numbers
+        // themselves — where each chart sits in the folder's spread, and how that compares to
+        // what the player actually scored — and re-deriving them there would mean a second
+        // projection of the same folder.
         if (projected.Count < MinProjectedCharts)
-            return new ProjectionComputation(new Dictionary<Guid, SongTierListEntry>(), projected.Count,
-                folderCharts.Count);
+            return new ProjectionComputation(new Dictionary<Guid, SongTierListEntry>(), projected,
+                projected.Count, folderCharts.Count);
 
         var estimates = projected.ToDictionary(kv => kv.Key, kv => (double)(int)kv.Value);
         return new ProjectionComputation(
             TierListProcessor.ProcessIntoTierList("Projection", estimates)
                 .ToDictionary(e => e.ChartId, e => e),
+            projected,
             projected.Count,
             folderCharts.Count);
     }
@@ -453,6 +458,7 @@ internal sealed record BlendComputation(
 /// </summary>
 internal sealed record ProjectionComputation(
     IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
+    IReadOnlyDictionary<Guid, PhoenixScore> Scores,
     int ProjectedChartCount,
     int FolderChartCount);
 

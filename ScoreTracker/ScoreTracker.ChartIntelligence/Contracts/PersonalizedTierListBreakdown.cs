@@ -1,4 +1,5 @@
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.ChartIntelligence.Contracts
 {
@@ -37,6 +38,11 @@ namespace ScoreTracker.ChartIntelligence.Contracts
     ///     personal sources, and the personalized final. Unrecorded = that source had
     ///     nothing to say about this chart.
     /// </summary>
+    /// <param name="ProjectedScore">
+    ///     What players near this one's competitive level score here — the number the Score list's
+    ///     tier is cut from. Null where no peer has played the chart, which is a different thing
+    ///     from a low projection and has to render as such.
+    /// </param>
     [ExcludeFromCodeCoverage]
     public sealed record BreakdownChartRecord(
         Guid ChartId,
@@ -44,7 +50,8 @@ namespace ScoreTracker.ChartIntelligence.Contracts
         TierListCategory PersonalizedCategory,
         TierListCategory SkillCategory,
         TierListCategory SimilarPlayersCategory,
-        TierListCategory ProjectionCategory);
+        TierListCategory ProjectionCategory,
+        PhoenixScore? ProjectedScore);
 
     /// <summary>
     ///     One skill's pooled estimate: deviation from the player's own baseline on
