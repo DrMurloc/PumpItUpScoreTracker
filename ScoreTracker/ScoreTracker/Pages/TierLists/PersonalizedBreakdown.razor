@@ -65,6 +65,21 @@ else
                 <MudText>@L["No charts match your filters"]</MudText>
             </div>
         }
+        else if (_lens != "Score")
+        {
+            @* Pass is on hold (owner, 2026-08-11). Its personal half — the skill estimate and
+               the similar-players read — is being reworked, and everything this page says about
+               Pass explains the version that is going away. Better to say nothing than to
+               explain a blend nobody is keeping. *@
+            <div class="tier-list-cta">
+                <MudText Typo="Typo.h6">@L["A breakdown for Pass Difficulty is coming."]</MudText>
+                <MudText Typo="Typo.caption">@L["The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced."]</MudText>
+                <div class="tier-list-cta-actions">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ChangeLens("Score"))">@L["See the Score breakdown"]</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="@TierListUrl">@L["Back to Tier List"]</MudButton>
+                </div>
+            </div>
+        }
         else
         {
             @* The verdict: what personalization actually did to this folder, in numbers
