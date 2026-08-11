@@ -117,6 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+
   <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
     <value>&quot;Lifebars are weird.&quot;</value>
   </data>
@@ -416,6 +417,9 @@
   </data>
   <data name="Across everything you've scored nearby" xml:space="preserve">
     <value>En todos tus puntajes de carpetas cercanas</value>
+  </data>
+  <data name="Active — {0} / {1} charts covered" xml:space="preserve">
+    <value>Activo — {0} / {1} charts cubiertos</value>
   </data>
   <data name="Active — {0} scores nearby, {1} skills have enough evidence" xml:space="preserve">
     <value>Activo — {0} puntajes cercanos, {1} habilidades con evidencia suficiente</value>
@@ -2007,6 +2011,9 @@
   <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
     <value>Cada peldaño exige un valor fijo a cada una de tus cincuenta gráficas. Cambia de grupo arriba para ver las otras escaleras.</value>
   </data>
+  <data name="Each source votes on every chart. Sources with more weight move charts further." xml:space="preserve">
+    <value>Cada fuente vota por cada chart. Las fuentes con más peso mueven más los charts.</value>
+  </data>
   <data name="Earned" xml:space="preserve">
     <value>Conseguidos</value>
   </data>
@@ -2126,6 +2133,9 @@
   </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>Todos los que lo tienen mantienen su perfil privado.</value>
+  </data>
+  <data name="Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it." xml:space="preserve">
+    <value>Todos los que están a medio nivel competitivo de ti y han jugado estos charts. Cada puntuación cuenta menos cuanto más ha mejorado ese jugador desde que la consiguió.</value>
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>Todo lo de abajo son datos reales del sitio: el producto de verdad, no capturas.</value>
@@ -4800,6 +4810,9 @@
   <data name="Players active" xml:space="preserve">
     <value>Jugadores activos</value>
   </data>
+  <data name="Players at your level" xml:space="preserve">
+    <value>Jugadores de tu nivel</value>
+  </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>Jugadores de la comunidad PIU construyen cosas sobre tus puntuaciones — planificadores de PUMBILITY, análisis de patrones, bots de ranking de Discord. Ahora hay una página donde puedes verlas y elegir quién tiene acceso.</value>
   </data>
@@ -5978,6 +5991,9 @@
   <data name="Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on." xml:space="preserve">
     <value>Inactivo — solo {0} habilidades tienen evidencia suficiente. Por ahora tu lista coincide con la de la comunidad. Registra más puntajes cerca de esta carpeta para activarlo.</value>
   </data>
+  <data name="Silent — players at your level have only scored {0} of these charts. Your list currently matches the community's." xml:space="preserve">
+    <value>Silencioso — los jugadores de tu nivel solo han puntuado {0} de estos charts. Tu lista coincide ahora con la de la comunidad.</value>
+  </data>
   <data name="Similar charts" xml:space="preserve">
     <value>Charts similares</value>
   </data>
@@ -6746,9 +6762,6 @@
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Tres años y medio de Pump, un solo resumen. Ve a ver el tuyo — y toma capturas de lo mejor.</value>
   </data>
-  <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
-    <value>Tres fuentes votan por cada chart. Las fuentes con más peso mueven más los charts.</value>
-  </data>
   <data name="Thresholds — each becomes a line" xml:space="preserve">
     <value>Umbrales: cada uno es una línea</value>
   </data>
@@ -7394,6 +7407,9 @@
   <data name="What Phoenix 1 is worth here" xml:space="preserve">
     <value>Cuánto vale aquí tu Phoenix 1</value>
   </data>
+  <data name="What Players at Your Level Score" xml:space="preserve">
+    <value>Lo que puntúan los jugadores de tu nivel</value>
+  </data>
   <data name="What should they change?" xml:space="preserve">
     <value>¿Qué deberían cambiar?</value>
   </data>
@@ -7496,8 +7512,8 @@
   <data name="wins in range" xml:space="preserve">
     <value>victorias en tu rango</value>
   </data>
-  <data name="Wiping down the sensors" xml:space="preserve">
-    <value>Limpiando los sensores</value>
+  <data name="Wiping of the baby powder" xml:space="preserve">
+    <value>Limpiando los polvos de talco</value>
   </data>
   <data name="within 1 level" xml:space="preserve">
     <value>a ±1 nivel</value>
@@ -7510,6 +7526,12 @@
   </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>Calculando lo que movió esta sesión: tus títulos, tu pool y la posición de cada puntuación entre jugadores de tu nivel.</value>
+  </data>
+  <data name="Working out what went into your version of this folder, and which charts it moved." xml:space="preserve">
+    <value>Calculando qué entró en tu versión de esta carpeta y qué charts movió.</value>
+  </data>
+  <data name="Working out where this folder sits for you. That means reading everyone near your level who has played it." xml:space="preserve">
+    <value>Calculando dónde encaja esta carpeta para ti. Eso consulta a todos los de tu nivel que la han jugado.</value>
   </data>
   <data name="Working out your projections. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
     <value>Calculando tus proyecciones. Esto consulta a unos cientos de jugadores de tu nivel, así que tarda un momento.</value>
