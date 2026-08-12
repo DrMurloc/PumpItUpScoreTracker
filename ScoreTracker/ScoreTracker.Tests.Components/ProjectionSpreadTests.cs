@@ -144,8 +144,35 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
 
         // ...and the click-away layer closes it. It is only mounted while something is pinned,
         // so it never swallows an ordinary click on the page underneath.
-        await cut.FindAll(".mud-overlay")[0].ClickAsync(new MouseEventArgs());
+        await cut.FindAll(".spread-clickaway")[0].ClickAsync(new MouseEventArgs());
         Assert.DoesNotContain("spread-readout", cut.Markup);
+    }
+
+    [Fact]
+    public async Task AReadoutNamesItsSongAndDoesNotStealThePagesScrollbar()
+    {
+        var cut = RenderWithPopovers(new[] { (913_500, (PhoenixScore?)902_100) });
+
+        await Fire(cut, 0, "onpointerup");
+
+        // Below 700px the row is a jacket and a track, so a pinned number that names nothing
+        // belongs to whichever row the thumb happened to be over.
+        Assert.Contains("spread-pop-title", cut.Markup);
+        Assert.Contains("Chart 0", cut.FindAll(".spread-pop-title")[0].TextContent);
+
+        // Nothing may lock document.body: that takes the page's scrollbar with it and reflows
+        // everything a scrollbar's width sideways the moment a readout opens. MudOverlay does it
+        // on mount and its documented LockScroll="false" does not stop it, which is why the
+        // click-away layer here is a plain div.
+        //
+        // Asserted on the JS call rather than on markup — the lock lands on document.body
+        // through the scroll manager, so the layer's own element looks identical either way and
+        // a class-name assertion passes whether or not the bug is present.
+        var locks = JSInterop.Invocations
+            .Where(i => i.Identifier.Contains("lockScroll", StringComparison.OrdinalIgnoreCase))
+            .Select(i => $"{i.Identifier}({string.Join(", ", i.Arguments)})")
+            .ToArray();
+        Assert.True(locks.Length == 0, "something locked the body scroll: " + string.Join(" | ", locks));
     }
 
     [Fact]
@@ -159,7 +186,7 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
         await Fire(cut, 0, "onpointerleave");
         Assert.DoesNotContain("spread-readout", cut.Markup);
         // Nothing pinned, so no click-away layer sitting over the page.
-        Assert.Empty(cut.FindAll(".mud-overlay"));
+        Assert.Empty(cut.FindAll(".spread-clickaway"));
     }
 
     private static Task Fire(IRenderedFragment cut, int marker, string eventName)

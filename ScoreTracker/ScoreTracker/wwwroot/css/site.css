@@ -13702,8 +13702,40 @@ span.ct-console-pick { cursor: default; }
     border-left: 8px solid currentColor;
 }
 
+/* Catches the click that dismisses a pinned readout, and nothing else: no background, no
+   scroll lock, below the popover's 1200 and above the page. */
+.spread-clickaway {
+    position: fixed;
+    inset: 0;
+    z-index: 1199;
+}
+
+/* The popover's own box: MudPopover brings no padding of its own. */
+.spread-pop {
+    padding: 7px 10px;
+}
+
 .spread-readout {
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* The song, so a pinned readout says which row it belongs to. Below 700px the row is a jacket
+   and a track, so without this a number on screen names nothing. Ellipsed rather than wrapped:
+   a two-line title pushes the figures off a phone. */
+.spread-pop-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--mix-ink-muted);
+    max-width: 24ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.spread-figures {
+    display: flex;
     align-items: center;
     gap: 6px;
     font-variant-numeric: tabular-nums;

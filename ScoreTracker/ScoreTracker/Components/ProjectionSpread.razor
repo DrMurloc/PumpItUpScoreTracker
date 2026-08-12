@@ -51,13 +51,19 @@
                         @<span class="spread-shape @(row.Mine == null ? "spread-unplayed" : "")"
                                style="color:@ThemeScales.DifficultyColor(band);background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>,
                         @<span class="spread-readout">
-                            <span>@row.Projected.ToString("N0")</span>
-                            <LetterGradeIcon Grade="@GradeOf(row.Projected)" Height="15"></LetterGradeIcon>
-                            <span style="color:@ThemeScales.DifficultyColor(band)">@L[TierNames[band]]</span>
-                            @if (projOff != null)
-                            {
-                                <span class="spread-offnote">@L["off the scale"]</span>
-                            }
+                            @* The song is named on the readout because below 700px the row shows
+                               a jacket and nothing else — without it a pinned number belongs to
+                               whichever row your thumb was over. *@
+                            <span class="spread-pop-title">@row.Chart.Song.Name</span>
+                            <span class="spread-figures">
+                                <span>@row.Projected.ToString("N0")</span>
+                                <LetterGradeIcon Grade="@GradeOf(row.Projected)" Height="15"></LetterGradeIcon>
+                                <span style="color:@ThemeScales.DifficultyColor(band)">@L[TierNames[band]]</span>
+                                @if (projOff != null)
+                                {
+                                    <span class="spread-offnote">@L["off the scale"]</span>
+                                }
+                            </span>
                         </span>)
                     @if (row.Mine != null)
                     {
@@ -72,12 +78,15 @@
                         @Marker(key + ":mine", Clamp(mine), Classes("spread-mine", mineOff),
                             @<span class="spread-shape" style="color:@ramp"></span>,
                             @<span class="spread-readout">
-                                <span>@L["you {0}", mine.ToString("N0")]</span>
-                                <LetterGradeIcon Grade="@GradeOf(mine)" Height="15"></LetterGradeIcon>
-                                @if (mineOff != null)
-                                {
-                                    <span class="spread-offnote">@L["off the scale"]</span>
-                                }
+                                <span class="spread-pop-title">@row.Chart.Song.Name</span>
+                                <span class="spread-figures">
+                                    <span>@L["you {0}", mine.ToString("N0")]</span>
+                                    <LetterGradeIcon Grade="@GradeOf(mine)" Height="15"></LetterGradeIcon>
+                                    @if (mineOff != null)
+                                    {
+                                        <span class="spread-offnote">@L["off the scale"]</span>
+                                    }
+                                </span>
                             </span>)
                     }
                 </span>
@@ -85,9 +94,18 @@
         }
     </div>
 </div>
-@* Click-away layer, the same shape FolderPicker uses: below the popover (1200), above the page.
-   Only mounted while something is pinned, so it never eats an ordinary click. *@
-<MudOverlay Visible="_pinned" OnClick="Unpin" ZIndex="1199"></MudOverlay>
+@* Click-away layer: below the popover (1200), above the page, mounted only while something is
+   pinned so it never eats an ordinary click.
+
+   A bare div rather than MudOverlay, which locks document.body scrolling when it mounts. That
+   takes the page's scrollbar with it, so opening a readout shifted the whole page sideways by
+   the scrollbar's width. Its LockScroll parameter is documented as the off switch and does not
+   work — mudScrollManager.lockScroll fires either way — and nothing here needs the page held
+   still anyway. This catches one click and has no other opinions. *@
+@if (_pinned)
+{
+    <div class="spread-clickaway" @onclick="Unpin"></div>
+}
 
 @code {
 
