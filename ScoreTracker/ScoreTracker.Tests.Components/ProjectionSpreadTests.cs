@@ -1,6 +1,10 @@
 using System.Text.RegularExpressions;
 using Bunit;
+using Microsoft.AspNetCore.Components.Web;
+using MudBlazor;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web.Components;
 using Xunit;
@@ -38,9 +42,13 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
     {
         // The projection is exactly as real for a chart nobody has touched — what is missing is
         // the player's marker, not the number, so dimming the dot would misstate the data.
-        var cut = RenderWith(new[] { (913_500, (PhoenixScore?)null), (951_600, (PhoenixScore?)962_400), (984_900, (PhoenixScore?)979_200) });
+        var cut = RenderWith(new[]
+        {
+            (913_500, (PhoenixScore?)null), (951_600, (PhoenixScore?)962_400),
+            (984_900, (PhoenixScore?)979_200)
+        });
 
-        Assert.Equal(1, Regex.Matches(cut.Markup, @"spread-dot spread-unplayed").Count);
+        Assert.Single(Regex.Matches(cut.Markup, @"spread-shape spread-unplayed"));
         // Two played charts, two personal markers.
         Assert.Equal(2, Regex.Matches(cut.Markup, @"spread-mine").Count);
     }
@@ -51,11 +59,66 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
         var cut = RenderWith(Projections.Select(p => (p, (PhoenixScore?)null)).ToArray());
 
         Assert.Equal(Projections.Length, Regex.Matches(cut.Markup, @"class=""spread-row""").Count);
-        foreach (Match m in Regex.Matches(cut.Markup, @"spread-dot[^>]*left:([0-9.]+)%"))
+        foreach (Match m in Regex.Matches(cut.Markup, @"spread-marker[^>]*left:([0-9.]+)%"))
         {
             var pct = double.Parse(m.Groups[1].Value);
             Assert.InRange(pct, 0, 100);
         }
+    }
+
+    [Fact]
+    public void AScoreBelowTheFolderIsPinnedToTheEdgeRatherThanStretchingTheAxis()
+    {
+        // The axis is the spread of the PROJECTIONS — that is the thing being explained. One
+        // score far under the folder used to drag the low end down with it and squash every
+        // chart into the right-hand third, so an off-scale score keeps its row and loses only
+        // its position.
+        var withDisaster = RenderWith(new[]
+        {
+            (913_500, (PhoenixScore?)812_300), (951_600, (PhoenixScore?)948_000),
+            (984_900, (PhoenixScore?)979_200)
+        });
+        var withoutIt = RenderWith(new[]
+        {
+            (913_500, (PhoenixScore?)910_000), (951_600, (PhoenixScore?)948_000),
+            (984_900, (PhoenixScore?)979_200)
+        });
+
+        Assert.Single(Regex.Matches(withDisaster.Markup, @"spread-off-left"));
+        Assert.Empty(Regex.Matches(withoutIt.Markup, @"spread-off"));
+        // Same projections, so the bands must land in exactly the same places either way.
+        Assert.Equal(EdgesOf(withoutIt.Markup), EdgesOf(withDisaster.Markup));
+    }
+
+    [Fact]
+    public async Task TheNumbersLiveOnTheMarkersRatherThanInAColumn()
+    {
+        // The value column was most of the track's width. Its removal is the reason the markers
+        // carry readouts at all, so a column creeping back means the readouts are redundant and
+        // nobody notices until the track is a third of the row again.
+        //
+        // A tooltip renders its content only once shown, so the readout has to be opened to be
+        // read — which is the behaviour a phone depends on anyway, there being no hover there.
+        var cut = RenderWithPopovers(new[]
+        {
+            (913_500, (PhoenixScore?)902_100), (951_600, (PhoenixScore?)948_000),
+            (984_900, (PhoenixScore?)979_200)
+        });
+
+        Assert.DoesNotContain("spread-value", cut.Markup);
+        Assert.DoesNotContain("spread-readout", cut.Markup);
+
+        // Three projections and three personal scores: six markers, each its own readout.
+        var markers = cut.FindAll(".spread-marker");
+        Assert.Equal(6, markers.Count);
+
+        // Pointer-up, not click: MudTooltip's ShowOnClick binds onpointerup, so ClickAsync here
+        // fails with "the element does not have an event handler for onclick" — which reads as a
+        // missing handler rather than the wrong event name.
+        await markers[0].TriggerEventAsync("onpointerup", new PointerEventArgs());
+
+        Assert.Contains("spread-readout", cut.Markup);
+        Assert.Contains("913,500", cut.Markup);
     }
 
     [Fact]
@@ -69,11 +132,56 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
         Assert.DoesNotContain("spread-row", cut.Markup);
     }
 
+    private static double[] EdgesOf(string markup)
+    {
+        return Regex.Matches(markup, @"spread-edge[^>]*left:([0-9.]+)%")
+            .Select(m => double.Parse(m.Groups[1].Value))
+            .ToArray();
+    }
+
     private IRenderedComponent<ProjectionSpread> RenderWith((int Projected, PhoenixScore? Mine)[] rows)
     {
-        var built = rows
-            .Select((r, i) => new ProjectionSpread.SpreadRow($"Chart {i}", r.Projected, r.Mine))
+        // Interactive: the readouts are MudTooltips, which need the popover provider, and a
+        // static render drops them by design.
+        this.RenderInteractive();
+        return RenderComponent<ProjectionSpread>(p => p
+            .Add(x => x.Rows, Build(rows))
+            .Add(x => x.Mix, MixEnum.Phoenix));
+    }
+
+    /// <summary>
+    ///     With a popover provider alongside, the way the live page carries one. A tooltip's
+    ///     content renders into the provider rather than into the anchor, so a fragment without
+    ///     one can only see the shapes.
+    /// </summary>
+    private IRenderedFragment RenderWithPopovers((int Projected, PhoenixScore? Mine)[] rows)
+    {
+        this.RenderInteractive();
+        var built = Build(rows);
+        return Render(builder =>
+        {
+            builder.OpenComponent<MudPopoverProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<ProjectionSpread>(1);
+            builder.AddAttribute(2, nameof(ProjectionSpread.Rows), built);
+            builder.AddAttribute(3, nameof(ProjectionSpread.Mix), MixEnum.Phoenix);
+            builder.CloseComponent();
+        });
+    }
+
+    private static ProjectionSpread.SpreadRow[] Build((int Projected, PhoenixScore? Mine)[] rows)
+    {
+        return rows
+            .Select((r, i) => new ProjectionSpread.SpreadRow(ChartNamed($"Chart {i}"), r.Projected, r.Mine))
             .ToArray();
-        return RenderComponent<ProjectionSpread>(p => p.Add(x => x.Rows, built));
+    }
+
+    private static Chart ChartNamed(string name)
+    {
+        return new Chart(Guid.NewGuid(), MixEnum.Phoenix,
+            new Song(name, SongType.Arcade, new Uri("https://piu.test/art.png"),
+                TimeSpan.FromSeconds(125), "BanYa", Bpm.From(160, 160)),
+            ScoreTracker.SharedKernel.Enums.ChartType.Double, 18, MixEnum.Phoenix, "SUNNY", 700,
+            new HashSet<Skill>());
     }
 }

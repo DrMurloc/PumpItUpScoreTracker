@@ -1,5 +1,6 @@
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.Theming
 @namespace ScoreTracker.Web.Components
@@ -24,7 +25,7 @@
                     <i style="background:@ThemeScales.DifficultyColor(band.Category)"></i>
                     <b style="color:@ThemeScales.DifficultyColor(band.Category)">@L[TierNames[band.Category]]</b>
                 </span>
-                @if (band.To < Max)
+                @if (band.To < High)
                 {
                     <span class="spread-edge" style="left:@Pct(band.To)%"></span>
                 }
@@ -34,28 +35,43 @@
         {
             var band = BandFor(row.Projected);
             <div class="spread-row">
-                <span class="spread-name @(row.Mine == null ? "spread-unplayed" : "")">@row.Name</span>
+                <span class="spread-name" role="button" tabindex="0" @onclick="() => Select(row.Chart)">
+                    <span class="spread-jacket" style="background-image:url('@row.Chart.Song.ImagePath')"></span>
+                    <span class="spread-title @(row.Mine == null ? "spread-unplayed" : "")">@row.Chart.Song.Name</span>
+                </span>
                 <span class="spread-track">
                     @* Unplayed keeps its position and colour and loses only its fill: the
                        projection is exactly as real there, and what is missing is the player's
                        marker, not the number. *@
-                    <span class="spread-dot @(row.Mine == null ? "spread-unplayed" : "")"
-                          style="left:@Pct(row.Projected)%;background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>
+                    @Marker(Pct(row.Projected), null,
+                        @<span class="spread-shape @(row.Mine == null ? "spread-unplayed" : "")"
+                               style="background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>,
+                        @<span class="spread-readout">
+                            <span>@row.Projected.ToString("N0")</span>
+                            <LetterGradeIcon Grade="@GradeOf(row.Projected)" Height="15"></LetterGradeIcon>
+                            <span style="color:@ThemeScales.DifficultyColor(band)">@L[TierNames[band]]</span>
+                        </span>)
                     @if (row.Mine != null)
                     {
-                        <span class="spread-mine" style="left:@Pct((int)row.Mine.Value)%"></span>
+                        var mine = (int)row.Mine.Value;
+                        @* A score outside the projections' range keeps its row and loses its
+                           position: the axis is the spread being explained, and letting one bad
+                           score stretch it squashes every chart into a corner of the track. The
+                           marker becomes an arrow at the edge so the row still reads as "off the
+                           bottom" rather than "at the bottom". *@
+                        var side = mine < Low ? "spread-off spread-off-left"
+                            : mine > High ? "spread-off spread-off-right" : null;
+                        @Marker(Math.Clamp(Pct(mine), 0, 100), "spread-mine " + side,
+                            @<span class="spread-shape"></span>,
+                            @<span class="spread-readout">
+                                <span>@L["you {0}", mine.ToString("N0")]</span>
+                                <LetterGradeIcon Grade="@GradeOf(mine)" Height="15"></LetterGradeIcon>
+                                @if (side != null)
+                                {
+                                    <span class="spread-offnote">@L["off the scale"]</span>
+                                }
+                            </span>)
                     }
-                </span>
-                <span class="spread-value">
-                    <span>
-                        @row.Projected.ToString("N0")
-                        @* The band name rides the row because the region labels have to go at
-                           phone widths, and colour is never the only channel (rule 8). *@
-                        <span class="spread-rowtier" style="color:@ThemeScales.DifficultyColor(band)">@L[TierNames[band]]</span>
-                    </span>
-                    <span class="spread-you">
-                        @(row.Mine != null ? L["you {0}", ((int)row.Mine.Value).ToString("N0")] : L["Not played"])
-                    </span>
                 </span>
             </div>
         }
@@ -65,7 +81,7 @@
 @code {
 
     /// <summary>One chart on the spread: what this level scores there, and what the player did.</summary>
-    public sealed record SpreadRow(string Name, int Projected, PhoenixScore? Mine);
+    public sealed record SpreadRow(Chart Chart, int Projected, PhoenixScore? Mine);
 
     /// <summary>
     ///     Charts with a projection, hardest first. A chart no peer has played has no position on
@@ -74,6 +90,18 @@
     [Parameter]
     [EditorRequired]
     public IReadOnlyList<SpreadRow> Rows { get; set; } = Array.Empty<SpreadRow>();
+
+    /// <summary>
+    ///     The mix the scores were set in. Required because a score resolves to different letters
+    ///     under Phoenix 2's floors, and there is deliberately no mix-less way to ask.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>Raised when a row's jacket or title is clicked. The page owns the dialog.</summary>
+    [Parameter]
+    public EventCallback<Chart> ChartSelected { get; set; }
 
     private static readonly IReadOnlyDictionary<TierListCategory, string> TierNames =
         new Dictionary<TierListCategory, string>
@@ -89,11 +117,14 @@
 
     private sealed record Band(TierListCategory Category, double From, double To);
 
-    private double Min => Math.Min(Rows.Min(r => (double)r.Projected),
-        Rows.Where(r => r.Mine != null).Select(r => (double)(int)r.Mine!.Value).DefaultIfEmpty(double.MaxValue).Min());
+    /// <summary>
+    ///     The axis spans the PROJECTIONS and nothing else. It is the spread of those numbers
+    ///     being explained, so a player's own score — which can sit a hundred thousand points
+    ///     below the folder's floor — does not get to stretch it.
+    /// </summary>
+    private double Min => Rows.Min(r => (double)r.Projected);
 
-    private double Max => Math.Max(Rows.Max(r => (double)r.Projected),
-        Rows.Where(r => r.Mine != null).Select(r => (double)(int)r.Mine!.Value).DefaultIfEmpty(double.MinValue).Max());
+    private double Max => Rows.Max(r => (double)r.Projected);
 
     // A little air at both ends so a dot at the extreme is not half off the track.
     private double Low => Min - (Max - Min) * 0.06;
@@ -129,5 +160,35 @@
         Bands.FirstOrDefault(b => projected < b.To)?.Category ?? TierListCategory.Overrated;
 
     private double Pct(double value) => High - Low < 0.0001 ? 0 : (value - Low) / (High - Low) * 100.0;
+
+    private PhoenixLetterGrade GradeOf(int score) => ((PhoenixScore)score).LetterGradeFor(Mix);
+
+    private Task Select(Chart chart) =>
+        ChartSelected.HasDelegate ? ChartSelected.InvokeAsync(chart) : Task.CompletedTask;
+
+    /// <summary>
+    ///     A marker and its readout. ShowOnClick as well as hover, because a phone has no hover
+    ///     and the number is the only place the score lives now the value column is gone — a tap
+    ///     opens it and it stays open.
+    ///     <para>
+    ///         MudTooltip renders through the popover provider, which does not exist in a static
+    ///         render; the shape is the data and the readout is an affordance, so a static render
+    ///         keeps the first and drops the second (same gate as DifficultyBubble).
+    ///     </para>
+    /// </summary>
+    private RenderFragment Marker(double left, string? extraClass, RenderFragment shape, RenderFragment readout)
+    {
+        var css = string.IsNullOrEmpty(extraClass) ? "spread-marker" : "spread-marker " + extraClass;
+        if (!RendererInfo.IsInteractive)
+        {
+            return @<span class="@css" style="left:@left%">@shape</span>;
+        }
+
+        return @<MudTooltip ShowOnClick="true" ShowOnFocus="true" Placement="Placement.Top"
+                            RootClass="@css" RootStyle="@($"left:{left}%")">
+                   <ChildContent>@shape</ChildContent>
+                   <TooltipContent>@readout</TooltipContent>
+               </MudTooltip>;
+    }
 
 }

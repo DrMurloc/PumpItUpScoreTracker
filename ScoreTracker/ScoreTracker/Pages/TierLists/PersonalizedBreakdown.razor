@@ -141,7 +141,7 @@ else
                 <section class="bd-block">
                     <MudText Typo="Typo.h5">@L["What players at your level score here"]</MudText>
                     <MudText Typo="Typo.caption" Class="bd-caption">@L["Every chart placed on what you would be expected to score. The tiers are cut from the spread of these numbers, which is why the bands sit where they do."]</MudText>
-                    <ProjectionSpread Rows="SpreadRows"></ProjectionSpread>
+                    <ProjectionSpread Rows="SpreadRows" Mix="_currentMix"></ProjectionSpread>
                     <div class="bd-spread-legend">
                         <span><span class="bd-legend-dot"></span> @L["projected for your level"]</span>
                         <span><span class="bd-legend-diamond"></span> @L["Your Score"]</span>
@@ -883,7 +883,7 @@ else
             .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId))
             .OrderBy(c => (int)c.ProjectedScore!.Value)
             .Select(c => new ProjectionSpread.SpreadRow(
-                _charts[c.ChartId].Song.Name.ToString(),
+                _charts[c.ChartId],
                 (int)c.ProjectedScore!.Value,
                 _scores.TryGetValue(c.ChartId, out var mine) ? mine.Score : null))
             .ToArray();
