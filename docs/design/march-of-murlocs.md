@@ -69,7 +69,8 @@ deletion rather than a rule change (§3).
   repeat of that chart. The external rules doc's "A and below are worth zero" and its non-play
   clause describe neither; the code stands and the divergence is documented in §2.8, not fixed.
 - **Phoenix 2: the "A or below" rule is unsettled** and will be decided after the scoring
-  experiment (§10). P2 ships on stock P2 pumbility, where the worst grade still pays 0.90.
+  experiment (§10). P2 ships on stock P2 pumbility, where a passing F pays nothing at all and the
+  worst grade that still pays is a D.
 - Song length scales value, with a 2-minute baseline.
 - Charts 22+ carry an exponential bonus (Phoenix 1 only — see §5).
 - **Stage break is deliberately outside the algorithm, on both mixes.** Passing and scoring are

@@ -76,7 +76,8 @@ collapse a rail.
 
 A title with `CompletionRequired == 0` — every `PhoenixBasicTitle`, which is 77 of Phoenix's 213
 and 66 of Phoenix 2's 272 — has no formula behind it. Play counts and step-artist plays are things
-piuscores never sees at all; Phoenix 2's CO-OP rating formula is still unknown; and the plate
+piuscores never sees at all; Phoenix 2's CO-OP rating is deliberately not computed, since the site
+surfaces it on no leaderboard for a computed value to be checked against; and the plate
 titles do not count what they appear to (see below).
 
 These **never show partial progress** — the old page drew them as 0% of a requirement that does

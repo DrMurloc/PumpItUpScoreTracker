@@ -183,6 +183,12 @@ namespace ScoreTracker.SharedKernel.Models
                     // along), and the grade multiplier and plate bonus combine ADDITIVELY
                     // before multiplying the base.
                     if (Mix == MixEnum.Phoenix2 && (int)level < 10) return 0;
+                    // An F contributes nothing even when the stage was PASSED. This has to be a
+                    // return rather than a zero in the grade table, because the plate bonus is
+                    // added to the grade rather than multiplied by it — an F with any plate but
+                    // Rough Game would otherwise still pay out.
+                    if (Mix == MixEnum.Phoenix2 && score.LetterGradeFor(Mix) == PhoenixLetterGrade.F)
+                        return 0;
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration,
                         includeLevelOverride);
                     if (Mix == MixEnum.Phoenix2 && chartType == ChartType.Single && result > 0)
@@ -288,9 +294,10 @@ namespace ScoreTracker.SharedKernel.Models
         ///         Measured from a bare base of ×1.00 rather than from a grade, so the level part
         ///         is the chart's own value and the grade part is everything the score adds on
         ///         top (docs/design/pumbility-overhaul.md D16). On Phoenix 1 that reference is
-        ///         also AA, whose modifier is exactly 1.0; on Phoenix 2 only an F scores below
-        ///         it, so the grade part is negative for exactly that grade and positive for
-        ///         every other.
+        ///         also AA, whose modifier is exactly 1.0. On Phoenix 2 nothing that contributes
+        ///         scores below it — an F contributes nothing at all, and the lowest rung that
+        ///         does is a Single's D at exactly 1.00 — so the grade part is zero at that one
+        ///         rung and positive at every other, never negative.
         ///     </para>
         /// </summary>
         public ScoreContribution Decompose(Chart chart, PhoenixScore score, PhoenixPlate plate,
@@ -316,6 +323,8 @@ namespace ScoreTracker.SharedKernel.Models
                 case CalculationType.GradePlusPlate:
                 {
                     if (Mix == MixEnum.Phoenix2 && (int)chart.Level < 10) return default;
+                    if (Mix == MixEnum.Phoenix2 && score.LetterGradeFor(Mix) == PhoenixLetterGrade.F)
+                        return default;
                     var scoreless = GetScorelessScore(chart, includeLevelOverride);
                     if (Mix == MixEnum.Phoenix2 && chart.Type == ChartType.Single && scoreless > 0)
                         scoreless += (int)chart.Level + 1 > 24 ? 10 : 5;
@@ -473,31 +482,40 @@ namespace ScoreTracker.SharedKernel.Models
             // out to have been a doubles observation rather than stale tuning.
             config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
             config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
-            // A verified live 2026-07-19 (my_page/pumbility.php per-chart read: an S14 A TG at
-            // 263.22 = Base(15) × 1.284); no doubles A row has ever been priced, so both types
-            // read it here.
-            config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.28;
-            // B and D are live singles reads (2026-08-10): an S18 B at Base(19) 225 × 1.20,
-            // seen twice on two different plates, and an S15 D at Base(16) 210 × 1.00. Neither
-            // has ever been priced on a Double, so both types read the singles value — closer
-            // to the evidence than the −0.05 extrapolation these replace.
-            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.20;
-            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.00;
-            // C and F have never been priced on either type: a pool holds a player's fifty
-            // BEST charts, and these grades rarely survive into one. They interpolate the
-            // confirmed rungs either side at the 0.10 step B and D describe. Note that F must
-            // move whatever else does — left where it was it would pay MORE than D, and a
-            // worse grade cannot be worth more than a better one.
-            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.10;
-            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 0.90;
+            // INFERRED, not observed. Exactly one Double rung below A+ has ever been priced —
+            // C, three steps down — so these two fill the gap at the uniform −0.05 step, which
+            // is the only even spacing that lands on that reading. A live Double row at either
+            // grade replaces the value outright: they are placeholders that happen to be
+            // self-consistent, not measurements.
+            config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.30;
+            config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.25;
+            // OBSERVED, one row: a D12 MG C at 229.14 = Base(12) 190 × (1.20 + 0.006). Solving
+            // the row the other way round demands a 0.106 plate bonus, which nothing on either
+            // plate table comes near, so the grade is what this row measures.
+            config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.20;
+            // INFERRED on the same −0.05 step as A and B above.
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.15;
+            // An F contributes NOTHING on either type — an exclusion like the sub-10 rule and
+            // the stage break, not the bottom rung of the ladder. The zero keeps this table
+            // honest for anything reading it directly, but what enforces the rule is the guard
+            // in GetScore: grade and plate ADD in this formula, so a zero multiplier on its own
+            // would still pay out the plate bonus.
+            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 0.00;
 
-            // What a Single reads instead, for the two grades that differ. Singles A+ is
-            // pinned by three live rows and AA by nine, against one doubles chart each — so
-            // the singles side is the better-evidenced half of both splits.
+            // What a Single reads instead, wherever the two types disagree. Every value here is
+            // a live per-chart read off the official breakdown page, and the bracketed count is
+            // how many independent rows imply that value and no other — so the whole singles
+            // ladder is measured, where its doubles counterpart below A+ mostly is not. AA+ and
+            // above land identically on both types, which is why they are absent.
             config.SinglesLetterGradeModifiers = new Dictionary<PhoenixLetterGrade, double>
             {
-                [PhoenixLetterGrade.AA] = 1.36,
-                [PhoenixLetterGrade.APlus] = 1.33
+                [PhoenixLetterGrade.AA] = 1.36, // 42 rows
+                [PhoenixLetterGrade.APlus] = 1.33, // 4 rows
+                [PhoenixLetterGrade.A] = 1.28, // 4 rows
+                [PhoenixLetterGrade.B] = 1.20, // 2 rows
+                [PhoenixLetterGrade.C] = 1.10, // 3 rows, at levels 12, 15 and 18
+                [PhoenixLetterGrade.D] = 1.00 // 1 row
+                // F is absent deliberately — zero on both types, so there is nothing to override.
             };
 
             // Plate bonuses (ADDITIVE terms, not multipliers). This table is what a Double

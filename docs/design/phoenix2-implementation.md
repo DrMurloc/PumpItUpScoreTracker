@@ -52,20 +52,35 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   count (owner-confirmed, and the breakdown page prices them 0.00). Everything dispatches
   through `ScoringConfiguration.PumbilityScoring(mix, …)`; Phoenix arm byte-identical.
 
-- **BOTH constant tables are per chart type (2026-08-10).** Production import telemetry
-  (`ScoringObservations`, 705 per-chart rows off live pools) priced all sixteen plate ×
-  chart-type cells and settled the sub-AAA ladder. A Single and a Double disagree in four
-  places and nowhere else:
+- **BOTH constant tables are per chart type.** Production import telemetry
+  (`ScoringObservations`, thousands of per-chart rows off live pools) priced all sixteen plate ×
+  chart-type cells and most of the grade ladder. The two tables disagree in eight places:
 
   | | Singles | Doubles |
   |---|---|---|
   | Extreme Game | **0.014** | 0.012 |
   | Ultimate Game | **0.017** | 0.016 |
-  | A+ | **1.33** | 1.35 |
   | AA | **1.36** | 1.37 |
+  | A+ | **1.33** | 1.35 |
+  | A | **1.28** | *1.30 (inferred)* |
+  | B | **1.20** | *1.25 (inferred)* |
+  | C | **1.10** | **1.20** |
+  | D | **1.00** | *1.15 (inferred)* |
 
-  Everything else is shared: plates RG 0.000 → PG +0.020, and the ladder F 0.90 · D 1.00 ·
-  C 1.10 · B 1.20 · A 1.28 · AA+ 1.39 · AAA 1.41 · AAA+ 1.43 · S 1.45 → SSS+ 1.50.
+  Everything else is shared: the other six plates (RG 0.000 · FG 0.002 · TG 0.004 · MG 0.006 ·
+  SG 0.008 · PG 0.020) and the top of the ladder (AA+ 1.39 · AAA 1.41 · AAA+ 1.43 · S 1.45 →
+  SSS+ 1.50). **An F is not a rung — it contributes zero**, on both types, the same as a break
+  or a sub-10 chart (owner, 2026-08-12; a *passing* F still prices at 0.00 on the official
+  page). It has to be an exclusion in the formula rather than a 0.0 multiplier, because grade
+  and plate ADD here and a zero multiplier alone would still pay the plate bonus.
+
+  **Which cells are measured and which are guesses.** All eight plate × type cells on each side
+  are measured, the whole Singles grade ladder is measured, and on Doubles everything from AA
+  up plus C is measured. **A, B and D on Doubles are interpolated** — they continue the −0.05
+  step between the two Doubles rungs that were read either side of them (A+ 1.35 and C 1.20),
+  which is the only uniform spacing that lands on C. They are pinned by
+  `InferredDoublesRungsBelowAPlusAreGuessesOnAUniformStep` so that replacing one with a live
+  reading is deliberate. A Double priced at A, B or D closes the last of it.
 
   Two July conclusions were wrong for one type each, and in the same way. The community's
   singles plate values were called a data error (owner call 2026-07-09) — two of the three
@@ -73,13 +88,10 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   1.33/1.36 was reconstructed from **singles-tab** players, so it was answering for one chart
   type while overwriting the value of the other; the pre-launch 1.35/1.37 it dismissed as
   location-test tuning were doubles observations, and the live page served them again
-  unprompted. **A pool reconstructed from one chart type cannot settle a constant for both.**
+  unprompted. C repeated the pattern a third time: three Singles rows agreed on 1.10 and were
+  taken for the shared value until one Double row read 1.20. **A pool reconstructed from one
+  chart type cannot settle a constant for both.**
 
-  Confidence is not uniform. The plate split rests on 81 rows with zero variance; each
-  doubles grade rests on a single chart. B (1.20) and D (1.00) are live singles reads that
-  both types use because no Double has ever been priced at either; C and F have never been
-  priced at all and interpolate the confirmed rungs at the 0.10 step B and D describe. F had
-  to move regardless — at its old 1.08 it would pay more than a confirmed D.
   `SkillRating` on P2 rows is the merged top-50, so it no longer equals
   `SinglesRating + DoublesRating`; S/D pool gains mint their own
   milestones (P2 only). Exit path for constant adjustments: edit the config, then press
@@ -90,7 +102,10 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   ranking 2026-07-23, the 20000 tier still unreached so its name stays masked); nine skill ladders
   (chart + SSS, `Phoenix2ChartGradeTitle`) with EXPERT/SPECIALIST metas; 34 boss breakers
   (`Phoenix2ChartClearTitle`; `1948 D??` matches any level); step-artist/play-count/CO-OP/judgment
-  badges site-detected only (CO-OP Rating formula unknown — TODO). **The `/Titles` page is live
+  badges site-detected only. **CO-OP Rating is deliberately not computed** — the site prices one
+  and quotes it in title.php's requirement text, but surfaces it on no leaderboard and in no
+  per-chart breakdown, so a computed value would have nothing to agree or disagree with (owner,
+  2026-08-12). Reading the worn title off the account is the whole answer. **The `/Titles` page is live
   for Phoenix 2** (2026-07-21) — renders through the same grid as Phoenix. **`[Legacy]` titles
   are deliberately excluded**: the site ports the Phoenix 1 titles into Phoenix 2 prefixed
   `[Legacy]`, and we already carry the real Phoenix 1 list, so mirroring them would double every

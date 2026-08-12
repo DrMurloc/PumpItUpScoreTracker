@@ -93,9 +93,12 @@ public sealed class TitleDetailDrawerTests : ComponentTestBase
     [Fact]
     public void AGradeNoFolderReachesKeepsItsRowAndSaysWhy()
     {
-        var drawer = Open("DOUBLE MASTER");
+        // The 20,000 capstone is the only title the top folder cannot reach at a bare A. Only
+        // the last row is pinned here — the rows above it are another test's subject, and this
+        // one is about the row that falls short still being shown, and saying so.
+        var drawer = Open("ABYSS ABSOLUTE");
 
-        Assert.Equal(new[] { "D25 at SSS+", "D27 at AAA", "D29 still isn't enough at A" }, Rows(drawer));
+        Assert.Equal("S29 · D29 still isn't enough at A", Rows(drawer)[^1]);
         // Dimmed, because that number is the ceiling it falls short of rather than an answer.
         Assert.Single(drawer.FindAll(".title-suggest-row.short"));
     }
