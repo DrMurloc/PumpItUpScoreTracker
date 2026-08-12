@@ -176,7 +176,8 @@ else
                             </MudMenuItem>
                         </MudMenu>
                     </div>
-                    <ProjectionSpread Rows="SpreadRows" Mix="_currentMix" ChartSelected="OpenChart"></ProjectionSpread>
+                    <ProjectionSpread Rows="SpreadRows" Mix="_currentMix" ChartSelected="OpenChart"
+                                      RailBy="@(_spreadSort == "Mine" ? ProjectionSpread.SpreadRail.Mine : ProjectionSpread.SpreadRail.Projected)"></ProjectionSpread>
                     <div class="bd-spread-legend">
                         <span><span class="bd-legend-dot"></span> @L["Projected Score"]</span>
                         <span><span class="bd-legend-diamond"></span> @L["You"]</span>

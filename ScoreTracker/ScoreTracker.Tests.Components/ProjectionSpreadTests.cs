@@ -303,6 +303,54 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
     }
 
     [Fact]
+    public void TheFirstMarkerToReachAGradeCarriesItsBadge()
+    {
+        // The rail is the scale the value column used to be. One badge per grade, on the row
+        // that starts its run, so the rest of the run reads by proximity.
+        var cut = RenderWith(new[]
+        {
+            (913_500, (PhoenixScore?)null), // AA  — starts AA
+            (918_000, (PhoenixScore?)null), // AA
+            (928_700, (PhoenixScore?)null), // AA+ — starts AA+
+            (935_200, (PhoenixScore?)null), // AA+
+            (951_600, (PhoenixScore?)null), // AAA — starts AAA
+            (984_900, (PhoenixScore?)null)  // SS  — starts SS
+        });
+
+        Assert.Equal(4, cut.FindAll(".spread-rail").Count);
+        // Every one of them hangs off a projection marker, never a personal one.
+        Assert.Empty(cut.FindAll(".spread-mine .spread-rail"));
+    }
+
+    [Fact]
+    public void TheRailFollowsWhicheverFieldTheListIsSortedBy()
+    {
+        // Reading down the projections labels the projections; reading down your own scores
+        // labels yours. A rail stuck on one field would scatter under the other sort.
+        var rows = new[]
+        {
+            (913_500, (PhoenixScore?)902_100), (951_600, (PhoenixScore?)955_000),
+            (984_900, (PhoenixScore?)null)
+        };
+
+        var byProjection = RenderWith(rows);
+        Assert.Empty(byProjection.FindAll(".spread-mine .spread-rail"));
+        Assert.NotEmpty(byProjection.FindAll(".spread-rail"));
+
+        this.RenderInteractive();
+        var byScores = RenderComponent<ProjectionSpread>(p => p
+            .Add(x => x.Rows, Build(rows))
+            .Add(x => x.Mix, MixEnum.Phoenix)
+            .Add(x => x.RailBy, ProjectionSpread.SpreadRail.Mine));
+
+        // Every rail is now on a personal marker — and the unplayed chart starts no run, because
+        // there is no score of yours to grade.
+        Assert.Equal(byScores.FindAll(".spread-rail").Count,
+            byScores.FindAll(".spread-mine .spread-rail").Count);
+        Assert.Equal(2, byScores.FindAll(".spread-rail").Count);
+    }
+
+    [Fact]
     public void NothingRendersWithoutRows()
     {
         // A folder no peer has reached has no axis to draw. The page says so in its own words;

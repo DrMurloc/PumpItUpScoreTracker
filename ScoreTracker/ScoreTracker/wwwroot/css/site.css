@@ -13723,6 +13723,24 @@ span.ct-console-pick { cursor: default; }
     padding: 7px 10px;
 }
 
+/* The grade rail: the first marker to reach each letter carries its badge, giving the track a
+   scale down its side without the value column coming back. Click-through, so it cannot steal
+   the marker's hit area, and flipped inside near the right edge so it never hangs off. */
+.spread-rail {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 1px);
+    transform: translateY(-50%);
+    pointer-events: none;
+    opacity: .92;
+    line-height: 0;
+}
+
+.spread-rail-left {
+    left: auto;
+    right: calc(100% + 1px);
+}
+
 .spread-readout {
     display: flex;
     flex-direction: column;

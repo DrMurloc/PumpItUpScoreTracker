@@ -49,8 +49,8 @@
                        as an arrow in its own band's colour — the chart is genuinely out there,
                        and letting it set the axis is what buried the middle bands. *@
                     @Marker(key + ":proj", Clamp(row.Projected), Classes(row.Mine == null ? "spread-unplayed" : null, projOff),
-                        @<span class="spread-shape @(row.Mine == null ? "spread-unplayed" : "")"
-                               style="color:@ThemeScales.DifficultyColor(band);background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>,
+                        @<text><span class="spread-shape @(row.Mine == null ? "spread-unplayed" : "")"
+                               style="color:@ThemeScales.DifficultyColor(band);background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>@Rail(row, SpreadRail.Projected, Clamp(row.Projected))</text>,
                         @<span class="spread-readout">
                             @* The song is named on the readout because below 700px the row shows
                                a jacket and nothing else — without it a pinned number belongs to
@@ -77,7 +77,7 @@
                             ? TierListCategory.VeryHard
                             : TierListCategory.VeryEasy);
                         @Marker(key + ":mine", Clamp(mine), Classes("spread-mine", mineOff),
-                            @<span class="spread-shape" style="color:@ramp"></span>,
+                            @<text><span class="spread-shape" style="color:@ramp"></span>@Rail(row, SpreadRail.Mine, Clamp(mine))</text>,
                             @<span class="spread-readout">
                                 <span class="spread-pop-title">@row.Chart.Song.Name</span>
                                 <span class="spread-figures">
@@ -133,6 +133,27 @@
     [Parameter]
     public EventCallback<Chart> ChartSelected { get; set; }
 
+    /// <summary>Which marker the grade rail hangs off. Follows whatever the list is sorted by.</summary>
+    public enum SpreadRail
+    {
+        Projected,
+        Mine
+    }
+
+    /// <summary>
+    ///     The field the grade rail labels — the same one the rows are ordered by, so the badges
+    ///     run down the track in order instead of scattering.
+    /// </summary>
+    [Parameter]
+    public SpreadRail RailBy { get; set; } = SpreadRail.Projected;
+
+    /// <summary>
+    ///     Chart → the letter grade whose run starts on that row. The first row to reach a grade
+    ///     carries its badge and the rest of the run inherits it by proximity, which turns the
+    ///     track into a scale without the value column coming back.
+    /// </summary>
+    private readonly Dictionary<Guid, PhoenixLetterGrade> _rails = new();
+
     private static readonly IReadOnlyDictionary<TierListCategory, string> TierNames =
         new Dictionary<TierListCategory, string>
         {
@@ -171,6 +192,18 @@
 
     protected override void OnParametersSet()
     {
+        _rails.Clear();
+        var seenGrades = new HashSet<PhoenixLetterGrade>();
+        foreach (var row in Rows)
+        {
+            // An unplayed chart has no score to grade, so it starts no run when reading by
+            // yours — it would otherwise label the rail with a grade nobody earned.
+            var value = RailBy == SpreadRail.Mine
+                ? row.Mine == null ? (int?)null : (int)row.Mine.Value
+                : row.Projected;
+            if (value != null && seenGrades.Add(GradeOf(value.Value))) _rails[row.Chart.Id] = GradeOf(value.Value);
+        }
+
         if (Rows.Count == 0)
         {
             _bands = Array.Empty<Band>();
@@ -299,6 +332,19 @@
     ///         the first and drops the second (same gate as DifficultyBubble).
     ///     </para>
     /// </summary>
+    /// <summary>
+    ///     The badge beside a marker, when that marker starts a grade's run and the rail is
+    ///     following its field. Flipped inside near the right edge so it never hangs off the
+    ///     track, and click-through so it cannot steal the marker's hit area.
+    /// </summary>
+    private RenderFragment? Rail(SpreadRow row, SpreadRail side, double atPercent)
+    {
+        if (RailBy != side || !_rails.TryGetValue(row.Chart.Id, out var grade)) return null;
+
+        var css = atPercent > 86 ? "spread-rail spread-rail-left" : "spread-rail";
+        return @<span class="@css"><LetterGradeIcon Grade="grade" Height="15"></LetterGradeIcon></span>;
+    }
+
     private RenderFragment Marker(string key, double left, string? extraClass, RenderFragment shape,
         RenderFragment readout)
     {
