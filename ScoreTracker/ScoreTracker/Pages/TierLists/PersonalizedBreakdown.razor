@@ -48,8 +48,6 @@ else
                     <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                     <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
                 </MudSelect>
-                <MudSpacer></MudSpacer>
-                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
             </div>
         </div>
 
@@ -95,42 +93,61 @@ else
                     @if (NoDataCharts.Any())
                     {
                         <span class="bd-dot">·</span>
-                        <span>@L["{0} don't have enough data to move", NoDataCharts.Count]</span>
+                        <span>@L["{0} not enough data", NoDataCharts.Count]</span>
                     }
                 </span>
                 <MudText Typo="Typo.caption" Class="bd-caption">@L["Recalculated every few hours"]</MudText>
             </div>
 
-            @* The recipe. One source, so there is no weighing to show — what matters is what
-               it is and how much of the folder it could reach. *@
+            @* The recipe, as figures. It used to be sixty words describing a cohort the page had
+               no way to count; now it can count it, and a reader can weigh "148 players" in a way
+               they cannot weigh "everyone within half a level of you". *@
             <section class="bd-block">
-                <MudText Typo="Typo.h5">@L["What goes into your list"]</MudText>
-                <div class="bd-recipe-cards">
-                    <div class="bd-card">
-                        <div class="bd-card-head">
-                            <MudText Typo="Typo.subtitle1">@L["What Players at Your Level Score"]</MudText>
-                            <span class="bd-weight bd-w-projection">@L["the whole list"]</span>
-                        </div>
-                        @* The honest claim and the limit of it: what players at this level score
-                           here, never that a chart suits you. The estimator takes no argument
-                           describing the player it predicts for. *@
-                        <MudText Typo="Typo.body2" Class="bd-caption">@L["Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it. Nothing else votes: the community score lists are built from the same scores this reads, so blending them in would count the same evidence twice."]</MudText>
-                        @if (_breakdown.ProjectedChartCount >= 3)
-                        {
-                            <div class="bd-status">
-                                <span class="bd-status-ok">●</span>
-                                <span>@L["Active — {0} / {1} charts covered", _breakdown.ProjectedChartCount, _breakdown.FolderChartCount]</span>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="bd-status">
-                                <span class="bd-status-off">●</span>
-                                <span>@L["Silent — players at your level have only scored {0} of these charts. Your list currently matches the community's.", _breakdown.ProjectedChartCount]</span>
-                            </div>
-                        }
-                    </div>
+                <div class="bd-head">
+                    <MudText Typo="Typo.h5">@L["What your list is built from"]</MudText>
+                    @* The one surviving explanation, and it waits to be asked: it answers "why
+                       isn't the community list mixed in", which is a question a reader either
+                       has or does not. Leading with it made the page argue with itself. *@
+                    <MudTooltip ShowOnClick="true" ShowOnFocus="true" Placement="Placement.Bottom">
+                        <ChildContent>
+                            <MudIcon Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Class="bd-qmark"></MudIcon>
+                        </ChildContent>
+                        <TooltipContent>
+                            <div class="bd-qbody">@L["Nothing else votes. The community score lists are built from the same scores this reads, so blending them in would count the same evidence twice."]</div>
+                        </TooltipContent>
+                    </MudTooltip>
                 </div>
+                @if (_breakdown.ProjectedChartCount >= 3)
+                {
+                    <div class="bd-stats">
+                        <div class="bd-stat bd-stat-accent">
+                            <span class="bd-stat-v">@_breakdown.PeerCount.ToString("N0")</span>
+                            <span class="bd-stat-l">@L["Players"]</span>
+                            <span class="bd-stat-s">@L["who played these charts"]</span>
+                        </div>
+                        <div class="bd-stat">
+                            <span class="bd-stat-v">@BandLow–@BandHigh</span>
+                            <span class="bd-stat-l">@L["Level band"]</span>
+                            <span class="bd-stat-s">@L["you sit at {0}", _breakdown.CompetitiveLevel.ToString("N1")]</span>
+                        </div>
+                        <div class="bd-stat">
+                            <span class="bd-stat-v">@_breakdown.ProjectedChartCount / @_breakdown.FolderChartCount</span>
+                            <span class="bd-stat-l">@L["Charts covered"]</span>
+                            <span class="bd-stat-s">@L["{0} have no peer score", _breakdown.FolderChartCount - _breakdown.ProjectedChartCount]</span>
+                        </div>
+                        <div class="bd-stat">
+                            <span class="bd-stat-v">▾ @((1 - _breakdown.MeanFreshness).ToString("P0"))</span>
+                            <span class="bd-stat-l">@L["Stale weight"]</span>
+                            <span class="bd-stat-s">@L["discount for peers who outgrew the score"]</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="bd-quiet">
+                        <span>@L["Silent — players at your level have only scored {0} of these charts. Your list currently matches the community's.", _breakdown.ProjectedChartCount]</span>
+                    </div>
+                }
             </section>
 
             @* The spread the tiers were cut from — the section carrying this page's whole
@@ -139,13 +156,20 @@ else
             @if (SpreadRows.Count > 0)
             {
                 <section class="bd-block">
+                    @* No caption: the bands are drawn over the dots, so the picture states what a
+                       sentence underneath would only restate. *@
                     <MudText Typo="Typo.h5">@L["What players at your level score here"]</MudText>
-                    <MudText Typo="Typo.caption" Class="bd-caption">@L["Every chart placed on what you would be expected to score. The tiers are cut from the spread of these numbers, which is why the bands sit where they do."]</MudText>
-                    <ProjectionSpread Rows="SpreadRows" Mix="_currentMix"></ProjectionSpread>
+                    <ProjectionSpread Rows="SpreadRows" Mix="_currentMix" ChartSelected="OpenChart"></ProjectionSpread>
                     <div class="bd-spread-legend">
-                        <span><span class="bd-legend-dot"></span> @L["projected for your level"]</span>
-                        <span><span class="bd-legend-diamond"></span> @L["Your Score"]</span>
-                        <span><span class="bd-legend-hollow"></span> @L["Not played yet"]</span>
+                        @* "what your level scores" rather than "your level scores": the Not-played
+                           column header is "Your level scores", and two keys differing only by
+                           case are deduped to one by GenerateResource, first spelling wins, and
+                           the loser renders English in every other locale. *@
+                        <span><span class="bd-legend-dot"></span> @L["what your level scores"]</span>
+                        <span><span class="bd-legend-diamond"></span> @L["You"]</span>
+                        <span><span class="bd-legend-hollow"></span> @L["Not played"]</span>
+                        <span><span class="bd-legend-caret"></span> @L["off the scale"]</span>
+                        <span>@L["hover or tap a marker"]</span>
                     </div>
                 </section>
             }
@@ -154,8 +178,9 @@ else
                movement in ramp-colored words, top contribution chips); tapping a row
                expands the full source strip (owner: simple view, tap for more data). *@
             <section class="bd-block">
+                @* No caption: two group headings that say "Harder for you" and "Easier for you",
+                   each with its count, already say what a sentence would. *@
                 <MudText Typo="Typo.h5">@L["Charts that moved"]</MudText>
-                <MudText Typo="Typo.caption" Class="bd-caption">@L["Where your list disagrees with the community's, and the number behind it."]</MudText>
                 @if (!HarderMovers.Any() && !EasierMovers.Any())
                 {
                     <div class="bd-quiet">@L["Your list currently matches the community's on every rated chart."]</div>
@@ -182,21 +207,40 @@ else
                             }
                             var expanded = _expandedCharts.Contains(mover.ChartId);
                             <div class="bd-mover" role="button" tabindex="0" @onclick="() => ToggleExpanded(mover.ChartId)">
-                                <span class="bd-jacket" style="background-image:url('@chart.Song.ImagePath')"></span>
+                                <span class="bd-jacket" style="background-image:url('@chart.Song.ImagePath')"
+                                      @onclick:stopPropagation="true" @onclick="() => OpenChart(chart)"></span>
                                 <span class="bd-mover-song">
-                                    <DifficultyBubble Chart="chart"></DifficultyBubble>
-                                    <span class="bd-mover-name">@chart.Song.Name</span>
+                                    <span class="bd-mover-name" @onclick:stopPropagation="true"
+                                          @onclick="() => OpenChart(chart)">@chart.Song.Name</span>
+                                    @* Two labelled figures where a sentence used to be, and the
+                                       grades make the gap legible without reading either number. *@
+                                    <span class="bd-pair">
+                                        @if (mover.ProjectedScore != null)
+                                        {
+                                            <span class="bd-f">
+                                                <span class="bd-k">@L["peers:"]</span>
+                                                <b>@(((int)mover.ProjectedScore.Value).ToString("N0"))</b>
+                                                <LetterGradeIcon Grade="@GradeOf((int)mover.ProjectedScore.Value)" Height="15"></LetterGradeIcon>
+                                            </span>
+                                        }
+                                        @if (MyScoreOn(mover.ChartId) is { } mine)
+                                        {
+                                            <span class="bd-f">
+                                                <span class="bd-k">@L["you:"]</span>
+                                                <b>@mine.ToString("N0")</b>
+                                                <LetterGradeIcon Grade="@GradeOf(mine)" Height="15"></LetterGradeIcon>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="bd-f bd-k">@L["Not played"]</span>
+                                        }
+                                    </span>
                                 </span>
                                 <span class="bd-move">
                                     <span style="color:@ThemeScales.DifficultyColor(mover.CommunityCategory)">@L[TierNameFor(mover.CommunityCategory)]</span>
                                     <span class="bd-move-arrow">→</span>
                                     <span style="color:@ThemeScales.DifficultyColor(mover.PersonalizedCategory)">@L[TierNameFor(mover.PersonalizedCategory)]</span>
-                                </span>
-                                <span class="bd-mover-chips">
-                                    @if (mover.ProjectedScore != null)
-                                    {
-                                        <span class="bd-mover-why">@L["Players at your level score {0}", ((int)mover.ProjectedScore.Value).ToString("N0")]</span>
-                                    }
                                 </span>
                                 @if (expanded)
                                 {
@@ -227,7 +271,7 @@ else
                     @if (NoDataCharts.Any())
                     {
                         <span class="bd-dot">·</span>
-                        <span>@L["{0} have no projection yet — nobody near your level has scored them:", NoDataCharts.Count]</span>
+                        <span>@L["{0} have no projection — nobody near your level has scored them:", NoDataCharts.Count]</span>
                         <span class="bd-nodata-names">@string.Join(" · ", NoDataChartNames.Take(_showNoData ? NoDataCharts.Count : 3))</span>
                         @if (NoDataCharts.Count > 3)
                         {
@@ -238,19 +282,49 @@ else
             </section>
 
             <section class="bd-block">
-                <MudText Typo="Typo.h5">@L["How you're doing against your level"]</MudText>
-                <MudText Typo="Typo.caption" Class="bd-caption">@L["Shown for comparison only — your own scores are not an input to the ranking above. The charts you sit furthest below are the ones with the most left in them."]</MudText>
-                @* The note that stops a column of red reading as a verdict on the player. *@
-                <MudText Typo="Typo.body2" Class="bd-shifting-bar">@L["Nobody is above the line on every chart in their folder. If you were, your competitive level would climb and you would be measured against stronger scores instead — the bar moves with you."]</MudText>
+                <div class="bd-head">
+                    <MudText Typo="Typo.h5">@L["You against your level"]</MudText>
+                    @* A chip rather than a sentence: what mattered about "shown for comparison
+                       only" was the fact, and the fact fits in three words. *@
+                    <span class="bd-chip-note">@L["not an input"]</span>
+                </div>
                 @if (Gaps.Count > 0)
                 {
+                    @* The balance, drawn. Three sentences used to assert that nobody clears their
+                       whole folder; the split says it, and says it about this player. *@
+                    <div class="bd-balance">
+                        <span class="bd-balance-n bd-easier-text">@AheadCount</span>
+                        <span>@L["above"]</span>
+                        <span class="bd-balance-bar">
+                            <span style="width:@(AheadCount * 100.0 / Gaps.Count)%;background:var(--diff-veryeasy)"></span>
+                            <span style="width:@((Gaps.Count - AheadCount) * 100.0 / Gaps.Count)%;background:var(--diff-veryhard)"></span>
+                        </span>
+                        <span class="bd-balance-n bd-harder-text">@(Gaps.Count - AheadCount)</span>
+                        <span>@L["below"]</span>
+                    </div>
+                    <MudText Typo="Typo.body2" Class="bd-shifting-bar">@L["Nobody is above the line on every chart — if you were, your level would climb and the line with it."]</MudText>
                     <div class="bd-gaps">
+                        <div class="bd-gap-row bd-gap-head">
+                            <span>@L["Chart"]</span>
+                            <span>@L["Behind / ahead"]</span>
+                            <span class="bd-gap-num">@L["Gap"]</span>
+                        </div>
                         @foreach (var gap in Gaps)
                         {
+                            var behind = gap.Delta < 0;
+                            var ramp = behind ? TierListCategory.VeryHard : TierListCategory.VeryEasy;
                             <div class="bd-gap-row">
-                                <span class="bd-gap-name">@gap.Name</span>
-                                <span class="bd-gap-num" style="color:@ThemeScales.DifficultyColor(gap.Delta < 0 ? TierListCategory.VeryHard : TierListCategory.VeryEasy)">
+                                @NameCell(gap.Chart)
+                                <span class="bd-gap-bar">
+                                    <span class="bd-gap-fill" style="@(behind ? "right:50%;" : "left:50%;")width:@(Math.Abs(gap.Delta) * 48.0 / WidestGap)%;background:@ThemeScales.DifficultyColor(ramp)"></span>
+                                </span>
+                                <span class="bd-gap-num" style="color:@ThemeScales.DifficultyColor(ramp)">
                                     @(gap.Delta > 0 ? "+" : "−")@Math.Abs(gap.Delta).ToString("N0")
+                                    <span class="bd-gap-grades">
+                                        <LetterGradeIcon Grade="@GradeOf(gap.Mine)" Height="14"></LetterGradeIcon>
+                                        <span>/</span>
+                                        <LetterGradeIcon Grade="@GradeOf(gap.Projected)" Height="14"></LetterGradeIcon>
+                                    </span>
                                 </span>
                             </div>
                         }
@@ -260,13 +334,23 @@ else
                 {
                     @* The projection does not need the player to have played a chart — it is
                        drawn from the peers who have — so these have a number and no comparison. *@
-                    <MudText Typo="Typo.subtitle2" Class="bd-gap-head">@L["Not played yet"]</MudText>
                     <div class="bd-gaps">
+                        <div class="bd-gap-row bd-gap-head">
+                            <span>@L["Not played yet"]</span>
+                            <span></span>
+                            <span class="bd-gap-num">@L["Your level scores"]</span>
+                        </div>
                         @foreach (var row in NotPlayed)
                         {
                             <div class="bd-gap-row">
-                                <span class="bd-gap-name">@row.Name</span>
-                                <span class="bd-gap-num bd-gap-projected">@row.Projected.ToString("N0")</span>
+                                @NameCell(row.Chart)
+                                <span></span>
+                                <span class="bd-gap-num bd-gap-projected">
+                                    @row.Projected.ToString("N0")
+                                    <span class="bd-gap-grades">
+                                        <LetterGradeIcon Grade="@GradeOf(row.Projected)" Height="14"></LetterGradeIcon>
+                                    </span>
+                                </span>
                             </div>
                         }
                     </div>
@@ -274,6 +358,9 @@ else
             </section>
         }
     </div>
+    @* Every song name and jacket on the page raises this one dialog — the shared chart details,
+       same as the tier list and Charts. The page owns it; the spread and the lists just ask. *@
+    <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
 }
 <style>
     .bd-page {
@@ -705,14 +792,19 @@ else
     .bd-gaps {
         display: flex;
         flex-direction: column;
-        max-width: 520px;
+        max-width: 620px;
+        margin-top: 10px;
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 10px;
+        overflow: hidden;
     }
 
     .bd-gap-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 6px 0;
+        display: grid;
+        grid-template-columns: 1fr 120px 96px;
+        gap: 10px;
+        align-items: center;
+        padding: 6px 12px;
         border-bottom: 1px solid var(--mud-palette-lines-default);
         font-size: .85rem;
     }
@@ -721,23 +813,192 @@ else
         border-bottom: 0;
     }
 
+    .bd-gap-head {
+        font-size: .64rem;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        color: var(--mud-palette-text-secondary);
+        font-weight: 700;
+    }
+
     .bd-gap-name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        cursor: pointer;
+    }
+
+    .bd-gap-name:hover .bd-gap-title, .bd-gap-name:focus-visible .bd-gap-title {
+        color: var(--mud-palette-primary);
+        text-decoration: underline;
+    }
+
+    .bd-jacket-sm {
+        width: 24px;
+        height: 24px;
+        border-radius: 3px;
+        flex: none;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .bd-gap-title {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
+    /* Centre-origin: the fill grows left for behind and right for ahead, so the column reads as
+       a distribution rather than a list of magnitudes. */
+    .bd-gap-bar {
+        position: relative;
+        height: 7px;
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--mud-palette-text-secondary) 16%, transparent);
+    }
+
+    .bd-gap-fill {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        border-radius: 4px;
+    }
+
     .bd-gap-num {
+        text-align: right;
         font-variant-numeric: tabular-nums;
         flex: none;
+    }
+
+    .bd-gap-grades {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        color: var(--mud-palette-text-secondary);
+        font-weight: 400;
     }
 
     .bd-gap-projected {
         color: var(--mix-accent);
     }
 
-    .bd-gap-head {
-        margin-top: 10px;
+    /* --- the recipe, as figures --- */
+    .bd-head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-wrap: wrap;
+    }
+
+    .bd-qmark {
+        color: var(--mud-palette-text-secondary);
+        cursor: pointer;
+    }
+
+    .bd-qbody {
+        max-width: 34ch;
+    }
+
+    .bd-chip-note {
+        font-size: .64rem;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        font-weight: 700;
+        border-radius: 4px;
+        padding: 2px 8px;
+        color: var(--mud-palette-text-secondary);
+        background: color-mix(in srgb, var(--mud-palette-text-secondary) 16%, transparent);
+    }
+
+    .bd-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    .bd-stat {
+        background: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 10px;
+        padding: 10px 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 130px;
+        flex: 1 1 130px;
+    }
+
+    .bd-stat-v {
+        font-size: 1.5rem;
+        font-weight: 600;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bd-stat-accent .bd-stat-v {
+        color: var(--mix-accent);
+    }
+
+    .bd-stat-l {
+        font-size: .64rem;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--mud-palette-text-secondary);
+        font-weight: 700;
+    }
+
+    .bd-stat-s {
+        font-size: .72rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    /* --- the balance figure --- */
+    .bd-balance {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: .82rem;
+        color: var(--mud-palette-text-secondary);
+        margin-top: 4px;
+    }
+
+    .bd-balance-n {
+        font-size: 1.2rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bd-balance-bar {
+        flex: 1;
+        max-width: 260px;
+        height: 7px;
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+    }
+
+    /* --- the mover's two figures --- */
+    .bd-pair {
+        display: flex;
+        align-items: center;
+        gap: 4px 12px;
+        flex-wrap: wrap;
+        font-size: .76rem;
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bd-f {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .bd-k {
+        color: var(--mud-palette-text-secondary);
     }
 
     .bd-spread-legend {
@@ -755,10 +1016,17 @@ else
         gap: 6px;
     }
 
-    .bd-legend-dot, .bd-legend-diamond, .bd-legend-hollow {
+    .bd-legend-dot, .bd-legend-diamond, .bd-legend-hollow, .bd-legend-caret {
         width: 11px;
         height: 11px;
         flex: none;
+    }
+
+    .bd-legend-caret {
+        width: 0;
+        height: 0;
+        border: 5px solid transparent;
+        border-right: 8px solid var(--diff-veryhard);
     }
 
     .bd-legend-dot {
@@ -859,6 +1127,15 @@ else
     private readonly HashSet<string> _showAllGroups = new();
     private bool _showNoData;
 
+    private Chart? _detailsChart;
+    private bool _detailsOpen;
+
+    private void OpenChart(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
+
     // Friendly tier names — raw enum names never render; the unlocalized string is
     // the key, L[...] localizes at render (same table as the tier list page).
     private static readonly IDictionary<TierListCategory, string> TierNames = new Dictionary<TierListCategory, string>
@@ -888,7 +1165,7 @@ else
                 _scores.TryGetValue(c.ChartId, out var mine) ? mine.Score : null))
             .ToArray();
 
-    private sealed record GapRow(string Name, int Delta);
+    private sealed record GapRow(Chart Chart, int Delta, int Mine, int Projected);
 
     /// <summary>
     ///     Your score against the projection, furthest behind first. Comparison only — these
@@ -899,12 +1176,20 @@ else
         : _breakdown.Charts
             .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId)
                         && _scores.TryGetValue(c.ChartId, out var s) && s.Score != null)
-            .Select(c => new GapRow(_charts[c.ChartId].Song.Name.ToString(),
-                (int)_scores[c.ChartId].Score!.Value - (int)c.ProjectedScore!.Value))
+            .Select(c => new GapRow(_charts[c.ChartId],
+                (int)_scores[c.ChartId].Score!.Value - (int)c.ProjectedScore!.Value,
+                (int)_scores[c.ChartId].Score!.Value,
+                (int)c.ProjectedScore!.Value))
             .OrderBy(g => g.Delta)
             .ToArray();
 
-    private sealed record NotPlayedRow(string Name, int Projected);
+    private int AheadCount => Gaps.Count(g => g.Delta > 0);
+
+    // The bar is scaled to the widest gap on the page, so the shape reads as this folder's
+    // spread rather than an absolute one. Never zero: every row would divide by it.
+    private int WidestGap => Math.Max(1, Gaps.Count == 0 ? 1 : Gaps.Max(g => Math.Abs(g.Delta)));
+
+    private sealed record NotPlayedRow(Chart Chart, int Projected);
 
     private IReadOnlyList<NotPlayedRow> NotPlayed => _breakdown == null
         ? Array.Empty<NotPlayedRow>()
@@ -912,9 +1197,26 @@ else
             .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId)
                         && (!_scores.TryGetValue(c.ChartId, out var s) || s.Score == null))
             .OrderByDescending(c => (int)c.ProjectedScore!.Value)
-            .Select(c => new NotPlayedRow(_charts[c.ChartId].Song.Name.ToString(),
-                (int)c.ProjectedScore!.Value))
+            .Select(c => new NotPlayedRow(_charts[c.ChartId], (int)c.ProjectedScore!.Value))
             .ToArray();
+
+    private int? MyScoreOn(Guid chartId) =>
+        _scores.TryGetValue(chartId, out var s) && s.Score != null ? (int)s.Score.Value : null;
+
+    // Mix-required: a score resolves to a different letter under Phoenix 2's floors, and there
+    // is deliberately no mix-less way to ask.
+    private PhoenixLetterGrade GradeOf(int score) => ((PhoenixScore)score).LetterGradeFor(_currentMix);
+
+    private string BandLow => Math.Max(1, _breakdown!.CompetitiveLevel - _breakdown.CompetitiveWindow)
+        .ToString("N1");
+
+    private string BandHigh => (_breakdown!.CompetitiveLevel + _breakdown.CompetitiveWindow).ToString("N1");
+
+    private RenderFragment NameCell(Chart chart) =>
+        @<span class="bd-gap-name" role="button" tabindex="0" @onclick="() => OpenChart(chart)">
+            <span class="bd-jacket-sm" style="background-image:url('@chart.Song.ImagePath')"></span>
+            <span class="bd-gap-title">@chart.Song.Name</span>
+        </span>;
 
     private static string TierNameFor(TierListCategory category)
     {
