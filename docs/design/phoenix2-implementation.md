@@ -85,11 +85,31 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
 
   **Which cells are measured and which are guesses.** All eight plate × type cells on each side
   are measured, the whole Singles grade ladder is measured, and on Doubles everything from AA
-  up plus C is measured. **A, B and D on Doubles are interpolated** — they continue the −0.05
-  step between the two Doubles rungs that were read either side of them (A+ 1.35 and C 1.20),
-  which is the only uniform spacing that lands on C. They are pinned by
-  `InferredDoublesRungsBelowAPlusAreGuessesOnAUniformStep` so that replacing one with a live
-  reading is deliberate. A Double priced at A, B or D closes the last of it.
+  up plus C is measured. **A, B and D on Doubles are guesses.** A and B interpolate the two
+  Doubles rungs read either side of them (A+ 1.35 and C 1.20) on the uniform −0.05 step, the only
+  even spacing that lands on C; **D 1.15 is an extrapolation** below the lowest measured Doubles
+  rung, making it the weakest cell in the table and the one carrying its widest type gap (−0.15).
+  All three are pinned by `InferredDoublesRungsBelowAPlusAreGuessesOnAUniformStep` so that
+  replacing one with a live reading is deliberate. A Double priced at A, B or D closes the last
+  of it.
+
+  **A competing fit exists, was considered, and was declined — do not re-derive it.** The Singles
+  ladder, the only fully measured one, *widens* going down (steps 0.03/0.05/0.08/0.10/0.10)
+  rather than holding a uniform step; a fit assuming the Doubles ladder has that same shape lands
+  on **A 1.32 and B 1.27** and hits both measured anchors equally well. Owner's call, 2026-08-12:
+  not worth spending on, because no player can see the difference between the two answers. For
+  anyone tempted anyway — it does **not** resolve the title-reachability note below. It makes it
+  slightly worse, so the two questions are independent.
+
+  **What the Doubles A guess visibly decides.** `/Titles` projects a folder per reference grade
+  by pricing fifty charts of that folder, so at the bottom reference grade the highest Doubles
+  folder sets a ceiling: fifty D29s at an A on a Talented Game plate. At A 1.28 that ceiling is
+  19,260 and at 1.30 it is 19,560, which moves `[D] EXPERT LV.9` (19,300), `[D] EXPERT LV.10`
+  (19,400) and `DOUBLE MASTER` (19,500) from "no folder reaches this at A" to "D29 does" — the
+  last of them on a 0.3% margin over a number nothing has measured. Left as is deliberately: a
+  Doubles pool cannot exceed the merged total, and the highest merged total on the mirrored world
+  board is 19,638.92, so all three rungs sit at or past the current world frontier and the claim
+  is being made to approximately nobody.
 
   Two July conclusions were wrong for one type each, and in the same way. The community's
   singles plate values were called a data error (owner call 2026-07-09) — two of the three

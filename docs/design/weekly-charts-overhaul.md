@@ -181,10 +181,12 @@ markup with jump links + the next-reset countdown.
    action. Anonymous visitors get a sign-in CTA card instead.
 6. **Scoring legend** — rendered from the active mix's `ScoringConfiguration` (never
    hand-copied): grade multipliers, Phoenix 2's additive plate bonuses, and the rules
-   sentences (§6). A board holds both pooled types, and Phoenix 2 prices four cells
+   sentences (§6). A board holds both pooled types, and Phoenix 2 prices eight cells
    differently on each, so a row the two disagree on prints both values against the type's
    shorthand (`S 0.014 / D 0.012`) rather than one number that would be wrong for half the
-   board.
+   board. A grade the formula excludes outright rather than scales — Phoenix 2's F — renders as
+   a plain `0`, never as `× 0.00`, which beside an additive plate ladder would read as though a
+   plate could still pay on it.
 7. **The pool** (`?pool=1`) — the not-yet-featured chart list, server-rendered on its own URL.
 8. **Admin** — the rotate trigger via the dialog host's confirm; a quiet card at the bottom,
    admin-only.
@@ -214,6 +216,10 @@ formulas' own rules:
 - **Broken plays score 0** toward totals (`StageBreakModifier = 0`). They still appear on
   per-chart boards, ranked by the existing policies. (Under PUMBILITY+ a broken AAA earned
   full points — that quirk dies.)
+- **On the Phoenix 2 board a passing F also scores 0**, so it ties with a stage break. This
+  follows the mix's formula rather than a weekly rule — Phoenix 2 excludes an F outright — and
+  is intended (owner, 2026-08-12). It is close to unobservable in practice: a passing F is rare
+  enough that a whole month of boards will usually contain none.
 - **Co-op is never PUMBILITY-priced on this page**: Combined excludes co-op (now Phoenix 2's
   own rule rather than convention), and the **Co-Op view ranks raw score sum** — the only
   currency co-op charts share.
