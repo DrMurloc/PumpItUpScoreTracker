@@ -139,9 +139,9 @@ With one source there is no blend to explain, so the page stopped explaining one
   CSS can live in `site.css` — a Razor `<style>` block is page-scoped) lays every
   chart out on what this level would score, with the tier bands drawn behind it. The
   cuts come from `TierListProcessor.StdDev`, the same function the bucketing runs, so
-  a band edge cannot sit where the tier list disagrees. Below 700px the name moves
-  above a full-width track and the band labels give way to the tier printed per row —
-  which is also what keeps colour from being the only channel there.
+  a band edge cannot sit where the tier list disagrees. (Below 700px the title gave
+  way to the tier printed per row — superseded by the vertical band labels below,
+  which fit at every width.)
 - **An unplayed chart keeps its position and loses only its fill.** The projection is
   exactly as real for a chart nobody has touched; what is missing is the player's
   marker, not the number. It is also the case the number is most useful for, so there
@@ -155,6 +155,56 @@ With one source there is no blend to explain, so the page stopped explaining one
 - **Retired with the skill profile:** the Vs. Peers column and the whole dependency
   chain behind it, including the `GetChartSkillChipsQuery` and
   `GetPlayerScoreQualityQuery` reads the page made on every visit to feed it.
+
+### Figures instead of prose (2026-08-11)
+
+The page as first drawn carried ~200 words of prose on the Score path. Most of it
+was *asserting* something the page had a number for, or could have had. Roughly 140
+of them are gone.
+
+| Was | Now |
+|---|---|
+| 60 words describing the cohort | Four figures: **players**, **level band**, **coverage**, **stale weight** |
+| 28-word spread caption | Nothing. The bands are drawn over the dots |
+| 30 words insisting the gap list is not an input | A `not an input` chip |
+| 34 words on the moving bar | The **balance figure** — *4 above · 7 below* — plus one clause |
+| 12-word movers caption | Nothing. Two headings with counts |
+| "Players at your level score 971,200 · you 968,000" | `peers: 971,200 [S]` · `you: 968,000 [AAA+]` |
+
+Three things this settled:
+
+- **The cohort figures are real data, not a restatement.** `ScoreProjector` already
+  computed the peer count, the matched level and the growth discount and threw all
+  three away, so `Project` returns them alongside the scores rather than a bare
+  dictionary. The count is players who **reached an estimate**, not the several
+  hundred in the band — most of a band has played none of a given folder, and the
+  band figure would overstate the evidence by that share. Freshness averages per
+  *score*, because a peer who lent five scores lent five pieces of evidence.
+- **The one surviving explanation waits to be asked.** "Nothing else votes, because
+  the community lists read the same scores" answers a question a reader either has or
+  does not. Behind a `?`, it is available; leading with it made the page argue with
+  itself.
+- **The window travels on the contract.** The page states a band, and it has no
+  business knowing that a tier list reads ±0.5 while PUMBILITY reads ±1.0. A page
+  that hardcoded one would print the wrong band the day the other moved.
+
+**The value column went and the numbers moved onto the markers** (`MudTooltip` with
+`ShowOnClick`, carrying score + tier + `LetterGradeIcon`). Two things that cost a
+debugging round each: a tooltip renders its content only once *shown*, so a bUnit
+assertion on a readout has to open it first; and `ShowOnClick` binds `onpointerup`,
+so `ClickAsync` fails there claiming the element has no `onclick` handler.
+
+**The axis spans the projections and nothing else.** It is the spread of *those*
+numbers being explained. One score a hundred thousand points under the folder used to
+drag the low end with it and squash every chart into the right-hand third; an
+off-scale score now keeps its row, clamps to the edge, and draws as an arrow so it
+still reads as "off the bottom" rather than "at the bottom".
+
+**Band labels turned vertical, and therefore stayed at every width.** Rotated they
+need ~12px instead of ~90, so they survive a phone — which is what let the row drop
+the per-row tier name the 700px rule previously required. The picture carries the
+tier at every width now, so colour is never the only channel (rule 8) without a
+second copy of the same information on every line.
 
 **Pass is on hold** (owner, 2026-08-11): it renders a coming-soon state rather than
 explaining a blend that is about to be reworked. The handler still computes it and the
@@ -171,8 +221,14 @@ one peer's one score. The floor is provisional; `ScoreProjectionCostProbeTests`
 
 One new contract query (cached 6h/1h sliding per user+folder+lens, like the blend):
 `GetPersonalizedTierListBreakdownQuery` → per-chart `BreakdownChartRecord`
-(community = stored sources combined alone, personalized, skill, similar players)
-+ `BreakdownSkillRecord` (deviation, evidence, usable) + statuses/weights. The page
-composes the rest from published contracts it already dispatches (`GetChartsQuery`,
-`GetChartSkillChipsQuery`, `GetPlayerScoreQualityQuery`, `GetPhoenixRecordsQuery`).
+(community = stored sources combined alone, personalized, skill, similar players,
+plus the projected score itself) + `BreakdownSkillRecord` (deviation, evidence,
+usable) + statuses/weights + the cohort figures (`PeerCount`, `CompetitiveLevel`,
+`CompetitiveWindow`, `MeanFreshness`). The page composes the rest from published
+contracts it already dispatches (`GetChartsQuery`, `GetPhoenixRecordsQuery`).
 No new tables, ports, or jobs; nothing in `dev/export/*` or `api/*` changed.
+
+`IScoreProjector.Project` returns `ScoreProjection` (scores + cohort) rather than a
+bare dictionary — four call sites, two verticals. `CohortEstimator` is untouched:
+`GrowthWeight` was already public for the exploration harness, so the freshness mean
+is computed where the peers already are and the PUMBILITY arithmetic cannot move.
