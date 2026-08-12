@@ -291,8 +291,10 @@ public static class Phoenix2TitleList
         new Phoenix2TitleSetTitle("SPECIALIST", "Earn all skill titles", "Misc.", SkillCategories, 90),
 
         // ---- CO-OP rating ladder (site-detected only) ----
-        // TODO(P2-titles): the in-game "CO-OP Rating" formula is unknown â€” these stay
-        // site-detected until it can be reverse-engineered from live CoOp data.
+        // These stay site-detected by decision, not by omission. The site does price a CO-OP
+        // Rating — title.php quotes one in its requirement text — but exposes it on no
+        // leaderboard and in no per-chart breakdown, so a computed value would have nothing to
+        // agree or disagree with. Reading the worn title off the account is the whole answer.
         new PhoenixBasicTitle("[CO-OP] LV.1", "[CO-OP Rating] 1000+", "CO-OP", "CO-OP", 1),
         new PhoenixBasicTitle("[CO-OP] LV.2", "[CO-OP Rating] 2000+", "CO-OP", "CO-OP", 2),
         new PhoenixBasicTitle("[CO-OP] LV.3", "[CO-OP Rating] 3000+", "CO-OP", "CO-OP", 3),

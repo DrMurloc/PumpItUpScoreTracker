@@ -52,20 +52,64 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   count (owner-confirmed, and the breakdown page prices them 0.00). Everything dispatches
   through `ScoringConfiguration.PumbilityScoring(mix, …)`; Phoenix arm byte-identical.
 
-- **BOTH constant tables are per chart type (2026-08-10).** Production import telemetry
-  (`ScoringObservations`, 705 per-chart rows off live pools) priced all sixteen plate ×
-  chart-type cells and settled the sub-AAA ladder. A Single and a Double disagree in four
-  places and nowhere else:
+- **BOTH constant tables are per chart type.** Production import telemetry
+  (`ScoringObservations`, thousands of per-chart rows off live pools) priced all sixteen plate ×
+  chart-type cells and most of the grade ladder. The two tables disagree in eight places:
 
   | | Singles | Doubles |
   |---|---|---|
   | Extreme Game | **0.014** | 0.012 |
   | Ultimate Game | **0.017** | 0.016 |
-  | A+ | **1.33** | 1.35 |
   | AA | **1.36** | 1.37 |
+  | A+ | **1.33** | 1.35 |
+  | A | **1.28** | *1.30 (inferred)* |
+  | B | **1.20** | *1.25 (inferred)* |
+  | C | **1.10** | **1.20** |
+  | D | **1.00** | *1.15 (inferred)* |
 
-  Everything else is shared: plates RG 0.000 → PG +0.020, and the ladder F 0.90 · D 1.00 ·
-  C 1.10 · B 1.20 · A 1.28 · AA+ 1.39 · AAA 1.41 · AAA+ 1.43 · S 1.45 → SSS+ 1.50.
+  Everything else is shared: the other six plates (RG 0.000 · FG 0.002 · TG 0.004 · MG 0.006 ·
+  SG 0.008 · PG 0.020) and the top of the ladder (AA+ 1.39 · AAA 1.41 · AAA+ 1.43 · S 1.45 →
+  SSS+ 1.50). **An F is not a rung — it contributes zero**, on both types, the same as a break
+  or a sub-10 chart, and that includes a *passing* F. It has to be an exclusion in the formula
+  rather than a 0.0 multiplier, because grade and plate ADD here and a zero multiplier alone
+  would still pay the plate bonus.
+
+  ⚠ **This one rests on the owner's knowledge of the game (2026-08-12), not on a reading, and no
+  instrument we have can check it.** `my_page/pumbility.php` publishes a top 50; an F is
+  essentially never in one, and `ScoringObservations` skips any row priced at zero — so an F is
+  unobservable by construction and its absence from the telemetry is not evidence either way.
+  The competing explanation, if it is ever worth revisiting, is that a chart missing from a
+  top-50 page is not *priced* at zero but simply not in the pool. Where the rule bites hardest
+  is a sparse Phoenix 2 account and `/Pumbility/Phoenix1`, where a 450k–499k Phoenix 1 score is
+  a P1 **D** but a P2 **F** and so reprices from about 0.9 × base to nothing.
+
+  **Which cells are measured and which are guesses.** All eight plate × type cells on each side
+  are measured, the whole Singles grade ladder is measured, and on Doubles everything from AA
+  up plus C is measured. **A, B and D on Doubles are guesses.** A and B interpolate the two
+  Doubles rungs read either side of them (A+ 1.35 and C 1.20) on the uniform −0.05 step, the only
+  even spacing that lands on C; **D 1.15 is an extrapolation** below the lowest measured Doubles
+  rung, making it the weakest cell in the table and the one carrying its widest type gap (−0.15).
+  All three are pinned by `InferredDoublesRungsBelowAPlusAreGuessesOnAUniformStep` so that
+  replacing one with a live reading is deliberate. A Double priced at A, B or D closes the last
+  of it.
+
+  **A competing fit exists, was considered, and was declined — do not re-derive it.** The Singles
+  ladder, the only fully measured one, *widens* going down (steps 0.03/0.05/0.08/0.10/0.10)
+  rather than holding a uniform step; a fit assuming the Doubles ladder has that same shape lands
+  on **A 1.32 and B 1.27** and hits both measured anchors equally well. Owner's call, 2026-08-12:
+  not worth spending on, because no player can see the difference between the two answers. For
+  anyone tempted anyway — it does **not** resolve the title-reachability note below. It makes it
+  slightly worse, so the two questions are independent.
+
+  **What the Doubles A guess visibly decides.** `/Titles` projects a folder per reference grade
+  by pricing fifty charts of that folder, so at the bottom reference grade the highest Doubles
+  folder sets a ceiling: fifty D29s at an A on a Talented Game plate. At A 1.28 that ceiling is
+  19,260 and at 1.30 it is 19,560, which moves `[D] EXPERT LV.9` (19,300), `[D] EXPERT LV.10`
+  (19,400) and `DOUBLE MASTER` (19,500) from "no folder reaches this at A" to "D29 does" — the
+  last of them on a 0.3% margin over a number nothing has measured. Left as is deliberately: a
+  Doubles pool cannot exceed the merged total, and the highest merged total on the mirrored world
+  board is 19,638.92, so all three rungs sit at or past the current world frontier and the claim
+  is being made to approximately nobody.
 
   Two July conclusions were wrong for one type each, and in the same way. The community's
   singles plate values were called a data error (owner call 2026-07-09) — two of the three
@@ -73,13 +117,10 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   1.33/1.36 was reconstructed from **singles-tab** players, so it was answering for one chart
   type while overwriting the value of the other; the pre-launch 1.35/1.37 it dismissed as
   location-test tuning were doubles observations, and the live page served them again
-  unprompted. **A pool reconstructed from one chart type cannot settle a constant for both.**
+  unprompted. C repeated the pattern a third time: three Singles rows agreed on 1.10 and were
+  taken for the shared value until one Double row read 1.20. **A pool reconstructed from one
+  chart type cannot settle a constant for both.**
 
-  Confidence is not uniform. The plate split rests on 81 rows with zero variance; each
-  doubles grade rests on a single chart. B (1.20) and D (1.00) are live singles reads that
-  both types use because no Double has ever been priced at either; C and F have never been
-  priced at all and interpolate the confirmed rungs at the 0.10 step B and D describe. F had
-  to move regardless — at its old 1.08 it would pay more than a confirmed D.
   `SkillRating` on P2 rows is the merged top-50, so it no longer equals
   `SinglesRating + DoublesRating`; S/D pool gains mint their own
   milestones (P2 only). Exit path for constant adjustments: edit the config, then press
@@ -90,7 +131,10 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   ranking 2026-07-23, the 20000 tier still unreached so its name stays masked); nine skill ladders
   (chart + SSS, `Phoenix2ChartGradeTitle`) with EXPERT/SPECIALIST metas; 34 boss breakers
   (`Phoenix2ChartClearTitle`; `1948 D??` matches any level); step-artist/play-count/CO-OP/judgment
-  badges site-detected only (CO-OP Rating formula unknown — TODO). **The `/Titles` page is live
+  badges site-detected only. **CO-OP Rating is deliberately not computed** — the site prices one
+  and quotes it in title.php's requirement text, but surfaces it on no leaderboard and in no
+  per-chart breakdown, so a computed value would have nothing to agree or disagree with (owner,
+  2026-08-12). Reading the worn title off the account is the whole answer. **The `/Titles` page is live
   for Phoenix 2** (2026-07-21) — renders through the same grid as Phoenix. **`[Legacy]` titles
   are deliberately excluded**: the site ports the Phoenix 1 titles into Phoenix 2 prefixed
   `[Legacy]`, and we already carry the real Phoenix 1 list, so mirroring them would double every

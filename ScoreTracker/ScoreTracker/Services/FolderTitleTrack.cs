@@ -136,12 +136,15 @@ public static class FolderTitleTrack
         // How many charts at what grade close the gap to the title. Take the grades that both clear a
         // pass (A — grinding to a fail means nothing) and actually beat your floor, cheapest first.
         // Each chart at grade `per` evicts your weakest pool chart, netting per − floor.
+        // Every grade read here goes through the folder's own chart type, for the same reason the
+        // AA yardstick above does: Phoenix 2 prices six of these rungs differently on Singles than
+        // on Doubles, so the shared table alone answers for the wrong half of the site.
         var deficit = target.CompletionRequired - poolValue;
-        var passFloor = config.LetterGradeModifiers[PhoenixLetterGrade.A];
+        var passFloor = config.LetterGradeModifierFor(PhoenixLetterGrade.A, folderType);
         var contributing = Enum.GetValues<PhoenixLetterGrade>()
-            .Where(g => config.LetterGradeModifiers[g] >= passFloor)
-            .OrderBy(g => config.LetterGradeModifiers[g])
-            .Select(g => (grade: g, per: effBase * config.LetterGradeModifiers[g]))
+            .Where(g => config.LetterGradeModifierFor(g, folderType) >= passFloor)
+            .OrderBy(g => config.LetterGradeModifierFor(g, folderType))
+            .Select(g => (grade: g, per: effBase * config.LetterGradeModifierFor(g, folderType)))
             .Where(x => x.per > floor)
             .ToArray();
 

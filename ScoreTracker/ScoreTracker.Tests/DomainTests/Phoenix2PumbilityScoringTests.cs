@@ -14,11 +14,19 @@ namespace ScoreTracker.Tests.DomainTests;
 ///     per-chart breakdown page my_page/pumbility.php (2026-07-19), which exposed the
 ///     singles +1-level pricing, the sub-10 zero, and the real A multiplier (1.28) — the
 ///     xlsx-era singles rows priced at Base(level) are superseded and re-derived at
-///     Base(level+1) here. A third era follows: production import telemetry (2026-08-10),
-///     which priced all sixteen plate × chart-type cells from live pools and showed Singles
-///     paying their own Extreme and Ultimate Game bonuses. Singles Rough Game is NOT among
-///     them — it pays the same 0.000 a Double does, so the community table's −0.010 stays
-///     refuted while its other two singles values are now pinned below.
+///     Base(level+1) here. A third era follows: production import telemetry, which priced all
+///     sixteen plate × chart-type cells from live pools and showed Singles paying their own
+///     Extreme and Ultimate Game bonuses. Singles Rough Game is NOT among them — it pays the
+///     same 0.000 a Double does, so the community table's −0.010 stays refuted while its other
+///     two singles values are now pinned below.
+///     <para>
+///         The grade ladder splits by chart type as well, and only its Singles half is fully
+///         measured. Every Singles rung SSS+ → D is a live row; on Doubles only AA+ and above,
+///         AA, A+ and C are, so A, B and D there are interpolated and say so — in the table
+///         itself and in <see cref="InferredDoublesRungsBelowAPlusAreGuessesOnAUniformStep" />,
+///         which exists to keep the guesses visible. F is not a rung at all: a passing F prices
+///         at zero, the same as a break.
+///     </para>
 /// </summary>
 public sealed class Phoenix2PumbilityScoringTests
 {
@@ -111,13 +119,21 @@ public sealed class Phoenix2PumbilityScoringTests
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.AAAPlus, PhoenixPlate.FairGame, 372.32)]
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.SS, PhoenixPlate.MarvelousGame, 383.76)]
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.SSPlus, PhoenixPlate.MarvelousGame, 386.36)]
-    // The sub-AAA rungs, all live per-chart reads from production pools (2026-08-10). A+ on a
-    // Double is 1.35 against the 1.33 a Single reads; B and D are singles reads that both types
-    // now use, since no Double has ever been priced at either.
+    // The sub-AAA rungs, all live per-chart reads from production pools. A+ on a Double is 1.35
+    // against the 1.33 a Single reads. Everything below A+ here is a SINGLE, which is the whole
+    // problem with the doubles half of that ladder — see InferredDoublesRungs... below.
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.APlus, PhoenixPlate.FairGame, 351.52)]
     [InlineData(ChartType.Single, 18, PhoenixLetterGrade.B, PhoenixPlate.FairGame, 270.45)]
     [InlineData(ChartType.Single, 18, PhoenixLetterGrade.B, PhoenixPlate.RoughGame, 270.00)]
     [InlineData(ChartType.Single, 15, PhoenixLetterGrade.D, PhoenixPlate.MarvelousGame, 211.26)]
+    // C, read three times on Singles at three different levels and two plates, and once on a
+    // Double — the one row that showed the grade ladder splits below A+ as well as at it. The
+    // Single rows all solve to 1.10 and the Double to 1.20, so this quartet is what holds the
+    // two C values apart.
+    [InlineData(ChartType.Single, 18, PhoenixLetterGrade.C, PhoenixPlate.FairGame, 247.95)]
+    [InlineData(ChartType.Single, 15, PhoenixLetterGrade.C, PhoenixPlate.TalentedGame, 231.84)]
+    [InlineData(ChartType.Single, 12, PhoenixLetterGrade.C, PhoenixPlate.TalentedGame, 215.28)]
+    [InlineData(ChartType.Double, 12, PhoenixLetterGrade.C, PhoenixPlate.MarvelousGame, 229.14)]
     public void MatchesRealPerChartPumbilityObservedOnTheLiveSite(ChartType type, int level,
         PhoenixLetterGrade grade, PhoenixPlate plate, double expected)
     {
@@ -125,13 +141,19 @@ public sealed class Phoenix2PumbilityScoringTests
     }
 
     [Theory]
-    // The four cells where the two chart types disagree. A Single and a Double are compared at
-    // the level that gives them the SAME base — a Single prices one level up, so an S(L-1) and
-    // a D(L) share a base and any difference left is the table's alone.
+    // Every cell where the two chart types disagree. A Single and a Double are compared at the
+    // level that gives them the SAME base — a Single prices one level up, so an S(L-1) and a
+    // D(L) share a base and any difference left is the table's alone. Note the direction: a
+    // Single pays MORE on the two split plates and LESS on all six split grades, and the grade
+    // gap widens the further down the ladder it goes.
     [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.ExtremeGame, 0.002)]
     [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.UltimateGame, 0.001)]
-    [InlineData(PhoenixLetterGrade.APlus, PhoenixPlate.RoughGame, -0.02)]
     [InlineData(PhoenixLetterGrade.AA, PhoenixPlate.RoughGame, -0.01)]
+    [InlineData(PhoenixLetterGrade.APlus, PhoenixPlate.RoughGame, -0.02)]
+    [InlineData(PhoenixLetterGrade.A, PhoenixPlate.RoughGame, -0.02)]
+    [InlineData(PhoenixLetterGrade.B, PhoenixPlate.RoughGame, -0.05)]
+    [InlineData(PhoenixLetterGrade.C, PhoenixPlate.RoughGame, -0.10)]
+    [InlineData(PhoenixLetterGrade.D, PhoenixPlate.RoughGame, -0.15)]
     public void SinglesAndDoublesPriceTheSplitCellsDifferently(PhoenixLetterGrade grade, PhoenixPlate plate,
         double expectedGapPerBasePoint)
     {
@@ -144,6 +166,26 @@ public sealed class Phoenix2PumbilityScoringTests
         var doubles = Contribution(ChartType.Double, doublesLevel, grade, plate);
 
         Assert.Equal(expectedGapPerBasePoint * expectedBase, singles - doubles, 2);
+    }
+
+    [Theory]
+    [InlineData(ChartType.Single)]
+    [InlineData(ChartType.Double)]
+    public void ThePricedBaseAgreesWithWhatTheFormulaActuallyCharges(ChartType type)
+    {
+        // The folder projections and the rating table price a whole folder without going through
+        // GetScore, so the base they use has to be the base it uses. Asserted across the range
+        // rather than at a point because the two ways of saying "one level up" — Base(level + 1)
+        // and Base(level) plus the step — agree everywhere except at 29, where the first runs off
+        // the end of DifficultyLevel and quietly clamps.
+        for (var level = 10; level <= (int)DifficultyLevel.Max; level++)
+        {
+            var priced = ScoringConfiguration.Phoenix2PricedBase(type, DifficultyLevel.From(level));
+
+            // SSS+ with a Rough Game adds nothing to the grade, so the score IS base x 1.50.
+            var viaFormula = Contribution(type, level, PhoenixLetterGrade.SSSPlus, PhoenixPlate.RoughGame) / 1.50;
+            Assert.Equal(viaFormula, priced, 6);
+        }
     }
 
     [Theory]
@@ -181,6 +223,44 @@ public sealed class Phoenix2PumbilityScoringTests
         var result = Scoring().GetScore(type, DifficultyLevel.From(level),
             PhoenixScore.From(998_170), PhoenixPlate.UltimateGame);
         Assert.Equal(0, result);
+    }
+
+    [Theory]
+    [InlineData(ChartType.Single, 20, PhoenixPlate.PerfectGame)]
+    [InlineData(ChartType.Single, 24, PhoenixPlate.MarvelousGame)]
+    [InlineData(ChartType.Single, 12, PhoenixPlate.RoughGame)]
+    [InlineData(ChartType.Double, 20, PhoenixPlate.UltimateGame)]
+    [InlineData(ChartType.Double, 12, PhoenixPlate.FairGame)]
+    public void PassingFsNeverContribute(ChartType type, int level, PhoenixPlate plate)
+    {
+        // A PASSED stage, not a broken one — 271,620 is a real unbroken F seen in import
+        // telemetry, so this is a score a player can actually hold. That an F is worth nothing
+        // rather than a low multiple is the OWNER'S rule, not a reading: the breakdown page
+        // publishes a top 50, an F is essentially never in one, and the observation path skips
+        // any row priced at zero, so no instrument we have can produce or refute it.
+        // The plates are the point of the theory: grade and plate ADD, so a grade multiplier of
+        // zero on its own would let every plate above Rough Game keep paying out.
+        var result = Scoring().GetScore(type, DifficultyLevel.From(level),
+            PhoenixScore.From(271_620), plate);
+        Assert.Equal(0, result);
+    }
+
+    [Theory]
+    [InlineData(PhoenixLetterGrade.A, 1.30)]
+    [InlineData(PhoenixLetterGrade.B, 1.25)]
+    [InlineData(PhoenixLetterGrade.D, 1.15)]
+    public void InferredDoublesRungsBelowAPlusAreGuessesOnAUniformStep(PhoenixLetterGrade grade,
+        double inferredMultiplier)
+    {
+        // NOT observations. No Double has ever been priced at any of these three grades, so they
+        // interpolate the two Double rungs that HAVE been read — A+ at 1.35 and C at 1.20 — on
+        // the uniform −0.05 step those two imply. Pinned so that replacing one with a real
+        // reading is a deliberate edit rather than a silent drift, and so that a future
+        // telemetry pass can see at a glance which cells still need a live row.
+        const int level = 20;
+        var expected = ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(level)) * inferredMultiplier;
+
+        Assert.Equal(expected, Contribution(ChartType.Double, level, grade, PhoenixPlate.RoughGame), 2);
     }
 
     [Fact]

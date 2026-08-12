@@ -119,11 +119,12 @@ internal sealed class PlayerRatingSaga :
         // A chart worth zero PUMBILITY holds a slot at no value. That is not merely wasteful:
         // the PUMBILITY page measures every projected gain against the pool's MINIMUM, and one
         // such row drives that floor to zero, which prints every suggestion's whole value as if
-        // it displaced nothing. Four kinds rate zero — a stage break (StageBreakModifier), CO-OP
-        // and half-double performance charts (ChartTypeModifiers), and anything below level 10
-        // (DifficultyLevel.BaseRating) — and `Rank(s) > 0` is all four at once. Nothing
-        // legitimate is caught: the worst grade multiplier is .4 on Phoenix and 1.08 on
-        // Phoenix 2, and MinimumScore is 0 in both PUMBILITY configs.
+        // it displaced nothing. Five kinds rate zero — a stage break (StageBreakModifier), CO-OP
+        // and half-double performance charts (ChartTypeModifiers), anything below level 10
+        // (DifficultyLevel.BaseRating), and on Phoenix 2 a PASSING F, which that mix excludes
+        // outright — and `Rank(s) > 0` is all five at once. The F is caught deliberately; nothing
+        // else legitimate is, because the worst grade that still pays is .4 on Phoenix and 1.00
+        // on Phoenix 2 (a Single's D), and MinimumScore is 0 in both PUMBILITY configs.
         //
         // IsBroken stays an explicit filter rather than folding into the rank: the Phoenix
         // branch of Rank calls an overload that hardcodes isBroken false, so a stage break

@@ -47,8 +47,11 @@ public static class SuggestedTitleLevel
 {
     /// <summary>
     ///     Best first, so the levels ascend down the block and the grades read in the order every
-    ///     other grade list on the site uses. A is the lowest grade whose multiplier is verified
-    ///     against live data — below it the shipped config is still extrapolating.
+    ///     other grade list on the site uses. A is the bottom rung because it is the lowest grade
+    ///     that reads as a real target rather than a near-miss — grinding a folder to a B is not
+    ///     an ask anyone acts on. It was also once the lowest multiplier verified against live
+    ///     data; that is no longer the reason, since a Double's A is itself interpolated while a
+    ///     Single's B, C and D are all measured.
     /// </summary>
     private static readonly PhoenixLetterGrade[] ReferenceGrades =
     {
@@ -141,12 +144,11 @@ public static class SuggestedTitleLevel
     {
         for (var level = LowestScoringLevel; level <= (int)DifficultyLevel.Max; level++)
         {
-            // Singles price one level up the base curve, so the level a player stands in is
-            // one below the level their score is worth.
-            var effective = type == ChartType.Single
-                ? Math.Min(level + 1, (int)DifficultyLevel.Max)
-                : level;
-            var pool = PoolSize * ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(effective)) * perChart;
+            // Singles price one level up the base curve, so the level a player stands in is one
+            // below the level their score is worth. The formula owns that step — asking it here
+            // is what keeps an S29 from being priced as an S28.
+            var pool = PoolSize *
+                       ScoringConfiguration.Phoenix2PricedBase(type, DifficultyLevel.From(level)) * perChart;
             if (pool >= threshold) return $"{type.GetShortHand()}{level}";
         }
 

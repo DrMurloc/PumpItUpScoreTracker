@@ -118,6 +118,22 @@ public sealed class ScoreContributionTests
     }
 
     [Fact]
+    public void APassingFDecomposesToNothingOnPhoenix2()
+    {
+        // The split has to honour the same exclusion the total does, or a chart worth zero would
+        // still report a level part and a plate part on the breakdown. Phoenix 1 has no such
+        // rule and keeps paying for an F, so only the Phoenix 2 arm is asserted at zero.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+
+        var split = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false)
+            .Decompose(chart, 271_620, PhoenixPlate.MarvelousGame, false);
+
+        Assert.Equal(0, split.Total);
+        Assert.Equal(0, split.Base);
+        Assert.Equal(0, split.FromPlate);
+    }
+
+    [Fact]
     public void TheLevelPartIsTheLargestShareAndThePlatePartIsTheSmallest()
     {
         // What the band claims in words, asserted as an ordering rather than as fixed numbers,

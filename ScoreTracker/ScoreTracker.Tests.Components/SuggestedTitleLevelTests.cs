@@ -181,12 +181,15 @@ public sealed class SuggestedTitleLevelTests
     [Fact]
     public void AGradeNoFolderReachesNamesTheCeilingItFallsShortOf()
     {
-        // Fifty D29s at a bare A come to 19,260 against a 19,500 ask.
-        var rungs = Suggestion("DOUBLE MASTER").Rungs;
+        // The 20,000 capstone is the only title fifty charts at a bare A cannot reach from the
+        // top folder on either side. DOUBLE MASTER used to be the example and no longer is: the
+        // Doubles A multiplier is interpolated rather than measured, and the value it currently
+        // holds lifts a D29 ceiling just past that title's 19,500 ask.
+        var rungs = Suggestion("ABYSS ABSOLUTE").Rungs;
         var last = rungs[^1];
         Assert.Equal(PhoenixLetterGrade.A, last.Grade);
         Assert.False(last.Reachable);
-        Assert.Equal("D29", Assert.Single(last.Folders));
+        Assert.Equal(new[] { "S29", "D29" }, last.Folders);
 
         Assert.All(rungs.Take(rungs.Count - 1), r => Assert.True(r.Reachable));
     }
