@@ -35,6 +35,7 @@
         {
             var band = BandFor(row.Projected);
             var projOff = OffSideOf(row.Projected);
+            var key = row.Chart.Id.ToString();
             <div class="spread-row">
                 <span class="spread-name" role="button" tabindex="0" @onclick="() => Select(row.Chart)">
                     <span class="spread-jacket" style="background-image:url('@row.Chart.Song.ImagePath')"></span>
@@ -46,7 +47,7 @@
                        marker, not the number. A projection past the axis cap pins to the edge
                        as an arrow in its own band's colour — the chart is genuinely out there,
                        and letting it set the axis is what buried the middle bands. *@
-                    @Marker(Clamp(row.Projected), Classes(row.Mine == null ? "spread-unplayed" : null, projOff),
+                    @Marker(key + ":proj", Clamp(row.Projected), Classes(row.Mine == null ? "spread-unplayed" : null, projOff),
                         @<span class="spread-shape @(row.Mine == null ? "spread-unplayed" : "")"
                                style="color:@ThemeScales.DifficultyColor(band);background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>,
                         @<span class="spread-readout">
@@ -68,7 +69,7 @@
                         var ramp = ThemeScales.DifficultyColor(mine < row.Projected
                             ? TierListCategory.VeryHard
                             : TierListCategory.VeryEasy);
-                        @Marker(Clamp(mine), Classes("spread-mine", mineOff),
+                        @Marker(key + ":mine", Clamp(mine), Classes("spread-mine", mineOff),
                             @<span class="spread-shape" style="color:@ramp"></span>,
                             @<span class="spread-readout">
                                 <span>@L["you {0}", mine.ToString("N0")]</span>
@@ -84,6 +85,9 @@
         }
     </div>
 </div>
+@* Click-away layer, the same shape FolderPicker uses: below the popover (1200), above the page.
+   Only mounted while something is pinned, so it never eats an ordinary click. *@
+<MudOverlay Visible="_pinned" OnClick="Unpin" ZIndex="1199"></MudOverlay>
 
 @code {
 
@@ -200,17 +204,55 @@
     private Task Select(Chart chart) =>
         ChartSelected.HasDelegate ? ChartSelected.InvokeAsync(chart) : Task.CompletedTask;
 
+    /// <summary>Which marker's readout is showing, and whether a tap pinned it there.</summary>
+    private string? _openMarker;
+
+    private bool _pinned;
+
+    private void Hover(string key)
+    {
+        if (_pinned) return;
+        _openMarker = key;
+    }
+
+    private void Unhover(string key)
+    {
+        // A pinned readout ignores the pointer leaving: on a phone the pointer "leaves" as soon
+        // as the finger lifts, which is the whole reason a tap could not hold one open.
+        if (_pinned || _openMarker != key) return;
+        _openMarker = null;
+    }
+
+    private void Pin(string key)
+    {
+        _openMarker = key;
+        _pinned = true;
+    }
+
+    private void Unpin()
+    {
+        _pinned = false;
+        _openMarker = null;
+    }
+
     /// <summary>
-    ///     A marker and its readout. ShowOnClick as well as hover, because a phone has no hover
-    ///     and the number is the only place the score lives now the value column is gone — a tap
-    ///     opens it and it stays open.
+    ///     A marker and its readout. One mechanism doing both jobs: pointer-enter opens it, so a
+    ///     mouse can scan the folder by hovering, and pointer-up pins it, so a tap holds it until
+    ///     something else is tapped.
     ///     <para>
-    ///         MudTooltip renders through the popover provider, which does not exist in a static
-    ///         render; the shape is the data and the readout is an affordance, so a static render
-    ///         keeps the first and drops the second (same gate as DifficultyBubble).
+    ///         MudTooltip could not do the second. It owns its own visibility, and on touch the
+    ///         sequence is enter → up → leave: it opened, the tap toggled it shut, and the leave
+    ///         closed it again. Controlling <c>Visible</c> from outside does not help either,
+    ///         because a one-way binding overrides the hover it is supposed to keep.
+    ///     </para>
+    ///     <para>
+    ///         The popover renders through the provider, which does not exist in a static render;
+    ///         the shape is the data and the readout is an affordance, so a static render keeps
+    ///         the first and drops the second (same gate as DifficultyBubble).
     ///     </para>
     /// </summary>
-    private RenderFragment Marker(double left, string? extraClass, RenderFragment shape, RenderFragment readout)
+    private RenderFragment Marker(string key, double left, string? extraClass, RenderFragment shape,
+        RenderFragment readout)
     {
         var css = string.IsNullOrEmpty(extraClass) ? "spread-marker" : "spread-marker " + extraClass;
         if (!RendererInfo.IsInteractive)
@@ -218,15 +260,16 @@
             return @<span class="@css" style="left:@left%">@shape</span>;
         }
 
-        // The wrapper is ours and the tooltip sits INSIDE it. Putting spread-marker on
-        // MudTooltip's own root instead lands it on an element already carrying
-        // .mud-tooltip-root{width:auto} and .mud-tooltip-inline{display:inline-block} — same
-        // specificity, so the framework's width and display win and the marker collapses.
-        return @<span class="@css" style="left:@left%">
-                   <MudTooltip ShowOnClick="true" ShowOnFocus="true" Placement="Placement.Top">
-                       <ChildContent>@shape</ChildContent>
-                       <TooltipContent>@readout</TooltipContent>
-                   </MudTooltip>
+        // The wrapper is ours and the popover sits INSIDE it, which is also what anchors it.
+        // Putting a positioning class on a framework root instead lands it on an element already
+        // carrying its own width and display at the same specificity, and it collapses.
+        return @<span class="@css" style="left:@left%" @onpointerenter="() => Hover(key)"
+                      @onpointerleave="() => Unhover(key)" @onpointerup="() => Pin(key)">
+                   @shape
+                   <MudPopover Open="@(_openMarker == key)" AnchorOrigin="Origin.TopCenter"
+                               TransformOrigin="Origin.BottomCenter" Class="spread-pop">
+                       @readout
+                   </MudPopover>
                </span>;
     }
 

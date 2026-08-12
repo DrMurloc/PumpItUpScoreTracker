@@ -1531,7 +1531,14 @@ else
     private CancellationTokenSource? _reloadCts;
 
     private static readonly string[] LensKeys = { "Pass", "Score", "Chabala", "PG" };
-    private static readonly string[] ValidGroupings = { "Difficulty", "Score", "Age", "Score Ranking", "Scoring Level", "Skill" };
+    /// <summary>
+    ///     Every value <c>_groupBy</c> may hold, and therefore every value that survives a
+    ///     reload: init drops anything not in here back to Community. "Personalized" arrived as
+    ///     the fourth view and did not, so it saved correctly and was discarded on the way back
+    ///     in — the one view whose whole point is being a deliberate choice.
+    /// </summary>
+    private static readonly string[] ValidGroupings =
+        { "Difficulty", "Personalized", "Score", "Age", "Score Ranking", "Scoring Level", "Skill" };
 
     private bool IsMyProgress => _groupBy is not "Difficulty" and not "Personalized" and not "Skill";
 

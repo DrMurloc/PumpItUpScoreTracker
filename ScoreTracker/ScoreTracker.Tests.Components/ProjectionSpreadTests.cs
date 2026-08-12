@@ -109,19 +109,62 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
         Assert.DoesNotContain("spread-readout", cut.Markup);
 
         // Three projections and three personal scores: six markers, each its own readout.
-        Assert.Equal(6, cut.FindAll(".spread-marker").Count);
+        var markers = cut.FindAll(".spread-marker");
+        Assert.Equal(6, markers.Count);
 
-        // The tooltip root INSIDE the marker, because that is what carries the handler — the
-        // marker span is ours and deliberately has no events of its own. Pointer-up, not click:
-        // MudTooltip's ShowOnClick binds onpointerup, so ClickAsync fails here claiming the
-        // element has no onclick handler, which reads as a missing handler rather than the
-        // wrong event name.
-        var anchors = cut.FindAll(".spread-marker .mud-tooltip-root");
-        Assert.Equal(6, anchors.Count);
-        await anchors[0].TriggerEventAsync("onpointerup", new PointerEventArgs());
+        await markers[0].TriggerEventAsync("onpointerenter", new PointerEventArgs());
 
         Assert.Contains("spread-readout", cut.Markup);
         Assert.Contains("913,500", cut.Markup);
+    }
+
+    [Fact]
+    public async Task ATapHoldsAReadoutOpenUntilSomethingElseIsTapped()
+    {
+        // On touch the sequence is enter, up, leave — all three within one tap. A readout that
+        // closes on leave is unreadable on a phone, which is exactly what MudTooltip did here:
+        // it opened on enter, the tap toggled it shut, and the leave closed it again.
+        var cut = RenderWithPopovers(new[]
+        {
+            (913_500, (PhoenixScore?)902_100), (984_900, (PhoenixScore?)979_200)
+        });
+
+        // Re-found before every dispatch: each one re-renders, and an element handle from before
+        // a render carries an event id the new tree no longer has.
+        await Fire(cut, 0, "onpointerenter");
+        await Fire(cut, 0, "onpointerup");
+        await Fire(cut, 0, "onpointerleave");
+
+        Assert.Contains("913,500", cut.Markup);
+
+        // A second marker takes it over rather than stacking.
+        await Fire(cut, 2, "onpointerup");
+        Assert.DoesNotContain("913,500", cut.Markup);
+        Assert.Contains("984,900", cut.Markup);
+
+        // ...and the click-away layer closes it. It is only mounted while something is pinned,
+        // so it never swallows an ordinary click on the page underneath.
+        await cut.FindAll(".mud-overlay")[0].ClickAsync(new MouseEventArgs());
+        Assert.DoesNotContain("spread-readout", cut.Markup);
+    }
+
+    [Fact]
+    public async Task HoveringAwayClosesAReadoutThatWasNeverPinned()
+    {
+        var cut = RenderWithPopovers(new[] { (913_500, (PhoenixScore?)902_100) });
+
+        await Fire(cut, 0, "onpointerenter");
+        Assert.Contains("spread-readout", cut.Markup);
+
+        await Fire(cut, 0, "onpointerleave");
+        Assert.DoesNotContain("spread-readout", cut.Markup);
+        // Nothing pinned, so no click-away layer sitting over the page.
+        Assert.Empty(cut.FindAll(".mud-overlay"));
+    }
+
+    private static Task Fire(IRenderedFragment cut, int marker, string eventName)
+    {
+        return cut.FindAll(".spread-marker")[marker].TriggerEventAsync(eventName, new PointerEventArgs());
     }
 
     [Fact]
@@ -154,7 +197,7 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheMarkerIsOurOwnElementRatherThanTheTooltipsRoot()
+    public void TheMarkerIsOurOwnElementRatherThanAFrameworkRoot()
     {
         // Putting spread-marker on MudTooltip's root via RootClass shipped once and rendered as
         // hairlines and specks: that root carries .mud-tooltip-root{width:auto} and
@@ -168,9 +211,7 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
         Assert.NotEmpty(markers);
         foreach (var marker in markers)
         {
-            Assert.DoesNotContain("mud-tooltip", marker.ClassName ?? "");
-            // ...and the tooltip is inside it, so the readout still has an anchor.
-            Assert.NotNull(marker.QuerySelector(".mud-tooltip-root"));
+            Assert.DoesNotContain("mud-", marker.ClassName ?? "");
         }
     }
 
