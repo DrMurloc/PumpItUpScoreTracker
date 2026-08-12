@@ -34,6 +34,7 @@
         @foreach (var row in Rows)
         {
             var band = BandFor(row.Projected);
+            var projOff = OffSideOf(row.Projected);
             <div class="spread-row">
                 <span class="spread-name" role="button" tabindex="0" @onclick="() => Select(row.Chart)">
                     <span class="spread-jacket" style="background-image:url('@row.Chart.Song.ImagePath')"></span>
@@ -42,31 +43,37 @@
                 <span class="spread-track">
                     @* Unplayed keeps its position and colour and loses only its fill: the
                        projection is exactly as real there, and what is missing is the player's
-                       marker, not the number. *@
-                    @Marker(Pct(row.Projected), null,
+                       marker, not the number. A projection past the axis cap pins to the edge
+                       as an arrow in its own band's colour — the chart is genuinely out there,
+                       and letting it set the axis is what buried the middle bands. *@
+                    @Marker(Clamp(row.Projected), Classes(row.Mine == null ? "spread-unplayed" : null, projOff),
                         @<span class="spread-shape @(row.Mine == null ? "spread-unplayed" : "")"
-                               style="background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>,
+                               style="color:@ThemeScales.DifficultyColor(band);background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>,
                         @<span class="spread-readout">
                             <span>@row.Projected.ToString("N0")</span>
                             <LetterGradeIcon Grade="@GradeOf(row.Projected)" Height="15"></LetterGradeIcon>
                             <span style="color:@ThemeScales.DifficultyColor(band)">@L[TierNames[band]]</span>
+                            @if (projOff != null)
+                            {
+                                <span class="spread-offnote">@L["off the scale"]</span>
+                            }
                         </span>)
                     @if (row.Mine != null)
                     {
                         var mine = (int)row.Mine.Value;
-                        @* A score outside the projections' range keeps its row and loses its
-                           position: the axis is the spread being explained, and letting one bad
-                           score stretch it squashes every chart into a corner of the track. The
-                           marker becomes an arrow at the edge so the row still reads as "off the
-                           bottom" rather than "at the bottom". *@
-                        var side = mine < Low ? "spread-off spread-off-left"
-                            : mine > High ? "spread-off spread-off-right" : null;
-                        @Marker(Math.Clamp(Pct(mine), 0, 100), "spread-mine " + side,
-                            @<span class="spread-shape"></span>,
+                        @* Same treatment for the player's own score, in the behind/ahead ramp
+                           rather than the band's colour — off the bottom means something
+                           different here than a chart being hard. *@
+                        var mineOff = OffSideOf(mine);
+                        var ramp = ThemeScales.DifficultyColor(mine < row.Projected
+                            ? TierListCategory.VeryHard
+                            : TierListCategory.VeryEasy);
+                        @Marker(Clamp(mine), Classes("spread-mine", mineOff),
+                            @<span class="spread-shape" style="color:@ramp"></span>,
                             @<span class="spread-readout">
                                 <span>@L["you {0}", mine.ToString("N0")]</span>
                                 <LetterGradeIcon Grade="@GradeOf(mine)" Height="15"></LetterGradeIcon>
-                                @if (side != null)
+                                @if (mineOff != null)
                                 {
                                     <span class="spread-offnote">@L["off the scale"]</span>
                                 }
@@ -118,17 +125,33 @@
     private sealed record Band(TierListCategory Category, double From, double To);
 
     /// <summary>
-    ///     The axis spans the PROJECTIONS and nothing else. It is the spread of those numbers
-    ///     being explained, so a player's own score — which can sit a hundred thousand points
-    ///     below the folder's floor — does not get to stretch it.
+    ///     How far out the axis is allowed to run, in standard deviations either side of the
+    ///     mean. The bands past ±1.5σ are open-ended — everything below is "1+ Level Harder" and
+    ///     everything above "1+ Level Easier" — so an axis drawn to the furthest projection hands
+    ///     those two regions whatever the worst outlier is worth. A folder whose floor sits 4σ
+    ///     down gave "1+ Level Harder" nearly half the track to hold two charts, and squeezed the
+    ///     five bands that hold the rest into 7% each.
+    ///     <para>
+    ///         At ±2 the outer bands are half a sigma of a four-sigma axis — 12.5% each, the same
+    ///         as their neighbours — and a projection outside pins to the edge as an arrow.
+    ///     </para>
     /// </summary>
+    private const double AxisSigmas = 2.0;
+
     private double Min => Rows.Min(r => (double)r.Projected);
 
     private double Max => Rows.Max(r => (double)r.Projected);
 
-    // A little air at both ends so a dot at the extreme is not half off the track.
-    private double Low => Min - (Max - Min) * 0.06;
-    private double High => Max + (Max - Min) * 0.06;
+    private double Mean => Rows.Average(r => (double)r.Projected);
+
+    private double Sd => TierListProcessor.StdDev(Rows.Select(r => (double)r.Projected).ToArray(), false);
+
+    // The tighter of the two: a folder that fits inside the cap keeps its own extent plus a
+    // little air, and one that does not gets the cap. Sd is zero when every projection matches,
+    // which the page's own three-chart floor makes unreachable — the max keeps it safe anyway.
+    private double Low => Math.Max(Min - (Max - Min) * 0.06, Mean - AxisSigmas * Sd);
+
+    private double High => Math.Min(Max + (Max - Min) * 0.06, Mean + AxisSigmas * Sd);
 
     /// <summary>
     ///     The same cuts the tier list makes: mean ± ½σ, σ, 1½σ over the projections, via the
@@ -138,9 +161,8 @@
     {
         get
         {
-            var values = Rows.Select(r => (double)r.Projected).ToArray();
-            var mean = values.Average();
-            var sd = TierListProcessor.StdDev(values, false);
+            var mean = Mean;
+            var sd = Sd;
             return new[]
             {
                 new Band(TierListCategory.Underrated, Low, mean - 1.5 * sd),
@@ -160,6 +182,18 @@
         Bands.FirstOrDefault(b => projected < b.To)?.Category ?? TierListCategory.Overrated;
 
     private double Pct(double value) => High - Low < 0.0001 ? 0 : (value - Low) / (High - Low) * 100.0;
+
+    private double Clamp(double value) => Math.Clamp(Pct(value), 0, 100);
+
+    /// <summary>Which edge a value sits past, or null when it is on the axis.</summary>
+    private string? OffSideOf(double value) =>
+        value < Low ? "spread-off spread-off-left" : value > High ? "spread-off spread-off-right" : null;
+
+    private static string? Classes(params string?[] parts)
+    {
+        var joined = string.Join(" ", parts.Where(p => !string.IsNullOrEmpty(p)));
+        return joined.Length == 0 ? null : joined;
+    }
 
     private PhoenixLetterGrade GradeOf(int score) => ((PhoenixScore)score).LetterGradeFor(Mix);
 

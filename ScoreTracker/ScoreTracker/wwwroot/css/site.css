@@ -13692,12 +13692,14 @@ span.ct-console-pick { cursor: default; }
     border-radius: 0;
 }
 
+/* currentColor, so the arrow keeps whatever the marker was going to be: the band's colour for
+   a projection, the behind/ahead ramp for the player's own score. */
 .spread-off-left .spread-shape {
-    border-right: 8px solid var(--diff-veryhard);
+    border-right: 8px solid currentColor;
 }
 
 .spread-off-right .spread-shape {
-    border-left: 8px solid var(--diff-veryeasy);
+    border-left: 8px solid currentColor;
 }
 
 .spread-readout {

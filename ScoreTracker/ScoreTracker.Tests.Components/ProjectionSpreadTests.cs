@@ -125,6 +125,35 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
     }
 
     [Fact]
+    public void OneLowOutlierCannotHandTheOuterBandHalfTheTrack()
+    {
+        // The bands past ±1.5σ are open-ended, so an axis drawn to the furthest projection gives
+        // "1+ Level Harder" whatever the worst chart in the folder is worth. A real D18 folder
+        // with a floor 4σ down rendered it at 46% of the track holding two charts, with the five
+        // bands holding everything else at 7% each. Capping the axis at ±2σ bounds the outer
+        // bands to half a sigma — never wider than Medium, which is a whole one.
+        var tightWithAnOutlier = new[]
+        {
+            812_000, 905_000, 912_000, 918_000, 921_000, 924_000,
+            927_000, 930_000, 933_000, 936_000, 941_000, 947_000
+        };
+
+        var cut = RenderWith(tightWithAnOutlier.Select(p => (p, (PhoenixScore?)null)).ToArray());
+
+        var widths = Regex.Matches(cut.Markup, @"spread-region""[^>]*width:([0-9.]+)%")
+            .Select(m => double.Parse(m.Groups[1].Value))
+            .ToArray();
+        Assert.NotEmpty(widths);
+        // Medium is the 1σ band and therefore the widest the geometry allows; every other band
+        // is a half sigma or a clamped remnant of one.
+        Assert.All(widths, w => Assert.True(w <= 33.4,
+            $"a band took {w:N1}% of the track — the axis is being stretched by an outlier again"));
+
+        // ...and the outlier is still stated rather than quietly parked on the floor.
+        Assert.Single(Regex.Matches(cut.Markup, "spread-off-left"));
+    }
+
+    [Fact]
     public void TheMarkerIsOurOwnElementRatherThanTheTooltipsRoot()
     {
         // Putting spread-marker on MudTooltip's root via RootClass shipped once and rendered as
