@@ -2,6 +2,7 @@ using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.ScoreLedger.Contracts;
+using ScoreTracker.ScoreLedger.Contracts.Events;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
 using ScoreTracker.SharedKernel.Enums;
@@ -26,7 +27,8 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         IScoreSessionRepository sessions,
         IMemoryCache cache)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
-        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>
+        IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
+        IConsumer<FlushOverdueScoreBatchesCommand>
 {
     public async Task Handle(UpdatePhoenixBestAttemptCommand request, CancellationToken cancellationToken)
     {
@@ -147,5 +149,40 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         await bus.Publish(
             PlayerScoresUpdatedEvent.Create(dateTimeOffset.Now, userId, batch.Mix, changes, batch.SessionId),
             cancellationToken);
+    }
+
+    /// <summary>
+    ///     Drains batches that are past their deadline and still sitting in the accumulator.
+    ///     <para>
+    ///         Covers one specific failure: the scheduled <see cref="TryFireScoreCommand" /> never
+    ///         arrived, inside a process that is still running. The scores are safe either way —
+    ///         they were written on submission — but everything derived from them (highlights,
+    ///         folder lamps, ratings, titles, the session card) hangs off the drain, so a lost
+    ///         schedule strands all of it while the import reports success.
+    ///     </para>
+    ///     <para>
+    ///         It does NOT cover a restart: the accumulator is in memory, so a batch caught by one
+    ///         is already gone by the time this runs and there is nothing here to find. That half
+    ///         is the session replay in OfficialMirror, on the same message.
+    ///     </para>
+    /// </summary>
+    public async Task Consume(ConsumeContext<FlushOverdueScoreBatchesCommand> context)
+    {
+        // Past the deadline and past the buffer the scheduled drain gets. Inside that slack a
+        // drain may still be in flight; beyond it the schedule is not late, it is not coming.
+        var claimBefore = dateTimeOffset.Now.UtcDateTime - ScoreBatchPolicy.DrainBuffer;
+        foreach (var due in batches.TakeDueBatches(claimBefore))
+        {
+            if (due.Batch.NewChartIds.Length == 0 && due.Batch.UpscoredChartIds.Count == 0) continue;
+            await PublishScoreEvents(due.UserId, due.Batch, context.CancellationToken);
+        }
+
+        // The journal-replay half runs only now, never alongside. Both halves are in scope for the
+        // very same sessions on the tick this job exists for, and a session stays unprocessed until
+        // its capture chain ends — so a replay racing this drain would find the session still
+        // unmarked and announce the batch a second time. Publishing the second half from the end of
+        // the first is what makes their "disjoint" claim true rather than merely likely.
+        await bus.Publish(new OverdueScoreBatchesFlushedEvent(dateTimeOffset.Now),
+            context.CancellationToken);
     }
 }

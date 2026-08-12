@@ -629,6 +629,9 @@
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>さらに倍率 {0} ノート分</value>
   </data>
+  <data name="Announcing score batches that never fired, and replaying sessions whose batch is gone." xml:space="preserve">
+    <value>未送信のスコアバッチを通知し、バッチが失われたセッションを再実行しています。</value>
+  </data>
   <data name="Anonymous" xml:space="preserve">
 	  <value>匿名</value>
 	  
@@ -2329,6 +2332,9 @@
   </data>
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>譜面ボード初登場</value>
+  </data>
+  <data name="Flush Stuck Score Batches" xml:space="preserve">
+    <value>滞留したスコアバッチを処理</value>
   </data>
   <data name="Folder" xml:space="preserve">
     <value>フォルダ</value>

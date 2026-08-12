@@ -51,6 +51,19 @@ internal sealed class SessionRecoverySaga :
         _logger = logger;
     }
 
+    /// <summary>
+    ///     Every session whose derived work never ran. Callers gate them; this reports them.
+    ///     <para>
+    ///         ⚠ Deliberately does not consult the accumulator. Filtering on a live batch here
+    ///         reads as a safety net and is one for the sweep, but it is keyed on (user, mix) while
+    ///         a session is (user, mix, source) — so a manual entry opening a batch hides that
+    ///         player's unrelated import orphan from the <em>boot</em> pass, which shares this
+    ///         query. A player who submits anything in the seconds between Kestrel accepting
+    ///         traffic and the startup publisher firing would bury their own interrupted run, and
+    ///         an interrupted run that is never seen is never closed and never disclosed. The
+    ///         sweep gets its ordering from pipeline shape instead (OverdueScoreBatchesFlushedEvent).
+    ///     </para>
+    /// </summary>
     public Task<IReadOnlyList<ScoreSessionRecord>> Handle(GetUnprocessedSessionsQuery request,
         CancellationToken cancellationToken)
     {

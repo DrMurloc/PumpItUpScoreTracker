@@ -15,6 +15,7 @@ using ScoreTracker.PlayerProgress.Contracts.Events;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -46,6 +47,16 @@ public sealed class SessionRecoverySagaTests
             Saga = new SessionRecoverySaga(Sessions.Object, Journal.Object, Records.Object, Bus.Object,
                 FakeDateTime.At(Now).Object, NullLogger<SessionRecoverySaga>.Instance);
         }
+
+        public void WithUnprocessed(params ScoreSessionRecord[] sessions)
+        {
+            Sessions.Setup(s => s.ListUnprocessed(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(sessions);
+        }
+
+        public static ScoreSessionRecord Session(Guid userId, MixEnum mix) =>
+            new(Guid.NewGuid(), userId, mix, ScoreJournalEntry.OfficialImportSource, null, null,
+                Now.AddMinutes(-30), Now.AddMinutes(-10), 0, 0, 0);
 
         public void WithSession(DateTimeOffset? processedAt = null, MixEnum mix = MixEnum.Phoenix)
         {
@@ -231,5 +242,23 @@ public sealed class SessionRecoverySagaTests
 
         ctx.Sessions.Verify(s => s.MarkProcessed(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     ⚠ The query reports candidates and gates none of them. It is shared with the boot pass,
+    ///     where an in-memory filter would let a player's fresh submission hide their own
+    ///     prior-process orphan — and an orphan never seen is never closed and never disclosed.
+    /// </summary>
+    [Fact]
+    public async Task UnprocessedReportsEverySessionTheLedgerHasNotStamped()
+    {
+        var ctx = new SagaContext();
+        var a = SagaContext.Session(UserId, MixEnum.Phoenix);
+        var b = SagaContext.Session(Guid.NewGuid(), MixEnum.Phoenix2);
+        ctx.WithUnprocessed(a, b);
+
+        var result = await ctx.Saga.Handle(new GetUnprocessedSessionsQuery(), CancellationToken.None);
+
+        Assert.Equal(new[] { a.Id, b.Id }, result.Select(s => s.Id));
     }
 }

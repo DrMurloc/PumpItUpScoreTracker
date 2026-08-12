@@ -30,6 +30,11 @@ public sealed class RecurringJobRunner
     public Task PublishResetDeepScans() =>
         _bus.Publish(new ResetDeepScansCommand());
 
+    // One command, two consumers: ScoreLedger drains batches sitting past their deadline,
+    // OfficialMirror replays sessions whose batch is gone.
+    public Task PublishFlushOverdueScoreBatches() =>
+        _bus.Publish(new FlushOverdueScoreBatchesCommand());
+
     public Task PublishProcessScoresTiersList() =>
         _bus.Publish(new ProcessScoresTiersListCommand());
 

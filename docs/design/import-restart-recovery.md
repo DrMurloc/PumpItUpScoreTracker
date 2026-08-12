@@ -46,17 +46,24 @@ derived work silently never happens:
 
 The scores are right. Everything built on them is missing, and the UI says it worked.
 
-### 1.1 The safety net that never worked
+### 1.1 The safety net that covers the other failure
 
-`flush-overdue-score-batches` (every 5 min) looks like it covers this. It does not: it iterates
-`IPlayerScoreBatchAccumulator.Dump()`, the same in-memory dictionary the restart just cleared. It
-was a holdover from a bug that took weeks to find and has since been fixed elsewhere.
+`flush-overdue-score-batches` (every 5 min) does not cover a **restart**: it iterates
+`IPlayerScoreBatchAccumulator.Dump()`, the same in-memory dictionary the restart just cleared.
 
 > **Delete the flush job** (owner call, 2026-08-09). It compensates for nothing, and a recurring
 > job that appears to cover a failure it cannot cover is worse than no job.
+>
+> **Reversed, and the job restored** (owner call, 2026-08-11, after a live incident). The reasoning
+> above was sound about restarts and wrong about everything else. What it dismissed —
+> *"a batch whose scheduled drain was lost inside a process that was still running"* — is a real
+> failure that then happened: over roughly eleven hours, **every** session site-wide was left with
+> zero counts and a null `ProcessedAt` while imports reported success, with no restart, no deploy
+> and not one exception logged. Nothing looks for that, because the pass in §4 runs only at boot
+> and the process never rebooted. The job is back on `*/5`, and it carries the mid-life half of the
+> recovery described in §4.3.
 
-`ScoreBatchPolicy.WorkExpectedWithin`'s doc comment repeats the same wrong claim ("the Hangfire
-safety net picks the batch up instead") and is corrected in the same change.
+`ScoreBatchPolicy.WorkExpectedWithin`'s doc comment names both halves.
 
 ## 2. What is already durable
 
@@ -130,21 +137,25 @@ extension rather than a redesign if it ever matters.
 
 ## 4. The startup recovery pass
 
-> **There is no scheduled job anywhere in this design.** Not a Hangfire recurring job, not a timer,
-> not a self-rescheduling bus message. `RecoverInterruptedImportsConsumer` runs **once per process
-> start** and never again until the next boot. Nothing is added to `docs/SCHEDULED-JOBS.md` — this
-> change only *removes* a row from it (§1.1).
+> **The boot pass has no scheduled job behind it.** `RecoverInterruptedImportsConsumer`'s
+> `RecoverInterruptedImportsCommand` handler runs **once per process start** and never again until
+> the next boot. The recurring job in §4.3 is a separate trigger with a separate gate; this half is
+> boot-only.
 
 An `IHostedService` in `Web/HostedServices/` publishes one message in `StartAsync`. One consumer
-handles it. That is the entire trigger mechanism.
+handles it. That is the entire trigger mechanism for the restart case.
 
 > **No new recurring Hangfire job** (owner call, 2026-08-09). Recurring jobs accumulate debugging
 > surface that is easy to forget about. Startup is when the restart happened, so startup is when
 > the recovery belongs.
+>
+> **Amended 2026-08-11**: still true of the *restart* case, which is why this pass stays boot-only.
+> But "the interruption is always a restart" was the load-bearing assumption, and it broke — see
+> §1.1. Recovery from a non-restart interruption cannot wait for a boot that may be weeks away,
+> so §4.3 adds the recurring half.
 
-Consequence, stated plainly: recovery happens at the next boot. For a restart that is immediate,
-since the restart *is* the boot. An interruption that is not a restart waits for the next deploy —
-which is why §0 scopes this to restarts.
+Consequence, stated plainly: recovery from a restart happens at the next boot — which is immediate,
+since the restart *is* the boot. An interruption that is **not** a restart is §4.3's business.
 
 The consumer lives in **OfficialMirror**, which owns import runs. It reads its candidates the way
 §3.1 describes, and for each one it decides to act on:
@@ -185,6 +196,85 @@ a session whose chain ran always gets stamped, even when the chain found nothing
 **The migration backfills every existing session as processed.** Without it, the first boot after
 deploy sees the entire history as unprocessed and tries to replay all of it. "Unprocessed" must
 never be able to mean "predates the feature".
+
+### 4.3 The mid-life sweep
+
+The boot pass answers "the process died". `flush-overdue-score-batches` (every 5 minutes, §1.1)
+answers the other one: **the process is fine and the drain still never happened.** Two halves,
+covering the two places the work can be sitting:
+
+| Where the work is | Consumer | What it does |
+|---|---|---|
+| Batch still in the accumulator, past its deadline | `UpdatePhoenixRecordHandler` (ScoreLedger) | Takes it and publishes, exactly as the drain would have |
+| Batch gone, session still unprocessed | `RecoverInterruptedImportsConsumer` (OfficialMirror) | Replays it from the journal, as §5 |
+
+#### They run in sequence, not in parallel
+
+`FlushOverdueScoreBatchesCommand` reaches ScoreLedger only. When its drain finishes it publishes
+`OverdueScoreBatchesFlushedEvent`, and *that* is what OfficialMirror consumes.
+
+> ⚠ **Fanning one message out to both is wrong, and looks fine.** `ConfigureEndpoints` gives each
+> consumer its own endpoint, so a `Publish` runs them concurrently. The ledger half is pure
+> in-memory and finishes in microseconds; the mirror half opens with a database query. On the exact
+> tick this job exists for — stuck batch, run long finished — **both halves are in scope for the
+> same sessions**, so the batch is normally already drained by the time the mirror half looks, its
+> guard matches nothing, and the session is replayed on top of the drain that just published it.
+> That is the expected path, not a corner.
+
+#### The gate: stale, and not yet drained
+
+**Staleness is the test here and the boot instant is not** — the exact mirror of §3.0. Mid-life
+every run started after the boot, so the boot test would skip every one of them.
+
+The constant is **`ScoreBatchPolicy.StaleAfter` (30 min), not `WorkExpectedWithin`**, even though
+that one reads like it fits. `WorkExpectedWithin` is a *reader's* patience — how long a page holds
+a spinner — and its two minutes of headroom past the drain is an assumption about how long capture
+takes. The sweep needs the opposite bias, because sharing the constant means every change to the
+spinner silently retunes the double-announcement window (and lowering it to make pages feel
+responsive would make double-announcement routine).
+
+Staleness alone is still not enough, because **`ProcessedAt` is an END marker**: the capture chain
+stamps it when it finishes, so it cannot distinguish *"the batch never drained"* from *"the batch
+drained and capture is still working"*. A first full-account import — thousands of charts through
+`ComputeFlags`, a full rating recalc, then every title ladder — can legitimately sit in that state.
+
+So the sweep also requires **no evidence of a drain**: `NewCount` and `UpscoreCount` are both zero.
+`Touch` writes those the moment a batch announces, long before `ProcessedAt` lands, and the replay's
+`SetCounts` writes them too — which is what also makes overlapping sweeps safe.
+
+**Consequence, stated plainly:** a session whose batch drained but whose capture chain then *failed*
+is out of scope for the sweep. That is deliberate — an unbounded 5-minute retry of a deterministic
+failure is worse than not retrying — and it is `HighlightCaptureSaga`'s failure isolation to fix,
+not this pass's.
+
+#### The rest of the guards
+
+- **The drain half waits out `DrainBuffer`,** so a batch whose scheduled drain is merely in flight
+  is left to it.
+- **The accumulator decides what is due, atomically.** `TakeDueBatches(dueBefore)` tests the
+  deadline and removes the batch under one gate. A `Dump()`-then-`TakeBatch` pair decides and acts
+  against different instants — the sweep awaits a publish per batch, so a player who resumes
+  playing mid-walk gets their extended, still-live batch seized and announced mid-set.
+- **A pass replays at most 25 sessions, oldest first,** and logs what it deferred. Every replay
+  drops a whole capture chain on the bus; the failure this recovers from strands sessions
+  site-wide, so an uncapped first tick after a long outage would herd the entire site through at
+  once. A pass that silently stops at a cap reads exactly like a pass that found nothing.
+- **`GetUnprocessedSessionsQuery` gates nothing** — it reports, callers decide. It is shared with
+  the boot pass, and an in-memory filter there is keyed (user, mix) while a session is
+  (user, mix, source): a player who submits anything in the seconds between Kestrel accepting
+  traffic and the startup publisher firing would bury their own prior-process orphan, and an orphan
+  never seen is never closed and never disclosed (§7).
+
+**The sweep never closes a run.** A run with no `FinishedAt` is either still scraping — a deep scan
+legitimately outlives this window before its first batch exists — or it died with its process,
+which is the boot pass's candidate. Marking it `Interrupted` on a five-minute timer would raise the
+§7 dialog underneath a player mid-import. Only §4's boot pass closes.
+
+`/Admin` carries the same publish as a **Flush Stuck Score Batches** button, for a report that
+arrives before the next tick. Safe to press: it touches only batches already past their deadline
+and sessions that are stale, undrained and unprocessed, so a press with nothing wrong changes
+nothing — and a press *during* a running sweep cannot double-announce, because the first pass's
+`SetCounts` has already taken those sessions out of scope.
 
 ## 5. Reconstruction
 

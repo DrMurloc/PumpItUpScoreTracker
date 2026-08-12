@@ -13,6 +13,7 @@ using ScoreTracker.OfficialMirror.Contracts.Messages;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
+using ScoreTracker.ScoreLedger.Contracts.Events;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Tests.TestHelpers;
@@ -33,7 +34,9 @@ public sealed class RecoverInterruptedImportsConsumerTests
     // The pass runs at boot; anything that began before that instant belonged to the process
     // that just died.
     private static readonly DateTimeOffset BootedAt = Now;
-    private static readonly TimeSpan LongAgo = TimeSpan.FromMinutes(30);
+    // Comfortably past ScoreBatchPolicy.StaleAfter, so the sweep's gate is unambiguous rather
+    // than sitting on its boundary.
+    private static readonly TimeSpan LongAgo = TimeSpan.FromMinutes(45);
 
     private sealed class PassContext
     {
@@ -78,6 +81,141 @@ public sealed class RecoverInterruptedImportsConsumerTests
             ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
             return Consumer.Consume(ctx.Object);
         }
+
+        public Task Sweep()
+        {
+            var ctx = new Mock<ConsumeContext<OverdueScoreBatchesFlushedEvent>>();
+            ctx.SetupGet(c => c.Message).Returns(new OverdueScoreBatchesFlushedEvent(Now));
+            ctx.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+            return Consumer.Consume(ctx.Object);
+        }
+
+        /// <summary>Unprocessed sessions, each a minute older than the one before it.</summary>
+        public void WithUnprocessedAged(params Guid[] sessionIds)
+        {
+            Mediator.Setup(m => m.Send(It.IsAny<GetUnprocessedSessionsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IReadOnlyList<ScoreSessionRecord>)sessionIds
+                    .Select((id, i) => new ScoreSessionRecord(id, UserId, MixEnum.Phoenix,
+                        ScoreJournalEntry.OfficialImportSource, null, null,
+                        Now - LongAgo + TimeSpan.FromMinutes(i), Now - LongAgo, 0, 0, 0))
+                    .ToArray());
+        }
+
+        /// <summary>Unprocessed sessions carrying counts, i.e. a batch that already announced.</summary>
+        public void WithDrainedSessions(params Guid[] sessionIds)
+        {
+            Mediator.Setup(m => m.Send(It.IsAny<GetUnprocessedSessionsQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IReadOnlyList<ScoreSessionRecord>)sessionIds
+                    .Select(id => new ScoreSessionRecord(id, UserId, MixEnum.Phoenix,
+                        ScoreJournalEntry.OfficialImportSource, null, null, Now - LongAgo, Now - LongAgo,
+                        4, 3, 1))
+                    .ToArray());
+        }
+    }
+
+    /// <summary>
+    ///     The mid-life sweep replays a run whose batch has had its whole window to drain and did
+    ///     not — the shape of a lost drain schedule inside a process that never restarted.
+    /// </summary>
+    [Fact]
+    public async Task TheSweepReplaysARunWhoseDrainWindowHasPassed()
+    {
+        var ctx = new PassContext();
+        var session = Guid.NewGuid();
+        ctx.WithUnprocessed(session);
+        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, Now - LongAgo));
+
+        await ctx.Sweep();
+
+        ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == session),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    ///     ⚠ The mirror of the boot pass's guard. Mid-life every run began after the boot, so the
+    ///     boot test would skip all of them — but staleness cuts the other way too: a run that
+    ///     finished a minute ago still has a live batch counting down, and replaying it would
+    ///     announce the same scores the drain is about to.
+    /// </summary>
+    [Fact]
+    public async Task TheSweepLeavesARunWhoseBatchIsStillCountingDown()
+    {
+        var ctx = new PassContext();
+        var session = Guid.NewGuid();
+        var justFinished = Now - TimeSpan.FromMinutes(1);
+        ctx.WithUnprocessed(session);
+        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, justFinished));
+
+        await ctx.Sweep();
+
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
+    ///     ⚠ ProcessedAt is an END marker, so on its own it cannot tell "the batch never drained"
+    ///     from "the batch drained and capture is still working". A first full-account import can
+    ///     spend minutes in capture; replaying underneath it publishes the same scores twice and
+    ///     posts a second card. The counts are the discriminator — Touch writes them when a batch
+    ///     announces, long before ProcessedAt lands.
+    /// </summary>
+    [Fact]
+    public async Task TheSweepLeavesASessionWhoseBatchAlreadyAnnounced()
+    {
+        var ctx = new PassContext();
+        var session = Guid.NewGuid();
+        ctx.WithDrainedSessions(session);
+        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, Now - LongAgo));
+
+        await ctx.Sweep();
+
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    /// <summary>
+    ///     Every replay drops a full capture chain on the bus, and the failure this recovers from
+    ///     strands sessions site-wide — so a pass sheds the newest rather than herding the whole
+    ///     backlog through one tick.
+    /// </summary>
+    [Fact]
+    public async Task TheSweepCapsOnePassAndTakesTheOldestFirst()
+    {
+        var ctx = new PassContext();
+        var sessions = Enumerable.Range(0, 30).Select(_ => Guid.NewGuid()).ToArray();
+        ctx.WithUnprocessedAged(sessions);
+        ctx.WithRuns(sessions.Select(s => new ImportRunForSession(Guid.NewGuid(), s, Now - LongAgo,
+            Now - LongAgo)).ToArray());
+
+        await ctx.Sweep();
+
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(25));
+        // Oldest first, so the newest five are what gets deferred to the next pass.
+        foreach (var deferred in sessions.TakeLast(5))
+            ctx.Mediator.Verify(m => m.Send(It.Is<ReplaySessionCommand>(c => c.SessionId == deferred),
+                It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     A run with no ending is either still scraping — a deep scan outlives this window with no
+    ///     batch open yet — or died with its process, which is the boot pass's candidate. Either
+    ///     way the sweep must not close it out from under a player mid-import.
+    /// </summary>
+    [Fact]
+    public async Task TheSweepNeitherClosesNorReplaysARunThatNeverReportedAnEnding()
+    {
+        var ctx = new PassContext();
+        var session = Guid.NewGuid();
+        ctx.WithUnprocessed(session);
+        ctx.WithRuns(new ImportRunForSession(Guid.NewGuid(), session, Now - LongAgo, null));
+
+        await ctx.Sweep();
+
+        ctx.Results.Verify(r => r.MarkInterrupted(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<ReplaySessionCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

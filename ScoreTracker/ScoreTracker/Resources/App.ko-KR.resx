@@ -627,6 +627,9 @@
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>그리고 배율 {0}노트 분량</value>
   </data>
+  <data name="Announcing score batches that never fired, and replaying sessions whose batch is gone." xml:space="preserve">
+    <value>전송되지 않은 점수 배치를 알리고, 배치가 사라진 세션을 다시 실행합니다.</value>
+  </data>
   <data name="Anonymous" xml:space="preserve">
     <value>익명</value>
   </data>
@@ -2312,6 +2315,9 @@
   </data>
   <data name="first-ever appearance on any chart board" xml:space="preserve">
     <value>채보 보드 첫 등장</value>
+  </data>
+  <data name="Flush Stuck Score Batches" xml:space="preserve">
+    <value>정체된 점수 배치 처리</value>
   </data>
   <data name="Folder" xml:space="preserve">
     <value>폴더</value>
