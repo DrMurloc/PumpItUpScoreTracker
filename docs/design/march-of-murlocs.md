@@ -62,9 +62,12 @@ deletion rather than a rule change (§3).
 - **Repeats are banned** — but the identity is song + chart type + *level*. The same song at a
   different difficulty is a different chart and is legal.
 - **Ties never happen in practice**; when they do, **earliest submission wins**.
-- **Phoenix 1: A and below are *meant* to be worth zero, and a zero-point play is a non-play** —
-  it does not count toward chart count and does not block replaying that chart. It still consumes
-  session time. **The rule does not currently hold: see §2.8.**
+- **Phoenix 1 scoring is frozen. No part of it changes in this pass** (owner, 2026-08-11, "in any
+  way shape or form"). What the ladder does today is the rule of record: a score below 750,000 is
+  worth zero, the 750,000–824,999 A band earns interpolated partial credit rising to nearly half
+  an A+, and a zero-point play is an ordinary entry — it counts toward chart count and blocks a
+  repeat of that chart. The external rules doc's "A and below are worth zero" and its non-play
+  clause describe neither; the code stands and the divergence is documented in §2.8, not fixed.
 - **Phoenix 2: the "A or below" rule is unsettled** and will be decided after the scoring
   experiment (§10). P2 ships on stock P2 pumbility, where the worst grade still pays 0.90.
 - Song length scales value, with a 2-minute baseline.
@@ -169,7 +172,13 @@ be accepted. 2.5 is what makes this checkable for the first time.
 - `RecordTournamentSession.DifficultyBubblePath` is dead — the `DifficultyBubble` component
   replaced it.
 
-### 2.8 The anti-mash zero does not actually zero anything — found 2026-08-10
+### 2.8 The anti-mash zero does not actually zero anything — found 2026-08-10, **not being fixed**
+
+> **Decided 2026-08-11: Phoenix 1 MoM scoring does not change, in any way, in this pass.** This
+> section stays because the behavior below is real and someone will rediscover it; it is a record
+> of how the ladder prices the A band, not a work item. Do not open it as one. The Phoenix 2 "A or
+> below" question (§10.1) is a separate decision about a mix with zero recorded sessions and is
+> still open.
 
 **The continuous grade scale interpolates straight through the zeroed rungs, so "A and below is
 worth zero" is only true at or below 750,000.**
@@ -191,17 +200,24 @@ The consequence is exactly the mash the grade rewrite exists to prevent. Priced 
 - a level 26 mashed to **824,999** over 112 seconds pays **1,031**
 - a level 22 played cleanly to a **AAA** over 120 seconds pays **930**
 
-So barely scraping an A on a 26 beats a clean AAA on a 22 — and §5's whole argument for the
-Phoenix 1 kicker assumes the opposite. §5's table saying the Phoenix 1 zero cliff is "< 825,000"
-is wrong for the same reason; the real cliff is < 750,000.
+So barely scraping an A on a 26 beats a clean AAA on a 22, which is the opposite of what §5's
+argument for the Phoenix 1 kicker assumes. §5's table carries the real cliff, < 750,000.
 
-Two candidate fixes, both one value. `MinimumScore = 825000` on the Phoenix 1 MoM config makes the
-cliff real (`if (score < MinimumScore) return 0`) — it is the same knob §10 already earmarks for
-the Phoenix 2 question. Or the grade table sets A to a small negative so the interpolation crosses
-zero at the intended place, which is clever and unreadable and should not be chosen.
+**Partial credit for a scraped A is the rule.** The owner settled it on 2026-08-11: the ladder has
+priced the A band this way since the grade rewrite landed, several seasons have been run and ranked
+under it, and re-pricing a live competitive ladder to match a sentence in a rules doc is not worth
+what it costs. §1 is now written to match the code rather than the other way round.
 
-**This is a rules question, not just a bug**: the owner may decide a partial credit for a scraped
-A is fine. But it is not what §1 says, and it has been live since the grade rewrite landed.
+Two things follow for anyone tempted to revisit it:
+
+- **It was never one value.** Raising the floor to 825,000 (`if (score < MinimumScore) return 0`)
+  would manufacture a population of zero-point plays, and §1's non-play handling **does not
+  exist**: `EFTournamentRepository` sets `ChartsPlayed = session.Entries.Count()` with no score
+  filter, and `TournamentSession.CanAdd`'s repeat check scans every entry regardless of what it
+  scored. So a zero-point play would inflate chart count and stay blocked from the retry the rules
+  promise. That work lives in Slice 4b's submit logic if it is ever wanted; it is not a knob.
+- **The edit site would be `MarchOfMurlocsHandler`, never `CreateScoring()`** — see §8 for why the
+  shared factory is the wrong place, and §9.5 for the same trap in its original form.
 
 ### 2.9 The window check refuses a legal closing song — found 2026-08-11
 
@@ -368,7 +384,7 @@ below 950,000, which bounds the behavioural change precisely:
 
 | | Phoenix 1 | Phoenix 2 |
 |---|---|---|
-| Zero cliff | < 750,000 *(intended < 825,000 — see §2.8)* | *none in this pass* |
+| Zero cliff | < 750,000 *(settled — §2.8)* | *none in this pass* |
 | 0.50 → 1.00 ramp | 825k → 950k | *n/a — P2 uses its own 0.90 → 1.50* |
 
 Implementation: keep the parameterless `ScoringConfiguration.PumbilityPlus` **exactly as it is**
@@ -500,7 +516,7 @@ re-ordered after Slice 1** (2026-08-11). What changed and why is under the table
 |---|---|---|
 | **0 — Stop the bleeding** ✅ *shipped* | Quarter map replaced with arithmetic; season year derived from the previous season with catch-up to the current quarter; seasons created highlighted. `MarchOfMurlocsHandler` only — no schema change. **Still owner-run: `mom-cleanup.sql`, including the empty-season prune.** | — |
 | **1 — Settle on mocks** ✅ *done* | UX/UI pass across the six surfaces. Design only, no code. D14–D22 and §11; the six mocks are checked in beside this doc. | 0 |
-| **R — The two rule fixes** *out of band, ship any time* | §2.9's window predicate, and §2.8's `MinimumScore` if the owner wants it now rather than with the P2 scoring session. One value and one condition, plus regression tests. No schema, no UI, no dependency on anything below. | — |
+| **R — The window predicate** *out of band, ship any time* | §2.9 only. One condition, the rest-time floor it implies, and regression tests. No schema, no UI, no scoring change, no dependency on anything below. **§2.8 is not in R and is not being fixed** — Phoenix 1 MoM scoring is frozen (owner, 2026-08-11). | — |
 | **2 — Own the data** | Five tables, model contribution, purge manifest, repository, migrate five seasons, cycle rewritten onto `MoMSeason`. **"Repointed" means the repository is swapped behind the old pages, not that they are rebuilt** — they are deleted in Slice 4 either way, and the point of the swap is to run the new tables under real traffic before the UI depends on them. | 1 |
 | **3 — Timestamps** *was Slice 5* | Plumb `RecordedAt` through `OfficialRecordedScore` (§2.5). An OfficialMirror change; touches none of MoM's tables. | — |
 | **4a — Read surfaces** | Season, Session Breakdown, Past seasons dialog. The Stamina→MoM rename, verification removal (D5), the old pages deleted. | 2 |
@@ -521,12 +537,20 @@ re-ordered after Slice 1** (2026-08-11). What changed and why is under the table
 - **The UX build split three ways** because it had grown to six surfaces plus a rename plus a
   lifecycle plus a feed. Read, write and Discord are independently shippable against the same
   tables, and 4a is what finally deletes the old pages.
-- **The two rule fixes came out of band** because they belong to no slice: they are live defects
-  found while drawing the mocks, each about one line, and they depend on nothing. §2.9 is a plain
-  bug. §2.8 is a rules call the owner may want to take alongside the Phoenix 2 "A or below"
-  question (§10.1) — it is the same `MinimumScore` knob and the same shape of decision.
-  **Neither re-scores a stored session**: each season freezes its config at creation, so a change
-  to `CreateScoring()` reaches only seasons made after it.
+- **R came out of band** because it belongs to no slice: a live defect found while drawing the
+  mocks, depending on nothing. It changes no score. §2.9 is eligibility — which charts a session
+  may contain — and prices nothing differently; no stored session re-scores, and the tightest real
+  session has 13:43 of rest, so nothing recorded is near the cap.
+
+  **R was briefly written as two fixes and is now one.** §2.8 was bundled with it as a "rules call
+  the owner may want now"; the owner's answer on 2026-08-11 was that Phoenix 1 MoM scoring does not
+  change in any way, so §2.8 is a documented behavior, not a work item. If a future pass ever
+  reopens it, two things that were wrong the first time: it is **not one value** (§2.8), and its
+  edit site is `MarchOfMurlocsHandler`, **never `CreateScoring()`** — the handler mutates a fresh
+  `ScoringConfiguration.PumbilityPlus` per board, which is why `AdjustToTime` is already overridden
+  there, whereas the shared factory also backs `PlayerRatingSaga`'s stored `PumbilityPlus` player
+  stat and the public v1 API's `PumbilityPlus` column. Neither is frozen; both would move silently.
+  Same trap as §9.5.
 
 `mom-cleanup.sql` is dry-run by default, has been tested end to end, and refuses to delete any
 season carrying player data.
