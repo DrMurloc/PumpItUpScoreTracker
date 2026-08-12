@@ -70,9 +70,18 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   Everything else is shared: the other six plates (RG 0.000 · FG 0.002 · TG 0.004 · MG 0.006 ·
   SG 0.008 · PG 0.020) and the top of the ladder (AA+ 1.39 · AAA 1.41 · AAA+ 1.43 · S 1.45 →
   SSS+ 1.50). **An F is not a rung — it contributes zero**, on both types, the same as a break
-  or a sub-10 chart (owner, 2026-08-12; a *passing* F still prices at 0.00 on the official
-  page). It has to be an exclusion in the formula rather than a 0.0 multiplier, because grade
-  and plate ADD here and a zero multiplier alone would still pay the plate bonus.
+  or a sub-10 chart, and that includes a *passing* F. It has to be an exclusion in the formula
+  rather than a 0.0 multiplier, because grade and plate ADD here and a zero multiplier alone
+  would still pay the plate bonus.
+
+  ⚠ **This one rests on the owner's knowledge of the game (2026-08-12), not on a reading, and no
+  instrument we have can check it.** `my_page/pumbility.php` publishes a top 50; an F is
+  essentially never in one, and `ScoringObservations` skips any row priced at zero — so an F is
+  unobservable by construction and its absence from the telemetry is not evidence either way.
+  The competing explanation, if it is ever worth revisiting, is that a chart missing from a
+  top-50 page is not *priced* at zero but simply not in the pool. Where the rule bites hardest
+  is a sparse Phoenix 2 account and `/Pumbility/Phoenix1`, where a 450k–499k Phoenix 1 score is
+  a P1 **D** but a P2 **F** and so reprices from about 0.9 × base to nothing.
 
   **Which cells are measured and which are guesses.** All eight plate × type cells on each side
   are measured, the whole Singles grade ladder is measured, and on Doubles everything from AA

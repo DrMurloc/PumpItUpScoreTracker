@@ -122,10 +122,16 @@
         var charts = await Mediator.Send(new GetChartsQuery(_mix));
         Entries = _mix == MixEnum.Phoenix2 ? BuildPhoenix2(charts) : BuildPhoenix(charts);
 
-        var ratings = Entries.SelectMany(e => e.Ratings.Values).OrderBy(r => r).ToArray();
-        Min = Entries.Min(e => e.Ratings[PhoenixLetterGrade.F]);
+        // The colour ramp spans what a chart can actually be worth, so cells worth nothing stay
+        // out of it. On Phoenix 2 an F scores zero at every level, and anchoring the scale on
+        // that column would rebase the whole ramp onto a floor no chart can occupy and drag the
+        // median down a full column with it. The zeros still render — they are the honest answer
+        // for an F — they just do not get a vote in the scale.
+        var ratings = Entries.SelectMany(e => e.Ratings.Values).Where(r => r > 0).OrderBy(r => r)
+            .ToArray();
+        Min = ratings.Length > 0 ? ratings[0] : 0;
         Max = Entries.Max(e => e.Ratings[PhoenixLetterGrade.SSSPlus]);
-        Median = ratings[ratings.Length / 2];
+        Median = ratings.Length > 0 ? ratings[ratings.Length / 2] : 0;
     }
 
     private static TableEntry[] BuildPhoenix(IEnumerable<Chart> charts)
@@ -158,12 +164,11 @@
         var grades = Enum.GetValues<PhoenixLetterGrade>();
         var levels = charts.Where(c => c.Type == _type).GroupBy(c => (int)c.Level)
             .ToDictionary(g => g.Key, g => g.Count());
-        var maxLevel = (int)DifficultyLevel.Max;
         return levels.Keys.Where(l => l >= 10).OrderBy(l => l)
             .Select(level =>
             {
-                var effLevel = _type == ChartType.Single ? Math.Min(level + 1, maxLevel) : level;
-                var baseRating = ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(effLevel));
+                var baseRating =
+                    ScoringConfiguration.Phoenix2PricedBase(_type, DifficultyLevel.From(level));
                 return new TableEntry
                 {
                     Level = level.ToString(),

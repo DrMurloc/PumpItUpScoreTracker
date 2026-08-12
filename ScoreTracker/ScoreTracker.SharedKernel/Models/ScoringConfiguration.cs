@@ -439,6 +439,24 @@ namespace ScoreTracker.SharedKernel.Models
         }
 
         /// <summary>
+        ///     The base a Phoenix 2 chart of this type and level is priced on: Base(level) for a
+        ///     Double, one step up the curve for a Single. Callers that project a folder's worth
+        ///     have to agree with <see cref="GetScore(Chart,PhoenixScore,PhoenixPlate,bool,bool)" />
+        ///     about this, and reaching for <c>Base(level + 1)</c> cannot get there — level 30 is
+        ///     off the end of <see cref="DifficultyLevel" />, so clamping under-prices an S29 by
+        ///     the ten points it should have gained crossing the kink at 24.
+        ///     <para>
+        ///         The sub-10 rule is deliberately NOT applied here: this answers what the curve
+        ///         charges, and whether a chart contributes at all is the formula's question.
+        ///     </para>
+        /// </summary>
+        public static int Phoenix2PricedBase(ChartType type, DifficultyLevel level)
+        {
+            var baseRating = Phoenix2BaseRating(level);
+            return type == ChartType.Single ? baseRating + ((int)level + 1 > 24 ? 10 : 5) : baseRating;
+        }
+
+        /// <summary>
         ///     Phoenix 2's PUMBILITY per-chart formula: contribution =
         ///     Base(level) × (gradeMultiplier + plateBonus), grade and plate combining
         ///     ADDITIVELY — where SINGLES price one level up the base curve (an S17 is worth

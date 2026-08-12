@@ -169,6 +169,26 @@ public sealed class Phoenix2PumbilityScoringTests
     }
 
     [Theory]
+    [InlineData(ChartType.Single)]
+    [InlineData(ChartType.Double)]
+    public void ThePricedBaseAgreesWithWhatTheFormulaActuallyCharges(ChartType type)
+    {
+        // The folder projections and the rating table price a whole folder without going through
+        // GetScore, so the base they use has to be the base it uses. Asserted across the range
+        // rather than at a point because the two ways of saying "one level up" — Base(level + 1)
+        // and Base(level) plus the step — agree everywhere except at 29, where the first runs off
+        // the end of DifficultyLevel and quietly clamps.
+        for (var level = 10; level <= (int)DifficultyLevel.Max; level++)
+        {
+            var priced = ScoringConfiguration.Phoenix2PricedBase(type, DifficultyLevel.From(level));
+
+            // SSS+ with a Rough Game adds nothing to the grade, so the score IS base x 1.50.
+            var viaFormula = Contribution(type, level, PhoenixLetterGrade.SSSPlus, PhoenixPlate.RoughGame) / 1.50;
+            Assert.Equal(viaFormula, priced, 6);
+        }
+    }
+
+    [Theory]
     [InlineData(16, 210)]
     [InlineData(20, 230)]
     [InlineData(23, 245)]
@@ -213,11 +233,13 @@ public sealed class Phoenix2PumbilityScoringTests
     [InlineData(ChartType.Double, 12, PhoenixPlate.FairGame)]
     public void PassingFsNeverContribute(ChartType type, int level, PhoenixPlate plate)
     {
-        // A PASSED stage, not a broken one — 271,620 is a real unbroken F off the live site. The
-        // official page prices it at 0.00 all the same, which is why F is an exclusion here and
-        // not the bottom rung of the grade ladder. The plates are the point of the theory: grade
-        // and plate ADD, so a grade multiplier of zero on its own would let every plate above
-        // Rough Game keep paying out.
+        // A PASSED stage, not a broken one — 271,620 is a real unbroken F seen in import
+        // telemetry, so this is a score a player can actually hold. That an F is worth nothing
+        // rather than a low multiple is the OWNER'S rule, not a reading: the breakdown page
+        // publishes a top 50, an F is essentially never in one, and the observation path skips
+        // any row priced at zero, so no instrument we have can produce or refute it.
+        // The plates are the point of the theory: grade and plate ADD, so a grade multiplier of
+        // zero on its own would let every plate above Rough Game keep paying out.
         var result = Scoring().GetScore(type, DifficultyLevel.From(level),
             PhoenixScore.From(271_620), plate);
         Assert.Equal(0, result);

@@ -98,8 +98,10 @@ internal static class ScoringObservations
         var config = ScoringConfiguration.PumbilityScoring(mix, false);
         foreach (var entry in entries)
         {
-            // Zero is how the page prices a broken, co-op or sub-10 chart. Those say nothing
-            // about a multiplier, and dividing by a base we never applied would invent one.
+            // Zero is how the page prices a broken, co-op or sub-10 chart, and a passing F.
+            // Those say nothing about a multiplier, and dividing by a base we never applied
+            // would invent one. Note what that costs: an F can never be observed here, so this
+            // instrument cannot confirm or refute the rule that excludes it.
             if (entry.Value <= 0 || entry.Grade == null) continue;
 
             var plate = entry.Plate ?? PhoenixPlate.RoughGame;

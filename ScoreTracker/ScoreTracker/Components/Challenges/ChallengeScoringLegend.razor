@@ -16,7 +16,16 @@
             @foreach (var grade in _scoring.LetterGradeModifiers.Keys.OrderByDescending(g => (int)g))
             {
                 <span><LetterGradeIcon Grade="grade" Height="18"></LetterGradeIcon></span>
-                <span>× @PerType(t => _scoring.LetterGradeModifierFor(grade, t), "0.00")</span>
+                @if (ScoresNothing(grade))
+                {
+                    @* Never "× 0.00" while a plate ladder is on screen: the reader would add the
+                       two and price an F on a Perfect Game at 0.020 × base. It is worth nothing. *@
+                    <span>0</span>
+                }
+                else
+                {
+                    <span>× @PerType(t => _scoring.LetterGradeModifierFor(grade, t), "0.00")</span>
+                }
             }
         </div>
     </div>
@@ -54,6 +63,15 @@
     {
         _scoring = ScoringConfiguration.PumbilityScoring(Mix, includeCoOp: false);
         _isAdditive = _scoring.Formula == ScoringConfiguration.CalculationType.GradePlusPlate;
+    }
+
+    // A grade the engine excludes outright rather than scales — on Phoenix 2, an F, which scores
+    // zero whether or not the stage was passed. Asked of both chart types because an exclusion
+    // that applied to only one would still be a multiplier for the other.
+    private bool ScoresNothing(PhoenixLetterGrade grade)
+    {
+        return _scoring.LetterGradeModifierFor(grade, ChartType.Single) == 0
+               && _scoring.LetterGradeModifierFor(grade, ChartType.Double) == 0;
     }
 
     // A board holds both pooled types, so a constant the two price differently cannot render as

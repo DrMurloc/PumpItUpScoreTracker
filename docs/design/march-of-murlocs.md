@@ -375,7 +375,7 @@ six levels pays whenever `grade(26) > 0.852 × grade(20)`:
 |---|---|
 | 26 at A+ (1.33 on a Single, 1.35 on a Double) | wins — ratio 0.94 / 0.96 |
 | 26 at A (1.28) | wins, barely — 0.91 |
-| 26 at F (0.90) | **loses** — 0.64 |
+| 26 at F | **scores nothing at all** — P2 excludes an F outright, passed or not |
 
 Phoenix 2 says *go as hard as you can still play competently*. Phoenix 1 with the kicker says
 *go as hard as you can survive at all* — even A+ at 0.50 wins by 1.7×.
@@ -385,8 +385,8 @@ below 950,000, which bounds the behavioural change precisely:
 
 | | Phoenix 1 | Phoenix 2 |
 |---|---|---|
-| Zero cliff | < 750,000 *(settled — §2.8)* | *none in this pass* |
-| 0.50 → 1.00 ramp | 825k → 950k | *n/a — P2 uses its own 0.90 → 1.50* |
+| Zero cliff | < 750,000 *(settled — §2.8)* | **< 500,000** — an F scores nothing on P2 |
+| 0.50 → 1.00 ramp | 825k → 950k | *n/a — P2 uses its own 1.00 → 1.50* |
 
 Implementation: keep the parameterless `ScoringConfiguration.PumbilityPlus` **exactly as it is**
 and add a mix-aware factory beside it that only MoM calls (§9.5). Write P1's corrections as an
