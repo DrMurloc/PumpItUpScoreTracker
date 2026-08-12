@@ -144,7 +144,8 @@ public sealed class ScoreProjectionCostProbeTests
             new ScoreProjectionRequest(MixEnum.Phoenix, chartType, userId, targets, window),
             CancellationToken.None);
         clock.Stop();
-        return new Run(userId, chartType, anchor, level, level - anchor, targets.Count, projected.Count,
+        return new Run(userId, chartType, anchor, level, level - anchor, targets.Count,
+            projected.Scores.Count, projected.PeerCount, projected.MeanFreshness,
             clock.ElapsedMilliseconds);
     }
 
@@ -152,11 +153,12 @@ public sealed class ScoreProjectionCostProbeTests
     {
         _output.WriteLine("");
         _output.WriteLine($"── {label} — {runs.Count} runs ──");
-        _output.WriteLine("type   anchor  folder  charts  projected  coverage    ms");
+        _output.WriteLine("type   anchor  folder  charts  projected  coverage    peers  fresh    ms");
         foreach (var r in runs.OrderBy(r => r.ChartType).ThenBy(r => r.Anchor).ThenBy(r => r.Level))
             _output.WriteLine(
                 $"{r.ChartType,-7}{r.Anchor,-8}{r.Level,-8}{r.Charts,-8}{r.Projected,-11}" +
-                $"{r.Projected / (double)Math.Max(1, r.Charts),-12:P0}{r.Milliseconds,6}");
+                $"{r.Projected / (double)Math.Max(1, r.Charts),-12:P0}{r.Peers,-7}" +
+                $"{r.MeanFreshness,-9:P0}{r.Milliseconds,6}");
 
         var times = runs.Select(r => r.Milliseconds).OrderBy(m => m).ToArray();
         _output.WriteLine(
@@ -171,8 +173,16 @@ public sealed class ScoreProjectionCostProbeTests
                 $"{group.Count(r => r.Projected < 3)}/{group.Count()} runs under the 3-chart floor");
     }
 
+    /// <param name="Peers">
+    ///     Distinct players whose scores are behind the projections — the figure the breakdown
+    ///     page prints, so the probe is where it gets sanity-checked against a real population.
+    /// </param>
+    /// <param name="MeanFreshness">
+    ///     Mean growth weight of the contributing scores, 1.0 = nobody has outgrown their own
+    ///     evidence.
+    /// </param>
     private sealed record Run(Guid UserId, ChartType ChartType, int Anchor, int Level, int Offset,
-        int Charts, int Projected, long Milliseconds);
+        int Charts, int Projected, int Peers, double MeanFreshness, long Milliseconds);
 
     /// <summary>
     ///     The production port graph without the web host. AddInfrastructure binds every

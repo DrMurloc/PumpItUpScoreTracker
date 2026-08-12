@@ -35,18 +35,17 @@ public sealed class ScoreProjector : IScoreProjector
         _history = history;
     }
 
-    public async Task<IReadOnlyDictionary<Guid, PhoenixScore>> Project(ScoreProjectionRequest request,
+    public async Task<ScoreProjection> Project(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var none = (IReadOnlyDictionary<Guid, PhoenixScore>)new Dictionary<Guid, PhoenixScore>();
-        if (request.Targets.Count == 0) return none;
+        if (request.Targets.Count == 0) return ScoreProjection.None();
 
         var (mix, chartType, userId, targets, window) = request;
         var reference = ReferenceMixFor(mix);
 
         var myLevel = await CompetitiveLevel(mix, chartType, userId, cancellationToken);
         // Competitive level 1 is the no-data floor: there is no band to draw peers from.
-        if (myLevel <= 1) return none;
+        if (myLevel <= 1) return ScoreProjection.None(myLevel);
 
         var cohort = (await _stats.GetPlayersByCompetitiveRange(mix, chartType, myLevel, window,
             cancellationToken)).ToHashSet();
@@ -54,7 +53,7 @@ public sealed class ScoreProjector : IScoreProjector
             cohort.UnionWith(await _stats.GetPlayersByCompetitiveRange(reference, chartType, myLevel, window,
                 cancellationToken));
         cohort.Remove(userId);
-        if (cohort.Count == 0) return none;
+        if (cohort.Count == 0) return ScoreProjection.None(myLevel);
 
         var peerScores = await BestAcrossMixes(mix, reference, cohort, targets, chartType, cancellationToken);
 
@@ -66,7 +65,7 @@ public sealed class ScoreProjector : IScoreProjector
         // cohort — a cohort is several hundred players and each carries a full timeline, so the
         // ones who never played one of these charts were pure freight.
         var voices = peerScores.Select(s => s.UserId).Distinct().ToArray();
-        if (voices.Length == 0) return none;
+        if (voices.Length == 0) return ScoreProjection.None(myLevel);
 
         var levelNow = (await _stats.GetStats(reference, voices, cancellationToken))
             .ToDictionary(s => s.UserId, s => CompetitiveLevelFor(s, chartType));
@@ -80,10 +79,16 @@ public sealed class ScoreProjector : IScoreProjector
             .ToDictionary(g => g.Key, g => g.OrderBy(h => h.Date).ToArray());
 
         var projected = new Dictionary<Guid, PhoenixScore>();
+        // Counted from the scores that actually reached an estimate rather than from the sweep:
+        // a peer the reference mix has no stats row for is dropped below, so the sweep's own
+        // distinct count would name players whose evidence never got used.
+        var contributors = new HashSet<Guid>();
+        var freshnessSum = 0.0;
+        var freshnessCount = 0;
         foreach (var group in peerScores.GroupBy(s => s.ChartId))
         {
-            var peers = group
-                .Where(s => levelNow.ContainsKey(s.UserId))
+            var contributing = group.Where(s => levelNow.ContainsKey(s.UserId)).ToArray();
+            var peers = contributing
                 .Select(s => new PeerScore((int)s.Score, levelNow[s.UserId],
                     LevelWhenSet(history, s.UserId, s.RecordedAt, chartType, levelNow[s.UserId])))
                 .ToArray();
@@ -91,10 +96,20 @@ public sealed class ScoreProjector : IScoreProjector
             var estimate = CohortEstimator.Estimate(peers);
             if (estimate == null) continue;
 
+            // Per score rather than per player: the question a caller asks of this is how heavily
+            // the EVIDENCE is discounted, and a peer who lent five scores lent five pieces of it.
+            for (var i = 0; i < peers.Length; i++)
+            {
+                contributors.Add(contributing[i].UserId);
+                freshnessSum += CohortEstimator.GrowthWeight(peers[i].Growth);
+            }
+
+            freshnessCount += peers.Length;
             projected[group.Key] = estimate.Value;
         }
 
-        return projected;
+        return new ScoreProjection(projected, contributors.Count, myLevel,
+            freshnessCount == 0 ? 0 : freshnessSum / freshnessCount);
     }
 
     public async Task<double> CompetitiveLevel(MixEnum mix, ChartType chartType, Guid userId,

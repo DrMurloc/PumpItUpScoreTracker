@@ -189,7 +189,7 @@ namespace ScoreTracker.PlayerProgress.Application
                 new ScoreProjectionRequest(mix, chartType, userId, scoped, CohortEstimator.CompetitiveWindow),
                 cancellationToken);
 
-            foreach (var (chartId, score) in projected) into[chartId] = score;
+            foreach (var (chartId, score) in projected.Scores) into[chartId] = score;
         }
 
         private static double ScoringLevelOf(Chart chart, IDictionary<Guid, double> scoringLevels)

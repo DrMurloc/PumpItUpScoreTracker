@@ -51,11 +51,11 @@ internal sealed class ProjectedScoresHandler
                 cancellationToken: cancellationToken)).ToArray();
             if (folder.Length == 0) return none;
 
-            return await _projector.Project(new ScoreProjectionRequest(request.Mix, request.ChartType,
+            return (await _projector.Project(new ScoreProjectionRequest(request.Mix, request.ChartType,
                     userId.Value,
                     folder.Select(c => new ProjectionTarget(c.Id, (int)c.Level)).ToArray(),
                     TierListBlendBuilder.ProjectionCompetitiveWindow),
-                cancellationToken);
+                cancellationToken)).Scores;
         }) ?? none;
     }
 }

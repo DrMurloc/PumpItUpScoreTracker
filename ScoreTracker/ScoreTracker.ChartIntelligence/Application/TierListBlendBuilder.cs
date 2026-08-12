@@ -409,10 +409,11 @@ internal sealed class TierListBlendBuilder
     private async Task<ProjectionComputation> ComputeProjection(ChartType chartType, MixEnum mix, Guid userId,
         IReadOnlyCollection<Chart> folderCharts, CancellationToken cancellationToken)
     {
-        var projected = await _projector.Project(new ScoreProjectionRequest(mix, chartType, userId,
+        var projection = await _projector.Project(new ScoreProjectionRequest(mix, chartType, userId,
                 folderCharts.Select(c => new ProjectionTarget(c.Id, (int)c.Level)).ToArray(),
                 ProjectionCompetitiveWindow),
             cancellationToken);
+        var projected = projection.Scores;
 
         // The raw scores travel with the buckets: the breakdown page is built on the numbers
         // themselves — where each chart sits in the folder's spread, and how that compares to
