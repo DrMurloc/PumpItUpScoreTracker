@@ -1,3 +1,4 @@
+@using System.Globalization
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
@@ -17,17 +18,17 @@
 }
 
 <div class="spread-scroll">
-    <div class="spread">
+    <div class="spread @(_pinned ? "spread-pinned" : "")">
         <div class="spread-regions" aria-hidden="true">
             @foreach (var band in Bands)
             {
-                <span class="spread-region" style="left:@Pct(band.From)%;width:@(Pct(band.To) - Pct(band.From))%">
+                <span class="spread-region" style="left:@Css(Pct(band.From))%;width:@Css(Pct(band.To) - Pct(band.From))%">
                     <i style="background:@ThemeScales.DifficultyColor(band.Category)"></i>
                     <b style="color:@ThemeScales.DifficultyColor(band.Category)">@L[TierNames[band.Category]]</b>
                 </span>
                 @if (band.To < High)
                 {
-                    <span class="spread-edge" style="left:@Pct(band.To)%"></span>
+                    <span class="spread-edge" style="left:@Css(Pct(band.To))%"></span>
                 }
             }
         </div>
@@ -160,48 +161,77 @@
     /// </summary>
     private const double AxisSigmas = 2.0;
 
-    private double Min => Rows.Min(r => (double)r.Projected);
+    // Geometry is computed once per parameter set. As properties these chained — Pct read Low
+    // and High, each of which read Min, Max, Mean and Sd, and Sd is a full pass over the folder.
+    // A fifty-chart folder ran hundreds of them per render for numbers that cannot change
+    // between markers.
+    private double _low;
+    private double _high;
+    private Band[] _bands = Array.Empty<Band>();
 
-    private double Max => Rows.Max(r => (double)r.Projected);
-
-    private double Mean => Rows.Average(r => (double)r.Projected);
-
-    private double Sd => TierListProcessor.StdDev(Rows.Select(r => (double)r.Projected).ToArray(), false);
-
-    // The tighter of the two: a folder that fits inside the cap keeps its own extent plus a
-    // little air, and one that does not gets the cap. Sd is zero when every projection matches,
-    // which the page's own three-chart floor makes unreachable — the max keeps it safe anyway.
-    private double Low => Math.Max(Min - (Max - Min) * 0.06, Mean - AxisSigmas * Sd);
-
-    private double High => Math.Min(Max + (Max - Min) * 0.06, Mean + AxisSigmas * Sd);
-
-    /// <summary>
-    ///     The same cuts the tier list makes: mean ± ½σ, σ, 1½σ over the projections, via the
-    ///     shared StdDev so the two cannot drift.
-    /// </summary>
-    private IReadOnlyList<Band> Bands
+    protected override void OnParametersSet()
     {
-        get
+        if (Rows.Count == 0)
         {
-            var mean = Mean;
-            var sd = Sd;
-            return new[]
+            _bands = Array.Empty<Band>();
+            return;
+        }
+
+        var values = Rows.Select(r => (double)r.Projected).ToArray();
+        var mean = values.Average();
+        var sd = TierListProcessor.StdDev(values, false);
+        var min = values.Min();
+        var max = values.Max();
+
+        if (sd <= 0)
+        {
+            // Every projection identical — reachable at a mix launch, where one peer's scores on
+            // three charts are the whole cohort. There is no spread to cut bands from, so the
+            // track is one band and every chart sits in the middle of it. Banding a zero spread
+            // would hand half the track to "1+ Level Harder" on charts that differ by nothing.
+            _low = mean - 1;
+            _high = mean + 1;
+            _bands = new[] { new Band(TierListCategory.Medium, _low, _high) };
+            return;
+        }
+
+        _low = Math.Max(min - (max - min) * 0.06, mean - AxisSigmas * sd);
+        _high = Math.Min(max + (max - min) * 0.06, mean + AxisSigmas * sd);
+        _bands = new[]
             {
-                new Band(TierListCategory.Underrated, Low, mean - 1.5 * sd),
+                new Band(TierListCategory.Underrated, _low, mean - 1.5 * sd),
                 new Band(TierListCategory.VeryHard, mean - 1.5 * sd, mean - sd),
                 new Band(TierListCategory.Hard, mean - sd, mean - sd / 2),
                 new Band(TierListCategory.Medium, mean - sd / 2, mean + sd / 2),
                 new Band(TierListCategory.Easy, mean + sd / 2, mean + sd),
                 new Band(TierListCategory.VeryEasy, mean + sd, mean + 1.5 * sd),
-                new Band(TierListCategory.Overrated, mean + 1.5 * sd, High)
-            }.Where(b => b.To > Low && b.From < High)
-                .Select(b => new Band(b.Category, Math.Max(b.From, Low), Math.Min(b.To, High)))
-                .ToArray();
-        }
+                new Band(TierListCategory.Overrated, mean + 1.5 * sd, _high)
+            }.Where(b => b.To > _low && b.From < _high)
+            .Select(b => new Band(b.Category, Math.Max(b.From, _low), Math.Min(b.To, _high)))
+            .ToArray();
     }
+
+    private double Low => _low;
+
+    private double High => _high;
+
+    /// <summary>
+    ///     The same cuts the tier list makes: mean ± ½σ, σ, 1½σ over the projections, via the
+    ///     shared StdDev so the two cannot drift.
+    /// </summary>
+    private IReadOnlyList<Band> Bands => _bands;
 
     private TierListCategory BandFor(int projected) =>
         Bands.FirstOrDefault(b => projected < b.To)?.Category ?? TierListCategory.Overrated;
+
+    /// <summary>
+    ///     A number bound for a CSS declaration, always with a dot. Razor interpolates a double
+    ///     through CurrentCulture, and the app switches formatting culture as well as UI culture
+    ///     (CultureResolution calls AddSupportedCultures), so on fr-FR / es-ES / es-MX / it-IT /
+    ///     pt-BR a raw one emits "left:37,428%" — invalid CSS, and the bands and markers collapse
+    ///     to the left edge for most of the site's non-English readers.
+    /// </summary>
+    private static string Css(double value) => value.ToString("0.####", CultureInfo.InvariantCulture);
 
     private double Pct(double value) => High - Low < 0.0001 ? 0 : (value - Low) / (High - Low) * 100.0;
 
@@ -275,13 +305,13 @@
         var css = string.IsNullOrEmpty(extraClass) ? "spread-marker" : "spread-marker " + extraClass;
         if (!RendererInfo.IsInteractive)
         {
-            return @<span class="@css" style="left:@left%">@shape</span>;
+            return @<span class="@css" style="left:@Css(left)%">@shape</span>;
         }
 
         // The wrapper is ours and the popover sits INSIDE it, which is also what anchors it.
         // Putting a positioning class on a framework root instead lands it on an element already
         // carrying its own width and display at the same specificity, and it collapses.
-        return @<span class="@css" style="left:@left%" @onpointerenter="() => Hover(key)"
+        return @<span class="@css" style="left:@Css(left)%" @onpointerenter="() => Hover(key)"
                       @onpointerleave="() => Unhover(key)" @onpointerup="() => Pin(key)">
                    @shape
                    <MudPopover Open="@(_openMarker == key)" AnchorOrigin="Origin.TopCenter"

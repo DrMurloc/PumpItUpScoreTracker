@@ -1,5 +1,6 @@
 @page "/TierLists/{ChartTypeRoute}/{LevelRoute:int}/Breakdown"
 @rendermode RenderModes.Interactive
+@using System.Globalization
 @using MediatR
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
@@ -308,8 +309,8 @@ else
                         <span class="bd-balance-n bd-easier-text">@AheadCount</span>
                         <span>@L["above"]</span>
                         <span class="bd-balance-bar">
-                            <span style="width:@(AheadCount * 100.0 / Gaps.Count)%;background:var(--diff-veryeasy)"></span>
-                            <span style="width:@((Gaps.Count - AheadCount) * 100.0 / Gaps.Count)%;background:var(--diff-veryhard)"></span>
+                            <span style="width:@Css(AheadCount * 100.0 / Gaps.Count)%;background:var(--diff-veryeasy)"></span>
+                            <span style="width:@Css((Gaps.Count - AheadCount) * 100.0 / Gaps.Count)%;background:var(--diff-veryhard)"></span>
                         </span>
                         <span class="bd-balance-n bd-harder-text">@(Gaps.Count - AheadCount)</span>
                         <span>@L["below"]</span>
@@ -328,7 +329,7 @@ else
                             <div class="bd-gap-row">
                                 @NameCell(gap.Chart)
                                 <span class="bd-gap-bar">
-                                    <span class="bd-gap-fill" style="@(behind ? "right:50%;" : "left:50%;")width:@(Math.Abs(gap.Delta) * 48.0 / WidestGap)%;background:@ThemeScales.DifficultyColor(ramp)"></span>
+                                    <span class="bd-gap-fill" style="@(behind ? "right:50%;" : "left:50%;")width:@Css(Math.Abs(gap.Delta) * 48.0 / WidestGap)%;background:@ThemeScales.DifficultyColor(ramp)"></span>
                                 </span>
                                 <span class="bd-gap-num" style="color:@ThemeScales.DifficultyColor(ramp)">
                                     @(gap.Delta > 0 ? "+" : "−")@Math.Abs(gap.Delta).ToString("N0")
@@ -1104,10 +1105,21 @@ else
 
     // A chart with no recorded vote from either personal source cannot move — that's
     // the honest "not enough data" bucket, distinct from "agrees with the community".
+    /// <summary>
+    ///     Charts the projection could not answer for — the honest "not enough data" bucket,
+    ///     distinct from "agrees with the community".
+    ///     <para>
+    ///         Keyed on the projection, because the projection is the whole recipe on the only
+    ///         lens this page renders. It used to ask whether Skill and Similar Players had
+    ///         anything to say; neither is in the Score recipe, so both come back Unrecorded for
+    ///         every chart, and the page counted the entire folder as dataless — which drove
+    ///         UnchangedCount negative and told the reader that charts drawn on the spread
+    ///         directly above had nobody near their level scoring them.
+    ///     </para>
+    /// </summary>
     private IReadOnlyList<BreakdownChartRecord> NoDataCharts => _breakdown == null
         ? Array.Empty<BreakdownChartRecord>()
-        : _breakdown.Charts.Where(c => c.SkillCategory == TierListCategory.Unrecorded &&
-                                       c.SimilarPlayersCategory == TierListCategory.Unrecorded).ToArray();
+        : _breakdown.Charts.Where(c => c.ProjectedScore == null).ToArray();
 
     private IReadOnlyList<BreakdownChartRecord> HarderMovers => MoversWhere(c => c.PersonalizedCategory > c.CommunityCategory);
 
@@ -1249,6 +1261,13 @@ else
             .Select(c => new NotPlayedRow(_charts[c.ChartId], (int)c.ProjectedScore!.Value))
             .ToArray();
 
+    /// <summary>
+    ///     A number bound for a CSS declaration, always with a dot — see ProjectionSpread.Css.
+    ///     The app switches formatting culture, so a raw double emits a comma here and the bar
+    ///     silently loses its width on five of the nine locales.
+    /// </summary>
+    private static string Css(double value) => value.ToString("0.####", CultureInfo.InvariantCulture);
+
     private int? MyScoreOn(Guid chartId) =>
         _scores.TryGetValue(chartId, out var s) && s.Score != null ? (int)s.Score.Value : null;
 
@@ -1274,7 +1293,11 @@ else
 
     private RenderFragment? SourceSegment(string label, double weight, TierListCategory category)
     {
-        if (category == TierListCategory.Unrecorded) return null;
+        // A source with no vote does not render, and neither does one carrying no weight.
+        // Community is populated on Score — it is the column the diff is against — but its
+        // weight is zero by design, so printing it read as "Community ×0" listed among the
+        // inputs, which is precisely what the recipe says it is not.
+        if (category == TierListCategory.Unrecorded || weight <= 0) return null;
         return @<span class="bd-src">@label <span class="bd-src-w">×@weight</span>
             <span style="color:@ThemeScales.DifficultyColor(category)">@L[TierNameFor(category)]</span></span>;
     }

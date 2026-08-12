@@ -13707,6 +13707,14 @@ span.ct-console-pick { cursor: default; }
 .spread-clickaway {
     position: fixed;
     inset: 0;
+    z-index: 1198;
+}
+
+/* While a readout is pinned the spread rises above the click-away layer, so tapping a SECOND
+   marker reaches that marker and moves the readout. Without it the layer is the hit target for
+   the whole viewport and moving a readout took two taps: one to dismiss, one to open. Below
+   MudPopover's 1200 so the readout itself still draws on top. */
+.spread-pinned {
     z-index: 1199;
 }
 

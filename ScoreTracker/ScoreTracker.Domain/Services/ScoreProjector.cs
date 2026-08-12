@@ -179,9 +179,11 @@ public sealed class ScoreProjector : IScoreProjector
 
     /// <summary>
     ///     The competitive level this player held when the score landed, from their own history.
-    ///     Falls back to their current level when the score predates any history — PlayerHistory
-    ///     begins 2024-06-04, and a no-information default of "no growth" under-states staleness
-    ///     rather than inventing it.
+    ///     A score older than every history row takes the EARLIEST row rather than the player's
+    ///     level today: PlayerHistory begins 2024-06-04, and the level they held at the start of
+    ///     the record is the closest thing to the level they held before it. Their current level
+    ///     is the fallback only when there is no history at all, which would otherwise credit the
+    ///     score with every point of growth since — the reverse of what an old score deserves.
     /// </summary>
     private static double LevelWhenSet(IReadOnlyDictionary<Guid, PlayerRatingRecord[]> history, Guid userId,
         DateTimeOffset? recordedAt, ChartType chartType, double fallback)

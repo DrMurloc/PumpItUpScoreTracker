@@ -413,7 +413,14 @@ internal sealed class TierListBlendBuilder
                 folderCharts.Select(c => new ProjectionTarget(c.Id, (int)c.Level)).ToArray(),
                 ProjectionCompetitiveWindow),
             cancellationToken);
-        var projected = projection.Scores;
+        // A projection of exactly zero is dropped rather than passed on. PhoenixScore's floor IS
+        // zero, so it is a value peers can hold, and TierListProcessor reserves zero for "no
+        // opinion" — so a chart landing there would go Not Rated on the list while the breakdown
+        // drew a confident 0 for it. The two surfaces have to agree about which charts the
+        // projection answered for, and this is the only value where they could not.
+        var projected = projection.Scores.Count == 0
+            ? projection.Scores
+            : projection.Scores.Where(kv => (int)kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
 
         // The raw scores travel with the buckets: the breakdown page is built on the numbers
         // themselves — where each chart sits in the folder's spread, and how that compares to

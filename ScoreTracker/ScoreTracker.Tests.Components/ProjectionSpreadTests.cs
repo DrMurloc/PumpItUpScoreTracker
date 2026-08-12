@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Bunit;
 using Microsoft.AspNetCore.Components.Web;
@@ -240,6 +241,65 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
         {
             Assert.DoesNotContain("mud-", marker.ClassName ?? "");
         }
+    }
+
+    [Fact]
+    public void CssNumbersUseADotWhateverTheReadersCulture()
+    {
+        // The app switches formatting culture, not just UI culture (CultureResolution calls
+        // AddSupportedCultures), so an interpolated double emits "left:37,428%" on fr-FR, es-ES,
+        // es-MX, it-IT and pt-BR — invalid CSS, and every band and marker collapses to the left
+        // edge for most of the site's non-English readers.
+        var original = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("fr-FR");
+            var cut = RenderWith(Projections.Select(p => (p, (PhoenixScore?)null)).ToArray());
+
+            Assert.DoesNotContain(",", Regex.Matches(cut.Markup, @"style=""[^""]*""")
+                .Select(m => m.Value)
+                .Where(v => v.Contains("left:") || v.Contains("width:"))
+                .DefaultIfEmpty("")
+                .Aggregate((a, b) => a + b));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
+    }
+
+    [Fact]
+    public void AFolderWhosePeersAllScoredTheSameGetsOneBandRatherThanNone()
+    {
+        // Reachable at a mix launch: one peer with the same score on three charts is the whole
+        // cohort. Sigma is then zero, the axis collapses to a point, and every band used to be
+        // filtered out — a bandless track with the markers stacked on the left edge.
+        var cut = RenderWith(new[]
+        {
+            (950_000, (PhoenixScore?)null), (950_000, (PhoenixScore?)null), (950_000, (PhoenixScore?)null)
+        });
+
+        Assert.Single(Regex.Matches(cut.Markup, @"class=""spread-region"""));
+        foreach (Match m in Regex.Matches(cut.Markup, @"spread-marker[^>]*left:([0-9.]+)%"))
+            Assert.Equal(50, double.Parse(m.Groups[1].Value), 1);
+    }
+
+    [Fact]
+    public async Task TheSpreadRisesAboveTheClickAwayLayerWhilePinned()
+    {
+        // The layer is fixed across the whole viewport, so without this it is the hit target for
+        // every marker too and moving a readout takes two taps: one to dismiss, one to open.
+        // Dispatching straight at an element bypasses hit-testing, so no event-based test can
+        // see it — what is checkable is that the spread claims a stacking context above it.
+        var cut = RenderWithPopovers(new[]
+        {
+            (913_500, (PhoenixScore?)902_100), (984_900, (PhoenixScore?)979_200)
+        });
+        Assert.DoesNotContain("spread-pinned", cut.Markup);
+
+        await Fire(cut, 0, "onpointerup");
+
+        Assert.Contains("spread-pinned", cut.Markup);
     }
 
     [Fact]

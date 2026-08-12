@@ -91,6 +91,23 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
             SpreadOrder(cut));
     }
 
+    [Fact]
+    public void TheVerdictCountsTheProjectionsGapsNotTheRetiredSourcesSilence()
+    {
+        // Skill and Similar Players are not in the Score recipe at all, so the handler returns
+        // Unrecorded for both on every chart. Keying "not enough data" on them therefore counted
+        // the WHOLE folder — which drove "match the community tier" negative the moment anything
+        // moved, and told the reader that charts drawn on the spread above had nobody near their
+        // level scoring them.
+        var cut = RenderPage(movers: true);
+
+        // Four charts, one with no projection, two moved: 4 - 2 - 1 = 1 unchanged.
+        Assert.Contains("1 not enough data", cut.Markup);
+        Assert.Contains("1 match the community tier", cut.Markup);
+        Assert.DoesNotContain("−1 match", cut.Markup);
+        Assert.DoesNotContain("-1 match", cut.Markup);
+    }
+
     private static string[] SpreadOrder(IRenderedFragment cut)
     {
         return Regex.Matches(cut.Markup, @"class=""spread-title[^""]*"">([^<]+)<")
@@ -103,7 +120,7 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
         return Mock.Get((IUiSettingsAccessor)Services.GetService(typeof(IUiSettingsAccessor))!);
     }
 
-    private IRenderedFragment RenderPage(string? savedSort = null)
+    private IRenderedFragment RenderPage(string? savedSort = null, bool movers = false)
     {
         var charts = Folder
             .Select(f => ChartNamed(f.Name))
@@ -129,9 +146,14 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PersonalizedTierListBreakdown(
                 Folder.Zip(charts)
-                    .Select(p => new BreakdownChartRecord(p.Second.Id, TierListCategory.Medium,
-                        TierListCategory.Medium, TierListCategory.Unrecorded, TierListCategory.Unrecorded,
-                        TierListCategory.Medium, p.First.Projected))
+                    .Select((p, i) => new BreakdownChartRecord(p.Second.Id,
+                        TierListCategory.Medium,
+                        // Two charts disagree with the community, and the last has no projection
+                        // at all — the shape that made the old predicate print a negative.
+                        movers && i < 2 ? TierListCategory.Hard : TierListCategory.Medium,
+                        TierListCategory.Unrecorded, TierListCategory.Unrecorded,
+                        TierListCategory.Medium,
+                        movers && i == 3 ? null : p.First.Projected))
                     .ToArray(),
                 Array.Empty<BreakdownSkillRecord>(), false, 0, 0, 0, 0,
                 0, 0, 0, 1, Folder.Length, Folder.Length, 148, 18.4, 0.5, 0.7, false));
