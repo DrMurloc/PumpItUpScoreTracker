@@ -4015,9 +4015,6 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Nessuno è salito nella classifica PUMBILITY questa settimana.</value>
   </data>
-  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
-    <value>Nessuno del tuo livello ha ancora giocato abbastanza di questa cartella.</value>
-  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Nessuno ti ha ancora come rivale</value>
   </data>
@@ -4062,6 +4059,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Non ci sono ancora abbastanza dati per indicare chart simili — il grafo si ricalcola ogni notte.</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>Non ci sono abbastanza giocatori nella tua fascia per dare risultati</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>non pieno</value>
@@ -6046,9 +6046,6 @@
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>mostra solo consigliati</value>
-  </data>
-  <data name="Show the community list" xml:space="preserve">
-    <value>Mostra la lista della community</value>
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Mostra le chart meno somiglianti</value>
@@ -8127,9 +8124,6 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Il tuo nome utente e la tua password vengono inviati direttamente a piugame.com e non vengono mai memorizzati</value>
-  </data>
-  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
-    <value>La tua versione di questa cartella è costruita su quanto fanno i giocatori entro mezzo livello competitivo da te.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>Solo per te. Modificabile poi dalla lista degli strumenti.</value>

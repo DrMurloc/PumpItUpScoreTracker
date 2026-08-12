@@ -4014,9 +4014,6 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Personne n'a grimpé sur le leaderboard PUMBILITY cette semaine.</value>
   </data>
-  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
-    <value>Personne de ton niveau n'a encore joué assez de ce dossier.</value>
-  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Personne ne vous a encore en rival</value>
   </data>
@@ -4061,6 +4058,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Pas encore assez de données pour nommer des charts similaires — le graphe est recalculé chaque nuit.</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>Pas assez de joueurs dans ta plage pour donner un résultat</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>pas plein</value>
@@ -6045,9 +6045,6 @@
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>voir les suggérés</value>
-  </data>
-  <data name="Show the community list" xml:space="preserve">
-    <value>Voir la liste de la communauté</value>
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Afficher les charts les moins ressemblants</value>
@@ -8126,9 +8123,6 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Votre identifiant et votre mot de passe sont envoyés directement à piugame.com et ne sont jamais conservés</value>
-  </data>
-  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
-    <value>Ta version de ce dossier est construite à partir des scores des joueurs situés à un demi-niveau compétitif de toi.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>Pour vous seul. Modifiable ensuite depuis la liste des outils.</value>

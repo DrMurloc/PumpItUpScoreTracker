@@ -3985,9 +3985,6 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Ninguém subiu no placar PUMBILITY esta semana.</value>
   </data>
-  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
-    <value>Ninguém do seu nível jogou o suficiente desta pasta ainda.</value>
-  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Ninguém te tem como rival ainda</value>
   </data>
@@ -4032,6 +4029,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Ainda não há dados suficientes para apontar charts similares — o grafo é recalculado toda noite.</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>Não há jogadores suficientes na sua faixa para dar resultados</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>não cheio</value>
@@ -5993,9 +5993,6 @@
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>ver só sugeridos</value>
-  </data>
-  <data name="Show the community list" xml:space="preserve">
-    <value>Ver a lista da comunidade</value>
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Mostrar os charts menos parecidos</value>
@@ -8057,9 +8054,6 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Seu usuário e senha são enviados diretamente ao piugame.com e nunca são armazenados</value>
-  </data>
-  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
-    <value>Sua versão desta pasta é construída com o que jogadores a meio nível competitivo de você pontuam aqui.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>Só para você. Editável depois pela lista de ferramentas.</value>

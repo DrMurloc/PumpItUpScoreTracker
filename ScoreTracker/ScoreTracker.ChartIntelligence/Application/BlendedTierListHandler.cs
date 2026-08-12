@@ -52,7 +52,8 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
                 .Select(c => TierListBlendBuilder.Combine("Final", c.Id, computation.Sources,
                     computation.Modifiers))
                 .ToList();
-            return new TierListResult(entries, computation.IsProvisionalFallback);
+            return new TierListResult(entries, computation.IsProvisionalFallback,
+                computation.Projection?.PeerCount ?? 0);
         }) ?? throw new InvalidOperationException("Blended tier list could not be built");
     }
 }

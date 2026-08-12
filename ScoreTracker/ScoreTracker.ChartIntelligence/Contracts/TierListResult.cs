@@ -8,7 +8,14 @@ namespace ScoreTracker.ChartIntelligence.Contracts
     ///     (locked decision, plan doc).
     /// </summary>
     [ExcludeFromCodeCoverage]
-    public sealed record TierListResult(IReadOnlyList<SongTierListEntry> Entries, bool IsProvisionalFallback)
+    /// <param name="PeerCount">
+    ///     How many players' scores are behind a personalized Score list, excluding the reader.
+    ///     Zero on every other lens and on the community lists, which have no cohort. The page
+    ///     gates the Personalized view on it: a folder only a couple of people at your level have
+    ///     touched cannot rank anything, and saying so beats a column of Not Rated.
+    /// </param>
+    public sealed record TierListResult(IReadOnlyList<SongTierListEntry> Entries, bool IsProvisionalFallback,
+        int PeerCount = 0)
     {
     }
 }

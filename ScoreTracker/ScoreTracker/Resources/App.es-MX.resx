@@ -3985,9 +3985,6 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Nadie subió en el tablero PUMBILITY esta semana.</value>
   </data>
-  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
-    <value>Nadie de tu nivel ha puntuado lo suficiente de esta carpeta todavía.</value>
-  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Nadie te tiene como rival todavía</value>
   </data>
@@ -4032,6 +4029,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Aún no hay datos suficientes para nombrar charts similares — el grafo se recalcula cada noche.</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>No hay suficientes jugadores en tu rango para dar resultados</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>no lleno</value>
@@ -5993,9 +5993,6 @@
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>ver solo sugeridos</value>
-  </data>
-  <data name="Show the community list" xml:space="preserve">
-    <value>Ver la lista de la comunidad</value>
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Mostrar los charts menos parecidos</value>
@@ -8057,9 +8054,6 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Tu usuario y contraseña se envían directamente a piugame.com y nunca se almacenan</value>
-  </data>
-  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
-    <value>Tu versión de esta carpeta se construye con lo que puntúan los jugadores a medio nivel competitivo de ti.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>Solo para ti. Editable después desde la lista de herramientas.</value>

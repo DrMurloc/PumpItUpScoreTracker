@@ -129,7 +129,10 @@ else
                 <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Community"]</MudButton>
                 @if (CanPersonalize)
                 {
-                    <MudButton Variant="@(_groupBy == "Personalized" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Personalized"))">@L["Personalized"]</MudButton>
+                    <MudButton Variant="@(_groupBy == "Personalized" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small"
+                               Disabled="@(_thinCohort != null)"
+                               title="@(_thinCohort != null ? L["Not enough players in range to provide results"].ToString() : null)"
+                               OnClick="@(() => ChangeGrouping("Personalized"))">@L["Personalized"]</MudButton>
                 }
                 <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Scores"]</MudButton>
                 @if (FolderHasSkills)
@@ -425,20 +428,6 @@ else
     @if (_isLoading)
     {
         <PatienceCard Explanation="@L["Compiling your personalized tier list."]"></PatienceCard>
-    }
-    else if (ProjectionTooThin)
-    {
-        @* Personalized Score is the projection and nothing else, so when nobody near this
-           player's level has scored the folder there is no list to show — and a screen of
-           Not Rated cards would be a worse way of saying that than saying it. Community is
-           one button away and has the answer. *@
-        <div class="tier-list-cta">
-            <MudText>@L["Nobody near your level has scored enough of this folder yet."]</MudText>
-            <MudText Typo="Typo.caption">@L["Your version of this folder is built from what players within half a competitive level of you score here."]</MudText>
-            <div class="tier-list-cta-actions">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Show the community list"]</MudButton>
-            </div>
-        </div>
     }
     else if (_groups.All(g => !g.Entries.Any(ShouldChartShow)))
     {
@@ -1583,9 +1572,15 @@ else
     ///     empty" are the same state. Pass still blends, so it can never land here — its
     ///     community source carries the folder whatever the personal ones do.
     /// </summary>
-    private bool ProjectionTooThin => PersonalizedActive && _tierListType == "Score"
-                                      && _finalEntries.Any()
-                                      && _finalEntries.All(e => e.Category == TierListCategory.Unrecorded);
+    /// <summary>
+    ///     Players at this level who have actually scored something in this folder, below which
+    ///     the personalized Score list is not offered. Three, excluding the reader: two peers
+    ///     cannot describe a folder, and the standard deviation the tiers are cut from means
+    ///     nothing at that size. Null when the personalized blend has not run or cleared the bar.
+    /// </summary>
+    private int? _thinCohort;
+
+    private const int MinCohortPeers = 3;
 
     private string BreakdownUrl => $"/TierLists/{_chartType}/{_level}/Breakdown?Lens={_tierListType}";
 
@@ -1602,6 +1597,7 @@ else
     {
         _chartType = folder.Type;
         _level = folder.Level;
+        _thinCohort = null;
         if (_chartType == ChartType.CoOp && _level is < 2 or > 5)
         {
             _level = 2;
@@ -1617,6 +1613,7 @@ else
     private async Task ChangeLens(string lens)
     {
         _tierListType = lens;
+        _thinCohort = null;
         await SetQueryString();
         await Recalculate();
     }
@@ -1639,9 +1636,16 @@ else
         {
             return;
         }
-        var crossesPersonalized = (_groupBy == "Personalized") != (newGrouping == "Personalized");
+        // Compared on the EFFECTIVE state, not on the button. Personalization has two switches —
+        // the Personalized view, and the saved Shown Difficulty preference that applies on My
+        // Scores and Skill Breakdown — and this only watched the first. Crossing between a tier
+        // view and My Scores with that preference saved on flipped the data personalization
+        // without a refetch, so Community rendered the personalized entries under the
+        // community's label. The saved value seeds the page; after that a switch is what changes
+        // it, and a switch always refetches and saves.
+        var wasPersonalized = PersonalizedActive;
         _groupBy = newGrouping;
-        if (crossesPersonalized)
+        if (PersonalizedActive != wasPersonalized)
         {
             await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
             await Recalculate();
@@ -1820,6 +1824,28 @@ else
         var blended = await Mediator.Send(new GetBlendedTierListQuery(_chartType, _level, _tierListType,
             PersonalizedActive, Mix: _currentMix), cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
+
+        // A folder only a couple of players at this level have touched cannot rank anything, so
+        // the personalized view is not offered for it: the button greys with a reason and the
+        // reader lands on the community list rather than on a screen of Not Rated. Only judged
+        // when the personalized blend actually ran — the community path computes no cohort, and
+        // its zero would grey the button on every folder.
+        // Only overwritten when the personalized blend RAN. Clearing it whenever it did not
+        // would un-grey the button on the very reload the fallback triggers, since that reload
+        // is on the community list by definition — the warning would flash and vanish. The
+        // folder and lens changes clear it instead, because those are what make it stale.
+        if (PersonalizedActive && _tierListType == "Score")
+        {
+            _thinCohort = blended.PeerCount < MinCohortPeers ? blended.PeerCount : null;
+        }
+
+        if (_thinCohort != null && _groupBy == "Personalized")
+        {
+            _groupBy = "Difficulty";
+            await UiSettings.SetSetting("TierLists__GroupBy", _groupBy, cancellationToken);
+            await LoadFolder(cancellationToken);
+            return;
+        }
 
         // Only when the switch asks for it: this is a peer sweep, and no other part of the page
         // needs it. SetShowProjectedScore backfills when it comes back on inside a folder.

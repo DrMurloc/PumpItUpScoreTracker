@@ -3985,9 +3985,6 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>이번 주에는 PUMBILITY 보드에서 상승한 플레이어가 없습니다.</value>
   </data>
-  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
-    <value>내 레벨의 플레이어가 이 폴더를 아직 충분히 플레이하지 않았습니다.</value>
-  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>아직 아무도 나를 라이벌로 등록하지 않았습니다</value>
   </data>
@@ -4032,6 +4029,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>비슷한 채보를 꼽기엔 아직 데이터가 부족합니다 — 그래프는 매일 밤 다시 계산됩니다.</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>범위 내 플레이어가 부족해 결과를 낼 수 없습니다</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>미달</value>
@@ -5993,9 +5993,6 @@
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>추천만 보기</value>
-  </data>
-  <data name="Show the community list" xml:space="preserve">
-    <value>커뮤니티 목록 보기</value>
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>가장 안 닮은 채보 보기</value>
@@ -8057,9 +8054,6 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>아이디와 비밀번호는 piugame.com으로 직접 전송되며 절대 저장되지 않습니다</value>
-  </data>
-  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
-    <value>이 폴더의 내 버전은 경쟁 레벨이 0.5 이내인 플레이어의 점수로 만들어집니다.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>본인만 봅니다. 나중에 도구 목록에서 수정할 수 있습니다.</value>

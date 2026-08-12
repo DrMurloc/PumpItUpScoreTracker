@@ -4015,9 +4015,6 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Nobody moved up the PUMBILITY board this week.</value>
   </data>
-  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
-    <value>Nobody near your level has scored enough of this folder yet.</value>
-  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Nobody rivals you yet</value>
   </data>
@@ -4062,6 +4059,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Not enough data yet to name similar charts — the graph rebuilds nightly.</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>Not enough players in range to provide results</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>not full</value>
@@ -6046,9 +6046,6 @@
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>show suggested only</value>
-  </data>
-  <data name="Show the community list" xml:space="preserve">
-    <value>Show the community list</value>
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Show the least matching charts instead</value>
@@ -8127,9 +8124,6 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Your username and password are sent directly to piugame.com and are never stored</value>
-  </data>
-  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
-    <value>Your version of this folder is built from what players within half a competitive level of you score here.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>Yours only. Editable afterwards from the tool list.</value>

@@ -4015,9 +4015,6 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>今週はPUMBILITYボードで順位を上げたプレイヤーはいません。</value>
   </data>
-  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
-    <value>同水準のプレイヤーがこのフォルダーをまだ十分にプレイしていません。</value>
-  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>まだ誰もあなたをライバルにしていません</value>
   </data>
@@ -4062,6 +4059,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>似ている譜面を挙げるにはまだデータ不足です——グラフは毎晩再計算されます。</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>同水準のプレイヤーが少なすぎて結果を出せません</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>未満員</value>
@@ -6046,9 +6046,6 @@
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>おすすめのみ表示</value>
-  </data>
-  <data name="Show the community list" xml:space="preserve">
-    <value>コミュニティのリストを表示</value>
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>最も似ていない譜面を表示</value>
@@ -8127,9 +8124,6 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>ユーザー名とパスワードはpiugame.comへ直接送信され、保存されることはありません</value>
-  </data>
-  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
-    <value>このフォルダーのあなた専用版は、競技レベルが0.5以内のプレイヤーのスコアから作られます。</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>あなた専用です。あとからツール一覧で編集できます。</value>

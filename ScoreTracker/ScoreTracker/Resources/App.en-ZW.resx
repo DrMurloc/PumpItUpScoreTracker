@@ -4015,9 +4015,6 @@
   <data name="Nobody moved up the PUMBILITY board this week." xml:space="preserve">
     <value>Urggro maglgrorp morg mrp PUMBILITY mrglblarg grglmrp plglmorg.</value>
   </data>
-  <data name="Nobody near your level has scored enough of this folder yet." xml:space="preserve">
-    <value>Mrp morp blarg gromurp grorpmurm mgrlgmrg blugmr murgl gaal.</value>
-  </data>
   <data name="Nobody rivals you yet" xml:space="preserve">
     <value>Urggro Murgmorp blub argl</value>
   </data>
@@ -4062,6 +4059,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Murm mrpgl gromurm argl grgl mrg maglarglblgrl murgl — mrp groblgrl murgrglplgl plglmurgmr.</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>Mrp obla morp arglrglmrmurm ro purgmorgl blugmr</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>murm mrglmr</value>
@@ -6046,9 +6046,6 @@
   </data>
   <data name="show suggested only" xml:space="preserve">
     <value>romorg romorgrgl mrpmurg</value>
-  </data>
-  <data name="Show the community list" xml:space="preserve">
-    <value>Romorg plglmurgblub grog</value>
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Romorg mrp mggl grrglarglblarg murgl grrglmurpblgrl</value>
@@ -8127,9 +8124,6 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Gromurp grrmrrgl ro glorgmrpmurm mrp mrpmurg grorpmrglblgrl grgl piugame.com ro mrp glargl morgro</value>
-  </data>
-  <data name="Your version of this folder is built from what players within half a competitive level of you score here." xml:space="preserve">
-    <value>Gromurp murgl gaal blarg murgablar urg morp arglblgrl parg arglrglmrmurm grorpmurm mrgl blub.</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>Murgm bo. Murp blorp murmo la rorgl grog.</value>
