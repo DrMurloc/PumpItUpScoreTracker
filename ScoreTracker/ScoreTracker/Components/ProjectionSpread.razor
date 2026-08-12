@@ -271,8 +271,11 @@
     private double Clamp(double value) => Math.Clamp(Pct(value), 0, 100);
 
     /// <summary>Which edge a value sits past, or null when it is on the axis.</summary>
-    private string? OffSideOf(double value) =>
-        value < Low ? "spread-off spread-off-left" : value > High ? "spread-off spread-off-right" : null;
+    private string? OffSideOf(double value)
+    {
+        if (value < Low) return "spread-off spread-off-left";
+        return value > High ? "spread-off spread-off-right" : null;
+    }
 
     private static string? Classes(params string?[] parts)
     {

@@ -78,6 +78,18 @@ public sealed class ScoreProjector : IScoreProjector
             .GroupBy(h => h.UserId)
             .ToDictionary(g => g.Key, g => g.OrderBy(h => h.Date).ToArray());
 
+        return Estimate(peerScores, levelNow, history, chartType, myLevel);
+    }
+
+    /// <summary>
+    ///     One estimate per chart, plus the tally of what the estimates rested on. Split out of
+    ///     <see cref="Project" />, which is otherwise a page of gathering followed by a page of
+    ///     arithmetic and reads as neither.
+    /// </summary>
+    private static ScoreProjection Estimate(IReadOnlyCollection<UserPhoenixScore> peerScores,
+        IReadOnlyDictionary<Guid, double> levelNow,
+        IReadOnlyDictionary<Guid, PlayerRatingRecord[]> history, ChartType chartType, double myLevel)
+    {
         var projected = new Dictionary<Guid, PhoenixScore>();
         // Counted from the scores that actually reached an estimate rather than from the sweep:
         // a peer the reference mix has no stats row for is dropped below, so the sweep's own

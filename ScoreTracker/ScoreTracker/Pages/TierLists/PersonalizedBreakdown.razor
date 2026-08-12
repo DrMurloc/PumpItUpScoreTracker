@@ -86,15 +86,15 @@ else
             <div class="bd-verdict">
                 <span>@L["Your personalized list moves {0} of {1} charts away from the community's.", MovedCount, _breakdown.Charts.Count]</span>
                 <span class="bd-verdict-detail">
-                    <span class="bd-harder-text">@L["{0} harder for you", HarderMovers.Count]</span>
+                    <span class="bd-harder-text">@L["{0} harder for you", _harderMovers.Count]</span>
                     <span class="bd-dot">·</span>
-                    <span class="bd-easier-text">@L["{0} easier for you", EasierMovers.Count]</span>
+                    <span class="bd-easier-text">@L["{0} easier for you", _easierMovers.Count]</span>
                     <span class="bd-dot">·</span>
                     <span>@L["{0} match the community tier", UnchangedCount]</span>
-                    @if (NoDataCharts.Any())
+                    @if (_noDataCharts.Any())
                     {
                         <span class="bd-dot">·</span>
-                        <span>@L["{0} not enough data", NoDataCharts.Count]</span>
+                        <span>@L["{0} not enough data", _noDataCharts.Count]</span>
                     }
                 </span>
                 <MudText Typo="Typo.caption" Class="bd-caption">@L["Recalculated every few hours"]</MudText>
@@ -154,7 +154,7 @@ else
             @* The spread the tiers were cut from — the section carrying this page's whole
                reason for existing. With the blend gone it is not one input among several, it
                IS the list. *@
-            @if (SpreadRows.Count > 0)
+            @if (_spreadRows.Count > 0)
             {
                 <section class="bd-block">
                     @* No caption: the bands are drawn over the dots, so the picture states what a
@@ -176,7 +176,7 @@ else
                             </MudMenuItem>
                         </MudMenu>
                     </div>
-                    <ProjectionSpread Rows="SpreadRows" Mix="_currentMix" ChartSelected="OpenChart"
+                    <ProjectionSpread Rows="_spreadRows" Mix="_currentMix" ChartSelected="OpenChart"
                                       RailBy="@(_spreadSort == "Mine" ? ProjectionSpread.SpreadRail.Mine : ProjectionSpread.SpreadRail.Projected)"></ProjectionSpread>
                     <div class="bd-spread-legend">
                         <span><span class="bd-legend-dot"></span> @L["Projected Score"]</span>
@@ -195,7 +195,7 @@ else
                 @* No caption: two group headings that say "Harder for you" and "Easier for you",
                    each with its count, already say what a sentence would. *@
                 <MudText Typo="Typo.h5">@L["Charts that moved"]</MudText>
-                @if (!HarderMovers.Any() && !EasierMovers.Any())
+                @if (!_harderMovers.Any() && !_easierMovers.Any())
                 {
                     <div class="bd-quiet">@L["Your list currently matches the community's on every rated chart."]</div>
                 }
@@ -282,14 +282,14 @@ else
                 }
                 <div class="bd-quiet">
                     <span>@L["{0} charts match the community tier", UnchangedCount]</span>
-                    @if (NoDataCharts.Any())
+                    @if (_noDataCharts.Any())
                     {
                         <span class="bd-dot">·</span>
-                        <span>@L["{0} have no projection — nobody near your level has scored them:", NoDataCharts.Count]</span>
-                        <span class="bd-nodata-names">@string.Join(" · ", NoDataChartNames.Take(_showNoData ? NoDataCharts.Count : 3))</span>
-                        @if (NoDataCharts.Count > 3)
+                        <span>@L["{0} have no projection — nobody near your level has scored them:", _noDataCharts.Count]</span>
+                        <span class="bd-nodata-names">@string.Join(" · ", NoDataChartNames.Take(_showNoData ? _noDataCharts.Count : 3))</span>
+                        @if (_noDataCharts.Count > 3)
                         {
-                            <MudLink Typo="Typo.caption" OnClick="() => _showNoData = !_showNoData">@(_showNoData ? L["Show fewer"] : L["+{0} more", NoDataCharts.Count - 3])</MudLink>
+                            <MudLink Typo="Typo.caption" OnClick="() => _showNoData = !_showNoData">@(_showNoData ? L["Show fewer"] : L["+{0} more", _noDataCharts.Count - 3])</MudLink>
                         }
                     }
                 </div>
@@ -302,7 +302,7 @@ else
                        only" was the fact, and the fact fits in three words. *@
                     <span class="bd-chip-note">@L["not an input"]</span>
                 </div>
-                @if (Gaps.Count > 0)
+                @if (_gaps.Count > 0)
                 {
                     @* The balance, drawn. Three sentences used to assert that nobody clears their
                        whole folder; the split says it, and says it about this player. *@
@@ -310,10 +310,10 @@ else
                         <span class="bd-balance-n bd-easier-text">@AheadCount</span>
                         <span>@L["above"]</span>
                         <span class="bd-balance-bar">
-                            <span style="width:@Css(AheadCount * 100.0 / Gaps.Count)%;background:var(--diff-veryeasy)"></span>
-                            <span style="width:@Css((Gaps.Count - AheadCount) * 100.0 / Gaps.Count)%;background:var(--diff-veryhard)"></span>
+                            <span style="width:@Css(AheadCount * 100.0 / _gaps.Count)%;background:var(--diff-veryeasy)"></span>
+                            <span style="width:@Css((_gaps.Count - AheadCount) * 100.0 / _gaps.Count)%;background:var(--diff-veryhard)"></span>
                         </span>
-                        <span class="bd-balance-n bd-harder-text">@(Gaps.Count - AheadCount)</span>
+                        <span class="bd-balance-n bd-harder-text">@(_gaps.Count - AheadCount)</span>
                         <span>@L["below"]</span>
                     </div>
                     <MudText Typo="Typo.body2" Class="bd-shifting-bar">@L["Nobody is above the line on every chart — if you were, your level would climb and the line with it."]</MudText>
@@ -323,7 +323,7 @@ else
                             <span>@L["Behind / ahead"]</span>
                             <span class="bd-gap-num">@L["Gap"]</span>
                         </div>
-                        @foreach (var gap in Gaps)
+                        @foreach (var gap in _gaps)
                         {
                             var behind = gap.Delta < 0;
                             var ramp = behind ? TierListCategory.VeryHard : TierListCategory.VeryEasy;
@@ -344,7 +344,7 @@ else
                         }
                     </div>
                 }
-                @if (NotPlayed.Count > 0)
+                @if (_notPlayed.Count > 0)
                 {
                     @* The projection does not need the player to have played a chart — it is
                        drawn from the peers who have — so these have a number and no comparison. *@
@@ -354,7 +354,7 @@ else
                             <span></span>
                             <span class="bd-gap-num">@L["Projected Scores"]</span>
                         </div>
-                        @foreach (var row in NotPlayed)
+                        @foreach (var row in _notPlayed)
                         {
                             <div class="bd-gap-row">
                                 @NameCell(row.Chart)
@@ -1118,13 +1118,13 @@ else
     ///         directly above had nobody near their level scoring them.
     ///     </para>
     /// </summary>
-    private IReadOnlyList<BreakdownChartRecord> NoDataCharts => _breakdown == null
+    private IReadOnlyList<BreakdownChartRecord> BuildNoDataCharts() => _breakdown == null
         ? Array.Empty<BreakdownChartRecord>()
         : _breakdown.Charts.Where(c => c.ProjectedScore == null).ToArray();
 
-    private IReadOnlyList<BreakdownChartRecord> HarderMovers => MoversWhere(c => c.PersonalizedCategory > c.CommunityCategory);
+    private IReadOnlyList<BreakdownChartRecord> BuildHarderMovers() => MoversWhere(c => c.PersonalizedCategory > c.CommunityCategory);
 
-    private IReadOnlyList<BreakdownChartRecord> EasierMovers => MoversWhere(c => c.PersonalizedCategory < c.CommunityCategory);
+    private IReadOnlyList<BreakdownChartRecord> BuildEasierMovers() => MoversWhere(c => c.PersonalizedCategory < c.CommunityCategory);
 
     private IReadOnlyList<BreakdownChartRecord> MoversWhere(Func<BreakdownChartRecord, bool> direction)
     {
@@ -1139,15 +1139,11 @@ else
                 .ToArray();
     }
 
-    private int MovedCount => HarderMovers.Count + EasierMovers.Count;
+    private int MovedCount => _harderMovers.Count + _easierMovers.Count;
 
     private int UnchangedCount => _breakdown == null
         ? 0
-        : _breakdown.Charts.Count - MovedCount - NoDataCharts.Count;
-
-    private int CommunityRatedCount => _breakdown == null
-        ? 0
-        : _breakdown.Charts.Count(c => c.CommunityCategory != TierListCategory.Unrecorded);
+        : _breakdown.Charts.Count - MovedCount - _noDataCharts.Count;
 
     // --- Skill profile ---------------------------------------------------------------------
 
@@ -1177,6 +1173,7 @@ else
         if (sort == _spreadSort) return;
 
         _spreadSort = sort;
+        _spreadRows = BuildSpreadRows();
         await UiSettings.SetSetting(SpreadSortKey, sort);
     }
 
@@ -1204,27 +1201,44 @@ else
     ///     The spread's rows: charts with a projection, hardest first. A chart no peer has played
     ///     has no position on that axis and belongs in the not-enough-data line instead.
     /// </summary>
-    private IReadOnlyList<ProjectionSpread.SpreadRow> SpreadRows
+    private IReadOnlyList<ProjectionSpread.SpreadRow> BuildSpreadRows()
     {
-        get
-        {
-            if (_breakdown == null) return Array.Empty<ProjectionSpread.SpreadRow>();
+        if (_breakdown == null) return Array.Empty<ProjectionSpread.SpreadRow>();
 
-            var rows = _breakdown.Charts
-                .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId))
-                .Select(c => new ProjectionSpread.SpreadRow(
-                    _charts[c.ChartId],
-                    (int)c.ProjectedScore!.Value,
-                    _scores.TryGetValue(c.ChartId, out var mine) ? mine.Score : null));
+        var rows = _breakdown.Charts
+            .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId))
+            .Select(c => new ProjectionSpread.SpreadRow(
+                _charts[c.ChartId],
+                (int)c.ProjectedScore!.Value,
+                _scores.TryGetValue(c.ChartId, out var mine) ? mine.Score : null));
 
-            // Ascending either way, so the top of the list is always the hard end — by what this
-            // level scores, or by what you actually did. An unplayed chart has nothing to sort on
-            // and goes last rather than pretending to be a zero at the top.
-            return (_spreadSort == "Mine"
-                    ? rows.OrderBy(r => r.Mine == null).ThenBy(r => r.Mine == null ? 0 : (int)r.Mine.Value)
-                    : rows.OrderBy(r => r.Projected))
-                .ToArray();
-        }
+        // Ascending either way, so the top of the list is always the hard end — by what this
+        // level scores, or by what you actually did. An unplayed chart has nothing to sort on
+        // and goes last rather than pretending to be a zero at the top.
+        return (_spreadSort == "Mine"
+                ? rows.OrderBy(r => r.Mine == null).ThenBy(r => r.Mine == null ? 0 : (int)r.Mine.Value)
+                : rows.OrderBy(r => r.Projected))
+            .ToArray();
+    }
+
+    // Built once per load rather than per read. Each of these was a property returning a fresh
+    // array, and the markup reads them several times apiece — _gaps alone through Count,
+    // AheadCount, WidestGap and its own loop, each rebuild walking the whole folder.
+    private IReadOnlyList<BreakdownChartRecord> _noDataCharts = Array.Empty<BreakdownChartRecord>();
+    private IReadOnlyList<BreakdownChartRecord> _harderMovers = Array.Empty<BreakdownChartRecord>();
+    private IReadOnlyList<BreakdownChartRecord> _easierMovers = Array.Empty<BreakdownChartRecord>();
+    private IReadOnlyList<GapRow> _gaps = Array.Empty<GapRow>();
+    private IReadOnlyList<NotPlayedRow> _notPlayed = Array.Empty<NotPlayedRow>();
+    private IReadOnlyList<ProjectionSpread.SpreadRow> _spreadRows = Array.Empty<ProjectionSpread.SpreadRow>();
+
+    private void RebuildViews()
+    {
+        _noDataCharts = BuildNoDataCharts();
+        _harderMovers = BuildHarderMovers();
+        _easierMovers = BuildEasierMovers();
+        _gaps = BuildGaps();
+        _notPlayed = BuildNotPlayed();
+        _spreadRows = BuildSpreadRows();
     }
 
     private sealed record GapRow(Chart Chart, int Delta, int Mine, int Projected);
@@ -1233,7 +1247,7 @@ else
     ///     Your score against the projection, furthest behind first. Comparison only — these
     ///     numbers never enter the ranking, which is the projection alone.
     /// </summary>
-    private IReadOnlyList<GapRow> Gaps => _breakdown == null
+    private IReadOnlyList<GapRow> BuildGaps() => _breakdown == null
         ? Array.Empty<GapRow>()
         : _breakdown.Charts
             .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId)
@@ -1245,15 +1259,15 @@ else
             .OrderBy(g => g.Delta)
             .ToArray();
 
-    private int AheadCount => Gaps.Count(g => g.Delta > 0);
+    private int AheadCount => _gaps.Count(g => g.Delta > 0);
 
     // The bar is scaled to the widest gap on the page, so the shape reads as this folder's
     // spread rather than an absolute one. Never zero: every row would divide by it.
-    private int WidestGap => Math.Max(1, Gaps.Count == 0 ? 1 : Gaps.Max(g => Math.Abs(g.Delta)));
+    private int WidestGap => Math.Max(1, _gaps.Count == 0 ? 1 : _gaps.Max(g => Math.Abs(g.Delta)));
 
     private sealed record NotPlayedRow(Chart Chart, int Projected);
 
-    private IReadOnlyList<NotPlayedRow> NotPlayed => _breakdown == null
+    private IReadOnlyList<NotPlayedRow> BuildNotPlayed() => _breakdown == null
         ? Array.Empty<NotPlayedRow>()
         : _breakdown.Charts
             .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId)
@@ -1305,8 +1319,8 @@ else
 
     private IReadOnlyList<(string Key, string Title, string CssClass, IReadOnlyList<BreakdownChartRecord> Movers)> MoverGroups => new[]
     {
-        ("Harder", (string)L["Harder for you"], "bd-count-harder", HarderMovers),
-        ("Easier", (string)L["Easier for you"], "bd-count-easier", EasierMovers)
+        ("Harder", (string)L["Harder for you"], "bd-count-harder", _harderMovers),
+        ("Easier", (string)L["Easier for you"], "bd-count-easier", _easierMovers)
     };
 
     private void ToggleExpanded(Guid chartId)
@@ -1325,7 +1339,7 @@ else
         }
     }
 
-    private IReadOnlyList<string> NoDataChartNames => NoDataCharts
+    private IReadOnlyList<string> NoDataChartNames => _noDataCharts
         .Select(c => _charts.TryGetValue(c.ChartId, out var chart) ? chart.Song.Name.ToString() : null)
         .Where(n => n != null)
         .Select(n => n!)
@@ -1361,6 +1375,7 @@ else
         _isLoading = true;
         StateHasChanged();
         _breakdown = await Mediator.Send(new GetPersonalizedTierListBreakdownQuery(_chartType, _level, _lens, Mix: _currentMix));
+        RebuildViews();
         _isLoading = false;
         StateHasChanged();
     }
@@ -1444,6 +1459,7 @@ else
         _breakdown = await Mediator.Send(
             new GetPersonalizedTierListBreakdownQuery(_chartType, _level, _lens, Mix: _currentMix));
 
+        RebuildViews();
         _isLoading = false;
         StateHasChanged();
     }
