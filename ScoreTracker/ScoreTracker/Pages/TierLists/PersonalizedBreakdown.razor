@@ -158,7 +158,23 @@ else
                 <section class="bd-block">
                     @* No caption: the bands are drawn over the dots, so the picture states what a
                        sentence underneath would only restate. *@
-                    <MudText Typo="Typo.h5">@L["What players at your level score here"]</MudText>
+                    <div class="bd-head">
+                        <MudText Typo="Typo.h5">@L["What players at your level score here"]</MudText>
+                        @* Reading down the projections answers "what is hard here"; reading down
+                           your own answers "where am I weakest". Both are the point of the
+                           picture, and neither is a filter, so it is a sort rather than a view. *@
+                        <MudMenu Dense="true" Size="Size.Small" Icon="@Icons.Material.Filled.SwapVert"
+                                 title="@L["Sort by"]" AriaLabel="@L["Sort by"]">
+                            <MudMenuItem OnClick="@(() => SetSpreadSort("Projected"))"
+                                         Icon="@(_spreadSort == "Projected" ? Icons.Material.Filled.Check : null)">
+                                @L["Projected"]
+                            </MudMenuItem>
+                            <MudMenuItem OnClick="@(() => SetSpreadSort("Mine"))"
+                                         Icon="@(_spreadSort == "Mine" ? Icons.Material.Filled.Check : null)">
+                                @L["My Scores"]
+                            </MudMenuItem>
+                        </MudMenu>
+                    </div>
                     <ProjectionSpread Rows="SpreadRows" Mix="_currentMix" ChartSelected="OpenChart"></ProjectionSpread>
                     <div class="bd-spread-legend">
                         <span><span class="bd-legend-dot"></span> @L["Projected Score"]</span>
@@ -1132,6 +1148,25 @@ else
     private Chart? _detailsChart;
     private bool _detailsOpen;
 
+    /// <summary>
+    ///     What the spread is ordered by: "Projected" or "Mine". Persisted like the tier list's
+    ///     own controls — it is a reading preference, and a reading preference that resets every
+    ///     visit is one the reader has to re-make every visit.
+    /// </summary>
+    private string _spreadSort = "Projected";
+
+    private const string SpreadSortKey = "Breakdown__SpreadSort";
+
+    private static readonly string[] ValidSpreadSorts = { "Projected", "Mine" };
+
+    private async Task SetSpreadSort(string sort)
+    {
+        if (sort == _spreadSort) return;
+
+        _spreadSort = sort;
+        await UiSettings.SetSetting(SpreadSortKey, sort);
+    }
+
     private void OpenChart(Chart chart)
     {
         _detailsChart = chart;
@@ -1156,16 +1191,28 @@ else
     ///     The spread's rows: charts with a projection, hardest first. A chart no peer has played
     ///     has no position on that axis and belongs in the not-enough-data line instead.
     /// </summary>
-    private IReadOnlyList<ProjectionSpread.SpreadRow> SpreadRows => _breakdown == null
-        ? Array.Empty<ProjectionSpread.SpreadRow>()
-        : _breakdown.Charts
-            .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId))
-            .OrderBy(c => (int)c.ProjectedScore!.Value)
-            .Select(c => new ProjectionSpread.SpreadRow(
-                _charts[c.ChartId],
-                (int)c.ProjectedScore!.Value,
-                _scores.TryGetValue(c.ChartId, out var mine) ? mine.Score : null))
-            .ToArray();
+    private IReadOnlyList<ProjectionSpread.SpreadRow> SpreadRows
+    {
+        get
+        {
+            if (_breakdown == null) return Array.Empty<ProjectionSpread.SpreadRow>();
+
+            var rows = _breakdown.Charts
+                .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId))
+                .Select(c => new ProjectionSpread.SpreadRow(
+                    _charts[c.ChartId],
+                    (int)c.ProjectedScore!.Value,
+                    _scores.TryGetValue(c.ChartId, out var mine) ? mine.Score : null));
+
+            // Ascending either way, so the top of the list is always the hard end — by what this
+            // level scores, or by what you actually did. An unplayed chart has nothing to sort on
+            // and goes last rather than pretending to be a zero at the top.
+            return (_spreadSort == "Mine"
+                    ? rows.OrderBy(r => r.Mine == null).ThenBy(r => r.Mine == null ? 0 : (int)r.Mine.Value)
+                    : rows.OrderBy(r => r.Projected))
+                .ToArray();
+        }
+    }
 
     private sealed record GapRow(Chart Chart, int Delta, int Mine, int Projected);
 
@@ -1340,8 +1387,13 @@ else
 
         var chartsTask = Mediator.Send(new GetChartsQuery(_currentMix));
         var scoresTask = Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix));
+        var sortTask = UiSettings.GetSetting(SpreadSortKey);
         _allCharts = (await chartsTask).ToDictionary(c => c.Id);
         _scores = (await scoresTask).ToDictionary(s => s.ChartId);
+        // Validated on the way in rather than trusted: a saved value that no longer names a sort
+        // would otherwise fall through to the projection while the menu ticks nothing.
+        var savedSort = await sortTask;
+        _spreadSort = ValidSpreadSorts.Contains(savedSort) ? savedSort! : "Projected";
 
         await LoadFolder();
     }
