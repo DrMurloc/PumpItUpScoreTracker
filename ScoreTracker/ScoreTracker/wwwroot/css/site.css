@@ -13627,22 +13627,35 @@ span.ct-console-pick { cursor: default; }
     height: 100%;
 }
 
-/* The marker is the hit area and the tooltip's anchor; the shape is a child, so the diamond can
-   rotate without taking the readout with it. 22px because a fingertip cannot reliably hit an
-   11px dot, and the readout is now the only place the number lives. */
+/* The marker is the hit area and the tooltip's anchor. It is OUR element with the tooltip
+   inside it, never MudTooltip's own root: that root carries .mud-tooltip-root{width:auto} and
+   .mud-tooltip-inline{display:inline-block} at the same specificity as anything added
+   alongside, so a marker class landing there loses its width and its display and collapses.
+   22px because a fingertip cannot reliably hit an 11px dot, and the readout is now the only
+   place the number lives. */
 .spread-marker {
     position: absolute;
     top: 50%;
     width: 22px;
     height: 22px;
-    transform: translate(-50%, -50%);
-    display: grid;
-    place-items: center;
+    margin: -11px 0 0 -11px;
 }
 
+.spread-marker .mud-tooltip-root {
+    position: absolute;
+    inset: 0;
+}
+
+/* Centred on margins rather than a transform, so the diamond below can spend its transform on
+   the rotation without having to restate the centring. */
 .spread-shape {
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
     width: 11px;
     height: 11px;
+    margin: -5.5px 0 0 -5.5px;
     border-radius: 50%;
     box-shadow: 0 0 0 2px var(--mix-bg);
 }
@@ -13657,6 +13670,7 @@ span.ct-console-pick { cursor: default; }
 .spread-mine .spread-shape {
     width: 9px;
     height: 9px;
+    margin: -4.5px 0 0 -4.5px;
     border-radius: 0;
     transform: rotate(45deg);
     border: 1.5px solid var(--mix-ink);
@@ -13665,11 +13679,13 @@ span.ct-console-pick { cursor: default; }
 }
 
 /* Clamped to the edge and drawn as an arrow: the row still says "off the bottom" rather than
-   claiming the score sits at the axis floor. */
+   claiming the score sits at the axis floor. The border box is 13x10, so the centring margins
+   are its own halves rather than the circle's. */
 .spread-off .spread-shape {
     width: 0;
     height: 0;
     border: 5px solid transparent;
+    margin: -5px 0 0 -6.5px;
     background: none;
     transform: none;
     box-shadow: none;

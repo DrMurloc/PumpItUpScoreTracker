@@ -184,11 +184,16 @@
             return @<span class="@css" style="left:@left%">@shape</span>;
         }
 
-        return @<MudTooltip ShowOnClick="true" ShowOnFocus="true" Placement="Placement.Top"
-                            RootClass="@css" RootStyle="@($"left:{left}%")">
-                   <ChildContent>@shape</ChildContent>
-                   <TooltipContent>@readout</TooltipContent>
-               </MudTooltip>;
+        // The wrapper is ours and the tooltip sits INSIDE it. Putting spread-marker on
+        // MudTooltip's own root instead lands it on an element already carrying
+        // .mud-tooltip-root{width:auto} and .mud-tooltip-inline{display:inline-block} — same
+        // specificity, so the framework's width and display win and the marker collapses.
+        return @<span class="@css" style="left:@left%">
+                   <MudTooltip ShowOnClick="true" ShowOnFocus="true" Placement="Placement.Top">
+                       <ChildContent>@shape</ChildContent>
+                       <TooltipContent>@readout</TooltipContent>
+                   </MudTooltip>
+               </span>;
     }
 
 }

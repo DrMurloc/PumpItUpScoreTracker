@@ -161,11 +161,7 @@ else
                     <MudText Typo="Typo.h5">@L["What players at your level score here"]</MudText>
                     <ProjectionSpread Rows="SpreadRows" Mix="_currentMix" ChartSelected="OpenChart"></ProjectionSpread>
                     <div class="bd-spread-legend">
-                        @* "what your level scores" rather than "your level scores": the Not-played
-                           column header is "Your level scores", and two keys differing only by
-                           case are deduped to one by GenerateResource, first spelling wins, and
-                           the loser renders English in every other locale. *@
-                        <span><span class="bd-legend-dot"></span> @L["what your level scores"]</span>
+                        <span><span class="bd-legend-dot"></span> @L["Projected Score"]</span>
                         <span><span class="bd-legend-diamond"></span> @L["You"]</span>
                         <span><span class="bd-legend-hollow"></span> @L["Not played"]</span>
                         <span><span class="bd-legend-caret"></span> @L["off the scale"]</span>
@@ -338,7 +334,7 @@ else
                         <div class="bd-gap-row bd-gap-head">
                             <span>@L["Not played yet"]</span>
                             <span></span>
-                            <span class="bd-gap-num">@L["Your level scores"]</span>
+                            <span class="bd-gap-num">@L["Projected Scores"]</span>
                         </div>
                         @foreach (var row in NotPlayed)
                         {
@@ -661,9 +657,11 @@ else
         color: var(--diff-veryeasy);
     }
 
+    /* Three children, so three tracks. It carried the four the pre-round-5 row had, which left
+       the song squeezed into a 240px cap while an empty fourth track took the slack. */
     .bd-mover {
         display: grid;
-        grid-template-columns: 40px minmax(150px, 240px) minmax(200px, 260px) 1fr;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
         gap: 12px;
         align-items: center;
         padding: 8px 12px;
@@ -704,6 +702,8 @@ else
         font-size: .84rem;
         white-space: nowrap;
         font-weight: 600;
+        text-align: right;
+        justify-self: end;
     }
 
     .bd-move-arrow {
@@ -770,9 +770,11 @@ else
             grid-template-columns: 40px 1fr;
         }
 
-        .bd-move, .bd-mover-chips {
+        /* The tier move drops under the song rather than competing with it for a phone's width. */
+        .bd-move {
             grid-column: 2;
-            justify-content: flex-start;
+            justify-self: start;
+            text-align: left;
         }
 
         /* One source per line on phones — the wrapping row read as compressed noise. */

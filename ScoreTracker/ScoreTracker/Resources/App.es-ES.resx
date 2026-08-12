@@ -5011,6 +5011,12 @@
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY proyectado de Doubles</value>
   </data>
+  <data name="Projected Score" xml:space="preserve">
+    <value>Puntuación proyectada</value>
+  </data>
+  <data name="Projected Scores" xml:space="preserve">
+    <value>Puntuaciones proyectadas</value>
+  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY proyectado de Singles</value>
   </data>
@@ -7516,9 +7522,6 @@
   <data name="what your grades add" xml:space="preserve">
     <value>lo que añaden tus notas</value>
   </data>
-  <data name="what your level scores" xml:space="preserve">
-    <value>lo que puntúa tu nivel</value>
-  </data>
   <data name="What your list is built from" xml:space="preserve">
     <value>De qué está hecha tu lista</value>
   </data>
@@ -7893,9 +7896,6 @@
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>Tu historial de nivel comenzará a registrarse con tu próxima importación.</value>
-  </data>
-  <data name="Your level scores" xml:space="preserve">
-    <value>Tu nivel puntúa</value>
   </data>
   <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
     <value>De momento tu lista coincide con la de la comunidad en todos los charts valorados.</value>

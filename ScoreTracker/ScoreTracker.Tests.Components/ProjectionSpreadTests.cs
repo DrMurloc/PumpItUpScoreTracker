@@ -109,16 +109,40 @@ public sealed class ProjectionSpreadTests : ComponentTestBase
         Assert.DoesNotContain("spread-readout", cut.Markup);
 
         // Three projections and three personal scores: six markers, each its own readout.
-        var markers = cut.FindAll(".spread-marker");
-        Assert.Equal(6, markers.Count);
+        Assert.Equal(6, cut.FindAll(".spread-marker").Count);
 
-        // Pointer-up, not click: MudTooltip's ShowOnClick binds onpointerup, so ClickAsync here
-        // fails with "the element does not have an event handler for onclick" — which reads as a
-        // missing handler rather than the wrong event name.
-        await markers[0].TriggerEventAsync("onpointerup", new PointerEventArgs());
+        // The tooltip root INSIDE the marker, because that is what carries the handler — the
+        // marker span is ours and deliberately has no events of its own. Pointer-up, not click:
+        // MudTooltip's ShowOnClick binds onpointerup, so ClickAsync fails here claiming the
+        // element has no onclick handler, which reads as a missing handler rather than the
+        // wrong event name.
+        var anchors = cut.FindAll(".spread-marker .mud-tooltip-root");
+        Assert.Equal(6, anchors.Count);
+        await anchors[0].TriggerEventAsync("onpointerup", new PointerEventArgs());
 
         Assert.Contains("spread-readout", cut.Markup);
         Assert.Contains("913,500", cut.Markup);
+    }
+
+    [Fact]
+    public void TheMarkerIsOurOwnElementRatherThanTheTooltipsRoot()
+    {
+        // Putting spread-marker on MudTooltip's root via RootClass shipped once and rendered as
+        // hairlines and specks: that root carries .mud-tooltip-root{width:auto} and
+        // .mud-tooltip-inline{display:inline-block}, both single-class selectors, so the marker's
+        // own width and display lost the tie and the shape — an inline span — ignored its size
+        // outright. Nothing in a rendered-markup assertion can see that, because the class IS
+        // there and the geometry is not bUnit's to compute. What IS visible is the sharing.
+        var cut = RenderWithPopovers(new[] { (913_500, (PhoenixScore?)902_100) });
+
+        var markers = cut.FindAll(".spread-marker");
+        Assert.NotEmpty(markers);
+        foreach (var marker in markers)
+        {
+            Assert.DoesNotContain("mud-tooltip", marker.ClassName ?? "");
+            // ...and the tooltip is inside it, so the readout still has an anchor.
+            Assert.NotNull(marker.QuerySelector(".mud-tooltip-root"));
+        }
     }
 
     [Fact]

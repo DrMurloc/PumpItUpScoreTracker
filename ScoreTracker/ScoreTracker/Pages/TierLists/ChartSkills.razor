@@ -132,7 +132,7 @@ else
                     <MudButton Variant="@(_groupBy == "Personalized" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Personalized"))">@L["Personalized"]</MudButton>
                 }
                 <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Scores"]</MudButton>
-                @if (_currentMix.HasSkillData())
+                @if (FolderHasSkills)
                 {
                     <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["Skill Breakdown"]</MudButton>
                 }
@@ -1542,6 +1542,16 @@ else
 
     private bool IsSkillView => _groupBy == "Skill";
 
+    /// <summary>
+    ///     Whether this folder has skills to break down, asked of the folder rather than of the
+    ///     mix. Skills are a property of the CHART — <c>ChartSkill</c> carries no mix column, and
+    ///     the catalog attaches the same rows whichever mix it loads — so a Phoenix 2 folder has
+    ///     had them all along and a mix-level flag was hiding data that was already there. It
+    ///     also retires the legacy special case: a mix with no tagged charts answers no on its
+    ///     own, without a rule saying so.
+    /// </summary>
+    private bool FolderHasSkills => _charts.Values.Any(c => c.Skills.Any());
+
     // When the grouping isn't the lens itself, each card/row carries its lens tier — word +
     // color, never color alone (rule 8; round-6 field test). Both tier views section BY the
     // lens, so there the annotation would only repeat the heading the card already sits under.
@@ -1748,6 +1758,14 @@ else
             .Where(c => c.Level == _level && c.Type == _chartType)
             .ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        // Skill Breakdown answers to the folder, so its fallback has to run once the folder is
+        // known — the init guard runs before any chart is loaded and would strip a legitimate
+        // saved grouping. Also covers folder-hopping into one with nothing tagged.
+        if (IsSkillView && !FolderHasSkills)
+        {
+            _groupBy = "Difficulty";
+        }
 
         // Phoenix 2's folder-title track — recomputed for THIS folder on every change (the full
         // load runs once, so it can't live there). Null for Phoenix/legacy and signed-out.
@@ -2317,8 +2335,9 @@ else
         {
             _tierListType = "Pass";
         }
+        // "Skill" is deliberately not checked here: whether it is available depends on the
+        // folder's charts, which are not loaded yet. Its fallback runs after the folder does.
         if (!ValidGroupings.Contains(_groupBy) || (!CurrentUser.IsLoggedIn && _groupBy is "Score" or "Age" or "Score Ranking")
-            || (_groupBy == "Skill" && !_currentMix.HasSkillData())
             || (_groupBy == "Personalized" && !CanPersonalize))
         {
             _groupBy = "Difficulty";

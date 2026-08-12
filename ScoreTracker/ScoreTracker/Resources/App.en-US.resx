@@ -5047,6 +5047,12 @@
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>projected Doubles PUMBILITY</value>
   </data>
+  <data name="Projected Score" xml:space="preserve">
+    <value>Projected Score</value>
+  </data>
+  <data name="Projected Scores" xml:space="preserve">
+    <value>Projected Scores</value>
+  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>projected Singles PUMBILITY</value>
   </data>
@@ -7582,9 +7588,6 @@
   <data name="what your grades add" xml:space="preserve">
     <value>what your grades add</value>
   </data>
-  <data name="what your level scores" xml:space="preserve">
-    <value>what your level scores</value>
-  </data>
   <data name="What your list is built from" xml:space="preserve">
     <value>What your list is built from</value>
   </data>
@@ -7965,9 +7968,6 @@
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>Your level history starts tracking with your next import.</value>
-  </data>
-  <data name="Your level scores" xml:space="preserve">
-    <value>Your level scores</value>
   </data>
   <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
     <value>Your list currently matches the community's on every rated chart.</value>

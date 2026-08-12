@@ -5047,6 +5047,12 @@
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>mrglgrrglrgl Groggl PUMBILITY</value>
   </data>
+  <data name="Projected Score" xml:space="preserve">
+    <value>Purgmorgl Mgrlgmrg</value>
+  </data>
+  <data name="Projected Scores" xml:space="preserve">
+    <value>Purgmorgl Mgrlgmrg</value>
+  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>mrglgrrglrgl Mrglrlgl PUMBILITY</value>
   </data>
@@ -7582,9 +7588,6 @@
   <data name="what your grades add" xml:space="preserve">
     <value>urgl rorgl roglub</value>
   </data>
-  <data name="what your level scores" xml:space="preserve">
-    <value>murgla gromurp grorpmurm mgrlgmrg</value>
-  </data>
   <data name="What your list is built from" xml:space="preserve">
     <value>Murgla gromurp grog blarg</value>
   </data>
@@ -7965,9 +7968,6 @@
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>Gromurp grorpmurm lurgmrmorg rglmagl grrglgroplgl glgrgl gromurp grorpglorg glorggl.</value>
-  </data>
-  <data name="Your level scores" xml:space="preserve">
-    <value>Gromurp grorpmurm mgrlgmrg</value>
   </data>
   <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
     <value>Gromurp grog morggrglmurp morgmaglblgrl mrp glmorgmorg lurg murgglorg maglmr murgl.</value>

@@ -5011,6 +5011,12 @@
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>예상 더블 PUMBILITY</value>
   </data>
+  <data name="Projected Score" xml:space="preserve">
+    <value>예상 점수</value>
+  </data>
+  <data name="Projected Scores" xml:space="preserve">
+    <value>예상 점수</value>
+  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>예상 싱글 PUMBILITY</value>
   </data>
@@ -7518,9 +7524,6 @@
   <data name="what your grades add" xml:space="preserve">
     <value>등급이 더하는 값</value>
   </data>
-  <data name="what your level scores" xml:space="preserve">
-    <value>내 레벨의 점수</value>
-  </data>
   <data name="What your list is built from" xml:space="preserve">
     <value>내 목록의 재료</value>
   </data>
@@ -7895,9 +7898,6 @@
   </data>
   <data name="Your level history starts tracking with your next import." xml:space="preserve">
     <value>레벨 기록은 다음 가져오기부터 기록됩니다.</value>
-  </data>
-  <data name="Your level scores" xml:space="preserve">
-    <value>내 레벨 예상 점수</value>
   </data>
   <data name="Your list currently matches the community's on every rated chart." xml:space="preserve">
     <value>지금은 평가된 모든 채보에서 내 리스트가 커뮤니티와 일치합니다.</value>
