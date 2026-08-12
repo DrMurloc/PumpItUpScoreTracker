@@ -421,7 +421,8 @@ internal sealed class TierListBlendBuilder
         // projection of the same folder.
         if (projected.Count < MinProjectedCharts)
             return new ProjectionComputation(new Dictionary<Guid, SongTierListEntry>(), projected,
-                projected.Count, folderCharts.Count);
+                projected.Count, folderCharts.Count, projection.PeerCount, projection.CompetitiveLevel,
+                projection.MeanFreshness);
 
         var estimates = projected.ToDictionary(kv => kv.Key, kv => (double)(int)kv.Value);
         return new ProjectionComputation(
@@ -429,7 +430,10 @@ internal sealed class TierListBlendBuilder
                 .ToDictionary(e => e.ChartId, e => e),
             projected,
             projected.Count,
-            folderCharts.Count);
+            folderCharts.Count,
+            projection.PeerCount,
+            projection.CompetitiveLevel,
+            projection.MeanFreshness);
     }
 
     private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)
@@ -455,13 +459,17 @@ internal sealed record BlendComputation(
 
 /// <summary>
 ///     The projection source's output plus what the page needs in order to say something true
-///     when it is quiet: how many of the folder's charts peers at this level have played at all.
+///     when it is quiet: how many of the folder's charts peers at this level have played at all,
+///     and the cohort the numbers came from.
 /// </summary>
 internal sealed record ProjectionComputation(
     IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
     IReadOnlyDictionary<Guid, PhoenixScore> Scores,
     int ProjectedChartCount,
-    int FolderChartCount);
+    int FolderChartCount,
+    int PeerCount,
+    double CompetitiveLevel,
+    double MeanFreshness);
 
 /// <summary>Per-skill pooled deviation on the proficiency scale + its effective evidence.</summary>
 internal sealed record SkillEvidence(double Deviation, double Evidence, bool Usable);

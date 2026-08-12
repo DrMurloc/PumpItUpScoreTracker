@@ -108,6 +108,10 @@ internal sealed class PersonalizedBreakdownHandler
             computation.Modifiers.GetValueOrDefault("Projection"),
             computation.Projection?.ProjectedChartCount ?? 0,
             computation.Projection?.FolderChartCount ?? computation.FolderCharts.Count,
+            computation.Projection?.PeerCount ?? 0,
+            computation.Projection?.CompetitiveLevel ?? 0,
+            TierListBlendBuilder.ProjectionCompetitiveWindow,
+            computation.Projection?.MeanFreshness ?? 0,
             computation.IsProvisionalFallback);
     }
 

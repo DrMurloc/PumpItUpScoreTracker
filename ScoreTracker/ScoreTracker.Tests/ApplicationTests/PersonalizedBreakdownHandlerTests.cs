@@ -206,6 +206,72 @@ public sealed class PersonalizedBreakdownHandlerTests
     }
 
     [Fact]
+    public async Task TheCohortBehindTheNumbersTravelsWithThem()
+    {
+        // The page states these instead of describing the cohort in a sentence, so each has to be
+        // the figure it claims: players who actually voted, the level they were matched around,
+        // the band's half-width, and how discounted their evidence is.
+        var easier = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var middling = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var harder = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
+        var userId = Guid.NewGuid();
+        var settled = Guid.NewGuid();
+        var improving = Guid.NewGuid();
+
+        var charts = ChartsMock(new[] { easier, middling, harder });
+        var mediator = new Mock<IMediator>();
+        SetupTierList(mediator, "Scores", Array.Empty<SongTierListEntry>());
+
+        var playerStats = new Mock<IPlayerStatsReader>();
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(StatsFor(userId, doublesCompetitive: 17.5));
+        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Double, 17.5,
+                TierListBlendBuilder.ProjectionCompetitiveWindow, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { settled, improving, userId });
+        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                StatsFor(settled, doublesCompetitive: 17.5), StatsFor(improving, doublesCompetitive: 17.5)
+            });
+
+        var scores = new Mock<IScoreReader>();
+        scores.Setup(s => s.GetPlayerScoresInLevelRange(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                ChartType.Double, It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                PeerScoreOn(settled, easier, 985_000), PeerScoreOn(improving, easier, 980_000),
+                PeerScoreOn(settled, middling, 950_000), PeerScoreOn(improving, middling, 945_000),
+                PeerScoreOn(settled, harder, 910_000), PeerScoreOn(improving, harder, 905_000)
+            });
+
+        // One peer was a level lower when they set every one of these, so exp(-1) of their voice
+        // survives; the other has not moved and keeps all of theirs.
+        var history = new Mock<IPlayerHistoryRepository>();
+        history.Setup(h => h.GetHistory(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new PlayerRatingRecord(improving, new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                    16.5, 0, 16.5, 0, 0)
+            });
+
+        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scores,
+            playerStats: playerStats, history: history);
+
+        var result = await handler.Handle(Query("Score", userId), CancellationToken.None);
+
+        // The requesting player is in the cohort read and must not count as their own peer.
+        Assert.Equal(2, result.PeerCount);
+        Assert.Equal(17.5, result.CompetitiveLevel);
+        Assert.Equal(TierListBlendBuilder.ProjectionCompetitiveWindow, result.CompetitiveWindow);
+        // Six scores: three at full voice, three at exp(-1). Averaged per SCORE, not per player —
+        // a peer who lent three scores lent three pieces of evidence.
+        Assert.Equal((1 + Math.Exp(-1)) / 2, result.MeanFreshness, 6);
+    }
+
+    [Fact]
     public async Task StaleSkillsFadeRelativeToYourOwnRecord()
     {
         // Era-mixing is the distortion (score-age workshop): three skills backed by
@@ -406,13 +472,20 @@ public sealed class PersonalizedBreakdownHandlerTests
             DoublesCompetitiveLevel: doublesCompetitive);
     }
 
+    private static UserPhoenixScore PeerScoreOn(Guid userId, Chart chart, int score)
+    {
+        return new UserPhoenixScore(userId, chart.Id, "Peer", score, null, false, true,
+            new DateTimeOffset(2026, 6, 1, 0, 0, 0, TimeSpan.Zero));
+    }
+
     private static PersonalizedBreakdownHandler BuildHandler(
         Mock<IChartRepository>? charts = null,
         Mock<IMediator>? mediator = null,
         Mock<IScoreReader>? scores = null,
         Mock<IPlayerStatsReader>? playerStats = null,
         Mock<IUserTierListRepository>? userTierLists = null,
-        Mock<IDateTimeOffsetAccessor>? clock = null)
+        Mock<IDateTimeOffsetAccessor>? clock = null,
+        Mock<IPlayerHistoryRepository>? history = null)
     {
         charts ??= ChartsMock(Array.Empty<Chart>());
         mediator ??= new Mock<IMediator>();
@@ -424,9 +497,10 @@ public sealed class PersonalizedBreakdownHandlerTests
                 .ReturnsAsync((MixEnum _, Guid id, CancellationToken _) => StatsFor(id));
         }
         userTierLists ??= new Mock<IUserTierListRepository>();
+        history ??= new Mock<IPlayerHistoryRepository>();
         return new PersonalizedBreakdownHandler(mediator.Object, charts.Object, scores.Object,
             playerStats.Object, userTierLists.Object, new Mock<ICurrentUserAccessor>().Object,
             new MemoryCache(new MemoryCacheOptions()), (clock ?? FakeDateTime.At(2026, 7, 12)).Object,
-            new ScoreProjector(scores.Object, playerStats.Object, new Mock<IPlayerHistoryRepository>().Object));
+            new ScoreProjector(scores.Object, playerStats.Object, history.Object));
     }
 }

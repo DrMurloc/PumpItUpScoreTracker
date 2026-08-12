@@ -16,6 +16,21 @@ namespace ScoreTracker.ChartIntelligence.Contracts
     ///     level has scored anything here — the source is silent, and the page has to say so
     ///     rather than let it read as agreement with the community.
     /// </param>
+    /// <param name="PeerCount">
+    ///     How many players' scores the projections were actually built from. The page prints this
+    ///     instead of describing the cohort in a sentence — a reader can weigh "148 players" and
+    ///     cannot weigh "everyone within half a level of you".
+    /// </param>
+    /// <param name="CompetitiveLevel">
+    ///     The level the peers were matched around. With <paramref name="CompetitiveWindow" /> it
+    ///     gives the band the page states, and it comes from the run itself so the stated band and
+    ///     the read band cannot be two different numbers.
+    /// </param>
+    /// <param name="CompetitiveWindow">Half-width of that band, in competitive levels.</param>
+    /// <param name="MeanFreshness">
+    ///     Mean growth weight of the contributing scores, 0..1. The page shows its complement —
+    ///     how much the evidence is discounted for peers who have outgrown their own scores.
+    /// </param>
     [ExcludeFromCodeCoverage]
     public sealed record PersonalizedTierListBreakdown(
         IReadOnlyList<BreakdownChartRecord> Charts,
@@ -31,6 +46,10 @@ namespace ScoreTracker.ChartIntelligence.Contracts
         double ProjectionWeight,
         int ProjectedChartCount,
         int FolderChartCount,
+        int PeerCount,
+        double CompetitiveLevel,
+        double CompetitiveWindow,
+        double MeanFreshness,
         bool IsProvisionalFallback);
 
     /// <summary>
