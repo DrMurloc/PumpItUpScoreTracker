@@ -170,6 +170,60 @@ public sealed class SessionHeroTests : ComponentTestBase
         Assert.NotEmpty(hero.FindAll("[data-testid='community-peers-empty']"));
     }
 
+    /// <summary>
+    ///     A P2 gain that crossed a rung reads as the crossing, with the raw numbers demoted to
+    ///     the sub-line (docs/design/pumbility-levels.md §5).
+    /// </summary>
+    [Fact]
+    public void APumbilityGainThatCrossedARungReadsAsALevelUp()
+    {
+        var breakdown = FullBreakdown();
+        breakdown = breakdown with
+        {
+            Group = breakdown.Group with { Mix = MixEnum.Phoenix2 },
+            Milestones = new[]
+            {
+                new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, Session, Start, 17_410.38, 17_602.69,
+                    null, null)
+            }
+        };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, breakdown));
+
+        var strip = hero.Find("[data-testid='milestone-strip']");
+        Assert.Contains("Level Up", strip.TextContent);
+        Assert.Contains("DIAMOND LV.3 → LV.4", strip.TextContent);
+        // The raw gain stays on the strip as the sub-line (N0 rounds nearest: .69 goes up).
+        Assert.Contains("17,410 → 17,603", strip.TextContent);
+    }
+
+    [Fact]
+    public void TheGemTitleOutranksTheLevelStripInItsOwnBatch()
+    {
+        // Crossing into RED BERYL LV.1 IS the [P.B] RED BERYL title. When the batch completed it,
+        // the title strip is the sentence and the gain renders in its plain form.
+        var breakdown = FullBreakdown();
+        breakdown = breakdown with
+        {
+            Group = breakdown.Group with { Mix = MixEnum.Phoenix2 },
+            Milestones = new[]
+            {
+                new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, Session, Start, 17_950, 18_010,
+                    null, null),
+                new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, Session, Start, null, null,
+                    "[P.B] RED BERYL", null)
+            }
+        };
+
+        var hero = RenderComponent<SessionHero>(p => p.Add(h => h.Breakdown, breakdown));
+
+        var strips = string.Join(" | ", hero.FindAll("[data-testid='milestone-strip']")
+            .Select(s => s.TextContent));
+        Assert.DoesNotContain("Level Up", strips);
+        Assert.Contains("PUMBILITY", strips);
+        Assert.Contains("[P.B] RED BERYL", strips);
+    }
+
     private static SessionBreakdown FullBreakdown()
     {
         var single = ChartAt(ChartType.Single, 21);

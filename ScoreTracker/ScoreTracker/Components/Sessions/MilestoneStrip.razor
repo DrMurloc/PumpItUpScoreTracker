@@ -1,12 +1,52 @@
 ﻿@using ScoreTracker.PlayerProgress.Contracts
 @namespace ScoreTracker.Web.Components
-<div class="d-flex align-center gap-2 px-3 py-0 mud-warning-hover" style="border-left: 3px solid var(--mud-palette-warning); background: rgba(255,196,51,.07)" data-testid="milestone-strip">
-    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">@KindLabel</MudChip>
-    <MudText Typo="Typo.body2">@Description</MudText>
-</div>
+@if (Milestone.Kind == MilestoneKind.PumbilityGain && LevelChange is { } change)
+{
+    @* The gain that crossed a rung reads as the crossing — the raw numbers demote to the
+       sub-line. Only ever rendered when the batch did NOT complete the gem title itself; the
+       caller derives that once for the whole batch (docs/design/pumbility-levels.md §5). *@
+    <div class="d-flex align-center gap-2 px-3 py-0 mud-warning-hover" style="border-left: 3px solid var(--mud-palette-warning); background: rgba(255,196,51,.07)" data-testid="milestone-strip">
+        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">@L["Level Up"]</MudChip>
+        <PumbilityLevelBadge Level="change.To" Height="22"></PumbilityLevelBadge>
+        <MudText Typo="Typo.body2"><b>@CrossingText(change)</b></MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">@Description</MudText>
+    </div>
+}
+else
+{
+    <div class="d-flex align-center gap-2 px-3 py-0 mud-warning-hover" style="border-left: 3px solid var(--mud-palette-warning); background: rgba(255,196,51,.07)" data-testid="milestone-strip">
+        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">@KindLabel</MudChip>
+        <MudText Typo="Typo.body2">@Description</MudText>
+    </div>
+}
 
 @code {
     [Parameter] [EditorRequired] public PlayerMilestoneRecord Milestone { get; set; } = null!;
+
+    /// <summary>
+    ///     The batch's level crossing, when its PUMBILITY gain crossed a rung. Supplied by the
+    ///     page (it holds the whole milestone set — suppression is a batch-level fact); consumed
+    ///     only by the PumbilityGain strip.
+    /// </summary>
+    [Parameter] public PumbilityLevelChange? LevelChange { get; set; }
+
+    // "DIAMOND LV.3 → LV.4" inside one gem; the full name appears only when the gem changed.
+    private static string CrossingText(PumbilityLevelChange change)
+    {
+        var from = LevelText(change.From);
+        var to = change.From.Gem is { } fromGem && change.To.Gem is { } toGem && fromGem == toGem &&
+                 change.To.Level is { } level
+            ? $"LV.{level}"
+            : LevelText(change.To);
+        return $"{from} → {to}";
+    }
+
+    private static string LevelText(ScoreTracker.Domain.Models.Titles.Phoenix2.Phoenix2PumbilityLevel level)
+    {
+        if (level.Gem is not { } gem) return "—";
+        var name = gem.ToString().Replace("[P.B] ", "");
+        return level.Level is { } lv ? $"{name} LV.{lv}" : name;
+    }
 
     private string KindLabel => Milestone.Kind switch
     {
