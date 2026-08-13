@@ -9,6 +9,7 @@ using ScoreTracker.ChartIntelligence.Application;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -190,7 +191,7 @@ public sealed class PumbilityCensusSagaTests
     }
 
     private sealed record SavedFolder(ChartType ChartType, int Level,
-        IReadOnlyDictionary<string, PumbilityCensusFolder> ByCohort);
+        IReadOnlyDictionary<string, PumbilityTierListFolder> ByCohort);
 
     private static PumbilityCensusSaga BuildSaga(IEnumerable<Chart> charts,
         IReadOnlyCollection<(Guid UserId, RecordedPhoenixScore Record)> scores, List<SavedFolder> saved,
@@ -219,16 +220,17 @@ public sealed class PumbilityCensusSagaTests
                     ? users
                     : Array.Empty<Guid>());
 
-        var census = new Mock<IPumbilityCensusRepository>();
-        census.Setup(c => c.SaveFolder(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
-                It.IsAny<IReadOnlyDictionary<string, PumbilityCensusFolder>>(),
+        var tierLists = new Mock<ITierListRepository>();
+        tierLists.Setup(c => c.SavePumbilityTierLists(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
+                It.IsAny<DifficultyLevel>(),
+                It.IsAny<IReadOnlyDictionary<string, PumbilityTierListFolder>>(),
                 It.IsAny<CancellationToken>()))
             .Callback((MixEnum _, ChartType type, DifficultyLevel level,
-                    IReadOnlyDictionary<string, PumbilityCensusFolder> byCohort,
+                    IReadOnlyDictionary<string, PumbilityTierListFolder> byCohort,
                     CancellationToken _) =>
                 saved.Add(new SavedFolder(type, level, byCohort)))
             .Returns(Task.CompletedTask);
 
-        return new PumbilityCensusSaga(chartRepo.Object, scoreReader.Object, titles.Object, census.Object);
+        return new PumbilityCensusSaga(chartRepo.Object, scoreReader.Object, titles.Object, tierLists.Object);
     }
 }

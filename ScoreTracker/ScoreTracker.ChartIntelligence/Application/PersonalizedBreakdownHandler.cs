@@ -30,10 +30,10 @@ internal sealed class PersonalizedBreakdownHandler
 
     public PersonalizedBreakdownHandler(IMediator mediator, IChartRepository charts,
         ICurrentUserAccessor currentUser, IMemoryCache cache, IScoreProjector projector,
-        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        ITierListRepository tierLists, ITitleRepository titles, IPlayerStatsReader playerStats,
         IScoreReader scores)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, projector, census, titles, playerStats, scores);
+        _builder = new TierListBlendBuilder(mediator, charts, projector, tierLists, titles, playerStats, scores);
         _currentUser = currentUser;
         _cache = cache;
     }

@@ -10,11 +10,11 @@ namespace ScoreTracker.ChartIntelligence.Application;
 
 /// <summary>
 ///     The tier-list blend, moved out of the page (tier-lists overhaul C2, design doc
-///     §6 Tier 3): weighted combination of the stored tier lists with, when
-///     personalized, the player's skill estimates and the similar-players aggregation.
-///     The source computation lives in <see cref="TierListBlendBuilder" /> (shared
-///     with the Personalized Breakdown query); this handler owns lens validation,
-///     the final combine, and the cache.
+///     §6 Tier 3): weighted combination of the stored tier lists — with, on the two
+///     lenses that personalize, the score projection (Score) or the viewer's own
+///     cohort's pool counts (PUMBILITY). The source computation lives in
+///     <see cref="TierListBlendBuilder" /> (shared with the Personalized Breakdown
+///     query); this handler owns lens validation, the final combine, and the cache.
 /// </summary>
 internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierListQuery, TierListResult>
 {
@@ -24,10 +24,10 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
 
     public BlendedTierListHandler(IMediator mediator, IChartRepository charts,
         ICurrentUserAccessor currentUser, IMemoryCache cache, IScoreProjector projector,
-        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        ITierListRepository tierLists, ITitleRepository titles, IPlayerStatsReader playerStats,
         IScoreReader scores)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, projector, census, titles, playerStats, scores);
+        _builder = new TierListBlendBuilder(mediator, charts, projector, tierLists, titles, playerStats, scores);
         _currentUser = currentUser;
         _cache = cache;
     }

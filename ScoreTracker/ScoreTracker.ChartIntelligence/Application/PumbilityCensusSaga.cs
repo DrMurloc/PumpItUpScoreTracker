@@ -1,6 +1,7 @@
 using MassTransit;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Domain;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.SharedKernel.Enums;
@@ -34,17 +35,17 @@ internal sealed class PumbilityCensusSaga : IConsumer<ProcessPumbilityCensusComm
     private const int PoolSize = 50;
 
     private readonly IChartRepository _charts;
-    private readonly IPumbilityCensusRepository _census;
     private readonly IScoreReader _scores;
+    private readonly ITierListRepository _tierLists;
     private readonly ITitleRepository _titles;
 
     public PumbilityCensusSaga(IChartRepository charts, IScoreReader scores, ITitleRepository titles,
-        IPumbilityCensusRepository census)
+        ITierListRepository tierLists)
     {
         _charts = charts;
         _scores = scores;
         _titles = titles;
-        _census = census;
+        _tierLists = tierLists;
     }
 
     public async Task Consume(ConsumeContext<ProcessPumbilityCensusCommand> context)
@@ -72,7 +73,7 @@ internal sealed class PumbilityCensusSaga : IConsumer<ProcessPumbilityCensusComm
                     .Select(c => c.Id).ToArray();
                 if (!folderCharts.Any()) continue;
 
-                var byCohort = new Dictionary<string, PumbilityCensusFolder>();
+                var byCohort = new Dictionary<string, PumbilityTierListFolder>();
                 foreach (var (cohortKey, members) in cohorts)
                 {
                     var counts = folderCharts.ToDictionary(id => id,
@@ -82,13 +83,13 @@ internal sealed class PumbilityCensusSaga : IConsumer<ProcessPumbilityCensusComm
                     // of the table — a cohort only covers a three-to-four level band.
                     if (counts.Values.Sum() == 0) continue;
 
-                    byCohort[cohortKey] = new PumbilityCensusFolder(TierListProcessor
+                    byCohort[cohortKey] = new PumbilityTierListFolder(TierListProcessor
                         .ProcessIntoLogScaledTierList(ListName, counts)
-                        .Select(e => new PumbilityCensusRecord(e.ChartId, counts[e.ChartId], e.Category, e.Order))
+                        .Select(e => new PumbilityTierListRecord(e.ChartId, counts[e.ChartId], e.Category, e.Order))
                         .ToArray(), members.Count);
                 }
 
-                await _census.SaveFolder(mix, chartType, DifficultyLevel.From(level), byCohort,
+                await _tierLists.SavePumbilityTierLists(mix, chartType, DifficultyLevel.From(level), byCohort,
                     cancellationToken);
             }
         }

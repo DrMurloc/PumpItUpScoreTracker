@@ -27,7 +27,6 @@ public static class ChartIntelligenceRegistrationExtensions
         services.AddTransient<IContributionDeletionRepository, EFContributionDeletionRepository>();
         services.AddTransient<IChartScoreStatsRepository, EFChartScoreStatsRepository>();
         services.AddTransient<IFolderCohortStatsRepository, EFFolderCohortStatsRepository>();
-        services.AddTransient<IPumbilityCensusRepository, EFPumbilityCensusRepository>();
         services.AddTransient<IChartSimilarityRepository, EFChartSimilarityRepository>();
         services.AddSingleton<IDbModelContribution, ChartIntelligenceModelContribution>();
         return services;

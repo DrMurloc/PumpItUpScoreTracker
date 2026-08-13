@@ -14,16 +14,16 @@ internal sealed class PumbilityFoldersHandler
 {
     private readonly TierListBlendBuilder _builder;
     private readonly IMemoryCache _cache;
-    private readonly IPumbilityCensusRepository _census;
     private readonly ICurrentUserAccessor _currentUser;
+    private readonly ITierListRepository _tierLists;
 
     public PumbilityFoldersHandler(IMediator mediator, IChartRepository charts, IScoreProjector projector,
-        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        ITierListRepository tierLists, ITitleRepository titles, IPlayerStatsReader playerStats,
         IScoreReader scores,
         ICurrentUserAccessor currentUser, IMemoryCache cache)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, projector, census, titles, playerStats, scores);
-        _census = census;
+        _builder = new TierListBlendBuilder(mediator, charts, projector, tierLists, titles, playerStats, scores);
+        _tierLists = tierLists;
         _currentUser = currentUser;
         _cache = cache;
     }
@@ -56,7 +56,8 @@ internal sealed class PumbilityFoldersHandler
                     : await _builder.ResolveViewerCohort(chartType, request.Mix, userId.Value,
                         cancellationToken);
                 if (cohortKey == null) continue;
-                folders.AddRange((await _census.GetFoldersWithData(request.Mix, cohortKey, cancellationToken))
+                folders.AddRange(
+                    (await _tierLists.GetPumbilityTierListFolders(request.Mix, cohortKey, cancellationToken))
                     .Where(f => f.ChartType == chartType)
                     .Select(f => new PumbilityFolderRecord(f.ChartType, f.Level)));
             }
