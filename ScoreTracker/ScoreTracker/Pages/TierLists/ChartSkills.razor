@@ -65,16 +65,16 @@ else
         @if (_groupBy == "Personalized")
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
             </MudSelect>
         }
         else if (IsTierView)
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
+                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
                 @if (ChabalaAvailable)
                 {
                     <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
@@ -85,13 +85,13 @@ else
         else
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Shown Difficulty"]" Disabled="_isLoading" Value="ShownDifficultyValue" ValueChanged="ChangeShownDifficulty">
+                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
                 @if (CanPersonalize)
                 {
-                    <MudSelectItem T="string" Value="@("Personalized Score")">@L["Personalized Score"]</MudSelectItem>
                     <MudSelectItem T="string" Value="@("Personalized PUMBILITY")">@L["Personalized PUMBILITY"]</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("Personalized Score")">@L["Personalized Score"]</MudSelectItem>
                 }
                 @if (ChabalaAvailable)
                 {
@@ -1664,6 +1664,19 @@ else
         // it, and a switch always refetches and saves.
         var wasPersonalized = PersonalizedActive;
         _groupBy = newGrouping;
+        // The Ranked-by list is not the same on every view — Personalized offers only the two
+        // lenses that personalize — so carrying a lens across can leave the picker showing a
+        // value it does not contain, which MudSelect renders as blank. Fall to the view's first
+        // option instead (owner, 2026-08-13).
+        if (!LensesFor(_groupBy).Contains(_tierListType))
+        {
+            _tierListType = LensesFor(_groupBy).First();
+            await UiSettings.SetSetting("TierLists__ListType", _tierListType);
+            await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
+            await Recalculate();
+            return;
+        }
+
         if (PersonalizedActive != wasPersonalized)
         {
             await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
@@ -2059,6 +2072,19 @@ else
         _pumbilityFolders = (await Mediator.Send(new GetPumbilityFoldersQuery(PersonalizedActive,
                     PersonalizedActive ? CurrentUser.User.Id : null, _currentMix), cancellationToken))
             .Select(f => (f.ChartType, f.Level)).ToHashSet();
+    }
+
+    /// <summary>
+    ///     The Ranked-by options a view actually offers, first one first. Mirrors the markup
+    ///     above; the two must agree or the picker can hold a value it never lists.
+    /// </summary>
+    private IReadOnlyList<string> LensesFor(string grouping)
+    {
+        if (grouping == "Personalized") return new[] { "PUMBILITY", "Score" };
+        var lenses = new List<string> { "PUMBILITY", "Pass", "Score" };
+        if (ChabalaAvailable) lenses.Add("Chabala");
+        lenses.Add("PG");
+        return lenses;
     }
 
     private string TierName(TierListCategory category) =>
