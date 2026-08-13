@@ -59,6 +59,76 @@ public static class TierListProcessor
         return ProcessIntoTierList(tierListName, chartWeights.ToDictionary(kv => kv.Key, kv => (double)kv.Value));
     }
 
+    /// <summary>
+    ///     The same bands, cut on a log scale, for counts whose spread is multiplicative rather
+    ///     than additive — how many players hold a chart in their PUMBILITY pool
+    ///     (docs/design/pumbility-tier-list.md §4a). A chart's count is roughly "how many players
+    ///     could reach it" × "how many of those played it", and both terms rise together with how
+    ///     good the chart is, so the counts compound: measured skewness across folders runs +0.8
+    ///     to +2.85 raw against −0.76 to +0.19 logged.
+    ///     <para>
+    ///         Banding at μ±0.5σ/±1σ/±1.5σ assumes a distribution roughly symmetric about its
+    ///         mean, so feeding it the raw counts does not merely look lopsided — it makes two
+    ///         tiers unreachable. The μ−1.5σ cutoff lands at a NEGATIVE appearance count in 33 of
+    ///         34 folders, and a chart cannot appear −51 times. Ordering is untouched: log is
+    ///         monotonic, so only the tier lines move.
+    ///     </para>
+    ///     <para>
+    ///         Zeros are excluded from the mean and standard deviation here, unlike
+    ///         <see cref="ProcessIntoTierList(string,IDictionary{Guid,double})" />, which counts
+    ///         them. A chart nobody pools is not a low value on this scale, it is the absence of
+    ///         an opinion, and letting those drag the mean would band the charts that do have one
+    ///         against a floor rather than against each other.
+    ///     </para>
+    /// </summary>
+    public static IEnumerable<SongTierListEntry> ProcessIntoLogScaledTierList(string tierListName,
+        IDictionary<Guid, int> chartCounts)
+    {
+        if (!chartCounts.Any()) return Array.Empty<SongTierListEntry>();
+
+        var logs = chartCounts.Where(kv => kv.Value > 0)
+            .ToDictionary(kv => kv.Key, kv => Math.Log(1.0 + kv.Value));
+        var ordered = chartCounts.OrderBy(kv => kv.Value).ToArray();
+        if (!logs.Any())
+            return ordered.Select((kv, order) =>
+                new SongTierListEntry(tierListName, kv.Key, TierListCategory.Unrecorded, order)).ToArray();
+
+        var standardDeviation = StdDev(logs.Values, false);
+        var average = logs.Values.Average();
+        var mediumMin = average - standardDeviation / 2;
+        var easyMin = average + standardDeviation / 2;
+        var veryEasyMin = average + standardDeviation;
+        var oneLevelOverrated = average + standardDeviation * 1.5;
+        var hardMin = average - standardDeviation;
+        var veryHardMin = average - standardDeviation * 1.5;
+
+        var result = new List<SongTierListEntry>();
+        var order = 0;
+        foreach (var (chartId, count) in ordered)
+        {
+            TierListCategory category;
+            if (count <= 0)
+            {
+                category = TierListCategory.Unrecorded;
+            }
+            else
+            {
+                var value = logs[chartId];
+                category = value < veryHardMin ? TierListCategory.Underrated
+                    : value < hardMin ? TierListCategory.VeryHard
+                    : value < mediumMin ? TierListCategory.Hard
+                    : value < easyMin ? TierListCategory.Medium
+                    : value < veryEasyMin ? TierListCategory.Easy
+                    : value < oneLevelOverrated ? TierListCategory.VeryEasy
+                    : TierListCategory.Overrated;
+            }
+
+            result.Add(new SongTierListEntry(tierListName, chartId, category, order++));
+        }
+
+        return result;
+    }
+
     public static double StdDev(IEnumerable<double> values,
         bool as_sample)
     {
