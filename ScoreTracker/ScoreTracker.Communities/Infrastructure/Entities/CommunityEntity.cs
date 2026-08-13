@@ -13,8 +13,8 @@ namespace ScoreTracker.Communities.Infrastructure.Entities
         public bool IsRegional { get; set; }
 
         // CommunityPermission flags applied to newly promoted admins (creator-settable). Seed =
-        // ManageInviteLinks | ManageUsers | ManageChannelSubscriptions = 13.
-        public int DefaultAdminPermissions { get; set; } = 13;
+        // ManageInviteLinks | ManageUsers | ManageChannelSubscriptions | ModerateComments = 29.
+        public int DefaultAdminPermissions { get; set; } = 29;
 
         // Fallback culture for this community's Discord notifications (creator-settable).
         [MaxLength(20)] public string? DefaultLanguage { get; set; }
