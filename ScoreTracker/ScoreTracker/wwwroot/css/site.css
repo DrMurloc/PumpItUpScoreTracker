@@ -89,9 +89,13 @@ body {
     pointer-events: none;
 }
 
-/* No state class means no circuit trouble; -hide is the reconnected case. Both stay down. */
+/* No state class means no circuit trouble; -hide is the reconnected case. Both stay down.
+   Every other class the framework can set has to be listed: an unlisted one leaves the box
+   hidden, which is a frozen page with nothing on screen accounting for it. */
 #components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-paused,
 #components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-resume-failed,
 #components-reconnect-modal.components-reconnect-rejected {
     display: flex;
 }
@@ -114,15 +118,23 @@ body {
 
 /* A dead session reads differently from a retry in progress: same box, louder edge. */
 #components-reconnect-modal.components-reconnect-failed .reconnect-card,
+#components-reconnect-modal.components-reconnect-resume-failed .reconnect-card,
 #components-reconnect-modal.components-reconnect-rejected .reconnect-card {
     border-left: 3px solid var(--mix-secondary);
 }
 
-/* All three states ship; the class Blazor set decides which one has a box. */
+/* Paused is neither: the circuit is waiting to be picked up, not gone. */
+#components-reconnect-modal.components-reconnect-paused .reconnect-card {
+    border-left: 3px solid var(--mix-accent);
+}
+
+/* Every state ships; the class Blazor set decides which one has a box. */
 #components-reconnect-modal .reconnect-state { display: none; }
 
 #components-reconnect-modal.components-reconnect-show .reconnect-on-show,
+#components-reconnect-modal.components-reconnect-paused .reconnect-on-paused,
 #components-reconnect-modal.components-reconnect-failed .reconnect-on-failed,
+#components-reconnect-modal.components-reconnect-resume-failed .reconnect-on-resume-failed,
 #components-reconnect-modal.components-reconnect-rejected .reconnect-on-rejected {
     display: flex;
     gap: 12px;

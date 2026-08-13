@@ -1645,6 +1645,9 @@
   <data name="Couldn't reconnect." xml:space="preserve">
     <value>다시 연결하지 못했습니다.</value>
   </data>
+  <data name="Couldn't resume the session." xml:space="preserve">
+    <value>세션을 다시 시작하지 못했습니다.</value>
+  </data>
   <data name="Couldn't unlock your saved password. Enter it to import." xml:space="preserve">
     <value>저장된 비밀번호를 열 수 없습니다. 가져오려면 입력하세요.</value>
   </data>
@@ -5508,6 +5511,9 @@
   <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
     <value>매주 월요일 보드가 갱신되면 결과와 새로운 라인업이 게시됩니다.</value>
   </data>
+  <data name="Resume" xml:space="preserve">
+    <value>다시 시작</value>
+  </data>
   <data name="Review access" xml:space="preserve">
     <value>접근 권한 검토</value>
   </data>
@@ -5760,6 +5766,9 @@
   <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
     <value>스크롤과 링크는 그대로 작동합니다. 버튼은 페이지를 새로 고쳐야 합니다.</value>
   </data>
+  <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
+    <value>스크롤과 링크는 그대로 작동합니다. 버튼을 쓰려면 다시 시작하세요.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>검색</value>
   </data>
@@ -5876,6 +5885,9 @@
   </data>
   <data name="Session mode hands your server a live piugame.com key, so every player agrees to it individually — nobody arrives through &quot;share with all tools&quot;. It can only be switched on while no player is connected, and a header is required." xml:space="preserve">
     <value>세션 모드는 살아 있는 piugame.com 키를 서버에 전달하므로 플레이어마다 개별 동의가 필요합니다 — '모든 도구와 공유'로는 들어오지 않습니다. 연결된 플레이어가 없을 때만 켤 수 있고 헤더가 필요합니다.</value>
+  </data>
+  <data name="Session paused." xml:space="preserve">
+    <value>세션이 일시 중지되었습니다.</value>
   </data>
   <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
     <value>임포트하는 동안 세션 요약이 기록됩니다 — 새 UG 플레이트, 개인 기록 2개, 폴더 램프 1개.</value>

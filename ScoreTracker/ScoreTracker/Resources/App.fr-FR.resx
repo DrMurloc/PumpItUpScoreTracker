@@ -1656,6 +1656,9 @@
   <data name="Couldn't reconnect." xml:space="preserve">
     <value>Échec de la reconnexion.</value>
   </data>
+  <data name="Couldn't resume the session." xml:space="preserve">
+    <value>Échec de la reprise de la session.</value>
+  </data>
   <data name="Couldn't unlock your saved password. Enter it to import." xml:space="preserve">
     <value>Impossible de déverrouiller votre mot de passe enregistré. Saisissez-le pour importer.</value>
   </data>
@@ -5550,6 +5553,9 @@
   <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
     <value>Les résultats et les nouveaux charts sont publiés à la rotation du leaderboard chaque lundi.</value>
   </data>
+  <data name="Resume" xml:space="preserve">
+    <value>Reprendre</value>
+  </data>
   <data name="Review access" xml:space="preserve">
     <value>Vérifier les accès</value>
   </data>
@@ -5807,6 +5813,9 @@
   <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
     <value>Le défilement et les liens fonctionnent toujours. Les boutons exigent un rechargement.</value>
   </data>
+  <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
+    <value>Le défilement et les liens fonctionnent toujours. Reprenez pour utiliser les boutons.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>Chercher</value>
   </data>
@@ -5923,6 +5932,9 @@
   </data>
   <data name="Session mode hands your server a live piugame.com key, so every player agrees to it individually — nobody arrives through &quot;share with all tools&quot;. It can only be switched on while no player is connected, and a header is required." xml:space="preserve">
     <value>Le mode session confie à votre serveur une clé piugame.com active, donc chaque joueur l'accepte individuellement — personne n'arrive par « partager avec tous les outils ». Il ne peut être activé que tant qu'aucun joueur n'est connecté, et un en-tête est obligatoire.</value>
+  </data>
+  <data name="Session paused." xml:space="preserve">
+    <value>Session en pause.</value>
   </data>
   <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
     <value>Résumé de session capturé à l'import — une nouvelle plaque UG, 2 records personnels, une lampe de dossier.</value>

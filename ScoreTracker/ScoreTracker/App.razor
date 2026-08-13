@@ -154,12 +154,31 @@
                 <p class="reconnect-sub">@L["Scrolling and links still work. Buttons don't."]</p>
             </div>
         </div>
-        @* Reconnect ran out of attempts — the server may still be there, so offer another go. *@
+        @* The server parked the circuit rather than losing it (.NET 10 pause/resume). Reconnecting
+           does not recover one of these — resuming does, so this state carries its own verb. *@
+        <div class="reconnect-state reconnect-on-paused">
+            <div class="reconnect-body">
+                <p class="reconnect-title">@L["Session paused."]</p>
+                <p class="reconnect-sub">@L["Scrolling and links still work. Resume to use buttons."]</p>
+                <button type="button" class="reconnect-btn" onclick="Blazor.resumeCircuit()">@L["Resume"]</button>
+            </div>
+        </div>
+        @* Reconnect ran out of attempts — the server may still be there, so offer another go.
+           Falling through to resumeCircuit mirrors what the framework's own dialog does: a
+           reconnect returns false rather than throwing when the circuit was parked, not dropped. *@
         <div class="reconnect-state reconnect-on-failed">
             <div class="reconnect-body">
                 <p class="reconnect-title">@L["Couldn't reconnect."]</p>
                 <p class="reconnect-sub">@L["Scrolling and links still work. Buttons need a reconnect."]</p>
-                <button type="button" class="reconnect-btn" onclick="Blazor.reconnect()">@L["Try again"]</button>
+                <button type="button" class="reconnect-btn" onclick="Blazor.reconnect().then(ok => ok || Blazor.resumeCircuit())">@L["Try again"]</button>
+            </div>
+        </div>
+        @* Resume was offered and refused: the stored state is gone, and only a fresh load rebuilds. *@
+        <div class="reconnect-state reconnect-on-resume-failed">
+            <div class="reconnect-body">
+                <p class="reconnect-title">@L["Couldn't resume the session."]</p>
+                <p class="reconnect-sub">@L["Scrolling and links still work. Buttons need a reload."]</p>
+                <button type="button" class="reconnect-btn" onclick="location.reload()">@L["Reload the page"]</button>
             </div>
         </div>
         @* The server answered and refused: that circuit is gone, and only a fresh load builds one. *@
