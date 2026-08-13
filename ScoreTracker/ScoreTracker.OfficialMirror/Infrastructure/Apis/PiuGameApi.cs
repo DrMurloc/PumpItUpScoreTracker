@@ -877,6 +877,14 @@ internal sealed class PiuGameApi : IPiuGameApi
     private static readonly Regex DecimalRegex =
         new(@"\d[\d,]*(?:\.\d+)?", RegexOptions.Compiled, RegexTimeout);
 
+    // The badge beside the personal page's total — the page's one statement of the player's
+    // PUMBILITY level. The path is captured raw rather than rebuilt: the source's zero-padding
+    // flips at ten, and guessing it is how the bottom of the ladder once looked unpublished
+    // (docs/design/pumbility-levels.md).
+    private static readonly Regex PumbilityBadgeRegex = new(
+        @"(?<path>(?:https?:)?(?:\/\/[^""']+)?\/l_img\/pumbility\/pumbility_(?<n>\d+)\.png)",
+        RegexOptions.Compiled, RegexTimeout);
+
     // "354<span class="pumbility-point-sub">.24</span>" — the lazy .*? spans arbitrary markup
     // between the class and the value, which is exactly the shape that backtracks badly.
     private static readonly Regex PumbilityValueRegex = new(
@@ -1024,7 +1032,21 @@ internal sealed class PiuGameApi : IPiuGameApi
             : ParsePumbilityRows(document.DocumentNode.SelectNodes(
                 "//div[contains(@class,'pumblitiySt')]//ul[contains(@class,'list')]/li"));
 
-        return new PiuGameGetPumbilityResult { Total = total, Entries = entries };
+        // Tolerant on purpose: a page with no badge (Phoenix, a redesign) parses to null rather
+        // than failing the read that carries the pool.
+        var badge = PumbilityBadgeRegex.Match(response);
+
+        return new PiuGameGetPumbilityResult
+        {
+            Total = total,
+            Entries = entries,
+            BadgeIndex = badge.Success
+                ? int.Parse(badge.Groups["n"].Value, NumberStyles.None, CultureInfo.InvariantCulture)
+                : null,
+            BadgeImageUrl = badge.Success
+                ? new Uri(new Uri(_urls.BaseUrlFor(mix)), HttpUtility.HtmlDecode(badge.Groups["path"].Value))
+                : null
+        };
     }
 
     /// <summary>Phoenix 2's breakdown cards: value in "354&lt;span&gt;.24&lt;/span&gt;", plate art

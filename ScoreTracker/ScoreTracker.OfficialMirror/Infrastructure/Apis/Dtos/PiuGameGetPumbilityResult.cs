@@ -17,6 +17,20 @@ namespace ScoreTracker.OfficialMirror.Infrastructure.Apis.Dtos
         public double Total { get; set; }
         public Entry[] Entries { get; set; } = Array.Empty<Entry>();
 
+        /// <summary>
+        ///     The badge index beside the total — the page's one statement of the player's
+        ///     PUMBILITY level, 0 (unranked) through 36 (docs/design/pumbility-levels.md). Null
+        ///     when the page draws none: Phoenix, or a redesign — the parser never guesses.
+        /// </summary>
+        public int? BadgeIndex { get; set; }
+
+        /// <summary>
+        ///     The badge img's own URL, absolute — the mirror's copy source. Carried raw because
+        ///     the source's zero-padding flips at ten, and rebuilding the name is how the bottom
+        ///     of the ladder once looked unpublished. Null exactly when <see cref="BadgeIndex" /> is.
+        /// </summary>
+        public Uri? BadgeImageUrl { get; set; }
+
         internal sealed class Entry
         {
             public string SongName { get; set; } = string.Empty;

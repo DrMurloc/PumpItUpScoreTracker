@@ -884,6 +884,9 @@ public sealed class PiuGameApiTests
         Assert.Equal(1460, first.Value);
         // Phoenix PUMBILITY is plate-blind and its rows carry no plate art.
         Assert.Null(first.Plate);
+        // Phoenix draws no level badge — the parser reports none rather than inventing one.
+        Assert.Null(result.BadgeIndex);
+        Assert.Null(result.BadgeImageUrl);
     }
 
     [Fact]
@@ -908,6 +911,12 @@ public sealed class PiuGameApiTests
         Assert.Contains(result.Entries, e => e.SongName == "Exceed2 Opening - SHORT CUT -");
         // Zero-valued rows are meaningful — that is how the page prices sub-10 and broken entries.
         Assert.Contains(result.Entries, e => e.Value == 0);
+
+        // The badge beside the total is the page's one statement of the player's PUMBILITY level;
+        // this account's 4,902 pool is below BRONZE, and index 0 IS the unranked rung, not a miss.
+        Assert.Equal(0, result.BadgeIndex);
+        Assert.Equal(new Uri("https://piugame.com/l_img/pumbility/pumbility_00.png"),
+            result.BadgeImageUrl);
     }
 
     // ---- user_play_log_detail: naming the charts inside one count tile ----
