@@ -208,7 +208,7 @@ internal sealed class TierListBlendBuilder
     ///     rung their pool clears. The two must agree or a player reads a list nobody built for
     ///     them.
     /// </summary>
-    private async Task<string?> ResolveViewerCohort(ChartType chartType, MixEnum mix, Guid userId,
+    public async Task<string?> ResolveViewerCohort(ChartType chartType, MixEnum mix, Guid userId,
         CancellationToken cancellationToken)
     {
         if (mix != MixEnum.Phoenix2)

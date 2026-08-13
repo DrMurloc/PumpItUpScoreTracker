@@ -65,8 +65,8 @@ else
         @if (_groupBy == "Personalized")
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
             </MudSelect>
         }
         else if (IsTierView)
@@ -74,6 +74,7 @@ else
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
                 <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
                 @if (ChabalaAvailable)
                 {
                     <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
@@ -86,10 +87,11 @@ else
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Shown Difficulty"]" Disabled="_isLoading" Value="ShownDifficultyValue" ValueChanged="ChangeShownDifficulty">
                 <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
                 @if (CanPersonalize)
                 {
-                    <MudSelectItem T="string" Value="@("Personalized Pass")">@L["Personalized Pass"]</MudSelectItem>
                     <MudSelectItem T="string" Value="@("Personalized Score")">@L["Personalized Score"]</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("Personalized PUMBILITY")">@L["Personalized PUMBILITY"]</MudSelectItem>
                 }
                 @if (ChabalaAvailable)
                 {
@@ -121,7 +123,8 @@ else
        centers, so the wrap is deliberate instead of ragged. *@
     <div class="tier-toolbar">
         <div class="tier-toolbar-row">
-            <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
+            <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"
+                          IsMissing="@((t, l) => !PumbilityFolderHasData(t, l))"></FolderPicker>
             @* Four views, one visible answer to "what am I looking at". Personalized was a
                switch riding on top of this group until 2026-08-11, which meant the state was
                spread across two controls and one of them was invisible in screenshots. *@
@@ -195,6 +198,16 @@ else
             <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Grouped by"]: @L[_groupBy]</MudChip>
         }
     </div>
+    @* Who the personalized list ranked you against. Same slot on every personalized lens;
+       only the cohort differs — PUMBILITY title ranges here, competitive level on Score. *@
+    @if (PersonalizedActive && _cohortSize > 0)
+    {
+        <MudText Typo="Typo.body2" Class="tier-cohort-line">
+            @(_tierListType == "PUMBILITY"
+                ? L["Ranked against {0} players in your PUMBILITY title ranges", _cohortSize]
+                : L["Ranked against {0} players of similar competitive level", _cohortSize])
+        </MudText>
+    }
     @* 3 — folder progress (logged in) or the rule-9 import CTA (anonymous).
        Piucenter round 5: folder progress lives ONLY in the Folder Stats drawer at
        every width — the fold belongs to the tier sections (rule 1). *@
@@ -495,7 +508,7 @@ else
                                     <td>@chart.DifficultyString</td>
                                     @if (ShowLensAnnotation)
                                     {
-                                        <td><span style="color:@ThemeScales.DifficultyColor(entry.Category)">@L[TierName(entry.Category)]</span></td>
+                                        <td><span style="color:@TierColor(entry.Category)">@L[TierName(entry.Category)]</span></td>
                                     }
                                     @if (_settings.ShowStepArtist)
                                     {
@@ -569,8 +582,8 @@ else
                                                ShowName="_settings.ShowSongName"
                                                ShowToDo="CurrentUser.IsLoggedIn"
                                                Density="_density"
-                                               TierLabel="@(ShowLensAnnotation ? (string)L[TierName(entry.Category)] : null)"
-                                               TierColor="@(ShowLensAnnotation ? ThemeScales.DifficultyColor(entry.Category) : null)"
+                                               TierLabel="@TierCardLabel(entry)"
+                                               TierColor="@(ShowLensAnnotation ? TierColor(entry.Category) : null)"
                                                StepArtist="@(_settings.ShowStepArtist ? chart.StepArtist?.ToString() : null)"
                                                Skills="@(_settings.ShowSkills ? SkillChipsFor(chart) : null)"
                                                AgeDays="@(_showAge && score != null ? (int)(_now - score.RecordedDate).TotalDays : null)"
@@ -1514,12 +1527,18 @@ else
     private IReadOnlyDictionary<Guid, PhoenixScore> _projectedScores = new Dictionary<Guid, PhoenixScore>();
     private IReadOnlyList<TierGroup> _groups = Array.Empty<TierGroup>();
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
+    // PUMBILITY only: how many of the cohort's pools hold each chart, and how big the cohort is.
+    private IReadOnlyDictionary<Guid, int> _appearances = new Dictionary<Guid, int>();
+    private int _cohortSize;
+    // Folders the PUMBILITY lens can answer for, for whichever cohort is in play. Null while
+    // the lens is not selected, which is also what makes the picker gate a no-op elsewhere.
+    private HashSet<(ChartType Type, int Level)>? _pumbilityFolders;
     private bool _isProvisionalFallback = false;
     private MixEnum _currentMix = MixEnum.Phoenix;
     private int _averageRating = 1;
     private CancellationTokenSource? _reloadCts;
 
-    private static readonly string[] LensKeys = { "Pass", "Score", "Chabala", "PG" };
+    private static readonly string[] LensKeys = { "Pass", "Score", "PUMBILITY", "Chabala", "PG" };
     /// <summary>
     ///     Every value <c>_groupBy</c> may hold, and therefore every value that survives a
     ///     reload: init drops anything not in here back to Community. "Personalized" arrived as
@@ -1558,12 +1577,12 @@ else
     // Personalization is a VIEW now, not a switch riding on top of one (owner, 2026-08-11) —
     // except on the two views that don't section by the lens, where the Shown Difficulty picker
     // names the personalized reading outright rather than a hidden modifier deciding it.
-    private bool PersonalizedActive => CanPersonalize && _tierListType is "Pass" or "Score"
+    private bool PersonalizedActive => CanPersonalize && _tierListType is "Score" or "PUMBILITY"
                                        && (_groupBy == "Personalized"
                                            || ((IsMyProgress || IsSkillView) && _shownPersonalized));
 
     /// <summary>The Shown Difficulty picker's value: a lens, or a lens read personally.</summary>
-    private string ShownDifficultyValue => _shownPersonalized && _tierListType is "Pass" or "Score"
+    private string ShownDifficultyValue => _shownPersonalized && _tierListType is "Score" or "PUMBILITY"
         ? $"Personalized {_tierListType}"
         : _tierListType;
 
@@ -1753,6 +1772,21 @@ else
         _isLoading = true;
         StateHasChanged();
 
+        // The PUMBILITY lens only answers for a band of folders around the cohort, and the
+        // routes for the others still exist and are crawlable. Land on the nearest folder that
+        // has an answer rather than on a dead page — silently, per the owner: an explanation
+        // for a folder the reader may not have chosen deliberately is noise.
+        await LoadPumbilityFolders(cancellationToken);
+        if (!PumbilityFolderHasData(_chartType, _level))
+        {
+            var nearest = NearestPumbilityFolder(_chartType, _level);
+            if (nearest != null && nearest.Value.Level != _level)
+            {
+                _level = nearest.Value.Level;
+                await SetQueryString();
+            }
+        }
+
         await UiSettings.SetSetting("TierLists__Level", _level.ToString(), cancellationToken);
         await UiSettings.SetSetting("TierLists__ChartType", _chartType.ToString(), cancellationToken);
         // The view toggle is a real choice on every mix, so it persists on every mix.
@@ -1856,6 +1890,8 @@ else
         // The blank-page guard is dead (rule 9): render every chart we can resolve and
         // silently drop entries whose chart no longer exists.
         _finalEntries = blended.Entries.Where(e => _charts.ContainsKey(e.ChartId)).ToArray();
+        _appearances = blended.Appearances ?? new Dictionary<Guid, int>();
+        _cohortSize = blended.PeerCount;
         _isProvisionalFallback = blended.IsProvisionalFallback;
         _chartDifficulties = _finalEntries.ToDictionary(e => e.ChartId, e => e.Category);
 
@@ -1938,6 +1974,19 @@ else
         { TierListCategory.Underrated, "1+ Level Harder" },
         { TierListCategory.Unrecorded, "Not Rated" }
     };
+    // The PUMBILITY lens counts how many peers keep a chart in their top 50, so its rungs
+    // say what that is worth to you rather than how hard it is (design doc §7).
+    private static readonly IDictionary<TierListCategory, string> _pumbilityNames = new Dictionary<TierListCategory, string>()
+    {
+        { TierListCategory.Overrated, "Staple" },
+        { TierListCategory.VeryEasy, "Strong" },
+        { TierListCategory.Easy, "Solid" },
+        { TierListCategory.Medium, "Average" },
+        { TierListCategory.Hard, "Modest" },
+        { TierListCategory.VeryHard, "Slim" },
+        { TierListCategory.Underrated, "Poor" },
+        { TierListCategory.Unrecorded, "Not in anyone's PUMBILITY" }
+    };
     private static readonly IDictionary<TierListCategory, string> _scoreNames = new Dictionary<TierListCategory, string>()
     {
         { TierListCategory.Overrated, "Amazing" },
@@ -1974,9 +2023,66 @@ else
         };
     }
 
+    /// <summary>
+    ///     Whether the PUMBILITY lens has anything to say about a folder. Always true for every
+    ///     other lens, so the picker gate only bites where a folder really is unanswerable —
+    ///     below your range nothing can reach your top 50, above it nobody at your level has
+    ///     played these (design doc §6).
+    /// </summary>
+    private bool PumbilityFolderHasData(ChartType type, int level) =>
+        _pumbilityFolders == null || _pumbilityFolders.Contains((type, level));
+
+    /// <summary>
+    ///     The nearest folder of the same type the lens can answer for, or null when it can
+    ///     answer for none. Ties break downward: a folder below you is one you have outgrown,
+    ///     which is a gentler landing than one you cannot play yet.
+    /// </summary>
+    private (ChartType Type, int Level)? NearestPumbilityFolder(ChartType type, int level) =>
+        _pumbilityFolders?
+            .Where(f => f.Type == type)
+            .OrderBy(f => Math.Abs(f.Level - level))
+            .ThenBy(f => f.Level)
+            .Select(f => ((ChartType, int)?)f)
+            .FirstOrDefault();
+
+    private async Task LoadPumbilityFolders(CancellationToken cancellationToken)
+    {
+        if (_tierListType != "PUMBILITY")
+        {
+            _pumbilityFolders = null;
+            return;
+        }
+
+        _pumbilityFolders = (await Mediator.Send(new GetPumbilityFoldersQuery(PersonalizedActive,
+                    PersonalizedActive ? CurrentUser.User.Id : null, _currentMix), cancellationToken))
+            .Select(f => (f.ChartType, f.Level)).ToHashSet();
+    }
+
     private string TierName(TierListCategory category) =>
         _tierListType == "Chabala" && category == TierListCategory.Unrecorded ? "Subjective" :
+        _tierListType == "PUMBILITY" ? _pumbilityNames[category] :
         _tierNames[category];
+
+    /// <summary>
+    ///     What a card prints under its jacket. The PUMBILITY lens always shows how many of the
+    ///     cohort hold the chart — that count IS the lens, and a tier section heading cannot
+    ///     carry it — with the tier name in front only where the section is not already saying it.
+    /// </summary>
+    private string? TierCardLabel(SongTierListEntry entry)
+    {
+        if (_tierListType != "PUMBILITY")
+        {
+            return ShowLensAnnotation ? L[TierName(entry.Category)] : null;
+        }
+
+        var peers = _appearances.TryGetValue(entry.ChartId, out var count) ? count : 0;
+        var peerText = peers == 1 ? L["1 peer"] : L["{0} peers", peers];
+        return ShowLensAnnotation ? $"{L[TierName(entry.Category)]} · {peerText}" : peerText;
+    }
+
+    /// <summary>The lens's ramp: rarity for PUMBILITY, difficulty for everything else.</summary>
+    private string TierColor(TierListCategory category) =>
+        _tierListType == "PUMBILITY" ? ThemeScales.PumbilityColor(category) : ThemeScales.DifficultyColor(category);
 
     // Round 7: the lens always orders cards within a section, in every view — easiest first,
     // scoring level as the tiebreaker, blend order as the final stabilizer. Unrecorded sinks
@@ -2002,7 +2108,7 @@ else
             .Select(g =>
             {
                 var name = TierName(g.Key);
-                return new TierGroup(name, L[name], ThemeScales.DifficultyColor(g.Key),
+                return new TierGroup(name, L[name], TierColor(g.Key),
                     MixThemes.DifficultyHex(g.Key), g.ToArray());
             })
             .ToArray();
