@@ -3226,6 +3226,9 @@
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>랭킹 구간별 필요 레벨</value>
   </data>
+  <data name="Level Up" xml:space="preserve">
+    <value>레벨 업</value>
+  </data>
   <data name="Level {0}" xml:space="preserve">
     <value>레벨 {0}</value>
   </data>
@@ -5110,6 +5113,9 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY level {0}" xml:space="preserve">
+    <value>PUMBILITY 레벨 {0}</value>
+  </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY 추이</value>
   </data>
@@ -5285,6 +5291,9 @@
   </data>
   <data name="reached by {0} players" xml:space="preserve">
     <value>{0}명 도달</value>
+  </data>
+  <data name="Reached {0}" xml:space="preserve">
+    <value>{0} 달성</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>소스 읽기</value>
@@ -7653,6 +7662,9 @@
   <data name="Where this record would land you" xml:space="preserve">
     <value>이 기록이 닿게 될 위치</value>
   </data>
+  <data name="Where you stand" xml:space="preserve">
+    <value>현재 위치</value>
+  </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>내 리스트가 커뮤니티와 다른 곳, 그리고 그걸 밀어낸 스킬. 채보를 탭하면 소스별 전체 분석을 볼 수 있습니다.</value>
   </data>
@@ -8531,6 +8543,9 @@
   </data>
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>칭호 {0}개, 그런데 게임은 진행도를 전혀 보여주지 않습니다.</value>
+  </data>
+  <data name="{0} to next level" xml:space="preserve">
+    <value>다음 레벨까지 {0}</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>PG까지 {0}</value>

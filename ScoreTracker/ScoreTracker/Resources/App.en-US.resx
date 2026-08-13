@@ -3245,6 +3245,9 @@
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>Level required, by ranking tier</value>
   </data>
+  <data name="Level Up" xml:space="preserve">
+    <value>Level Up</value>
+  </data>
   <data name="Level {0}" xml:space="preserve">
     <value>Level {0}</value>
   </data>
@@ -5147,6 +5150,9 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY level {0}" xml:space="preserve">
+    <value>PUMBILITY level {0}</value>
+  </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY over time</value>
   </data>
@@ -5324,6 +5330,9 @@
   </data>
   <data name="reached by {0} players" xml:space="preserve">
     <value>reached by {0} players</value>
+  </data>
+  <data name="Reached {0}" xml:space="preserve">
+    <value>Reached {0}</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>Read the source</value>
@@ -7717,6 +7726,9 @@
   <data name="Where this record would land you" xml:space="preserve">
     <value>Where this record would land you</value>
   </data>
+  <data name="Where you stand" xml:space="preserve">
+    <value>Where you stand</value>
+  </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown.</value>
   </data>
@@ -8601,6 +8613,9 @@
   </data>
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>{0} titles, and the game shows you none of your progress.</value>
+  </data>
+  <data name="{0} to next level" xml:space="preserve">
+    <value>{0} to next level</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} to PG</value>

@@ -3245,6 +3245,9 @@
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>Grorpmurm blargblargglorg, murm glarglro mrpgrrgl</value>
   </data>
+  <data name="Level Up" xml:space="preserve">
+    <value>Grorpmurm Morg</value>
+  </data>
   <data name="Level {0}" xml:space="preserve">
     <value>Grorpmurm {0}</value>
   </data>
@@ -5147,6 +5150,9 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY level {0}" xml:space="preserve">
+    <value>PUMBILITY grorpmurm {0}</value>
+  </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY grglglorg grglmrgl</value>
   </data>
@@ -5324,6 +5330,9 @@
   </data>
   <data name="reached by {0} players" xml:space="preserve">
     <value>gromrglorg murm {0} morp</value>
+  </data>
+  <data name="Reached {0}" xml:space="preserve">
+    <value>Gromrglorg {0}</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>Blurgl murgblub</value>
@@ -7717,6 +7726,9 @@
   <data name="Where this record would land you" xml:space="preserve">
     <value>Blarg mrgloru grolub mrgl urgl</value>
   </data>
+  <data name="Where you stand" xml:space="preserve">
+    <value>Blarg gromurp morggrrgl</value>
+  </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>Blarggrorp gromurp grog blubgrrglglorg glgrgl mrp glmorgmorg, ro mrp blarglurg blubgrrgl murpplgl gl. Morg gro murgl ro argl mrglmr maglgro maglgrogrrgl.</value>
   </data>
@@ -8601,6 +8613,9 @@
   </data>
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>{0} mrgl, ro mrp glorgargl urgblgrl blub rglmagl mrgl gromurp mrglrlgl.</value>
+  </data>
+  <data name="{0} to next level" xml:space="preserve">
+    <value>{0} ma grorpglorg grorpmurm</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} grgl PG</value>

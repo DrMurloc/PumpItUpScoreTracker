@@ -3226,6 +3226,9 @@
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>Nível necessário, por faixa do ranking</value>
   </data>
+  <data name="Level Up" xml:space="preserve">
+    <value>Subiu de nível</value>
+  </data>
   <data name="Level {0}" xml:space="preserve">
     <value>Nível {0}</value>
   </data>
@@ -5110,6 +5113,9 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY level {0}" xml:space="preserve">
+    <value>Nível de PUMBILITY {0}</value>
+  </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY ao longo do tempo</value>
   </data>
@@ -5285,6 +5291,9 @@
   </data>
   <data name="reached by {0} players" xml:space="preserve">
     <value>alcançado por {0} jogadores</value>
+  </data>
+  <data name="Reached {0}" xml:space="preserve">
+    <value>Alcançou {0}</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>Ler o código</value>
@@ -7653,6 +7662,9 @@
   <data name="Where this record would land you" xml:space="preserve">
     <value>Onde este histórico colocaria você</value>
   </data>
+  <data name="Where you stand" xml:space="preserve">
+    <value>Sua posição</value>
+  </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>Onde sua lista difere da comunidade, e as habilidades que a empurraram. Toque em um chart para ver o detalhamento completo por fonte.</value>
   </data>
@@ -8531,6 +8543,9 @@
   </data>
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>{0} títulos, e o jogo não mostra nada do seu progresso.</value>
+  </data>
+  <data name="{0} to next level" xml:space="preserve">
+    <value>{0} para o próximo nível</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} para o PG</value>

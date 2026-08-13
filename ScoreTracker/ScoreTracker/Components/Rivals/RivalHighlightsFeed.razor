@@ -134,7 +134,7 @@ else
         ScoreTracker.Domain.Models.Titles.Phoenix2.Phoenix2PumbilityLevel.FromIndex(index) is { } level &&
         PumbilityLevelChange.LabelFor(level) is { Length: > 0 } label
             ? label
-            : L["Level up"];
+            : L["Level Up"];
 
     private static string PoolSuffix(SignificantWin win) =>
         win.PoolValue is { } pool ? $" · {pool.ToString("N0")}" : string.Empty;

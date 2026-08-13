@@ -427,7 +427,7 @@ else
     private string LevelName(SignificantWin win) =>
         LevelOf(win) is { } level && PumbilityLevelChange.LabelFor(level) is { Length: > 0 } label
             ? label
-            : L["Level up"];
+            : L["Level Up"];
 
     private string PoolSuffix(SignificantWin win) =>
         win.PoolValue is { } pool ? $" · {pool.ToString("N0")}" : string.Empty;
