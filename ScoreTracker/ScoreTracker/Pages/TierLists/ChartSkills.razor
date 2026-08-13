@@ -2071,8 +2071,9 @@ else
     ///     played these (design doc §6).
     /// </summary>
     private bool PumbilityFolderHasData(ChartType type, int level) =>
-        // An EMPTY set means the census has not been built for this mix, not that every folder
-        // is unanswerable — gating on it would disable the whole picker and strand the reader.
+        // An EMPTY set means the PUMBILITY lists have not been built for this mix, not that
+        // every folder is unanswerable — gating on it would disable the whole picker and
+        // strand the reader.
         _pumbilityFolders == null || _pumbilityFolders.Count == 0
         || _pumbilityFolders.Contains((type, level));
 
@@ -2144,6 +2145,16 @@ else
     private string TierColor(TierListCategory category) =>
         _tierListType == "PUMBILITY" ? ThemeScales.PumbilityColor(category) : ThemeScales.DifficultyColor(category);
 
+    /// <summary>
+    ///     The same ramp resolved to raw hex for the share card, which cannot read CSS custom
+    ///     properties — the two must pick the same ramp or the downloaded image contradicts the
+    ///     page it was downloaded from.
+    /// </summary>
+    private string TierShareHex(TierListCategory category) =>
+        _tierListType == "PUMBILITY"
+            ? MixThemes.PumbilityHex(_currentMix, category)
+            : MixThemes.DifficultyHex(category);
+
     // Round 7: the lens always orders cards within a section, in every view — easiest first,
     // scoring level as the tiebreaker, blend order as the final stabilizer. Unrecorded sinks
     // to the bottom. The category enum already runs easiest to hardest, so this is its own
@@ -2169,7 +2180,7 @@ else
             {
                 var name = TierName(g.Key);
                 return new TierGroup(name, L[name], TierColor(g.Key),
-                    MixThemes.DifficultyHex(g.Key), g.ToArray());
+                    TierShareHex(g.Key), g.ToArray());
             })
             .ToArray();
     }

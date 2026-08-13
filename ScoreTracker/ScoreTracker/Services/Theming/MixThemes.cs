@@ -294,6 +294,28 @@ public static class MixThemes
     }
 
     /// <summary>
+    ///     Raw hex for a PUMBILITY tier — the mix's rarity ramp, for render targets that can't
+    ///     read CSS custom properties (the SkiaSharp share card). Mirrors
+    ///     <see cref="ThemeScales.PumbilityColor" />: six rarity stops against seven tiers, so
+    ///     Poor and "Not in anyone's PUMBILITY" share the unrecorded grey, and nothing on this
+    ///     ramp is ever red.
+    /// </summary>
+    public static string PumbilityHex(MixEnum mix, TierListCategory category)
+    {
+        var rarity = PaletteFor(mix).Rarity;
+        return category switch
+        {
+            TierListCategory.Overrated => rarity.Prism,
+            TierListCategory.VeryEasy => rarity.Sapphire,
+            TierListCategory.Easy => rarity.Gold,
+            TierListCategory.Medium => rarity.Emerald,
+            TierListCategory.Hard => rarity.Silver,
+            TierListCategory.VeryHard => rarity.Common,
+            _ => DifficultyHex(TierListCategory.Unrecorded)
+        };
+    }
+
+    /// <summary>
     ///     Raw hex for a rarity band in a mix — for render targets that can't read CSS
     ///     custom properties (ApexCharts config, e.g. the By-Level Breakdown grade/plate
     ///     bars). Rarity hues are per-mix (unlike difficulty), so this takes the mix.
