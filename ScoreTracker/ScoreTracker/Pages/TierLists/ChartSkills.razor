@@ -1690,6 +1690,9 @@ else
             _tierListType = LensesFor(_groupBy).First();
             await UiSettings.SetSetting("TierLists__ListType", _tierListType);
             await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
+            // The URL must follow the coerced lens, or a refresh/share of this page re-applies
+            // the old one through the query override at init and re-breaks the picker.
+            await SetQueryString();
             await Recalculate();
             return;
         }
@@ -2533,6 +2536,18 @@ else
             || (_groupBy == "Personalized" && !CanPersonalize))
         {
             _groupBy = "Difficulty";
+        }
+
+        // The ChangeGrouping guard, applied to restored state too: a saved or bookmarked lens
+        // the restored view no longer offers (every pre-PUMBILITY Personalized-Pass user has
+        // exactly GroupBy=Personalized + ListType=Pass saved) would leave the Ranked-by select
+        // holding a value it does not list — which MudSelect renders blank — over a community
+        // blend wearing the Personalized button. Runs after every groupBy guard above so it
+        // normalizes against the view that will actually render; Recalculate re-saves the
+        // corrected lens and the canonical replace below rewrites the URL that carried it.
+        if (!LensesFor(_groupBy).Contains(_tierListType))
+        {
+            _tierListType = LensesFor(_groupBy).First();
         }
 
         await SetQueryString(replace: true);
