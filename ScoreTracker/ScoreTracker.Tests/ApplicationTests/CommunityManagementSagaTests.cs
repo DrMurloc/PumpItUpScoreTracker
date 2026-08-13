@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
@@ -177,5 +178,36 @@ public sealed class CommunityManagementSagaTests
             CancellationToken.None);
 
         Assert.Null(role.Role);
+    }
+
+    [Fact]
+    public async Task GetCommunityMemberRolesPassesTheIdThrough()
+    {
+        var communityId = Guid.NewGuid();
+        var member = Guid.NewGuid();
+        _communities.Setup(c => c.GetMemberRoles(communityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new CommunityMemberRoleRecord(member, CommunityRole.Admin) });
+
+        var roles = await Build(Guid.NewGuid()).Handle(new GetCommunityMemberRolesQuery(communityId),
+            CancellationToken.None);
+
+        var role = Assert.Single(roles);
+        Assert.Equal(member, role.UserId);
+        Assert.Equal(CommunityRole.Admin, role.Role);
+    }
+
+    [Fact]
+    public async Task GetCommunityNamesPassesTheIdsThrough()
+    {
+        var communityId = Guid.NewGuid();
+        _communities.Setup(c => c.GetCommunityNames(
+                It.Is<IReadOnlyCollection<Guid>>(ids => ids.Contains(communityId)),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, Name> { [communityId] = Name.From("Acme") });
+
+        var names = await Build(Guid.NewGuid()).Handle(new GetCommunityNamesQuery(new[] { communityId }),
+            CancellationToken.None);
+
+        Assert.Equal(Name.From("Acme"), names[communityId]);
     }
 }

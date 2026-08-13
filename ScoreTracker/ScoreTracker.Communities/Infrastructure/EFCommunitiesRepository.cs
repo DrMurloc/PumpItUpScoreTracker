@@ -469,12 +469,39 @@ namespace ScoreTracker.Communities.Infrastructure
             var rows = await (from cm in database.Set<CommunityMembershipEntity>()
                     where cm.UserId == userId
                     join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
-                    select new { c.Name, cm.Role, cm.Permissions })
+                    select new { c.Id, c.Name, cm.Role, cm.Permissions })
                 .ToArrayAsync(cancellationToken);
 
-            return rows.Select(r => new MyCommunityRoleRecord(r.Name,
+            return rows.Select(r => new MyCommunityRoleRecord(r.Id, r.Name,
                 Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member,
                 (CommunityPermission)r.Permissions)).ToArray();
+        }
+
+        public async Task<IEnumerable<CommunityMemberRoleRecord>> GetMemberRoles(Guid communityId,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await database.Set<CommunityMembershipEntity>()
+                .Where(cm => cm.CommunityId == communityId)
+                .Select(cm => new { cm.UserId, cm.Role })
+                .ToArrayAsync(cancellationToken);
+
+            return rows.Select(r => new CommunityMemberRoleRecord(r.UserId,
+                Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member)).ToArray();
+        }
+
+        public async Task<IReadOnlyDictionary<Guid, Name>> GetCommunityNames(
+            IReadOnlyCollection<Guid> communityIds, CancellationToken cancellationToken)
+        {
+            if (communityIds.Count == 0) return new Dictionary<Guid, Name>();
+
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await database.Set<CommunityEntity>()
+                .Where(c => communityIds.Contains(c.Id))
+                .Select(c => new { c.Id, c.Name })
+                .ToArrayAsync(cancellationToken);
+
+            return rows.ToDictionary(r => r.Id, r => Name.From(r.Name));
         }
 
         public async Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName,

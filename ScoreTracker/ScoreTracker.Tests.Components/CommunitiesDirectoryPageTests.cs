@@ -102,7 +102,7 @@ public sealed class CommunitiesDirectoryPageTests : ComponentTestBase
         GivenLoggedIn();
         GivenPublicCommunities(Overview("Explorable"), Overview("Mine"));
         GivenMyCommunities(Overview("Mine"));
-        GivenRoles(new MyCommunityRoleRecord(Name.From("Mine"), CommunityRole.Member, CommunityPermission.None));
+        GivenRoles(new MyCommunityRoleRecord(Guid.NewGuid(), Name.From("Mine"), CommunityRole.Member, CommunityPermission.None));
         var cut = Render();
 
         Assert.Contains("Mine", cut.Find(".communities-your").TextContent);
@@ -116,7 +116,7 @@ public sealed class CommunitiesDirectoryPageTests : ComponentTestBase
         GivenLoggedIn();
         GivenPublicCommunities(Overview("Led", privacy: CommunityPrivacyType.PublicWithCode));
         GivenMyCommunities(Overview("Led", privacy: CommunityPrivacyType.PublicWithCode));
-        GivenRoles(new MyCommunityRoleRecord(Name.From("Led"), CommunityRole.Creator, CommunityPermission.All));
+        GivenRoles(new MyCommunityRoleRecord(Guid.NewGuid(), Name.From("Led"), CommunityRole.Creator, CommunityPermission.All));
         var cut = Render();
 
         var buttons = cut.FindAll(".communities-card button").Select(b => b.TextContent.Trim()).ToArray();
@@ -166,8 +166,8 @@ public sealed class CommunitiesDirectoryPageTests : ComponentTestBase
         GivenPublicCommunities(Overview("Led"), Overview("Joined"));
         GivenMyCommunities(Overview("Led"), Overview("Joined"));
         GivenRoles(
-            new MyCommunityRoleRecord(Name.From("Led"), CommunityRole.Creator, CommunityPermission.All),
-            new MyCommunityRoleRecord(Name.From("Joined"), CommunityRole.Member, CommunityPermission.None));
+            new MyCommunityRoleRecord(Guid.NewGuid(), Name.From("Led"), CommunityRole.Creator, CommunityPermission.All),
+            new MyCommunityRoleRecord(Guid.NewGuid(), Name.From("Joined"), CommunityRole.Member, CommunityPermission.None));
         var cut = Render();
 
         var cards = cut.FindAll(".communities-your .communities-card");

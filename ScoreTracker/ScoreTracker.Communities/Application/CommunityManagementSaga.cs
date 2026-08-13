@@ -33,6 +33,8 @@ internal sealed class CommunityManagementSaga :
     IRequestHandler<DeleteCommunityCommand>,
     IRequestHandler<GetMyCommunityRoleQuery, CommunityRoleRecord>,
     IRequestHandler<GetMyCommunityRolesQuery, IEnumerable<MyCommunityRoleRecord>>,
+    IRequestHandler<GetCommunityMemberRolesQuery, IEnumerable<CommunityMemberRoleRecord>>,
+    IRequestHandler<GetCommunityNamesQuery, IReadOnlyDictionary<Guid, Name>>,
     IRequestHandler<GetCommunityRosterQuery, IEnumerable<CommunityMemberRecord>>
 {
     private readonly ICommunityRepository _communities;
@@ -117,6 +119,14 @@ internal sealed class CommunityManagementSaga :
         _currentUser.IsLoggedIn
             ? await _communities.GetUserRoles(_currentUser.User.Id, cancellationToken)
             : Array.Empty<MyCommunityRoleRecord>();
+
+    public async Task<IEnumerable<CommunityMemberRoleRecord>> Handle(GetCommunityMemberRolesQuery request,
+        CancellationToken cancellationToken) =>
+        await _communities.GetMemberRoles(request.CommunityId, cancellationToken);
+
+    public async Task<IReadOnlyDictionary<Guid, Name>> Handle(GetCommunityNamesQuery request,
+        CancellationToken cancellationToken) =>
+        await _communities.GetCommunityNames(request.CommunityIds, cancellationToken);
 
     public async Task<IEnumerable<CommunityMemberRecord>> Handle(GetCommunityRosterQuery request,
         CancellationToken cancellationToken)
