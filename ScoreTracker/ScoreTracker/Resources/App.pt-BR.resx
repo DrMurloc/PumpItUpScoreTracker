@@ -5751,6 +5751,15 @@
   <data name="Scroll right" xml:space="preserve">
     <value>Rolar para a direita</value>
   </data>
+  <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
+    <value>A rolagem e os links continuam funcionando. Os botões não.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reconnect." xml:space="preserve">
+    <value>A rolagem e os links continuam funcionando. Os botões precisam reconectar.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
+    <value>A rolagem e os links continuam funcionando. Os botões precisam de um recarregamento.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>Buscar</value>
   </data>

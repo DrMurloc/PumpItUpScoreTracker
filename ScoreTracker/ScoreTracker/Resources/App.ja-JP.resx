@@ -5799,6 +5799,15 @@
   <data name="Scroll right" xml:space="preserve">
     <value>右へスクロール</value>
   </data>
+  <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
+    <value>スクロールとリンクは使えます。ボタンは使えません。</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reconnect." xml:space="preserve">
+    <value>スクロールとリンクは使えます。ボタンには再接続が必要です。</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
+    <value>スクロールとリンクは使えます。ボタンにはページの再読み込みが必要です。</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>検索</value>
   </data>

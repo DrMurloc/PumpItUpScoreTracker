@@ -5799,6 +5799,15 @@
   <data name="Scroll right" xml:space="preserve">
     <value>Scorri a destra</value>
   </data>
+  <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
+    <value>Scorrimento e link funzionano ancora. I pulsanti no.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reconnect." xml:space="preserve">
+    <value>Scorrimento e link funzionano ancora. I pulsanti richiedono la riconnessione.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
+    <value>Scorrimento e link funzionano ancora. I pulsanti richiedono un ricaricamento.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>Cerca</value>
   </data>

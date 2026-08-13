@@ -5751,6 +5751,15 @@
   <data name="Scroll right" xml:space="preserve">
     <value>오른쪽으로 스크롤</value>
   </data>
+  <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
+    <value>스크롤과 링크는 그대로 작동합니다. 버튼은 안 됩니다.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reconnect." xml:space="preserve">
+    <value>스크롤과 링크는 그대로 작동합니다. 버튼은 다시 연결해야 합니다.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
+    <value>스크롤과 링크는 그대로 작동합니다. 버튼은 페이지를 새로 고쳐야 합니다.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>검색</value>
   </data>

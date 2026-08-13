@@ -5799,6 +5799,15 @@
   <data name="Scroll right" xml:space="preserve">
     <value>Scroll right</value>
   </data>
+  <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
+    <value>Scrolling and links still work. Buttons don't.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reconnect." xml:space="preserve">
+    <value>Scrolling and links still work. Buttons need a reconnect.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
+    <value>Scrolling and links still work. Buttons need a reload.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>Search</value>
   </data>

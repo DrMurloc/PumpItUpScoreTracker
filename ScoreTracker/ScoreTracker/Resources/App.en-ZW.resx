@@ -5799,6 +5799,15 @@
   <data name="Scroll right" xml:space="preserve">
     <value>Rglmurg rogro</value>
   </data>
+  <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
+    <value>Glrmurgro arg plglrgl larg murmgl. Prglglubarg bo.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reconnect." xml:space="preserve">
+    <value>Glrmurgro arg plglrgl larg murmgl. Prglglubarg gurgmarg a lurgmrpblarg.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
+    <value>Glrmurgro arg plglrgl larg murmgl. Prglglubarg gurgmarg a mrglmurg.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>Grrglgro</value>
   </data>
