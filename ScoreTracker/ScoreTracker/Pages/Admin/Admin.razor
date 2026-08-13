@@ -23,7 +23,10 @@
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/PiuCenter">PIU Center</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/OfficialLeaderboards">Official Leaderboards</MudButton>
 <MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/CommunityTools">@L["Community Tools"]</MudButton>
-<MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/Comments">@L["Reported Comments"]</MudButton>
+@* Sentence case on purpose, matching the page it opens: a "Reported Comments" variant would
+   differ from the page title only by case, and GenerateResource dedupes resx keys
+   case-insensitively — the loser silently renders English in every other locale. *@
+<MudButton Color="Color.Warning" Variant="Variant.Outlined" Href="/Admin/Comments">@L["Reported comments"]</MudButton>
 @* Scoped to one session per player on purpose: a rebuild computes against today's state, and
    the further back it reaches the less that resembles the state it is claiming to restore. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="RebuildLatestSessions"
