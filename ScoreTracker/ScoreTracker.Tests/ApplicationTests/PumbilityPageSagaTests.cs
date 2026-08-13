@@ -354,8 +354,22 @@ public sealed class PumbilityPageSagaTests
         Assert.NotNull(rail.NextThreshold);
         Assert.Equal(rail.NextThreshold!.Value / 50.0, rail.Ask, 6);
         Assert.Equal(rail.Value / 50.0, rail.Average, 6);
-        Assert.Equal(Math.Max(0, rail.Ask - rail.Average), rail.PerChartGap, 6);
         Assert.InRange(rail.Progress, 0, 1);
+    }
+
+    [Fact]
+    public async Task TheAverageIsOverTheChartsYouHoldNotAFullFifty()
+    {
+        // A ten-chart pool averaging ~400 must read ~400. Spread over fifty it read ~80 — a
+        // number lower than every chart on the board it sits above. The ask keeps the
+        // fifty-denominator; the average does not.
+        var ctx = new PageContext().WithPool(10, ChartType.Single, 21);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId, MixEnum.Phoenix2, ChartType.Single),
+            CancellationToken.None);
+
+        var rail = Assert.Single(page.Rails!);
+        Assert.Equal(rail.Value / 10.0, rail.Average, 6);
     }
 
     [Theory]
@@ -388,6 +402,8 @@ public sealed class PumbilityPageSagaTests
 
         var rail = Assert.Single(page.Rails!);
         Assert.Equal(0, rail.Value);
+        // Zero charts average zero — never a divide-by-nothing NaN.
+        Assert.Equal(0, rail.Average);
         Assert.Null(rail.Held);
         Assert.NotNull(rail.Next);
     }

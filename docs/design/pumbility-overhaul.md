@@ -304,9 +304,13 @@ are exact against the formula.
 
 **Edge states, both drawn:**
 
-- **A thin pool.** *"Your pool holds 7 of 50. BRONZE asks 200.00 a chart across fifty."* Under what
-  any level-10 chart pays at AA, so until the pool is full the ask is the pool itself. This is the
-  common case for months after a mix launch, not an afterthought.
+- **A thin pool.** The ask keeps its fifty-denominator — a threshold is a demand on a full pool
+  however much of one exists — but **your charts average divides by the charts actually held**
+  (owner, 2026-08-13): a ten-chart pool averaging 400 reads 400, not 80. The number moves as the
+  pool fills, which is accepted. (An earlier draft of this state reworded the whole cell row —
+  *"Your pool holds 7 of 50. BRONZE asks 200.00 a chart across fifty."* — and was never built;
+  dividing the average by fifty in the meantime is what a player reported as a wrong number.)
+  This is the common case for months after a mix launch, not an afterthought.
 - **The top of a ladder.** The rail states that nothing sits above ABYSS ABSOLUTE rather than
   vanishing, so the section never disappears on the one player it should be congratulating.
 
@@ -750,7 +754,7 @@ that harness yet. The mix-dependent half is covered one layer down — the saga 
 | R8 | Docs | This section, `ARCHITECTURE.md`'s Progress row |
 
 R1 is deliberately first and deliberately alone: it is a live bug, it needs no UI, and every figure
-in R5 divides by fifty — an average over a pool holding a passed S9 is wrong by construction.
+in R5 is computed off the pool — an average over a pool holding a passed S9 is wrong by construction.
 
 ### 6.5 How a projection is held
 

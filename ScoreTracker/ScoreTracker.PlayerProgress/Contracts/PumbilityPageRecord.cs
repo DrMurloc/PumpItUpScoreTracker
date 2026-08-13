@@ -128,7 +128,11 @@ public sealed record PoolTotals(double All, double Singles, double Doubles);
 /// <param name="Held">The highest rung the pool clears, or null below the first one.</param>
 /// <param name="Next">The rung above it, or null at the top of the ladder.</param>
 /// <param name="Ask">What <see cref="Next" /> asks of every chart in a full pool.</param>
-/// <param name="Average">What the pool's charts are worth each today, over a full fifty.</param>
+/// <param name="Average">
+///     What the charts in the pool are worth each today — the mean over the charts actually
+///     held, so below a full fifty it moves as the pool fills. The ask beside it keeps the
+///     fifty-denominator, because a threshold is a demand on a full pool.
+/// </param>
 /// <param name="Bar">This pool's fiftieth chart, or null before it holds fifty.</param>
 /// <param name="Examples">
 ///     What chart meets the ask, at each of three reference grades — the actionable half, since a
@@ -158,9 +162,6 @@ public sealed record TitleRail(
     public double Progress => NextThreshold == null || NextThreshold.Value <= HeldThreshold
         ? 1
         : Math.Clamp((Value - HeldThreshold) / (double)(NextThreshold.Value - HeldThreshold), 0, 1);
-
-    /// <summary>What every chart still has to find. Zero at the top of the ladder.</summary>
-    public double PerChartGap => Math.Max(0, Ask - Average);
 
     /// <summary>What the pool as a whole still has to find.</summary>
     public double Gap => NextThreshold == null ? 0 : Math.Max(0, NextThreshold.Value - Value);
