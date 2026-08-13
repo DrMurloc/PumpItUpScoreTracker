@@ -144,10 +144,18 @@ The P2 ladder already carries in-title levels — `[S] ADVANCED LV.1` at 15,000 
 `LV.10` at 17,250, in 250-point steps — which is exactly the band width the cohort sizes
 above were measured at.
 
-- Singles reads **Singles title ∪ Combined title**; Doubles reads **Doubles ∪ Combined**.
-- A player in both cohorts counts **once**.
+- A player belongs to **one** cohort per chart type — cohorts are a partition, which is what
+  makes them materializable.
 - Phoenix 1 needs no new read: `ITitleRepository.GetUserIdsOnHighestLevel` already exists and
   `ProcessPassTierList` already calls it.
+
+⚠️ **Deviation from the original intent, shipped deliberately.** The rule was "Singles reads
+Singles title ∪ Combined title, Doubles reads Doubles ∪ Combined, counted once". Implemented,
+that union is *per viewer* — my cohort is the union of the two ladders I personally sit on, and
+the player next to me sits on a different pair, so no two readers share a cohort and none of it
+can be materialized per cohort. Phoenix 2 therefore reads the **own-type ladder only**, and the
+Combined ladder is unused. Revisit when Phoenix 2 has score volume; the cheap version is to key
+a cohort on the *pair* of rungs, which stays a partition.
 
 ## 6. Coverage, and what happens outside your band
 
@@ -193,7 +201,10 @@ S22 is best for my PUMBILITY" genuinely has no answer.
   the top six; **Poor and "Not in anyone's PUMBILITY" share the existing unrecorded grey**,
   because the rarity ramp is six stops against seven tiers and growing a shared token for this
   was rejected.
-- **Peer count on every card** — "175 peers", "1 peer". Plain, no special phrasing.
+- **Peer count on every card** — "175 peers", "1 peer". Plain, no special phrasing. It rides the
+  card's existing tier-label slot and is shown on every view, because the count *is* the lens and
+  a tier section heading cannot carry it; the tier name joins it only where the section is not
+  already saying it.
 - **Cohort line**, on *every* personalized tier list, not just this one:
   - PUMBILITY — "Ranked against **N players** in your PUMBILITY title ranges"
   - Score — "Ranked against **N players** of similar competitive level"
