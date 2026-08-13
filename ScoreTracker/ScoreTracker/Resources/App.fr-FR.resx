@@ -241,6 +241,9 @@
   <data name="1 paragon" xml:space="preserve">
     <value>1 paragon</value>
   </data>
+  <data name="1 peer" xml:space="preserve">
+    <value>1 joueur similaire</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 joueur</value>
   </data>
@@ -3580,6 +3583,9 @@
   <data name="Modern" xml:space="preserve">
     <value>Actuels</value>
   </data>
+  <data name="Modest" xml:space="preserve">
+    <value>Modeste</value>
+  </data>
   <data name="Monthly" xml:space="preserve">
     <value>Mensuel</value>
   </data>
@@ -4091,6 +4097,9 @@
   </data>
   <data name="Not in" xml:space="preserve">
     <value>Pas dans</value>
+  </data>
+  <data name="Not in anyone's PUMBILITY" xml:space="preserve">
+    <value>Dans aucune PUMBILITY</value>
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>Absent de {0} — ses {1} charts sont partis avec la chanson.</value>
@@ -4644,6 +4653,9 @@
   <data name="Personalized Pass" xml:space="preserve">
     <value>Passes personnalisé</value>
   </data>
+  <data name="Personalized PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY personnalisée</value>
+  </data>
   <data name="Personalized Score" xml:space="preserve">
     <value>Scores personnalisé</value>
   </data>
@@ -4977,6 +4989,9 @@
   <data name="Pool" xml:space="preserve">
     <value>Ensemble</value>
   </data>
+  <data name="Poor" xml:space="preserve">
+    <value>Faible</value>
+  </data>
   <data name="Popular" xml:space="preserve">
     <value>Populaire</value>
   </data>
@@ -5233,6 +5248,12 @@
   </data>
   <!-- Tier-lists overhaul (PR #135). « Why Don't You Get Up and Dance, Man? » est un
        mème du jeu : terme universel, ne pas traduire. -->
+  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
+    <value>Classé face à {0} joueurs dans vos paliers de titre PUMBILITY</value>
+  </data>
+  <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
+    <value>Classé face à {0} joueurs de niveau compétitif similaire</value>
+  </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Classé par</value>
   </data>
@@ -6233,8 +6254,14 @@
   <data name="Skipped" xml:space="preserve">
     <value>Ignorée</value>
   </data>
+  <data name="Slim" xml:space="preserve">
+    <value>Mince</value>
+  </data>
   <data name="Socialite" xml:space="preserve">
     <value>Socialite</value>
+  </data>
+  <data name="Solid" xml:space="preserve">
+    <value>Solide</value>
   </data>
   <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
     <value>Certains ajustements pour les fautes de frappe ou les différences de conventions de nommage ont été pris en compte. Les noms de chansons ne sont pas sensibles à la casse. (Notez que certains semblent identiques car ce sont des ajustements d'espaces blancs)</value>
@@ -6344,6 +6371,9 @@
   <data name="Standout bar" xml:space="preserve">
     <value>Seuil d'exploit</value>
   </data>
+  <data name="Staple" xml:space="preserve">
+    <value>Incontournable</value>
+  </data>
   <data name="Start" xml:space="preserve">
     <value>Démarrer</value>
   </data>
@@ -6419,6 +6449,9 @@
   </data>
   <data name="Stretching first" xml:space="preserve">
     <value>Échauffement d'abord</value>
+  </data>
+  <data name="Strong" xml:space="preserve">
+    <value>Fort</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>plus fort</value>
@@ -8471,6 +8504,9 @@
   </data>
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>{0} passe dans ce folder</value>
+  </data>
+  <data name="{0} peers" xml:space="preserve">
+    <value>{0} joueurs similaires</value>
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0} joueurs</value>

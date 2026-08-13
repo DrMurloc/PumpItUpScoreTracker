@@ -241,6 +241,9 @@
   <data name="1 paragon" xml:space="preserve">
     <value>パラゴン 1 件</value>
   </data>
+  <data name="1 peer" xml:space="preserve">
+    <value>同レベル1人</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1人</value>
   </data>
@@ -3581,6 +3584,9 @@
   <data name="Modern" xml:space="preserve">
     <value>現行</value>
   </data>
+  <data name="Modest" xml:space="preserve">
+    <value>控えめ</value>
+  </data>
   <data name="Monthly" xml:space="preserve">
     <value>月間</value>
   </data>
@@ -4092,6 +4098,9 @@
   </data>
   <data name="Not in" xml:space="preserve">
     <value>未収録</value>
+  </data>
+  <data name="Not in anyone's PUMBILITY" xml:space="preserve">
+    <value>誰のPUMBILITYにも入っていない</value>
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>{0} には収録なし — {1} 譜面すべてが曲ごと削除されました。</value>
@@ -4645,6 +4654,9 @@
   <data name="Personalized Pass" xml:space="preserve">
     <value>パーソナライズ パス</value>
   </data>
+  <data name="Personalized PUMBILITY" xml:space="preserve">
+    <value>パーソナライズ PUMBILITY</value>
+  </data>
   <data name="Personalized Score" xml:space="preserve">
     <value>パーソナライズ スコア</value>
   </data>
@@ -4978,6 +4990,9 @@
   <data name="Pool" xml:space="preserve">
     <value>プール</value>
   </data>
+  <data name="Poor" xml:space="preserve">
+    <value>乏しい</value>
+  </data>
   <data name="Popular" xml:space="preserve">
     <value>人気</value>
   </data>
@@ -5234,6 +5249,12 @@
   </data>
   <!-- Tier-lists overhaul (PR #135)。"Why Don't You Get Up and Dance, Man?" は
        ゲーム内ミームのため全ロケール共通・翻訳しない。 -->
+  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
+    <value>あなたのPUMBILITY称号帯の{0}人と比較</value>
+  </data>
+  <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
+    <value>同程度の競技レベルの{0}人と比較</value>
+  </data>
   <data name="Ranked by" xml:space="preserve">
     <value>ランキング基準</value>
   </data>
@@ -6234,8 +6255,14 @@
   <data name="Skipped" xml:space="preserve">
     <value>スキップ</value>
   </data>
+  <data name="Slim" xml:space="preserve">
+    <value>わずか</value>
+  </data>
   <data name="Socialite" xml:space="preserve">
     <value>Socialite</value>
+  </data>
+  <data name="Solid" xml:space="preserve">
+    <value>堅実</value>
   </data>
   <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
 	  <value>タイプミスや命名規則の違いに対する調整が含まれています。曲名は大文字小文字を区別しません。（同じに見えるものもありますが、空白文字の調整です）</value>
@@ -6345,6 +6372,9 @@
   <data name="Standout bar" xml:space="preserve">
     <value>基準ライン</value>
   </data>
+  <data name="Staple" xml:space="preserve">
+    <value>定番</value>
+  </data>
   <data name="Start" xml:space="preserve">
 	  <value>開始</value>
   </data>
@@ -6420,6 +6450,9 @@
   </data>
   <data name="Stretching first" xml:space="preserve">
     <value>まずストレッチ</value>
+  </data>
+  <data name="Strong" xml:space="preserve">
+    <value>強力</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>強い</value>
@@ -8472,6 +8505,9 @@
   </data>
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>このフォルダ {0} 通過</value>
+  </data>
+  <data name="{0} peers" xml:space="preserve">
+    <value>同レベル{0}人</value>
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0}人</value>
