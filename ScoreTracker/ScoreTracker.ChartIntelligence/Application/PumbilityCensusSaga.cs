@@ -62,7 +62,7 @@ internal sealed class PumbilityCensusSaga : IConsumer<ProcessPumbilityCensusComm
         foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
         {
             var pools = poolsByType[chartType];
-            var cohorts = await ResolveCohorts(mix, chartType, pools, poolsByType, cancellationToken);
+            var cohorts = await ResolveCohorts(mix, chartType, pools, cancellationToken);
             var holders = HoldersByChart(pools);
 
             for (var level = LowestFolder; level <= (int)DifficultyLevel.Max; level++)
@@ -72,7 +72,7 @@ internal sealed class PumbilityCensusSaga : IConsumer<ProcessPumbilityCensusComm
                     .Select(c => c.Id).ToArray();
                 if (!folderCharts.Any()) continue;
 
-                var byCohort = new Dictionary<string, IReadOnlyList<PumbilityCensusRecord>>();
+                var byCohort = new Dictionary<string, PumbilityCensusFolder>();
                 foreach (var (cohortKey, members) in cohorts)
                 {
                     var counts = folderCharts.ToDictionary(id => id,
@@ -82,10 +82,10 @@ internal sealed class PumbilityCensusSaga : IConsumer<ProcessPumbilityCensusComm
                     // of the table — a cohort only covers a three-to-four level band.
                     if (counts.Values.Sum() == 0) continue;
 
-                    byCohort[cohortKey] = TierListProcessor
+                    byCohort[cohortKey] = new PumbilityCensusFolder(TierListProcessor
                         .ProcessIntoLogScaledTierList(ListName, counts)
                         .Select(e => new PumbilityCensusRecord(e.ChartId, counts[e.ChartId], e.Category, e.Order))
-                        .ToArray();
+                        .ToArray(), members.Count);
                 }
 
                 await _census.SaveFolder(mix, chartType, DifficultyLevel.From(level), byCohort,
@@ -144,7 +144,6 @@ internal sealed class PumbilityCensusSaga : IConsumer<ProcessPumbilityCensusComm
     /// </summary>
     private async Task<IReadOnlyDictionary<string, IReadOnlySet<Guid>>> ResolveCohorts(MixEnum mix,
         ChartType chartType, IReadOnlyDictionary<Guid, PlayerPool> pools,
-        IReadOnlyDictionary<ChartType, IReadOnlyDictionary<Guid, PlayerPool>> poolsByType,
         CancellationToken cancellationToken)
     {
         var cohorts = new Dictionary<string, IReadOnlySet<Guid>>
@@ -157,9 +156,7 @@ internal sealed class PumbilityCensusSaga : IConsumer<ProcessPumbilityCensusComm
             var byRung = new Dictionary<string, HashSet<Guid>>();
             foreach (var (userId, pool) in pools)
             {
-                var combined = poolsByType.Values
-                    .Select(p => p.TryGetValue(userId, out var theirs) ? theirs.Total : 0).Sum();
-                var key = PumbilityCohortKeys.ForPhoenix2Pool(chartType, pool.Total, combined);
+                var key = PumbilityCohortKeys.ForPhoenix2Pool(chartType, pool.Total);
                 if (key == null) continue;
                 if (!byRung.TryGetValue(key, out var members)) byRung[key] = members = new HashSet<Guid>();
                 members.Add(userId);

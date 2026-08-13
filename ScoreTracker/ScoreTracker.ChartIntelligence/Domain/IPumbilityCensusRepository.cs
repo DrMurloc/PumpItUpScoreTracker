@@ -6,6 +6,9 @@ namespace ScoreTracker.ChartIntelligence.Domain;
 /// <summary>One chart's standing in a cohort's pools.</summary>
 internal sealed record PumbilityCensusRecord(Guid ChartId, int Appearances, TierListCategory Category, int Order);
 
+/// <summary>A cohort's whole folder: what it holds, and how many players it speaks for.</summary>
+internal sealed record PumbilityCensusFolder(IReadOnlyList<PumbilityCensusRecord> Entries, int CohortSize);
+
 /// <summary>
 ///     The materialized PUMBILITY census (docs/design/pumbility-tier-list.md §8). Reads are
 ///     always one folder for one cohort; writes replace a folder across every cohort at once,
@@ -22,10 +25,10 @@ internal interface IPumbilityCensusRepository
     ///     cover a three-to-four level band.
     /// </summary>
     Task SaveFolder(MixEnum mix, ChartType chartType, DifficultyLevel level,
-        IReadOnlyDictionary<string, IReadOnlyList<PumbilityCensusRecord>> byCohort,
+        IReadOnlyDictionary<string, PumbilityCensusFolder> byCohort,
         CancellationToken cancellationToken);
 
-    Task<IEnumerable<PumbilityCensusRecord>> GetFolder(MixEnum mix, ChartType chartType, DifficultyLevel level,
+    Task<PumbilityCensusFolder> GetFolder(MixEnum mix, ChartType chartType, DifficultyLevel level,
         string cohortKey, CancellationToken cancellationToken);
 
     /// <summary>

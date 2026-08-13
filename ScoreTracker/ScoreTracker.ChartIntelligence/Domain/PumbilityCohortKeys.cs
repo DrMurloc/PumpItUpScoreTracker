@@ -25,17 +25,19 @@ internal static class PumbilityCohortKeys
     }
 
     /// <summary>
-    ///     Phoenix 2: the highest PUMBILITY rung this pool total clears, for the ladder matching
-    ///     the chart type. Falls back to the Total ladder for a player who has cleared none of
-    ///     their own type's rungs, which is the only reading of "Singles reads Singles and
-    ///     Combined" that keeps cohorts a partition — a per-viewer union of two ladders would
-    ///     give every player a different peer set, and none of it could be materialized.
-    ///     Null when the total clears nothing at all: an unranked player has no cohort.
+    ///     Phoenix 2: the highest PUMBILITY rung this pool total clears on the ladder matching
+    ///     the chart type. Null when it clears nothing — an unranked player has no cohort.
+    ///     <para>
+    ///         Own-type ladder only. Reading the Combined ladder as well would make a cohort a
+    ///         per-viewer union of two ladders rather than a partition, so no two players would
+    ///         share one and none of it could be materialized. Deferred with the rest of the
+    ///         Phoenix 2 work — the ladder has no score volume behind it yet.
+    ///     </para>
     /// </summary>
-    public static string? ForPhoenix2Pool(ChartType chartType, double poolTotal, double combinedTotal)
+    public static string? ForPhoenix2Pool(ChartType chartType, double poolTotal)
     {
-        var ownPool = chartType == ChartType.Single ? PumbilityPool.Singles : PumbilityPool.Doubles;
-        return HighestRung(ownPool, poolTotal) ?? HighestRung(PumbilityPool.Total, combinedTotal);
+        return HighestRung(chartType == ChartType.Single ? PumbilityPool.Singles : PumbilityPool.Doubles,
+            poolTotal);
     }
 
     private static string? HighestRung(PumbilityPool pool, double total)

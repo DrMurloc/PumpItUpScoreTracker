@@ -519,6 +519,9 @@ namespace ScoreTracker.Data.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
 
+                    b.Property<int>("CohortSize")
+                        .HasColumnType("int");
+
                     b.Property<int>("Order")
                         .HasColumnType("int");
 

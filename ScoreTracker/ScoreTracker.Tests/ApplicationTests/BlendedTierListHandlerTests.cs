@@ -10,6 +10,7 @@ using ScoreTracker.ChartIntelligence.Application;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
@@ -253,10 +254,15 @@ public sealed class BlendedTierListHandlerTests
             playerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum _, Guid id, CancellationToken _) => StatsFor(id));
         }
+        var census = new Mock<IPumbilityCensusRepository>();
+        census.Setup(c => c.GetFolder(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PumbilityCensusFolder(Array.Empty<PumbilityCensusRecord>(), 0));
         // The real projector over the same stubbed ports: the Projection source is driven by
         // cohort membership and peer scores, which is what these fixtures already set up.
         return new BlendedTierListHandler(mediator.Object, charts.Object,
             new Mock<ICurrentUserAccessor>().Object, new MemoryCache(new MemoryCacheOptions()),
-            new ScoreProjector(scores.Object, playerStats.Object, new Mock<IPlayerHistoryRepository>().Object));
+            new ScoreProjector(scores.Object, playerStats.Object, new Mock<IPlayerHistoryRepository>().Object),
+            census.Object, new Mock<ITitleRepository>().Object, playerStats.Object);
     }
 }

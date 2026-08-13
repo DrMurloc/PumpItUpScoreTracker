@@ -29,9 +29,10 @@ internal sealed class PersonalizedBreakdownHandler
     private readonly ICurrentUserAccessor _currentUser;
 
     public PersonalizedBreakdownHandler(IMediator mediator, IChartRepository charts,
-        ICurrentUserAccessor currentUser, IMemoryCache cache, IScoreProjector projector)
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IScoreProjector projector,
+        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, projector);
+        _builder = new TierListBlendBuilder(mediator, charts, projector, census, titles, playerStats);
         _currentUser = currentUser;
         _cache = cache;
     }

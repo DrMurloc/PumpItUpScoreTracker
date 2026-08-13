@@ -31,6 +31,13 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure.Entities
         /// <summary>Players in the cohort whose pool contains this chart. Zero is a real answer.</summary>
         public int Appearances { get; set; }
 
+        /// <summary>
+        ///     Players in the cohort at all, which is what "ranked against N players" reads.
+        ///     Constant across a cohort's rows and stored on each so the page never needs a
+        ///     second read to say who it ranked you against.
+        /// </summary>
+        public int CohortSize { get; set; }
+
         [MaxLength(32)] public string Category { get; set; } = string.Empty;
 
         public int Order { get; set; }

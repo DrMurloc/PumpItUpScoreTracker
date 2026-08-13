@@ -14,8 +14,13 @@ namespace ScoreTracker.ChartIntelligence.Contracts
     ///     gates the Personalized view on it: a folder only a couple of people at your level have
     ///     touched cannot rank anything, and saying so beats a column of Not Rated.
     /// </param>
+    /// <param name="Appearances">
+    ///     Per chart, how many of the cohort's PUMBILITY pools hold it — what the cards print as
+    ///     "175 peers". Null on every lens but PUMBILITY, which is the only one counting people
+    ///     rather than combining stored opinions.
+    /// </param>
     public sealed record TierListResult(IReadOnlyList<SongTierListEntry> Entries, bool IsProvisionalFallback,
-        int PeerCount = 0)
+        int PeerCount = 0, IReadOnlyDictionary<Guid, int>? Appearances = null)
     {
     }
 }

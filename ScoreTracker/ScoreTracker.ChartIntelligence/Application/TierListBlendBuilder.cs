@@ -1,5 +1,6 @@
 using MediatR;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
@@ -29,7 +30,8 @@ internal sealed class TierListBlendBuilder
             ["Score"] = new Dictionary<string, double> { ["Official Scores"] = 1, ["Scores"] = 2 },
             ["Popularity"] = new Dictionary<string, double> { ["Popularity"] = 1 },
             ["Chabala"] = new Dictionary<string, double> { ["Chabala"] = 1 },
-            ["PG"] = new Dictionary<string, double> { ["PG"] = 1 }
+            ["PG"] = new Dictionary<string, double> { ["PG"] = 1 },
+            ["PUMBILITY"] = new Dictionary<string, double> { [PumbilitySource] = 1 }
         };
 
     /// <summary>
@@ -53,21 +55,34 @@ internal sealed class TierListBlendBuilder
     private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, double>> PersonalizedModifiers =
         new Dictionary<string, IReadOnlyDictionary<string, double>>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Score"] = new Dictionary<string, double> { ["Projection"] = 1 }
+            ["Score"] = new Dictionary<string, double> { ["Projection"] = 1 },
+            // Same computation as the community view, over a different set of players — so the
+            // recipe is identical and only the cohort the census is read for changes.
+            ["PUMBILITY"] = new Dictionary<string, double> { [PumbilitySource] = 1 }
         };
+
+    /// <summary>The census source's name, which is its own single-source recipe on both views.</summary>
+    private const string PumbilitySource = "PUMBILITY";
 
     private static readonly string[] StoredSources =
         { "Official Scores", "Scores", "Popularity", "Pass Count", "PG", "Chabala" };
 
+    private readonly IPumbilityCensusRepository _census;
     private readonly IChartRepository _charts;
     private readonly IMediator _mediator;
+    private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreProjector _projector;
+    private readonly ITitleRepository _titles;
 
-    public TierListBlendBuilder(IMediator mediator, IChartRepository charts, IScoreProjector projector)
+    public TierListBlendBuilder(IMediator mediator, IChartRepository charts, IScoreProjector projector,
+        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats)
     {
         _mediator = mediator;
         _charts = charts;
         _projector = projector;
+        _census = census;
+        _titles = titles;
+        _playerStats = playerStats;
     }
 
     /// <summary>How much of a recipe is stored community lists — 0 when none of it is.</summary>
@@ -113,6 +128,13 @@ internal sealed class TierListBlendBuilder
                 .ToDictionary(g => g.Key, g => g.First());
         }
 
+        PumbilityComputation? pumbility = null;
+        if (modifiers.ContainsKey(PumbilitySource))
+        {
+            pumbility = await ComputePumbility(chartType, level, mix, userId, cancellationToken);
+            sources[PumbilitySource] = pumbility.Entries;
+        }
+
         ProjectionComputation? projection = null;
         if (userId != null && modifiers.TryGetValue("Projection", out var projectionWeight) && projectionWeight > 0)
         {
@@ -121,7 +143,7 @@ internal sealed class TierListBlendBuilder
             sources["Projection"] = projection.Entries;
         }
 
-        return new BlendComputation(folderCharts, sources, modifiers, provisional, projection);
+        return new BlendComputation(folderCharts, sources, modifiers, provisional, projection, pumbility);
     }
 
     /// <summary>
@@ -155,6 +177,49 @@ internal sealed class TierListBlendBuilder
             final <= 1.5 ? TierListCategory.Hard :
             final <= 2.5 ? TierListCategory.VeryHard :
             TierListCategory.Underrated, (int)(final * 100.0));
+    }
+
+    /// <summary>
+    ///     Reads the materialized census for this folder, for everyone or for the viewer's own
+    ///     cohort. Nothing is computed here — the nightly job owns the counting, and a cohort
+    ///     with no rows for this folder simply votes on nothing.
+    /// </summary>
+    private async Task<PumbilityComputation> ComputePumbility(ChartType chartType, DifficultyLevel level,
+        MixEnum mix, Guid? userId, CancellationToken cancellationToken)
+    {
+        var cohortKey = userId == null
+            ? PumbilityCohortKeys.Community
+            : await ResolveViewerCohort(chartType, mix, userId.Value, cancellationToken);
+        if (cohortKey == null)
+            return new PumbilityComputation(new Dictionary<Guid, SongTierListEntry>(),
+                new Dictionary<Guid, int>(), 0);
+
+        var folder = await _census.GetFolder(mix, chartType, level, cohortKey, cancellationToken);
+        return new PumbilityComputation(
+            folder.Entries.ToDictionary(e => e.ChartId,
+                e => new SongTierListEntry(PumbilitySource, e.ChartId, e.Category, e.Order)),
+            folder.Entries.ToDictionary(e => e.ChartId, e => e.Appearances),
+            folder.CohortSize);
+    }
+
+    /// <summary>
+    ///     Which cohort the reader belongs to, resolved exactly as the nightly job resolves it —
+    ///     Phoenix 1 by the level of their highest difficulty title, Phoenix 2 by the PUMBILITY
+    ///     rung their pool clears. The two must agree or a player reads a list nobody built for
+    ///     them.
+    /// </summary>
+    private async Task<string?> ResolveViewerCohort(ChartType chartType, MixEnum mix, Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (mix != MixEnum.Phoenix2)
+        {
+            var titleLevel = await _titles.GetCurrentTitleLevel(mix, userId, cancellationToken);
+            return PumbilityCohortKeys.ForDifficultyTitleLevel((int)titleLevel);
+        }
+
+        var stats = await _playerStats.GetStats(mix, userId, cancellationToken);
+        return PumbilityCohortKeys.ForPhoenix2Pool(chartType,
+            chartType == ChartType.Single ? stats.SinglesRating : stats.DoublesRating);
     }
 
     /// <summary>
@@ -225,7 +290,18 @@ internal sealed record BlendComputation(
     IReadOnlyDictionary<string, IReadOnlyDictionary<Guid, SongTierListEntry>> Sources,
     IReadOnlyDictionary<string, double> Modifiers,
     bool IsProvisionalFallback,
-    ProjectionComputation? Projection);
+    ProjectionComputation? Projection,
+    PumbilityComputation? Pumbility);
+
+/// <summary>
+///     The census source's output: the banded entries, how many of the cohort's pools hold each
+///     chart, and how many players the cohort is. An empty read is the honest answer for a
+///     folder this cohort's pools cannot reach.
+/// </summary>
+internal sealed record PumbilityComputation(
+    IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
+    IReadOnlyDictionary<Guid, int> Appearances,
+    int CohortSize);
 
 /// <summary>
 ///     The projection source's output plus what the page needs in order to say something true

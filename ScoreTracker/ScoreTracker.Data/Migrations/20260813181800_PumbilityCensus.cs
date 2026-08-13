@@ -22,6 +22,7 @@ namespace ScoreTracker.Data.Migrations
                     CohortKey = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
                     ChartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Appearances = table.Column<int>(type: "int", nullable: false),
+                    CohortSize = table.Column<int>(type: "int", nullable: false),
                     Category = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
                     Order = table.Column<int>(type: "int", nullable: false)
                 },

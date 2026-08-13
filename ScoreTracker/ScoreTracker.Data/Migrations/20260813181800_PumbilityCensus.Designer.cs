@@ -12,7 +12,7 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    [Migration("20260813180313_PumbilityCensus")]
+    [Migration("20260813181800_PumbilityCensus")]
     partial class PumbilityCensus
     {
         /// <inheritdoc />
@@ -521,6 +521,9 @@ namespace ScoreTracker.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
+
+                    b.Property<int>("CohortSize")
+                        .HasColumnType("int");
 
                     b.Property<int>("Order")
                         .HasColumnType("int");

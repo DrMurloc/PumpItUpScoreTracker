@@ -17,7 +17,7 @@ internal sealed class EFPumbilityCensusRepository : IPumbilityCensusRepository
     }
 
     public async Task SaveFolder(MixEnum mix, ChartType chartType, DifficultyLevel level,
-        IReadOnlyDictionary<string, IReadOnlyList<PumbilityCensusRecord>> byCohort,
+        IReadOnlyDictionary<string, PumbilityCensusFolder> byCohort,
         CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -28,8 +28,8 @@ internal sealed class EFPumbilityCensusRepository : IPumbilityCensusRepository
             .Where(e => e.MixId == mixId && e.ChartType == typeName && e.Level == levelInt)
             .ToArrayAsync(cancellationToken);
         database.Set<PumbilityCensusEntryEntity>().RemoveRange(existing);
-        foreach (var (cohortKey, entries) in byCohort)
-        foreach (var entry in entries)
+        foreach (var (cohortKey, folder) in byCohort)
+        foreach (var entry in folder.Entries)
             await database.Set<PumbilityCensusEntryEntity>().AddAsync(new PumbilityCensusEntryEntity
             {
                 MixId = mixId,
@@ -38,6 +38,7 @@ internal sealed class EFPumbilityCensusRepository : IPumbilityCensusRepository
                 CohortKey = cohortKey,
                 ChartId = entry.ChartId,
                 Appearances = entry.Appearances,
+                CohortSize = folder.CohortSize,
                 Category = entry.Category.ToString(),
                 Order = entry.Order
             }, cancellationToken);
@@ -45,19 +46,21 @@ internal sealed class EFPumbilityCensusRepository : IPumbilityCensusRepository
         await database.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<PumbilityCensusRecord>> GetFolder(MixEnum mix, ChartType chartType,
+    public async Task<PumbilityCensusFolder> GetFolder(MixEnum mix, ChartType chartType,
         DifficultyLevel level, string cohortKey, CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixIds.For(mix);
         var typeName = chartType.ToString();
         var levelInt = (int)level;
-        return (await database.Set<PumbilityCensusEntryEntity>()
-                .Where(e => e.MixId == mixId && e.ChartType == typeName && e.Level == levelInt
-                            && e.CohortKey == cohortKey)
-                .ToArrayAsync(cancellationToken))
-            .Select(e => new PumbilityCensusRecord(e.ChartId, e.Appearances,
-                Enum.Parse<TierListCategory>(e.Category), e.Order));
+        var rows = await database.Set<PumbilityCensusEntryEntity>()
+            .Where(e => e.MixId == mixId && e.ChartType == typeName && e.Level == levelInt
+                        && e.CohortKey == cohortKey)
+            .ToArrayAsync(cancellationToken);
+        return new PumbilityCensusFolder(
+            rows.Select(e => new PumbilityCensusRecord(e.ChartId, e.Appearances,
+                Enum.Parse<TierListCategory>(e.Category), e.Order)).ToArray(),
+            rows.Length == 0 ? 0 : rows[0].CohortSize);
     }
 
     public async Task<IEnumerable<(ChartType ChartType, int Level)>> GetFoldersWithData(MixEnum mix,

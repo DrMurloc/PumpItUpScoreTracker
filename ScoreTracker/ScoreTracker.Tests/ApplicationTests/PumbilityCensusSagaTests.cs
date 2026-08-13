@@ -47,7 +47,7 @@ public sealed class PumbilityCensusSagaTests
         await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
 
         var community = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single)
-            .ByCohort[PumbilityCohortKeys.Community];
+            .ByCohort[PumbilityCohortKeys.Community].Entries;
         var popularEntry = community.Single(e => e.ChartId == popular.Id);
         var nicheEntry = community.Single(e => e.ChartId == niche.Id);
 
@@ -77,8 +77,10 @@ public sealed class PumbilityCensusSagaTests
         await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
 
         var folder = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single);
-        Assert.Equal(2, folder.ByCohort[PumbilityCohortKeys.Community].Single().Appearances);
-        Assert.Equal(1, folder.ByCohort[PumbilityCohortKeys.ForDifficultyTitleLevel(17)].Single().Appearances);
+        Assert.Equal(2, folder.ByCohort[PumbilityCohortKeys.Community].Entries.Single().Appearances);
+        var cohort = folder.ByCohort[PumbilityCohortKeys.ForDifficultyTitleLevel(17)];
+        Assert.Equal(1, cohort.Entries.Single().Appearances);
+        Assert.Equal(1, cohort.CohortSize);
     }
 
     [Fact]
@@ -116,7 +118,7 @@ public sealed class PumbilityCensusSagaTests
 
         await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
 
-        var community = saved.Single(f => f.Level == 20).ByCohort[PumbilityCohortKeys.Community];
+        var community = saved.Single(f => f.Level == 20).ByCohort[PumbilityCohortKeys.Community].Entries;
         Assert.Equal(50, community.Count(e => e.Appearances == 1));
         Assert.Equal(10, community.Count(e => e.Appearances == 0));
         Assert.All(community.Where(e => e.Appearances == 0),
@@ -137,7 +139,7 @@ public sealed class PumbilityCensusSagaTests
     }
 
     private sealed record SavedFolder(ChartType ChartType, int Level,
-        IReadOnlyDictionary<string, IReadOnlyList<PumbilityCensusRecord>> ByCohort);
+        IReadOnlyDictionary<string, PumbilityCensusFolder> ByCohort);
 
     private static PumbilityCensusSaga BuildSaga(IEnumerable<Chart> charts,
         IReadOnlyCollection<(Guid UserId, RecordedPhoenixScore Record)> scores, List<SavedFolder> saved,
@@ -168,10 +170,10 @@ public sealed class PumbilityCensusSagaTests
 
         var census = new Mock<IPumbilityCensusRepository>();
         census.Setup(c => c.SaveFolder(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
-                It.IsAny<IReadOnlyDictionary<string, IReadOnlyList<PumbilityCensusRecord>>>(),
+                It.IsAny<IReadOnlyDictionary<string, PumbilityCensusFolder>>(),
                 It.IsAny<CancellationToken>()))
             .Callback((MixEnum _, ChartType type, DifficultyLevel level,
-                    IReadOnlyDictionary<string, IReadOnlyList<PumbilityCensusRecord>> byCohort,
+                    IReadOnlyDictionary<string, PumbilityCensusFolder> byCohort,
                     CancellationToken _) =>
                 saved.Add(new SavedFolder(type, level, byCohort)))
             .Returns(Task.CompletedTask);
