@@ -72,7 +72,10 @@ else
         else if (IsTierView)
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                @if (PumbilityAvailable)
+                {
+                    <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                }
                 <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
                 @if (ChabalaAvailable)
@@ -85,7 +88,10 @@ else
         else
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Shown Difficulty"]" Disabled="_isLoading" Value="ShownDifficultyValue" ValueChanged="ChangeShownDifficulty">
-                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                @if (PumbilityAvailable)
+                {
+                    <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                }
                 <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
                 @if (CanPersonalize)
@@ -123,8 +129,10 @@ else
        centers, so the wrap is deliberate instead of ragged. *@
     <div class="tier-toolbar">
         <div class="tier-toolbar-row">
+            @* CoOp folders are never marked missing: the lens is not offered there, so picking
+               one swaps the lens (Chabala precedent) rather than dead-ending on a greyed grid. *@
             <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"
-                          IsMissing="@((t, l) => !PumbilityFolderHasData(t, l))"></FolderPicker>
+                          IsMissing="@((t, l) => t != ChartType.CoOp && !PumbilityFolderHasData(t, l))"></FolderPicker>
             @* Four views, one visible answer to "what am I looking at". Personalized was a
                switch riding on top of this group until 2026-08-11, which meant the state was
                spread across two controls and one of them was invisible in screenshots. *@
@@ -1574,6 +1582,11 @@ else
 
     private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
 
+    // The PUMBILITY pools price no co-op charts (includeCoOp: false, and CO-OP has no rating),
+    // so the lens has nothing to say on CoOp folders and is not offered there — no explanation,
+    // same as Chabala on folders without links.
+    private bool PumbilityAvailable => _chartType != ChartType.CoOp;
+
     // Personalization is a VIEW now, not a switch riding on top of one (owner, 2026-08-11) —
     // except on the two views that don't section by the lens, where the Shown Difficulty picker
     // names the personalized reading outright rather than a hidden modifier deciding it.
@@ -1622,6 +1635,10 @@ else
             _level = 2;
         }
         if (_tierListType == "Chabala" && !ChabalaAvailable)
+        {
+            _tierListType = "Pass";
+        }
+        if (_tierListType == "PUMBILITY" && !PumbilityAvailable)
         {
             _tierListType = "Pass";
         }
@@ -2081,7 +2098,10 @@ else
     private IReadOnlyList<string> LensesFor(string grouping)
     {
         if (grouping == "Personalized") return new[] { "PUMBILITY", "Score" };
-        var lenses = new List<string> { "PUMBILITY", "Pass", "Score" };
+        var lenses = new List<string>();
+        if (PumbilityAvailable) lenses.Add("PUMBILITY");
+        lenses.Add("Pass");
+        lenses.Add("Score");
         if (ChabalaAvailable) lenses.Add("Chabala");
         lenses.Add("PG");
         return lenses;
@@ -2500,6 +2520,10 @@ else
             _level = 2;
         }
         if (_tierListType == "Chabala" && !ChabalaAvailable)
+        {
+            _tierListType = "Pass";
+        }
+        if (_tierListType == "PUMBILITY" && !PumbilityAvailable)
         {
             _tierListType = "Pass";
         }
