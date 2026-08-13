@@ -277,6 +277,9 @@ builder.Services.AddBlazorApplicationInsights()
     })
     .AddTransient<IUserAccessService, UserAccessService>()
     .AddTransient<IBulkChartJsonParser, BulkChartJsonParser>()
+    // A Domain service, so AddInfrastructure's reflection never sees it — that binds
+    // Domain.SecondaryPorts interfaces to their ScoreTracker.Data implementations.
+    .AddTransient<IScoreProjector, ScoreProjector>()
     .AddInfrastructure(builder.Configuration.GetSection("AzureBlob").Get<AzureBlobConfiguration>(),
         sqlConfig,
         builder.Configuration.GetSection("Sendgrid").Get<SendGridConfiguration>())

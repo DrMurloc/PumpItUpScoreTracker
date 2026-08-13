@@ -56,16 +56,48 @@ else
            It comes back when voting does; the lens itself is unchanged (owner, 2026-08-10). *@
         @if (!IsLegacy)
         {
-        <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-            <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
-            <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-            <MudSelectItem T="string" Value="@("Popularity")">@L["Popularity"]</MudSelectItem>
-            @if (ChabalaAvailable)
-            {
-                <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
-            }
-            <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
-        </MudSelect>
+        @* Three shapes, because the lens means three different things. On the tier views it
+           RANKS, so Community offers every community list and Personalized offers only the two
+           that have a personalized recipe. On My Scores and Skill Breakdown something else does
+           the sectioning and the lens only annotates each card — so it is labelled for what it
+           does there, and it can name a personalized reading outright, which is the one place
+           those are reachable from. *@
+        @if (_groupBy == "Personalized")
+        {
+            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
+                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+            </MudSelect>
+        }
+        else if (IsTierView)
+        {
+            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
+                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                @if (ChabalaAvailable)
+                {
+                    <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
+                }
+                <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
+            </MudSelect>
+        }
+        else
+        {
+            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Shown Difficulty"]" Disabled="_isLoading" Value="ShownDifficultyValue" ValueChanged="ChangeShownDifficulty">
+                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                @if (CanPersonalize)
+                {
+                    <MudSelectItem T="string" Value="@("Personalized Pass")">@L["Personalized Pass"]</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("Personalized Score")">@L["Personalized Score"]</MudSelectItem>
+                }
+                @if (ChabalaAvailable)
+                {
+                    <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
+                }
+                <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
+            </MudSelect>
+        }
         }
         @if (IsMyProgress)
         {
@@ -90,28 +122,37 @@ else
     <div class="tier-toolbar">
         <div class="tier-toolbar-row">
             <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
+            @* Four views, one visible answer to "what am I looking at". Personalized was a
+               switch riding on top of this group until 2026-08-11, which meant the state was
+               spread across two controls and one of them was invisible in screenshots. *@
             <MudButtonGroup OverrideStyles="false" Class="tier-views-group">
-                <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Tier List"]</MudButton>
-                <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Progress"]</MudButton>
-                @if (_currentMix.HasSkillData())
+                <MudButton Variant="@(_groupBy == "Difficulty" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Difficulty"))">@L["Community"]</MudButton>
+                @if (CanPersonalize)
                 {
-                    <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["By Skill"]</MudButton>
+                    <MudButton Variant="@(_groupBy == "Personalized" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small"
+                               Disabled="@(_thinCohort != null)"
+                               title="@(_thinCohort != null ? L["Not enough players in range to provide results"].ToString() : null)"
+                               OnClick="@(() => ChangeGrouping("Personalized"))">@L["Personalized"]</MudButton>
+                }
+                <MudButton Variant="@(IsMyProgress ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping(CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"))">@L["My Scores"]</MudButton>
+                @if (FolderHasSkills)
+                {
+                    <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["Skill Breakdown"]</MudButton>
                 }
             </MudButtonGroup>
+            @if (_groupBy == "Personalized")
+            {
+                @* The only thing the retired "Personalized for {gametag}" chip did that the
+                   selected view button does not: get you to the breakdown. *@
+                <MudTooltip Text="@L["How is this personalized?"]">
+                    <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
+                                   aria-label="@L["How is this personalized?"]"></MudIconButton>
+                </MudTooltip>
+            }
             <MudButton Class="tier-compact-only tier-advanced-btn" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Tune" OnClick="() => _advancedOpen = true">@L["Advanced"]</MudButton>
         </div>
         <div class="tier-toolbar-row tier-desktop-only">
-            @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
-            {
-                <div class="tier-personalized-cell">
-                    <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
-                    <MudTooltip Text="@L["How is this personalized?"]">
-                        <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
-                                       aria-label="@L["How is this personalized?"]"></MudIconButton>
-                    </MudTooltip>
-                </div>
-            }
             <MudSpacer></MudSpacer>
             @if (CurrentUser.IsLoggedIn)
             {
@@ -144,17 +185,10 @@ else
         {
             <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
         }
-        @if (PersonalizedActive)
-        {
-            @* The chip doubles as the door to the breakdown page — same destination as
-               the "How is this personalized?" links by the switch. *@
-            <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt"
-                     OnClick="@(() => NavManager.NavigateTo(BreakdownUrl))">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
-        }
         @* Same reason as the picker: naming the only lens there is says nothing. *@
         @if (!IsLegacy)
         {
-            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Ranked by"]: @LensDisplayName(_tierListType)</MudChip>
+            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@(IsTierView ? L["Ranked by"] : L["Shown Difficulty"]): @LensDisplayName(_tierListType)</MudChip>
         }
         @if (IsMyProgress)
         {
@@ -388,10 +422,12 @@ else
             }
         </div>
     }
-    @* 5/6/7 — the answer: tier sections, skeleton while loading, honest empty state. *@
+    @* 5/6/7 — the answer: tier sections, a loading state that says so, honest empty state. One
+       loader for both waits (owner, 2026-08-11) — a page that changes what it shows you while it
+       loads is stranger than either loader on its own. *@
     @if (_isLoading)
     {
-        <TierListSkeleton></TierListSkeleton>
+        <PatienceCard Explanation="@L["Compiling your personalized tier list."]"></PatienceCard>
     }
     else if (_groups.All(g => !g.Entries.Any(ShouldChartShow)))
     {
@@ -538,6 +574,8 @@ else
                                                StepArtist="@(_settings.ShowStepArtist ? chart.StepArtist?.ToString() : null)"
                                                Skills="@(_settings.ShowSkills ? SkillChipsFor(chart) : null)"
                                                AgeDays="@(_showAge && score != null ? (int)(_now - score.RecordedDate).TotalDays : null)"
+                                               ShowProjectedScore="@(_settings.ShowProjectedScore && _density != UiDensity.Compact)"
+                                               ProjectedScore="@(_projectedScores.TryGetValue(chart.Id, out var projected) ? projected : null)"
                                                OnToDo="ToggleToDo"
                                                OnOpen="OpenDetails"></TierListChartCard>
                         }
@@ -623,6 +661,11 @@ else
                    switches above — this one stays live in every density. *@
                 <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowOtherMixPasses" ValueChanged="SetShowOtherMixPasses"
                            Label=@L["Show Passed in Another Mix"]></MudSwitch>
+                @if (!IsLegacy && _chartType != ChartType.CoOp)
+                {
+                    <MudSwitch T="bool" Color="Color.Primary" Value="_settings.ShowProjectedScore" ValueChanged="SetShowProjectedScore"
+                               Disabled="_density == UiDensity.Compact" Label=@L["Show Projected Score"]></MudSwitch>
+                }
             }
         </text>;
     }
@@ -653,16 +696,6 @@ else
                                aria-label="@L["Close"]"></MudIconButton>
             </div>
             @lensControls
-            @if (CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score")
-            {
-                <div class="tier-personalized-cell">
-                    <MudSwitch T="bool" Color="Color.Primary" Value="_usePersonalizedData" ValueChanged="SetUsePersonalized" Label="@L["Personalized"]"></MudSwitch>
-                    <MudTooltip Text="@L["How is this personalized?"]">
-                        <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
-                                       aria-label="@L["How is this personalized?"]"></MudIconButton>
-                    </MudTooltip>
-                </div>
-            }
             <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
                        StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
                        Disabled="_isBuildingImage || _isLoading">
@@ -721,14 +754,6 @@ else
 
     .tier-compact-only {
         display: none;
-    }
-
-    /* The Personalized switch and its breakdown ?-icon ride as one toolbar cell
-       (field-test round: the full "How is this personalized?" string was text bloat). */
-    .tier-personalized-cell {
-        display: flex;
-        align-items: center;
-        gap: 0;
     }
 
     @@media (max-width: 959.98px) {
@@ -987,8 +1012,6 @@ else
     }
     private IDictionary<Guid, double> _scoringLevels = new Dictionary<Guid, double>();
     private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
-    private ISet<Guid> _unPopularCharts = new HashSet<Guid>();
-    private ISet<Guid> _popularCharts = new HashSet<Guid>();
     private IReadOnlySet<Guid> _otherMixPasses = new HashSet<Guid>();
     private bool _otherMixPassesLoaded = false;
 
@@ -1017,6 +1040,7 @@ else
         public bool ShowSkillMetric { get; set; }
         // Defaults on, so an existing player's folder looks the same until they turn it off.
         public bool ShowOtherMixPasses { get; set; } = true;
+        public bool ShowProjectedScore { get; set; }
         public int? MinNoteCount { get; set; }
         public int? MaxNoteCount { get; set; }
         public HashSet<string> StepArtists { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -1160,6 +1184,19 @@ else
             _otherMixPassesLoaded = true;
         }
     }
+    private async Task SetShowProjectedScore(bool show)
+    {
+        _settings.ShowProjectedScore = show;
+        await SaveSettings();
+        // Same shape as the cross-mix switch: the folder load skips the read when the switch is
+        // off, so turning it back on inside a folder backfills what that load never fetched.
+        if (show && CurrentUser.IsLoggedIn && !IsLegacy && _chartType != ChartType.CoOp)
+        {
+            _projectedScores = await Mediator.Send(
+                new GetProjectedScoresQuery(_chartType, _level, _currentMix));
+        }
+    }
+
     private async Task SetShowName(bool show)
     {
         _settings.ShowSongName = show;
@@ -1328,7 +1365,6 @@ else
     {
         "Pass" => L["Pass Difficulty"],
         "Score" => L["Score Difficulty"],
-        "Popularity" => L["Popularity"],
         "Community" => L["Community Rating"],
         _ => lens
     };
@@ -1469,7 +1505,13 @@ else
     private double _doublesCompetitive = 1;
     private bool _statsOpen = false;
     private bool _advancedOpen = false;
-    private bool _usePersonalizedData = true;
+    /// <summary>
+    ///     Whether the Shown Difficulty picker is on one of its personalized readings. It only
+    ///     applies to My Scores and Skill Breakdown, where the lens annotates cards rather than
+    ///     sectioning them — the tier views carry that choice in the view itself.
+    /// </summary>
+    private bool _shownPersonalized;
+    private IReadOnlyDictionary<Guid, PhoenixScore> _projectedScores = new Dictionary<Guid, PhoenixScore>();
     private IReadOnlyList<TierGroup> _groups = Array.Empty<TierGroup>();
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
     private bool _isProvisionalFallback = false;
@@ -1477,20 +1519,68 @@ else
     private int _averageRating = 1;
     private CancellationTokenSource? _reloadCts;
 
-    private static readonly string[] LensKeys = { "Pass", "Score", "Popularity", "Chabala", "PG" };
-    private static readonly string[] ValidGroupings = { "Difficulty", "Score", "Age", "Score Ranking", "Scoring Level", "Skill" };
+    private static readonly string[] LensKeys = { "Pass", "Score", "Chabala", "PG" };
+    /// <summary>
+    ///     Every value <c>_groupBy</c> may hold, and therefore every value that survives a
+    ///     reload: init drops anything not in here back to Community. "Personalized" arrived as
+    ///     the fourth view and did not, so it saved correctly and was discarded on the way back
+    ///     in — the one view whose whole point is being a deliberate choice.
+    /// </summary>
+    private static readonly string[] ValidGroupings =
+        { "Difficulty", "Personalized", "Score", "Age", "Score Ranking", "Scoring Level", "Skill" };
 
-    private bool IsMyProgress => _groupBy is not "Difficulty" and not "Skill";
+    private bool IsMyProgress => _groupBy is not "Difficulty" and not "Personalized" and not "Skill";
+
+    /// <summary>Community and Personalized both section by the lens; they differ only in data.</summary>
+    private bool IsTierView => _groupBy is "Difficulty" or "Personalized";
+
+    private bool CanPersonalize => CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && !IsLegacy;
 
     private bool IsSkillView => _groupBy == "Skill";
 
-    // When grouping isn't the lens itself, each card/row carries its lens tier —
-    // word + color, never color alone (rule 8; round-6 field test).
-    private bool ShowLensAnnotation => _groupBy != "Difficulty";
+    /// <summary>
+    ///     Whether this folder has skills to break down, asked of the folder rather than of the
+    ///     mix. Skills are a property of the CHART — <c>ChartSkill</c> carries no mix column, and
+    ///     the catalog attaches the same rows whichever mix it loads — so a Phoenix 2 folder has
+    ///     had them all along and a mix-level flag was hiding data that was already there. It
+    ///     also retires the legacy special case: a mix with no tagged charts answers no on its
+    ///     own, without a rule saying so.
+    /// </summary>
+    private bool FolderHasSkills => _charts.Values.Any(c => c.Skills.Any());
+
+    // When the grouping isn't the lens itself, each card/row carries its lens tier — word +
+    // color, never color alone (rule 8; round-6 field test). Both tier views section BY the
+    // lens, so there the annotation would only repeat the heading the card already sits under.
+    private bool ShowLensAnnotation => !IsTierView;
 
     private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
 
-    private bool PersonalizedActive => _usePersonalizedData && CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp && _tierListType is "Pass" or "Score";
+    // Personalization is a VIEW now, not a switch riding on top of one (owner, 2026-08-11) —
+    // except on the two views that don't section by the lens, where the Shown Difficulty picker
+    // names the personalized reading outright rather than a hidden modifier deciding it.
+    private bool PersonalizedActive => CanPersonalize && _tierListType is "Pass" or "Score"
+                                       && (_groupBy == "Personalized"
+                                           || ((IsMyProgress || IsSkillView) && _shownPersonalized));
+
+    /// <summary>The Shown Difficulty picker's value: a lens, or a lens read personally.</summary>
+    private string ShownDifficultyValue => _shownPersonalized && _tierListType is "Pass" or "Score"
+        ? $"Personalized {_tierListType}"
+        : _tierListType;
+
+    /// <summary>
+    ///     Personalized Score has one source, so "the projection said nothing" and "the list is
+    ///     empty" are the same state. Pass still blends, so it can never land here — its
+    ///     community source carries the folder whatever the personal ones do.
+    /// </summary>
+    /// <summary>
+    ///     Players at this level who have actually scored something in this folder, below which
+    ///     the personalized Score list is not offered. Three, excluding the reader: two peers
+    ///     cannot describe a folder, and the standard deviation the tiers are cut from means
+    ///     nothing at that size. Null when the personalized blend has not run or cleared the bar.
+    /// </summary>
+    private int? _thinCohort;
+
+    private const int MinCohortPeers = 3;
 
     private string BreakdownUrl => $"/TierLists/{_chartType}/{_level}/Breakdown?Lens={_tierListType}";
 
@@ -1507,6 +1597,7 @@ else
     {
         _chartType = folder.Type;
         _level = folder.Level;
+        _thinCohort = null;
         if (_chartType == ChartType.CoOp && _level is < 2 or > 5)
         {
             _level = 2;
@@ -1522,24 +1613,45 @@ else
     private async Task ChangeLens(string lens)
     {
         _tierListType = lens;
+        _thinCohort = null;
         await SetQueryString();
         await Recalculate();
     }
 
-    private async Task SetUsePersonalized(bool newUse)
+    private async Task ChangeShownDifficulty(string value)
     {
-        _usePersonalizedData = newUse;
+        const string prefix = "Personalized ";
+        _shownPersonalized = value.StartsWith(prefix, StringComparison.Ordinal);
+        _tierListType = _shownPersonalized ? value[prefix.Length..] : value;
+        await UiSettings.SetSetting("TierLists__ShownPersonalized", _shownPersonalized.ToString());
+        await SetQueryString();
         await Recalculate();
     }
 
-    // View and grouping changes never refetch — they re-group in memory only.
+    // Grouping changes re-group in memory. Crossing between Community and Personalized is the
+    // exception: those are different blends, so that one refetches.
     private async Task ChangeGrouping(string newGrouping)
     {
         if (newGrouping == _groupBy)
         {
             return;
         }
+        // Compared on the EFFECTIVE state, not on the button. Personalization has two switches —
+        // the Personalized view, and the saved Shown Difficulty preference that applies on My
+        // Scores and Skill Breakdown — and this only watched the first. Crossing between a tier
+        // view and My Scores with that preference saved on flipped the data personalization
+        // without a refetch, so Community rendered the personalized entries under the
+        // community's label. The saved value seeds the page; after that a switch is what changes
+        // it, and a switch always refetches and saves.
+        var wasPersonalized = PersonalizedActive;
         _groupBy = newGrouping;
+        if (PersonalizedActive != wasPersonalized)
+        {
+            await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
+            await Recalculate();
+            return;
+        }
+
         await ApplyGroupingChange();
     }
 
@@ -1651,13 +1763,20 @@ else
             // Phoenix session should restore whatever lens the player actually chose. Same
             // for personalization, which has no meaning without scoring levels.
             await UiSettings.SetSetting("TierLists__ListType", _tierListType, cancellationToken);
-            await UiSettings.SetSetting("TierLists__UsePersonalized", _usePersonalizedData.ToString(), cancellationToken);
         }
 
         _charts = _allCharts.Values
             .Where(c => c.Level == _level && c.Type == _chartType)
             .ToDictionary(c => c.Id);
         _folderScores = _scores.Where(kv => _charts.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        // Skill Breakdown answers to the folder, so its fallback has to run once the folder is
+        // known — the init guard runs before any chart is loaded and would strip a legitimate
+        // saved grouping. Also covers folder-hopping into one with nothing tagged.
+        if (IsSkillView && !FolderHasSkills)
+        {
+            _groupBy = "Difficulty";
+        }
 
         // Phoenix 2's folder-title track — recomputed for THIS folder on every change (the full
         // load runs once, so it can't live there). Null for Phoenix/legacy and signed-out.
@@ -1702,21 +1821,43 @@ else
         }
 
         // Population phase — works logged-out, renders as soon as it lands.
-        var blendTask = Mediator.Send(new GetBlendedTierListQuery(_chartType, _level, _tierListType,
+        var blended = await Mediator.Send(new GetBlendedTierListQuery(_chartType, _level, _tierListType,
             PersonalizedActive, Mix: _currentMix), cancellationToken);
-        var popularityTask = Mediator.Send(new GetTierListWithFallbackQuery("Popularity", _currentMix), cancellationToken);
-        var blended = await blendTask;
-        var popularityResult = await popularityTask;
         cancellationToken.ThrowIfCancellationRequested();
+
+        // A folder only a couple of players at this level have touched cannot rank anything, so
+        // the personalized view is not offered for it: the button greys with a reason and the
+        // reader lands on the community list rather than on a screen of Not Rated. Only judged
+        // when the personalized blend actually ran — the community path computes no cohort, and
+        // its zero would grey the button on every folder.
+        // Only overwritten when the personalized blend RAN. Clearing it whenever it did not
+        // would un-grey the button on the very reload the fallback triggers, since that reload
+        // is on the community list by definition — the warning would flash and vanish. The
+        // folder and lens changes clear it instead, because those are what make it stale.
+        if (PersonalizedActive && _tierListType == "Score")
+        {
+            _thinCohort = blended.PeerCount < MinCohortPeers ? blended.PeerCount : null;
+        }
+
+        if (_thinCohort != null && _groupBy == "Personalized")
+        {
+            _groupBy = "Difficulty";
+            await UiSettings.SetSetting("TierLists__GroupBy", _groupBy, cancellationToken);
+            await LoadFolder(cancellationToken);
+            return;
+        }
+
+        // Only when the switch asks for it: this is a peer sweep, and no other part of the page
+        // needs it. SetShowProjectedScore backfills when it comes back on inside a folder.
+        _projectedScores = _settings.ShowProjectedScore && CurrentUser.IsLoggedIn && _chartType != ChartType.CoOp
+            ? await Mediator.Send(new GetProjectedScoresQuery(_chartType, _level, _currentMix), cancellationToken)
+            : new Dictionary<Guid, PhoenixScore>();
 
         // The blank-page guard is dead (rule 9): render every chart we can resolve and
         // silently drop entries whose chart no longer exists.
         _finalEntries = blended.Entries.Where(e => _charts.ContainsKey(e.ChartId)).ToArray();
-        _isProvisionalFallback = blended.IsProvisionalFallback || popularityResult.IsProvisionalFallback;
+        _isProvisionalFallback = blended.IsProvisionalFallback;
         _chartDifficulties = _finalEntries.ToDictionary(e => e.ChartId, e => e.Category);
-        var popularity = popularityResult.Entries.GroupBy(e => e.ChartId).ToDictionary(g => g.Key, g => g.First());
-        _popularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Overrated).Select(kv => kv.Key).ToHashSet();
-        _unPopularCharts = popularity.Where(kv => kv.Value.Category == TierListCategory.Underrated).Select(kv => kv.Key).ToHashSet();
 
         ComputeFolderFilterRanges(_finalEntries.Select(e => _charts[e.ChartId]).ToArray());
 
@@ -1819,17 +1960,6 @@ else
         { TierListCategory.Underrated, "Most Recent" },
         { TierListCategory.Unrecorded, "Not Recorded" }
     };
-    private static readonly IDictionary<TierListCategory, string> _popularityNames = new Dictionary<TierListCategory, string>()
-    {
-        { TierListCategory.Unrecorded, "Unknown" },
-        { TierListCategory.Overrated, "Ultra Popular" },
-        { TierListCategory.VeryEasy, "Very Popular" },
-        { TierListCategory.Easy, "Popular" },
-        { TierListCategory.Medium, "Average" },
-        { TierListCategory.Hard, "Unpopular" },
-        { TierListCategory.VeryHard, "Very Unpopular" },
-        { TierListCategory.Underrated, "Ultra Unpopular" }
-    };
 
     private void RegroupEntries()
     {
@@ -1845,20 +1975,18 @@ else
     }
 
     private string TierName(TierListCategory category) =>
-        _tierListType == "Popularity" ? _popularityNames[category] :
         _tierListType == "Chabala" && category == TierListCategory.Unrecorded ? "Subjective" :
         _tierNames[category];
 
-    // Round 7: the lens always orders cards within a section, in every view — hardest
-    // first (most-popular first under the Popularity lens), scoring level as the
-    // tiebreaker, blend order as the final stabilizer. Unrecorded sinks to the bottom.
+    // Round 7: the lens always orders cards within a section, in every view — easiest first,
+    // scoring level as the tiebreaker, blend order as the final stabilizer. Unrecorded sinks
+    // to the bottom. The category enum already runs easiest to hardest, so this is its own
+    // order.
     private IEnumerable<SongTierListEntry> LensOrdered(IEnumerable<SongTierListEntry> entries)
     {
-        var byCategory = _tierListType == "Popularity"
-            ? entries.OrderBy(e => e.Category == TierListCategory.Unrecorded ? int.MaxValue : (int)e.Category)
-            : entries.OrderByDescending(e => e.Category == TierListCategory.Unrecorded ? int.MinValue : (int)e.Category);
-        return byCategory
-            .ThenByDescending(e => _scoringLevels.TryGetValue(e.ChartId, out var sl) ? sl : 0)
+        return entries
+            .OrderBy(e => e.Category == TierListCategory.Unrecorded ? int.MaxValue : (int)e.Category)
+            .ThenBy(e => _scoringLevels.TryGetValue(e.ChartId, out var sl) ? sl : 0)
             .ThenBy(e => e.Order);
     }
 
@@ -1866,11 +1994,10 @@ else
     {
         var groups = LensOrdered(_finalEntries)
             .GroupBy(e => e.Category);
-        // Hardest-first is the community-image convention; the popularity lens reads
+        // Easiest first (owner, 2026-08-11), which the popularity lens already read as
         // most-popular first. Not Rated always sinks to the bottom.
-        var ordered = _tierListType == "Popularity"
-            ? groups.OrderBy(g => g.Key == TierListCategory.Unrecorded ? int.MaxValue : (int)g.Key)
-            : groups.OrderByDescending(g => g.Key == TierListCategory.Unrecorded ? int.MinValue : (int)g.Key);
+        var ordered = groups
+            .OrderBy(g => g.Key == TierListCategory.Unrecorded ? int.MaxValue : (int)g.Key);
         return ordered
             .Select(g =>
             {
@@ -1882,17 +2009,33 @@ else
     }
 
     private TierGroup ToNeutralGroup(IGrouping<string, SongTierListEntry> group) =>
-        new(group.Key, L[group.Key], NeutralSectionColor, MixThemes.PaletteFor(_currentMix).InkMuted, group.ToArray());
+        ToNeutralGroup(group.Key, group);
+
+    private TierGroup ToNeutralGroup(string key, IEnumerable<SongTierListEntry> entries) =>
+        new(key, L[key], NeutralSectionColor, MixThemes.PaletteFor(_currentMix).InkMuted, entries.ToArray());
+
+    /// <summary>
+    ///     Sections for a My Scores bucketing, ordered by the bucket's own rank rather than by
+    ///     whichever chart happened to sort first. Both dictionaries run best-to-worst with the
+    ///     enum — Amazing to "Why Don't You Get Up and Dance, Man?", Ancient to Most Recent —
+    ///     so ascending is the order in both cases, with the unrecorded bucket last.
+    /// </summary>
+    private IReadOnlyList<TierGroup> ByCategoryBuckets(
+        IEnumerable<SongTierListEntry> ordered, Func<SongTierListEntry, TierListCategory> bucket,
+        IDictionary<TierListCategory, string> names) =>
+        ordered.GroupBy(bucket)
+            .OrderBy(g => g.Key == TierListCategory.Unrecorded ? int.MaxValue : (int)g.Key)
+            .Select(g => ToNeutralGroup(names[g.Key], g))
+            .ToArray();
 
     private IReadOnlyList<TierGroup> GroupByScore()
     {
         var tierList = TierListProcessor
             .ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (int)kv.Value.Score!.Value))
             .ToDictionary(e => e.ChartId);
-        return LensOrdered(_finalEntries)
-            .GroupBy(e => _scoreNames[tierList.TryGetValue(e.ChartId, out var t) ? t.Category : TierListCategory.Unrecorded])
-            .Select(ToNeutralGroup)
-            .ToArray();
+        return ByCategoryBuckets(LensOrdered(_finalEntries),
+            e => tierList.TryGetValue(e.ChartId, out var t) ? t.Category : TierListCategory.Unrecorded,
+            _scoreNames);
     }
 
     private IReadOnlyList<TierGroup> GroupByAge()
@@ -1907,13 +2050,22 @@ else
         var tierList = TierListProcessor
             .ProcessIntoTierList("Score", _folderScores.Where(kv => kv.Value.Score != null).ToDictionary(kv => kv.Key, kv => (_now - kv.Value.RecordedDate).TotalDays))
             .ToDictionary(e => e.ChartId);
-        return LensOrdered(_finalEntries)
-            .GroupBy(e => _scores.ContainsKey(e.ChartId)
-                ? _ageNames[tierList.TryGetValue(e.ChartId, out var t) ? t.Category : TierListCategory.Unrecorded]
-                : _ageNames[TierListCategory.Unrecorded])
-            .Select(ToNeutralGroup)
-            .ToArray();
+        // Oldest first (owner): the stale end of the folder is the actionable one.
+        return ByCategoryBuckets(LensOrdered(_finalEntries),
+            e => _scores.ContainsKey(e.ChartId) && tierList.TryGetValue(e.ChartId, out var t)
+                ? t.Category
+                : TierListCategory.Unrecorded,
+            _ageNames);
     }
+
+    // Best percentile first, unrecorded last. The bands are ordered explicitly because they
+    // are strings — grouping alone emits them in order of first appearance, which followed the
+    // lens and reshuffled the page whenever the lens changed.
+    private static readonly string[] RankingBands =
+    {
+        "The Best", "90% -> 99.9%", "75% -> 90%", "50% -> 75%", "25% -> 50%", "10% -> 25%",
+        "0 -> 10%", "Last Place", "Not Recorded"
+    };
 
     private IReadOnlyList<TierGroup> GroupByScoreRanking()
     {
@@ -1936,6 +2088,7 @@ else
                                         "90% -> 99.9%"
                     )
                 : "Not Recorded")
+            .OrderBy(g => Array.IndexOf(RankingBands, g.Key))
             .Select(ToNeutralGroup)
             .ToArray();
     }
@@ -2107,7 +2260,7 @@ else
         var levelSettingTask = UiSettings.GetSetting("TierLists__Level");
         var chartTypeSettingTask = UiSettings.GetSetting("TierLists__ChartType");
         var listTypeSettingTask = UiSettings.GetSetting("TierLists__ListType");
-        var personalizedSettingTask = UiSettings.GetSetting("TierLists__UsePersonalized");
+        var shownPersonalizedTask = UiSettings.GetSetting("TierLists__ShownPersonalized");
         var groupBySettingTask = UiSettings.GetSetting("TierLists__GroupBy");
         var densitySettingTask = UiSettings.GetSetting(DensitySettingKey);
         var legacyTextViewTask = UiSettings.GetSetting("TierLists__TextView");
@@ -2174,7 +2327,9 @@ else
         _chartType = Enum.TryParse<ChartType>(await chartTypeSettingTask, out var savedType) ? savedType : _chartType;
         var savedLens = await listTypeSettingTask;
         _tierListType = LensKeys.FirstOrDefault(k => string.Equals(k, savedLens, StringComparison.OrdinalIgnoreCase)) ?? "Pass";
-        _usePersonalizedData = (await personalizedSettingTask ?? true.ToString()) == true.ToString();
+        // No migration from TierLists__UsePersonalized, which defaulted ON: nobody chose that,
+        // and everyone lands on Community now (owner). The key simply stops being read.
+        _shownPersonalized = (await shownPersonalizedTask ?? false.ToString()) == true.ToString();
         _groupBy = await groupBySettingTask ?? "Difficulty";
 
         // Legacy query params, then the canonical C3 path route, win over saved state.
@@ -2213,8 +2368,10 @@ else
         {
             _tierListType = "Pass";
         }
+        // "Skill" is deliberately not checked here: whether it is available depends on the
+        // folder's charts, which are not loaded yet. Its fallback runs after the folder does.
         if (!ValidGroupings.Contains(_groupBy) || (!CurrentUser.IsLoggedIn && _groupBy is "Score" or "Age" or "Score Ranking")
-            || (_groupBy == "Skill" && !_currentMix.HasSkillData()))
+            || (_groupBy == "Personalized" && !CanPersonalize))
         {
             _groupBy = "Difficulty";
         }

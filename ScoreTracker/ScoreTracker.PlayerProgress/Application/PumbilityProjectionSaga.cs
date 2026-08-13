@@ -1,12 +1,10 @@
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
-using ScoreTracker.Domain.Records;
-using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
-using ScoreTracker.PlayerProgress.Domain;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -17,10 +15,11 @@ namespace ScoreTracker.PlayerProgress.Application
     ///     Projects what a player would score on charts they have not played, and what that
     ///     would add to their PUMBILITY (docs/design/pumbility-overhaul.md §4.1).
     ///     <para>
-    ///         The arithmetic lives in <see cref="CohortEstimator" />, which is pure, so the
-    ///         exploration harness measures the same code that ships. This class is the
-    ///         plumbing: pick the peers, resolve what level each held when they set a score,
-    ///         and price the result against the player's own top-50 bar.
+    ///         The projection itself is <see cref="IScoreProjector" />, shared with the
+    ///         personalized Score tier list so the two surfaces cannot answer "what would you
+    ///         score here" differently. What is left here is this page's own half: which charts
+    ///         are worth asking about, and what the answers are worth against the player's own
+    ///         top-50 bar.
     ///     </para>
     /// </summary>
     internal sealed class PumbilityProjectionSaga : IRequestHandler<ProjectPumbilityGainsQuery, PumbilityProjection>
@@ -35,25 +34,15 @@ namespace ScoreTracker.PlayerProgress.Application
         /// <summary>How many peer-estimated suggestions survive to the merge (owner, 2026-08-06).</summary>
         private const int MaxTargets = 100;
 
-        /// <summary>
-        ///     Levels of slack when reading the reference mix, which rerated these charts — a
-        ///     chart sitting at 21 here may sit at 22 or 20 there.
-        /// </summary>
-        private const int ReferenceLevelSlack = 2;
-
         private readonly PumbilityProjectionCache _cache;
-        private readonly IPlayerHistoryRepository _history;
         private readonly IMediator _mediator;
-        private readonly IScoreReader _scores;
-        private readonly IPlayerStatsReader _stats;
+        private readonly IScoreProjector _projector;
 
-        public PumbilityProjectionSaga(IMediator mediator, IPlayerStatsReader stats, IScoreReader scores,
-            IPlayerHistoryRepository history, PumbilityProjectionCache cache)
+        public PumbilityProjectionSaga(IMediator mediator, IScoreProjector projector,
+            PumbilityProjectionCache cache)
         {
             _mediator = mediator;
-            _stats = stats;
-            _scores = scores;
-            _history = history;
+            _projector = projector;
             _cache = cache;
         }
 
@@ -89,11 +78,10 @@ namespace ScoreTracker.PlayerProgress.Application
                 (await BuildPool(ChartType.Single, userId, mix, charts, scoring, CancellationToken.None)).Baseline,
                 (await BuildPool(ChartType.Double, userId, mix, charts, scoring, CancellationToken.None)).Baseline);
 
-            var myStats = await _stats.GetStats(mix, userId, CancellationToken.None);
             var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(mix), CancellationToken.None);
 
             var expectedScore = new Dictionary<Guid, PhoenixScore>();
-            var scope = new ProjectionScope(mix, charts, scoringLevels, myStats, scoring, floor);
+            var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor);
 
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
                 await ProjectType(chartType, userId, scope, expectedScore, CancellationToken.None);
@@ -169,25 +157,16 @@ namespace ScoreTracker.PlayerProgress.Application
 
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
         private sealed record ProjectionScope(MixEnum Mix, IReadOnlyDictionary<Guid, Chart> Charts,
-            IDictionary<Guid, double> ScoringLevels, PlayerStatsRecord MyStats,
-            ScoringConfiguration Scoring, double Baseline);
+            IDictionary<Guid, double> ScoringLevels, ScoringConfiguration Scoring, double Baseline);
 
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
             IDictionary<Guid, PhoenixScore> into, CancellationToken cancellationToken)
         {
-            var (mix, charts, scoringLevels, myStats, scoring, baseline) = scope;
+            var (mix, charts, scoringLevels, scoring, baseline) = scope;
 
-            // The player is measured in the mix they are looking at: their pool, their bar and
-            // their level all come from this mix and nowhere else. The reference mix is a
-            // detail of the PEER side only (see BestAcrossMixes).
-            var reference = ReferenceMixFor(mix);
-
-            var myLevel = CompetitiveLevelFor(myStats, chartType);
-            if (myLevel <= 1 && reference != mix)
-                // A launch-mix account with no scores yet has no level to match peers on. The
-                // other mix names one rather than the page projecting nothing at all.
-                myLevel = CompetitiveLevelFor(
-                    await _stats.GetStats(reference, userId, cancellationToken), chartType);
+            // The same level the projector draws peers around, so the charts asked about and the
+            // players asked cannot end up centred on different numbers.
+            var myLevel = await _projector.CompetitiveLevel(mix, chartType, userId, cancellationToken);
             // Competitive level 1 is the no-data floor; below 10 the pool contributes nothing
             // to PUMBILITY anyway, so there is no projection worth making.
             if (myLevel <= 1) return;
@@ -200,147 +179,22 @@ namespace ScoreTracker.PlayerProgress.Application
                 // exact — but it is the difference between asking the database for every peer's
                 // scores on ~600 charts and asking for the couple hundred that could matter.
                 .Where(c => scoring.GetScore(c, PhoenixScore.Max, PhoenixPlate.PerfectGame, false) > baseline)
-                .Select(c => c.Id)
+                .Select(c => new ProjectionTarget(c.Id, (int)c.Level))
                 .ToArray();
             if (scoped.Length == 0) return;
 
-            var cohort = (await _stats.GetPlayersByCompetitiveRange(mix, chartType, myLevel,
-                CohortEstimator.CompetitiveWindow, cancellationToken)).ToHashSet();
-            if (reference != mix)
-                cohort.UnionWith(await _stats.GetPlayersByCompetitiveRange(reference, chartType, myLevel,
-                    CohortEstimator.CompetitiveWindow, cancellationToken));
-            cohort.Remove(userId);
-            if (cohort.Count == 0) return;
-
-            var peerScores = await BestAcrossMixes(mix, reference, cohort, scoped, charts, chartType,
+            // ±1.0, measured optimal for predicting the score itself — this page quotes the
+            // number, so its accuracy is what matters rather than the ranking.
+            var projected = await _projector.Project(
+                new ScoreProjectionRequest(mix, chartType, userId, scoped, CohortEstimator.CompetitiveWindow),
                 cancellationToken);
 
-            // Their level NOW, and their level history, so a score can be dated against the
-            // player they were when they set it. Both come from the reference mix, which is
-            // where the level series actually runs; a peer the reference mix has never seen
-            // falls back to this one.
-            //
-            // History is read for the peers who ACTUALLY turned up in the sweep, not for the
-            // whole cohort — a cohort is several hundred players and each carries a full
-            // timeline, so the ones who never played a chart in the window were pure freight.
-            var voices = peerScores.Select(s => s.UserId).Distinct().ToArray();
-            if (voices.Length == 0) return;
-
-            var levelNow = (await _stats.GetStats(reference, voices, cancellationToken))
-                .ToDictionary(s => s.UserId, s => CompetitiveLevelFor(s, chartType));
-            if (reference != mix)
-                foreach (var stats in await _stats.GetStats(mix, voices, cancellationToken))
-                    if (!levelNow.ContainsKey(stats.UserId))
-                        levelNow[stats.UserId] = CompetitiveLevelFor(stats, chartType);
-
-            var history = (await _history.GetHistory(reference, voices, cancellationToken))
-                .GroupBy(h => h.UserId)
-                .ToDictionary(g => g.Key, g => g.OrderBy(h => h.Date).ToArray());
-
-            foreach (var group in peerScores.GroupBy(s => s.ChartId))
-            {
-                var peers = group
-                    .Where(s => levelNow.ContainsKey(s.UserId))
-                    .Select(s => new PeerScore((int)s.Score, levelNow[s.UserId],
-                        LevelWhenSet(history, s.UserId, s.RecordedAt, chartType, levelNow[s.UserId])))
-                    .ToArray();
-
-                var estimate = CohortEstimator.Estimate(peers);
-                if (estimate == null) continue;
-
-                into[group.Key] = estimate.Value;
-            }
-        }
-
-        /// <summary>
-        ///     The mix a peer's evidence may also be read from. Phoenix 2 rerated Phoenix 1's
-        ///     charts rather than restepping them, and the score scale did not move with them:
-        ///     across 2,241 player-chart pairs scored in both mixes the median difference is
-        ///     zero, with 976 higher in Phoenix 2 against 994 lower. A changed scoring formula
-        ///     would show a consistent offset — that spread is practice, so a peer's Phoenix 1
-        ///     score is real evidence of what they can do on the same steps today.
-        ///     <para>
-        ///         This matters most at a launch, which is exactly when the cohort is thinnest:
-        ///         Phoenix 2 has scores from tens of players where Phoenix 1 has thousands.
-        ///     </para>
-        /// </summary>
-        private static MixEnum ReferenceMixFor(MixEnum mix)
-        {
-            return mix == MixEnum.Phoenix2 ? MixEnum.Phoenix : mix;
-        }
-
-        /// <summary>
-        ///     Each peer's best attempt per chart across the projected mix and its reference
-        ///     mix. Only the peers pool — the player's own scores are never read from another
-        ///     mix, because what they are being shown is what they have done HERE.
-        /// </summary>
-        private async Task<IReadOnlyCollection<UserPhoenixScore>> BestAcrossMixes(MixEnum mix, MixEnum reference,
-            IReadOnlyCollection<Guid> cohort, IReadOnlyCollection<Guid> chartIds,
-            IReadOnlyDictionary<Guid, Chart> charts, ChartType chartType, CancellationToken cancellationToken)
-        {
-            var wanted = chartIds.ToHashSet();
-            // The scoped set IS a level band, so it is asked for as one: a range scan the
-            // index can serve, rather than several hundred chart GUIDs in an IN list. The
-            // exact set is applied in memory below, so the result is identical either way.
-            var levels = chartIds.Select(id => (int)charts[id].Level).ToArray();
-            var min = levels.Min();
-            var max = levels.Max();
-
-            var scores = (await _scores.GetPlayerScoresInLevelRange(mix, cohort, chartType, min, max,
-                cancellationToken)).ToList();
-
-            if (reference != mix)
-                // Widened, because the reference mix rerated these charts and a chart's level
-                // there is not necessarily its level here. Over-fetching costs a few rows; the
-                // wanted-set filter below makes it exact.
-                scores.AddRange(await _scores.GetPlayerScoresInLevelRange(reference, cohort, chartType,
-                    Math.Max(1, min - ReferenceLevelSlack), Math.Min(DifficultyLevel.Max, max + ReferenceLevelSlack),
-                    cancellationToken));
-
-            return scores
-                .Where(s => wanted.Contains(s.ChartId))
-                .GroupBy(s => (s.UserId, s.ChartId))
-                .Select(g => g.OrderByDescending(s => (int)s.Score).First())
-                .ToArray();
-        }
-
-        /// <summary>
-        ///     The competitive level this player held when the score landed, from their own
-        ///     history. Falls back to their current level when the score predates any history —
-        ///     PlayerHistory begins 2024-06-04, and a no-information default of "no growth"
-        ///     under-states staleness rather than inventing it.
-        /// </summary>
-        private static double LevelWhenSet(IReadOnlyDictionary<Guid, PlayerRatingRecord[]> history, Guid userId,
-            DateTimeOffset? recordedAt, ChartType chartType, double fallback)
-        {
-            if (recordedAt == null || !history.TryGetValue(userId, out var rows) || rows.Length == 0)
-                return fallback;
-
-            PlayerRatingRecord? preceding = null;
-            foreach (var row in rows)
-            {
-                if (row.Date > recordedAt.Value) break;
-                preceding = row;
-            }
-
-            var chosen = preceding ?? rows[0];
-            var level = chartType == ChartType.Single ? chosen.SinglesLevel : chosen.DoublesLevel;
-            return level > 1 ? level : fallback;
+            foreach (var (chartId, score) in projected.Scores) into[chartId] = score;
         }
 
         private static double ScoringLevelOf(Chart chart, IDictionary<Guid, double> scoringLevels)
         {
             return scoringLevels.TryGetValue(chart.Id, out var level) ? level : (int)chart.Level;
-        }
-
-        private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)
-        {
-            return chartType switch
-            {
-                ChartType.Single => stats.SinglesCompetitiveLevel,
-                ChartType.Double => stats.DoublesCompetitiveLevel,
-                _ => stats.CompetitiveLevel
-            };
         }
 
         private async Task<PoolState> BuildPool(ChartType? chartType, Guid userId, MixEnum mix,

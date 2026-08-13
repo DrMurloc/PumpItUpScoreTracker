@@ -6,6 +6,7 @@ using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -21,17 +22,42 @@ namespace ScoreTracker.ChartIntelligence.Application;
 /// </summary>
 internal sealed class TierListBlendBuilder
 {
-    // Source weights per lens — ported verbatim from the page's modifier table.
-    private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, double>> LensModifiers =
+    /// <summary>
+    ///     What the shared, community view of a lens is made of — stored lists only. This is
+    ///     also what a signed-out visitor sees, and what the personalized view is diffed against.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, double>> CommunityModifiers =
         new Dictionary<string, IReadOnlyDictionary<string, double>>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Pass"] = new Dictionary<string, double>
-                { ["Skill"] = 2, ["Similar Players"] = 1, ["Pass Count"] = 2 },
-            ["Score"] = new Dictionary<string, double>
-                { ["Official Scores"] = 1, ["Scores"] = 2, ["Skill"] = 2, ["Similar Players"] = 1 },
+            ["Pass"] = new Dictionary<string, double> { ["Pass Count"] = 2 },
+            ["Score"] = new Dictionary<string, double> { ["Official Scores"] = 1, ["Scores"] = 2 },
             ["Popularity"] = new Dictionary<string, double> { ["Popularity"] = 1 },
             ["Chabala"] = new Dictionary<string, double> { ["Chabala"] = 1 },
             ["PG"] = new Dictionary<string, double> { ["PG"] = 1 }
+        };
+
+    /// <summary>
+    ///     What the personalized view of a lens is made of. Only Pass and Score have one; every
+    ///     other lens is community-only and personalizing it would mean nothing.
+    ///     <para>
+    ///         Score is the projection and nothing else (owner, 2026-08-11). Blending the stored
+    ///         score lists back in would count the same evidence twice: the projection is built
+    ///         from peers' actual scores, so those lists are an echo of its own input, bucketed —
+    ///         not a second opinion. It also means the standard-deviation banding happens once,
+    ///         inside the projection, rather than being averaged with other bandings and re-cut.
+    ///     </para>
+    ///     <para>
+    ///         Pass still blends, and deliberately keeps exactly what it had: there is no
+    ///         pass-projection engine, so its personal half is still the skill estimate and the
+    ///         similar-players aggregation.
+    ///     </para>
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, double>> PersonalizedModifiers =
+        new Dictionary<string, IReadOnlyDictionary<string, double>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Pass"] = new Dictionary<string, double>
+                { ["Pass Count"] = 2, ["Skill"] = 2, ["Similar Players"] = 1 },
+            ["Score"] = new Dictionary<string, double> { ["Projection"] = 1 }
         };
 
     private static readonly string[] StoredSources =
@@ -41,11 +67,13 @@ internal sealed class TierListBlendBuilder
     private readonly IDateTimeOffsetAccessor _clock;
     private readonly IMediator _mediator;
     private readonly IPlayerStatsReader _playerStats;
+    private readonly IScoreProjector _projector;
     private readonly IScoreReader _scores;
     private readonly IUserTierListRepository _userTierLists;
 
     public TierListBlendBuilder(IMediator mediator, IChartRepository charts, IScoreReader scores,
-        IPlayerStatsReader playerStats, IUserTierListRepository userTierLists, IDateTimeOffsetAccessor clock)
+        IPlayerStatsReader playerStats, IUserTierListRepository userTierLists, IDateTimeOffsetAccessor clock,
+        IScoreProjector projector)
     {
         _mediator = mediator;
         _charts = charts;
@@ -53,27 +81,36 @@ internal sealed class TierListBlendBuilder
         _playerStats = playerStats;
         _userTierLists = userTierLists;
         _clock = clock;
+        _projector = projector;
+    }
+
+    /// <summary>How much of a recipe is stored community lists — 0 when none of it is.</summary>
+    public static double CommunityWeightIn(IReadOnlyDictionary<string, double> modifiers)
+    {
+        return modifiers.Where(kv => StoredSources.Contains(kv.Key)).Sum(kv => kv.Value);
     }
 
     public static bool IsKnownLens(string lens)
     {
-        return LensModifiers.ContainsKey(lens);
+        return CommunityModifiers.ContainsKey(lens);
     }
 
-    public static IReadOnlyDictionary<string, double> ModifiersFor(string lens)
+    /// <summary>
+    ///     The weights in play for a lens as one view or the other. A lens with no personalized
+    ///     recipe falls back to its community one, so asking for a personalized Popularity list
+    ///     gets the community answer rather than an empty page.
+    /// </summary>
+    public static IReadOnlyDictionary<string, double> ModifiersFor(string lens, bool personalized)
     {
-        return LensModifiers[lens];
-    }
-
-    public static bool IsStoredSource(string sourceName)
-    {
-        return StoredSources.Contains(sourceName);
+        return personalized && PersonalizedModifiers.TryGetValue(lens, out var mine)
+            ? mine
+            : CommunityModifiers[lens];
     }
 
     public async Task<BlendComputation> Compute(ChartType chartType, DifficultyLevel level, string lens,
         Guid? userId, MixEnum mix, CancellationToken cancellationToken)
     {
-        var modifiers = LensModifiers[lens];
+        var modifiers = ModifiersFor(lens, userId != null);
         var folderCharts =
             (await _charts.GetCharts(mix, level, chartType, cancellationToken: cancellationToken)).ToArray();
 
@@ -92,6 +129,7 @@ internal sealed class TierListBlendBuilder
 
         SkillSourceComputation? skill = null;
         SimilarPlayersComputation? similar = null;
+        ProjectionComputation? projection = null;
         if (userId != null)
         {
             if (modifiers.TryGetValue("Skill", out var skillWeight) && skillWeight > 0)
@@ -107,9 +145,16 @@ internal sealed class TierListBlendBuilder
                     cancellationToken);
                 sources["Similar Players"] = similar.Entries;
             }
+
+            if (modifiers.TryGetValue("Projection", out var projectionWeight) && projectionWeight > 0)
+            {
+                projection = await ComputeProjection(chartType, mix, userId.Value, folderCharts,
+                    cancellationToken);
+                sources["Projection"] = projection.Entries;
+            }
         }
 
-        return new BlendComputation(folderCharts, sources, modifiers, provisional, skill, similar);
+        return new BlendComputation(folderCharts, sources, modifiers, provisional, skill, similar, projection);
     }
 
     /// <summary>
@@ -163,10 +208,8 @@ internal sealed class TierListBlendBuilder
     // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
     // under 900,000 = 0%. Deviations pool over this floored scale so sub-900k scores
     // read as zero proficiency instead of dragging skill estimates linearly.
-    // SkillScoreRange is public: PlayerSkillDeviationsHandler converts pooled
-    // deviations to score units with it (proficiency × range).
     private const double SkillScoreFloor = 900_000;
-    public const double SkillScoreRange = 100_000;
+    private const double SkillScoreRange = 100_000;
 
     private static double Proficiency(int score)
     {
@@ -174,11 +217,10 @@ internal sealed class TierListBlendBuilder
     }
 
     /// <summary>
-    ///     The pooled per-skill evidence around an anchor folder — the reusable core of
-    ///     the Skill source, also served cross-vertical through
-    ///     GetPlayerSkillDeviationsQuery (Pumbility projections v2). extraChipChartIds
-    ///     lets ComputeSkillSource keep its single bulk chips fetch for the
-    ///     folder-estimate stage that follows.
+    ///     The pooled per-skill evidence around an anchor folder — the core of the Skill
+    ///     source, and nothing outside this class reads it. extraChipChartIds lets
+    ///     ComputeSkillSource keep its single bulk chips fetch for the folder-estimate
+    ///     stage that follows.
     /// </summary>
     public async Task<SkillEvidencePool> ComputeSkillEvidence(ChartType chartType, DifficultyLevel anchorLevel,
         MixEnum mix, Guid userId, IReadOnlyCollection<Guid> extraChipChartIds, CancellationToken cancellationToken)
@@ -340,6 +382,67 @@ internal sealed class TierListBlendBuilder
             neighborIds.Count);
     }
 
+    /// <summary>
+    ///     Competitive-level half-width for the projection's peer gate. Narrower than the
+    ///     PUMBILITY page's ±1.0, and deliberately: that page quotes the projected number, where
+    ///     the wider window is measured more accurate, while this one only ranks the folder's
+    ///     charts against each other. ±0.5 is what the rest of the site means by a competitive
+    ///     peer — the session breakdown, communities, player highlights and this page's own
+    ///     Vs. Peers column all use it — and a level and a half of spread is two different players.
+    /// </summary>
+    public const double ProjectionCompetitiveWindow = 0.5;
+
+    /// <summary>
+    ///     How many of a folder's charts the projection must reach before it votes. The tier
+    ///     bands are cut from the spread of the values handed in, so a lone projection sits at
+    ///     its own mean with a standard deviation of zero and comes out stamped the easiest chart
+    ///     in the folder — at full weight, off one peer's single score. Two is barely better: the
+    ///     pair stretches to opposite ends of the ramp whatever the gap between them.
+    ///     ⚠ Provisional, and one of the numbers ScoreProjectionCostProbeTests exists to settle.
+    /// </summary>
+    public const int MinProjectedCharts = 3;
+
+    // The personalized Score source: what players at this level actually score on these charts,
+    // bucketed by standard deviation like every other tier list. A chart no peer has played is
+    // simply absent from the result — Combine skips a source with no entry, so the community
+    // lists carry that chart on their own rather than it dropping out of the folder.
+    private async Task<ProjectionComputation> ComputeProjection(ChartType chartType, MixEnum mix, Guid userId,
+        IReadOnlyCollection<Chart> folderCharts, CancellationToken cancellationToken)
+    {
+        var projection = await _projector.Project(new ScoreProjectionRequest(mix, chartType, userId,
+                folderCharts.Select(c => new ProjectionTarget(c.Id, (int)c.Level)).ToArray(),
+                ProjectionCompetitiveWindow),
+            cancellationToken);
+        // A projection of exactly zero is dropped rather than passed on. PhoenixScore's floor IS
+        // zero, so it is a value peers can hold, and TierListProcessor reserves zero for "no
+        // opinion" — so a chart landing there would go Not Rated on the list while the breakdown
+        // drew a confident 0 for it. The two surfaces have to agree about which charts the
+        // projection answered for, and this is the only value where they could not.
+        var projected = projection.Scores.Count == 0
+            ? projection.Scores
+            : projection.Scores.Where(kv => (int)kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
+
+        // The raw scores travel with the buckets: the breakdown page is built on the numbers
+        // themselves — where each chart sits in the folder's spread, and how that compares to
+        // what the player actually scored — and re-deriving them there would mean a second
+        // projection of the same folder.
+        if (projected.Count < MinProjectedCharts)
+            return new ProjectionComputation(new Dictionary<Guid, SongTierListEntry>(), projected,
+                projected.Count, folderCharts.Count, projection.PeerCount, projection.CompetitiveLevel,
+                projection.MeanFreshness);
+
+        var estimates = projected.ToDictionary(kv => kv.Key, kv => (double)(int)kv.Value);
+        return new ProjectionComputation(
+            TierListProcessor.ProcessIntoTierList("Projection", estimates)
+                .ToDictionary(e => e.ChartId, e => e),
+            projected,
+            projected.Count,
+            folderCharts.Count,
+            projection.PeerCount,
+            projection.CompetitiveLevel,
+            projection.MeanFreshness);
+    }
+
     private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)
     {
         return chartType switch
@@ -358,7 +461,22 @@ internal sealed record BlendComputation(
     IReadOnlyDictionary<string, double> Modifiers,
     bool IsProvisionalFallback,
     SkillSourceComputation? Skill,
-    SimilarPlayersComputation? Similar);
+    SimilarPlayersComputation? Similar,
+    ProjectionComputation? Projection);
+
+/// <summary>
+///     The projection source's output plus what the page needs in order to say something true
+///     when it is quiet: how many of the folder's charts peers at this level have played at all,
+///     and the cohort the numbers came from.
+/// </summary>
+internal sealed record ProjectionComputation(
+    IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
+    IReadOnlyDictionary<Guid, PhoenixScore> Scores,
+    int ProjectedChartCount,
+    int FolderChartCount,
+    int PeerCount,
+    double CompetitiveLevel,
+    double MeanFreshness);
 
 /// <summary>Per-skill pooled deviation on the proficiency scale + its effective evidence.</summary>
 internal sealed record SkillEvidence(double Deviation, double Evidence, bool Usable);

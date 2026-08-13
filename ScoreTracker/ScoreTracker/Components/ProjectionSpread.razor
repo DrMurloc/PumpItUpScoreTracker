@@ -1,0 +1,373 @@
+@using System.Globalization
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* The folder laid out on what a player at this level would score, with the tier bands drawn
+   behind it. The bands were always cut from a spread; this is the first surface that shows the
+   spread they were cut from — which is the whole reason the breakdown page exists.
+
+   The cuts come from TierListProcessor.StdDev, the same function the bucketing itself uses, so
+   a band edge here can never sit somewhere the tier list disagrees with. *@
+@if (Rows.Count == 0)
+{
+    return;
+}
+
+<div class="spread-scroll">
+    <div class="spread @(_pinned ? "spread-pinned" : "")">
+        <div class="spread-regions" aria-hidden="true">
+            @foreach (var band in Bands)
+            {
+                <span class="spread-region" style="left:@Css(Pct(band.From))%;width:@Css(Pct(band.To) - Pct(band.From))%">
+                    <i style="background:@ThemeScales.DifficultyColor(band.Category)"></i>
+                    <b style="color:@ThemeScales.DifficultyColor(band.Category)">@L[TierNames[band.Category]]</b>
+                </span>
+                @if (band.To < High)
+                {
+                    <span class="spread-edge" style="left:@Css(Pct(band.To))%"></span>
+                }
+            }
+        </div>
+        @foreach (var row in Rows)
+        {
+            var band = BandFor(row.Projected);
+            var projOff = OffSideOf(row.Projected);
+            var key = row.Chart.Id.ToString();
+            <div class="spread-row">
+                <span class="spread-name" role="button" tabindex="0" @onclick="() => Select(row.Chart)">
+                    <span class="spread-jacket" style="background-image:url('@row.Chart.Song.ImagePath')"></span>
+                    <span class="spread-title @(row.Mine == null ? "spread-unplayed" : "")">@row.Chart.Song.Name</span>
+                </span>
+                <span class="spread-track">
+                    @* Unplayed keeps its position and colour and loses only its fill: the
+                       projection is exactly as real there, and what is missing is the player's
+                       marker, not the number. A projection past the axis cap pins to the edge
+                       as an arrow in its own band's colour — the chart is genuinely out there,
+                       and letting it set the axis is what buried the middle bands. *@
+                    @Marker(key + ":proj", Clamp(row.Projected), Classes(row.Mine == null ? "spread-unplayed" : null, projOff),
+                        @<text><span class="spread-shape @(row.Mine == null ? "spread-unplayed" : "")"
+                               style="color:@ThemeScales.DifficultyColor(band);background:@ThemeScales.DifficultyColor(band);border-color:@ThemeScales.DifficultyColor(band)"></span>@Rail(row, SpreadRail.Projected, Clamp(row.Projected))</text>,
+                        @<span class="spread-readout">
+                            @* The song is named on the readout because below 700px the row shows
+                               a jacket and nothing else — without it a pinned number belongs to
+                               whichever row your thumb was over. *@
+                            <span class="spread-pop-title">@row.Chart.Song.Name</span>
+                            <span class="spread-figures">
+                                <span>@row.Projected.ToString("N0")</span>
+                                <LetterGradeIcon Grade="@GradeOf(row.Projected)" Height="15"></LetterGradeIcon>
+                                <span style="color:@ThemeScales.DifficultyColor(band)">@L[TierNames[band]]</span>
+                                @if (projOff != null)
+                                {
+                                    <span class="spread-offnote">@L["off the scale"]</span>
+                                }
+                            </span>
+                        </span>)
+                    @if (row.Mine != null)
+                    {
+                        var mine = (int)row.Mine.Value;
+                        @* Same treatment for the player's own score, in the behind/ahead ramp
+                           rather than the band's colour — off the bottom means something
+                           different here than a chart being hard. *@
+                        var mineOff = OffSideOf(mine);
+                        var ramp = ThemeScales.DifficultyColor(mine < row.Projected
+                            ? TierListCategory.VeryHard
+                            : TierListCategory.VeryEasy);
+                        @Marker(key + ":mine", Clamp(mine), Classes("spread-mine", mineOff),
+                            @<text><span class="spread-shape" style="color:@ramp"></span>@Rail(row, SpreadRail.Mine, Clamp(mine))</text>,
+                            @<span class="spread-readout">
+                                <span class="spread-pop-title">@row.Chart.Song.Name</span>
+                                <span class="spread-figures">
+                                    <span>@L["you {0}", mine.ToString("N0")]</span>
+                                    <LetterGradeIcon Grade="@GradeOf(mine)" Height="15"></LetterGradeIcon>
+                                    @if (mineOff != null)
+                                    {
+                                        <span class="spread-offnote">@L["off the scale"]</span>
+                                    }
+                                </span>
+                            </span>)
+                    }
+                </span>
+            </div>
+        }
+    </div>
+</div>
+@* Click-away layer: below the popover (1200), above the page, mounted only while something is
+   pinned so it never eats an ordinary click.
+
+   A bare div rather than MudOverlay, which locks document.body scrolling when it mounts. That
+   takes the page's scrollbar with it, so opening a readout shifted the whole page sideways by
+   the scrollbar's width. Its LockScroll parameter is documented as the off switch and does not
+   work — mudScrollManager.lockScroll fires either way — and nothing here needs the page held
+   still anyway. This catches one click and has no other opinions. *@
+@if (_pinned)
+{
+    <div class="spread-clickaway" @onclick="Unpin"></div>
+}
+
+@code {
+
+    /// <summary>One chart on the spread: what this level scores there, and what the player did.</summary>
+    public sealed record SpreadRow(Chart Chart, int Projected, PhoenixScore? Mine);
+
+    /// <summary>
+    ///     Charts with a projection, hardest first. A chart no peer has played has no position on
+    ///     this axis and belongs in the page's own not-enough-data list, not here.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public IReadOnlyList<SpreadRow> Rows { get; set; } = Array.Empty<SpreadRow>();
+
+    /// <summary>
+    ///     The mix the scores were set in. Required because a score resolves to different letters
+    ///     under Phoenix 2's floors, and there is deliberately no mix-less way to ask.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    /// <summary>Raised when a row's jacket or title is clicked. The page owns the dialog.</summary>
+    [Parameter]
+    public EventCallback<Chart> ChartSelected { get; set; }
+
+    /// <summary>Which marker the grade rail hangs off. Follows whatever the list is sorted by.</summary>
+    public enum SpreadRail
+    {
+        Projected,
+        Mine
+    }
+
+    /// <summary>
+    ///     The field the grade rail labels — the same one the rows are ordered by, so the badges
+    ///     run down the track in order instead of scattering.
+    /// </summary>
+    [Parameter]
+    public SpreadRail RailBy { get; set; } = SpreadRail.Projected;
+
+    /// <summary>
+    ///     Chart → the letter grade whose run starts on that row. The first row to reach a grade
+    ///     carries its badge and the rest of the run inherits it by proximity, which turns the
+    ///     track into a scale without the value column coming back.
+    /// </summary>
+    private readonly Dictionary<Guid, PhoenixLetterGrade> _rails = new();
+
+    private static readonly IReadOnlyDictionary<TierListCategory, string> TierNames =
+        new Dictionary<TierListCategory, string>
+        {
+            [TierListCategory.Overrated] = "1+ Level Easier",
+            [TierListCategory.VeryEasy] = "Very Easy",
+            [TierListCategory.Easy] = "Easy",
+            [TierListCategory.Medium] = "Medium",
+            [TierListCategory.Hard] = "Hard",
+            [TierListCategory.VeryHard] = "Very Hard",
+            [TierListCategory.Underrated] = "1+ Level Harder"
+        };
+
+    private sealed record Band(TierListCategory Category, double From, double To);
+
+    /// <summary>
+    ///     How far out the axis is allowed to run, in standard deviations either side of the
+    ///     mean. The bands past ±1.5σ are open-ended — everything below is "1+ Level Harder" and
+    ///     everything above "1+ Level Easier" — so an axis drawn to the furthest projection hands
+    ///     those two regions whatever the worst outlier is worth. A folder whose floor sits 4σ
+    ///     down gave "1+ Level Harder" nearly half the track to hold two charts, and squeezed the
+    ///     five bands that hold the rest into 7% each.
+    ///     <para>
+    ///         At ±2 the outer bands are half a sigma of a four-sigma axis — 12.5% each, the same
+    ///         as their neighbours — and a projection outside pins to the edge as an arrow.
+    ///     </para>
+    /// </summary>
+    private const double AxisSigmas = 2.0;
+
+    // Geometry is computed once per parameter set. As properties these chained — Pct read Low
+    // and High, each of which read Min, Max, Mean and Sd, and Sd is a full pass over the folder.
+    // A fifty-chart folder ran hundreds of them per render for numbers that cannot change
+    // between markers.
+    private double _low;
+    private double _high;
+    private Band[] _bands = Array.Empty<Band>();
+
+    protected override void OnParametersSet()
+    {
+        _rails.Clear();
+        var seenGrades = new HashSet<PhoenixLetterGrade>();
+        foreach (var row in Rows)
+        {
+            // An unplayed chart has no score to grade, so it starts no run when reading by
+            // yours — it would otherwise label the rail with a grade nobody earned.
+            var value = RailBy == SpreadRail.Mine
+                ? row.Mine == null ? (int?)null : (int)row.Mine.Value
+                : row.Projected;
+            if (value != null && seenGrades.Add(GradeOf(value.Value))) _rails[row.Chart.Id] = GradeOf(value.Value);
+        }
+
+        if (Rows.Count == 0)
+        {
+            _bands = Array.Empty<Band>();
+            return;
+        }
+
+        var values = Rows.Select(r => (double)r.Projected).ToArray();
+        var mean = values.Average();
+        var sd = TierListProcessor.StdDev(values, false);
+        var min = values.Min();
+        var max = values.Max();
+
+        if (sd <= 0)
+        {
+            // Every projection identical — reachable at a mix launch, where one peer's scores on
+            // three charts are the whole cohort. There is no spread to cut bands from, so the
+            // track is one band and every chart sits in the middle of it. Banding a zero spread
+            // would hand half the track to "1+ Level Harder" on charts that differ by nothing.
+            _low = mean - 1;
+            _high = mean + 1;
+            _bands = new[] { new Band(TierListCategory.Medium, _low, _high) };
+            return;
+        }
+
+        _low = Math.Max(min - (max - min) * 0.06, mean - AxisSigmas * sd);
+        _high = Math.Min(max + (max - min) * 0.06, mean + AxisSigmas * sd);
+        _bands = new[]
+            {
+                new Band(TierListCategory.Underrated, _low, mean - 1.5 * sd),
+                new Band(TierListCategory.VeryHard, mean - 1.5 * sd, mean - sd),
+                new Band(TierListCategory.Hard, mean - sd, mean - sd / 2),
+                new Band(TierListCategory.Medium, mean - sd / 2, mean + sd / 2),
+                new Band(TierListCategory.Easy, mean + sd / 2, mean + sd),
+                new Band(TierListCategory.VeryEasy, mean + sd, mean + 1.5 * sd),
+                new Band(TierListCategory.Overrated, mean + 1.5 * sd, _high)
+            }.Where(b => b.To > _low && b.From < _high)
+            .Select(b => new Band(b.Category, Math.Max(b.From, _low), Math.Min(b.To, _high)))
+            .ToArray();
+    }
+
+    private double Low => _low;
+
+    private double High => _high;
+
+    /// <summary>
+    ///     The same cuts the tier list makes: mean ± ½σ, σ, 1½σ over the projections, via the
+    ///     shared StdDev so the two cannot drift.
+    /// </summary>
+    private IReadOnlyList<Band> Bands => _bands;
+
+    private TierListCategory BandFor(int projected) =>
+        Bands.FirstOrDefault(b => projected < b.To)?.Category ?? TierListCategory.Overrated;
+
+    /// <summary>
+    ///     A number bound for a CSS declaration, always with a dot. Razor interpolates a double
+    ///     through CurrentCulture, and the app switches formatting culture as well as UI culture
+    ///     (CultureResolution calls AddSupportedCultures), so on fr-FR / es-ES / es-MX / it-IT /
+    ///     pt-BR a raw one emits "left:37,428%" — invalid CSS, and the bands and markers collapse
+    ///     to the left edge for most of the site's non-English readers.
+    /// </summary>
+    private static string Css(double value) => value.ToString("0.####", CultureInfo.InvariantCulture);
+
+    private double Pct(double value) => High - Low < 0.0001 ? 0 : (value - Low) / (High - Low) * 100.0;
+
+    private double Clamp(double value) => Math.Clamp(Pct(value), 0, 100);
+
+    /// <summary>Which edge a value sits past, or null when it is on the axis.</summary>
+    private string? OffSideOf(double value)
+    {
+        if (value < Low) return "spread-off spread-off-left";
+        return value > High ? "spread-off spread-off-right" : null;
+    }
+
+    private static string? Classes(params string?[] parts)
+    {
+        var joined = string.Join(" ", parts.Where(p => !string.IsNullOrEmpty(p)));
+        return joined.Length == 0 ? null : joined;
+    }
+
+    private PhoenixLetterGrade GradeOf(int score) => ((PhoenixScore)score).LetterGradeFor(Mix);
+
+    private Task Select(Chart chart) =>
+        ChartSelected.HasDelegate ? ChartSelected.InvokeAsync(chart) : Task.CompletedTask;
+
+    /// <summary>Which marker's readout is showing, and whether a tap pinned it there.</summary>
+    private string? _openMarker;
+
+    private bool _pinned;
+
+    private void Hover(string key)
+    {
+        if (_pinned) return;
+        _openMarker = key;
+    }
+
+    private void Unhover(string key)
+    {
+        // A pinned readout ignores the pointer leaving: on a phone the pointer "leaves" as soon
+        // as the finger lifts, which is the whole reason a tap could not hold one open.
+        if (_pinned || _openMarker != key) return;
+        _openMarker = null;
+    }
+
+    private void Pin(string key)
+    {
+        _openMarker = key;
+        _pinned = true;
+    }
+
+    private void Unpin()
+    {
+        _pinned = false;
+        _openMarker = null;
+    }
+
+    /// <summary>
+    ///     A marker and its readout. One mechanism doing both jobs: pointer-enter opens it, so a
+    ///     mouse can scan the folder by hovering, and pointer-up pins it, so a tap holds it until
+    ///     something else is tapped.
+    ///     <para>
+    ///         MudTooltip could not do the second. It owns its own visibility, and on touch the
+    ///         sequence is enter → up → leave: it opened, the tap toggled it shut, and the leave
+    ///         closed it again. Controlling <c>Visible</c> from outside does not help either,
+    ///         because a one-way binding overrides the hover it is supposed to keep.
+    ///     </para>
+    ///     <para>
+    ///         The popover renders through the provider, which does not exist in a static render;
+    ///         the shape is the data and the readout is an affordance, so a static render keeps
+    ///         the first and drops the second (same gate as DifficultyBubble).
+    ///     </para>
+    /// </summary>
+    /// <summary>
+    ///     The badge beside a marker, when that marker starts a grade's run and the rail is
+    ///     following its field. Flipped inside near the right edge so it never hangs off the
+    ///     track, and click-through so it cannot steal the marker's hit area.
+    /// </summary>
+    private RenderFragment? Rail(SpreadRow row, SpreadRail side, double atPercent)
+    {
+        if (RailBy != side || !_rails.TryGetValue(row.Chart.Id, out var grade)) return null;
+
+        var css = atPercent > 86 ? "spread-rail spread-rail-left" : "spread-rail";
+        return @<span class="@css"><LetterGradeIcon Grade="grade" Height="15"></LetterGradeIcon></span>;
+    }
+
+    private RenderFragment Marker(string key, double left, string? extraClass, RenderFragment shape,
+        RenderFragment readout)
+    {
+        var css = string.IsNullOrEmpty(extraClass) ? "spread-marker" : "spread-marker " + extraClass;
+        if (!RendererInfo.IsInteractive)
+        {
+            return @<span class="@css" style="left:@Css(left)%">@shape</span>;
+        }
+
+        // The wrapper is ours and the popover sits INSIDE it, which is also what anchors it.
+        // Putting a positioning class on a framework root instead lands it on an element already
+        // carrying its own width and display at the same specificity, and it collapses.
+        return @<span class="@css" style="left:@Css(left)%" @onpointerenter="() => Hover(key)"
+                      @onpointerleave="() => Unhover(key)" @onpointerup="() => Pin(key)">
+                   @shape
+                   <MudPopover Open="@(_openMarker == key)" AnchorOrigin="Origin.TopCenter"
+                               TransformOrigin="Origin.BottomCenter" Class="spread-pop">
+                       @readout
+                   </MudPopover>
+               </span>;
+    }
+
+}

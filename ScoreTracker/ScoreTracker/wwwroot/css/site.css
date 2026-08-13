@@ -1,4 +1,4 @@
-﻿/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
+/* Self-hosted display face — headings, stat numerals, wordmark. Latin subset only:
    Korean/Japanese glyphs fall through per-glyph to the system CJK fonts in the stack
    (see --font-display), which keeps mixed-script headings from going anemic. */
 @font-face {
@@ -2037,10 +2037,6 @@ html.sheet-open .more-sheet-scrim {
 
 .tier-chart-card-extra {
     margin-top: 2px;
-}
-
-.tier-chart-card-skeleton {
-    border-radius: 8px;
 }
 
 .tier-chart-card-lens-dot {
@@ -13500,6 +13496,304 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-ink-muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+}
+
+/* --- the projection spread: a folder laid out on what your level scores there --- */
+/* Lives here rather than in a Razor <style> block, which is page-scoped — a shared component
+   styled that way renders unstyled on every other page that picks it up. */
+.spread-scroll {
+    overflow-x: auto;
+}
+
+/* No value column: the numbers live on the markers, which buys the track most of the width
+   back — the thing the spread is actually made of. */
+.spread {
+    /* The region overlay derives its inset from the same two numbers as the grid below, because
+       pixel-guessing the alignment is exactly what breaks when a column width changes. */
+    --spread-namecol: 190px;
+    --spread-gap: 14px;
+    min-width: 460px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-top: 26px;
+}
+
+.spread-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--spread-namecol) 1fr;
+    align-items: center;
+    gap: var(--spread-gap);
+    height: 34px;
+    border-radius: 4px;
+}
+
+/* The row highlight is the alignment aid — it is what lets an eye carry a dot back to the title
+   it belongs to. A vertical rule through the dot as well was one guide too many. */
+.spread-row:hover {
+    background: color-mix(in srgb, var(--mix-ink) 7%, transparent);
+}
+
+.spread-row:hover .spread-title {
+    color: var(--mix-ink);
+}
+
+.spread-regions {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--spread-namecol) + var(--spread-gap));
+    right: 0;
+    pointer-events: none;
+}
+
+.spread-region {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+}
+
+.spread-region i {
+    position: absolute;
+    inset: 0;
+    opacity: .13;
+}
+
+/* Vertical at every width. Rotated, a band label needs about 12px rather than the 90 its
+   horizontal form wanted, so it survives a narrow band and a phone alike — which is what lets
+   the row drop the tier name entirely instead of printing it beside every number. */
+.spread-region b {
+    position: absolute;
+    top: 3px;
+    left: 2px;
+    font-size: 9px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    max-height: calc(100% - 6px);
+    overflow: hidden;
+}
+
+.spread-edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: color-mix(in srgb, var(--mix-ink) 22%, transparent);
+}
+
+.spread-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+}
+
+.spread-name:hover .spread-title, .spread-name:focus-visible .spread-title {
+    color: var(--mix-primary);
+    text-decoration: underline;
+}
+
+.spread-jacket {
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+    flex: none;
+    background-size: cover;
+    background-position: center;
+}
+
+/* A long title ellipses rather than widening the column and dragging the track with it. */
+.spread-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.spread-title.spread-unplayed {
+    font-style: italic;
+}
+
+.spread-track {
+    position: relative;
+    height: 100%;
+}
+
+/* The marker is the hit area and the tooltip's anchor. It is OUR element with the tooltip
+   inside it, never MudTooltip's own root: that root carries .mud-tooltip-root{width:auto} and
+   .mud-tooltip-inline{display:inline-block} at the same specificity as anything added
+   alongside, so a marker class landing there loses its width and its display and collapses.
+   22px because a fingertip cannot reliably hit an 11px dot, and the readout is now the only
+   place the number lives. */
+.spread-marker {
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    margin: -11px 0 0 -11px;
+}
+
+.spread-marker .mud-tooltip-root {
+    position: absolute;
+    inset: 0;
+}
+
+/* Centred on margins rather than a transform, so the diamond below can spend its transform on
+   the rotation without having to restate the centring. */
+.spread-shape {
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 11px;
+    height: 11px;
+    margin: -5.5px 0 0 -5.5px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--mix-bg);
+}
+
+/* Unplayed loses its fill and nothing else — the projection is just as real there. */
+.spread-shape.spread-unplayed {
+    background: var(--mix-bg) !important;
+    border: 2px solid;
+    box-shadow: none;
+}
+
+.spread-mine .spread-shape {
+    width: 9px;
+    height: 9px;
+    margin: -4.5px 0 0 -4.5px;
+    border-radius: 0;
+    transform: rotate(45deg);
+    border: 1.5px solid var(--mix-ink);
+    background: var(--mix-bg);
+    box-shadow: none;
+}
+
+/* Clamped to the edge and drawn as an arrow: the row still says "off the bottom" rather than
+   claiming the score sits at the axis floor. The border box is 13x10, so the centring margins
+   are its own halves rather than the circle's. */
+.spread-off .spread-shape {
+    width: 0;
+    height: 0;
+    border: 5px solid transparent;
+    margin: -5px 0 0 -6.5px;
+    background: none;
+    transform: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+/* currentColor, so the arrow keeps whatever the marker was going to be: the band's colour for
+   a projection, the behind/ahead ramp for the player's own score. */
+.spread-off-left .spread-shape {
+    border-right: 8px solid currentColor;
+}
+
+.spread-off-right .spread-shape {
+    border-left: 8px solid currentColor;
+}
+
+/* Catches the click that dismisses a pinned readout, and nothing else: no background, no
+   scroll lock, below the popover's 1200 and above the page. */
+.spread-clickaway {
+    position: fixed;
+    inset: 0;
+    z-index: 1198;
+}
+
+/* While a readout is pinned the spread rises above the click-away layer, so tapping a SECOND
+   marker reaches that marker and moves the readout. Without it the layer is the hit target for
+   the whole viewport and moving a readout took two taps: one to dismiss, one to open. Below
+   MudPopover's 1200 so the readout itself still draws on top. */
+.spread-pinned {
+    z-index: 1199;
+}
+
+/* The popover's own box: MudPopover brings no padding of its own. */
+.spread-pop {
+    padding: 7px 10px;
+}
+
+/* The grade rail: the first marker to reach each letter carries its badge, giving the track a
+   scale down its side without the value column coming back. Click-through, so it cannot steal
+   the marker's hit area, and flipped inside near the right edge so it never hangs off. */
+.spread-rail {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 1px);
+    transform: translateY(-50%);
+    pointer-events: none;
+    opacity: .92;
+    line-height: 0;
+}
+
+.spread-rail-left {
+    left: auto;
+    right: calc(100% + 1px);
+}
+
+.spread-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* The song, so a pinned readout says which row it belongs to. Below 700px the row is a jacket
+   and a track, so without this a number on screen names nothing. Ellipsed rather than wrapped:
+   a two-line title pushes the figures off a phone. */
+.spread-pop-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--mix-ink-muted);
+    max-width: 24ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.spread-figures {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.spread-offnote {
+    font-weight: 400;
+    opacity: .75;
+}
+
+/* Below this the title gives way to the jacket alone and the track takes the width. The band
+   labels stay: vertical, they fit here as well as anywhere, and they are what keeps the dot's
+   colour from being the only channel carrying the tier. */
+@media (max-width: 700px) {
+    .spread {
+        --spread-namecol: 30px;
+        --spread-gap: 8px;
+        min-width: 0;
+        padding-top: 0;
+    }
+
+    .spread-row {
+        height: 38px;
+        border-radius: 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 7%, transparent);
+    }
+
+    .spread-title {
+        display: none;
+    }
 }
 
 /* --- the patience card: sitewide, for waits a page cannot shorten --- */

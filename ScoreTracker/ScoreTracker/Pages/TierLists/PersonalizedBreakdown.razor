@@ -1,5 +1,6 @@
 @page "/TierLists/{ChartTypeRoute}/{LevelRoute:int}/Breakdown"
 @rendermode RenderModes.Interactive
+@using System.Globalization
 @using MediatR
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
@@ -48,19 +49,34 @@ else
                     <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                     <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
                 </MudSelect>
-                <MudSpacer></MudSpacer>
-                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Bolt">@L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name]</MudChip>
             </div>
         </div>
 
+        @* Always the card here: this page only exists for a signed-in player on a personalizing
+           lens, so its wait is the slow one every time. *@
         @if (_isLoading)
         {
-            <TierListSkeleton></TierListSkeleton>
+            <PatienceCard Explanation="@L["Compiling your personalized breakdown."]"></PatienceCard>
         }
         else if (_breakdown == null)
         {
             <div class="tier-list-cta">
                 <MudText>@L["No charts match your filters"]</MudText>
+            </div>
+        }
+        else if (_lens != "Score")
+        {
+            @* Pass is on hold (owner, 2026-08-11). Its personal half — the skill estimate and
+               the similar-players read — is being reworked, and everything this page says about
+               Pass explains the version that is going away. Better to say nothing than to
+               explain a blend nobody is keeping. *@
+            <div class="tier-list-cta">
+                <MudText Typo="Typo.h6">@L["A breakdown for Pass Difficulty is coming."]</MudText>
+                <MudText Typo="Typo.caption">@L["The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced."]</MudText>
+                <div class="tier-list-cta-actions">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ChangeLens("Score"))">@L["See the Score breakdown"]</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="@TierListUrl">@L["Back to Tier List"]</MudButton>
+                </div>
             </div>
         }
         else
@@ -70,163 +86,116 @@ else
             <div class="bd-verdict">
                 <span>@L["Your personalized list moves {0} of {1} charts away from the community's.", MovedCount, _breakdown.Charts.Count]</span>
                 <span class="bd-verdict-detail">
-                    @{
-                        var harderDrivers = TopDrivers(HarderMovers, weaker: true);
-                        var easierDrivers = TopDrivers(EasierMovers, weaker: false);
-                    }
-                    <span class="bd-harder-text">@(harderDrivers.Length > 0 ? L["{0} harder for you — mostly {1}", HarderMovers.Count, harderDrivers] : L["{0} harder for you", HarderMovers.Count])</span>
+                    <span class="bd-harder-text">@L["{0} harder for you", _harderMovers.Count]</span>
                     <span class="bd-dot">·</span>
-                    <span class="bd-easier-text">@(easierDrivers.Length > 0 ? L["{0} easier for you — mostly {1}", EasierMovers.Count, easierDrivers] : L["{0} easier for you", EasierMovers.Count])</span>
+                    <span class="bd-easier-text">@L["{0} easier for you", _easierMovers.Count]</span>
                     <span class="bd-dot">·</span>
                     <span>@L["{0} match the community tier", UnchangedCount]</span>
-                    @if (NoDataCharts.Any())
+                    @if (_noDataCharts.Any())
                     {
                         <span class="bd-dot">·</span>
-                        <span>@L["{0} don't have enough data to move", NoDataCharts.Count]</span>
+                        <span>@L["{0} not enough data", _noDataCharts.Count]</span>
                     }
                 </span>
                 <MudText Typo="Typo.caption" Class="bd-caption">@L["Recalculated every few hours"]</MudText>
             </div>
 
-            @* The recipe: the three sources, their weights, and their status for YOU in
-               this folder — a silent source is a diagnostic, not a mystery. *@
+            @* The recipe, as figures. It used to be sixty words describing a cohort the page had
+               no way to count; now it can count it, and a reader can weigh "148 players" in a way
+               they cannot weigh "everyone within half a level of you". *@
             <section class="bd-block">
-                <MudText Typo="Typo.h5">@L["What goes into your list"]</MudText>
-                <MudText Typo="Typo.caption" Class="bd-caption">@L["Three sources vote on every chart. Sources with more weight move charts further."]</MudText>
-                <div class="bd-weightbar" aria-hidden="true">
-                    <span class="bd-w-community" style="flex:@_breakdown.CommunityWeight"></span>
-                    <span class="bd-w-skill" style="flex:@_breakdown.SkillWeight"></span>
-                    <span class="bd-w-similar" style="flex:@_breakdown.SimilarPlayersWeight"></span>
+                <div class="bd-head">
+                    <MudText Typo="Typo.h5">@L["What your list is built from"]</MudText>
+                    @* The one surviving explanation, and it waits to be asked: it answers "why
+                       isn't the community list mixed in", which is a question a reader either
+                       has or does not. Leading with it made the page argue with itself. *@
+                    <MudTooltip ShowOnClick="true" ShowOnFocus="true" Placement="Placement.Bottom">
+                        <ChildContent>
+                            <MudIcon Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Class="bd-qmark"></MudIcon>
+                        </ChildContent>
+                        <TooltipContent>
+                            <div class="bd-qbody">@L["Nothing else votes. The community score lists are built from the same scores this reads, so blending them in would count the same evidence twice."]</div>
+                        </TooltipContent>
+                    </MudTooltip>
                 </div>
-                <div class="bd-recipe-cards">
-                    <div class="bd-card">
-                        <div class="bd-card-head">
-                            <MudText Typo="Typo.subtitle1">@L["Community Tier List"]</MudText>
-                            <span class="bd-weight bd-w-community">×@_breakdown.CommunityWeight</span>
+                @if (_breakdown.ProjectedChartCount >= 3)
+                {
+                    <div class="bd-stats">
+                        <div class="bd-stat bd-stat-accent">
+                            <span class="bd-stat-v">@_breakdown.PeerCount.ToString("N0")</span>
+                            <span class="bd-stat-l">@L["Players"]</span>
+                            <span class="bd-stat-s">@L["who played these charts"]</span>
                         </div>
-                        <MudText Typo="Typo.body2" Class="bd-caption">@L["The shared tier list for this folder, built from everyone's data."]</MudText>
-                        <div class="bd-status">
-                            <span class="bd-status-ok">●</span>
-                            <span>@L["{0} / {1} charts rated", CommunityRatedCount, _breakdown.Charts.Count]</span>
+                        <div class="bd-stat">
+                            <span class="bd-stat-v">@BandLow–@BandHigh</span>
+                            <span class="bd-stat-l">@L["Level band"]</span>
+                            <span class="bd-stat-s">@L["you sit at {0}", _breakdown.CompetitiveLevel.ToString("N1")]</span>
+                        </div>
+                        <div class="bd-stat">
+                            <span class="bd-stat-v">@_breakdown.ProjectedChartCount / @_breakdown.FolderChartCount</span>
+                            <span class="bd-stat-l">@L["Charts covered"]</span>
+                            <span class="bd-stat-s">@L["{0} have no peer score", _breakdown.FolderChartCount - _breakdown.ProjectedChartCount]</span>
+                        </div>
+                        <div class="bd-stat">
+                            <span class="bd-stat-v">▾ @((1 - _breakdown.MeanFreshness).ToString("P0"))</span>
+                            <span class="bd-stat-l">@L["Stale weight"]</span>
+                            <span class="bd-stat-s">@L["discount for peers who outgrew the score"]</span>
                         </div>
                     </div>
-                    <div class="bd-card">
-                        <div class="bd-card-head">
-                            <MudText Typo="Typo.subtitle1">@L["Your Skill Estimate"]</MudText>
-                            <span class="bd-weight bd-w-skill">×@_breakdown.SkillWeight</span>
-                        </div>
-                        <MudText Typo="Typo.body2" Class="bd-caption">@L["Every chart you've scored within 3 folders votes on your skills — closer folders and bigger skill coverage count more."]</MudText>
-                        @if (_breakdown.SkillSourceActive)
-                        {
-                            <div class="bd-status">
-                                <span class="bd-status-ok">●</span>
-                                <span>@L["Active — {0} scores nearby, {1} skills have enough evidence", _breakdown.ScoredChartCount, _breakdown.UsableSkillCount]</span>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="bd-status">
-                                <span class="bd-status-off">●</span>
-                                <span>@L["Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on.", _breakdown.UsableSkillCount]</span>
-                            </div>
-                        }
-                        @* Card-level disclaimer, deliberately not per-row (owner): the age
-                           weighting is context, not data. Counts the actual outliers the
-                           algorithm diminished, not a fixed calendar cutoff. *@
-                        @if (_breakdown.OutdatedScoreCount > 0)
-                        {
-                            <div class="bd-status bd-age-note">
-                                <MudIcon Icon="@Icons.Material.Filled.History" Class="bd-age-icon"></MudIcon>
-                                <span>@L["Older scores count for less — {0} of your nearby scores are much older than the rest of your record.", _breakdown.OutdatedScoreCount]</span>
-                            </div>
-                        }
+                }
+                else
+                {
+                    <div class="bd-quiet">
+                        <span>@L["Silent — players at your level have only scored {0} of these charts. Your list currently matches the community's.", _breakdown.ProjectedChartCount]</span>
                     </div>
-                    <div class="bd-card">
-                        <div class="bd-card-head">
-                            <MudText Typo="Typo.subtitle1">@L["Players Like You"]</MudText>
-                            <span class="bd-weight bd-w-similar">×@_breakdown.SimilarPlayersWeight</span>
-                        </div>
-                        <MudText Typo="Typo.body2" Class="bd-caption">@L["Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours."]</MudText>
-                        @if (_breakdown.SimilarPlayerCount > 0)
-                        {
-                            <div class="bd-status">
-                                <span class="bd-status-ok">●</span>
-                                <span>@L["{0} players found", _breakdown.SimilarPlayerCount]</span>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="bd-status">
-                                <span class="bd-status-off">●</span>
-                                <span>@L["Silent — no players found in your competitive range yet."]</span>
-                            </div>
-                        }
-                    </div>
-                </div>
+                }
             </section>
 
-            @* Your skill profile — the same skills through two questions. Left: the
-               cross-folder deviations the blend actually uses (owner: users should
-               come out going "oh, that's what all that meant"). Right: the Folder
-               Stats view of this folder, restated so the two connect. *@
-            <section class="bd-block">
-                <MudText Typo="Typo.h5">@L["Your skill profile"]</MudText>
-                <MudText Typo="Typo.caption" Class="bd-caption">@L["Two views of the same skills. The left one feeds the blend above; the right one is this folder as Folder Stats shows it."]</MudText>
-                <div class="bd-skills-grid">
-                    <div class="bd-card">
-                        <MudText Typo="Typo.subtitle1">@L["Across everything you've scored nearby"]</MudText>
-                        <MudText Typo="Typo.caption" Class="bd-caption">@L["How each skill runs against your own average"]</MudText>
-                        <div class="bd-dev-head">
-                            <span>@L["Skill"]</span>
-                            <span>← @L["weaker"] · @L["stronger"] →</span>
-                            <span>@L["You"]</span>
-                            <span>@L["Evidence"]</span>
-                            <span>@L["Vs. Peers"]</span>
-                        </div>
-                        @foreach (var row in SkillRows)
-                        {
-                            var widthPercent = row.Usable ? Math.Max(2, (int)Math.Round(48.0 * Math.Abs(row.Deviation) / MaxAbsDeviation)) : 0;
-                            <div class="bd-dev-row skillcat-@(row.Skill.GetPrimaryCategory().ToString().ToLowerInvariant()) @(row.Usable ? "" : "bd-dim")">
-                                <span class="bd-dev-label">@row.Skill.GetName()</span>
-                                <span class="bd-dev-track">
-                                    @if (row.Usable)
-                                    {
-                                        <span class="bd-dev-fill" style="@(row.Deviation < 0 ? $"right:50%;width:{widthPercent}%" : $"left:50%;width:{widthPercent}%")"></span>
-                                    }
-                                </span>
-                                <span class="bd-dev-val">@(row.Usable ? (row.Deviation >= 0 ? "+" : "−") + Math.Abs(row.Deviation * 100).ToString("0.0") + "%" : "—")</span>
-                                <span class="bd-dev-ev">@row.Evidence.ToString("0.0")</span>
-                                <span class="bd-dev-peer">
-                                    @if (row.PeerPercentile != null)
-                                    {
-                                        <span class="@ThemeScales.RarityClass(ThemeScales.BandFor(row.PeerPercentile.Value))" style="@ThemeScales.RarityStyle(row.PeerPercentile.Value)">@((100 * row.PeerPercentile.Value).ToString("N0"))%</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="bd-caption">—</span>
-                                    }
-                                </span>
-                            </div>
-                        }
-                        <MudText Typo="Typo.caption" Class="bd-caption bd-footnote">@L["Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet."] @L["Evidence already includes score age — older scores count for less."]</MudText>
+            @* The spread the tiers were cut from — the section carrying this page's whole
+               reason for existing. With the blend gone it is not one input among several, it
+               IS the list. *@
+            @if (_spreadRows.Count > 0)
+            {
+                <section class="bd-block">
+                    @* No caption: the bands are drawn over the dots, so the picture states what a
+                       sentence underneath would only restate. *@
+                    <div class="bd-head">
+                        <MudText Typo="Typo.h5">@L["What players at your level score here"]</MudText>
+                        @* Reading down the projections answers "what is hard here"; reading down
+                           your own answers "where am I weakest". Both are the point of the
+                           picture, and neither is a filter, so it is a sort rather than a view. *@
+                        <MudMenu Dense="true" Size="Size.Small" Icon="@Icons.Material.Filled.SwapVert"
+                                 title="@L["Sort by"]" AriaLabel="@L["Sort by"]">
+                            <MudMenuItem OnClick="@(() => SetSpreadSort("Projected"))"
+                                         Icon="@(_spreadSort == "Projected" ? Icons.Material.Filled.Check : null)">
+                                @L["Projected"]
+                            </MudMenuItem>
+                            <MudMenuItem OnClick="@(() => SetSpreadSort("Mine"))"
+                                         Icon="@(_spreadSort == "Mine" ? Icons.Material.Filled.Check : null)">
+                                @L["My Scores"]
+                            </MudMenuItem>
+                        </MudMenu>
                     </div>
-                    <div class="bd-card">
-                        <MudText Typo="Typo.subtitle1">@L["In this folder"]</MudText>
-                        <MudText Typo="Typo.caption" Class="bd-caption">@L["Your ability on the charts you've played here — the same numbers as Folder Stats"]</MudText>
-                        <FolderSkillList Charts="_charts.Values" SkillChips="_skillChips" Scores="_scores"></FolderSkillList>
-                        <div class="bd-bridge">@L["Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts."]</div>
+                    <ProjectionSpread Rows="_spreadRows" Mix="_currentMix" ChartSelected="OpenChart"
+                                      RailBy="@(_spreadSort == "Mine" ? ProjectionSpread.SpreadRail.Mine : ProjectionSpread.SpreadRail.Projected)"></ProjectionSpread>
+                    <div class="bd-spread-legend">
+                        <span><span class="bd-legend-dot"></span> @L["Projected Score"]</span>
+                        <span><span class="bd-legend-diamond"></span> @L["You"]</span>
+                        <span><span class="bd-legend-hollow"></span> @L["Not played"]</span>
+                        <span><span class="bd-legend-caret"></span> @L["off the scale"]</span>
+                        <span>@L["hover or tap a marker"]</span>
                     </div>
-                </div>
-                <MudText Typo="Typo.caption" Class="bd-attribution">@L["Skill data: PIU Center — maintained by aesthete"]</MudText>
-            </section>
+                </section>
+            }
 
             @* Charts that moved — the reason this page exists. Simple rows (jacket,
                movement in ramp-colored words, top contribution chips); tapping a row
                expands the full source strip (owner: simple view, tap for more data). *@
             <section class="bd-block">
+                @* No caption: two group headings that say "Harder for you" and "Easier for you",
+                   each with its count, already say what a sentence would. *@
                 <MudText Typo="Typo.h5">@L["Charts that moved"]</MudText>
-                <MudText Typo="Typo.caption" Class="bd-caption">@L["Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown."]</MudText>
-                @if (!HarderMovers.Any() && !EasierMovers.Any())
+                @if (!_harderMovers.Any() && !_easierMovers.Any())
                 {
                     <div class="bd-quiet">@L["Your list currently matches the community's on every rated chart."]</div>
                 }
@@ -252,24 +221,40 @@ else
                             }
                             var expanded = _expandedCharts.Contains(mover.ChartId);
                             <div class="bd-mover" role="button" tabindex="0" @onclick="() => ToggleExpanded(mover.ChartId)">
-                                <span class="bd-jacket" style="background-image:url('@chart.Song.ImagePath')"></span>
+                                <span class="bd-jacket" style="background-image:url('@chart.Song.ImagePath')"
+                                      @onclick:stopPropagation="true" @onclick="() => OpenChart(chart)"></span>
                                 <span class="bd-mover-song">
-                                    <DifficultyBubble Chart="chart"></DifficultyBubble>
-                                    <span class="bd-mover-name">@chart.Song.Name</span>
+                                    <span class="bd-mover-name" @onclick:stopPropagation="true"
+                                          @onclick="() => OpenChart(chart)">@chart.Song.Name</span>
+                                    @* Two labelled figures where a sentence used to be, and the
+                                       grades make the gap legible without reading either number. *@
+                                    <span class="bd-pair">
+                                        @if (mover.ProjectedScore != null)
+                                        {
+                                            <span class="bd-f">
+                                                <span class="bd-k">@L["peers:"]</span>
+                                                <b>@(((int)mover.ProjectedScore.Value).ToString("N0"))</b>
+                                                <LetterGradeIcon Grade="@GradeOf((int)mover.ProjectedScore.Value)" Height="15"></LetterGradeIcon>
+                                            </span>
+                                        }
+                                        @if (MyScoreOn(mover.ChartId) is { } mine)
+                                        {
+                                            <span class="bd-f">
+                                                <span class="bd-k">@L["you:"]</span>
+                                                <b>@mine.ToString("N0")</b>
+                                                <LetterGradeIcon Grade="@GradeOf(mine)" Height="15"></LetterGradeIcon>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="bd-f bd-k">@L["Not played"]</span>
+                                        }
+                                    </span>
                                 </span>
                                 <span class="bd-move">
                                     <span style="color:@ThemeScales.DifficultyColor(mover.CommunityCategory)">@L[TierNameFor(mover.CommunityCategory)]</span>
                                     <span class="bd-move-arrow">→</span>
                                     <span style="color:@ThemeScales.DifficultyColor(mover.PersonalizedCategory)">@L[TierNameFor(mover.PersonalizedCategory)]</span>
-                                </span>
-                                <span class="bd-mover-chips">
-                                    @foreach (var chip in ContributionChipsFor(mover.ChartId).Take(2))
-                                    {
-                                        <span class="tier-chart-card-skill skillcat-@(chip.Skill.GetPrimaryCategory().ToString().ToLowerInvariant())">
-                                            @chip.Skill.GetName()@(chip.Coverage == null ? null : $" {(int)Math.Round(100 * chip.Coverage.Value)}%")
-                                            <span class="bd-chip-dev">@FormatDeviation(chip.Deviation)</span>
-                                        </span>
-                                    }
                                 </span>
                                 @if (expanded)
                                 {
@@ -280,6 +265,7 @@ else
                                         @SourceSegment(L["Community"], _breakdown.CommunityWeight, mover.CommunityCategory)
                                         @SourceSegment(L["Players Like You"], _breakdown.SimilarPlayersWeight, mover.SimilarPlayersCategory)
                                         @SourceSegment(L["Your skills"], _breakdown.SkillWeight, mover.SkillCategory)
+                                        @SourceSegment(L["Players at your level"], _breakdown.ProjectionWeight, mover.ProjectionCategory)
                                         <span class="bd-src-final">= <span style="color:@ThemeScales.DifficultyColor(mover.PersonalizedCategory)">@L[TierNameFor(mover.PersonalizedCategory)]</span></span>
                                     </div>
                                 }
@@ -289,27 +275,106 @@ else
                         {
                             <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
                                        OnClick="() => ToggleShowAll(group.Key)">
-                                @(_showAllGroups.Contains(group.Key) ? L["Show fewer"] : L["Show all {0}", group.Movers.Count])
+                                @(_showAllGroups.Contains(group.Key) ? L["Show fewer"] : L["Show all {0} charts", group.Movers.Count])
                             </MudButton>
                         }
                     </div>
                 }
                 <div class="bd-quiet">
                     <span>@L["{0} charts match the community tier", UnchangedCount]</span>
-                    @if (NoDataCharts.Any())
+                    @if (_noDataCharts.Any())
                     {
                         <span class="bd-dot">·</span>
-                        <span>@L["{0} don't have enough skill data to move:", NoDataCharts.Count]</span>
-                        <span class="bd-nodata-names">@string.Join(" · ", NoDataChartNames.Take(_showNoData ? NoDataCharts.Count : 3))</span>
-                        @if (NoDataCharts.Count > 3)
+                        <span>@L["{0} have no projection — nobody near your level has scored them:", _noDataCharts.Count]</span>
+                        <span class="bd-nodata-names">@string.Join(" · ", NoDataChartNames.Take(_showNoData ? _noDataCharts.Count : 3))</span>
+                        @if (_noDataCharts.Count > 3)
                         {
-                            <MudLink Typo="Typo.caption" OnClick="() => _showNoData = !_showNoData">@(_showNoData ? L["Show fewer"] : L["+{0} more", NoDataCharts.Count - 3])</MudLink>
+                            <MudLink Typo="Typo.caption" OnClick="() => _showNoData = !_showNoData">@(_showNoData ? L["Show fewer"] : L["+{0} more", _noDataCharts.Count - 3])</MudLink>
                         }
                     }
                 </div>
             </section>
+
+            <section class="bd-block">
+                <div class="bd-head">
+                    <MudText Typo="Typo.h5">@L["You against your level"]</MudText>
+                    @* A chip rather than a sentence: what mattered about "shown for comparison
+                       only" was the fact, and the fact fits in three words. *@
+                    <span class="bd-chip-note">@L["not an input"]</span>
+                </div>
+                @if (_gaps.Count > 0)
+                {
+                    @* The balance, drawn. Three sentences used to assert that nobody clears their
+                       whole folder; the split says it, and says it about this player. *@
+                    <div class="bd-balance">
+                        <span class="bd-balance-n bd-easier-text">@AheadCount</span>
+                        <span>@L["above"]</span>
+                        <span class="bd-balance-bar">
+                            <span style="width:@Css(AheadCount * 100.0 / _gaps.Count)%;background:var(--diff-veryeasy)"></span>
+                            <span style="width:@Css((_gaps.Count - AheadCount) * 100.0 / _gaps.Count)%;background:var(--diff-veryhard)"></span>
+                        </span>
+                        <span class="bd-balance-n bd-harder-text">@(_gaps.Count - AheadCount)</span>
+                        <span>@L["below"]</span>
+                    </div>
+                    <MudText Typo="Typo.body2" Class="bd-shifting-bar">@L["Nobody is above the line on every chart — if you were, your level would climb and the line with it."]</MudText>
+                    <div class="bd-gaps">
+                        <div class="bd-gap-row bd-gap-head">
+                            <span>@L["Chart"]</span>
+                            <span>@L["Behind / ahead"]</span>
+                            <span class="bd-gap-num">@L["Gap"]</span>
+                        </div>
+                        @foreach (var gap in _gaps)
+                        {
+                            var behind = gap.Delta < 0;
+                            var ramp = behind ? TierListCategory.VeryHard : TierListCategory.VeryEasy;
+                            <div class="bd-gap-row">
+                                @NameCell(gap.Chart)
+                                <span class="bd-gap-bar">
+                                    <span class="bd-gap-fill" style="@(behind ? "right:50%;" : "left:50%;")width:@Css(Math.Abs(gap.Delta) * 48.0 / WidestGap)%;background:@ThemeScales.DifficultyColor(ramp)"></span>
+                                </span>
+                                <span class="bd-gap-num" style="color:@ThemeScales.DifficultyColor(ramp)">
+                                    @(gap.Delta > 0 ? "+" : "−")@Math.Abs(gap.Delta).ToString("N0")
+                                    <span class="bd-gap-grades">
+                                        <LetterGradeIcon Grade="@GradeOf(gap.Mine)" Height="14"></LetterGradeIcon>
+                                        <span>/</span>
+                                        <LetterGradeIcon Grade="@GradeOf(gap.Projected)" Height="14"></LetterGradeIcon>
+                                    </span>
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+                @if (_notPlayed.Count > 0)
+                {
+                    @* The projection does not need the player to have played a chart — it is
+                       drawn from the peers who have — so these have a number and no comparison. *@
+                    <div class="bd-gaps">
+                        <div class="bd-gap-row bd-gap-head">
+                            <span>@L["Not played yet"]</span>
+                            <span></span>
+                            <span class="bd-gap-num">@L["Projected Scores"]</span>
+                        </div>
+                        @foreach (var row in _notPlayed)
+                        {
+                            <div class="bd-gap-row">
+                                @NameCell(row.Chart)
+                                <span></span>
+                                <span class="bd-gap-num bd-gap-projected">
+                                    @row.Projected.ToString("N0")
+                                    <span class="bd-gap-grades">
+                                        <LetterGradeIcon Grade="@GradeOf(row.Projected)" Height="14"></LetterGradeIcon>
+                                    </span>
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
         }
     </div>
+    @* Every song name and jacket on the page raises this one dialog — the shared chart details,
+       same as the tier list and Charts. The page owns it; the spread and the lists just ask. *@
+    <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
 }
 <style>
     .bd-page {
@@ -403,6 +468,10 @@ else
 
     .bd-w-similar {
         background: var(--mix-secondary);
+    }
+
+    .bd-w-projection {
+        background: var(--mix-accent);
     }
 
     span.bd-weight {
@@ -606,9 +675,11 @@ else
         color: var(--diff-veryeasy);
     }
 
+    /* Three children, so three tracks. It carried the four the pre-round-5 row had, which left
+       the song squeezed into a 240px cap while an empty fourth track took the slack. */
     .bd-mover {
         display: grid;
-        grid-template-columns: 40px minmax(150px, 240px) minmax(200px, 260px) 1fr;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
         gap: 12px;
         align-items: center;
         padding: 8px 12px;
@@ -649,6 +720,8 @@ else
         font-size: .84rem;
         white-space: nowrap;
         font-weight: 600;
+        text-align: right;
+        justify-self: end;
     }
 
     .bd-move-arrow {
@@ -715,9 +788,11 @@ else
             grid-template-columns: 40px 1fr;
         }
 
-        .bd-move, .bd-mover-chips {
+        /* The tier move drops under the song rather than competing with it for a phone's width. */
+        .bd-move {
             grid-column: 2;
-            justify-content: flex-start;
+            justify-self: start;
+            text-align: left;
         }
 
         /* One source per line on phones — the wrapping row read as compressed noise. */
@@ -727,6 +802,275 @@ else
             gap: 4px;
         }
     }
+    .bd-shifting-bar {
+        border-left: 3px solid var(--mud-palette-lines-default);
+        padding-left: 12px;
+        max-width: 68ch;
+        color: var(--mud-palette-text-primary);
+    }
+
+    .bd-gaps {
+        display: flex;
+        flex-direction: column;
+        max-width: 620px;
+        margin-top: 10px;
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .bd-gap-row {
+        display: grid;
+        grid-template-columns: 1fr 120px 96px;
+        gap: 10px;
+        align-items: center;
+        padding: 6px 12px;
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+        font-size: .85rem;
+    }
+
+    .bd-gap-row:last-child {
+        border-bottom: 0;
+    }
+
+    .bd-gap-head {
+        font-size: .64rem;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        color: var(--mud-palette-text-secondary);
+        font-weight: 700;
+    }
+
+    .bd-gap-name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        cursor: pointer;
+    }
+
+    .bd-gap-name:hover .bd-gap-title, .bd-gap-name:focus-visible .bd-gap-title {
+        color: var(--mud-palette-primary);
+        text-decoration: underline;
+    }
+
+    .bd-jacket-sm {
+        width: 24px;
+        height: 24px;
+        border-radius: 3px;
+        flex: none;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .bd-gap-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Centre-origin: the fill grows left for behind and right for ahead, so the column reads as
+       a distribution rather than a list of magnitudes. */
+    .bd-gap-bar {
+        position: relative;
+        height: 7px;
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--mud-palette-text-secondary) 16%, transparent);
+    }
+
+    .bd-gap-fill {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        border-radius: 4px;
+    }
+
+    .bd-gap-num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        flex: none;
+    }
+
+    .bd-gap-grades {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        color: var(--mud-palette-text-secondary);
+        font-weight: 400;
+    }
+
+    .bd-gap-projected {
+        color: var(--mix-accent);
+    }
+
+    /* --- the recipe, as figures --- */
+    .bd-head {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-wrap: wrap;
+    }
+
+    .bd-qmark {
+        color: var(--mud-palette-text-secondary);
+        cursor: pointer;
+    }
+
+    .bd-qbody {
+        max-width: 34ch;
+    }
+
+    .bd-chip-note {
+        font-size: .64rem;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        font-weight: 700;
+        border-radius: 4px;
+        padding: 2px 8px;
+        color: var(--mud-palette-text-secondary);
+        background: color-mix(in srgb, var(--mud-palette-text-secondary) 16%, transparent);
+    }
+
+    .bd-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    .bd-stat {
+        background: var(--mud-palette-surface);
+        border: 1px solid var(--mud-palette-lines-default);
+        border-radius: 10px;
+        padding: 10px 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        min-width: 130px;
+        flex: 1 1 130px;
+    }
+
+    .bd-stat-v {
+        font-size: 1.5rem;
+        font-weight: 600;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bd-stat-accent .bd-stat-v {
+        color: var(--mix-accent);
+    }
+
+    .bd-stat-l {
+        font-size: .64rem;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--mud-palette-text-secondary);
+        font-weight: 700;
+    }
+
+    .bd-stat-s {
+        font-size: .72rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    /* --- the balance figure --- */
+    .bd-balance {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: .82rem;
+        color: var(--mud-palette-text-secondary);
+        margin-top: 4px;
+    }
+
+    .bd-balance-n {
+        font-size: 1.2rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bd-balance-bar {
+        flex: 1;
+        max-width: 260px;
+        height: 7px;
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+    }
+
+    /* --- the mover's two figures --- */
+    .bd-pair {
+        display: flex;
+        align-items: center;
+        gap: 4px 12px;
+        flex-wrap: wrap;
+        font-size: .76rem;
+        margin-top: 2px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bd-f {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .bd-k {
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .bd-spread-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        font-size: .75rem;
+        color: var(--mud-palette-text-secondary);
+        align-items: center;
+    }
+
+    .bd-spread-legend > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .bd-legend-dot, .bd-legend-diamond, .bd-legend-hollow, .bd-legend-caret {
+        width: 11px;
+        height: 11px;
+        flex: none;
+    }
+
+    .bd-legend-caret {
+        width: 0;
+        height: 0;
+        border: 5px solid transparent;
+        border-right: 8px solid var(--diff-veryhard);
+    }
+
+    .bd-legend-dot {
+        border-radius: 50%;
+        background: var(--mix-primary);
+    }
+
+    .bd-legend-diamond {
+        width: 9px;
+        height: 9px;
+        transform: rotate(45deg);
+        border: 1.5px solid var(--mix-ink);
+    }
+
+    .bd-legend-hollow {
+        border-radius: 50%;
+        border: 2px solid var(--mud-palette-text-secondary);
+    }
+
+    .bd-mover-why {
+        font-size: .78rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
 </style>
 @inject ICurrentUserAccessor CurrentUser;
 @inject IMediator Mediator;
@@ -755,9 +1099,6 @@ else
     private IDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IDictionary<Guid, Chart> _allCharts = new Dictionary<Guid, Chart>();
     private IDictionary<Guid, RecordedPhoenixScore> _scores = new Dictionary<Guid, RecordedPhoenixScore>();
-    private IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> _skillChips =
-        new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
-    private IDictionary<Guid, ScoreRankingRecord> _scoreRankings = new Dictionary<Guid, ScoreRankingRecord>();
 
     private string TierListUrl => $"/TierLists/{_chartType}/{_level}?TierListType={_lens}";
 
@@ -765,14 +1106,25 @@ else
 
     // A chart with no recorded vote from either personal source cannot move — that's
     // the honest "not enough data" bucket, distinct from "agrees with the community".
-    private IReadOnlyList<BreakdownChartRecord> NoDataCharts => _breakdown == null
+    /// <summary>
+    ///     Charts the projection could not answer for — the honest "not enough data" bucket,
+    ///     distinct from "agrees with the community".
+    ///     <para>
+    ///         Keyed on the projection, because the projection is the whole recipe on the only
+    ///         lens this page renders. It used to ask whether Skill and Similar Players had
+    ///         anything to say; neither is in the Score recipe, so both come back Unrecorded for
+    ///         every chart, and the page counted the entire folder as dataless — which drove
+    ///         UnchangedCount negative and told the reader that charts drawn on the spread
+    ///         directly above had nobody near their level scoring them.
+    ///     </para>
+    /// </summary>
+    private IReadOnlyList<BreakdownChartRecord> BuildNoDataCharts() => _breakdown == null
         ? Array.Empty<BreakdownChartRecord>()
-        : _breakdown.Charts.Where(c => c.SkillCategory == TierListCategory.Unrecorded &&
-                                       c.SimilarPlayersCategory == TierListCategory.Unrecorded).ToArray();
+        : _breakdown.Charts.Where(c => c.ProjectedScore == null).ToArray();
 
-    private IReadOnlyList<BreakdownChartRecord> HarderMovers => MoversWhere(c => c.PersonalizedCategory > c.CommunityCategory);
+    private IReadOnlyList<BreakdownChartRecord> BuildHarderMovers() => MoversWhere(c => c.PersonalizedCategory > c.CommunityCategory);
 
-    private IReadOnlyList<BreakdownChartRecord> EasierMovers => MoversWhere(c => c.PersonalizedCategory < c.CommunityCategory);
+    private IReadOnlyList<BreakdownChartRecord> BuildEasierMovers() => MoversWhere(c => c.PersonalizedCategory < c.CommunityCategory);
 
     private IReadOnlyList<BreakdownChartRecord> MoversWhere(Func<BreakdownChartRecord, bool> direction)
     {
@@ -787,63 +1139,13 @@ else
                 .ToArray();
     }
 
-    private int MovedCount => HarderMovers.Count + EasierMovers.Count;
+    private int MovedCount => _harderMovers.Count + _easierMovers.Count;
 
     private int UnchangedCount => _breakdown == null
         ? 0
-        : _breakdown.Charts.Count - MovedCount - NoDataCharts.Count;
-
-    private int CommunityRatedCount => _breakdown == null
-        ? 0
-        : _breakdown.Charts.Count(c => c.CommunityCategory != TierListCategory.Unrecorded);
+        : _breakdown.Charts.Count - MovedCount - _noDataCharts.Count;
 
     // --- Skill profile ---------------------------------------------------------------------
-
-    private sealed record SkillRow(Skill Skill, double Deviation, double Evidence, bool Usable,
-        double? PeerPercentile);
-
-    // Usable skills weakest-first (the actionable order); below-evidence skills sink
-    // to the bottom, greyed, so "not enough data" never masquerades as "average".
-    private IReadOnlyList<SkillRow> SkillRows => _breakdown == null
-        ? Array.Empty<SkillRow>()
-        : _breakdown.Skills
-            .Select(s => new SkillRow(s.Skill, s.Deviation, s.Evidence, s.Usable, PeerPercentileFor(s.Skill)))
-            .OrderBy(s => s.Usable ? 0 : 1)
-            .ThenBy(s => s.Usable ? s.Deviation : 0)
-            .ThenByDescending(s => s.Evidence)
-            .ThenBy(s => s.Skill.GetName())
-            .ToArray();
-
-    private double MaxAbsDeviation => Math.Max(0.0001, _breakdown == null
-        ? 1
-        : _breakdown.Skills.Where(s => s.Usable).Select(s => Math.Abs(s.Deviation)).DefaultIfEmpty(1).Max());
-
-    // Vs. Peers: the coverage-weighted average of your per-chart "Better Than %"
-    // (players within ±0.5 competitive level — the tier page's Better Than column)
-    // across this folder's charts featuring the skill. Only scored charts have a
-    // percentile, so thin skills aggregate over few charts — the evidence column
-    // beside it keeps that honest. No new cohort SQL (owner, post-incident).
-    private double? PeerPercentileFor(Skill skill)
-    {
-        var weightTotal = 0.0;
-        var weighted = 0.0;
-        foreach (var chart in _charts.Values)
-        {
-            if (!_scoreRankings.TryGetValue(chart.Id, out var rank)) continue;
-            double? weight = _skillChips.TryGetValue(chart.Id, out var chips) && chips.Count > 0
-                ? chips.Where(c => c.Skill == skill)
-                    .Select(c => (double?)((double?)c.SegmentFraction ?? 1.0))
-                    .FirstOrDefault()
-                : chart.Skills.Contains(skill)
-                    ? 1.0
-                    : null;
-            if (weight is not > 0) continue;
-            weightTotal += weight.Value;
-            weighted += weight.Value * rank.Ranking;
-        }
-
-        return weightTotal <= 0 ? null : weighted / weightTotal;
-    }
 
     // --- Movers ------------------------------------------------------------------------
 
@@ -851,6 +1153,35 @@ else
     private readonly HashSet<Guid> _expandedCharts = new();
     private readonly HashSet<string> _showAllGroups = new();
     private bool _showNoData;
+
+    private Chart? _detailsChart;
+    private bool _detailsOpen;
+
+    /// <summary>
+    ///     What the spread is ordered by: "Projected" or "Mine". Persisted like the tier list's
+    ///     own controls — it is a reading preference, and a reading preference that resets every
+    ///     visit is one the reader has to re-make every visit.
+    /// </summary>
+    private string _spreadSort = "Projected";
+
+    private const string SpreadSortKey = "Breakdown__SpreadSort";
+
+    private static readonly string[] ValidSpreadSorts = { "Projected", "Mine" };
+
+    private async Task SetSpreadSort(string sort)
+    {
+        if (sort == _spreadSort) return;
+
+        _spreadSort = sort;
+        _spreadRows = BuildSpreadRows();
+        await UiSettings.SetSetting(SpreadSortKey, sort);
+    }
+
+    private void OpenChart(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
 
     // Friendly tier names — raw enum names never render; the unlocalized string is
     // the key, L[...] localizes at render (same table as the tier list page).
@@ -866,6 +1197,110 @@ else
         { TierListCategory.Unrecorded, "Not Rated" }
     };
 
+    /// <summary>
+    ///     The spread's rows: charts with a projection, hardest first. A chart no peer has played
+    ///     has no position on that axis and belongs in the not-enough-data line instead.
+    /// </summary>
+    private IReadOnlyList<ProjectionSpread.SpreadRow> BuildSpreadRows()
+    {
+        if (_breakdown == null) return Array.Empty<ProjectionSpread.SpreadRow>();
+
+        var rows = _breakdown.Charts
+            .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId))
+            .Select(c => new ProjectionSpread.SpreadRow(
+                _charts[c.ChartId],
+                (int)c.ProjectedScore!.Value,
+                _scores.TryGetValue(c.ChartId, out var mine) ? mine.Score : null));
+
+        // Ascending either way, so the top of the list is always the hard end — by what this
+        // level scores, or by what you actually did. An unplayed chart has nothing to sort on
+        // and goes last rather than pretending to be a zero at the top.
+        return (_spreadSort == "Mine"
+                ? rows.OrderBy(r => r.Mine == null).ThenBy(r => r.Mine == null ? 0 : (int)r.Mine.Value)
+                : rows.OrderBy(r => r.Projected))
+            .ToArray();
+    }
+
+    // Built once per load rather than per read. Each of these was a property returning a fresh
+    // array, and the markup reads them several times apiece — _gaps alone through Count,
+    // AheadCount, WidestGap and its own loop, each rebuild walking the whole folder.
+    private IReadOnlyList<BreakdownChartRecord> _noDataCharts = Array.Empty<BreakdownChartRecord>();
+    private IReadOnlyList<BreakdownChartRecord> _harderMovers = Array.Empty<BreakdownChartRecord>();
+    private IReadOnlyList<BreakdownChartRecord> _easierMovers = Array.Empty<BreakdownChartRecord>();
+    private IReadOnlyList<GapRow> _gaps = Array.Empty<GapRow>();
+    private IReadOnlyList<NotPlayedRow> _notPlayed = Array.Empty<NotPlayedRow>();
+    private IReadOnlyList<ProjectionSpread.SpreadRow> _spreadRows = Array.Empty<ProjectionSpread.SpreadRow>();
+
+    private void RebuildViews()
+    {
+        _noDataCharts = BuildNoDataCharts();
+        _harderMovers = BuildHarderMovers();
+        _easierMovers = BuildEasierMovers();
+        _gaps = BuildGaps();
+        _notPlayed = BuildNotPlayed();
+        _spreadRows = BuildSpreadRows();
+    }
+
+    private sealed record GapRow(Chart Chart, int Delta, int Mine, int Projected);
+
+    /// <summary>
+    ///     Your score against the projection, furthest behind first. Comparison only — these
+    ///     numbers never enter the ranking, which is the projection alone.
+    /// </summary>
+    private IReadOnlyList<GapRow> BuildGaps() => _breakdown == null
+        ? Array.Empty<GapRow>()
+        : _breakdown.Charts
+            .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId)
+                        && _scores.TryGetValue(c.ChartId, out var s) && s.Score != null)
+            .Select(c => new GapRow(_charts[c.ChartId],
+                (int)_scores[c.ChartId].Score!.Value - (int)c.ProjectedScore!.Value,
+                (int)_scores[c.ChartId].Score!.Value,
+                (int)c.ProjectedScore!.Value))
+            .OrderBy(g => g.Delta)
+            .ToArray();
+
+    private int AheadCount => _gaps.Count(g => g.Delta > 0);
+
+    // The bar is scaled to the widest gap on the page, so the shape reads as this folder's
+    // spread rather than an absolute one. Never zero: every row would divide by it.
+    private int WidestGap => Math.Max(1, _gaps.Count == 0 ? 1 : _gaps.Max(g => Math.Abs(g.Delta)));
+
+    private sealed record NotPlayedRow(Chart Chart, int Projected);
+
+    private IReadOnlyList<NotPlayedRow> BuildNotPlayed() => _breakdown == null
+        ? Array.Empty<NotPlayedRow>()
+        : _breakdown.Charts
+            .Where(c => c.ProjectedScore != null && _charts.ContainsKey(c.ChartId)
+                        && (!_scores.TryGetValue(c.ChartId, out var s) || s.Score == null))
+            .OrderByDescending(c => (int)c.ProjectedScore!.Value)
+            .Select(c => new NotPlayedRow(_charts[c.ChartId], (int)c.ProjectedScore!.Value))
+            .ToArray();
+
+    /// <summary>
+    ///     A number bound for a CSS declaration, always with a dot — see ProjectionSpread.Css.
+    ///     The app switches formatting culture, so a raw double emits a comma here and the bar
+    ///     silently loses its width on five of the nine locales.
+    /// </summary>
+    private static string Css(double value) => value.ToString("0.####", CultureInfo.InvariantCulture);
+
+    private int? MyScoreOn(Guid chartId) =>
+        _scores.TryGetValue(chartId, out var s) && s.Score != null ? (int)s.Score.Value : null;
+
+    // Mix-required: a score resolves to a different letter under Phoenix 2's floors, and there
+    // is deliberately no mix-less way to ask.
+    private PhoenixLetterGrade GradeOf(int score) => ((PhoenixScore)score).LetterGradeFor(_currentMix);
+
+    private string BandLow => Math.Max(1, _breakdown!.CompetitiveLevel - _breakdown.CompetitiveWindow)
+        .ToString("N1");
+
+    private string BandHigh => (_breakdown!.CompetitiveLevel + _breakdown.CompetitiveWindow).ToString("N1");
+
+    private RenderFragment NameCell(Chart chart) =>
+        @<span class="bd-gap-name" role="button" tabindex="0" @onclick="() => OpenChart(chart)">
+            <span class="bd-jacket-sm" style="background-image:url('@chart.Song.ImagePath')"></span>
+            <span class="bd-gap-title">@chart.Song.Name</span>
+        </span>;
+
     private static string TierNameFor(TierListCategory category)
     {
         return TierNames[category];
@@ -873,15 +1308,19 @@ else
 
     private RenderFragment? SourceSegment(string label, double weight, TierListCategory category)
     {
-        if (category == TierListCategory.Unrecorded) return null;
+        // A source with no vote does not render, and neither does one carrying no weight.
+        // Community is populated on Score — it is the column the diff is against — but its
+        // weight is zero by design, so printing it read as "Community ×0" listed among the
+        // inputs, which is precisely what the recipe says it is not.
+        if (category == TierListCategory.Unrecorded || weight <= 0) return null;
         return @<span class="bd-src">@label <span class="bd-src-w">×@weight</span>
             <span style="color:@ThemeScales.DifficultyColor(category)">@L[TierNameFor(category)]</span></span>;
     }
 
     private IReadOnlyList<(string Key, string Title, string CssClass, IReadOnlyList<BreakdownChartRecord> Movers)> MoverGroups => new[]
     {
-        ("Harder", (string)L["Harder for you"], "bd-count-harder", HarderMovers),
-        ("Easier", (string)L["Easier for you"], "bd-count-easier", EasierMovers)
+        ("Harder", (string)L["Harder for you"], "bd-count-harder", _harderMovers),
+        ("Easier", (string)L["Easier for you"], "bd-count-easier", _easierMovers)
     };
 
     private void ToggleExpanded(Guid chartId)
@@ -900,7 +1339,7 @@ else
         }
     }
 
-    private IReadOnlyList<string> NoDataChartNames => NoDataCharts
+    private IReadOnlyList<string> NoDataChartNames => _noDataCharts
         .Select(c => _charts.TryGetValue(c.ChartId, out var chart) ? chart.Song.Name.ToString() : null)
         .Where(n => n != null)
         .Select(n => n!)
@@ -908,50 +1347,6 @@ else
         .ToArray();
 
     // --- Contribution chips ---------------------------------------------------------------
-
-    private sealed record ContributionChip(Skill Skill, double? Coverage, double Deviation);
-
-    private IReadOnlyDictionary<Skill, double> UsableDeviations => _breakdown == null
-        ? new Dictionary<Skill, double>()
-        : _breakdown.Skills.Where(s => s.Usable).ToDictionary(s => s.Skill, s => s.Deviation);
-
-    // Which of the chart's skills pushed it: influence = coverage × |your deviation|,
-    // matching the blend's own weighting. Pre-crawl fallback tags have no coverage to
-    // print and weigh like the blend's default.
-    private IReadOnlyList<ContributionChip> ContributionChipsFor(Guid chartId)
-    {
-        if (!_charts.TryGetValue(chartId, out var chart)) return Array.Empty<ContributionChip>();
-        var deviations = UsableDeviations;
-        var pairs = _skillChips.TryGetValue(chartId, out var chips) && chips.Count > 0
-            ? chips.Select(c => (c.Skill, Coverage: (double?)c.SegmentFraction, Weight: (double?)c.SegmentFraction ?? 0.5))
-            : chart.Skills.Select(s => (Skill: s, Coverage: (double?)null, Weight: 0.5));
-        return pairs
-            .Where(p => deviations.ContainsKey(p.Skill))
-            .Select(p => new ContributionChip(p.Skill, p.Coverage, deviations[p.Skill]))
-            .OrderByDescending(p => (p.Coverage ?? 0.5) * Math.Abs(p.Deviation))
-            .ToArray();
-    }
-
-    private static string FormatDeviation(double deviation)
-    {
-        return (deviation >= 0 ? "+" : "−") + Math.Abs(deviation * 100).ToString("0.0") + "%";
-    }
-
-    // The verdict's "mostly X, Y": the skills with the most total influence over a
-    // mover group, counting only deviations pointing the group's way.
-    private string TopDrivers(IReadOnlyList<BreakdownChartRecord> movers, bool weaker)
-    {
-        var totals = new Dictionary<Skill, double>();
-        foreach (var mover in movers)
-        foreach (var chip in ContributionChipsFor(mover.ChartId))
-        {
-            if (weaker ? chip.Deviation >= 0 : chip.Deviation <= 0) continue;
-            totals[chip.Skill] = totals.GetValueOrDefault(chip.Skill) +
-                                 (chip.Coverage ?? 0.5) * Math.Abs(chip.Deviation);
-        }
-
-        return string.Join(", ", totals.OrderByDescending(kv => kv.Value).Take(2).Select(kv => kv.Key.GetName()));
-    }
 
     // --- Navigation ----------------------------------------------------------------------
 
@@ -980,6 +1375,7 @@ else
         _isLoading = true;
         StateHasChanged();
         _breakdown = await Mediator.Send(new GetPersonalizedTierListBreakdownQuery(_chartType, _level, _lens, Mix: _currentMix));
+        RebuildViews();
         _isLoading = false;
         StateHasChanged();
     }
@@ -1030,8 +1426,13 @@ else
 
         var chartsTask = Mediator.Send(new GetChartsQuery(_currentMix));
         var scoresTask = Mediator.Send(new GetPhoenixRecordsQuery(CurrentUser.User.Id, _currentMix));
+        var sortTask = UiSettings.GetSetting(SpreadSortKey);
         _allCharts = (await chartsTask).ToDictionary(c => c.Id);
         _scores = (await scoresTask).ToDictionary(s => s.ChartId);
+        // Validated on the way in rather than trusted: a saved value that no longer names a sort
+        // would otherwise fall through to the projection while the menu ticks nothing.
+        var savedSort = await sortTask;
+        _spreadSort = ValidSpreadSorts.Contains(savedSort) ? savedSort! : "Projected";
 
         await LoadFolder();
     }
@@ -1053,13 +1454,12 @@ else
             .Where(c => c.Level == _level && c.Type == _chartType)
             .ToDictionary(c => c.Id);
 
-        var breakdownTask = Mediator.Send(new GetPersonalizedTierListBreakdownQuery(_chartType, _level, _lens, Mix: _currentMix));
-        var chipsTask = Mediator.Send(new GetChartSkillChipsQuery(_charts.Keys.ToArray()));
-        var rankingsTask = Mediator.Send(new GetPlayerScoreQualityQuery(_level, _chartType, _currentMix));
-        _breakdown = await breakdownTask;
-        _skillChips = await chipsTask;
-        _scoreRankings = await rankingsTask;
+        // The skill chips and the score-quality rankings went with the skill profile: both only
+        // ever fed it, and this page is read on every "how is this personalized?" click.
+        _breakdown = await Mediator.Send(
+            new GetPersonalizedTierListBreakdownQuery(_chartType, _level, _lens, Mix: _currentMix));
 
+        RebuildViews();
         _isLoading = false;
         StateHasChanged();
     }

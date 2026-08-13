@@ -488,8 +488,11 @@ public sealed class PumbilityProjectionSagaTests
 
             // A cache per context, so one test's projection can never answer another's.
             Cache = new PumbilityProjectionCache();
-            Saga = new PumbilityProjectionSaga(Mediator.Object, Stats.Object, Scores.Object,
-                History.Object, Cache);
+            // The real projector over the same stubbed ports rather than a double: these tests
+            // are written against cohort membership and level-when-set, so faking it would leave
+            // the plumbing this fixture exists to drive unexercised.
+            Saga = new PumbilityProjectionSaga(Mediator.Object,
+                new ScoreProjector(Scores.Object, Stats.Object, History.Object), Cache);
         }
 
         public Guid UserId { get; } = Guid.NewGuid();

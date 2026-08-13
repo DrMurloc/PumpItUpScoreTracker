@@ -117,6 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+
   <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
     <value>&quot;Lifebars are weird.&quot;</value>
   </data>
@@ -306,6 +307,9 @@
   <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
     <value>Un Bad. Unas 22 notas de progreso perdidas.</value>
   </data>
+  <data name="A breakdown for Pass Difficulty is coming." xml:space="preserve">
+    <value>El desglose de Dificultad por pases está en camino.</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>un chart</value>
   </data>
@@ -392,6 +396,9 @@
   </data>
   <data name="About The Site" xml:space="preserve">
     <value>Acerca del sitio</value>
+  </data>
+  <data name="above" xml:space="preserve">
+    <value>por encima</value>
   </data>
   <data name="Accept - merge history" xml:space="preserve">
     <value>Aceptar - fusionar historial</value>
@@ -870,8 +877,14 @@
   <data name="Before we remember your password" xml:space="preserve">
     <value>Antes de recordar tu contraseña</value>
   </data>
+  <data name="Behind / ahead" xml:space="preserve">
+    <value>Por debajo / por encima</value>
+  </data>
   <data name="Behind your top 50 — serves {0}" xml:space="preserve">
     <value>Por debajo de tu top 50 — sirve para {0}</value>
+  </data>
+  <data name="below" xml:space="preserve">
+    <value>por debajo</value>
   </data>
   <data name="Below this life a miss costs less than a bad." xml:space="preserve">
     <value>Debajo de esta vida, un Miss cuesta menos que un Bad.</value>
@@ -1194,6 +1207,9 @@
   <data name="Charts" xml:space="preserve">
     <value>Charts</value>
   </data>
+  <data name="Charts covered" xml:space="preserve">
+    <value>Charts cubiertos</value>
+  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>Tablas en el grupo</value>
   </data>
@@ -1484,6 +1500,12 @@
   </data>
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>singles competitivo, entre todos en PIUScores</value>
+  </data>
+  <data name="Compiling your personalized breakdown." xml:space="preserve">
+    <value>Compilando tu desglose personalizado.</value>
+  </data>
+  <data name="Compiling your personalized tier list." xml:space="preserve">
+    <value>Compilando tu Tier List personalizada.</value>
   </data>
   <data name="Completed" xml:space="preserve">
     <value>Completado</value>
@@ -1914,6 +1936,9 @@
   <data name="Discord, wired in" xml:space="preserve">
     <value>Discord, conectado</value>
   </data>
+  <data name="discount for peers who outgrew the score" xml:space="preserve">
+    <value>descuento por jugadores que han superado su puntaje</value>
+  </data>
   <data name="Dismiss" xml:space="preserve">
     <value>Descartar</value>
   </data>
@@ -2021,6 +2046,9 @@
   </data>
   <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
     <value>Cada peldaño exige un valor fijo a cada una de tus cincuenta gráficas. Cambia de grupo arriba para ver las otras escaleras.</value>
+  </data>
+  <data name="Each source votes on every chart. Sources with more weight move charts further." xml:space="preserve">
+    <value>Cada fuente vota por cada chart. Las fuentes con más peso mueven más los charts.</value>
   </data>
   <data name="Earned" xml:space="preserve">
     <value>Conseguidos</value>
@@ -2141,6 +2169,9 @@
   </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>Todos los que lo tienen mantienen su perfil privado.</value>
+  </data>
+  <data name="Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it." xml:space="preserve">
+    <value>Todos los que están a medio nivel competitivo de ti y han jugado estos charts. Cada puntuación cuenta menos cuanto más ha mejorado ese jugador desde que la consiguió.</value>
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>Todo lo de abajo son datos reales del sitio: el producto de verdad, no capturas.</value>
@@ -2448,6 +2479,9 @@
   <data name="GameTag" xml:space="preserve">
     <value>GameTag</value>
   </data>
+  <data name="Gap" xml:space="preserve">
+    <value>Diferencia</value>
+  </data>
   <data name="Generate one" xml:space="preserve">
     <value>Generar uno</value>
   </data>
@@ -2666,6 +2700,9 @@
   </data>
   <data name="Hours Minutes Left" xml:space="preserve">
     <value>{0}h {1}min</value>
+  </data>
+  <data name="hover or tap a marker" xml:space="preserve">
+    <value>pasa el cursor o toca un marcador</value>
   </data>
   <data name="How each skill runs against your own average" xml:space="preserve">
     <value>Cómo va cada habilidad frente a tu propio promedio</value>
@@ -3162,6 +3199,9 @@
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>nivel 24+, debe superar el récord vigente</value>
   </data>
+  <data name="Level band" xml:space="preserve">
+    <value>Franja de nivel</value>
+  </data>
   <data name="Level basis" xml:space="preserve">
     <value>Base del nivel</value>
   </data>
@@ -3651,6 +3691,9 @@
   <data name="My Score" xml:space="preserve">
     <value>Mi puntaje</value>
   </data>
+  <data name="My Scores" xml:space="preserve">
+    <value>Mis puntajes</value>
+  </data>
   <data name="My Sessions" xml:space="preserve">
     <value>Mis sesiones</value>
   </data>
@@ -3957,6 +4000,9 @@
   <data name="Nobody here holds this title yet." xml:space="preserve">
     <value>Aquí todavía nadie tiene este título.</value>
   </data>
+  <data name="Nobody is above the line on every chart — if you were, your level would climb and the line with it." xml:space="preserve">
+    <value>Nadie está por encima de la línea en todos los charts — si lo estuvieras, tu nivel subiría y la línea con él.</value>
+  </data>
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Todavía no hay nadie en este tablero.</value>
   </data>
@@ -3977,6 +4023,9 @@
   </data>
   <data name="Not a good suggestion?" xml:space="preserve">
     <value>¿No es una buena sugerencia?</value>
+  </data>
+  <data name="not an input" xml:space="preserve">
+    <value>no es una entrada</value>
   </data>
   <data name="Not available in" xml:space="preserve">
     <value>No disponible en</value>
@@ -4004,6 +4053,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Aún no hay datos suficientes para nombrar charts similares — el grafo se recalcula cada noche.</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>No hay suficientes jugadores en tu rango para dar resultados</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>no lleno</value>
@@ -4107,6 +4159,9 @@
   <data name="Nothing counts until it beats this. A chart worth more replaces it and you keep the difference." xml:space="preserve">
     <value>Nada cuenta hasta que supere esto. Un gráfico que valga más lo sustituye y te quedas con la diferencia.</value>
   </data>
+  <data name="Nothing else votes. The community score lists are built from the same scores this reads, so blending them in would count the same evidence twice." xml:space="preserve">
+    <value>No vota nada más. Las listas de puntaje de la comunidad se construyen con los mismos puntajes que esto lee, así que mezclarlas contaría la misma evidencia dos veces.</value>
+  </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Nada de esta carpeta está en el tablero de popularidad.</value>
   </data>
@@ -4202,6 +4257,9 @@
   </data>
   <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
     <value>Desactivado significa solo jugadores que se conectan directamente, por invitación. Desactívalo si tu herramienta es para un grupo concreto y mil desconocidos serían ruido.</value>
+  </data>
+  <data name="off the scale" xml:space="preserve">
+    <value>fuera de escala</value>
   </data>
   <data name="Off — only you can see your scores" xml:space="preserve">
     <value>Desactivado: solo tú puedes ver tus puntuaciones</value>
@@ -4494,6 +4552,9 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>Pega el enlace completo, o solo el código del final.</value>
   </data>
+  <data name="peers:" xml:space="preserve">
+    <value>tu nivel:</value>
+  </data>
   <data name="Pending" xml:space="preserve">
     <value>Pendiente</value>
   </data>
@@ -4547,6 +4608,12 @@
   </data>
   <data name="Personalized for {0}" xml:space="preserve">
     <value>Personalizado para {0}</value>
+  </data>
+  <data name="Personalized Pass" xml:space="preserve">
+    <value>Pases personalizado</value>
+  </data>
+  <data name="Personalized Score" xml:space="preserve">
+    <value>Puntaje personalizado</value>
   </data>
   <data name="PF" xml:space="preserve">
     <value>PF</value>
@@ -4824,6 +4891,9 @@
   <data name="Players active" xml:space="preserve">
     <value>Jugadores activos</value>
   </data>
+  <data name="Players at your level" xml:space="preserve">
+    <value>Jugadores de tu nivel</value>
+  </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>Jugadores de la comunidad PIU construyen cosas sobre tus puntuaciones — planificadores de PUMBILITY, análisis de patrones, bots de ranking de Discord. Ahora hay una página donde puedes verlas y elegir quién tiene acceso.</value>
   </data>
@@ -4965,11 +5035,23 @@
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY Doubles proyectado</value>
   </data>
+  <data name="Projected Score" xml:space="preserve">
+    <value>Puntaje proyectado</value>
+  </data>
+  <data name="Projected Scores" xml:space="preserve">
+    <value>Puntajes proyectados</value>
+  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY Singles proyectado</value>
   </data>
   <data name="projected total" xml:space="preserve">
     <value>total proyectado</value>
+  </data>
+  <data name="projected: no data" xml:space="preserve">
+    <value>proyectado: sin datos</value>
+  </data>
+  <data name="projected: {0}" xml:space="preserve">
+    <value>proyectado: {0}</value>
   </data>
   <data name="Promote other admins" xml:space="preserve">
     <value>Promover a otros admins</value>
@@ -5720,6 +5802,9 @@
   <data name="See the full board" xml:space="preserve">
     <value>Ver el tablero completo</value>
   </data>
+  <data name="See the Score breakdown" xml:space="preserve">
+    <value>Ver el desglose de Puntaje</value>
+  </data>
   <data name="See their boards" xml:space="preserve">
     <value>Ver sus tableros</value>
   </data>
@@ -5885,6 +5970,9 @@
   <data name="show all {0}" xml:space="preserve">
     <value>ver los {0}</value>
   </data>
+  <data name="Show all {0} charts" xml:space="preserve">
+    <value>Ver los {0} charts</value>
+  </data>
   <data name="Show all {0} plays" xml:space="preserve">
     <value>Ver los {0} intentos</value>
   </data>
@@ -5908,6 +5996,9 @@
   </data>
   <data name="Show per type" xml:space="preserve">
     <value>Show per type</value>
+  </data>
+  <data name="Show Projected Score" xml:space="preserve">
+    <value>Mostrar puntaje proyectado</value>
   </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>Mostrar invitados regionales</value>
@@ -5947,6 +6038,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>mostrando sugeridos</value>
+  </data>
+  <data name="Shown Difficulty" xml:space="preserve">
+    <value>Dificultad mostrada</value>
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>Se muestra en el directorio. Los jugadores lo leen antes de conectarse.</value>
@@ -6011,6 +6105,9 @@
   <data name="Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on." xml:space="preserve">
     <value>Inactivo — solo {0} habilidades tienen evidencia suficiente. Por ahora tu lista coincide con la de la comunidad. Registra más puntajes cerca de esta carpeta para activarlo.</value>
   </data>
+  <data name="Silent — players at your level have only scored {0} of these charts. Your list currently matches the community's." xml:space="preserve">
+    <value>Silencioso — los jugadores de tu nivel solo han puntuado {0} de estos charts. Tu lista coincide ahora con la de la comunidad.</value>
+  </data>
   <data name="Similar charts" xml:space="preserve">
     <value>Charts similares</value>
   </data>
@@ -6052,6 +6149,9 @@
   </data>
   <data name="Skill" xml:space="preserve">
     <value>Habilidad</value>
+  </data>
+  <data name="Skill Breakdown" xml:space="preserve">
+    <value>Desglose por habilidad</value>
   </data>
   <data name="Skill data: PIU Center" xml:space="preserve">
     <value>Datos de habilidades: PIU Center</value>
@@ -6175,6 +6275,9 @@
   </data>
   <data name="Staggered Brackets" xml:space="preserve">
     <value>Brackets escalonados</value>
+  </data>
+  <data name="Stale weight" xml:space="preserve">
+    <value>Peso obsoleto</value>
   </data>
   <data name="Stamina Session Builder" xml:space="preserve">
     <value>Constructor de sesión de stamina</value>
@@ -6560,6 +6663,12 @@
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>Las tier lists, clasificaciones y calculadoras están abiertas — inicia sesión cuando quieras ver tus propias puntuaciones en escena.</value>
   </data>
+  <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
+    <value>La forma en que Pass se personaliza se está rehaciendo, así que esta página espera en vez de explicar la versión que se va a reemplazar.</value>
+  </data>
+  <data name="the whole list" xml:space="preserve">
+    <value>la lista entera</value>
+  </data>
   <data name="Their tools stop working immediately." xml:space="preserve">
     <value>Sus herramientas dejan de funcionar de inmediato.</value>
   </data>
@@ -6778,9 +6887,6 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Tres años y medio de Pump, un solo resumen. Ve a ver el tuyo — y toma capturas de lo mejor.</value>
-  </data>
-  <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
-    <value>Tres fuentes votan por cada chart. Las fuentes con más peso mueven más los charts.</value>
   </data>
   <data name="Thresholds — each becomes a line" xml:space="preserve">
     <value>Umbrales: cada uno es una línea</value>
@@ -7406,9 +7512,6 @@
   <data name="What can it do?" xml:space="preserve">
     <value>¿Qué puede hacer?</value>
   </data>
-  <data name="What goes into your list" xml:space="preserve">
-    <value>Qué entra en tu lista</value>
-  </data>
   <data name="What holds the rungs" xml:space="preserve">
     <value>Lo que aguanta cada peldaño</value>
   </data>
@@ -7426,6 +7529,9 @@
   </data>
   <data name="What Phoenix 1 is worth here" xml:space="preserve">
     <value>Cuánto vale aquí tu Phoenix 1</value>
+  </data>
+  <data name="What players at your level score here" xml:space="preserve">
+    <value>Lo que puntúan los jugadores de tu nivel aquí</value>
   </data>
   <data name="What should they change?" xml:space="preserve">
     <value>¿Qué deberían cambiar?</value>
@@ -7447,6 +7553,9 @@
   </data>
   <data name="what your grades add" xml:space="preserve">
     <value>lo que añaden tus notas</value>
+  </data>
+  <data name="What your list is built from" xml:space="preserve">
+    <value>De qué está hecha tu lista</value>
   </data>
   <data name="what your plates add" xml:space="preserve">
     <value>lo que añaden tus platos</value>
@@ -7511,6 +7620,9 @@
   <data name="Who has it" xml:space="preserve">
     <value>Quién lo tiene</value>
   </data>
+  <data name="who played these charts" xml:space="preserve">
+    <value>que han jugado estos charts</value>
+  </data>
   <data name="Why" xml:space="preserve">
     <value>Por qué</value>
   </data>
@@ -7529,8 +7641,8 @@
   <data name="wins in range" xml:space="preserve">
     <value>victorias en tu rango</value>
   </data>
-  <data name="Wiping down the sensors" xml:space="preserve">
-    <value>Limpiando los sensores</value>
+  <data name="Wiping of the baby powder" xml:space="preserve">
+    <value>Limpiando los polvos de talco</value>
   </data>
   <data name="within 1 level" xml:space="preserve">
     <value>a ±1 nivel</value>
@@ -7607,6 +7719,9 @@
   <data name="You" xml:space="preserve">
     <value>Tú</value>
   </data>
+  <data name="You against your level" xml:space="preserve">
+    <value>Tú frente a tu nivel</value>
+  </data>
   <data name="You ahead" xml:space="preserve">
     <value>Vas por delante</value>
   </data>
@@ -7673,6 +7788,9 @@
   <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
     <value>Necesitas el permiso Gestionar canales en este servidor para hacer eso.</value>
   </data>
+  <data name="you sit at {0}" xml:space="preserve">
+    <value>estás en {0}</value>
+  </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
     <value>De alguna manera terminó en un estado entre realidades. Actualice la página para intentar de nuevo.</value>
   </data>
@@ -7687,6 +7805,9 @@
   </data>
   <data name="You will no longer be able to sign in with this method" xml:space="preserve">
     <value>Ya no podrás iniciar sesión con este método</value>
+  </data>
+  <data name="you {0}" xml:space="preserve">
+    <value>tú {0}</value>
   </data>
   <data name="You'll come back here after signing in. Nothing is shared until you press Connect." xml:space="preserve">
     <value>Volverás aquí después de iniciar sesión. No se comparte nada hasta que pulses Conectar.</value>
@@ -7711,6 +7832,9 @@
   </data>
   <data name="You've been invited to join this community." xml:space="preserve">
     <value>Lo han invitado a unirse a esta comunidad.</value>
+  </data>
+  <data name="you:" xml:space="preserve">
+    <value>tú:</value>
   </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Tú: {0} · promedio de jugadores similares: {1}</value>
@@ -8120,9 +8244,6 @@
   <data name="{0} directory clicks" xml:space="preserve">
     <value>{0} clics en el directorio</value>
   </data>
-  <data name="{0} don't have enough data to move" xml:space="preserve">
-    <value>{0} no tienen datos suficientes para moverse</value>
-  </data>
   <data name="{0} don't have enough skill data to move:" xml:space="preserve">
     <value>{0} no tienen datos de habilidades suficientes para moverse:</value>
   </data>
@@ -8152,6 +8273,12 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0} más difíciles para ti — sobre todo {1}</value>
+  </data>
+  <data name="{0} have no peer score" xml:space="preserve">
+    <value>{0} sin puntaje de nadie de tu nivel</value>
+  </data>
+  <data name="{0} have no projection — nobody near your level has scored them:" xml:space="preserve">
+    <value>{0} no tienen proyección — nadie de tu nivel los ha puntuado:</value>
   </data>
   <data name="{0} hours, {1} minutes" xml:space="preserve">
     <value>{0} horas, {1} minutos</value>
@@ -8209,6 +8336,9 @@
   </data>
   <data name="{0} new · {1} upscored" xml:space="preserve">
     <value>{0} nuevas · {1} mejoradas</value>
+  </data>
+  <data name="{0} not enough data" xml:space="preserve">
+    <value>{0} sin datos suficientes</value>
   </data>
   <data name="{0} notes" xml:space="preserve">
     <value>{0} notas</value>

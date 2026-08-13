@@ -117,6 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+
   <data name="&quot;Lifebars are weird.&quot;" xml:space="preserve">
     <value>&quot;Mrpmrrgl mrp lurggl.&quot;</value>
   </data>
@@ -306,6 +307,9 @@
   <data name="A bad. Roughly 22 notes of progress gone." xml:space="preserve">
     <value>GRO urg. Mrpmurgmurg 22 roblub mrgl mrglrlgl glrgl.</value>
   </data>
+  <data name="A breakdown for Pass Difficulty is coming." xml:space="preserve">
+    <value>Maglplgl Glorgmurpgrrgl maglgrogrrgl blublurg.</value>
+  </data>
   <data name="a chart" xml:space="preserve">
     <value>gro murgl</value>
   </data>
@@ -392,6 +396,9 @@
   </data>
   <data name="About The Site" xml:space="preserve">
 	  <value>Rrglrmrgl Mrp Plglmorg</value>
+  </data>
+  <data name="above" xml:space="preserve">
+    <value>amur</value>
   </data>
   <data name="Accept - merge history" xml:space="preserve">
     <value>Blargmrgl - murmplgl lurgmrmorg</value>
@@ -877,8 +884,14 @@
   <data name="Before we remember your password" xml:space="preserve">
     <value>Glorggro mrgl roblgrlargl gromurp glorgmrpmurm</value>
   </data>
+  <data name="Behind / ahead" xml:space="preserve">
+    <value>Blugmr / amur</value>
+  </data>
   <data name="Behind your top 50 — serves {0}" xml:space="preserve">
     <value>Murgglorg gromurp blarg 50 — mrpmrgl {0}</value>
+  </data>
+  <data name="below" xml:space="preserve">
+    <value>blugmr</value>
   </data>
   <data name="Below this life a miss costs less than a bad." xml:space="preserve">
     <value>Blgrlblarg grglmrp glorgrgl gro murpblarg maglro mgl grogrgl gro urg.</value>
@@ -1203,6 +1216,9 @@
   <data name="Charts" xml:space="preserve">
     <value>Murgl</value>
   </data>
+  <data name="Charts covered" xml:space="preserve">
+    <value>Murgl grorp</value>
+  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>Murgl lo grubo</value>
   </data>
@@ -1495,6 +1511,12 @@
   </data>
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>arglrglmrmurm mrglrlgl, rgl Urgrogrgl morp</value>
+  </data>
+  <data name="Compiling your personalized breakdown." xml:space="preserve">
+    <value>Murgablar gromurp urgblargmurmmorg maglgrogrrgl.</value>
+  </data>
+  <data name="Compiling your personalized tier list." xml:space="preserve">
+    <value>Murgablar gromurp urgblargmurmmorg mrpgrrgl grog.</value>
   </data>
   <data name="Completed" xml:space="preserve">
     <value>Morgrorp</value>
@@ -1927,6 +1949,9 @@
   <data name="Discord, wired in" xml:space="preserve">
     <value>Discord, lurgmurp mrp</value>
   </data>
+  <data name="discount for peers who outgrew the score" xml:space="preserve">
+    <value>blugmrp morp blarg amur gaal mgrlgmrg</value>
+  </data>
   <data name="Dismiss" xml:space="preserve">
     <value>Murpmrblgrl</value>
   </data>
@@ -2035,6 +2060,9 @@
   </data>
   <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
     <value>Mrglro glargurgl arggro a marglub blarg mrglro murgl blarg 50. Marglub grorgl ap murgl mrglro glargurgl.</value>
+  </data>
+  <data name="Each source votes on every chart. Sources with more weight move charts further." xml:space="preserve">
+    <value>Ograll urgglblgrl glorgmagl lurg murgglorg murgl. Urgglblgrl glgrgl mrrgl grorpgrrgl grrglmurm murgl blubmorggrorp.</value>
   </data>
   <data name="Earned" xml:space="preserve">
     <value>Plglgrorp</value>
@@ -2157,6 +2185,9 @@
   </data>
   <data name="Everyone who holds this keeps their profile private." xml:space="preserve">
     <value>Lurgblargmurg lurg murpgrorp grglmrp mrpmr grglblarg mrglarglrgl glblgrlmagl.</value>
+  </data>
+  <data name="Everyone within half a competitive level of you who has played these charts. Each score counts for less the more that player has improved since setting it." xml:space="preserve">
+    <value>Ograll morp arglblgrl parg arglrglmrmurm grorpmurm mrgl blub urg blarg murgglorg murgl gaal. Ograll mgrlgmrg mrrgl blugmrp murgl morp urg oglumrp mrogl mrglgrorp.</value>
   </data>
   <data name="Everything below is live site data — the actual product, not screenshots." xml:space="preserve">
     <value>Grglmurpmurm blgrlblarg urg mrmrp plglmorg gromurm — mrp rglargl urgmurpgrrgl, murm rglmaglmurmmurg.</value>
@@ -2465,6 +2496,9 @@
   <data name="GameTag" xml:space="preserve">
     <value>Grglmrg</value>
   </data>
+  <data name="Gap" xml:space="preserve">
+    <value>Murgablu</value>
+  </data>
   <data name="Generate one" xml:space="preserve">
     <value>Marogl mo</value>
   </data>
@@ -2683,6 +2717,9 @@
   </data>
   <data name="Hours Minutes Left" xml:space="preserve">
     <value>{0}m {1}p</value>
+  </data>
+  <data name="hover or tap a marker" xml:space="preserve">
+    <value>gorbl obla purgl gaal mrpgrrgl</value>
   </data>
   <data name="How each skill runs against your own average" xml:space="preserve">
     <value>Gro blubmurp morgmurm morgplgl murmlurgmurp gromurp grrgl rorg</value>
@@ -3180,6 +3217,9 @@
   </data>
   <data name="level 24+, must beat the standing record" xml:space="preserve">
     <value>grorpmurm 24+, romurm grrglgl mrp morggrrglglorg blubgrorp</value>
+  </data>
+  <data name="Level band" xml:space="preserve">
+    <value>Grorpmurm murm</value>
   </data>
   <data name="Level basis" xml:space="preserve">
     <value>Grorpmurm romorg</value>
@@ -3679,6 +3719,9 @@
   <data name="My Score" xml:space="preserve">
     <value>Blgrl Mrglrgl</value>
   </data>
+  <data name="My Scores" xml:space="preserve">
+    <value>Gromurp Mgrlgmrg</value>
+  </data>
   <data name="My Sessions" xml:space="preserve">
     <value>Blgrl Glorgmaglgro</value>
   </data>
@@ -3987,6 +4030,9 @@
   <data name="Nobody here holds this title yet." xml:space="preserve">
     <value>Urggro blubmorg murpgrorp grglmrp mrgl argl.</value>
   </data>
+  <data name="Nobody is above the line on every chart — if you were, your level would climb and the line with it." xml:space="preserve">
+    <value>Mrp morp blarg amur gaal murm ograll murgl — blub blarg, gromurp grorpmurm morgrorp ro gaal murm blub.</value>
+  </data>
   <data name="Nobody is on this chart board yet." xml:space="preserve">
     <value>Urggro urg lurg grglmrp murgl mrglblarg argl.</value>
   </data>
@@ -4007,6 +4053,9 @@
   </data>
   <data name="Not a good suggestion?" xml:space="preserve">
     <value>Murm gro lurggrgl maglgllurg?</value>
+  </data>
+  <data name="not an input" xml:space="preserve">
+    <value>mrp urgglblgrl</value>
   </data>
   <data name="Not available in" xml:space="preserve">
     <value>Murm blargromrp mrp</value>
@@ -4034,6 +4083,9 @@
   </data>
   <data name="Not enough data yet to name similar charts — the graph rebuilds nightly." xml:space="preserve">
     <value>Murm mrpgl gromurm argl grgl mrg maglarglblgrl murgl — mrp groblgrl murgrglplgl plglmurgmr.</value>
+  </data>
+  <data name="Not enough players in range to provide results" xml:space="preserve">
+    <value>Mrp obla morp arglrglmrmurm ro purgmorgl blugmr</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>murm mrglmr</value>
@@ -4138,6 +4190,9 @@
   <data name="Nothing counts until it beats this. A chart worth more replaces it and you keep the difference." xml:space="preserve">
     <value>Morp mrgl blub grogmurg mrgl. Murgl mrrgl blarg mrgloru grolgub blubgro mrgl.</value>
   </data>
+  <data name="Nothing else votes. The community score lists are built from the same scores this reads, so blending them in would count the same evidence twice." xml:space="preserve">
+    <value>Mrp obla urgglblgrl. Plglmurgblub mgrlgmrg mrglrgl grog blarg gaal mgrlgmrg mrogl blubmorggrorp, mrogl blubmorggrorp gaal orlo.</value>
+  </data>
   <data name="Nothing from this folder is on the popularity board." xml:space="preserve">
     <value>Blarggllurg romurg grglmrp grrgllurg urg lurg mrp grorpmorgmurm mrglblarg.</value>
   </data>
@@ -4233,6 +4288,9 @@
   </data>
   <data name="Off means only players who connect to you directly, by invite. Turn it off if your tool is for one crew and a thousand strangers would be noise." xml:space="preserve">
     <value>Grorp murgm murmo Morp galm murgargl, blu murpgrogl. Grorp murgm Rorgl murmo blu murmo mrgloo murm murpmurp Morp murgm murgblarg.</value>
+  </data>
+  <data name="off the scale" xml:space="preserve">
+    <value>obla gaal murm</value>
   </data>
   <data name="Off — only you can see your scores" xml:space="preserve">
     <value>Marg — orgu blargl grumal</value>
@@ -4526,6 +4584,9 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>Grabla argla, arplo grabla mrpgrogl blaromurp.</value>
   </data>
+  <data name="peers:" xml:space="preserve">
+    <value>morp:</value>
+  </data>
   <data name="Pending" xml:space="preserve">
     <value>Murggrglurg</value>
     <comment>Pending</comment>
@@ -4580,6 +4641,12 @@
   </data>
   <data name="Personalized for {0}" xml:space="preserve">
     <value>Urgblargmurmmorg ro {0}</value>
+  </data>
+  <data name="Personalized Pass" xml:space="preserve">
+    <value>Urgblargmurmmorg Maglplgl</value>
+  </data>
+  <data name="Personalized Score" xml:space="preserve">
+    <value>Urgblargmurmmorg Mrglrgl</value>
   </data>
   <data name="PF" xml:space="preserve">
     <value>PF</value>
@@ -4860,6 +4927,9 @@
   <data name="Players active" xml:space="preserve">
     <value>Morp grglmurp</value>
   </data>
+  <data name="Players at your level" xml:space="preserve">
+    <value>Morp ogl gromurp grorpmurm</value>
+  </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>Morp blu PIU Plglmurgblub murpmurp murgm blu gromurp Mgrlgmrg — PUMBILITY murgargl, murgl blgrlgromrrgl, Discord murgblarg. Blorm murgm blaromurp gromurp murp murgl murm murgargl bo argla.</value>
   </data>
@@ -5001,11 +5071,23 @@
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>mrglgrrglrgl Groggl PUMBILITY</value>
   </data>
+  <data name="Projected Score" xml:space="preserve">
+    <value>Purgmorgl Mgrlgmrg</value>
+  </data>
+  <data name="Projected Scores" xml:space="preserve">
+    <value>Purgmorgl Mgrlgmrg</value>
+  </data>
   <data name="projected Singles PUMBILITY" xml:space="preserve">
     <value>mrglgrrglrgl Mrglrlgl PUMBILITY</value>
   </data>
   <data name="projected total" xml:space="preserve">
     <value>mrglgrrglrgl urgargl</value>
+  </data>
+  <data name="projected: no data" xml:space="preserve">
+    <value>purgmorgl: mrp obla</value>
+  </data>
+  <data name="projected: {0}" xml:space="preserve">
+    <value>purgmorgl: {0}</value>
   </data>
   <data name="Promote other admins" xml:space="preserve">
     <value>Plglmaglmagl mrpblgrl glorgrgl</value>
@@ -5768,6 +5850,9 @@
   <data name="See the full board" xml:space="preserve">
     <value>Blarg mrp mrglmr mrglblarg</value>
   </data>
+  <data name="See the Score breakdown" xml:space="preserve">
+    <value>Romorg Mrglrgl maglgrogrrgl</value>
+  </data>
   <data name="See their boards" xml:space="preserve">
     <value>Blarg grglblarg grrglplgl</value>
   </data>
@@ -5935,6 +6020,9 @@
   <data name="show all {0}" xml:space="preserve">
     <value>romorg rgl {0}</value>
   </data>
+  <data name="Show all {0} charts" xml:space="preserve">
+    <value>Romorg ograll {0} murgl</value>
+  </data>
   <data name="Show all {0} plays" xml:space="preserve">
     <value>Murlo al {0} blub</value>
   </data>
@@ -5958,6 +6046,9 @@
   </data>
   <data name="Show per type" xml:space="preserve">
     <value>Romorg morg morg</value>
+  </data>
+  <data name="Show Projected Score" xml:space="preserve">
+    <value>Romorg Purgmorgl Mrglrgl</value>
   </data>
   <data name="Show Regional Guests" xml:space="preserve">
     <value>Romorg Glorgmurpmrgl Mrglargl</value>
@@ -6000,6 +6091,9 @@
   </data>
   <data name="showing suggested" xml:space="preserve">
     <value>mrarglblgrl romorgrgl</value>
+  </data>
+  <data name="Shown Difficulty" xml:space="preserve">
+    <value>Romorg Glorgmurpgrrgl</value>
   </data>
   <data name="Shown in the tool directory. Players read this before they connect." xml:space="preserve">
     <value>Murgl blu Rorgl grog. Morp murp blurgl blorm murgargl galm.</value>
@@ -6064,6 +6158,9 @@
   <data name="Silent — only {0} skills have enough evidence. Your list currently matches the community's. Score more charts near this folder to turn this on." xml:space="preserve">
     <value>Morggrgl — mrpmurg {0} blarglurg mrglro mrpgl grrglgrorpblarg. Gromurp grog morggrglmurp morgmaglblgrl mrp glmorgmorg. Mrglrgl mrrgl murgl murpblub grglmrp grrgllurg grgl murgblarg grglmrp lurg.</value>
   </data>
+  <data name="Silent — players at your level have only scored {0} of these charts. Your list currently matches the community's." xml:space="preserve">
+    <value>Morggrgl — morp mrgl gromurp grorpmurm mgrlgmrg blugmr {0} murgl gaal. Gromurp grog mrgl plglmurgblub grog blarg.</value>
+  </data>
   <data name="Similar charts" xml:space="preserve">
     <value>Maglarglblgrl murgl</value>
   </data>
@@ -6106,6 +6203,9 @@
   <data name="Skill" xml:space="preserve">
 	  <value>Morgmurm</value>
 	  <comment>Skill</comment>
+  </data>
+  <data name="Skill Breakdown" xml:space="preserve">
+    <value>Morgmurm Maglgrogrrgl</value>
   </data>
   <data name="Skill data: PIU Center" xml:space="preserve">
     <value>Morgmurm gromurm: PIU Center</value>
@@ -6232,6 +6332,9 @@
   </data>
   <data name="Staggered Brackets" xml:space="preserve">
     <value>Maglgrglgrrgl Mrpurgmrgl</value>
+  </data>
+  <data name="Stale weight" xml:space="preserve">
+    <value>Blugmrp murm</value>
   </data>
   <data name="Stamina Session Builder" xml:space="preserve">
 	  <value>Gromrgrgl Grrglgrrglgl Grglmrglmagl</value>
@@ -6619,6 +6722,12 @@
   <data name="The tier lists, rankings, and calculators are open — sign in when you want your own scores in the picture." xml:space="preserve">
     <value>Mrp mrpgrrgl grog, maglmrpplgl, ro mrpmrglmurpgl mrp mrprgl — mrpmurp mrp mrpgrrgl blub mrlurg gromurp grrgl mgrlgmrg mrp mrp blgrlmrpplgl.</value>
   </data>
+  <data name="The way Pass personalizes is being reworked, so this page waits for it rather than explaining the version being replaced." xml:space="preserve">
+    <value>Maglplgl urgblargmurmmorg blarg maglmr, mrogl gaal grog blublurg mrp murgablar gaal orlo.</value>
+  </data>
+  <data name="the whole list" xml:space="preserve">
+    <value>gaal ograll grog</value>
+  </data>
   <data name="Their tools stop working immediately." xml:space="preserve">
     <value>Murgm rorgl blorm murgloo argla.</value>
   </data>
@@ -6837,9 +6946,6 @@
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Morgmr ro gro mrmurm murmblgrl mrgl Gllurg, argl grrglmr. Gro blarg glmagl — ro mrgrrglro mrp lurggrgl urgplgl.</value>
-  </data>
-  <data name="Three sources vote on every chart. Sources with more weight move charts further." xml:space="preserve">
-    <value>Morgmr urgglblgrl glorgmagl lurg murgglorg murgl. Urgglblgrl glgrgl mrrgl grorpgrrgl grrglmurm murgl blubmorggrorp.</value>
   </data>
   <data name="Thresholds — each becomes a line" xml:space="preserve">
     <value>Glmrpblub — blubmurp blargmrglmrgl gro lurggrgl</value>
@@ -7470,9 +7576,6 @@
   <data name="What can it do?" xml:space="preserve">
     <value>Rglmorg grorp gl urg?</value>
   </data>
-  <data name="What goes into your list" xml:space="preserve">
-    <value>Rglmorg glrgl murpgrrgl gromurp grog</value>
-  </data>
   <data name="What holds the rungs" xml:space="preserve">
     <value>Rglmorg rglmr mrp mrpmurm</value>
   </data>
@@ -7490,6 +7593,9 @@
   </data>
   <data name="What Phoenix 1 is worth here" xml:space="preserve">
     <value>Blarg Phoenix 1 mrgloru blub</value>
+  </data>
+  <data name="What players at your level score here" xml:space="preserve">
+    <value>Murgla morp ogl gromurp grorpmurm mgrlgmrg</value>
   </data>
   <data name="What should they change?" xml:space="preserve">
     <value>Amba golba?</value>
@@ -7511,6 +7617,9 @@
   </data>
   <data name="what your grades add" xml:space="preserve">
     <value>urgl rorgl roglub</value>
+  </data>
+  <data name="What your list is built from" xml:space="preserve">
+    <value>Murgla gromurp grog blarg</value>
   </data>
   <data name="what your plates add" xml:space="preserve">
     <value>urgl murp roglub</value>
@@ -7575,6 +7684,9 @@
   <data name="Who has it" xml:space="preserve">
     <value>Lurg rgl gl</value>
   </data>
+  <data name="who played these charts" xml:space="preserve">
+    <value>morp gaal murgl</value>
+  </data>
   <data name="Why" xml:space="preserve">
     <value>Murgloo</value>
   </data>
@@ -7593,8 +7705,8 @@
   <data name="wins in range" xml:space="preserve">
     <value>blgrlblarg mrp blubmrgl</value>
   </data>
-  <data name="Wiping down the sensors" xml:space="preserve">
-    <value>Pluggam orlo</value>
+  <data name="Wiping of the baby powder" xml:space="preserve">
+    <value>Pluggam mulgub</value>
   </data>
   <data name="within 1 level" xml:space="preserve">
     <value>arglblgrl 1 grorpmurm</value>
@@ -7677,6 +7789,9 @@
   <data name="You" xml:space="preserve">
     <value>Blub</value>
   </data>
+  <data name="You against your level" xml:space="preserve">
+    <value>Blub urg gromurp grorpmurm</value>
+  </data>
   <data name="You ahead" xml:space="preserve">
     <value>Blub mrrgl</value>
   </data>
@@ -7743,6 +7858,9 @@
   <data name="You need the Manage Channels permission in this server to do that." xml:space="preserve">
     <value>Blub arglmr mrp Blubblub Mrmrglgro morgmaglgl mrp grglmrp blargmrp grgl urg blubgrrgl.</value>
   </data>
+  <data name="you sit at {0}" xml:space="preserve">
+    <value>blub blarg {0}</value>
+  </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
 	  <value>Blub urgmaglblub lurgblub morg mrp gro grrglrgl blgrlarglblgrl blargarglmr. Grogrrgllurg mrp urggrgl grgl lurg morgro.</value>
   </data>
@@ -7757,6 +7875,9 @@
   </data>
   <data name="You will no longer be able to sign in with this method" xml:space="preserve">
     <value>Blub murmurg mrp lurgmurp glorg grorpmrgl grgl mrpmurp mrp glgrgl grglmrp glorgmagl</value>
+  </data>
+  <data name="you {0}" xml:space="preserve">
+    <value>blub {0}</value>
   </data>
   <data name="You'll come back here after signing in. Nothing is shared until you press Connect." xml:space="preserve">
     <value>Gromurp murgm blaromurp blorm Mrglmurp. Bo murgblub blorm gromurp galm.</value>
@@ -7781,6 +7902,9 @@
   </data>
   <data name="You've been invited to join this community." xml:space="preserve">
     <value>Plglgrrgl murmmrp arglromrgl grgl grorpblgrl grglmrp plglmurgblub.</value>
+  </data>
+  <data name="you:" xml:space="preserve">
+    <value>blub:</value>
   </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Blub: {0} · maglarglblgrl morp rorg {1}</value>
@@ -8190,9 +8314,6 @@
   <data name="{0} directory clicks" xml:space="preserve">
     <value>{0} golba blorp</value>
   </data>
-  <data name="{0} don't have enough data to move" xml:space="preserve">
-    <value>{0} glorggrrgl mrglro mrpgl gromurm grgl grrglmurm</value>
-  </data>
   <data name="{0} don't have enough skill data to move:" xml:space="preserve">
     <value>{0} glorggrrgl mrglro mrpgl morgmurm gromurm grgl grrglmurm:</value>
   </data>
@@ -8222,6 +8343,12 @@
   </data>
   <data name="{0} harder for you — mostly {1}" xml:space="preserve">
     <value>{0} mrrglmrgl ro blub — arglrgl {1}</value>
+  </data>
+  <data name="{0} have no peer score" xml:space="preserve">
+    <value>{0} mrp morp mgrlgmrg</value>
+  </data>
+  <data name="{0} have no projection — nobody near your level has scored them:" xml:space="preserve">
+    <value>{0} mrp purgmorgl — mrp morp mrgl gromurp grorpmurm mgrlgmrg gaal:</value>
   </data>
   <data name="{0} hours, {1} minutes" xml:space="preserve">
     <value>{0} obla, {1} malbu</value>
@@ -8279,6 +8406,9 @@
   </data>
   <data name="{0} new · {1} upscored" xml:space="preserve">
     <value>{0} grgl · {1} blgrlarglglorg</value>
+  </data>
+  <data name="{0} not enough data" xml:space="preserve">
+    <value>{0} mrp obla</value>
   </data>
   <data name="{0} notes" xml:space="preserve">
     <value>{0} roblub</value>

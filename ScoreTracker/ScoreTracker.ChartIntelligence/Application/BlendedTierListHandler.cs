@@ -4,6 +4,7 @@ using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services.Contracts;
 
 namespace ScoreTracker.ChartIntelligence.Application;
 
@@ -23,9 +24,11 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
 
     public BlendedTierListHandler(IMediator mediator, IChartRepository charts, IScoreReader scores,
         IPlayerStatsReader playerStats, IUserTierListRepository userTierLists,
-        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock)
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock,
+        IScoreProjector projector)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock);
+        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock,
+            projector);
         _currentUser = currentUser;
         _cache = cache;
     }
@@ -49,7 +52,8 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
                 .Select(c => TierListBlendBuilder.Combine("Final", c.Id, computation.Sources,
                     computation.Modifiers))
                 .ToList();
-            return new TierListResult(entries, computation.IsProvisionalFallback);
+            return new TierListResult(entries, computation.IsProvisionalFallback,
+                computation.Projection?.PeerCount ?? 0);
         }) ?? throw new InvalidOperationException("Blended tier list could not be built");
     }
 }

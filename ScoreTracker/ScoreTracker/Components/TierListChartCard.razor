@@ -3,6 +3,7 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Enums
 
 @* The tier list's chart card. Border language is owner-locked (design doc §4): solid
@@ -116,6 +117,15 @@ else
         {
             <MudText Typo="Typo.caption" Class="tier-chart-card-meta">@L["{0} days ago", AgeDays]</MudText>
         }
+        @if (ShowProjectedScore)
+        {
+            @* Says whose number it is, because a bare score beside your own reads as a target
+               somebody set for you. Null is printed as such — a chart nobody near your level has
+               played has no projection, and filling that in would be inventing one. *@
+            <MudText Typo="Typo.caption" Class="tier-chart-card-meta">
+                @(ProjectedScore != null ? L["projected: {0}", ((int)ProjectedScore.Value).ToString("N0")] : L["projected: no data"])
+            </MudText>
+        }
         @if (Body != null)
         {
             <div class="tier-chart-card-extra">@Body</div>
@@ -199,6 +209,16 @@ else
     public sealed record CardSkillChip(string Label, string CategoryClass, string? Metric);
 
     [Parameter] public int? AgeDays { get; set; }
+
+    /// <summary>
+    ///     What players near this one's competitive level score here. Separate from the value so
+    ///     "no projection" can render as a stated absence rather than the line vanishing, which
+    ///     would read as the chart having no data at all.
+    /// </summary>
+    [Parameter]
+    public bool ShowProjectedScore { get; set; }
+
+    [Parameter] public PhoenixScore? ProjectedScore { get; set; }
 
     [Parameter] public EventCallback<Guid> OnToDo { get; set; }
 

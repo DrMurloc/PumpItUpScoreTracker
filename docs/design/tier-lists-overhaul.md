@@ -42,16 +42,25 @@ Tier lists are the site's most-used feature (~28% of traffic, ~60% of it anonymo
 
 **Round 6 (2026-07-11, owner field test of C1–C10, desktop):** the toolbar splits on a new principle — **"changes the data you see" stays sticky (folder → view → Personalized); "changes how it presents" moves to a content bar directly above the list** (Ranked-by, Grouped-by, density, Download, Filters-as-icon-with-count-badge) — the single big toolbar read as overwhelming. This amends UX-GUIDELINES rule 6 (the filter row is no longer sticky; the drawer + chips move with the content, the mobile bottom bar keeps thumb reach). **Ranked-by shows in every view** (reversing round 1's hide-under-My-Progress): when the grouping isn't the lens, each card/row carries its lens tier — a named column in Table, the tier word on the card in Comfortable, a top-right diff-colored dot + tooltip word in Compact. **Progress strip**: general folder progress (pass rate + grade lamps + rarity line) always shows; the title bars collapse under **"Title Levels"** (same label on every mix), default collapsed. **"Applied Filters:"** label precedes the chips. Table density regains the song jacket as column 1 (rule 2). Bug fixes from the same session: jacket `url(&quot;)` corruption, legend swatch CSS-order override, MudMenu-based folder picker closing on type switch (rebuilt on an owned popover; component genericized to `FolderPicker`). Shared component styles moved to `site.css` — page style blocks can't back reusable components. Scope additions from the same session: the piucenter crawler, `/TierLists/Old` removal, and the Playwright rewrite are now in scope (§12 addendum).
 
-## 3. Mental model: three concepts the UI stops blending
+## 3. Mental model: two concepts the UI stops blending
 
-Today "Difficulty Categorization", "Group By", and a hidden "Personalized Difficulty" checkbox interleave three orthogonal ideas. The overhaul separates them:
+Today "Difficulty Categorization", "Group By", and a hidden "Personalized Difficulty" checkbox interleave three orthogonal ideas. The overhaul separated them into three; the 2026-08-11 pass collapsed the middle one into the first, because a switch riding on top of a view meant "what am I looking at" had two answers and only one of them survived a screenshot.
 
-1. **Ranked by (lens)** — which data ranks the charts. Pass Difficulty, Score Difficulty, Scoring Level; Popularity, Chabala (P1), PG under "Other lists". One picker, plain names. The picker **hides while My Progress is active** — the lens has no effect on personal buckets, and a control that does nothing is worse than no control.
-2. **Personalized** — an explicit toggle that bends the active lens with my skill/similar-player data. When ON, the page and any exported image carry a **"Personalized for {gametag}"** badge; OFF is the shared community reference. (Fixes the trust problem: two players comparing screens can see *why* their lists differ.)
-3. **View** — *whose buckets section the folder*:
-   - **Tier List** — sections are the lens's tiers, displayed with the friendly scale **"1+ Level Easier / Very Easy / Easy / Medium / Hard / Very Hard / 1+ Level Harder / Not Rated"** (raw enum names like "Overrated" never render).
-   - **My Progress** — sections are *my* buckets: score percentile (rarity ramp + printed %), my score bands, score recency. This absorbs Group By's Age/Score/Score Ranking and is the home of job #1.
-   - **By Skill** (Phoenix 1 only) — the current skill grouping, behind the capability flag.
+1. **View** — four buttons, and the selected one is the whole answer:
+   - **Community** — sections are the lens's tiers over the shared lists, displayed with the friendly scale **"1+ Level Easier / Very Easy / Easy / Medium / Hard / Very Hard / 1+ Level Harder / Not Rated"** (raw enum names like "Overrated" never render). Sections read **easiest first** (owner, 2026-08-11).
+   - **Personalized** — the same sectioning over your data. Hidden when it cannot apply: signed out, CoOp, or a legacy mix.
+   - **My Scores** — sections are *my* buckets: score bands, score recency, percentile, scoring level. This absorbs Group By's Age/Score/Score Ranking and is the home of job #1.
+   - **Skill Breakdown** (Phoenix 1 only) — the skill grouping, behind the capability flag.
+2. **The difficulty picker**, which takes three shapes because the lens means three things:
+   - On **Community** it ranks, and offers every community list.
+   - On **Personalized** it ranks, and offers only Pass and Score — the two with a personalized recipe.
+   - On **My Scores** and **Skill Breakdown** something else does the sectioning, so it only annotates each card. It is labelled **Shown Difficulty** there, and it is the one place **Personalized Pass** and **Personalized Score** can be selected outright rather than implied.
+
+The lens annotation (word + colour on the card) renders only where the sections are *not* the lens tiers — on the two tier views it would repeat the heading the card sits under.
+
+**Retired with the toggle:** the "Personalized for {gametag}" page chip, since the selected view button says it. The chip's one irreplaceable job — reaching the Breakdown — became a **?** beside the view group on Personalized. The **downloaded image keeps its stamp**: an image has no view button to read. `TierLists__UsePersonalized` stops being read with no migration (owner) — it defaulted ON, so nobody chose it, and everyone lands on Community.
+
+**Popularity retired as a lens** (owner, 2026-08-11) — the Popularity leaderboard covers it. The stored list, its daily rebuild and the chart dialog's popularity chip are untouched; this removed a way of looking at a folder, not the data. It also removed a `GetTierListWithFallbackQuery` from every folder load, which had been filling two fields nothing read.
 
 "Group By" dies as a user-facing concept.
 
@@ -127,7 +136,8 @@ One flag set, resolved per `ListMix`:
 | Skill tags on cards / By-Skill view (radar charts retired — round 4) | ✅ | ❌ off until piucenter data covers P2 | n/a — page shows "coming soon" |
 | Chabala lens | ✅ (existing links; becomes imported difficulty attribution later) | ❌ | n/a — page shows "coming soon" |
 | Paragon / title progress strip | ✅ unchanged | ❌ (Folder Level doc will fill this) | n/a — page shows "coming soon" |
-| Personalized blend inputs | Pass Count + Skill + Similar Players | Pass Count + Similar Players | n/a |
+| Personalized blend inputs (Pass) | Pass Count + Skill + Similar Players | Pass Count + Similar Players | n/a |
+| Personalized blend inputs (Score) | **Projection alone** — no community sources | same | n/a |
 | Provisional-fallback badge | n/a | ✅ stays | n/a |
 
 XX and older mixes get the whole-page **"Tier lists for XX and older coming soon"** state (round 5) — the per-capability XX column is moot for this page.

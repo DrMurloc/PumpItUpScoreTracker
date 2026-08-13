@@ -1,10 +1,10 @@
-namespace ScoreTracker.PlayerProgress.Domain;
+namespace ScoreTracker.Domain.Services;
 
 /// <summary>
 ///     One peer's score on the chart being estimated, with everything needed to weigh it:
 ///     the level they hold now, and the level they held when they set it.
 /// </summary>
-internal readonly record struct PeerScore(int Score, double LevelNow, double LevelWhenSet)
+public readonly record struct PeerScore(int Score, double LevelNow, double LevelWhenSet)
 {
     /// <summary>How much this peer has grown since setting it. Never negative — a player whose
     ///     level fell has not made the score less representative of them.</summary>
@@ -12,11 +12,11 @@ internal readonly record struct PeerScore(int Score, double LevelNow, double Lev
 }
 
 /// <summary>
-///     The PUMBILITY score estimator (docs/design/pumbility-overhaul.md §4.1). Pure — no I/O,
-///     no clock, no randomness — so the exploration harness and the shipping saga run the same
+///     The score estimator (docs/design/pumbility-overhaul.md §4.1). Pure — no I/O, no clock,
+///     no randomness — so the exploration harness and every shipping caller run the same
 ///     arithmetic and cannot drift.
 ///     <para>
-///         Given the peers inside a ±1 competitive band who have played a chart, it answers
+///         Given the peers inside a competitive band who have played a chart, it answers
 ///         "what would a player at this level score here": each peer's score discounted by how
 ///         much they have grown since setting it, then a weighted quantile of what remains.
 ///     </para>
@@ -28,7 +28,7 @@ internal readonly record struct PeerScore(int Score, double LevelNow, double Lev
 ///         in §4.3. The peers' scores already encode who the chart suits.
 ///     </para>
 /// </summary>
-internal static class CohortEstimator
+public static class CohortEstimator
 {
     /// <summary>
     ///     Growth decay, in competitive levels. A peer who has not moved counts at full voice;
@@ -45,16 +45,21 @@ internal static class CohortEstimator
     ///     <para>
     ///         ⚠ Fitted against a ONE-YEAR truth horizon and re-fittable by design. It is the
     ///         same species of constant as the ×0.95 fudge it replaces, and it moves bias by
-    ///         ~5,000 points across its useful range. If the page's claim changes from "what
+    ///         ~5,000 points across its useful range. If a caller's claim changes from "what
     ///         you would eventually score" toward "what you would score today", this drops.
     ///     </para>
     /// </summary>
     public const double Quantile = 0.65;
 
     /// <summary>
-    ///     Competitive-level half-width of the peer gate. Measured optimal against every
-    ///     alternative: ±0.5 costs 3.1%, ±2.0 costs 3.1%, ±3.0 costs 12.4% (§4.5). It is also
-    ///     what bounds the query — without it a projection compares against thousands.
+    ///     Competitive-level half-width of the peer gate for the PUMBILITY projection, measured
+    ///     optimal for that page's job — predicting the score itself, where ±0.5 costs 3.1%,
+    ///     ±2.0 costs 3.1% and ±3.0 costs 12.4% of accuracy (§4.5).
+    ///     <para>
+    ///         It is not a site-wide rule, and callers pass their own. A tier list only needs
+    ///         the folder's charts ranked against each other rather than the number quoted, and
+    ///         the rest of the site calls a competitive peer ±0.5, so it asks for ±0.5.
+    ///     </para>
     /// </summary>
     public const double CompetitiveWindow = 1.0;
 
