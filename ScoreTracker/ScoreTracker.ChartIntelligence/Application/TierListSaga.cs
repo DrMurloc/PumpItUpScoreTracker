@@ -110,7 +110,9 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     public async Task Consume(ConsumeContext<ProcessPassTierListCommand> context)
     {
         var mix = context.Message.Mix;
-        foreach (var level in Enumerable.Range(10, 18))
+        // Levels 10 through 29 — DifficultyLevel.Max. The cohort guards below stop reaching
+        // above 29 for the upper folders rather than the loop stopping short of them.
+        foreach (var level in Enumerable.Range(10, 20))
         {
             await ProcessPgTierList(mix, level, ChartType.Single, context.CancellationToken);
             await ProcessPgTierList(mix, level, ChartType.Double, context.CancellationToken);
