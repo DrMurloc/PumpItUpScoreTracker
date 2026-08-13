@@ -74,7 +74,6 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.TierListEntry` | Tier list entries per mix (the site's most-used feature) |
-| `scores.UserTierListEntry` | Materialized per-user relative tier lists, event-driven off score imports (tier-lists overhaul C1); `Freshness` weights each entry's similar-players vote by score age relative to the player's own folder (score-age workshop — default 1.0 until the Backfill User Tier Lists run re-stamps rows) |
 | `scores.ChartScoreStats` | Population score variance per chart, refreshed by the daily scores tier-list rebuild (tier-lists overhaul C1) |
 | `scores.FolderCohortStats` | Folder pass-count histograms per competitive-level bucket, refreshed by the daily scores tier-list rebuild — powers the "Folder Passes vs Similar Players" bar (tier-lists overhaul C16) |
 | `scores.ChartScoringLevel` | Calculated scoring-difficulty level per chart+mix |
@@ -213,6 +212,7 @@ owned it.
 | `archive.UserWorldRanking` | 2026-07-28 | Calculated world rankings; the feature had no reader left |
 | `archive.OfficialUserAvatar` | 2026-07-28 | Avatar cache, absorbed by `OfficialPlayer` |
 | `archive.OfficialLeaderboardImportState` | 2026-07-28 | Last-import timestamp, absorbed by the snapshot seal |
+| `archive.UserTierListEntry` | 2026-08-13 | Materialized per-user relative tier lists, read only by the similar-players source of personalized Pass. **Transferred empty** — the rows were derived from scores, and a million user-keyed rows outside the purge path would strand personal data ([pumbility-tier-list.md](design/pumbility-tier-list.md)) |
 
 The UCS tables (`scores.UcsChart_archived` and its two siblings) predate the `archive` schema and
 keep their suffix-in-place form.
