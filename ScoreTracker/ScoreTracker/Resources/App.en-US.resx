@@ -5343,8 +5343,14 @@
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>Rebuild weekly highlights</value>
   </data>
+  <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
+    <value>Rebuild {0} PUMBILITY tier lists</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Rebuilding the latest session for every player.</value>
+  </data>
+  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
+    <value>Rebuilding the {0} PUMBILITY census. It takes a few minutes.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Recalculated every few hours</value>

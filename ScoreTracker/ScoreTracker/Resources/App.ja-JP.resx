@@ -5343,8 +5343,14 @@
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>週間ハイライトを再計算</value>
   </data>
+  <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
+    <value>{0} の PUMBILITY 難易度表を再構築</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>全プレイヤーの最新セッションを再構築しています。</value>
+  </data>
+  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
+    <value>{0} の PUMBILITY 集計を再構築しています。数分かかります。</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>数時間ごとに再計算されます</value>

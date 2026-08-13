@@ -5304,8 +5304,14 @@
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>주간 하이라이트 재계산</value>
   </data>
+  <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
+    <value>{0} PUMBILITY 티어 리스트 재생성</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>모든 플레이어의 최근 세션을 재생성하는 중입니다.</value>
+  </data>
+  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
+    <value>{0} PUMBILITY 집계를 재생성하는 중입니다. 몇 분 걸립니다.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>몇 시간마다 다시 계산됩니다</value>

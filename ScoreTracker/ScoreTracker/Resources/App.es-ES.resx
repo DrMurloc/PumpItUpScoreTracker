@@ -5302,8 +5302,14 @@
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>Recalcular destacados semanales</value>
   </data>
+  <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
+    <value>Reconstruir las listas de niveles PUMBILITY de {0}</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Reconstruyendo la última sesión de cada jugador.</value>
+  </data>
+  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
+    <value>Reconstruyendo el censo PUMBILITY de {0}. Tarda unos minutos.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Se recalcula cada pocas horas</value>

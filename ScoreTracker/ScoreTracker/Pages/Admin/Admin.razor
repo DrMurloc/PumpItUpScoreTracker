@@ -1,5 +1,6 @@
 ﻿@using MassTransit
 @using ScoreTracker.ScoreLedger.Contracts.Messages
+@using ScoreTracker.ChartIntelligence.Contracts.Messages
 @page "/Admin"
 @rendermode RenderModes.Interactive
 @using MediatR
@@ -46,6 +47,15 @@
 {
     <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="@(() => RepriceRatings(mix))"
                data-testid="@($"reprice-ratings-{mix}")">@L["Re-price {0} ratings", mix.GetName()]</MudButton>
+}
+
+@* The PUMBILITY lens reads a nightly census, so a fresh deploy shows nothing until the job
+   first runs — and locally PreventRecurringJobs parks it on a yearly cron, where the Hangfire
+   dashboard cannot trigger it either. Safe to re-run: the job rewrites each folder wholesale. *@
+@foreach (var mix in RepriceableMixes)
+{
+    <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="@(() => RebuildPumbilityCensus(mix))"
+               data-testid="@($"rebuild-pumbility-census-{mix}")">@L["Rebuild {0} PUMBILITY tier lists", mix.GetName()]</MudButton>
 }
 
 <MudCard>
@@ -239,6 +249,13 @@
     {
         await Bus.Publish(new RecalculateMixRatingsCommand(mix));
         Snackbar.Add(L["Re-pricing stored {0} ratings. Nothing is announced.", mix.GetName()].Value,
+            Severity.Success);
+    }
+
+    private async Task RebuildPumbilityCensus(MixEnum mix)
+    {
+        await Bus.Publish(new ProcessPumbilityCensusCommand(mix));
+        Snackbar.Add(L["Rebuilding the {0} PUMBILITY census. It takes a few minutes.", mix.GetName()].Value,
             Severity.Success);
     }
 

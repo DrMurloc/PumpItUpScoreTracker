@@ -5343,8 +5343,14 @@
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>Glrolurg murmmr murmmurmgro</value>
   </data>
+  <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
+    <value>Blurgmurgl {0} PUMBILITY mrgl morgl</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Bagl orgab murlog al.</value>
+  </data>
+  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
+    <value>Blurgmurgl {0} PUMBILITY morp. Mrgl blub argl mrogl.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Groglorgplglmorg murgglorg rgl blargmrp</value>
