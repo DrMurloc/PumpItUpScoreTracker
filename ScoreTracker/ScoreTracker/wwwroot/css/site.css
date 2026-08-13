@@ -198,12 +198,13 @@ body {
     margin-top: 8px;
     align-self: flex-start;
     padding: 6px 14px;
-    font-size: .82rem;
     border-radius: 6px;
     border: 1px solid var(--mix-primary);
     background: var(--mix-primary);
     color: var(--mix-primary-contrast);
+    /* The shorthand resets every font-* longhand, so the size must come after it. */
     font: inherit;
+    font-size: .82rem;
     font-weight: 600;
     cursor: pointer;
 }
