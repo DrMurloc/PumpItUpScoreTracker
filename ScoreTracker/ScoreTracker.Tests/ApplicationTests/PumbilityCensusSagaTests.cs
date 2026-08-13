@@ -41,8 +41,10 @@ public sealed class PumbilityCensusSagaTests
 
         scores.Add((everyone[0], Score(niche, 960_000)));
 
+        var charts = filler.Concat(new[] { popular, niche }).ToList();
+        GiveFullPools(charts, scores, everyone);
         var saved = new List<SavedFolder>();
-        var saga = BuildSaga(filler.Concat(new[] { popular, niche }), scores, saved);
+        var saga = BuildSaga(charts, scores, saved);
 
         await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
 
@@ -70,8 +72,10 @@ public sealed class PumbilityCensusSagaTests
             (titled, Score(chart, 990_000)), (untitled, Score(chart, 990_000))
         };
 
+        var charts = new List<Chart> { chart };
+        GiveFullPools(charts, scores, titled, untitled);
         var saved = new List<SavedFolder>();
-        var saga = BuildSaga(new[] { chart }, scores, saved,
+        var saga = BuildSaga(charts, scores, saved,
             titleLevels: new Dictionary<int, Guid[]> { [17] = new[] { titled } });
 
         await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
@@ -90,9 +94,11 @@ public sealed class PumbilityCensusSagaTests
         var lowChart = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
         var highChart = new ChartBuilder().WithLevel(24).WithType(ChartType.Single).Build();
         var scores = new List<(Guid, RecordedPhoenixScore)> { (lowPlayer, Score(lowChart, 980_000)) };
+        var charts = new List<Chart> { lowChart, highChart };
+        GiveFullPools(charts, scores, lowPlayer);
 
         var saved = new List<SavedFolder>();
-        var saga = BuildSaga(new[] { lowChart, highChart }, scores, saved,
+        var saga = BuildSaga(charts, scores, saved,
             titleLevels: new Dictionary<int, Guid[]> { [15] = new[] { lowPlayer } });
 
         await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
@@ -102,6 +108,33 @@ public sealed class PumbilityCensusSagaTests
         // Nobody at that level pools a 24, so the folder is written with no cohorts at all
         // rather than with a set of zeros nobody can read anything from.
         Assert.Empty(saved.Single(f => f.Level == 24).ByCohort);
+    }
+
+    [Fact]
+    public async Task APartialPoolIsNotCountedAtAll()
+    {
+        // The Phoenix 2 shape: a player who has imported a handful of charts has a low pool
+        // total because they have played little of the mix, not because they are weak. Counting
+        // them would put them in a cohort of genuinely weaker players and drag that cohort with
+        // them, which is what a mix with no score volume yet does to everyone in it.
+        var full = Guid.NewGuid();
+        var partial = Guid.NewGuid();
+        var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var scores = new List<(Guid, RecordedPhoenixScore)>
+        {
+            (full, Score(chart, 990_000)), (partial, Score(chart, 990_000))
+        };
+        var charts = new List<Chart> { chart };
+        GiveFullPools(charts, scores, full);
+
+        var saved = new List<SavedFolder>();
+        var saga = BuildSaga(charts, scores, saved);
+
+        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+
+        var community = saved.Single(f => f.Level == 20).ByCohort[PumbilityCohortKeys.Community];
+        Assert.Equal(1, community.Entries.Single().Appearances);
+        Assert.Equal(1, community.CohortSize);
     }
 
     [Fact]
@@ -123,6 +156,24 @@ public sealed class PumbilityCensusSagaTests
         Assert.Equal(10, community.Count(e => e.Appearances == 0));
         Assert.All(community.Where(e => e.Appearances == 0),
             e => Assert.Equal(TierListCategory.Unrecorded, e.Category));
+    }
+
+    /// <summary>
+    ///     Fifty low-level charts per player, so their pool is a pool. The census ignores anyone
+    ///     short of a full fifty — a partial pool's total says how much someone has imported, not
+    ///     how well they play — and every fixture here is otherwise far too small to qualify.
+    ///     Level 12 keeps the ballast below whatever folder is under test, so it fills the pool
+    ///     without displacing the charts the test is about.
+    /// </summary>
+    private static void GiveFullPools(List<Chart> charts, List<(Guid, RecordedPhoenixScore)> scores,
+        params Guid[] users)
+    {
+        var ballast = Enumerable.Range(0, 50)
+            .Select(_ => new ChartBuilder().WithLevel(12).WithType(ChartType.Single).Build()).ToArray();
+        charts.AddRange(ballast);
+        foreach (var user in users)
+        foreach (var chart in ballast)
+            scores.Add((user, Score(chart, 900_000)));
     }
 
     private static RecordedPhoenixScore Score(Chart chart, int score)

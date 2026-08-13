@@ -19,9 +19,10 @@ internal sealed class PumbilityFoldersHandler
 
     public PumbilityFoldersHandler(IMediator mediator, IChartRepository charts, IScoreProjector projector,
         IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        IScoreReader scores,
         ICurrentUserAccessor currentUser, IMemoryCache cache)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, projector, census, titles, playerStats);
+        _builder = new TierListBlendBuilder(mediator, charts, projector, census, titles, playerStats, scores);
         _census = census;
         _currentUser = currentUser;
         _cache = cache;
@@ -32,8 +33,17 @@ internal sealed class PumbilityFoldersHandler
     {
         var userId = request.Personalized ? request.UserId ?? _currentUser.User.Id : (Guid?)null;
         var cacheKey = $"{nameof(PumbilityFoldersHandler)}_{request.Mix}_{userId?.ToString() ?? "community"}";
+        if (_cache.TryGetValue<IReadOnlyList<PumbilityFolderRecord>>(cacheKey, out var cached) &&
+            cached is { Count: > 0 })
+            return cached;
+
         return await _cache.GetOrCreateAsync(cacheKey, async entry =>
         {
+            // An empty answer is cached for a minute, not six hours. Empty almost always means
+            // the census has not been built for this mix yet, and a six-hour hold turns "press
+            // Rebuild" into "press Rebuild and wait until tomorrow" — with every folder in the
+            // picker disabled in the meantime, since a folder with no census row is a folder
+            // the lens cannot speak for.
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
             entry.SlidingExpiration = TimeSpan.FromHours(1);
             // The cohort is per chart type on Phoenix 2, so both are asked and merged - a
@@ -51,6 +61,7 @@ internal sealed class PumbilityFoldersHandler
                     .Select(f => new PumbilityFolderRecord(f.ChartType, f.Level)));
             }
 
+            if (folders.Count == 0) entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
             return (IReadOnlyList<PumbilityFolderRecord>)folders;
         }) ?? Array.Empty<PumbilityFolderRecord>();
     }

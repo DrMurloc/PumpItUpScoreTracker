@@ -263,6 +263,6 @@ public sealed class BlendedTierListHandlerTests
         return new BlendedTierListHandler(mediator.Object, charts.Object,
             new Mock<ICurrentUserAccessor>().Object, new MemoryCache(new MemoryCacheOptions()),
             new ScoreProjector(scores.Object, playerStats.Object, new Mock<IPlayerHistoryRepository>().Object),
-            census.Object, new Mock<ITitleRepository>().Object, playerStats.Object);
+            census.Object, new Mock<ITitleRepository>().Object, playerStats.Object, scores.Object);
     }
 }

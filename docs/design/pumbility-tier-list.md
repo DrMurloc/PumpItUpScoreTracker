@@ -83,8 +83,13 @@ set — is the argument for it earning a lens slot rather than replacing Pass.
 
 For a folder (mix, chart type, level) and a cohort:
 
-1. Every player in the cohort has a top-50 pool per chart type, priced by
-   `ScoringConfiguration.PumbilityScoring(mix, includeCoOp: false)`.
+1. Every player in the cohort has a **full** top-50 pool per chart type, priced by
+   `ScoringConfiguration.PumbilityScoring(mix, includeCoOp: false)`. A player short of fifty is
+   not counted at all — their total is low because they have imported little of the mix, not
+   because they are weak, and letting that stand drops them into a cohort of genuinely weaker
+   players *and* drags that cohort down with them. This is also what keeps Phoenix 2 dark until
+   its pools are real, and lights it up on its own as they fill. The same gate applies to the
+   reader: no pool, no personalized answer.
 2. For each chart in the folder, count how many of those pools contain it. That count is the
    signal. No denominator, no rate.
 3. Band the counts through `TierListProcessor` on a **log scale**: `log(1 + n)`, zeros
@@ -259,4 +264,9 @@ the same commit as the manifest change, or `AccountPurgeCoverageTests` fails.
 ## 11. Post-deploy, once
 
 The census table ships empty, so the lens shows nothing until the nightly job first runs.
-Trigger it per mix from `/hangfire` (or the admin Rebuild button) rather than waiting a day.
+Press **Rebuild {mix} PUMBILITY tier lists** on `/Admin`, per mix. `/hangfire` works too, except
+locally where `PreventRecurringJobs` parks the job on a yearly cron the dashboard cannot fire.
+
+**Importing scores does not rebuild the census**, and deliberately: it is a population-wide
+count, not a per-player derivation, so one import cannot meaningfully move it. Your own new
+scores show up in the lens on the next nightly run — or immediately, if you press the button.

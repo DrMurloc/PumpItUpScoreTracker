@@ -64,6 +64,9 @@ internal sealed class TierListBlendBuilder
     /// <summary>The census source's name, which is its own single-source recipe on both views.</summary>
     private const string PumbilitySource = "PUMBILITY";
 
+    /// <summary>A PUMBILITY pool is fifty charts; anything short of that is not one yet.</summary>
+    private const int PumbilityPoolSize = 50;
+
     private static readonly string[] StoredSources =
         { "Official Scores", "Scores", "Popularity", "Pass Count", "PG", "Chabala" };
 
@@ -72,10 +75,12 @@ internal sealed class TierListBlendBuilder
     private readonly IMediator _mediator;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreProjector _projector;
+    private readonly IScoreReader _scores;
     private readonly ITitleRepository _titles;
 
     public TierListBlendBuilder(IMediator mediator, IChartRepository charts, IScoreProjector projector,
-        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats)
+        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        IScoreReader scores)
     {
         _mediator = mediator;
         _charts = charts;
@@ -83,6 +88,7 @@ internal sealed class TierListBlendBuilder
         _census = census;
         _titles = titles;
         _playerStats = playerStats;
+        _scores = scores;
     }
 
     /// <summary>How much of a recipe is stored community lists — 0 when none of it is.</summary>
@@ -216,6 +222,16 @@ internal sealed class TierListBlendBuilder
             var titleLevel = await _titles.GetCurrentTitleLevel(mix, userId, cancellationToken);
             return PumbilityCohortKeys.ForDifficultyTitleLevel((int)titleLevel);
         }
+
+        // Same shape of gate the census applies. A reader who has not yet imported a pool's
+        // worth of this mix resolves to a rung well below where they play — their total is low
+        // because they have played little of it, not because they are weak — and is then handed
+        // the folder band of the players genuinely at that rung. Counting scores rather than the
+        // pool itself is deliberately coarse: it is the mix-has-no-volume-yet case this exists
+        // for, and it costs one read behind a six-hour cache.
+        var scored = (await _scores.GetBestScores(mix, userId, cancellationToken))
+            .Count(s => s is { Score: not null, IsBroken: false });
+        if (scored < PumbilityPoolSize) return null;
 
         var stats = await _playerStats.GetStats(mix, userId, cancellationToken);
         return PumbilityCohortKeys.ForPhoenix2Pool(chartType,

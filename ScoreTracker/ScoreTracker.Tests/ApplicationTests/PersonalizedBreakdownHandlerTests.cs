@@ -210,6 +210,6 @@ public sealed class PersonalizedBreakdownHandlerTests
         return new PersonalizedBreakdownHandler(mediator.Object, charts.Object,
             new Mock<ICurrentUserAccessor>().Object, new MemoryCache(new MemoryCacheOptions()),
             new ScoreProjector(scores.Object, playerStats.Object, history.Object),
-            census.Object, new Mock<ITitleRepository>().Object, playerStats.Object);
+            census.Object, new Mock<ITitleRepository>().Object, playerStats.Object, scores.Object);
     }
 }

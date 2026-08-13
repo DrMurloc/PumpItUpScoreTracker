@@ -2030,7 +2030,10 @@ else
     ///     played these (design doc §6).
     /// </summary>
     private bool PumbilityFolderHasData(ChartType type, int level) =>
-        _pumbilityFolders == null || _pumbilityFolders.Contains((type, level));
+        // An EMPTY set means the census has not been built for this mix, not that every folder
+        // is unanswerable — gating on it would disable the whole picker and strand the reader.
+        _pumbilityFolders == null || _pumbilityFolders.Count == 0
+        || _pumbilityFolders.Contains((type, level));
 
     /// <summary>
     ///     The nearest folder of the same type the lens can answer for, or null when it can

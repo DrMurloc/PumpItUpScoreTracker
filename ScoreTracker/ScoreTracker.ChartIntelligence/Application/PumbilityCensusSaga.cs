@@ -115,7 +115,13 @@ internal sealed class PumbilityCensusSaga : IConsumer<ProcessPumbilityCensusComm
             scores.Add((record.ChartId, rating));
         }
 
-        return rated.ToDictionary(kv => kv.Key, kv =>
+        // Only full pools count. A player with thirty charts has a low total because they have
+        // played thirty charts, not because they are weak, and letting that stand puts them in a
+        // cohort of genuinely weaker players — which is exactly what a mix with no score volume
+        // yet produces for everyone. It also keeps Phoenix 2 dark until its pools are real,
+        // which is what the design doc says should happen, and lights it up on its own as they
+        // fill (docs/design/pumbility-tier-list.md §8).
+        return rated.Where(kv => kv.Value.Count >= PoolSize).ToDictionary(kv => kv.Key, kv =>
         {
             var top = kv.Value.OrderByDescending(s => s.Rating).Take(PoolSize).ToArray();
             return new PlayerPool(top.Select(s => s.ChartId).ToHashSet(), top.Sum(s => s.Rating));
