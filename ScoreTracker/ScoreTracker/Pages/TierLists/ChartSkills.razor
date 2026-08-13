@@ -151,7 +151,11 @@ else
                     <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["Skill Breakdown"]</MudButton>
                 }
             </MudButtonGroup>
-            @if (_groupBy == "Personalized")
+            @* Score only: the Breakdown page explains the Score projection and coerces any
+               other lens to it, so linking it from Personalized PUMBILITY would answer a
+               different question than the one on screen. A PUMBILITY breakdown mode is
+               deferred (design doc §10) — deferring means no link, not a rerouted one. *@
+            @if (_groupBy == "Personalized" && _tierListType == "Score")
             {
                 @* The only thing the retired "Personalized for {gametag}" chip did that the
                    selected view button does not: get you to the breakdown. *@
@@ -1816,7 +1820,11 @@ else
             if (nearest != null && nearest.Value.Level != _level)
             {
                 _level = nearest.Value.Level;
-                await SetQueryString();
+                // Replace, never push: this corrects an address the reader typed or followed,
+                // so Back must return to wherever they came from — a pushed entry leaves the
+                // URL and the rendered folder disagreeing after one Back press, since the
+                // static router handles no popstate.
+                await SetQueryString(replace: true);
             }
         }
 
