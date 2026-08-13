@@ -210,4 +210,105 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         Assert.Single(result);
         Assert.Contains(activeUser, result);
     }
+
+    [Fact]
+    public async Task SavePumbilityTierListsAndGetPumbilityTierListRoundTripPreservesAllFields()
+    {
+        // The PUMBILITY tier lists ride the same repository as the stored lists (one owner for
+        // the tier-list family) but their own table — this also exercises the
+        // PumbilityCensusEntry → PumbilityTierListEntry rename migration against a real schema.
+        var chartA = Guid.NewGuid();
+        var chartB = Guid.NewGuid();
+        var byCohort = new Dictionary<string, PumbilityTierListFolder>
+        {
+            ["*"] = new(new[]
+            {
+                new PumbilityTierListRecord(chartA, 8, TierListCategory.Overrated, 1),
+                new PumbilityTierListRecord(chartB, 0, TierListCategory.Unrecorded, 0)
+            }, 12),
+            ["L17"] = new(new[] { new PumbilityTierListRecord(chartA, 3, TierListCategory.Medium, 0) }, 3)
+        };
+
+        await BuildRepository().SavePumbilityTierLists(MixEnum.Phoenix, ChartType.Single, 20, byCohort,
+            CancellationToken.None);
+
+        var community = await BuildRepository()
+            .GetPumbilityTierList(MixEnum.Phoenix, ChartType.Single, 20, "*", CancellationToken.None);
+        Assert.Equal(12, community.CohortSize);
+        Assert.Equal(2, community.Entries.Count);
+        var a = community.Entries.Single(e => e.ChartId == chartA);
+        Assert.Equal(8, a.Appearances);
+        Assert.Equal(TierListCategory.Overrated, a.Category);
+        Assert.Equal(1, a.Order);
+
+        var titled = await BuildRepository()
+            .GetPumbilityTierList(MixEnum.Phoenix, ChartType.Single, 20, "L17", CancellationToken.None);
+        Assert.Equal(3, titled.CohortSize);
+        Assert.Single(titled.Entries);
+
+        var unknown = await BuildRepository()
+            .GetPumbilityTierList(MixEnum.Phoenix, ChartType.Single, 20, "L99", CancellationToken.None);
+        Assert.Empty(unknown.Entries);
+        Assert.Equal(0, unknown.CohortSize);
+    }
+
+    [Fact]
+    public async Task SavePumbilityTierListsReplacesTheFolderWholesale()
+    {
+        // The nightly rebuild recomputes each folder from scratch: a cohort absent from the new
+        // write must lose its old rows, or a cohort that stopped reaching the folder would keep
+        // serving yesterday's answer forever.
+        var chartId = Guid.NewGuid();
+        var writer = BuildRepository();
+        await writer.SavePumbilityTierLists(MixEnum.Phoenix, ChartType.Double, 18,
+            new Dictionary<string, PumbilityTierListFolder>
+            {
+                ["L15"] = new(new[] { new PumbilityTierListRecord(chartId, 5, TierListCategory.Easy, 0) }, 9)
+            }, CancellationToken.None);
+        await writer.SavePumbilityTierLists(MixEnum.Phoenix, ChartType.Double, 18,
+            new Dictionary<string, PumbilityTierListFolder>
+            {
+                ["L16"] = new(new[] { new PumbilityTierListRecord(chartId, 2, TierListCategory.Hard, 0) }, 4)
+            }, CancellationToken.None);
+
+        var reader = BuildRepository();
+        var stale = await reader.GetPumbilityTierList(MixEnum.Phoenix, ChartType.Double, 18, "L15",
+            CancellationToken.None);
+        Assert.Empty(stale.Entries);
+        var fresh = await reader.GetPumbilityTierList(MixEnum.Phoenix, ChartType.Double, 18, "L16",
+            CancellationToken.None);
+        Assert.Equal(2, fresh.Entries.Single().Appearances);
+    }
+
+    [Fact]
+    public async Task GetPumbilityTierListFoldersSkipsAllZeroFoldersAndOtherMixes()
+    {
+        // A folder is offered to a cohort only where at least one of its pools reaches a chart;
+        // zero rows are written (so the rebuild needn't remember what it skipped) but never
+        // offered. Other mixes' rows never leak in.
+        var chartId = Guid.NewGuid();
+        var writer = BuildRepository();
+        await writer.SavePumbilityTierLists(MixEnum.Phoenix, ChartType.Single, 20,
+            new Dictionary<string, PumbilityTierListFolder>
+            {
+                ["L17"] = new(new[] { new PumbilityTierListRecord(chartId, 4, TierListCategory.Medium, 0) }, 7)
+            }, CancellationToken.None);
+        await writer.SavePumbilityTierLists(MixEnum.Phoenix, ChartType.Single, 21,
+            new Dictionary<string, PumbilityTierListFolder>
+            {
+                ["L17"] = new(new[] { new PumbilityTierListRecord(chartId, 0, TierListCategory.Unrecorded, 0) }, 7)
+            }, CancellationToken.None);
+        await writer.SavePumbilityTierLists(MixEnum.Phoenix2, ChartType.Single, 22,
+            new Dictionary<string, PumbilityTierListFolder>
+            {
+                ["L17"] = new(new[] { new PumbilityTierListRecord(chartId, 6, TierListCategory.Easy, 0) }, 5)
+            }, CancellationToken.None);
+
+        var folders = (await BuildRepository()
+                .GetPumbilityTierListFolders(MixEnum.Phoenix, "L17", CancellationToken.None))
+            .ToList();
+
+        Assert.Single(folders);
+        Assert.Equal((ChartType.Single, 20), folders[0]);
+    }
 }

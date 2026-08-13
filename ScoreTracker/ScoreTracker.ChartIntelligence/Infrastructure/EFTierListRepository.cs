@@ -151,13 +151,13 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
             var mixId = MixIds.For(mix);
             var typeName = chartType.ToString();
             var levelInt = (int)level;
-            var existing = await database.Set<PumbilityCensusEntryEntity>()
+            var existing = await database.Set<PumbilityTierListEntryEntity>()
                 .Where(e => e.MixId == mixId && e.ChartType == typeName && e.Level == levelInt)
                 .ToArrayAsync(cancellationToken);
-            database.Set<PumbilityCensusEntryEntity>().RemoveRange(existing);
+            database.Set<PumbilityTierListEntryEntity>().RemoveRange(existing);
             foreach (var (cohortKey, folder) in byCohort)
             foreach (var entry in folder.Entries)
-                await database.Set<PumbilityCensusEntryEntity>().AddAsync(new PumbilityCensusEntryEntity
+                await database.Set<PumbilityTierListEntryEntity>().AddAsync(new PumbilityTierListEntryEntity
                 {
                     MixId = mixId,
                     ChartType = typeName,
@@ -180,7 +180,7 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
             var mixId = MixIds.For(mix);
             var typeName = chartType.ToString();
             var levelInt = (int)level;
-            var rows = await database.Set<PumbilityCensusEntryEntity>()
+            var rows = await database.Set<PumbilityTierListEntryEntity>()
                 .Where(e => e.MixId == mixId && e.ChartType == typeName && e.Level == levelInt
                             && e.CohortKey == cohortKey)
                 .ToArrayAsync(cancellationToken);
@@ -198,7 +198,7 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
             // A folder every one of whose rows reads zero is a folder this cohort cannot speak
             // for — it is written, so the rebuild does not have to remember which folders it
             // skipped, but it must not be offered.
-            return (await database.Set<PumbilityCensusEntryEntity>()
+            return (await database.Set<PumbilityTierListEntryEntity>()
                     .Where(e => e.MixId == mixId && e.CohortKey == cohortKey && e.Appearances > 0)
                     .Select(e => new { e.ChartType, e.Level })
                     .Distinct()
