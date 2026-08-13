@@ -17,5 +17,7 @@ public sealed class ChartCommentsModelContribution : IDbModelContribution
         modelBuilder.Entity<CommentRevisionEntity>().ToTable("ChartCommentRevision");
         modelBuilder.Entity<CommentVoteEntity>().ToTable("ChartCommentVote");
         modelBuilder.Entity<CommentConsentEntity>().ToTable("ChartCommentConsent");
+        modelBuilder.Entity<CommentReportEntity>().ToTable("ChartCommentReport");
+        modelBuilder.Entity<CommentRestrictionEntity>().ToTable("ChartCommentRestriction");
     }
 }

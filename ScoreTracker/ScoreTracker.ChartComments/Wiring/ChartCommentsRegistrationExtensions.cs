@@ -17,6 +17,8 @@ public static class ChartCommentsRegistrationExtensions
     {
         services.AddTransient<ICommentRepository, EFCommentRepository>();
         services.AddTransient<ICommentConsentRepository, EFCommentConsentRepository>();
+        services.AddTransient<ICommentReportRepository, EFCommentReportRepository>();
+        services.AddTransient<ICommentRestrictionRepository, EFCommentRestrictionRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, ChartCommentsModelContribution>();
         return services;
