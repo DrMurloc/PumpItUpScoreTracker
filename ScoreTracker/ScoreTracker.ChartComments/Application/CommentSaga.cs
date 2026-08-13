@@ -9,6 +9,7 @@ using ScoreTracker.CommunityTools.Contracts.Queries;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.ChartComments.Application;
@@ -38,11 +39,6 @@ internal sealed class CommentSaga :
     internal const int TermsVersion = 1;
 
     private const string WorldCommunityName = "World";
-    private const string ToolHostsCacheKey = $"{nameof(CommentSaga)}__TrustedToolHosts";
-
-    // Short on purpose. The allowlist is data — a tool approved this afternoon should be trusted
-    // by this evening — but it is read on every comment render, so it cannot be a query each time.
-    private static readonly TimeSpan ToolHostsCacheFor = TimeSpan.FromMinutes(10);
 
     private readonly IMemoryCache _cache;
     private readonly IDateTimeOffsetAccessor _clock;
@@ -50,14 +46,19 @@ internal sealed class CommentSaga :
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
     private readonly ICommentRepository _comments;
+    private readonly ICommentReportRepository _reports;
+    private readonly ICommentRestrictionRepository _restrictions;
     private readonly IUserReader _users;
 
     public CommentSaga(ICommentRepository comments, ICommentConsentRepository consents,
+        ICommentReportRepository reports, ICommentRestrictionRepository restrictions,
         ICurrentUserAccessor currentUser, IDateTimeOffsetAccessor clock, IMediator mediator,
         IUserReader users, IMemoryCache cache)
     {
         _comments = comments;
         _consents = consents;
+        _reports = reports;
+        _restrictions = restrictions;
         _currentUser = currentUser;
         _clock = clock;
         _mediator = mediator;
@@ -72,6 +73,7 @@ internal sealed class CommentSaga :
     public async Task<Guid> Handle(PostCommentCommand request, CancellationToken cancellationToken)
     {
         var author = RequireSignedIn();
+        await EnsureMayWriteTo(request.Audience, author, cancellationToken);
         await EnsureMayPostTo(request.Audience, cancellationToken);
 
         var comment = Comment.Post(request.ChartId, author, request.Audience, request.Text, _clock.Now);
@@ -93,6 +95,7 @@ internal sealed class CommentSaga :
             : await _comments.GetById(parent.ParentCommentId!.Value, cancellationToken)
               ?? throw new CommentNotAllowedException("That comment is no longer there.");
 
+        await EnsureMayWriteTo(root.Audience, author, cancellationToken);
         await EnsureMayPostTo(root.Audience, cancellationToken);
 
         var reply = Comment.Reply(root, author, request.Text, _clock.Now);
@@ -105,6 +108,10 @@ internal sealed class CommentSaga :
     {
         var actor = RequireSignedIn();
         var comment = await Load(request.CommentId, cancellationToken);
+
+        // An edit is a way to keep talking through old comments, so the lock and the mute reach
+        // it. Delete deliberately stays ungated below — taking your own words down always works.
+        await EnsureMayWriteTo(comment.Audience, actor, cancellationToken);
 
         var replaced = comment.Edit(actor, request.Text, _clock.Now);
 
@@ -126,14 +133,19 @@ internal sealed class CommentSaga :
     public async Task Handle(RemoveCommentCommand request, CancellationToken cancellationToken)
     {
         var actor = RequireSignedIn();
-        // Slice 2 moderation is the site admin alone, which needs no permission flag because
-        // User.IsAdmin is computed. Community moderators arrive with ModerateComments.
-        if (!_currentUser.User.IsAdmin)
-            throw new CommentNotAllowedException("You cannot remove that comment.");
-
         var comment = await Load(request.CommentId, cancellationToken);
+        await EnsureMayModerate(comment, cancellationToken);
+
         comment.RemoveByModerator(actor, _clock.Now);
         await _comments.Save(comment, cancellationToken);
+
+        // A removed comment leaves nothing to act on in any queue, so every open report against
+        // it resolves — whichever desks were still waiting, stamped by the remover.
+        foreach (var report in await _reports.GetOpenForComment(comment.Id, cancellationToken))
+        {
+            report.ResolveEverywhere(actor, _clock.Now);
+            await _reports.Save(report, cancellationToken);
+        }
     }
 
     public async Task Handle(VoteOnCommentCommand request, CancellationToken cancellationToken)
@@ -169,10 +181,11 @@ internal sealed class CommentSaga :
         var totalRoots = await _comments.CountRoots(request.ChartId, request.Audience, viewer,
             cancellationToken);
 
-        var trust = new LinkTrust(await TrustedToolHosts(cancellationToken));
+        var trust = new LinkTrust(await ToolHostAllowlist.Get(_cache, _mediator, cancellationToken));
         var authors = (await _users.GetUsers(
                 rows.Select(r => r.UserId).Where(id => id != Guid.Empty).Distinct(), cancellationToken))
             .ToDictionary(u => u.Id);
+        var moderation = await ModerationContextFor(request.Audience, viewer, cancellationToken);
 
         var repliesByRoot = rows.Where(r => r.ParentCommentId != null)
             .GroupBy(r => r.ParentCommentId!.Value)
@@ -187,10 +200,10 @@ internal sealed class CommentSaga :
                         ? found.Where(reply => reply.DeletedAt == null)
                         : Enumerable.Empty<CommentRow>())
                     .Select(reply => Project(reply, request.Audience, trust, authors, viewer,
-                        Array.Empty<CommentRecord>()))
+                        moderation, Array.Empty<CommentRecord>()))
                     .ToArray();
 
-                return Project(root, request.Audience, trust, authors, viewer, replies);
+                return Project(root, request.Audience, trust, authors, viewer, moderation, replies);
             })
             // A deleted root leaves a stub ONLY while something living still hangs off it. Nobody
             // answered, or every answer is gone too, and the whole thread goes with it.
@@ -205,9 +218,16 @@ internal sealed class CommentSaga :
     {
         if (!_currentUser.IsLoggedIn) return Array.Empty<CommentScopeRecord>();
 
+        // A muted or locked player keeps every chip — reading is never revoked — and gets a
+        // disabled composer where they cannot post. Notes always can: no audience to protect.
+        var locked = _currentUser.User.IsContentLocked;
+        var mutedIn = (await _restrictions.GetActiveForUser(_currentUser.User.Id, cancellationToken))
+            .Select(mute => mute.CommunityId)
+            .ToHashSet();
+
         var scopes = new List<CommentScopeRecord>
         {
-            new(CommentAudience.Public, Name.From("Public")),
+            new(CommentAudience.Public, Name.From("Public"), !locked),
             // Second, not last: it is the one chip every signed-in player has, and it must not get
             // pushed off the end of a phone's rail by somebody who joins six communities.
             new(CommentAudience.Private, Name.From("Notes"))
@@ -221,7 +241,8 @@ internal sealed class CommentSaga :
             .Where(community => !community.IsRegional && community.CommunityName != WorldCommunityName)
             .OrderBy(community => community.CommunityName.ToString())
             .Select(community => new CommentScopeRecord(
-                CommentAudience.Community(community.CommunityId), community.CommunityName)));
+                CommentAudience.Community(community.CommunityId), community.CommunityName,
+                !locked && !mutedIn.Contains(community.CommunityId))));
 
         return scopes;
     }
@@ -263,7 +284,8 @@ internal sealed class CommentSaga :
     // ----- helpers -----------------------------------------------------------------------------
 
     private CommentRecord Project(CommentRow row, CommentAudience audience, LinkTrust trust,
-        Dictionary<Guid, User> authors, Guid viewer, IReadOnlyList<CommentRecord> replies)
+        Dictionary<Guid, User> authors, Guid viewer, ModerationContext moderation,
+        IReadOnlyList<CommentRecord> replies)
     {
         var deletion = DeletionOf(row);
         var author = row.UserId != Guid.Empty && authors.TryGetValue(row.UserId, out var found) ? found : null;
@@ -279,13 +301,96 @@ internal sealed class CommentSaga :
             deletion == null ? row.Votes : 0,
             deletion == null && row.ViewerVoted,
             deletion == null && viewer != Guid.Empty && viewer == row.UserId,
-            // The shield is the permission: nobody else renders it, and a personal note never
-            // carries one for anybody.
-            deletion == null && !audience.IsPrivate && _currentUser.IsLoggedIn && _currentUser.User.IsAdmin,
+            // The shield is the permission, per comment: the site admin everywhere, the creator
+            // over admins and members, an admin with the flag over members — and never on your
+            // own row, where Edit and Delete already live. A note never carries one for anybody.
+            deletion == null && !audience.IsPrivate && viewer != Guid.Empty && viewer != row.UserId &&
+            moderation.MayModerateAuthor(row.UserId),
             row.CreatedAt,
             deletion == null ? row.EditedAt : null,
             deletion,
             replies);
+    }
+
+    /// <summary>
+    ///     The role context one page render needs to answer the shield question per comment — two
+    ///     contract reads for a community scope, nothing at all for public (where the answer is
+    ///     the site admin) or notes (where the answer is nobody).
+    /// </summary>
+    private async Task<ModerationContext> ModerationContextFor(CommentAudience audience, Guid viewer,
+        CancellationToken cancellationToken)
+    {
+        var isAdmin = _currentUser.IsLoggedIn && _currentUser.User.IsAdmin;
+        if (viewer == Guid.Empty || audience.IsPrivate)
+            return new ModerationContext(false, null, CommunityPermission.None, null);
+        if (audience.Kind != CommentAudienceKind.Community || audience.CommunityId == null)
+            return new ModerationContext(isAdmin, null, CommunityPermission.None, null);
+
+        var (role, permissions) = await CommunityStanding.Mine(_mediator, audience.CommunityId.Value,
+            cancellationToken);
+        // Only a viewer with standing needs the member list; everyone else's answer is already no.
+        var couldModerate = isAdmin || role == CommunityRole.Creator ||
+                            (role == CommunityRole.Admin &&
+                             permissions.HasFlag(CommunityPermission.ModerateComments));
+        var authorRoles = couldModerate
+            ? await CommunityStanding.MemberRoles(_mediator, audience.CommunityId.Value, cancellationToken)
+            : null;
+
+        return new ModerationContext(isAdmin, role, permissions, authorRoles);
+    }
+
+    private sealed record ModerationContext(
+        bool IsSiteAdmin,
+        CommunityRole? MyRole,
+        CommunityPermission MyPermissions,
+        IReadOnlyDictionary<Guid, CommunityRole>? AuthorRoles)
+    {
+        public bool MayModerateAuthor(Guid authorId)
+        {
+            // AuthorRoles null with community standing absent means a public scope (or no
+            // standing at all) — the authority answers from the site-admin flag alone there.
+            return CommentModerationAuthority.MayRemove(IsSiteAdmin, MyRole, MyPermissions,
+                AuthorRoles?.RoleOf(authorId));
+        }
+    }
+
+    /// <summary>
+    ///     Removal-equivalent standing over one comment: the site admin everywhere, community
+    ///     moderators inside their club and their tier. Public comments belong to the site admin
+    ///     alone.
+    /// </summary>
+    private async Task EnsureMayModerate(Comment comment, CancellationToken cancellationToken)
+    {
+        if (_currentUser.User.IsAdmin) return;
+        if (comment.Audience.Kind != CommentAudienceKind.Community || comment.Audience.CommunityId == null)
+            throw new CommentNotAllowedException("You cannot remove that comment.");
+
+        var communityId = comment.Audience.CommunityId.Value;
+        var (role, permissions) = await CommunityStanding.Mine(_mediator, communityId, cancellationToken);
+        var roles = await CommunityStanding.MemberRoles(_mediator, communityId, cancellationToken);
+
+        if (!CommentModerationAuthority.MayRemove(false, role, permissions, roles.RoleOf(comment.UserId)))
+            throw new CommentNotAllowedException("You cannot remove that comment.");
+    }
+
+    /// <summary>
+    ///     The two write gates, checked before any post, reply or edit. A personal note passes
+    ///     both — a note has no audience to protect — and delete is deliberately never gated:
+    ///     taking your own words down always works.
+    /// </summary>
+    private async Task EnsureMayWriteTo(CommentAudience audience, Guid author,
+        CancellationToken cancellationToken)
+    {
+        if (audience.IsPrivate) return;
+
+        // The claim is trustworthy here: SetUserContentLockHandler stamps ClaimsInvalidatedAt on
+        // every lock change, and the cookie revalidates against it on the next request.
+        if (_currentUser.User.IsContentLocked)
+            throw new CommentNotAllowedException("Your account can't post comments right now.");
+
+        if (audience.Kind == CommentAudienceKind.Community && audience.CommunityId != null &&
+            await _restrictions.GetActive(author, audience.CommunityId.Value, cancellationToken) != null)
+            throw new CommentNotAllowedException("You can't comment in this community right now.");
     }
 
     private static CommentDeletion? DeletionOf(CommentRow row)
@@ -323,22 +428,4 @@ internal sealed class CommentSaga :
         throw new CommentNotAllowedException("You are not a member of that community.");
     }
 
-    private async Task<IReadOnlyList<string>> TrustedToolHosts(CancellationToken cancellationToken)
-    {
-        if (_cache.TryGetValue(ToolHostsCacheKey, out IReadOnlyList<string>? cached) && cached != null)
-            return cached;
-
-        var hosts = (await _mediator.Send(new GetPublicToolsQuery(), cancellationToken))
-            .Select(tool => tool.Url)
-            .Where(url => !string.IsNullOrWhiteSpace(url))
-            .Select(url => LinkTrust.TryParse(url!)?.Host)
-            .Where(host => host != null)
-            .Select(host => host!)
-            .Distinct()
-            .ToArray();
-
-        _cache.Set(ToolHostsCacheKey, (IReadOnlyList<string>)hosts, ToolHostsCacheFor);
-
-        return hosts;
-    }
 }
