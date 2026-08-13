@@ -1,0 +1,109 @@
+@namespace ScoreTracker.Web.Components.ChartComments
+@using ScoreTracker.ChartComments.Contracts
+
+@* The report panel, in place under the comment — the same shape as the removal confirm, and for
+   the same two reasons: the whole question is whether THIS is the one you mean, and a MudDialog
+   inside the details dialog orphans its scrim. One radio reason, because the reason decides
+   routing — and nothing here names where the report goes. A reporter who has to work out whose
+   problem it is will pick the wrong box to reach the person they want. *@
+
+<div class="cmt-report" data-testid="@($"report-{CommentId}")">
+    <span class="cmt-report-q">@L["Why are you reporting this?"]</span>
+    <div class="cmt-report-reasons" role="radiogroup">
+        @foreach (var reason in Reasons)
+        {
+            var r = reason;
+            <label class="cmt-report-reason @(_selected == r ? "cmt-report-reason-on" : null)">
+                <input type="radio" name="@($"report-reason-{CommentId}")" checked="@(_selected == r)"
+                       data-testid="@($"report-reason-{CommentId}-{r}")"
+                       @onchange="() => _selected = r"/>
+                @Label(r)
+            </label>
+        }
+    </div>
+    <div class="cmt-report-foot">
+        <MudSpacer></MudSpacer>
+        <MudButton Size="Size.Small" Variant="Variant.Text"
+                   OnClick="() => OnCancel.InvokeAsync()">@L["Cancel"]</MudButton>
+        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error"
+                   Disabled="@(_selected == null)" data-testid="@($"report-go-{CommentId}")"
+                   OnClick="Submit">@L["Report"]</MudButton>
+    </div>
+</div>
+
+<style>
+    .cmt-report {
+        margin-top: 7px;
+        padding: 8px 11px;
+        border-radius: 6px;
+        border: 1px solid var(--mud-palette-secondary);
+        background: var(--mud-palette-secondary-hover);
+        font-size: .78rem;
+    }
+
+    .cmt-report-q {
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .cmt-report-reasons {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+    .cmt-report-reason {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .cmt-report-reason-on {
+        color: var(--mud-palette-text-primary);
+    }
+
+    .cmt-report-foot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+
+@code {
+    private static readonly CommentReportReason[] Reasons =
+    {
+        CommentReportReason.SpamOrAdvertising,
+        CommentReportReason.OffTopic,
+        CommentReportReason.WrongInformation,
+        CommentReportReason.HateOrDiscrimination,
+        CommentReportReason.ThreatsOrHarassment
+    };
+
+    private CommentReportReason? _selected;
+
+    [Parameter] [EditorRequired] public Guid CommentId { get; set; }
+
+    [Parameter] public EventCallback<CommentReportReason> OnSubmit { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private Task Submit()
+    {
+        return _selected is { } reason ? OnSubmit.InvokeAsync(reason) : Task.CompletedTask;
+    }
+
+    private string Label(CommentReportReason reason)
+    {
+        return reason switch
+        {
+            CommentReportReason.SpamOrAdvertising => L["Spam or advertising"],
+            CommentReportReason.OffTopic => L["Off topic"],
+            CommentReportReason.WrongInformation => L["Wrong information"],
+            CommentReportReason.HateOrDiscrimination => L["Hate or discrimination"],
+            _ => L["Threats or harassment"]
+        };
+    }
+}

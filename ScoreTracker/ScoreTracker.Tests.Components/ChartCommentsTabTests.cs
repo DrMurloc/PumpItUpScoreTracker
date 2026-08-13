@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using Bunit;
 using MediatR;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -187,17 +188,70 @@ public sealed class ChartCommentsTabTests : TestContext
     // on the row is a way into a moderation action.
 
     [Fact]
-    public void SomebodyElsesCommentCarriesNoMenuAtAll()
+    public void SomebodyElsesCommentCarriesReportAndOnlyReport()
     {
-        // Report and the community shield arrive with moderation, so in this slice a normal
-        // reader's row on somebody else's words has ▲ and Reply and nothing more.
+        // The flag-day counterpart of SomebodyElsesCommentCarriesNoMenuAtAll: moderation exists
+        // now, so a signed-in reader's ⋯ on somebody else's words carries Report — while Edit
+        // and Delete stay on your own rows, and no shield renders without the record saying so.
         Page(Comment("not mine"));
         var page = Render();
 
         Assert.NotEmpty(page.FindAll(".cmt-foot .cmt-act"));
         Assert.Empty(page.FindAll("[data-testid^='own-']"));
+        Assert.Single(page.FindAll("[data-testid^='other-']"));
         Assert.DoesNotContain(page.FindComponents<MudMenu>(),
             m => m.Instance.Icon == Icons.Material.Filled.Shield);
+    }
+
+    [Fact]
+    public async Task ReportingAsksInPlaceAndSendsTheReasonPicked()
+    {
+        var theirs = Comment("hostile words");
+        Page(theirs);
+        var page = Render();
+
+        var row = page.FindComponent<CommentRow>();
+        await page.InvokeAsync(() => row.Instance.OnReport.InvokeAsync(theirs));
+
+        // The panel is under the comment — the words stay on screen while you pick — and
+        // nothing is sent until Report, which stays disabled until a reason is chosen.
+        page.Find($"[data-testid='report-{theirs.Id}']");
+        Assert.Contains("hostile words", page.Markup);
+        Assert.True(page.Find($"[data-testid='report-go-{theirs.Id}']").HasAttribute("disabled"));
+
+        await page.Find($"[data-testid='report-reason-{theirs.Id}-HateOrDiscrimination']")
+            .ChangeAsync(new ChangeEventArgs());
+        await page.Find($"[data-testid='report-go-{theirs.Id}']").ClickAsync(new MouseEventArgs());
+
+        _mediator.Verify(m => m.Send(It.Is<ReportCommentCommand>(c =>
+                c.CommentId == theirs.Id && c.Reason == CommentReportReason.HateOrDiscrimination),
+            It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Empty(page.FindAll($"[data-testid='report-{theirs.Id}']"));
+    }
+
+    [Fact]
+    public async Task AScopeYouCannotPostToGetsASentenceInsteadOfAComposer()
+    {
+        // A mute (or the lock) drops CanPost; the chip stays because reading is never revoked.
+        // The rules card must not show either — nobody gets walked through the terms to hit a
+        // wall behind them.
+        Scopes(new CommentScopeRecord(CommentAudience.Public, Name.From("Public")),
+            new CommentScopeRecord(CommentAudience.Private, Name.From("Notes")),
+            new CommentScopeRecord(CommentAudience.Community(Club), Name.From("Murloc Lab"), false));
+        Consent(true, false);
+        var page = Render();
+
+        await page.Find("[data-testid='cmt-scope-Murloc Lab']").ClickAsync(new MouseEventArgs());
+
+        page.Find("[data-testid='cmt-cannot-post']");
+        Assert.Empty(page.FindAll("[data-testid='cmt-root-composer']"));
+        Assert.Empty(page.FindAll(".cmt-rules"));
+
+        // Public still takes a comment — the mute is that club's and only that club's. The
+        // consent card shows here, because this reader still owes the terms.
+        await page.Find("[data-testid='cmt-scope-Public']").ClickAsync(new MouseEventArgs());
+        Assert.Empty(page.FindAll("[data-testid='cmt-cannot-post']"));
+        Assert.NotEmpty(page.FindAll(".cmt-rules"));
     }
 
     [Fact]
@@ -380,7 +434,7 @@ public sealed class ChartCommentsTabTests : TestContext
 
         var page = Render();
 
-        Assert.Contains("Removed by the site admin", page.Markup);
+        Assert.Contains("Removed by a moderator", page.Markup);
         Assert.Contains("still here", page.Markup);
     }
 

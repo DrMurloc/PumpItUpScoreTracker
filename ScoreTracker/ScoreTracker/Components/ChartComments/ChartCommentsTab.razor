@@ -58,7 +58,14 @@ else
 
     @if (CurrentUser.IsLoggedIn)
     {
-        @if (_consent.NeedsAnything)
+        @if (!CanPostHere)
+        {
+            @* A mute or the account lock. The chip stays and the thread reads normally —
+               reading is never revoked — but the composer is a sentence, not a field. Which
+               gate it is stays unsaid on purpose: the answer lives with whoever imposed it. *@
+            <div class="cmt-cannot-post" data-testid="cmt-cannot-post">@L["You can't post here right now."]</div>
+        }
+        else if (_consent.NeedsAnything)
         {
             @* Rendered where the composer goes rather than as a dialog over this one: a
                MudDialog inside a MudDialog orphans its scrim and leaves the page unclickable. *@
@@ -90,8 +97,11 @@ else
         {
             <CommentRow Comment="root" IsNote="IsNotes" CanInteract="CurrentUser.IsLoggedIn"
                         IsFocused="@(FocusCommentId == root.Id)" Confirming="ConfirmingFor(root.Id)"
+                        Reporting="@(_reporting == root.Id)"
                         OnVote="Vote" OnReply="StartReply" OnEdit="StartEdit" OnDelete="AskToDelete"
                         OnRemove="AskToRemove" OnConfirm="Confirmed" OnCancelConfirm="() => _confirming = null"
+                        OnReport="StartReport" OnReportSubmit="SubmitReport"
+                        OnCancelReport="() => _reporting = null"
                         OnUntrustedLink="ShowInterstitial" @key="root.Id"></CommentRow>
         }
         @if (_replyingTo == root.Id)
@@ -111,8 +121,11 @@ else
             {
                 <CommentRow Comment="reply" IsReply="true" CanInteract="CurrentUser.IsLoggedIn"
                             IsFocused="@(FocusCommentId == reply.Id)" Confirming="ConfirmingFor(reply.Id)"
+                            Reporting="@(_reporting == reply.Id)"
                             OnVote="Vote" OnEdit="StartEdit" OnDelete="AskToDelete" OnRemove="AskToRemove"
                             OnConfirm="Confirmed" OnCancelConfirm="() => _confirming = null"
+                            OnReport="StartReport" OnReportSubmit="SubmitReport"
+                            OnCancelReport="() => _reporting = null"
                             OnUntrustedLink="ShowInterstitial" @key="reply.Id"></CommentRow>
             }
         }
@@ -379,6 +392,14 @@ else
         color: var(--mud-palette-text-secondary);
     }
 
+    /* Where the composer would be, when the reader cannot post here: a sentence, not a field. */
+    .cmt-cannot-post {
+        padding: 8px 2px 12px;
+        font-size: .78rem;
+        font-style: italic;
+        color: var(--mud-palette-text-secondary);
+    }
+
     .cmt-rules {
         border-top: 1px solid var(--mud-palette-lines-default);
         padding: 12px 0 4px;
@@ -417,6 +438,7 @@ else
     private CommentAudience _audience = CommentAudience.Public;
     private CommentSort _sort = CommentSort.Top;
     private Guid? _replyingTo;
+    private Guid? _reporting;
     private (Guid Id, CommentRow.CommentAction Action)? _confirming;
     private Guid _editing = Guid.Empty;
     private string? _editingText;
@@ -475,6 +497,13 @@ else
 
     private string ScopeLabel =>
         _scopes.FirstOrDefault(s => s.Audience == _audience)?.Label.ToString() ?? L["Public"].Value;
+
+    /// <summary>
+    ///     Whether the reader may post where they are standing — a mute in this club, or the
+    ///     account lock anywhere public. True for a scope we have no record of, which is the
+    ///     signed-out reader who gets no composer anyway.
+    /// </summary>
+    private bool CanPostHere => _scopes.FirstOrDefault(s => s.Audience == _audience)?.CanPost ?? true;
 
     private string ScopeClass(CommentScopeRecord scope)
     {
@@ -546,6 +575,31 @@ else
     private void StartReply(CommentRecord comment)
     {
         _replyingTo = _replyingTo == comment.Id ? null : comment.Id;
+    }
+
+    private void StartReport(CommentRecord comment)
+    {
+        _reporting = _reporting == comment.Id ? null : comment.Id;
+    }
+
+    /// <summary>
+    ///     Reporting reloads nothing — the thread looks exactly the same afterwards, which is the
+    ///     point: nothing about a report is advertised, including that one happened.
+    /// </summary>
+    private async Task SubmitReport((CommentRecord Comment, CommentReportReason Reason) request)
+    {
+        _reporting = null;
+        try
+        {
+            await Mediator.Send(new ReportCommentCommand(request.Comment.Id, request.Reason));
+        }
+        catch (CommentNotAllowedException exception)
+        {
+            Snackbar.Add(exception.Message, Severity.Warning);
+            return;
+        }
+
+        Snackbar.Add(L["Thanks — a moderator will take a look."].Value, Severity.Success);
     }
 
     /// <summary>

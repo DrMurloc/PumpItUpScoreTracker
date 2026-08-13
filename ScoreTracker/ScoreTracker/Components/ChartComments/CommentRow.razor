@@ -2,9 +2,10 @@
 @using ScoreTracker.ChartComments.Contracts
 
 @* One comment, reply or note. Which controls appear IS the permission model: ▲ and Reply for
-   anyone signed in, ⋯ only on your own, 🛡 only for a moderator, and nothing at all on a
-   stub. A note drops the avatar entirely — every one of them is yours, so the column is 44px
-   of nothing, and losing it makes a note unmistakable for a comment at a glance. *@
+   anyone signed in, ⋯ with Edit/Delete on your own and Report on everybody else's, 🛡 only
+   for a moderator, and nothing at all on a stub. A note drops the avatar entirely — every one
+   of them is yours, so the column is 44px of nothing, and losing it makes a note unmistakable
+   for a comment at a glance. *@
 
 <div class="cmt @(IsReply ? "cmt-reply" : null) @(IsNote ? "cmt-note" : null) @(IsFocused ? "cmt-focused" : null)"
      data-testid="@($"comment-{Comment.Id}")" id="@($"comment-{Comment.Id}")">
@@ -69,6 +70,11 @@
                     </span>
                 </div>
             }
+            else if (Reporting)
+            {
+                <CommentReportPanel CommentId="Comment.Id" OnSubmit="reason => OnReportSubmit.InvokeAsync((Comment, reason))"
+                                    OnCancel="() => OnCancelReport.InvokeAsync()"></CommentReportPanel>
+            }
             else if (!IsNote)
             {
                 <div class="cmt-foot">
@@ -87,8 +93,10 @@
                     <MudSpacer></MudSpacer>
                     @if (Comment.ViewerMayModerate)
                     {
-                        @* The shield IS the permission — nobody without it renders one. Remove and
-                           only remove: there is no moderator edit, deliberately. *@
+                        @* The shield IS the permission — nobody without it renders one, and it is
+                           computed per comment now: the site admin everywhere, a creator over
+                           admins and members, a flag-holding admin over members. Remove and only
+                           remove: there is no moderator edit, deliberately. *@
                         <MudMenu Icon="@Icons.Material.Filled.Shield" Size="Size.Small" Dense="true"
                                  Color="Color.Primary" AriaLabel="@L["Moderate"]">
                             <MudMenuItem OnClick="() => OnRemove.InvokeAsync(Comment)">@L["Remove comment"]</MudMenuItem>
@@ -97,6 +105,14 @@
                     @if (Comment.ViewerIsAuthor)
                     {
                         @Menu()
+                    }
+                    else if (CanInteract)
+                    {
+                        @* Somebody else's words: the ⋯ carries Report and nothing else. *@
+                        <MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small" Dense="true"
+                                 AriaLabel="@L["More"]" data-testid="@($"other-{Comment.Id}")">
+                            <MudMenuItem OnClick="() => OnReport.InvokeAsync(Comment)">@L["Report"]</MudMenuItem>
+                        </MudMenu>
                     }
                 </div>
             }
@@ -124,6 +140,15 @@
     [Parameter] public EventCallback<(CommentRecord Comment, CommentAction Action)> OnConfirm { get; set; }
 
     [Parameter] public EventCallback OnCancelConfirm { get; set; }
+
+    /// <summary>Set while this row's report panel is open — same in-place shape as the confirm.</summary>
+    [Parameter] public bool Reporting { get; set; }
+
+    [Parameter] public EventCallback<CommentRecord> OnReport { get; set; }
+
+    [Parameter] public EventCallback<(CommentRecord Comment, CommentReportReason Reason)> OnReportSubmit { get; set; }
+
+    [Parameter] public EventCallback OnCancelReport { get; set; }
 
     /// <summary>A reply is indented and cannot itself be replied to — threads are one level.</summary>
     [Parameter] public bool IsReply { get; set; }
@@ -164,7 +189,9 @@
     {
         return deletion switch
         {
-            CommentDeletion.ByModerator => L["Removed by the site admin"],
+            // "a moderator" rather than naming the tier: the row cannot tell the site admin's
+            // removal from a community admin's, and the author is not told either way.
+            CommentDeletion.ByModerator => L["Removed by a moderator"],
             CommentDeletion.ByDeletedAccount => L["Comment from a deleted user"],
             _ => L["Deleted"]
         };
