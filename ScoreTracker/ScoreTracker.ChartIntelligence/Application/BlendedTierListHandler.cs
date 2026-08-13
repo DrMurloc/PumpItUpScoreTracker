@@ -47,6 +47,13 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
             entry.SlidingExpiration = TimeSpan.FromHours(1);
             var computation = await _builder.Compute(request.ChartType, request.Level, lens, userId,
                 request.Mix, cancellationToken);
+            // An empty PUMBILITY answer is cached for a minute, not six hours — the same rule
+            // PumbilityFoldersHandler applies, for the same reason: empty almost always means
+            // the lists have not been built for this mix (or this viewer's cohort) yet, and a
+            // six-hour hold turns "press Rebuild" into "press Rebuild and wait" for every
+            // folder anyone viewed before pressing it.
+            if (computation.Pumbility is { Entries.Count: 0 })
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
             var entries = computation.FolderCharts
                 .Select(c => TierListBlendBuilder.Combine("Final", c.Id, computation.Sources,
                     computation.Modifiers))
