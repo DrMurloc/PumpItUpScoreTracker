@@ -22,13 +22,10 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
     private readonly IMemoryCache _cache;
     private readonly ICurrentUserAccessor _currentUser;
 
-    public BlendedTierListHandler(IMediator mediator, IChartRepository charts, IScoreReader scores,
-        IPlayerStatsReader playerStats, IUserTierListRepository userTierLists,
-        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock,
-        IScoreProjector projector)
+    public BlendedTierListHandler(IMediator mediator, IChartRepository charts,
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IScoreProjector projector)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock,
-            projector);
+        _builder = new TierListBlendBuilder(mediator, charts, projector);
         _currentUser = currentUser;
         _cache = cache;
     }
