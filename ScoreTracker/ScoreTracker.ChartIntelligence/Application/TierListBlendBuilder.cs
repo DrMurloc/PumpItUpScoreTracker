@@ -64,9 +64,6 @@ internal sealed class TierListBlendBuilder
     /// <summary>The PUMBILITY source's name, which is its own single-source recipe on both views.</summary>
     private const string PumbilitySource = "PUMBILITY";
 
-    /// <summary>A PUMBILITY pool is fifty charts; anything short of that is not one yet.</summary>
-    private const int PumbilityPoolSize = 50;
-
     private static readonly string[] StoredSources =
         { "Official Scores", "Scores", "Popularity", "Pass Count", "PG", "Chabala" };
 
@@ -231,7 +228,7 @@ internal sealed class TierListBlendBuilder
         // for, and it costs one read behind a six-hour cache.
         var scored = (await _scores.GetBestScores(mix, userId, cancellationToken))
             .Count(s => s is { Score: not null, IsBroken: false });
-        if (scored < PumbilityPoolSize) return null;
+        if (scored < PumbilityCohortKeys.PoolSize) return null;
 
         var stats = await _playerStats.GetStats(mix, userId, cancellationToken);
         return PumbilityCohortKeys.ForPhoenix2Pool(chartType,

@@ -19,7 +19,11 @@ using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
-public sealed class PumbilityCensusSagaTests
+/// <summary>
+///     TierListSaga's PUMBILITY rebuild (its ProcessPumbilityTierListCommand consumer) — a
+///     sibling file to TierListSagaTests, the same split TierListSagaStaticsTests already uses.
+/// </summary>
+public sealed class TierListSagaPumbilityTests
 {
     private static readonly DateTimeOffset Recorded = new(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
 
@@ -47,7 +51,7 @@ public sealed class PumbilityCensusSagaTests
         var saved = new List<SavedFolder>();
         var saga = BuildSaga(charts, scores, saved);
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var community = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single)
             .ByCohort[PumbilityCohortKeys.Community].Entries;
@@ -79,7 +83,7 @@ public sealed class PumbilityCensusSagaTests
         var saga = BuildSaga(charts, scores, saved,
             titleLevels: new Dictionary<int, Guid[]> { [17] = new[] { titled } });
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var folder = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single);
         Assert.Equal(2, folder.ByCohort[PumbilityCohortKeys.Community].Entries.Single().Appearances);
@@ -102,7 +106,7 @@ public sealed class PumbilityCensusSagaTests
         var saga = BuildSaga(charts, scores, saved,
             titleLevels: new Dictionary<int, Guid[]> { [15] = new[] { lowPlayer } });
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var cohort = PumbilityCohortKeys.ForDifficultyTitleLevel(15);
         Assert.Contains(cohort, saved.Single(f => f.Level == 15).ByCohort.Keys);
@@ -131,7 +135,7 @@ public sealed class PumbilityCensusSagaTests
         var saved = new List<SavedFolder>();
         var saga = BuildSaga(charts, scores, saved);
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var community = saved.Single(f => f.Level == 20).ByCohort[PumbilityCohortKeys.Community];
         Assert.Equal(1, community.Entries.Single().Appearances);
@@ -150,7 +154,7 @@ public sealed class PumbilityCensusSagaTests
         var saved = new List<SavedFolder>();
         var saga = BuildSaga(charts, scores, saved);
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var community = saved.Single(f => f.Level == 20).ByCohort[PumbilityCohortKeys.Community].Entries;
         Assert.Equal(50, community.Count(e => e.Appearances == 1));
@@ -193,7 +197,7 @@ public sealed class PumbilityCensusSagaTests
     private sealed record SavedFolder(ChartType ChartType, int Level,
         IReadOnlyDictionary<string, PumbilityTierListFolder> ByCohort);
 
-    private static PumbilityCensusSaga BuildSaga(IEnumerable<Chart> charts,
+    private static TierListSaga BuildSaga(IEnumerable<Chart> charts,
         IReadOnlyCollection<(Guid UserId, RecordedPhoenixScore Record)> scores, List<SavedFolder> saved,
         IReadOnlyDictionary<int, Guid[]>? titleLevels = null)
     {
@@ -231,6 +235,12 @@ public sealed class PumbilityCensusSagaTests
                 saved.Add(new SavedFolder(type, level, byCohort)))
             .Returns(Task.CompletedTask);
 
-        return new PumbilityCensusSaga(chartRepo.Object, scoreReader.Object, titles.Object, tierLists.Object);
+        // The PUMBILITY rebuild reads charts, scores, titles and writes tier lists; the rest of
+        // TierListSaga's dependencies belong to its other consumers and stay inert dummies here.
+        return new TierListSaga(new Mock<IChartDifficultyRatingRepository>().Object, chartRepo.Object,
+            tierLists.Object, scoreReader.Object, new Mock<ICurrentUserAccessor>().Object,
+            new Mock<IPlayerStatsReader>().Object, new Mock<IChartScoringLevelRepository>().Object,
+            new Mock<IChartScoreStatsRepository>().Object, new Mock<IFolderCohortStatsRepository>().Object,
+            titles.Object);
     }
 }

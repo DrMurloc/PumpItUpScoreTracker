@@ -41,7 +41,6 @@ public static class ChartIntelligenceRegistrationExtensions
     {
         configurator.AddConsumer<ContributionsDeletionConsumer>();
         configurator.AddConsumer<TierListSaga>();
-        configurator.AddConsumer<PumbilityCensusSaga>();
         configurator.AddConsumer<ScoringDifficultySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<ChartSimilaritySaga>();

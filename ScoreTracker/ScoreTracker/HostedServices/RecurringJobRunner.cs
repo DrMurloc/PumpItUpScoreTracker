@@ -60,8 +60,8 @@ public sealed class RecurringJobRunner
     public Task PublishProcessPassTierList() =>
         _bus.Publish(new ProcessPassTierListCommand());
 
-    public Task PublishProcessPumbilityCensus() =>
-        _bus.Publish(new ProcessPumbilityCensusCommand());
+    public Task PublishProcessPumbilityTierList() =>
+        _bus.Publish(new ProcessPumbilityTierListCommand());
 
     public Task PublishCalculateChartLetterDifficulties() =>
         _bus.Publish(new RecalculateChartLetterDifficultiesCommand());
