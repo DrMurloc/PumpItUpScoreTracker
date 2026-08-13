@@ -9450,6 +9450,86 @@ button.chart-card-art {
     flex-direction: column;
 }
 
+/* The gem-rung drawer: flat level groups, strongest first (docs/design/pumbility-levels.md §4).
+   The group rows stay unmarked on purpose — the viewer's own holder row is the list's only
+   highlight, because "Where you stand" above already carries their rung. */
+.title-stand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.title-stand-id {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.title-stand-name {
+    font-weight: 600;
+}
+
+.title-stand-next,
+.title-stand-range {
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+}
+
+.title-stand-range {
+    white-space: nowrap;
+}
+
+.title-lvls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.title-lvl-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mix-ink) 5%, transparent);
+}
+
+.title-lvl.empty {
+    opacity: .45;
+}
+
+.title-lvl-name {
+    font-weight: 600;
+}
+
+.title-lvl-th {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.title-lvl-n {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.title-lvl-holders {
+    display: flex;
+    flex-direction: column;
+    margin-left: 8px;
+    padding: 2px 0 4px 10px;
+    border-left: 2px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+}
+
+.title-lvl-pool {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 860px) {
     .title-standing {
         grid-template-columns: 1fr;
