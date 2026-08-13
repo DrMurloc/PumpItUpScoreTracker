@@ -152,6 +152,16 @@
             <div class="reconnect-body">
                 <p class="reconnect-title">@L["Reconnecting…"]</p>
                 <p class="reconnect-sub">@L["Scrolling and links still work. Buttons don't."]</p>
+                @* Blazor fills both spans by id and adds -retrying once the ladder starts backing
+                   off, so the count is framework state, not ours to track. The spans go in through
+                   MarkupString because the two numbers have to move with the sentence: word order
+                   around them is the translator's call, not the English's. *@
+                <p class="reconnect-sub reconnect-retry-line">
+                    @((MarkupString)string.Format(
+                        L["Attempt {0} of {1}"].Value,
+                        "<span id=\"components-reconnect-current-attempt\"></span>",
+                        "<span id=\"components-reconnect-max-retries\"></span>"))
+                </p>
             </div>
         </div>
         @* The server parked the circuit rather than losing it (.NET 10 pause/resume). Reconnecting
@@ -206,8 +216,11 @@
 </div>
 
 @* blazor.web.js stays on its plain name: the framework versions and caches its own boot script,
-   and the manifest entry for it is not ours to redirect. *@
-<script src="_framework/blazor.web.js"></script>
+   and the manifest entry for it is not ours to redirect. autostart is off so reconnect.js can
+   pass reconnection options to start() — it must stay the very next script, since nothing on
+   the page is interactive until it runs. *@
+<script src="_framework/blazor.web.js" autostart="false"></script>
+<script src="@Assets["js/reconnect.js"]"></script>
 <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
 <script src="@Assets["js/page-dock.js"]"></script>
 <script src="@Assets["js/nav.js"]"></script>

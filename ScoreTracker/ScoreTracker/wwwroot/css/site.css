@@ -164,6 +164,16 @@ body {
     color: var(--mix-ink-muted);
 }
 
+/* -retrying rides on top of -show once the ladder starts backing off. Before that the
+   attempts are instant, so there is no wait worth counting and the line stays down. */
+#components-reconnect-modal .reconnect-retry-line {
+    font-variant-numeric: tabular-nums;
+}
+
+#components-reconnect-modal:not(.components-reconnect-retrying) .reconnect-retry-line {
+    display: none;
+}
+
 #components-reconnect-modal .reconnect-spinner {
     display: block;
     width: 20px;

@@ -754,6 +754,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>at {0} or better</value>
   </data>
+  <data name="Attempt {0} of {1}" xml:space="preserve">
+    <value>Attempt {0} of {1}</value>
+  </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Attempts before this clear</value>
   </data>
