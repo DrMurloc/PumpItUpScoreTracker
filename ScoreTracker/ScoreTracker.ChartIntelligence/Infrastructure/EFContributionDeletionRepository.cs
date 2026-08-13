@@ -19,7 +19,6 @@ internal sealed class EFContributionDeletionRepository : IContributionDeletionRe
         CancellationToken cancellationToken = default)
     {
         var chosen = new List<Type>();
-        if (items.HasFlag(ContributionDeletionItems.TierListVotes)) chosen.Add(typeof(UserTierListEntryEntity));
         if (items.HasFlag(ContributionDeletionItems.ChartDifficultyRatings))
             chosen.Add(typeof(UserChartDifficultyRatingEntity));
         if (items.HasFlag(ContributionDeletionItems.ChartPreferenceRatings))

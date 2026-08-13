@@ -8,7 +8,6 @@ namespace ScoreTracker.Domain.Records;
 public enum ContributionDeletionItems
 {
     None = 0,
-    TierListVotes = 1,
     ChartDifficultyRatings = 2,
     ChartPreferenceRatings = 4,
     CoOpRatings = 8,
@@ -16,6 +15,6 @@ public enum ContributionDeletionItems
     TournamentResults = 32,
     CommunityMemberships = 64,
 
-    Everything = TierListVotes | ChartDifficultyRatings | ChartPreferenceRatings | CoOpRatings |
+    Everything = ChartDifficultyRatings | ChartPreferenceRatings | CoOpRatings |
                  WeeklyAndDailyStep | TournamentResults | CommunityMemberships
 }
