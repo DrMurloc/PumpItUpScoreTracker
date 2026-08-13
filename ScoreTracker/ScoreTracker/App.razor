@@ -141,23 +141,63 @@
 @* Blazor builds its own reconnect overlay — framework markup, framework light styling — but
    only when the document has none of its own. Supplying the element switches it to toggling
    state classes on ours instead (components-reconnect-show / -hide / -failed / -rejected), so
-   the overlay is site chrome. Reads --mix-* only: every --mud-* var is emitted by
-   MudThemeProvider inside the circuit, which is the thing this overlay exists to report on. *@
+   the overlay is site chrome. It docks in a corner rather than covering the page (site.css),
+   which is why every state carries a second line: undimmed, the card is the only thing saying
+   the controls are dead. Reads --mix-* only: every --mud-* var is emitted by MudThemeProvider
+   inside the circuit, which is the thing this overlay exists to report on. *@
 <div id="components-reconnect-modal" data-nosnippet aria-live="assertive">
     <div class="reconnect-card">
         <div class="reconnect-state reconnect-on-show">
             <span class="reconnect-spinner" aria-hidden="true"></span>
-            <p class="reconnect-title">@L["Reconnecting…"]</p>
+            <div class="reconnect-body">
+                <p class="reconnect-title">@L["Reconnecting…"]</p>
+                <p class="reconnect-sub">@L["Scrolling and links still work. Buttons don't."]</p>
+                @* Blazor fills both spans by id and adds -retrying once the ladder starts backing
+                   off, so the count is framework state, not ours to track. The spans go in through
+                   MarkupString because the two numbers have to move with the sentence: word order
+                   around them is the translator's call, not the English's. *@
+                <p class="reconnect-sub reconnect-retry-line">
+                    @((MarkupString)string.Format(
+                        L["Attempt {0} of {1}"].Value,
+                        "<span id=\"components-reconnect-current-attempt\"></span>",
+                        "<span id=\"components-reconnect-max-retries\"></span>"))
+                </p>
+            </div>
         </div>
-        @* Reconnect ran out of attempts — the server may still be there, so offer another go. *@
+        @* The server parked the circuit rather than losing it (.NET 10 pause/resume). Reconnecting
+           does not recover one of these — resuming does, so this state carries its own verb. *@
+        <div class="reconnect-state reconnect-on-paused">
+            <div class="reconnect-body">
+                <p class="reconnect-title">@L["Session paused."]</p>
+                <p class="reconnect-sub">@L["Scrolling and links still work. Resume to use buttons."]</p>
+                <button type="button" class="reconnect-btn" onclick="Blazor.resumeCircuit()">@L["Resume"]</button>
+            </div>
+        </div>
+        @* Reconnect ran out of attempts — the server may still be there, so offer another go.
+           Falling through to resumeCircuit mirrors what the framework's own dialog does: a
+           reconnect returns false rather than throwing when the circuit was parked, not dropped. *@
         <div class="reconnect-state reconnect-on-failed">
-            <p class="reconnect-title">@L["Couldn't reconnect."]</p>
-            <button type="button" class="reconnect-btn" onclick="Blazor.reconnect()">@L["Try again"]</button>
+            <div class="reconnect-body">
+                <p class="reconnect-title">@L["Couldn't reconnect."]</p>
+                <p class="reconnect-sub">@L["Scrolling and links still work. Buttons need a reconnect."]</p>
+                <button type="button" class="reconnect-btn" onclick="Blazor.reconnect().then(ok => ok || Blazor.resumeCircuit())">@L["Try again"]</button>
+            </div>
+        </div>
+        @* Resume was offered and refused: the stored state is gone, and only a fresh load rebuilds. *@
+        <div class="reconnect-state reconnect-on-resume-failed">
+            <div class="reconnect-body">
+                <p class="reconnect-title">@L["Couldn't resume the session."]</p>
+                <p class="reconnect-sub">@L["Scrolling and links still work. Buttons need a reload."]</p>
+                <button type="button" class="reconnect-btn" onclick="location.reload()">@L["Reload the page"]</button>
+            </div>
         </div>
         @* The server answered and refused: that circuit is gone, and only a fresh load builds one. *@
         <div class="reconnect-state reconnect-on-rejected">
-            <p class="reconnect-title">@L["Your session ended."]</p>
-            <button type="button" class="reconnect-btn" onclick="location.reload()">@L["Reload the page"]</button>
+            <div class="reconnect-body">
+                <p class="reconnect-title">@L["Your session ended."]</p>
+                <p class="reconnect-sub">@L["Scrolling and links still work. Buttons need a reload."]</p>
+                <button type="button" class="reconnect-btn" onclick="location.reload()">@L["Reload the page"]</button>
+            </div>
         </div>
     </div>
 </div>
@@ -176,14 +216,20 @@
 </div>
 
 @* blazor.web.js stays on its plain name: the framework versions and caches its own boot script,
-   and the manifest entry for it is not ours to redirect. *@
-<script src="_framework/blazor.web.js"></script>
+   and the manifest entry for it is not ours to redirect. autostart is off so reconnect.js can
+   pass reconnection options to start() — it must stay the very next script, since nothing on
+   the page is interactive until it runs. *@
+<script src="_framework/blazor.web.js" autostart="false"></script>
+<script src="@Assets["js/reconnect.js"]"></script>
 <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
 <script src="@Assets["js/page-dock.js"]"></script>
 <script src="@Assets["js/nav.js"]"></script>
 <script src="@Assets["js/dashboard-grid.js"]"></script>
 <script src="@Assets["js/credential-storage.js"]"></script>
 <script src="@Assets["js/challenge-board.js"]"></script>
+@* Ctrl+Alt+R cycles the reconnect overlay through its states; Ctrl+Alt+X clears it. The
+   paused/resume-failed states can't be provoked on demand, so this is how they get seen. *@
+<script src="@Assets["js/reconnect-preview.js"]"></script>
 </body>
 </html>
 

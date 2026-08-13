@@ -28,6 +28,8 @@ The framework's build-time asset pipeline, in place of `UseStaticFiles`. Every f
 
 The three ES modules the circuit imports at runtime (`./js/helpers.js`, `./js/life-calculator.js`, `./js/phoenix-recap.js`) have no tag to carry a hashed name, so `<ImportMap />` in `App.razor` rewrites those specifiers in the browser — the C# call sites keep asking for the plain path. `_framework/blazor.web.js` stays on its plain name; the framework versions its own boot script.
 
+⚠ **`blazor.web.js` carries `autostart="false"`, and `js/reconnect.js` is what starts it.** It passes reconnection options (a twelve-rung retry ladder instead of the framework's thirty) that `Blazor.start()` only accepts at boot. The consequence is that the two tags are ordered, not merely adjacent: until `reconnect.js` runs there is no circuit, so nothing may be inserted between them and `reconnect.js` must never grow a reason to fail. Everything else in that block is order-independent.
+
 DartSassBuilder runs **before** the manifest is fingerprinted (verified: editing `charts.scss` moves the hash on `charts.<hash>.css`), so a Sass-only change busts the cache like any other. Ratcheted by `StaticAssetVersioningTests`.
 
 ### Localization (resx)

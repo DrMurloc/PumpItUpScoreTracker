@@ -63,49 +63,89 @@ body {
 
 /* ===== The circuit-drop overlay =====
    App.razor supplies #components-reconnect-modal, so Blazor stops building its own and just
-   toggles state classes on ours. Everything here is --mix-*: a dropped circuit is exactly the
-   moment MudThemeProvider's --mud-* vars can't be relied on. Every rule is id-scoped because
-   MudBlazor ships its own #components-reconnect-modal rules (background, z-index, and a
+   toggles state classes on ours. The framework's user-supplied-dialog path sets classes and
+   nothing else — no inert, no scroll lock — so how much of the page an outage covers is
+   decided entirely here, and it covers a corner. A dropped circuit leaves the rendered page
+   readable: scrolling works, the static shell's nav works, and every navigation is a full
+   document load, so a link the reader can still see and click is the fastest repair available
+   to them. Dimming the page hid that and left them watching a spinner instead.
+   Everything here is --mix-*: a dropped circuit is exactly the moment MudThemeProvider's
+   --mud-* vars can't be relied on. Every rule is id-scoped because MudBlazor ships its own
+   #components-reconnect-modal rules (background, z-index, and a
    `#components-reconnect-modal button` that outranks a bare class). */
 
 #components-reconnect-modal {
     display: none;
     position: fixed;
-    inset: 0;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
+    /* Docked, not draped: under the app bar, clear of the mobile bottom nav. */
+    inset: auto;
+    top: calc(var(--shell-appbar-h) + 8px);
+    right: 8px;
+    max-width: min(340px, calc(100vw - 16px));
     /* !important answers MudBlazor's own !important background; site.css loads after theirs. */
-    background: color-mix(in srgb, var(--mix-bg) 82%, transparent) !important;
-    backdrop-filter: blur(2px);
+    background: none !important;
+    /* The box shrink-wraps its card today, so this changes nothing today. It is what keeps a
+       later padding or max-width edit from quietly parking a dead click zone over the page. */
+    pointer-events: none;
 }
 
-/* No state class means no circuit trouble; -hide is the reconnected case. Both stay down. */
+/* No state class means no circuit trouble; -hide is the reconnected case. Both stay down.
+   Every other class the framework can set has to be listed: an unlisted one leaves the box
+   hidden, which is a frozen page with nothing on screen accounting for it. */
 #components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-paused,
 #components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-resume-failed,
 #components-reconnect-modal.components-reconnect-rejected {
     display: flex;
 }
 
 #components-reconnect-modal .reconnect-card {
-    min-width: 240px;
-    padding: 22px 28px;
+    display: flex;
+    gap: 12px;
+    padding: 12px 15px;
     border-radius: 10px;
     border: 1px solid color-mix(in srgb, var(--mix-ink) 14%, transparent);
     background: var(--mix-surface);
     color: var(--mix-ink);
     box-shadow: 0 14px 44px -16px color-mix(in srgb, var(--mix-bg) 90%, transparent);
     font-family: var(--font-body);
-    text-align: center;
+    text-align: left;
+    /* The dock above is inert so the page keeps its clicks; the card takes its own back,
+       because two of the three states carry a button that has to be reachable. */
+    pointer-events: auto;
 }
 
-/* All three states ship; the class Blazor set decides which one has a box. */
+/* A dead session reads differently from a retry in progress: same box, louder edge. */
+#components-reconnect-modal.components-reconnect-failed .reconnect-card,
+#components-reconnect-modal.components-reconnect-resume-failed .reconnect-card,
+#components-reconnect-modal.components-reconnect-rejected .reconnect-card {
+    border-left: 3px solid var(--mix-secondary);
+}
+
+/* Paused is neither: the circuit is waiting to be picked up, not gone. */
+#components-reconnect-modal.components-reconnect-paused .reconnect-card {
+    border-left: 3px solid var(--mix-accent);
+}
+
+/* Every state ships; the class Blazor set decides which one has a box. */
 #components-reconnect-modal .reconnect-state { display: none; }
 
 #components-reconnect-modal.components-reconnect-show .reconnect-on-show,
+#components-reconnect-modal.components-reconnect-paused .reconnect-on-paused,
 #components-reconnect-modal.components-reconnect-failed .reconnect-on-failed,
+#components-reconnect-modal.components-reconnect-resume-failed .reconnect-on-resume-failed,
 #components-reconnect-modal.components-reconnect-rejected .reconnect-on-rejected {
-    display: block;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+#components-reconnect-modal .reconnect-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
 }
 
 #components-reconnect-modal .reconnect-title {
@@ -114,13 +154,32 @@ body {
     font-size: 1.15rem;
     font-weight: 600;
     letter-spacing: .01em;
+    line-height: 1.15;
+}
+
+/* Says which controls are dead. Undimmed, nothing else on screen says it. */
+#components-reconnect-modal .reconnect-sub {
+    margin: 0;
+    font-size: .78rem;
+    color: var(--mix-ink-muted);
+}
+
+/* -retrying rides on top of -show once the ladder starts backing off. Before that the
+   attempts are instant, so there is no wait worth counting and the line stays down. */
+#components-reconnect-modal .reconnect-retry-line {
+    font-variant-numeric: tabular-nums;
+}
+
+#components-reconnect-modal:not(.components-reconnect-retrying) .reconnect-retry-line {
+    display: none;
 }
 
 #components-reconnect-modal .reconnect-spinner {
     display: block;
-    width: 28px;
-    height: 28px;
-    margin: 0 auto 12px;
+    width: 20px;
+    height: 20px;
+    flex: none;
+    margin-top: 3px;
     border-radius: 50%;
     border: 3px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
     border-top-color: var(--mix-primary);
@@ -136,13 +195,16 @@ body {
 }
 
 #components-reconnect-modal .reconnect-btn {
-    margin-top: 16px;
-    padding: 8px 18px;
+    margin-top: 8px;
+    align-self: flex-start;
+    padding: 6px 14px;
     border-radius: 6px;
     border: 1px solid var(--mix-primary);
     background: var(--mix-primary);
     color: var(--mix-primary-contrast);
+    /* The shorthand resets every font-* longhand, so the size must come after it. */
     font: inherit;
+    font-size: .82rem;
     font-weight: 600;
     cursor: pointer;
 }

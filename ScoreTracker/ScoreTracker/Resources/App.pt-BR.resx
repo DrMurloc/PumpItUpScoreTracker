@@ -751,6 +751,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>com {0} ou melhor</value>
   </data>
+  <data name="Attempt {0} of {1}" xml:space="preserve">
+    <value>Tentativa {0} de {1}</value>
+  </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Tentativas antes de passar</value>
   </data>
@@ -1647,6 +1650,9 @@
   </data>
   <data name="Couldn't reconnect." xml:space="preserve">
     <value>Não foi possível reconectar.</value>
+  </data>
+  <data name="Couldn't resume the session." xml:space="preserve">
+    <value>Não foi possível retomar a sessão.</value>
   </data>
   <data name="Couldn't unlock your saved password. Enter it to import." xml:space="preserve">
     <value>Não foi possível desbloquear sua senha salva. Digite-a para importar.</value>
@@ -5535,6 +5541,9 @@
   <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
     <value>Os resultados e os novos charts são publicados quando a classificação é renovada toda segunda-feira.</value>
   </data>
+  <data name="Resume" xml:space="preserve">
+    <value>Retomar</value>
+  </data>
   <data name="Review access" xml:space="preserve">
     <value>Revisar o acesso</value>
   </data>
@@ -5778,6 +5787,18 @@
   <data name="Scroll right" xml:space="preserve">
     <value>Rolar para a direita</value>
   </data>
+  <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
+    <value>A rolagem e os links continuam funcionando. Os botões não.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reconnect." xml:space="preserve">
+    <value>A rolagem e os links continuam funcionando. Os botões precisam reconectar.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
+    <value>A rolagem e os links continuam funcionando. Os botões precisam de um recarregamento.</value>
+  </data>
+  <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
+    <value>A rolagem e os links continuam funcionando. Retome para usar os botões.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>Buscar</value>
   </data>
@@ -5894,6 +5915,9 @@
   </data>
   <data name="Session mode hands your server a live piugame.com key, so every player agrees to it individually — nobody arrives through &quot;share with all tools&quot;. It can only be switched on while no player is connected, and a header is required." xml:space="preserve">
     <value>O modo sessão entrega ao seu servidor uma chave ativa do piugame.com, então cada jogador concorda individualmente — ninguém chega por "compartilhar com todas as ferramentas". Só dá para ligar enquanto nenhum jogador está conectado, e um cabeçalho é obrigatório.</value>
+  </data>
+  <data name="Session paused." xml:space="preserve">
+    <value>Sessão pausada.</value>
   </data>
   <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
     <value>Resumo da sessão capturado na importação — uma placa UG nova, 2 recordes pessoais, uma lâmpada de pasta.</value>

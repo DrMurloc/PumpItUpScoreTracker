@@ -757,6 +757,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>{0}以上で</value>
   </data>
+  <data name="Attempt {0} of {1}" xml:space="preserve">
+    <value>{1} 回中 {0} 回目</value>
+  </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>クリアまでの試行回数</value>
   </data>
@@ -1659,6 +1662,9 @@
   </data>
   <data name="Couldn't reconnect." xml:space="preserve">
     <value>再接続できませんでした。</value>
+  </data>
+  <data name="Couldn't resume the session." xml:space="preserve">
+    <value>セッションを再開できませんでした。</value>
   </data>
   <data name="Couldn't unlock your saved password. Enter it to import." xml:space="preserve">
     <value>保存済みのパスワードを解除できませんでした。インポートするには入力してください。</value>
@@ -5578,6 +5584,9 @@
   <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
     <value>毎週月曜のボード更新時に、結果と新しいラインナップが投稿されます。</value>
   </data>
+  <data name="Resume" xml:space="preserve">
+    <value>再開</value>
+  </data>
   <data name="Review access" xml:space="preserve">
     <value>アクセスを確認</value>
   </data>
@@ -5826,6 +5835,18 @@
   <data name="Scroll right" xml:space="preserve">
     <value>右へスクロール</value>
   </data>
+  <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
+    <value>スクロールとリンクは使えます。ボタンは使えません。</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reconnect." xml:space="preserve">
+    <value>スクロールとリンクは使えます。ボタンには再接続が必要です。</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
+    <value>スクロールとリンクは使えます。ボタンにはページの再読み込みが必要です。</value>
+  </data>
+  <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
+    <value>スクロールとリンクは使えます。ボタンを使うには再開してください。</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>検索</value>
   </data>
@@ -5942,6 +5963,9 @@
   </data>
   <data name="Session mode hands your server a live piugame.com key, so every player agrees to it individually — nobody arrives through &quot;share with all tools&quot;. It can only be switched on while no player is connected, and a header is required." xml:space="preserve">
     <value>セッションモードは有効な piugame.com のキーをサーバーに渡すため、プレイヤーごとの同意が必要です — 「すべてのツールと共有」からは入ってきません。接続中のプレイヤーがいないときだけ有効にでき、ヘッダーが必須です。</value>
+  </data>
+  <data name="Session paused." xml:space="preserve">
+    <value>セッションを一時停止しました。</value>
   </data>
   <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
     <value>インポート時にセッションのまとめを記録 — 新しい UG プレート、自己ベスト2件、フォルダーランプ1件。</value>

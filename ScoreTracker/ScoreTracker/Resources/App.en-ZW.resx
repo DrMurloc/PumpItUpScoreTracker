@@ -757,6 +757,9 @@
   <data name="at {0} or better" xml:space="preserve">
     <value>og {0} ol mrrgl</value>
   </data>
+  <data name="Attempt {0} of {1}" xml:space="preserve">
+    <value>Murgrglarg {0} gl {1}</value>
+  </data>
   <data name="Attempts before this clear" xml:space="preserve">
     <value>Blub arg palo</value>
   </data>
@@ -1659,6 +1662,9 @@
   </data>
   <data name="Couldn't reconnect." xml:space="preserve">
     <value>Glorgmrgrorp lurgmrpblarg.</value>
+  </data>
+  <data name="Couldn't resume the session." xml:space="preserve">
+    <value>Glorgmrgrorp gurglurg mrp grrglgrrglgl.</value>
   </data>
   <data name="Couldn't unlock your saved password. Enter it to import." xml:space="preserve">
     <value>Glorgmrgrorp blargglorg gromurp murpmurm glorgmrpmurm. Morgmurp gl grgl glorggl.</value>
@@ -5578,6 +5584,9 @@
   <data name="Results and the new lineup post when the board rotates each Monday." xml:space="preserve">
     <value>Murglurgmorg ro mrp grgl mrglglorg grogrgl mrpgrrgl mrp mrglblarg morggrrglglorg blubmurp Lurggrrgl.</value>
   </data>
+  <data name="Resume" xml:space="preserve">
+    <value>Gurglurg</value>
+  </data>
   <data name="Review access" xml:space="preserve">
     <value>Murgl golba</value>
   </data>
@@ -5826,6 +5835,18 @@
   <data name="Scroll right" xml:space="preserve">
     <value>Rglmurg rogro</value>
   </data>
+  <data name="Scrolling and links still work. Buttons don't." xml:space="preserve">
+    <value>Glrmurgro arg plglrgl larg murmgl. Prglglubarg bo.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reconnect." xml:space="preserve">
+    <value>Glrmurgro arg plglrgl larg murmgl. Prglglubarg gurgmarg a lurgmrpblarg.</value>
+  </data>
+  <data name="Scrolling and links still work. Buttons need a reload." xml:space="preserve">
+    <value>Glrmurgro arg plglrgl larg murmgl. Prglglubarg gurgmarg a mrglmurg.</value>
+  </data>
+  <data name="Scrolling and links still work. Resume to use buttons." xml:space="preserve">
+    <value>Glrmurgro arg plglrgl larg murmgl. Gurglurg ro gro prglglubarg.</value>
+  </data>
   <data name="Search" xml:space="preserve">
     <value>Grrglgro</value>
   </data>
@@ -5942,6 +5963,9 @@
   </data>
   <data name="Session mode hands your server a live piugame.com key, so every player agrees to it individually — nobody arrives through &quot;share with all tools&quot;. It can only be switched on while no player is connected, and a header is required." xml:space="preserve">
     <value>Grumba marogl blorp am olo PIUGAME grumb — opa pragl bloop golba am olo. Marogl bo blurgl la bloop, opa grumb alla.</value>
+  </data>
+  <data name="Session paused." xml:space="preserve">
+    <value>Grrglgrrglgl brglblub.</value>
   </data>
   <data name="Session roundup captured on the way in — a new UG plate, 2 PBs, one folder lamp." xml:space="preserve">
     <value>Grrglgrrglgl morgmurpmrp grrglgrglmarg lurg mrp urg mrp — gro grgl UG murp, 2 Lurg, argl grrgllurg maglmrgl.</value>
