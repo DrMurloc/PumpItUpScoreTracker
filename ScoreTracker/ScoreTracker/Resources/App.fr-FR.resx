@@ -905,6 +905,9 @@
   <data name="Best chart placement" xml:space="preserve">
     <value>Meilleure place sur un Chart</value>
   </data>
+  <data name="Best for your PUMBILITY first, from players at your level" xml:space="preserve">
+    <value>Le meilleur pour votre PUMBILITY d'abord — d'après les joueurs de votre niveau</value>
+  </data>
   <data name="Best N" xml:space="preserve">
     <value>Les {0} meilleures</value>
   </data>
@@ -2077,9 +2080,6 @@
   </data>
   <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
     <value>Du plus facile à passer — d'après la tier list Pass de la communauté</value>
-  </data>
-  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
-    <value>Du plus facile à passer — d'après votre tier list Pass</value>
   </data>
   <data name="Easiest to score first, by scoring level" xml:space="preserve">
     <value>Du plus facile à scorer — d'après le scoring level</value>
@@ -4650,9 +4650,6 @@
   <data name="Personalized for {0}" xml:space="preserve">
     <value>Personnalisé pour {0}</value>
   </data>
-  <data name="Personalized Pass" xml:space="preserve">
-    <value>Passes personnalisé</value>
-  </data>
   <data name="Personalized PUMBILITY" xml:space="preserve">
     <value>PUMBILITY personnalisée</value>
   </data>
@@ -5348,8 +5345,8 @@
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Reconstruction de la dernière session de chaque joueur.</value>
   </data>
-  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
-    <value>Reconstruction du recensement PUMBILITY de {0}. Cela prend quelques minutes.</value>
+  <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
+    <value>Reconstruction des classements PUMBILITY de {0}. Cela prend quelques minutes.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Recalculé plusieurs fois par jour</value>

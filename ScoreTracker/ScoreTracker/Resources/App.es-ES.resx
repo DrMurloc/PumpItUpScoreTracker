@@ -898,6 +898,9 @@
   <data name="Best chart placement" xml:space="preserve">
     <value>Mejor posición en chart</value>
   </data>
+  <data name="Best for your PUMBILITY first, from players at your level" xml:space="preserve">
+    <value>Lo mejor para tu PUMBILITY primero: según jugadores de tu nivel</value>
+  </data>
   <data name="Best N" xml:space="preserve">
     <value>Las {0} mejores</value>
   </data>
@@ -2064,9 +2067,6 @@
   </data>
   <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
     <value>Del más fácil de pasar: según la tier list de Pass de la comunidad</value>
-  </data>
-  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
-    <value>Del más fácil de pasar: según tu tier list de Pass</value>
   </data>
   <data name="Easiest to score first, by scoring level" xml:space="preserve">
     <value>Del más fácil de puntuar: según el scoring level</value>
@@ -4618,9 +4618,6 @@
   <data name="Personalized for {0}" xml:space="preserve">
     <value>Personalizada para {0}</value>
   </data>
-  <data name="Personalized Pass" xml:space="preserve">
-    <value>Pass personalizada</value>
-  </data>
   <data name="Personalized PUMBILITY" xml:space="preserve">
     <value>PUMBILITY personalizada</value>
   </data>
@@ -5308,8 +5305,8 @@
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Reconstruyendo la última sesión de cada jugador.</value>
   </data>
-  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
-    <value>Reconstruyendo el censo PUMBILITY de {0}. Tarda unos minutos.</value>
+  <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
+    <value>Reconstruyendo las listas de niveles PUMBILITY de {0}. Tarda unos minutos.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Se recalcula cada pocas horas</value>
