@@ -424,12 +424,10 @@ else
 
     // The gem is the game's own proper noun; only a row whose index no longer resolves needs a
     // word of ours.
-    private string LevelName(SignificantWin win)
-    {
-        if (LevelOf(win) is not { Gem: { } gem } level) return L["Level up"];
-        var name = gem.ToString().Replace("[P.B] ", "");
-        return level.Level is { } lv ? $"{name} LV.{lv}" : name;
-    }
+    private string LevelName(SignificantWin win) =>
+        LevelOf(win) is { } level && PumbilityLevelChange.LabelFor(level) is { Length: > 0 } label
+            ? label
+            : L["Level up"];
 
     private string PoolSuffix(SignificantWin win) =>
         win.PoolValue is { } pool ? $" · {pool.ToString("N0")}" : string.Empty;

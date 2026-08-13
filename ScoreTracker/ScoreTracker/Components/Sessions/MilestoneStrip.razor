@@ -8,7 +8,7 @@
     <div class="d-flex align-center gap-2 px-3 py-0 mud-warning-hover" style="border-left: 3px solid var(--mud-palette-warning); background: rgba(255,196,51,.07)" data-testid="milestone-strip">
         <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text">@L["Level Up"]</MudChip>
         <PumbilityLevelBadge Level="change.To" Height="22"></PumbilityLevelBadge>
-        <MudText Typo="Typo.body2"><b>@CrossingText(change)</b></MudText>
+        <MudText Typo="Typo.body2"><b>@change.CrossingText()</b></MudText>
         <MudText Typo="Typo.body2" Class="mud-text-secondary">@Description</MudText>
     </div>
 }
@@ -29,24 +29,6 @@ else
     ///     only by the PumbilityGain strip.
     /// </summary>
     [Parameter] public PumbilityLevelChange? LevelChange { get; set; }
-
-    // "DIAMOND LV.3 → LV.4" inside one gem; the full name appears only when the gem changed.
-    private static string CrossingText(PumbilityLevelChange change)
-    {
-        var from = LevelText(change.From);
-        var to = change.From.Gem is { } fromGem && change.To.Gem is { } toGem && fromGem == toGem &&
-                 change.To.Level is { } level
-            ? $"LV.{level}"
-            : LevelText(change.To);
-        return $"{from} → {to}";
-    }
-
-    private static string LevelText(ScoreTracker.Domain.Models.Titles.Phoenix2.Phoenix2PumbilityLevel level)
-    {
-        if (level.Gem is not { } gem) return "—";
-        var name = gem.ToString().Replace("[P.B] ", "");
-        return level.Level is { } lv ? $"{name} LV.{lv}" : name;
-    }
 
     private string KindLabel => Milestone.Kind switch
     {

@@ -129,15 +129,12 @@ else
     };
 
     // The gem is the game's own proper noun and never localizes.
-    private string LevelName(SignificantWin win)
-    {
-        if (win.Rank is not { } index ||
-            ScoreTracker.Domain.Models.Titles.Phoenix2.Phoenix2PumbilityLevel.FromIndex(index) is not
-                { Gem: { } gem } level)
-            return L["Level up"];
-        var name = gem.ToString().Replace("[P.B] ", "");
-        return level.Level is { } lv ? $"{name} LV.{lv}" : name;
-    }
+    private string LevelName(SignificantWin win) =>
+        win.Rank is { } index &&
+        ScoreTracker.Domain.Models.Titles.Phoenix2.Phoenix2PumbilityLevel.FromIndex(index) is { } level &&
+        PumbilityLevelChange.LabelFor(level) is { Length: > 0 } label
+            ? label
+            : L["Level up"];
 
     private static string PoolSuffix(SignificantWin win) =>
         win.PoolValue is { } pool ? $" · {pool.ToString("N0")}" : string.Empty;

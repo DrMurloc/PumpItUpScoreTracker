@@ -55,4 +55,31 @@ public sealed record PumbilityLevelChange(
             ? null
             : new PumbilityLevelChange(from, to, gain.OldValue.Value, gain.NewValue.Value);
     }
+
+    /// <summary>
+    ///     "DIAMOND LV.4" — the display form every surface shares. Gem names are the game's own
+    ///     proper nouns and never localize; the [P.B] prefix drops because these strings render
+    ///     where the ladder is already the subject. Empty for the unranked rung, whose only name
+    ///     is a localized word the caller owns.
+    /// </summary>
+    public static string LabelFor(Phoenix2PumbilityLevel level)
+    {
+        if (level.Gem is not { } gem) return string.Empty;
+        var name = gem.ToString().Replace("[P.B] ", "");
+        return level.Level is { } lv ? $"{name} LV.{lv}" : name;
+    }
+
+    /// <summary>
+    ///     "DIAMOND LV.3 → LV.4" — the gem stated once when the crossing stays inside it, in
+    ///     full when it changes, and the destination alone when the player was unranked before
+    ///     (an arrow out of a rung with no name says less than the rung reached).
+    /// </summary>
+    public string CrossingText()
+    {
+        if (!From.IsRanked) return LabelFor(To);
+        var to = From.Gem is { } fromGem && To.Gem is { } toGem && fromGem == toGem && To.Level is { } level
+            ? $"LV.{level}"
+            : LabelFor(To);
+        return $"{LabelFor(From)} → {to}";
+    }
 }
