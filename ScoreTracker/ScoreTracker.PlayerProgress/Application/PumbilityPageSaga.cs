@@ -134,8 +134,8 @@ namespace ScoreTracker.PlayerProgress.Application
             }
 
             var total = pool.Sum(p => p.Value);
-            var totals = await PoolTotalsFor(request.UserId, mix, request.Pool, total, bar, charts, scoring,
-                reachable, cancellationToken);
+            var totals = await PoolTotalsFor(request.UserId, mix, request.Pool, total, bar, pool.Length,
+                charts, scoring, reachable, cancellationToken);
 
             return new PumbilityPageRecord(mix, request.Pool, total, bar, barChart,
                 pool, waiting, top, Breakdown(pool, charts, scoring), totals?.Totals,
@@ -198,7 +198,7 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     this whole handler.
         /// </summary>
         private async Task<(PoolTotals Totals, IReadOnlyList<TitleRail> Rails)?> PoolTotalsFor(Guid userId,
-            MixEnum mix, ChartType? scope, double scopeTotal, double? scopeBar,
+            MixEnum mix, ChartType? scope, double scopeTotal, double? scopeBar, int scopeCount,
             IReadOnlyDictionary<Guid, Chart> charts, ScoringConfiguration scoring,
             IReadOnlyDictionary<Guid, double> reachable, CancellationToken cancellationToken)
         {
@@ -206,9 +206,9 @@ namespace ScoreTracker.PlayerProgress.Application
             // split to show nor a ladder to show it against.
             if (mix != MixEnum.Phoenix2) return null;
 
-            async Task<(double Total, double? Bar)> PoolFor(ChartType? type)
+            async Task<(double Total, double? Bar, int Count)> PoolFor(ChartType? type)
             {
-                if (type == scope) return (scopeTotal, scopeBar);
+                if (type == scope) return (scopeTotal, scopeBar, scopeCount);
 
                 var values = (await _mediator.Send(new GetTop50ForPlayerQuery(userId, type, PoolSize, mix),
                         cancellationToken))
@@ -218,7 +218,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     .OrderByDescending(v => v)
                     .ToArray();
 
-                return (values.Sum(), values.Length >= PoolSize ? values[^1] : null);
+                return (values.Sum(), values.Length >= PoolSize ? values[^1] : null, values.Length);
             }
 
             var all = await PoolFor(null);
@@ -245,8 +245,8 @@ namespace ScoreTracker.PlayerProgress.Application
             return (new PoolTotals(all.Total, singles.Total, doubles.Total),
                 rail == null ? Array.Empty<TitleRail>() : new[] { rail });
 
-            TitleRail? Rail(PumbilityPool pool, (double Total, double? Bar) figures, ChartType exampleType,
-                ChartType? exampleScope)
+            TitleRail? Rail(PumbilityPool pool, (double Total, double? Bar, int Count) figures,
+                ChartType exampleType, ChartType? exampleScope)
             {
                 if (!ladders.TryGetValue(pool, out var ladder) || ladder.Length == 0) return null;
 
@@ -262,8 +262,7 @@ namespace ScoreTracker.PlayerProgress.Application
                     : AskExamples(scoring, exampleType, ask);
 
                 // What the fifty would average if every suggestion landed. Over PoolSize rather
-                // than over however many charts exist, so it is comparable to the ask and to the
-                // average beside it.
+                // than over however many charts exist, so it is comparable to the ask.
                 var projectable = reachable
                     .Where(kv => exampleScope == null || charts[kv.Key].Type == exampleScope)
                     .Select(kv => kv.Value)
@@ -272,9 +271,12 @@ namespace ScoreTracker.PlayerProgress.Application
                     .Take(PoolSize)
                     .ToArray();
 
+                // The average is over the charts actually held: a ten-chart pool averaging 400
+                // reads 400, not 80. It moves as the pool fills, and lands on the ask's
+                // fifty-denominator once the pool is full.
                 return new TitleRail(pool, figures.Total, held?.Name.ToString(),
                     held?.CompletionRequired ?? 0, next?.Name.ToString(), next?.CompletionRequired,
-                    ask, figures.Total / (double)PoolSize, figures.Bar, examples,
+                    ask, figures.Count == 0 ? 0 : figures.Total / figures.Count, figures.Bar, examples,
                     projectable.Length == 0 ? null : projectable.Sum() / (double)PoolSize);
             }
         }
