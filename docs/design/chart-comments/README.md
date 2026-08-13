@@ -7,7 +7,7 @@ the dialog already renders.
 **[mock.html](mock.html) is the UI reference.** Open it before building any surface described here:
 it carries the real Phoenix palette at true widths (572 px desktop, 390 px mobile) and shows every
 state in one place — language badges, threads, the composer, the rules card, the link interstitial,
-the report dialog, the moderation queue row.
+the inline report panel, the moderation queue and the admin page.
 
 > **Two parts of this folder are scaffolding and get deleted when the feature ships:**
 > **`mock.html`**, and **Part 2 — Technical scope** below. What survives is Part 1, the feature
@@ -406,17 +406,30 @@ ModerateComments = 1 << 4        // All: 15 → 31,  DefaultAdminPermissionsSeed
 
 ### Sanctions
 
-One table, two scopes:
+One table, one scope:
 
-`CommentRestriction(UserId, Scope: Site|Community, CommunityId?, RestrictedByUserId, Reason?, CreatedAt, LiftedAt?)`
+`CommentRestriction(UserId, CommunityId, RestrictedByUserId, Reason?, CreatedAt, LiftedAt?)`
 
-- **Site scope** is the owner's content lock — blocks commenting everywhere.
-- **Community scope** is the admin's mute — blocks that community only. This is deliberately
-  *lighter* than the existing community ban, which ejects someone entirely; you stay in the club and
-  lose the mic.
-- Both are **prospective**. Existing comments stay unless separately deleted, matching the
+- **Community scope only** — the admin's mute, blocking that community. Deliberately *lighter* than
+  the existing community ban, which ejects someone entirely; you stay in the club and lose the mic.
+- ⚠ **There is no site scope, because there already is one.** `User.IsContentLocked` is the soft ban
+  — the existing lock on generating content, persisted on `User` and carried in the claims — and a
+  second site-wide mechanism beside it would be two switches for one decision, with the usual
+  outcome that one of them gets flipped and the other doesn't. The post gate reads both: the lock
+  for everywhere, a restriction row for one club.
+- Restrictions are **prospective**. Existing comments stay unless separately deleted, matching the
   tool-maker ban pattern.
-- A community **ban** already blocks commenting for free — no membership, no community comments.
+- **The hierarchy** (owner, 2026-08-13): the creator moderates admins and members; an admin with
+  `ModerateComments` moderates members only. Admins never mute or remove each other, and nobody
+  touches the creator. Lifting a mute follows the same ladder as imposing one. The **site admin acts
+  from outside the hierarchy and with site tools only** — Remove and the account lock, never a
+  community mute: communities moderate themselves.
+- **A mute blocks post, reply and edit** in that community — an edit is a way to keep talking
+  through old comments. **Delete always works**, and **votes are untouched**: a vote is not content.
+  The site lock blocks the same three everywhere; a **personal note passes both**, because a note has
+  no audience to protect.
+- A community **ban** already blocks commenting for free — no membership, no community comments. A
+  mute is its own row, so it survives leaving and rejoining the club.
 - ⚠ Two Guid `*UserId` columns means `[PurgeKey(nameof(UserId))]` is required, exactly as on
   `CommunityMembership.GrantedByUserId`. Without it account deletion purges the wrong person.
 
@@ -436,12 +449,34 @@ moderation problem, because a moderator ever sees one language. The moderation v
 **the original and what the reporter saw**. Without it, an admin reading ko-KR cannot evaluate a
 report filed against the es-ES rendering.
 
+### Every report resolves
+
+**Remove** takes the comment down and closes every open report against it in **every** queue.
+**Dismiss is per-queue**: a community admin's dismissal clears their panel and only theirs — an
+escalated hate report stays on the site admin's desk until the site admin acts, because escalation
+exists precisely for the club that won't. Each resolution carries its resolver and a timestamp, so a
+second moderator arriving later sees it was handled rather than handling it again. Without this the
+queue only ever grows, and the first duplicate report teaches everyone to stop reading it.
+
+One open report per reporter per comment — reporting again while yours is open changes nothing.
+
 ### Surfacing
 
-A conditional panel — rendered only when that moderator has open reports — on the community admin
-page and on `/Admin`. One row: difficulty bubble → song image → reported user → reporter → **Open**,
-which launches the dialog with `InitialTab=Comments` and `FocusCommentId`. Moderation happens in the
-surface the comment lives in; there is no second console to build or keep in sync.
+**Community admins** get a conditional panel — rendered only when that moderator has open reports —
+on the community admin page. One row: difficulty bubble → song image → reported user → reporter →
+**Dismiss** and **Open**, which launches the dialog with `InitialTab=Comments` and `FocusCommentId`.
+They are in the club, so the scope chip is there and the thread reads normally.
+
+**The site admin gets `/Admin/Comments`**, linked from `/Admin`, where the reported comment's text is
+on the page beside Remove, Dismiss and the mute. There is no **Open** there and it is not an
+oversight: hate and threats escalate out of a community the site admin need not belong to, so the
+dialog would offer no scope chip for it and the button would land on an empty tab. Rather than
+granting a scope — which hands over the whole club — **an open report grants a read of exactly the
+comment it names**, and nothing else in the thread.
+
+⚠ That page is also the only place a *public* comment's report is actioned, so it is not a special
+case built for escalation — it is the site admin's queue, and escalated community comments simply
+arrive in it.
 
 The **shield glyph on a comment is the permission** — site admin sees it everywhere, a community
 admin only inside their own club, nobody else renders it. Report lives in the `⋯` for everyone
@@ -536,7 +571,7 @@ clean for one join that only presentation needs.
 | **Domain** | One new port: `ILanguageModelBatchClient` (submit / status / results), beside `ILanguageModelClient`. `Complete()` is synchronous-per-request and cannot express a 24-hour batch. |
 | **Application** | Nothing. It is shrinking by design and this does not reverse that. |
 | **Data** | `AnthropicBatchClient : ILanguageModelBatchClient` in `Clients/`, plus migrations. Reflection DI binds it automatically. |
-| **Web** | Dialog restructure + `ChartCommentsTab`, `CommentThread`, `CommentComposer`, `CommentTextView`, `CommentRulesCard`, `LinkInterstitialDialog`, `ReportCommentDialog`, `SimilarChartsCompactGrid`, `ChartScoreHistoryTab`, `ReportedCommentsPanel`. **No JS file** — plain text needs no `wrapSelection`. Plus `ChartCommentsConfiguration` + `IOptions<T>`, following `DevAuthConfiguration`. |
+| **Web** | Dialog restructure + `ChartCommentsTab`, `CommentThread`, `CommentComposer`, `CommentTextView`, `CommentRulesCard`, `LinkInterstitialDialog`, `CommentReportPanel` (inline under the comment, for the reason the rules card is), `SimilarChartsCompactGrid`, `ChartScoreHistoryTab`, `ReportedCommentsPanel`, the `/Admin/Comments` page. **No JS file** — plain text needs no `wrapSelection`. Plus `ChartCommentsConfiguration` + `IOptions<T>`, following `DevAuthConfiguration`. |
 | **CompositionRoot** | `AddChartComments()`; `ChartCommentsModelContribution` into `VerticalModelContributions.All()`. |
 
 ### ChartComments internals

@@ -264,6 +264,31 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
            background: rgba(242,85,90,.09); font-size: 12.5px; }
 .confirm .q { color: var(--mix-ink); }
 .confirm .sub { color: var(--mix-ink-muted); font-size: 11.5px; width: 100%; }
+
+/* Report renders in place under the comment, for the same reason removal does: a MudDialog
+   inside the details dialog orphans its scrim, and you cannot judge "is this the one I
+   meant" behind a panel that covers it. */
+.report-inline { margin-top: 8px; padding: 9px 11px; border-radius: 6px; font-size: 12.5px;
+                 border: 1px solid rgba(255,107,53,.45); background: rgba(255,107,53,.08); }
+.report-inline .q { color: var(--mix-ink); display: block; margin-bottom: 7px; }
+.report-inline .reasons { display: flex; flex-direction: column; gap: 5px; margin-bottom: 9px; }
+.report-inline label { display: flex; align-items: center; gap: 8px; cursor: pointer;
+                       color: var(--mix-ink-muted); font-size: 12.5px; }
+.report-inline label.on { color: var(--mix-ink); }
+.radio { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--mix-lines);
+         flex: none; display: grid; place-items: center; }
+.radio.on { border-color: var(--mix-secondary); }
+.radio.on::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--mix-secondary); }
+.report-inline .foot { display: flex; align-items: center; gap: 8px; }
+
+/* /Admin/Comments — the site admin reads the reported comment on the page, because an
+   escalated community comment sits in a club they may hold no scope chip for. */
+.rcard { border-bottom: 1px solid var(--mix-lines); padding: 12px 13px; }
+.rcard:last-child { border-bottom: none; }
+.rcard .rhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.rcard .where { font-size: 11px; color: var(--mix-ink-muted); }
+.rcard .quoted { border-left: 2px solid var(--mix-lines); padding: 2px 0 2px 10px; margin-bottom: 8px; }
+.rcard .rfoot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .privately { font-size: 11px; color: var(--mix-ink-muted); display: flex; align-items: center; gap: 5px; }
 .privately::before { content: "🔒"; font-size: 10px; }
 .emptynote { padding: 22px 16px 26px; text-align: center; color: var(--mix-ink-muted); font-size: 12.5px; }
@@ -894,24 +919,39 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
       </div></div>
     </div>
     <div class="frame">
-      <div class="cap">Report · closed reason list · Slice 3</div>
-      <div class="app"><div class="modal" style="max-width:100%">
-        <div class="modal-h">Report this comment</div>
-        <div class="modal-b">
-          <p style="font-size:12.5px;color:var(--mix-ink-muted)">Goes to the admins of <b style="color:var(--mix-ink)">Murloc Lab</b>.</p>
-          <div style="display:flex;flex-direction:column;gap:6px;margin:10px 0 4px">
-            <label class="chk" style="padding:0"><span class="box"></span><span>Spam or advertising</span></label>
-            <label class="chk" style="padding:0"><span class="box"></span><span>Off topic</span></label>
-            <label class="chk" style="padding:0"><span class="box"></span><span>Wrong information</span></label>
-            <label class="chk" style="padding:0"><span class="box on">✓</span><span>Hate or discrimination</span></label>
-            <label class="chk" style="padding:0"><span class="box"></span><span>Threats or harassment</span></label>
+      <div class="cap">Report · closed reason list · in place, under the comment · Slice 3</div>
+      <div class="app">
+        <div style="background:var(--mix-surface);border:1px solid var(--mix-lines);border-radius:8px;overflow:hidden">
+          <div class="cmt" style="border-top:none">
+            <div class="av">K</div>
+            <div>
+              <div class="chead"><span class="cname">kimchi_stomper 🇰🇷</span><span class="cmeta">2 hours ago</span></div>
+              <div class="cbody"><p>이 채보 만든 사람 진짜…</p></div>
+              <div class="report-inline">
+                <span class="q">Why are you reporting this?</span>
+                <div class="reasons">
+                  <label><span class="radio"></span>Spam or advertising</label>
+                  <label><span class="radio"></span>Off topic</label>
+                  <label><span class="radio"></span>Wrong information</label>
+                  <label class="on"><span class="radio on"></span>Hate or discrimination</label>
+                  <label><span class="radio"></span>Threats or harassment</label>
+                </div>
+                <div class="foot">
+                  <span class="spacer"></span>
+                  <button class="btn ghost">Cancel</button>
+                  <button class="btn danger">Report</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="modal-f">
-          <button class="btn ghost">Cancel</button>
-          <button class="btn danger">Report</button>
-        </div>
-      </div></div>
+      </div>
+      <div class="cap" style="margin:12px 0 0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px;line-height:1.5">
+        The comment stays on screen while you pick a reason — same shape as the removal confirm, and
+        for the same two reasons. <b>Nothing here names where the report goes:</b> the reason decides
+        routing, and a reporter who has to work out whose problem it is will pick the wrong box to
+        reach the person they want.
+      </div>
     </div>
   </div>
   <div class="note" style="margin-top:22px">
@@ -996,29 +1036,96 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 <!-- ══════════════════════════════════════════════════ -->
 <section>
-  <div class="sec-head"><span class="n">06</span><h2>Moderation queue</h2><span class="slice">Slice 3</span><span class="eyebrow">community admin page &amp; /Admin</span></div>
-  <div class="frame">
-    <div class="cap">Renders only when that moderator has open reports</div>
-    <div class="app">
-      <div style="border:1px solid var(--mix-lines);border-radius:8px;overflow:hidden;background:var(--mix-surface)">
-        <div class="ovr" style="border-top:none">Reported comments · Murloc Lab</div>
-        <div class="qrow">
-          <span class="bub sm">S20</span>
-          <span class="jacket" style="width:44px;height:44px;margin:0;font-size:8px;background:linear-gradient(150deg,#7a3520,#2a1109)">Baroque<br>Virus</span>
-          <span class="who"><b>kimchi_stomper</b><span class="r"> — reported by ERRLENA · 2 hours ago</span></span>
-          <span style="display:flex;gap:8px;align-items:center"><span class="reason">Hate or discrimination</span><button class="btn ghost">Open</button></span>
+  <div class="sec-head"><span class="n">06</span><h2>Moderation queue</h2><span class="slice">Slice 3</span><span class="eyebrow">community panel &amp; /Admin/Comments</span></div>
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(330px,1fr))">
+    <div class="frame">
+      <div class="cap">Community admin page · renders only when that moderator has open reports</div>
+      <div class="app">
+        <div style="border:1px solid var(--mix-lines);border-radius:8px;overflow:hidden;background:var(--mix-surface)">
+          <div class="ovr" style="border-top:none">Reported comments · Murloc Lab</div>
+          <div class="qrow">
+            <span class="bub sm">S20</span>
+            <span class="jacket" style="width:44px;height:44px;margin:0;font-size:8px;background:linear-gradient(150deg,#7a3520,#2a1109)">Baroque<br>Virus</span>
+            <span class="who"><b>kimchi_stomper</b><span class="r"> — reported by ERRLENA · 2 hours ago</span></span>
+            <span style="display:flex;gap:8px;align-items:center"><span class="reason">Hate or discrimination</span><button class="btn ghost">Dismiss</button><button class="btn ghost">Open</button></span>
+          </div>
+          <div class="qrow" style="border-bottom:none">
+            <span class="bub d sm">D22</span>
+            <span class="jacket" style="width:44px;height:44px;margin:0;font-size:8px;background:linear-gradient(150deg,#1f4f6d,#0d1e2b)">Horang<br>Pungryuga</span>
+            <span class="who"><b>bot_spam_9000</b><span class="r"> — reported by TUSA · yesterday</span></span>
+            <span style="display:flex;gap:8px;align-items:center"><span class="reason" style="border-color:var(--mix-ink-muted);color:var(--mix-ink-muted)">Spam</span><button class="btn ghost">Dismiss</button><button class="btn ghost">Open</button></span>
+          </div>
         </div>
-        <div class="qrow" style="border-bottom:none">
-          <span class="bub d sm">D22</span>
-          <span class="jacket" style="width:44px;height:44px;margin:0;font-size:8px;background:linear-gradient(150deg,#1f4f6d,#0d1e2b)">Horang<br>Pungryuga</span>
-          <span class="who"><b>bot_spam_9000</b><span class="r"> — reported by TUSA · yesterday</span></span>
-          <span style="display:flex;gap:8px;align-items:center"><span class="reason" style="border-color:var(--mix-ink-muted);color:var(--mix-ink-muted)">Spam</span><button class="btn ghost">Open</button></span>
+      </div>
+      <div class="cap" style="margin:12px 0 0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px;line-height:1.5">
+        <b>Open</b> launches the details dialog with <code style="font-size:11px">InitialTab=Comments</code> and
+        <code style="font-size:11px">FocusCommentId</code>. A community admin is <i>in</i> the club, so the scope
+        chip is there and the thread reads normally.
+      </div>
+    </div>
+    <div class="frame">
+      <div class="cap">/Admin/Comments · linked from /Admin · the comment is on the page</div>
+      <div class="app">
+        <div style="border:1px solid var(--mix-lines);border-radius:8px;overflow:hidden;background:var(--mix-surface)">
+          <div class="ovr" style="border-top:none">Reported comments · 2 open</div>
+          <div class="rcard">
+            <div class="rhead">
+              <span class="bub sm">S20</span>
+              <span style="font-size:12.5px"><b>kimchi_stomper</b></span>
+              <span class="reason">Hate or discrimination</span>
+              <span class="spacer"></span>
+              <span class="where">Murloc Lab</span>
+            </div>
+            <div class="where" style="margin-bottom:6px">Baroque Virus S20 · reported by ERRLENA · 2 hours ago</div>
+            <div class="cbody quoted"><p>이 채보 만든 사람 진짜…</p></div>
+            <div class="rfoot">
+              <button class="btn danger">Remove</button>
+              <button class="btn ghost">Dismiss</button>
+              <button class="btn ghost">Lock account</button>
+            </div>
+          </div>
+          <div class="rcard">
+            <div class="rhead">
+              <span class="bub d sm">D22</span>
+              <span style="font-size:12.5px"><b>bot_spam_9000</b></span>
+              <span class="reason" style="border-color:var(--mix-ink-muted);color:var(--mix-ink-muted)">Spam</span>
+              <span class="spacer"></span>
+              <span class="where">Public</span>
+            </div>
+            <div class="where" style="margin-bottom:6px">Horang Pungryuga D22 · reported by TUSA · yesterday</div>
+            <div class="cbody quoted"><p>free pump coins at <a class="lnk untrusted" href="#">cheap-piu-coins.example.net</a> no survey</p></div>
+            <div class="rfoot">
+              <button class="btn danger">Remove</button>
+              <button class="btn ghost">Dismiss</button>
+              <button class="btn ghost">Lock account</button>
+            </div>
+          </div>
         </div>
+      </div>
+      <div class="cap" style="margin:12px 0 0;text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px;line-height:1.5">
+        No <b>Open</b> here, because there is nothing to open into: an escalated comment lives in a club
+        the site admin need not belong to, and would have no scope chip in the dialog. The contents are
+        on the page instead.
       </div>
     </div>
   </div>
-  <div class="note" style="margin-top:18px">
-    <p><b>Open</b> launches the chart details dialog with <code>InitialTab=Comments</code> and <code>FocusCommentId</code>, so moderation happens in the surface where the comment actually lives — no second console to build or maintain. Same row, same behaviour, on <code>/Admin</code> for anything that reaches your desk.</p>
+  <div class="note" style="margin-top:22px">
+    <p><b>A queue that cannot empty is not a queue.</b> Every report resolves exactly one of two ways —
+      <b>Remove</b>, which takes the comment down and closes every open report against it in <i>every</i>
+      queue, or <b>Dismiss</b>, which is <b>per-queue</b>: a community admin's dismissal clears their panel
+      and only theirs. An escalated hate report stays on the site admin's desk until the site admin acts —
+      escalation exists precisely for the club that won't. Each resolution carries its resolver and a
+      timestamp, so a second moderator arriving later sees it was handled rather than handling it again.</p>
+    <p><b>The escalation path reads the words, not a scope.</b> Hate and threats reach the site admin from
+      inside a community, which is the one case where reading a club's comment without joining it is the
+      point. That read is granted by <i>an open report on that comment</i> and reaches nothing else in the
+      thread — deliberately less than a scope chip, which would hand over the whole club.</p>
+    <p><b>The site admin acts from outside the hierarchy — and with site tools only.</b> Remove and the
+      account lock; never a community mute. Inside a club the ladder is fixed: the creator moderates
+      admins and members, an admin with the flag moderates members, admins never mute or remove each
+      other, and nobody touches the creator. A mute blocks post, reply <i>and edit</i> in that club —
+      an edit is a way to keep talking through old comments — while delete always works and votes are
+      untouched, because a vote is not content.</p>
     <p><b>Personal notes are invisible to all of this.</b> They cannot be reported, they never enter a queue, and no moderator — including the site admin — can read one. That is enforced where the rows are read, not by leaving a button off a screen.</p>
   </div>
 </section>
@@ -1115,7 +1222,8 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
         <tr><td><span class="slice now">2</span></td><td><code>VerticalModelContributions.All()</code></td><td>CompositionRoot</td><td>Omit it and scaffolded migrations silently drop every ChartComments table.</td></tr>
         <tr><td><span class="slice">3</span></td><td><code>ModerateComments = 1&nbsp;&lt;&lt;&nbsp;4</code></td><td>SharedKernel</td><td><code>All</code> 15&nbsp;→&nbsp;31, seed 13&nbsp;→&nbsp;29. Creators are computed by <code>PermissionsOf</code>, so they need nothing. The site admin needs nothing either — <code>User.IsAdmin</code> is computed, which is why removal could ship a slice early.</td></tr>
         <tr><td><span class="slice">3</span></td><td>Permission backfill</td><td>EF migration</td><td>13&nbsp;→&nbsp;29 and 15&nbsp;→&nbsp;31 across <b>both</b> <code>CommunityMembership.Permissions</code> and <code>Community</code>'s stored default — which is a literal <code>= 13</code> on <code>CommunityEntity</code> as well as the composed <code>DefaultAdminPermissionsSeed</code>. Missing the second means future admins in existing clubs silently lack the power.</td></tr>
-        <tr><td><span class="slice">3</span></td><td><code>CommentRestriction</code></td><td>ChartComments</td><td>Two Guid <code>*UserId</code> columns → needs <code>[PurgeKey(nameof(UserId))]</code>, or account deletion purges the wrong person. Check first whether the existing <code>User.IsContentLocked</code> already covers the site scope.</td></tr>
+        <tr><td><span class="slice">3</span></td><td><code>CommentRestriction</code></td><td>ChartComments</td><td>Two Guid <code>*UserId</code> columns → needs <code>[PurgeKey(nameof(UserId))]</code>, or account deletion purges the wrong person. <b>Community scope only</b> — the site scope is the existing <code>User.IsContentLocked</code>, which is already the soft ban and needs no second mechanism.</td></tr>
+        <tr><td><span class="slice">3</span></td><td><code>MyCommunityRoleRecord</code></td><td>Communities</td><td>It carries <code>Name CommunityName</code>, and a comment stores <code>Guid CommunityId</code> — so the moderation check cannot join without adding the id, required rather than optional. Same fix <code>CommunityOverviewRecord</code> took in Slice 2, where required turned a silent <code>Guid.Empty</code> into nine compile errors. Nothing renames a community today; the id is what keeps that true.</td></tr>
         <tr><td><span class="slice">4</span></td><td>Re-translation cooldown</td><td>ChartComments</td><td>The $30 ceiling is a fuse against bugs. An edit loop is a <i>user-driven</i> cost amplifier the fuse can't see.</td></tr>
       </tbody>
     </table>
