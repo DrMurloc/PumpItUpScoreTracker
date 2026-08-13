@@ -433,6 +433,7 @@ var recurringJobs = new (string Id, System.Linq.Expressions.Expression<Func<Recu
     ("update-weekly-charts",             r => r.PublishUpdateWeeklyCharts(),              "0 5 * * *"),  // 00:00 ET (EST) — Monday board reset; was 0 9 (5am EDT), a Hangfire-extraction regression
     ("rotate-daily-step",                r => r.PublishRotateDailyStep(),                 "0 5 * * *"),  // 00:00 ET (EST) — Daily Step reset, per mix
     ("process-pass-tier-list",           r => r.PublishProcessPassTierList(),             "30 9 * * *"), // 04:30 ET
+    ("process-pumbility-census",         r => r.PublishProcessPumbilityCensus(),          "30 10 * * *"), // 05:30 ET
     ("calculate-chart-letter-difficulties", r => r.PublishCalculateChartLetterDifficulties(), "0 10 * * *"), // 05:00 ET
     ("recalculate-chart-similarity",     r => r.PublishRecalculateChartSimilarity(),      "0 12 * * *"), // 07:00 ET — order-independent: reads only the piucenter crawl, not the jobs above
 

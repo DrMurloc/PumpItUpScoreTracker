@@ -8,14 +8,22 @@ internal sealed record PumbilityCensusRecord(Guid ChartId, int Appearances, Tier
 
 /// <summary>
 ///     The materialized PUMBILITY census (docs/design/pumbility-tier-list.md §8). Reads are
-///     always one folder for one cohort; writes always replace that folder wholesale, because
-///     the nightly job recomputes it from scratch and a chart that fell out of every pool has
-///     to stop being listed.
+///     always one folder for one cohort; writes replace a folder across every cohort at once,
+///     because the nightly job recomputes it from scratch and a chart that fell out of every
+///     pool has to stop being listed.
 /// </summary>
 internal interface IPumbilityCensusRepository
 {
-    Task SaveFolder(MixEnum mix, ChartType chartType, DifficultyLevel level, string cohortKey,
-        IEnumerable<PumbilityCensusRecord> entries, CancellationToken cancellationToken);
+    /// <summary>
+    ///     Replaces every cohort's rows for one folder. Cohorts absent from
+    ///     <paramref name="byCohort" /> end up with no rows, which is how a cohort says it
+    ///     cannot speak for this folder — writing a full set of zeros for every cohort that
+    ///     cannot reach a folder would be most of the table, since a cohort's pools only
+    ///     cover a three-to-four level band.
+    /// </summary>
+    Task SaveFolder(MixEnum mix, ChartType chartType, DifficultyLevel level,
+        IReadOnlyDictionary<string, IReadOnlyList<PumbilityCensusRecord>> byCohort,
+        CancellationToken cancellationToken);
 
     Task<IEnumerable<PumbilityCensusRecord>> GetFolder(MixEnum mix, ChartType chartType, DifficultyLevel level,
         string cohortKey, CancellationToken cancellationToken);

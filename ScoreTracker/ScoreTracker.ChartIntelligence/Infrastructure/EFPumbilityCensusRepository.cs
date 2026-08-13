@@ -16,18 +16,19 @@ internal sealed class EFPumbilityCensusRepository : IPumbilityCensusRepository
         _factory = factory;
     }
 
-    public async Task SaveFolder(MixEnum mix, ChartType chartType, DifficultyLevel level, string cohortKey,
-        IEnumerable<PumbilityCensusRecord> entries, CancellationToken cancellationToken)
+    public async Task SaveFolder(MixEnum mix, ChartType chartType, DifficultyLevel level,
+        IReadOnlyDictionary<string, IReadOnlyList<PumbilityCensusRecord>> byCohort,
+        CancellationToken cancellationToken)
     {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
         var mixId = MixIds.For(mix);
         var typeName = chartType.ToString();
         var levelInt = (int)level;
         var existing = await database.Set<PumbilityCensusEntryEntity>()
-            .Where(e => e.MixId == mixId && e.ChartType == typeName && e.Level == levelInt
-                        && e.CohortKey == cohortKey)
+            .Where(e => e.MixId == mixId && e.ChartType == typeName && e.Level == levelInt)
             .ToArrayAsync(cancellationToken);
         database.Set<PumbilityCensusEntryEntity>().RemoveRange(existing);
+        foreach (var (cohortKey, entries) in byCohort)
         foreach (var entry in entries)
             await database.Set<PumbilityCensusEntryEntity>().AddAsync(new PumbilityCensusEntryEntity
             {
