@@ -68,6 +68,23 @@ public static class ThemeScales
     public static string DifficultyColor(TierListCategory category) =>
         $"var(--diff-{DifficultySlug(category)})";
 
+    /// <summary>
+    ///     The PUMBILITY lens on the rarity ramp: it measures worth playing, not difficulty, and
+    ///     rarity is the ramp whose meaning is "better" (docs/design/pumbility-tier-list.md §7).
+    ///     Six stops against seven tiers, so the bottom rung shares the unrecorded grey with the
+    ///     charts nobody pools at all — growing a shared token for one lens was rejected.
+    /// </summary>
+    public static string PumbilityColor(TierListCategory category) => category switch
+    {
+        TierListCategory.Overrated => "var(--rarity-prism)",
+        TierListCategory.VeryEasy => "var(--rarity-sapphire)",
+        TierListCategory.Easy => "var(--rarity-gold)",
+        TierListCategory.Medium => "var(--rarity-emerald)",
+        TierListCategory.Hard => "var(--rarity-silver)",
+        TierListCategory.VeryHard => "var(--rarity-common)",
+        _ => "var(--diff-unrecorded)"
+    };
+
     /// <summary>Plate color token; null = unplayed ("plate-none").</summary>
     public static string PlateColor(PhoenixPlate? plate) =>
         plate == null

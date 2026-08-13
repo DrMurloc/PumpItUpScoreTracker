@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
-using ScoreTracker.Catalog.Contracts;
-using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Application;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.ChartIntelligence.Contracts;
@@ -20,7 +18,6 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
-using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -71,9 +68,8 @@ public sealed class BlendedTierListHandlerTests
             new[] { new SongTierListEntry("Pass Count", chart.Id, TierListCategory.Hard, 0) });
         var scores = new Mock<IScoreReader>();
         var playerStats = new Mock<IPlayerStatsReader>();
-        var userTierLists = new Mock<IUserTierListRepository>();
         var handler = BuildHandler(charts: charts, mediator: mediator, scores: scores,
-            playerStats: playerStats, userTierLists: userTierLists);
+            playerStats: playerStats);
 
         var result = await handler.Handle(Query("Pass", personalized: false), CancellationToken.None);
 
@@ -82,276 +78,8 @@ public sealed class BlendedTierListHandlerTests
             Times.Never);
         playerStats.Verify(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        userTierLists.Verify(r => r.GetEntriesForCharts(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
-            It.IsAny<CancellationToken>()), Times.Never);
         mediator.Verify(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()),
             Times.Never);
-    }
-
-    [Fact]
-    public async Task PersonalizedPassLensReadsSimilarPlayersFromMaterializedRowsWithoutFanOut()
-    {
-        var chart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var userId = Guid.NewGuid();
-        var neighbor = Guid.NewGuid();
-        var charts = ChartsMock(new[] { chart });
-        var mediator = new Mock<IMediator>();
-        SetupTierList(mediator, "Pass Count",
-            new[] { new SongTierListEntry("Pass Count", chart.Id, TierListCategory.Medium, 0) });
-        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-                { new SongTierListEntry("My Relative Scores", chart.Id, TierListCategory.Medium, 0) });
-        // Neighbors come from the competitive-level cohort; the range read returns the
-        // requesting player too — the handler must drop them from their own cohort.
-        var playerStats = new Mock<IPlayerStatsReader>();
-        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(StatsFor(userId, doublesCompetitive: 17.4));
-        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Double, 17.4, 1.0,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { neighbor, userId });
-        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { StatsFor(neighbor, doublesCompetitive: 17.0) });
-        var userTierLists = new Mock<IUserTierListRepository>();
-        userTierLists.Setup(r => r.GetEntriesForCharts(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new UserTierListEntryRecord(neighbor, chart.Id, TierListCategory.Easy, 0) });
-        var handler = BuildHandler(charts: charts, mediator: mediator, playerStats: playerStats,
-            userTierLists: userTierLists);
-
-        var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
-            CancellationToken.None);
-
-        Assert.NotEqual(TierListCategory.Unrecorded, result.Entries.Single(e => e.ChartId == chart.Id).Category);
-        userTierLists.Verify(r => r.GetEntriesForCharts(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
-        // The whole point of C1: exactly ONE relative-tier-list computation (the
-        // requesting user's own) — never one per neighboring player.
-        mediator.Verify(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task SimilarPlayersVotesScaleWithCompetitiveCloseness()
-    {
-        // Two neighbors disagree symmetrically about two charts. Without closeness
-        // weighting their votes cancel; with it, the player at the requesting user's
-        // own level outvotes the one at the window's edge, so each chart lands where
-        // the closer player put it.
-        var chart1 = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var chart2 = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var userId = Guid.NewGuid();
-        var near = Guid.NewGuid();
-        var far = Guid.NewGuid();
-        var charts = ChartsMock(new[] { chart1, chart2 });
-        var mediator = new Mock<IMediator>();
-        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
-        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new SongTierListEntry("My Relative Scores", chart1.Id, TierListCategory.Medium, 0),
-                new SongTierListEntry("My Relative Scores", chart2.Id, TierListCategory.Medium, 0)
-            });
-        var playerStats = new Mock<IPlayerStatsReader>();
-        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(StatsFor(userId, doublesCompetitive: 17.5));
-        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Double, 17.5, 1.0,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { near, far });
-        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                StatsFor(near, doublesCompetitive: 17.5),
-                StatsFor(far, doublesCompetitive: 18.4)
-            });
-        var userTierLists = new Mock<IUserTierListRepository>();
-        userTierLists.Setup(r => r.GetEntriesForCharts(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new UserTierListEntryRecord(near, chart1.Id, TierListCategory.Easy, 0),
-                new UserTierListEntryRecord(near, chart2.Id, TierListCategory.Hard, 0),
-                new UserTierListEntryRecord(far, chart1.Id, TierListCategory.Hard, 0),
-                new UserTierListEntryRecord(far, chart2.Id, TierListCategory.Easy, 0)
-            });
-        var handler = BuildHandler(charts: charts, mediator: mediator, playerStats: playerStats,
-            userTierLists: userTierLists);
-
-        var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
-            CancellationToken.None);
-
-        var entry1 = result.Entries.Single(e => e.ChartId == chart1.Id);
-        var entry2 = result.Entries.Single(e => e.ChartId == chart2.Id);
-        Assert.NotEqual(TierListCategory.Unrecorded, entry1.Category);
-        Assert.NotEqual(TierListCategory.Unrecorded, entry2.Category);
-        Assert.True(entry1.Category < entry2.Category,
-            $"the near player's Easy vote on chart1 ({entry1.Category}) should outweigh the far player's ({entry2.Category})");
-    }
-
-    [Fact]
-    public async Task SimilarPlayersVotesScaleWithEntryFreshness()
-    {
-        // Two equally-close neighbors disagree symmetrically, but one's entries were
-        // materialized from era-mixed (stale) scores — the fresh neighbor's read wins.
-        var chart1 = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var chart2 = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var userId = Guid.NewGuid();
-        var freshNeighbor = Guid.NewGuid();
-        var staleNeighbor = Guid.NewGuid();
-        var charts = ChartsMock(new[] { chart1, chart2 });
-        var mediator = new Mock<IMediator>();
-        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
-        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new SongTierListEntry("My Relative Scores", chart1.Id, TierListCategory.Medium, 0),
-                new SongTierListEntry("My Relative Scores", chart2.Id, TierListCategory.Medium, 0)
-            });
-        var playerStats = new Mock<IPlayerStatsReader>();
-        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(StatsFor(userId, doublesCompetitive: 17.5));
-        playerStats.Setup(p => p.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Double, 17.5, 1.0,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { freshNeighbor, staleNeighbor });
-        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                StatsFor(freshNeighbor, doublesCompetitive: 17.5),
-                StatsFor(staleNeighbor, doublesCompetitive: 17.5)
-            });
-        var userTierLists = new Mock<IUserTierListRepository>();
-        userTierLists.Setup(r => r.GetEntriesForCharts(MixEnum.Phoenix, It.IsAny<IEnumerable<Guid>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new UserTierListEntryRecord(freshNeighbor, chart1.Id, TierListCategory.Easy, 0),
-                new UserTierListEntryRecord(freshNeighbor, chart2.Id, TierListCategory.Hard, 0),
-                new UserTierListEntryRecord(staleNeighbor, chart1.Id, TierListCategory.Hard, 0, Freshness: 0.2),
-                new UserTierListEntryRecord(staleNeighbor, chart2.Id, TierListCategory.Easy, 0, Freshness: 0.2)
-            });
-        var handler = BuildHandler(charts: charts, mediator: mediator, playerStats: playerStats,
-            userTierLists: userTierLists);
-
-        var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
-            CancellationToken.None);
-
-        var entry1 = result.Entries.Single(e => e.ChartId == chart1.Id);
-        var entry2 = result.Entries.Single(e => e.ChartId == chart2.Id);
-        Assert.True(entry1.Category < entry2.Category,
-            $"the fresh neighbor's Easy vote on chart1 ({entry1.Category}) should outweigh the stale one's ({entry2.Category})");
-    }
-
-    [Fact]
-    public async Task SimilarPlayersStaySilentForPlayersWithoutCompetitiveData()
-    {
-        // Competitive level 1 is the no-data floor — a fresh player has no cohort, so
-        // the source must say nothing instead of pulling in the whole population.
-        var chart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var userId = Guid.NewGuid();
-        var charts = ChartsMock(new[] { chart });
-        var mediator = new Mock<IMediator>();
-        SetupTierList(mediator, "Pass Count", Array.Empty<SongTierListEntry>());
-        var playerStats = new Mock<IPlayerStatsReader>();
-        playerStats.Setup(p => p.GetStats(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(StatsFor(userId));
-        var handler = BuildHandler(charts: charts, mediator: mediator, playerStats: playerStats);
-
-        var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
-            CancellationToken.None);
-
-        Assert.Equal(TierListCategory.Unrecorded, result.Entries.Single(e => e.ChartId == chart.Id).Category);
-        playerStats.Verify(p => p.GetPlayersByCompetitiveRange(It.IsAny<MixEnum>(), It.IsAny<ChartType?>(),
-            It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task SkillSourcePoolsAdjacentFoldersWhenTheViewedFolderHasNoScores()
-    {
-        // The K7 cold-start fix: a player with zero scores in the viewed folder but a
-        // history one level below still gets skill-derived estimates (deviations pool
-        // across ±3 folders, decay-weighted). The old implementation returned nothing
-        // here. Runs charts score above the player's folder baseline, twist charts
-        // below — so the runs-heavy folder chart must land easier than the twisty one.
-        var userId = Guid.NewGuid();
-        var scored = new List<Chart>();
-        var scores = new List<RecordedPhoenixScore>();
-        var chips = new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>();
-        for (var i = 0; i < 6; i++)
-        {
-            var runs = new ChartBuilder().WithLevel(16).WithType(ChartType.Double).Build();
-            var twists = new ChartBuilder().WithLevel(16).WithType(ChartType.Double).Build();
-            var jumps = new ChartBuilder().WithLevel(16).WithType(ChartType.Double).Build();
-            scored.AddRange(new[] { runs, twists, jumps });
-            scores.Add(new RecordedPhoenixScore(runs.Id, 960_000 + i * 1000, null, false, DateTimeOffset.MinValue));
-            scores.Add(new RecordedPhoenixScore(twists.Id, 880_000 + i * 1000, null, false, DateTimeOffset.MinValue));
-            scores.Add(new RecordedPhoenixScore(jumps.Id, 920_000 + i * 1000, null, false, DateTimeOffset.MinValue));
-            chips[runs.Id] = new[] { new ChartSkillChipRecord(Skill.Runs, true, 0.8m) };
-            chips[twists.Id] = new[] { new ChartSkillChipRecord(Skill.Twists, true, 0.8m) };
-            chips[jumps.Id] = new[] { new ChartSkillChipRecord(Skill.Jumps, true, 0.8m) };
-        }
-
-        var runsFolderChart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var twistsFolderChart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        chips[runsFolderChart.Id] = new[] { new ChartSkillChipRecord(Skill.Runs, true, 0.8m) };
-        chips[twistsFolderChart.Id] = new[] { new ChartSkillChipRecord(Skill.Twists, true, 0.8m) };
-
-        var charts = ChartsMock(scored.Concat(new[] { runsFolderChart, twistsFolderChart }));
-        var mediator = new Mock<IMediator>();
-        SetupTierList(mediator, "Scores", Array.Empty<SongTierListEntry>());
-        mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(chips);
-        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<SongTierListEntry>());
-        var scoreReader = new Mock<IScoreReader>();
-        scoreReader.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(scores);
-        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader);
-
-        // Pass, because that is the lens the Skill source votes on now: Score personalizes
-        // through the projection alone.
-        var result = await handler.Handle(Query("Pass", personalized: true, userId: userId),
-            CancellationToken.None);
-
-        var runsEntry = result.Entries.Single(e => e.ChartId == runsFolderChart.Id);
-        var twistsEntry = result.Entries.Single(e => e.ChartId == twistsFolderChart.Id);
-        Assert.NotEqual(TierListCategory.Unrecorded, runsEntry.Category);
-        Assert.NotEqual(TierListCategory.Unrecorded, twistsEntry.Category);
-        Assert.True(runsEntry.Category < twistsEntry.Category,
-            $"runs-heavy chart ({runsEntry.Category}) should rank easier than the twisty one ({twistsEntry.Category})");
-    }
-
-    [Fact]
-    public async Task SkillSourceStaysSilentOnThinEvidence()
-    {
-        // One scored chart can't clear the evidence guard — the source must say
-        // nothing rather than extrapolate from a single data point.
-        var userId = Guid.NewGuid();
-        var lone = new ChartBuilder().WithLevel(16).WithType(ChartType.Double).Build();
-        var folderChart = new ChartBuilder().WithLevel(17).WithType(ChartType.Double).Build();
-        var charts = ChartsMock(new[] { lone, folderChart });
-        var mediator = new Mock<IMediator>();
-        SetupTierList(mediator, "Scores", Array.Empty<SongTierListEntry>());
-        mediator.Setup(m => m.Send(It.IsAny<GetChartSkillChipsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, IReadOnlyList<ChartSkillChipRecord>>
-            {
-                [lone.Id] = new[] { new ChartSkillChipRecord(Skill.Runs, true, 0.8m) },
-                [folderChart.Id] = new[] { new ChartSkillChipRecord(Skill.Runs, true, 0.8m) }
-            });
-        mediator.Setup(m => m.Send(It.IsAny<GetMyRelativeTierListQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<SongTierListEntry>());
-        var scoreReader = new Mock<IScoreReader>();
-        scoreReader.Setup(s => s.GetBestScores(MixEnum.Phoenix, userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-                { new RecordedPhoenixScore(lone.Id, 950_000, null, false, DateTimeOffset.MinValue) });
-        var handler = BuildHandler(charts: charts, mediator: mediator, scores: scoreReader);
-
-        var result = await handler.Handle(Query("Score", personalized: true, userId: userId),
-            CancellationToken.None);
-
-        Assert.Equal(TierListCategory.Unrecorded,
-            result.Entries.Single(e => e.ChartId == folderChart.Id).Category);
     }
 
     [Fact]
@@ -514,26 +242,27 @@ public sealed class BlendedTierListHandlerTests
         Mock<IChartRepository>? charts = null,
         Mock<IMediator>? mediator = null,
         Mock<IScoreReader>? scores = null,
-        Mock<IPlayerStatsReader>? playerStats = null,
-        Mock<IUserTierListRepository>? userTierLists = null)
+        Mock<IPlayerStatsReader>? playerStats = null)
     {
         charts ??= ChartsMock(Array.Empty<Chart>());
         mediator ??= new Mock<IMediator>();
         scores ??= new Mock<IScoreReader>();
         if (playerStats == null)
         {
-            // Default: every player sits at the competitive-level-1 no-data floor, so
-            // the similar-players source stays silent unless a test opts in.
+            // Default: every player sits at the competitive-level-1 no-data floor.
             playerStats = new Mock<IPlayerStatsReader>();
             playerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum _, Guid id, CancellationToken _) => StatsFor(id));
         }
-        userTierLists ??= new Mock<IUserTierListRepository>();
+        var census = new Mock<IPumbilityCensusRepository>();
+        census.Setup(c => c.GetFolder(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
+                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PumbilityCensusFolder(Array.Empty<PumbilityCensusRecord>(), 0));
         // The real projector over the same stubbed ports: the Projection source is driven by
         // cohort membership and peer scores, which is what these fixtures already set up.
-        return new BlendedTierListHandler(mediator.Object, charts.Object, scores.Object, playerStats.Object,
-            userTierLists.Object, new Mock<ICurrentUserAccessor>().Object,
-            new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(2026, 7, 12).Object,
-            new ScoreProjector(scores.Object, playerStats.Object, new Mock<IPlayerHistoryRepository>().Object));
+        return new BlendedTierListHandler(mediator.Object, charts.Object,
+            new Mock<ICurrentUserAccessor>().Object, new MemoryCache(new MemoryCacheOptions()),
+            new ScoreProjector(scores.Object, playerStats.Object, new Mock<IPlayerHistoryRepository>().Object),
+            census.Object, new Mock<ITitleRepository>().Object, playerStats.Object, scores.Object);
     }
 }

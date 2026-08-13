@@ -22,19 +22,18 @@ namespace ScoreTracker.ChartIntelligence.Application;
 internal sealed class PersonalizedBreakdownHandler
     : IRequestHandler<GetPersonalizedTierListBreakdownQuery, PersonalizedTierListBreakdown>
 {
-    private static readonly string[] PersonalizingLenses = { "Pass", "Score" };
+    private static readonly string[] PersonalizingLenses = { "Score" };
 
     private readonly TierListBlendBuilder _builder;
     private readonly IMemoryCache _cache;
     private readonly ICurrentUserAccessor _currentUser;
 
-    public PersonalizedBreakdownHandler(IMediator mediator, IChartRepository charts, IScoreReader scores,
-        IPlayerStatsReader playerStats, IUserTierListRepository userTierLists,
-        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock,
-        IScoreProjector projector)
+    public PersonalizedBreakdownHandler(IMediator mediator, IChartRepository charts,
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IScoreProjector projector,
+        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        IScoreReader scores)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock,
-            projector);
+        _builder = new TierListBlendBuilder(mediator, charts, projector, census, titles, playerStats, scores);
         _currentUser = currentUser;
         _cache = cache;
     }
@@ -45,7 +44,7 @@ internal sealed class PersonalizedBreakdownHandler
         var lens = request.Lens.ToString();
         if (!PersonalizingLenses.Contains(lens, StringComparer.OrdinalIgnoreCase))
             throw new ArgumentOutOfRangeException(nameof(request.Lens), lens,
-                "Only the Pass and Score lenses personalize");
+                "Only the Score lens personalizes");
 
         var userId = request.UserId ?? _currentUser.User.Id;
         var cacheKey =
@@ -79,32 +78,32 @@ internal sealed class PersonalizedBreakdownHandler
                     .Category,
                 TierListBlendBuilder.Combine("Final", c.Id, computation.Sources, computation.Modifiers)
                     .Category,
-                CategoryFor(computation.Skill?.Entries, c.Id),
-                CategoryFor(computation.Similar?.Entries, c.Id),
+                TierListCategory.Unrecorded,
+                TierListCategory.Unrecorded,
                 CategoryFor(computation.Projection?.Entries, c.Id),
                 computation.Projection != null && computation.Projection.Scores.TryGetValue(c.Id, out var projected)
                     ? projected
                     : null))
             .ToArray();
 
-        var skills = (computation.Skill?.PooledSkills ?? new Dictionary<Skill, SkillEvidence>())
-            .Select(kv => new BreakdownSkillRecord(kv.Key, kv.Value.Deviation, kv.Value.Evidence,
-                kv.Value.Usable))
-            .ToArray();
+        // The skill and similar-players sources went with Personalized Pass. Their fields
+        // stay on the contract, reporting empty, until the breakdown page's own pass removes
+        // them — see docs/design/pumbility-tier-list.md §10.
+        var skills = Array.Empty<BreakdownSkillRecord>();
 
         return new PersonalizedTierListBreakdown(
             charts,
             skills,
-            computation.Skill?.Active ?? false,
-            skills.Count(s => s.Usable),
-            computation.Skill?.ScoredChartCount ?? 0,
-            computation.Skill?.OutdatedScoreCount ?? 0,
-            computation.Similar?.NeighborCount ?? 0,
+            false,
+            0,
+            0,
+            0,
+            0,
             // How much of YOUR list is community, which is 0 on Score — not the weight of the
             // community column, which is computed separately and exists only to diff against.
             TierListBlendBuilder.CommunityWeightIn(computation.Modifiers),
-            computation.Modifiers.GetValueOrDefault("Skill"),
-            computation.Modifiers.GetValueOrDefault("Similar Players"),
+            0,
+            0,
             computation.Modifiers.GetValueOrDefault("Projection"),
             computation.Projection?.ProjectedChartCount ?? 0,
             computation.Projection?.FolderChartCount ?? computation.FolderCharts.Count,

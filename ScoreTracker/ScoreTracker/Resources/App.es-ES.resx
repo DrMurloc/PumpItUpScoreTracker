@@ -241,6 +241,9 @@
   <data name="1 paragon" xml:space="preserve">
     <value>1 paragon</value>
   </data>
+  <data name="1 peer" xml:space="preserve">
+    <value>1 jugador similar</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 jugador</value>
   </data>
@@ -3553,6 +3556,9 @@
   <data name="Modern" xml:space="preserve">
     <value>Actuales</value>
   </data>
+  <data name="Modest" xml:space="preserve">
+    <value>Discreto</value>
+  </data>
   <data name="Monthly" xml:space="preserve">
     <value>Mensual</value>
   </data>
@@ -4062,6 +4068,9 @@
   </data>
   <data name="Not in" xml:space="preserve">
     <value>No en</value>
+  </data>
+  <data name="Not in anyone's PUMBILITY" xml:space="preserve">
+    <value>En ninguna PUMBILITY</value>
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>No está en {0} — sus {1} charts se fueron con la canción.</value>
@@ -4612,6 +4621,9 @@
   <data name="Personalized Pass" xml:space="preserve">
     <value>Pass personalizada</value>
   </data>
+  <data name="Personalized PUMBILITY" xml:space="preserve">
+    <value>PUMBILITY personalizada</value>
+  </data>
   <data name="Personalized Score" xml:space="preserve">
     <value>Score personalizada</value>
   </data>
@@ -4942,6 +4954,9 @@
   <data name="Pool" xml:space="preserve">
     <value>Conjunto</value>
   </data>
+  <data name="Poor" xml:space="preserve">
+    <value>Pobre</value>
+  </data>
   <data name="Popular" xml:space="preserve">
     <value>Popular</value>
   </data>
@@ -5194,6 +5209,12 @@
   <data name="rank #{0}" xml:space="preserve">
     <value>puesto #{0}</value>
   </data>
+  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
+    <value>Clasificado frente a {0} jugadores en tus rangos de título de PUMBILITY</value>
+  </data>
+  <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
+    <value>Clasificado frente a {0} jugadores de nivel competitivo similar</value>
+  </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Ordenado por</value>
   </data>
@@ -5281,8 +5302,14 @@
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>Recalcular destacados semanales</value>
   </data>
+  <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
+    <value>Reconstruir las listas de niveles PUMBILITY de {0}</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Reconstruyendo la última sesión de cada jugador.</value>
+  </data>
+  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
+    <value>Reconstruyendo el censo PUMBILITY de {0}. Tarda unos minutos.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Se recalcula cada pocas horas</value>
@@ -6178,8 +6205,14 @@
   <data name="Skipped" xml:space="preserve">
     <value>Omitido</value>
   </data>
+  <data name="Slim" xml:space="preserve">
+    <value>Escaso</value>
+  </data>
   <data name="Socialite" xml:space="preserve">
     <value>Alma social</value>
+  </data>
+  <data name="Solid" xml:space="preserve">
+    <value>Sólido</value>
   </data>
   <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
     <value>Se han tenido en cuenta algunos ajustes por erratas o diferencias en las convenciones de nombres. Los nombres de canciones no distinguen mayúsculas de minúsculas. (Algunos parecen iguales porque son ajustes de espacios)</value>
@@ -6286,6 +6319,9 @@
   <data name="Standout bar" xml:space="preserve">
     <value>Umbral de destaque</value>
   </data>
+  <data name="Staple" xml:space="preserve">
+    <value>Imprescindible</value>
+  </data>
   <data name="Start" xml:space="preserve">
     <value>Empezar</value>
   </data>
@@ -6360,6 +6396,9 @@
   </data>
   <data name="Stretching first" xml:space="preserve">
     <value>Estirando primero</value>
+  </data>
+  <data name="Strong" xml:space="preserve">
+    <value>Fuerte</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>más fuerte</value>
@@ -8400,6 +8439,9 @@
   </data>
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>{0} paso en este folder</value>
+  </data>
+  <data name="{0} peers" xml:space="preserve">
+    <value>{0} jugadores similares</value>
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0} jugadores</value>

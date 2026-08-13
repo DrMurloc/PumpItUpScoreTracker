@@ -46,7 +46,7 @@ public sealed class DataDeletionConsumerTests
     {
         var bus = new Mock<IBus>();
         var handler = new DeleteMyContributionsHandler(bus.Object);
-        var items = ContributionDeletionItems.TierListVotes | ContributionDeletionItems.TournamentResults;
+        var items = ContributionDeletionItems.ChartDifficultyRatings | ContributionDeletionItems.TournamentResults;
 
         await handler.Handle(new DeleteMyContributionsCommand(UserId, items), CancellationToken.None);
 

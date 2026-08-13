@@ -22,13 +22,12 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
     private readonly IMemoryCache _cache;
     private readonly ICurrentUserAccessor _currentUser;
 
-    public BlendedTierListHandler(IMediator mediator, IChartRepository charts, IScoreReader scores,
-        IPlayerStatsReader playerStats, IUserTierListRepository userTierLists,
-        ICurrentUserAccessor currentUser, IMemoryCache cache, IDateTimeOffsetAccessor clock,
-        IScoreProjector projector)
+    public BlendedTierListHandler(IMediator mediator, IChartRepository charts,
+        ICurrentUserAccessor currentUser, IMemoryCache cache, IScoreProjector projector,
+        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        IScoreReader scores)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, scores, playerStats, userTierLists, clock,
-            projector);
+        _builder = new TierListBlendBuilder(mediator, charts, projector, census, titles, playerStats, scores);
         _currentUser = currentUser;
         _cache = cache;
     }
@@ -53,7 +52,8 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
                     computation.Modifiers))
                 .ToList();
             return new TierListResult(entries, computation.IsProvisionalFallback,
-                computation.Projection?.PeerCount ?? 0);
+                computation.Projection?.PeerCount ?? computation.Pumbility?.CohortSize ?? 0,
+                computation.Pumbility?.Appearances);
         }) ?? throw new InvalidOperationException("Blended tier list could not be built");
     }
 }

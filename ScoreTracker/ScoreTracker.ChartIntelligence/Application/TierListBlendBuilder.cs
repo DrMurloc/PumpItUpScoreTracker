@@ -1,6 +1,4 @@
 using MediatR;
-using ScoreTracker.Catalog.Contracts;
-using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Records;
@@ -17,8 +15,7 @@ namespace ScoreTracker.ChartIntelligence.Application;
 ///     The blend's source computation, extracted from BlendedTierListHandler so the
 ///     Personalized Breakdown query can expose the same numbers the blend actually
 ///     uses (breakdown-page workshop) — one implementation, two consumers, no drift.
-///     Owns the lens weight tables, the K7 surrounding-folder skill inference, and
-///     the competitive-cohort similar-players aggregation.
+///     Owns the lens weight tables and the score projection.
 /// </summary>
 internal sealed class TierListBlendBuilder
 {
@@ -33,12 +30,13 @@ internal sealed class TierListBlendBuilder
             ["Score"] = new Dictionary<string, double> { ["Official Scores"] = 1, ["Scores"] = 2 },
             ["Popularity"] = new Dictionary<string, double> { ["Popularity"] = 1 },
             ["Chabala"] = new Dictionary<string, double> { ["Chabala"] = 1 },
-            ["PG"] = new Dictionary<string, double> { ["PG"] = 1 }
+            ["PG"] = new Dictionary<string, double> { ["PG"] = 1 },
+            ["PUMBILITY"] = new Dictionary<string, double> { [PumbilitySource] = 1 }
         };
 
     /// <summary>
-    ///     What the personalized view of a lens is made of. Only Pass and Score have one; every
-    ///     other lens is community-only and personalizing it would mean nothing.
+    ///     What the personalized view of a lens is made of. Only Score has one; every other lens
+    ///     is community-only and personalizing it would mean nothing.
     ///     <para>
     ///         Score is the projection and nothing else (owner, 2026-08-11). Blending the stored
     ///         score lists back in would count the same evidence twice: the projection is built
@@ -47,41 +45,50 @@ internal sealed class TierListBlendBuilder
     ///         inside the projection, rather than being averaged with other bandings and re-cut.
     ///     </para>
     ///     <para>
-    ///         Pass still blends, and deliberately keeps exactly what it had: there is no
-    ///         pass-projection engine, so its personal half is still the skill estimate and the
-    ///         similar-players aggregation.
+    ///         Pass no longer personalizes at all (owner, 2026-08-13). Its personal half was the
+    ///         skill estimate and the similar-players aggregation, and neither carried a pass
+    ///         signal — both were built from scores — so roughly 60% of a "personalized pass"
+    ///         answer was score inference wearing a pass label. What replaces it is the PUMBILITY
+    ///         lens; see docs/design/pumbility-tier-list.md.
     ///     </para>
     /// </summary>
     private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, double>> PersonalizedModifiers =
         new Dictionary<string, IReadOnlyDictionary<string, double>>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Pass"] = new Dictionary<string, double>
-                { ["Pass Count"] = 2, ["Skill"] = 2, ["Similar Players"] = 1 },
-            ["Score"] = new Dictionary<string, double> { ["Projection"] = 1 }
+            ["Score"] = new Dictionary<string, double> { ["Projection"] = 1 },
+            // Same computation as the community view, over a different set of players — so the
+            // recipe is identical and only the cohort the census is read for changes.
+            ["PUMBILITY"] = new Dictionary<string, double> { [PumbilitySource] = 1 }
         };
+
+    /// <summary>The census source's name, which is its own single-source recipe on both views.</summary>
+    private const string PumbilitySource = "PUMBILITY";
+
+    /// <summary>A PUMBILITY pool is fifty charts; anything short of that is not one yet.</summary>
+    private const int PumbilityPoolSize = 50;
 
     private static readonly string[] StoredSources =
         { "Official Scores", "Scores", "Popularity", "Pass Count", "PG", "Chabala" };
 
+    private readonly IPumbilityCensusRepository _census;
     private readonly IChartRepository _charts;
-    private readonly IDateTimeOffsetAccessor _clock;
     private readonly IMediator _mediator;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreProjector _projector;
     private readonly IScoreReader _scores;
-    private readonly IUserTierListRepository _userTierLists;
+    private readonly ITitleRepository _titles;
 
-    public TierListBlendBuilder(IMediator mediator, IChartRepository charts, IScoreReader scores,
-        IPlayerStatsReader playerStats, IUserTierListRepository userTierLists, IDateTimeOffsetAccessor clock,
-        IScoreProjector projector)
+    public TierListBlendBuilder(IMediator mediator, IChartRepository charts, IScoreProjector projector,
+        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        IScoreReader scores)
     {
         _mediator = mediator;
         _charts = charts;
-        _scores = scores;
-        _playerStats = playerStats;
-        _userTierLists = userTierLists;
-        _clock = clock;
         _projector = projector;
+        _census = census;
+        _titles = titles;
+        _playerStats = playerStats;
+        _scores = scores;
     }
 
     /// <summary>How much of a recipe is stored community lists — 0 when none of it is.</summary>
@@ -127,34 +134,22 @@ internal sealed class TierListBlendBuilder
                 .ToDictionary(g => g.Key, g => g.First());
         }
 
-        SkillSourceComputation? skill = null;
-        SimilarPlayersComputation? similar = null;
-        ProjectionComputation? projection = null;
-        if (userId != null)
+        PumbilityComputation? pumbility = null;
+        if (modifiers.ContainsKey(PumbilitySource))
         {
-            if (modifiers.TryGetValue("Skill", out var skillWeight) && skillWeight > 0)
-            {
-                skill = await ComputeSkillSource(chartType, level, mix, userId.Value, folderCharts,
-                    cancellationToken);
-                sources["Skill"] = skill.Entries;
-            }
-
-            if (modifiers.TryGetValue("Similar Players", out var similarWeight) && similarWeight > 0)
-            {
-                similar = await ComputeSimilarPlayers(chartType, level, mix, userId.Value, folderCharts,
-                    cancellationToken);
-                sources["Similar Players"] = similar.Entries;
-            }
-
-            if (modifiers.TryGetValue("Projection", out var projectionWeight) && projectionWeight > 0)
-            {
-                projection = await ComputeProjection(chartType, mix, userId.Value, folderCharts,
-                    cancellationToken);
-                sources["Projection"] = projection.Entries;
-            }
+            pumbility = await ComputePumbility(chartType, level, mix, userId, cancellationToken);
+            sources[PumbilitySource] = pumbility.Entries;
         }
 
-        return new BlendComputation(folderCharts, sources, modifiers, provisional, skill, similar, projection);
+        ProjectionComputation? projection = null;
+        if (userId != null && modifiers.TryGetValue("Projection", out var projectionWeight) && projectionWeight > 0)
+        {
+            projection = await ComputeProjection(chartType, mix, userId.Value, folderCharts,
+                cancellationToken);
+            sources["Projection"] = projection.Entries;
+        }
+
+        return new BlendComputation(folderCharts, sources, modifiers, provisional, projection, pumbility);
     }
 
     /// <summary>
@@ -190,196 +185,57 @@ internal sealed class TierListBlendBuilder
             TierListCategory.Underrated, (int)(final * 100.0));
     }
 
-    // K7 (piucenter follow-up, owner-approved F3): the surrounding-folder skill
-    // inference. The old version only saw the viewed folder and went silent under 10
-    // scored charts — dead exactly when someone breaks into a new folder. Now every
-    // scored chart within ±3 folders votes: per folder the player's scores normalize
-    // to deviations from their own folder average (you can't compare raw scores
-    // across levels), each (chart, skill) observation is weighted by folder decay ×
-    // the skill's segment coverage (a token-drills chart barely votes on Drills), and
-    // folder-chart estimates are the coverage-weighted mean of their skills' pooled
-    // deviations. Constants are tunable; decay ladder owner-locked 2026-07-11.
-    private static readonly double[] FolderDecay = { 1.0, 0.6, 0.3, 0.15 };
-    private const int FolderWindow = 3;
-    public const double MinSkillEvidence = 2.0; // effective weighted observations per skill
-    public const int MinUsableSkills = 3;
-    private const double EstimateOffset = 500_000; // ProcessIntoTierList treats exactly 0 as Unrecorded
-
-    // Proficiency lives in the 900k-1M band (owner): 990,000 = 90%, anything at or
-    // under 900,000 = 0%. Deviations pool over this floored scale so sub-900k scores
-    // read as zero proficiency instead of dragging skill estimates linearly.
-    private const double SkillScoreFloor = 900_000;
-    private const double SkillScoreRange = 100_000;
-
-    private static double Proficiency(int score)
+    /// <summary>
+    ///     Reads the materialized census for this folder, for everyone or for the viewer's own
+    ///     cohort. Nothing is computed here — the nightly job owns the counting, and a cohort
+    ///     with no rows for this folder simply votes on nothing.
+    /// </summary>
+    private async Task<PumbilityComputation> ComputePumbility(ChartType chartType, DifficultyLevel level,
+        MixEnum mix, Guid? userId, CancellationToken cancellationToken)
     {
-        return Math.Clamp(score - SkillScoreFloor, 0, SkillScoreRange) / SkillScoreRange;
+        var cohortKey = userId == null
+            ? PumbilityCohortKeys.Community
+            : await ResolveViewerCohort(chartType, mix, userId.Value, cancellationToken);
+        if (cohortKey == null)
+            return new PumbilityComputation(new Dictionary<Guid, SongTierListEntry>(),
+                new Dictionary<Guid, int>(), 0);
+
+        var folder = await _census.GetFolder(mix, chartType, level, cohortKey, cancellationToken);
+        return new PumbilityComputation(
+            folder.Entries.ToDictionary(e => e.ChartId,
+                e => new SongTierListEntry(PumbilitySource, e.ChartId, e.Category, e.Order)),
+            folder.Entries.ToDictionary(e => e.ChartId, e => e.Appearances),
+            folder.CohortSize);
     }
 
     /// <summary>
-    ///     The pooled per-skill evidence around an anchor folder — the core of the Skill
-    ///     source, and nothing outside this class reads it. extraChipChartIds lets
-    ///     ComputeSkillSource keep its single bulk chips fetch for the folder-estimate
-    ///     stage that follows.
+    ///     Which cohort the reader belongs to, resolved exactly as the nightly job resolves it —
+    ///     Phoenix 1 by the level of their highest difficulty title, Phoenix 2 by the PUMBILITY
+    ///     rung their pool clears. The two must agree or a player reads a list nobody built for
+    ///     them.
     /// </summary>
-    public async Task<SkillEvidencePool> ComputeSkillEvidence(ChartType chartType, DifficultyLevel anchorLevel,
-        MixEnum mix, Guid userId, IReadOnlyCollection<Guid> extraChipChartIds, CancellationToken cancellationToken)
+    public async Task<string?> ResolveViewerCohort(ChartType chartType, MixEnum mix, Guid userId,
+        CancellationToken cancellationToken)
     {
-        var intLevel = (int)anchorLevel;
-        var bestScores = (await _scores.GetBestScores(mix, userId, cancellationToken))
-            .Where(s => s is { Score: not null, IsBroken: false })
-            .ToDictionary(s => s.ChartId);
-
-        var scoredWindowCharts = (await _charts.GetCharts(mix, cancellationToken: cancellationToken))
-            .Where(c => c.Type == chartType && Math.Abs((int)c.Level - intLevel) <= FolderWindow)
-            .Where(c => bestScores.ContainsKey(c.Id))
-            .ToArray();
-
-        var chips = await _mediator.Send(new GetChartSkillChipsQuery(
-                scoredWindowCharts.Select(c => c.Id).Union(extraChipChartIds).ToArray()),
-            cancellationToken);
-
-        // Age outliers over the whole ±3 window: scores much older than the rest of
-        // the record vote quietly. Baselines MUST use the same weights — a stale
-        // baseline against fresh observations reads as a phantom deviation.
-        var ageWeights = ScoreAgePolicy.AgeOutlierWeights(
-            scoredWindowCharts.Select(c => (c.Id, bestScores[c.Id].RecordedDate)), _clock.Now);
-        var outdatedScoreCount = ageWeights.Count(kv => kv.Value < 1.0);
-
-        // Normalize before pooling: deviation from YOUR average within each folder,
-        // measured on the floored proficiency scale.
-        var folderBaselines = scoredWindowCharts
-            .GroupBy(c => (int)c.Level)
-            .ToDictionary(g => g.Key, g =>
-                g.Sum(c => ageWeights[c.Id] * Proficiency((int)bestScores[c.Id].Score!.Value)) /
-                g.Sum(c => ageWeights[c.Id]));
-
-        var pooled = new Dictionary<Skill, (double WeightedDeviation, double Evidence)>();
-        foreach (var chart in scoredWindowCharts)
+        if (mix != MixEnum.Phoenix2)
         {
-            var decay = FolderDecay[Math.Abs((int)chart.Level - intLevel)];
-            var deviation = Proficiency((int)bestScores[chart.Id].Score!.Value) - folderBaselines[(int)chart.Level];
-            foreach (var (skill, weight) in WeightsFor(chips, chart))
-            {
-                var observationWeight = decay * weight * ageWeights[chart.Id];
-                var current = pooled.TryGetValue(skill, out var sums) ? sums : (0.0, 0.0);
-                pooled[skill] = (current.Item1 + observationWeight * deviation,
-                    current.Item2 + observationWeight);
-            }
+            var titleLevel = await _titles.GetCurrentTitleLevel(mix, userId, cancellationToken);
+            return PumbilityCohortKeys.ForDifficultyTitleLevel((int)titleLevel);
         }
 
-        var pooledSkills = pooled.ToDictionary(kv => kv.Key, kv => new SkillEvidence(
-            kv.Value.Evidence <= 0 ? 0 : kv.Value.WeightedDeviation / kv.Value.Evidence,
-            kv.Value.Evidence,
-            kv.Value.Evidence >= MinSkillEvidence));
+        // Same shape of gate the census applies. A reader who has not yet imported a pool's
+        // worth of this mix resolves to a rung well below where they play — their total is low
+        // because they have played little of it, not because they are weak — and is then handed
+        // the folder band of the players genuinely at that rung. Counting scores rather than the
+        // pool itself is deliberately coarse: it is the mix-has-no-volume-yet case this exists
+        // for, and it costs one read behind a six-hour cache.
+        var scored = (await _scores.GetBestScores(mix, userId, cancellationToken))
+            .Count(s => s is { Score: not null, IsBroken: false });
+        if (scored < PumbilityPoolSize) return null;
 
-        return new SkillEvidencePool(pooledSkills, chips, scoredWindowCharts.Length, outdatedScoreCount);
-    }
-
-    private static IReadOnlyList<(Skill Skill, double Weight)> WeightsFor(
-        IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> chips, Chart chart)
-    {
-        return chips.TryGetValue(chart.Id, out var chartChips) && chartChips.Count > 0
-            ? chartChips.Select(c => (c.Skill, c.Weight)).ToArray()
-            : chart.Skills.Select(s => (s, ChartSkillChipRecord.DefaultSegmentWeight)).ToArray();
-    }
-
-    private async Task<SkillSourceComputation> ComputeSkillSource(ChartType chartType, DifficultyLevel level,
-        MixEnum mix, Guid userId, IReadOnlyCollection<Chart> folderCharts, CancellationToken cancellationToken)
-    {
-        var evidence = await ComputeSkillEvidence(chartType, level, mix, userId,
-            folderCharts.Select(c => c.Id).ToArray(), cancellationToken);
-
-        var skillDeviations = evidence.PooledSkills
-            .Where(kv => kv.Value.Usable)
-            .ToDictionary(kv => kv.Key, kv => kv.Value.Deviation);
-        if (skillDeviations.Count < MinUsableSkills)
-            return new SkillSourceComputation(
-                folderCharts.ToDictionary(c => c.Id,
-                    c => new SongTierListEntry("Skill", c.Id, TierListCategory.Unrecorded, 0)),
-                evidence.PooledSkills, false, evidence.ScoredChartCount, evidence.OutdatedScoreCount);
-
-        var estimates = new Dictionary<Guid, double>();
-        var silent = new List<SongTierListEntry>();
-        foreach (var chart in folderCharts)
-        {
-            var usable = WeightsFor(evidence.Chips, chart).Where(p => skillDeviations.ContainsKey(p.Skill))
-                .ToArray();
-            if (usable.Length == 0)
-            {
-                silent.Add(new SongTierListEntry("Skill", chart.Id, TierListCategory.Unrecorded, 9999));
-                continue;
-            }
-
-            estimates[chart.Id] = EstimateOffset +
-                                  usable.Sum(p => p.Weight * skillDeviations[p.Skill]) /
-                                  usable.Sum(p => p.Weight);
-        }
-
-        return new SkillSourceComputation(
-            TierListProcessor.ProcessIntoTierList("Skill", estimates).Concat(silent)
-                .ToDictionary(e => e.ChartId, e => e),
-            evidence.PooledSkills, true, evidence.ScoredChartCount, evidence.OutdatedScoreCount);
-    }
-
-    // Similar players, re-architected on C1's materialization: neighbors' folder
-    // categories come from UserTierListEntry in one read. Neighbors are selected by
-    // COMPETITIVE level (breakdown-page workshop, replacing the old ±1 title level):
-    // players within ±1.0 competitive level for the requested chart type, each vote
-    // scaled by closeness (linear falloff to zero at the window edge) × how much
-    // their folder ratings agree with the requesting player's.
-    public const double CompetitiveWindow = 1.0;
-
-    private async Task<SimilarPlayersComputation> ComputeSimilarPlayers(ChartType chartType, DifficultyLevel level,
-        MixEnum mix, Guid userId, IReadOnlyCollection<Chart> folderCharts, CancellationToken cancellationToken)
-    {
-        var none = new SimilarPlayersComputation(new Dictionary<Guid, SongTierListEntry>(), 0);
-        var myLevel = CompetitiveLevelFor(
-            await _playerStats.GetStats(mix, userId, cancellationToken), chartType);
-        // Competitive level 1 is the no-data floor (same guard the tier page uses).
-        if (myLevel <= 1) return none;
-
-        var neighborIds = (await _playerStats.GetPlayersByCompetitiveRange(mix, chartType,
-                myLevel, CompetitiveWindow, cancellationToken)).ToHashSet();
-        neighborIds.Remove(userId);
-        if (!neighborIds.Any()) return none;
-
-        var closeness = (await _playerStats.GetStats(mix, neighborIds, cancellationToken))
-            .ToDictionary(s => s.UserId, s => Math.Max(0.0,
-                1.0 - Math.Abs(CompetitiveLevelFor(s, chartType) - myLevel) / CompetitiveWindow));
-
-        var myEntries =
-            (await _mediator.Send(new GetMyRelativeTierListQuery(chartType, level, userId, mix),
-                cancellationToken))
-            .ToDictionary(e => e.ChartId);
-        var neighborEntries =
-            (await _userTierLists.GetEntriesForCharts(mix, folderCharts.Select(c => c.Id),
-                cancellationToken))
-            .Where(e => neighborIds.Contains(e.UserId) && e.Category != TierListCategory.Unrecorded)
-            .ToArray();
-
-        var userTotals = neighborEntries.GroupBy(e => e.UserId)
-            .ToDictionary(g => g.Key, g => closeness.GetValueOrDefault(g.Key) * g.Sum(e =>
-                myEntries.TryGetValue(e.ChartId, out var mine) && mine.Category != TierListCategory.Unrecorded
-                    ? (int)TierListCategory.Unrecorded - Math.Abs(e.Category - mine.Category)
-                    : 0));
-
-        var chartWeights = new Dictionary<Guid, double>();
-        foreach (var entry in neighborEntries)
-        {
-            chartWeights.TryGetValue(entry.ChartId, out var current);
-            // Freshness (materialized with the entry, folder-scoped per player):
-            // era-mixed entries vote quietly; a quit player's coherent snapshot
-            // still votes at full voice.
-            chartWeights[entry.ChartId] =
-                current + (TierListCategory.Unrecorded - entry.Category) * userTotals[entry.UserId] *
-                entry.Freshness;
-        }
-
-        return new SimilarPlayersComputation(
-            TierListProcessor.ProcessIntoTierList("Similar Players", chartWeights)
-                .ToDictionary(e => e.ChartId, e => e),
-            neighborIds.Count);
+        var stats = await _playerStats.GetStats(mix, userId, cancellationToken);
+        return PumbilityCohortKeys.ForPhoenix2Pool(chartType,
+            chartType == ChartType.Single ? stats.SinglesRating : stats.DoublesRating);
     }
 
     /// <summary>
@@ -442,16 +298,6 @@ internal sealed class TierListBlendBuilder
             projection.CompetitiveLevel,
             projection.MeanFreshness);
     }
-
-    private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)
-    {
-        return chartType switch
-        {
-            ChartType.Single => stats.SinglesCompetitiveLevel,
-            ChartType.Double => stats.DoublesCompetitiveLevel,
-            _ => stats.CompetitiveLevel
-        };
-    }
 }
 
 /// <summary>Everything one blend run computed, for consumers that need the internals.</summary>
@@ -460,9 +306,18 @@ internal sealed record BlendComputation(
     IReadOnlyDictionary<string, IReadOnlyDictionary<Guid, SongTierListEntry>> Sources,
     IReadOnlyDictionary<string, double> Modifiers,
     bool IsProvisionalFallback,
-    SkillSourceComputation? Skill,
-    SimilarPlayersComputation? Similar,
-    ProjectionComputation? Projection);
+    ProjectionComputation? Projection,
+    PumbilityComputation? Pumbility);
+
+/// <summary>
+///     The census source's output: the banded entries, how many of the cohort's pools hold each
+///     chart, and how many players the cohort is. An empty read is the honest answer for a
+///     folder this cohort's pools cannot reach.
+/// </summary>
+internal sealed record PumbilityComputation(
+    IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
+    IReadOnlyDictionary<Guid, int> Appearances,
+    int CohortSize);
 
 /// <summary>
 ///     The projection source's output plus what the page needs in order to say something true
@@ -477,27 +332,3 @@ internal sealed record ProjectionComputation(
     int PeerCount,
     double CompetitiveLevel,
     double MeanFreshness);
-
-/// <summary>Per-skill pooled deviation on the proficiency scale + its effective evidence.</summary>
-internal sealed record SkillEvidence(double Deviation, double Evidence, bool Usable);
-
-/// <summary>
-///     The pooled evidence around an anchor folder, plus the chips fetched to build it
-///     (returned so ComputeSkillSource's folder-estimate stage reuses the one bulk read).
-/// </summary>
-internal sealed record SkillEvidencePool(
-    IReadOnlyDictionary<Skill, SkillEvidence> PooledSkills,
-    IReadOnlyDictionary<Guid, IReadOnlyList<ChartSkillChipRecord>> Chips,
-    int ScoredChartCount,
-    int OutdatedScoreCount);
-
-internal sealed record SkillSourceComputation(
-    IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
-    IReadOnlyDictionary<Skill, SkillEvidence> PooledSkills,
-    bool Active,
-    int ScoredChartCount,
-    int OutdatedScoreCount);
-
-internal sealed record SimilarPlayersComputation(
-    IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
-    int NeighborCount);

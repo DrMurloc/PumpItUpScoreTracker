@@ -74,9 +74,9 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | Table | Purpose |
 |---|---|
 | `scores.TierListEntry` | Tier list entries per mix (the site's most-used feature) |
-| `scores.UserTierListEntry` | Materialized per-user relative tier lists, event-driven off score imports (tier-lists overhaul C1); `Freshness` weights each entry's similar-players vote by score age relative to the player's own folder (score-age workshop — default 1.0 until the Backfill User Tier Lists run re-stamps rows) |
 | `scores.ChartScoreStats` | Population score variance per chart, refreshed by the daily scores tier-list rebuild (tier-lists overhaul C1) |
 | `scores.FolderCohortStats` | Folder pass-count histograms per competitive-level bucket, refreshed by the daily scores tier-list rebuild — powers the "Folder Passes vs Similar Players" bar (tier-lists overhaul C16) |
+| `scores.PumbilityCensusEntry` | How many players in a cohort hold each of a folder's charts in their top-50 PUMBILITY pool, with the log-banded tier that count produced. One row set per folder per cohort (`CohortKey` = a P1 difficulty title level, a P2 PUMBILITY title rung, or `*` for everyone), rewritten nightly ([pumbility-tier-list.md](design/pumbility-tier-list.md)) |
 | `scores.ChartScoringLevel` | Calculated scoring-difficulty level per chart+mix |
 | `scores.ChartSimilarity` | Similarity-graph edges: the top-20 nearest charts per chart+mix, stored **floor-free** so the shelf can move its own bar and render near-misses without a rebuild. `SignalsJson` carries the skill/intensity breakdown plus the shared badges the shelf names each match from. Rebuilt wholesale by the nightly similarity job ([design](design/chart-similarity.md)) |
 | `scores.ChartLetterDifficulty` | Letter-grade (AA–PG) difficulty percentiles per chart |
@@ -213,6 +213,7 @@ owned it.
 | `archive.UserWorldRanking` | 2026-07-28 | Calculated world rankings; the feature had no reader left |
 | `archive.OfficialUserAvatar` | 2026-07-28 | Avatar cache, absorbed by `OfficialPlayer` |
 | `archive.OfficialLeaderboardImportState` | 2026-07-28 | Last-import timestamp, absorbed by the snapshot seal |
+| `archive.UserTierListEntry` | 2026-08-13 | Materialized per-user relative tier lists, read only by the similar-players source of personalized Pass. **Transferred empty** — the rows were derived from scores, and a million user-keyed rows outside the purge path would strand personal data ([pumbility-tier-list.md](design/pumbility-tier-list.md)) |
 
 The UCS tables (`scores.UcsChart_archived` and its two siblings) predate the `archive` schema and
 keep their suffix-in-place form.

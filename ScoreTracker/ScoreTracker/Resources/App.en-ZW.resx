@@ -241,6 +241,9 @@
   <data name="1 paragon" xml:space="preserve">
     <value>1 mrpurggl</value>
   </data>
+  <data name="1 peer" xml:space="preserve">
+    <value>1 morp</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 Morp</value>
   </data>
@@ -3581,6 +3584,9 @@
   <data name="Modern" xml:space="preserve">
     <value>Rglmurm</value>
   </data>
+  <data name="Modest" xml:space="preserve">
+    <value>Murgl</value>
+  </data>
   <data name="Monthly" xml:space="preserve">
     <value>Blubglplgl</value>
   </data>
@@ -4092,6 +4098,9 @@
   </data>
   <data name="Not in" xml:space="preserve">
     <value>Murm mrp</value>
+  </data>
+  <data name="Not in anyone's PUMBILITY" xml:space="preserve">
+    <value>Blarg mrp morp PUMBILITY</value>
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>Murm mrp {0} — rgl {1} murgl rolurg glgrgl mrp mrgl.</value>
@@ -4645,6 +4654,9 @@
   <data name="Personalized Pass" xml:space="preserve">
     <value>Urgblargmurmmorg Maglplgl</value>
   </data>
+  <data name="Personalized PUMBILITY" xml:space="preserve">
+    <value>Urgblargmurmmorg PUMBILITY</value>
+  </data>
   <data name="Personalized Score" xml:space="preserve">
     <value>Urgblargmurmmorg Mrglrgl</value>
   </data>
@@ -4978,6 +4990,9 @@
   <data name="Pool" xml:space="preserve">
     <value>Blubgro</value>
   </data>
+  <data name="Poor" xml:space="preserve">
+    <value>Glub</value>
+  </data>
   <data name="Popular" xml:space="preserve">
     <value>Grolurgmrp</value>
   </data>
@@ -5234,6 +5249,12 @@
   </data>
   <!-- Tier-lists overhaul (PR #135). "Why Don't You Get Up and Dance, Man?" is an
        in-game meme and a universal do-not-translate term in every locale. -->
+  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
+    <value>Blublurg glorg {0} morp mrp gromurp PUMBILITY mrgl grorpmurm</value>
+  </data>
+  <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
+    <value>Blublurg glorg {0} morp mrp maglarglblgrl grorpmurm</value>
+  </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Blublurg murm</value>
   </data>
@@ -5322,8 +5343,14 @@
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>Glrolurg murmmr murmmurmgro</value>
   </data>
+  <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
+    <value>Blurgmurgl {0} PUMBILITY mrgl morgl</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Bagl orgab murlog al.</value>
+  </data>
+  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
+    <value>Blurgmurgl {0} PUMBILITY morp. Mrgl blub argl mrogl.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Groglorgplglmorg murgglorg rgl blargmrp</value>
@@ -6234,8 +6261,14 @@
   <data name="Skipped" xml:space="preserve">
     <value>Rorolurg</value>
   </data>
+  <data name="Slim" xml:space="preserve">
+    <value>Brgl</value>
+  </data>
   <data name="Socialite" xml:space="preserve">
     <value>Plglmurmmorg</value>
+  </data>
+  <data name="Solid" xml:space="preserve">
+    <value>Grogmrgl</value>
   </data>
   <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
 	  <value>Mrgrgl blubglorgmaglurg grgl grgl ro murgmurm argl mrglurggro mrp blubmrp lurgarglgrogrorp mrglro murmmrp groglgrrgl ro. Mrgl Grglglorg mrp Murgmagl Murpgrourgmrgl. (Grogrgl blubgrrgl mrgrgl mrgl blgrlmrp glmurp mrp blubmurm grrglmurpurg maglgro mrp murmblubblarg blubglorgmaglurg)</value>
@@ -6345,6 +6378,9 @@
   <data name="Standout bar" xml:space="preserve">
     <value>Arglgromagl mr</value>
   </data>
+  <data name="Staple" xml:space="preserve">
+    <value>Mrglmurp</value>
+  </data>
   <data name="Start" xml:space="preserve">
 	  <value>Romurm</value>
   </data>
@@ -6420,6 +6456,9 @@
   </data>
   <data name="Stretching first" xml:space="preserve">
     <value>Blurgama pol</value>
+  </data>
+  <data name="Strong" xml:space="preserve">
+    <value>Grrgl</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>murggroblarg</value>
@@ -8472,6 +8511,9 @@
   </data>
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>{0} maglplgl mrp grglmrp grrgllurg</value>
+  </data>
+  <data name="{0} peers" xml:space="preserve">
+    <value>{0} morp</value>
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0} Morp</value>

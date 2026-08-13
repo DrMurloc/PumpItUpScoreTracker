@@ -176,11 +176,12 @@ public sealed class TierListSagaTests
     }
 
     [Theory]
-    [InlineData(10, true)]   // included: Range(10, 18) => 10..27
+    [InlineData(10, true)]   // included: Range(10, 20) => 10..29, DifficultyLevel.Max
     [InlineData(27, true)]
+    [InlineData(28, true)]
+    [InlineData(29, true)]
     [InlineData(9, false)]   // excluded
-    [InlineData(28, false)]
-    public async Task ProcessPassTierListIteratesLevelsTenThroughTwentySevenInclusive(int level, bool expected)
+    public async Task ProcessPassTierListIteratesLevelsTenThroughTwentyNineInclusive(int level, bool expected)
     {
         var charts = new Mock<IChartRepository>();
         charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(), It.IsAny<ChartType?>(),

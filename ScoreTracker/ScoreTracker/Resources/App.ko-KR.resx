@@ -241,6 +241,9 @@
   <data name="1 paragon" xml:space="preserve">
     <value>파라곤 1개</value>
   </data>
+  <data name="1 peer" xml:space="preserve">
+    <value>동급 1명</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1명</value>
   </data>
@@ -3553,6 +3556,9 @@
   <data name="Modern" xml:space="preserve">
     <value>현행</value>
   </data>
+  <data name="Modest" xml:space="preserve">
+    <value>소소</value>
+  </data>
   <data name="Monthly" xml:space="preserve">
     <value>월간</value>
   </data>
@@ -4062,6 +4068,9 @@
   </data>
   <data name="Not in" xml:space="preserve">
     <value>미수록</value>
+  </data>
+  <data name="Not in anyone's PUMBILITY" xml:space="preserve">
+    <value>아무의 PUMBILITY에도 없음</value>
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>{0}에 없음 — 채보 {1}개가 노래와 함께 삭제되었습니다.</value>
@@ -4612,6 +4621,9 @@
   <data name="Personalized Pass" xml:space="preserve">
     <value>개인화 패스</value>
   </data>
+  <data name="Personalized PUMBILITY" xml:space="preserve">
+    <value>개인화 PUMBILITY</value>
+  </data>
   <data name="Personalized Score" xml:space="preserve">
     <value>개인화 스코어</value>
   </data>
@@ -4942,6 +4954,9 @@
   <data name="Pool" xml:space="preserve">
     <value>풀</value>
   </data>
+  <data name="Poor" xml:space="preserve">
+    <value>미미</value>
+  </data>
   <data name="Popular" xml:space="preserve">
     <value>인기</value>
   </data>
@@ -5196,6 +5211,12 @@
   </data>
   <!-- Tier-lists overhaul (PR #135). "Why Don't You Get Up and Dance, Man?"는
        게임 내 밈이므로 모든 로케일 공통, 번역하지 않음. -->
+  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
+    <value>내 PUMBILITY 칭호 구간의 {0}명과 비교</value>
+  </data>
+  <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
+    <value>비슷한 경쟁 레벨 {0}명과 비교</value>
+  </data>
   <data name="Ranked by" xml:space="preserve">
     <value>정렬 기준</value>
   </data>
@@ -5283,8 +5304,14 @@
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>주간 하이라이트 재계산</value>
   </data>
+  <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
+    <value>{0} PUMBILITY 티어 리스트 재생성</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>모든 플레이어의 최근 세션을 재생성하는 중입니다.</value>
+  </data>
+  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
+    <value>{0} PUMBILITY 집계를 재생성하는 중입니다. 몇 분 걸립니다.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>몇 시간마다 다시 계산됩니다</value>
@@ -6180,8 +6207,14 @@
   <data name="Skipped" xml:space="preserve">
     <value>건너뜀</value>
   </data>
+  <data name="Slim" xml:space="preserve">
+    <value>희박</value>
+  </data>
   <data name="Socialite" xml:space="preserve">
     <value>Socialite</value>
+  </data>
+  <data name="Solid" xml:space="preserve">
+    <value>견실</value>
   </data>
   <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
     <value>오타나 명명 규칙 차이를 보정하기 위한 일부 조정이 적용되어 있습니다. 노래 이름은 대소문자를 구분하지 않습니다. (공백 조정 때문에 일부가 동일해 보일 수 있다는 점에 유의해주세요)</value>
@@ -6288,6 +6321,9 @@
   <data name="Standout bar" xml:space="preserve">
     <value>스탠드아웃 기준</value>
   </data>
+  <data name="Staple" xml:space="preserve">
+    <value>필수</value>
+  </data>
   <data name="Start" xml:space="preserve">
     <value>시작</value>
   </data>
@@ -6362,6 +6398,9 @@
   </data>
   <data name="Stretching first" xml:space="preserve">
     <value>먼저 스트레칭</value>
+  </data>
+  <data name="Strong" xml:space="preserve">
+    <value>강력</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>강함</value>
@@ -8402,6 +8441,9 @@
   </data>
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>이 폴더 {0} 통과</value>
+  </data>
+  <data name="{0} peers" xml:space="preserve">
+    <value>동급 {0}명</value>
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0}명</value>

@@ -16,8 +16,7 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
     {
         typeof(UserChartDifficultyRatingEntity),
         typeof(UserPreferenceRatingEntity),
-        typeof(UserCoOpRatingEntity),
-        typeof(UserTierListEntryEntity)
+        typeof(UserCoOpRatingEntity)
     };
 
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;

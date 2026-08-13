@@ -46,7 +46,6 @@ else
                 <MudText Typo="Typo.h4" Class="bd-title">@L["Personalized Breakdown"]</MudText>
                 <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"></FolderPicker>
                 <MudSelect T="string" Class="bd-lens-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_lens" ValueChanged="ChangeLens">
-                    <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                     <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
                 </MudSelect>
             </div>
@@ -1087,12 +1086,15 @@ else
     [SupplyParameterFromQuery(Name = "Lens")]
     public string? LensParam { get; set; }
 
-    private static readonly string[] ValidLenses = { "Pass", "Score" };
+    // Score alone personalizes now; Pass stopped when its two personal sources went
+    // (docs/design/pumbility-tier-list.md). A bookmarked ?Lens=Pass falls through to Score
+    // rather than reaching a handler that would reject it.
+    private static readonly string[] ValidLenses = { "Score" };
 
     private MixEnum _currentMix = MixEnum.Phoenix;
     private ChartType _chartType = ChartType.Double;
     private int _level = 18;
-    private string _lens = "Pass";
+    private string _lens = "Score";
     private bool _isLoading = true;
 
     private PersonalizedTierListBreakdown? _breakdown;
@@ -1416,7 +1418,7 @@ else
             return;
         }
 
-        _lens = ValidLenses.FirstOrDefault(l => string.Equals(l, LensParam, StringComparison.OrdinalIgnoreCase)) ?? "Pass";
+        _lens = ValidLenses.FirstOrDefault(l => string.Equals(l, LensParam, StringComparison.OrdinalIgnoreCase)) ?? "Score";
 
         if (!CurrentUser.IsLoggedIn)
         {

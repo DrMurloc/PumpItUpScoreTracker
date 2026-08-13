@@ -46,27 +46,6 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
 
         modelBuilder.Entity<TierListEntryEntity>().ToTable("TierListEntry");
 
-        // Tier-lists overhaul C1 (design doc §6): materialized per-user relative tier
-        // lists. The (MixId, ChartId) covering index serves the similar-players
-        // aggregation — every user's category for one folder's charts in a single seek.
-        modelBuilder.Entity<UserTierListEntryEntity>().ToTable("UserTierListEntry")
-            .HasKey(e => new { e.MixId, e.UserId, e.ChartId });
-        // Default 1.0 = full voice, so pre-backfill rows behave exactly as before the
-        // freshness column existed until the Backfill User Tier Lists run re-stamps them.
-        modelBuilder.Entity<UserTierListEntryEntity>()
-            .Property(e => e.Freshness)
-            .HasDefaultValue(1.0);
-        modelBuilder.Entity<UserTierListEntryEntity>()
-            .HasIndex(e => new { e.MixId, e.ChartId })
-            .IncludeProperties(e => new { e.Category, e.Order, e.Freshness });
-        modelBuilder.Entity<UserTierListEntryEntity>()
-            .HasOne<UserEntity>()
-            .WithMany()
-            .HasForeignKey(e => e.UserId);
-        modelBuilder.Entity<UserTierListEntryEntity>()
-            .HasOne<ChartEntity>()
-            .WithMany()
-            .HasForeignKey(e => e.ChartId);
 
         // Population score variance per chart, refreshed by the daily scores rebuild.
         modelBuilder.Entity<ChartScoreStatsEntity>().ToTable("ChartScoreStats")
@@ -80,6 +59,13 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
         // by the daily scores rebuild; read as a tiny keyed range per folder view.
         modelBuilder.Entity<FolderCohortStatsEntity>().ToTable("FolderCohortStats")
             .HasKey(e => new { e.MixId, e.ChartType, e.Level, e.Bucket });
+
+        // The PUMBILITY census (docs/design/pumbility-tier-list.md): per cohort, how many
+        // players hold each of a folder's charts in their top-50 pool. The key prefix IS the
+        // read — a folder for one cohort is a single seek, which is the only shape the page
+        // and the nightly rewrite ask for.
+        modelBuilder.Entity<PumbilityCensusEntryEntity>().ToTable("PumbilityCensusEntry")
+            .HasKey(e => new { e.MixId, e.ChartType, e.Level, e.CohortKey, e.ChartId });
 
         modelBuilder.Entity<ChartScoringLevelEntity>().ToTable("ChartScoringLevel");
         modelBuilder.Entity<UserPreferenceRatingEntity>().ToTable("UserPreferenceRating");

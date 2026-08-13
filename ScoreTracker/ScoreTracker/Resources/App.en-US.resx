@@ -241,6 +241,9 @@
   <data name="1 paragon" xml:space="preserve">
     <value>1 paragon</value>
   </data>
+  <data name="1 peer" xml:space="preserve">
+    <value>1 peer</value>
+  </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 Player</value>
   </data>
@@ -3581,6 +3584,9 @@
   <data name="Modern" xml:space="preserve">
     <value>Modern</value>
   </data>
+  <data name="Modest" xml:space="preserve">
+    <value>Modest</value>
+  </data>
   <data name="Monthly" xml:space="preserve">
     <value>Monthly</value>
   </data>
@@ -4092,6 +4098,9 @@
   </data>
   <data name="Not in" xml:space="preserve">
     <value>Not in</value>
+  </data>
+  <data name="Not in anyone's PUMBILITY" xml:space="preserve">
+    <value>Not in anyone's PUMBILITY</value>
   </data>
   <data name="Not in {0} — all {1} charts left with the song." xml:space="preserve">
     <value>Not in {0} — all {1} charts left with the song.</value>
@@ -4645,6 +4654,9 @@
   <data name="Personalized Pass" xml:space="preserve">
     <value>Personalized Pass</value>
   </data>
+  <data name="Personalized PUMBILITY" xml:space="preserve">
+    <value>Personalized PUMBILITY</value>
+  </data>
   <data name="Personalized Score" xml:space="preserve">
     <value>Personalized Score</value>
   </data>
@@ -4978,6 +4990,9 @@
   <data name="Pool" xml:space="preserve">
     <value>Pool</value>
   </data>
+  <data name="Poor" xml:space="preserve">
+    <value>Poor</value>
+  </data>
   <data name="Popular" xml:space="preserve">
     <value>Popular</value>
   </data>
@@ -5234,6 +5249,12 @@
   </data>
   <!-- Tier-lists overhaul (PR #135). "Why Don't You Get Up and Dance, Man?" is an
        in-game meme and a universal do-not-translate term in every locale. -->
+  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
+    <value>Ranked against {0} players in your PUMBILITY title ranges</value>
+  </data>
+  <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
+    <value>Ranked against {0} players of similar competitive level</value>
+  </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Ranked by</value>
   </data>
@@ -5322,8 +5343,14 @@
   <data name="Rebuild weekly highlights" xml:space="preserve">
     <value>Rebuild weekly highlights</value>
   </data>
+  <data name="Rebuild {0} PUMBILITY tier lists" xml:space="preserve">
+    <value>Rebuild {0} PUMBILITY tier lists</value>
+  </data>
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Rebuilding the latest session for every player.</value>
+  </data>
+  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
+    <value>Rebuilding the {0} PUMBILITY census. It takes a few minutes.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Recalculated every few hours</value>
@@ -6234,8 +6261,14 @@
   <data name="Skipped" xml:space="preserve">
     <value>Skipped</value>
   </data>
+  <data name="Slim" xml:space="preserve">
+    <value>Slim</value>
+  </data>
   <data name="Socialite" xml:space="preserve">
     <value>Socialite</value>
+  </data>
+  <data name="Solid" xml:space="preserve">
+    <value>Solid</value>
   </data>
   <data name="Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)" xml:space="preserve">
 	  <value>Some adjustments to account for typos or difference in naming conventions have been accounted for. Song Names are Case Insensitive. (Note that some of these look the same because they are whitespace adjustments)</value>
@@ -6345,6 +6378,9 @@
   <data name="Standout bar" xml:space="preserve">
     <value>Standout bar</value>
   </data>
+  <data name="Staple" xml:space="preserve">
+    <value>Staple</value>
+  </data>
   <data name="Start" xml:space="preserve">
 	  <value>Start</value>
   </data>
@@ -6420,6 +6456,9 @@
   </data>
   <data name="Stretching first" xml:space="preserve">
     <value>Stretching first</value>
+  </data>
+  <data name="Strong" xml:space="preserve">
+    <value>Strong</value>
   </data>
   <data name="stronger" xml:space="preserve">
     <value>stronger</value>
@@ -8472,6 +8511,9 @@
   </data>
   <data name="{0} pass in this folder" xml:space="preserve">
     <value>{0} pass in this folder</value>
+  </data>
+  <data name="{0} peers" xml:space="preserve">
+    <value>{0} peers</value>
   </data>
   <data name="{0} Players" xml:space="preserve">
     <value>{0} Players</value>
