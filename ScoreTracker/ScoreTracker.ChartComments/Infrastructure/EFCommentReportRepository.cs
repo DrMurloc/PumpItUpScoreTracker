@@ -64,11 +64,26 @@ internal sealed class EFCommentReportRepository : ICommentReportRepository
     public async Task<bool> HasOpenFrom(Guid commentId, Guid reporterUserId,
         CancellationToken cancellationToken = default)
     {
+        // Openness is ROUTING-AWARE here, unlike GetOpenForComment's either-slot read (which only
+        // feeds removal, where over-matching is harmless). Most reports can only ever reach one
+        // desk — a public report has no community desk, a non-escalating community report never
+        // reaches the site's — so counting an unreachable slot as "still open" would leave the
+        // reporter permanently unable to re-report after a dismissal, with the retry swallowed
+        // behind a success toast.
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await database.Set<CommentReportEntity>()
-            .AnyAsync(r => r.CommentId == commentId && r.ReporterUserId == reporterUserId &&
-                           (r.CommunityResolvedAt == null || r.SiteResolvedAt == null),
-                cancellationToken);
+        var publicKind = nameof(CommentAudienceKind.Public);
+        var communityKind = nameof(CommentAudienceKind.Community);
+
+        return await (
+                from report in database.Set<CommentReportEntity>()
+                join comment in database.Set<CommentEntity>() on report.CommentId equals comment.Id
+                where report.CommentId == commentId && report.ReporterUserId == reporterUserId &&
+                      ((comment.Audience == publicKind && report.SiteResolvedAt == null) ||
+                       (comment.Audience == communityKind &&
+                        (report.CommunityResolvedAt == null ||
+                         (EscalatingReasons.Contains(report.Reason) && report.SiteResolvedAt == null))))
+                select report.Id)
+            .AnyAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<CommentReport>> GetOpenForComment(Guid commentId,
@@ -137,20 +152,28 @@ internal sealed class EFCommentReportRepository : ICommentReportRepository
     {
         return new ReportQueueRow(report.Id, comment.Id, comment.ChartId, comment.UserId,
             comment.CommunityId, comment.Text, report.ReporterUserId,
-            Enum.TryParse<CommentReportReason>(report.Reason, out var reason)
-                ? reason
-                : CommentReportReason.OffTopic,
+            ParseReason(report.Reason),
             report.CreatedAt);
     }
 
     private static CommentReport Hydrate(CommentReportEntity entity)
     {
         return CommentReport.FromStorage(new CommentReportState(entity.Id, entity.CommentId,
-            entity.ReporterUserId,
-            Enum.TryParse<CommentReportReason>(entity.Reason, out var reason)
-                ? reason
-                : CommentReportReason.OffTopic,
+            entity.ReporterUserId, ParseReason(entity.Reason),
             entity.RenderingLocale, entity.CreatedAt, entity.CommunityResolvedAt,
             entity.CommunityResolvedByUserId, entity.SiteResolvedAt, entity.SiteResolvedByUserId));
+    }
+
+    /// <summary>
+    ///     IsDefined as well as TryParse: TryParse accepts a bare integer ("7" parses into an
+    ///     undefined value), which would then render through a switch's default arm as the last
+    ///     reason. Unknown strings and undefined numbers both degrade to OffTopic, matching how
+    ///     the queue SQL treats them (non-escalating).
+    /// </summary>
+    private static CommentReportReason ParseReason(string stored)
+    {
+        return Enum.TryParse<CommentReportReason>(stored, out var reason) && Enum.IsDefined(reason)
+            ? reason
+            : CommentReportReason.OffTopic;
     }
 }

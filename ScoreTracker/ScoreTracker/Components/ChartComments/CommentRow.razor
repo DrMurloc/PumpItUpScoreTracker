@@ -165,6 +165,14 @@
 
     [Parameter] public bool CanInteract { get; set; }
 
+    /// <summary>
+    ///     Whether the reader may WRITE in this scope — false under a mute or the lock. Gates
+    ///     Reply and the own-menu Edit, and only those: voting rides <see cref="CanInteract" />
+    ///     (a vote is not content) and Delete always works. The server enforces the same line;
+    ///     this keeps the row from offering a composer the submit would refuse.
+    /// </summary>
+    [Parameter] public bool CanWrite { get; set; } = true;
+
     [Parameter] public EventCallback<CommentRecord> OnVote { get; set; }
     [Parameter] public EventCallback<CommentRecord> OnReply { get; set; }
     [Parameter] public EventCallback<CommentRecord> OnEdit { get; set; }
@@ -174,13 +182,16 @@
 
     private bool CanVote => CanInteract && !IsNote && !Comment.ViewerIsAuthor;
 
-    private bool CanReply => CanInteract && !IsNote && !IsReply;
+    private bool CanReply => CanInteract && CanWrite && !IsNote && !IsReply;
 
     private RenderFragment Menu()
     {
         return @<MudMenu Icon="@Icons.Material.Filled.MoreHoriz" Size="Size.Small" Dense="true"
                          AriaLabel="@L["More"]" data-testid="@($"own-{Comment.Id}")">
-                   <MudMenuItem OnClick="() => OnEdit.InvokeAsync(Comment)">@L["Edit"]</MudMenuItem>
+                   @if (CanWrite)
+                   {
+                       <MudMenuItem OnClick="() => OnEdit.InvokeAsync(Comment)">@L["Edit"]</MudMenuItem>
+                   }
                    <MudMenuItem OnClick="() => OnDelete.InvokeAsync(Comment)">@L["Delete"]</MudMenuItem>
                </MudMenu>;
     }

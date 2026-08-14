@@ -45,9 +45,15 @@ else
                     <DifficultyBubble Chart="chart" Small="true" Tooltip="false"></DifficultyBubble>
                     <span class="acr-song">@chart.Song.Name</span>
                 }
+                else
+                {
+                    <span class="acr-song acr-where">@L["From another mix"]</span>
+                }
                 <span class="acr-reason">@ReasonLabel(row.Reason)</span>
                 <MudSpacer></MudSpacer>
-                <span class="acr-where">@(row.CommunityName?.ToString() ?? L["Public"].Value)</span>
+                @* A null NAME is not a null COMMUNITY: comments outlive a deleted club, and labeling
+                   an escalated one "Public" would misstate the scope the site admin is judging. *@
+                <span class="acr-where">@(row.CommunityId == null ? L["Public"].Value : row.CommunityName?.ToString() ?? L["A deleted community"].Value)</span>
             </div>
             <div class="acr-meta">
                 <b>@(row.ReportedUserName?.ToString() ?? L["a deleted user"])</b>
@@ -187,12 +193,10 @@ else
             Snackbar.Add(L["This account needs a display name to lock — use the Admin page."].Value,
                 Severity.Warning);
         }
-        catch (CommentNotAllowedException exception)
+        finally
         {
-            Snackbar.Add(exception.Message, Severity.Warning);
+            _working = false;
         }
-
-        _working = false;
     }
 
     // Generic rather than taking IRequest, for the same reason ChartCommentsTab's is: with the
@@ -210,8 +214,11 @@ else
         {
             Snackbar.Add(exception.Message, Severity.Warning);
         }
-
-        _working = false;
+        finally
+        {
+            // An unexpected failure that skipped this would leave every button dead until refresh.
+            _working = false;
+        }
     }
 
     private string ReasonLabel(CommentReportReason reason)

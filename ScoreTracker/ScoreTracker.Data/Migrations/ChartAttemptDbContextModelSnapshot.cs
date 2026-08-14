@@ -347,7 +347,9 @@ namespace ScoreTracker.Data.Migrations
 
                     b.HasIndex("CommunityId");
 
-                    b.HasIndex("UserId", "CommunityId");
+                    b.HasIndex("UserId", "CommunityId")
+                        .IsUnique()
+                        .HasFilter("[LiftedAt] IS NULL");
 
                     b.ToTable("ChartCommentRestriction", "scores");
                 });

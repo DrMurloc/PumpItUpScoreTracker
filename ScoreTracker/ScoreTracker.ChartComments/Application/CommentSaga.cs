@@ -225,6 +225,14 @@ internal sealed class CommentSaga :
             .Select(mute => mute.CommunityId)
             .ToHashSet();
 
+        // A ban is heavier than a mute and takes the whole chip, read included: "no membership,
+        // no community comments" is the design's deal, but a ban RETAINS its membership row to
+        // block rejoin, and GetMyCommunitiesQuery does not filter it — so this surface must.
+        var bannedFrom = (await _mediator.Send(new GetMyCommunityRolesQuery(), cancellationToken))
+            .Where(role => role.Role == CommunityRole.Banned)
+            .Select(role => role.CommunityId)
+            .ToHashSet();
+
         var scopes = new List<CommentScopeRecord>
         {
             new(CommentAudience.Public, Name.From("Public"), !locked),
@@ -239,6 +247,7 @@ internal sealed class CommentSaga :
             // everybody. Regional boards are ownerless and carry no roles, so a comment posted to
             // one would have no moderator at all.
             .Where(community => !community.IsRegional && community.CommunityName != WorldCommunityName)
+            .Where(community => !bannedFrom.Contains(community.CommunityId))
             .OrderBy(community => community.CommunityName.ToString())
             .Select(community => new CommentScopeRecord(
                 CommentAudience.Community(community.CommunityId), community.CommunityName,

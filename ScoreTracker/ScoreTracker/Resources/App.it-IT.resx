@@ -322,6 +322,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>Esiste già una comunità con questo nome.</value>
   </data>
+  <data name="A deleted community" xml:space="preserve">
+    <value>Una community eliminata</value>
+  </data>
   <data name="a deleted user" xml:space="preserve">
     <value>un utente eliminato</value>
   </data>
@@ -2465,6 +2468,9 @@
   </data>
   <data name="From" xml:space="preserve">
     <value>Da</value>
+  </data>
+  <data name="From another mix" xml:space="preserve">
+    <value>Da un altro mix</value>
   </data>
   <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
     <value>D'ora in poi ogni importazione e sessione compare qui e puoi annullarne una qualsiasi. I punteggi che avevi già restano eliminabili.</value>

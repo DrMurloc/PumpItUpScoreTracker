@@ -185,6 +185,68 @@ public sealed class ChartCommentModerationRepositoryTests : IAsyncLifetime
         Assert.False(await Reports.HasOpenFrom(hateInClub, _reporter));
     }
 
+    [Theory]
+    [InlineData(CommentReportReason.OffTopic)]
+    [InlineData(CommentReportReason.HateOrDiscrimination)]
+    public async Task ASiteDismissalOnAPublicReportFreesTheReporter(CommentReportReason reason)
+    {
+        // A public report has no community desk — nothing can ever stamp that slot short of
+        // removal. Counting it as "still open" after the site admin dismissed would leave the
+        // reporter permanently unable to re-report, with the retry swallowed behind a success
+        // toast. HasOpenFrom is routing-aware for exactly this.
+        var publicComment = await SavedComment(CommentAudience.Public);
+        var report = CommentReport.File(publicComment, _reporter, reason, null, Now);
+        await Reports.Save(report);
+        Assert.True(await Reports.HasOpenFrom(publicComment, _reporter));
+
+        report.ResolveForSite(_moderator, Now);
+        await Reports.Save(report);
+
+        Assert.False(await Reports.HasOpenFrom(publicComment, _reporter));
+    }
+
+    [Fact]
+    public async Task ACommunityDismissalFreesTheReporterUnlessTheReportEscalated()
+    {
+        // Non-escalating community report: the community desk is its only desk, so dismissal
+        // there frees the reporter. An escalated one stays open until the site admin acts too.
+        var spam = await SavedComment(CommentAudience.Community(Club));
+        var hate = await SavedComment(CommentAudience.Community(Club));
+        var spamReport = CommentReport.File(spam, _reporter, CommentReportReason.SpamOrAdvertising,
+            null, Now);
+        var hateReport = CommentReport.File(hate, _reporter, CommentReportReason.HateOrDiscrimination,
+            null, Now);
+        await Reports.Save(spamReport);
+        await Reports.Save(hateReport);
+
+        spamReport.ResolveForCommunity(_moderator, Now);
+        hateReport.ResolveForCommunity(_moderator, Now);
+        await Reports.Save(spamReport);
+        await Reports.Save(hateReport);
+
+        Assert.False(await Reports.HasOpenFrom(spam, _reporter));
+        Assert.True(await Reports.HasOpenFrom(hate, _reporter));
+    }
+
+    [Fact]
+    public async Task TwoRacingMutesLandOnOneRowAndALiftedMuteDoesNotBlockANewOne()
+    {
+        // The saga's check-then-insert is the polite path; the filtered unique index is the
+        // guarantee. Filtered on LiftedAt IS NULL, because lifted rows are history and stack up.
+        var first = CommentRestriction.Impose(_author, Club, _moderator, null, Now);
+        await Restrictions.Save(first);
+
+        await Assert.ThrowsAsync<DbUpdateException>(() =>
+            Restrictions.Save(CommentRestriction.Impose(_author, Club, Guid.NewGuid(), null, Now)));
+
+        first.Lift(Now.AddDays(1));
+        await Restrictions.Save(first);
+        await Restrictions.Save(CommentRestriction.Impose(_author, Club, _moderator, "again", Now.AddDays(2)));
+
+        var active = await Restrictions.GetActive(_author, Club);
+        Assert.Equal("again", active!.Reason);
+    }
+
     [Fact]
     public async Task ADeletedCommentsReportsAppearInNoQueue()
     {

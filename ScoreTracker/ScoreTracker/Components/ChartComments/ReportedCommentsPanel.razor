@@ -30,6 +30,13 @@
                     <DifficultyBubble Chart="chart" Small="true" Tooltip="false"></DifficultyBubble>
                     <span class="rcp-song">@chart.Song.Name</span>
                 }
+                else
+                {
+                    @* Comments are cross-mix; the chart may not exist in the selected mix. The
+                       row must still say SOMETHING about where it lives, or the moderator can
+                       only dismiss blind. *@
+                    <span class="rcp-song rcp-meta">@L["From another mix"]</span>
+                }
                 <span class="rcp-who">
                     <b>@(row.ReportedUserName?.ToString() ?? L["a deleted user"])</b>
                     <span class="rcp-meta"> — @L["reported by {0}", row.ReporterName?.ToString() ?? L["a deleted user"].Value]</span>
@@ -52,7 +59,8 @@
 
     <ChartDetailsDialog @bind-Visible="_dialogOpen" Chart="_dialogChart" Mix="_mix"
                         InitialTab="ChartDetailsDialog.DetailsTab.Comments"
-                        FocusCommentId="_focusCommentId"></ChartDetailsDialog>
+                        FocusCommentId="_focusCommentId"
+                        InitialCommentAudience="@CommentAudience.Community(CommunityId)"></ChartDetailsDialog>
 }
 
 <style>
@@ -138,8 +146,12 @@
         {
             Snackbar.Add(exception.Message, Severity.Warning);
         }
-
-        _working = false;
+        finally
+        {
+            // Not after the try: an unexpected failure that skipped this would leave every
+            // button in the panel dead until a full page refresh.
+            _working = false;
+        }
     }
 
     private void Open(ReportedCommentRecord row)

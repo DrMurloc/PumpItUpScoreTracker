@@ -2,6 +2,7 @@
 @using MediatR
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.ChartComments.Contracts
 @using ScoreTracker.ChartIntelligence.Contracts.Queries
 @using ScoreTracker.Domain.Models
 @using ScoreTracker.Domain.Records
@@ -98,6 +99,7 @@
                     <ChartCommentsTab ChartId="ViewChart.Id" Active="IsLive(DetailsTab.Comments)"
                                       AdminPreview="@(!Comments.Value.Enabled)"
                                       FocusCommentId="@(IsDrilled ? null : FocusCommentId)"
+                                      InitialAudience="@(IsDrilled ? null : InitialCommentAudience)"
                                       @key="(ViewChart.Id, nameof(ChartCommentsTab))"></ChartCommentsTab>
                 </div>
             }
@@ -371,10 +373,16 @@
     /// <summary>
     ///     A comment to open on. The moderation queue passes this with
     ///     <see cref="InitialTab" /> = Comments so moderation happens in the surface the comment
-    ///     lives in rather than a second console. Nothing sends one until reports land; the
-    ///     parameter is what that row will hand over.
+    ///     lives in rather than a second console.
     /// </summary>
     [Parameter] public Guid? FocusCommentId { get; set; }
+
+    /// <summary>
+    ///     The comment scope to open standing in — the queue passes the reported comment's
+    ///     community alongside <see cref="FocusCommentId" />. Without it the tab opens on Public,
+    ///     which by construction is never where a community queue row's comment lives.
+    /// </summary>
+    [Parameter] public CommentAudience? InitialCommentAudience { get; set; }
 
     /// <summary>
     ///     Comments ships gated: off in configuration, so the surface is the site admin's alone

@@ -303,9 +303,14 @@ else
     private bool CanPromote => _myRole != null && _myRole.Permissions.HasFlag(CommunityPermission.PromoteAdmins);
     private bool CanManageUsers => _myRole != null && _myRole.Permissions.HasFlag(CommunityPermission.ManageUsers);
 
+    // Role == Admin as well as the flag, matching the server gate exactly: permissions are only
+    // meaningful for admins, and a stray flag bit on a Member row (bad data — demote clears
+    // permissions in every normal flow) would otherwise render a panel whose first query throws
+    // and takes the whole page load with it.
     private bool CanModerateComments => _myRole != null &&
                                         (_myRole.Role == CommunityRole.Creator ||
-                                         _myRole.Permissions.HasFlag(CommunityPermission.ModerateComments));
+                                         (_myRole.Role == CommunityRole.Admin &&
+                                          _myRole.Permissions.HasFlag(CommunityPermission.ModerateComments)));
 
     /// <summary>
     ///     The mute ladder, mirrored from the saga's authority so a button never offers what the

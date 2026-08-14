@@ -559,6 +559,30 @@ public sealed class CommentSagaTests
     }
 
     [Fact]
+    public async Task ABannedMemberLosesTheWholeChipReadIncluded()
+    {
+        // A ban RETAINS its membership row to block rejoin, and GetMyCommunitiesQuery does not
+        // filter it — so without this the heavier sanction (ban) would block less than the
+        // lighter one (mute). "No membership, no community comments" is the design's deal.
+        Communities(("Murloc Lab", ClubId, false));
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunityRolesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new MyCommunityRoleRecord(ClubId, Name.From("Murloc Lab"), CommunityRole.Banned,
+                    CommunityPermission.None)
+            });
+
+        var scopes = await Subject().Handle(new GetMyCommentScopesQuery(), CancellationToken.None);
+
+        Assert.DoesNotContain(scopes, s => s.Audience.CommunityId == ClubId);
+
+        // And the post gate inherits the same answer, because it asks the same scopes.
+        await Assert.ThrowsAsync<CommentNotAllowedException>(() => Subject().Handle(
+            new PostCommentCommand(ChartId, CommentAudience.Community(ClubId), "words"),
+            CancellationToken.None));
+    }
+
+    [Fact]
     public async Task TheRailUnderALockKeepsOnlyNotes()
     {
         Locked();

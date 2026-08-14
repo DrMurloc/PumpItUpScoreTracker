@@ -11,7 +11,10 @@ namespace ScoreTracker.ChartComments.Infrastructure.Entities;
 // UserId is whose mic this takes and owns the row for purge. RestrictedByUserId is the moderator,
 // a different person — [PurgeKey] says so. Like DeletedByUserId on CommentEntity, the moderator
 // pointer may outlive its account.
-[Index(nameof(UserId), nameof(CommunityId))]
+// The (UserId, CommunityId) index is declared in ChartCommentsModelContribution rather than here:
+// it is UNIQUE over active rows only (filtered on LiftedAt IS NULL), which an attribute cannot
+// express — the saga's check-then-insert is the polite path, and the index is what makes two
+// racing moderators land on one mute instead of two.
 [Index(nameof(CommunityId))]
 [PurgeKey(nameof(UserId))]
 internal sealed class CommentRestrictionEntity

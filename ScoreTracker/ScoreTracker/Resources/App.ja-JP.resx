@@ -322,6 +322,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>この名前のコミュニティは既に存在します。</value>
   </data>
+  <data name="A deleted community" xml:space="preserve">
+    <value>削除されたコミュニティ</value>
+  </data>
   <data name="a deleted user" xml:space="preserve">
     <value>削除されたユーザー</value>
   </data>
@@ -2465,6 +2468,9 @@
   </data>
   <data name="From" xml:space="preserve">
 	  <value>から</value>
+  </data>
+  <data name="From another mix" xml:space="preserve">
+    <value>別のバージョンの譜面</value>
   </data>
   <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
     <value>これ以降、インポートとプレイセッションはすべてここに表示され、どれでも取り消せます。すでにあるスコアも削除はできます。</value>

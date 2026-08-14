@@ -230,6 +230,47 @@ public sealed class ChartCommentsTabTests : TestContext
     }
 
     [Fact]
+    public async Task AScopeYouCannotPostToAlsoHidesReplyAndEdit()
+    {
+        // The composer-is-a-sentence treatment reaches the rows too: no Reply on anybody's
+        // comment, no Edit in your own ⋯ — Delete stays, and voting stays, because a vote is
+        // not content. The server refuses all three anyway; this stops the row offering a
+        // composer the submit would bounce.
+        Scopes(new CommentScopeRecord(CommentAudience.Public, Name.From("Public"), false),
+            new CommentScopeRecord(CommentAudience.Private, Name.From("Notes")));
+        var mine = Comment("my old words", isAuthor: true);
+        var theirs = Comment("their words");
+        Page(mine, theirs);
+        var page = Render();
+
+        Assert.Empty(page.FindAll($"[data-testid='reply-{theirs.Id}']"));
+        var ownMenu = page.FindComponents<MudMenu>()
+            .First(m => m.Instance.Icon == Icons.Material.Filled.MoreHoriz &&
+                        m.Markup.Contains($"own-{mine.Id}"));
+        await page.InvokeAsync(() => ownMenu.Find("button").ClickAsync(new MouseEventArgs()));
+        Assert.DoesNotContain("Edit", ownMenu.Markup);
+        // Vote is still live for their comment.
+        Assert.False(page.Find($"[data-testid='vote-{theirs.Id}']").HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public async Task TheModerationHandoffOpensStandingInTheRightScopeWithAFocusSizedPage()
+    {
+        // The queue's whole promise: Open lands ON the reported comment. That takes the scope
+        // (every queue row is a community comment; the default is Public, where it is not) and
+        // a first page big enough that a fresh, few-votes comment cannot sort below the fold.
+        var page = RenderComponent<ChartCommentsTab>(p => p
+            .Add(c => c.ChartId, Chart)
+            .Add(c => c.Active, true)
+            .Add(c => c.FocusCommentId, Guid.NewGuid())
+            .Add(c => c.InitialAudience, CommentAudience.Community(Club)));
+
+        page.WaitForAssertion(() => _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q =>
+                q.Audience == CommentAudience.Community(Club) && q.TakeRoots == 500),
+            It.IsAny<CancellationToken>()), Times.Once));
+    }
+
+    [Fact]
     public async Task AScopeYouCannotPostToGetsASentenceInsteadOfAComposer()
     {
         // A mute (or the lock) drops CanPost; the chip stays because reading is never revoked.

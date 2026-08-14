@@ -322,6 +322,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>이미 같은 이름의 커뮤니티가 있습니다.</value>
   </data>
+  <data name="A deleted community" xml:space="preserve">
+    <value>삭제된 커뮤니티</value>
+  </data>
   <data name="a deleted user" xml:space="preserve">
     <value>삭제된 사용자</value>
   </data>
@@ -2448,6 +2451,9 @@
   </data>
   <data name="From" xml:space="preserve">
     <value>원본</value>
+  </data>
+  <data name="From another mix" xml:space="preserve">
+    <value>다른 시리즈의 채보</value>
   </data>
   <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
     <value>이제부터 모든 가져오기와 플레이 세션이 여기에 표시되며 언제든 되돌릴 수 있습니다. 이미 있던 점수도 삭제는 가능합니다.</value>

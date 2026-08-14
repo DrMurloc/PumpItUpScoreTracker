@@ -87,11 +87,16 @@ namespace ScoreTracker.Data.Migrations
                 table: "ChartCommentRestriction",
                 column: "CommunityId");
 
+            // UNIQUE over active rows only: the saga's check-then-insert is the polite path, and
+            // this is what makes two racing moderators land on one mute instead of two. Filtered
+            // because lifted rows are history and stack up.
             migrationBuilder.CreateIndex(
                 name: "IX_ChartCommentRestriction_UserId_CommunityId",
                 schema: "scores",
                 table: "ChartCommentRestriction",
-                columns: new[] { "UserId", "CommunityId" });
+                columns: new[] { "UserId", "CommunityId" },
+                unique: true,
+                filter: "[LiftedAt] IS NULL");
 
             migrationBuilder.Sql(BackfillSql);
         }

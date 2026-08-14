@@ -322,6 +322,9 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>A community with this name already exists.</value>
   </data>
+  <data name="A deleted community" xml:space="preserve">
+    <value>A deleted community</value>
+  </data>
   <data name="a deleted user" xml:space="preserve">
     <value>a deleted user</value>
   </data>
@@ -2465,6 +2468,9 @@
   </data>
   <data name="From" xml:space="preserve">
 	  <value>From</value>
+  </data>
+  <data name="From another mix" xml:space="preserve">
+    <value>From another mix</value>
   </data>
   <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
     <value>From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted.</value>
