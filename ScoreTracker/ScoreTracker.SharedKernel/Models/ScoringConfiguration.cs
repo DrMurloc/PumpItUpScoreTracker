@@ -506,19 +506,25 @@ namespace ScoreTracker.SharedKernel.Models
             // 364.56 = 280 × 1.302. It was interpolated before those rows arrived and they landed
             // exactly on the guess, which is why the step below is now anchored at both ends.
             config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.30;
-            // INFERRED, not observed — no Double has ever been priced at B. It splits the two
-            // rungs either side of it, A 1.30 and C 1.20, on the uniform −0.05 step they imply;
-            // both of those are live reads now, so this interpolates between measurements rather
-            // than reaching down from A+. A live Double row replaces it outright.
+            // INFERRED, not observed — the last cell in this table with no live row behind it. It
+            // splits the −0.10 between the two measured rungs either side of it, A 1.30 and C
+            // 1.20. Do NOT justify it as "the ladder's uniform −0.05 step" any more: C → D is
+            // −0.10, so the ladder is not uniform and only this one span is. It survives the
+            // other plausible fit anyway — dividing the span in the 0.08 : 0.10 proportion the
+            // fully measured Singles ladder uses across the same two rungs lands on 1.256 — so
+            // both readings round to what is here. A live Double row replaces it outright.
             config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.25;
             // OBSERVED, one row: a D12 MG C at 229.14 = Base(12) 190 × (1.20 + 0.006). Solving
             // the row the other way round demands a 0.106 plate bonus, which nothing on either
             // plate table comes near, so the grade is what this row measures.
             config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.20;
-            // INFERRED on the same −0.05 step, and the weakest cell in this table: B at least
-            // sits between two measured rungs, where this extrapolates one step BELOW the lowest
-            // Double ever priced.
-            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.15;
+            // MEASURED, and it REFUTED the 1.15 this cell used to extrapolate to. A D10 MG D at
+            // 199.08 = Base(10) 180 × 1.106, read off the official breakdown page beside a C on
+            // the same level and plate (217.08), so the two differ by grade alone: the 18.00
+            // between them is 0.10 of base whatever the plate turns out to be worth. The step
+            // down from C is therefore DOUBLE the −0.05 the ladder holds higher up, which is what
+            // made the uniform-step extrapolation wrong rather than merely unlucky.
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.10;
             // An F contributes NOTHING on either type — an exclusion like the sub-10 rule and
             // the stage break, not the bottom rung of the ladder. The zero keeps this table
             // honest for anything reading it directly, but what enforces the rule is the guard
@@ -529,8 +535,9 @@ namespace ScoreTracker.SharedKernel.Models
             // What a Single reads instead, wherever the two types disagree. Every value here is
             // a live per-chart read off the official breakdown page, and the bracketed count is
             // how many independent rows imply that value and no other — so the whole singles
-            // ladder is measured, where its doubles counterpart below A+ mostly is not. AA+ and
-            // above land identically on both types, which is why they are absent.
+            // ladder is measured, and since the 2026-08-14 readings its doubles counterpart is
+            // too, everywhere except B. AA+ and above land identically on both types, which is
+            // why they are absent.
             config.SinglesLetterGradeModifiers = new Dictionary<PhoenixLetterGrade, double>
             {
                 [PhoenixLetterGrade.AA] = 1.36, // 42 rows

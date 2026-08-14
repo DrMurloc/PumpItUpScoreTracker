@@ -84,38 +84,65 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   a P1 **D** but a P2 **F** and so reprices from about 0.9 × base to nothing.
 
   **Which cells are measured and which are guesses.** All eight plate × type cells on each side
-  are measured, the whole Singles grade ladder is measured, and on Doubles everything from AA up
-  plus **A** and C is measured. **B and D on Doubles are the only guesses left.** B interpolates
-  the two Doubles rungs read either side of it (A 1.30 and C 1.20) on the uniform −0.05 step;
-  **D 1.15 is an extrapolation** below the lowest measured Doubles rung, making it the weakest
-  cell in the table and the one carrying its widest type gap (−0.15). Both are pinned by
-  `InferredDoublesRungsBelowAAreGuessesOnAUniformStep` so that replacing one with a live reading
-  is deliberate. A Double priced at B or D closes the last of it.
+  are measured, the whole Singles grade ladder is measured, and on Doubles every rung from AA
+  down to D is measured now as well. **B on Doubles is the only guess left in either table.** It
+  splits the −0.10 between the measured rungs either side of it (A 1.30 and C 1.20), and is
+  pinned by `DoublesBIsTheLastInferredRungAndSplitsTwoMeasuredNeighbours` so that replacing it
+  with a live reading is deliberate rather than silent. A Double priced at B closes the last of
+  it. F is the one cell no reading can ever fill — see below.
+
+  ⚠ **Do not justify B as "the ladder's uniform −0.05 step" — the ladder is not uniform.** Every
+  step from AA down to C is −0.05 or narrower, but **C → D is −0.10**, and that is measured, not
+  fitted. The A → C span B sits inside is the only uniform stretch left, and that span is all the
+  argument B can carry.
 
   **A on Doubles was a guess and is now measured — at exactly the guessed value.** Five import
   rows (2026-08-13/14) across four levels and three plates all imply 1.3000 and nothing else:
   D24 MG 326.50 = Base(24) 250 × 1.306 · D25 RG 338.00 = 260 × 1.300 · D26 FG 351.54 =
   270 × 1.302 · D27 FG 364.56 = 280 × 1.302. That does two things beyond closing the cell: it
-  corroborates the −0.05 step rather than merely assuming it, and it moves B from *reaching down
-  from A+* to *interpolating between two measurements*. Note where the remaining evidence gap
-  actually sits — telemetry has never priced a chart above level 27, so **Base(28) = 290 and
-  Base(29) = 300 are extrapolation**, the post-24 kink being confirmed only at 25, 26 and 27.
-  The five charts up there are all Doubles (*1949*, *Dead End*, *Neo Catharsis*, *Paradoxx* at
-  28; *1948* at 29) and none has entered an imported pool.
+  corroborates the −0.05 step across the upper ladder rather than merely assuming it, and it
+  moves B from *reaching down from A+* to *interpolating between two measurements*. Note where
+  the remaining evidence gap actually sits — telemetry has never priced a chart above level 27,
+  so **Base(28) = 290 and Base(29) = 300 are extrapolation**, the post-24 kink being confirmed
+  only at 25, 26 and 27. The five charts up there are all Doubles (*1949*, *Dead End*,
+  *Neo Catharsis*, *Paradoxx* at 28; *1948* at 29) and none has entered an imported pool.
 
-  **Where the last two cells will come from.** Not from strong players: a Double scored in the
-  B (700k–799k) or D (500k–599k) band essentially never survives into a top-50 pool. They come
-  from **beginners with fewer than fifty charts**, where every chart enters the pool regardless
-  of what it contributes — which is exactly how the single Doubles C reading arrived, on a D12.
-  So these cells fill as Phoenix 2 picks up casual importers, not as the elite grind.
+  **D on Doubles was a guess too, and that one was WRONG — it is 1.10, not the extrapolated
+  1.15.** Played deliberately to close the cell (2026-08-14) and read off the breakdown page as a
+  pair on the same level and plate, which is what makes it airtight: *Your Mind* D10 MG C at
+  **217.08** and *Switronic* D10 MG D at **199.08**, both over Base(10) = 180. They differ by
+  grade alone, so the 18.00 between them is 0.10 of base whatever Marvelous Game is worth, and
+  the C independently confirms 1.20 a second time at a second level. Two consequences. The step
+  from C is **double** the −0.05 the ladder holds higher up, which is the thing that made the
+  extrapolation wrong rather than merely unlucky. And the type gap at D closes from −0.15 to
+  −0.10, matching C's, so the gap **plateaus** across the bottom two rungs instead of widening —
+  the shape the old value implied.
 
-  **A competing fit exists, was considered, and was declined — do not re-derive it.** The Singles
-  ladder, the only fully measured one, *widens* going down (steps 0.03/0.05/0.08/0.10/0.10)
-  rather than holding a uniform step; a fit assuming the Doubles ladder has that same shape lands
-  on **A 1.32 and B 1.27** and hits both measured anchors equally well. Owner's call, 2026-08-12:
-  not worth spending on, because no player can see the difference between the two answers. For
-  anyone tempted anyway — it does **not** resolve the title-reachability note below. It makes it
-  slightly worse, so the two questions are independent.
+  ⚠ **This one changed a shipped price**, unlike the A reading: a Doubles D was being paid
+  `0.05 × base` too much (9 points on a D10). It only ever reached beginners — a D never survives
+  into a full top-50 — but that is the same population the passing-F bug hit, and they compound.
+  **Post-deploy: press "Recalculate Phoenix 2 Player Ratings."**
+
+  **Where the last cell will come from.** Not from strong players: a Double scored in the B
+  band (700k–799k) essentially never survives into a top-50 pool. It comes from **a player with
+  fewer than fifty charts**, where every chart enters the pool regardless of what it contributes
+  — which is how all three bottom readings arrived, on a D12 and a pair of D10s. So B fills from
+  a small pool, whether a beginner's or one deliberately made, not from the elite grind.
+
+  **The competing fit is now REFUTED, not merely declined — do not re-derive it.** The Singles
+  ladder *widens* going down (steps 0.03/0.05/0.08/0.10/0.10) rather than holding a uniform step,
+  and a fit assuming the Doubles ladder had that same shape landed on **A 1.32 and B 1.27**,
+  hitting the anchors of the day (A+ 1.35 and C 1.20) just as well as the uniform reading did. It
+  was declined on the owner's call, 2026-08-12, as not worth spending on because no player could
+  see the difference. Play settled it instead: **A measured 1.30, not 1.32**, so the
+  shape-matching fit is dead and its B 1.27 goes with it — which is why B stays at the even split
+  of 1.25.
+
+  Worth keeping the episode rather than deleting it, because the two fits behaved exactly as
+  fits do: they agreed on every cell that had been observed and disagreed only on the ones that
+  had not, which is precisely where one of them was being used. The bottom of this ladder has now
+  produced one guess that was right (A) and one that was wrong (D), from the same reasoning, on
+  the same day's evidence.
 
   **What the Doubles A rung visibly decides.** `/Titles` projects a folder per reference grade
   by pricing fifty charts of that folder, so at the bottom reference grade the highest Doubles

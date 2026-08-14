@@ -20,12 +20,12 @@ namespace ScoreTracker.Tests.DomainTests;
 ///     same 0.000 a Double does, so the community table's −0.010 stays refuted while its other
 ///     two singles values are now pinned below.
 ///     <para>
-///         The grade ladder splits by chart type as well, and only its Singles half is fully
-///         measured. Every Singles rung SSS+ → D is a live row; on Doubles everything from AA
-///         up is, plus A and C, so only B and D there are interpolated and say so — in the table
-///         itself and in <see cref="InferredDoublesRungsBelowAAreGuessesOnAUniformStep" />,
-///         which exists to keep the guesses visible. F is not a rung at all: a passing F prices
-///         at zero, the same as a break.
+///         The grade ladder splits by chart type as well, and both halves are measured now but
+///         for a single cell. Every Singles rung SSS+ → D is a live row, and on Doubles so is
+///         every rung except B — which is interpolated and says so, in the table itself and in
+///         <see cref="DoublesBIsTheLastInferredRungAndSplitsTwoMeasuredNeighbours" />, which
+///         exists to keep the last guess visible. F is not a rung at all: a passing F prices at
+///         zero, the same as a break — so it is the one cell no reading can ever fill.
 ///     </para>
 /// </summary>
 public sealed class Phoenix2PumbilityScoringTests
@@ -142,6 +142,14 @@ public sealed class Phoenix2PumbilityScoringTests
     [InlineData(ChartType.Single, 15, PhoenixLetterGrade.C, PhoenixPlate.TalentedGame, 231.84)]
     [InlineData(ChartType.Single, 12, PhoenixLetterGrade.C, PhoenixPlate.TalentedGame, 215.28)]
     [InlineData(ChartType.Double, 12, PhoenixLetterGrade.C, PhoenixPlate.MarvelousGame, 229.14)]
+    // The bottom of the Doubles ladder, played deliberately to close it (2026-08-14) and read off
+    // the breakdown page as a PAIR on the same level and plate — so they differ by grade alone and
+    // the 18.00 between them is 0.10 of Base(10) whatever Marvelous Game is worth. The C confirms
+    // 1.20 a second time at a second level; the D measures 1.10 and refutes the 1.15 that had been
+    // extrapolated there. Together they are why the ladder is known NOT to be uniform at the
+    // bottom: every step above C is −0.05, and C → D is −0.10.
+    [InlineData(ChartType.Double, 10, PhoenixLetterGrade.C, PhoenixPlate.MarvelousGame, 217.08)]
+    [InlineData(ChartType.Double, 10, PhoenixLetterGrade.D, PhoenixPlate.MarvelousGame, 199.08)]
     public void MatchesRealPerChartPumbilityObservedOnTheLiveSite(ChartType type, int level,
         PhoenixLetterGrade grade, PhoenixPlate plate, double expected)
     {
@@ -153,7 +161,8 @@ public sealed class Phoenix2PumbilityScoringTests
     // level that gives them the SAME base — a Single prices one level up, so an S(L-1) and a
     // D(L) share a base and any difference left is the table's alone. Note the direction: a
     // Single pays MORE on the two split plates and LESS on all six split grades, and the grade
-    // gap widens the further down the ladder it goes.
+    // gap widens going down the ladder until it PLATEAUS at −0.10 across the bottom two rungs —
+    // it does not keep widening, which is what the D row read as while it was still extrapolated.
     [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.ExtremeGame, 0.002)]
     [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.UltimateGame, 0.001)]
     [InlineData(PhoenixLetterGrade.AA, PhoenixPlate.RoughGame, -0.01)]
@@ -161,7 +170,7 @@ public sealed class Phoenix2PumbilityScoringTests
     [InlineData(PhoenixLetterGrade.A, PhoenixPlate.RoughGame, -0.02)]
     [InlineData(PhoenixLetterGrade.B, PhoenixPlate.RoughGame, -0.05)]
     [InlineData(PhoenixLetterGrade.C, PhoenixPlate.RoughGame, -0.10)]
-    [InlineData(PhoenixLetterGrade.D, PhoenixPlate.RoughGame, -0.15)]
+    [InlineData(PhoenixLetterGrade.D, PhoenixPlate.RoughGame, -0.10)]
     public void SinglesAndDoublesPriceTheSplitCellsDifferently(PhoenixLetterGrade grade, PhoenixPlate plate,
         double expectedGapPerBasePoint)
     {
@@ -253,25 +262,26 @@ public sealed class Phoenix2PumbilityScoringTests
         Assert.Equal(0, result);
     }
 
-    [Theory]
-    [InlineData(PhoenixLetterGrade.B, 1.25)]
-    [InlineData(PhoenixLetterGrade.D, 1.15)]
-    public void InferredDoublesRungsBelowAAreGuessesOnAUniformStep(PhoenixLetterGrade grade,
-        double inferredMultiplier)
+    [Fact]
+    public void DoublesBIsTheLastInferredRungAndSplitsTwoMeasuredNeighbours()
     {
-        // NOT observations. No Double has ever been priced at either of these two grades, so they
-        // sit on the uniform −0.05 step running through the Double rungs that HAVE been read.
-        // A used to be a third entry here and is not one any more: five live rows priced it at
-        // exactly the 1.30 this step predicted, which is why B now interpolates BETWEEN two
-        // measurements (A 1.30 and C 1.20) instead of reaching down from A+, and why the step
-        // itself is corroborated rather than assumed. D is still an extrapolation below the
-        // lowest rung ever read, so it stays the weakest cell. Pinned so that replacing one with
-        // a real reading is a deliberate edit rather than a silent drift, and so that a future
-        // telemetry pass can see at a glance which cells still need a live row.
+        // The ONLY cell left in either table with no live row behind it. B is not an observation:
+        // it splits the −0.10 between A 1.30 and C 1.20, both of which are measured.
+        //
+        // Two other rungs stood here once and both were settled by play rather than by argument,
+        // in opposite directions — A landed on its guessed 1.30 exactly, and D did NOT, coming in
+        // at 1.10 against an extrapolated 1.15. That is precisely why this pins a value at all:
+        // the guesses are right often enough to look settled and wrong often enough to matter, so
+        // replacing one has to be a deliberate edit rather than a silent drift.
+        //
+        // What survives of the reasoning is that the two fits which disagree elsewhere agree
+        // here. Splitting the span evenly gives 1.25; dividing it in the 0.08 : 0.10 proportion
+        // the fully measured Singles ladder uses across the same two rungs gives 1.256.
         const int level = 20;
-        var expected = ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(level)) * inferredMultiplier;
+        var expected = ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(level)) * 1.25;
 
-        Assert.Equal(expected, Contribution(ChartType.Double, level, grade, PhoenixPlate.RoughGame), 2);
+        Assert.Equal(expected,
+            Contribution(ChartType.Double, level, PhoenixLetterGrade.B, PhoenixPlate.RoughGame), 2);
     }
 
     [Fact]
