@@ -39,7 +39,9 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             _dateTime = dateTime;
         }
 
-        private static string TourneyCacheKey = $@"{nameof(EFTournamentRepository)}_Tournies";
+        // Internal: EFMoMRepository busts the listing cache when the cycle creates or prunes
+        // a season.
+        internal static readonly string TourneyCacheKey = $@"{nameof(EFTournamentRepository)}_Tournies";
         private static string TourneyIdCacheKey(Guid id) => $@"{nameof(EFTournamentRepository)}_Tourney_{id}";
 
         /// <summary>
@@ -408,24 +410,6 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                         Session = session
                     };
                 }).ToArray();
-        }
-
-        public async Task CreateScoringLevelSnapshots(Guid tournamentId, IEnumerable<(Guid, double)> snapshots,
-            CancellationToken cancellationToken)
-        {
-            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            database.Set<TournamentChartLevelEntity>().RemoveRange(
-                await database.Set<TournamentChartLevelEntity>().Where(l => l.TournamentId == tournamentId)
-                    .ToArrayAsync(cancellationToken));
-
-            await database.Set<TournamentChartLevelEntity>().AddRangeAsync(snapshots.Select(s => new TournamentChartLevelEntity
-            {
-                Id = Guid.NewGuid(),
-                ChartId = s.Item1,
-                Level = s.Item2,
-                TournamentId = tournamentId
-            }), cancellationToken);
-            await database.SaveChangesAsync(cancellationToken);
         }
 
         private string SnapshotCacheKey(Guid tournamentId)

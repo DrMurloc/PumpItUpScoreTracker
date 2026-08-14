@@ -7,23 +7,26 @@ using MassTransit;
 using Moq;
 using ScoreTracker.EventCompetition.Application;
 using ScoreTracker.EventCompetition.Contracts.Messages;
+using ScoreTracker.EventCompetition.Domain;
 using ScoreTracker.SharedKernel.Enums;
-using ScoreTracker.Domain.Models;
-using ScoreTracker.SharedKernel.Models;
-using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
-using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
+/// <summary>
+///     The cycle is stateless against MoMSeason (D2): the only question either consumer asks
+///     is "does the quarter we are standing in have its season". History never enters into
+///     it, which is what makes the two runaway variants (the missing month-map arm and the
+///     late-cycle year drift) structurally impossible rather than merely fixed.
+/// </summary>
 public sealed class MarchOfMurlocsHandlerTests
 {
-    private static TournamentRecord MoM(DateTimeOffset? endDate, bool isHighlighted = true) =>
-        new(Guid.NewGuid(), Name.From("MoM"), 0, TournamentType.Stamina, "Online",
-            isHighlighted, null, null, endDate, IsMoM: true);
+    private static MoMSeason Season(int year, int quarter, DateTimeOffset endsAt) =>
+        new(Guid.NewGuid(), year, (byte)quarter, $"Season {year}/{quarter}",
+            endsAt.AddMonths(-3), endsAt, endsAt.AddMonths(-3));
 
     private static Mock<ConsumeContext<T>> ContextOf<T>(T message) where T : class
     {
@@ -33,96 +36,10 @@ public sealed class MarchOfMurlocsHandlerTests
         return ctx;
     }
 
-    [Fact]
-    public async Task TryScheduleCyclesImmediatelyWhenNoActiveMoMExists()
+    private static MarchOfMurlocsHandler Handler(Mock<IMoMRepository> mom, Mock<IBus> bus,
+        Mock<IMessageScheduler> scheduler, DateTimeOffset now)
     {
-        var tournaments = new Mock<ITournamentRepository>();
         var charts = new Mock<IChartRepository>();
-        var bus = new Mock<IBus>();
-        var scheduler = new Mock<IMessageScheduler>();
-        var dateTime = FakeDateTime.At(2026, 4, 1);
-
-        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<TournamentRecord>());
-
-        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
-
-        await handler.Consume(ContextOf(new TryScheduleMoMCommand()).Object);
-
-        bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
-            Times.Once);
-        scheduler.Verify(s => s.SchedulePublish(It.IsAny<DateTime>(),
-                It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Fact]
-    public async Task TryScheduleCyclesImmediatelyWhenActiveMoMHasAlreadyEnded()
-    {
-        var tournaments = new Mock<ITournamentRepository>();
-        var charts = new Mock<IChartRepository>();
-        var bus = new Mock<IBus>();
-        var scheduler = new Mock<IMessageScheduler>();
-        var now = new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero);
-        var dateTime = FakeDateTime.At(now);
-
-        var endedMoM = MoM(now - TimeSpan.FromDays(1));
-        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { endedMoM });
-
-        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
-
-        await handler.Consume(ContextOf(new TryScheduleMoMCommand()).Object);
-
-        bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task TrySchedulePostponesCycleUntilCurrentMoMEnds()
-    {
-        var tournaments = new Mock<ITournamentRepository>();
-        var charts = new Mock<IChartRepository>();
-        var bus = new Mock<IBus>();
-        var scheduler = new Mock<IMessageScheduler>();
-        var now = new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero);
-        var endDate = now + TimeSpan.FromDays(30);
-        var dateTime = FakeDateTime.At(now);
-
-        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { MoM(endDate) });
-
-        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
-
-        await handler.Consume(ContextOf(new TryScheduleMoMCommand()).Object);
-
-        bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-        scheduler.Verify(s => s.SchedulePublish(
-                (endDate + TimeSpan.FromMinutes(1)).DateTime,
-                It.IsAny<CycleMoMCommand>(),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task CycleCreatesSingleAndDoubleTournamentsAndUnhighlightsPreviousMoMs()
-    {
-        var tournaments = new Mock<ITournamentRepository>();
-        var charts = new Mock<IChartRepository>();
-        var bus = new Mock<IBus>();
-        var scheduler = new Mock<IMessageScheduler>();
-        // Previous MoM ended in March → new season is "Spring" with end in June.
-        var previousEnd = new DateTimeOffset(2026, 3, 31, 23, 59, 59, TimeSpan.FromHours(-5));
-        var now = new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero);
-        var dateTime = FakeDateTime.At(now);
-        var previousMoM = MoM(previousEnd);
-
-        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { previousMoM });
         charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -130,247 +47,203 @@ public sealed class MarchOfMurlocsHandlerTests
                 new ChartBuilder().WithLevel(20).WithType(ChartType.Double).Build(),
                 new ChartBuilder().WithLevel(20).WithType(ChartType.CoOp).Build()
             });
-
-        var savedConfigurations = new List<TournamentConfiguration>();
-        var savedRecords = new List<TournamentRecord>();
-        tournaments.Setup(t => t.CreateOrSaveTournament(It.IsAny<TournamentConfiguration>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<TournamentConfiguration, CancellationToken>((cfg, _) => savedConfigurations.Add(cfg))
-            .Returns(Task.CompletedTask);
-        tournaments.Setup(t => t.CreateOrSaveTournament(It.IsAny<TournamentRecord>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<TournamentRecord, CancellationToken>((rec, _) => savedRecords.Add(rec))
-            .Returns(Task.CompletedTask);
-
-        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
-
-        await handler.Consume(ContextOf(new CycleMoMCommand()).Object);
-
-        var newTournaments = savedConfigurations.Where(s => s.IsMom).ToArray();
-        Assert.Equal(2, newTournaments.Length);
-        Assert.Contains(newTournaments, t => ((string)t.Name).Contains("Spring") && ((string)t.Name).Contains("Singles"));
-        Assert.Contains(newTournaments, t => ((string)t.Name).Contains("Spring") && ((string)t.Name).Contains("Doubles"));
-        Assert.All(newTournaments, t => Assert.Equal(6, t.EndDate!.Value.Month));
-
-        tournaments.Verify(t => t.CreateScoringLevelSnapshots(It.IsAny<Guid>(),
-                It.IsAny<IEnumerable<(Guid, double)>>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(2));
-
-        Assert.Contains(savedRecords, r => r.Id == previousMoM.Id && !r.IsHighlighted);
+        var scoringLevels = new Mock<IChartScoringLevelRepository>();
+        scoringLevels.Setup(s => s.GetScoringLevels(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double>());
+        return new MarchOfMurlocsHandler(mom.Object, charts.Object, bus.Object, scheduler.Object,
+            FakeDateTime.At(now).Object, scoringLevels.Object);
     }
 
     [Fact]
-    public async Task TrySchedulePostponesCycleWhenLatestMoMIsActiveEvenIfExpiredOldMoMExists()
+    public async Task TryScheduleCyclesImmediatelyWhenTheCurrentQuarterHasNoSeason()
     {
-        // Regression: pre-fix, FirstOrDefault(IsMoM) could return an old expired MoM and trigger
-        // CycleMoMCommand on every tick — the runaway that filled the DB with garbage tournaments. The
-        // handler must now pick the latest MoM by EndDate.
-        var tournaments = new Mock<ITournamentRepository>();
-        var charts = new Mock<IChartRepository>();
+        var mom = new Mock<IMoMRepository>();
         var bus = new Mock<IBus>();
         var scheduler = new Mock<IMessageScheduler>();
-        var now = new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero);
-        var activeEnd = now + TimeSpan.FromDays(30);
-        var dateTime = FakeDateTime.At(now);
+        mom.Setup(m => m.GetSeason(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MoMSeason?)null);
 
-        var expiredOld = MoM(now - TimeSpan.FromDays(365));
-        var active = MoM(activeEnd);
-        // Return the expired one first so an unordered FirstOrDefault would pick it.
-        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { expiredOld, active });
+        var handler = Handler(mom, bus, scheduler, new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero));
+        await handler.Consume(ContextOf(new TryScheduleMoMCommand()).Object);
 
-        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
+        bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        scheduler.Verify(s => s.SchedulePublish(It.IsAny<DateTime>(),
+                It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        // April sits in Q2 — the lookup must be for the quarter we are standing in.
+        mom.Verify(m => m.GetSeason(2026, 2, It.IsAny<CancellationToken>()), Times.Once);
+    }
 
+    [Fact]
+    public async Task TrySchedulePostponesTheCycleUntilTheCurrentSeasonEnds()
+    {
+        var mom = new Mock<IMoMRepository>();
+        var bus = new Mock<IBus>();
+        var scheduler = new Mock<IMessageScheduler>();
+        var endsAt = new DateTimeOffset(2026, 6, 30, 23, 59, 59, TimeSpan.FromHours(-5));
+        mom.Setup(m => m.GetSeason(2026, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Season(2026, 2, endsAt));
+
+        var handler = Handler(mom, bus, scheduler, new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero));
         await handler.Consume(ContextOf(new TryScheduleMoMCommand()).Object);
 
         bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
         scheduler.Verify(s => s.SchedulePublish(
-                (activeEnd + TimeSpan.FromMinutes(1)).DateTime,
+                (endsAt + TimeSpan.FromMinutes(1)).DateTime,
                 It.IsAny<CycleMoMCommand>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task CycleDoesNothingWhenFutureDatedMoMAlreadyExists()
+    public async Task CycleDoesNothingWhenTheCurrentQuarterAlreadyHasItsSeason()
     {
-        // Idempotency: a duplicate CycleMoMCommand (e.g. from in-memory transport replay or a double
-        // publish) must not create another pair of tournaments when one is already active.
-        var tournaments = new Mock<ITournamentRepository>();
-        var charts = new Mock<IChartRepository>();
-        var bus = new Mock<IBus>();
-        var scheduler = new Mock<IMessageScheduler>();
+        // Idempotency for a duplicated CycleMoMCommand (in-memory transport replay, double
+        // publish); the filtered unique (Year, Quarter) index is the hard guarantee behind it.
+        var mom = new Mock<IMoMRepository>();
         var now = new DateTimeOffset(2026, 4, 1, 12, 0, 0, TimeSpan.Zero);
-        var dateTime = FakeDateTime.At(now);
-        var active = MoM(now + TimeSpan.FromDays(30));
+        mom.Setup(m => m.GetSeason(2026, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Season(2026, 2, new DateTimeOffset(2026, 6, 30, 23, 59, 59, TimeSpan.FromHours(-5))));
 
-        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { active });
-
-        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, dateTime.Object, EmptyScoringLevels().Object);
-
+        var handler = Handler(mom, new Mock<IBus>(), new Mock<IMessageScheduler>(), now);
         await handler.Consume(ContextOf(new CycleMoMCommand()).Object);
 
-        tournaments.Verify(t => t.CreateOrSaveTournament(It.IsAny<TournamentConfiguration>(),
-                It.IsAny<CancellationToken>()),
-            Times.Never);
-        tournaments.Verify(t => t.CreateScoringLevelSnapshots(It.IsAny<Guid>(),
-                It.IsAny<IEnumerable<(Guid, double)>>(), It.IsAny<CancellationToken>()),
-            Times.Never);
+        mom.Verify(m => m.CreateSeason(It.IsAny<MoMSeason>(), It.IsAny<IReadOnlyList<MoMBoardSeed>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        mom.Verify(m => m.PruneEndedEmptySeasons(It.IsAny<DateTimeOffset>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CycleCreatesTheCurrentQuarterSeasonWithAPhoenixBoardPerChartType()
+    {
+        var (season, boards) = await Cycle(new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero));
+
+        Assert.Equal("Summer 2026", season.Name);
+        Assert.Equal(2026, season.Year);
+        Assert.Equal((byte)3, season.Quarter);
+        Assert.Equal(new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.FromHours(-5)), season.EndsAt);
+
+        Assert.Equal(2, boards.Count);
+        Assert.All(boards, b => Assert.Equal(MixEnum.Phoenix, b.Mix));
+        var singles = Assert.Single(boards, b => b.ChartType == ChartType.Single);
+        Assert.Equal("March of Murlocs Summer 2026 - Singles", (string)singles.Configuration.Name);
+        var doubles = Assert.Single(boards, b => b.ChartType == ChartType.Double);
+        Assert.Equal("March of Murlocs Summer 2026 - Doubles", (string)doubles.Configuration.Name);
+        Assert.All(boards, b => Assert.True(b.Configuration.IsMom));
+        Assert.All(boards, b => Assert.False(b.Configuration.AllowRepeats));
+        Assert.All(boards, b => Assert.Equal(TimeSpan.FromMinutes(105), b.Configuration.MaxTime));
+        // The frozen config zeroes every other chart type (D15: a board is one type, always).
+        Assert.Equal(0, singles.Configuration.Scoring.ChartTypeModifiers[ChartType.Double]);
+        Assert.Equal(0, doubles.Configuration.Scoring.ChartTypeModifiers[ChartType.Single]);
+    }
+
+    [Fact]
+    public async Task CyclePrunesEndedEmptySeasonsWhenItCreatesTheNext()
+    {
+        var mom = new Mock<IMoMRepository>();
+        var now = new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero);
+        mom.Setup(m => m.GetSeason(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MoMSeason?)null);
+
+        var handler = Handler(mom, new Mock<IBus>(), new Mock<IMessageScheduler>(), now);
+        await handler.Consume(ContextOf(new CycleMoMCommand()).Object);
+
+        mom.Verify(m => m.PruneEndedEmptySeasons(now, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
-    ///     Every month maps to the end of the following quarter. Written as a theory over all
-    ///     twelve because the table this covers listed only eleven: month 6 was missing, fell
-    ///     through to the default, and produced a season that had already ended.
+    ///     Every month lands on its own quarter's season. The table this replaces listed
+    ///     eleven months and fell through for the twelfth; deriving from now cannot omit one.
     /// </summary>
     [Theory]
-    [InlineData(1, 3, 2026)]
-    [InlineData(2, 3, 2026)]
-    [InlineData(3, 6, 2026)]
-    [InlineData(4, 6, 2026)]
-    [InlineData(5, 6, 2026)]
-    [InlineData(6, 9, 2026)]
-    [InlineData(7, 9, 2026)]
-    [InlineData(8, 9, 2026)]
-    [InlineData(9, 12, 2026)]
-    [InlineData(10, 12, 2026)]
-    [InlineData(11, 12, 2026)]
-    [InlineData(12, 3, 2027)]
-    public async Task CycleEndsEverySeasonAtTheNextQuarter(int previousEndMonth, int expectedMonth,
-        int expectedYear)
+    [InlineData(1, 1, "Winter", 3)]
+    [InlineData(2, 1, "Winter", 3)]
+    [InlineData(3, 1, "Winter", 3)]
+    [InlineData(4, 2, "Spring", 6)]
+    [InlineData(5, 2, "Spring", 6)]
+    [InlineData(6, 2, "Spring", 6)]
+    [InlineData(7, 3, "Summer", 9)]
+    [InlineData(8, 3, "Summer", 9)]
+    [InlineData(9, 3, "Summer", 9)]
+    [InlineData(10, 4, "Fall", 12)]
+    [InlineData(11, 4, "Fall", 12)]
+    [InlineData(12, 4, "Fall", 12)]
+    public async Task CycleCreatesTheSeasonOfTheQuarterItRunsIn(int month, int expectedQuarter,
+        string expectedName, int expectedEndMonth)
     {
-        var previousEnd = new DateTimeOffset(2026, previousEndMonth,
-            DateTime.DaysInMonth(2026, previousEndMonth), 23, 59, 59, TimeSpan.FromHours(-5));
-        var created = await Cycle(previousEnd, previousEnd + TimeSpan.FromDays(1));
+        var (season, _) = await Cycle(new DateTimeOffset(2026, month, 2, 11, 0, 0, TimeSpan.Zero));
 
-        Assert.Equal(2, created.Length);
-        Assert.All(created, t => Assert.Equal(expectedMonth, t.EndDate!.Value.Month));
-        Assert.All(created, t => Assert.Equal(expectedYear, t.EndDate!.Value.Year));
-    }
-
-    [Fact]
-    public async Task CycleFollowsAJuneSeasonWithSeptemberNotTheMarchThatAlreadyPassed()
-    {
-        // The production incident, with its real dates: Spring 2026 ended 2026-06-30 and every
-        // daily tick from 2026-07-01 created a pair of seasons dated to end 2026-03-31. Because
-        // those were already past, the next tick saw no future-dated MoM and did it again.
-        var springEnd = new DateTimeOffset(2026, 6, 30, 23, 59, 59, TimeSpan.FromHours(-5));
-        var created = await Cycle(springEnd, new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero));
-
-        Assert.All(created, t => Assert.Equal(new DateTimeOffset(2026, 9, 30, 23, 59, 59,
-            TimeSpan.FromHours(-5)), t.EndDate));
-        Assert.All(created, t => Assert.Contains("Summer 2026", (string)t.Name));
-    }
-
-    [Fact]
-    public async Task CycleHighlightsTheSeasonsItCreates()
-    {
-        // The shell's Compete menu renders HighlightedEvents, so an unhighlighted season is one
-        // no player can navigate to. Every MoM row in production carried IsHighlighted = 0.
-        var springEnd = new DateTimeOffset(2026, 6, 30, 23, 59, 59, TimeSpan.FromHours(-5));
-        var created = await Cycle(springEnd, new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero));
-
-        Assert.Equal(2, created.Length);
-        Assert.All(created, t => Assert.True(t.IsHighlighted));
-    }
-
-    [Fact]
-    public async Task CycleCatchesUpToTheCurrentQuarterAfterMissingSeveral()
-    {
-        // Five quarters behind: the quarter following the last season (June 2025) has itself long
-        // since ended, and creating it would leave no future-dated MoM for TryScheduleMoM to wait
-        // on — which is the loop. It must land on the quarter we are actually in.
-        var lastSeason = new DateTimeOffset(2025, 3, 31, 23, 59, 59, TimeSpan.FromHours(-5));
-        var now = new DateTimeOffset(2026, 8, 9, 11, 0, 0, TimeSpan.Zero);
-
-        var created = await Cycle(lastSeason, now);
-
-        Assert.Equal(2, created.Length);
-        Assert.All(created, t => Assert.Equal(new DateTimeOffset(2026, 9, 30, 23, 59, 59,
-            TimeSpan.FromHours(-5)), t.EndDate));
-        Assert.All(created, t => Assert.Contains("Summer 2026", (string)t.Name));
+        Assert.Equal((byte)expectedQuarter, season.Quarter);
+        Assert.Equal($"{expectedName} 2026", season.Name);
+        Assert.Equal(expectedEndMonth, season.EndsAt.Month);
+        Assert.Equal(2026, season.EndsAt.Year);
     }
 
     [Fact]
     public async Task CycleNeverCreatesASeasonThatHasAlreadyEnded()
     {
-        // The invariant the runaway violated, stated directly. Every season the consumer can be
-        // asked to create, from any starting point, must end ahead of now.
-        var now = new DateTimeOffset(2026, 8, 9, 11, 0, 0, TimeSpan.Zero);
-
-        foreach (var monthsBehind in new[] { 1, 2, 3, 6, 9, 12, 18, 24, 40 })
+        // The invariant the runaway violated, stated directly: whenever the cycle runs, the
+        // season it creates ends ahead of now — there is no history to fall behind.
+        foreach (var now in new[]
+                 {
+                     new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                     new DateTimeOffset(2026, 6, 30, 23, 0, 0, TimeSpan.Zero),
+                     new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero),
+                     new DateTimeOffset(2027, 12, 31, 12, 0, 0, TimeSpan.Zero)
+                 })
         {
-            var lastSeason = now.AddMonths(-monthsBehind);
-            var created = await Cycle(lastSeason, now);
-
-            Assert.NotEmpty(created);
-            Assert.All(created, t => Assert.True(t.EndDate > now,
-                $"{monthsBehind} months behind produced a season ending {t.EndDate}"));
+            var (season, _) = await Cycle(now);
+            Assert.True(season.EndsAt > now,
+                $"cycling at {now} produced a season ending {season.EndsAt}");
         }
     }
 
     [Fact]
-    public async Task CycleRollsTheYearWhenAFallSeasonIsFollowedByWinter()
+    public async Task CycleUsesTheSeasonClockNotUtcAtTheYearBoundary()
     {
-        // December is followed by March in the NEXT year. Reading the year off today's date
-        // instead of off the previous season is the other half of how a past-dated season
-        // got created.
-        var fallEnd = new DateTimeOffset(2026, 12, 31, 23, 59, 59, TimeSpan.FromHours(-5));
-        var created = await Cycle(fallEnd, new DateTimeOffset(2027, 1, 1, 11, 0, 0, TimeSpan.Zero));
+        // Midnight UTC on January 1st is still December 31st evening in UTC-5: the cycle must
+        // finish out Fall 2026, not skip ahead to Winter 2027 while the season has hours left.
+        var (season, _) = await Cycle(new DateTimeOffset(2027, 1, 1, 2, 0, 0, TimeSpan.Zero));
 
-        Assert.All(created, t => Assert.Equal(new DateTimeOffset(2027, 3, 31, 23, 59, 59,
-            TimeSpan.FromHours(-5)), t.EndDate));
-        Assert.All(created, t => Assert.Contains("Winter 2027", (string)t.Name));
+        Assert.Equal("Fall 2026", season.Name);
+        Assert.Equal(new DateTimeOffset(2026, 12, 31, 23, 59, 59, TimeSpan.FromHours(-5)), season.EndsAt);
     }
 
-    /// <summary>
-    ///     Runs one CycleMoMCommand against a single previous MoM and returns the tournaments it
-    ///     created.
-    /// </summary>
-    private static async Task<TournamentConfiguration[]> Cycle(DateTimeOffset previousEnd,
+    [Fact]
+    public async Task CycleRollsIntoWinterOnceTheNewYearStartsOnTheSeasonClock()
+    {
+        var (season, _) = await Cycle(new DateTimeOffset(2027, 1, 1, 11, 0, 0, TimeSpan.Zero));
+
+        Assert.Equal("Winter 2027", season.Name);
+        Assert.Equal(new DateTimeOffset(2027, 3, 31, 23, 59, 59, TimeSpan.FromHours(-5)), season.EndsAt);
+    }
+
+    /// <summary>Runs one CycleMoMCommand with no existing season and returns what it created.</summary>
+    private static async Task<(MoMSeason Season, IReadOnlyList<MoMBoardSeed> Boards)> Cycle(
         DateTimeOffset now)
     {
-        var tournaments = new Mock<ITournamentRepository>();
-        var charts = new Mock<IChartRepository>();
-        var bus = new Mock<IBus>();
-        var scheduler = new Mock<IMessageScheduler>();
-
-        tournaments.Setup(t => t.GetAllTournaments(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { MoM(previousEnd) });
-        charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
+        var mom = new Mock<IMoMRepository>();
+        mom.Setup(m => m.GetSeason(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MoMSeason?)null);
+        MoMSeason? season = null;
+        IReadOnlyList<MoMBoardSeed>? boards = null;
+        mom.Setup(m => m.CreateSeason(It.IsAny<MoMSeason>(), It.IsAny<IReadOnlyList<MoMBoardSeed>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MoMSeason, IReadOnlyList<MoMBoardSeed>, CancellationToken>((s, b, _) =>
             {
-                new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build(),
-                new ChartBuilder().WithLevel(20).WithType(ChartType.Double).Build()
-            });
-
-        var saved = new List<TournamentConfiguration>();
-        tournaments.Setup(t => t.CreateOrSaveTournament(It.IsAny<TournamentConfiguration>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<TournamentConfiguration, CancellationToken>((cfg, _) => saved.Add(cfg))
-            .Returns(Task.CompletedTask);
-        tournaments.Setup(t => t.CreateOrSaveTournament(It.IsAny<TournamentRecord>(),
-                It.IsAny<CancellationToken>()))
+                season = s;
+                boards = b;
+            })
             .Returns(Task.CompletedTask);
 
-        var handler = new MarchOfMurlocsHandler(tournaments.Object, charts.Object, bus.Object,
-            scheduler.Object, FakeDateTime.At(now).Object, EmptyScoringLevels().Object);
-
+        var handler = Handler(mom, new Mock<IBus>(), new Mock<IMessageScheduler>(), now);
         await handler.Consume(ContextOf(new CycleMoMCommand()).Object);
 
-        return saved.Where(s => s.IsMom).ToArray();
-    }
-
-    private static Mock<IChartScoringLevelRepository> EmptyScoringLevels()
-    {
-        var scoringLevels = new Mock<IChartScoringLevelRepository>();
-        scoringLevels.Setup(s => s.GetScoringLevels(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, double>());
-        return scoringLevels;
+        Assert.NotNull(season);
+        Assert.NotNull(boards);
+        return (season!, boards!);
     }
 }
