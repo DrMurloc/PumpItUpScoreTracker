@@ -18,6 +18,13 @@ starter trio).**
   range (typical post-P2-switch), render left-edge ghost ticks at Phoenix's final Singles/Doubles values
   with a small "Phoenix: S 20.4 · D 21.1" label — the regrind's reference line. Values are just the last
   records of the Phoenix history call; no new query.
+- **Validity floor (owner, 2026-08-14)**: a competitive level at or below **5** is not a real reading —
+  ≤1 is the calculator's no-data floor, and a never-played pool otherwise plots a flatline that pins the
+  y-axis near 0 and flattens every real series (field report: a no-doubles player's graph read as "no
+  change", and the zero-slope dashed era lines read as dots). Each series drops points ≤5 before
+  rendering; a series with **no surviving points is omitted entirely**, including its "where you left
+  off" ghost marker. A literal ≥20-charts-played series gate was considered and deferred; per-date
+  historical gating was rejected (needs a journal-reconstruction backfill, not worth it).
 - **Config v1**: mixes (multi-select: Phoenix / Phoenix 2; default = current mix); range
   (3/6/12 months/all — default 6); series toggles (Singles / Doubles, both on).
 - **Sizes**: 2×1 (default), 2×2. No 1×1 — line charts need width; per-widget `SupportedSizes` exists
