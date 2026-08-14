@@ -167,30 +167,6 @@ else
             <MudButton Class="tier-compact-only tier-advanced-btn" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
                        StartIcon="@Icons.Material.Filled.Tune" OnClick="() => _advancedOpen = true">@L["Advanced"]</MudButton>
         </div>
-        <div class="tier-toolbar-row tier-desktop-only">
-            <MudSpacer></MudSpacer>
-            @if (CurrentUser.IsLoggedIn)
-            {
-                @* Piucenter round 6: on desktop the Folder Stats trigger rides the
-                   toolbar next to Download, decluttering the row around the sections. *@
-                <MudButton Color="Color.Primary" Variant="Variant.Outlined"
-                           StartIcon="@Icons.Material.Filled.QueryStats"
-                           OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
-            }
-            <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
-                       StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
-                       Disabled="_isBuildingImage || _isLoading">
-                @if (_isBuildingImage)
-                {
-                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
-                    @L["Generating"]
-                }
-                else
-                {
-                    @L["Download"]
-                }
-            </MudButton>
-        </div>
     </div>
     @* The badges row always names the active lens (and the grouping, on My Progress)
        so a glance tells you what tier list you're looking at — the selects themselves
@@ -363,10 +339,11 @@ else
     <div class="tier-content-bar">
         @if (CurrentUser.IsLoggedIn)
         {
-            @* Round 9: on compact, Folder Stats takes the Ranked-by slot; on desktop
-               it rides the toolbar next to Download (piucenter round 6). *@
-            <MudButton Class="tier-compact-only" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
-                       StartIcon="@Icons.Material.Filled.QueryStats" OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
+            @* One home at every width; the name rides the tooltip and aria-label. *@
+            <MudTooltip Text="@L["Folder Stats"]">
+                <MudIconButton Icon="@Icons.Material.Filled.QueryStats" Color="Color.Primary" Variant="Variant.Outlined"
+                               OnClick="() => _statsOpen = true" aria-label="@L["Folder Stats"]"></MudIconButton>
+            </MudTooltip>
         }
         <div class="tier-flat tier-desktop-only">
             @lensControls
@@ -403,6 +380,17 @@ else
                                OnClick="() => _filtersOpen = true" aria-label="@L["Filters and Columns"]"></MudIconButton>
             </MudBadge>
         </MudTooltip>
+        @if (_isBuildingImage)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small"></MudProgressCircular>
+        }
+        else
+        {
+            <MudTooltip Text="@L["Download"]">
+                <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" Variant="Variant.Outlined"
+                               OnClick="DownloadImage" Disabled="_isLoading" aria-label="@L["Download"]"></MudIconButton>
+            </MudTooltip>
+        }
     </div>
     @* Active-filter chips: labeled so it's obvious what the chips are (round 6). *@
     @if (HasActiveFilters)
@@ -801,12 +789,6 @@ else
             gap: 8px;
         }
 
-        /* The desktop-only second row (Personalized + Download) hides wholesale —
-           the Advanced drawer carries both on compact. Two classes beat the
-           display:flex row rule above. */
-        .tier-toolbar-row.tier-desktop-only {
-            display: none;
-        }
     }
 
     /* Round 9: under 600px the Advanced button slots between the folder and the view
