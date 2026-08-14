@@ -220,6 +220,31 @@ public sealed class TitleDetailDrawerTests : ComponentTestBase
     }
 
     [Fact]
+    public void AGemRungsProgressBarWearsTheRungsItClimbsThrough()
+    {
+        // The DIAMOND bar spans 16,000 → 17,000 — PLATINUM's four interior levels tick it.
+        var drawer = OpenWithHolders("[P.B] DIAMOND", new TitleHoldersRecord(Array.Empty<TitleHolder>(), 0));
+
+        Assert.Equal(4, drawer.FindAll(".title-bar .pmb-lvl-tick").Count);
+    }
+
+    [Fact]
+    public void TheFirstRungsBarStaysBareBecauseNothingSitsBelowBronze()
+    {
+        var drawer = OpenWithHolders("[P.B] BRONZE", new TitleHoldersRecord(Array.Empty<TitleHolder>(), 0));
+
+        Assert.Empty(drawer.FindAll(".title-bar .pmb-lvl-tick"));
+    }
+
+    [Fact]
+    public void ALadderTitlesBarStaysBareOnThePerTypePools()
+    {
+        var drawer = OpenWithHolders("[S] ADVANCED LV.1", new TitleHoldersRecord(Array.Empty<TitleHolder>(), 0));
+
+        Assert.Empty(drawer.FindAll(".title-bar .pmb-lvl-tick"));
+    }
+
+    [Fact]
     public void ANonGemTitleKeepsItsFlatHolderList()
     {
         var drawer = OpenWithHolders("[S] ADVANCED LV.1", new TitleHoldersRecord(new[]

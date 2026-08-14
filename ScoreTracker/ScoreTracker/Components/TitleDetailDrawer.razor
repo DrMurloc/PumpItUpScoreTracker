@@ -41,6 +41,15 @@
                         <p class="title-label">@L["Your progress"]</p>
                         <div class="title-bar @(Rung.State == RungState.Earned ? "done" : "")">
                             <i style="width:@Percent"></i>
+                            @* A gem title's bar spans one gem (LinkLadder floors it at the rung
+                               below), so it wears that gem's level rungs — the ones being climbed
+                               through on the way to the title (docs/design/pumbility-levels.md §8). *@
+                            @if (IsGemRung)
+                            {
+                                <PumbilityLevelTicks Floor="Rung.Title.CompletionFloor"
+                                                     Ceiling="Rung.Title.CompletionRequired"
+                                                     Pool="Rung.Progress.CompletionCount"></PumbilityLevelTicks>
+                            }
                         </div>
                         <div class="title-figures">
                             <span>@FloorText</span>
