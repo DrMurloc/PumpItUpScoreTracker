@@ -172,7 +172,9 @@ else
             }
             : null;
         _options.Yaxis = new List<YAxis> { new() { DecimalsInFloat = 2 } };
-        _options.Annotations = annotations.Any() ? new Annotations { Yaxis = annotations } : null;
+        // Unconditional: an empty yaxis list draws nothing, same as null — and the list is
+        // filled inside AddType, which static flow analysis can't see through the closure.
+        _options.Annotations = new Annotations { Yaxis = annotations };
         _renderKey = signature;
         _loaded = true;
     }
