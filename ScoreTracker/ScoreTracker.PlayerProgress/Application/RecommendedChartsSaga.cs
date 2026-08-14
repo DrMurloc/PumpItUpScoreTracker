@@ -471,8 +471,11 @@ namespace ScoreTracker.PlayerProgress.Application
                 .Where(kv => window == null || window(charts[kv.Key]))
                 .OrderByDescending(kv => kv.Value)
                 .Take(12)
+                // Truncated, never rounded up — a gain is never overstated (the PUMBILITY
+                // precision rule): 36.7 stamps as +36.
                 .Select(kv => new ChartRecommendation(RecommendationCategories.PushPumbility, kv.Key,
-                    "The biggest Pumbility gains available to you right now", "+" + kv.Value.ToString("N0")));
+                    "The biggest Pumbility gains available to you right now",
+                    "+" + Math.Floor(kv.Value).ToString("N0")));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetSkillTitleCharts(MixEnum mix,

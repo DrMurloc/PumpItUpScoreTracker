@@ -321,6 +321,22 @@ public sealed class RecommendedChartsSagaTests
     }
 
     [Fact]
+    public async Task PumbilityPushTruncatesTheStampedGainSoItIsNeverOverstated()
+    {
+        // The PUMBILITY precision rule: a gain truncates — 36.7 stamps +36, never +37.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(chart)
+            .WithPumbilityGains((chart.Id, 36.7));
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: new HashSet<RecommendationCategory> { RecommendationCategory.PushPumbility }),
+            CancellationToken.None)).ToArray();
+
+        Assert.Equal("+36", Assert.Single(result).ChartDetails);
+    }
+
+    [Fact]
     public async Task PumbilityPushExcludesHiddenChartsAndNonPositiveGains()
     {
         var gainer = new ChartBuilder().WithType(ChartType.Single).WithLevel(21).Build();
