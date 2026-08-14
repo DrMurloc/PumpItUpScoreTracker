@@ -500,18 +500,24 @@ namespace ScoreTracker.SharedKernel.Models
             // out to have been a doubles observation rather than stale tuning.
             config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
             config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
-            // INFERRED, not observed. Exactly one Double rung below A+ has ever been priced —
-            // C, three steps down — so these two fill the gap at the uniform −0.05 step, which
-            // is the only even spacing that lands on that reading. A live Double row at either
-            // grade replaces the value outright: they are placeholders that happen to be
-            // self-consistent, not measurements.
+            // MEASURED. Five import-telemetry rows, at four levels and on three plates, every one
+            // of them implying this value and no other: a D24 MG at 326.50 = Base(24) 250 × 1.306,
+            // a D25 RG at 338.00 = 260 × 1.300, a D26 FG at 351.54 = 270 × 1.302 and a D27 FG at
+            // 364.56 = 280 × 1.302. It was interpolated before those rows arrived and they landed
+            // exactly on the guess, which is why the step below is now anchored at both ends.
             config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.30;
+            // INFERRED, not observed — no Double has ever been priced at B. It splits the two
+            // rungs either side of it, A 1.30 and C 1.20, on the uniform −0.05 step they imply;
+            // both of those are live reads now, so this interpolates between measurements rather
+            // than reaching down from A+. A live Double row replaces it outright.
             config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.25;
             // OBSERVED, one row: a D12 MG C at 229.14 = Base(12) 190 × (1.20 + 0.006). Solving
             // the row the other way round demands a 0.106 plate bonus, which nothing on either
             // plate table comes near, so the grade is what this row measures.
             config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.20;
-            // INFERRED on the same −0.05 step as A and B above.
+            // INFERRED on the same −0.05 step, and the weakest cell in this table: B at least
+            // sits between two measured rungs, where this extrapolates one step BELOW the lowest
+            // Double ever priced.
             config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.15;
             // An F contributes NOTHING on either type — an exclusion like the sub-10 rule and
             // the stage break, not the bottom rung of the ladder. The zero keeps this table

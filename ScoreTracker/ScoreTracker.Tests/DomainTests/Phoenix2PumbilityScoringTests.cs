@@ -21,9 +21,9 @@ namespace ScoreTracker.Tests.DomainTests;
 ///     two singles values are now pinned below.
 ///     <para>
 ///         The grade ladder splits by chart type as well, and only its Singles half is fully
-///         measured. Every Singles rung SSS+ → D is a live row; on Doubles only AA+ and above,
-///         AA, A+ and C are, so A, B and D there are interpolated and say so — in the table
-///         itself and in <see cref="InferredDoublesRungsBelowAPlusAreGuessesOnAUniformStep" />,
+///         measured. Every Singles rung SSS+ → D is a live row; on Doubles everything from AA
+///         up is, plus A and C, so only B and D there are interpolated and say so — in the table
+///         itself and in <see cref="InferredDoublesRungsBelowAAreGuessesOnAUniformStep" />,
 ///         which exists to keep the guesses visible. F is not a rung at all: a passing F prices
 ///         at zero, the same as a break.
 ///     </para>
@@ -120,9 +120,17 @@ public sealed class Phoenix2PumbilityScoringTests
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.SS, PhoenixPlate.MarvelousGame, 383.76)]
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.SSPlus, PhoenixPlate.MarvelousGame, 386.36)]
     // The sub-AAA rungs, all live per-chart reads from production pools. A+ on a Double is 1.35
-    // against the 1.33 a Single reads. Everything below A+ here is a SINGLE, which is the whole
-    // problem with the doubles half of that ladder — see InferredDoublesRungs... below.
+    // against the 1.33 a Single reads.
     [InlineData(ChartType.Double, 25, PhoenixLetterGrade.APlus, PhoenixPlate.FairGame, 351.52)]
+    // A on a Double is 1.30 against the 1.28 a Single reads — five import-telemetry rows across
+    // four levels and three plates, none implying anything else. The grade was interpolated
+    // until these arrived and they landed on the guess exactly. The top two also pin the base
+    // curve's post-24 kink at 26 and 27: Base(26) = 270 and Base(27) = 280, one +5 step each.
+    // Nothing has ever been priced above 27, so Base(28) and Base(29) remain extrapolation.
+    [InlineData(ChartType.Double, 24, PhoenixLetterGrade.A, PhoenixPlate.MarvelousGame, 326.50)]
+    [InlineData(ChartType.Double, 25, PhoenixLetterGrade.A, PhoenixPlate.RoughGame, 338.00)]
+    [InlineData(ChartType.Double, 26, PhoenixLetterGrade.A, PhoenixPlate.FairGame, 351.54)]
+    [InlineData(ChartType.Double, 27, PhoenixLetterGrade.A, PhoenixPlate.FairGame, 364.56)]
     [InlineData(ChartType.Single, 18, PhoenixLetterGrade.B, PhoenixPlate.FairGame, 270.45)]
     [InlineData(ChartType.Single, 18, PhoenixLetterGrade.B, PhoenixPlate.RoughGame, 270.00)]
     [InlineData(ChartType.Single, 15, PhoenixLetterGrade.D, PhoenixPlate.MarvelousGame, 211.26)]
@@ -246,16 +254,19 @@ public sealed class Phoenix2PumbilityScoringTests
     }
 
     [Theory]
-    [InlineData(PhoenixLetterGrade.A, 1.30)]
     [InlineData(PhoenixLetterGrade.B, 1.25)]
     [InlineData(PhoenixLetterGrade.D, 1.15)]
-    public void InferredDoublesRungsBelowAPlusAreGuessesOnAUniformStep(PhoenixLetterGrade grade,
+    public void InferredDoublesRungsBelowAAreGuessesOnAUniformStep(PhoenixLetterGrade grade,
         double inferredMultiplier)
     {
-        // NOT observations. No Double has ever been priced at any of these three grades, so they
-        // interpolate the two Double rungs that HAVE been read — A+ at 1.35 and C at 1.20 — on
-        // the uniform −0.05 step those two imply. Pinned so that replacing one with a real
-        // reading is a deliberate edit rather than a silent drift, and so that a future
+        // NOT observations. No Double has ever been priced at either of these two grades, so they
+        // sit on the uniform −0.05 step running through the Double rungs that HAVE been read.
+        // A used to be a third entry here and is not one any more: five live rows priced it at
+        // exactly the 1.30 this step predicted, which is why B now interpolates BETWEEN two
+        // measurements (A 1.30 and C 1.20) instead of reaching down from A+, and why the step
+        // itself is corroborated rather than assumed. D is still an extrapolation below the
+        // lowest rung ever read, so it stays the weakest cell. Pinned so that replacing one with
+        // a real reading is a deliberate edit rather than a silent drift, and so that a future
         // telemetry pass can see at a glance which cells still need a live row.
         const int level = 20;
         var expected = ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(level)) * inferredMultiplier;
