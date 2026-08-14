@@ -94,7 +94,7 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
     }
 
     private IRenderedComponent<SuggestedChartsWidget> Render(SuggestedChartsConfig? config = null,
-        WidgetHeaderSlot? headerSlot = null)
+        WidgetHeaderSlot? headerSlot = null, MixEnum mix = MixEnum.Phoenix)
     {
         config ??= new SuggestedChartsConfig { Goal = SuggestedGoal.HotStreak };
         var widget = new HomePageWidgetRecord(Guid.NewGuid(), "suggested-charts", null, 0, "1x2",
@@ -105,7 +105,7 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
             builder.CloseComponent();
             builder.OpenComponent<SuggestedChartsWidget>(1);
             builder.AddAttribute(2, nameof(SuggestedChartsWidget.Widget), widget);
-            builder.AddAttribute(3, nameof(SuggestedChartsWidget.EffectiveMix), MixEnum.Phoenix);
+            builder.AddAttribute(3, nameof(SuggestedChartsWidget.EffectiveMix), mix);
             builder.CloseComponent();
         };
         return base.Render(builder =>
@@ -127,6 +127,31 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
     private ChartRecommendation HotStreakRec(Guid chartId, double? ranking = 0.94, bool fallback = false) =>
         new(RecommendationCategories.HotStreak, chartId, "More charts like your recent standout plays",
             SeedChartId: _seed.Id, SeedPeerRanking: ranking, SeedIsFallback: fallback);
+
+    [Fact]
+    public void TitleHuntFallsBackToPumbilityPushOnPhoenix2()
+    {
+        // P2 has no difficulty or skill titles, so the goal's own categories are structurally
+        // empty there — the widget asks for the Pumbility Push bundle instead, silently
+        // (owner, 2026-08-14: no explainer glyph; a P2 "next title" IS a pumbility threshold).
+        Render(new SuggestedChartsConfig { Goal = SuggestedGoal.TitleHunt }, mix: MixEnum.Phoenix2);
+
+        _mediator.Verify(m => m.Send(It.Is<GetRecommendedChartsQuery>(q =>
+                q.Mix == MixEnum.Phoenix2 && q.Categories != null && q.Categories.Count == 1
+                && q.Categories.Contains(RecommendationCategory.PushPumbility)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void TitleHuntKeepsItsTitleCategoriesOnPhoenix()
+    {
+        Render(new SuggestedChartsConfig { Goal = SuggestedGoal.TitleHunt });
+
+        _mediator.Verify(m => m.Send(It.Is<GetRecommendedChartsQuery>(q =>
+                q.Categories != null && q.Categories.Contains(RecommendationCategory.PushLevel)
+                && q.Categories.Contains(RecommendationCategory.SkillTitles)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 
     [Fact]
     public void GroupedModeCaptionsTheSeedEvenForASingleSectionWithThePeersBarInTheTooltip()
