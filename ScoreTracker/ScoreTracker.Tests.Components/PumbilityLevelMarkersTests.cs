@@ -117,6 +117,24 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     }
 
     [Fact]
+    public void OnlyTheGemSessionBarWearsTicks()
+    {
+        // The [P.B] bar resolves its one-gem span from the title's name — the model carries only
+        // the name — while the [S] bar resolves to nothing and renders exactly as today.
+        var cut = RenderComponent<SessionTitleBars>(p => p.Add(x => x.Bars, new[]
+        {
+            new SessionTitleBarModel("Pumbility", "[P.B] DIAMOND", 0.40, 0.45, 16_450, 17_000),
+            new SessionTitleBarModel("Singles", "[S] EXPERT LV.2", 0.03, 0.07, 17_507, 17_700)
+        }));
+
+        var ticks = cut.FindAll(".sbd-track .pmb-lvl-tick");
+        Assert.Equal(4, ticks.Count);
+        // 16,450 stands on PLATINUM LV.3 — the brightened tick inside the DIAMOND climb.
+        Assert.Contains("cur", Assert.Single(ticks, t => (t.GetAttribute("title") ?? "").StartsWith("PLATINUM LV.3"))
+            .GetAttribute("class"));
+    }
+
+    [Fact]
     public void OnlyTheTotalRailWearsTicks()
     {
         // The Singles rail is real and mid-climb, and stays bare: the per-type ladders have no
