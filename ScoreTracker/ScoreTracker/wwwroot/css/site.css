@@ -3759,10 +3759,12 @@ html.sheet-open .more-sheet-scrim {
     gap: 16px;
 }
 
-/* The P2 level gem beside the total — a fixed square so a slow image load
-   never reflows the hero. */
+/* The P2 level gem beside the total — a fixed square so a slow image load never
+   reflows the hero. The negative margin eats the hero gap plus the art's own
+   transparent frame, so gem and number read as one unit (owner, field test). */
 .dash-acct-hero .pumbility-level-badge {
     flex: none;
+    margin-right: -8px;
 }
 
 .dash-acct-total {
