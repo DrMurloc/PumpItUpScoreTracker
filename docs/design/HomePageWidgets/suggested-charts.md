@@ -21,10 +21,13 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
   the same emptiness condition the engine's PushLevel checks — not the "Difficulty" *category*, which
   in P2 names its pumbility titles), so it self-heals if P2 ever ships difficulty titles ·
   *Score Push* = PushPGs + ImproveTop50 + RevisitOldScores · *Fill Gaps* = FillScores · *Pumbility
-  Push* = PushPumbility (PR #149: the gain-ranked projected targets that moved off the Account Stats
-  widget — `ProjectPumbilityGainsQuery`, biggest overall-rating gain first, stamps "+N", **truncated,
-  never rounded up** — a 36.7 gain prints +36 (owner, 2026-08-14; gains never overstate, the
-  PUMBILITY-precision rule); distinct from the random ImproveTop50, and has its own drawer preset) · *Hot Streak* = HotStreak (the
+  Push* = PushPumbility (PR #149: the projected targets that moved off the Account Stats widget —
+  `ProjectPumbilityGainsQuery`; since 2026-08-14 the shown dozen **samples from the top-50 gains**
+  and re-ranks the hand best-first (owner: a fresh hand each load, which is also what makes the
+  header shuffle honest on this goal; the /Pumbility page reads the projection directly and stays
+  fully ranked), stamps "+N" **truncated, never rounded up** — a 36.7 gain prints +36 (gains never
+  overstate, the PUMBILITY-precision rule); distinct from the random ImproveTop50, and has its own
+  drawer preset) · *Hot Streak* = HotStreak (the
   seed-and-expand goal, spec in §Hot Streak below — the one category that never runs for
   null-Categories callers, and the one whose sections group by seed rather than by category). The
   Weekly category is dropped from the widget — the Weekly widget owns that board. Defaults per
@@ -55,8 +58,12 @@ re-roll in the body meta row. The page's vestigial `LevelOffset` UI is supersede
   a phone). The veto path above is untouched. `ChartClickContext` still carries the category —
   it is part of the render contract — but nothing reads it now.
 - **Shell extensions this widget introduced**: `WidgetDescriptor.DrawerPresets` (one add-drawer card
-  per pre-filled config, D10) and `ChartClickContext` (the OnChartClick payload — chart + optional
-  suggestion category; all widgets raise it).
+  per pre-filled config, D10), `ChartClickContext` (the OnChartClick payload — chart + optional
+  suggestion category; all widgets raise it), and `WidgetDescriptor.ShowRefresh` (2026-08-14): a
+  config-aware predicate the host consults before rendering the refresh action — **Hot Streak hides
+  its shuffle** because its content is deterministic (seeds newest-first, targets by similarity), and
+  a re-roll into the identical list is a lie. Pumbility Push keeps it, honestly, via the sampling
+  above.
 - **Phoenix 2**: supported; the old page-level P2 gate stays dead (D14). Field-tested 2026-08-14:
   the 272 P2 titles do **not** light Title Hunt up — none are difficulty- or skill-typed, so both of
   the goal's categories are structurally empty there (worse, the generic empty state told P2 players
