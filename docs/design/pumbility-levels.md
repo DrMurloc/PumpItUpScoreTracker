@@ -161,14 +161,45 @@ Docs first, internationalization last (owner):
 No migrations, no new ports, no DI wiring, no public API change — `Tests.Api`, `Tests.Integration`
 and E2E are untouched by design.
 
-## 8. Explicitly out of scope
+## 8. Level markers on the one-gem bars
+
+Four surfaces draw a bar fed by a PUMBILITY pool: the title rails on `/Pumbility/Pool`
+(`PumbilityTitleRails`, one per pool, held title → next title), the Titles drawer's "Your
+progress" bar, the session page's "Titles you're working on" bars (`SessionTitleBars`), and the
+title track on `/TierLists`. The level rungs render as tick marks on the bars whose geometry
+carries them — which turns out to be every **total-pool** bar, because of a fact worth stating
+precisely:
+
+**No pumbility bar runs 0 → threshold.** `Phoenix2TitleList.BuildList` finishes with
+`TitleHelpers.LinkLadder` over the pumbility titles, flooring each rung at the rung below it, and
+the session bars' milestone percents are floor-aware (`TitleSaga`). So a gem title's bar spans
+exactly one gem — the drawer's DIAMOND bar runs 16,000 → 17,000, which is PLATINUM's five levels,
+the rungs being climbed through on the way to the title. The `/Pumbility/Pool` rail (held → next)
+spans the *current* gem the same way.
+
+**One formula covers every bar**: tick each rung whose threshold falls strictly inside the bar's
+span, positioned proportionally; brighten the tick of the rung the pool stands on. The formula
+yields four evenly spaced ticks on every gem bar and naturally yields zero where ticks would be
+wrong — BRONZE's first rung (0 → 10,000 contains no levels), non-pumbility titles, Phoenix.
+
+Excluded on pool rather than geometry: the `/TierLists` track and the Singles/Doubles rails run on
+the per-type pools, and the per-type ladders have no levels (the site draws no badge on those board
+tabs). The hero's "Your bar" card is not a growth bar at all — it is the 50th chart's value.
+
+Implementation is presentation-only: a pure `PumbilityLevelMarkers` service and a shared
+`PumbilityLevelTicks` component in Web, consumed by the three total-pool bars. The session bars
+need no model change — the component resolves floor and threshold from the title name against the
+floor-linked `BuildList` output. No contract, no query, no storage, no localizer keys (the labels
+are the game's own `LV.n` notation).
+
+## 9. Explicitly out of scope
 
 - **Peers by pumbility level** (owner: "not yet") — needs a `GetPlayersByPumbilityLevel` beside
   `GetPlayersByCompetitiveRange` and moves the cohort behind every projected number on /Pumbility.
   Competitive level and pumbility level are different axes; that swap wants its own validation run.
 - The XX/Phoenix-1 mixes — no gem ladder exists there; every surface here is Phoenix 2-gated.
 
-## 9. Artifacts
+## 10. Artifacts
 
 - Ladder reference (all 37 badges, cutoff intervals): the "pumbility-levels" artifact page.
 - Scope + mocks (drawer, strip, card, feeds): the "pumbility-level-scope" artifact page.
