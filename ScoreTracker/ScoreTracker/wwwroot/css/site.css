@@ -3062,6 +3062,9 @@ html.sheet-open .more-sheet-scrim {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    /* Never pans: overflow-y:auto forces this axis from visible to auto, so any
+       too-long line would otherwise mint a horizontal scrollbar for the whole feed. */
+    overflow-x: hidden;
     height: 100%;
     /* So win rows can respond to the widget's own width, not just the viewport. */
     container-type: inline-size;
@@ -3243,9 +3246,12 @@ html.sheet-open .more-sheet-scrim {
     max-width: 12rem;
 }
 
+/* Prose rows (titles, folders, level-ups) wrap; only the scored one-liner below
+   pins its caption to a single line, and the narrow reflows release even that. */
 .dash-ch-why {
     color: var(--mix-ink-muted);
-    white-space: nowrap;
+    overflow-wrap: break-word;
+    min-width: 0;
 }
 
 /* Scored win = one line on wide: chart (the song name truncates) + highlight, then a right-aligned
@@ -3254,6 +3260,10 @@ html.sheet-open .more-sheet-scrim {
     flex-wrap: nowrap;
     align-items: center;
     gap: .35rem;
+}
+
+.dash-ch-win-scored .dash-ch-why {
+    white-space: nowrap;
 }
 
 .dash-ch-win-scored .dash-ch-chart {
@@ -3276,18 +3286,18 @@ html.sheet-open .more-sheet-scrim {
 
 /* Narrow — a 1-wide widget (container query on the feed) or mobile, where the dashboard is one
    column (media query): hide the song name and drop the highlight onto its own subtitle line. */
-@container (max-width: 300px) {
+@container (max-width: 340px) {
     .dash-ch-song { display: none; }
     .dash-ch-win-scored { flex-wrap: wrap; }
     .dash-ch-win-scored .dash-ch-score-right { order: 2; }
-    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; white-space: normal; }
 }
 
 @media (max-width: 600px) {
     .dash-ch-song { display: none; }
     .dash-ch-win-scored { flex-wrap: wrap; }
     .dash-ch-win-scored .dash-ch-score-right { order: 2; }
-    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; white-space: normal; }
 }
 
 /* Card-strip person divider (avatar + vertical name) — the community analog of the
