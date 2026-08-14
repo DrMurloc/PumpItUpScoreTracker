@@ -190,6 +190,7 @@ else
     private IReadOnlySet<Guid> _rivalUserIds = new HashSet<Guid>();
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private MixEnum _mix = MixEnum.Phoenix;
+    private bool _mixedAudience;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -201,6 +202,7 @@ else
         var config = WidgetConfigJson.Read<CommunityHighlightsConfig>(Widget.ConfigJson);
         _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
+        _mixedAudience = config.IncludeCommunities && config.IncludeRivals;
 
         // Empty config follows your non-regional crews (CH1) — World/country are opt-in.
         var communities = !config.IncludeCommunities
@@ -306,10 +308,12 @@ else
     private bool IsMe(PlayerHighlightRecord record) =>
         CurrentUser.IsLoggedIn && CurrentUser.User.Id == record.UserId;
 
-    // The only surface where all three states are meaningful, because it is the only one whose
-    // population is genuinely mixed (docs/design/rivals.md D36).
+    // Row states only when the board is genuinely mixed (owner, 2026-08-14): on a
+    // single-audience feed every row shares the one audience, and a marker everyone wears
+    // says nothing. Both halves on is where green/red/both disambiguate.
     private string RowClass(PlayerHighlightRecord record)
     {
+        if (!_mixedAudience) return "dash-ch-entry";
         return ("dash-ch-entry " + CommunityGlowReader.RowClass(false,
             _rivalUserIds.Contains(record.UserId), _communityUserIds.Contains(record.UserId),
             youClass: string.Empty)).TrimEnd();

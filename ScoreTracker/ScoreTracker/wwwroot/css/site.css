@@ -3066,8 +3066,6 @@ html.sheet-open .more-sheet-scrim {
        too-long line would otherwise mint a horizontal scrollbar for the whole feed. */
     overflow-x: hidden;
     height: 100%;
-    /* Air between the right-aligned scores and the edge the scroll thumb overlays. */
-    padding-right: .4rem;
     /* So win rows can respond to the widget's own width, not just the viewport. */
     container-type: inline-size;
 }
@@ -3187,7 +3185,9 @@ html.sheet-open .more-sheet-scrim {
 .dash-ch-entry {
     display: flex;
     gap: .6rem;
-    padding: .55rem .25rem;
+    /* Right side breathes: on a marked row the audience band paints the entry, and a
+       score flush against the band's edge read as clipped (owner, field test). */
+    padding: .55rem .5rem .55rem .25rem;
     border-bottom: 1px solid color-mix(in srgb, var(--mix-ink-muted) 15%, transparent);
 }
 
