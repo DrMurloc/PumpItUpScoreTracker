@@ -3066,6 +3066,8 @@ html.sheet-open .more-sheet-scrim {
        too-long line would otherwise mint a horizontal scrollbar for the whole feed. */
     overflow-x: hidden;
     height: 100%;
+    /* Air between the right-aligned scores and the edge the scroll thumb overlays. */
+    padding-right: .4rem;
     /* So win rows can respond to the widget's own width, not just the viewport. */
     container-type: inline-size;
 }
@@ -3264,6 +3266,13 @@ html.sheet-open .more-sheet-scrim {
 
 .dash-ch-win-scored .dash-ch-why {
     white-space: nowrap;
+}
+
+/* The level-up row is a badge image plus text — centered as a unit, not baseline-hung. */
+.dash-ch-lvlup {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
 }
 
 .dash-ch-win-scored .dash-ch-chart {
