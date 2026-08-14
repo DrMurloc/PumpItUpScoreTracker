@@ -52,12 +52,10 @@ public sealed class PlayerHighlightPolicyTests
     private static Dictionary<Guid, Chart> Charts(params Chart[] charts) => charts.ToDictionary(c => c.Id);
 
     private static RaritySnapshot Snapshot(
-        (Guid ChartId, int PgHolders)? pg = null, int activePlayers = 1463,
-        (string Title, int Holders)? title = null, int titledUsers = 1000)
+        (Guid ChartId, int PgHolders)? pg = null, int activePlayers = 1463)
     {
         var pgs = pg is { } p ? new Dictionary<Guid, int> { [p.ChartId] = p.PgHolders } : new Dictionary<Guid, int>();
-        var titles = title is { } t ? new Dictionary<string, int> { [t.Title] = t.Holders } : new Dictionary<string, int>();
-        return new RaritySnapshot(pgs, activePlayers, titles, titledUsers);
+        return new RaritySnapshot(pgs, activePlayers);
     }
 
     // Default player: zero competitive level, so the folder-debut gate never blocks unless a test
@@ -141,27 +139,35 @@ public sealed class PlayerHighlightPolicyTests
     }
 
     [Fact]
-    public void ATitleHeldByUnderOnePercentOfTitledPlayersIsARareTitle()
+    public void AnyEarnedTitleIsAWinWithNoRarityClaim()
     {
+        // "All titles are big titles" (owner, 2026-08-14) — no rarity gate, no population read.
         var wins = Classify(
             Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
                 TitleCompleted("SCROOGE")),
-            new Dictionary<Guid, Chart>(), Snapshot(title: ("SCROOGE", 5), titledUsers: 1000));
+            new Dictionary<Guid, Chart>(), Snapshot());
 
         var win = Assert.Single(wins);
-        Assert.Equal(WinKind.RareTitle, win.Kind);
-        Assert.Equal(0.005, win.RarityShare);
+        Assert.Equal(WinKind.BigTitle, win.Kind);
+        Assert.Equal("SCROOGE", win.TitleName);
+        Assert.Null(win.RarityShare);
     }
 
     [Fact]
-    public void ACommonTitleIsNotAWin()
+    public void TheDefaultTitleNeverAnnounces()
     {
-        var wins = Classify(
+        // A first import "earns" the account's default title; that is noise, not news.
+        var phoenix = Classify(
             Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
-                TitleCompleted("SCROOGE")),
-            new Dictionary<Guid, Chart>(), Snapshot(title: ("SCROOGE", 500), titledUsers: 1000));
+                TitleCompleted("Beginner")),
+            new Dictionary<Guid, Chart>(), Snapshot());
+        var phoenix2 = Classify(
+            Event(MixEnum.Phoenix2, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                TitleCompleted("BEGINNER")),
+            new Dictionary<Guid, Chart>(), Snapshot());
 
-        Assert.Empty(wins);
+        Assert.Empty(phoenix);
+        Assert.Empty(phoenix2);
     }
 
     [Fact]
@@ -416,6 +422,65 @@ public sealed class PlayerHighlightPolicyTests
 
         var win = Assert.Single(wins);
         Assert.Equal(WinKind.FolderFirst, win.Kind);
+    }
+
+    // ---- pumbility ladder roll-up (owner, 2026-08-14; feeds only, the card stays loud) ----
+
+    [Fact]
+    public void SeveralRungsOfOnePumbilityLadderRollIntoOneSpan()
+    {
+        var wins = Classify(
+            Event(MixEnum.Phoenix2, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                TitleCompleted("[S] ADVANCED LV.7"), TitleCompleted("[S] ADVANCED LV.6"),
+                TitleCompleted("[S] ADVANCED LV.9"), TitleCompleted("[S] ADVANCED LV.8")),
+            Charts(), Snapshot());
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.PumbilityTitleSpan, win.Kind);
+        Assert.Equal("[S] ADVANCED LV.9", win.TitleName); // the rung reached
+        Assert.Equal("[S] ADVANCED LV.6", win.Detail);    // the first rung crossed
+    }
+
+    [Fact]
+    public void EachPumbilityPoolRollsUpSeparately()
+    {
+        var wins = Classify(
+            Event(MixEnum.Phoenix2, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                TitleCompleted("[S] ADVANCED LV.6"), TitleCompleted("[S] ADVANCED LV.7"),
+                TitleCompleted("[D] INTERMEDIATE LV.3"), TitleCompleted("[D] INTERMEDIATE LV.4")),
+            Charts(), Snapshot());
+
+        Assert.Equal(2, wins.Count);
+        Assert.All(wins, w => Assert.Equal(WinKind.PumbilityTitleSpan, w.Kind));
+        Assert.Contains(wins, w => w.TitleName == "[S] ADVANCED LV.7" && w.Detail == "[S] ADVANCED LV.6");
+        Assert.Contains(wins, w => w.TitleName == "[D] INTERMEDIATE LV.4" && w.Detail == "[D] INTERMEDIATE LV.3");
+    }
+
+    [Fact]
+    public void ALonePumbilityRungStaysAPlainTitleRow()
+    {
+        var wins = Classify(
+            Event(MixEnum.Phoenix2, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                TitleCompleted("[S] ADVANCED LV.6")),
+            Charts(), Snapshot());
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.BigTitle, win.Kind);
+        Assert.Equal("[S] ADVANCED LV.6", win.TitleName);
+    }
+
+    [Fact]
+    public void PhoenixDifficultyChainsDoNotRollUp()
+    {
+        // Only the pumbility pool ladders roll (owner: "specifically only the pumbility titles") —
+        // a Phoenix difficulty chain prints one row per rung.
+        var wins = Classify(
+            Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                TitleCompleted("Expert Lv. 1"), TitleCompleted("Expert Lv. 2")),
+            new Dictionary<Guid, Chart>(), Snapshot());
+
+        Assert.Equal(2, wins.Count);
+        Assert.All(wins, w => Assert.Equal(WinKind.BigTitle, w.Kind));
     }
 
     // ---- the PUMBILITY level crossing (docs/design/pumbility-levels.md §5) ----

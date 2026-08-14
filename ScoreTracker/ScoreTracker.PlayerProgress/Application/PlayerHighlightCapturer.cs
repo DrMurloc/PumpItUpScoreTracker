@@ -32,14 +32,12 @@ internal sealed class PlayerHighlightCapturer : IPlayerHighlightCapturer
     private readonly IPlayerHighlightRepository _highlights;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreReader _scores;
-    private readonly ITitleRepository _titles;
 
-    public PlayerHighlightCapturer(IChartRepository charts, IScoreReader scores, ITitleRepository titles,
+    public PlayerHighlightCapturer(IChartRepository charts, IScoreReader scores,
         IPlayerHighlightRepository highlights, IPlayerStatsReader playerStats, IMemoryCache cache, IBus bus)
     {
         _charts = charts;
         _scores = scores;
-        _titles = titles;
         _highlights = highlights;
         _playerStats = playerStats;
         _cache = cache;
@@ -78,11 +76,7 @@ internal sealed class PlayerHighlightCapturer : IPlayerHighlightCapturer
             var pgHolders = (await _scores.GetChartScoreAggregates(mix, cancellationToken))
                 .ToDictionary(a => a.ChartId, a => a.PgCount);
             var activePlayers = (await _scores.GetActiveUserIds(mix, DateTimeOffset.MinValue, cancellationToken)).Count;
-            var titleHolders = (await _titles.GetTitleAggregations(mix, cancellationToken))
-                .GroupBy(t => t.Title.ToString())
-                .ToDictionary(g => g.Key, g => g.First().Count);
-            var titledUsers = await _titles.CountTitledUsers(cancellationToken);
-            return new RaritySnapshot(pgHolders, activePlayers, titleHolders, titledUsers);
+            return new RaritySnapshot(pgHolders, activePlayers);
         }))!;
     }
 }
