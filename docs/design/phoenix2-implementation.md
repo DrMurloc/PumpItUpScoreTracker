@@ -63,9 +63,9 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   | AA | **1.36** | 1.37 |
   | A+ | **1.33** | 1.35 |
   | A | **1.28** | **1.30** |
-  | B | **1.20** | *1.25 (inferred)* |
+  | B | **1.20** | **1.25** |
   | C | **1.10** | **1.20** |
-  | D | **1.00** | *1.15 (inferred)* |
+  | D | **1.00** | **1.10** |
 
   Everything else is shared: the other six plates (RG 0.000 · FG 0.002 · TG 0.004 · MG 0.006 ·
   SG 0.008 · PG 0.020) and the top of the ladder (AA+ 1.39 · AAA 1.41 · AAA+ 1.43 · S 1.45 →
@@ -83,25 +83,24 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   is a sparse Phoenix 2 account and `/Pumbility/Phoenix1`, where a 450k–499k Phoenix 1 score is
   a P1 **D** but a P2 **F** and so reprices from about 0.9 × base to nothing.
 
-  **Which cells are measured and which are guesses.** All eight plate × type cells on each side
-  are measured, the whole Singles grade ladder is measured, and on Doubles every rung from AA
-  down to D is measured now as well. **B on Doubles is the only guess left in either table.** It
-  splits the −0.10 between the measured rungs either side of it (A 1.30 and C 1.20), and is
-  pinned by `DoublesBIsTheLastInferredRungAndSplitsTwoMeasuredNeighbours` so that replacing it
-  with a live reading is deliberate rather than silent. A Double priced at B closes the last of
-  it. F is the one cell no reading can ever fill — see below.
+  **Which cells are measured, and which are not (2026-08-14: nearly all of them are).** All eight
+  plate × type cells on each side are measured, and **both grade ladders are now measured end to
+  end** — every Singles rung SSS+ → D and every Doubles rung alike. **Nothing in either table is
+  interpolated any more.** Two cells remain outside that: **F**, which no reading can ever fill
+  because a passing F prices at zero and so never appears, and the **base curve above level 27**,
+  which is the one place the formula still extrapolates — see below.
 
-  ⚠ **Do not justify B as "the ladder's uniform −0.05 step" — the ladder is not uniform.** Every
-  step from AA down to C is −0.05 or narrower, but **C → D is −0.10**, and that is measured, not
-  fitted. The A → C span B sits inside is the only uniform stretch left, and that span is all the
-  argument B can carry.
+  **The ladder's real shape, now read rather than fitted.** Doubles runs −0.05 a rung from A+ all
+  the way down to C (1.35 · 1.30 · 1.25 · 1.20) and then takes a single **−0.10** step to D 1.10.
+  That one irregular step at the bottom is the whole story of the guesses this table used to
+  carry: extrapolating the uniform step produced the right A and the right B and the **wrong D**.
+  Do not describe the ladder as uniform — only the A+ → C stretch is.
 
   **A on Doubles was a guess and is now measured — at exactly the guessed value.** Five import
   rows (2026-08-13/14) across four levels and three plates all imply 1.3000 and nothing else:
   D24 MG 326.50 = Base(24) 250 × 1.306 · D25 RG 338.00 = 260 × 1.300 · D26 FG 351.54 =
-  270 × 1.302 · D27 FG 364.56 = 280 × 1.302. That does two things beyond closing the cell: it
-  corroborates the −0.05 step across the upper ladder rather than merely assuming it, and it
-  moves B from *reaching down from A+* to *interpolating between two measurements*. Note where
+  270 × 1.302 · D27 FG 364.56 = 280 × 1.302. Beyond closing the cell it corroborates the −0.05
+  step across the upper ladder rather than merely assuming it. Note where
   the remaining evidence gap actually sits — telemetry has never priced a chart above level 27,
   so **Base(28) = 290 and Base(29) = 300 are extrapolation**, the post-24 kink being confirmed
   only at 25, 26 and 27. The five charts up there are all Doubles (*1949*, *Dead End*,
@@ -123,26 +122,33 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   into a full top-50 — but that is the same population the passing-F bug hit, and they compound.
   **Post-deploy: press "Recalculate Phoenix 2 Player Ratings."**
 
-  **Where the last cell will come from.** Not from strong players: a Double scored in the B
-  band (700k–799k) essentially never survives into a top-50 pool. It comes from **a player with
-  fewer than fifty charts**, where every chart enters the pool regardless of what it contributes
-  — which is how all three bottom readings arrived, on a D12 and a pair of D10s. So B fills from
-  a small pool, whether a beginner's or one deliberately made, not from the elite grind.
+  **B on Doubles closed the same day, and that guess was right: 1.25 exactly.** *Danger & Danger*
+  D10 EG B at **227.16** = Base(10) 180 × 1.262, minus the 0.012 a Doubles Extreme Game pays. It
+  was the last interpolated cell in either table.
+
+  **How all four bottom readings were obtained, because it is the reusable part.** None came from
+  the elite grind — a B, C or D never survives into a full top-50 pool, which is exactly why the
+  cells stayed open for so long. They came from **a pool holding fewer than fifty charts**, where
+  every chart enters regardless of what it contributes. The Doubles C first arrived that way by
+  accident on a beginner's D12; the B, C and D were then played *deliberately* on D10s to close
+  the table. Anything still missing from this formula is reachable the same way: make a small
+  pool and play the case you need.
 
   **The competing fit is now REFUTED, not merely declined — do not re-derive it.** The Singles
   ladder *widens* going down (steps 0.03/0.05/0.08/0.10/0.10) rather than holding a uniform step,
   and a fit assuming the Doubles ladder had that same shape landed on **A 1.32 and B 1.27**,
   hitting the anchors of the day (A+ 1.35 and C 1.20) just as well as the uniform reading did. It
   was declined on the owner's call, 2026-08-12, as not worth spending on because no player could
-  see the difference. Play settled it instead: **A measured 1.30, not 1.32**, so the
-  shape-matching fit is dead and its B 1.27 goes with it — which is why B stays at the even split
-  of 1.25.
+  see the difference. Play settled it instead, and **refuted it twice**: A measured **1.30, not
+  1.32**, and B measured **1.25, not 1.27**. The shape-matching fit is dead on both of its own
+  predictions, and the even-split reading it competed with was right on both.
 
-  Worth keeping the episode rather than deleting it, because the two fits behaved exactly as
-  fits do: they agreed on every cell that had been observed and disagreed only on the ones that
-  had not, which is precisely where one of them was being used. The bottom of this ladder has now
-  produced one guess that was right (A) and one that was wrong (D), from the same reasoning, on
-  the same day's evidence.
+  Worth keeping the episode rather than deleting it, because the two fits behaved exactly as fits
+  do: they agreed on every cell that had been observed and disagreed only on the ones that had
+  not — precisely where one of them was being used. And the reasoning that won here still is not
+  a law: the same even-step logic that nailed A and B produced the **wrong D**, because the step
+  changes at the bottom of the ladder. Fitting got three of four; only play could say which one
+  it had missed.
 
   **What the Doubles A rung visibly decides.** `/Titles` projects a folder per reference grade
   by pricing fifty charts of that folder, so at the bottom reference grade the highest Doubles

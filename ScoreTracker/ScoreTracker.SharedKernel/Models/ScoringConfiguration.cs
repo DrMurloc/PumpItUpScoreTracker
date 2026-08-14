@@ -506,13 +506,12 @@ namespace ScoreTracker.SharedKernel.Models
             // 364.56 = 280 × 1.302. It was interpolated before those rows arrived and they landed
             // exactly on the guess, which is why the step below is now anchored at both ends.
             config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.30;
-            // INFERRED, not observed — the last cell in this table with no live row behind it. It
-            // splits the −0.10 between the two measured rungs either side of it, A 1.30 and C
-            // 1.20. Do NOT justify it as "the ladder's uniform −0.05 step" any more: C → D is
-            // −0.10, so the ladder is not uniform and only this one span is. It survives the
-            // other plausible fit anyway — dividing the span in the 0.08 : 0.10 proportion the
-            // fully measured Singles ladder uses across the same two rungs lands on 1.256 — so
-            // both readings round to what is here. A live Double row replaces it outright.
+            // MEASURED, and like A it landed on exactly the value that had been interpolated
+            // here. A D10 EG B at 227.16 = Base(10) 180 × 1.262, played to close the last open
+            // cell in this table. With it the ladder is read rather than fitted end to end, and
+            // its real shape is known: −0.05 a rung from A+ all the way down to C, then a single
+            // −0.10 at C → D. That one irregular step at the bottom is the whole story of the
+            // guesses — extrapolating the uniform step gave the right A and B and the wrong D.
             config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.25;
             // OBSERVED, one row: a D12 MG C at 229.14 = Base(12) 190 × (1.20 + 0.006). Solving
             // the row the other way round demands a 0.106 plate bonus, which nothing on either
@@ -534,10 +533,11 @@ namespace ScoreTracker.SharedKernel.Models
 
             // What a Single reads instead, wherever the two types disagree. Every value here is
             // a live per-chart read off the official breakdown page, and the bracketed count is
-            // how many independent rows imply that value and no other — so the whole singles
-            // ladder is measured, and since the 2026-08-14 readings its doubles counterpart is
-            // too, everywhere except B. AA+ and above land identically on both types, which is
-            // why they are absent.
+            // how many independent rows imply that value and no other. Since the 2026-08-14
+            // readings closed the Doubles bottom, BOTH ladders are measured end to end and
+            // nothing in either is interpolated: F is the only cell left that no reading can
+            // fill, because a passing F prices at zero and so can never be seen. AA+ and above
+            // land identically on both types, which is why they are absent.
             config.SinglesLetterGradeModifiers = new Dictionary<PhoenixLetterGrade, double>
             {
                 [PhoenixLetterGrade.AA] = 1.36, // 42 rows
