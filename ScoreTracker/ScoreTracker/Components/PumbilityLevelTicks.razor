@@ -1,0 +1,45 @@
+@namespace ScoreTracker.Web.Components
+@using System.Globalization
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.Web.Services
+
+@* The level rungs inside a one-gem PUMBILITY bar, as tick marks
+   (docs/design/pumbility-levels.md §8). Hosted inside any position:relative bar; the ticks sit
+   within the bar's own clip, full height, so every host keeps its rounded overflow. Renders
+   nothing when the span holds no rungs, which is what makes it safe on every bar. *@
+
+@foreach (var tick in Ticks)
+{
+    <span class="pmb-lvl-tick @(tick.Current ? "cur" : "")" style="left:@Left(tick)"
+          title="@TitleFor(tick)"></span>
+}
+
+@code {
+
+    /// <summary>Where the bar starts measuring — the rung below on a ladder, per LinkLadder.</summary>
+    [Parameter]
+    public double Floor { get; set; }
+
+    /// <summary>Where the bar completes.</summary>
+    [Parameter]
+    public double Ceiling { get; set; }
+
+    /// <summary>The pool the bar measures — what decides which tick reads as current.</summary>
+    [Parameter]
+    public double Pool { get; set; }
+
+    private IReadOnlyList<PumbilityLevelMarkers.Tick> Ticks =>
+        PumbilityLevelMarkers.TicksFor(Floor, Ceiling, Pool);
+
+    private static string Left(PumbilityLevelMarkers.Tick tick)
+    {
+        return (tick.Fraction * 100).ToString("0.##", CultureInfo.InvariantCulture) + "%";
+    }
+
+    // "PLATINUM LV.2 · 16,200" — the game's own notation, so no localizer key.
+    private static string TitleFor(PumbilityLevelMarkers.Tick tick)
+    {
+        return $"{PumbilityLevelChange.LabelFor(tick.Level)} · {tick.Level.Threshold:N0}";
+    }
+
+}

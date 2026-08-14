@@ -9335,10 +9335,27 @@ button.chart-card-art {
 }
 
 .title-bar {
+    position: relative;
     height: 9px;
     border-radius: 2px;
     background: color-mix(in srgb, var(--mix-ink) 10%, transparent);
     overflow: hidden;
+}
+
+/* PUMBILITY rung ticks inside a one-gem bar (docs/design/pumbility-levels.md §8). Full height
+   within the host's own clip; the current rung's tick is the bright one. Hover names the rung —
+   the labels are the game's own LV.n notation. */
+.pmb-lvl-tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    margin-left: -1px;
+    background: color-mix(in srgb, var(--mix-ink) 35%, transparent);
+}
+
+.pmb-lvl-tick.cur {
+    background: color-mix(in srgb, var(--mix-ink) 85%, transparent);
 }
 
 .title-bar i {
