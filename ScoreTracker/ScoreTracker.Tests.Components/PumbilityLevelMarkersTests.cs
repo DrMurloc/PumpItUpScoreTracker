@@ -94,26 +94,38 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheTickFragmentRendersPositionsCurrentAndHoverNames()
+    public void TheTickFragmentFramesTheBarWithLabelledMarkers()
     {
         var cut = RenderComponent<PumbilityLevelTicks>(p => p
-            .Add(x => x.Floor, 17_000).Add(x => x.Ceiling, 18_000).Add(x => x.Pool, 17_602.69));
+            .Add(x => x.Floor, 17_000).Add(x => x.Ceiling, 18_000).Add(x => x.Pool, 17_602.69)
+            .AddChildContent("<div class='probe-bar'></div>"));
+
+        // The bar renders unchanged inside the frame; the labelled ticks ride the overlay.
+        Assert.Single(cut.FindAll(".pmb-lvl-frame .probe-bar"));
 
         var ticks = cut.FindAll(".pmb-lvl-tick");
         Assert.Equal(4, ticks.Count);
         Assert.Equal(new[] { "left:20%", "left:40%", "left:60%", "left:80%" },
             ticks.Select(t => t.GetAttribute("style")));
+        // Every marker says its level out loud — the visible label was the owner's whole ask.
+        Assert.Equal(new[] { "LV.2", "LV.3", "LV.4", "LV.5" },
+            ticks.Select(t => t.QuerySelector("b")!.TextContent));
         Assert.Contains("cur", Assert.Single(ticks, t => t.GetAttribute("title") == "DIAMOND LV.4 · 17,600")
             .GetAttribute("class"));
     }
 
     [Fact]
-    public void TheTickFragmentRendersNothingForABareSpan()
+    public void ABareSpanRendersItsBarWithNoFrameAtAll()
     {
+        // BRONZE's first rung holds no levels: the child passes through untouched, so the frame
+        // never adds label headroom where there are no labels.
         var cut = RenderComponent<PumbilityLevelTicks>(p => p
-            .Add(x => x.Floor, 0).Add(x => x.Ceiling, 10_000).Add(x => x.Pool, 4_000));
+            .Add(x => x.Floor, 0).Add(x => x.Ceiling, 10_000).Add(x => x.Pool, 4_000)
+            .AddChildContent("<div class='probe-bar'></div>"));
 
-        Assert.Empty(cut.Markup.Trim());
+        Assert.Single(cut.FindAll(".probe-bar"));
+        Assert.Empty(cut.FindAll(".pmb-lvl-frame"));
+        Assert.Empty(cut.FindAll(".pmb-lvl-tick"));
     }
 
     [Fact]
@@ -127,8 +139,11 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
             new SessionTitleBarModel("Singles", "[S] EXPERT LV.2", 0.03, 0.07, 17_507, 17_700)
         }));
 
-        var ticks = cut.FindAll(".sbd-track .pmb-lvl-tick");
+        var ticks = cut.FindAll(".pmb-lvl-tick");
         Assert.Equal(4, ticks.Count);
+        // The [P.B] bar itself sits framed; the [S] bar renders outside any frame.
+        Assert.Single(cut.FindAll(".pmb-lvl-frame .sbd-track"));
+        Assert.Equal(2, cut.FindAll(".sbd-track").Count);
         // 16,450 stands on PLATINUM LV.3 — the brightened tick inside the DIAMOND climb.
         Assert.Contains("cur", Assert.Single(ticks, t => (t.GetAttribute("title") ?? "").StartsWith("PLATINUM LV.3"))
             .GetAttribute("class"));

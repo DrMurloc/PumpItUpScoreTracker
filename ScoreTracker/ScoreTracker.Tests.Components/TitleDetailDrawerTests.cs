@@ -225,7 +225,7 @@ public sealed class TitleDetailDrawerTests : ComponentTestBase
         // The DIAMOND bar spans 16,000 → 17,000 — PLATINUM's four interior levels tick it.
         var drawer = OpenWithHolders("[P.B] DIAMOND", new TitleHoldersRecord(Array.Empty<TitleHolder>(), 0));
 
-        Assert.Equal(4, drawer.FindAll(".title-bar .pmb-lvl-tick").Count);
+        Assert.Equal(4, drawer.FindAll(".pmb-lvl-tick").Count);
     }
 
     [Fact]
@@ -233,7 +233,7 @@ public sealed class TitleDetailDrawerTests : ComponentTestBase
     {
         var drawer = OpenWithHolders("[P.B] BRONZE", new TitleHoldersRecord(Array.Empty<TitleHolder>(), 0));
 
-        Assert.Empty(drawer.FindAll(".title-bar .pmb-lvl-tick"));
+        Assert.Empty(drawer.FindAll(".pmb-lvl-tick"));
     }
 
     [Fact]
@@ -241,7 +241,7 @@ public sealed class TitleDetailDrawerTests : ComponentTestBase
     {
         var drawer = OpenWithHolders("[S] ADVANCED LV.1", new TitleHoldersRecord(Array.Empty<TitleHolder>(), 0));
 
-        Assert.Empty(drawer.FindAll(".title-bar .pmb-lvl-tick"));
+        Assert.Empty(drawer.FindAll(".pmb-lvl-tick"));
     }
 
     [Fact]

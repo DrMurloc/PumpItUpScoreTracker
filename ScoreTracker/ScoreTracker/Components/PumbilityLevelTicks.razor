@@ -3,15 +3,29 @@
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.Web.Services
 
-@* The level rungs inside a one-gem PUMBILITY bar, as tick marks
-   (docs/design/pumbility-levels.md §8). Hosted inside any position:relative bar; the ticks sit
-   within the bar's own clip, full height, so every host keeps its rounded overflow. Renders
-   nothing when the span holds no rungs, which is what makes it safe on every bar. *@
+@* The level rungs on a one-gem PUMBILITY bar: big ticks with visible LV.n labels
+   (docs/design/pumbility-levels.md §8). Wraps the bar it decorates — every host bar clips its
+   fill with overflow:hidden, so the ticks live on a frame AROUND the bar instead: the frame
+   reserves label headroom above, the labels render into it, and the ticks overshoot the bar's
+   edges while the bar keeps its own rounded clip untouched. A span holding no rungs renders the
+   child bare, so the frame never adds layout where there is nothing to show. *@
 
-@foreach (var tick in Ticks)
+@if (Ticks.Count == 0)
 {
-    <span class="pmb-lvl-tick @(tick.Current ? "cur" : "")" style="left:@Left(tick)"
-          title="@TitleFor(tick)"></span>
+    @ChildContent
+}
+else
+{
+    <div class="pmb-lvl-frame">
+        @ChildContent
+        <div class="pmb-lvl-overlay">
+            @foreach (var tick in Ticks)
+            {
+                <span class="pmb-lvl-tick @(tick.Current ? "cur" : "")" style="left:@Left(tick)"
+                      title="@TitleFor(tick)"><b>@LabelText(tick)</b></span>
+            }
+        </div>
+    </div>
 }
 
 @code {
@@ -28,6 +42,10 @@
     [Parameter]
     public double Pool { get; set; }
 
+    /// <summary>The bar being decorated, rendered unchanged.</summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
     private IReadOnlyList<PumbilityLevelMarkers.Tick> Ticks =>
         PumbilityLevelMarkers.TicksFor(Floor, Ceiling, Pool);
 
@@ -36,7 +54,14 @@
         return (tick.Fraction * 100).ToString("0.##", CultureInfo.InvariantCulture) + "%";
     }
 
-    // "PLATINUM LV.2 · 16,200" — the game's own notation, so no localizer key.
+    // "LV.2" — the game's own notation, so no localizer key. The full-name fallback only fires
+    // if a span ever crosses a gem boundary, where a bare number would be ambiguous.
+    private static string LabelText(PumbilityLevelMarkers.Tick tick)
+    {
+        return tick.Level.Level is { } level ? $"LV.{level}" : PumbilityLevelChange.LabelFor(tick.Level);
+    }
+
+    // "PLATINUM LV.2 · 16,200" — the hover names the rung the label abbreviates.
     private static string TitleFor(PumbilityLevelMarkers.Tick tick)
     {
         return $"{PumbilityLevelChange.LabelFor(tick.Level)} · {tick.Level.Threshold:N0}";
