@@ -50,8 +50,10 @@ FROM (
 WHERE NOT EXISTS (SELECT 1 FROM scores.MoMSeason s WHERE s.Name = g.SeasonName);
 
 -- Boards: one per legacy tournament, keeping the legacy tournament's Guid as the board's —
--- which is what keeps every old /Tournament/Stamina/{id} URL resolving. The frozen config is
--- the legacy Configuration JSON verbatim, so historical sessions re-price byte-identically.
+-- which is what keeps every old /Tournament/Stamina URL resolving. The frozen config is the
+-- legacy Configuration JSON verbatim, so historical sessions re-price byte-identically.
+-- (No literal braces anywhere in this script: ExecuteSqlRawAsync composite-formats its SQL,
+-- and the integration suite runs these exact bytes through it.)
 INSERT INTO scores.MoMBoard (Id, SeasonId, MixId, ChartType, ScoringConfig)
 SELECT l.Id, s.Id, @PhoenixMixId, l.ChartType, l.Configuration
 FROM #legacy l
