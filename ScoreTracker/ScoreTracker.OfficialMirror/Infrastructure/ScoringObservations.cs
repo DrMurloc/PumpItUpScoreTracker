@@ -6,11 +6,20 @@ using ScoreTracker.SharedKernel.Models;
 namespace ScoreTracker.OfficialMirror.Infrastructure;
 
 /// <summary>
-///     Temporary instrumentation (2026-08-08): logs the score→grade and per-chart PUMBILITY
-///     observations that fly past during an import, so the telemetry accumulates the evidence
-///     that settles the constants still being guessed at — the Superb Game plate bonus, the A+
-///     and B grade multipliers, and the C/D/F score floors. Expected to be torn out once the
-///     table is closed; it is one file and two call lines for exactly that reason.
+///     Instrumentation (2026-08-08): logs the score→grade and per-chart PUMBILITY observations
+///     that fly past during an import. Every constant it was built to settle — the Superb Game
+///     plate bonus, the grade ladders on both types, the C/D/F score floors — is settled as of
+///     2026-08-14, and it stays in anyway, because it is now the standing tripwire for the two
+///     things no deliberate play has been able to reach (owner, 2026-08-14):
+///     <para>
+///         <b>Base(28) and Base(29)</b>, extrapolated to 290/300 and never priced — the first
+///         import whose pool carries a level-28 or -29 chart logs the one row that solves the
+///         base outright, level and grade and plate and official value all on the line. And the
+///         <b>Doubles passing-F assumption</b>, which a row can refute but never confirm: an F
+///         the site priced nonzero would arrive as a PumbilityRow MISMATCH, while one priced
+///         zero is skipped with every other zero-value row. Tear this out only when those are
+///         closed or abandoned.
+///     </para>
 ///     <para>
 ///         Two properties keep it safe on the import path. It does <b>no I/O</b> — every method
 ///         is pure over already-parsed data plus an ILogger — so the worst case is a logged

@@ -500,31 +500,53 @@ namespace ScoreTracker.SharedKernel.Models
             // out to have been a doubles observation rather than stale tuning.
             config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
             config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
-            // INFERRED, not observed. Exactly one Double rung below A+ has ever been priced —
-            // C, three steps down — so these two fill the gap at the uniform −0.05 step, which
-            // is the only even spacing that lands on that reading. A live Double row at either
-            // grade replaces the value outright: they are placeholders that happen to be
-            // self-consistent, not measurements.
+            // MEASURED. Five import-telemetry rows, at four levels and on three plates, every one
+            // of them implying this value and no other: a D24 MG at 326.50 = Base(24) 250 × 1.306,
+            // a D25 RG at 338.00 = 260 × 1.300, a D26 FG at 351.54 = 270 × 1.302 and a D27 FG at
+            // 364.56 = 280 × 1.302. It was interpolated before those rows arrived and they landed
+            // exactly on the guess, which is why the step below is now anchored at both ends.
             config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.30;
+            // MEASURED, and like A it landed on exactly the value that had been interpolated
+            // here. A D10 EG B at 227.16 = Base(10) 180 × 1.262, played to close the last open
+            // cell in this table. With it the ladder is read rather than fitted end to end, and
+            // its real shape is known: −0.05 a rung from A+ all the way down to C, then a single
+            // −0.10 at C → D. That one irregular step at the bottom is the whole story of the
+            // guesses — extrapolating the uniform step gave the right A and B and the wrong D.
             config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.25;
             // OBSERVED, one row: a D12 MG C at 229.14 = Base(12) 190 × (1.20 + 0.006). Solving
             // the row the other way round demands a 0.106 plate bonus, which nothing on either
             // plate table comes near, so the grade is what this row measures.
             config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.20;
-            // INFERRED on the same −0.05 step as A and B above.
-            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.15;
+            // MEASURED, and it REFUTED the 1.15 this cell used to extrapolate to. A D10 MG D at
+            // 199.08 = Base(10) 180 × 1.106, read off the official breakdown page beside a C on
+            // the same level and plate (217.08), so the two differ by grade alone: the 18.00
+            // between them is 0.10 of base whatever the plate turns out to be worth. The step
+            // down from C is therefore DOUBLE the −0.05 the ladder holds higher up, which is what
+            // made the uniform-step extrapolation wrong rather than merely unlucky.
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.10;
             // An F contributes NOTHING on either type — an exclusion like the sub-10 rule and
             // the stage break, not the bottom rung of the ladder. The zero keeps this table
             // honest for anything reading it directly, but what enforces the rule is the guard
             // in GetScore: grade and plate ADD in this formula, so a zero multiplier on its own
             // would still pay out the plate bonus.
+            //
+            // The evidence is asymmetric, and deliberately documented as such (owner, 2026-08-14):
+            // a passing SINGLES F has been observed rendering 0.00 on the official breakdown
+            // page, while a passing DOUBLES F has never been reproduced, so the Doubles zero is
+            // an ASSUMPTION held by symmetry — a fair one whose cost if wrong is a few points on
+            // a pool of fewer than fifty charts, since an F never survives into a full fifty.
+            // Telemetry can refute the assumption but never confirm it: a Doubles F the site
+            // priced NONZERO would surface as a PumbilityRow MISMATCH, while one priced zero is
+            // skipped by the observer along with every other zero-value row.
             config.LetterGradeModifiers[PhoenixLetterGrade.F] = 0.00;
 
             // What a Single reads instead, wherever the two types disagree. Every value here is
             // a live per-chart read off the official breakdown page, and the bracketed count is
-            // how many independent rows imply that value and no other — so the whole singles
-            // ladder is measured, where its doubles counterpart below A+ mostly is not. AA+ and
-            // above land identically on both types, which is why they are absent.
+            // how many independent rows imply that value and no other. Since the 2026-08-14
+            // readings closed the Doubles bottom, BOTH ladders are measured end to end and
+            // nothing in either is interpolated. F is the one asymmetry left: its zero is
+            // observed on Singles and assumed on Doubles — see the F entry above. AA+ and above
+            // land identically on both types, which is why they are absent.
             config.SinglesLetterGradeModifiers = new Dictionary<PhoenixLetterGrade, double>
             {
                 [PhoenixLetterGrade.AA] = 1.36, // 42 rows
