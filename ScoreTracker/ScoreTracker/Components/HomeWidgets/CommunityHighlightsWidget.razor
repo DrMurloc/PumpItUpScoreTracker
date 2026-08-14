@@ -12,6 +12,7 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.HomeDashboard
 
 @* Highlights feed (docs/design/home-page-widgets.md §7, docs/design/rivals.md D35): recent big
@@ -99,7 +100,9 @@ else
                                         <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
                                         <span class="dash-ch-song">@chart.Song.Name</span>
                                     </span>
-                                    <span class="dash-ch-why">@Caption(win)</span>
+                                    @* The chip states the fact; the sentence rides the hover (owner: lean
+                                       hard on tooltips — the strips' rule, extended to the feed rows). *@
+                                    <span class="dash-ch-why" title="@Caption(win)">@ShortCaption(win)</span>
                                     @if (win.Score is { } score)
                                     {
                                         <span class="dash-ch-score-right">
@@ -120,7 +123,7 @@ else
                             else if (win.Kind == WinKind.FolderComplete)
                             {
                                 <div class="dash-ch-win">
-                                    <span class="dash-ch-why">🎉 @L["Cleared all of {0}", win.Difficulty ?? ""]</span>
+                                    <span class="dash-ch-why">🎉 @L["Cleared {0}", win.Difficulty ?? ""]</span>
                                 </div>
                             }
                             else if (win.Kind == WinKind.FolderProgress)
@@ -132,16 +135,18 @@ else
                             else if (win.Kind == WinKind.PumbilityLevelUp)
                             {
                                 <div class="dash-ch-win">
-                                    <span class="dash-ch-why">
+                                    <span class="dash-ch-why" title="@($"{L["Reached {0}", LevelName(win)]}{PoolSuffix(win)}")">
                                         <PumbilityLevelBadge Level="LevelOf(win)" Height="18"></PumbilityLevelBadge>
-                                        <b>@L["Reached {0}", LevelName(win)]</b>@PoolSuffix(win)
+                                        <b>@LevelName(win)</b>
                                     </span>
                                 </div>
                             }
                             else if (win.TitleName != null)
                             {
+                                @* Every title stands on its name — no "Completed", no rarity claim
+                                   ("all titles are big titles"); a ladder span compacts to one row. *@
                                 <div class="dash-ch-win">
-                                    <span class="dash-ch-why">🏅 <b>@Bracket(win.TitleName)</b> @TitleSuffix(win)</span>
+                                    <span class="dash-ch-why">🏅 <b>@TitleLabel(win)</b></span>
                                 </div>
                             }
                             else if (win.ChartName != null)
@@ -271,9 +276,12 @@ else
 
     private static int PeerPct(SignificantWin win) => Math.Max(1, (int)Math.Ceiling((win.RarityShare ?? 0) * 100));
 
-    private string TitleSuffix(SignificantWin win) => win.Kind == WinKind.RareTitle && win.RarityShare != null
-        ? $"· {L["only {0} hold it", Pct(win.RarityShare)]}"
-        : L["Completed"];
+    // Spans compact to "[S] ADVANCED LV.6 → 9"; everything else is the bracketed name alone —
+    // no "Completed", no rarity claim ("all titles are big titles", owner 2026-08-14).
+    private static string TitleLabel(SignificantWin win) =>
+        win.Kind == WinKind.PumbilityTitleSpan && win.Detail is { Length: > 0 }
+            ? TitleSpans.Compact(Bracket(win.Detail), Bracket(win.TitleName ?? ""))
+            : Bracket(win.TitleName ?? "");
 
     private static string Pct(double? share) =>
         share == null ? "" : (share.Value * 100).ToString("0.#", CultureInfo.InvariantCulture) + "%";
@@ -314,22 +322,19 @@ else
         : L["{0} now {1}", win.Difficulty ?? "", win.Detail].Value;
 
     private string NonChartTip(SignificantWin win) => win.Kind == WinKind.FolderComplete
-        ? $"🎉 {L["Cleared all of {0}", win.Difficulty ?? ""].Value}"
-        : $"🏅 {Bracket(win.TitleName ?? "")} {TitleSuffix(win)}";
+        ? $"🎉 {L["Cleared {0}", win.Difficulty ?? ""].Value}"
+        : $"🏅 {TitleLabel(win)}";
 
-    // Cards get the *shortest* form — the full sentence lives in the tooltip (owner: lean hard on tooltips).
+    // The shortest form — cards and feed rows alike; the full sentence lives in the tooltip
+    // (owner: lean hard on tooltips).
     private string ShortCaption(SignificantWin win) => win.Kind switch
     {
         WinKind.NotablePg => $"💎 {L["Rare PG"]}",
         WinKind.TopPumbility => $"👑 #{win.Rank ?? 0} PUMB",
-        WinKind.PeerElite => $"📊 {L["Top {0}%", PeerPct(win)]}",
-        WinKind.FolderFirst => $"🆕 {Ordinal(win.Rank ?? 0)} {win.Difficulty}",
+        WinKind.PeerElite => win.Rank == 1 ? "📊 #1" : $"📊 {L["Top {0}%", PeerPct(win)]}",
+        WinKind.FolderFirst => $"🆕 {Ordinal(win.Rank ?? 0)} · {win.Difficulty}",
         _ => string.Empty
     };
-
-    // Rare titles get a "Rare Title" tag; big titles get nothing (no "completed").
-    private string ShortTitleSub(SignificantWin win) =>
-        win.Kind == WinKind.RareTitle ? L["Rare Title"].Value : string.Empty;
 
     // A win as a strip card. Chart wins = art + grade/plate + score + the short caption; titles + folder
     // clears are text cards. The full detail + song name ride a MudTooltip on hover (owner).
@@ -403,15 +408,11 @@ else
             }
             else
             {
-                @* Big + rare titles: name, plus "Rare Title" for a rare-title win only (no "completed"). *@
+                @* Titles: the name alone (a ladder span compacts) — no tags, no "completed". *@
                 <MudTooltip Text="@NonChartTip(win)" Arrow="true">
                     <div class="dash-chart-card dash-card-text">
                         <div class="dash-card-emoji">🏅</div>
-                        <div class="dash-card-name">@Bracket(win.TitleName ?? "")</div>
-                        @if (ShortTitleSub(win) is { Length: > 0 } sub)
-                        {
-                            <div class="dash-card-detail dash-muted">@sub</div>
-                        }
+                        <div class="dash-card-name">@TitleLabel(win)</div>
                     </div>
                 </MudTooltip>
             }
