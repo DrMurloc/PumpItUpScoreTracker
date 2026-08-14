@@ -321,6 +321,33 @@ public sealed class RecommendedChartsSagaTests
     }
 
     [Fact]
+    public async Task PumbilityPushDealsAFreshHandFromTheTopPoolNotAlwaysTheSameTwelve()
+    {
+        // Thirteen candidates; the mocked RNG hands out descending keys, so the ascending
+        // sample enumerates the pool back-to-front — the top gainer is left out of the hand.
+        // Only possible if the shown dozen samples from a wider pool (owner, field test).
+        var charts = Enumerable.Range(1, 13)
+            .Select(i => (Chart: new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build(),
+                Gain: (double)i))
+            .ToArray();
+        var ctx = new RecommendedChartsContext()
+            .WithCharts(charts.Select(c => c.Chart).ToArray())
+            .WithPumbilityGains(charts.Select(c => (c.Chart.Id, c.Gain)).ToArray());
+        var key = 1000;
+        ctx.Random.Setup(r => r.Next(It.IsAny<int>())).Returns(() => key--);
+
+        var result = (await ctx.Saga.Handle(new GetRecommendedChartsQuery(ChartType: null, LevelOffset: 0,
+                Categories: new HashSet<RecommendationCategory> { RecommendationCategory.PushPumbility }),
+            CancellationToken.None)).ToArray();
+
+        var topGainer = charts.Single(c => c.Gain == 13).Chart.Id;
+        Assert.Equal(12, result.Length);
+        Assert.DoesNotContain(result, r => r.ChartId == topGainer);
+        // The hand still reads best-first.
+        Assert.Equal("+12", result[0].ChartDetails);
+    }
+
+    [Fact]
     public async Task PumbilityPushTruncatesTheStampedGainSoItIsNeverOverstated()
     {
         // The PUMBILITY precision rule: a gain truncates — 36.7 stamps +36, never +37.
