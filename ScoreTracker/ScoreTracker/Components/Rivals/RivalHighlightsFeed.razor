@@ -59,9 +59,11 @@ else
                             <div class="dash-ch-win">
                                 @if (win.ChartId is { } chartId && Charts.TryGetValue(chartId, out var chart))
                                 {
-                                    <span class="dash-ch-chart">
-                                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                                        <span class="dash-ch-song">@chart.Song.Name</span>
+                                    var c = chart;
+                                    <span class="dash-ch-chart @(OnChartClick.HasDelegate ? "dash-clickable" : "")"
+                                          @onclick="() => Open(c)">
+                                        <DifficultyBubble Chart="c" Small="true"></DifficultyBubble>
+                                        <span class="dash-ch-song">@c.Song.Name</span>
                                     </span>
                                 }
                                 @* The chip states the fact; the sentence rides the hover (the feeds'
@@ -99,6 +101,13 @@ else
     [Parameter] public IReadOnlyList<PlayerHighlightRecord> Records { get; set; } = Array.Empty<PlayerHighlightRecord>();
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
     [Parameter] public IReadOnlySet<Guid> Clubmates { get; set; } = new HashSet<Guid>();
+
+    /// <summary>Charts open the host page's details dialog when this is wired (the /Rivals
+    /// page passes its own OpenChart). Unwired, rows render inert — no dead cursor.</summary>
+    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+
+    private Task Open(Chart chart) =>
+        OnChartClick.HasDelegate ? OnChartClick.InvokeAsync(chart) : Task.CompletedTask;
 
     private string RowClass(PlayerHighlightRecord record) =>
         Clubmates.Contains(record.UserId) ? "dash-ch-entry is-community" : "dash-ch-entry";
