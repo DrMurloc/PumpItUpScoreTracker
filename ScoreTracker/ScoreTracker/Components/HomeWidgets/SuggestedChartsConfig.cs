@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -128,12 +129,26 @@ public static class SuggestedGoals
     }
 
     /// <summary>
+    ///     The bundle a render actually runs: on a mix whose title list has no difficulty titles
+    ///     (Phoenix 2 today) Title Hunt silently falls back to Pumbility Push — a P2 "next title"
+    ///     IS a PUMBILITY threshold, so the biggest gains are the title path (owner, 2026-08-14).
+    ///     The config panel keeps showing the goal's own bundle via the mix-free overload.
+    /// </summary>
+    public static IReadOnlyList<RecommendationCategory> CategoriesFor(SuggestedGoal goal, MixEnum mix)
+    {
+        return goal == SuggestedGoal.TitleHunt && !TitleLists.HasDifficultyTitles(mix)
+            ? CategoriesFor(SuggestedGoal.PumbilityPush)
+            : CategoriesFor(goal);
+    }
+
+    /// <summary>
     ///     The goal's categories minus the player's disables; falls back to the full
     ///     bundle if config managed to disable everything (imports are tolerant, D19).
     /// </summary>
-    public static IReadOnlyList<RecommendationCategory> EffectiveCategories(SuggestedChartsConfig config)
+    public static IReadOnlyList<RecommendationCategory> EffectiveCategories(SuggestedChartsConfig config,
+        MixEnum mix)
     {
-        var categories = CategoriesFor(config.Goal);
+        var categories = CategoriesFor(config.Goal, mix);
         var enabled = categories.Where(c => !config.DisabledCategories.Contains(c)).ToArray();
         return enabled.Any() ? enabled : categories;
     }

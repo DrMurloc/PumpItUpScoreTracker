@@ -448,11 +448,17 @@ namespace ScoreTracker.PlayerProgress.Application
                     "These are randomly pulled from your best 100 charts based on competitive score. Push that score!"));
         }
 
+        /// <summary>The ranked pool a Pumbility Push hand draws from.</summary>
+        private const int PumbilityPushDrawPool = 50;
+
+        /// <summary>How many drawn picks one load shows.</summary>
+        private const int PumbilityPushShown = 12;
+
         /// <summary>
         ///     The projected-Pumbility targets that used to live in the Pumbility widget: each
-        ///     chart's expected gain to your overall rating, biggest first. Unlike
-        ///     <see cref="GetRandomFromTop50Charts" />, which shuffles the top 50, these are
-        ///     ranked by gain and stamp the "+N" onto the recommendation.
+        ///     chart's expected gain to your overall rating. Unlike
+        ///     <see cref="GetRandomFromTop50Charts" />, which shuffles the top 50, these stay
+        ///     gain-ranked and stamp the "+N" onto the recommendation.
         /// </summary>
         private async Task<IEnumerable<ChartRecommendation>> GetPumbilityPushes(MixEnum mix,
             IDictionary<string, ISet<Guid>> ignoredChartIds, ChartType? chartType,
@@ -465,14 +471,28 @@ namespace ScoreTracker.PlayerProgress.Application
             var projection =
                 await _mediator.Send(new ProjectPumbilityGainsQuery(_currentUser.User.Id, mix), cancellationToken);
 
-            return projection.ProjectedGains
+            // A fresh hand each load (owner, field test): the shown dozen samples from the top
+            // pool instead of pinning the same twelve forever, then ranks the hand by gain so
+            // the list still reads best-first — which is also what makes the header shuffle an
+            // honest control on this goal. The /Pumbility page reads the projection directly
+            // and stays fully ranked.
+            var pool = projection.ProjectedGains
                 .Where(kv => kv.Value > 0 && charts.ContainsKey(kv.Key) && !skipped.Contains(kv.Key))
                 .Where(kv => chartType == null || charts[kv.Key].Type == chartType)
                 .Where(kv => window == null || window(charts[kv.Key]))
                 .OrderByDescending(kv => kv.Value)
-                .Take(12)
+                .Take(PumbilityPushDrawPool)
+                .ToArray();
+            var random = _random;
+            return pool
+                .OrderBy(_ => random.Next(int.MaxValue))
+                .Take(PumbilityPushShown)
+                .OrderByDescending(kv => kv.Value)
+                // Truncated, never rounded up — a gain is never overstated (the PUMBILITY
+                // precision rule): 36.7 stamps as +36.
                 .Select(kv => new ChartRecommendation(RecommendationCategories.PushPumbility, kv.Key,
-                    "The biggest Pumbility gains available to you right now", "+" + kv.Value.ToString("N0")));
+                    "The biggest Pumbility gains available to you right now",
+                    "+" + Math.Floor(kv.Value).ToString("N0")));
         }
 
         private async Task<IEnumerable<ChartRecommendation>> GetSkillTitleCharts(MixEnum mix,

@@ -307,7 +307,13 @@ else if (_loaded)
         <DialogContent>
             @if (_configureWidget != null && _configureComponent != null)
             {
-                <DynamicComponent Type="_configureComponent" Parameters="_configureParameters"/>
+                @* A named cascade rather than a dictionary entry: DynamicComponent throws on a
+                   parameter a panel didn't declare, so panels opt in — the ones whose display
+                   depends on what "follow current mix" resolves to right now. *@
+                <CascadingValue Name="EffectiveMix"
+                                Value="(MixEnum?)(_selectedPage == null ? _currentMix : EffectiveMixFor(_selectedPage))">
+                    <DynamicComponent Type="_configureComponent" Parameters="_configureParameters"/>
+                </CascadingValue>
             }
         </DialogContent>
     </MudDialog>

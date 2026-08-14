@@ -1298,11 +1298,11 @@
   <data name="Clear Progress" xml:space="preserve">
     <value>Progression des pass</value>
   </data>
-  <data name="Cleared all of {0}" xml:space="preserve">
-    <value>Tout {0} réussi</value>
-  </data>
   <data name="Cleared on attempt {0}" xml:space="preserve">
     <value>Réussi à l'essai {0}</value>
+  </data>
+  <data name="Cleared {0}" xml:space="preserve">
+    <value>{0} réussi</value>
   </data>
   <data name="Clearly Has Friends" xml:space="preserve">
     <value>Clearly Has Friends</value>
@@ -4443,11 +4443,7 @@
   </data>
   <data name="only {0} have PG" xml:space="preserve">
     <value>seuls {0} ont le PG</value>
-  </data>
-  <data name="only {0} hold it" xml:space="preserve">
-    <value>seuls {0} le détiennent</value>
-  </data>
-  <data name="only {0} pass it" xml:space="preserve">
+  </data>  <data name="only {0} pass it" xml:space="preserve">
     <value>seuls {0} le passent</value>
   </data>
   <data name="Open" xml:space="preserve">
@@ -5286,11 +5282,7 @@
   </data>
   <data name="Rare PGs, big titles, and top scores from your communities show up here." xml:space="preserve">
     <value>Les PG rares, grands titres et meilleurs scores de vos communautés apparaissent ici.</value>
-  </data>
-  <data name="Rare Title" xml:space="preserve">
-    <value>Titre rare</value>
-  </data>
-  <data name="Rarest passes" xml:space="preserve">
+  </data>  <data name="Rarest passes" xml:space="preserve">
     <value>Passes les plus rares</value>
   </data>
   <data name="Rarest titles" xml:space="preserve">

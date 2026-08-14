@@ -15,8 +15,9 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///     </para>
 ///     Field usage per <see cref="WinKind" />:
 ///     <list type="bullet">
-///         <item>BigTitle — TitleName</item>
-///         <item>RareTitle — TitleName + RarityShare (holder fraction, e.g. 0.004)</item>
+///         <item>BigTitle — TitleName (since 2026-08-14: ANY earned title — the big/rare split retired)</item>
+///         <item>PumbilityTitleSpan — TitleName (the rung reached) + Detail (the first rung crossed)</item>
+///         <item>RareTitle — TitleName + RarityShare; no longer produced, survives on stored rows</item>
 ///         <item>FolderComplete — Difficulty (the folder, e.g. "D23") — every chart in it passed</item>
 ///         <item>FolderFirst — Chart* + Score + Rank (folder ordinal 1/2/3)</item>
 ///         <item>TopPumbility — Chart* + Score + Rank (pumbility rank, e.g. 2 for #2)</item>
@@ -60,7 +61,16 @@ public enum WinKind
     ///     (docs/design/pumbility-levels.md §5). Suppressed at classification when the same batch
     ///     completed the gem title itself, so this row only speaks when the title didn't.
     /// </summary>
-    PumbilityLevelUp
+    PumbilityLevelUp,
+
+    /// <summary>
+    ///     One batch climbed several rungs of a single Phoenix 2 PUMBILITY pool ladder, and the
+    ///     rungs roll into one row ("[S] ADVANCED LV.6 → LV.9") instead of one per rung — in the
+    ///     feeds only; the Discord card renders from the milestones themselves and stays
+    ///     uncollapsed (owner, 2026-08-14). TitleName is the rung reached, Detail the first rung
+    ///     crossed. Only the pumbility ladders roll up; every other title family prints per rung.
+    /// </summary>
+    PumbilityTitleSpan
 }
 
 /// <summary>
@@ -80,6 +90,12 @@ public enum WinKind
 ///         v3 added <see cref="WinKind.PumbilityLevelUp" /> and <see cref="SignificantWin.PoolValue" />
 ///         — same reasoning as v2: a summary written before level crossings existed is incomplete
 ///         rather than wrong, and rows regenerate on their next import.
+///     </para>
+///     <para>
+///         2026-08-14: <see cref="WinKind.PumbilityTitleSpan" /> and the all-titles inclusion landed
+///         WITHOUT a bump — deliberately. A pre-change row is a complete summary under the rules of
+///         its day (nothing it should have carried is missing), so it keeps rendering; the 30-day
+///         window ages the old shapes out on its own.
 ///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
