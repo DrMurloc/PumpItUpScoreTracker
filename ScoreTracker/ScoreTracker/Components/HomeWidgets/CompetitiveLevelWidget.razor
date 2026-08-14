@@ -73,6 +73,14 @@ else
     /// </summary>
     private const double ValidityFloor = 5.0;
 
+    /// <summary>
+    ///     A reading taken before the mix had ~20 passes is estimator chaos, not a level — the
+    ///     first-session points swing wildly on a tiny pool (owner, field test). PassCount rides
+    ///     every history row, so the gate is per-date and fully retroactive; it is the mix total
+    ///     rather than per-type, which the validity floor above backstops.
+    /// </summary>
+    private const int MinPassCount = 20;
+
     private sealed record LevelSeries(string Label, string Color, bool Dashed,
         IReadOnlyList<PlayerRatingRecord> Points, Func<PlayerRatingRecord, double> YSelector);
 
@@ -121,7 +129,9 @@ else
             void AddType(bool show, string typeLabel, string color, Func<PlayerRatingRecord, double> level)
             {
                 if (!show) return;
-                var valid = history.Where(h => level(h) > ValidityFloor).ToArray();
+                var valid = history
+                    .Where(h => h.PassCount >= MinPassCount && level(h) > ValidityFloor)
+                    .ToArray();
                 var inRange = valid.Where(h => h.Date >= cutoff).ToArray();
                 if (inRange.Length >= 2)
                 {

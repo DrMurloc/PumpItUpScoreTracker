@@ -39,10 +39,15 @@ public sealed class CompetitiveLevelWidgetTests : ComponentTestBase
 
     private void SetUpHistory(params (double Singles, double Doubles)[] points)
     {
+        SetUpHistoryWithPasses(points.Select(p => (p, 100)).ToArray());
+    }
+
+    private void SetUpHistoryWithPasses(params ((double Singles, double Doubles) Levels, int Passes)[] points)
+    {
         // Recent dates so every point sits inside any range window.
         var rows = points.Select((p, i) => new PlayerRatingRecord(_me,
-            DateTimeOffset.Now.AddDays(-points.Length + i), (p.Singles + p.Doubles) / 2,
-            p.Singles, p.Doubles, 0, 100)).ToArray();
+            DateTimeOffset.Now.AddDays(-points.Length + i), (p.Levels.Singles + p.Levels.Doubles) / 2,
+            p.Levels.Singles, p.Levels.Doubles, 0, p.Passes)).ToArray();
         _mediator.Setup(m => m.Send(It.IsAny<GetPlayerHistoryQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(rows);
     }
@@ -84,6 +89,23 @@ public sealed class CompetitiveLevelWidgetTests : ComponentTestBase
         Assert.Equal(2, series.Count);
         var doubles = Assert.Single(series, s => s.Instance.Name!.Contains("Doubles"));
         Assert.Equal(2, doubles.Instance.Items!.Count());
+    }
+
+    [Fact]
+    public void ReadingsBeforeTwentyPassesAreEstimatorChaosAndDoNotPlot()
+    {
+        // The first-session estimate swings wildly on a tiny pool (owner field test: a dip
+        // from 19.5 to 17.2 and back inside days). The pass-count gate is per-date — the
+        // early rows drop, the seasoned ones plot.
+        SetUpHistoryWithPasses(
+            ((19.5, 18.0), 4), ((17.2, 15.5), 11),
+            ((17.8, 16.0), 25), ((17.9, 16.2), 40), ((18.1, 16.5), 60));
+
+        var cut = Render();
+
+        var series = cut.FindComponents<ApexCharts.ApexPointSeries<PlayerRatingRecord>>();
+        Assert.Equal(2, series.Count);
+        Assert.All(series, s => Assert.Equal(3, s.Instance.Items!.Count()));
     }
 
     [Fact]
