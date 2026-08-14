@@ -41,17 +41,25 @@
                 else
                 {
                     <div class="pmb-rail-track">
-                        <div class="pmb-rail-bar">
-                            <span class="pmb-rail-fill" style="width:@Percent(rail.Progress)%"></span>
-                            @* The rail's span is one gem, so the total rail wears that gem's level
-                               rungs (docs/design/pumbility-levels.md §8). The per-type pools have
-                               no levels — their rails stay bare on the Pool gate. *@
-                            @if (rail.Pool == PumbilityPool.Total && rail.NextThreshold is { } nextThreshold)
-                            {
-                                <PumbilityLevelTicks Floor="rail.HeldThreshold" Ceiling="nextThreshold"
-                                                     Pool="rail.Value"></PumbilityLevelTicks>
-                            }
-                        </div>
+                        @* The rail's span is one gem, so the total rail wears that gem's level
+                           rungs — labelled, framed around the bar (docs/design/pumbility-levels.md
+                           §8). The per-type pools have no levels — their rails stay bare on the
+                           Pool gate. *@
+                        @if (rail.Pool == PumbilityPool.Total && rail.NextThreshold is { } nextThreshold)
+                        {
+                            <PumbilityLevelTicks Floor="rail.HeldThreshold" Ceiling="nextThreshold"
+                                                 Pool="rail.Value">
+                                <div class="pmb-rail-bar">
+                                    <span class="pmb-rail-fill" style="width:@Percent(rail.Progress)%"></span>
+                                </div>
+                            </PumbilityLevelTicks>
+                        }
+                        else
+                        {
+                            <div class="pmb-rail-bar">
+                                <span class="pmb-rail-fill" style="width:@Percent(rail.Progress)%"></span>
+                            </div>
+                        }
                         @* The remaining sits BETWEEN the two rungs, because that is what it is the
                            distance across. Said as a total at the foot of the rail it read as a
                            number with no unit, next to figures that were per-chart. *@

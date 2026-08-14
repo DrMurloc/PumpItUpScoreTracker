@@ -9342,20 +9342,51 @@ button.chart-card-art {
     overflow: hidden;
 }
 
-/* PUMBILITY rung ticks inside a one-gem bar (docs/design/pumbility-levels.md §8). Full height
-   within the host's own clip; the current rung's tick is the bright one. Hover names the rung —
-   the labels are the game's own LV.n notation. */
+/* PUMBILITY rung ticks on a one-gem bar (docs/design/pumbility-levels.md §8). The frame wraps
+   the bar: 18px of reserved headroom carries the LV.n labels, the overlay aligns to the bar's
+   own box, and the ticks overshoot its edges — the bar underneath keeps its rounded clip. The
+   current rung's tick and label are the bright ones; hover names the rung in full. */
+.pmb-lvl-frame {
+    position: relative;
+    padding-top: 18px;
+}
+
+.pmb-lvl-overlay {
+    position: absolute;
+    inset: 18px 0 0 0;
+    pointer-events: none;
+}
+
 .pmb-lvl-tick {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    margin-left: -1px;
-    background: color-mix(in srgb, var(--mix-ink) 35%, transparent);
+    top: -3px;
+    bottom: -3px;
+    width: 3px;
+    margin-left: -1.5px;
+    border-radius: 1px;
+    background: color-mix(in srgb, var(--mix-ink) 45%, transparent);
+    pointer-events: auto;
+}
+
+.pmb-lvl-tick b {
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: .03em;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
 }
 
 .pmb-lvl-tick.cur {
-    background: color-mix(in srgb, var(--mix-ink) 85%, transparent);
+    background: var(--mix-ink);
+}
+
+.pmb-lvl-tick.cur b {
+    color: var(--mix-ink);
 }
 
 .title-bar i {

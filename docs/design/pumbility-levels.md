@@ -192,6 +192,14 @@ need no model change — the component resolves floor and threshold from the tit
 floor-linked `BuildList` output. No contract, no query, no storage, no localizer keys (the labels
 are the game's own `LV.n` notation).
 
+**The markers are big, and the labels are visible** (owner, field-testing the first cut: "I
+expected big ol' markers with visible labels"). The first version shrank the ticks to fit inside
+each bar's `overflow: hidden` clip and dropped the labels — wrong trade. `PumbilityLevelTicks`
+now *wraps* the bar it decorates: the frame reserves label headroom above, the `LV.n` labels
+render into it, and the ticks overshoot the bar's edges — while the bar itself keeps its own
+rounded clip untouched. A gem bar whose span holds no rungs (BRONZE's first) renders its child
+bare, so the frame never adds layout where there is nothing to show.
+
 ## 9. Explicitly out of scope
 
 - **Peers by pumbility level** (owner: "not yet") — needs a `GetPlayersByPumbilityLevel` beside
