@@ -1,7 +1,10 @@
 using MediatR;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.PlayerProgress.Application;
 
@@ -14,13 +17,24 @@ internal sealed class TitleCommunityHandler :
     IRequestHandler<GetTitleRarityQuery, TitleRarityRecord>,
     IRequestHandler<GetTitleHoldersQuery, TitleHoldersRecord>
 {
+    // The eight total-pool [P.B] rungs are the only titles whose holders subdivide by level.
+    // Resolved from the shipped taxonomy rather than spelled out, so a renamed gem cannot leave
+    // a stale name behind here.
+    private static readonly IReadOnlySet<Name> TotalPumbilityGems = Phoenix2TitleList.BuildList()
+        .OfType<Phoenix2PumbilityTitle>()
+        .Where(t => t.Pool == PumbilityPool.Total)
+        .Select(t => t.Name)
+        .ToHashSet();
+
+    private readonly IPlayerStatsReader _stats;
     private readonly ITitleRepository _titles;
     private readonly IUserReader _users;
 
-    public TitleCommunityHandler(ITitleRepository titles, IUserReader users)
+    public TitleCommunityHandler(ITitleRepository titles, IUserReader users, IPlayerStatsReader stats)
     {
         _titles = titles;
         _users = users;
+        _stats = stats;
     }
 
     public async Task<TitleRarityRecord> Handle(GetTitleRarityQuery request, CancellationToken cancellationToken)
@@ -43,10 +57,37 @@ internal sealed class TitleCommunityHandler :
         var holders = standing
             .Where(id => users.TryGetValue(id, out var user) && user.IsPublic)
             .Select(id => new TitleHolder(users[id]))
-            .OrderBy(h => h.User.Name.ToString())
             .ToArray();
 
-        return new TitleHoldersRecord(holders, standing.Length - holders.Length, climbedPast);
+        holders = await AttachPools(request, holders, cancellationToken);
+
+        // Pool-less titles all sort by name (every pool is null); the gem rungs read strongest
+        // first, which is the order their level groups render in.
+        return new TitleHoldersRecord(
+            holders
+                .OrderByDescending(h => h.TotalPumbility ?? double.MinValue)
+                .ThenBy(h => h.User.Name.ToString())
+                .ToArray(),
+            standing.Length - holders.Length, climbedPast);
+    }
+
+    /// <summary>
+    ///     On the eight total-PUMBILITY gems the drawer subdivides holders by level, and the level
+    ///     is a function of the pool — so those rungs, and only those, pay one extra batch read.
+    ///     The pool rides the record raw; presentation is the only thing that rounds one.
+    /// </summary>
+    private async Task<TitleHolder[]> AttachPools(GetTitleHoldersQuery request, TitleHolder[] holders,
+        CancellationToken cancellationToken)
+    {
+        if (request.Mix != MixEnum.Phoenix2 || holders.Length == 0 ||
+            !TotalPumbilityGems.Contains(request.Title))
+            return holders;
+
+        var pools = (await _stats.GetStats(request.Mix, holders.Select(h => h.User.Id), cancellationToken))
+            .ToDictionary(s => s.UserId, s => s.SkillRating);
+        return holders
+            .Select(h => pools.TryGetValue(h.User.Id, out var pool) ? h with { TotalPumbility = pool } : h)
+            .ToArray();
     }
 
     /// <summary>

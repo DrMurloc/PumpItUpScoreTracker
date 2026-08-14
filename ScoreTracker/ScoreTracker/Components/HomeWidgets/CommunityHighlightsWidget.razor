@@ -2,6 +2,7 @@
 @using MediatR
 @using ScoreTracker.Communities.Contracts
 @using ScoreTracker.Communities.Contracts.Queries
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
 @using ScoreTracker.PlayerProgress.Contracts
@@ -126,6 +127,15 @@ else
                             {
                                 <div class="dash-ch-win">
                                     <span class="dash-ch-why">📈 @FolderProgressCaption(win)</span>
+                                </div>
+                            }
+                            else if (win.Kind == WinKind.PumbilityLevelUp)
+                            {
+                                <div class="dash-ch-win">
+                                    <span class="dash-ch-why">
+                                        <PumbilityLevelBadge Level="LevelOf(win)" Height="18"></PumbilityLevelBadge>
+                                        <b>@L["Reached {0}", LevelName(win)]</b>@PoolSuffix(win)
+                                    </span>
                                 </div>
                             }
                             else if (win.TitleName != null)
@@ -380,6 +390,17 @@ else
                     </div>
                 </MudTooltip>
             }
+            else if (win.Kind == WinKind.PumbilityLevelUp)
+            {
+                <MudTooltip Text="@($"{L["Reached {0}", LevelName(win)]}{PoolSuffix(win)}")" Arrow="true">
+                    <div class="dash-chart-card dash-card-text">
+                        <div class="dash-card-emoji">
+                            <PumbilityLevelBadge Level="LevelOf(win)" Height="22"></PumbilityLevelBadge>
+                        </div>
+                        <div class="dash-card-name">@LevelName(win)</div>
+                    </div>
+                </MudTooltip>
+            }
             else
             {
                 @* Big + rare titles: name, plus "Rare Title" for a rare-title win only (no "completed"). *@
@@ -395,5 +416,20 @@ else
                 </MudTooltip>
             }
         </text>;
+
+    // ---- the PUMBILITY level-up row (docs/design/pumbility-levels.md §5) ----
+
+    private static Phoenix2PumbilityLevel? LevelOf(SignificantWin win) =>
+        win.Rank is { } index ? Phoenix2PumbilityLevel.FromIndex(index) : null;
+
+    // The gem is the game's own proper noun; only a row whose index no longer resolves needs a
+    // word of ours.
+    private string LevelName(SignificantWin win) =>
+        LevelOf(win) is { } level && PumbilityLevelChange.LabelFor(level) is { Length: > 0 } label
+            ? label
+            : L["Level Up"];
+
+    private string PoolSuffix(SignificantWin win) =>
+        win.PoolValue is { } pool ? $" · {pool.ToString("N0")}" : string.Empty;
 
 }

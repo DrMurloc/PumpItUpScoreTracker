@@ -22,6 +22,15 @@
                     <span class="sbd-track-held" style="@($"width:{Clamp(bar.OldPercent)}%")"></span>
                     <span class="sbd-track-gain"
                           style="@($"left:{Clamp(bar.OldPercent)}%;width:{Clamp(bar.NewPercent) - Clamp(bar.OldPercent)}%")"></span>
+                    @* A gem title's bar spans one gem (the percents are floor-aware), so it wears
+                       that gem's level rungs. The name lookup is the gate: [S]/[D] and Phoenix
+                       titles resolve to nothing and stay exactly as they are
+                       (docs/design/pumbility-levels.md §8). *@
+                    @if (PumbilityLevelMarkers.GemSpanFor(bar.Title) is { } span)
+                    {
+                        <PumbilityLevelTicks Floor="span.Floor" Ceiling="span.Required"
+                                             Pool="bar.Current"></PumbilityLevelTicks>
+                    }
                 </div>
                 @if (bar.Required > 0)
                 {

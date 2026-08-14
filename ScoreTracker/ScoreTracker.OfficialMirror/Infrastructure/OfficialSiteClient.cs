@@ -312,7 +312,41 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         // The pool page is live; the ranking board is a daily 01:00 KST batch and would report a
         // player who played today as mismatched against their own scores.
         var pumbility = await _piuGame.GetPumbility(mix, client, cancellationToken);
+        await MirrorPumbilityBadge(mix, pumbility, cancellationToken);
         return new AccountCensus(mix, buckets, pumbility.Total);
+    }
+
+    /// <summary>
+    ///     Mirrors the importer's PUMBILITY badge into <c>pumbility/p2</c> the first time anyone
+    ///     wears an index we do not hold — the same self-heal the avatars use — and logs the
+    ///     (pool, badge) pair either way: importers below the board's floor are the only
+    ///     observations that can ever confirm the derived rungs
+    ///     (docs/design/pumbility-levels.md §6). Never fails the read it rides on.
+    /// </summary>
+    private async Task MirrorPumbilityBadge(MixEnum mix, PiuGameGetPumbilityResult pumbility,
+        CancellationToken cancellationToken)
+    {
+        if (mix != MixEnum.Phoenix2 || pumbility.BadgeIndex is not { } index ||
+            pumbility.BadgeImageUrl == null) return;
+
+        try
+        {
+            _logger.LogInformation("PumbilityBadgeObservation Index={BadgeIndex} Pool={Pool}", index,
+                pumbility.Total);
+
+            // Ours pad uniformly; the source's padding flips at ten, which is why the copy uses
+            // the page's own URL rather than rebuilding the name.
+            var path = $"/pumbility/p2/pumbility_{index:00}.png";
+            if (await _fileUpload.DoesFileExist(path, out _, cancellationToken)) return;
+
+            await _fileUpload.CopyFromSource(pumbility.BadgeImageUrl, path, cancellationToken);
+            _logger.LogInformation("Mirrored pumbility badge {BadgeIndex} from {Source}", index,
+                pumbility.BadgeImageUrl);
+        }
+        catch (Exception e) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogError(e, "Pumbility badge mirror failed; the read continues");
+        }
     }
 
     // A repair walks a level to its end rather than stopping on an up-score window: the window is
@@ -612,6 +646,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
 
             var pumbility = await _piuGame.GetPumbility(mix, sessionId, cancellationToken);
             ScoringObservations.ObservePumbility(_logger, mix, pumbility.Entries);
+            await MirrorPumbilityBadge(mix, pumbility, cancellationToken);
         }
         // Filtering on the token rather than the exception type: a cancelled import does not
         // reliably surface as OperationCanceledException, and swallowing a cancellation here

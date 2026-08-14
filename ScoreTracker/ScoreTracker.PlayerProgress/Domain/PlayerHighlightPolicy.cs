@@ -78,6 +78,12 @@ internal static class PlayerHighlightPolicy
             if (win is not null) wins.Add(win.Value);
         }
 
+        // The level crossing is a batch-level fact, not a per-milestone one: whether it speaks
+        // depends on which titles completed beside it, so it derives from the whole set.
+        if (PumbilityLevelChange.TryFrom(e.Mix, e.Milestones) is { } levelUp)
+            wins.Add((PriorityPumbilityLevelUp, new SignificantWin(WinKind.PumbilityLevelUp,
+                Rank: levelUp.To.Index, PoolValue: levelUp.NewPool)));
+
         foreach (var change in e.Changes)
         {
             if (!charts.TryGetValue(change.ChartId, out var chart)) continue;
@@ -214,15 +220,17 @@ internal static class PlayerHighlightPolicy
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     // Priority: lower renders first (owner order 2026-07-13): titles, then folder wins, then the
-    // number wins. Within titles, rare above big.
+    // number wins. Within titles, rare above big. The level crossing sits with the titles — it is
+    // a gem sub-step, and it only ever speaks when the gem title itself stayed quiet.
     private const int PriorityRareTitle = 0;
     private const int PriorityBigTitle = 1;
-    private const int PriorityFolderComplete = 2;
-    private const int PriorityFolderProgress = 3;
-    private const int PriorityFolderFirst = 4;
-    private const int PriorityTopPumbility = 5;
-    private const int PriorityNotablePg = 6;
-    private const int PriorityPeerElite = 7;
+    private const int PriorityPumbilityLevelUp = 2;
+    private const int PriorityFolderComplete = 3;
+    private const int PriorityFolderProgress = 4;
+    private const int PriorityFolderFirst = 5;
+    private const int PriorityTopPumbility = 6;
+    private const int PriorityNotablePg = 7;
+    private const int PriorityPeerElite = 8;
 }
 
 /// <summary>

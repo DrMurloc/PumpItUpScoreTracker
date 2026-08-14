@@ -853,6 +853,67 @@ public sealed class CommunitySagaTests
     }
 
     [Fact]
+    public async Task ALevelCrossingRidesThePumbilityLine()
+    {
+        // The crossing is the PUMBILITY line's headline, not a second stats row — the block is
+        // budget-reserved and the label is the game's own notation (docs/design/pumbility-levels.md §5).
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 950000);
+        var milestones = new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, sessionId, Now, 17410.38, 17602.69, null, null)
+        };
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, sessionId, milestones,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs => msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                t.Markdown.Contains(
+                    "📈 **PUMBILITY** 17,410 → **17,603** (+192) · 🆙 **DIAMOND LV.3 → LV.4**"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheGemTitleKeepsTheCardsLevelLineQuiet()
+    {
+        // Crossing into RED BERYL LV.1 IS the [P.B] RED BERYL title, and the achievements block
+        // already announces it — the PUMBILITY line stays plain rather than saying it twice.
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenUser(userId, name: "alice");
+        ctx.GivenUserCommunitiesWithChannel(userId, communityName: "Acme", channelId: 12345);
+        ctx.GivenScoreAnnouncementLookups(MixEnum.Phoenix2, userId, chart, score: 950000);
+        var milestones = new[]
+        {
+            new PlayerMilestoneRecord(MilestoneKind.PumbilityGain, sessionId, Now, 17950, 18010, null, null),
+            new PlayerMilestoneRecord(MilestoneKind.TitleCompleted, sessionId, Now, null, null,
+                "[P.B] RED BERYL", null)
+        };
+
+        await ctx.Saga.Consume(BuildContext(CapturedEvent(userId, MixEnum.Phoenix2, sessionId, milestones,
+            (chart.Id, true, HighlightFlags.None))));
+
+        ctx.Bot.Verify(b => b.SendRichMessages(
+            It.Is<IEnumerable<RichBotMessage>>(msgs =>
+                msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                    t.Markdown.Contains("📈 **PUMBILITY** 17,950 → **18,010** (+60)"))
+                && msgs.Single().Blocks.OfType<RichBotText>().Any(t =>
+                    t.Markdown.Contains("🏅 **[P.B] RED BERYL** completed"))
+                && !msgs.Single().Blocks.OfType<RichBotText>().Any(t => t.Markdown.Contains("🆙"))),
+            It.IsAny<IEnumerable<ulong>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task FolderMovementRidesTheCardAsOneLineShowingOnlyWhatMoved()
     {
         // Discord gets the full spectrum, unlike the homepage widget: a shallow tier and a

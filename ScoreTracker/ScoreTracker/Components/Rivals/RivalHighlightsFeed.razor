@@ -123,9 +123,21 @@ else
         WinKind.FolderFirst => $"🆕 {L["{0} pass in this folder", Ordinal(win.Rank ?? 0)]}",
         WinKind.FolderComplete => $"🎉 {L["Cleared all of {0}", win.Difficulty ?? ""]}",
         WinKind.FolderProgress => $"📈 {L["{0}% of {1}", win.Rank ?? 0, win.Difficulty ?? ""]}",
+        WinKind.PumbilityLevelUp => $"🆙 {L["Reached {0}", LevelName(win)]}{PoolSuffix(win)}",
         WinKind.RareTitle => $"🏅 [{win.TitleName}] · {L["only {0} hold it", Pct(win.RarityShare)]}",
         _ => $"🏅 [{win.TitleName}]"
     };
+
+    // The gem is the game's own proper noun and never localizes.
+    private string LevelName(SignificantWin win) =>
+        win.Rank is { } index &&
+        ScoreTracker.Domain.Models.Titles.Phoenix2.Phoenix2PumbilityLevel.FromIndex(index) is { } level &&
+        PumbilityLevelChange.LabelFor(level) is { Length: > 0 } label
+            ? label
+            : L["Level Up"];
+
+    private static string PoolSuffix(SignificantWin win) =>
+        win.PoolValue is { } pool ? $" · {pool.ToString("N0")}" : string.Empty;
 
     private static string Ordinal(int n) => n switch { 1 => "1st", 2 => "2nd", 3 => "3rd", _ => $"{n}th" };
 

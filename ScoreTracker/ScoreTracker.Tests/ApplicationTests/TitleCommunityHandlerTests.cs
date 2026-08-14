@@ -18,10 +18,11 @@ namespace ScoreTracker.Tests.ApplicationTests;
 
 public sealed class TitleCommunityHandlerTests
 {
+    private readonly Mock<IPlayerStatsReader> _stats = new();
     private readonly Mock<ITitleRepository> _titles = new();
     private readonly Mock<IUserReader> _users = new();
 
-    private TitleCommunityHandler Handler => new(_titles.Object, _users.Object);
+    private TitleCommunityHandler Handler => new(_titles.Object, _users.Object, _stats.Object);
 
     private static User Player(string name, bool isPublic = true)
     {
@@ -34,6 +35,14 @@ public sealed class TitleCommunityHandlerTests
             .ReturnsAsync(holders.Select(h => new TitleAchievedRecord(h.user.Id, "The Master", h.paragon)));
         _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(holders.Select(h => h.user));
+    }
+
+    private void HasPools(params (Guid userId, double pool)[] pools)
+    {
+        _stats.Setup(s => s.GetStats(MixEnum.Phoenix2, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(pools.Select(p => new PlayerStatsRecord(p.userId, 12000, 22, 500, 0, 0, p.pool,
+                950000, 20.5, 871, 960000, 20.9, 852, 940000, 20.1, 20.6, 20.8, 20.2)));
     }
 
     [Fact]
@@ -83,6 +92,56 @@ public sealed class TitleCommunityHandlerTests
             CancellationToken.None);
 
         Assert.Equal(new[] { "Alpha", "Mid", "Zephyr" }, result.Holders.Select(h => h.User.Name.ToString()));
+    }
+
+    [Fact]
+    public async Task ANonGemTitleNeverPaysTheStatsRead()
+    {
+        HasHolders((Player("Anyone"), ParagonLevel.AA));
+
+        var result = await Handler.Handle(new GetTitleHoldersQuery(MixEnum.Phoenix, "The Master"),
+            CancellationToken.None);
+
+        Assert.All(result.Holders, h => Assert.Null(h.TotalPumbility));
+        _stats.Verify(
+            s => s.GetStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AGemRungCarriesEachHoldersPoolStrongestFirst()
+    {
+        var mid = Player("Mid");
+        var top = Player("Top");
+        var low = Player("Low");
+        HasHolders((mid, ParagonLevel.None), (top, ParagonLevel.None), (low, ParagonLevel.None));
+        HasPools((mid.Id, 17_641.20), (top.Id, 17_791.55), (low.Id, 17_612.03));
+
+        var result = await Handler.Handle(new GetTitleHoldersQuery(MixEnum.Phoenix2, "[P.B] DIAMOND"),
+            CancellationToken.None);
+
+        Assert.Equal(new[] { "Top", "Mid", "Low" }, result.Holders.Select(h => h.User.Name.ToString()));
+        Assert.Equal(new double?[] { 17_791.55, 17_641.20, 17_612.03 },
+            result.Holders.Select(h => h.TotalPumbility));
+    }
+
+    /// <summary>
+    ///     A titles row can exist for an account whose stats row does not (or not yet) — the holder
+    ///     stays listed, just without a number, and sorts after everyone who has one.
+    /// </summary>
+    [Fact]
+    public async Task AHolderWithoutAStatsRowStaysListedWithoutAPool()
+    {
+        var known = Player("Known");
+        var statless = Player("Statless");
+        HasHolders((statless, ParagonLevel.None), (known, ParagonLevel.None));
+        HasPools((known.Id, 17_100.5));
+
+        var result = await Handler.Handle(new GetTitleHoldersQuery(MixEnum.Phoenix2, "[P.B] DIAMOND"),
+            CancellationToken.None);
+
+        Assert.Equal(new[] { "Known", "Statless" }, result.Holders.Select(h => h.User.Name.ToString()));
+        Assert.Null(result.Holders[1].TotalPumbility);
     }
 
     [Fact]
