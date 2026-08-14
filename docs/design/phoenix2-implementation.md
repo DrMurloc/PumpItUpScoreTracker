@@ -62,7 +62,7 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   | Ultimate Game | **0.017** | 0.016 |
   | AA | **1.36** | 1.37 |
   | A+ | **1.33** | 1.35 |
-  | A | **1.28** | *1.30 (inferred)* |
+  | A | **1.28** | **1.30** |
   | B | **1.20** | *1.25 (inferred)* |
   | C | **1.10** | **1.20** |
   | D | **1.00** | *1.15 (inferred)* |
@@ -84,14 +84,30 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   a P1 **D** but a P2 **F** and so reprices from about 0.9 × base to nothing.
 
   **Which cells are measured and which are guesses.** All eight plate × type cells on each side
-  are measured, the whole Singles grade ladder is measured, and on Doubles everything from AA
-  up plus C is measured. **A, B and D on Doubles are guesses.** A and B interpolate the two
-  Doubles rungs read either side of them (A+ 1.35 and C 1.20) on the uniform −0.05 step, the only
-  even spacing that lands on C; **D 1.15 is an extrapolation** below the lowest measured Doubles
-  rung, making it the weakest cell in the table and the one carrying its widest type gap (−0.15).
-  All three are pinned by `InferredDoublesRungsBelowAPlusAreGuessesOnAUniformStep` so that
-  replacing one with a live reading is deliberate. A Double priced at A, B or D closes the last
-  of it.
+  are measured, the whole Singles grade ladder is measured, and on Doubles everything from AA up
+  plus **A** and C is measured. **B and D on Doubles are the only guesses left.** B interpolates
+  the two Doubles rungs read either side of it (A 1.30 and C 1.20) on the uniform −0.05 step;
+  **D 1.15 is an extrapolation** below the lowest measured Doubles rung, making it the weakest
+  cell in the table and the one carrying its widest type gap (−0.15). Both are pinned by
+  `InferredDoublesRungsBelowAAreGuessesOnAUniformStep` so that replacing one with a live reading
+  is deliberate. A Double priced at B or D closes the last of it.
+
+  **A on Doubles was a guess and is now measured — at exactly the guessed value.** Five import
+  rows (2026-08-13/14) across four levels and three plates all imply 1.3000 and nothing else:
+  D24 MG 326.50 = Base(24) 250 × 1.306 · D25 RG 338.00 = 260 × 1.300 · D26 FG 351.54 =
+  270 × 1.302 · D27 FG 364.56 = 280 × 1.302. That does two things beyond closing the cell: it
+  corroborates the −0.05 step rather than merely assuming it, and it moves B from *reaching down
+  from A+* to *interpolating between two measurements*. Note where the remaining evidence gap
+  actually sits — telemetry has never priced a chart above level 27, so **Base(28) = 290 and
+  Base(29) = 300 are extrapolation**, the post-24 kink being confirmed only at 25, 26 and 27.
+  The five charts up there are all Doubles (*1949*, *Dead End*, *Neo Catharsis*, *Paradoxx* at
+  28; *1948* at 29) and none has entered an imported pool.
+
+  **Where the last two cells will come from.** Not from strong players: a Double scored in the
+  B (700k–799k) or D (500k–599k) band essentially never survives into a top-50 pool. They come
+  from **beginners with fewer than fifty charts**, where every chart enters the pool regardless
+  of what it contributes — which is exactly how the single Doubles C reading arrived, on a D12.
+  So these cells fill as Phoenix 2 picks up casual importers, not as the elite grind.
 
   **A competing fit exists, was considered, and was declined — do not re-derive it.** The Singles
   ladder, the only fully measured one, *widens* going down (steps 0.03/0.05/0.08/0.10/0.10)
@@ -101,12 +117,16 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   anyone tempted anyway — it does **not** resolve the title-reachability note below. It makes it
   slightly worse, so the two questions are independent.
 
-  **What the Doubles A guess visibly decides.** `/Titles` projects a folder per reference grade
+  **What the Doubles A rung visibly decides.** `/Titles` projects a folder per reference grade
   by pricing fifty charts of that folder, so at the bottom reference grade the highest Doubles
   folder sets a ceiling: fifty D29s at an A on a Talented Game plate. At A 1.28 that ceiling is
   19,260 and at 1.30 it is 19,560, which moves `[D] EXPERT LV.9` (19,300), `[D] EXPERT LV.10`
-  (19,400) and `DOUBLE MASTER` (19,500) from "no folder reaches this at A" to "D29 does" — the
-  last of them on a 0.3% margin over a number nothing has measured. Left as is deliberately: a
+  (19,400) and `DOUBLE MASTER` (19,500) from "no folder reaches this at A" to "D29 does". The
+  multiplier deciding that is now measured, so the caveat that used to sit here has **moved
+  rather than cleared**: the ceiling is `50 × Base(29) × 1.304`, and `Base(29) = 300` is the
+  extrapolated end of the curve — nothing above level 27 has ever been priced, so the 0.3%
+  margin on `DOUBLE MASTER` now rests on the base rather than on the grade. Left as is
+  deliberately, and for the reason it always was: a
   Doubles pool cannot exceed the merged total, and the highest merged total on the mirrored world
   board is 19,638.92, so all three rungs sit at or past the current world frontier and the claim
   is being made to approximately nobody.
