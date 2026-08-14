@@ -47,86 +47,13 @@
 }
 else
 {
-    @* Round 9: the lens controls render in the desktop content bar AND the compact
-       Advanced drawer — one fragment so they can't drift. *@
-    RenderFragment lensControls = @<text>
-        @* A legacy mix gets no lens control at all. It has exactly one — Community Rating,
-           off the vote aggregates — so the picker was a disabled dropdown with a single
-           option, which is a control that looks broken rather than one that explains itself.
-           It comes back when voting does; the lens itself is unchanged (owner, 2026-08-10). *@
-        @if (!IsLegacy)
-        {
-        @* Three shapes, because the lens means three different things. On the tier views it
-           RANKS, so Community offers every community list and Personalized offers only the two
-           that have a personalized recipe. On My Scores and Skill Breakdown something else does
-           the sectioning and the lens only annotates each card — so it is labelled for what it
-           does there, and it can name a personalized reading outright, which is the one place
-           those are reachable from. *@
-        @if (_groupBy == "Personalized")
-        {
-            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
-                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-            </MudSelect>
-        }
-        else if (IsTierView)
-        {
-            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-                @if (PumbilityAvailable)
-                {
-                    <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
-                }
-                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
-                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-                @if (ChabalaAvailable)
-                {
-                    <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
-                }
-                <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
-            </MudSelect>
-        }
-        else
-        {
-            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Shown Difficulty"]" Disabled="_isLoading" Value="ShownDifficultyValue" ValueChanged="ChangeShownDifficulty">
-                @if (PumbilityAvailable)
-                {
-                    <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
-                }
-                <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
-                <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
-                @if (CanPersonalize)
-                {
-                    <MudSelectItem T="string" Value="@("Personalized PUMBILITY")">@L["Personalized PUMBILITY"]</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("Personalized Score")">@L["Personalized Score"]</MudSelectItem>
-                }
-                @if (ChabalaAvailable)
-                {
-                    <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
-                }
-                <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
-            </MudSelect>
-        }
-        }
-        @if (IsMyProgress)
-        {
-            <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Grouped by"]" Value="_groupBy" ValueChanged="ChangeGrouping">
-                @if (CurrentUser.IsLoggedIn)
-                {
-                    <MudSelectItem T="string" Value="@("Score")">@L["Score"]</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("Age")">@L["Age"]</MudSelectItem>
-                    <MudSelectItem T="string" Value="@("Score Ranking")">@L["Score Ranking"]</MudSelectItem>
-                }
-                <MudSelectItem T="string" Value="@("Scoring Level")">@L["Scoring level"]</MudSelectItem>
-            </MudSelect>
-        }
-    </text>;
     <div class="tier-page">
-    @* 1 — sticky toolbar. Desktop: one line — folder → view → personalized → Download.
-       Round 9 compact (<960): one clean row of Folder → view → Advanced; the Advanced
-       drawer holds Personalized, Ranked-by, Grouped-by, Download, and the whole filter
-       panel (replacing round 8's bottom action bar, which fought the shell's bottom
-       nav). Below 600 the Advanced button slots before the view group and everything
-       centers, so the wrap is deliberate instead of ragged. *@
+    @* 1 — sticky toolbar: the whole "what list am I looking at" choice — folder, view,
+       lens, grouping — in one place at every width. Desktop reads as one line (the row
+       flattens via display:contents); under 960 the view buttons take the second line
+       whole, keeping all four glanceable; under 500 they hand over to the View select
+       and the lens controls take their own line. The presentation tools live in the
+       content bar below. *@
     <div class="tier-toolbar">
         <div class="tier-toolbar-row">
             @* CoOp folders are never marked missing: the lens is not offered there, so picking
@@ -151,74 +78,125 @@ else
                     <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["Skill Breakdown"]</MudButton>
                 }
             </MudButtonGroup>
-            @* Score only: the Breakdown page explains the Score projection and coerces any
-               other lens to it, so linking it from Personalized PUMBILITY would answer a
-               different question than the one on screen. A PUMBILITY breakdown mode is
-               deferred (design doc §10) — deferring means no link, not a rerouted one. *@
-            @if (_groupBy == "Personalized" && _tierListType == "Score")
-            {
-                @* The only thing the retired "Personalized for {gametag}" chip did that the
-                   selected view button does not: get you to the breakdown. *@
-                <MudTooltip Text="@L["How is this personalized?"]">
-                    <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
-                                   aria-label="@L["How is this personalized?"]"></MudIconButton>
-                </MudTooltip>
-            }
-            <MudButton Class="tier-compact-only tier-advanced-btn" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
-                       StartIcon="@Icons.Material.Filled.Tune" OnClick="() => _advancedOpen = true">@L["Advanced"]</MudButton>
-        </div>
-        <div class="tier-toolbar-row tier-desktop-only">
-            <MudSpacer></MudSpacer>
-            @if (CurrentUser.IsLoggedIn)
-            {
-                @* Piucenter round 6: on desktop the Folder Stats trigger rides the
-                   toolbar next to Download, decluttering the row around the sections. *@
-                <MudButton Color="Color.Primary" Variant="Variant.Outlined"
-                           StartIcon="@Icons.Material.Filled.QueryStats"
-                           OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
-            }
-            <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
-                       StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
-                       Disabled="_isBuildingImage || _isLoading">
-                @if (_isBuildingImage)
+            @* The same four views as one control under 500 — on a portrait phone even a
+               dedicated row can't hold the buttons in every locale (French needs ~460px). *@
+            <MudSelect T="string" Class="tier-toolbar-select tier-view-select" Label="@L["View"]" Disabled="_isLoading" Value="ViewValue" ValueChanged="ChangeView">
+                <MudSelectItem T="string" Value="@("Difficulty")">@L["Community"]</MudSelectItem>
+                @if (CanPersonalize)
                 {
-                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
-                    @L["Generating"]
+                    <MudSelectItem T="string" Value="@("Personalized")" Disabled="_thinCohort != null">@L["Personalized"]</MudSelectItem>
+                }
+                <MudSelectItem T="string" Value="@("MyProgress")">@L["My Scores"]</MudSelectItem>
+                @if (FolderHasSkills)
+                {
+                    <MudSelectItem T="string" Value="@("Skill")">@L["Skill Breakdown"]</MudSelectItem>
+                }
+            </MudSelect>
+            <div class="tier-lens-wrap">
+                @* A legacy mix gets no lens control at all. It has exactly one — Community Rating,
+                   off the vote aggregates — so the picker was a disabled dropdown with a single
+                   option, which is a control that looks broken rather than one that explains itself.
+                   It comes back when voting does; the lens itself is unchanged (owner, 2026-08-10). *@
+                @if (!IsLegacy)
+                {
+                @* Three shapes, because the lens means three different things. On the tier views it
+                   RANKS, so Community offers every community list and Personalized offers only the two
+                   that have a personalized recipe. On My Scores and Skill Breakdown something else does
+                   the sectioning and the lens only annotates each card — so it is labelled for what it
+                   does there, and it can name a personalized reading outright, which is the one place
+                   those are reachable from. *@
+                @if (_groupBy == "Personalized")
+                {
+                    <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
+                        <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                    </MudSelect>
+                }
+                else if (IsTierView)
+                {
+                    <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
+                        @if (PumbilityAvailable)
+                        {
+                            <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                        }
+                        <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                        @if (ChabalaAvailable)
+                        {
+                            <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
+                        }
+                        <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
+                    </MudSelect>
                 }
                 else
                 {
-                    @L["Download"]
+                    <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Shown Difficulty"]" Disabled="_isLoading" Value="ShownDifficultyValue" ValueChanged="ChangeShownDifficulty">
+                        @if (PumbilityAvailable)
+                        {
+                            <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                        }
+                        <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
+                        @if (CanPersonalize)
+                        {
+                            <MudSelectItem T="string" Value="@("Personalized PUMBILITY")">@L["Personalized PUMBILITY"]</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("Personalized Score")">@L["Personalized Score"]</MudSelectItem>
+                        }
+                        @if (ChabalaAvailable)
+                        {
+                            <MudSelectItem T="string" Value="@("Chabala")">Chabala</MudSelectItem>
+                        }
+                        <MudSelectItem T="string" Value="@("PG")">PG</MudSelectItem>
+                    </MudSelect>
                 }
-            </MudButton>
+                }
+                @if (IsMyProgress)
+                {
+                    <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Grouped by"]" Value="_groupBy" ValueChanged="ChangeGrouping">
+                        @if (CurrentUser.IsLoggedIn)
+                        {
+                            <MudSelectItem T="string" Value="@("Score")">@L["Score"]</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("Age")">@L["Age"]</MudSelectItem>
+                            <MudSelectItem T="string" Value="@("Score Ranking")">@L["Score Ranking"]</MudSelectItem>
+                        }
+                        <MudSelectItem T="string" Value="@("Scoring Level")">@L["Scoring level"]</MudSelectItem>
+                    </MudSelect>
+                }
+            </div>
         </div>
     </div>
-    @* The badges row always names the active lens (and the grouping, on My Progress)
-       so a glance tells you what tier list you're looking at — the selects themselves
-       hide inside the Advanced drawer on compact. *@
-    <div class="tier-badges">
-        @if (_isProvisionalFallback)
-        {
-            <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
-        }
-        @* Same reason as the picker: naming the only lens there is says nothing. *@
-        @if (!IsLegacy)
-        {
-            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@(IsTierView ? L["Ranked by"] : L["Shown Difficulty"]): @LensDisplayName(_tierListType)</MudChip>
-        }
-        @if (IsMyProgress)
-        {
-            <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small">@L["Grouped by"]: @L[_groupBy]</MudChip>
-        }
-    </div>
-    @* Who the personalized list ranked you against. Same slot on every personalized lens;
-       only the cohort differs — PUMBILITY title ranges here, competitive level on Score. *@
-    @if (PersonalizedActive && _cohortSize > 0)
+    @* The context caption: the one chip that is a warning, and who the personalized list
+       ranked you against — a note under the controls, not a headline. The lens-naming
+       chips died with the Advanced drawer: the selects are visible at every width now. *@
+    @if (_isProvisionalFallback || (PersonalizedActive && _cohortSize > 0))
     {
-        <MudText Typo="Typo.body2" Class="tier-cohort-line">
-            @(_tierListType == "PUMBILITY"
-                ? L["Ranked against {0} players in your PUMBILITY title ranges", _cohortSize]
-                : L["Ranked against {0} players of similar competitive level", _cohortSize])
-        </MudText>
+        <div class="tier-context-line">
+            @if (_isProvisionalFallback)
+            {
+                <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
+            }
+            @* Same slot on every personalized lens; only the cohort differs — PUMBILITY
+               title ranges here, competitive level on Score. *@
+            @if (PersonalizedActive && _cohortSize > 0)
+            {
+                <span>
+                    @(_tierListType == "PUMBILITY"
+                        ? L["Ranked against {0} players in your PUMBILITY title ranges", _cohortSize]
+                        : L["Ranked against {0} players of similar competitive level", _cohortSize])
+                </span>
+                @* Score only: the Breakdown page explains the Score projection and coerces any
+                   other lens to it, so linking it from Personalized PUMBILITY would answer a
+                   different question than the one on screen. A PUMBILITY breakdown mode is
+                   deferred (design doc §10) — deferring means no link, not a rerouted one. *@
+                @if (_groupBy == "Personalized" && _tierListType == "Score")
+                {
+                    <MudTooltip Text="@L["How is this personalized?"]">
+                        <MudIconButton Icon="@Icons.Material.Outlined.HelpOutline" Size="Size.Small" Href="@BreakdownUrl"
+                                       aria-label="@L["How is this personalized?"]"></MudIconButton>
+                    </MudTooltip>
+                }
+            }
+        </div>
     }
     @* 3 — folder progress (logged in) or the rule-9 import CTA (anonymous).
        Piucenter round 5: folder progress lives ONLY in the Folder Stats drawer at
@@ -363,17 +341,15 @@ else
     <div class="tier-content-bar">
         @if (CurrentUser.IsLoggedIn)
         {
-            @* Round 9: on compact, Folder Stats takes the Ranked-by slot; on desktop
-               it rides the toolbar next to Download (piucenter round 6). *@
-            <MudButton Class="tier-compact-only" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small"
-                       StartIcon="@Icons.Material.Filled.QueryStats" OnClick="() => _statsOpen = true">@L["Folder Stats"]</MudButton>
+            @* One home at every width; the name rides the tooltip and aria-label. *@
+            <MudTooltip Text="@L["Folder Stats"]">
+                <MudIconButton Icon="@Icons.Material.Filled.QueryStats" Color="Color.Primary" Variant="Variant.Outlined"
+                               OnClick="() => _statsOpen = true" aria-label="@L["Folder Stats"]"></MudIconButton>
+            </MudTooltip>
         }
-        <div class="tier-flat tier-desktop-only">
-            @lensControls
-        </div>
         <MudSpacer></MudSpacer>
-        @* The card-outline legend rides the middle of the toolbar, between the lens and the
-           density switch — it explains the borders on the cards below (desktop only). *@
+        @* The card-outline legend rides the middle of the bar — it explains the borders
+           on the cards below (desktop only). *@
         <div class="tier-desktop-only">
             <BorderLegend ShowOtherMix="_settings.ShowOtherMixPasses"></BorderLegend>
         </div>
@@ -403,6 +379,17 @@ else
                                OnClick="() => _filtersOpen = true" aria-label="@L["Filters and Columns"]"></MudIconButton>
             </MudBadge>
         </MudTooltip>
+        @if (_isBuildingImage)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small"></MudProgressCircular>
+        }
+        else
+        {
+            <MudTooltip Text="@L["Download"]">
+                <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" Variant="Variant.Outlined"
+                               OnClick="DownloadImage" Disabled="_isLoading" aria-label="@L["Download"]"></MudIconButton>
+            </MudTooltip>
+        }
     </div>
     @* Active-filter chips: labeled so it's obvious what the chips are (round 6). *@
     @if (HasActiveFilters)
@@ -707,36 +694,6 @@ else
         </div>
     </MudDrawer>
     </MudLayout>
-    @* Round 9: the compact Advanced drawer replaces the bottom action bar (which
-       stacked awkwardly on the shell's bottom nav). Owner-specced order: Ranked-by →
-       Grouped-by → Personalized → Download. Filtering deliberately is NOT here —
-       the Filters icon + drawer are the same at every width. *@
-    <MudLayout>
-    <MudDrawer @bind-Open="_advancedOpen" Anchor="Anchor.Right" Variant="@DrawerVariant.Temporary" Width="320px">
-        <div class="tier-filter-drawer">
-            <div class="tier-drawer-head">
-                <MudText Typo="Typo.h6">@L["Advanced"]</MudText>
-                <MudSpacer></MudSpacer>
-                <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="() => _advancedOpen = false"
-                               aria-label="@L["Close"]"></MudIconButton>
-            </div>
-            @lensControls
-            <MudButton OnClick="DownloadImage" Color="Color.Primary" Variant="Variant.Outlined"
-                       StartIcon="@(_isBuildingImage ? null : Icons.Material.Filled.FileDownload)"
-                       Disabled="_isBuildingImage || _isLoading">
-                @if (_isBuildingImage)
-                {
-                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
-                    @L["Generating"]
-                }
-                else
-                {
-                    @L["Download"]
-                }
-            </MudButton>
-        </div>
-    </MudDrawer>
-    </MudLayout>
     <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"
                         Score="_detailsChart != null && _scores.TryGetValue(_detailsChart.Id, out var detailsScore) ? detailsScore : null"
                         Ranking="_detailsChart != null && _scoreRankings.TryGetValue(_detailsChart.Id, out var detailsRank) ? detailsRank : null"
@@ -746,10 +703,10 @@ else
     </div>
 }
 <style>
-    /* Round 8: one clamp for 4K, one 960px breakpoint (matches the shell's bottom
-       nav). Below it: two explicit toolbar rows, the bottom action bar takes over
-       Download/Filters, and the legend lives behind the Folder Stats drawer (folder
-       progress lives there at EVERY width since piucenter round 5). */
+    /* One clamp for 4K, one 960px breakpoint (matches the shell's bottom nav) where
+       the view buttons take the toolbar's second line, and a 500px line where they
+       hand over to the View select and the lens controls take their own row. Folder
+       progress lives behind the Folder Stats drawer at every width (piucenter round 5). */
     .tier-page {
         max-width: 1680px;
         margin: 0 auto;
@@ -770,14 +727,14 @@ else
         align-items: center;
     }
 
-    /* Desktop: the rows (and the tier-flat wrappers around shared fragments)
-       flatten away so the toolbar and content bar read as single lines. */
+    /* Desktop: the row (and the lens wrapper inside it) flattens away so the
+       toolbar reads as a single line. */
     .tier-toolbar-row,
-    .tier-flat {
+    .tier-lens-wrap {
         display: contents;
     }
 
-    .tier-compact-only {
+    .tier-view-select {
         display: none;
     }
 
@@ -786,8 +743,11 @@ else
             display: none;
         }
 
-        .tier-compact-only {
-            display: inline-flex;
+        /* The view buttons keep their at-a-glance row by taking the toolbar's second
+           line whole — order pushes them behind the folder + lens line. */
+        .tier-views-group {
+            order: 3;
+            flex-basis: 100%;
         }
 
         .tier-toolbar {
@@ -801,28 +761,32 @@ else
             gap: 8px;
         }
 
-        /* The desktop-only second row (Personalized + Download) hides wholesale —
-           the Advanced drawer carries both on compact. Two classes beat the
-           display:flex row rule above. */
-        .tier-toolbar-row.tier-desktop-only {
-            display: none;
-        }
     }
 
-    /* Round 9: under 600px the Advanced button slots between the folder and the view
-       group and the row centers, so the wrap lands as folder+Advanced / views instead
-       of a ragged break. */
-    @@media (max-width: 599.98px) {
-        .tier-toolbar-row {
-            justify-content: center;
-        }
-
-        .tier-advanced-btn {
-            order: 1;
-        }
-
+    /* Under 500px the buttons hand over to the View select — even a dedicated row
+       can't hold them in every locale there — and the lens controls take their own
+       full-width line: folder + View above, Ranked-by (and Grouped-by) below. */
+    @@media (max-width: 499.98px) {
         .tier-views-group {
-            order: 2;
+            display: none;
+        }
+
+        .tier-view-select {
+            display: inline-flex;
+            flex: 1 1 0;
+            max-width: none;
+        }
+
+        .tier-lens-wrap {
+            display: flex;
+            flex-basis: 100%;
+            min-width: 0;
+            gap: 8px;
+        }
+
+        .tier-lens-wrap .tier-toolbar-select {
+            flex: 1 1 0;
+            max-width: none;
         }
     }
 
@@ -851,11 +815,14 @@ else
         color: var(--mud-palette-text-secondary);
     }
 
-    .tier-badges {
+    .tier-context-line {
         display: flex;
+        align-items: center;
         flex-wrap: wrap;
-        gap: 4px;
-        margin: 8px 0;
+        gap: 6px;
+        margin: 6px 0;
+        font-size: .75rem;
+        color: var(--mud-palette-text-secondary);
     }
 
     .tier-progress-strip-summary {
@@ -1529,7 +1496,6 @@ else
     private double _singlesCompetitive = 1;
     private double _doublesCompetitive = 1;
     private bool _statsOpen = false;
-    private bool _advancedOpen = false;
     /// <summary>
     ///     Whether the Shown Difficulty picker is on one of its personalized readings. It only
     ///     applies to My Scores and Skill Breakdown, where the lens annotates cards rather than
@@ -1628,6 +1594,24 @@ else
         CurrentUser.IsLoggedIn ? L["{0} / {1} cleared", visible.Count(e => Passed(e.ChartId)), visible.Count].ToString() : null;
 
     // --- Toolbar interactions --------------------------------------------------------------
+
+    /// <summary>
+    ///     The compact View select's value: the four views, with every My Scores grouping
+    ///     reading as the one entry — the same derivation the desktop buttons use for
+    ///     their filled state.
+    /// </summary>
+    private string ViewValue => IsMyProgress ? "MyProgress" : _groupBy;
+
+    private Task ChangeView(string view)
+    {
+        // "MyProgress" is a select sentinel, not a grouping — it maps to the same default
+        // the My Scores button uses BEFORE reaching ChangeGrouping, so it can never be
+        // saved and the ViewPersistenceTests vocabulary stays real groupings only.
+        var grouping = view == "MyProgress"
+            ? CurrentUser.IsLoggedIn ? "Score" : "Scoring Level"
+            : view;
+        return ChangeGrouping(grouping);
+    }
 
     private async Task ChangeFolder((ChartType Type, int Level) folder)
     {
