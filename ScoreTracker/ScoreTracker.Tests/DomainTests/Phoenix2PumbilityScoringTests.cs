@@ -23,10 +23,11 @@ namespace ScoreTracker.Tests.DomainTests;
 ///         The grade ladder splits by chart type as well, and as of 2026-08-14 both halves are
 ///         measured end to end — every Singles rung SSS+ → D and every Doubles rung alike, with
 ///         nothing in either table interpolated any more. F is not a rung at all: a passing F
-///         prices at zero, the same as a break, which makes it the one cell no reading can ever
-///         fill. The base curve above level 27 is now the only place this formula extrapolates,
-///         and <see cref="TheTopOfTheBaseCurveIsExtrapolatedNotMeasured" /> is what keeps that
-///         visible.
+///         prices at zero the way a break does — observed on Singles, ASSUMED on Doubles, where
+///         a passing F has never been reproduced (see <see cref="PassingFsNeverContribute" />).
+///         That assumption and the base curve above level 27 are the two unmeasured things left
+///         in the formula; <see cref="TheTopOfTheBaseCurveIsExtrapolatedNotMeasured" /> keeps
+///         the second visible.
 ///     </para>
 /// </summary>
 public sealed class Phoenix2PumbilityScoringTests
@@ -256,10 +257,15 @@ public sealed class Phoenix2PumbilityScoringTests
     public void PassingFsNeverContribute(ChartType type, int level, PhoenixPlate plate)
     {
         // A PASSED stage, not a broken one — 271,620 is a real unbroken F seen in import
-        // telemetry, so this is a score a player can actually hold. That an F is worth nothing
-        // rather than a low multiple is the OWNER'S rule, not a reading: the breakdown page
-        // publishes a top 50, an F is essentially never in one, and the observation path skips
-        // any row priced at zero, so no instrument we have can produce or refute it.
+        // telemetry, so this is a score a player can actually hold.
+        //
+        // The zero is an OBSERVATION on Singles and an ASSUMPTION on Doubles, and the rows here
+        // deliberately pin both anyway. A passing Singles F has been seen rendering 0.00 on the
+        // official breakdown page; a passing Doubles F has never been reproduced, so its zero is
+        // held by symmetry on the owner's call (2026-08-14) — fair, because being wrong costs a
+        // few points on a pool of fewer than fifty charts. Telemetry can refute the Doubles half
+        // but never confirm it: a Doubles F the site priced nonzero would log a PumbilityRow
+        // MISMATCH, while one priced zero is skipped with every other zero-value row.
         // The plates are the point of the theory: grade and plate ADD, so a grade multiplier of
         // zero on its own would let every plate above Rough Game keep paying out.
         var result = Scoring().GetScore(type, DifficultyLevel.From(level),

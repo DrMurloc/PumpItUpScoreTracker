@@ -74,21 +74,27 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   rather than a 0.0 multiplier, because grade and plate ADD here and a zero multiplier alone
   would still pay the plate bonus.
 
-  ⚠ **This one rests on the owner's knowledge of the game (2026-08-12), not on a reading, and no
-  instrument we have can check it.** `my_page/pumbility.php` publishes a top 50; an F is
-  essentially never in one, and `ScoringObservations` skips any row priced at zero — so an F is
-  unobservable by construction and its absence from the telemetry is not evidence either way.
-  The competing explanation, if it is ever worth revisiting, is that a chart missing from a
-  top-50 page is not *priced* at zero but simply not in the pool. Where the rule bites hardest
-  is a sparse Phoenix 2 account and `/Pumbility/Phoenix1`, where a 450k–499k Phoenix 1 score is
-  a P1 **D** but a P2 **F** and so reprices from about 0.9 × base to nothing.
+  ⚠ **The F zero is half observed and half assumed, and the doc must not blur which half is
+  which (owner, 2026-08-14).** A passing **Singles** F has been **observed** rendering 0.00 on
+  the breakdown page — a small pool admits every chart, so the row is visible there — which also
+  retires the old competing explanation that a zero-rendered chart might simply not be in the
+  pool. A passing **Doubles** F has **never been reproduced**, so its zero is an **assumption**
+  held by symmetry: the owner's call is that it is a fair one, and the cost of being wrong is a
+  few points on a pool of fewer than fifty charts, since an F never survives into a full fifty.
+  Telemetry can refute the assumption but never confirm it — a Doubles F the site priced nonzero
+  would log a `PumbilityRow` MISMATCH, while one priced zero is skipped by `ScoringObservations`
+  along with every other zero-value row, so its absence from the telemetry is not evidence.
+  Where the rule bites hardest is a sparse Phoenix 2 account and `/Pumbility/Phoenix1`, where a
+  450k–499k Phoenix 1 score is a P1 **D** but a P2 **F** and so reprices from about 0.9 × base
+  to nothing.
 
   **Which cells are measured, and which are not (2026-08-14: nearly all of them are).** All eight
   plate × type cells on each side are measured, and **both grade ladders are now measured end to
   end** — every Singles rung SSS+ → D and every Doubles rung alike. **Nothing in either table is
-  interpolated any more.** Two cells remain outside that: **F**, which no reading can ever fill
-  because a passing F prices at zero and so never appears, and the **base curve above level 27**,
-  which is the one place the formula still extrapolates — see below.
+  interpolated any more.** Two assumptions remain outside that: **the Doubles F zero** — the
+  Singles side is observed, the Doubles side has never been reproduced; see the F note above —
+  and the **base curve above level 27**, the one place the formula still extrapolates — see
+  below.
 
   **The ladder's real shape, now read rather than fitted.** Doubles runs −0.05 a rung from A+ all
   the way down to C (1.35 · 1.30 · 1.25 · 1.20) and then takes a single **−0.10** step to D 1.10.

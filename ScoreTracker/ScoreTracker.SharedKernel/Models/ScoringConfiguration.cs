@@ -529,14 +529,23 @@ namespace ScoreTracker.SharedKernel.Models
             // honest for anything reading it directly, but what enforces the rule is the guard
             // in GetScore: grade and plate ADD in this formula, so a zero multiplier on its own
             // would still pay out the plate bonus.
+            //
+            // The evidence is asymmetric, and deliberately documented as such (owner, 2026-08-14):
+            // a passing SINGLES F has been observed rendering 0.00 on the official breakdown
+            // page, while a passing DOUBLES F has never been reproduced, so the Doubles zero is
+            // an ASSUMPTION held by symmetry — a fair one whose cost if wrong is a few points on
+            // a pool of fewer than fifty charts, since an F never survives into a full fifty.
+            // Telemetry can refute the assumption but never confirm it: a Doubles F the site
+            // priced NONZERO would surface as a PumbilityRow MISMATCH, while one priced zero is
+            // skipped by the observer along with every other zero-value row.
             config.LetterGradeModifiers[PhoenixLetterGrade.F] = 0.00;
 
             // What a Single reads instead, wherever the two types disagree. Every value here is
             // a live per-chart read off the official breakdown page, and the bracketed count is
             // how many independent rows imply that value and no other. Since the 2026-08-14
             // readings closed the Doubles bottom, BOTH ladders are measured end to end and
-            // nothing in either is interpolated: F is the only cell left that no reading can
-            // fill, because a passing F prices at zero and so can never be seen. AA+ and above
+            // nothing in either is interpolated. F is the one asymmetry left: its zero is
+            // observed on Singles and assumed on Doubles — see the F entry above. AA+ and above
             // land identically on both types, which is why they are absent.
             config.SinglesLetterGradeModifiers = new Dictionary<PhoenixLetterGrade, double>
             {
