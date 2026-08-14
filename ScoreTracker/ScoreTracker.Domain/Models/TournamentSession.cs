@@ -6,45 +6,9 @@ namespace ScoreTracker.Domain.Models
 {
     public sealed class TournamentSession
     {
-        public bool NeedsApproval { get; private set; } = true;
-        public SubmissionVerificationType? ApprovedVerificationType { get; private set; }
-
-        public void Approve()
-        {
-            NeedsApproval = false;
-            ApprovedVerificationType = VerificationType;
-        }
-
-        public SubmissionVerificationType VerificationType { get; private set; }
-        public ICollection<Uri> PhotoUrls { get; } = new List<Uri>();
+        // Verification is gone (D5, march-of-murlocs.md): sessions publish without approval,
+        // and a video survives purely as a showcase link.
         public Uri? VideoUrl { get; set; }
-
-        public void AddPhoto(Uri photo)
-        {
-            PhotoUrls.Add(photo);
-            NeedsApproval = true;
-        }
-
-        public void RemovePhoto(Uri photo)
-        {
-            PhotoUrls.Remove(photo);
-            NeedsApproval = true;
-        }
-
-        public void SetVerificationType(SubmissionVerificationType type)
-        {
-            if (type == SubmissionVerificationType.InPerson || type == SubmissionVerificationType.Unverified ||
-                type == ApprovedVerificationType)
-            {
-                NeedsApproval = false;
-            }
-            else
-            {
-                NeedsApproval = true;
-            }
-
-            VerificationType = type;
-        }
 
         public Guid UsersId { get; }
         public Guid TournamentId => _configuration.Id;
@@ -122,16 +86,14 @@ namespace ScoreTracker.Domain.Models
                 Score = score, Plate = plate, IsBroken = isBroken,
                 SessionScore = (int)_configuration.Scoring.GetScore(oldEntry.Chart, score, plate, isBroken)
             };
-            NeedsApproval = true;
         }
 
         public void Remove(Entry entry)
         {
             Entries.Remove(entry);
-            NeedsApproval = true;
         }
 
-        public void AddWithoutApproval(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
+        public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
         {
             if (!CanAdd(chart))
             {
@@ -143,12 +105,6 @@ namespace ScoreTracker.Domain.Models
             Entries.Add(
                 new Entry(chart, score, plate, isBroken,
                     (int)withBonus, (int)(withBonus - basePoints)));
-        }
-
-        public void Add(Chart chart, PhoenixScore score, PhoenixPlate plate, bool isBroken)
-        {
-            AddWithoutApproval(chart, score, plate, isBroken);
-            NeedsApproval = true;
         }
 
         public sealed record Entry(Chart Chart, PhoenixScore Score, PhoenixPlate Plate, bool IsBroken,

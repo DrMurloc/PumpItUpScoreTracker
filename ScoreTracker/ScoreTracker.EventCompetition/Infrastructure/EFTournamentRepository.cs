@@ -169,9 +169,11 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                     RestTime = session.CurrentRestTime,
                     ChartsPlayed = session.Entries.Count(),
                     AverageDifficulty = session.Entries.Average(e => e.Chart.Level),
-                    NeedsApproval = session.NeedsApproval,
+                    // Verification is deleted (D5) — every saved session publishes as-is; the
+                    // columns keep their pre-D5 shape until the table is archived.
+                    NeedsApproval = false,
                     VideoUrl = session.VideoUrl?.ToString(),
-                    VerificationType = session.VerificationType.ToString(),
+                    VerificationType = SubmissionVerificationType.Unverified.ToString(),
                     ChartEntries = JsonSerializer.Serialize(session.Entries.Select(e => new SessionEntryEntity
                     {
                         ChartId = e.Chart.Id,
@@ -194,8 +196,8 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                     entity.MixId = MixIds.For(session.Mix);
                     entity.SessionScore = session.TotalScore;
                     entity.RestTime = session.CurrentRestTime;
-                    entity.NeedsApproval = session.NeedsApproval;
-                    entity.VerificationType = session.VerificationType.ToString();
+                    entity.NeedsApproval = false;
+                    entity.VerificationType = SubmissionVerificationType.Unverified.ToString();
                     entity.ChartsPlayed = session.Entries.Count();
                     entity.VideoUrl = session.VideoUrl?.ToString();
                     entity.AverageDifficulty = session.Entries.Average(e => e.Chart.Level);
@@ -211,23 +213,6 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 }
             }
 
-            var existingPhotos = await database.Set<PhotoVerificationEntity>()
-                .Where(p => p.TournamentId == session.TournamentId && p.UserId == session.UsersId)
-                .ToArrayAsync(cancellationToken);
-
-            var newUrls = session.PhotoUrls.Select(u => u.ToString()).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var toDelete = existingPhotos.Where(p => !newUrls.Contains(p.PhotoUrl));
-            var toCreate = newUrls.Where(u =>
-                    !existingPhotos.Any(p => p.PhotoUrl.Equals(u, StringComparison.OrdinalIgnoreCase)))
-                .Select(p => new PhotoVerificationEntity
-                {
-                    Id = Guid.NewGuid(),
-                    PhotoUrl = p,
-                    TournamentId = session.TournamentId,
-                    UserId = session.UsersId
-                });
-            database.Set<PhotoVerificationEntity>().RemoveRange(toDelete);
-            await database.Set<PhotoVerificationEntity>().AddRangeAsync(toCreate, cancellationToken);
             await database.SaveChangesAsync(cancellationToken);
             _memoryCache.Remove(CacheKey(session.TournamentId, session.UsersId));
         }
@@ -262,21 +247,8 @@ namespace ScoreTracker.EventCompetition.Infrastructure
 
                 var session = new TournamentSession(userId, tournamentConfig, mix);
                 foreach (var entry in entries)
-                    session.AddWithoutApproval(entry.Chart, entry.Score, entry.Plate, entry.IsBroken);
-                session.SetVerificationType(Enum.Parse<SubmissionVerificationType>(entity.VerificationType));
+                    session.Add(entry.Chart, entry.Score, entry.Plate, entry.IsBroken);
                 if (Uri.TryCreate(entity.VideoUrl, UriKind.Absolute, out var videoUrl)) session.VideoUrl = videoUrl;
-
-                var photos = await database.Set<PhotoVerificationEntity>()
-                    .Where(p => p.TournamentId == tournamentId && p.UserId == userId)
-                    .ToArrayAsync(cancellationToken);
-                foreach (var photo in photos.Select(p => p.PhotoUrl))
-                {
-                    if (!Uri.TryCreate(photo, UriKind.Absolute, out var photoUrl)) continue;
-
-                    session.PhotoUrls.Add(photoUrl);
-                }
-
-                if (!entity.NeedsApproval) session.Approve();
 
                 return session;
             });
@@ -290,12 +262,11 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                         join u in database.User on uts.UserId equals u.Id
                         where uts.TournamentId == tournamentId
                         select new UserEntryDto(u.Id, u.Name, uts.SessionScore, uts.RestTime, uts.ChartsPlayed,
-                            uts.AverageDifficulty, uts.VerificationType, uts.NeedsApproval, uts.VideoUrl))
+                            uts.AverageDifficulty, uts.VideoUrl))
                     .ToArrayAsync(cancellationToken))
                 .OrderByDescending(ue => ue.Score)
                 .Select((ue, index) => new LeaderboardRecord(index + 1, ue.UserId, ue.Name, ue.Score, ue.RestTime,
-                    ue.AverageDifficulty, ue.ChartsPlayed, Enum.Parse<SubmissionVerificationType>(ue.VerificationType),
-                    ue.NeedsApproval,
+                    ue.AverageDifficulty, ue.ChartsPlayed,
                     ue.VideoUrl == null ? null :
                     Uri.TryCreate(ue.VideoUrl, UriKind.Absolute, out var vidUrl) ? vidUrl : null)).ToArray();
             foreach (var result in results)
@@ -394,7 +365,7 @@ namespace ScoreTracker.EventCompetition.Infrastructure
 
 
         private sealed record UserEntryDto(Guid UserId, string Name, int Score, TimeSpan RestTime, int ChartsPlayed,
-            double AverageDifficulty, string VerificationType, bool NeedsApproval, string? VideoUrl)
+            double AverageDifficulty, string? VideoUrl)
         {
         }
 

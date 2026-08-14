@@ -12,12 +12,10 @@ namespace ScoreTracker.Tests.DomainTests;
 public sealed class TournamentSessionTests
 {
     [Fact]
-    public void NewSessionStartsNeedingApprovalWithNoEntries()
+    public void NewSessionStartsWithNoEntries()
     {
         var session = new TournamentSession(Guid.NewGuid(), Config());
 
-        Assert.True(session.NeedsApproval);
-        Assert.Null(session.ApprovedVerificationType);
         Assert.Empty(session.Entries);
         Assert.Equal(0, session.CurrentScore);
         Assert.Equal(0, session.TotalScore);
@@ -32,95 +30,6 @@ public sealed class TournamentSessionTests
         Assert.Equal(MixEnum.Phoenix2,
             new TournamentSession(Guid.NewGuid(), Config(), Array.Empty<TournamentSession.Entry>(),
                 MixEnum.Phoenix2).Mix);
-    }
-
-    [Fact]
-    public void ApproveClearsNeedsApprovalAndSnapshotsVerificationType()
-    {
-        var session = new TournamentSession(Guid.NewGuid(), Config());
-        session.SetVerificationType(SubmissionVerificationType.Photo);
-        Assert.True(session.NeedsApproval);
-
-        session.Approve();
-
-        Assert.False(session.NeedsApproval);
-        Assert.Equal(SubmissionVerificationType.Photo, session.ApprovedVerificationType);
-    }
-
-    [Fact]
-    public void AddPhotoReFlagsNeedsApprovalEvenAfterApprove()
-    {
-        var session = ApprovedSession();
-
-        session.AddPhoto(new Uri("https://example.invalid/p.png"));
-
-        Assert.True(session.NeedsApproval);
-        Assert.Single(session.PhotoUrls);
-    }
-
-    [Fact]
-    public void RemovePhotoReFlagsNeedsApproval()
-    {
-        var photo = new Uri("https://example.invalid/p.png");
-        var session = ApprovedSession();
-        session.AddPhoto(photo);
-        session.Approve();
-
-        session.RemovePhoto(photo);
-
-        Assert.True(session.NeedsApproval);
-        Assert.Empty(session.PhotoUrls);
-    }
-
-    [Theory]
-    [InlineData(SubmissionVerificationType.InPerson)]
-    [InlineData(SubmissionVerificationType.Unverified)]
-    public void SetVerificationTypeAutoApprovesForInPersonAndUnverified(SubmissionVerificationType type)
-    {
-        var session = new TournamentSession(Guid.NewGuid(), Config());
-
-        session.SetVerificationType(type);
-
-        Assert.False(session.NeedsApproval);
-        Assert.Equal(type, session.VerificationType);
-    }
-
-    [Theory]
-    [InlineData(SubmissionVerificationType.Photo)]
-    [InlineData(SubmissionVerificationType.Video)]
-    public void SetVerificationTypeRequiresApprovalForPhotoAndVideoWhenNeverApproved(SubmissionVerificationType type)
-    {
-        var session = new TournamentSession(Guid.NewGuid(), Config());
-
-        session.SetVerificationType(type);
-
-        Assert.True(session.NeedsApproval);
-        Assert.Equal(type, session.VerificationType);
-    }
-
-    [Fact]
-    public void SetVerificationTypeMatchingPreviouslyApprovedTypeDoesNotNeedApproval()
-    {
-        var session = new TournamentSession(Guid.NewGuid(), Config());
-        session.SetVerificationType(SubmissionVerificationType.Photo);
-        session.Approve();
-        session.AddPhoto(new Uri("https://example.invalid/p.png")); // re-flags NeedsApproval
-
-        session.SetVerificationType(SubmissionVerificationType.Photo);
-
-        Assert.False(session.NeedsApproval);
-    }
-
-    [Fact]
-    public void SetVerificationTypeDifferentFromPreviouslyApprovedTypeNeedsApproval()
-    {
-        var session = new TournamentSession(Guid.NewGuid(), Config());
-        session.SetVerificationType(SubmissionVerificationType.Photo);
-        session.Approve();
-
-        session.SetVerificationType(SubmissionVerificationType.Video);
-
-        Assert.True(session.NeedsApproval);
     }
 
     [Fact]
@@ -222,14 +131,13 @@ public sealed class TournamentSessionTests
     }
 
     [Fact]
-    public void AddFlipsNeedsApprovalAndAppendsEntry()
+    public void AddAppendsEntry()
     {
-        var session = ApprovedSession();
+        var session = new TournamentSession(Guid.NewGuid(), Config());
         var chart = new ChartBuilder().Build();
 
         session.Add(chart, 950000, PhoenixPlate.SuperbGame, isBroken: false);
 
-        Assert.True(session.NeedsApproval);
         Assert.Single(session.Entries);
     }
 
@@ -244,24 +152,11 @@ public sealed class TournamentSessionTests
     }
 
     [Fact]
-    public void AddWithoutApprovalDoesNotFlipNeedsApproval()
-    {
-        var session = ApprovedSession();
-        var chart = new ChartBuilder().Build();
-
-        session.AddWithoutApproval(chart, 950000, PhoenixPlate.SuperbGame, isBroken: false);
-
-        Assert.False(session.NeedsApproval);
-        Assert.Single(session.Entries);
-    }
-
-    [Fact]
-    public void SwapReplacesEntryAndFlipsNeedsApproval()
+    public void SwapReplacesEntry()
     {
         var session = new TournamentSession(Guid.NewGuid(), Config());
         var chart = new ChartBuilder().Build();
         session.Add(chart, 800000, PhoenixPlate.FairGame, isBroken: false);
-        session.Approve();
         var original = session.Entries.Single();
 
         session.Swap(original, 990000, PhoenixPlate.PerfectGame, isBroken: false);
@@ -269,13 +164,12 @@ public sealed class TournamentSessionTests
         var swapped = session.Entries.Single();
         Assert.Equal((PhoenixScore)990000, swapped.Score);
         Assert.Equal(PhoenixPlate.PerfectGame, swapped.Plate);
-        Assert.True(session.NeedsApproval);
     }
 
     [Fact]
     public void SwapIsNoOpWhenEntryNotInList()
     {
-        var session = ApprovedSession();
+        var session = new TournamentSession(Guid.NewGuid(), Config());
         var chart = new ChartBuilder().Build();
         var stranger = new TournamentSession.Entry(chart, 900000, PhoenixPlate.SuperbGame,
             IsBroken: false, SessionScore: 1, BonusPoints: 0);
@@ -283,21 +177,18 @@ public sealed class TournamentSessionTests
         session.Swap(stranger, 1000000, PhoenixPlate.PerfectGame, isBroken: false);
 
         Assert.Empty(session.Entries);
-        Assert.False(session.NeedsApproval);
     }
 
     [Fact]
-    public void RemoveRemovesEntryAndFlipsNeedsApproval()
+    public void RemoveRemovesEntry()
     {
         var session = new TournamentSession(Guid.NewGuid(), Config());
         session.Add(new ChartBuilder().Build(), 900000, PhoenixPlate.SuperbGame, isBroken: false);
-        session.Approve();
         var entry = session.Entries.Single();
 
         session.Remove(entry);
 
         Assert.Empty(session.Entries);
-        Assert.True(session.NeedsApproval);
     }
 
     [Fact]
@@ -336,13 +227,6 @@ public sealed class TournamentSessionTests
 
     private static TournamentConfiguration Config() =>
         new(new ScoringConfiguration());
-
-    private static TournamentSession ApprovedSession()
-    {
-        var session = new TournamentSession(Guid.NewGuid(), Config());
-        session.SetVerificationType(SubmissionVerificationType.InPerson);
-        return session;
-    }
 
     private static Song SongOfDuration(string name, TimeSpan duration) =>
         new(Name.From(name), SongType.Arcade, new Uri("https://example.invalid/song.png"),
