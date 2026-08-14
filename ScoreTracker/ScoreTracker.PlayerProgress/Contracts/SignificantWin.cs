@@ -23,6 +23,7 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///         <item>PeerElite — Chart* + Score + Rank (peer position, 1 = #1) + RarityShare (top fraction → "top N%")</item>
 ///         <item>NotablePg — Chart* + Score + RarityShare (fraction of active players holding the PG)</item>
 ///         <item>FolderProgress — Difficulty (the folder) + Rank (completion tier) + Detail (the grade)</item>
+///         <item>PumbilityLevelUp — Rank (the badge index reached, 1–36) + PoolValue (the new pool)</item>
 ///     </list>
 /// </summary>
 [ExcludeFromCodeCoverage]
@@ -35,7 +36,8 @@ public sealed record SignificantWin(
     double? RarityShare = null,
     int? Rank = null,
     int? Score = null,
-    string? Detail = null);
+    string? Detail = null,
+    double? PoolValue = null);
 
 public enum WinKind
 {
@@ -51,7 +53,14 @@ public enum WinKind
     ///     A folder reached a deep completion tier, or its grade climbed into the top band.
     ///     Narrower than the Discord card on purpose (docs/design/folder-level-progression.md §5.5).
     /// </summary>
-    FolderProgress
+    FolderProgress,
+
+    /// <summary>
+    ///     The player crossed a PUMBILITY level — a rung inside a [P.B] gem
+    ///     (docs/design/pumbility-levels.md §5). Suppressed at classification when the same batch
+    ///     completed the gem title itself, so this row only speaks when the title didn't.
+    /// </summary>
+    PumbilityLevelUp
 }
 
 /// <summary>
@@ -67,9 +76,14 @@ public enum WinKind
 ///         Version 2 carries over unchanged from the Communities-owned era: the payload's JSON
 ///         shape did not move when the type's namespace did, so stored rows read as current.
 ///     </para>
+///     <para>
+///         v3 added <see cref="WinKind.PumbilityLevelUp" /> and <see cref="SignificantWin.PoolValue" />
+///         — same reasoning as v2: a summary written before level crossings existed is incomplete
+///         rather than wrong, and rows regenerate on their next import.
+///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
 public static class PlayerHighlightSchema
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 }

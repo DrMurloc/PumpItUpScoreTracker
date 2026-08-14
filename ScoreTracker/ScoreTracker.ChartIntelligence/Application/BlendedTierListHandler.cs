@@ -10,11 +10,11 @@ namespace ScoreTracker.ChartIntelligence.Application;
 
 /// <summary>
 ///     The tier-list blend, moved out of the page (tier-lists overhaul C2, design doc
-///     §6 Tier 3): weighted combination of the stored tier lists with, when
-///     personalized, the player's skill estimates and the similar-players aggregation.
-///     The source computation lives in <see cref="TierListBlendBuilder" /> (shared
-///     with the Personalized Breakdown query); this handler owns lens validation,
-///     the final combine, and the cache.
+///     §6 Tier 3): weighted combination of the stored tier lists — with, on the two
+///     lenses that personalize, the score projection (Score) or the viewer's own
+///     cohort's pool counts (PUMBILITY). The source computation lives in
+///     <see cref="TierListBlendBuilder" /> (shared with the Personalized Breakdown
+///     query); this handler owns lens validation, the final combine, and the cache.
 /// </summary>
 internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierListQuery, TierListResult>
 {
@@ -24,10 +24,10 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
 
     public BlendedTierListHandler(IMediator mediator, IChartRepository charts,
         ICurrentUserAccessor currentUser, IMemoryCache cache, IScoreProjector projector,
-        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        ITierListRepository tierLists, ITitleRepository titles, IPlayerStatsReader playerStats,
         IScoreReader scores)
     {
-        _builder = new TierListBlendBuilder(mediator, charts, projector, census, titles, playerStats, scores);
+        _builder = new TierListBlendBuilder(mediator, charts, projector, tierLists, titles, playerStats, scores);
         _currentUser = currentUser;
         _cache = cache;
     }
@@ -47,6 +47,13 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
             entry.SlidingExpiration = TimeSpan.FromHours(1);
             var computation = await _builder.Compute(request.ChartType, request.Level, lens, userId,
                 request.Mix, cancellationToken);
+            // An empty PUMBILITY answer is cached for a minute, not six hours — the same rule
+            // PumbilityFoldersHandler applies, for the same reason: empty almost always means
+            // the lists have not been built for this mix (or this viewer's cohort) yet, and a
+            // six-hour hold turns "press Rebuild" into "press Rebuild and wait" for every
+            // folder anyone viewed before pressing it.
+            if (computation.Pumbility is { Entries.Count: 0 })
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
             var entries = computation.FolderCharts
                 .Select(c => TierListBlendBuilder.Combine("Final", c.Id, computation.Sources,
                     computation.Modifiers))

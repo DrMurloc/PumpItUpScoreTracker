@@ -9,6 +9,7 @@ using ScoreTracker.ChartIntelligence.Application;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -18,7 +19,11 @@ using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
-public sealed class PumbilityCensusSagaTests
+/// <summary>
+///     TierListSaga's PUMBILITY rebuild (its ProcessPumbilityTierListCommand consumer) — a
+///     sibling file to TierListSagaTests, the same split TierListSagaStaticsTests already uses.
+/// </summary>
+public sealed class TierListSagaPumbilityTests
 {
     private static readonly DateTimeOffset Recorded = new(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
 
@@ -46,7 +51,7 @@ public sealed class PumbilityCensusSagaTests
         var saved = new List<SavedFolder>();
         var saga = BuildSaga(charts, scores, saved);
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var community = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single)
             .ByCohort[PumbilityCohortKeys.Community].Entries;
@@ -78,7 +83,7 @@ public sealed class PumbilityCensusSagaTests
         var saga = BuildSaga(charts, scores, saved,
             titleLevels: new Dictionary<int, Guid[]> { [17] = new[] { titled } });
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var folder = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single);
         Assert.Equal(2, folder.ByCohort[PumbilityCohortKeys.Community].Entries.Single().Appearances);
@@ -101,7 +106,7 @@ public sealed class PumbilityCensusSagaTests
         var saga = BuildSaga(charts, scores, saved,
             titleLevels: new Dictionary<int, Guid[]> { [15] = new[] { lowPlayer } });
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var cohort = PumbilityCohortKeys.ForDifficultyTitleLevel(15);
         Assert.Contains(cohort, saved.Single(f => f.Level == 15).ByCohort.Keys);
@@ -130,7 +135,7 @@ public sealed class PumbilityCensusSagaTests
         var saved = new List<SavedFolder>();
         var saga = BuildSaga(charts, scores, saved);
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var community = saved.Single(f => f.Level == 20).ByCohort[PumbilityCohortKeys.Community];
         Assert.Equal(1, community.Entries.Single().Appearances);
@@ -149,7 +154,7 @@ public sealed class PumbilityCensusSagaTests
         var saved = new List<SavedFolder>();
         var saga = BuildSaga(charts, scores, saved);
 
-        await saga.Consume(Context(new ProcessPumbilityCensusCommand()));
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var community = saved.Single(f => f.Level == 20).ByCohort[PumbilityCohortKeys.Community].Entries;
         Assert.Equal(50, community.Count(e => e.Appearances == 1));
@@ -158,8 +163,54 @@ public sealed class PumbilityCensusSagaTests
             e => Assert.Equal(TierListCategory.Unrecorded, e.Category));
     }
 
+    [Fact]
+    public async Task TheCommandsMixReachesEveryReadAndTheWrite()
+    {
+        // The stubs answer only for Phoenix 2 here, so a consumer that hardcodes Phoenix at any
+        // step reads nothing, saves nothing, and fails this test — the exact blind spot that let
+        // the nightly job's default-mix publish rebuild one mix only.
+        var user = Guid.NewGuid();
+        var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var scores = new List<(Guid, RecordedPhoenixScore)> { (user, Score(chart, 990_000)) };
+        var charts = new List<Chart> { chart };
+        GiveFullPools(charts, scores, user);
+
+        var saved = new List<SavedFolder>();
+        var saga = BuildSaga(charts, scores, saved, mix: MixEnum.Phoenix2);
+
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand(MixEnum.Phoenix2)));
+
+        var folder = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single);
+        Assert.Equal(MixEnum.Phoenix2, folder.Mix);
+        Assert.Equal(1, folder.ByCohort[PumbilityCohortKeys.Community].Entries.Single().Appearances);
+    }
+
+    [Fact]
+    public async Task PhoenixTwoCohortsComeFromTheRungLadderNotTitles()
+    {
+        // Phoenix 2 partitions on the PUMBILITY rung a pool total clears; the difficulty-title
+        // ladder is Phoenix 1's stand-in and must not be consulted at all.
+        var user = Guid.NewGuid();
+        var chart = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var scores = new List<(Guid, RecordedPhoenixScore)> { (user, Score(chart, 990_000)) };
+        var charts = new List<Chart> { chart };
+        GiveFullPools(charts, scores, user);
+
+        var saved = new List<SavedFolder>();
+        var titles = new Mock<ITitleRepository>();
+        var saga = BuildSaga(charts, scores, saved, mix: MixEnum.Phoenix2, titles: titles);
+
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand(MixEnum.Phoenix2)));
+
+        titles.Verify(t => t.GetUserIdsOnHighestLevel(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        var folder = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single);
+        var rungKey = Assert.Single(folder.ByCohort.Keys.Where(k => k != PumbilityCohortKeys.Community));
+        Assert.Equal(1, folder.ByCohort[rungKey].CohortSize);
+    }
+
     /// <summary>
-    ///     Fifty low-level charts per player, so their pool is a pool. The census ignores anyone
+    ///     Fifty low-level charts per player, so their pool is a pool. The rebuild ignores anyone
     ///     short of a full fifty — a partial pool's total says how much someone has imported, not
     ///     how well they play — and every fixture here is otherwise far too small to qualify.
     ///     Level 12 keeps the ballast below whatever folder is under test, so it fills the pool
@@ -189,29 +240,41 @@ public sealed class PumbilityCensusSagaTests
         return ctx.Object;
     }
 
-    private sealed record SavedFolder(ChartType ChartType, int Level,
-        IReadOnlyDictionary<string, PumbilityCensusFolder> ByCohort);
+    private sealed record SavedFolder(MixEnum Mix, ChartType ChartType, int Level,
+        IReadOnlyDictionary<string, PumbilityTierListFolder> ByCohort);
 
-    private static PumbilityCensusSaga BuildSaga(IEnumerable<Chart> charts,
+    /// <summary>
+    ///     The chart and score stubs answer only for <paramref name="mix" /> — a consumer that
+    ///     hardcodes a mix anywhere in the chain reads nothing and the test fails, which is what
+    ///     pins the message's Mix actually propagating.
+    /// </summary>
+    private static TierListSaga BuildSaga(IEnumerable<Chart> charts,
         IReadOnlyCollection<(Guid UserId, RecordedPhoenixScore Record)> scores, List<SavedFolder> saved,
-        IReadOnlyDictionary<int, Guid[]>? titleLevels = null)
+        IReadOnlyDictionary<int, Guid[]>? titleLevels = null, MixEnum mix = MixEnum.Phoenix,
+        Mock<ITitleRepository>? titles = null)
     {
         var all = charts.ToArray();
         var chartRepo = new Mock<IChartRepository>();
         chartRepo.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(),
                 It.IsAny<ChartType?>(), It.IsAny<IEnumerable<Guid>?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((MixEnum _, DifficultyLevel? level, ChartType? type, IEnumerable<Guid>? _,
+            .ReturnsAsync((MixEnum m, DifficultyLevel? level, ChartType? type, IEnumerable<Guid>? _,
                     CancellationToken _) =>
-                all.Where(c => level == null || c.Level == level).Where(c => type == null || c.Type == type));
+                m != mix
+                    ? Array.Empty<Chart>()
+                    : all.Where(c => level == null || c.Level == level)
+                        .Where(c => type == null || c.Type == type));
 
         var byId = all.ToDictionary(c => c.Id);
         var scoreReader = new Mock<IScoreReader>();
         scoreReader.Setup(s => s.GetScores(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
                 It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((MixEnum _, ChartType type, DifficultyLevel level, CancellationToken _) =>
-                scores.Where(s => byId[s.Record.ChartId].Type == type && byId[s.Record.ChartId].Level == level));
+            .ReturnsAsync((MixEnum m, ChartType type, DifficultyLevel level, CancellationToken _) =>
+                m != mix
+                    ? Array.Empty<(Guid, RecordedPhoenixScore)>()
+                    : scores.Where(s =>
+                        byId[s.Record.ChartId].Type == type && byId[s.Record.ChartId].Level == level));
 
-        var titles = new Mock<ITitleRepository>();
+        titles ??= new Mock<ITitleRepository>();
         titles.Setup(t => t.GetUserIdsOnHighestLevel(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((MixEnum _, DifficultyLevel level, CancellationToken _) =>
@@ -219,16 +282,23 @@ public sealed class PumbilityCensusSagaTests
                     ? users
                     : Array.Empty<Guid>());
 
-        var census = new Mock<IPumbilityCensusRepository>();
-        census.Setup(c => c.SaveFolder(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
-                It.IsAny<IReadOnlyDictionary<string, PumbilityCensusFolder>>(),
+        var tierLists = new Mock<ITierListRepository>();
+        tierLists.Setup(c => c.SavePumbilityTierLists(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
+                It.IsAny<DifficultyLevel>(),
+                It.IsAny<IReadOnlyDictionary<string, PumbilityTierListFolder>>(),
                 It.IsAny<CancellationToken>()))
-            .Callback((MixEnum _, ChartType type, DifficultyLevel level,
-                    IReadOnlyDictionary<string, PumbilityCensusFolder> byCohort,
+            .Callback((MixEnum m, ChartType type, DifficultyLevel level,
+                    IReadOnlyDictionary<string, PumbilityTierListFolder> byCohort,
                     CancellationToken _) =>
-                saved.Add(new SavedFolder(type, level, byCohort)))
+                saved.Add(new SavedFolder(m, type, level, byCohort)))
             .Returns(Task.CompletedTask);
 
-        return new PumbilityCensusSaga(chartRepo.Object, scoreReader.Object, titles.Object, census.Object);
+        // The PUMBILITY rebuild reads charts, scores, titles and writes tier lists; the rest of
+        // TierListSaga's dependencies belong to its other consumers and stay inert dummies here.
+        return new TierListSaga(new Mock<IChartDifficultyRatingRepository>().Object, chartRepo.Object,
+            tierLists.Object, scoreReader.Object, new Mock<ICurrentUserAccessor>().Object,
+            new Mock<IPlayerStatsReader>().Object, new Mock<IChartScoringLevelRepository>().Object,
+            new Mock<IChartScoreStatsRepository>().Object, new Mock<IFolderCohortStatsRepository>().Object,
+            titles.Object);
     }
 }

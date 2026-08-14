@@ -914,6 +914,9 @@
   <data name="Best chart placement" xml:space="preserve">
     <value>Mrpblarg murgl plglglmr</value>
   </data>
+  <data name="Best for your PUMBILITY first, from players at your level" xml:space="preserve">
+    <value>Blub morgl gromurp PUMBILITY, morp romurg gromurp</value>
+  </data>
   <data name="Best N" xml:space="preserve">
     <value>Mrrrgl {0}</value>
   </data>
@@ -2097,9 +2100,6 @@
   <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
     <value>Mrrrgl grgl mrpmurg murpargl, romurg mrp plglmurgblub Maglplgl mrpgrrgl grog</value>
   </data>
-  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
-    <value>Mrrrgl grgl mrpmurg murpargl, romurg gromurp Maglplgl mrpgrrgl grog</value>
-  </data>
   <data name="Easiest to score first, by scoring level" xml:space="preserve">
     <value>Mrrrgl grgl mrglrgl murpargl, murm blgrlblgrlplgl grorpmurm</value>
   </data>
@@ -3259,6 +3259,9 @@
   </data>
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>Grorpmurm blargblargglorg, murm glarglro mrpgrrgl</value>
+  </data>
+  <data name="Level Up" xml:space="preserve">
+    <value>Grorpmurm Morg</value>
   </data>
   <data name="Level {0}" xml:space="preserve">
     <value>Grorpmurm {0}</value>
@@ -4690,9 +4693,6 @@
   <data name="Personalized for {0}" xml:space="preserve">
     <value>Urgblargmurmmorg ro {0}</value>
   </data>
-  <data name="Personalized Pass" xml:space="preserve">
-    <value>Urgblargmurmmorg Maglplgl</value>
-  </data>
   <data name="Personalized PUMBILITY" xml:space="preserve">
     <value>Urgblargmurmmorg PUMBILITY</value>
   </data>
@@ -5180,6 +5180,9 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY level {0}" xml:space="preserve">
+    <value>PUMBILITY grorpmurm {0}</value>
+  </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY grglglorg grglmrgl</value>
   </data>
@@ -5358,6 +5361,9 @@
   <data name="reached by {0} players" xml:space="preserve">
     <value>gromrglorg murm {0} morp</value>
   </data>
+  <data name="Reached {0}" xml:space="preserve">
+    <value>Gromrglorg {0}</value>
+  </data>
   <data name="Read the source" xml:space="preserve">
     <value>Blurgl murgblub</value>
   </data>
@@ -5391,8 +5397,8 @@
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>Bagl orgab murlog al.</value>
   </data>
-  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
-    <value>Blurgmurgl {0} PUMBILITY morp. Mrgl blub argl mrogl.</value>
+  <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
+    <value>Blurgmurgl {0} PUMBILITY mrgl morgl. Mrgl blub argl mrogl.</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>Groglorgplglmorg murgglorg rgl blargmrp</value>
@@ -7783,6 +7789,9 @@
   <data name="Where this record would land you" xml:space="preserve">
     <value>Blarg mrgloru grolub mrgl urgl</value>
   </data>
+  <data name="Where you stand" xml:space="preserve">
+    <value>Blarg gromurp morggrrgl</value>
+  </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>Blarggrorp gromurp grog blubgrrglglorg glgrgl mrp glmorgmorg, ro mrp blarglurg blubgrrgl murpplgl gl. Morg gro murgl ro argl mrglmr maglgro maglgrogrrgl.</value>
   </data>
@@ -8676,6 +8685,9 @@
   </data>
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>{0} mrgl, ro mrp glorgargl urgblgrl blub rglmagl mrgl gromurp mrglrlgl.</value>
+  </data>
+  <data name="{0} to next level" xml:space="preserve">
+    <value>{0} ma grorpglorg grorpmurm</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>{0} grgl PG</value>

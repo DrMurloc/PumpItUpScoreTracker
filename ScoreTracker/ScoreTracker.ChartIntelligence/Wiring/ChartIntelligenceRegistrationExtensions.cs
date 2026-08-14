@@ -27,7 +27,6 @@ public static class ChartIntelligenceRegistrationExtensions
         services.AddTransient<IContributionDeletionRepository, EFContributionDeletionRepository>();
         services.AddTransient<IChartScoreStatsRepository, EFChartScoreStatsRepository>();
         services.AddTransient<IFolderCohortStatsRepository, EFFolderCohortStatsRepository>();
-        services.AddTransient<IPumbilityCensusRepository, EFPumbilityCensusRepository>();
         services.AddTransient<IChartSimilarityRepository, EFChartSimilarityRepository>();
         services.AddSingleton<IDbModelContribution, ChartIntelligenceModelContribution>();
         return services;
@@ -42,7 +41,6 @@ public static class ChartIntelligenceRegistrationExtensions
     {
         configurator.AddConsumer<ContributionsDeletionConsumer>();
         configurator.AddConsumer<TierListSaga>();
-        configurator.AddConsumer<PumbilityCensusSaga>();
         configurator.AddConsumer<ScoringDifficultySaga>();
         configurator.AddConsumer<AccountPurgeConsumer>();
         configurator.AddConsumer<ChartSimilaritySaga>();

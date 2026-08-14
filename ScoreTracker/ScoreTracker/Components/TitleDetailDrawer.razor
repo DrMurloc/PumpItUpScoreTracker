@@ -1,6 +1,7 @@
 @namespace ScoreTracker.Web.Components
 @using System.Globalization
 @using MediatR
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
@@ -38,9 +39,25 @@
                     else if (IsLoggedIn)
                     {
                         <p class="title-label">@L["Your progress"]</p>
-                        <div class="title-bar @(Rung.State == RungState.Earned ? "done" : "")">
-                            <i style="width:@Percent"></i>
-                        </div>
+                        @* A gem title's bar spans one gem (LinkLadder floors it at the rung
+                           below), so it wears that gem's level rungs — labelled, framed around
+                           the bar (docs/design/pumbility-levels.md §8). *@
+                        @if (IsGemRung)
+                        {
+                            <PumbilityLevelTicks Floor="Rung.Title.CompletionFloor"
+                                                 Ceiling="Rung.Title.CompletionRequired"
+                                                 Pool="Rung.Progress.CompletionCount">
+                                <div class="title-bar @(Rung.State == RungState.Earned ? "done" : "")">
+                                    <i style="width:@Percent"></i>
+                                </div>
+                            </PumbilityLevelTicks>
+                        }
+                        else
+                        {
+                            <div class="title-bar @(Rung.State == RungState.Earned ? "done" : "")">
+                                <i style="width:@Percent"></i>
+                            </div>
+                        }
                         <div class="title-figures">
                             <span>@FloorText</span>
                             <span><b>@Have</b> / @Need</span>
@@ -48,6 +65,24 @@
                         @if (!string.IsNullOrWhiteSpace(Rung.Progress.AdditionalNote))
                         {
                             <p class="title-hint">@Rung.Progress.AdditionalNote</p>
+                        }
+
+                        @* A gem rung's progress IS the viewer's pool, so their exact rung and the
+                           distance to the next cost nothing (docs/design/pumbility-levels.md §4). *@
+                        @if (IsGemRung && ViewerLevel is { } standing)
+                        {
+                            <p class="title-label">@L["Where you stand"]</p>
+                            <div class="title-stand">
+                                <PumbilityLevelBadge Level="standing" Height="44"></PumbilityLevelBadge>
+                                <div class="title-stand-id">
+                                    <span class="title-stand-name">@LevelLabel(standing)</span>
+                                    @if (standing.ToNext(Rung.Progress.CompletionCount) is { } toNext and > 0)
+                                    {
+                                        <span class="title-stand-next">@L["{0} to next level", PumbilityFormat.Gain(toNext)]</span>
+                                    }
+                                </div>
+                                <span class="title-stand-range">@RangeText(standing)</span>
+                            </div>
                         }
                     }
 
@@ -88,6 +123,59 @@
                                 ? L["Everyone who holds this keeps their profile private."]
                                 : L["Nobody here holds this title yet."])
                         </p>
+                    }
+                    else if (IsGemRung)
+                    {
+                        @* Flat level groups, strongest first, every name visible. The rung rows stay
+                           plain on purpose — the viewer's own holder row is the list's only marker,
+                           and "Where you stand" above already carries their rung. *@
+                        <div class="title-lvls">
+                            @foreach (var level in GemLevels)
+                            {
+                                var members = MembersAt(level);
+                                <div class="title-lvl @(members.Count == 0 ? "empty" : "")">
+                                    <div class="title-lvl-head">
+                                        <PumbilityLevelBadge Level="level" Height="28"></PumbilityLevelBadge>
+                                        <span class="title-lvl-name">@(level.Level is { } lv ? $"LV.{lv}" : LevelLabel(level))</span>
+                                        <span class="title-lvl-th">@($"{level.Threshold:N0}+")</span>
+                                        <span class="title-lvl-n">@(members.Count == 0 ? "—" : members.Count.ToString("N0"))</span>
+                                    </div>
+                                    @if (members.Count > 0)
+                                    {
+                                        <div class="title-lvl-holders">
+                                            @foreach (var holder in members)
+                                            {
+                                                <div class="olb-rank-card @(holder.User.Id == CurrentUserId ? "olb-row-me" : "")">
+                                                    <UserLabel User="holder.User"></UserLabel>
+                                                    <span class="title-lvl-pool">@holder.TotalPumbility?.ToString("N0")</span>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            @if (PoollessHolders.Count > 0)
+                            {
+                                @* A titles row can outlive its stats row; these holders are real but
+                                   carry no pool to place them on a rung. *@
+                                <div class="title-lvl-holders">
+                                    @foreach (var holder in PoollessHolders)
+                                    {
+                                        <div class="olb-rank-card @(holder.User.Id == CurrentUserId ? "olb-row-me" : "")">
+                                            <UserLabel User="holder.User"></UserLabel>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        @if (_holders.HiddenCount > 0)
+                        {
+                            <p class="title-hint">@L["{0} more keep their profile private.", _holders.HiddenCount]</p>
+                        }
+                        @if (_holders.ClimbedPastCount > 0)
+                        {
+                            <p class="title-hint">@L["+{0} others have climbed higher on this ladder.", _holders.ClimbedPastCount]</p>
+                        }
                     }
                     else
                     {
@@ -131,6 +219,54 @@
     private string? _loadedFor;
 
     private SuggestedLevel? Suggested => Rung == null ? null : SuggestedTitleLevel.For(Rung.Title);
+
+    /// <summary>The eight total-pool [P.B] rungs — the only titles whose holders subdivide by level.</summary>
+    private bool IsGemRung => Mix == MixEnum.Phoenix2 &&
+                              Rung?.Title is Phoenix2PumbilityTitle { Pool: PumbilityPool.Total };
+
+    /// <summary>
+    ///     The viewer's own rung. A gem title's progress IS their total pool, so this reads what the
+    ///     drawer already holds; zero means no Phoenix 2 pool at all, which renders nothing rather
+    ///     than an UNRANKED badge on every gem drawer.
+    /// </summary>
+    private Phoenix2PumbilityLevel? ViewerLevel =>
+        Rung is { Progress.CompletionCount: > 0 } ? Phoenix2PumbilityLevel.From(Rung.Progress.CompletionCount) : null;
+
+    /// <summary>This gem's levels, strongest first — the order the groups render in.</summary>
+    private IReadOnlyList<Phoenix2PumbilityLevel> GemLevels => Rung == null
+        ? Array.Empty<Phoenix2PumbilityLevel>()
+        : Phoenix2PumbilityLevel.LevelsOf(Rung.Title.Name).Reverse().ToArray();
+
+    private IReadOnlyList<TitleHolder> PoollessHolders =>
+        _holders?.Holders.Where(h => h.TotalPumbility == null).ToArray() ?? Array.Empty<TitleHolder>();
+
+    /// <summary>
+    ///     The holders standing on one level. A pool that has outrun the standing set (stats moved,
+    ///     titles not yet recomputed) clamps into this gem's five — the standing set is the
+    ///     authority for who appears at all.
+    /// </summary>
+    private List<TitleHolder> MembersAt(Phoenix2PumbilityLevel level)
+    {
+        if (_holders == null || Rung == null) return new List<TitleHolder>();
+        var levels = Phoenix2PumbilityLevel.LevelsOf(Rung.Title.Name);
+        return _holders.Holders
+            .Where(h => h.TotalPumbility is { } pool &&
+                        Math.Clamp(Phoenix2PumbilityLevel.From(pool).Index, levels[0].Index, levels[^1].Index) ==
+                        level.Index)
+            .ToList();
+    }
+
+    // Display strips the [P.B] prefix — inside this drawer the gem is already the headline.
+    private string LevelLabel(Phoenix2PumbilityLevel level)
+    {
+        if (level.Gem is not { } gem) return L["Unranked"];
+        var name = gem.ToString().Replace("[P.B] ", "");
+        return level.Level is { } lv ? $"{name} LV.{lv}" : name;
+    }
+
+    private static string RangeText(Phoenix2PumbilityLevel level) => level.NextThreshold is { } next
+        ? $"{level.Threshold:N0}–{next:N0}"
+        : $"{level.Threshold:N0}+";
 
     /// <summary>What a suggested rung's folders are conditional on, in its own words.</summary>
     private string AskFor(SuggestedRung rung)

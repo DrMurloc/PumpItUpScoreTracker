@@ -140,7 +140,70 @@ public sealed class OfficialCensusTests
         scores.VerifyNoOtherCalls();
     }
 
+    // ---- the badge mirror riding the pumbility read (docs/design/pumbility-levels.md §6) ----
+
+    [Fact]
+    public async Task AnUnknownBadgeOnThePumbilityPageMirrorsItselfHome()
+    {
+        var api = Api(MixEnum.Phoenix2, Buckets("", "17"),
+            passes: new Dictionary<string, int> { ["17"] = 1 });
+        var source = new Uri("https://piugame.com/l_img/pumbility/pumbility_03.png");
+        api.Setup(a => a.GetPumbility(MixEnum.Phoenix2, It.IsAny<HttpClient>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PiuGameGetPumbilityResult { Total = 11_050, BadgeIndex = 3, BadgeImageUrl = source });
+        var upload = UploadKnowing(exists: false);
+
+        await Client(api, fileUpload: upload).GetOfficialCensus(MixEnum.Phoenix2, UserId, "sid",
+            CancellationToken.None);
+
+        // Destination pads uniformly regardless of how the source spelled it.
+        upload.Verify(u => u.CopyFromSource(source, "/pumbility/p2/pumbility_03.png",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ABadgeAlreadyMirroredIsLeftAlone()
+    {
+        var api = Api(MixEnum.Phoenix2, Buckets("", "17"),
+            passes: new Dictionary<string, int> { ["17"] = 1 });
+        api.Setup(a => a.GetPumbility(MixEnum.Phoenix2, It.IsAny<HttpClient>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PiuGameGetPumbilityResult
+            {
+                Total = 17_602.69, BadgeIndex = 24,
+                BadgeImageUrl = new Uri("https://piugame.com/l_img/pumbility/pumbility_24.png")
+            });
+        var upload = UploadKnowing(exists: true);
+
+        await Client(api, fileUpload: upload).GetOfficialCensus(MixEnum.Phoenix2, UserId, "sid",
+            CancellationToken.None);
+
+        upload.Verify(u => u.CopyFromSource(It.IsAny<Uri>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task APageWithNoBadgeMirrorsNothing()
+    {
+        // The Phoenix page draws no badge; the parse reports null and the mirror never wakes.
+        var api = Api(MixEnum.Phoenix, Buckets("", "10", "18"),
+            passes: new Dictionary<string, int> { ["10"] = 1, ["18"] = 1 }, bestScoreTotal: 2);
+        var upload = new Mock<IFileUploadClient>(MockBehavior.Strict);
+
+        await Client(api, fileUpload: upload).GetOfficialCensus(MixEnum.Phoenix, UserId, "sid",
+            CancellationToken.None);
+
+        upload.VerifyNoOtherCalls();
+    }
+
     // ---- builders ----
+
+    private static Mock<IFileUploadClient> UploadKnowing(bool exists)
+    {
+        var upload = new Mock<IFileUploadClient>();
+        var mirrored = new Uri("https://piuimages.arroweclip.se/pumbility/p2/known.png");
+        upload.Setup(u => u.DoesFileExist(It.IsAny<string>(), out mirrored, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(exists);
+        return upload;
+    }
 
     private static string[] Buckets(params string[] buckets)
     {
@@ -168,12 +231,12 @@ public sealed class OfficialCensusTests
     }
 
     private static OfficialSiteClient Client(Mock<IPiuGameApi> api, Mock<IMediator>? mediator = null,
-        Mock<IScoreReader>? scores = null)
+        Mock<IScoreReader>? scores = null, Mock<IFileUploadClient>? fileUpload = null)
     {
         return new OfficialSiteClient(api.Object, Mock.Of<IChartRepository>(),
             NullLogger<OfficialSiteClient>.Instance, (mediator ?? new Mock<IMediator>()).Object,
             Mock.Of<ICurrentUserAccessor>(), (scores ?? new Mock<IScoreReader>()).Object,
-            Mock.Of<IFileUploadClient>(), Mock.Of<IBus>(), FakeDateTime.At(Now).Object,
+            (fileUpload ?? new Mock<IFileUploadClient>()).Object, Mock.Of<IBus>(), FakeDateTime.At(Now).Object,
             Mock.Of<IDailyStepReader>(), Options.Create(new PiuGameConfiguration()));
     }
 }

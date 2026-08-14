@@ -186,9 +186,10 @@ public sealed class TierListTests : IAsyncLifetime
         var timeout = new LocatorAssertionsToBeVisibleOptions { Timeout = 60_000 };
         await Expect(SectionNamed("Easy")).ToBeVisibleAsync(timeout);
 
-        // Round 7 moved Download to the sticky toolbar (right-aligned action slot).
+        // Download rides the content bar's tools cluster as an icon button; its
+        // accessible name is the aria-label.
         var download = await _page.RunAndWaitForDownloadAsync(
-            () => _page.Locator(".tier-toolbar")
+            () => _page.Locator(".tier-content-bar")
                 .GetByRole(AriaRole.Button, new LocatorGetByRoleOptions { Name = "Download" }).ClickAsync(),
             new PageRunAndWaitForDownloadOptions { Timeout = 60_000 });
 

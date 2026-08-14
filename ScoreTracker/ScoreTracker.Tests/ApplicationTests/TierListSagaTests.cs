@@ -215,7 +215,8 @@ public sealed class TierListSagaTests
         Mock<ICurrentUserAccessor>? currentUser = null,
         Mock<IPlayerStatsReader>? playerStats = null,
         Mock<IChartScoreStatsRepository>? chartStats = null,
-        Mock<IFolderCohortStatsRepository>? cohortStats = null)
+        Mock<IFolderCohortStatsRepository>? cohortStats = null,
+        Mock<ITitleRepository>? titles = null)
     {
         chartRatings ??= EmptyRatingsMock();
         charts ??= EmptyChartsMock();
@@ -225,9 +226,10 @@ public sealed class TierListSagaTests
         playerStats ??= new Mock<IPlayerStatsReader>();
         chartStats ??= new Mock<IChartScoreStatsRepository>();
         cohortStats ??= new Mock<IFolderCohortStatsRepository>();
+        titles ??= new Mock<ITitleRepository>();
         return new TierListSaga(chartRatings.Object, charts.Object, tierLists.Object, scores.Object,
             currentUser.Object, playerStats.Object, new Mock<IChartScoringLevelRepository>().Object,
-            chartStats.Object, cohortStats.Object);
+            chartStats.Object, cohortStats.Object, titles.Object);
     }
 
     private static Mock<IChartRepository> EmptyChartsMock()

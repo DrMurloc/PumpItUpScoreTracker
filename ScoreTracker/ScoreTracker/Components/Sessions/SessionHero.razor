@@ -57,7 +57,7 @@
             <div class="sbd-eyebrow sbd-section-head">@L["Titles you earned"]</div>
             @foreach (var milestone in Breakdown.Milestones.OrderBy(m => m.Kind))
             {
-                <MilestoneStrip Milestone="milestone"></MilestoneStrip>
+                <MilestoneStrip Milestone="milestone" LevelChange="LevelChange"></MilestoneStrip>
             }
         </div>
     }
@@ -158,4 +158,12 @@
             return duration.TotalMinutes < 5 ? string.Empty : $" · {L["{0} min", (int)duration.TotalMinutes]}";
         }
     }
+
+    /// <summary>
+    ///     The batch's PUMBILITY level crossing, derived once for the whole milestone set —
+    ///     suppression (a gem title completing beside it) is a batch-level fact no single strip
+    ///     can see (docs/design/pumbility-levels.md §5).
+    /// </summary>
+    private PumbilityLevelChange? LevelChange =>
+        PumbilityLevelChange.TryFrom(Breakdown.Group.Mix, Breakdown.Milestones);
 }

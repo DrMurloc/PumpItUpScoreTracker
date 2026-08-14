@@ -352,7 +352,7 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
     private RichBotMessage BuildSnapshotCard(SnapshotInputs inputs, string folderStats, string? culture)
     {
         var header = HeaderSection(inputs, culture);
-        var statLines = StatLines(inputs.E.Milestones, culture);
+        var statLines = StatLines(inputs.E.Mix, inputs.E.Milestones, culture);
         var achievementLines = AchievementLines(inputs.E, inputs.Weekly, inputs.Charts, inputs.Daily,
             inputs.DailyChartId, culture);
 
@@ -581,15 +581,23 @@ internal sealed class CommunitySaga : IRequestHandler<CreateCommunityCommand>, I
             : UpscoreRow(change, chart, best, bigGain, culture);
     }
 
-    private List<string> StatLines(IReadOnlyList<PlayerMilestoneRecord> milestones, string? culture)
+    private List<string> StatLines(MixEnum mix, IReadOnlyList<PlayerMilestoneRecord> milestones, string? culture)
     {
+        // The level crossing rides the PUMBILITY line rather than taking one of its own — the
+        // stats block is budget-reserved, and the crossing is that line's headline, not a second
+        // fact. Suppressed by derivation when the batch completed the gem title itself, which the
+        // achievements block already announces (docs/design/pumbility-levels.md §5). The label is
+        // the game's own notation, so it carries no localizer key.
+        var levelUp = PumbilityLevelChange.TryFrom(mix, milestones);
+
         var lines = new List<string>();
         foreach (var m in milestones)
             switch (m.Kind)
             {
                 case MilestoneKind.PumbilityGain:
                     lines.Add("📈 " + _localizer.Get(culture, "**PUMBILITY** {0:N0} → **{1:N0}** (+{2:N0})",
-                        m.OldValue, m.NewValue, m.NewValue - m.OldValue));
+                                  m.OldValue, m.NewValue, m.NewValue - m.OldValue)
+                              + (levelUp == null ? string.Empty : $" · 🆙 **{levelUp.CrossingText()}**"));
                     break;
                 case MilestoneKind.SinglesPumbilityGain:
                     lines.Add("📈 " + _localizer.Get(culture, "**PUMBILITY (S)** {0:N0} → **{1:N0}** (+{2:N0})",

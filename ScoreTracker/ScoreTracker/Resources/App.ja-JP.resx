@@ -914,6 +914,9 @@
   <data name="Best chart placement" xml:space="preserve">
     <value>最高譜面順位</value>
   </data>
+  <data name="Best for your PUMBILITY first, from players at your level" xml:space="preserve">
+    <value>PUMBILITYに効く順 — 自分のレベルのプレイヤー基準</value>
+  </data>
   <data name="Best N" xml:space="preserve">
     <value>上位{0}譜面</value>
   </data>
@@ -2097,9 +2100,6 @@
   <data name="Easiest to clear first, from the community Pass tier list" xml:space="preserve">
     <value>クリアしやすい順 — コミュニティのクリアティアリスト基準</value>
   </data>
-  <data name="Easiest to clear first, from your Pass tier list" xml:space="preserve">
-    <value>クリアしやすい順 — 自分のクリアティアリスト基準</value>
-  </data>
   <data name="Easiest to score first, by scoring level" xml:space="preserve">
     <value>スコアを出しやすい順 — スコアレベル基準</value>
   </data>
@@ -3259,6 +3259,9 @@
   </data>
   <data name="Level required, by ranking tier" xml:space="preserve">
     <value>ランキング帯別の必要レベル</value>
+  </data>
+  <data name="Level Up" xml:space="preserve">
+    <value>レベルアップ</value>
   </data>
   <data name="Level {0}" xml:space="preserve">
     <value>レベル {0}</value>
@@ -4690,9 +4693,6 @@
   <data name="Personalized for {0}" xml:space="preserve">
     <value>{0}向けにパーソナライズ</value>
   </data>
-  <data name="Personalized Pass" xml:space="preserve">
-    <value>パーソナライズ パス</value>
-  </data>
   <data name="Personalized PUMBILITY" xml:space="preserve">
     <value>パーソナライズ PUMBILITY</value>
   </data>
@@ -5180,6 +5180,9 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY level {0}" xml:space="preserve">
+    <value>PUMBILITYレベル {0}</value>
+  </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITYの推移</value>
   </data>
@@ -5358,6 +5361,9 @@
   <data name="reached by {0} players" xml:space="preserve">
     <value>{0}人が到達</value>
   </data>
+  <data name="Reached {0}" xml:space="preserve">
+    <value>{0}に到達</value>
+  </data>
   <data name="Read the source" xml:space="preserve">
     <value>ソースを読む</value>
   </data>
@@ -5391,8 +5397,8 @@
   <data name="Rebuilding the latest session for every player." xml:space="preserve">
     <value>全プレイヤーの最新セッションを再構築しています。</value>
   </data>
-  <data name="Rebuilding the {0} PUMBILITY census. It takes a few minutes." xml:space="preserve">
-    <value>{0} の PUMBILITY 集計を再構築しています。数分かかります。</value>
+  <data name="Rebuilding the {0} PUMBILITY tier lists. It takes a few minutes." xml:space="preserve">
+    <value>{0} の PUMBILITY 難易度表を再構築しています。数分かかります。</value>
   </data>
   <data name="Recalculated every few hours" xml:space="preserve">
     <value>数時間ごとに再計算されます</value>
@@ -7783,6 +7789,9 @@
   <data name="Where this record would land you" xml:space="preserve">
     <value>この記録が届く位置</value>
   </data>
+  <data name="Where you stand" xml:space="preserve">
+    <value>現在の位置</value>
+  </data>
   <data name="Where your list disagrees with the community's, and the skills that pushed it. Tap a chart for its full source breakdown." xml:space="preserve">
     <value>あなたのリストとコミュニティの違い、そしてそれを押したスキル。譜面をタップするとソース別の完全な内訳が見られます。</value>
   </data>
@@ -8676,6 +8685,9 @@
   </data>
   <data name="{0} titles, and the game shows you none of your progress." xml:space="preserve">
     <value>称号は {0} 個ありますが、ゲームは進捗を一切見せてくれません。</value>
+  </data>
+  <data name="{0} to next level" xml:space="preserve">
+    <value>次のレベルまで{0}</value>
   </data>
   <data name="{0} to PG" xml:space="preserve">
     <value>PGまで{0}</value>

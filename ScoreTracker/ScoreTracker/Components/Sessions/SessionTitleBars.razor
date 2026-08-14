@@ -18,11 +18,28 @@
                         <span class="sbd-tbar-was">@Percent(bar.OldPercent) →</span> @Percent(bar.NewPercent)
                     </span>
                 </div>
-                <div class="sbd-track">
-                    <span class="sbd-track-held" style="@($"width:{Clamp(bar.OldPercent)}%")"></span>
-                    <span class="sbd-track-gain"
-                          style="@($"left:{Clamp(bar.OldPercent)}%;width:{Clamp(bar.NewPercent) - Clamp(bar.OldPercent)}%")"></span>
-                </div>
+                @* A gem title's bar spans one gem (the percents are floor-aware), so it wears
+                   that gem's level rungs — labelled, framed around the bar. The name lookup is
+                   the gate: [S]/[D] and Phoenix titles resolve to nothing and stay exactly as
+                   they are (docs/design/pumbility-levels.md §8). *@
+                @if (PumbilityLevelMarkers.GemSpanFor(bar.Title) is { } span)
+                {
+                    <PumbilityLevelTicks Floor="span.Floor" Ceiling="span.Required" Pool="bar.Current">
+                        <div class="sbd-track">
+                            <span class="sbd-track-held" style="@($"width:{Clamp(bar.OldPercent)}%")"></span>
+                            <span class="sbd-track-gain"
+                                  style="@($"left:{Clamp(bar.OldPercent)}%;width:{Clamp(bar.NewPercent) - Clamp(bar.OldPercent)}%")"></span>
+                        </div>
+                    </PumbilityLevelTicks>
+                }
+                else
+                {
+                    <div class="sbd-track">
+                        <span class="sbd-track-held" style="@($"width:{Clamp(bar.OldPercent)}%")"></span>
+                        <span class="sbd-track-gain"
+                              style="@($"left:{Clamp(bar.OldPercent)}%;width:{Clamp(bar.NewPercent) - Clamp(bar.OldPercent)}%")"></span>
+                    </div>
+                }
                 @if (bar.Required > 0)
                 {
                     <div class="sbd-tbar-cap">@L["{0} of {1} rating", bar.Current.ToString("N0"), bar.Required.ToString("N0")]</div>

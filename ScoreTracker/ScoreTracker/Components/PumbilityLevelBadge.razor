@@ -1,0 +1,44 @@
+@namespace ScoreTracker.Web.Components
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+
+@* The Phoenix 2 PUMBILITY level badge — piugame's own art, mirrored into our storage
+   (docs/design/pumbility-levels.md). The image self-hides on a 404 rather than rendering a broken
+   frame: until the mirror holds an index (or when piugame mints a new one), the text beside this
+   component carries the meaning and the badge is only decoration. *@
+
+@if (Level is { } rung)
+{
+    <img class="pumbility-level-badge" src="@BadgeUrl(rung)" alt="@AltText(rung)" title="@AltText(rung)"
+         width="@Height" height="@Height" loading="lazy" onerror="this.style.display='none'"/>
+}
+
+@code {
+
+    /// <summary>The rung to draw. Null renders nothing — the Phoenix 2 gate lives in callers.</summary>
+    [Parameter]
+    public Phoenix2PumbilityLevel? Level { get; set; }
+
+    [Parameter]
+    public int Height { get; set; } = 24;
+
+    // Our copies pad uniformly (pumbility_00..36) — unlike the source, whose padding flips at ten,
+    // which is the trap that once made the bottom of the ladder look unpublished.
+    private static string BadgeUrl(Phoenix2PumbilityLevel rung)
+    {
+        return $"https://piuimages.arroweclip.se/pumbility/p2/pumbility_{rung.Index:00}.png";
+    }
+
+    private string AltText(Phoenix2PumbilityLevel rung)
+    {
+        return L["PUMBILITY level {0}", LabelFor(rung)];
+    }
+
+    // Gem names are the game's own proper nouns and never localize; only the unranked rung,
+    // which has no name anywhere, needs a word of ours.
+    private string LabelFor(Phoenix2PumbilityLevel rung)
+    {
+        if (rung.Gem is not { } gem) return L["Unranked"];
+        return rung.Level is { } level ? $"{gem} LV.{level}" : gem.ToString();
+    }
+
+}

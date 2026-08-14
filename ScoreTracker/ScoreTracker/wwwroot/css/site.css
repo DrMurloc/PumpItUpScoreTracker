@@ -9335,10 +9335,58 @@ button.chart-card-art {
 }
 
 .title-bar {
+    position: relative;
     height: 9px;
     border-radius: 2px;
     background: color-mix(in srgb, var(--mix-ink) 10%, transparent);
     overflow: hidden;
+}
+
+/* PUMBILITY rung ticks on a one-gem bar (docs/design/pumbility-levels.md §8). The frame wraps
+   the bar: 18px of reserved headroom carries the LV.n labels, the overlay aligns to the bar's
+   own box, and the ticks overshoot its edges — the bar underneath keeps its rounded clip. The
+   current rung's tick and label are the bright ones; hover names the rung in full. */
+.pmb-lvl-frame {
+    position: relative;
+    padding-top: 18px;
+}
+
+.pmb-lvl-overlay {
+    position: absolute;
+    inset: 18px 0 0 0;
+    pointer-events: none;
+}
+
+.pmb-lvl-tick {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 3px;
+    margin-left: -1.5px;
+    border-radius: 1px;
+    background: color-mix(in srgb, var(--mix-ink) 45%, transparent);
+    pointer-events: auto;
+}
+
+.pmb-lvl-tick b {
+    position: absolute;
+    bottom: calc(100% + 3px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: .03em;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.pmb-lvl-tick.cur {
+    background: var(--mix-ink);
+}
+
+.pmb-lvl-tick.cur b {
+    color: var(--mix-ink);
 }
 
 .title-bar i {
@@ -9448,6 +9496,86 @@ button.chart-card-art {
 .title-holders {
     display: flex;
     flex-direction: column;
+}
+
+/* The gem-rung drawer: flat level groups, strongest first (docs/design/pumbility-levels.md §4).
+   The group rows stay unmarked on purpose — the viewer's own holder row is the list's only
+   highlight, because "Where you stand" above already carries their rung. */
+.title-stand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.title-stand-id {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.title-stand-name {
+    font-weight: 600;
+}
+
+.title-stand-next,
+.title-stand-range {
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+}
+
+.title-stand-range {
+    white-space: nowrap;
+}
+
+.title-lvls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.title-lvl-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--mix-ink) 5%, transparent);
+}
+
+.title-lvl.empty {
+    opacity: .45;
+}
+
+.title-lvl-name {
+    font-weight: 600;
+}
+
+.title-lvl-th {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.title-lvl-n {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.title-lvl-holders {
+    display: flex;
+    flex-direction: column;
+    margin-left: 8px;
+    padding: 2px 0 4px 10px;
+    border-left: 2px solid color-mix(in srgb, var(--mix-ink) 12%, transparent);
+}
+
+.title-lvl-pool {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 860px) {

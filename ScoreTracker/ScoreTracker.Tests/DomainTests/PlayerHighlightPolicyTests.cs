@@ -34,6 +34,9 @@ public sealed class PlayerHighlightPolicyTests
     private static PlayerMilestoneRecord TitleCompleted(string title) =>
         new(MilestoneKind.TitleCompleted, SessionId: null, When, OldValue: null, NewValue: null, title, Detail: null);
 
+    private static PlayerMilestoneRecord PumbilityGain(double from, double to) =>
+        new(MilestoneKind.PumbilityGain, SessionId: null, When, from, to, Title: null, Detail: null);
+
     private static PlayerMilestoneRecord FolderPassLamp(string folder) =>
         new(MilestoneKind.FolderPassLamp, SessionId: null, When, OldValue: null, NewValue: null, Title: null,
             Detail: folder);
@@ -413,5 +416,71 @@ public sealed class PlayerHighlightPolicyTests
 
         var win = Assert.Single(wins);
         Assert.Equal(WinKind.FolderFirst, win.Kind);
+    }
+
+    // ---- the PUMBILITY level crossing (docs/design/pumbility-levels.md §5) ----
+
+    [Fact]
+    public void ALevelCrossingWithoutItsGemTitleIsAWin()
+    {
+        var wins = Classify(
+            Event(MixEnum.Phoenix2, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                PumbilityGain(17_410.38, 17_602.69)),
+            Charts(), Snapshot());
+
+        var win = Assert.Single(wins);
+        Assert.Equal(WinKind.PumbilityLevelUp, win.Kind);
+        // Rank carries the badge index reached — DIAMOND LV.4 — and PoolValue the raw pool.
+        Assert.Equal(24, win.Rank);
+        Assert.Equal(17_602.69, win.PoolValue);
+    }
+
+    [Fact]
+    public void AGainInsideOneRungSaysNothing()
+    {
+        var wins = Classify(
+            Event(MixEnum.Phoenix2, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                PumbilityGain(17_610, 17_650)),
+            Charts(), Snapshot());
+
+        Assert.Empty(wins);
+    }
+
+    [Fact]
+    public void AGemTitleInTheSameBatchOutranksTheLevelRow()
+    {
+        // Crossing into RED BERYL LV.1 IS the [P.B] RED BERYL title; when the batch completed it,
+        // the title is the sentence and the level row stands down. This is the owner's "didn't
+        // change titles but changed levels", stated from the other side.
+        var wins = Classify(
+            Event(MixEnum.Phoenix2, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                PumbilityGain(17_950, 18_010), TitleCompleted("[P.B] RED BERYL")),
+            Charts(), Snapshot());
+
+        Assert.DoesNotContain(wins, w => w.Kind == WinKind.PumbilityLevelUp);
+        Assert.Contains(wins, w => w.Kind == WinKind.BigTitle && w.TitleName == "[P.B] RED BERYL");
+    }
+
+    [Fact]
+    public void ASinglesLadderTitleNeverSuppressesTheLevel()
+    {
+        // The [S]/[D] ladders have no levels — completing one says nothing about the gem ladder.
+        var wins = Classify(
+            Event(MixEnum.Phoenix2, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                PumbilityGain(17_410.38, 17_602.69), TitleCompleted("[S] ADVANCED LV.2")),
+            Charts(), Snapshot());
+
+        Assert.Contains(wins, w => w.Kind == WinKind.PumbilityLevelUp);
+    }
+
+    [Fact]
+    public void PhoenixHasNoGemLadderAndMintsNoLevel()
+    {
+        var wins = Classify(
+            Event(MixEnum.Phoenix, Array.Empty<ScoreHighlightsCapturedEvent.HighlightedChange>(),
+                PumbilityGain(17_410.38, 17_602.69)),
+            Charts(), Snapshot());
+
+        Assert.Empty(wins);
     }
 }

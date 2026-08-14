@@ -288,7 +288,7 @@
     {
         ShelfSort.None => "Strongest match first — no difficulty applied",
         ShelfSort.PassDifficulty => _personalized
-            ? "Easiest to clear first, from your Pass tier list"
+            ? "Best for your PUMBILITY first, from players at your level"
             : "Easiest to clear first, from the community Pass tier list",
         _ => _personalized
             ? "Easiest to score first, from your Score tier list"
@@ -420,7 +420,13 @@
             return levels;
         }
 
-        var lens = Name.From(_sort == ShelfSort.PassDifficulty ? "Pass" : "Score");
+        // Personalized Pass no longer exists — PUMBILITY replaced it — so the personalized
+        // reading of the Pass sort asks for that lens (how many players at your level hold
+        // each chart); the community reading keeps the community Pass list.
+        var personalized = _personalized && CanPersonalize;
+        var lens = Name.From(_sort == ShelfSort.PassDifficulty
+            ? personalized ? "PUMBILITY" : "Pass"
+            : "Score");
         var result = new Dictionary<Guid, double>();
         if (_anchor == null) return result;
         // A blended list covers its whole folder, so most of what comes back is not on this
@@ -432,7 +438,7 @@
         foreach (var level in _all.Select(e => e.Chart.Level).Distinct())
         {
             var list = await Mediator.Send(new GetBlendedTierListQuery(_anchor.Type, level, lens,
-                Personalized: _personalized && CanPersonalize));
+                Personalized: personalized));
             foreach (var entry in list.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
                 if (shelfLevels.TryGetValue(entry.ChartId, out var chartLevel))
                     result[entry.ChartId] = EffectiveLevel(chartLevel, entry.Category);
