@@ -60,5 +60,51 @@ public sealed class EventCompetitionModelContribution : IDbModelContribution
         modelBuilder.Entity<QualifiersConfigurationEntity>()
             .Property(e => e.ChartPlayCount)
             .HasDefaultValue(3);
+
+        // The MoM tables (docs/design/march-of-murlocs.md §6). One linear cascade chain:
+        // Season → Board → Session → SessionChart, so pruning an empty season (D13) and
+        // purging an account's sessions each take their children with them.
+        modelBuilder.Entity<MoMSeasonEntity>().ToTable("MoMSeason");
+        modelBuilder.Entity<MoMSeasonEntity>()
+            .HasIndex(s => new { s.Year, s.Quarter })
+            .IsUnique()
+            .HasDatabaseName("UX_MoMSeason_Quarter")
+            .HasFilter("[Quarter] IS NOT NULL");
+
+        modelBuilder.Entity<MoMBoardEntity>().ToTable("MoMBoard");
+        modelBuilder.Entity<MoMBoardEntity>()
+            .HasIndex(b => new { b.SeasonId, b.MixId, b.ChartType })
+            .IsUnique();
+        modelBuilder.Entity<MoMBoardEntity>()
+            .HasOne<MoMSeasonEntity>().WithMany()
+            .HasForeignKey(b => b.SeasonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MoMChartLevelEntity>().ToTable("MoMChartLevel");
+        modelBuilder.Entity<MoMChartLevelEntity>()
+            .HasKey(l => new { l.SeasonId, l.MixId, l.ChartId });
+        modelBuilder.Entity<MoMChartLevelEntity>()
+            .HasOne<MoMSeasonEntity>().WithMany()
+            .HasForeignKey(l => l.SeasonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MoMSessionEntity>().ToTable("MoMSession");
+        modelBuilder.Entity<MoMSessionEntity>()
+            .HasIndex(s => new { s.BoardId, s.TotalScore })
+            .HasDatabaseName("IX_MoMSession_Board")
+            .IsDescending(false, true)
+            .HasFilter("[PublishedAt] IS NOT NULL");
+        modelBuilder.Entity<MoMSessionEntity>()
+            .HasOne<MoMBoardEntity>().WithMany()
+            .HasForeignKey(s => s.BoardId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MoMSessionChartEntity>().ToTable("MoMSessionChart");
+        modelBuilder.Entity<MoMSessionChartEntity>()
+            .HasKey(c => new { c.SessionId, c.Ordinal });
+        modelBuilder.Entity<MoMSessionChartEntity>()
+            .HasOne<MoMSessionEntity>().WithMany()
+            .HasForeignKey(c => c.SessionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
