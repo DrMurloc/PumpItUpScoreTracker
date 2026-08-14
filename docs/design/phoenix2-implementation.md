@@ -112,6 +112,23 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   only at 25, 26 and 27. The five charts up there are all Doubles (*1949*, *Dead End*,
   *Neo Catharsis*, *Paradoxx* at 28; *1948* at 29) and none has entered an imported pool.
 
+  **A board reconciliation was run against Base(28) and could not sharpen it — do not re-run it
+  expecting a solve (2026-08-14).** Exactly one D28 pass exists in the mirrored world boards:
+  FEFEMZ#1489's 966,723 (AAA+) on *Neo Catharsis*, constant across the 07-26/08-02/08-09
+  snapshots while his official PUMBILITY Doubles total is known at each. Reconstructing his
+  doubles top-50 from his chart-board rows and bracketing every unknowable plate RG → UG puts
+  the official value **inside the bracket at Base(28) = 290 on all three snapshots** — the rung
+  reconciles. But the bracket arithmetic is the finding: fifty plate-unknown rows make the
+  bracket ~200 points wide, a ±10 change in Base(28) moves the reconstruction ~14, and where a
+  player sits inside his own bracket is a per-player plate-profile trait that varies by more
+  than that (six no-28 controls sit at stable positions spanning 0.23–0.41). FEFEMZ's own trait
+  is unmeasurable — his pre-28-era and singles coverage are both eviction-truncated — so the
+  data is consistent with 290 and equally with anything in roughly [285, 320]. Two things it
+  does say: **exclusion is disfavored** (a 28 paying zero would put him above every control
+  observation at every snapshot), and **no D29 pass exists anywhere in the mirror** — *1948*'s
+  board is empty in every snapshot. What would actually close the rung: any imported player's
+  breakdown page with a 28 in the pool, the same instrument that closed everything else.
+
   **D on Doubles was a guess too, and that one was WRONG — it is 1.10, not the extrapolated
   1.15.** Played deliberately to close the cell (2026-08-14) and read off the breakdown page as a
   pair on the same level and plate, which is what makes it airtight: *Your Mind* D10 MG C at
