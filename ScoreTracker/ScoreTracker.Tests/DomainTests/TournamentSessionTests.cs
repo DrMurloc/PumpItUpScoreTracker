@@ -134,16 +134,64 @@ public sealed class TournamentSessionTests
     }
 
     [Fact]
-    public void CanAddReturnsFalseWhenAddingChartWouldExceedMaxTime()
+    public void CanAddAllowsAClosingChartThatOverhangsTheWindow()
     {
+        // The window governs when a chart may start, not when it must finish (the Gargoyle
+        // close): 90s entered of a 120s window leaves the window open, so a 90s closer is
+        // legal even though it finishes past the buzzer.
         var config = Config();
         config.MaxTime = TimeSpan.FromMinutes(2);
         var session = new TournamentSession(Guid.NewGuid(), config);
         var first = new ChartBuilder().WithSong(SongOfDuration("song-a", TimeSpan.FromSeconds(90))).Build();
-        var second = new ChartBuilder().WithSong(SongOfDuration("song-b", TimeSpan.FromSeconds(90))).Build();
+        var closer = new ChartBuilder().WithSong(SongOfDuration("song-b", TimeSpan.FromSeconds(90))).Build();
         session.Add(first, 900000, PhoenixPlate.SuperbGame, isBroken: false);
 
-        Assert.False(session.CanAdd(second));
+        Assert.True(session.CanAdd(closer));
+    }
+
+    [Fact]
+    public void CanAddReturnsFalseOnceEnteredDurationsFillTheWindow()
+    {
+        // Every chart is provisionally the last; once the durations already entered reach
+        // MaxTime the window is spent, and no candidate may start — not even a short one.
+        var config = Config();
+        config.MaxTime = TimeSpan.FromMinutes(2);
+        var session = new TournamentSession(Guid.NewGuid(), config);
+        session.Add(new ChartBuilder().WithSong(SongOfDuration("song-a", TimeSpan.FromSeconds(60))).Build(),
+            900000, PhoenixPlate.SuperbGame, isBroken: false);
+        session.Add(new ChartBuilder().WithSong(SongOfDuration("song-b", TimeSpan.FromSeconds(60))).Build(),
+            900000, PhoenixPlate.SuperbGame, isBroken: false);
+        var candidate = new ChartBuilder().WithSong(SongOfDuration("song-c", TimeSpan.FromSeconds(1))).Build();
+
+        Assert.False(session.CanAdd(candidate));
+    }
+
+    [Fact]
+    public void RestTimeFloorsAtZeroWhenTheClosingChartOverhangs()
+    {
+        var config = Config();
+        config.MaxTime = TimeSpan.FromMinutes(2);
+        var session = new TournamentSession(Guid.NewGuid(), config);
+        session.Add(new ChartBuilder().WithSong(SongOfDuration("song-a", TimeSpan.FromSeconds(90))).Build(),
+            900000, PhoenixPlate.SuperbGame, isBroken: false);
+        session.Add(new ChartBuilder().WithSong(SongOfDuration("song-b", TimeSpan.FromSeconds(90))).Build(),
+            900000, PhoenixPlate.SuperbGame, isBroken: false);
+
+        Assert.Equal(TimeSpan.Zero, session.CurrentRestTime);
+        Assert.Equal(TimeSpan.Zero, session.AverageTimeBetweenCharts);
+    }
+
+    [Fact]
+    public void AverageTimeWithAddedChartFloorsAtZeroWhenTheCandidateOverhangs()
+    {
+        var config = Config();
+        config.MaxTime = TimeSpan.FromMinutes(2);
+        var session = new TournamentSession(Guid.NewGuid(), config);
+        session.Add(new ChartBuilder().WithSong(SongOfDuration("song-a", TimeSpan.FromSeconds(90))).Build(),
+            900000, PhoenixPlate.SuperbGame, isBroken: false);
+        var closer = new ChartBuilder().WithSong(SongOfDuration("song-b", TimeSpan.FromSeconds(90))).Build();
+
+        Assert.Equal(TimeSpan.Zero, session.AverageTimeWithAddedChart(closer));
     }
 
     [Fact]
