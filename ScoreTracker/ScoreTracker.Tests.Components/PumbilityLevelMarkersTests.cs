@@ -1,5 +1,8 @@
+using System;
 using System.Linq;
 using Bunit;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
+using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Services;
 using Xunit;
@@ -111,5 +114,25 @@ public sealed class PumbilityLevelMarkersTests : ComponentTestBase
             .Add(x => x.Floor, 0).Add(x => x.Ceiling, 10_000).Add(x => x.Pool, 4_000));
 
         Assert.Empty(cut.Markup.Trim());
+    }
+
+    [Fact]
+    public void OnlyTheTotalRailWearsTicks()
+    {
+        // The Singles rail is real and mid-climb, and stays bare: the per-type ladders have no
+        // levels, and the Pool gate is what keeps that true.
+        var rails = new[]
+        {
+            new TitleRail(PumbilityPool.Total, 17_602.69, "[P.B] DIAMOND", 17_000,
+                "RED BERYL", 18_000, 380, 350, 340, Array.Empty<AskExample>(), null),
+            new TitleRail(PumbilityPool.Singles, 17_507.33, "[S] EXPERT LV.1", 17_500,
+                "[S] EXPERT LV.2", 17_700, 354, 350, 340, Array.Empty<AskExample>(), null)
+        };
+
+        var cut = RenderComponent<PumbilityTitleRails>(p => p.Add(x => x.Rails, rails));
+
+        var ticks = cut.FindAll(".pmb-lvl-tick");
+        Assert.Equal(4, ticks.Count);
+        Assert.Single(ticks, t => (t.GetAttribute("class") ?? "").Contains("cur"));
     }
 }
