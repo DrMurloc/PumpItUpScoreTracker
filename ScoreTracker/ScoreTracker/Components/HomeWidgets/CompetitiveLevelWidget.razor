@@ -65,6 +65,14 @@ else
 
     private static readonly MixEnum[] Supported = { MixEnum.Phoenix, MixEnum.Phoenix2 };
 
+    /// <summary>
+    ///     A competitive level at or below this is not a real reading: ≤1 is the calculator's
+    ///     no-data floor, and a never-played pool otherwise plots a flatline that pins the
+    ///     y-axis near 0 and flattens every real series (owner, 2026-08-14 — a no-doubles
+    ///     player's graph read as "no change", and its zero-slope dashed lines read as dots).
+    /// </summary>
+    private const double ValidityFloor = 5.0;
+
     private sealed record LevelSeries(string Label, string Color, bool Dashed,
         IReadOnlyList<PlayerRatingRecord> Points, Func<PlayerRatingRecord, double> YSelector);
 
@@ -105,43 +113,38 @@ else
         {
             var history = (await Mediator.Send(new GetPlayerHistoryQuery(CurrentUser.User.Id, mix)))
                 .OrderBy(h => h.Date).ToArray();
-            var inRange = history.Where(h => h.Date >= cutoff).ToArray();
             var dashed = mix != EffectiveMix && mixes.Length > 1;
 
-            if (inRange.Length >= 2)
+            // Per pool, because the floor makes the halves genuinely diverge: a player with a
+            // live singles line and a never-played doubles pool draws one series, not a series
+            // plus a flatline at the floor.
+            void AddType(bool show, string typeLabel, string color, Func<PlayerRatingRecord, double> level)
             {
-                if (config.ShowSingles)
+                if (!show) return;
+                var valid = history.Where(h => level(h) > ValidityFloor).ToArray();
+                var inRange = valid.Where(h => h.Date >= cutoff).ToArray();
+                if (inRange.Length >= 2)
                 {
-                    _series.Add(new LevelSeries($"{L["Singles"]} · {mix}", palette.ChartSingles, dashed,
-                        inRange, h => h.SinglesLevel));
+                    _series.Add(new LevelSeries($"{typeLabel} · {mix}", color, dashed, inRange, level));
                     dashes.Add(dashed ? 5 : 0);
                 }
+                else if (valid.Any())
+                {
+                    // "Where you left off": the pool's valid data sits entirely left of the
+                    // range — a ghost line at its final level, the reference the re-grind
+                    // chases. A pool with nothing valid draws nothing at all: no series, no
+                    // ghost at the no-data floor.
+                    var last = valid.Last();
+                    annotations.Add(new AnnotationsYAxis
+                    {
+                        Y = level(last), BorderColor = color, StrokeDashArray = 4,
+                        Label = new Label { Text = $"{mix} {typeLabel} {level(last):0.0}" }
+                    });
+                }
+            }
 
-                if (config.ShowDoubles)
-                {
-                    _series.Add(new LevelSeries($"{L["Doubles"]} · {mix}", palette.ChartDoubles, dashed,
-                        inRange, h => h.DoublesLevel));
-                    dashes.Add(dashed ? 5 : 0);
-                }
-            }
-            else if (history.Any())
-            {
-                // "Where you left off": the mix's data sits entirely left of the range —
-                // ghost lines at its final levels, the reference the re-grind chases.
-                var last = history.Last();
-                if (config.ShowSingles)
-                    annotations.Add(new AnnotationsYAxis
-                    {
-                        Y = last.SinglesLevel, BorderColor = palette.ChartSingles, StrokeDashArray = 4,
-                        Label = new Label { Text = $"{mix} {L["Singles"]} {last.SinglesLevel:0.0}" }
-                    });
-                if (config.ShowDoubles)
-                    annotations.Add(new AnnotationsYAxis
-                    {
-                        Y = last.DoublesLevel, BorderColor = palette.ChartDoubles, StrokeDashArray = 4,
-                        Label = new Label { Text = $"{mix} {L["Doubles"]} {last.DoublesLevel:0.0}" }
-                    });
-            }
+            AddType(config.ShowSingles, L["Singles"], palette.ChartSingles, h => h.SinglesLevel);
+            AddType(config.ShowDoubles, L["Doubles"], palette.ChartDoubles, h => h.DoublesLevel);
         }
 
         // Single-era boards get the gradient-area treatment (the "PIU Scores" look);
