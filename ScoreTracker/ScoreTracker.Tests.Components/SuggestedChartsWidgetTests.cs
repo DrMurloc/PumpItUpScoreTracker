@@ -153,15 +153,21 @@ public sealed class SuggestedChartsWidgetTests : ComponentTestBase
     }
 
     [Fact]
-    public void GroupedRowsOrderEasiestTierFirstAndColorTheTierColumn()
+    public void GroupedRowsOrderBestTierFirstAndSpeakThePumbilityVocabulary()
     {
         SetUpRecommendations(HotStreakRec(_hardMatch.Id), HotStreakRec(_easyMatch.Id));
         SetUpTiers((_hardMatch.Id, TierListCategory.VeryHard), (_easyMatch.Id, TierListCategory.Easy));
 
         var cut = Render();
 
-        Assert.Contains("Easy", cut.Markup);
-        Assert.Contains("Very Hard", cut.Markup);
+        // Hot Streak reads the personalized PUMBILITY blend (Personalized Pass is gone), so
+        // its tier column speaks that lens's vocabulary on the rarity ramp: an Easy-banded
+        // chart reads Solid, a VeryHard one Slim — never the difficulty words.
+        Assert.Contains("Solid", cut.Markup);
+        Assert.Contains("Slim", cut.Markup);
+        Assert.DoesNotContain("Very Hard", cut.Markup);
+        _mediator.Verify(m => m.Send(It.Is<GetBlendedTierListQuery>(q =>
+            (string)q.Lens == "PUMBILITY" && q.Personalized), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         // The engine sent the hard match first; the widget reorders by the fetched tier.
         Assert.True(cut.Markup.IndexOf("Achluoias", StringComparison.Ordinal)
                     < cut.Markup.IndexOf("Uh-Heung", StringComparison.Ordinal));

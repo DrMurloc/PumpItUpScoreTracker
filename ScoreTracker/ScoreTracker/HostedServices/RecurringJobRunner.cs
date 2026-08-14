@@ -35,11 +35,19 @@ public sealed class RecurringJobRunner
     public Task PublishFlushOverdueScoreBatches() =>
         _bus.Publish(new FlushOverdueScoreBatchesCommand());
 
+    // Phoenix 2 tier lists are live (owner, 2026-08-13): every tier-list compute job fans out
+    // per mix, like the rotations below. Each consumer's own thin-data guards keep a mix with
+    // little volume quiet rather than wrong — the PUMBILITY job's full-pool gate in particular
+    // writes nothing until a mix has real pools.
     public Task PublishProcessScoresTiersList() =>
-        _bus.Publish(new ProcessScoresTiersListCommand());
+        Task.WhenAll(
+            _bus.Publish(new ProcessScoresTiersListCommand(MixEnum.Phoenix)),
+            _bus.Publish(new ProcessScoresTiersListCommand(MixEnum.Phoenix2)));
 
     public Task PublishCalculateScoringDifficulty() =>
-        _bus.Publish(new RecalculateScoringDifficultyCommand());
+        Task.WhenAll(
+            _bus.Publish(new RecalculateScoringDifficultyCommand(MixEnum.Phoenix)),
+            _bus.Publish(new RecalculateScoringDifficultyCommand(MixEnum.Phoenix2)));
 
     // Weekly boards are parallel per mix (like Daily Step below). A daily cadence can't rely on the
     // manual per-mix trigger the Weekly page uses, so the job fans out to each supported mix; a mix
@@ -58,13 +66,19 @@ public sealed class RecurringJobRunner
             _bus.Publish(new RotateDailyStepCommand(MixEnum.Phoenix2)));
 
     public Task PublishProcessPassTierList() =>
-        _bus.Publish(new ProcessPassTierListCommand());
+        Task.WhenAll(
+            _bus.Publish(new ProcessPassTierListCommand(MixEnum.Phoenix)),
+            _bus.Publish(new ProcessPassTierListCommand(MixEnum.Phoenix2)));
 
-    public Task PublishProcessPumbilityCensus() =>
-        _bus.Publish(new ProcessPumbilityCensusCommand());
+    public Task PublishProcessPumbilityTierList() =>
+        Task.WhenAll(
+            _bus.Publish(new ProcessPumbilityTierListCommand(MixEnum.Phoenix)),
+            _bus.Publish(new ProcessPumbilityTierListCommand(MixEnum.Phoenix2)));
 
     public Task PublishCalculateChartLetterDifficulties() =>
-        _bus.Publish(new RecalculateChartLetterDifficultiesCommand());
+        Task.WhenAll(
+            _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Phoenix)),
+            _bus.Publish(new RecalculateChartLetterDifficultiesCommand(MixEnum.Phoenix2)));
 
     public Task PublishRecalculateChartSimilarity() =>
         _bus.Publish(new RecalculateChartSimilarityCommand());

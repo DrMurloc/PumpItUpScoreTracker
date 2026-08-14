@@ -72,7 +72,10 @@ else
         else if (IsTierView)
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Ranked by"]" Disabled="_isLoading" Value="_tierListType" ValueChanged="ChangeLens">
-                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                @if (PumbilityAvailable)
+                {
+                    <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                }
                 <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
                 @if (ChabalaAvailable)
@@ -85,7 +88,10 @@ else
         else
         {
             <MudSelect T="string" Class="tier-toolbar-select" Label="@L["Shown Difficulty"]" Disabled="_isLoading" Value="ShownDifficultyValue" ValueChanged="ChangeShownDifficulty">
-                <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                @if (PumbilityAvailable)
+                {
+                    <MudSelectItem T="string" Value="@("PUMBILITY")">PUMBILITY</MudSelectItem>
+                }
                 <MudSelectItem T="string" Value="@("Pass")">@L["Pass Difficulty"]</MudSelectItem>
                 <MudSelectItem T="string" Value="@("Score")">@L["Score Difficulty"]</MudSelectItem>
                 @if (CanPersonalize)
@@ -123,8 +129,10 @@ else
        centers, so the wrap is deliberate instead of ragged. *@
     <div class="tier-toolbar">
         <div class="tier-toolbar-row">
+            @* CoOp folders are never marked missing: the lens is not offered there, so picking
+               one swaps the lens (Chabala precedent) rather than dead-ending on a greyed grid. *@
             <FolderPicker Type="_chartType" Level="_level" Disabled="_isLoading" FolderChanged="ChangeFolder"
-                          IsMissing="@((t, l) => !PumbilityFolderHasData(t, l))"></FolderPicker>
+                          IsMissing="@((t, l) => t != ChartType.CoOp && !PumbilityFolderHasData(t, l))"></FolderPicker>
             @* Four views, one visible answer to "what am I looking at". Personalized was a
                switch riding on top of this group until 2026-08-11, which meant the state was
                spread across two controls and one of them was invisible in screenshots. *@
@@ -143,7 +151,11 @@ else
                     <MudButton Variant="@(IsSkillView ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ChangeGrouping("Skill"))">@L["Skill Breakdown"]</MudButton>
                 }
             </MudButtonGroup>
-            @if (_groupBy == "Personalized")
+            @* Score only: the Breakdown page explains the Score projection and coerces any
+               other lens to it, so linking it from Personalized PUMBILITY would answer a
+               different question than the one on screen. A PUMBILITY breakdown mode is
+               deferred (design doc §10) — deferring means no link, not a rerouted one. *@
+            @if (_groupBy == "Personalized" && _tierListType == "Score")
             {
                 @* The only thing the retired "Personalized for {gametag}" chip did that the
                    selected view button does not: get you to the breakdown. *@
@@ -1574,6 +1586,11 @@ else
 
     private bool ChabalaAvailable => _currentMix == MixEnum.Phoenix && _chabalaLinks.ContainsKey((_chartType, _level));
 
+    // The PUMBILITY pools price no co-op charts (includeCoOp: false, and CO-OP has no rating),
+    // so the lens has nothing to say on CoOp folders and is not offered there — no explanation,
+    // same as Chabala on folders without links.
+    private bool PumbilityAvailable => _chartType != ChartType.CoOp;
+
     // Personalization is a VIEW now, not a switch riding on top of one (owner, 2026-08-11) —
     // except on the two views that don't section by the lens, where the Shown Difficulty picker
     // names the personalized reading outright rather than a hidden modifier deciding it.
@@ -1625,6 +1642,10 @@ else
         {
             _tierListType = "Pass";
         }
+        if (_tierListType == "PUMBILITY" && !PumbilityAvailable)
+        {
+            _tierListType = "Pass";
+        }
         await SetQueryString();
         await Recalculate();
     }
@@ -1673,6 +1694,9 @@ else
             _tierListType = LensesFor(_groupBy).First();
             await UiSettings.SetSetting("TierLists__ListType", _tierListType);
             await UiSettings.SetSetting("TierLists__GroupBy", _groupBy);
+            // The URL must follow the coerced lens, or a refresh/share of this page re-applies
+            // the old one through the query override at init and re-breaks the picker.
+            await SetQueryString();
             await Recalculate();
             return;
         }
@@ -1796,7 +1820,11 @@ else
             if (nearest != null && nearest.Value.Level != _level)
             {
                 _level = nearest.Value.Level;
-                await SetQueryString();
+                // Replace, never push: this corrects an address the reader typed or followed,
+                // so Back must return to wherever they came from — a pushed entry leaves the
+                // URL and the rendered folder disagreeing after one Back press, since the
+                // static router handles no popstate.
+                await SetQueryString(replace: true);
             }
         }
 
@@ -2043,8 +2071,9 @@ else
     ///     played these (design doc §6).
     /// </summary>
     private bool PumbilityFolderHasData(ChartType type, int level) =>
-        // An EMPTY set means the census has not been built for this mix, not that every folder
-        // is unanswerable — gating on it would disable the whole picker and strand the reader.
+        // An EMPTY set means the PUMBILITY lists have not been built for this mix, not that
+        // every folder is unanswerable — gating on it would disable the whole picker and
+        // strand the reader.
         _pumbilityFolders == null || _pumbilityFolders.Count == 0
         || _pumbilityFolders.Contains((type, level));
 
@@ -2081,7 +2110,10 @@ else
     private IReadOnlyList<string> LensesFor(string grouping)
     {
         if (grouping == "Personalized") return new[] { "PUMBILITY", "Score" };
-        var lenses = new List<string> { "PUMBILITY", "Pass", "Score" };
+        var lenses = new List<string>();
+        if (PumbilityAvailable) lenses.Add("PUMBILITY");
+        lenses.Add("Pass");
+        lenses.Add("Score");
         if (ChabalaAvailable) lenses.Add("Chabala");
         lenses.Add("PG");
         return lenses;
@@ -2113,6 +2145,16 @@ else
     private string TierColor(TierListCategory category) =>
         _tierListType == "PUMBILITY" ? ThemeScales.PumbilityColor(category) : ThemeScales.DifficultyColor(category);
 
+    /// <summary>
+    ///     The same ramp resolved to raw hex for the share card, which cannot read CSS custom
+    ///     properties — the two must pick the same ramp or the downloaded image contradicts the
+    ///     page it was downloaded from.
+    /// </summary>
+    private string TierShareHex(TierListCategory category) =>
+        _tierListType == "PUMBILITY"
+            ? MixThemes.PumbilityHex(_currentMix, category)
+            : MixThemes.DifficultyHex(category);
+
     // Round 7: the lens always orders cards within a section, in every view — easiest first,
     // scoring level as the tiebreaker, blend order as the final stabilizer. Unrecorded sinks
     // to the bottom. The category enum already runs easiest to hardest, so this is its own
@@ -2138,7 +2180,7 @@ else
             {
                 var name = TierName(g.Key);
                 return new TierGroup(name, L[name], TierColor(g.Key),
-                    MixThemes.DifficultyHex(g.Key), g.ToArray());
+                    TierShareHex(g.Key), g.ToArray());
             })
             .ToArray();
     }
@@ -2503,12 +2545,28 @@ else
         {
             _tierListType = "Pass";
         }
+        if (_tierListType == "PUMBILITY" && !PumbilityAvailable)
+        {
+            _tierListType = "Pass";
+        }
         // "Skill" is deliberately not checked here: whether it is available depends on the
         // folder's charts, which are not loaded yet. Its fallback runs after the folder does.
         if (!ValidGroupings.Contains(_groupBy) || (!CurrentUser.IsLoggedIn && _groupBy is "Score" or "Age" or "Score Ranking")
             || (_groupBy == "Personalized" && !CanPersonalize))
         {
             _groupBy = "Difficulty";
+        }
+
+        // The ChangeGrouping guard, applied to restored state too: a saved or bookmarked lens
+        // the restored view no longer offers (every pre-PUMBILITY Personalized-Pass user has
+        // exactly GroupBy=Personalized + ListType=Pass saved) would leave the Ranked-by select
+        // holding a value it does not list — which MudSelect renders blank — over a community
+        // blend wearing the Personalized button. Runs after every groupBy guard above so it
+        // normalizes against the view that will actually render; Recalculate re-saves the
+        // corrected lens and the canonical replace below rewrites the URL that carried it.
+        if (!LensesFor(_groupBy).Contains(_tierListType))
+        {
+            _tierListType = LensesFor(_groupBy).First();
         }
 
         await SetQueryString(replace: true);

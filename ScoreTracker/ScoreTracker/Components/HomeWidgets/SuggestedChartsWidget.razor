@@ -77,7 +77,7 @@ else
                         <span class="dash-target-score">
                             @if (row.Tier != null)
                             {
-                                <span style="@($"color:{ThemeScales.DifficultyColor(row.Tier.Value)}")">
+                                <span style="@($"color:{TierColor(row.Tier.Value)}")">
                                     @TierName(row.Tier.Value)
                                 </span>
                             }
@@ -255,14 +255,19 @@ else
 
         UpdateFallbackPill(false);
 
-        // Fill Gaps lens (owner, round 3): tier-list difficulty per fill chart — the
-        // blended list covers unplayed charts, and Personalized bends it with the
-        // player's skill estimates. One query per (type, level) folder in the results.
+        // Fill Gaps lens (owner, round 3): tier-list difficulty per fill chart — the blended
+        // list covers unplayed charts. Personalized Pass no longer exists — PUMBILITY replaced
+        // it — so the personalized reading of the Pass lens asks for that list (how many
+        // players at your level hold each chart); Score personalizes through the projection as
+        // before. One query per (type, level) folder in the results.
         _lensTiers.Clear();
         if (config.DifficultyLens != SuggestedDifficultyLens.None
             && categories.Contains(RecommendationCategory.FillScores))
         {
-            var lens = config.DifficultyLens == SuggestedDifficultyLens.PassDifficulty ? "Pass" : "Score";
+            var lens = config.DifficultyLens == SuggestedDifficultyLens.PassDifficulty
+                ? config.PersonalizedLens ? "PUMBILITY" : "Pass"
+                : "Score";
+            _tiersArePumbility = lens == "PUMBILITY";
             var fillCharts = recommendations
                 .Where(r => (string)r.Category == RecommendationCategories.FillScores
                             && charts.ContainsKey(r.ChartId))
@@ -311,9 +316,10 @@ else
 
     // Hot Streak sections: one per seed (newest first, the engine's order), captioned
     // with the seed and the Peers bar it cleared; flat mode is one section with the
-    // seed riding each row's detail. The right column is the personalized Pass blend —
-    // targets are unpassed, so pass difficulty is the honest read — fetched once per
-    // folder present, which also drives the easiest-first ordering inside a group.
+    // seed riding each row's detail. The right column is the personalized PUMBILITY
+    // blend — Personalized Pass is gone, and what a streak wants next is what players
+    // at your level actually hold — fetched once per folder present, which also drives
+    // the best-first ordering inside a group.
     private async Task LoadHotStreakAsync(ChartRecommendation[] recommendations,
         IReadOnlyDictionary<Guid, Chart> charts, IReadOnlyDictionary<Guid, RecordedPhoenixScore> scores,
         bool groupBySeed)
@@ -324,10 +330,11 @@ else
         UpdateFallbackPill(known.Any(r => r.SeedIsFallback));
 
         _lensTiers.Clear();
+        _tiersArePumbility = true;
         foreach (var folder in known.Select(r => charts[r.ChartId]).GroupBy(c => (c.Type, c.Level)))
         {
             var tierList = await Mediator.Send(new GetBlendedTierListQuery(folder.Key.Type,
-                folder.Key.Level, "Pass", Personalized: true, Mix: _mix));
+                folder.Key.Level, "PUMBILITY", Personalized: true, Mix: _mix));
             foreach (var entry in tierList.Entries.Where(e => e.Category != TierListCategory.Unrecorded))
                 _lensTiers[entry.ChartId] = entry.Category;
         }
@@ -436,7 +443,7 @@ else
             <div class="dash-card-score">
                 @if (ctx.Row.Tier != null)
                 {
-                    <span style="@($"color:{ThemeScales.DifficultyColor(ctx.Row.Tier.Value)}")">
+                    <span style="@($"color:{TierColor(ctx.Row.Tier.Value)}")">
                         @TierName(ctx.Row.Tier.Value)
                     </span>
                 }
@@ -511,8 +518,24 @@ else
             ShowScore: !isFill);
     }
 
+    // Whether _lensTiers came from the PUMBILITY lens, whose tiers speak worth-playing on the
+    // rarity ramp rather than difficulty on the heat ramp.
+    private bool _tiersArePumbility;
+
     private string TierName(TierListCategory category)
     {
+        if (_tiersArePumbility)
+            return category switch
+            {
+                TierListCategory.Overrated => L["Staple"],
+                TierListCategory.VeryEasy => L["Strong"],
+                TierListCategory.Easy => L["Solid"],
+                TierListCategory.Medium => L["Average"],
+                TierListCategory.Hard => L["Modest"],
+                TierListCategory.VeryHard => L["Slim"],
+                TierListCategory.Underrated => L["Poor"],
+                _ => L["Not in anyone's PUMBILITY"]
+            };
         return category switch
         {
             TierListCategory.Overrated => L["1+ Level Easier"],
@@ -525,6 +548,10 @@ else
             _ => L["Not Rated"]
         };
     }
+
+    /// <summary>The tier's ramp, matching the lens the tiers came from (never red for PUMBILITY).</summary>
+    private string TierColor(TierListCategory category) =>
+        _tiersArePumbility ? ThemeScales.PumbilityColor(category) : ThemeScales.DifficultyColor(category);
 
     private static readonly string[] KnownNames =
     {

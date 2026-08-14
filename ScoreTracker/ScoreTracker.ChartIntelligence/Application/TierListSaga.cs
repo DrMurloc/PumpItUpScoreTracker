@@ -9,6 +9,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.ChartIntelligence.Application;
@@ -16,6 +17,7 @@ namespace ScoreTracker.ChartIntelligence.Application;
 internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     IConsumer<ProcessScoresTiersListCommand>,
     IConsumer<ProcessPassTierListCommand>,
+    IConsumer<ProcessPumbilityTierListCommand>,
     IRequestHandler<GetMyRelativeTierListQuery, IEnumerable<SongTierListEntry>>,
     IRequestHandler<GetFolderCohortStatsQuery, FolderCohortSummaryRecord?>
 {
@@ -28,12 +30,13 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     private readonly IChartScoringLevelRepository _scoringLevels;
     private readonly IChartScoreStatsRepository _chartStats;
     private readonly IFolderCohortStatsRepository _cohortStats;
+    private readonly ITitleRepository _titles;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
         ITierListRepository tierLists, IScoreReader scores,
         ICurrentUserAccessor currentUser, IPlayerStatsReader playerStats,
         IChartScoringLevelRepository scoringLevels, IChartScoreStatsRepository chartStats,
-        IFolderCohortStatsRepository cohortStats)
+        IFolderCohortStatsRepository cohortStats, ITitleRepository titles)
     {
         _cohortStats = cohortStats;
         _chartStats = chartStats;
@@ -44,6 +47,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         _scores = scores;
         _currentUser = currentUser;
         _playerStats = playerStats;
+        _titles = titles;
     }
 
 
@@ -386,4 +390,156 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         result.AddRange(TierListProcessor.ProcessIntoTierList("Pass Count", chartSums));
         await _tierLists.SaveEntries(mix, result, cancellationToken);
     }
+
+    // --- The PUMBILITY tier lists (docs/design/pumbility-tier-list.md) -----------------------
+    // For every folder and every cohort, how many of that cohort's top-50 pools hold each
+    // chart. Pools are built once per chart type from a level-by-level bulk read rather than
+    // per-player — the alternative is roughly three thousand round trips for a job that only
+    // ever wants every pool at once.
+
+    /// <summary>The list name the blend reads the PUMBILITY source under.</summary>
+    internal const string PumbilityListName = "PUMBILITY";
+
+    /// <summary>
+    ///     Folders the PUMBILITY lists are written for. Matches the pass job's range: Phoenix 2
+    ///     prices everything below 10 at zero, and no folder under it has ever been browsed as a
+    ///     tier list. Pools themselves are built from every level, so a low chart that does
+    ///     reach someone's top 50 still displaces correctly — it just never gets a folder of
+    ///     its own.
+    /// </summary>
+    private const int LowestPumbilityFolder = 10;
+
+    public async Task Consume(ConsumeContext<ProcessPumbilityTierListCommand> context)
+    {
+        var mix = context.Message.Mix;
+        var cancellationToken = context.CancellationToken;
+        var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+        var allCharts = (await _chartRepository.GetCharts(mix, cancellationToken: cancellationToken))
+            .ToDictionary(c => c.Id);
+
+        foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
+        {
+            var pools = await BuildPools(mix, chartType, allCharts, scoring, cancellationToken);
+            var cohorts = await ResolveCohorts(mix, chartType, pools, cancellationToken);
+            var holders = HoldersByChart(pools);
+
+            for (var level = LowestPumbilityFolder; level <= (int)DifficultyLevel.Max; level++)
+            {
+                var folderCharts = allCharts.Values
+                    .Where(c => c.Type == chartType && (int)c.Level == level)
+                    .Select(c => c.Id).ToArray();
+                if (!folderCharts.Any()) continue;
+
+                var byCohort = new Dictionary<string, PumbilityTierListFolder>();
+                foreach (var (cohortKey, members) in cohorts)
+                {
+                    var counts = folderCharts.ToDictionary(id => id,
+                        id => holders.TryGetValue(id, out var who) ? who.Count(members.Contains) : 0);
+                    // A cohort whose pools reach nothing here does not get a row set. Writing a
+                    // full folder of zeros for every cohort that cannot reach it would be most
+                    // of the table — a cohort only covers a three-to-four level band.
+                    if (counts.Values.Sum() == 0) continue;
+
+                    byCohort[cohortKey] = new PumbilityTierListFolder(TierListProcessor
+                        .ProcessIntoLogScaledTierList(PumbilityListName, counts)
+                        .Select(e => new PumbilityTierListRecord(e.ChartId, counts[e.ChartId], e.Category, e.Order))
+                        .ToArray(), members.Count);
+                }
+
+                await _tierLists.SavePumbilityTierLists(mix, chartType, DifficultyLevel.From(level), byCohort,
+                    cancellationToken);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Every player's top-50 for one chart type, priced by the mix's own PUMBILITY formula.
+    ///     Read level by level because that is the bulk shape the score store offers.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, PlayerPool>> BuildPools(MixEnum mix, ChartType chartType,
+        IReadOnlyDictionary<Guid, Chart> allCharts, ScoringConfiguration scoring,
+        CancellationToken cancellationToken)
+    {
+        var rated = new Dictionary<Guid, List<(Guid ChartId, double Rating)>>();
+        for (var level = (int)DifficultyLevel.Min; level <= (int)DifficultyLevel.Max; level++)
+        foreach (var (userId, record) in await _scores.GetScores(mix, chartType, DifficultyLevel.From(level),
+                     cancellationToken))
+        {
+            if (record.Score == null || !allCharts.TryGetValue(record.ChartId, out var chart)) continue;
+            var rating = scoring.GetScore(chart, record.Score.Value, record.Plate ?? PhoenixPlate.RoughGame,
+                record.IsBroken);
+            if (rating <= 0) continue;
+            if (!rated.TryGetValue(userId, out var scores)) rated[userId] = scores = new List<(Guid, double)>();
+            scores.Add((record.ChartId, rating));
+        }
+
+        // Only full pools count. A player with thirty charts has a low total because they have
+        // played thirty charts, not because they are weak, and letting that stand puts them in a
+        // cohort of genuinely weaker players — which is exactly what a mix with no score volume
+        // yet produces for everyone. It also keeps Phoenix 2 dark until its pools are real, and
+        // lights it up on its own as they fill (docs/design/pumbility-tier-list.md §8).
+        return rated.Where(kv => kv.Value.Count >= PumbilityCohortKeys.PoolSize).ToDictionary(kv => kv.Key, kv =>
+        {
+            var top = kv.Value.OrderByDescending(s => s.Rating).Take(PumbilityCohortKeys.PoolSize).ToArray();
+            return new PlayerPool(top.Select(s => s.ChartId).ToHashSet(), top.Sum(s => s.Rating));
+        });
+    }
+
+    /// <summary>Which of a folder's charts each player pools, inverted so a count is one scan.</summary>
+    private static IReadOnlyDictionary<Guid, IReadOnlyList<Guid>> HoldersByChart(
+        IReadOnlyDictionary<Guid, PlayerPool> pools)
+    {
+        var holders = new Dictionary<Guid, List<Guid>>();
+        foreach (var (userId, pool) in pools)
+        foreach (var chartId in pool.ChartIds)
+        {
+            if (!holders.TryGetValue(chartId, out var who)) holders[chartId] = who = new List<Guid>();
+            who.Add(userId);
+        }
+
+        return holders.ToDictionary(kv => kv.Key, kv => (IReadOnlyList<Guid>)kv.Value);
+    }
+
+    /// <summary>
+    ///     The cohorts to count over, plus the community cohort that is every player at once.
+    ///     Phoenix 1 groups by the level of a player's highest difficulty title; Phoenix 2 by
+    ///     the PUMBILITY rung their pool total clears.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<string, IReadOnlySet<Guid>>> ResolveCohorts(MixEnum mix,
+        ChartType chartType, IReadOnlyDictionary<Guid, PlayerPool> pools,
+        CancellationToken cancellationToken)
+    {
+        var cohorts = new Dictionary<string, IReadOnlySet<Guid>>
+        {
+            [PumbilityCohortKeys.Community] = pools.Keys.ToHashSet()
+        };
+
+        if (mix == MixEnum.Phoenix2)
+        {
+            var byRung = new Dictionary<string, HashSet<Guid>>();
+            foreach (var (userId, pool) in pools)
+            {
+                var key = PumbilityCohortKeys.ForPhoenix2Pool(chartType, pool.Total);
+                if (key == null) continue;
+                if (!byRung.TryGetValue(key, out var members)) byRung[key] = members = new HashSet<Guid>();
+                members.Add(userId);
+            }
+
+            foreach (var (key, members) in byRung) cohorts[key] = members;
+            return cohorts;
+        }
+
+        for (var level = (int)DifficultyLevel.Min; level <= (int)DifficultyLevel.Max; level++)
+        {
+            var onLevel = (await _titles.GetUserIdsOnHighestLevel(mix, DifficultyLevel.From(level),
+                    cancellationToken))
+                .Where(pools.ContainsKey).ToHashSet();
+            if (onLevel.Any()) cohorts[PumbilityCohortKeys.ForDifficultyTitleLevel(level)] = onLevel;
+        }
+
+        return cohorts;
+    }
+
+    /// <summary>A player's top 50 for one chart type: what is in it, and what it sums to.</summary>
+    private sealed record PlayerPool(IReadOnlySet<Guid> ChartIds, double Total);
 }

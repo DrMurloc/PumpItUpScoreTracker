@@ -203,13 +203,13 @@ public sealed class PersonalizedBreakdownHandlerTests
                 .ReturnsAsync((MixEnum _, Guid id, CancellationToken _) => StatsFor(id));
         }
         history ??= new Mock<IPlayerHistoryRepository>();
-        var census = new Mock<IPumbilityCensusRepository>();
-        census.Setup(c => c.GetFolder(It.IsAny<MixEnum>(), It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(),
-                It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PumbilityCensusFolder(Array.Empty<PumbilityCensusRecord>(), 0));
+        var tierLists = new Mock<ITierListRepository>();
+        tierLists.Setup(c => c.GetPumbilityTierList(It.IsAny<MixEnum>(), It.IsAny<ChartType>(),
+                It.IsAny<DifficultyLevel>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PumbilityTierListFolder(Array.Empty<PumbilityTierListRecord>(), 0));
         return new PersonalizedBreakdownHandler(mediator.Object, charts.Object,
             new Mock<ICurrentUserAccessor>().Object, new MemoryCache(new MemoryCacheOptions()),
             new ScoreProjector(scores.Object, playerStats.Object, history.Object),
-            census.Object, new Mock<ITitleRepository>().Object, playerStats.Object, scores.Object);
+            tierLists.Object, new Mock<ITitleRepository>().Object, playerStats.Object, scores.Object);
     }
 }

@@ -1,6 +1,6 @@
 # The PUMBILITY tier list
 
-Replaces **Personalized Pass** with a census of what players actually keep in their top-50
+Replaces **Personalized Pass** with a count of what players actually keep in their top-50
 PUMBILITY pool. Community and personalized are the same computation over different cohorts.
 
 Mocks: <https://claude.ai/code/artifact/0c0cf3e8-7bd3-4097-86ec-da506c7ee8bf>
@@ -26,7 +26,7 @@ actively worse, and found similar-skilled-player aggregation more effective than
 algorithm. That measurement predates the PiuCenter migration, so it was measuring data that
 no longer exists — but the verdict stands for other reasons and the decision is deletion.
 
-## 2. Why the pool census is the right replacement
+## 2. Why the pool count is the right replacement
 
 Progression titles are no longer folder-tied. "What can I pass in this folder" stopped being
 the question; "what could I play that moves my PUMBILITY" is the question. That is
@@ -36,12 +36,12 @@ Three structural properties make it a better primitive than a pass count:
 
 1. **Top-50 slots are rivalrous.** A pass count is a stock that only grows — a lifetime
    popularity integral. A pool slot has to displace something and can be lost, so the count
-   is a *current-state census of the player population* rather than an accumulation.
+   is a *current-state count across the player population* rather than an accumulation.
 2. **Level cancels inside a folder.** Across folders, higher levels crowd every pool
    regardless of ease. Within one folder every chart is the same level, so what is left is
    relative value. Tier lists are per-folder, so this works out.
-3. **No tunable constants.** The Pass ladder has seven hand-picked cohort weights. The census
-   has none — it is a `GROUP BY` over data already computed for `/Pumbility`.
+3. **No tunable constants.** The Pass ladder has seven hand-picked cohort weights. The pool
+   count has none — it is a `GROUP BY` over data already computed for `/Pumbility`.
 
 **Popularity bias does not carry over, and this is the subtle part.** For Pass, play is
 driven by fun, novelty and tournaments — orthogonal to difficulty, so popularity is a
@@ -71,7 +71,7 @@ disagreements are systematic:
 | Remix | 91 | +0.070 | 6.6% |
 | Arcade | 2,059 | −0.030 | 6.9% |
 
-The census independently rediscovers **short-cut farming** — a full tier of re-rating on a
+The pool count independently rediscovers **short-cut farming** — a full tier of re-rating on a
 fifth of all shortcuts, which pass counts cannot see because shortcuts are under-played
 relative to how well they pay. The other direction is charts you can pass that do not pay:
 Sorceress Elise D24 has *zero* pool appearances while Pass calls it Medium.
@@ -220,16 +220,19 @@ S22 is best for my PUMBILITY" genuinely has no answer.
 ## 8. Storage and scheduling
 
 `TierListEntry` cannot hold this — the cards show a peer count and that table has no count
-column — so the census gets **its own table**, keyed
-(MixId, ChartType, Level, ChartId, CohortKey) with the appearance count, category and order.
+column — so the PUMBILITY tier lists get **their own table**, `scores.PumbilityTierListEntry`,
+keyed (MixId, ChartType, Level, ChartId, CohortKey) with the appearance count, category and
+order. It lives beside `TierListEntry` on `ITierListRepository` — one repository owns the
+tier-list family — and the computation is a consumer on `TierListSaga`, where tier list
+calculations live.
 
-Written by a **nightly Hangfire job** in the ChartIntelligence vertical, one row set per
+Written by the nightly `process-pumbility-tier-list` job, **once per mix**, one row set per
 cohort plus an "everyone" cohort for the community view. Per-cohort rather than per-user is
 what makes materializing tractable: ~34 folders × ~30 cohorts.
 
 **No Phoenix 2 fallback.** `GetTierListWithFallbackQuery` falls back P2 → P1 for stored lists,
 and that is *wrong* here: the two mixes price charts under completely different formulas and
-338 shared charts were rerated between them, so a P1 census is a wrong answer for a P2 folder
+338 shared charts were rerated between them, so a P1 pool count is a wrong answer for a P2 folder
 rather than a stale one. On P2 the lens is absent until P2 pools exist.
 
 ## 9. What this deletes
@@ -263,10 +266,10 @@ the same commit as the manifest change, or `AccountPurgeCoverageTests` fails.
 
 ## 11. Post-deploy, once
 
-The census table ships empty, so the lens shows nothing until the nightly job first runs.
+The `PumbilityTierListEntry` table ships empty, so the lens shows nothing until the nightly job first runs.
 Press **Rebuild {mix} PUMBILITY tier lists** on `/Admin`, per mix. `/hangfire` works too, except
 locally where `PreventRecurringJobs` parks the job on a yearly cron the dashboard cannot fire.
 
-**Importing scores does not rebuild the census**, and deliberately: it is a population-wide
+**Importing scores does not rebuild the PUMBILITY tier lists**, and deliberately: it is a population-wide
 count, not a per-player derivation, so one import cannot meaningfully move it. Your own new
 scores show up in the lens on the next nightly run — or immediately, if you press the button.

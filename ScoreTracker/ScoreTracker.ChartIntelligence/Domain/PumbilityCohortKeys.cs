@@ -18,6 +18,13 @@ internal static class PumbilityCohortKeys
     /// <summary>Every player at once, which is what the community view reads.</summary>
     public const string Community = "*";
 
+    /// <summary>
+    ///     A PUMBILITY pool is fifty charts; anything short of that is not one yet. The one
+    ///     definition the writer's membership gate and the reader's resolution both use — the
+    ///     two must agree or a player reads a list nobody built for them.
+    /// </summary>
+    public const int PoolSize = 50;
+
     /// <summary>Phoenix 1: the level of the player's highest difficulty title.</summary>
     public static string ForDifficultyTitleLevel(int level)
     {

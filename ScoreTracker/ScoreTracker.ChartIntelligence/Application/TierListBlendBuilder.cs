@@ -61,31 +61,28 @@ internal sealed class TierListBlendBuilder
             ["PUMBILITY"] = new Dictionary<string, double> { [PumbilitySource] = 1 }
         };
 
-    /// <summary>The census source's name, which is its own single-source recipe on both views.</summary>
+    /// <summary>The PUMBILITY source's name, which is its own single-source recipe on both views.</summary>
     private const string PumbilitySource = "PUMBILITY";
-
-    /// <summary>A PUMBILITY pool is fifty charts; anything short of that is not one yet.</summary>
-    private const int PumbilityPoolSize = 50;
 
     private static readonly string[] StoredSources =
         { "Official Scores", "Scores", "Popularity", "Pass Count", "PG", "Chabala" };
 
-    private readonly IPumbilityCensusRepository _census;
     private readonly IChartRepository _charts;
     private readonly IMediator _mediator;
     private readonly IPlayerStatsReader _playerStats;
     private readonly IScoreProjector _projector;
     private readonly IScoreReader _scores;
+    private readonly ITierListRepository _tierLists;
     private readonly ITitleRepository _titles;
 
     public TierListBlendBuilder(IMediator mediator, IChartRepository charts, IScoreProjector projector,
-        IPumbilityCensusRepository census, ITitleRepository titles, IPlayerStatsReader playerStats,
+        ITierListRepository tierLists, ITitleRepository titles, IPlayerStatsReader playerStats,
         IScoreReader scores)
     {
         _mediator = mediator;
         _charts = charts;
         _projector = projector;
-        _census = census;
+        _tierLists = tierLists;
         _titles = titles;
         _playerStats = playerStats;
         _scores = scores;
@@ -186,9 +183,9 @@ internal sealed class TierListBlendBuilder
     }
 
     /// <summary>
-    ///     Reads the materialized census for this folder, for everyone or for the viewer's own
-    ///     cohort. Nothing is computed here — the nightly job owns the counting, and a cohort
-    ///     with no rows for this folder simply votes on nothing.
+    ///     Reads the materialized PUMBILITY tier list for this folder, for everyone or for the
+    ///     viewer's own cohort. Nothing is computed here — the nightly job owns the counting,
+    ///     and a cohort with no rows for this folder simply votes on nothing.
     /// </summary>
     private async Task<PumbilityComputation> ComputePumbility(ChartType chartType, DifficultyLevel level,
         MixEnum mix, Guid? userId, CancellationToken cancellationToken)
@@ -200,7 +197,7 @@ internal sealed class TierListBlendBuilder
             return new PumbilityComputation(new Dictionary<Guid, SongTierListEntry>(),
                 new Dictionary<Guid, int>(), 0);
 
-        var folder = await _census.GetFolder(mix, chartType, level, cohortKey, cancellationToken);
+        var folder = await _tierLists.GetPumbilityTierList(mix, chartType, level, cohortKey, cancellationToken);
         return new PumbilityComputation(
             folder.Entries.ToDictionary(e => e.ChartId,
                 e => new SongTierListEntry(PumbilitySource, e.ChartId, e.Category, e.Order)),
@@ -231,7 +228,7 @@ internal sealed class TierListBlendBuilder
         // for, and it costs one read behind a six-hour cache.
         var scored = (await _scores.GetBestScores(mix, userId, cancellationToken))
             .Count(s => s is { Score: not null, IsBroken: false });
-        if (scored < PumbilityPoolSize) return null;
+        if (scored < PumbilityCohortKeys.PoolSize) return null;
 
         var stats = await _playerStats.GetStats(mix, userId, cancellationToken);
         return PumbilityCohortKeys.ForPhoenix2Pool(chartType,
@@ -310,8 +307,8 @@ internal sealed record BlendComputation(
     PumbilityComputation? Pumbility);
 
 /// <summary>
-///     The census source's output: the banded entries, how many of the cohort's pools hold each
-///     chart, and how many players the cohort is. An empty read is the honest answer for a
+///     The PUMBILITY source's output: the banded entries, how many of the cohort's pools hold
+///     each chart, and how many players the cohort is. An empty read is the honest answer for a
 ///     folder this cohort's pools cannot reach.
 /// </summary>
 internal sealed record PumbilityComputation(
