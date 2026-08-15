@@ -118,19 +118,23 @@ public sealed class ScoreContributionTests
     }
 
     [Fact]
-    public void APassingFDecomposesToNothingOnPhoenix2()
+    public void APassingFDecomposesWithANegativeGradePart()
     {
-        // The split has to honour the same exclusion the total does, or a chart worth zero would
-        // still report a level part and a plate part on the breakdown. Phoenix 1 has no such
-        // rule and keeps paying for an F, so only the Phoenix 2 arm is asserted at zero.
+        // Asserted ZERO until 2026-08-14 — a passing F turned out to be the ladder's real
+        // bottom rung (Singles 0.90, measured), not an exclusion. It is also the ONE rung
+        // priced below the decomposition's ×1.00 reference, so the grade part goes negative
+        // here and nowhere else: the score genuinely subtracts from the chart's bare value,
+        // and the parts must still sum to the total exactly.
         var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var config = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
 
-        var split = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false)
-            .Decompose(chart, 271_620, PhoenixPlate.MarvelousGame, false);
+        var split = config.Decompose(chart, 271_620, PhoenixPlate.MarvelousGame, false);
 
-        Assert.Equal(0, split.Total);
-        Assert.Equal(0, split.Base);
-        Assert.Equal(0, split.FromPlate);
+        var pricedBase = 235; // S20 prices one level up: Base(21)
+        Assert.Equal(pricedBase * (0.90 + 0.006), split.Total, 2);
+        Assert.Equal(pricedBase, split.Base, 2);
+        Assert.Equal(pricedBase * -0.10, split.FromGrade, 2);
+        Assert.Equal(pricedBase * 0.006, split.FromPlate, 2);
     }
 
     [Fact]

@@ -18,6 +18,14 @@ starter trio); refactored Pumbility → Account Stats in PR #149.** Consumes the
 > Sizes are now **1×1 / 1×2 / 1×3**. TypeId stays `pumbility` (export vocabulary). The historical spec
 > below describes the original Pumbility widget.
 
+> **2026-08-14: the weekly ▲ delta left the widget** (owner: the Sessions page is where that delta
+> matters) — and with it the `GetPlayerHistoryQuery` fetch that existed only to compute it. In the
+> space it frees, on **Phoenix 2** the **PUMBILITY level gem** renders beside the glowy total:
+> `PumbilityLevelBadge` with the rung from `Phoenix2PumbilityLevel.From(SkillRating)` (the total-pool
+> ladder — [pumbility-levels.md](../pumbility-levels.md)). The badge self-hides on 404 until the art
+> is mirrored, so ship order vs. the blob upload doesn't matter. Phoenix 1 has no ladder and renders
+> no gem.
+
 ---
 
 - **Data**: `GetPlayerStatsQuery` → `SkillRating` (the merged top-50; + `SinglesRating`/`DoublesRating`

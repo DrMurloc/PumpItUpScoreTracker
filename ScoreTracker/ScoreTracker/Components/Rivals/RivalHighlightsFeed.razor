@@ -1,6 +1,7 @@
 @using System.Globalization
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components.Rivals
 @using Microsoft.JSInterop
 @inject IJSRuntime JSRuntime
@@ -58,12 +59,16 @@ else
                             <div class="dash-ch-win">
                                 @if (win.ChartId is { } chartId && Charts.TryGetValue(chartId, out var chart))
                                 {
-                                    <span class="dash-ch-chart">
-                                        <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
-                                        <span class="dash-ch-song">@chart.Song.Name</span>
+                                    var c = chart;
+                                    <span class="dash-ch-chart @(OnChartClick.HasDelegate ? "dash-clickable" : "")"
+                                          @onclick="() => Open(c)">
+                                        <DifficultyBubble Chart="c" Small="true"></DifficultyBubble>
+                                        <span class="dash-ch-song">@c.Song.Name</span>
                                     </span>
                                 }
-                                <span class="dash-ch-why">@Caption(win)</span>
+                                @* The chip states the fact; the sentence rides the hover (the feeds'
+                                   short-form rule — same vocabulary as the home widget). *@
+                                <span class="dash-ch-why" title="@Caption(win)">@Short(win)</span>
                             </div>
                         }
                     </div>
@@ -97,6 +102,13 @@ else
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
     [Parameter] public IReadOnlySet<Guid> Clubmates { get; set; } = new HashSet<Guid>();
 
+    /// <summary>Charts open the host page's details dialog when this is wired (the /Rivals
+    /// page passes its own OpenChart). Unwired, rows render inert — no dead cursor.</summary>
+    [Parameter] public EventCallback<Chart> OnChartClick { get; set; }
+
+    private Task Open(Chart chart) =>
+        OnChartClick.HasDelegate ? OnChartClick.InvokeAsync(chart) : Task.CompletedTask;
+
     private string RowClass(PlayerHighlightRecord record) =>
         Clubmates.Contains(record.UserId) ? "dash-ch-entry is-community" : "dash-ch-entry";
 
@@ -113,6 +125,25 @@ else
         return $"{(int)(span.TotalDays / 7)}w";
     }
 
+    // The row text — the shortest true form; a ladder span compacts to one label. Titles carry
+    // no rarity claim ("all titles are big titles", owner 2026-08-14).
+    private string Short(SignificantWin win) => win.Kind switch
+    {
+        WinKind.NotablePg => $"💎 {L["Rare PG"]}",
+        WinKind.TopPumbility => $"👑 #{win.Rank ?? 0} PUMB",
+        WinKind.PeerElite => win.Rank == 1
+            ? "📊 #1"
+            : $"📊 {L["Top {0}%", Math.Max(1, (int)Math.Ceiling((win.RarityShare ?? 0) * 100))]}",
+        WinKind.FolderFirst => $"🆕 {Ordinal(win.Rank ?? 0)} · {win.Difficulty}",
+        WinKind.FolderComplete => $"🎉 {L["Cleared {0}", win.Difficulty ?? ""]}",
+        WinKind.FolderProgress => $"📈 {L["{0}% of {1}", win.Rank ?? 0, win.Difficulty ?? ""]}",
+        WinKind.PumbilityLevelUp => $"🆙 {LevelName(win)}",
+        WinKind.PumbilityTitleSpan when win.Detail is { Length: > 0 } =>
+            $"🏅 {TitleSpans.Compact(Bracket(win.Detail), Bracket(win.TitleName))}",
+        _ => $"🏅 {Bracket(win.TitleName)}"
+    };
+
+    // The hover keeps what the chip dropped — the sentence, the percent, the pool.
     private string Caption(SignificantWin win) => win.Kind switch
     {
         WinKind.NotablePg => $"💎 {L["only {0} have PG", Pct(win.RarityShare)]}",
@@ -121,12 +152,12 @@ else
             ? $"📊 {L["#1 of all peers"]}"
             : $"📊 {L["top {0}% of peers", Math.Max(1, (int)Math.Ceiling((win.RarityShare ?? 0) * 100))]}",
         WinKind.FolderFirst => $"🆕 {L["{0} pass in this folder", Ordinal(win.Rank ?? 0)]}",
-        WinKind.FolderComplete => $"🎉 {L["Cleared all of {0}", win.Difficulty ?? ""]}",
-        WinKind.FolderProgress => $"📈 {L["{0}% of {1}", win.Rank ?? 0, win.Difficulty ?? ""]}",
         WinKind.PumbilityLevelUp => $"🆙 {L["Reached {0}", LevelName(win)]}{PoolSuffix(win)}",
-        WinKind.RareTitle => $"🏅 [{win.TitleName}] · {L["only {0} hold it", Pct(win.RarityShare)]}",
-        _ => $"🏅 [{win.TitleName}]"
+        _ => Short(win)
     };
+
+    private static string Bracket(string? title) =>
+        string.IsNullOrEmpty(title) ? "" : title.StartsWith('[') ? title : $"[{title}]";
 
     // The gem is the game's own proper noun and never localizes.
     private string LevelName(SignificantWin win) =>

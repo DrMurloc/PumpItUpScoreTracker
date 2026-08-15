@@ -3062,6 +3062,9 @@ html.sheet-open .more-sheet-scrim {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    /* Never pans: overflow-y:auto forces this axis from visible to auto, so any
+       too-long line would otherwise mint a horizontal scrollbar for the whole feed. */
+    overflow-x: hidden;
     height: 100%;
     /* So win rows can respond to the widget's own width, not just the viewport. */
     container-type: inline-size;
@@ -3182,7 +3185,9 @@ html.sheet-open .more-sheet-scrim {
 .dash-ch-entry {
     display: flex;
     gap: .6rem;
-    padding: .55rem .25rem;
+    /* Right side breathes: on a marked row the audience band paints the entry, and a
+       score flush against the band's edge read as clipped (owner, field test). */
+    padding: .55rem .5rem .55rem .25rem;
     border-bottom: 1px solid color-mix(in srgb, var(--mix-ink-muted) 15%, transparent);
 }
 
@@ -3243,15 +3248,29 @@ html.sheet-open .more-sheet-scrim {
     max-width: 12rem;
 }
 
+/* Prose rows (titles, folders, level-ups) wrap; only the scored one-liner below
+   pins its caption to a single line, and the narrow reflows release even that. */
 .dash-ch-why {
     color: var(--mix-ink-muted);
-    white-space: nowrap;
+    overflow-wrap: break-word;
+    min-width: 0;
 }
 
 /* Scored win = one line on wide: chart (the song name truncates) + highlight, then a right-aligned
    grade/plate + score. The narrow queries below reflow it into a chart+score line and a subtitle. */
 .dash-ch-win-scored {
     flex-wrap: nowrap;
+    align-items: center;
+    gap: .35rem;
+}
+
+.dash-ch-win-scored .dash-ch-why {
+    white-space: nowrap;
+}
+
+/* The level-up row is a badge image plus text — centered as a unit, not baseline-hung. */
+.dash-ch-lvlup {
+    display: inline-flex;
     align-items: center;
     gap: .35rem;
 }
@@ -3276,18 +3295,18 @@ html.sheet-open .more-sheet-scrim {
 
 /* Narrow — a 1-wide widget (container query on the feed) or mobile, where the dashboard is one
    column (media query): hide the song name and drop the highlight onto its own subtitle line. */
-@container (max-width: 300px) {
+@container (max-width: 340px) {
     .dash-ch-song { display: none; }
     .dash-ch-win-scored { flex-wrap: wrap; }
     .dash-ch-win-scored .dash-ch-score-right { order: 2; }
-    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; white-space: normal; }
 }
 
 @media (max-width: 600px) {
     .dash-ch-song { display: none; }
     .dash-ch-win-scored { flex-wrap: wrap; }
     .dash-ch-win-scored .dash-ch-score-right { order: 2; }
-    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; }
+    .dash-ch-win-scored .dash-ch-why { order: 3; flex-basis: 100%; font-size: .72rem; white-space: normal; }
 }
 
 /* Card-strip person divider (avatar + vertical name) — the community analog of the
@@ -3747,6 +3766,14 @@ html.sheet-open .more-sheet-scrim {
     display: flex;
     align-items: center;
     gap: 16px;
+}
+
+/* The P2 level gem beside the total — a fixed square so a slow image load never
+   reflows the hero. The negative margin eats the hero gap plus the art's own
+   transparent frame, so gem and number read as one unit (owner, field test). */
+.dash-acct-hero .pumbility-level-badge {
+    flex: none;
+    margin-right: -8px;
 }
 
 .dash-acct-total {

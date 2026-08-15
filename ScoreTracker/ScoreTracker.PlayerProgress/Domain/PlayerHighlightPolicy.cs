@@ -32,9 +32,6 @@ internal static class PlayerHighlightPolicy
     /// <summary>PG rarity self-selects hard charts, but a new easy chart reads "rare" too — floor it.</summary>
     public const int PgMinLevel = 20;
 
-    /// <summary>A title held by fewer than this fraction of titled players is a rare title.</summary>
-    public const double TitleRarityThreshold = 0.01;
-
     /// <summary>A pumbility rank at or above this (i.e. ≤ N) is a huge pumbility win.</summary>
     public const int PumbilityTopRank = 10;
 
@@ -60,12 +57,25 @@ internal static class PlayerHighlightPolicy
     public const int MaxWinsPerEvent = 4;
 
     private const string PerfectGamePlate = "Perfect Game";
-    private const string DifficultyCategory = "Difficulty";
+    private const string DefaultTitleDescription = "Default title";
 
-    // Difficulty titles (Phoenix) and PUMBILITY titles (Phoenix 2) both carry Category "Difficulty" —
-    // exactly the owner's "big title" set. Names come from the shipped title taxonomy.
-    private static readonly IReadOnlySet<string> PhoenixDifficultyTitles = DifficultyTitleNames(PhoenixTitleList.BuildList());
-    private static readonly IReadOnlySet<string> Phoenix2DifficultyTitles = DifficultyTitleNames(Phoenix2TitleList.BuildList());
+    // Name → rung for the three Phoenix 2 PUMBILITY pool ladders ([S], [D], [P.B] total) — the
+    // only titles that roll up (owner, 2026-08-14: "specifically only the pumbility titles").
+    // Phoenix 1 has no pool ladders; its difficulty titles print one row per rung like every
+    // other family.
+    private static readonly IReadOnlyDictionary<string, Phoenix2PumbilityTitle> Phoenix2PumbilityRungs =
+        Phoenix2TitleList.BuildList().OfType<Phoenix2PumbilityTitle>()
+            .ToDictionary(t => t.Name.ToString(), t => t, StringComparer.OrdinalIgnoreCase);
+
+    private static readonly IReadOnlyDictionary<string, Phoenix2PumbilityTitle> NoPumbilityRungs =
+        new Dictionary<string, Phoenix2PumbilityTitle>(StringComparer.OrdinalIgnoreCase);
+
+    // The default title every account starts with — a first import "earning" it is noise.
+    private static readonly IReadOnlySet<string> DefaultTitleNames = PhoenixTitleList.BuildList()
+        .Concat(Phoenix2TitleList.BuildList())
+        .Where(t => string.Equals(t.Description, DefaultTitleDescription, StringComparison.OrdinalIgnoreCase))
+        .Select(t => t.Name.ToString())
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     public static IReadOnlyList<SignificantWin> Classify(ScoreHighlightsCapturedEvent e,
         IReadOnlyDictionary<Guid, Chart> charts, RaritySnapshot snapshot, PlayerStatsRecord stats)
@@ -74,9 +84,11 @@ internal static class PlayerHighlightPolicy
 
         foreach (var milestone in e.Milestones)
         {
-            var win = ClassifyMilestone(milestone, e.Mix, snapshot);
+            var win = ClassifyMilestone(milestone);
             if (win is not null) wins.Add(win.Value);
         }
+
+        wins.AddRange(ClassifyTitles(e.Mix, e.Milestones));
 
         // The level crossing is a batch-level fact, not a per-milestone one: whether it speaks
         // depends on which titles completed beside it, so it derives from the whole set.
@@ -100,23 +112,49 @@ internal static class PlayerHighlightPolicy
             .ToArray();
     }
 
-    // A title completion or full-folder clear → its win. FolderPassLamp Detail is the folder ("D23");
-    // titles split into difficulty/pumbility "big" titles and sub-1%-held "rare" ones.
-    private static (int Priority, SignificantWin Win)? ClassifyMilestone(PlayerMilestoneRecord milestone,
-        MixEnum mix, RaritySnapshot snapshot)
+    // A full-folder clear or folder movement → its win. FolderPassLamp Detail is the folder ("D23").
+    private static (int Priority, SignificantWin Win)? ClassifyMilestone(PlayerMilestoneRecord milestone)
     {
         if (milestone.Kind == MilestoneKind.FolderPassLamp && milestone.Detail is { Length: > 0 } folder)
             return (PriorityFolderComplete, new SignificantWin(WinKind.FolderComplete, Difficulty: folder));
 
         if (milestone.Kind == MilestoneKind.FolderProgress) return ClassifyFolderProgress(milestone);
 
-        if (milestone.Kind != MilestoneKind.TitleCompleted || milestone.Title is null) return null;
-        var title = milestone.Title;
-        if (IsBigTitle(mix, title))
-            return (PriorityBigTitle, new SignificantWin(WinKind.BigTitle, TitleName: title));
-        if (TitleShare(title, snapshot) is { } share && share < TitleRarityThreshold)
-            return (PriorityRareTitle, new SignificantWin(WinKind.RareTitle, TitleName: title, RarityShare: share));
         return null;
+    }
+
+    /// <summary>
+    ///     Every earned title is feed-worthy (owner, 2026-08-14: "all titles are big titles") — the
+    ///     old big/rare gate is gone, and with it the policy's only use of title-rarity data. The one
+    ///     grouping: a batch that climbs several rungs of one Phoenix 2 PUMBILITY pool ladder reads
+    ///     as a single span ("[S] ADVANCED LV.6 → LV.9") rather than one row per rung — in the feeds
+    ///     only, since the Discord card renders from the milestones themselves and stays loud.
+    /// </summary>
+    private static IEnumerable<(int Priority, SignificantWin Win)> ClassifyTitles(MixEnum mix,
+        IReadOnlyList<PlayerMilestoneRecord> milestones)
+    {
+        var completed = milestones
+            .Where(m => m.Kind == MilestoneKind.TitleCompleted && m.Title is { Length: > 0 })
+            .Select(m => m.Title!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Where(t => !DefaultTitleNames.Contains(t))
+            .ToArray();
+
+        var rungs = mix == MixEnum.Phoenix2 ? Phoenix2PumbilityRungs : NoPumbilityRungs;
+
+        // The ladder story leads: one span per pool whose rungs order by threshold, a lone rung
+        // staying a plain title row.
+        foreach (var pool in completed.Where(rungs.ContainsKey).GroupBy(t => rungs[t].Pool))
+        {
+            var climbed = pool.OrderBy(t => rungs[t].CompletionRequired).ToArray();
+            yield return climbed.Length == 1
+                ? (PriorityTitle, new SignificantWin(WinKind.BigTitle, TitleName: climbed[0]))
+                : (PriorityTitle, new SignificantWin(WinKind.PumbilityTitleSpan,
+                    TitleName: climbed[^1], Detail: climbed[0]));
+        }
+
+        foreach (var title in completed.Where(t => !rungs.ContainsKey(t)))
+            yield return (PriorityTitle, new SignificantWin(WinKind.BigTitle, TitleName: title));
     }
 
     /// <summary>
@@ -205,40 +243,25 @@ internal static class PlayerHighlightPolicy
             ? 0
             : snapshot.PgHoldersByChart.GetValueOrDefault(chartId) / (double)snapshot.ActivePlayerCount;
 
-    private static double? TitleShare(string title, RaritySnapshot snapshot) =>
-        snapshot.TitledUserCount > 0 && snapshot.TitleHoldersByName.TryGetValue(title, out var holders)
-            ? holders / (double)snapshot.TitledUserCount
-            : null;
-
-    private static bool IsBigTitle(MixEnum mix, string titleName) => mix == MixEnum.Phoenix2
-        ? Phoenix2DifficultyTitles.Contains(titleName)
-        : PhoenixDifficultyTitles.Contains(titleName);
-
-    private static IReadOnlySet<string> DifficultyTitleNames(IEnumerable<PhoenixTitle> titles) =>
-        titles.Where(t => string.Equals(t.Category.ToString(), DifficultyCategory, StringComparison.OrdinalIgnoreCase))
-            .Select(t => t.Name.ToString())
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
     // Priority: lower renders first (owner order 2026-07-13): titles, then folder wins, then the
-    // number wins. Within titles, rare above big. The level crossing sits with the titles — it is
-    // a gem sub-step, and it only ever speaks when the gem title itself stayed quiet.
-    private const int PriorityRareTitle = 0;
-    private const int PriorityBigTitle = 1;
-    private const int PriorityPumbilityLevelUp = 2;
-    private const int PriorityFolderComplete = 3;
-    private const int PriorityFolderProgress = 4;
-    private const int PriorityFolderFirst = 5;
-    private const int PriorityTopPumbility = 6;
-    private const int PriorityNotablePg = 7;
-    private const int PriorityPeerElite = 8;
+    // number wins. The level crossing sits with the titles — it is a gem sub-step, and it only
+    // ever speaks when the gem title itself stayed quiet.
+    private const int PriorityTitle = 0;
+    private const int PriorityPumbilityLevelUp = 1;
+    private const int PriorityFolderComplete = 2;
+    private const int PriorityFolderProgress = 3;
+    private const int PriorityFolderFirst = 4;
+    private const int PriorityTopPumbility = 5;
+    private const int PriorityNotablePg = 6;
+    private const int PriorityPeerElite = 7;
 }
 
 /// <summary>
 ///     The slow-moving population aggregates the policy needs, snapshotted so the busy import path
 ///     doesn't recompute them per event. Loaded by the capturer behind a per-mix memory cache.
+///     Title-holder aggregates left 2026-08-14 with the rare-title gate — PG rarity is the one
+///     population read left.
 /// </summary>
 internal sealed record RaritySnapshot(
     IReadOnlyDictionary<Guid, int> PgHoldersByChart,
-    int ActivePlayerCount,
-    IReadOnlyDictionary<string, int> TitleHoldersByName,
-    int TitledUserCount);
+    int ActivePlayerCount);

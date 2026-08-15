@@ -280,8 +280,10 @@ stayed unreachable in a component that had supported it all along.
 ### 3.7 Feeds
 
 Rivals page = rivals only, green marks clubmates. Community page = communities only, red marks
-rivals. Home widget = checkable, all three states live (D35–D36). Ghosts never appear (D30), and
-the empty state names what would fill it.
+rivals. Home widget = checkable — and its row states light **only when both audiences are on**
+(owner, 2026-08-14): on a single-audience board every row shares the one audience, so a marker
+everyone wears says nothing; the mixed board is where green/red/both disambiguate (D35–D36).
+Ghosts never appear (D30), and the empty state names what would fill it.
 
 ---
 

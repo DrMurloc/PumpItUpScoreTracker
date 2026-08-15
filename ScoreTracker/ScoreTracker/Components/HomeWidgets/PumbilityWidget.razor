@@ -1,5 +1,6 @@
 ﻿@using MediatR
 @using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.HomePage.Contracts
@@ -36,12 +37,16 @@ else
         <div class="dash-acct-stats">
             <div class="dash-acct-eyebrow">@L["PUMBILITY"]</div>
             <div class="dash-acct-hero">
+                @if (_mix == MixEnum.Phoenix2)
+                {
+                    @* The P2 total-pool level gem (the ladder belongs to Phoenix 2 alone);
+                       it self-hides on 404 until the art is mirrored, and the hover names
+                       the rung. The weekly delta left for the Sessions page (owner,
+                       2026-08-14) — this is the space it freed. *@
+                    <PumbilityLevelBadge Level="Phoenix2PumbilityLevel.From(_stats.SkillRating)" Height="44"/>
+                }
                 <span class="dash-acct-total">
                     <span class="dash-stat-num rarity-glow-1">@_stats.SkillRating.ToString("N0")</span>
-                    @if (_weeklyDelta is > 0)
-                    {
-                        <PumbilityDelta Value="_weeklyDelta.Value" Marker="▲ " Class="dash-stat-delta"></PumbilityDelta>
-                    }
                 </span>
                 <div class="dash-acct-pools">
                     <div class="dash-acct-poolrow">
@@ -137,7 +142,6 @@ else
     private MixEnum _mix;
     private ChartType? _dimension;
     private PlayerStatsRecord? _stats;
-    private double? _weeklyDelta;
     private double _myLevel;
     private List<MatchRow> _matches = new();
     private string? _headerSlotKey;
@@ -168,15 +172,6 @@ else
 
             var userId = CurrentUser.User.Id;
             _stats = await Mediator.Send(new GetPlayerStatsQuery(userId, _mix));
-
-            var history = (await Mediator.Send(new GetPlayerHistoryQuery(userId, _mix)))
-                .Where(h => h.SkillRating != null)
-                .OrderBy(h => h.Date)
-                .ToArray();
-            var weekAgo = history.LastOrDefault(h => h.Date <= DateTimeOffset.Now.AddDays(-7));
-            _weeklyDelta = weekAgo?.SkillRating is { } baseline && _stats != null
-                ? _stats.SkillRating - baseline
-                : null;
 
             _matches = new List<MatchRow>();
             if (_showMatches && _stats != null) await LoadMatches(userId);

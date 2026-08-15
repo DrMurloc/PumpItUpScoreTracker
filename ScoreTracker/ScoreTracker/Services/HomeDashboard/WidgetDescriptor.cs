@@ -85,4 +85,8 @@ public sealed record WidgetDescriptor(
     string? RefreshTitleKey = null,
     // When true, the host auto-bumps RefreshToken after the viewer's score import lands, so
     // personal-score widgets reflect the new scores/rating without a manual refresh.
-    bool RefreshOnScoreImport = false);
+    bool RefreshOnScoreImport = false,
+    // Optional config-aware visibility for the refresh action: some goals of a type are
+    // deterministic, and a shuffle that re-rolls into the identical list is a lie. Null =
+    // always shown when RefreshIcon is set.
+    Func<string?, bool>? ShowRefresh = null);

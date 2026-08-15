@@ -29,7 +29,7 @@
                edit controls keep the bar to themselves. *@
             <span class="dash-head-slot">@_headerSlot.Content</span>
         }
-        @if (_descriptor?.RefreshIcon != null)
+        @if (_descriptor?.RefreshIcon != null && (_descriptor.ShowRefresh?.Invoke(Widget.ConfigJson) ?? true))
         {
             @* Header refresh (owner, round 5): bumps RefreshToken so the widget reloads
                without spending body space on a meta row. *@

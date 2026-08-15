@@ -300,11 +300,15 @@ The widget home page ([design doc](design/HomePageWidgets/README.md)) adds a voc
 - **Graphs start from `ApexChartTheming.BaseOptions` + its `WrapperClass`** on the container: frozen
   canvas, display face, palette fore color, whisper-grid, dark theme, themed tooltips. Charts layer
   their specifics (strokes, fills, axes) on top — never rebuild the base by hand.
-- **Community-scoped feeds reuse the shipped vocabulary**: the Community Highlights widget renders each
-  big win with the Discord card's own caption emoji (👑 pumbility, 📊 peers, 🆕 folder, 🏅 title, 💎 rare
-  PG) and colors the "% have it" rarity through the rarity ramp — the on-site feed and the Discord cards
-  read as one system. Persisted win data is structured, never pre-rendered text: the row localizes every
-  caption (a UI string never rides the DB payload).
+- **Community-scoped feeds reuse the shipped vocabulary, at feed density**: the Highlights feed renders
+  each big win with the Discord card's own caption emoji (👑 pumbility, 📊 peers, 🆕 folder, 🏅 title,
+  💎 rare PG) in **short form** — the chip states the fact ("Top 3%", "Rare PG"), the full sentence rides
+  the tooltip (owner: lean hard on tooltips; extended from the strip cards to the vertical feed rows
+  2026-08-14). Titles carry **no rarity claim** — every earned title is feed-worthy ("all titles are big
+  titles"), and pumbility-ladder crossings roll up into one span row per pool ("[S] ADVANCED LV.6 →
+  LV.9") **in the feeds only**; the Discord session card stays un-collapsed ("many titles should feel
+  like many titles", 2026-07-26). Persisted win data is structured, never pre-rendered text: the row
+  localizes every caption (a UI string never rides the DB payload).
 
 ## 5. Challenge boards (Weekly Charts + Daily Step)
 
