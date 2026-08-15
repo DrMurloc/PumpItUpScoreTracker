@@ -48,7 +48,10 @@ namespace ScoreTracker.EventCompetition.Application
             if (current == null)
                 await _bus.Publish(new CycleMoMCommand());
             else
-                await _scheduler.SchedulePublish((current.EndsAt + TimeSpan.FromMinutes(1)).DateTime,
+                // UtcDateTime, not DateTime: the season clock runs UTC-5, and the scheduler
+                // compares against UTC — the bare wall-clock time would fire five hours early
+                // (harmlessly, but the real rollover then waits for the next daily tick).
+                await _scheduler.SchedulePublish((current.EndsAt + TimeSpan.FromMinutes(1)).UtcDateTime,
                     new CycleMoMCommand(), context.CancellationToken);
         }
 
@@ -115,12 +118,14 @@ namespace ScoreTracker.EventCompetition.Application
                 var deltas = new Dictionary<Guid, double>();
                 foreach (var chart in charts.Where(c => c.Type == chartType))
                 {
-                    double? scoringLevel = scoringLevels.TryGetValue(chart.Id, out var sl) ? sl : null;
-                    var balanced = scoringLevel == null ? chart.Level + .5 :
-                        chart.Level + 1.5 < scoringLevel ? chart.Level + 1.5 :
-                        chart.Level + .5 < scoringLevel ? scoringLevel.Value :
-                        chart.Level + .5;
-                    if (Math.Abs(balanced - (chart.Level + .5)) > 0.0001) deltas[chart.Id] = balanced;
+                    // The community scoring level, clamped to at most one level above the
+                    // folder and never below the folder's own + 0.5; a chart with no scoring
+                    // level sits at the floor.
+                    var floor = chart.Level + .5;
+                    var balanced = scoringLevels.TryGetValue(chart.Id, out var scoringLevel)
+                        ? Math.Clamp(scoringLevel, floor, chart.Level + 1.5)
+                        : floor;
+                    if (Math.Abs(balanced - floor) > 0.0001) deltas[chart.Id] = balanced;
                 }
 
                 boards.Add(new MoMBoardSeed(boardId, MixEnum.Phoenix, chartType, configuration, deltas));

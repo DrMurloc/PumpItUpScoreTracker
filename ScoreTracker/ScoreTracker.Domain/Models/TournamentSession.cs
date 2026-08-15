@@ -81,10 +81,13 @@ namespace ScoreTracker.Domain.Models
             var index = Entries.IndexOf(oldEntry);
             if (index == -1) return;
 
+            var basePoints = _configuration.Scoring.GetScore(oldEntry.Chart, score, plate, isBroken, false);
+            var withBonus = _configuration.Scoring.GetScore(oldEntry.Chart, score, plate, isBroken);
             Entries[index] = oldEntry with
             {
                 Score = score, Plate = plate, IsBroken = isBroken,
-                SessionScore = (int)_configuration.Scoring.GetScore(oldEntry.Chart, score, plate, isBroken)
+                SessionScore = (int)withBonus,
+                BonusPoints = (int)(withBonus - basePoints)
             };
         }
 

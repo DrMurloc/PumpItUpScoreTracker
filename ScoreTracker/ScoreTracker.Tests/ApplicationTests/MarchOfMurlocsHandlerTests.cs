@@ -90,8 +90,10 @@ public sealed class MarchOfMurlocsHandlerTests
 
         bus.Verify(b => b.Publish(It.IsAny<CycleMoMCommand>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        // The UTC instant, not the UTC-5 wall clock — the scheduler compares against UTC, and
+        // the bare .DateTime would have fired five hours early.
         scheduler.Verify(s => s.SchedulePublish(
-                (endsAt + TimeSpan.FromMinutes(1)).DateTime,
+                (endsAt + TimeSpan.FromMinutes(1)).UtcDateTime,
                 It.IsAny<CycleMoMCommand>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -138,6 +140,54 @@ public sealed class MarchOfMurlocsHandlerTests
         // The frozen config zeroes every other chart type (D15: a board is one type, always).
         Assert.Equal(0, singles.Configuration.Scoring.ChartTypeModifiers[ChartType.Double]);
         Assert.Equal(0, doubles.Configuration.Scoring.ChartTypeModifiers[ChartType.Single]);
+    }
+
+    [Fact]
+    public async Task CycleStoresOnlyTheSnapshotRowsThatDifferFromTheFolderFloor()
+    {
+        // §9.3: a chart at folder level + 0.5 gets NO row — the fallback produces the same
+        // value. Community scoring levels clamp to [level + 0.5, level + 1.5].
+        var noEntry = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var capped = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var mid = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var belowFloor = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+        var exactFloor = new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build();
+
+        var mom = new Mock<IMoMRepository>();
+        mom.Setup(m => m.GetSeason(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MoMSeason?)null);
+        IReadOnlyList<MoMBoardSeed>? boards = null;
+        mom.Setup(m => m.CreateSeason(It.IsAny<MoMSeason>(), It.IsAny<IReadOnlyList<MoMBoardSeed>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<MoMSeason, IReadOnlyList<MoMBoardSeed>, CancellationToken>((_, b, _) => boards = b)
+            .Returns(Task.CompletedTask);
+        var charts = new Mock<IChartRepository>();
+        charts.Setup(r => r.GetCharts(MixEnum.Phoenix, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { noEntry, capped, mid, belowFloor, exactFloor });
+        var scoringLevels = new Mock<IChartScoringLevelRepository>();
+        scoringLevels.Setup(s => s.GetScoringLevels(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, double>
+            {
+                [capped.Id] = 23.0,      // above level + 1.5 → clamps to 21.5, stored
+                [mid.Id] = 21.0,         // inside the band → stored as-is
+                [belowFloor.Id] = 20.2,  // below level + 0.5 → floors to 20.5, NOT stored
+                [exactFloor.Id] = 20.5   // exactly the floor → NOT stored
+            });
+        var handler = new MarchOfMurlocsHandler(mom.Object, charts.Object, new Mock<IBus>().Object,
+            new Mock<IMessageScheduler>().Object,
+            FakeDateTime.At(new DateTimeOffset(2026, 7, 1, 11, 0, 0, TimeSpan.Zero)).Object,
+            scoringLevels.Object);
+
+        await handler.Consume(ContextOf(new CycleMoMCommand()).Object);
+
+        Assert.NotNull(boards);
+        var singles = Assert.Single(boards!, b => b.ChartType == ChartType.Single);
+        Assert.Equal(2, singles.SnapshotDeltas.Count);
+        Assert.Equal(21.5, singles.SnapshotDeltas[capped.Id]);
+        Assert.Equal(21.0, singles.SnapshotDeltas[mid.Id]);
+        Assert.DoesNotContain(noEntry.Id, singles.SnapshotDeltas.Keys);
+        Assert.DoesNotContain(belowFloor.Id, singles.SnapshotDeltas.Keys);
+        Assert.DoesNotContain(exactFloor.Id, singles.SnapshotDeltas.Keys);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
@@ -164,6 +165,30 @@ public sealed class TournamentSessionTests
         var swapped = session.Entries.Single();
         Assert.Equal((PhoenixScore)990000, swapped.Score);
         Assert.Equal(PhoenixPlate.PerfectGame, swapped.Plate);
+    }
+
+    [Fact]
+    public void SwapRecomputesBonusPointsForTheNewScore()
+    {
+        // BonusPoints is the chart-level-snapshot bump — the score with the balanced-level
+        // override minus the score without it. It scales with the grade multiplier, so a
+        // swapped entry keeping its old score's bonus is observable data.
+        var chart = new ChartBuilder().WithLevel(20).Build();
+        var config = Config();
+        config.Scoring.ChartLevelSnapshot = new Dictionary<Guid, double> { [chart.Id] = 21.5 };
+        var session = new TournamentSession(Guid.NewGuid(), config);
+        session.Add(chart, 800000, PhoenixPlate.FairGame, isBroken: false);
+        var original = session.Entries.Single();
+        Assert.True(original.BonusPoints > 0);
+
+        session.Swap(original, 990000, PhoenixPlate.PerfectGame, isBroken: false);
+
+        var swapped = session.Entries.Single();
+        var withBonus = config.Scoring.GetScore(chart, 990000, PhoenixPlate.PerfectGame, false);
+        var basePoints = config.Scoring.GetScore(chart, 990000, PhoenixPlate.PerfectGame, false, false);
+        Assert.Equal((int)withBonus, swapped.SessionScore);
+        Assert.Equal((int)(withBonus - basePoints), swapped.BonusPoints);
+        Assert.NotEqual(original.BonusPoints, swapped.BonusPoints);
     }
 
     [Fact]

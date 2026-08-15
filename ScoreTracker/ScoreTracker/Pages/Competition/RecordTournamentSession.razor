@@ -356,6 +356,12 @@
         {
             return;
         }
+        // A filled-in link that does not parse must not silently save as no video at all.
+        if (!string.IsNullOrWhiteSpace(_videoUrl) && VideoUrl == null)
+        {
+            Snackbar.Add("The video link needs to be a full URL, like https://youtu.be/...", Severity.Warning);
+            return;
+        }
         _isSaving = true;
         _session.VideoUrl= VideoUrl;
         await TournamentRepository.SaveSession(_session, CancellationToken.None);
