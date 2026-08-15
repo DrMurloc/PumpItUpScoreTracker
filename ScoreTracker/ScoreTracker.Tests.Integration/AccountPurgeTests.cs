@@ -104,12 +104,13 @@ public sealed class AccountPurgeTests : IAsyncLifetime
         var stranger = await seeder.SeedUserAsync();
 
         var chartId = await seeder.SeedPhoenixChartAsync();
+        var boardId = await seeder.SeedMoMBoardAsync();
 
         var manifest = ManifestTypes();
         var unplantable = new List<string>();
         foreach (var type in manifest)
         {
-            var failure = await TryPlant(type, decoy, bystander, chartId);
+            var failure = await TryPlant(type, decoy, bystander, chartId, boardId);
             if (failure is not null) unplantable.Add(failure);
         }
 
@@ -167,7 +168,7 @@ public sealed class AccountPurgeTests : IAsyncLifetime
     ///     Values are written through the CLR properties <em>before</em> the entity is tracked: a
     ///     string primary key still null at Add throws there, before any of this could fix it.
     /// </summary>
-    private async Task<string?> TryPlant(Type type, Guid ownerId, Guid bystanderId, Guid chartId)
+    private async Task<string?> TryPlant(Type type, Guid ownerId, Guid bystanderId, Guid chartId, Guid boardId)
     {
         try
         {
@@ -182,7 +183,7 @@ public sealed class AccountPurgeTests : IAsyncLifetime
                 var clr = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;
                 var current = slot.GetValue(instance);
 
-                // Foreign keys have to point at something real, so the two the manifests actually
+                // Foreign keys have to point at something real, so the ones the manifests actually
                 // reference are seeded once and shared by every probe row.
                 if (property.Name == owningColumn) slot.SetValue(instance, ownerId);
                 else if (clr == typeof(Guid) && property.Name.EndsWith("UserId", StringComparison.Ordinal))
@@ -190,6 +191,7 @@ public sealed class AccountPurgeTests : IAsyncLifetime
                 else if (clr == typeof(Guid) && property.Name == "ChartId") slot.SetValue(instance, chartId);
                 else if (clr == typeof(Guid) && property.Name == "MixId")
                     slot.SetValue(instance, TestDataSeeder.PhoenixMixId);
+                else if (clr == typeof(Guid) && property.Name == "BoardId") slot.SetValue(instance, boardId);
                 else if (property.IsPrimaryKey() && clr == typeof(Guid) &&
                          property.ValueGenerated == ValueGenerated.Never)
                     slot.SetValue(instance, Guid.NewGuid());

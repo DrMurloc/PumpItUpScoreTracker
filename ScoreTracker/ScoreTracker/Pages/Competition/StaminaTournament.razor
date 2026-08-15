@@ -43,7 +43,7 @@
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.AveragePps">@L["Average PPS"]</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel T="LeaderboardRecord" SortBy="e=>e.TotalRestTime">@L["Rest Time"]</MudTableSortLabel></MudTh>
             }
-            <MudTh>@L["Verification"]</MudTh>
+            <MudTh>@L["Video"]</MudTh>
             @if (CurrentUser.IsLoggedInAsAdmin && _showExtraData)
             {
                 <MudTh>@L["Edit"]</MudTh>
@@ -69,37 +69,9 @@
                 <MudTd>@RestTime(context.TotalRestTime)</MudTd>
             }
             <MudTd>
-                @if (context.NeedsApproval)
+                @if (context.VideoUrl != null)
                 {
-                    <MudText>@L["Pending"]</MudText>
-
-                }
-                else
-                {
-                    @switch (context.VerificationType)
-                    {
-                        case SubmissionVerificationType.Unverified:
-                            <MudText>@L["None"]</MudText>
-                            break;
-                        case SubmissionVerificationType.Photo:
-                            <MudButton StartIcon="@Icons.Material.Filled.PhotoLibrary" Color="Color.Primary" OnClick="()=>ShowPhotos(context.UserId)">@L["Photos"]</MudButton>
-                            break;
-                        case SubmissionVerificationType.Video:
-                            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.MusicVideo" Href="@(context.VideoUrl?.ToString()??"")" Target="_blank">@L["Video"]</MudButton>
-                            break;
-                        case SubmissionVerificationType.InPerson:
-                            @if (context.VideoUrl != null)
-                            {
-                                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.MusicVideo" Href="@(context.VideoUrl?.ToString()??"")" Target="_blank">@L["In Person"]</MudButton>
-                            }
-                            else
-                            {
-                                <MudText>@L["In Person"]</MudText>
-                            }
-                            break;
-                        default:
-                            break;
-                    }
+                    <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.MusicVideo" Href="@context.VideoUrl.ToString()" Target="_blank">@L["Video"]</MudButton>
                 }
             </MudTd>
             @if (CurrentUser.IsLoggedInAsAdmin && _showExtraData)
@@ -215,25 +187,6 @@
         </ChildRowContent>
     </MudTable>
 }
-<MudDialog @bind-Visible="_showPhotoDialog">
-    <DialogContent>
-        @if (_photoSession != null)
-        {
-            <MudGrid>
-                @foreach (var item in _photoSession.PhotoUrls)
-                {
-                    <MudItem xs="6" sm="4" md="3">
-                        <MudImage Src="@item.ToString()" ObjectFit="ObjectFit.Contain" Height="200"></MudImage>
-                    </MudItem>
-                }
-            </MudGrid>
-        }
-    </DialogContent>
-    <DialogActions>
-        <MudSpacer></MudSpacer>
-        <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Close" OnClick="() => _showPhotoDialog = false">@L["Close"]</MudButton>
-    </DialogActions>
-</MudDialog>
 @inject ITournamentRepository TournamentRepository;
 @inject ICurrentUserAccessor CurrentUser;
 @inject NavigationManager NavManager;
@@ -246,9 +199,7 @@
     private TournamentConfiguration _configuration = new TournamentConfiguration(new ScoringConfiguration());
     private bool _isLoaded = false;
     private bool _isLoadingUser = false;
-    private bool _showPhotoDialog = false;
     private bool _showExtraData = false;
-    private TournamentSession? _photoSession;
     private TournamentSession? _showingSession = null;
     private string UserSessionlink(Guid userId) => $"/Tournament/Stamina/{TournamentId}/Record?UserId={userId}";
     private Guid? _showingChartBoard = null;
@@ -290,14 +241,6 @@
     private IEnumerable<TimelinePoint> _timeline = Array.Empty<TimelinePoint>();
     private double _averagePps = 0.0;
     private sealed record TimelinePoint(int MinutesIn, double PointsPerSecond);
-    private async Task ShowPhotos(Guid userId)
-    {
-        _isLoadingUser = true;
-        _photoSession = await TournamentRepository.GetSession(TournamentId, userId, CancellationToken.None);
-        _showPhotoDialog = true;
-        _isLoadingUser = false;
-        
-    }
     private async Task ShowUserCharts(Guid showingUser)
     {
         if (_showingSession != null && _showingSession.UsersId == showingUser)

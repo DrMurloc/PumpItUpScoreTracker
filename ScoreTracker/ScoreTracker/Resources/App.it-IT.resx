@@ -2946,9 +2946,6 @@
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>nel nostro database, bloccata così da non poter essere aperta da sola.</value>
   </data>
-  <data name="In Person" xml:space="preserve">
-    <value>Di persona</value>
-  </data>
   <data name="In progress" xml:space="preserve">
     <value>In corso</value>
   </data>
@@ -7434,9 +7431,6 @@
   </data>
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>Spariti pur essendo ancora in classifica</value>
-  </data>
-  <data name="Verification" xml:space="preserve">
-    <value>Verifica</value>
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Verificato dall'importazione ufficiale</value>

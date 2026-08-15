@@ -139,10 +139,15 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.Tournament` | Competitive event definition: configuration, location, visibility, and the Discord channel the randomizer's Push to Discord posts into |
+| `scores.Tournament` | Competitive event definition: configuration, location, visibility, and the Discord channel the randomizer's Push to Discord posts into. MoM rows are legacy — copied onto the `MoM*` tables (march-of-murlocs.md §7) and no longer read |
 | `scores.UserTournamentRegistration` | Player registrations |
-| `scores.UserTournamentSession` | A player's session: charts played, scores, approval state, and the mix it was played on |
-| `scores.PhotoVerification` | Photo proofs attached to sessions |
+| `scores.UserTournamentSession` | Legacy MoM session storage (JSON chart blob) — copied onto `MoMSession`/`MoMSessionChart` and no longer read |
+| `scores.PhotoVerification` | Photo proofs attached to sessions (verification deleted, D5 — rows kept, never written) |
+| `scores.MoMSeason` | A March of Murlocs season; filtered unique (Year, Quarter) is the anti-runaway guarantee (D2); Year/Quarter NULL for off-grid legacy seasons |
+| `scores.MoMBoard` | One board of a season — (mix, chart type) with its frozen serialized scoring config; legacy boards keep their legacy tournament Guid |
+| `scores.MoMChartLevel` | Season balance snapshot, delta rows only (a missing row means folder level + 0.5) |
+| `scores.MoMSession` | A recorded MoM session: derived cache columns over its chart rows; PublishedAt NULL = draft; no unique (Board, User) — boards rank sessions, not players (D16) |
+| `scores.MoMSessionChart` | The session's charts, normalized out of the legacy JSON blob; PlayedAt lands with timestamps (Slice 3) |
 | `scores.TournamentChartLevel` | Per-tournament chart level overrides |
 | `scores.TournamentRole` | Per-tournament roles (organizer, judge, …) |
 | `scores.TournamentRoleInvite` | Role-carrying invite link tokens (Head TO mints; optional expiry) |

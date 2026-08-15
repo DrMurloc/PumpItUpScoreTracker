@@ -2946,9 +2946,6 @@
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>私たちのデータベース内にあり、単体では開けないようロックされています。</value>
   </data>
-  <data name="In Person" xml:space="preserve">
-	  <value>現地</value>
-  </data>
   <data name="In progress" xml:space="preserve">
     <value>進行中</value>
   </data>
@@ -7434,9 +7431,6 @@
   </data>
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>ランキングに残るはずが消えた</value>
-  </data>
-  <data name="Verification" xml:space="preserve">
-	  <value>確認</value>
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>公式インポートで確認済み</value>

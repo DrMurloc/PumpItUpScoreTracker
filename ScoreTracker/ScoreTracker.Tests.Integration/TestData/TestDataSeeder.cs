@@ -63,6 +63,26 @@ public sealed class TestDataSeeder
         await ctx.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    ///     A MoM season + Phoenix Doubles board to hang session rows on. Raw SQL because the
+    ///     MoM entities are internal to EventCompetition — this seeder's whole point is staying
+    ///     independent of the code under test.
+    /// </summary>
+    public async Task<Guid> SeedMoMBoardAsync(CancellationToken cancellationToken = default)
+    {
+        var seasonId = Guid.NewGuid();
+        var boardId = Guid.NewGuid();
+        await using var ctx = await _factory.CreateDbContextAsync(cancellationToken);
+        await ctx.Database.ExecuteSqlRawAsync(
+            "INSERT INTO scores.MoMSeason (Id, Name, StartsAt, EndsAt, CreatedAt) " +
+            "VALUES ({0}, {1}, {2}, {3}, {2}); " +
+            "INSERT INTO scores.MoMBoard (Id, SeasonId, MixId, ChartType, ScoringConfig) " +
+            "VALUES ({4}, {0}, {5}, 1, '{{}}');",
+            new object[] { seasonId, $"season_{seasonId:N}"[..32], Epoch, Epoch.AddMonths(3), boardId, PhoenixMixId },
+            cancellationToken);
+        return boardId;
+    }
+
     private async Task<Guid> InsertChartAsync(int level, string type, bool addToPhoenixMix,
         CancellationToken cancellationToken)
     {

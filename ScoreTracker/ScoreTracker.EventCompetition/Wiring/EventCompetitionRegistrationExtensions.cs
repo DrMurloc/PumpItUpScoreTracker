@@ -22,6 +22,7 @@ public static class EventCompetitionRegistrationExtensions
     public static IServiceCollection AddEventCompetition(this IServiceCollection services)
     {
         services.AddTransient<ITournamentRepository, EFTournamentRepository>();
+        services.AddTransient<IMoMRepository, EFMoMRepository>();
         services.AddTransient<IQualifiersRepository, EFQualifiersRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<IContributionDeletionRepository, EFContributionDeletionRepository>();
