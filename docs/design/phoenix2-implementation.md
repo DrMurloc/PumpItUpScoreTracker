@@ -66,41 +66,43 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   | B | **1.20** | **1.25** |
   | C | **1.10** | **1.20** |
   | D | **1.00** | **1.10** |
+  | F | **0.90** | *1.00 (inferred)* |
 
   Everything else is shared: the other six plates (RG 0.000 · FG 0.002 · TG 0.004 · MG 0.006 ·
   SG 0.008 · PG 0.020) and the top of the ladder (AA+ 1.39 · AAA 1.41 · AAA+ 1.43 · S 1.45 →
-  SSS+ 1.50). **An F is not a rung — it contributes zero**, on both types, the same as a break
-  or a sub-10 chart, and that includes a *passing* F. It has to be an exclusion in the formula
-  rather than a 0.0 multiplier, because grade and plate ADD here and a zero multiplier alone
-  would still pay the plate bonus.
+  SSS+ 1.50).
 
-  ⚠ **The F zero is half observed and half assumed, and the doc must not blur which half is
-  which (owner, 2026-08-14).** A passing **Singles** F has been **observed** rendering 0.00 on
-  the breakdown page — a small pool admits every chart, so the row is visible there — which also
-  retires the old competing explanation that a zero-rendered chart might simply not be in the
-  pool. A passing **Doubles** F has **never been reproduced**, so its zero is an **assumption**
-  held by symmetry: the owner's call is that it is a fair one, and the cost of being wrong is a
-  few points on a pool of fewer than fifty charts, since an F never survives into a full fifty.
-  Telemetry can refute the assumption but never confirm it — a Doubles F the site priced nonzero
-  would log a `PumbilityRow` MISMATCH, while one priced zero is skipped by `ScoringObservations`
-  along with every other zero-value row, so its absence from the telemetry is not evidence.
-  Where the rule bites hardest is a sparse Phoenix 2 account and `/Pumbility/Phoenix1`, where a
-  450k–499k Phoenix 1 score is a P1 **D** but a P2 **F** and so reprices from about 0.9 × base
-  to nothing.
+  ⚠⚠ **A passing F is a REAL RUNG, and the "F is an exclusion" rule was wrong — reversed by a
+  live reading on 2026-08-14.** The history matters because it reversed *twice*: F shipped at
+  0.90 (interpolated), was ruled an exclusion pricing zero on 2026-08-12 (owner's game
+  knowledge; the one F ever seen rendering on the breakdown page showed 0.00), and then a
+  deliberately played F settled it — *Monkey Fingers* S12 F MG, official **176.67** =
+  Base(13) 195 × (0.90 + 0.006), exact to the cent. The 0.00 that had supported the exclusion
+  turned out to be **the sub-10 rule wearing an F grade** — that chart was below level 10, so
+  its zero said nothing about F at all. The 0.90 interpolation had been right the whole time.
+  Only a **break** and a **sub-10 chart** price at zero. Consequences: the Doubles F is
+  **inferred at 1.00** (the measured Singles D → F step is −0.10 and the type gap plateaus at
+  −0.10 across C and D; both arguments land there) — and unlike the old exclusion the telemetry
+  can settle it, because F rows price nonzero and `ScoringObservations` logs them like any
+  other row. The `/Pumbility/Phoenix1` bite also softens: a 450k–499k Phoenix 1 score (P1 D, P2
+  F) reprices to 0.90 × base rather than to nothing. And the decomposition's grade part goes
+  **negative** on a passing F — the only rung below the ×1.00 reference — which `Decompose`'s
+  consumers must tolerate.
 
-  **Which cells are measured, and which are not (2026-08-14: nearly all of them are).** All eight
-  plate × type cells on each side are measured, and **both grade ladders are now measured end to
-  end** — every Singles rung SSS+ → D and every Doubles rung alike. **Nothing in either table is
-  interpolated any more.** Two assumptions remain outside that: **the Doubles F zero** — the
-  Singles side is observed, the Doubles side has never been reproduced; see the F note above —
-  and the **base curve above level 27**, the one place the formula still extrapolates — see
-  below.
+  **Which cells are measured, and which are not (2026-08-14).** All sixteen plate × type cells
+  are measured, the full Singles ladder **SSS+ → F** is measured, and Doubles is measured at
+  every rung except F. Two inferences remain: **the Doubles F 1.00** (pinned by
+  `DoublesFIsTheLastInferredRungAndContinuesTheBottomSteps`; the first imported Doubles F
+  settles it) and the **base curve above level 27** — see below.
 
-  **The ladder's real shape, now read rather than fitted.** Doubles runs −0.05 a rung from A+ all
-  the way down to C (1.35 · 1.30 · 1.25 · 1.20) and then takes a single **−0.10** step to D 1.10.
-  That one irregular step at the bottom is the whole story of the guesses this table used to
-  carry: extrapolating the uniform step produced the right A and the right B and the **wrong D**.
-  Do not describe the ladder as uniform — only the A+ → C stretch is.
+  **The ladder's real shape, now read rather than fitted.** Singles runs −0.05 a rung from A+
+  down through C and then **−0.10 per rung across the bottom: C 1.10 → D 1.00 → F 0.90**.
+  Doubles mirrors it one notch higher: −0.05 a rung from A+ to C (1.35 · 1.30 · 1.25 · 1.20),
+  then −0.10 to D 1.10 (and, inferred, −0.10 again to F 1.00). The widening bottom step is the
+  whole story of the guesses this table used to carry: extrapolating the uniform −0.05 produced
+  the right A and the right B and the **wrong D**, and the "exclusion" reading of F survived
+  only until someone actually played one. Do not describe the ladder as uniform — only the
+  A+ → C stretch is.
 
   **A on Doubles was a guess and is now measured — at exactly the guessed value.** Five import
   rows (2026-08-13/14) across four levels and three plates all imply 1.3000 and nothing else:
@@ -142,20 +144,23 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
 
   ⚠ **This one changed a shipped price**, unlike the A reading: a Doubles D was being paid
   `0.05 × base` too much (9 points on a D10). It only ever reached beginners — a D never survives
-  into a full top-50 — but that is the same population the passing-F bug hit, and they compound.
-  **Post-deploy: press "Recalculate Phoenix 2 Player Ratings."**
+  into a full top-50. **Post-deploy: press "Recalculate Phoenix 2 Player Ratings."** (Deploy-state
+  note: the F→zero change merged in #264 never deployed, so production priced F at 0.90 all
+  along — on Singles, the value the Monkey Fingers reading proved correct. Production's Doubles
+  D 1.15/F 0.90 still need this PR's 1.10/1.00.)
 
   **B on Doubles closed the same day, and that guess was right: 1.25 exactly.** *Danger & Danger*
-  D10 EG B at **227.16** = Base(10) 180 × 1.262, minus the 0.012 a Doubles Extreme Game pays. It
-  was the last interpolated cell in either table.
+  D10 EG B at **227.16** = Base(10) 180 × 1.262, minus the 0.012 a Doubles Extreme Game pays.
 
-  **How all four bottom readings were obtained, because it is the reusable part.** None came from
-  the elite grind — a B, C or D never survives into a full top-50 pool, which is exactly why the
-  cells stayed open for so long. They came from **a pool holding fewer than fifty charts**, where
-  every chart enters regardless of what it contributes. The Doubles C first arrived that way by
-  accident on a beginner's D12; the B, C and D were then played *deliberately* on D10s to close
-  the table. Anything still missing from this formula is reachable the same way: make a small
-  pool and play the case you need.
+  **How the bottom readings were obtained, because it is the reusable part.** None came from
+  the elite grind — a B, C, D or F never survives into a full top-50 pool, which is exactly why
+  these cells stayed open for so long. They came from **a pool holding fewer than fifty
+  charts**, where every chart enters regardless of what it contributes. The Doubles C first
+  arrived that way by accident on a beginner's D12; the Doubles B, C and D were then played
+  *deliberately* on D10s, and the Singles F that overturned the exclusion the same way on an
+  S12 (surviving the stage while scoring under 500k, F with a Marvelous Game plate). Anything
+  still missing from this formula is reachable the same way: make a small pool and play the
+  case you need.
 
   **The competing fit is now REFUTED, not merely declined — do not re-derive it.** The Singles
   ladder *widens* going down (steps 0.03/0.05/0.08/0.10/0.10) rather than holding a uniform step,
