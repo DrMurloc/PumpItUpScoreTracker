@@ -20,14 +20,13 @@ namespace ScoreTracker.Tests.DomainTests;
 ///     same 0.000 a Double does, so the community table's −0.010 stays refuted while its other
 ///     two singles values are now pinned below.
 ///     <para>
-///         The grade ladder splits by chart type as well, and as of 2026-08-14 every Singles
-///         rung SSS+ → F is a live read, Doubles everything but F. A passing F is the ladder's
-///         REAL BOTTOM RUNG, not an exclusion — that rule reversed twice in three days, and
-///         <see cref="PassingFsPriceAsTheBottomRungNotAnExclusion" /> carries the story. What
-///         remains unmeasured: the Doubles F
-///         (<see cref="DoublesFIsTheLastInferredRungAndContinuesTheBottomSteps" />) and the
-///         base curve above level 27
-///         (<see cref="TheTopOfTheBaseCurveIsExtrapolatedNotMeasured" />).
+///         The grade ladder splits by chart type as well, and as of 2026-08-14 EVERY rung of
+///         BOTH ladders SSS+ → F is a live read — the grade tables hold no inference at all,
+///         the bottom five cells closed by deliberately played small-pool charts. A passing F
+///         is the ladder's real bottom rung, not an exclusion — that rule reversed twice in
+///         three days, and <see cref="PassingFsPriceAsTheBottomRungNotAnExclusion" /> carries
+///         the story. The base curve above level 27 is the formula's one remaining
+///         extrapolation (<see cref="TheTopOfTheBaseCurveIsExtrapolatedNotMeasured" />).
 ///     </para>
 /// </summary>
 public sealed class Phoenix2PumbilityScoringTests
@@ -160,6 +159,10 @@ public sealed class Phoenix2PumbilityScoringTests
     // Singles C at a fourth level (Love is a Danger Zone pt. 2 S11 TG).
     [InlineData(ChartType.Single, 12, PhoenixLetterGrade.F, PhoenixPlate.MarvelousGame, 176.67)]
     [InlineData(ChartType.Single, 11, PhoenixLetterGrade.C, PhoenixPlate.TalentedGame, 209.76)]
+    // And the Doubles F that closed the table the same day: Get Your Groove On D10 SG,
+    // 181.44 = Base(10) 180 × (1.00 + 0.008) — the last grade cell in either ladder to be
+    // measured, landing exactly on the value its neighbours predicted.
+    [InlineData(ChartType.Double, 10, PhoenixLetterGrade.F, PhoenixPlate.SuperbGame, 181.44)]
     public void MatchesRealPerChartPumbilityObservedOnTheLiveSite(ChartType type, int level,
         PhoenixLetterGrade grade, PhoenixPlate plate, double expected)
     {
@@ -173,8 +176,7 @@ public sealed class Phoenix2PumbilityScoringTests
     // Single pays MORE on the two split plates and LESS on all seven split grades, and the
     // grade gap widens going down the ladder until it PLATEAUS at −0.10 from C down — it does
     // not keep widening, which is what the D row read as while it was still extrapolated.
-    // Every row through D is a difference of two readings; the F row's doubles side is the one
-    // inferred value left, so that gap asserts the inference tracks the plateau, not a fact.
+    // Every row here is a difference of two live readings, F included.
     [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.ExtremeGame, 0.002)]
     [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.UltimateGame, 0.001)]
     [InlineData(PhoenixLetterGrade.AA, PhoenixPlate.RoughGame, -0.01)]
@@ -272,8 +274,8 @@ public sealed class Phoenix2PumbilityScoringTests
         // the sub-10 rule wearing an F grade, and the ruling had no observation behind it at
         // all. The deliberately played Monkey Fingers S12 F MG (see the golden rows) then priced
         // NONZERO at exactly Base(13) × (0.90 + 0.006): a passing F is the ladder's real bottom
-        // rung. The Singles 0.90 is that measurement; the Doubles 1.00 is inferred — see
-        // DoublesFIsTheLastInferredRungAndContinuesTheBottomSteps.
+        // rung. Both types are measurements now — the Doubles 1.00 closed the same day on Get
+        // Your Groove On D10 SG (also in the golden rows).
         var pricedBase = ScoringConfiguration.Phoenix2PricedBase(type, DifficultyLevel.From(level));
 
         var result = Scoring().GetScore(type, DifficultyLevel.From(level),
@@ -282,30 +284,14 @@ public sealed class Phoenix2PumbilityScoringTests
         Assert.Equal(pricedBase * expectedMultiplier, result, 2);
     }
 
-    [Fact]
-    public void DoublesFIsTheLastInferredRungAndContinuesTheBottomSteps()
-    {
-        // NOT an observation — no Double has ever been priced at F, so this is the one cell in
-        // either grade table without a live row behind it. Two independent arguments land on
-        // 1.00: the measured Singles ladder steps D → F by −0.10, and the Singles-vs-Doubles
-        // gap plateaus at −0.10 across C and D. Unlike the old exclusion, telemetry can now
-        // settle it either way — an F row prices nonzero, so ObservePumbility logs it instead
-        // of skipping it, and the first imported Doubles F confirms or replaces this value.
-        const int level = 20;
-        var expected = ScoringConfiguration.Phoenix2BaseRating(DifficultyLevel.From(level)) * 1.00;
-
-        Assert.Equal(expected,
-            Contribution(ChartType.Double, level, PhoenixLetterGrade.F, PhoenixPlate.RoughGame), 2);
-    }
-
     [Theory]
     [InlineData(28, 290)]
     [InlineData(29, 300)]
     public void TheTopOfTheBaseCurveIsExtrapolatedNotMeasured(int level, double extrapolatedBase)
     {
-        // The successor to a ratchet that used to guard the interpolated grade rungs — all of
-        // those but the Doubles F (which has its own pin) are live readings now, so the
-        // mechanism also covers the other thing that still is not one: the top of the curve.
+        // The successor to a ratchet that used to guard the interpolated grade rungs — every
+        // one of those is a live reading now, so the mechanism guards the one thing in the
+        // formula that still is not: the top of the base curve.
         //
         // Base holds 130 + 5L, plus 5 more per level past 24, everywhere it has been observed:
         // levels 10 through 27. Nothing above 27 has ever been priced, because the only Phoenix 2

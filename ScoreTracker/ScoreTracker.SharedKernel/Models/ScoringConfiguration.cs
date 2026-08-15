@@ -516,25 +516,21 @@ namespace ScoreTracker.SharedKernel.Models
             // down from C is therefore DOUBLE the −0.05 the ladder holds higher up, which is what
             // made the uniform-step extrapolation wrong rather than merely unlucky.
             config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.10;
-            // INFERRED, not observed — and F's history demands the label more than any other
-            // cell. A passing F IS a rung: the "F is an exclusion, prices at zero" rule
-            // (2026-08-12) was refuted on 2026-08-14 by a deliberately played Singles F priced
-            // nonzero on the breakdown page, and the observation that had seemed to support the
-            // zero turned out to be the sub-10 exclusion wearing an F grade. No Double has ever
-            // been priced at F, so this continues the two steps that surround it — D → F is
-            // −0.10 on the measured Singles ladder, and the Singles-vs-Doubles gap plateaus at
-            // −0.10 across C and D — both of which land on 1.00. A live Doubles F replaces it
-            // outright, and CAN now arrive by telemetry: F rows price nonzero, so the observer
-            // no longer skips them.
+            // MEASURED, one row, and the cell with the strangest history in the table: F shipped
+            // interpolated at 0.90, was ruled an exclusion pricing zero (2026-08-12), had the
+            // ruling reversed by a deliberately played Singles F (2026-08-14 — the zero that had
+            // supported it was the sub-10 exclusion wearing an F grade), and closed the same day
+            // when Get Your Groove On D10 SG F priced 181.44 = Base(10) 180 × (1.00 + 0.008),
+            // exact to the cent — landing on the value the surrounding steps predicted. A
+            // passing F is the ladder's real bottom rung on both types.
             config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.00;
 
             // What a Single reads instead, wherever the two types disagree. Every value here is
             // a live per-chart read off the official breakdown page, and the bracketed count is
             // how many independent rows imply that value and no other. Since the 2026-08-14
-            // readings closed the Doubles bottom, every rung of the Singles ladder SSS+ → F is
-            // a live read, and on Doubles everything but F is — see the F entry above for the
-            // one inference left. AA+ and above land identically on both types, which is why
-            // they are absent.
+            // readings closed both bottoms, EVERY rung of BOTH ladders SSS+ → F is a live read —
+            // the grade tables hold no inference at all. AA+ and above land identically on both
+            // types, which is why they are absent.
             config.SinglesLetterGradeModifiers = new Dictionary<PhoenixLetterGrade, double>
             {
                 [PhoenixLetterGrade.AA] = 1.36, // 42 rows

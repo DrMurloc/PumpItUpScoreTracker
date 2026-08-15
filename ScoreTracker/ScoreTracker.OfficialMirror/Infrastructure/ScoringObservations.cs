@@ -8,17 +8,14 @@ namespace ScoreTracker.OfficialMirror.Infrastructure;
 /// <summary>
 ///     Instrumentation (2026-08-08): logs the score→grade and per-chart PUMBILITY observations
 ///     that fly past during an import. Every constant it was built to settle — the Superb Game
-///     plate bonus, the grade ladders on both types, the C/D/F score floors — is settled as of
-///     2026-08-14, and it stays in anyway, because it is now the standing tripwire for the two
-///     things no deliberate play has been able to reach (owner, 2026-08-14):
+///     plate bonus, the grade ladders on both types end to end, the C/D/F score floors — is
+///     settled as of 2026-08-14, and it stays in anyway, because it is the standing tripwire
+///     for the one thing no deliberate play can reach (owner, 2026-08-14):
 ///     <para>
-///         <b>Base(28) and Base(29)</b>, extrapolated to 290/300 and never priced — the first
-///         import whose pool carries a level-28 or -29 chart logs the one row that solves the
-///         base outright, level and grade and plate and official value all on the line. And the
-///         <b>Doubles F multiplier</b>, inferred at 1.00 since the 2026-08-14 reversal proved a
-///         passing F prices as a real rung (Singles 0.90, measured): F rows price nonzero, so
-///         the first imported Doubles F logs like any other row and settles the cell either
-///         way. Tear this out only when those are closed or abandoned.
+///         <b>Base(28) and Base(29)</b>, extrapolated to 290/300 and never priced — the five
+///         charts up there are beyond deliberate reach, so the first import whose pool carries
+///         one logs the row that solves the base outright, level and grade and plate and
+///         official value all on the line. Tear this out only when that is closed or abandoned.
 ///     </para>
 ///     <para>
 ///         Two properties keep it safe on the import path. It does <b>no I/O</b> — every method
@@ -110,7 +107,7 @@ internal static class ScoringObservations
             // Zero is how the page prices a broken, co-op or sub-10 chart. Those say nothing
             // about a multiplier, and dividing by a base we never applied would invent one.
             // A passing F is NOT in that list — it prices nonzero (the 2026-08-14 reversal),
-            // so F rows flow through and this instrument can settle the inferred Doubles F.
+            // so F rows flow through like any other.
             if (entry.Value <= 0 || entry.Grade == null) continue;
 
             var plate = entry.Plate ?? PhoenixPlate.RoughGame;
