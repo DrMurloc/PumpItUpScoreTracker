@@ -183,6 +183,12 @@ public static class WidgetRegistry
                 },
             RefreshIcon: Icons.Material.Filled.Shuffle,
             RefreshTitleKey: "Shuffle suggestions",
+            // Shuffle only where a re-roll changes the hand: Hot Streak is deterministic
+            // (seeds newest-first, targets by similarity), so the button would lie there.
+            // Pumbility Push samples its pool, so it keeps it — and the Title Hunt fallback
+            // inherits that sampling on Phoenix 2.
+            ShowRefresh: json =>
+                WidgetConfigJson.Read<SuggestedChartsConfig>(json).Goal != SuggestedGoal.HotStreak,
             RefreshOnScoreImport: true),
         new("by-level-breakdown",
             "By-Level Breakdown",

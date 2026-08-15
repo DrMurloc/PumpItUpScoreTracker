@@ -233,7 +233,7 @@ else
         _mix = config.Mix != null && Supported.Contains(config.Mix.Value) ? config.Mix.Value
             : Supported.Contains(EffectiveMix) ? EffectiveMix : MixEnum.Phoenix;
 
-        var categories = SuggestedGoals.EffectiveCategories(config);
+        var categories = SuggestedGoals.EffectiveCategories(config, _mix);
         var recommendations = (await Mediator.Send(new GetRecommendedChartsQuery(
                 config.ChartType, LevelOffset: 0, _mix,
                 Categories: categories.ToHashSet(),

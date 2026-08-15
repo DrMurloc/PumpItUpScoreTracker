@@ -25,6 +25,12 @@
     [Parameter] public EventCallback<(string ConfigJson, int ConfigVersion)> OnSave { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
 
+    /// <summary>What "no mixes configured" resolves to, from the dialog's cascade — so the
+    /// checkboxes show the mix whose data the widget is actually drawing (owner field test:
+    /// a fresh widget showed Phoenix checked while rendering Phoenix 2).</summary>
+    [CascadingParameter(Name = "EffectiveMix")]
+    public MixEnum? EffectiveMix { get; set; }
+
     private bool _phoenix;
     private bool _phoenix2;
     private int _rangeMonths;
@@ -35,8 +41,12 @@
     {
         var config = WidgetConfigJson.Read<CompetitiveLevelConfig>(Widget.ConfigJson);
         var mixes = config.Mixes ?? new List<MixEnum>();
-        _phoenix = !mixes.Any() || mixes.Contains(MixEnum.Phoenix);
-        _phoenix2 = mixes.Contains(MixEnum.Phoenix2);
+        // Null mixes = follow the current mix — mirror the widget's own resolution (Phoenix 2
+        // when that's current, Phoenix for anything else) instead of defaulting the display
+        // to Phoenix while the graph draws something else.
+        var effective = EffectiveMix == MixEnum.Phoenix2 ? MixEnum.Phoenix2 : MixEnum.Phoenix;
+        _phoenix = mixes.Contains(MixEnum.Phoenix) || (!mixes.Any() && effective == MixEnum.Phoenix);
+        _phoenix2 = mixes.Contains(MixEnum.Phoenix2) || (!mixes.Any() && effective == MixEnum.Phoenix2);
         _rangeMonths = config.RangeMonths;
         _showSingles = config.ShowSingles;
         _showDoubles = config.ShowDoubles;

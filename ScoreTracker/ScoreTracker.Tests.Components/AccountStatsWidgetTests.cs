@@ -47,8 +47,6 @@ public sealed class AccountStatsWidgetTests : ComponentTestBase
                 SinglesRating: 852, SinglesScore: 900000, SinglesLevel: 21.3,
                 DoublesRating: 774, DoublesScore: 880000, DoublesLevel: 19.9,
                 CompetitiveLevel: 20.61, SinglesCompetitiveLevel: 21.34, DoublesCompetitiveLevel: 19.87));
-        _mediator.Setup(m => m.Send(It.IsAny<GetPlayerHistoryQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<PlayerRatingRecord>());
         Services.AddSingleton(_mediator.Object);
         Services.AddSingleton(_users.Object);
         Services.AddScoped<CommunityGlowReader>();
@@ -57,14 +55,15 @@ public sealed class AccountStatsWidgetTests : ComponentTestBase
         this.RenderInteractive();
     }
 
-    private IRenderedComponent<PumbilityWidget> Render(string size, string configJson = "{}")
+    private IRenderedComponent<PumbilityWidget> Render(string size, string configJson = "{}",
+        MixEnum mix = MixEnum.Phoenix)
     {
         var widget = new HomePageWidgetRecord(Guid.NewGuid(), "pumbility", null, 0, size, configJson, 1);
         return base.Render(builder =>
         {
             builder.OpenComponent<PumbilityWidget>(0);
             builder.AddAttribute(1, nameof(PumbilityWidget.Widget), widget);
-            builder.AddAttribute(2, nameof(PumbilityWidget.EffectiveMix), MixEnum.Phoenix);
+            builder.AddAttribute(2, nameof(PumbilityWidget.EffectiveMix), mix);
             builder.CloseComponent();
         }).FindComponent<PumbilityWidget>();
     }
@@ -105,6 +104,29 @@ public sealed class AccountStatsWidgetTests : ComponentTestBase
         Assert.Contains("19.87", cut.Markup);         // doubles competitive level
         // 1x1 is stats only — no match list.
         Assert.Empty(cut.FindAll(".dash-acct-matches"));
+        // The weekly delta left for the Sessions page (owner, 2026-08-14), and the
+        // history query that existed only to compute it left with it.
+        Assert.Empty(cut.FindAll(".dash-stat-delta"));
+        _mediator.Verify(m => m.Send(It.IsAny<GetPlayerHistoryQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public void Phoenix2WearsTheLevelGemBesideTheTotal()
+    {
+        // 868 total sits below the 10,000 BRONZE floor → the UNRANKED rung, index 0.
+        var cut = Render("1x1", mix: MixEnum.Phoenix2);
+
+        var badge = Assert.Single(cut.FindAll(".pumbility-level-badge"));
+        Assert.Contains("pumbility/p2/pumbility_00.png", badge.GetAttribute("src"));
+    }
+
+    [Fact]
+    public void PhoenixHasNoLadderAndWearsNoGem()
+    {
+        var cut = Render("1x1");
+
+        Assert.Empty(cut.FindAll(".pumbility-level-badge"));
     }
 
     [Fact]

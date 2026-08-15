@@ -125,7 +125,8 @@ Three render surfaces consume the one rule:
    (`SignificantWin.Rank` carries the badge index, a new `PoolValue` the pool), rendered by
    `CommunityHighlightsWidget` and `RivalHighlightsFeed`. `PlayerHighlightSchema` bumps to v3 so
    pre-level summaries read as stale and regenerate on their next import (v2 did the same for
-   folder standings).
+   folder standings). Feed rows shortened 2026-08-14 (the feeds' short-form pass): the row is the
+   badge + rung name; "Reached …" and the pool value ride the tooltip.
 
 ## 6. Storage and mirroring (Slice 4)
 

@@ -87,6 +87,15 @@ public sealed record WidgetDescriptor(
 Verticals contribute *data* (contract queries, precompute jobs); Web contributes the descriptor +
 components. A future vertical (Rivals) adds descriptors without touching shell code (D9).
 
+The descriptor has since grown optional config-aware hooks beyond this sketch: `DynamicNameKey`
+(instance titles follow config), `DrawerPresets`, the refresh action (`RefreshIcon`/`RefreshTitleKey`/
+`RefreshOnScoreImport`), and `ShowRefresh` (2026-08-14) — a predicate the host consults so a goal
+whose content is deterministic doesn't render a shuffle that re-rolls into the identical list.
+The **config dialog** also cascades the page's effective mix as a named `CascadingValue`
+(`Name="EffectiveMix"`, `MixEnum?`) — panels whose display depends on what "follow current mix"
+resolves to opt in via `[CascadingParameter]`; a dictionary parameter can't do this, because
+`DynamicComponent` throws on a parameter a panel didn't declare.
+
 ### 2.3 Widget lifecycle contract (D14)
 
 Every render component must provide:

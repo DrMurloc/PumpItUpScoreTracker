@@ -183,12 +183,6 @@ namespace ScoreTracker.SharedKernel.Models
                     // along), and the grade multiplier and plate bonus combine ADDITIVELY
                     // before multiplying the base.
                     if (Mix == MixEnum.Phoenix2 && (int)level < 10) return 0;
-                    // An F contributes nothing even when the stage was PASSED. This has to be a
-                    // return rather than a zero in the grade table, because the plate bonus is
-                    // added to the grade rather than multiplied by it — an F with any plate but
-                    // Rough Game would otherwise still pay out.
-                    if (Mix == MixEnum.Phoenix2 && score.LetterGradeFor(Mix) == PhoenixLetterGrade.F)
-                        return 0;
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration,
                         includeLevelOverride);
                     if (Mix == MixEnum.Phoenix2 && chartType == ChartType.Single && result > 0)
@@ -294,10 +288,10 @@ namespace ScoreTracker.SharedKernel.Models
         ///         Measured from a bare base of ×1.00 rather than from a grade, so the level part
         ///         is the chart's own value and the grade part is everything the score adds on
         ///         top (docs/design/pumbility-overhaul.md D16). On Phoenix 1 that reference is
-        ///         also AA, whose modifier is exactly 1.0. On Phoenix 2 nothing that contributes
-        ///         scores below it — an F contributes nothing at all, and the lowest rung that
-        ///         does is a Single's D at exactly 1.00 — so the grade part is zero at that one
-        ///         rung and positive at every other, never negative.
+        ///         also AA, whose modifier is exactly 1.0. On Phoenix 2 one rung sits below it:
+        ///         a Single's D is exactly 1.00 and a Single's F is 0.90, so a passing F's grade
+        ///         part is slightly NEGATIVE — the score genuinely subtracts from the chart's
+        ///         bare value there, and any consumer rendering the parts must tolerate that.
         ///     </para>
         /// </summary>
         public ScoreContribution Decompose(Chart chart, PhoenixScore score, PhoenixPlate plate,
@@ -323,8 +317,6 @@ namespace ScoreTracker.SharedKernel.Models
                 case CalculationType.GradePlusPlate:
                 {
                     if (Mix == MixEnum.Phoenix2 && (int)chart.Level < 10) return default;
-                    if (Mix == MixEnum.Phoenix2 && score.LetterGradeFor(Mix) == PhoenixLetterGrade.F)
-                        return default;
                     var scoreless = GetScorelessScore(chart, includeLevelOverride);
                     if (Mix == MixEnum.Phoenix2 && chart.Type == ChartType.Single && scoreless > 0)
                         scoreless += (int)chart.Level + 1 > 24 ? 10 : 5;
@@ -500,40 +492,57 @@ namespace ScoreTracker.SharedKernel.Models
             // out to have been a doubles observation rather than stale tuning.
             config.LetterGradeModifiers[PhoenixLetterGrade.AA] = 1.37;
             config.LetterGradeModifiers[PhoenixLetterGrade.APlus] = 1.35;
-            // INFERRED, not observed. Exactly one Double rung below A+ has ever been priced —
-            // C, three steps down — so these two fill the gap at the uniform −0.05 step, which
-            // is the only even spacing that lands on that reading. A live Double row at either
-            // grade replaces the value outright: they are placeholders that happen to be
-            // self-consistent, not measurements.
+            // MEASURED. Five import-telemetry rows, at four levels and on three plates, every one
+            // of them implying this value and no other: a D24 MG at 326.50 = Base(24) 250 × 1.306,
+            // a D25 RG at 338.00 = 260 × 1.300, a D26 FG at 351.54 = 270 × 1.302 and a D27 FG at
+            // 364.56 = 280 × 1.302. It was interpolated before those rows arrived and they landed
+            // exactly on the guess, which is why the step below is now anchored at both ends.
             config.LetterGradeModifiers[PhoenixLetterGrade.A] = 1.30;
+            // MEASURED, and like A it landed on exactly the value that had been interpolated
+            // here. A D10 EG B at 227.16 = Base(10) 180 × 1.262, played to close the last open
+            // cell in this table. With it the ladder is read rather than fitted end to end, and
+            // its real shape is known: −0.05 a rung from A+ all the way down to C, then a single
+            // −0.10 at C → D. That one irregular step at the bottom is the whole story of the
+            // guesses — extrapolating the uniform step gave the right A and B and the wrong D.
             config.LetterGradeModifiers[PhoenixLetterGrade.B] = 1.25;
             // OBSERVED, one row: a D12 MG C at 229.14 = Base(12) 190 × (1.20 + 0.006). Solving
             // the row the other way round demands a 0.106 plate bonus, which nothing on either
             // plate table comes near, so the grade is what this row measures.
             config.LetterGradeModifiers[PhoenixLetterGrade.C] = 1.20;
-            // INFERRED on the same −0.05 step as A and B above.
-            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.15;
-            // An F contributes NOTHING on either type — an exclusion like the sub-10 rule and
-            // the stage break, not the bottom rung of the ladder. The zero keeps this table
-            // honest for anything reading it directly, but what enforces the rule is the guard
-            // in GetScore: grade and plate ADD in this formula, so a zero multiplier on its own
-            // would still pay out the plate bonus.
-            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 0.00;
+            // MEASURED, and it REFUTED the 1.15 this cell used to extrapolate to. A D10 MG D at
+            // 199.08 = Base(10) 180 × 1.106, read off the official breakdown page beside a C on
+            // the same level and plate (217.08), so the two differ by grade alone: the 18.00
+            // between them is 0.10 of base whatever the plate turns out to be worth. The step
+            // down from C is therefore DOUBLE the −0.05 the ladder holds higher up, which is what
+            // made the uniform-step extrapolation wrong rather than merely unlucky.
+            config.LetterGradeModifiers[PhoenixLetterGrade.D] = 1.10;
+            // MEASURED, one row, and the cell with the strangest history in the table: F shipped
+            // interpolated at 0.90, was ruled an exclusion pricing zero (2026-08-12), had the
+            // ruling reversed by a deliberately played Singles F (2026-08-14 — the zero that had
+            // supported it was the sub-10 exclusion wearing an F grade), and closed the same day
+            // when Get Your Groove On D10 SG F priced 181.44 = Base(10) 180 × (1.00 + 0.008),
+            // exact to the cent — landing on the value the surrounding steps predicted. A
+            // passing F is the ladder's real bottom rung on both types.
+            config.LetterGradeModifiers[PhoenixLetterGrade.F] = 1.00;
 
             // What a Single reads instead, wherever the two types disagree. Every value here is
             // a live per-chart read off the official breakdown page, and the bracketed count is
-            // how many independent rows imply that value and no other — so the whole singles
-            // ladder is measured, where its doubles counterpart below A+ mostly is not. AA+ and
-            // above land identically on both types, which is why they are absent.
+            // how many independent rows imply that value and no other. Since the 2026-08-14
+            // readings closed both bottoms, EVERY rung of BOTH ladders SSS+ → F is a live read —
+            // the grade tables hold no inference at all. AA+ and above land identically on both
+            // types, which is why they are absent.
             config.SinglesLetterGradeModifiers = new Dictionary<PhoenixLetterGrade, double>
             {
                 [PhoenixLetterGrade.AA] = 1.36, // 42 rows
                 [PhoenixLetterGrade.APlus] = 1.33, // 4 rows
                 [PhoenixLetterGrade.A] = 1.28, // 4 rows
                 [PhoenixLetterGrade.B] = 1.20, // 2 rows
-                [PhoenixLetterGrade.C] = 1.10, // 3 rows, at levels 12, 15 and 18
-                [PhoenixLetterGrade.D] = 1.00 // 1 row
-                // F is absent deliberately — zero on both types, so there is nothing to override.
+                [PhoenixLetterGrade.C] = 1.10, // 4 rows, at levels 11, 12, 15 and 18
+                [PhoenixLetterGrade.D] = 1.00, // 1 row
+                // 1 row, played deliberately to settle whether a passing F is a rung at all:
+                // Monkey Fingers S12 F MG, official 176.67 = Base(13) 195 × (0.90 + 0.006),
+                // exact to the cent. It is — see the shared table's F entry for the reversal.
+                [PhoenixLetterGrade.F] = 0.90
             };
 
             // Plate bonuses (ADDITIVE terms, not multipliers). This table is what a Double

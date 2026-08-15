@@ -29,7 +29,6 @@ public sealed class PlayerHighlightSagaTests
     private readonly Mock<IPlayerHighlightRepository> _highlights = new();
     private readonly Mock<IPlayerStatsReader> _playerStats = new();
     private readonly Mock<IScoreReader> _scores = new();
-    private readonly Mock<ITitleRepository> _titles = new();
     private readonly Mock<IBus> _bus = new();
 
     // The capture logic lives in the capturer now; the saga just delegates + isolates failures.
@@ -41,7 +40,7 @@ public sealed class PlayerHighlightSagaTests
                 It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<IReadOnlyList<SignificantWin>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        return new(_charts.Object, _scores.Object, _titles.Object, _highlights.Object, _playerStats.Object,
+        return new(_charts.Object, _scores.Object, _highlights.Object, _playerStats.Object,
             new MemoryCache(new MemoryCacheOptions()), _bus.Object);
     }
 
@@ -54,9 +53,6 @@ public sealed class PlayerHighlightSagaTests
             .ReturnsAsync(new[] { new ChartScoreAggregate(chart.Id, activePlayers, activePlayers, pgHolders) });
         _scores.Setup(s => s.GetActiveUserIds(It.IsAny<MixEnum>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Enumerable.Range(0, activePlayers).Select(_ => Guid.NewGuid()).ToHashSet());
-        _titles.Setup(t => t.GetTitleAggregations(It.IsAny<MixEnum>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<TitleAggregationRecord>());
-        _titles.Setup(t => t.CountTitledUsers(It.IsAny<CancellationToken>())).ReturnsAsync(1000);
     }
 
     private static ScoreHighlightsCapturedEvent PgEvent(Guid userId, Guid chartId, string? plate = "Perfect Game") =>
