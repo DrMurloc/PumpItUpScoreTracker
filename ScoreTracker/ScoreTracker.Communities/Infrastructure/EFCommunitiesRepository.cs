@@ -241,12 +241,18 @@ namespace ScoreTracker.Communities.Infrastructure
             return rows.Select(r => new ChannelCommunityInfo(Name.From(r.Name), r.IsRegional, r.Culture)).ToArray();
         }
 
+        // "Clubs I belong to", which a ban ends — deliberately narrower than GetUserRoles below,
+        // which returns every row the user HOLDS, bans included, because the roster's Unban
+        // machinery and comment moderation need to see them. A ban retains its membership row to
+        // block rejoin; without this filter every "my communities" surface (directory, leaderboard
+        // scopes, feeds, rivals audience, recap, comment scopes) kept showing the club.
         public async Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var banned = nameof(CommunityRole.Banned);
             return (await (from cm in database.Set<CommunityMembershipEntity>()
-                where cm.UserId == userId
+                where cm.UserId == userId && cm.Role != banned
                 join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
                 join members in database.Set<CommunityMembershipEntity>() on c.Id equals members.CommunityId
                 group c by new { c.Id, c.Name, c.IsRegional, c.PrivacyType, cm.UserId }

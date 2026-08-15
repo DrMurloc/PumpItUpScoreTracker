@@ -172,6 +172,30 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ABanEndsBelongingButNotTheRowTheUnbanMachineryNeeds()
+    {
+        // The ban RETAINS its membership row to block rejoin, so the two reads deliberately
+        // diverge: GetCommunities ("clubs I belong to" — the directory, leaderboard scopes,
+        // feeds, rivals audience, recap, comment scopes) drops the club, while GetUserRoles
+        // ("rows I hold") keeps it — the roster's Unban button and comment moderation read roles.
+        var owner = Guid.NewGuid();
+        var banned = Guid.NewGuid();
+        var writer = BuildRepository();
+        var community = new Community("Clubhouse", owner, CommunityPrivacyType.Public,
+            new[] { owner, banned }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        community.Ban(owner, banned);
+        await writer.SaveCommunity(community, CancellationToken.None);
+
+        var belongs = await BuildRepository().GetCommunities(banned, CancellationToken.None);
+        var holds = await BuildRepository().GetUserRoles(banned, CancellationToken.None);
+
+        Assert.DoesNotContain(belongs, c => (string)c.CommunityName == "Clubhouse");
+        var row = Assert.Single(holds, r => (string)r.CommunityName == "Clubhouse");
+        Assert.Equal(CommunityRole.Banned, row.Role);
+    }
+
+    [Fact]
     public async Task GetPublicCommunitiesReturnsOnlyPublicAndPublicWithCodeCommunities()
     {
         var owner = Guid.NewGuid();

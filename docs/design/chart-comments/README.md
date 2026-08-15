@@ -102,12 +102,13 @@ have no moderator and would fall to the site admin by default — the opposite o
 Notes sits second rather than last so it holds a stable position: it is the one chip every signed-in
 player has, and it must not get pushed off the end by someone who joins six communities.
 
-The list comes from `GetMyCommunitiesQuery`, filtered the way `ChartLeaderboardScopes` filters it —
-`!IsRegional` **and** not the World community, which carries `IsRegional = 0` and would otherwise
-mean everybody — **plus one filter the leaderboard does not have: clubs you are banned from**. A ban
-*retains* its membership row to block rejoin, and `GetMyCommunitiesQuery` does not filter role, so
-"no membership, no community comments" has to be enforced where the chips are built or a banned
-member keeps the mic the mute would have taken.
+The list comes from `GetMyCommunitiesQuery`, filtered exactly the way `ChartLeaderboardScopes`
+already filters it — `!IsRegional` **and** not the World community, which carries `IsRegional = 0`
+and would otherwise mean everybody. A ban *retains* its membership row to block rejoin, and
+`GetMyCommunitiesQuery` filters those rows **at the source** (owner call at the bug-check round), so
+every "my communities" surface — this rail, the leaderboard scopes, the directory, feeds — drops a
+club the moment you are banned from it. `GetMyCommunityRolesQuery` deliberately still returns the
+row: the roster's Unban machinery and comment moderation read roles, bans included.
 
 ### Personal notes are an audience of one
 
@@ -431,9 +432,9 @@ One table, one scope:
   through old comments. **Delete always works**, and **votes are untouched**: a vote is not content.
   The site lock blocks the same three everywhere; a **personal note passes both**, because a note has
   no audience to protect.
-- A community **ban** blocks commenting — but *not* for free: the ban retains its membership row to
-  block rejoin, so the comment-scope read filters `Banned` explicitly (§2). A mute is its own row,
-  so it survives leaving and rejoining the club.
+- A community **ban** blocks commenting — enforced at the source: `GetMyCommunitiesQuery` drops
+  banned rows for every "my communities" surface at once (§2). A mute is its own row, so it
+  survives leaving and rejoining the club.
 - ⚠ Two Guid `*UserId` columns means `[PurgeKey(nameof(UserId))]` is required, exactly as on
   `CommunityMembership.GrantedByUserId`. Without it account deletion purges the wrong person.
 
