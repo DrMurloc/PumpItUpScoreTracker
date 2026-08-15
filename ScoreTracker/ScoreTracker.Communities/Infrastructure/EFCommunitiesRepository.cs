@@ -403,13 +403,13 @@ namespace ScoreTracker.Communities.Infrastructure
                 (CommunityPermission)entity.DefaultAdminPermissions, entity.DefaultLanguage);
         }
 
-        public async Task DeleteCommunity(Name communityName, CancellationToken cancellationToken)
+        public async Task<Guid?> DeleteCommunity(Name communityName, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var nameString = communityName.ToString();
             var entity = await database.Set<CommunityEntity>()
                 .FirstOrDefaultAsync(c => c.Name == nameString, cancellationToken);
-            if (entity == null) return;
+            if (entity == null) return null;
             var id = entity.Id;
 
             await database.Set<CommunityMembershipEntity>().Where(m => m.CommunityId == id)
@@ -425,6 +425,8 @@ namespace ScoreTracker.Communities.Infrastructure
 
             // The non-regional count is a cached front-door stat — evict so it reflects the deletion.
             _cache.Remove(CommunityCountCacheKey);
+
+            return id;
         }
 
         public async Task<IEnumerable<CommunityCompetitiveRangeRecord>> GetCompetitiveRanges(MixEnum mix,

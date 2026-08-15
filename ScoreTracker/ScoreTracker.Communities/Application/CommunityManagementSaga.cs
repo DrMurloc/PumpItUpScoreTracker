@@ -1,6 +1,8 @@
+using MassTransit;
 using MediatR;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
+using ScoreTracker.Communities.Contracts.Events;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Exceptions;
@@ -37,16 +39,18 @@ internal sealed class CommunityManagementSaga :
     IRequestHandler<GetCommunityNamesQuery, IReadOnlyDictionary<Guid, Name>>,
     IRequestHandler<GetCommunityRosterQuery, IEnumerable<CommunityMemberRecord>>
 {
+    private readonly IBus _bus;
     private readonly ICommunityRepository _communities;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
 
     public CommunityManagementSaga(ICommunityRepository communities, ICurrentUserAccessor currentUser,
-        IMediator mediator)
+        IMediator mediator, IBus bus)
     {
         _communities = communities;
         _currentUser = currentUser;
         _mediator = mediator;
+        _bus = bus;
     }
 
     public Task Handle(PromoteMemberCommand request, CancellationToken cancellationToken) =>
@@ -101,7 +105,13 @@ internal sealed class CommunityManagementSaga :
         // Deletion is a repository operation, not an aggregate state change — authorize here.
         if (community.RoleOf(_currentUser.User.Id) != CommunityRole.Creator)
             throw new CommunityPermissionException("Only the creator may delete the community.");
-        await _communities.DeleteCommunity(request.CommunityName, cancellationToken);
+        var deletedId = await _communities.DeleteCommunity(request.CommunityName, cancellationToken);
+
+        // The last moment the id/name pair exists — the row is already gone. Other verticals
+        // settle what THEY hold against the club off this fact: ChartComments archives the
+        // club's comments and purges its reports and mutes.
+        if (deletedId is { } id)
+            await _bus.Publish(new CommunityDeletedEvent(id, request.CommunityName), cancellationToken);
     }
 
     public async Task<CommunityRoleRecord> Handle(GetMyCommunityRoleQuery request,

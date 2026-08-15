@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MassTransit;
 using MediatR;
 using Moq;
 using ScoreTracker.Communities.Application;
 using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Commands;
+using ScoreTracker.Communities.Contracts.Events;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Communities.Domain;
 using ScoreTracker.Domain.Exceptions;
@@ -22,6 +24,7 @@ namespace ScoreTracker.Tests.ApplicationTests;
 
 public sealed class CommunityManagementSagaTests
 {
+    private readonly Mock<IBus> _bus = new();
     private readonly Mock<ICommunityRepository> _communities = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IMediator> _mediator = new();
@@ -30,7 +33,8 @@ public sealed class CommunityManagementSagaTests
     {
         _currentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(actingUserId).Build());
         _currentUser.SetupGet(u => u.IsLoggedIn).Returns(true);
-        return new CommunityManagementSaga(_communities.Object, _currentUser.Object, _mediator.Object);
+        return new CommunityManagementSaga(_communities.Object, _currentUser.Object, _mediator.Object,
+            _bus.Object);
     }
 
     private void GivenCommunity(Community community)
@@ -110,15 +114,40 @@ public sealed class CommunityManagementSagaTests
     }
 
     [Fact]
-    public async Task DeleteCommunityByTheCreatorDeletes()
+    public async Task DeleteCommunityByTheCreatorDeletesAndAnnouncesTheFact()
     {
         var creator = Guid.NewGuid();
+        var communityId = Guid.NewGuid();
         GivenCommunity(Community(creator));
+        _communities.Setup(c => c.DeleteCommunity(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(communityId);
 
         await Build(creator).Handle(new DeleteCommunityCommand(Name.From("Acme")), CancellationToken.None);
 
         _communities.Verify(c => c.DeleteCommunity(It.Is<Name>(n => (string)n == "Acme"),
             It.IsAny<CancellationToken>()), Times.Once);
+        // The event is how other verticals settle what THEY hold against the club — ChartComments
+        // archives its comments off this fact. Id and name both ride, because this is the last
+        // moment the pair exists.
+        _bus.Verify(b => b.Publish(It.Is<CommunityDeletedEvent>(e =>
+                e.CommunityId == communityId && (string)e.CommunityName == "Acme"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeletingNothingAnnouncesNothing()
+    {
+        // The repository returns null when no row matched — a race with another delete. A fact
+        // that did not happen is not published.
+        var creator = Guid.NewGuid();
+        GivenCommunity(Community(creator));
+        _communities.Setup(c => c.DeleteCommunity(It.IsAny<Name>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid?)null);
+
+        await Build(creator).Handle(new DeleteCommunityCommand(Name.From("Acme")), CancellationToken.None);
+
+        _bus.Verify(b => b.Publish(It.IsAny<CommunityDeletedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -131,6 +160,8 @@ public sealed class CommunityManagementSagaTests
         await Assert.ThrowsAsync<CommunityPermissionException>(() =>
             Build(member).Handle(new DeleteCommunityCommand(Name.From("Acme")), CancellationToken.None));
         _communities.Verify(c => c.DeleteCommunity(It.IsAny<Name>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _bus.Verify(b => b.Publish(It.IsAny<CommunityDeletedEvent>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
