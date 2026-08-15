@@ -66,7 +66,7 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   | B | **1.20** | **1.25** |
   | C | **1.10** | **1.20** |
   | D | **1.00** | **1.10** |
-  | F | **0.90** | *1.00 (inferred)* |
+  | F | **0.90** | **1.00** |
 
   Everything else is shared: the other six plates (RG 0.000 · FG 0.002 · TG 0.004 · MG 0.006 ·
   SG 0.008 · PG 0.020) and the top of the ladder (AA+ 1.39 · AAA 1.41 · AAA+ 1.43 · S 1.45 →
@@ -80,29 +80,26 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   Base(13) 195 × (0.90 + 0.006), exact to the cent. The 0.00 that had supported the exclusion
   turned out to be **the sub-10 rule wearing an F grade** — that chart was below level 10, so
   its zero said nothing about F at all. The 0.90 interpolation had been right the whole time.
-  Only a **break** and a **sub-10 chart** price at zero. Consequences: the Doubles F is
-  **inferred at 1.00** (the measured Singles D → F step is −0.10 and the type gap plateaus at
-  −0.10 across C and D; both arguments land there) — and unlike the old exclusion the telemetry
-  can settle it, because F rows price nonzero and `ScoringObservations` logs them like any
-  other row. The `/Pumbility/Phoenix1` bite also softens: a 450k–499k Phoenix 1 score (P1 D, P2
-  F) reprices to 0.90 × base rather than to nothing. And the decomposition's grade part goes
-  **negative** on a passing F — the only rung below the ×1.00 reference — which `Decompose`'s
-  consumers must tolerate.
+  Only a **break** and a **sub-10 chart** price at zero. The Doubles F was inferred at 1.00 for
+  a few hours and then **measured at exactly that**: *Get Your Groove On* D10 SG F, official
+  **181.44** = Base(10) 180 × (1.00 + 0.008), exact to the cent — the last grade cell in either
+  ladder to be read. The `/Pumbility/Phoenix1` bite also softens: a 450k–499k Phoenix 1 score
+  (P1 D, P2 F) reprices to 0.90 × base rather than to nothing. And the decomposition's grade
+  part goes **negative** on a passing F — the only rung below the ×1.00 reference — which
+  `Decompose`'s consumers must tolerate.
 
-  **Which cells are measured, and which are not (2026-08-14).** All sixteen plate × type cells
-  are measured, the full Singles ladder **SSS+ → F** is measured, and Doubles is measured at
-  every rung except F. Two inferences remain: **the Doubles F 1.00** (pinned by
-  `DoublesFIsTheLastInferredRungAndContinuesTheBottomSteps`; the first imported Doubles F
-  settles it) and the **base curve above level 27** — see below.
+  **Which cells are measured (2026-08-14): all of them.** All sixteen plate × type cells and
+  **every rung of both grade ladders SSS+ → F** are live per-chart readings — the grade tables
+  hold no inference at all. The one extrapolation left in the formula is the **base curve above
+  level 27** — see below.
 
   **The ladder's real shape, now read rather than fitted.** Singles runs −0.05 a rung from A+
   down through C and then **−0.10 per rung across the bottom: C 1.10 → D 1.00 → F 0.90**.
   Doubles mirrors it one notch higher: −0.05 a rung from A+ to C (1.35 · 1.30 · 1.25 · 1.20),
-  then −0.10 to D 1.10 (and, inferred, −0.10 again to F 1.00). The widening bottom step is the
-  whole story of the guesses this table used to carry: extrapolating the uniform −0.05 produced
-  the right A and the right B and the **wrong D**, and the "exclusion" reading of F survived
-  only until someone actually played one. Do not describe the ladder as uniform — only the
-  A+ → C stretch is.
+  then −0.10 per rung to D 1.10 and F 1.00. The widening bottom step is the whole story of the
+  guesses this table used to carry: extrapolating the uniform −0.05 produced the right A and
+  the right B and the **wrong D**, and the "exclusion" reading of F survived only until someone
+  actually played one. Do not describe the ladder as uniform — only the A+ → C stretch is.
 
   **A on Doubles was a guess and is now measured — at exactly the guessed value.** Five import
   rows (2026-08-13/14) across four levels and three plates all imply 1.3000 and nothing else:
@@ -147,7 +144,7 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   into a full top-50. **Post-deploy: press "Recalculate Phoenix 2 Player Ratings."** (Deploy-state
   note: the F→zero change merged in #264 never deployed, so production priced F at 0.90 all
   along — on Singles, the value the Monkey Fingers reading proved correct. Production's Doubles
-  D 1.15/F 0.90 still need this PR's 1.10/1.00.)
+  D 1.15/F 0.90 correct to 1.10/1.00 across #275/#276 and the Doubles-F measurement PR.)
 
   **B on Doubles closed the same day, and that guess was right: 1.25 exactly.** *Danger & Danger*
   D10 EG B at **227.16** = Base(10) 180 × 1.262, minus the 0.012 a Doubles Extreme Game pays.
@@ -157,10 +154,11 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   these cells stayed open for so long. They came from **a pool holding fewer than fifty
   charts**, where every chart enters regardless of what it contributes. The Doubles C first
   arrived that way by accident on a beginner's D12; the Doubles B, C and D were then played
-  *deliberately* on D10s, and the Singles F that overturned the exclusion the same way on an
-  S12 (surviving the stage while scoring under 500k, F with a Marvelous Game plate). Anything
-  still missing from this formula is reachable the same way: make a small pool and play the
-  case you need.
+  *deliberately* on D10s, the Singles F that overturned the exclusion the same way on an S12
+  (surviving the stage while scoring under 500k, F with a Marvelous Game plate), and the
+  Doubles F that finished the table on a D10 hours later. Anything still missing from this
+  formula is reachable the same way — except the top of the base curve, which is why that is
+  the one thing left.
 
   **The competing fit is now REFUTED, not merely declined — do not re-derive it.** The Singles
   ladder *widens* going down (steps 0.03/0.05/0.08/0.10/0.10) rather than holding a uniform step,
