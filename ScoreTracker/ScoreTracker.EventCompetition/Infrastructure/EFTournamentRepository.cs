@@ -18,10 +18,6 @@ namespace ScoreTracker.EventCompetition.Infrastructure
         IRequestHandler<GetTournamentRolesQuery, IEnumerable<UserTournamentRole>>,
         IRequestHandler<GetMyTournamentsQuery, IEnumerable<TournamentRoleListing>>
     {
-        // MoM is the only stamina event (D9) and its rules are fixed, so what the legacy rows
-        // stored per tournament is a constant here: a 1h45m window, repeats banned.
-        private static readonly TimeSpan MoMMaxTime = TimeSpan.FromHours(1) + TimeSpan.FromMinutes(45);
-
         private readonly IMemoryCache _memoryCache;
         private readonly IChartRepository _charts;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
@@ -66,6 +62,11 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             return season.StartsAt <= now && season.EndsAt > now;
         }
 
+        private static Uri? ParseUri(string? url)
+        {
+            return Uri.TryCreate(url, UriKind.Absolute, out var parsed) ? parsed : null;
+        }
+
         public async Task<IEnumerable<TournamentRecord>> GetAllTournaments(CancellationToken cancellationToken)
         {
             return await _memoryCache.GetOrCreateAsync(TourneyCacheKey, async o =>
@@ -87,7 +88,7 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                         0,
                         Enum.Parse<TournamentType>(t.Type),
                         t.Location, t.IsHighlighted,
-                        Uri.TryCreate(t.LinkOverride, UriKind.Absolute, out var url) ? (Uri?)url : null,
+                        ParseUri(t.LinkOverride),
                         t.StartDate,
                         t.EndDate,
                         false));
@@ -150,23 +151,27 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 .Where(l => l.SeasonId == board.SeasonId && l.MixId == board.MixId)
                 .ToDictionaryAsync(l => l.ChartId, l => l.Level, cancellationToken);
             var json = JsonSerializer.Deserialize<TournamentConfigurationJsonEntity>(board.ScoringConfig)
-                       ?? throw new Exception($"MoM board {board.Id} has no scoring configuration");
-            var scoring = json.To(snapshot).Scoring;
+                       ?? throw new InvalidOperationException(
+                           $"MoM board {board.Id} has no scoring configuration");
+            var frozen = json.To(snapshot);
             // The board pins the mix, so grading follows the board rather than defaulting to
             // Phoenix (§2.3) — a no-op for every Phoenix board, load-bearing once P2 boards
             // exist (Slice 5).
-            scoring.Mix = MixIds.ToEnum(board.MixId);
+            frozen.Scoring.Mix = MixIds.ToEnum(board.MixId);
 
+            // MaxTime and AllowRepeats come from the frozen config itself — every stored board
+            // carries 1h45m / no-repeats today, and reading them back means a session always
+            // replays under exactly the rules it was recorded under.
             return new TournamentConfiguration(board.Id,
                 BoardDisplayName(season, board, boardCount),
-                scoring,
+                frozen.Scoring,
                 IsCurrent(season),
                 true)
             {
                 StartDate = season.StartsAt,
                 EndDate = season.EndsAt,
-                MaxTime = MoMMaxTime,
-                AllowRepeats = false
+                MaxTime = frozen.MaxTime,
+                AllowRepeats = frozen.AllowRepeats
             };
         }
 
@@ -358,7 +363,7 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 var session = new TournamentSession(userId, tournamentConfig, mix);
                 foreach (var row in chartRows)
                     session.Add(charts[row.ChartId], row.Score, Enum.Parse<PhoenixPlate>(row.Plate), row.IsBroken);
-                if (Uri.TryCreate(entity.VideoUrl, UriKind.Absolute, out var videoUrl)) session.VideoUrl = videoUrl;
+                session.VideoUrl = ParseUri(entity.VideoUrl);
 
                 return session;
             });
@@ -404,8 +409,7 @@ namespace ScoreTracker.EventCompetition.Infrastructure
 
                     return new LeaderboardRecord(index + 1, x.Entity.UserId, x.Name, x.Entity.TotalScore,
                         TimeSpan.FromTicks(x.Entity.RestTime), x.Entity.AverageDifficulty, x.Entity.ChartsPlayed,
-                        x.Entity.VideoUrl == null ? null :
-                        Uri.TryCreate(x.Entity.VideoUrl, UriKind.Absolute, out var vidUrl) ? vidUrl : null)
+                        ParseUri(x.Entity.VideoUrl))
                     {
                         Session = session
                     };

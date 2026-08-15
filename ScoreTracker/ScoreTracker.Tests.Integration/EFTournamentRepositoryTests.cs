@@ -44,8 +44,11 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
     private EFTournamentRepository BuildRepository() => BuildRepository(Mock.Of<IChartRepository>());
 
     private EFTournamentRepository BuildRepository(IChartRepository charts) =>
+        BuildRepository(charts, Now);
+
+    private EFTournamentRepository BuildRepository(IChartRepository charts, DateTimeOffset now) =>
         new(new MemoryCache(new MemoryCacheOptions()), charts, _fixture.DbContextFactory,
-            Mock.Of<ICurrentUserAccessor>(), Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == Now));
+            Mock.Of<ICurrentUserAccessor>(), Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == now));
 
     /// <summary>
     ///     A season + board pair seeded the way the migration and the cycle write them; the
@@ -384,6 +387,36 @@ public sealed class EFTournamentRepositoryTests : IAsyncLifetime
         Assert.Equal(2, leaderboard[1].Place);
         Assert.Equal(weak, leaderboard[1].UserId);
         Assert.DoesNotContain(leaderboard, r => r.UserId == drafter);
+    }
+
+    [Fact]
+    public async Task LeaderboardBreaksAnExactTieByEarliestPublication()
+    {
+        // §1: ties never happen in practice, and when they do the earliest submission wins —
+        // so the session published first sits above the one that matched it later.
+        var seeder = new TestDataSeeder(_fixture.DbContextFactory);
+        var early = await seeder.SeedUserAsync();
+        var late = await seeder.SeedUserAsync();
+        var (_, boardId) = await SeedBoard(MixEnum.Phoenix, ChartType.Double);
+        var chart = BuildChart(Guid.NewGuid(), MixEnum.Phoenix, 20, ChartType.Double);
+        var chartRepo = ChartRepoReturning(MixEnum.Phoenix, chart);
+
+        var earlyRepo = BuildRepository(chartRepo.Object, Now);
+        var configuration = await earlyRepo.GetTournament(boardId, CancellationToken.None);
+        var earlySession = new TournamentSession(early, configuration);
+        earlySession.Add(chart, 990000, PhoenixPlate.SuperbGame, isBroken: false);
+        await earlyRepo.SaveSession(earlySession, CancellationToken.None);
+        var lateSession = new TournamentSession(late, configuration);
+        lateSession.Add(chart, 990000, PhoenixPlate.SuperbGame, isBroken: false);
+        await BuildRepository(chartRepo.Object, Now.AddHours(1)).SaveSession(lateSession, CancellationToken.None);
+
+        var leaderboard = (await BuildRepository(chartRepo.Object)
+            .GetLeaderboardRecords(boardId, CancellationToken.None)).ToArray();
+
+        Assert.Equal(2, leaderboard.Length);
+        Assert.Equal(leaderboard[0].TotalScore, leaderboard[1].TotalScore);
+        Assert.Equal(early, leaderboard[0].UserId);
+        Assert.Equal(late, leaderboard[1].UserId);
     }
 
     [Fact]

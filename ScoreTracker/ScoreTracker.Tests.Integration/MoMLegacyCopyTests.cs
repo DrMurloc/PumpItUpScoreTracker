@@ -1,8 +1,19 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Moq;
 using ScoreTracker.Data.Migrations;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.EventCompetition.Infrastructure;
+using ScoreTracker.EventCompetition.Infrastructure.Entities;
+using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Tests.Integration.Fixtures;
 using ScoreTracker.Tests.Integration.TestData;
+using ChartType = ScoreTracker.SharedKernel.Enums.ChartType;
 
 namespace ScoreTracker.Tests.Integration;
 
@@ -56,7 +67,16 @@ public sealed class MoMLegacyCopyTests : IAsyncLifetime
         var soloId = Guid.NewGuid();
         var winterId = Guid.NewGuid();
         var junkId = Guid.NewGuid();
-        const string config = @"{""LevelRatings"":{""20"":650},""AdjustToTime"":true}";
+        // A real config in the exact shape production rows carry — serialized through the same
+        // DTO — so the read-back half of this test exercises the true deserialization path.
+        var config = JsonSerializer.Serialize(TournamentConfigurationJsonEntity.From(
+            new TournamentConfiguration(doublesId, "legacy", new ScoringConfiguration(), false, true)
+            {
+                MaxTime = TimeSpan.FromMinutes(105),
+                AllowRepeats = false,
+                StartDate = PairStart,
+                EndDate = PairEnd
+            }));
 
         await SeedTournament(singlesId, "Copy Test 2 - Singles", config, PairStart, PairEnd);
         await SeedTournament(doublesId, "Copy Test 2 - Doubles", config, PairStart, PairEnd);
@@ -114,6 +134,35 @@ public sealed class MoMLegacyCopyTests : IAsyncLifetime
         Assert.Equal(4, await Scalar<int>(
             "SELECT COUNT(*) AS Value FROM scores.MoMBoard WHERE ScoringConfig = {0}", config));
 
+        // The copy → read seam: the rows the script just produced must reconstruct through
+        // the live repository — plate strings parse, ordinals hold, the frozen config
+        // deserializes, and the stored total survives as the board's number.
+        var domainChartA = BuildChart(chartA, 20, ChartType.Double);
+        var domainChartB = BuildChart(chartB, 15, ChartType.Single);
+        var chartRepo = new Mock<IChartRepository>();
+        chartRepo.Setup(c => c.GetCharts(MixEnum.Phoenix, null, null, It.IsAny<IEnumerable<Guid>?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { domainChartA, domainChartB });
+        var repository = new EFTournamentRepository(new MemoryCache(new MemoryCacheOptions()),
+            chartRepo.Object, _fixture.DbContextFactory, Mock.Of<ICurrentUserAccessor>(),
+            Mock.Of<IDateTimeOffsetAccessor>(d => d.Now == PairEnd));
+
+        var loaded = await repository.GetSession(doublesId, userId, CancellationToken.None);
+        Assert.Equal(2, loaded.Entries.Count);
+        Assert.Equal(chartA, loaded.Entries[0].Chart.Id);
+        Assert.Equal((PhoenixScore)990000, loaded.Entries[0].Score);
+        Assert.Equal(PhoenixPlate.SuperbGame, loaded.Entries[0].Plate);
+        Assert.Equal(chartB, loaded.Entries[1].Chart.Id);
+        Assert.True(loaded.Entries[1].IsBroken);
+        Assert.Equal("https://example.invalid/v", loaded.VideoUrl?.ToString());
+
+        var board = (await repository.GetLeaderboardRecords(doublesId, CancellationToken.None)).ToArray();
+        var placement = Assert.Single(board);
+        Assert.Equal(1, placement.Place);
+        Assert.Equal(userId, placement.UserId);
+        Assert.Equal(2300, placement.TotalScore);
+        Assert.Equal(2, placement.Session.Entries.Count);
+
         // The session: published at its season's end, rest time in ticks (13:43 = 823s),
         // total preserved, and the derived cache computed over the snapshot — balanced
         // (21.5 + 15.5) / 2 = 18.5, grades (14 + 9) / 2 = 11.5, folder min/max 15/20.
@@ -155,6 +204,14 @@ public sealed class MoMLegacyCopyTests : IAsyncLifetime
         Assert.Equal(1, await Scalar<int>("SELECT COUNT(*) AS Value FROM scores.MoMSession"));
         Assert.Equal(2, await Scalar<int>("SELECT COUNT(*) AS Value FROM scores.MoMSessionChart"));
         Assert.Equal(1, await Scalar<int>("SELECT COUNT(*) AS Value FROM scores.MoMChartLevel"));
+    }
+
+    private static Chart BuildChart(Guid chartId, int level, ChartType type)
+    {
+        var song = new Song($"song_{chartId:N}", SongType.Arcade,
+            new Uri("https://example.invalid/song.png"), TimeSpan.FromMinutes(2), "Artist", null);
+        return new Chart(chartId, MixEnum.Phoenix, song, type, DifficultyLevel.From(level),
+            MixEnum.Phoenix, null, null, new HashSet<Skill>());
     }
 
     private async Task SeedTournament(Guid id, string name, string configuration,
