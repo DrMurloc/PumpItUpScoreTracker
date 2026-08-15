@@ -19,6 +19,7 @@ public sealed class ChartCommentsModelContribution : IDbModelContribution
         modelBuilder.Entity<CommentConsentEntity>().ToTable("ChartCommentConsent");
         modelBuilder.Entity<CommentReportEntity>().ToTable("ChartCommentReport");
         modelBuilder.Entity<CommentRestrictionEntity>().ToTable("ChartCommentRestriction");
+        modelBuilder.Entity<CommentArchiveEntity>().ToTable("ChartCommentArchive");
         // One ACTIVE mute per (user, community), enforced where a saga race cannot reach it.
         // Filtered rather than whole-table unique because lifted rows are history and stack up.
         modelBuilder.Entity<CommentRestrictionEntity>()

@@ -19,6 +19,7 @@ public static class ChartCommentsRegistrationExtensions
         services.AddTransient<ICommentConsentRepository, EFCommentConsentRepository>();
         services.AddTransient<ICommentReportRepository, EFCommentReportRepository>();
         services.AddTransient<ICommentRestrictionRepository, EFCommentRestrictionRepository>();
+        services.AddTransient<ICommentArchiveRepository, EFCommentArchiveRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddSingleton<IDbModelContribution, ChartCommentsModelContribution>();
         return services;
@@ -33,5 +34,6 @@ public static class ChartCommentsRegistrationExtensions
     public static void AddChartCommentsConsumers(this IRegistrationConfigurator configurator)
     {
         configurator.AddConsumer<AccountPurgeConsumer>();
+        configurator.AddConsumer<CommunityDeletionConsumer>();
     }
 }

@@ -483,6 +483,18 @@ comment it names**, and nothing else in the thread.
 case built for escalation — it is the site admin's queue, and escalated community comments simply
 arrive in it.
 
+### A deleted community archives its comments
+
+Deleting a club publishes `CommunityDeletedEvent(CommunityId, CommunityName)` — the last moment the
+id/name pair exists — and ChartComments settles what it holds (owner call, 2026-08-14): the club's
+comments move to `scores.ChartCommentArchive` with the name snapshot and an `ArchivedAt`, and
+everything that only meant something while the club lived goes — votes, revisions, **reports open
+and resolved** (a report on an archived comment is a row nobody can open), and the club's mutes.
+One transaction, idempotent, because the in-memory transport re-fires. Nothing renders the archive;
+it exists so a revival starts from real data, the never-drop-tables standard applied to a club's
+death. Archived rows stay in the account-purge manifest — words surviving a club's deletion must
+not survive their author's.
+
 The **shield glyph on a comment is the permission** — site admin sees it everywhere, a community
 admin only inside their own club, nobody else renders it. Report lives in the `⋯` for everyone
 signed in.

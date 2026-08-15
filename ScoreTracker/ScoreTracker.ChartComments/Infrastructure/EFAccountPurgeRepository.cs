@@ -25,10 +25,13 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
     ///     against the assembly, and <see cref="UserDataPurge" /> executes it — one list, so a
     ///     table cannot be declared without also being deleted. A report is the reporter's row
     ///     ([PurgeKey] on ReporterUserId — an open report vanishing with its reporter is
-    ///     accepted); a mute is the muted player's row, not the moderator's.
+    ///     accepted); a mute is the muted player's row, not the moderator's; an archived comment
+    ///     is still its author's words, and words surviving a club's death must not survive the
+    ///     author's deletion (blanket delete is safe there — nothing renders archives as threads).
     /// </summary>
     internal static readonly Type[] UserOwned =
     {
+        typeof(CommentArchiveEntity),
         typeof(CommentReportEntity),
         typeof(CommentRestrictionEntity)
     };
