@@ -483,7 +483,9 @@ chart type would then cost nothing.
 wholesale per the never-drop-tables standard.
 
 Eight legacy tournament rows collapse into **five seasons and eight boards** — and every one maps
-to a single chart type, so no "combined" board is needed:
+to a single chart type, so no "combined" board is needed. Verified against prod-synced data
+2026-08-14: the cleanup ran, Spring 2026 was pruned (an ended season with zero entries, D13), and
+Slice 0's catch-up created Summer 2026 on 2026-08-10, correctly highlighted:
 
 | Legacy tournament | Season | Year/Qtr | Board | Sessions |
 |---|---|---|---|---|
@@ -493,18 +495,31 @@ to a single chart type, so no "combined" board is needed:
 | MoM 2 – Doubles | / (same dates) | NULL | Phoenix · Double | 17 |
 | Winter 2025 – Singles | \ Winter 2025 | 2025 / 1 | Phoenix · Single | 5 |
 | Winter 2025 – Doubles | / | | Phoenix · Double | 11 |
-| Spring 2026 – Singles | \ Spring 2026 | 2026 / 2 | Phoenix · Single | 0 |
-| Spring 2026 – Doubles | / | | Phoenix · Double | 0 |
+| Summer 2026 – Singles | \ Summer 2026 | 2026 / 3 | Phoenix · Single | live |
+| Summer 2026 – Doubles | / | | Phoenix · Double | live |
 
 Notes for whoever writes it:
 
+- **The copy is predicate-driven, never this list.** Prod grows a season per quarter, so the
+  script selects on `IsMoM = 1` and excludes the junk signature (`EndDate < StartDate`, §9.1)
+  rather than naming rows. Singles/Doubles pairs sharing dates collapse into one season; each
+  legacy tournament's Guid becomes its board's Guid, which is what keeps every old URL resolving.
 - **Quarters are NULL for everything before Winter 2025.** MoM 2 ran June 8 → Aug 8, straddling
   Q2/Q3; the quarterly cadence only starts at Winter 2025.
-- **Spring 2026 will not exist** if Slice 0's prune ran — it is an ended season with zero
-  entries (D13).
+- **`PublishedAt` = the season's `EndsAt`** for every migrated session (owner, 2026-08-14).
+  `NULL` means draft, so all legacy sessions need a value and the old rows carry no timestamp of
+  any kind. The choice is arbitrary but deterministic, and it feeds only tie-breaks, which never
+  happen in practice.
+- **The frozen config is the `Tournament.Configuration` JSON column** (the serialized
+  `TournamentConfigurationJsonEntity`); the copy extracts the scoring portion into
+  `MoMBoard.ScoringConfig` verbatim, so historical sessions re-price byte-identically.
+- **`BonusPoints` exists only in newer `ChartEntries` JSON** (14 of 62 sessions); older entries
+  predate the field and coalesce to 0 — the base/bonus split is unrecoverable for them and
+  `SessionScore` stays the stored truth.
 - The 2023 "March of Murlocs" contains **one stray Singles play** among 566 Doubles. Copy it
   faithfully inside its entry rather than inventing a rule.
-- Verification data is not carried across except `VideoUrl` (D6). Zero photos exist to lose.
+- Verification data is not carried across except `VideoUrl` (D6). Zero photos exist to lose —
+  the two `PhotoVerification` rows in prod are orphans pointing at deleted tournaments.
 
 ---
 
@@ -517,10 +532,10 @@ re-ordered after Slice 1** (2026-08-11). What changed and why is under the table
 |---|---|---|
 | **0 — Stop the bleeding** ✅ *shipped* | Quarter map replaced with arithmetic; season year derived from the previous season with catch-up to the current quarter; seasons created highlighted. `MarchOfMurlocsHandler` only — no schema change. **Still owner-run: `mom-cleanup.sql`, including the empty-season prune.** | — |
 | **1 — Settle on mocks** ✅ *done* | UX/UI pass across the six surfaces. Design only, no code. D14–D22 and §11; the six mocks are checked in beside this doc. | 0 |
-| **R — The window predicate** *out of band, ship any time* | §2.9 only. One condition, the rest-time floor it implies, and regression tests. No schema, no UI, no scoring change, no dependency on anything below. **§2.8 is not in R and is not being fixed** — Phoenix 1 MoM scoring is frozen (owner, 2026-08-11). | — |
-| **2 — Own the data** | Five tables, model contribution, purge manifest, repository, migrate five seasons, cycle rewritten onto `MoMSeason`. **"Repointed" means the repository is swapped behind the old pages, not that they are rebuilt** — they are deleted in Slice 4 either way, and the point of the swap is to run the new tables under real traffic before the UI depends on them. | 1 |
+| **R — The window predicate** ✅ *shipped inside Slice 2* | §2.9 only. One condition, the rest-time floor it implies, and regression tests. No schema, no UI, no scoring change, no dependency on anything below. **§2.8 is not in R and is not being fixed** — Phoenix 1 MoM scoring is frozen (owner, 2026-08-11). Folded into Slice 2's PR rather than shipped alone (owner, 2026-08-14). | — |
+| **2 — Own the data** ✅ | Five tables, model contribution, purge manifest, repository, migrate the seasons, cycle rewritten onto `MoMSeason`. **"Repointed" means the repository is swapped behind the old pages, not that they are rebuilt** — they are deleted in Slice 4 either way, and the point of the swap is to run the new tables under real traffic before the UI depends on them. **D5 (verification removal) rides in this slice** (owner, 2026-08-14): `MoMSession` deliberately has no home for approval state, and dual-storage plumbing for a feature with zero photos ever attached would be built only to be deleted in 4a. Slice R rides here too. | 1 |
 | **3 — Timestamps** *was Slice 5* | Plumb `RecordedAt` through `OfficialRecordedScore` (§2.5). An OfficialMirror change; touches none of MoM's tables. | — |
-| **4a — Read surfaces** | Season, Session Breakdown, Past seasons dialog. The Stamina→MoM rename, verification removal (D5), the old pages deleted. | 2 |
+| **4a — Read surfaces** | Season, Session Breakdown, Past seasons dialog. The Stamina→MoM rename, the old pages deleted. (Verification removal moved up into Slice 2.) | 2 |
 | **4b — Write surfaces** | Submit — draft/publish lifecycle, minimal-click entry, the import with gap detection — and the Planner with named saved sets and CSV. | 2, 3 |
 | **4c — Discord card** | The fourth `DiscordFeedKind`, the card, `/piu feed mom`. | 2 |
 | **5 — Per-mix boards** *was Slice 3* | Four boards live, mix-correct grading and snapshots, PUMBILITY2+, `MixCapabilities` entry (D19), Phoenix 2 ungated. | 2, and the scoring session |

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Discord;
 using Discord.WebSocket;
 using ScoreTracker.Domain.Records;
@@ -101,7 +102,7 @@ public static class DiscordCommandTranslator
             else
             {
                 foreach (var leaf in current)
-                    options[leaf.Name] = leaf.Value?.ToString() ?? string.Empty;
+                    options[leaf.Name] = ValueText(leaf.Value);
                 break;
             }
         }
@@ -127,7 +128,7 @@ public static class DiscordCommandTranslator
                 or ApplicationCommandOptionType.SubCommandGroup)
                 path.Add(option.Name);
             else if (!option.Focused)
-                options[option.Name] = option.Value?.ToString() ?? string.Empty;
+                options[option.Name] = ValueText(option.Value);
 
         return (path, options);
     }
@@ -180,7 +181,16 @@ public static class DiscordCommandTranslator
     private static ApplicationCommandOptionType MapType(BotCommandOptionType type) => type switch
     {
         BotCommandOptionType.Integer => ApplicationCommandOptionType.Integer,
+        BotCommandOptionType.Number => ApplicationCommandOptionType.Number,
         BotCommandOptionType.Boolean => ApplicationCommandOptionType.Boolean,
         _ => ApplicationCommandOptionType.String
     };
+
+    /// <summary>
+    ///     An option value as the culture-invariant string the handlers parse back. Discord
+    ///     hands numeric options over as boxed numbers, and a decimal must not pick up the
+    ///     host's separator on the way to a parse that expects the invariant one.
+    /// </summary>
+    private static string ValueText(object? value) =>
+        Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
 }

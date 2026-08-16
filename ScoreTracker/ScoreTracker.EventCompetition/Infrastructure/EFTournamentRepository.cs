@@ -22,19 +22,50 @@ namespace ScoreTracker.EventCompetition.Infrastructure
         private readonly IChartRepository _charts;
         private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
         private readonly ICurrentUserAccessor _currentUser;
+        private readonly IDateTimeOffsetAccessor _dateTime;
 
         public EFTournamentRepository(IMemoryCache memoryCache, IChartRepository charts,
-            IDbContextFactory<ChartAttemptDbContext> factory, ICurrentUserAccessor currentUser)
+            IDbContextFactory<ChartAttemptDbContext> factory, ICurrentUserAccessor currentUser,
+            IDateTimeOffsetAccessor dateTime)
         {
             _factory = factory;
             _memoryCache = memoryCache;
             _charts = charts;
             _currentUser = currentUser;
+            _dateTime = dateTime;
         }
 
-        private static string TourneyCacheKey = $@"{nameof(EFTournamentRepository)}_Tournies";
+        // Internal: EFMoMRepository busts the listing cache when the cycle creates or prunes
+        // a season.
+        internal static readonly string TourneyCacheKey = $@"{nameof(EFTournamentRepository)}_Tournies";
         private static string TourneyIdCacheKey(Guid id) => $@"{nameof(EFTournamentRepository)}_Tourney_{id}";
 
+        /// <summary>
+        ///     Reconstructs the display name a legacy tournament row carried: the franchise
+        ///     prefix unless the season name already starts with it, and the chart-type suffix
+        ///     for quarterly or multi-board seasons — the two off-grid single-board seasons
+        ///     ("March of Murlocs Practice", "March of Murlocs") never had one.
+        /// </summary>
+        private static string BoardDisplayName(MoMSeasonEntity season, MoMBoardEntity board, int seasonBoardCount)
+        {
+            var baseName = season.Name.StartsWith("March of Murlocs", StringComparison.OrdinalIgnoreCase)
+                ? season.Name
+                : $"March of Murlocs {season.Name}";
+            return season.Quarter == null && seasonBoardCount == 1
+                ? baseName
+                : $"{baseName} - {(ChartType)board.ChartType}s";
+        }
+
+        private bool IsCurrent(MoMSeasonEntity season)
+        {
+            var now = _dateTime.Now;
+            return season.StartsAt <= now && season.EndsAt > now;
+        }
+
+        private static Uri? ParseUri(string? url)
+        {
+            return Uri.TryCreate(url, UriKind.Absolute, out var parsed) ? parsed : null;
+        }
 
         public async Task<IEnumerable<TournamentRecord>> GetAllTournaments(CancellationToken cancellationToken)
         {
@@ -42,24 +73,49 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(60);
                 await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-                var counts = (await database.Set<UserTournamentSessionEntity>().ToArrayAsync(cancellationToken))
-                    .GroupBy(uts => uts.TournamentId)
-                    .ToDictionary(g => g.Key, g => g.Count());
 
                 // Unlisted micro-tournaments are invisible here by design — every existing
                 // consumer (nav, /Tournaments, the API) wants the curated listing. Role
-                // holders reach them through GetMyTournamentsQuery instead.
-                return (await database.Set<TournamentEntity>().Where(t => !t.IsUnlisted)
+                // holders reach them through GetMyTournamentsQuery instead. MoM rows on the
+                // legacy table are excluded: they were copied onto the MoM* tables (Slice 2)
+                // and the boards below are their living successors. No live non-MoM
+                // tournament carries sessions, so the count column is MoM-only.
+                var tournaments = (await database.Set<TournamentEntity>()
+                        .Where(t => !t.IsUnlisted && !t.IsMoM)
                         .ToArrayAsync(cancellationToken)).Select(t =>
                     new TournamentRecord(t.Id,
                         t.Name,
-                        counts.TryGetValue(t.Id, out var count) ? count : 0,
+                        0,
                         Enum.Parse<TournamentType>(t.Type),
                         t.Location, t.IsHighlighted,
-                        Uri.TryCreate(t.LinkOverride, UriKind.Absolute, out var url) ? (Uri?)url : null,
+                        ParseUri(t.LinkOverride),
                         t.StartDate,
                         t.EndDate,
-                        t.IsMoM)).ToArray();
+                        false));
+
+                var seasons = await database.Set<MoMSeasonEntity>().ToArrayAsync(cancellationToken);
+                var boards = await database.Set<MoMBoardEntity>().ToArrayAsync(cancellationToken);
+                var counts = await database.Set<MoMSessionEntity>()
+                    .Where(s => s.PublishedAt != null)
+                    .GroupBy(s => s.BoardId)
+                    .Select(g => new { g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(g => g.Key, g => g.Count, cancellationToken);
+                var boardsPerSeason = boards.GroupBy(b => b.SeasonId).ToDictionary(g => g.Key, g => g.Count());
+
+                var boardRecords = from b in boards
+                    join s in seasons on b.SeasonId equals s.Id
+                    select new TournamentRecord(b.Id,
+                        BoardDisplayName(s, b, boardsPerSeason[s.Id]),
+                        counts.TryGetValue(b.Id, out var count) ? count : 0,
+                        TournamentType.Stamina,
+                        "Remote",
+                        IsCurrent(s),
+                        null,
+                        s.StartsAt,
+                        s.EndsAt,
+                        true);
+
+                return tournaments.Concat(boardRecords).ToArray();
             });
         }
 
@@ -69,12 +125,54 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromMinutes(60);
                 await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+
+                var board = await database.Set<MoMBoardEntity>()
+                    .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+                if (board != null) return await BoardConfiguration(database, board, cancellationToken);
+
                 var result = await database.Set<TournamentEntity>().Where(t => t.Id == id).SingleAsync(cancellationToken);
                 var snapshots = await GetScoringLevelSnapshot(id, cancellationToken);
                 return JsonSerializer.Deserialize<TournamentConfigurationJsonEntity>(result.Configuration)
                            ?.To(snapshots) ??
                        throw new Exception($"Tournament {id} was not configured properly");
             });
+        }
+
+        private async Task<TournamentConfiguration> BoardConfiguration(ChartAttemptDbContext database,
+            MoMBoardEntity board, CancellationToken cancellationToken)
+        {
+            var season = await database.Set<MoMSeasonEntity>()
+                .SingleAsync(s => s.Id == board.SeasonId, cancellationToken);
+            var boardCount = await database.Set<MoMBoardEntity>()
+                .CountAsync(b => b.SeasonId == board.SeasonId, cancellationToken);
+            // Delta rows only (§9.3): a chart with no row scores at folder level + 0.5, which
+            // is exactly what the scoring fallback does for a missing key — sparse is exact.
+            var snapshot = await database.Set<MoMChartLevelEntity>()
+                .Where(l => l.SeasonId == board.SeasonId && l.MixId == board.MixId)
+                .ToDictionaryAsync(l => l.ChartId, l => l.Level, cancellationToken);
+            var json = JsonSerializer.Deserialize<TournamentConfigurationJsonEntity>(board.ScoringConfig)
+                       ?? throw new InvalidOperationException(
+                           $"MoM board {board.Id} has no scoring configuration");
+            var frozen = json.To(snapshot);
+            // The board pins the mix, so grading follows the board rather than defaulting to
+            // Phoenix (§2.3) — a no-op for every Phoenix board, load-bearing once P2 boards
+            // exist (Slice 5).
+            frozen.Scoring.Mix = MixIds.ToEnum(board.MixId);
+
+            // MaxTime and AllowRepeats come from the frozen config itself — every stored board
+            // carries 1h45m / no-repeats today, and reading them back means a session always
+            // replays under exactly the rules it was recorded under.
+            return new TournamentConfiguration(board.Id,
+                BoardDisplayName(season, board, boardCount),
+                frozen.Scoring,
+                IsCurrent(season),
+                true)
+            {
+                StartDate = season.StartsAt,
+                EndDate = season.EndsAt,
+                MaxTime = frozen.MaxTime,
+                AllowRepeats = frozen.AllowRepeats
+            };
         }
 
         public async Task CreateOrSaveTournament(TournamentConfiguration tournament,
@@ -155,79 +253,79 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             _memoryCache.Remove(TourneyCacheKey);
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
 
-            var entity = await database.Set<UserTournamentSessionEntity>().FirstOrDefaultAsync(
-                uts => uts.TournamentId == session.TournamentId && uts.UserId == session.UsersId, cancellationToken);
+            // The submit flow edits "the" session — until Slice 4b's draft/publish lifecycle,
+            // that is the user's latest on the board (D16 allows many; this UI makes one).
+            var entity = await database.Set<MoMSessionEntity>()
+                .Where(s => s.BoardId == session.TournamentId && s.UserId == session.UsersId)
+                .OrderByDescending(s => s.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (!session.Entries.Any())
+            {
+                // Saving an emptied session is the delete (D17) — chart rows cascade.
+                if (entity != null)
+                {
+                    database.Set<MoMSessionEntity>().Remove(entity);
+                    await database.SaveChangesAsync(cancellationToken);
+                }
+
+                _memoryCache.Remove(CacheKey(session.TournamentId, session.UsersId));
+                return;
+            }
+
+            var board = await database.Set<MoMBoardEntity>()
+                .SingleAsync(b => b.Id == session.TournamentId, cancellationToken);
+            var mix = MixIds.ToEnum(board.MixId);
+            var snapshot = await database.Set<MoMChartLevelEntity>()
+                .Where(l => l.SeasonId == board.SeasonId && l.MixId == board.MixId)
+                .ToDictionaryAsync(l => l.ChartId, l => l.Level, cancellationToken);
+
+            var now = _dateTime.Now;
             if (entity == null)
             {
-                await database.Set<UserTournamentSessionEntity>().AddAsync(new UserTournamentSessionEntity
+                entity = new MoMSessionEntity
                 {
                     Id = Guid.NewGuid(),
+                    BoardId = session.TournamentId,
                     UserId = session.UsersId,
-                    TournamentId = session.TournamentId,
-                    MixId = MixIds.For(session.Mix),
-                    SessionScore = session.TotalScore,
-                    RestTime = session.CurrentRestTime,
-                    ChartsPlayed = session.Entries.Count(),
-                    AverageDifficulty = session.Entries.Average(e => e.Chart.Level),
-                    NeedsApproval = session.NeedsApproval,
-                    VideoUrl = session.VideoUrl?.ToString(),
-                    VerificationType = session.VerificationType.ToString(),
-                    ChartEntries = JsonSerializer.Serialize(session.Entries.Select(e => new SessionEntryEntity
-                    {
-                        ChartId = e.Chart.Id,
-                        IsBroken = e.IsBroken,
-                        Plate = e.Plate.ToString(),
-                        Score = e.Score,
-                        SessionScore = e.SessionScore,
-                        BonusPoints = e.BonusPoints
-                    }))
-                }, cancellationToken);
-            }
-            else
-            {
-                if (!session.Entries.Any())
-                {
-                    database.Set<UserTournamentSessionEntity>().Remove(entity);
-                }
-                else
-                {
-                    entity.MixId = MixIds.For(session.Mix);
-                    entity.SessionScore = session.TotalScore;
-                    entity.RestTime = session.CurrentRestTime;
-                    entity.NeedsApproval = session.NeedsApproval;
-                    entity.VerificationType = session.VerificationType.ToString();
-                    entity.ChartsPlayed = session.Entries.Count();
-                    entity.VideoUrl = session.VideoUrl?.ToString();
-                    entity.AverageDifficulty = session.Entries.Average(e => e.Chart.Level);
-                    entity.ChartEntries = JsonSerializer.Serialize(session.Entries.Select(e => new SessionEntryEntity
-                    {
-                        ChartId = e.Chart.Id,
-                        IsBroken = e.IsBroken,
-                        Plate = e.Plate.ToString(),
-                        Score = e.Score,
-                        SessionScore = e.SessionScore,
-                        BonusPoints = e.BonusPoints
-                    }));
-                }
+                    CreatedAt = now,
+                    // Publish-on-save: this flow has no draft concept and today's board ranks
+                    // a session the moment it is saved. NULL starts meaning draft in 4b.
+                    PublishedAt = now
+                };
+                await database.Set<MoMSessionEntity>().AddAsync(entity, cancellationToken);
             }
 
-            var existingPhotos = await database.Set<PhotoVerificationEntity>()
-                .Where(p => p.TournamentId == session.TournamentId && p.UserId == session.UsersId)
-                .ToArrayAsync(cancellationToken);
+            // Everything below PublishedAt is a derived cache of the chart rows (§6),
+            // recomputed wholesale on every save. Balanced level is the season snapshot's
+            // override where one exists, folder level + 0.5 where none does (§9.3).
+            entity.UpdatedAt = now;
+            entity.TotalScore = session.TotalScore;
+            entity.ChartsPlayed = session.Entries.Count;
+            entity.RestTime = session.CurrentRestTime.Ticks;
+            entity.AverageDifficulty = session.Entries.Average(e =>
+                snapshot.TryGetValue(e.Chart.Id, out var balanced) ? balanced : (int)e.Chart.Level + 0.5);
+            entity.AverageGrade = session.Entries.Average(e => (int)e.Score.LetterGradeFor(mix));
+            entity.LowestLevel = (byte)session.Entries.Min(e => (int)e.Chart.Level);
+            entity.HighestLevel = (byte)session.Entries.Max(e => (int)e.Chart.Level);
+            entity.VideoUrl = session.VideoUrl?.ToString();
 
-            var newUrls = session.PhotoUrls.Select(u => u.ToString()).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var toDelete = existingPhotos.Where(p => !newUrls.Contains(p.PhotoUrl));
-            var toCreate = newUrls.Where(u =>
-                    !existingPhotos.Any(p => p.PhotoUrl.Equals(u, StringComparison.OrdinalIgnoreCase)))
-                .Select(p => new PhotoVerificationEntity
+            var existingCharts = await database.Set<MoMSessionChartEntity>()
+                .Where(c => c.SessionId == entity.Id).ToArrayAsync(cancellationToken);
+            database.Set<MoMSessionChartEntity>().RemoveRange(existingCharts);
+            await database.Set<MoMSessionChartEntity>().AddRangeAsync(session.Entries.Select(
+                (e, ordinal) => new MoMSessionChartEntity
                 {
-                    Id = Guid.NewGuid(),
-                    PhotoUrl = p,
-                    TournamentId = session.TournamentId,
-                    UserId = session.UsersId
-                });
-            database.Set<PhotoVerificationEntity>().RemoveRange(toDelete);
-            await database.Set<PhotoVerificationEntity>().AddRangeAsync(toCreate, cancellationToken);
+                    SessionId = entity.Id,
+                    Ordinal = ordinal,
+                    ChartId = e.Chart.Id,
+                    Score = e.Score,
+                    Plate = e.Plate.ToString(),
+                    IsBroken = e.IsBroken,
+                    SessionScore = e.SessionScore,
+                    BonusPoints = e.BonusPoints
+                }), cancellationToken);
+
             await database.SaveChangesAsync(cancellationToken);
             _memoryCache.Remove(CacheKey(session.TournamentId, session.UsersId));
         }
@@ -245,38 +343,27 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromDays(1);
 
                 await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-                var entity = await database.Set<UserTournamentSessionEntity>().FirstOrDefaultAsync(
-                    uts => uts.TournamentId == tournamentId && uts.UserId == userId, cancellationToken);
                 var tournamentConfig = await GetTournament(tournamentId, cancellationToken);
-                if (entity == null) return new TournamentSession(userId, tournamentConfig);
+                // The board pins the mix (set in BoardConfiguration), so the session follows it.
+                var mix = tournamentConfig.Scoring.Mix;
+                var entity = await database.Set<MoMSessionEntity>()
+                    .Where(s => s.BoardId == tournamentId && s.UserId == userId)
+                    .OrderByDescending(s => s.CreatedAt)
+                    .FirstOrDefaultAsync(cancellationToken);
+                if (entity == null) return new TournamentSession(userId, tournamentConfig, mix);
 
-                var entryEntities = JsonSerializer.Deserialize<SessionEntryEntity[]>(entity.ChartEntries) ??
-                                    Array.Empty<SessionEntryEntity>();
-                // Rows backfill Phoenix; an unset MixId only appears in pre-backfill test data.
-                var mix = entity.MixId == default ? MixEnum.Phoenix : MixIds.ToEnum(entity.MixId);
+                var chartRows = await database.Set<MoMSessionChartEntity>()
+                    .Where(c => c.SessionId == entity.Id)
+                    .OrderBy(c => c.Ordinal)
+                    .ToArrayAsync(cancellationToken);
                 var charts = (await _charts.GetCharts(mix,
-                    chartIds: entryEntities.Select(e => e.ChartId).Distinct().ToArray(),
+                    chartIds: chartRows.Select(c => c.ChartId).Distinct().ToArray(),
                     cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
-                var entries = entryEntities.Select(e => new TournamentSession.Entry(charts[e.ChartId], e.Score,
-                    Enum.Parse<PhoenixPlate>(e.Plate), e.IsBroken, e.SessionScore, e.BonusPoints ?? 0));
 
                 var session = new TournamentSession(userId, tournamentConfig, mix);
-                foreach (var entry in entries)
-                    session.AddWithoutApproval(entry.Chart, entry.Score, entry.Plate, entry.IsBroken);
-                session.SetVerificationType(Enum.Parse<SubmissionVerificationType>(entity.VerificationType));
-                if (Uri.TryCreate(entity.VideoUrl, UriKind.Absolute, out var videoUrl)) session.VideoUrl = videoUrl;
-
-                var photos = await database.Set<PhotoVerificationEntity>()
-                    .Where(p => p.TournamentId == tournamentId && p.UserId == userId)
-                    .ToArrayAsync(cancellationToken);
-                foreach (var photo in photos.Select(p => p.PhotoUrl))
-                {
-                    if (!Uri.TryCreate(photo, UriKind.Absolute, out var photoUrl)) continue;
-
-                    session.PhotoUrls.Add(photoUrl);
-                }
-
-                if (!entity.NeedsApproval) session.Approve();
+                foreach (var row in chartRows)
+                    session.Add(charts[row.ChartId], row.Score, Enum.Parse<PhoenixPlate>(row.Plate), row.IsBroken);
+                session.VideoUrl = ParseUri(entity.VideoUrl);
 
                 return session;
             });
@@ -286,40 +373,47 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            var results = (await (from uts in database.Set<UserTournamentSessionEntity>()
-                        join u in database.User on uts.UserId equals u.Id
-                        where uts.TournamentId == tournamentId
-                        select new UserEntryDto(u.Id, u.Name, uts.SessionScore, uts.RestTime, uts.ChartsPlayed,
-                            uts.AverageDifficulty, uts.VerificationType, uts.NeedsApproval, uts.VideoUrl))
+            var config = await GetTournament(tournamentId, cancellationToken);
+            var mix = config.Scoring.Mix;
+
+            // Boards rank published sessions, not players (D16); the earliest publication
+            // wins a tie (§1). Drafts are never on a board.
+            var sessions = await (from s in database.Set<MoMSessionEntity>()
+                    join u in database.User on s.UserId equals u.Id
+                    where s.BoardId == tournamentId && s.PublishedAt != null
+                    select new { Entity = s, u.Name })
+                .ToArrayAsync(cancellationToken);
+            if (!sessions.Any()) return Array.Empty<LeaderboardRecord>();
+
+            // One query for every session's chart rows and one catalog read for every chart —
+            // the old shape re-read the config and charts per player, an N+1 on each render.
+            var sessionIds = sessions.Select(x => x.Entity.Id).ToArray();
+            var chartRows = (await database.Set<MoMSessionChartEntity>()
+                    .Where(c => sessionIds.Contains(c.SessionId))
                     .ToArrayAsync(cancellationToken))
-                .OrderByDescending(ue => ue.Score)
-                .Select((ue, index) => new LeaderboardRecord(index + 1, ue.UserId, ue.Name, ue.Score, ue.RestTime,
-                    ue.AverageDifficulty, ue.ChartsPlayed, Enum.Parse<SubmissionVerificationType>(ue.VerificationType),
-                    ue.NeedsApproval,
-                    ue.VideoUrl == null ? null :
-                    Uri.TryCreate(ue.VideoUrl, UriKind.Absolute, out var vidUrl) ? vidUrl : null)).ToArray();
-            foreach (var result in results)
-                result.Session = await GetSession(tournamentId, result.UserId, cancellationToken);
+                .GroupBy(c => c.SessionId)
+                .ToDictionary(g => g.Key, g => g.OrderBy(c => c.Ordinal).ToArray());
+            var charts = (await _charts.GetCharts(mix,
+                    chartIds: chartRows.Values.SelectMany(rows => rows.Select(c => c.ChartId)).Distinct().ToArray(),
+                    cancellationToken: cancellationToken)).ToDictionary(c => c.Id);
 
-            return results;
-        }
+            return sessions
+                .OrderByDescending(x => x.Entity.TotalScore)
+                .ThenBy(x => x.Entity.PublishedAt)
+                .Select((x, index) =>
+                {
+                    var session = new TournamentSession(x.Entity.UserId, config, mix);
+                    foreach (var row in chartRows[x.Entity.Id])
+                        session.Add(charts[row.ChartId], row.Score, Enum.Parse<PhoenixPlate>(row.Plate),
+                            row.IsBroken);
 
-        public async Task CreateScoringLevelSnapshots(Guid tournamentId, IEnumerable<(Guid, double)> snapshots,
-            CancellationToken cancellationToken)
-        {
-            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            database.Set<TournamentChartLevelEntity>().RemoveRange(
-                await database.Set<TournamentChartLevelEntity>().Where(l => l.TournamentId == tournamentId)
-                    .ToArrayAsync(cancellationToken));
-
-            await database.Set<TournamentChartLevelEntity>().AddRangeAsync(snapshots.Select(s => new TournamentChartLevelEntity
-            {
-                Id = Guid.NewGuid(),
-                ChartId = s.Item1,
-                Level = s.Item2,
-                TournamentId = tournamentId
-            }), cancellationToken);
-            await database.SaveChangesAsync(cancellationToken);
+                    return new LeaderboardRecord(index + 1, x.Entity.UserId, x.Name, x.Entity.TotalScore,
+                        TimeSpan.FromTicks(x.Entity.RestTime), x.Entity.AverageDifficulty, x.Entity.ChartsPlayed,
+                        ParseUri(x.Entity.VideoUrl))
+                    {
+                        Session = session
+                    };
+                }).ToArray();
         }
 
         private string SnapshotCacheKey(Guid tournamentId)
@@ -334,11 +428,16 @@ namespace ScoreTracker.EventCompetition.Infrastructure
             {
                 o.AbsoluteExpiration = DateTimeOffset.Now + TimeSpan.FromHours(1);
                 await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-                var result = await database.Set<TournamentChartLevelEntity>().Where(e => e.TournamentId == tournamentId)
-                    .ToArrayAsync(cancellationToken);
-                if (!result.Any()) return (IDictionary<Guid, double>?)null;
+                var board = await database.Set<MoMBoardEntity>()
+                    .FirstOrDefaultAsync(b => b.Id == tournamentId, cancellationToken);
+                // Snapshots were always a MoM concern; a non-board id has none.
+                if (board == null) return (IDictionary<Guid, double>?)null;
 
-                return result.ToDictionary(e => e.ChartId, e => e.Level);
+                // Delta rows only (§9.3): a missing chart means folder level + 0.5, which the
+                // scoring fallback already produces — sparse is exact, not approximate.
+                return await database.Set<MoMChartLevelEntity>()
+                    .Where(l => l.SeasonId == board.SeasonId && l.MixId == board.MixId)
+                    .ToDictionaryAsync(l => l.ChartId, l => l.Level, cancellationToken);
             });
         }
 
@@ -392,11 +491,6 @@ namespace ScoreTracker.EventCompetition.Infrastructure
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-
-        private sealed record UserEntryDto(Guid UserId, string Name, int Score, TimeSpan RestTime, int ChartsPlayed,
-            double AverageDifficulty, string VerificationType, bool NeedsApproval, string? VideoUrl)
-        {
-        }
 
         private static string TourneyRolesCacheKey(Guid tournamentId)
         {

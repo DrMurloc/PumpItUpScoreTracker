@@ -3090,9 +3090,6 @@
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>in our database, locked so it can't be opened alone.</value>
   </data>
-  <data name="In Person" xml:space="preserve">
-	  <value>In Person</value>
-  </data>
   <data name="In progress" xml:space="preserve">
     <value>In progress</value>
   </data>
@@ -7737,9 +7734,6 @@
   </data>
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>Vanished while still ranking</value>
-  </data>
-  <data name="Verification" xml:space="preserve">
-	  <value>Verification</value>
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Verified from official import</value>
