@@ -67,6 +67,12 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
         modelBuilder.Entity<PumbilityTierListEntryEntity>().ToTable("PumbilityTierListEntry")
             .HasKey(e => new { e.MixId, e.ChartType, e.Level, e.CohortKey, e.ChartId });
 
+        // Where PUMBILITY comes from per band of the total (docs/design/pumbility-calculator.md D9):
+        // a handful of rows per mix, rewritten wholesale by the same nightly sweep, read as one
+        // keyed range by the calculator page.
+        modelBuilder.Entity<PumbilityPoolCompositionEntity>().ToTable("PumbilityPoolComposition")
+            .HasKey(e => new { e.MixId, e.BandKey });
+
         modelBuilder.Entity<ChartScoringLevelEntity>().ToTable("ChartScoringLevel");
         modelBuilder.Entity<UserPreferenceRatingEntity>().ToTable("UserPreferenceRating");
         modelBuilder.Entity<ChartPreferenceRatingEntity>().ToTable("ChartPreferenceRating");
