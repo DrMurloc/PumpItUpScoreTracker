@@ -88,6 +88,12 @@ internal sealed class TierListBlendBuilder
         _scores = scores;
     }
 
+    /// <summary>
+    ///     The lowest level a Phoenix 2 chart prices above zero at — the pool's floor, and so the
+    ///     floor of the read that decides whether a reader has a pool of the type.
+    /// </summary>
+    private static readonly DifficultyLevel MinimumPricedLevel = DifficultyLevel.From(10);
+
     /// <summary>How much of a recipe is stored community lists — 0 when none of it is.</summary>
     public static double CommunityWeightIn(IReadOnlyDictionary<string, double> modifiers)
     {
@@ -220,19 +226,20 @@ internal sealed class TierListBlendBuilder
             return PumbilityPeers.ForDifficultyTitleLevel((int)titleLevel);
         }
 
-        // Same shape of gate the census applies. A reader who has not yet imported a pool's
-        // worth of this mix resolves to a rung well below where they play — their total is low
-        // because they have played little of it, not because they are weak — and is then handed
-        // the folder band of the players genuinely at that rung. Counting scores rather than the
-        // pool itself is deliberately coarse: it is the mix-has-no-volume-yet case this exists
-        // for, and it costs one read behind a six-hour cache.
-        var scored = (await _scores.GetBestScores(mix, userId, cancellationToken))
-            .Count(s => s is { Score: not null, IsBroken: false });
-        if (scored < PumbilityPeers.PoolSize) return null;
+        // The same gate the nightly job and the PUMBILITY projection apply (D28): a full pool of
+        // THIS chart type, counted from the player's non-broken records at level 10 and above —
+        // on Phoenix 2 every one of those prices above zero, so that count IS the pool. A reader
+        // short of it has no peers for the type: their total is low because they have played
+        // little of it, not because they are weak, and a rung read off that total would hand
+        // them the list of players genuinely at it. One read behind a six-hour cache.
+        var pooled = (await _scores.GetPlayerScoresInLevelRange(mix, new[] { userId }, chartType,
+                MinimumPricedLevel, DifficultyLevel.Max, cancellationToken))
+            .Select(s => s.ChartId).Distinct().Count();
+        if (pooled < PumbilityPeers.PoolSize) return null;
 
+        // The key is the viewer's rung on the total pool — the same one whichever type they read.
         var stats = await _playerStats.GetStats(mix, userId, cancellationToken);
-        return PumbilityPeers.ForPhoenix2Pool(chartType,
-            chartType == ChartType.Single ? stats.SinglesRating : stats.DoublesRating);
+        return PumbilityPeers.ForPhoenix2Total(stats.SkillRating);
     }
 
     /// <summary>
@@ -282,7 +289,7 @@ internal sealed class TierListBlendBuilder
         if (projected.Count < MinProjectedCharts)
             return new ProjectionComputation(new Dictionary<Guid, SongTierListEntry>(), projected,
                 projected.Count, folderCharts.Count, projection.PeerCount, projection.CompetitiveLevel,
-                projection.MeanFreshness);
+                projection.MeanFreshness, projection.Group);
 
         var estimates = projected.ToDictionary(kv => kv.Key, kv => (double)(int)kv.Value);
         return new ProjectionComputation(
@@ -293,7 +300,8 @@ internal sealed class TierListBlendBuilder
             folderCharts.Count,
             projection.PeerCount,
             projection.CompetitiveLevel,
-            projection.MeanFreshness);
+            projection.MeanFreshness,
+            projection.Group);
     }
 }
 
@@ -328,4 +336,5 @@ internal sealed record ProjectionComputation(
     int FolderChartCount,
     int PeerCount,
     double CompetitiveLevel,
-    double MeanFreshness);
+    double MeanFreshness,
+    PeerGroup? Peers = null);

@@ -1,15 +1,21 @@
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
-using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Domain.Services.Contracts;
 
 namespace ScoreTracker.ChartIntelligence.Domain;
 
 /// <summary>
-///     Who a player is ranked against on the PUMBILITY lens — their PUMBILITY peers — keyed on
-///     title and resolved per mix (docs/design/pumbility-tier-list.md §5).
+///     Who a player is ranked against on the PUMBILITY lens — their PUMBILITY peers — resolved
+///     per mix (docs/design/pumbility-tier-list.md §5).
 ///     <para>
-///         Phoenix 2 has a PUMBILITY title ladder with in-title rungs — [S] ADVANCED LV.1 at
-///         15,000 through LV.10 at 17,250, in 250-point steps — so a rung is the peer group.
-///         Phoenix 1 has no PUMBILITY-threshold titles, so its difficulty titles stand in.
+///         <b>Phoenix 2</b>: the players within ±3 rungs of the viewer on the PUMBILITY level
+///         ladder who hold a full pool of the chart type. This is THE definition — the same one
+///         the PUMBILITY page's projection draws its evidence from (docs/design/pumbility-overhaul.md
+///         §4.8, D22, D23) — so the two surfaces cannot disagree about who "players like you" are.
+///         The key is the <i>viewer's</i> rung: everyone standing on rung <i>r</i> reads one list,
+///         computed over the players in <i>r</i>±3, which is what keeps it materializable.
+///     </para>
+///     <para>
+///         <b>Phoenix 1</b> has no PUMBILITY level ladder, so its difficulty titles stand in.
 ///         Imperfect and deliberately so: Phoenix 1 PUMBILITY has weeks of relevance left.
 ///     </para>
 /// </summary>
@@ -19,11 +25,14 @@ internal static class PumbilityPeers
     public const string Community = "*";
 
     /// <summary>
-    ///     A PUMBILITY pool is fifty charts; anything short of that is not one yet. The one
-    ///     definition the writer's membership gate and the reader's resolution both use — the
-    ///     two must agree or a player reads a list nobody built for them.
+    ///     A PUMBILITY pool is fifty charts; anything short of that is not one yet. One definition
+    ///     for the writer's membership gate, the reader's resolution and the projection's peer
+    ///     rule — the three must agree or a player reads a list nobody built for them.
     /// </summary>
-    public const int PoolSize = 50;
+    public const int PoolSize = PeerGroup.PumbilityPoolSize;
+
+    /// <summary>Rungs either side of the viewer's that count as PUMBILITY peers on Phoenix 2.</summary>
+    public const int RungWindow = PeerGroup.PumbilityRungWindow;
 
     /// <summary>Phoenix 1: the level of the player's highest difficulty title.</summary>
     public static string ForDifficultyTitleLevel(int level)
@@ -32,28 +41,27 @@ internal static class PumbilityPeers
     }
 
     /// <summary>
-    ///     Phoenix 2: the highest PUMBILITY rung this pool total clears on the ladder matching
-    ///     the chart type. Null when it clears nothing — an unranked player has no peers.
-    ///     <para>
-    ///         Own-type ladder only. Reading the Combined ladder as well would make a peer group a
-    ///         per-viewer union of two ladders rather than a partition, so no two players would
-    ///         share one and none of it could be materialized. Deferred with the rest of the
-    ///         Phoenix 2 work — the ladder has no score volume behind it yet.
-    ///     </para>
+    ///     Phoenix 2: the key for a viewer standing on <paramref name="rungIndex" /> of the ladder
+    ///     (badge index 0–36) — the list counted over the players in that rung's band.
     /// </summary>
-    public static string? ForPhoenix2Pool(ChartType chartType, double poolTotal)
+    public static string ForPhoenix2Rung(int rungIndex)
     {
-        return HighestRung(chartType == ChartType.Single ? PumbilityPool.Singles : PumbilityPool.Doubles,
-            poolTotal);
+        return $"R{rungIndex}";
     }
 
-    private static string? HighestRung(PumbilityPool pool, double total)
+    /// <summary>Phoenix 2: the key for a viewer whose total pool is <paramref name="totalPool" />.</summary>
+    public static string ForPhoenix2Total(double totalPool)
     {
-        return Phoenix2TitleList.BuildList()
-            .OfType<Phoenix2PumbilityTitle>()
-            .Where(t => t.Pool == pool && total >= t.CompletionRequired)
-            .OrderByDescending(t => t.CompletionRequired)
-            .Select(t => (string)t.Name)
-            .FirstOrDefault();
+        return ForPhoenix2Rung(Phoenix2PumbilityLevel.From(totalPool).Index);
+    }
+
+    /// <summary>
+    ///     The rungs whose players are peers of a viewer on <paramref name="rungIndex" />: three
+    ///     either side, clipped to the ladder — index 0 reaches only upward, the capstone only down.
+    /// </summary>
+    public static (int Lowest, int Highest) Phoenix2Band(int rungIndex)
+    {
+        return (Math.Max(0, rungIndex - RungWindow),
+            Math.Min(Phoenix2PumbilityLevel.CapstoneIndex, rungIndex + RungWindow));
     }
 }

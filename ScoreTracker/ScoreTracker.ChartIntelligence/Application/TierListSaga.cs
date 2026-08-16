@@ -7,6 +7,7 @@ using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Models;
@@ -502,8 +503,8 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
     /// <summary>
     ///     The peer groups to count over, plus the community group that is every player at once.
-    ///     Phoenix 1 groups by the level of a player's highest difficulty title; Phoenix 2 by
-    ///     the PUMBILITY rung their pool total clears.
+    ///     Phoenix 1 groups by the level of a player's highest difficulty title; Phoenix 2 by the
+    ///     viewer's PUMBILITY rung, each group being the band of three rungs either side of it.
     /// </summary>
     private async Task<IReadOnlyDictionary<string, IReadOnlySet<Guid>>> ResolvePeers(MixEnum mix,
         ChartType chartType, IReadOnlyDictionary<Guid, PlayerPool> pools,
@@ -516,16 +517,22 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
         if (mix == MixEnum.Phoenix2)
         {
-            var byRung = new Dictionary<string, HashSet<Guid>>();
-            foreach (var (userId, pool) in pools)
+            // PUMBILITY peers (docs/design/pumbility-tier-list.md §5, the same definition the
+            // projection uses): a list per VIEWER rung, counted over every full-pool player within
+            // three rungs of it. The rung is the total pool's — the merged top fifty across both
+            // types, the number the game's badge is drawn from — read from stats rather than from
+            // the per-type pool this pass built, because that pool is only one type's half of it.
+            var rungOf = (await _playerStats.GetStats(mix, pools.Keys, cancellationToken))
+                .ToDictionary(s => s.UserId, s => Phoenix2PumbilityLevel.From(s.SkillRating).Index);
+            for (var rung = 0; rung <= Phoenix2PumbilityLevel.CapstoneIndex; rung++)
             {
-                var key = PumbilityPeers.ForPhoenix2Pool(chartType, pool.Total);
-                if (key == null) continue;
-                if (!byRung.TryGetValue(key, out var members)) byRung[key] = members = new HashSet<Guid>();
-                members.Add(userId);
+                var (lowest, highest) = PumbilityPeers.Phoenix2Band(rung);
+                var members = pools.Keys
+                    .Where(id => rungOf.TryGetValue(id, out var r) && r >= lowest && r <= highest)
+                    .ToHashSet();
+                if (members.Count > 0) peerGroups[PumbilityPeers.ForPhoenix2Rung(rung)] = members;
             }
 
-            foreach (var (key, members) in byRung) peerGroups[key] = members;
             return peerGroups;
         }
 

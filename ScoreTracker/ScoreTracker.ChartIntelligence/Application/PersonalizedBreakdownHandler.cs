@@ -111,7 +111,10 @@ internal sealed class PersonalizedBreakdownHandler
             computation.Projection?.CompetitiveLevel ?? 0,
             TierListBlendBuilder.ProjectionCompetitiveWindow,
             computation.Projection?.MeanFreshness ?? 0,
-            computation.IsProvisionalFallback);
+            computation.IsProvisionalFallback,
+            // Who was asked, in a form the page can name without knowing the mix: a competitive
+            // band on Phoenix 1, PUMBILITY peers on Phoenix 2 (docs/design/personalized-breakdown.md).
+            computation.Projection?.Peers);
     }
 
     private static TierListCategory CategoryFor(IReadOnlyDictionary<Guid, SongTierListEntry>? entries,
