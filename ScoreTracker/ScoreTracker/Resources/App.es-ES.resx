@@ -1219,6 +1219,9 @@
   <data name="Charts covered" xml:space="preserve">
     <value>Charts cubiertos</value>
   </data>
+  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
+    <value>Los charts que menos de 5 de ellos han pasado no se muestran.</value>
+  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>Tablas en el grupo</value>
   </data>
@@ -1995,6 +1998,9 @@
   </data>
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Nivel competitivo de Doubles</value>
+  </data>
+  <data name="Doubles: {0} of {1} charts before peer projections show" xml:space="preserve">
+    <value>Doubles: {0} de {1} charts para que aparezcan las proyecciones de pares</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>Doublesteps</value>
@@ -5109,6 +5115,9 @@
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY a lo largo del tiempo</value>
   </data>
+  <data name="PUMBILITY peers" xml:space="preserve">
+    <value>Pares de PUMBILITY</value>
+  </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Subida de Pumbility</value>
   </data>
@@ -5211,11 +5220,14 @@
   <data name="rank #{0}" xml:space="preserve">
     <value>puesto #{0}</value>
   </data>
-  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
-    <value>Clasificado frente a {0} jugadores en tus rangos de título de PUMBILITY</value>
-  </data>
   <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
     <value>Clasificado frente a {0} jugadores de nivel competitivo similar</value>
+  </data>
+  <data name="Ranked against {0} players on your difficulty title level" xml:space="preserve">
+    <value>Clasificado frente a {0} jugadores en tu nivel de título de dificultad</value>
+  </data>
+  <data name="Ranked against {0} PUMBILITY peers within 3 levels of you" xml:space="preserve">
+    <value>Clasificado frente a {0} pares de PUMBILITY a ±3 niveles de ti</value>
   </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Ordenado por</value>
@@ -6178,6 +6190,9 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>Singles vs Doubles</value>
+  </data>
+  <data name="Singles: {0} of {1} charts before peer projections show" xml:space="preserve">
+    <value>Singles: {0} de {1} charts para que aparezcan las proyecciones de pares</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
     <value>Sitio construido y mantenido por DrMurloc</value>
@@ -7703,6 +7718,9 @@
   <data name="within 1 level" xml:space="preserve">
     <value>a ±1 nivel</value>
   </data>
+  <data name="within 3 levels of you with a full pool" xml:space="preserve">
+    <value>a ±3 niveles de ti y con el conjunto completo</value>
+  </data>
   <data name="Within days" xml:space="preserve">
     <value>Días (máx.)</value>
   </data>
@@ -7849,6 +7867,9 @@
   </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
     <value>De alguna manera has acabado en un estado entre realidades. Recarga la página para volver a intentarlo.</value>
+  </data>
+  <data name="you stand on {0}" xml:space="preserve">
+    <value>estás en {0}</value>
   </data>
   <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
     <value>Empiezas cada canción con 500 de vida y el multiplicador casi a cero: {0} Miss seguidos te matan, en cualquier nivel. Sobrevive a la apertura y un {1} te da {2}. Empieza fuerte.</value>
@@ -8482,6 +8503,12 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} jugadores · semana del {1}</value>
+  </data>
+  <data name="{0} PUMBILITY peers — within 3 levels of you with a full doubles pool" xml:space="preserve">
+    <value>{0} pares de PUMBILITY — a ±3 niveles de ti y con el conjunto de Doubles completo</value>
+  </data>
+  <data name="{0} PUMBILITY peers — within 3 levels of you with a full singles pool" xml:space="preserve">
+    <value>{0} pares de PUMBILITY — a ±3 niveles de ti y con el conjunto de Singles completo</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>{0} PUMBILITY restantes</value>

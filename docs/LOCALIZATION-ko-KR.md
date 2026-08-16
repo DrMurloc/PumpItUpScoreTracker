@@ -212,3 +212,16 @@ Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-rede
 5. For inconsistency fixes (e.g. converging 음악/노래, fixing the placeholder order in `Log In With`), do **one batch per category** so the diff is reviewable.
 6. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
 7. PR titled like `Translate <Folder> to ko-KR` or `Fix ko-KR <inconsistency>`.
+
+## PUMBILITY peers (Phoenix 2 projection, 2026-08-16)
+
+The `/Pumbility` peer line and the tier lists' PUMBILITY lens name one group: players within ±3 rungs
+of you on the PUMBILITY level ladder holding a full 50-chart pool of the type. Same register as the
+existing `동급 {0}명` / `또래 대비` family.
+
+| English | ko-KR | Notes |
+|---|---|---|
+| PUMBILITY peers | PUMBILITY 동료 | 동료 (peer, colleague) rather than 또래 (age-mate): the group is defined by standing, not by age. |
+| within 3 levels of you with a full pool | 나와 3레벨 이내, 풀을 가득 채운 플레이어 | "levels" here are PUMBILITY ladder rungs, not chart levels; 레벨 stays because the game's own badge says LV. |
+| you stand on {0} | 내 위치: {0} | {0} is a rung name in the game's notation ("[P.B] DIAMOND LV.4"), never translated. |
+| Charts fewer than 5 of them have passed are not shown. | 그중 5명 미만이 클리어한 채보는 표시하지 않습니다. | 클리어 for "passed", per the existing Passed → 클리어. |

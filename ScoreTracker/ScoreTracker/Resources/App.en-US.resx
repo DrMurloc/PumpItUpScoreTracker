@@ -1228,6 +1228,9 @@
   <data name="Charts covered" xml:space="preserve">
     <value>Charts covered</value>
   </data>
+  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
+    <value>Charts fewer than 5 of them have passed are not shown.</value>
+  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>Charts in pool</value>
   </data>
@@ -2009,6 +2012,9 @@
   </data>
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Doubles competitive level</value>
+  </data>
+  <data name="Doubles: {0} of {1} charts before peer projections show" xml:space="preserve">
+    <value>Doubles: {0} of {1} charts before peer projections show</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>Doublesteps</value>
@@ -5146,6 +5152,9 @@
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY over time</value>
   </data>
+  <data name="PUMBILITY peers" xml:space="preserve">
+    <value>PUMBILITY peers</value>
+  </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility Push</value>
   </data>
@@ -5251,11 +5260,14 @@
   </data>
   <!-- Tier-lists overhaul (PR #135). "Why Don't You Get Up and Dance, Man?" is an
        in-game meme and a universal do-not-translate term in every locale. -->
-  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
-    <value>Ranked against {0} players in your PUMBILITY title ranges</value>
-  </data>
   <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
     <value>Ranked against {0} players of similar competitive level</value>
+  </data>
+  <data name="Ranked against {0} players on your difficulty title level" xml:space="preserve">
+    <value>Ranked against {0} players on your difficulty title level</value>
+  </data>
+  <data name="Ranked against {0} PUMBILITY peers within 3 levels of you" xml:space="preserve">
+    <value>Ranked against {0} PUMBILITY peers within 3 levels of you</value>
   </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Ranked by</value>
@@ -6233,6 +6245,9 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Singles vs Doubles</value>
+  </data>
+  <data name="Singles: {0} of {1} charts before peer projections show" xml:space="preserve">
+    <value>Singles: {0} of {1} charts before peer projections show</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
 	  <value>Site constructed and maintained by DrMurloc</value>
@@ -7769,6 +7784,9 @@
   <data name="within 1 level" xml:space="preserve">
     <value>within 1 level</value>
   </data>
+  <data name="within 3 levels of you with a full pool" xml:space="preserve">
+    <value>within 3 levels of you with a full pool</value>
+  </data>
   <data name="Within days" xml:space="preserve">
     <value>Within days</value>
   </data>
@@ -7921,6 +7939,9 @@
   </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
 	  <value>You somehow ended up in a state between realities. Refresh the page to try again.</value>
+  </data>
+  <data name="you stand on {0}" xml:space="preserve">
+    <value>you stand on {0}</value>
   </data>
   <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
     <value>You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong.</value>
@@ -8554,6 +8575,12 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} players · week of {1}</value>
+  </data>
+  <data name="{0} PUMBILITY peers — within 3 levels of you with a full doubles pool" xml:space="preserve">
+    <value>{0} PUMBILITY peers — within 3 levels of you with a full doubles pool</value>
+  </data>
+  <data name="{0} PUMBILITY peers — within 3 levels of you with a full singles pool" xml:space="preserve">
+    <value>{0} PUMBILITY peers — within 3 levels of you with a full singles pool</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>{0} PUMBILITY remaining</value>

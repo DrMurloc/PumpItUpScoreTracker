@@ -574,3 +574,14 @@ the rest of the file.
 5. For the remaining inconsistency fixes (the full Title Case → sentence case sweep, French typographic NBSP normalization, the `Plaque`→`Plate` question if adopted), do **one batch per category** so the diff is reviewable.
 6. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
 7. PR titled like `Translate <Folder> to fr-FR` or `Fix fr-FR <inconsistency>`.
+
+## PUMBILITY peers (Phoenix 2 projection, 2026-08-16)
+
+The `/Pumbility` peer line and the tier lists' PUMBILITY lens name one group: players within ±3 rungs
+of you on the PUMBILITY level ladder holding a full 50-chart pool of the type.
+
+| English | fr-FR | Notes |
+|---|---|---|
+| PUMBILITY peers | pairs PUMBILITY | `pairs`, per the existing `Vs pairs`. |
+| within 3 levels of you with a full pool | à ±3 niveaux de vous, avec un ensemble complet | `ensemble` for pool, per the existing Pool → Ensemble; `±3` mirrors `à ±1 niveau`. |
+| you stand on {0} | vous êtes sur {0} | {0} is a rung name in the game's notation, never translated. |

@@ -175,13 +175,16 @@ else
             {
                 <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
             }
-            @* Same slot on every personalized lens; only the cohort differs — PUMBILITY
-               title ranges here, competitive level on Score. *@
+            @* Same slot on every personalized lens; only the peer group differs — PUMBILITY
+               peers here (the rung band on Phoenix 2, the difficulty-title level standing in on
+               Phoenix 1), competitive level on Score. *@
             @if (PersonalizedActive && _peerCount > 0)
             {
                 <span>
                     @(_tierListType == "PUMBILITY"
-                        ? L["Ranked against {0} players in your PUMBILITY title ranges", _peerCount]
+                        ? _currentMix == MixEnum.Phoenix2
+                            ? L["Ranked against {0} PUMBILITY peers within 3 levels of you", _peerCount]
+                            : L["Ranked against {0} players on your difficulty title level", _peerCount]
                         : L["Ranked against {0} players of similar competitive level", _peerCount])
                 </span>
                 @* Score only: the Breakdown page explains the Score projection and coerces any
