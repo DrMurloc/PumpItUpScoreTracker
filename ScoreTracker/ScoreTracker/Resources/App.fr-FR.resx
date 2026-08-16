@@ -220,6 +220,9 @@
   <data name="+ {0} more on this week's board" xml:space="preserve">
     <value>+ {0} de plus sur le tableau de la semaine</value>
   </data>
+  <data name="+5 more per level above 24" xml:space="preserve">
+    <value>+5 de plus par niveau au-dessus de 24</value>
+  </data>
   <data name="+{0} levels up" xml:space="preserve">
     <value>+{0} niveaux au-dessus</value>
   </data>
@@ -234,6 +237,12 @@
   </data>
   <data name="+{0} over P1" xml:space="preserve">
     <value>+{0} au-dessus de P1</value>
+  </data>
+  <data name=", plate under half a percent" xml:space="preserve">
+    <value>, plaque sous le demi pour cent</value>
+  </data>
+  <data name=", so the comparison is the exchange rate: taking one chart from a 900,000 to an SSS+ equals how many levels of pass-pushing, on each mix." xml:space="preserve">
+    <value>, donc la comparaison est le taux de change : faire passer un chart de 900 000 à SSS+ vaut combien de niveaux de montée en pass, sur chaque Mix.</value>
   </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
@@ -301,6 +310,15 @@
   <data name="90% -> 99.9%" xml:space="preserve">
     <value>90% -> 99.9%</value>
   </data>
+  <data name="900,000 is exactly the {0} floor on {1}." xml:space="preserve">
+    <value>900 000 est exactement le plancher {0} sur {1}.</value>
+  </data>
+  <data name="900,000 on its own level — {0}" xml:space="preserve">
+    <value>900 000 sur son propre niveau — {0}</value>
+  </data>
+  <data name="900,000 → SSS+ is worth" xml:space="preserve">
+    <value>900 000 → SSS+ vaut</value>
+  </data>
   <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
     <value>Un Bad, c'est −50 fixes quelle que soit la vie ; un Miss monte à −270. Mais un Bad divise quand même votre multiplicateur par deux, donc des Bads enchaînés étranglent la récupération tout aussi efficacement.</value>
   </data>
@@ -312,6 +330,9 @@
   </data>
   <data name="A breakdown for Pass Difficulty is coming." xml:space="preserve">
     <value>Le détail de la Difficulté par passes arrive.</value>
+  </data>
+  <data name="a broken run" xml:space="preserve">
+    <value>un run break</value>
   </data>
   <data name="a chart" xml:space="preserve">
     <value>un chart</value>
@@ -333,6 +354,9 @@
   </data>
   <data name="A good, always." xml:space="preserve">
     <value>Un Good, toujours.</value>
+  </data>
+  <data name="A grade is only worth something" xml:space="preserve">
+    <value>Un grade ne vaut quelque chose que</value>
   </data>
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>Un Great avec le multiplicateur au plafond.</value>
@@ -373,6 +397,9 @@
   <data name="A perfect plate on every chart in your pool would add {0} — {1} of it." xml:space="preserve">
     <value>Une plaque parfaite sur chaque graphique de votre groupe ajouterait {0} — soit {1} du total.</value>
   </data>
+  <data name="A plate adds at most +{0} to a grade multiplier of {1}–{2}, so Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {3} — {4} of a level at 24, {5} of a level at 20." xml:space="preserve">
+    <value>Une plaque ajoute au plus +{0} à un multiplicateur de grade de {1}–{2} : passer chaque chart d'un pool de Rough Game à Perfect Game vaut environ {3} — {4} niveau à 24, {5} niveau à 20.</value>
+  </data>
   <data name="A player connected" xml:space="preserve">
     <value>Un joueur s'est connecté</value>
   </data>
@@ -391,8 +418,26 @@
   <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
     <value>Un score que tu as déjà réalisé dans Phoenix 1, revalorisé pour Phoenix 2.</value>
   </data>
+  <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
+    <value>Un Single est valorisé un niveau plus haut : un S17 paie Base(18). Sous le niveau 10 un chart vaut 0.</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>Un zip de snapshot importe directement une version de données déjà récupérée : même traitement que l'exploration, sans téléchargement</value>
+  </data>
+  <data name="A tiebreaker." xml:space="preserve">
+    <value>Un départage.</value>
+  </data>
+  <data name="a typical pool sits at about +{0}" xml:space="preserve">
+    <value>un pool typique se situe vers +{0}</value>
+  </data>
+  <data name="AA is exactly ×1.00. Steps of 0.05 up to S, then 0.06 a rung to SSS+; 0.10 a rung below AA." xml:space="preserve">
+    <value>AA vaut exactement ×1,00. Pas de 0,05 jusqu'à S, puis 0,06 par échelon jusqu'à SSS+ ; 0,10 par échelon sous AA.</value>
+  </data>
+  <data name="AA is the neutral point; every grade above it adds, every grade below it takes away." xml:space="preserve">
+    <value>AA est le point neutre ; chaque grade au-dessus ajoute, chaque grade en dessous retire.</value>
+  </data>
+  <data name="AA+ and above are identical on both types. On a Double the ladder steps −0.01 a rung through the S grades, −0.02 a rung from AAA+ to A+, −0.05 a rung down to C, then −0.10 a rung to F; a Single runs a notch lower from AA down. A perfect 1,000,000 keeps SSS+’s ×1.50 — Perfect Game is a plate." xml:space="preserve">
+    <value>AA+ et au-dessus sont identiques sur les deux types. Sur un Double l'échelle descend de −0,01 par échelon dans les grades S, −0,02 par échelon de AAA+ à A+, −0,05 par échelon jusqu'à C, puis −0,10 par échelon jusqu'à F ; un Single est un cran plus bas de AA vers le bas. Un 1 000 000 parfait garde le ×1,50 de SSS+ — Perfect Game est une plaque.</value>
   </data>
   <data name="About" xml:space="preserve">
     <value>À propos</value>
@@ -500,6 +545,9 @@
   <data name="Added to Favorites!" xml:space="preserve">
     <value>Ajouté aux Favoris !</value>
   </data>
+  <data name="Added to the grade multiplier before the base multiplies it. Perfect Game needs a 1,000,000." xml:space="preserve">
+    <value>Ajouté au multiplicateur de grade avant que la base ne le multiplie. Perfect Game exige un 1 000 000.</value>
+  </data>
   <data name="Added to ToDo List!" xml:space="preserve">
     <value>Ajouté à la ToDo List !</value>
   </data>
@@ -535,6 +583,9 @@
   </data>
   <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
     <value>Après l'upload, s'il y a des lignes/charts/essais qui n'ont pas été uploadés correctement, vous aurez la possibilité de télécharger la liste des lignes échouées avec la raison de l'échec.</value>
+  </data>
+  <data name="Against {0} {1}." xml:space="preserve">
+    <value>Face à {0} {1}.</value>
   </data>
   <data name="Age" xml:space="preserve">
 	  <value>Ancienneté</value>
@@ -621,11 +672,23 @@
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>Un compte avec le game tag {0} existe déjà, est-ce vous ?</value>
   </data>
+  <data name="An additive bonus, not a multiplier — at most {0} of a chart." xml:space="preserve">
+    <value>Un bonus additif, pas un multiplicateur — au plus {0} d'un chart.</value>
+  </data>
   <data name="An estimate from players at your competitive level." xml:space="preserve">
     <value>Une estimation à partir des joueurs de ton niveau compétitif.</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>Un import est déjà en cours</value>
+  </data>
+  <data name="an SSS+" xml:space="preserve">
+    <value>un SSS+</value>
+  </data>
+  <data name="An SSS+ on a level 20 reaches {0} — the same PUMBILITY as a 900,000 there, so taking one chart from a pass to a perfect is worth {1} levels of pass-pushing. The reach grows with level because Phoenix’s base is quadratic: {2} levels at 16, {1} at 20, {3} at 24. Below the pass line a chart falls off the same way: an A pays ×{4}, an F ×{5}." xml:space="preserve">
+    <value>Un SSS+ sur un niveau 20 atteint {0} — le même PUMBILITY qu'un 900 000 là-bas, donc faire passer un chart d'un pass à un perfect vaut {1} niveaux de montée en pass. La portée grandit avec le niveau parce que la base de Phoenix est quadratique : {2} niveaux à 16, {1} à 20, {3} à 24. Sous la ligne de pass un chart chute de la même façon : un A paie ×{4}, un F ×{5}.</value>
+  </data>
+  <data name="An SSS+ on a {0} reaches {1} — the same PUMBILITY as a 900,000 there, so taking one chart from a pass to a perfect is worth {2} levels of pass-pushing. The reach narrows above 24, where Phoenix 2’s base starts growing by 10 a level instead of 5: {3} levels at 16, {2} at 20, {4} at 24. Below the pass line a chart drops off fast — a D pays ×{5} against {6}’s ×{7}." xml:space="preserve">
+    <value>Un SSS+ sur un {0} atteint {1} — le même PUMBILITY qu'un 900 000 là-bas, donc faire passer un chart d'un pass à un perfect vaut {2} niveaux de montée en pass. La portée se resserre au-dessus de 24, où la base de Phoenix 2 se met à croître de 10 par niveau au lieu de 5 : {3} niveaux à 16, {2} à 20, {4} à 24. Sous la ligne de pass un chart chute vite — un D paie ×{5} contre le ×{7} de {6}.</value>
   </data>
   <data name="An unknown error occurred" xml:space="preserve">
     <value>Une erreur inconnue est survenue</value>
@@ -635,6 +698,9 @@
   </data>
   <data name="Ancient" xml:space="preserve">
     <value>Antique</value>
+  </data>
+  <data name="And it barely moves from band to band: score is {0} of the number in {1} and {2} in {3}. What changes between the bands is the level of the charts — average {4} in {1}, {5} in {3} — with S or better on {6}–{7} of the fifty throughout." xml:space="preserve">
+    <value>Et ça bouge à peine d'une tranche à l'autre : le score fait {0} du nombre en {1} et {2} en {3}. Ce qui change entre les tranches, c'est le niveau des charts — {4} de moyenne en {1}, {5} en {3} — avec S ou mieux sur {6}–{7} des cinquante partout.</value>
   </data>
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>et {0} notes de multiplicateur</value>
@@ -660,6 +726,9 @@
   </data>
   <data name="Any tool that publishes its source code will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
     <value>Tout outil qui publie son code source pourra lire vos scores — c'est ce qui alimente la plupart des outils d'analyse. C'est un réglage distinct et vous pouvez le désactiver juste après, sur cette page.</value>
+  </data>
+  <data name="any — ×1.0" xml:space="preserve">
+    <value>n'importe laquelle — ×1,0</value>
   </data>
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>Toute personne disposant d'un lien d'invitation peut se connecter, que son profil soit public ou privé.</value>
@@ -869,8 +938,20 @@
   <data name="BanYa Lover" xml:space="preserve">
     <value>BanYa Lover</value>
   </data>
+  <data name="bar = 900,000 on the level → SSS+; label = levels bought" xml:space="preserve">
+    <value>barre = 900 000 sur le niveau → SSS+ ; étiquette = niveaux gagnés</value>
+  </data>
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>Seuil désactivé — toute partie ayant fait monter votre niveau compétitif compte.</value>
+  </data>
+  <data name="base" xml:space="preserve">
+    <value>base</value>
+  </data>
+  <data name="Base × grade at the lowest plate, rounded to the point." xml:space="preserve">
+    <value>Base × grade à la plaque la plus basse, arrondi au point.</value>
+  </data>
+  <data name="Base({0}) — a Single is priced one level up" xml:space="preserve">
+    <value>Base({0}) — un Single est valorisé un niveau plus haut</value>
   </data>
   <data name="Based on" xml:space="preserve">
     <value>D'après</value>
@@ -898,6 +979,12 @@
   </data>
   <data name="below" xml:space="preserve">
     <value>en dessous</value>
+  </data>
+  <data name="below level 10" xml:space="preserve">
+    <value>sous le niveau 10</value>
+  </data>
+  <data name="below the pass line" xml:space="preserve">
+    <value>sous la ligne de pass</value>
   </data>
   <data name="Below this life a miss costs less than a bad." xml:space="preserve">
     <value>En dessous de cette vie, un Miss coûte moins qu'un Bad.</value>
@@ -988,6 +1075,9 @@
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
+  </data>
+  <data name="both" xml:space="preserve">
+    <value>les deux</value>
   </data>
   <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
     <value>Les deux sont nécessaires avant que quelqu'un d'autre puisse utiliser votre outil.</value>
@@ -1080,6 +1170,9 @@
   <data name="Bursty" xml:space="preserve">
     <value>En rafales</value>
   </data>
+  <data name="but a level got {0}× smaller — more than the grade did" xml:space="preserve">
+    <value>mais un niveau est devenu {0}× plus petit — plus que le grade</value>
+  </data>
   <data name="By Chart" xml:space="preserve">
     <value>Par Chart</value>
   </data>
@@ -1094,6 +1187,9 @@
   </data>
   <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
     <value>Calculez un score Phoenix depuis un écran de résultats</value>
+  </data>
+  <data name="Calculator" xml:space="preserve">
+    <value>Calculateur</value>
   </data>
   <data name="Calculators" xml:space="preserve">
     <value>Calculateurs</value>
@@ -1307,6 +1403,9 @@
   <data name="Clearly Has Friends" xml:space="preserve">
     <value>Clearly Has Friends</value>
   </data>
+  <data name="Click any value" xml:space="preserve">
+    <value>Cliquez sur une valeur</value>
+  </data>
   <data name="Clicks" xml:space="preserve">
     <value>Clics</value>
   </data>
@@ -1353,14 +1452,23 @@
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>Transitions de pad en co-op</value>
   </data>
+  <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
+    <value>CO-OP était valorisé à une base fixe de 2 000 mais n'a jamais compté dans le total.</value>
+  </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
+  </data>
+  <data name="CO-OP: priced at a flat 2,000 base, never counted in the total." xml:space="preserve">
+    <value>CO-OP : valorisé à une base fixe de 2 000, jamais compté dans le total.</value>
   </data>
   <data name="Code" xml:space="preserve">
     <value>Code</value>
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>Charts les moins populaires</value>
+  </data>
+  <data name="colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines" xml:space="preserve">
+    <value>couleur = vaut un 900 000 sur un niveau bas → un haut ; les bandes diagonales sont les lignes d'égale valeur</value>
   </data>
   <data name="Coloured by your standing among players at your level" xml:space="preserve">
     <value>Coloré selon ton classement parmi les joueurs de ton niveau</value>
@@ -1979,6 +2087,9 @@
     <value>Faire</value>
     <comment>Bouton de déclenchement admin — exécute RebuildOfficialLeaderboard.</comment>
   </data>
+  <data name="Does scoring matter more than it did on {0}?" xml:space="preserve">
+    <value>Le score compte-t-il plus que sur {0} ?</value>
+  </data>
   <data name="Doesn't Match My Personal Skills" xml:space="preserve">
     <value>Ne correspond pas à mes compétences personnelles</value>
   </data>
@@ -2008,6 +2119,9 @@
   </data>
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Niveau compétitif Doubles</value>
+  </data>
+  <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
+    <value>Table des Doubles ; un Single lit AA et en dessous un cran plus bas (AA {0}, A+ {1} …). Échelle complète ci-dessous.</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>Doublesteps</value>
@@ -2069,11 +2183,17 @@
   <data name="Duration (seconds)" xml:space="preserve">
     <value>Durée (secondes)</value>
   </data>
+  <data name="Each row is a level. The bar starts at a 900,000 on that level — a clean pass — and climbs through the grades; the axis is" xml:space="preserve">
+    <value>Chaque ligne est un niveau. La barre part d'un 900 000 sur ce niveau — un pass propre — et grimpe à travers les grades ; l'axe est</value>
+  </data>
   <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
     <value>Chaque échelon exige une valeur fixe de chacun de vos cinquante graphiques. Changez de groupe ci-dessus pour voir les autres échelles.</value>
   </data>
   <data name="Each source votes on every chart. Sources with more weight move charts further." xml:space="preserve">
     <value>Chaque source vote pour chaque chart. Les sources au poids plus élevé déplacent davantage les charts.</value>
+  </data>
+  <data name="Early days: {0} full pools." xml:space="preserve">
+    <value>Encore tôt : {0} pools complets.</value>
   </data>
   <data name="Earned" xml:space="preserve">
     <value>Obtenus</value>
@@ -2161,14 +2281,32 @@
   <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>Chaque note empilée par dossier, avec un segment cassé / non joué pour le total du dossier.</value>
   </data>
+  <data name="Every level, every grade" xml:space="preserve">
+    <value>Chaque niveau, chaque grade</value>
+  </data>
   <data name="Every level, Singles and Doubles" xml:space="preserve">
     <value>Tous les niveaux, Singles et Doubles</value>
   </data>
   <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
     <value>Chaque Miss remet le multiplicateur de gain à zéro. Il faut {0} Perfects — ou {1} Greats — pour le ramener au plafond. D'ici là, vous frappez des notes pour presque aucune vie.</value>
   </data>
+  <data name="Every multiplier and bonus in the formula. Where a Single reads differently from a Double the Single’s value is written in full; a dash means the two agree." xml:space="preserve">
+    <value>Chaque multiplicateur et bonus de la formule. Là où un Single lit autrement qu'un Double, la valeur du Single est écrite en toutes lettres ; un tiret signifie que les deux concordent.</value>
+  </data>
+  <data name="Every multiplier in the formula. One table serves both types." xml:space="preserve">
+    <value>Chaque multiplicateur de la formule. Une seule table sert aux deux types.</value>
+  </data>
+  <data name="every plate" xml:space="preserve">
+    <value>chaque plaque</value>
+  </data>
   <data name="every plate at once, end to end, is worth {0}" xml:space="preserve">
     <value>toutes les plaques ensemble, d'un bout à l'autre, valent {0}</value>
+  </data>
+  <data name="Every plate carried ×1.0. Not a rounding argument — the plate never entered the number." xml:space="preserve">
+    <value>Chaque plaque valait ×1,0. Pas une question d'arrondi — la plaque n'est jamais entrée dans le nombre.</value>
+  </data>
+  <data name="Every plate on Phoenix carried a modifier of exactly ×1.0, so the plate you walked away with never entered the number. Not a rounding argument — a Rough Game SSS+ and a Perfect Game SSS+ were worth the same PUMBILITY. Phoenix 2 is where plates start to count, and even there they are a tiebreaker." xml:space="preserve">
+    <value>Chaque plaque sur Phoenix portait un modificateur d'exactement ×1,0 : la plaque avec laquelle vous repartiez n'entrait jamais dans le nombre. Pas une question d'arrondi — un SSS+ Rough Game et un SSS+ Perfect Game valaient le même PUMBILITY. C'est sur Phoenix 2 que les plaques commencent à compter, et même là ce n'est qu'un départage.</value>
   </data>
   <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>Chaque plaque empilée par dossier, avec un segment cassé / non joué pour le total du dossier.</value>
@@ -2477,6 +2615,9 @@
   <data name="From {0} scores" xml:space="preserve">
     <value>Sur {0} scores</value>
   </data>
+  <data name="From {0} to {1} the split barely moves — level {2}, score {3}{4} — while the pool’s average level climbs from {5} to {6}. Grades are already S or better on {7}–{8} of the fifty in every band: pools here are scored close to the ceiling, and what separates one band from the next is the level of the charts in it. Scoring is how a chart enters the pool — an SSS+ about {9} levels down ties a clean pass — but the pool climbs on level." xml:space="preserve">
+    <value>De {0} à {1} la répartition bouge à peine — niveau {2}, score {3}{4} — pendant que le niveau moyen du pool grimpe de {5} à {6}. Les grades sont déjà S ou mieux sur {7}–{8} des cinquante dans chaque tranche : ici les pools sont scorés près du plafond, et ce qui sépare une tranche de la suivante est le niveau des charts qu'elle contient. Scorer est la façon dont un chart entre dans le pool — un SSS+ environ {9} niveaux plus bas égale un pass propre — mais le pool grimpe au niveau.</value>
+  </data>
   <data name="Full board" xml:space="preserve">
     <value>Leaderboard complet</value>
   </data>
@@ -2750,6 +2891,9 @@
   <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
     <value>Combien de combo propre vous devez racheter entre deux cassures, et où votre vie se stabilise si vous payez exactement ça.</value>
   </data>
+  <data name="How much do plates matter?" xml:space="preserve">
+    <value>Les plaques comptent-elles beaucoup ?</value>
+  </data>
   <data name="How much of every folder you've cleared, per level." xml:space="preserve">
     <value>How much of every folder you've cleared, per level.</value>
   </data>
@@ -2957,6 +3101,9 @@
   <data name="In Swagger: press Authorize and paste the key into toolKey — the key on its own, without the word Bearer." xml:space="preserve">
     <value>Dans Swagger : appuyez sur Authorize et collez la clé dans toolKey — la clé seule, sans le mot Bearer.</value>
   </data>
+  <data name="In the pools above, plates carry {0} of the number." xml:space="preserve">
+    <value>Dans les pools ci-dessus, les plaques pèsent {0} du nombre.</value>
+  </data>
   <data name="in the top ten" xml:space="preserve">
     <value>dans le top 10</value>
   </data>
@@ -2965,6 +3112,9 @@
   </data>
   <data name="In your PUMBILITY top 50" xml:space="preserve">
     <value>Dans votre top 50 PUMBILITY</value>
+  </data>
+  <data name="In {0} the split is level {1} / score {2}; in {3} it is {4} / {5}. The pool’s average level climbs from {6} to {7} along the way and S or better from {8} to {9} of fifty: passing harder charts is the whole ladder for most players, and scoring is what the last stretch is made of." xml:space="preserve">
+    <value>En {0} la répartition est niveau {1} / score {2} ; en {3} elle est {4} / {5}. Le niveau moyen du pool grimpe de {6} à {7} en chemin et S ou mieux de {8} à {9} sur cinquante : passer des charts plus durs est toute l'échelle pour la plupart des joueurs, et scorer est ce dont est fait le dernier tronçon.</value>
   </data>
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>Inclure un segment non joué</value>
@@ -3045,6 +3195,9 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>Il a peut-être été révoqué, ou l'outil n'existe plus. Demandez un nouveau lien à la personne qui vous l'a envoyé.</value>
   </data>
+  <data name="It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty." xml:space="preserve">
+    <value>Ça bouge, et c'est toute la réponse : le score fait {0} du nombre en {1} et {2} en {3}. Le niveau moyen du pool va de {4} → {5} en chemin, et S ou mieux de {6} → {7} sur cinquante.</value>
+  </data>
   <data name="It reads player scores" xml:space="preserve">
     <value>Il lit les scores des joueurs</value>
   </data>
@@ -3062,6 +3215,9 @@
   </data>
   <data name="It stops showing. Anyone who replied keeps their reply." xml:space="preserve">
     <value>Il cesse de s’afficher. Ceux qui ont répondu gardent leur réponse.</value>
+  </data>
+  <data name="It was AA on Phoenix — the floors moved." xml:space="preserve">
+    <value>C'était AA sur Phoenix — les planchers ont bougé.</value>
   </data>
   <data name="It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest." xml:space="preserve">
     <value>Il a sans doute été interrompu par une mise à jour du site. Ce qu'il a enregistré est déjà sur votre compte : réimporter récupère le reste.</value>
@@ -3250,6 +3406,9 @@
   <data name="Level {0}" xml:space="preserve">
     <value>Niveau {0}</value>
   </data>
+  <data name="Level · {0}" xml:space="preserve">
+    <value>Niveau · {0}</value>
+  </data>
   <data name="Levels" xml:space="preserve">
     <value>Niveaux</value>
   </data>
@@ -3258,6 +3417,9 @@
   </data>
   <data name="Levels below" xml:space="preserve">
     <value>Niveaux en dessous</value>
+  </data>
+  <data name="Levels first, then scores." xml:space="preserve">
+    <value>Les niveaux d'abord, les scores ensuite.</value>
   </data>
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
@@ -3469,9 +3631,6 @@
 	  <value>Nombre de Notes Max</value>
 	  <comment>Nombre de Notes Max</comment>
   </data>
-  <data name="Max Rating" xml:space="preserve">
-    <value>Rating Max</value>
-  </data>
   <data name="Maximum" xml:space="preserve">
     <value>Maximum</value>
   </data>
@@ -3657,6 +3816,9 @@
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>Grimpeurs de la semaine</value>
+  </data>
+  <data name="multiplier" xml:space="preserve">
+    <value>multiplicateur</value>
   </data>
   <data name="multiplier already gone" xml:space="preserve">
     <value>multiplicateur déjà perdu</value>
@@ -3867,6 +4029,9 @@
   <data name="Next title" xml:space="preserve">
     <value>Titre suivant</value>
   </data>
+  <data name="next to what a level is worth" xml:space="preserve">
+    <value>à côté de ce que vaut un niveau</value>
+  </data>
   <data name="Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there." xml:space="preserve">
     <value>Ensuite, votre page d'accueil : un tableau de widgets que vous choisissez. On démarre avec une configuration par défaut, puis vous réorganisez.</value>
   </data>
@@ -3938,6 +4103,12 @@
   </data>
   <data name="No Phoenix 2 chart" xml:space="preserve">
     <value>Aucun chart dans Phoenix 2</value>
+  </data>
+  <data name="No pool on PIU Scores has held a level {0} yet, so their base ({1}) follows the curve rather than a reading." xml:space="preserve">
+    <value>Aucun pool sur PIU Scores n'a encore contenu de niveau {0}, donc leur base ({1}) suit la courbe plutôt qu'une lecture.</value>
+  </data>
+  <data name="No pool on PIU Scores has held this level yet, so its base follows the curve rather than a reading." xml:space="preserve">
+    <value>Aucun pool sur PIU Scores n'a encore contenu ce niveau, donc sa base suit la courbe plutôt qu'une lecture.</value>
   </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>Pas encore d'instantané de popularité - il arrive avec l'import hebdomadaire.</value>
@@ -4080,6 +4251,9 @@
   <data name="Not available on {0}." xml:space="preserve">
     <value>Non disponible sur {0}.</value>
   </data>
+  <data name="Not because grades are worth more there — the span from a clean pass to an SSS+ fell from +{0} here to +{1} — but because a level fell further: Phoenix’s base is quadratic (+{2} at 20) against Phoenix 2’s flat +{3}. On Phoenix, passing one level higher takes a 900,000 to {4} to match on the chart you already have. That is why the ladder here is passing: the score lever is the expensive one." xml:space="preserve">
+    <value>Non pas parce que les grades y valent plus — l'écart d'un pass propre à un SSS+ est tombé de +{0} ici à +{1} — mais parce qu'un niveau a chuté davantage : la base de Phoenix est quadratique (+{2} à 20) contre le +{3} plat de Phoenix 2. Sur Phoenix, égaler un pass un niveau plus haut demande de porter un 900 000 à {4} sur le chart que vous avez déjà. Voilà pourquoi l'échelle ici est le pass : le levier du score est le levier cher.</value>
+  </data>
   <data name="Not checked" xml:space="preserve">
     <value>Non vérifié</value>
   </data>
@@ -4100,6 +4274,9 @@
   </data>
   <data name="Not enough players in range to provide results" xml:space="preserve">
     <value>Pas assez de joueurs dans ta plage pour donner un résultat</value>
+  </data>
+  <data name="not enough players yet: {0}" xml:space="preserve">
+    <value>pas encore assez de joueurs : {0}</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>pas plein</value>
@@ -4240,8 +4417,14 @@
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Rien n'a bougé — les {0} charts gardent leur niveau.</value>
   </data>
+  <data name="Nothing selected — click a value." xml:space="preserve">
+    <value>Rien de sélectionné — cliquez sur une valeur.</value>
+  </data>
   <data name="Nothing to compare yet" xml:space="preserve">
     <value>Rien à comparer pour l'instant</value>
+  </data>
+  <data name="Nothing to draw for {0} yet — the population figures build with the nightly PUMBILITY sweep, and a band needs at least {1} full pools before it is drawn." xml:space="preserve">
+    <value>Rien à tracer pour {0} pour l'instant — les chiffres de population se construisent avec le balayage PUMBILITY nocturne, et une tranche a besoin d'au moins {1} pools complets avant d'être tracée.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>Rien à suggérer pour l'instant — jouez et importez des scores d'abord.</value>
@@ -4258,8 +4441,14 @@
   <data name="Nothing was sent — post in the Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>Rien n'a été envoyé — écrivez sur le Discord et quelqu'un y jettera un œil. Votre outil continue de fonctionner entre-temps.</value>
   </data>
+  <data name="nothing within reach" xml:space="preserve">
+    <value>rien à portée</value>
+  </data>
   <data name="Nothing yet." xml:space="preserve">
     <value>Rien pour l'instant.</value>
+  </data>
+  <data name="Nothing." xml:space="preserve">
+    <value>Rien.</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>maintenant</value>
@@ -4390,6 +4579,9 @@
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>Un graphique configurable de vos scores, notes, plates ou pass par niveau.</value>
   </data>
+  <data name="one level higher is worth" xml:space="preserve">
+    <value>un niveau plus haut vaut</value>
+  </data>
   <data name="One minute, then you're in" xml:space="preserve">
     <value>Une minute, et c'est parti</value>
   </data>
@@ -4411,8 +4603,14 @@
   <data name="one per level bucket" xml:space="preserve">
     <value>un par tranche de niveau</value>
   </data>
+  <data name="One plate step (+{0}) on one chart is a few hundredths of a point." xml:space="preserve">
+    <value>Un cran de plaque (+{0}) sur un chart, c'est quelques centièmes de point.</value>
+  </data>
   <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
     <value>Un seul tableau partagé, une semaine — tout le monde poste son meilleur score sur les mêmes charts.</value>
+  </data>
+  <data name="One table for both types — Phoenix priced a Single and a Double at the same level alike." xml:space="preserve">
+    <value>Une seule table pour les deux types — Phoenix valorisait pareillement un Single et un Double du même niveau.</value>
   </data>
   <data name="One-click import" xml:space="preserve">
     <value>Import en un clic</value>
@@ -4594,6 +4792,9 @@
   <data name="Password saved on this device" xml:space="preserve">
     <value>Mot de passe enregistré sur cet appareil</value>
   </data>
+  <data name="past {0}" xml:space="preserve">
+    <value>au-delà de {0}</value>
+  </data>
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>Collez le lien entier, ou juste le code à la fin.</value>
   </data>
@@ -4603,6 +4804,12 @@
   <data name="Pending" xml:space="preserve">
     <value>En attente</value>
     <comment>En attente</comment>
+  </data>
+  <data name="per chart · grade and plate add, then multiply the base · your best fifty summed" xml:space="preserve">
+    <value>par chart · grade et plaque s'ajoutent, puis multiplient la base · vos cinquante meilleurs additionnés</value>
+  </data>
+  <data name="per chart · plates never entered it · your best fifty summed" xml:space="preserve">
+    <value>par chart · les plaques n'y entraient jamais · vos cinquante meilleurs additionnés</value>
   </data>
   <data name="Per-channel language" xml:space="preserve">
     <value>Langue par salon</value>
@@ -4673,6 +4880,9 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · ton vrai top 50</value>
   </data>
+  <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
+    <value>Phoenix 2 s'appuie sur le score environ {0}× plus que Phoenix.</value>
+  </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2 valorise un chart Singles un niveau au-dessus sur la courbe de base — un S22 rapporte comme un 23. Refaire les mêmes charts que dans le Mix précédent est le mauvais plan.</value>
   </data>
@@ -4734,6 +4944,12 @@
   <data name="Photos" xml:space="preserve">
     <value>Photos</value>
     <comment>Photos</comment>
+  </data>
+  <data name="Pick a chart’s level and the grade — the exact per-chart PUMBILITY, and what equals it elsewhere." xml:space="preserve">
+    <value>Choisissez le niveau d'un chart et le grade — le PUMBILITY exact par chart, et ce qui l'égale ailleurs.</value>
+  </data>
+  <data name="Pick a chart’s level, the grade and the plate — the exact per-chart PUMBILITY, and what equals it elsewhere." xml:space="preserve">
+    <value>Choisissez le niveau d'un chart, le grade et la plaque — le PUMBILITY exact par chart, et ce qui l'égale ailleurs.</value>
   </data>
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>Choisissez une difficulté dans la liste pour voir son détail et les charts similaires.</value>
@@ -5045,6 +5261,9 @@
   <data name="Previously rejected: {0}" xml:space="preserve">
     <value>Précédemment refusé : {0}</value>
   </data>
+  <data name="priced base" xml:space="preserve">
+    <value>base valorisée</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -5142,6 +5361,18 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY Calculator" xml:space="preserve">
+    <value>Calculateur de PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY Calculator — {0}" xml:space="preserve">
+    <value>Calculateur de PUMBILITY — {0}</value>
+  </data>
+  <data name="PUMBILITY is the sum of your fifty highest-valued charts — one pool across Singles and Doubles." xml:space="preserve">
+    <value>Le PUMBILITY est la somme de vos cinquante charts de plus grande valeur — un seul pool à travers Singles et Doubles.</value>
+  </data>
+  <data name="PUMBILITY is the sum of your fifty highest-valued charts. Phoenix 2 keeps three pools — Singles, Doubles, and the total across both — each its own top fifty." xml:space="preserve">
+    <value>Le PUMBILITY est la somme de vos cinquante charts de plus grande valeur. Phoenix 2 tient trois pools — Singles, Doubles et le total des deux — chacun son propre top cinquante.</value>
+  </data>
   <data name="PUMBILITY level {0}" xml:space="preserve">
     <value>Niveau PUMBILITY {0}</value>
   </data>
@@ -5163,11 +5394,17 @@
   <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
     <value>Pump It Up n'avait pas de titres avant Prime 2.</value>
   </data>
+  <data name="Push levels." xml:space="preserve">
+    <value>Montez en niveau.</value>
+  </data>
   <data name="Push PGs" xml:space="preserve">
     <value>Visez les PG</value>
   </data>
   <data name="Pushing Title Charts" xml:space="preserve">
     <value>Charts du titre en cours</value>
+  </data>
+  <data name="Quadratic: a level is worth {0} at 20 and {1} at 27. Below level 10 a chart is worth 0. CO-OP charts were priced at a flat 2,000 but never counted in the total." xml:space="preserve">
+    <value>Quadratique : un niveau vaut {0} à 20 et {1} à 27. Sous le niveau 10 un chart vaut 0. Les charts CO-OP étaient valorisés à 2 000 fixes mais n'ont jamais compté dans le total.</value>
   </data>
   <data name="Qualifier Existing Score" xml:space="preserve">
     <value>Vous avez déjà {0} {1} ici. L'envoi le remplace.</value>
@@ -5226,6 +5463,9 @@
   </data>
   <data name="Queued" xml:space="preserve">
     <value>En file d'attente</value>
+  </data>
+  <data name="Quick calculator" xml:space="preserve">
+    <value>Calculateur rapide</value>
   </data>
   <data name="Quick Record" xml:space="preserve">
     <value>Enregistrement rapide</value>
@@ -5298,9 +5538,6 @@
     <value>Rating</value>
     <comment>Rating</comment>
   </data>
-  <data name="Rating Calculator" xml:space="preserve">
-    <value>Calculateur de Rating</value>
-  </data>
   <data name="Re-price {0} ratings" xml:space="preserve">
     <value>Recalculer les ratings {0}</value>
   </data>
@@ -5321,6 +5558,9 @@
   </data>
   <data name="Reached {0}" xml:space="preserve">
     <value>A atteint {0}</value>
+  </data>
+  <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
+    <value>Remontez tout droit depuis le bout d'une barre pour voir à quel niveau elle correspond.</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>Lire le code</value>
@@ -5638,6 +5878,9 @@
   <data name="Rotation started." xml:space="preserve">
     <value>Rotation lancée.</value>
   </data>
+  <data name="Rough" xml:space="preserve">
+    <value>Rough</value>
+  </data>
   <data name="Rows with this edge come from the player's PIU Scores account, not the official board." xml:space="preserve">
     <value>Les lignes avec ce bord viennent du compte PIU Scores du joueur, pas du leaderboard officiel.</value>
   </data>
@@ -5668,6 +5911,9 @@
   </data>
   <data name="Runs Without Twists" xml:space="preserve">
     <value>Runs sans twists</value>
+  </data>
+  <data name="S + D" xml:space="preserve">
+    <value>S + D</value>
   </data>
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>Mêmes compétences, deux questions : la vue dossier demande comment se passent les charts que vous avez joués ici — la vue mélange demande quelles compétences surperforment ou sous-performent sur tout ce que vous avez scoré à proximité. Une compétence peut sembler correcte ici et déplacer des charts quand même.</value>
@@ -5725,6 +5971,12 @@
   </data>
   <data name="Score Distribution" xml:space="preserve">
     <value>Distribution de scores</value>
+  </data>
+  <data name="score floor" xml:space="preserve">
+    <value>plancher de score</value>
+  </data>
+  <data name="Score floors changed below AAA on Phoenix 2 — A {0} · A+ {1} · AA {2} · AA+ {3}." xml:space="preserve">
+    <value>Les planchers de score ont changé sous AAA sur Phoenix 2 — A {0} · A+ {1} · AA {2} · AA+ {3}.</value>
   </data>
   <data name="Score Formula Shoutout" xml:space="preserve">
     <value>Shout out à MR_WEQ pour le reverse-engineering de la formule !</value>
@@ -6058,6 +6310,9 @@
   <data name="Short Cut" xml:space="preserve">
     <value>Short Cut</value>
   </data>
+  <data name="Should I push levels or push scores?" xml:space="preserve">
+    <value>Faut-il monter en niveau ou en score ?</value>
+  </data>
   <data name="Show" xml:space="preserve">
     <value>Montrer</value>
   </data>
@@ -6227,6 +6482,9 @@
   <data name="Singles + Doubles" xml:space="preserve">
     <value>Singles + Doubles</value>
   </data>
+  <data name="Singles are priced one level up and read a few grades and plates differently." xml:space="preserve">
+    <value>Les Singles sont valorisés un niveau plus haut et lisent quelques grades et plaques autrement.</value>
+  </data>
   <data name="Singles competitive level" xml:space="preserve">
     <value>Niveau compétitif Singles</value>
   </data>
@@ -6284,6 +6542,9 @@
   </data>
   <data name="Slim" xml:space="preserve">
     <value>Mince</value>
+  </data>
+  <data name="so scoring one chart is worth" xml:space="preserve">
+    <value>donc scorer un chart vaut</value>
   </data>
   <data name="Socialite" xml:space="preserve">
     <value>Socialite</value>
@@ -6674,6 +6935,9 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>Le code a peut-être été révoqué, ou la communauté n'existe plus.</value>
   </data>
+  <data name="The constants" xml:space="preserve">
+    <value>Les constantes</value>
+  </data>
   <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
     <value>Le récapitulatif est publié après le balayage hebdomadaire du dimanche.</value>
   </data>
@@ -6689,11 +6953,23 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>Les chiffres exacts</value>
   </data>
+  <data name="the exchange rate — scoring got {0}× more powerful relative to passing" xml:space="preserve">
+    <value>le taux de change — scorer est devenu {0}× plus puissant par rapport au pass</value>
+  </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>Le premier score Phoenix 2 à battre votre meilleur score Phoenix 1</value>
   </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>Le premier instantané hebdomadaire n'est pas encore arrivé - les temps forts s'allument après l'import de dimanche prochain.</value>
+  </data>
+  <data name="The formula" xml:space="preserve">
+    <value>La formule</value>
+  </data>
+  <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}. The gap closes above 24, where the base starts growing by 10 a level instead of 5 — and that is exactly where scoring stops being the cheap lever. It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level." xml:space="preserve">
+    <value>L'écart de grade a bien rétréci : un SSS+ au-dessus d'un pass propre valait +{0} sur Phoenix et vaut +{1} ici. Mais cela ne compte que face à ce que vaut un niveau, et le niveau a rétréci davantage — la base de Phoenix est quadratique (+{2} à 20), celle de Phoenix 2 croît de 5 fixes (+{3}). Dit autrement : sur Phoenix, égaler un pass un niveau plus haut demandait de porter un 900 000 à {4} sur le chart que vous aviez déjà ; sur Phoenix 2 le même pas de niveau s'égale avec {5}. L'écart se referme au-dessus de 24, où la base se met à croître de 10 par niveau au lieu de 5 — et c'est exactement là que scorer cesse d'être le levier bon marché. Cela explique aussi les pools ci-dessus : tout le monde a déjà tiré le levier bon marché, donc ce qui reste à grimper, c'est le niveau.</value>
+  </data>
+  <data name="the grade span got {0}× smaller" xml:space="preserve">
+    <value>l'écart de grade est devenu {0}× plus petit</value>
   </data>
   <data name="The grind" xml:space="preserve">
     <value>Le grind</value>
@@ -6740,11 +7016,23 @@
   <data name="The piugame.com session key is forwarded so you run your own import." xml:space="preserve">
     <value>La clé de session piugame.com est transmise pour que vous fassiez votre propre import.</value>
   </data>
+  <data name="The plate you walked away with never entered the number." xml:space="preserve">
+    <value>La plaque avec laquelle vous repartiez n'entrait jamais dans le nombre.</value>
+  </data>
   <data name="The plate, magnified" xml:space="preserve">
     <value>La plaque, agrandie</value>
   </data>
+  <data name="The plate, magnified — Rough Game on every chart to Perfect Game on every chart" xml:space="preserve">
+    <value>La plaque, agrandie — de Rough Game sur chaque chart à Perfect Game sur chaque chart</value>
+  </data>
   <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
     <value>Le POST dit seulement « ce joueur a importé ». Vous venez chercher ce dont vous avez besoin.</value>
+  </data>
+  <data name="The Pump It Up Phoenix 2 PUMBILITY formula: Base(level) × (grade + plate), Base = 130 + 5 × level, singles priced one level up. Every grade multiplier and plate bonus, what any level and grade is worth, and how much scoring buys against passing." xml:space="preserve">
+    <value>La formule PUMBILITY de Pump It Up Phoenix 2 : Base(level) × (grade + plate), Base = 130 + 5 × level, singles valorisés un niveau plus haut. Chaque multiplicateur de grade et bonus de plaque, ce que vaut n'importe quel niveau et grade, et ce que le score achète face au pass.</value>
+  </data>
+  <data name="The Pump It Up Phoenix PUMBILITY formula: Base(level) × grade, Base = 100 + 5 × (level − 10) × (level − 9), plates ×1.0. Every grade multiplier, what any level and grade was worth, and how much scoring bought against passing." xml:space="preserve">
+    <value>La formule PUMBILITY de Pump It Up Phoenix : Base(level) × grade, Base = 100 + 5 × (level − 10) × (level − 9), plaques ×1,0. Chaque multiplicateur de grade, ce que valait n'importe quel niveau et grade, et ce que le score achetait face au pass.</value>
   </data>
   <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
     <value>La barre Rainbow, c'est 1000 de vie sur un 1 comme sur un 29. Ce qu'un chart plus difficile vous donne, c'est de la vie derrière la barre : invisible sur la borne, et la seule chose qui change avec le niveau. Le combo nécessaire par Miss est identique jusqu'en haut.</value>
@@ -6757,6 +7045,9 @@
   </data>
   <data name="The rules" xml:space="preserve">
     <value>Les règles</value>
+  </data>
+  <data name="The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}." xml:space="preserve">
+    <value>Le S17 paie Base(18) = {0} — un Single est valorisé un niveau plus haut. Perfect Game est le bonus de plaque, pas un grade : un 1 000 000 garde le ×{1} de SSS+ et ajoute +{2}.</value>
   </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>Le même Perfect au début de la chanson, avant tout combo.</value>
@@ -6950,6 +7241,12 @@
   <data name="This page is full." xml:space="preserve">
     <value>Cette page est pleine.</value>
   </data>
+  <data name="This page is the formula behind the number: what any grade on any level is worth, and where the number actually comes from." xml:space="preserve">
+    <value>Cette page est la formule derrière le nombre : ce que vaut n'importe quel grade sur n'importe quel niveau, et d'où vient réellement le nombre.</value>
+  </data>
+  <data name="This page is the Phoenix formula behind the number: what any grade on any level was worth, and where the number came from." xml:space="preserve">
+    <value>Cette page est la formule Phoenix derrière le nombre : ce que valait n'importe quel grade sur n'importe quel niveau, et d'où venait le nombre.</value>
+  </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>Ce récap n&apos;a pas encore été calculé — reviens bientôt.</value>
   </data>
@@ -7078,6 +7375,9 @@
   </data>
   <data name="To Leaderboard" xml:space="preserve">
     <value>Vers le Leaderboard</value>
+  </data>
+  <data name="to light up what equals it on every other level." xml:space="preserve">
+    <value>pour éclairer ce qui l'égale sur chaque autre niveau.</value>
   </data>
   <data name="To page" xml:space="preserve">
     <value>À la page</value>
@@ -7280,6 +7580,9 @@
   </data>
   <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
     <value>Non confirmé sur Phoenix et Phoenix 2 : voir la note en haut de la page.</value>
+  </data>
+  <data name="under {0}" xml:space="preserve">
+    <value>moins de {0}</value>
   </data>
   <data name="Underrated" xml:space="preserve">
     <value>Sous-évalué</value>
@@ -7657,6 +7960,9 @@
   <data name="What players at your level score here" xml:space="preserve">
     <value>Ce que marquent les joueurs de ton niveau ici</value>
   </data>
+  <data name="What scoring buys, in levels" xml:space="preserve">
+    <value>Ce que le score achète, en niveaux</value>
+  </data>
   <data name="What should they change?" xml:space="preserve">
     <value>Que devraient-ils changer ?</value>
   </data>
@@ -7708,6 +8014,9 @@
   <data name="Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it." xml:space="preserve">
     <value>Là où les joueurs lisent votre code — GitHub, GitLab, Codeberg, n'importe quel hébergeur public. Un outil listé pointe directement dessus.</value>
   </data>
+  <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
+    <value>D'où vient le PUMBILITY sur {0} — le pool moyen</value>
+  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Où se situent les passes de ce chart, par niveau compétitif.</value>
   </data>
@@ -7728,6 +8037,9 @@
   </data>
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>Quels charts sont honnêtes pour leur niveau — et lesquels mentent.</value>
+  </data>
+  <data name="which level’s 900,000 is worth the same" xml:space="preserve">
+    <value>le 900 000 de quel niveau vaut pareil</value>
   </data>
   <data name="Which mix" xml:space="preserve">
     <value>Quel Mix</value>
@@ -7780,6 +8092,9 @@
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Sans eux il fonctionne quand même — pour vous, sur vos propres scores.</value>
   </data>
+  <data name="Worked examples" xml:space="preserve">
+    <value>Exemples calculés</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>Calcul de ce que cette session a changé : vos titres, votre pool, et la place de chaque score parmi les joueurs de votre niveau.</value>
   </data>
@@ -7800,6 +8115,21 @@
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>Classements mondiaux</value>
+  </data>
+  <data name="worth a 900,000 on level →" xml:space="preserve">
+    <value>vaut un 900 000 sur le niveau →</value>
+  </data>
+  <data name="worth a 900,000 on {0}" xml:space="preserve">
+    <value>vaut un 900 000 sur {0}</value>
+  </data>
+  <data name="Worth about the same" xml:space="preserve">
+    <value>Vaut à peu près pareil</value>
+  </data>
+  <data name="worth more than a 900,000 on any chart in the game" xml:space="preserve">
+    <value>vaut plus qu'un 900 000 sur n'importe quel chart du jeu</value>
+  </data>
+  <data name="Worth zero" xml:space="preserve">
+    <value>Vaut zéro</value>
   </data>
   <data name="Wouldn't You Like To Know" xml:space="preserve">
     <value>Vous aimeriez bien le savoir, hein ?</value>
@@ -7833,6 +8163,9 @@
   <data name="XXLetterGrade" xml:space="preserve">
     <value>XXLetterGrade</value>
     <comment>En-tête de colonne dans la grille d'aperçu d'upload des scores XX ; correspond au nom de propriété historique.</comment>
+  </data>
+  <data name="Yes — about {0}× more, where most pools actually live." xml:space="preserve">
+    <value>Oui — environ {0}× plus, là où vivent réellement la plupart des pools.</value>
   </data>
   <data name="Yes, cycle all keys" xml:space="preserve">
     <value>Oui, faire tourner toutes les clés</value>
@@ -8272,6 +8605,12 @@
   <data name="{0} admins" xml:space="preserve">
     <value>{0} administrateurs</value>
   </data>
+  <data name="{0} against {1}." xml:space="preserve">
+    <value>{0} face à {1}.</value>
+  </data>
+  <data name="{0} and up" xml:space="preserve">
+    <value>{0} et plus</value>
+  </data>
   <data name="{0} API calls" xml:space="preserve">
     <value>{0} appels d'API</value>
   </data>
@@ -8283,6 +8622,9 @@
   </data>
   <data name="{0} at {1}" xml:space="preserve">
     <value>{0} en {1}</value>
+  </data>
+  <data name="{0} beats it at any pass" xml:space="preserve">
+    <value>{0} le fait mieux avec n'importe quel pass</value>
   </data>
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0} devient le créateur de cette communauté et vous devenez administrateur. Il n'y a qu'une place de créateur : vous ne pourrez pas la reprendre vous-même.</value>
@@ -8304,6 +8646,9 @@
   </data>
   <data name="{0} can now read your scores" xml:space="preserve">
     <value>{0} peut maintenant lire vos scores</value>
+  </data>
+  <data name="{0} can’t reach it (SSS+ = {1})" xml:space="preserve">
+    <value>{0} ne l'atteint pas (SSS+ = {1})</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0} a changé le niveau de {1} charts par rapport à {2} — {3} plus durs, {4} plus faciles — {5} chansons ajoutées et {6} retirées.</value>
@@ -8431,6 +8776,9 @@
   <data name="{0} left" xml:space="preserve">
     <value>{0} sortis</value>
   </data>
+  <data name="{0} levels" xml:space="preserve">
+    <value>{0} niveaux</value>
+  </data>
   <data name="{0} match the community tier" xml:space="preserve">
     <value>{0} correspondent à la communauté</value>
   </data>
@@ -8527,6 +8875,9 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0} au classement</value>
   </data>
+  <data name="{0} on {1}" xml:space="preserve">
+    <value>{0} sur {1}</value>
+  </data>
   <data name="{0} only" xml:space="preserve">
     <value>{0} uniquement</value>
   </data>
@@ -8557,8 +8908,20 @@
   <data name="{0} players lose access" xml:space="preserve">
     <value>{0} joueurs perdent l'accès</value>
   </data>
+  <data name="{0} players on PIU Scores with a full pool of fifty — {1} players, {2}. The split is measured from a bare base of ×1.00, the same split as on your PUMBILITY page." xml:space="preserve">
+    <value>Joueurs {0} sur PIU Scores avec un pool complet de cinquante — {1} joueurs, {2}. La répartition est mesurée depuis une base nue de ×1,00, la même répartition que sur votre page PUMBILITY.</value>
+  </data>
+  <data name="{0} players on PIU Scores with a full pool of fifty. The split is measured from a bare base of ×1.00, the same split as on your PUMBILITY page." xml:space="preserve">
+    <value>Joueurs {0} sur PIU Scores avec un pool complet de cinquante. La répartition est mesurée depuis une base nue de ×1,00, la même répartition que sur votre page PUMBILITY.</value>
+  </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} joueurs · semaine du {1}</value>
+  </data>
+  <data name="{0} pools" xml:space="preserve">
+    <value>{0} pools</value>
+  </data>
+  <data name="{0} pools · average level {1}" xml:space="preserve">
+    <value>{0} pools · niveau moyen {1}</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>{0} PUMBILITY restants</value>
@@ -8653,6 +9016,9 @@
   <data name="{0}% to next title" xml:space="preserve">
     <value>{0} % avant le prochain titre</value>
   </data>
+  <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
+    <value>{0} : un SSS+ sur {1} vaut un 900 000 sur {2}</value>
+  </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>il y a {0} j</value>
   </data>
@@ -8685,6 +9051,9 @@
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Zelllooo</value>
+  </data>
+  <data name="≈ the closest value on each other level:" xml:space="preserve">
+    <value>≈ la valeur la plus proche sur chaque autre niveau :</value>
   </data>
   <data name="▲ Harder" xml:space="preserve">
     <value>▲ Plus dur</value>

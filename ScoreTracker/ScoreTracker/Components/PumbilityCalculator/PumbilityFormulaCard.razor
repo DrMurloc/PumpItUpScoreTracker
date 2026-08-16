@@ -18,13 +18,13 @@
             @if (Model.HasPlates)
             {
                 <p class="pc-formula-line">
-                    <span class="pc-t-level">Base(level)</span><span class="pc-op">×</span><span class="pc-op">(</span><span class="pc-t-grade">@L["grade"]</span><span class="pc-op">+</span><span class="pc-t-plate">@L["plate"]</span><span class="pc-op">)</span>
+                    <span class="pc-t-level">Base(level)</span><span class="pc-op">×</span><span class="pc-op">(</span><span class="pc-t-grade">grade</span><span class="pc-op">+</span><span class="pc-t-plate">plate</span><span class="pc-op">)</span>
                     <small>@L["per chart · grade and plate add, then multiply the base · your best fifty summed"]</small>
                 </p>
                 <div class="pc-terms">
                     <div class="pc-term pc-term-level">
                         <span class="pc-lbl">Base(level)</span>
-                        <span class="pc-term-val">130 + 5 × @L["level"] <small>@L["+5 more per level above 24"]</small></span>
+                        <span class="pc-term-val">130 + 5 × level <small>@L["+5 more per level above 24"]</small></span>
                         <span class="pc-term-say">@L["A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0."]</span>
                     </div>
                     <div class="pc-term pc-term-grade">
@@ -44,19 +44,19 @@
                     <span class="pc-zero-item">@L["a broken run"]</span>
                     <span class="pc-zero-item">CO-OP</span>
                     <span class="pc-zero-item">U.C.S.</span>
-                    <span class="pc-zero-item">@L["half-double"]</span>
+                    <span class="pc-zero-item">@L["Half-Double"]</span>
                 </div>
             }
             else
             {
                 <p class="pc-formula-line">
-                    <span class="pc-t-level">Base(level)</span><span class="pc-op">×</span><span class="pc-t-grade">@L["grade"]</span>
+                    <span class="pc-t-level">Base(level)</span><span class="pc-op">×</span><span class="pc-t-grade">grade</span>
                     <small>@L["per chart · plates never entered it · your best fifty summed"]</small>
                 </p>
                 <div class="pc-terms">
                     <div class="pc-term pc-term-level">
                         <span class="pc-lbl">Base(level)</span>
-                        <span class="pc-term-val">100 + 5 × (@L["level"] − 10) × (@L["level"] − 9)</span>
+                        <span class="pc-term-val">100 + 5 × (level − 10) × (level − 9)</span>
                         <span class="pc-term-say">@L["Quadratic: a level is worth {0} at 20 and {1} at 27. Below level 10 a chart is worth 0. CO-OP charts were priced at a flat 2,000 but never counted in the total.", LevelStep(20), LevelStep(27)]</span>
                     </div>
                     <div class="pc-term pc-term-grade">
@@ -75,7 +75,7 @@
                     <span class="pc-zero-item">@L["below level 10"]</span>
                     <span class="pc-zero-item">@L["a broken run"]</span>
                     <span class="pc-zero-item">U.C.S.</span>
-                    <span class="pc-zero-item">@L["half-double"]</span>
+                    <span class="pc-zero-item">@L["Half-Double"]</span>
                 </div>
             }
         </div>
@@ -144,9 +144,9 @@
     {
         var chart = Model.HasTypes
             ? $"{example.Type.GetShortHand()}{example.Level}"
-            : L["level {0}", example.Level].Value;
+            : L["Level {0}", example.Level].Value;
         return Model.HasPlates
-            ? $"{chart} · {example.Grade.GetName()} · {L[example.Plate.GetName()]}"
+            ? $"{chart} · {example.Grade.GetName()} · {example.Plate.GetName()}"
             : $"{chart} · {example.Grade.GetName()}";
     }
 }

@@ -51,7 +51,7 @@
                 <select data-pc-plate>
                     @foreach (var plate in Enumerable.Reverse(Plates))
                     {
-                        <option value="@plate.GetShorthand()" selected="@(plate == DefaultPlate)">@L[plate.GetName()]</option>
+                        <option value="@plate.GetShorthand()" selected="@(plate == DefaultPlate)">@plate.GetName()</option>
                     }
                 </select>
             </label>

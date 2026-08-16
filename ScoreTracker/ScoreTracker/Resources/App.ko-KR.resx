@@ -220,6 +220,9 @@
   <data name="+ {0} more on this week's board" xml:space="preserve">
     <value>이번 주 보드에 외 {0}개</value>
   </data>
+  <data name="+5 more per level above 24" xml:space="preserve">
+    <value>24 이상은 레벨당 +5 추가</value>
+  </data>
   <data name="+{0} levels up" xml:space="preserve">
     <value>+{0} 레벨 위</value>
   </data>
@@ -234,6 +237,12 @@
   </data>
   <data name="+{0} over P1" xml:space="preserve">
     <value>P1 대비 +{0}</value>
+  </data>
+  <data name=", plate under half a percent" xml:space="preserve">
+    <value>, 플레이트 0.5% 미만</value>
+  </data>
+  <data name=", so the comparison is the exchange rate: taking one chart from a 900,000 to an SSS+ equals how many levels of pass-pushing, on each mix." xml:space="preserve">
+    <value>, 그래서 비교는 환율입니다: 채보 하나를 900,000에서 SSS+로 끌어올리는 것이 시리즈별로 레벨 올리기 몇 레벨에 해당하는가.</value>
   </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
@@ -301,6 +310,15 @@
   <data name="90% -> 99.9%" xml:space="preserve">
     <value>90% -> 99.9%</value>
   </data>
+  <data name="900,000 is exactly the {0} floor on {1}." xml:space="preserve">
+    <value>900,000은 {1}에서 정확히 {0}의 하한선입니다.</value>
+  </data>
+  <data name="900,000 on its own level — {0}" xml:space="preserve">
+    <value>자기 레벨에서의 900,000 — {0}</value>
+  </data>
+  <data name="900,000 → SSS+ is worth" xml:space="preserve">
+    <value>900,000 → SSS+의 가치</value>
+  </data>
   <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
     <value>Bad는 라이프와 무관하게 일정하게 −50, Miss는 최대 −270입니다. 하지만 Bad도 배율을 절반으로 깎기 때문에, 연속된 Bad는 그만큼 확실하게 회복을 옥죕니다.</value>
   </data>
@@ -312,6 +330,9 @@
   </data>
   <data name="A breakdown for Pass Difficulty is coming." xml:space="preserve">
     <value>패스 난이도 분석은 준비 중입니다.</value>
+  </data>
+  <data name="a broken run" xml:space="preserve">
+    <value>브레이크된 플레이</value>
   </data>
   <data name="a chart" xml:space="preserve">
     <value>채보</value>
@@ -333,6 +354,9 @@
   </data>
   <data name="A good, always." xml:space="preserve">
     <value>Good은 언제나.</value>
+  </data>
+  <data name="A grade is only worth something" xml:space="preserve">
+    <value>등급은 오직</value>
   </data>
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>배율 상한에서의 Great.</value>
@@ -373,6 +397,9 @@
   <data name="A perfect plate on every chart in your pool would add {0} — {1} of it." xml:space="preserve">
     <value>풀의 모든 차트에서 퍼펙트 플레이트를 받으면 {0}이(가) 늘어납니다 — 전체의 {1}.</value>
   </data>
+  <data name="A plate adds at most +{0} to a grade multiplier of {1}–{2}, so Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {3} — {4} of a level at 24, {5} of a level at 20." xml:space="preserve">
+    <value>플레이트는 {1}–{2}의 등급 배율에 최대 +{0}을 더할 뿐이므로, 풀의 모든 채보를 Rough Game 대신 Perfect Game으로 채워도 약 {3}의 가치 — 24레벨에서 {4}레벨, 20레벨에서 {5}레벨어치입니다.</value>
+  </data>
   <data name="A player connected" xml:space="preserve">
     <value>플레이어가 연결되었습니다</value>
   </data>
@@ -391,8 +418,26 @@
   <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
     <value>Phoenix 1에서 이미 낸 점수를 Phoenix 2 기준으로 재산정한 값입니다.</value>
   </data>
+  <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
+    <value>싱글은 한 레벨 위로 책정됩니다: S17은 Base(18)로 계산됩니다. 10레벨 미만 채보의 가치는 0입니다.</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>스냅샷 zip은 이미 받아 둔 데이터 릴리스를 직접 가져옵니다. 크롤과 같은 과정이며 별도 다운로드가 없습니다</value>
+  </data>
+  <data name="A tiebreaker." xml:space="preserve">
+    <value>타이브레이커입니다.</value>
+  </data>
+  <data name="a typical pool sits at about +{0}" xml:space="preserve">
+    <value>일반적인 풀은 약 +{0} 부근</value>
+  </data>
+  <data name="AA is exactly ×1.00. Steps of 0.05 up to S, then 0.06 a rung to SSS+; 0.10 a rung below AA." xml:space="preserve">
+    <value>AA는 정확히 ×1.00입니다. S까지 0.05씩, 그다음 SSS+까지 단계당 0.06; AA 아래로는 단계당 0.10.</value>
+  </data>
+  <data name="AA is the neutral point; every grade above it adds, every grade below it takes away." xml:space="preserve">
+    <value>AA가 기준점입니다; 그 위의 등급은 더하고, 아래의 등급은 뺍니다.</value>
+  </data>
+  <data name="AA+ and above are identical on both types. On a Double the ladder steps −0.01 a rung through the S grades, −0.02 a rung from AAA+ to A+, −0.05 a rung down to C, then −0.10 a rung to F; a Single runs a notch lower from AA down. A perfect 1,000,000 keeps SSS+’s ×1.50 — Perfect Game is a plate." xml:space="preserve">
+    <value>AA+ 이상은 두 종류가 동일합니다. 더블에서는 S 등급대에서 단계당 −0.01, AAA+에서 A+까지 단계당 −0.02, C까지 단계당 −0.05, 그다음 F까지 단계당 −0.10; 싱글은 AA 아래부터 한 칸씩 낮습니다. 완벽한 1,000,000도 SSS+의 ×1.50을 유지합니다 — Perfect Game은 플레이트입니다.</value>
   </data>
   <data name="About" xml:space="preserve">
     <value>Score Tracker 소개</value>
@@ -499,6 +544,9 @@
   <data name="Added to Favorites!" xml:space="preserve">
     <value>즐겨찾기에 추가됨!</value>
   </data>
+  <data name="Added to the grade multiplier before the base multiplies it. Perfect Game needs a 1,000,000." xml:space="preserve">
+    <value>베이스를 곱하기 전에 등급 배율에 더해집니다. Perfect Game은 1,000,000이 필요합니다.</value>
+  </data>
   <data name="Added to ToDo List!" xml:space="preserve">
     <value>목표 목록에 추가됨!</value>
   </data>
@@ -534,6 +582,9 @@
   </data>
   <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
     <value>업로드 후에 일부 행/채보/기록이 올바르게 업로드되지 않은 경우, 실패한 행 목록과 실패 사유를 다운로드하실 수 있는 옵션이 제공됩니다.</value>
+  </data>
+  <data name="Against {0} {1}." xml:space="preserve">
+    <value>{0} {1} 기준.</value>
   </data>
   <data name="Age" xml:space="preserve">
     <value>나이</value>
@@ -619,11 +670,23 @@
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>게임 태그 {0}인 계정이 이미 있습니다. 본인인가요?</value>
   </data>
+  <data name="An additive bonus, not a multiplier — at most {0} of a chart." xml:space="preserve">
+    <value>배율이 아닌 가산 보너스 — 채보 하나의 최대 {0}.</value>
+  </data>
   <data name="An estimate from players at your competitive level." xml:space="preserve">
     <value>같은 경쟁 레벨 플레이어들에게서 얻은 추정치입니다.</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>이미 가져오기가 실행 중입니다</value>
+  </data>
+  <data name="an SSS+" xml:space="preserve">
+    <value>SSS+</value>
+  </data>
+  <data name="An SSS+ on a level 20 reaches {0} — the same PUMBILITY as a 900,000 there, so taking one chart from a pass to a perfect is worth {1} levels of pass-pushing. The reach grows with level because Phoenix’s base is quadratic: {2} levels at 16, {1} at 20, {3} at 24. Below the pass line a chart falls off the same way: an A pays ×{4}, an F ×{5}." xml:space="preserve">
+    <value>20레벨의 SSS+는 {0}에 닿습니다 — 그곳의 900,000과 같은 PUMBILITY이므로, 채보 하나를 클리어에서 퍼펙트로 끌어올리는 것은 레벨 올리기 {1}레벨어치입니다. Phoenix의 베이스는 2차 함수라서 레벨이 오를수록 도달 범위가 커집니다: 16에서 {2}레벨, 20에서 {1}, 24에서 {3}. 클리어 선 아래로도 같은 방식으로 떨어집니다: A는 ×{4}, F는 ×{5}.</value>
+  </data>
+  <data name="An SSS+ on a {0} reaches {1} — the same PUMBILITY as a 900,000 there, so taking one chart from a pass to a perfect is worth {2} levels of pass-pushing. The reach narrows above 24, where Phoenix 2’s base starts growing by 10 a level instead of 5: {3} levels at 16, {2} at 20, {4} at 24. Below the pass line a chart drops off fast — a D pays ×{5} against {6}’s ×{7}." xml:space="preserve">
+    <value>{0}의 SSS+는 {1}에 닿습니다 — 그곳의 900,000과 같은 PUMBILITY이므로, 채보 하나를 클리어에서 퍼펙트로 끌어올리는 것은 레벨 올리기 {2}레벨어치입니다. Phoenix 2의 베이스가 레벨당 5 대신 10씩 늘기 시작하는 24 위에서는 도달 범위가 좁아집니다: 16에서 {3}레벨, 20에서 {2}, 24에서 {4}. 클리어 선 아래로는 채보의 가치가 빠르게 떨어집니다 — D는 ×{5}, {6}은 ×{7}.</value>
   </data>
   <data name="An unknown error occurred" xml:space="preserve">
     <value>알 수 없는 오류가 발생했습니다</value>
@@ -633,6 +696,9 @@
   </data>
   <data name="Ancient" xml:space="preserve">
     <value>아주 오래됨</value>
+  </data>
+  <data name="And it barely moves from band to band: score is {0} of the number in {1} and {2} in {3}. What changes between the bands is the level of the charts — average {4} in {1}, {5} in {3} — with S or better on {6}–{7} of the fifty throughout." xml:space="preserve">
+    <value>그리고 구간 사이에서 거의 움직이지 않습니다: 점수는 {1}에서 숫자의 {0}, {3}에서 {2}입니다. 구간 사이에 바뀌는 것은 채보의 레벨입니다 — {1}에서 평균 {4}, {3}에서 {5} — 50개 중 S 이상은 내내 {6}–{7}개입니다.</value>
   </data>
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>그리고 배율 {0}노트 분량</value>
@@ -657,6 +723,9 @@
   </data>
   <data name="Any tool that publishes its source code will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
     <value>소스 코드를 공개한 도구가 내 점수를 읽을 수 있게 됩니다. 대부분의 점수 분석 도구가 이 기능을 사용합니다. 별도의 설정이므로 이 페이지에서 바로 끌 수 있습니다.</value>
+  </data>
+  <data name="any — ×1.0" xml:space="preserve">
+    <value>아무거나 — ×1.0</value>
   </data>
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>초대 링크가 있으면 프로필이 공개든 비공개든 연결할 수 있습니다.</value>
@@ -862,8 +931,20 @@
   <data name="BanYa Lover" xml:space="preserve">
     <value>BanYa Lover</value>
   </data>
+  <data name="bar = 900,000 on the level → SSS+; label = levels bought" xml:space="preserve">
+    <value>막대 = 그 레벨의 900,000 → SSS+; 라벨 = 얻은 레벨 수</value>
+  </data>
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>기준 해제 — 경쟁 레벨을 올린 모든 플레이가 집계됩니다.</value>
+  </data>
+  <data name="base" xml:space="preserve">
+    <value>베이스</value>
+  </data>
+  <data name="Base × grade at the lowest plate, rounded to the point." xml:space="preserve">
+    <value>가장 낮은 플레이트에서의 베이스 × 등급, 정수로 반올림.</value>
+  </data>
+  <data name="Base({0}) — a Single is priced one level up" xml:space="preserve">
+    <value>Base({0}) — 싱글은 한 레벨 위로 책정</value>
   </data>
   <data name="Based on" xml:space="preserve">
     <value>근거</value>
@@ -891,6 +972,12 @@
   </data>
   <data name="below" xml:space="preserve">
     <value>아래</value>
+  </data>
+  <data name="below level 10" xml:space="preserve">
+    <value>10레벨 미만</value>
+  </data>
+  <data name="below the pass line" xml:space="preserve">
+    <value>클리어 선 아래</value>
   </data>
   <data name="Below this life a miss costs less than a bad." xml:space="preserve">
     <value>이 라이프 아래에서는 Miss가 Bad보다 손해가 적습니다.</value>
@@ -982,6 +1069,9 @@
   <data name="Boss breakers" xml:space="preserve">
     <value>보스 브레이커</value>
   </data>
+  <data name="both" xml:space="preserve">
+    <value>둘 다</value>
+  </data>
   <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
     <value>다른 사람이 도구를 쓰려면 둘 다 필요합니다.</value>
   </data>
@@ -1072,6 +1162,9 @@
   <data name="Bursty" xml:space="preserve">
     <value>순간 폭타</value>
   </data>
+  <data name="but a level got {0}× smaller — more than the grade did" xml:space="preserve">
+    <value>하지만 레벨은 {0}배 작아졌습니다 — 등급보다 더</value>
+  </data>
   <data name="By Chart" xml:space="preserve">
     <value>채보별</value>
   </data>
@@ -1086,6 +1179,9 @@
   </data>
   <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
     <value>결과 화면으로 Phoenix 점수 계산</value>
+  </data>
+  <data name="Calculator" xml:space="preserve">
+    <value>계산기</value>
   </data>
   <data name="Calculators" xml:space="preserve">
     <value>계산기</value>
@@ -1297,6 +1393,9 @@
   <data name="Clearly Has Friends" xml:space="preserve">
     <value>Clearly Has Friends</value>
   </data>
+  <data name="Click any value" xml:space="preserve">
+    <value>아무 값이나 클릭하면</value>
+  </data>
   <data name="Clicks" xml:space="preserve">
     <value>클릭</value>
   </data>
@@ -1342,14 +1441,23 @@
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>코옵 패드 이동</value>
   </data>
+  <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
+    <value>CO-OP은 고정 베이스 2,000으로 책정됐지만 총합에는 포함되지 않았습니다.</value>
+  </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
+  </data>
+  <data name="CO-OP: priced at a flat 2,000 base, never counted in the total." xml:space="preserve">
+    <value>CO-OP: 고정 베이스 2,000으로 책정, 총합에는 미포함.</value>
   </data>
   <data name="Code" xml:space="preserve">
     <value>코드</value>
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>최저 인기 채보</value>
+  </data>
+  <data name="colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines" xml:space="preserve">
+    <value>색 = 낮은 레벨 → 높은 레벨의 900,000어치; 대각선 띠가 같은 가치의 선입니다</value>
   </data>
   <data name="Coloured by your standing among players at your level" xml:space="preserve">
     <value>같은 실력대에서의 순위로 색상 표시</value>
@@ -1966,6 +2074,9 @@
   <data name="Do It" xml:space="preserve">
     <value>실행</value>
   </data>
+  <data name="Does scoring matter more than it did on {0}?" xml:space="preserve">
+    <value>점수는 {0}보다 더 중요해졌나요?</value>
+  </data>
   <data name="Doesn't Match My Personal Skills" xml:space="preserve">
     <value>본인 스킬과 맞지 않음</value>
   </data>
@@ -1995,6 +2106,9 @@
   </data>
   <data name="Doubles competitive level" xml:space="preserve">
     <value>더블 경쟁 레벨</value>
+  </data>
+  <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
+    <value>더블 표입니다; 싱글은 AA 이하를 한 칸씩 낮게 읽습니다 (AA {0}, A+ {1} …). 전체 사다리는 아래에.</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>더블스텝</value>
@@ -2056,11 +2170,17 @@
   <data name="Duration (seconds)" xml:space="preserve">
     <value>시간 (초)</value>
   </data>
+  <data name="Each row is a level. The bar starts at a 900,000 on that level — a clean pass — and climbs through the grades; the axis is" xml:space="preserve">
+    <value>각 행이 레벨 하나입니다. 막대는 그 레벨의 900,000 — 무난한 클리어 — 에서 시작해 등급을 따라 올라갑니다; 축은</value>
+  </data>
   <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
     <value>각 단계는 50개 차트 모두에 일정한 값을 요구합니다. 위에서 풀을 바꾸면 다른 사다리를 볼 수 있습니다.</value>
   </data>
   <data name="Each source votes on every chart. Sources with more weight move charts further." xml:space="preserve">
     <value>각 소스가 각 채보에 투표합니다. 가중치가 큰 소스일수록 채보를 더 크게 움직입니다.</value>
+  </data>
+  <data name="Early days: {0} full pools." xml:space="preserve">
+    <value>아직 초기입니다: 완성된 풀 {0}개.</value>
   </data>
   <data name="Earned" xml:space="preserve">
     <value>획득함</value>
@@ -2146,14 +2266,32 @@
   <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>폴더별로 모든 등급을 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
   </data>
+  <data name="Every level, every grade" xml:space="preserve">
+    <value>모든 레벨, 모든 등급</value>
+  </data>
   <data name="Every level, Singles and Doubles" xml:space="preserve">
     <value>모든 레벨, 싱글과 더블</value>
   </data>
   <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
     <value>Miss는 회복 배율을 0으로 만듭니다. 상한까지 되돌리려면 Perfect {0}개 또는 Great {1}개가 필요합니다. 그전까지는 라이프가 거의 오르지 않는 노트를 밟게 됩니다.</value>
   </data>
+  <data name="Every multiplier and bonus in the formula. Where a Single reads differently from a Double the Single’s value is written in full; a dash means the two agree." xml:space="preserve">
+    <value>공식의 모든 배율과 보너스입니다. 싱글이 더블과 다르게 읽히는 곳에는 싱글 값을 그대로 적었고, 대시는 둘이 같다는 뜻입니다.</value>
+  </data>
+  <data name="Every multiplier in the formula. One table serves both types." xml:space="preserve">
+    <value>공식의 모든 배율입니다. 표 하나가 두 종류 모두에 쓰입니다.</value>
+  </data>
+  <data name="every plate" xml:space="preserve">
+    <value>모든 플레이트</value>
+  </data>
   <data name="every plate at once, end to end, is worth {0}" xml:space="preserve">
     <value>모든 플레이트를 끝에서 끝까지 합치면 {0}</value>
+  </data>
+  <data name="Every plate carried ×1.0. Not a rounding argument — the plate never entered the number." xml:space="preserve">
+    <value>모든 플레이트는 ×1.0이었습니다. 반올림 문제가 아닙니다 — 플레이트는 애초에 숫자에 들어간 적이 없습니다.</value>
+  </data>
+  <data name="Every plate on Phoenix carried a modifier of exactly ×1.0, so the plate you walked away with never entered the number. Not a rounding argument — a Rough Game SSS+ and a Perfect Game SSS+ were worth the same PUMBILITY. Phoenix 2 is where plates start to count, and even there they are a tiebreaker." xml:space="preserve">
+    <value>Phoenix의 모든 플레이트는 정확히 ×1.0의 배율이어서, 어떤 플레이트를 받았든 숫자에는 들어가지 않았습니다. 반올림 문제가 아닙니다 — Rough Game SSS+와 Perfect Game SSS+는 같은 PUMBILITY였습니다. 플레이트가 의미를 갖기 시작하는 곳은 Phoenix 2이고, 거기서도 타이브레이커일 뿐입니다.</value>
   </data>
   <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>폴더별로 모든 플레이트를 쌓고, 실패 / 미플레이 구간으로 폴더 전체 수까지 표시.</value>
@@ -2461,6 +2599,9 @@
   <data name="From {0} scores" xml:space="preserve">
     <value>{0}개 스코어 기반</value>
   </data>
+  <data name="From {0} to {1} the split barely moves — level {2}, score {3}{4} — while the pool’s average level climbs from {5} to {6}. Grades are already S or better on {7}–{8} of the fifty in every band: pools here are scored close to the ceiling, and what separates one band from the next is the level of the charts in it. Scoring is how a chart enters the pool — an SSS+ about {9} levels down ties a clean pass — but the pool climbs on level." xml:space="preserve">
+    <value>{0}부터 {1}까지 구성은 거의 움직이지 않습니다 — 레벨 {2}, 점수 {3}{4} — 그동안 풀의 평균 레벨은 {5}에서 {6}으로 오릅니다. 모든 구간에서 50개 중 {7}–{8}개가 이미 S 이상입니다: 여기 풀들은 천장 가까이 점수가 나와 있고, 구간을 가르는 것은 그 안에 든 채보의 레벨입니다. 점수는 채보가 풀에 들어오는 방법이지만 — 약 {9}레벨 아래의 SSS+가 무난한 클리어와 비깁니다 — 풀은 레벨로 올라갑니다.</value>
+  </data>
   <data name="Full board" xml:space="preserve">
     <value>전체 리더보드</value>
   </data>
@@ -2734,6 +2875,9 @@
   <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
     <value>브레이크 사이에 얼마나 클린 콤보를 되사야 하는지, 그리고 그만큼만 계속 지불했을 때 라이프가 어디에 머무르는지.</value>
   </data>
+  <data name="How much do plates matter?" xml:space="preserve">
+    <value>플레이트는 얼마나 중요한가요?</value>
+  </data>
   <data name="How much of every folder you've cleared, per level." xml:space="preserve">
     <value>How much of every folder you've cleared, per level.</value>
   </data>
@@ -2941,6 +3085,9 @@
   <data name="In Swagger: press Authorize and paste the key into toolKey — the key on its own, without the word Bearer." xml:space="preserve">
     <value>Swagger에서: Authorize를 누르고 toolKey 칸에 키를 붙여넣으세요 — Bearer라는 단어 없이 키만 넣습니다.</value>
   </data>
+  <data name="In the pools above, plates carry {0} of the number." xml:space="preserve">
+    <value>위 풀들에서 플레이트는 숫자의 {0}를 차지합니다.</value>
+  </data>
   <data name="in the top ten" xml:space="preserve">
     <value>개 보드 10위 이내</value>
   </data>
@@ -2949,6 +3096,9 @@
   </data>
   <data name="In your PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY 상위 50 포함</value>
+  </data>
+  <data name="In {0} the split is level {1} / score {2}; in {3} it is {4} / {5}. The pool’s average level climbs from {6} to {7} along the way and S or better from {8} to {9} of fifty: passing harder charts is the whole ladder for most players, and scoring is what the last stretch is made of." xml:space="preserve">
+    <value>{0}에서 구성은 레벨 {1} / 점수 {2}이고, {3}에서는 {4} / {5}입니다. 그 사이 풀의 평균 레벨은 {6}에서 {7}로, 50개 중 S 이상은 {8}에서 {9}개로 오릅니다: 대부분의 유저에게 사다리는 더 어려운 채보를 클리어하는 것이고, 점수는 마지막 구간을 이루는 것입니다.</value>
   </data>
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>미플레이 구간 포함</value>
@@ -3028,6 +3178,9 @@
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>취소되었거나 도구가 삭제되었을 수 있습니다. 보낸 사람에게 새 링크를 요청하세요.</value>
   </data>
+  <data name="It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty." xml:space="preserve">
+    <value>움직입니다, 그리고 그것이 답의 전부입니다: 점수는 {1}에서 숫자의 {0}, {3}에서 {2}입니다. 그 사이 풀의 평균 레벨은 {4} → {5}, 50개 중 S 이상은 {6} → {7}개입니다.</value>
+  </data>
   <data name="It reads player scores" xml:space="preserve">
     <value>플레이어 점수를 읽습니다</value>
   </data>
@@ -3045,6 +3198,9 @@
   </data>
   <data name="It stops showing. Anyone who replied keeps their reply." xml:space="preserve">
     <value>더 이상 표시되지 않습니다. 답글을 단 사람의 답글은 남습니다.</value>
+  </data>
+  <data name="It was AA on Phoenix — the floors moved." xml:space="preserve">
+    <value>Phoenix에서는 AA였습니다 — 하한선이 옮겨졌습니다.</value>
   </data>
   <data name="It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest." xml:space="preserve">
     <value>사이트 업데이트로 중단되었을 가능성이 큽니다. 저장된 부분은 이미 계정에 있으며, 다시 가져오면 나머지를 가져옵니다.</value>
@@ -3232,6 +3388,9 @@
   <data name="Level {0}" xml:space="preserve">
     <value>레벨 {0}</value>
   </data>
+  <data name="Level · {0}" xml:space="preserve">
+    <value>레벨 · {0}</value>
+  </data>
   <data name="Levels" xml:space="preserve">
     <value>레벨</value>
   </data>
@@ -3240,6 +3399,9 @@
   </data>
   <data name="Levels below" xml:space="preserve">
     <value>아래 레벨 수</value>
+  </data>
+  <data name="Levels first, then scores." xml:space="preserve">
+    <value>먼저 레벨, 그다음 점수.</value>
   </data>
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
@@ -3445,9 +3607,6 @@
   <data name="Max Note Count" xml:space="preserve">
     <value>최대 노트 수</value>
   </data>
-  <data name="Max Rating" xml:space="preserve">
-    <value>최고 레이팅</value>
-  </data>
   <data name="Maximum" xml:space="preserve">
     <value>최대</value>
   </data>
@@ -3630,6 +3789,9 @@
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>이번 주의 무버</value>
+  </data>
+  <data name="multiplier" xml:space="preserve">
+    <value>배율</value>
   </data>
   <data name="multiplier already gone" xml:space="preserve">
     <value>배율은 이미 0</value>
@@ -3838,6 +4000,9 @@
   <data name="Next title" xml:space="preserve">
     <value>다음 칭호</value>
   </data>
+  <data name="next to what a level is worth" xml:space="preserve">
+    <value>레벨의 가치 옆에서만 의미가 있습니다</value>
+  </data>
   <data name="Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there." xml:space="preserve">
     <value>다음은 메인 페이지입니다. 직접 고른 위젯으로 구성되며, 기본 구성으로 시작한 뒤 자유롭게 재배치할 수 있습니다.</value>
   </data>
@@ -3909,6 +4074,12 @@
   </data>
   <data name="No Phoenix 2 chart" xml:space="preserve">
     <value>Phoenix 2에 채보 없음</value>
+  </data>
+  <data name="No pool on PIU Scores has held a level {0} yet, so their base ({1}) follows the curve rather than a reading." xml:space="preserve">
+    <value>PIU Scores의 어떤 풀에도 아직 {0}레벨이 들어온 적이 없어서, 그 베이스({1})는 실측이 아니라 곡선을 따릅니다.</value>
+  </data>
+  <data name="No pool on PIU Scores has held this level yet, so its base follows the curve rather than a reading." xml:space="preserve">
+    <value>PIU Scores의 어떤 풀에도 아직 이 레벨이 들어온 적이 없어서, 그 베이스는 실측이 아니라 곡선을 따릅니다.</value>
   </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>아직 인기 순위 스냅샷이 없습니다 - 주간 가져오기와 함께 생성됩니다.</value>
@@ -4051,6 +4222,9 @@
   <data name="Not available on {0}." xml:space="preserve">
     <value>{0}에서는 사용할 수 없습니다.</value>
   </data>
+  <data name="Not because grades are worth more there — the span from a clean pass to an SSS+ fell from +{0} here to +{1} — but because a level fell further: Phoenix’s base is quadratic (+{2} at 20) against Phoenix 2’s flat +{3}. On Phoenix, passing one level higher takes a 900,000 to {4} to match on the chart you already have. That is why the ladder here is passing: the score lever is the expensive one." xml:space="preserve">
+    <value>거기서 등급이 더 값지기 때문이 아니라 — 무난한 클리어에서 SSS+까지의 폭은 여기의 +{0}에서 +{1}로 줄었습니다 — 레벨이 더 많이 줄었기 때문입니다: Phoenix의 베이스는 2차 함수(20에서 +{2})이고 Phoenix 2는 고정 +{3}입니다. Phoenix에서 한 레벨 위를 클리어하는 것과 같아지려면 이미 가진 채보에서 900,000을 {4}까지 올려야 합니다. 그래서 여기의 사다리는 클리어입니다: 점수 쪽 지렛대가 비싼 쪽입니다.</value>
+  </data>
   <data name="Not checked" xml:space="preserve">
     <value>미확인</value>
   </data>
@@ -4071,6 +4245,9 @@
   </data>
   <data name="Not enough players in range to provide results" xml:space="preserve">
     <value>범위 내 플레이어가 부족해 결과를 낼 수 없습니다</value>
+  </data>
+  <data name="not enough players yet: {0}" xml:space="preserve">
+    <value>아직 유저가 부족: {0}</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>미달</value>
@@ -4210,8 +4387,14 @@
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>변경 없음 — {0}개 채보 모두 난이도를 유지했습니다.</value>
   </data>
+  <data name="Nothing selected — click a value." xml:space="preserve">
+    <value>선택된 것이 없습니다 — 값을 클릭하세요.</value>
+  </data>
   <data name="Nothing to compare yet" xml:space="preserve">
     <value>아직 비교할 것이 없습니다</value>
+  </data>
+  <data name="Nothing to draw for {0} yet — the population figures build with the nightly PUMBILITY sweep, and a band needs at least {1} full pools before it is drawn." xml:space="preserve">
+    <value>{0}에는 아직 그릴 것이 없습니다 — 인구 수치는 매일 밤 PUMBILITY 집계로 쌓이고, 구간 하나를 그리려면 완성된 풀이 최소 {1}개 필요합니다.</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>아직 추천할 것이 없습니다 — 먼저 플레이하고 점수를 가져오세요.</value>
@@ -4228,8 +4411,14 @@
   <data name="Nothing was sent — post in the Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>자동으로 전달된 것은 없습니다 — 디스코드에 글을 남기면 누군가 확인합니다. 그동안에도 도구는 계속 작동합니다.</value>
   </data>
+  <data name="nothing within reach" xml:space="preserve">
+    <value>닿는 것이 없음</value>
+  </data>
   <data name="Nothing yet." xml:space="preserve">
     <value>아직 없습니다.</value>
+  </data>
+  <data name="Nothing." xml:space="preserve">
+    <value>아무것도.</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>방금</value>
@@ -4360,6 +4549,9 @@
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>점수, 등급, 플레이트 또는 클리어를 레벨별로 보여주는 구성 가능한 그래프.</value>
   </data>
+  <data name="one level higher is worth" xml:space="preserve">
+    <value>한 레벨 위의 가치</value>
+  </data>
   <data name="One minute, then you're in" xml:space="preserve">
     <value>1분이면 끝납니다</value>
   </data>
@@ -4381,8 +4573,14 @@
   <data name="one per level bucket" xml:space="preserve">
     <value>레벨 구간별 1개</value>
   </data>
+  <data name="One plate step (+{0}) on one chart is a few hundredths of a point." xml:space="preserve">
+    <value>채보 하나에서 플레이트 한 단계(+{0})는 소수점 둘째 자리 몇 개 정도입니다.</value>
+  </data>
   <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
     <value>하나의 공유 보드, 일주일 — 모두가 같은 채보에서 최고 기록을 겨룹니다.</value>
+  </data>
+  <data name="One table for both types — Phoenix priced a Single and a Double at the same level alike." xml:space="preserve">
+    <value>표 하나가 두 종류를 다 담습니다 — Phoenix는 같은 레벨의 싱글과 더블을 똑같이 책정했습니다.</value>
   </data>
   <data name="One-click import" xml:space="preserve">
     <value>원클릭 임포트</value>
@@ -4563,6 +4761,9 @@
   <data name="Password saved on this device" xml:space="preserve">
     <value>이 기기에 비밀번호를 저장했습니다</value>
   </data>
+  <data name="past {0}" xml:space="preserve">
+    <value>{0} 너머</value>
+  </data>
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>링크 전체 또는 끝의 코드만 붙여넣으세요.</value>
   </data>
@@ -4571,6 +4772,12 @@
   </data>
   <data name="Pending" xml:space="preserve">
     <value>대기 중</value>
+  </data>
+  <data name="per chart · grade and plate add, then multiply the base · your best fifty summed" xml:space="preserve">
+    <value>채보당 · 등급과 플레이트를 더한 뒤 베이스에 곱하기 · 상위 50개의 합</value>
+  </data>
+  <data name="per chart · plates never entered it · your best fifty summed" xml:space="preserve">
+    <value>채보당 · 플레이트는 들어가지 않음 · 상위 50개의 합</value>
   </data>
   <data name="Per-channel language" xml:space="preserve">
     <value>채널별 언어</value>
@@ -4641,6 +4848,9 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · 실제 상위 50</value>
   </data>
+  <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
+    <value>Phoenix 2는 Phoenix보다 약 {0}배 더 점수에 기댑니다.</value>
+  </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2는 Singles 채보를 기본 곡선에서 한 레벨 위로 계산합니다 — S22가 23처럼 매겨집니다. 이전 시리즈와 같은 채보를 파는 것은 잘못된 계획입니다.</value>
   </data>
@@ -4700,6 +4910,12 @@
   </data>
   <data name="Photos" xml:space="preserve">
     <value>사진</value>
+  </data>
+  <data name="Pick a chart’s level and the grade — the exact per-chart PUMBILITY, and what equals it elsewhere." xml:space="preserve">
+    <value>채보의 레벨과 등급을 고르세요 — 정확한 채보당 PUMBILITY와, 다른 곳에서 그와 같은 것.</value>
+  </data>
+  <data name="Pick a chart’s level, the grade and the plate — the exact per-chart PUMBILITY, and what equals it elsewhere." xml:space="preserve">
+    <value>채보의 레벨, 등급, 플레이트를 고르세요 — 정확한 채보당 PUMBILITY와, 다른 곳에서 그와 같은 것.</value>
   </data>
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>목록에서 난이도를 선택하면 상세 정보와 유사 채보를 볼 수 있습니다.</value>
@@ -5010,6 +5226,9 @@
   <data name="Previously rejected: {0}" xml:space="preserve">
     <value>이전 거절 사유: {0}</value>
   </data>
+  <data name="priced base" xml:space="preserve">
+    <value>책정 베이스</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -5106,6 +5325,18 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY Calculator" xml:space="preserve">
+    <value>PUMBILITY 계산기</value>
+  </data>
+  <data name="PUMBILITY Calculator — {0}" xml:space="preserve">
+    <value>PUMBILITY 계산기 — {0}</value>
+  </data>
+  <data name="PUMBILITY is the sum of your fifty highest-valued charts — one pool across Singles and Doubles." xml:space="preserve">
+    <value>PUMBILITY는 가치가 가장 높은 채보 50개의 합입니다 — 싱글과 더블을 합친 풀 하나.</value>
+  </data>
+  <data name="PUMBILITY is the sum of your fifty highest-valued charts. Phoenix 2 keeps three pools — Singles, Doubles, and the total across both — each its own top fifty." xml:space="preserve">
+    <value>PUMBILITY는 가치가 가장 높은 채보 50개의 합입니다. Phoenix 2는 풀을 세 개 둡니다 — 싱글, 더블, 그리고 둘을 합친 총합 — 각각 자기만의 상위 50개.</value>
+  </data>
   <data name="PUMBILITY level {0}" xml:space="preserve">
     <value>PUMBILITY 레벨 {0}</value>
   </data>
@@ -5127,11 +5358,17 @@
   <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
     <value>Pump It Up은 Prime 2부터 칭호가 도입되었습니다.</value>
   </data>
+  <data name="Push levels." xml:space="preserve">
+    <value>레벨을 밀어붙이세요.</value>
+  </data>
   <data name="Push PGs" xml:space="preserve">
     <value>PG 도전</value>
   </data>
   <data name="Pushing Title Charts" xml:space="preserve">
     <value>도전 중인 칭호 채보</value>
+  </data>
+  <data name="Quadratic: a level is worth {0} at 20 and {1} at 27. Below level 10 a chart is worth 0. CO-OP charts were priced at a flat 2,000 but never counted in the total." xml:space="preserve">
+    <value>2차 함수: 레벨 하나의 가치는 20에서 {0}, 27에서 {1}입니다. 10레벨 미만 채보의 가치는 0입니다. CO-OP 채보는 고정 2,000으로 책정됐지만 총합에는 포함되지 않았습니다.</value>
   </data>
   <data name="Qualifier Existing Score" xml:space="preserve">
     <value>이미 {0} {1} 기록이 있습니다. 제출하면 교체됩니다.</value>
@@ -5189,6 +5426,9 @@
   </data>
   <data name="Queued" xml:space="preserve">
     <value>대기열에 추가됨</value>
+  </data>
+  <data name="Quick calculator" xml:space="preserve">
+    <value>간단 계산기</value>
   </data>
   <data name="Quick Record" xml:space="preserve">
     <value>빠른 기록</value>
@@ -5260,9 +5500,6 @@
   <data name="Rating" xml:space="preserve">
     <value>레이팅</value>
   </data>
-  <data name="Rating Calculator" xml:space="preserve">
-    <value>레이팅 계산기</value>
-  </data>
   <data name="Re-price {0} ratings" xml:space="preserve">
     <value>{0} 레이팅 재계산</value>
   </data>
@@ -5283,6 +5520,9 @@
   </data>
   <data name="Reached {0}" xml:space="preserve">
     <value>{0} 달성</value>
+  </data>
+  <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
+    <value>막대 끝에서 곧장 위로 읽으면 어느 레벨과 같은지 보입니다.</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>소스 읽기</value>
@@ -5596,6 +5836,9 @@
   <data name="Rotation started." xml:space="preserve">
     <value>교체를 시작했습니다.</value>
   </data>
+  <data name="Rough" xml:space="preserve">
+    <value>Rough</value>
+  </data>
   <data name="Rows with this edge come from the player's PIU Scores account, not the official board." xml:space="preserve">
     <value>이 테두리가 있는 행은 공식 보드가 아니라 해당 플레이어의 PIU Scores 계정에서 가져온 것입니다.</value>
   </data>
@@ -5625,6 +5868,9 @@
   </data>
   <data name="Runs Without Twists" xml:space="preserve">
     <value>틀기 없는 폭타</value>
+  </data>
+  <data name="S + D" xml:space="preserve">
+    <value>S + D</value>
   </data>
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>같은 스킬, 두 가지 질문: 폴더 보기는 "여기서 플레이한 채보가 실제로 어떤가"를, 블렌드 보기는 "주변에서 기록한 모든 스코어 중 어떤 스킬이 강하고 약한가"를 묻습니다. 여기서는 괜찮아 보이는 스킬이 채보를 움직일 수도 있습니다.</value>
@@ -5682,6 +5928,12 @@
   </data>
   <data name="Score Distribution" xml:space="preserve">
     <value>점수 분포</value>
+  </data>
+  <data name="score floor" xml:space="preserve">
+    <value>점수 하한</value>
+  </data>
+  <data name="Score floors changed below AAA on Phoenix 2 — A {0} · A+ {1} · AA {2} · AA+ {3}." xml:space="preserve">
+    <value>Phoenix 2에서는 AAA 아래의 점수 하한이 바뀌었습니다 — A {0} · A+ {1} · AA {2} · AA+ {3}.</value>
   </data>
   <data name="Score Formula Shoutout" xml:space="preserve">
     <value>이 점수공식을 제작해주신 Mr_WEQ님에게 감사드립니다</value>
@@ -6010,6 +6262,9 @@
   <data name="Short Cut" xml:space="preserve">
     <value>숏컷</value>
   </data>
+  <data name="Should I push levels or push scores?" xml:space="preserve">
+    <value>레벨을 올려야 하나요, 점수를 올려야 하나요?</value>
+  </data>
   <data name="Show" xml:space="preserve">
     <value>표시</value>
   </data>
@@ -6175,6 +6430,9 @@
   <data name="Singles + Doubles" xml:space="preserve">
     <value>Singles + Doubles</value>
   </data>
+  <data name="Singles are priced one level up and read a few grades and plates differently." xml:space="preserve">
+    <value>싱글은 한 레벨 위로 책정되며 몇몇 등급과 플레이트를 다르게 읽습니다.</value>
+  </data>
   <data name="Singles competitive level" xml:space="preserve">
     <value>싱글 경쟁 레벨</value>
   </data>
@@ -6231,6 +6489,9 @@
   </data>
   <data name="Slim" xml:space="preserve">
     <value>희박</value>
+  </data>
+  <data name="so scoring one chart is worth" xml:space="preserve">
+    <value>그래서 채보 하나의 점수는</value>
   </data>
   <data name="Socialite" xml:space="preserve">
     <value>Socialite</value>
@@ -6616,6 +6877,9 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>코드가 취소되었거나 커뮤니티가 더 이상 존재하지 않습니다.</value>
   </data>
+  <data name="The constants" xml:space="preserve">
+    <value>상수</value>
+  </data>
   <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
     <value>매주 일요일 집계 후 다이제스트가 게시됩니다.</value>
   </data>
@@ -6631,11 +6895,23 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>정확한 수치</value>
   </data>
+  <data name="the exchange rate — scoring got {0}× more powerful relative to passing" xml:space="preserve">
+    <value>환율 — 점수가 클리어에 비해 {0}배 더 강력해졌습니다</value>
+  </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>Phoenix 1 최고 기록을 처음으로 넘은 Phoenix 2 점수</value>
   </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>첫 주간 스냅샷이 아직 없습니다 - 다음 일요일 가져오기 후 하이라이트가 표시됩니다.</value>
+  </data>
+  <data name="The formula" xml:space="preserve">
+    <value>공식</value>
+  </data>
+  <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}. The gap closes above 24, where the base starts growing by 10 a level instead of 5 — and that is exactly where scoring stops being the cheap lever. It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level." xml:space="preserve">
+    <value>등급의 폭은 분명 줄었습니다: 무난한 클리어 위의 SSS+는 Phoenix에서 +{0}였고 여기서는 +{1}입니다. 하지만 그것은 레벨의 가치와 견줘야만 의미가 있고, 레벨이 더 많이 줄었습니다 — Phoenix의 베이스는 2차 함수(20에서 +{2}), Phoenix 2는 고정 5씩(+{3}) 늘어납니다. 뒤집어 말하면: Phoenix에서 한 레벨 위를 클리어하는 것과 같아지려면 이미 가진 채보에서 900,000을 {4}까지 올려야 했고, Phoenix 2에서는 같은 한 레벨을 {5}이면 따라잡습니다. 이 차이는 베이스가 레벨당 5 대신 10씩 늘기 시작하는 24 위에서 닫힙니다 — 바로 거기서 점수가 값싼 지렛대이기를 그만둡니다. 위의 풀들도 이것으로 설명됩니다: 모두가 이미 값싼 지렛대를 당겼으니, 남은 것은 레벨을 오르는 일입니다.</value>
+  </data>
+  <data name="the grade span got {0}× smaller" xml:space="preserve">
+    <value>등급의 폭은 {0}배 작아졌습니다</value>
   </data>
   <data name="The grind" xml:space="preserve">
     <value>그라인드</value>
@@ -6682,11 +6958,23 @@
   <data name="The piugame.com session key is forwarded so you run your own import." xml:space="preserve">
     <value>piugame.com 세션 키가 전달되어 직접 임포트를 실행할 수 있습니다.</value>
   </data>
+  <data name="The plate you walked away with never entered the number." xml:space="preserve">
+    <value>받은 플레이트는 숫자에 들어간 적이 없습니다.</value>
+  </data>
   <data name="The plate, magnified" xml:space="preserve">
     <value>플레이트, 확대해서</value>
   </data>
+  <data name="The plate, magnified — Rough Game on every chart to Perfect Game on every chart" xml:space="preserve">
+    <value>플레이트를 확대해서 — 모든 채보 Rough Game부터 모든 채보 Perfect Game까지</value>
+  </data>
   <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
     <value>POST에는 "이 플레이어가 기록을 가져왔다"만 담깁니다. 필요한 것은 직접 가져가세요.</value>
+  </data>
+  <data name="The Pump It Up Phoenix 2 PUMBILITY formula: Base(level) × (grade + plate), Base = 130 + 5 × level, singles priced one level up. Every grade multiplier and plate bonus, what any level and grade is worth, and how much scoring buys against passing." xml:space="preserve">
+    <value>Pump It Up Phoenix 2의 PUMBILITY 공식: Base(level) × (grade + plate), Base = 130 + 5 × level, 싱글은 한 레벨 위로 책정. 모든 등급 배율과 플레이트 보너스, 어떤 레벨과 등급이 얼마인지, 그리고 점수가 클리어에 비해 얼마나 값어치 있는지.</value>
+  </data>
+  <data name="The Pump It Up Phoenix PUMBILITY formula: Base(level) × grade, Base = 100 + 5 × (level − 10) × (level − 9), plates ×1.0. Every grade multiplier, what any level and grade was worth, and how much scoring bought against passing." xml:space="preserve">
+    <value>Pump It Up Phoenix의 PUMBILITY 공식: Base(level) × grade, Base = 100 + 5 × (level − 10) × (level − 9), 플레이트 ×1.0. 모든 등급 배율, 어떤 레벨과 등급이 얼마였는지, 그리고 점수가 클리어에 비해 얼마나 값어치 있었는지.</value>
   </data>
   <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
     <value>레인보우 바는 1레벨에서도 29레벨에서도 라이프 1000입니다. 어려운 채보가 주는 것은 바 뒤에 숨은 라이프, 즉 기체에는 보이지 않으면서 레벨에 따라 달라지는 유일한 값입니다. Miss 하나당 필요한 콤보는 끝까지 동일합니다.</value>
@@ -6699,6 +6987,9 @@
   </data>
   <data name="The rules" xml:space="preserve">
     <value>규칙</value>
+  </data>
+  <data name="The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}." xml:space="preserve">
+    <value>S17은 Base(18) = {0}로 계산됩니다 — 싱글은 한 레벨 위로 책정됩니다. Perfect Game은 등급이 아니라 플레이트 보너스입니다: 1,000,000도 SSS+의 ×{1}을 유지하고 +{2}를 더합니다.</value>
   </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>같은 Perfect라도 콤보 전, 곡 시작 시점.</value>
@@ -6892,6 +7183,12 @@
   <data name="This page is full." xml:space="preserve">
     <value>이 페이지는 가득 찼습니다.</value>
   </data>
+  <data name="This page is the formula behind the number: what any grade on any level is worth, and where the number actually comes from." xml:space="preserve">
+    <value>이 페이지는 그 숫자 뒤의 공식입니다: 어떤 레벨의 어떤 등급이 얼마인지, 그리고 그 숫자가 실제로 어디서 오는지.</value>
+  </data>
+  <data name="This page is the Phoenix formula behind the number: what any grade on any level was worth, and where the number came from." xml:space="preserve">
+    <value>이 페이지는 그 숫자 뒤의 Phoenix 공식입니다: 어떤 레벨의 어떤 등급이 얼마였는지, 그리고 그 숫자가 어디서 왔는지.</value>
+  </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>이 리캡은 아직 계산되지 않았습니다. 나중에 다시 확인해 주세요.</value>
   </data>
@@ -7020,6 +7317,9 @@
   </data>
   <data name="To Leaderboard" xml:space="preserve">
     <value>등수판으로</value>
+  </data>
+  <data name="to light up what equals it on every other level." xml:space="preserve">
+    <value>다른 모든 레벨에서 그와 같은 값이 켜집니다.</value>
   </data>
   <data name="To page" xml:space="preserve">
     <value>끝 페이지</value>
@@ -7221,6 +7521,9 @@
   </data>
   <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
     <value>Phoenix 및 Phoenix 2에서는 미확인입니다. 페이지 상단의 안내를 참고하세요.</value>
+  </data>
+  <data name="under {0}" xml:space="preserve">
+    <value>{0} 미만</value>
   </data>
   <data name="Underrated" xml:space="preserve">
     <value>과소평가</value>
@@ -7594,6 +7897,9 @@
   <data name="What players at your level score here" xml:space="preserve">
     <value>여기서 내 레벨 플레이어가 내는 점수</value>
   </data>
+  <data name="What scoring buys, in levels" xml:space="preserve">
+    <value>점수가 사는 것, 레벨 단위로</value>
+  </data>
   <data name="What should they change?" xml:space="preserve">
     <value>무엇을 바꿔야 하나요?</value>
   </data>
@@ -7645,6 +7951,9 @@
   <data name="Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it." xml:space="preserve">
     <value>플레이어가 여러분의 코드를 읽는 곳입니다 — GitHub, GitLab, Codeberg 등 공개된 곳이면 어디든. 목록에 오른 도구는 여기로 바로 연결됩니다.</value>
   </data>
+  <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
+    <value>{0}에서 PUMBILITY가 어디서 오는가 — 평균 풀</value>
+  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>이 채보의 클리어가 어느 경쟁 레벨에 있는지 보여줍니다.</value>
   </data>
@@ -7665,6 +7974,9 @@
   </data>
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>어떤 채보가 레벨에 정직한지 — 어떤 채보가 거짓말하는지.</value>
+  </data>
+  <data name="which level’s 900,000 is worth the same" xml:space="preserve">
+    <value>어느 레벨의 900,000이 같은 가치인가</value>
   </data>
   <data name="Which mix" xml:space="preserve">
     <value>시리즈</value>
@@ -7717,6 +8029,9 @@
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>없어도 동작합니다 — 여러분 자신의 점수에 대해서는요.</value>
   </data>
+  <data name="Worked examples" xml:space="preserve">
+    <value>계산 예시</value>
+  </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>이 세션이 무엇을 움직였는지 계산 중 — 칭호, 풀, 그리고 동급 플레이어 사이에서 각 점수의 위치.</value>
   </data>
@@ -7737,6 +8052,21 @@
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>세계 랭킹</value>
+  </data>
+  <data name="worth a 900,000 on level →" xml:space="preserve">
+    <value>레벨 →의 900,000어치</value>
+  </data>
+  <data name="worth a 900,000 on {0}" xml:space="preserve">
+    <value>{0}의 900,000어치</value>
+  </data>
+  <data name="Worth about the same" xml:space="preserve">
+    <value>비슷한 가치</value>
+  </data>
+  <data name="worth more than a 900,000 on any chart in the game" xml:space="preserve">
+    <value>게임의 어떤 채보의 900,000보다 값진</value>
+  </data>
+  <data name="Worth zero" xml:space="preserve">
+    <value>가치 0</value>
   </data>
   <data name="Wouldn't You Like To Know" xml:space="preserve">
     <value>알고 싶지 않으세요</value>
@@ -7764,6 +8094,9 @@
   </data>
   <data name="XXLetterGrade" xml:space="preserve">
     <value>XXLetterGrade</value>
+  </data>
+  <data name="Yes — about {0}× more, where most pools actually live." xml:space="preserve">
+    <value>네 — 대부분의 풀이 실제로 있는 곳에서 약 {0}배 더.</value>
   </data>
   <data name="Yes, cycle all keys" xml:space="preserve">
     <value>예, 모든 키를 교체합니다</value>
@@ -8203,6 +8536,12 @@
   <data name="{0} admins" xml:space="preserve">
     <value>관리자 {0}명</value>
   </data>
+  <data name="{0} against {1}." xml:space="preserve">
+    <value>{0}, {1} 기준.</value>
+  </data>
+  <data name="{0} and up" xml:space="preserve">
+    <value>{0} 이상</value>
+  </data>
   <data name="{0} API calls" xml:space="preserve">
     <value>API 호출 {0}회</value>
   </data>
@@ -8214,6 +8553,9 @@
   </data>
   <data name="{0} at {1}" xml:space="preserve">
     <value>{1} 등급의 {0}</value>
+  </data>
+  <data name="{0} beats it at any pass" xml:space="preserve">
+    <value>{0}은 어떤 클리어로도 이깁니다</value>
   </data>
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0}님이 이 커뮤니티의 개설자가 되고 회원님은 관리자가 됩니다. 개설자 자리는 하나뿐이라 직접 되돌릴 수 없습니다.</value>
@@ -8235,6 +8577,9 @@
   </data>
   <data name="{0} can now read your scores" xml:space="preserve">
     <value>{0}이(가) 이제 내 점수를 읽을 수 있습니다</value>
+  </data>
+  <data name="{0} can’t reach it (SSS+ = {1})" xml:space="preserve">
+    <value>{0}은 닿지 못합니다 (SSS+ = {1})</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0}은(는) {2} 대비 채보 {1}개의 난이도를 조정했고(상향 {3}, 하향 {4}), 노래 {5}곡을 추가하고 {6}곡을 삭제했습니다.</value>
@@ -8362,6 +8707,9 @@
   <data name="{0} left" xml:space="preserve">
     <value>{0}개 나감</value>
   </data>
+  <data name="{0} levels" xml:space="preserve">
+    <value>{0}레벨</value>
+  </data>
   <data name="{0} match the community tier" xml:space="preserve">
     <value>{0}개가 커뮤니티와 일치</value>
   </data>
@@ -8458,6 +8806,9 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0}명 참여 중</value>
   </data>
+  <data name="{0} on {1}" xml:space="preserve">
+    <value>{1}의 {0}</value>
+  </data>
   <data name="{0} only" xml:space="preserve">
     <value>{0}만</value>
   </data>
@@ -8488,8 +8839,20 @@
   <data name="{0} players lose access" xml:space="preserve">
     <value>플레이어 {0}명이 접근을 잃습니다</value>
   </data>
+  <data name="{0} players on PIU Scores with a full pool of fifty — {1} players, {2}. The split is measured from a bare base of ×1.00, the same split as on your PUMBILITY page." xml:space="preserve">
+    <value>완성된 풀 50개를 가진 PIU Scores의 {0} 유저 — {1}명, {2}. 구성은 ×1.00의 순수 베이스에서 측정하며, PUMBILITY 페이지와 같은 구성입니다.</value>
+  </data>
+  <data name="{0} players on PIU Scores with a full pool of fifty. The split is measured from a bare base of ×1.00, the same split as on your PUMBILITY page." xml:space="preserve">
+    <value>완성된 풀 50개를 가진 PIU Scores의 {0} 유저. 구성은 ×1.00의 순수 베이스에서 측정하며, PUMBILITY 페이지와 같은 구성입니다.</value>
+  </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>플레이어 {0}명 · {1} 주</value>
+  </data>
+  <data name="{0} pools" xml:space="preserve">
+    <value>풀 {0}개</value>
+  </data>
+  <data name="{0} pools · average level {1}" xml:space="preserve">
+    <value>풀 {0}개 · 평균 레벨 {1}</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>PUMBILITY {0} 남음</value>
@@ -8584,6 +8947,9 @@
   <data name="{0}% to next title" xml:space="preserve">
     <value>다음 타이틀까지 {0}%</value>
   </data>
+  <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
+    <value>{0}: {1}의 SSS+는 {2}의 900,000어치</value>
+  </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}일 전</value>
   </data>
@@ -8616,6 +8982,9 @@
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Zelllooo</value>
+  </data>
+  <data name="≈ the closest value on each other level:" xml:space="preserve">
+    <value>≈ 다른 각 레벨에서 가장 가까운 값:</value>
   </data>
   <data name="▲ Harder" xml:space="preserve">
     <value>▲ 상향</value>

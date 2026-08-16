@@ -26,7 +26,7 @@
                     }
                     @foreach (var plate in Plates)
                     {
-                        <div class="pc-plate-tick" style="left:@((Bonus(plate) / MaxBonus * 100).ToString("0.#", CultureInfo.InvariantCulture))%" title="@L[plate.GetName()] +@Bonus(plate).ToString("0.000")"></div>
+                        <div class="pc-plate-tick" style="left:@((Bonus(plate) / MaxBonus * 100).ToString("0.#", CultureInfo.InvariantCulture))%" title="@plate.GetName() +@Bonus(plate).ToString("0.000")"></div>
                     }
                 </div>
                 <div class="pc-plate-ends">

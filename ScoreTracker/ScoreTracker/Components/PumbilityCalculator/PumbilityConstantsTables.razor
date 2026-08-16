@@ -28,7 +28,7 @@
                 <table class="pc-ct">
                     <thead>
                     <tr>
-                        <th scope="col" class="pc-rl">@L["grade"]</th>
+                        <th scope="col" class="pc-rl">@L["Grade"]</th>
                         @foreach (var grade in Grades)
                         {
                             <th scope="col">@grade.GetName()<span class="pc-metal" style="background:@ThemeScales.GradeColor(grade)"></span></th>
@@ -85,10 +85,10 @@
                 <table class="pc-ct">
                     <thead>
                     <tr>
-                        <th scope="col" class="pc-rl">@L["plate"]</th>
+                        <th scope="col" class="pc-rl">@L["Plate"]</th>
                         @foreach (var plate in Plates)
                         {
-                            <th scope="col" title="@L[plate.GetName()]">@plate.GetShorthand()</th>
+                            <th scope="col" title="@plate.GetName()">@plate.GetShorthand()</th>
                         }
                     </tr>
                     </thead>
