@@ -4,16 +4,16 @@ using ScoreTracker.SharedKernel.Enums;
 namespace ScoreTracker.ChartIntelligence.Domain;
 
 /// <summary>
-///     Who a player is ranked against on the PUMBILITY lens, keyed on title and resolved per
-///     mix (docs/design/pumbility-tier-list.md §5).
+///     Who a player is ranked against on the PUMBILITY lens — their PUMBILITY peers — keyed on
+///     title and resolved per mix (docs/design/pumbility-tier-list.md §5).
 ///     <para>
 ///         Phoenix 2 has a PUMBILITY title ladder with in-title rungs — [S] ADVANCED LV.1 at
-///         15,000 through LV.10 at 17,250, in 250-point steps — so a rung is the cohort.
+///         15,000 through LV.10 at 17,250, in 250-point steps — so a rung is the peer group.
 ///         Phoenix 1 has no PUMBILITY-threshold titles, so its difficulty titles stand in.
 ///         Imperfect and deliberately so: Phoenix 1 PUMBILITY has weeks of relevance left.
 ///     </para>
 /// </summary>
-internal static class PumbilityCohortKeys
+internal static class PumbilityPeers
 {
     /// <summary>Every player at once, which is what the community view reads.</summary>
     public const string Community = "*";
@@ -33,9 +33,9 @@ internal static class PumbilityCohortKeys
 
     /// <summary>
     ///     Phoenix 2: the highest PUMBILITY rung this pool total clears on the ladder matching
-    ///     the chart type. Null when it clears nothing — an unranked player has no cohort.
+    ///     the chart type. Null when it clears nothing — an unranked player has no peers.
     ///     <para>
-    ///         Own-type ladder only. Reading the Combined ladder as well would make a cohort a
+    ///         Own-type ladder only. Reading the Combined ladder as well would make a peer group a
     ///         per-viewer union of two ladders rather than a partition, so no two players would
     ///         share one and none of it could be materialized. Deferred with the rest of the
     ///         Phoenix 2 work — the ladder has no score volume behind it yet.

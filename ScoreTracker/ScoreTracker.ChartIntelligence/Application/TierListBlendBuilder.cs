@@ -57,7 +57,7 @@ internal sealed class TierListBlendBuilder
         {
             ["Score"] = new Dictionary<string, double> { ["Projection"] = 1 },
             // Same computation as the community view, over a different set of players — so the
-            // recipe is identical and only the cohort the census is read for changes.
+            // recipe is identical and only the peer group the census is read for changes.
             ["PUMBILITY"] = new Dictionary<string, double> { [PumbilitySource] = 1 }
         };
 
@@ -184,40 +184,40 @@ internal sealed class TierListBlendBuilder
 
     /// <summary>
     ///     Reads the materialized PUMBILITY tier list for this folder, for everyone or for the
-    ///     viewer's own cohort. Nothing is computed here — the nightly job owns the counting,
-    ///     and a cohort with no rows for this folder simply votes on nothing.
+    ///     viewer's own peer group. Nothing is computed here — the nightly job owns the counting,
+    ///     and a peer group with no rows for this folder simply votes on nothing.
     /// </summary>
     private async Task<PumbilityComputation> ComputePumbility(ChartType chartType, DifficultyLevel level,
         MixEnum mix, Guid? userId, CancellationToken cancellationToken)
     {
-        var cohortKey = userId == null
-            ? PumbilityCohortKeys.Community
-            : await ResolveViewerCohort(chartType, mix, userId.Value, cancellationToken);
-        if (cohortKey == null)
+        var peerKey = userId == null
+            ? PumbilityPeers.Community
+            : await ResolveViewerPeers(chartType, mix, userId.Value, cancellationToken);
+        if (peerKey == null)
             return new PumbilityComputation(new Dictionary<Guid, SongTierListEntry>(),
                 new Dictionary<Guid, int>(), 0);
 
-        var folder = await _tierLists.GetPumbilityTierList(mix, chartType, level, cohortKey, cancellationToken);
+        var folder = await _tierLists.GetPumbilityTierList(mix, chartType, level, peerKey, cancellationToken);
         return new PumbilityComputation(
             folder.Entries.ToDictionary(e => e.ChartId,
                 e => new SongTierListEntry(PumbilitySource, e.ChartId, e.Category, e.Order)),
             folder.Entries.ToDictionary(e => e.ChartId, e => e.Appearances),
-            folder.CohortSize);
+            folder.PeerCount);
     }
 
     /// <summary>
-    ///     Which cohort the reader belongs to, resolved exactly as the nightly job resolves it —
+    ///     Which peer group the reader belongs to, resolved exactly as the nightly job resolves it —
     ///     Phoenix 1 by the level of their highest difficulty title, Phoenix 2 by the PUMBILITY
     ///     rung their pool clears. The two must agree or a player reads a list nobody built for
     ///     them.
     /// </summary>
-    public async Task<string?> ResolveViewerCohort(ChartType chartType, MixEnum mix, Guid userId,
+    public async Task<string?> ResolveViewerPeers(ChartType chartType, MixEnum mix, Guid userId,
         CancellationToken cancellationToken)
     {
         if (mix != MixEnum.Phoenix2)
         {
             var titleLevel = await _titles.GetCurrentTitleLevel(mix, userId, cancellationToken);
-            return PumbilityCohortKeys.ForDifficultyTitleLevel((int)titleLevel);
+            return PumbilityPeers.ForDifficultyTitleLevel((int)titleLevel);
         }
 
         // Same shape of gate the census applies. A reader who has not yet imported a pool's
@@ -228,10 +228,10 @@ internal sealed class TierListBlendBuilder
         // for, and it costs one read behind a six-hour cache.
         var scored = (await _scores.GetBestScores(mix, userId, cancellationToken))
             .Count(s => s is { Score: not null, IsBroken: false });
-        if (scored < PumbilityCohortKeys.PoolSize) return null;
+        if (scored < PumbilityPeers.PoolSize) return null;
 
         var stats = await _playerStats.GetStats(mix, userId, cancellationToken);
-        return PumbilityCohortKeys.ForPhoenix2Pool(chartType,
+        return PumbilityPeers.ForPhoenix2Pool(chartType,
             chartType == ChartType.Single ? stats.SinglesRating : stats.DoublesRating);
     }
 
@@ -307,19 +307,19 @@ internal sealed record BlendComputation(
     PumbilityComputation? Pumbility);
 
 /// <summary>
-///     The PUMBILITY source's output: the banded entries, how many of the cohort's pools hold
-///     each chart, and how many players the cohort is. An empty read is the honest answer for a
-///     folder this cohort's pools cannot reach.
+///     The PUMBILITY source's output: the banded entries, how many of the peer group's pools hold
+///     each chart, and how many players the peer group is. An empty read is the honest answer for a
+///     folder this peer group's pools cannot reach.
 /// </summary>
 internal sealed record PumbilityComputation(
     IReadOnlyDictionary<Guid, SongTierListEntry> Entries,
     IReadOnlyDictionary<Guid, int> Appearances,
-    int CohortSize);
+    int PeerCount);
 
 /// <summary>
 ///     The projection source's output plus what the page needs in order to say something true
 ///     when it is quiet: how many of the folder's charts peers at this level have played at all,
-///     and the cohort the numbers came from.
+///     and the peer group the numbers came from.
 /// </summary>
 internal sealed record ProjectionComputation(
     IReadOnlyDictionary<Guid, SongTierListEntry> Entries,

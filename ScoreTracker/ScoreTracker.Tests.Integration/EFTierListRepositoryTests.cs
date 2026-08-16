@@ -219,7 +219,7 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
         // PumbilityCensusEntry → PumbilityTierListEntry rename migration against a real schema.
         var chartA = Guid.NewGuid();
         var chartB = Guid.NewGuid();
-        var byCohort = new Dictionary<string, PumbilityTierListFolder>
+        var byPeerKey = new Dictionary<string, PumbilityTierListFolder>
         {
             ["*"] = new(new[]
             {
@@ -229,12 +229,12 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
             ["L17"] = new(new[] { new PumbilityTierListRecord(chartA, 3, TierListCategory.Medium, 0) }, 3)
         };
 
-        await BuildRepository().SavePumbilityTierLists(MixEnum.Phoenix, ChartType.Single, 20, byCohort,
+        await BuildRepository().SavePumbilityTierLists(MixEnum.Phoenix, ChartType.Single, 20, byPeerKey,
             CancellationToken.None);
 
         var community = await BuildRepository()
             .GetPumbilityTierList(MixEnum.Phoenix, ChartType.Single, 20, "*", CancellationToken.None);
-        Assert.Equal(12, community.CohortSize);
+        Assert.Equal(12, community.PeerCount);
         Assert.Equal(2, community.Entries.Count);
         var a = community.Entries.Single(e => e.ChartId == chartA);
         Assert.Equal(8, a.Appearances);
@@ -243,13 +243,13 @@ public sealed class EFTierListRepositoryTests : IAsyncLifetime
 
         var titled = await BuildRepository()
             .GetPumbilityTierList(MixEnum.Phoenix, ChartType.Single, 20, "L17", CancellationToken.None);
-        Assert.Equal(3, titled.CohortSize);
+        Assert.Equal(3, titled.PeerCount);
         Assert.Single(titled.Entries);
 
         var unknown = await BuildRepository()
             .GetPumbilityTierList(MixEnum.Phoenix, ChartType.Single, 20, "L99", CancellationToken.None);
         Assert.Empty(unknown.Entries);
-        Assert.Equal(0, unknown.CohortSize);
+        Assert.Equal(0, unknown.PeerCount);
     }
 
     [Fact]

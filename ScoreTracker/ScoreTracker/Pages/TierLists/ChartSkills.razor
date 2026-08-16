@@ -168,7 +168,7 @@ else
     @* The context caption: the one chip that is a warning, and who the personalized list
        ranked you against — a note under the controls, not a headline. The lens-naming
        chips died with the Advanced drawer: the selects are visible at every width now. *@
-    @if (_isProvisionalFallback || (PersonalizedActive && _cohortSize > 0))
+    @if (_isProvisionalFallback || (PersonalizedActive && _peerCount > 0))
     {
         <div class="tier-context-line">
             @if (_isProvisionalFallback)
@@ -177,12 +177,12 @@ else
             }
             @* Same slot on every personalized lens; only the cohort differs — PUMBILITY
                title ranges here, competitive level on Score. *@
-            @if (PersonalizedActive && _cohortSize > 0)
+            @if (PersonalizedActive && _peerCount > 0)
             {
                 <span>
                     @(_tierListType == "PUMBILITY"
-                        ? L["Ranked against {0} players in your PUMBILITY title ranges", _cohortSize]
-                        : L["Ranked against {0} players of similar competitive level", _cohortSize])
+                        ? L["Ranked against {0} players in your PUMBILITY title ranges", _peerCount]
+                        : L["Ranked against {0} players of similar competitive level", _peerCount])
                 </span>
                 @* Score only: the Breakdown page explains the Score projection and coerces any
                    other lens to it, so linking it from Personalized PUMBILITY would answer a
@@ -1507,7 +1507,7 @@ else
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
     // PUMBILITY only: how many of the cohort's pools hold each chart, and how big the cohort is.
     private IReadOnlyDictionary<Guid, int> _appearances = new Dictionary<Guid, int>();
-    private int _cohortSize;
+    private int _peerCount;
     // Folders the PUMBILITY lens can answer for, for whichever cohort is in play. Null while
     // the lens is not selected, which is also what makes the picker gate a no-op elsewhere.
     private HashSet<(ChartType Type, int Level)>? _pumbilityFolders;
@@ -1916,7 +1916,7 @@ else
         // silently drop entries whose chart no longer exists.
         _finalEntries = blended.Entries.Where(e => _charts.ContainsKey(e.ChartId)).ToArray();
         _appearances = blended.Appearances ?? new Dictionary<Guid, int>();
-        _cohortSize = blended.PeerCount;
+        _peerCount = blended.PeerCount;
         _isProvisionalFallback = blended.IsProvisionalFallback;
         _chartDifficulties = _finalEntries.ToDictionary(e => e.ChartId, e => e.Category);
 

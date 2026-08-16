@@ -54,7 +54,7 @@ public sealed class TierListSagaPumbilityTests
         await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var community = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single)
-            .ByCohort[PumbilityCohortKeys.Community].Entries;
+            .ByPeerKey[PumbilityPeers.Community].Entries;
         var popularEntry = community.Single(e => e.ChartId == popular.Id);
         var nicheEntry = community.Single(e => e.ChartId == niche.Id);
 
@@ -67,7 +67,7 @@ public sealed class TierListSagaPumbilityTests
     }
 
     [Fact]
-    public async Task ACohortCountsOnlyItsOwnMembers()
+    public async Task APeerGroupCountsOnlyItsOwnMembers()
     {
         var titled = Guid.NewGuid();
         var untitled = Guid.NewGuid();
@@ -86,14 +86,14 @@ public sealed class TierListSagaPumbilityTests
         await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
         var folder = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single);
-        Assert.Equal(2, folder.ByCohort[PumbilityCohortKeys.Community].Entries.Single().Appearances);
-        var cohort = folder.ByCohort[PumbilityCohortKeys.ForDifficultyTitleLevel(17)];
-        Assert.Equal(1, cohort.Entries.Single().Appearances);
-        Assert.Equal(1, cohort.CohortSize);
+        Assert.Equal(2, folder.ByPeerKey[PumbilityPeers.Community].Entries.Single().Appearances);
+        var peers = folder.ByPeerKey[PumbilityPeers.ForDifficultyTitleLevel(17)];
+        Assert.Equal(1, peers.Entries.Single().Appearances);
+        Assert.Equal(1, peers.PeerCount);
     }
 
     [Fact]
-    public async Task ACohortWhosePoolsReachNothingHereIsNotWritten()
+    public async Task APeerGroupWhosePoolsReachNothingHereIsNotWritten()
     {
         var lowPlayer = Guid.NewGuid();
         var lowChart = new ChartBuilder().WithLevel(15).WithType(ChartType.Single).Build();
@@ -108,11 +108,11 @@ public sealed class TierListSagaPumbilityTests
 
         await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
-        var cohort = PumbilityCohortKeys.ForDifficultyTitleLevel(15);
-        Assert.Contains(cohort, saved.Single(f => f.Level == 15).ByCohort.Keys);
-        // Nobody at that level pools a 24, so the folder is written with no cohorts at all
+        var peers = PumbilityPeers.ForDifficultyTitleLevel(15);
+        Assert.Contains(peers, saved.Single(f => f.Level == 15).ByPeerKey.Keys);
+        // Nobody at that level pools a 24, so the folder is written with no peer groups at all
         // rather than with a set of zeros nobody can read anything from.
-        Assert.Empty(saved.Single(f => f.Level == 24).ByCohort);
+        Assert.Empty(saved.Single(f => f.Level == 24).ByPeerKey);
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public sealed class TierListSagaPumbilityTests
     {
         // The Phoenix 2 shape: a player who has imported a handful of charts has a low pool
         // total because they have played little of the mix, not because they are weak. Counting
-        // them would put them in a cohort of genuinely weaker players and drag that cohort with
+        // them would put them in a peer group of genuinely weaker players and drag that peer group with
         // them, which is what a mix with no score volume yet does to everyone in it.
         var full = Guid.NewGuid();
         var partial = Guid.NewGuid();
@@ -137,9 +137,9 @@ public sealed class TierListSagaPumbilityTests
 
         await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
-        var community = saved.Single(f => f.Level == 20).ByCohort[PumbilityCohortKeys.Community];
+        var community = saved.Single(f => f.Level == 20).ByPeerKey[PumbilityPeers.Community];
         Assert.Equal(1, community.Entries.Single().Appearances);
-        Assert.Equal(1, community.CohortSize);
+        Assert.Equal(1, community.PeerCount);
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public sealed class TierListSagaPumbilityTests
 
         await saga.Consume(Context(new ProcessPumbilityTierListCommand()));
 
-        var community = saved.Single(f => f.Level == 20).ByCohort[PumbilityCohortKeys.Community].Entries;
+        var community = saved.Single(f => f.Level == 20).ByPeerKey[PumbilityPeers.Community].Entries;
         Assert.Equal(50, community.Count(e => e.Appearances == 1));
         Assert.Equal(10, community.Count(e => e.Appearances == 0));
         Assert.All(community.Where(e => e.Appearances == 0),
@@ -182,11 +182,11 @@ public sealed class TierListSagaPumbilityTests
 
         var folder = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single);
         Assert.Equal(MixEnum.Phoenix2, folder.Mix);
-        Assert.Equal(1, folder.ByCohort[PumbilityCohortKeys.Community].Entries.Single().Appearances);
+        Assert.Equal(1, folder.ByPeerKey[PumbilityPeers.Community].Entries.Single().Appearances);
     }
 
     [Fact]
-    public async Task PhoenixTwoCohortsComeFromTheRungLadderNotTitles()
+    public async Task PhoenixTwoPeerGroupsComeFromTheRungLadderNotTitles()
     {
         // Phoenix 2 partitions on the PUMBILITY rung a pool total clears; the difficulty-title
         // ladder is Phoenix 1's stand-in and must not be consulted at all.
@@ -205,8 +205,8 @@ public sealed class TierListSagaPumbilityTests
         titles.Verify(t => t.GetUserIdsOnHighestLevel(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel>(),
             It.IsAny<CancellationToken>()), Times.Never);
         var folder = saved.Single(f => f.Level == 20 && f.ChartType == ChartType.Single);
-        var rungKey = Assert.Single(folder.ByCohort.Keys.Where(k => k != PumbilityCohortKeys.Community));
-        Assert.Equal(1, folder.ByCohort[rungKey].CohortSize);
+        var rungKey = Assert.Single(folder.ByPeerKey.Keys.Where(k => k != PumbilityPeers.Community));
+        Assert.Equal(1, folder.ByPeerKey[rungKey].PeerCount);
     }
 
     /// <summary>
@@ -241,7 +241,7 @@ public sealed class TierListSagaPumbilityTests
     }
 
     private sealed record SavedFolder(MixEnum Mix, ChartType ChartType, int Level,
-        IReadOnlyDictionary<string, PumbilityTierListFolder> ByCohort);
+        IReadOnlyDictionary<string, PumbilityTierListFolder> ByPeerKey);
 
     /// <summary>
     ///     The chart and score stubs answer only for <paramref name="mix" /> — a consumer that
@@ -288,9 +288,9 @@ public sealed class TierListSagaPumbilityTests
                 It.IsAny<IReadOnlyDictionary<string, PumbilityTierListFolder>>(),
                 It.IsAny<CancellationToken>()))
             .Callback((MixEnum m, ChartType type, DifficultyLevel level,
-                    IReadOnlyDictionary<string, PumbilityTierListFolder> byCohort,
+                    IReadOnlyDictionary<string, PumbilityTierListFolder> byPeerKey,
                     CancellationToken _) =>
-                saved.Add(new SavedFolder(m, type, level, byCohort)))
+                saved.Add(new SavedFolder(m, type, level, byPeerKey)))
             .Returns(Task.CompletedTask);
 
         // The PUMBILITY rebuild reads charts, scores, titles and writes tier lists; the rest of

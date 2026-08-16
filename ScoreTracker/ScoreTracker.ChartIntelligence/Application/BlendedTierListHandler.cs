@@ -12,7 +12,7 @@ namespace ScoreTracker.ChartIntelligence.Application;
 ///     The tier-list blend, moved out of the page (tier-lists overhaul C2, design doc
 ///     §6 Tier 3): weighted combination of the stored tier lists — with, on the two
 ///     lenses that personalize, the score projection (Score) or the viewer's own
-///     cohort's pool counts (PUMBILITY). The source computation lives in
+///     peer group's pool counts (PUMBILITY). The source computation lives in
 ///     <see cref="TierListBlendBuilder" /> (shared with the Personalized Breakdown
 ///     query); this handler owns lens validation, the final combine, and the cache.
 /// </summary>
@@ -59,7 +59,7 @@ internal sealed class BlendedTierListHandler : IRequestHandler<GetBlendedTierLis
                     computation.Modifiers))
                 .ToList();
             return new TierListResult(entries, computation.IsProvisionalFallback,
-                computation.Projection?.PeerCount ?? computation.Pumbility?.CohortSize ?? 0,
+                computation.Projection?.PeerCount ?? computation.Pumbility?.PeerCount ?? 0,
                 computation.Pumbility?.Appearances);
         }) ?? throw new InvalidOperationException("Blended tier list could not be built");
     }
