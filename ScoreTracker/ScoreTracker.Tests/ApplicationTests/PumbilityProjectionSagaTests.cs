@@ -341,18 +341,47 @@ public sealed class PumbilityProjectionSagaTests
     // ------------------------------------------------------------------ context
 
     [Fact]
-    public async Task APhoenix2ProjectionHearsPeersWhoOnlyEverScoredInPhoenix1()
+    public async Task APhoenix2ProjectionNeverHearsPhoenix1Evidence()
     {
-        // Nobody has touched this chart in Phoenix 2. Phoenix 2 rerated Phoenix 1's charts
-        // rather than restepping them, so what those players scored on the same steps is
-        // still evidence — and at a launch it is the only evidence there is.
-        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
-        ctx.WithPeerScores(chart, 940_000, 950_000, 960_000, 970_000);
+        // Phoenix 2 is its own world (D21): five Phoenix 1 scores on this chart from players
+        // who are PUMBILITY peers here say nothing, and the chart is not projected.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var chart, ChartType.Single, 20);
+        for (var i = 0; i < 5; i++)
+            ctx.WithPumbilityPeer(chart, phoenix1Score: 940_000 + i * 5_000);
 
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
 
-        Assert.True(result.ExpectedScores.ContainsKey(chart.Id));
+        Assert.DoesNotContain(chart.Id, result.ExpectedScores.Keys);
+    }
+
+    [Fact]
+    public async Task APhoenix2ProjectionIsTheMedianOfFiveOrMorePumbilityPeers()
+    {
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var chart, ChartType.Single, 20);
+        foreach (var score in new[] { 940_000, 985_000, 962_000, 990_000, 975_000 })
+            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Equal(975_000, (int)result.ExpectedScores[chart.Id]);
+    }
+
+    [Fact]
+    public async Task FourPumbilityPeersAreNotAnOpinion()
+    {
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var chart, ChartType.Single, 20);
+        foreach (var score in new[] { 985_000, 985_000, 990_000, 990_000 })
+            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.DoesNotContain(chart.Id, result.ExpectedScores.Keys);
     }
 
     [Fact]
@@ -372,33 +401,19 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task APeerScoredInBothMixesSpeaksOnceWithTheirBetterScore()
+    public async Task AnAccountWithoutAFullPhoenix2PoolOfTheTypeGetsNothingForThatType()
     {
-        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
-        ctx.WithPeerScoredInBothMixes(chart, 900_000, 980_000)
-            .WithPeerScoredInBothMixes(chart, 985_000, 905_000);
+        // D28: the peers exist, the viewer is not yet in a position to have any. Twenty-nine
+        // doubles is not a doubles pool, so the doubles chart is not projected however many
+        // PUMBILITY peers have played it.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(29, 17_500)
+            .WithChart(out var chart, ChartType.Double, 20);
+        for (var i = 0; i < 6; i++) ctx.WithPumbilityPeer(chart, phoenix2Score: 970_000);
 
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
 
-        // The value IS the proof that each peer spoke once. Two voices at 980k and 985k put
-        // the p65 at 984,000; had the weaker attempts entered as voices of their own, four
-        // values would have dragged it to 980,500.
-        Assert.Equal(984_000, (int)result.ExpectedScores[chart.Id]);
-    }
-
-    [Fact]
-    public async Task AnAccountWithNoPhoenix2ScoresIsStillMatchedToPeers()
-    {
-        // A launch-mix account has no Phoenix 2 competitive level to match on. Reading the
-        // level it does have beats showing the player nothing at all.
-        var ctx = new ProjectionContext().WithChart(out var chart, ChartType.Single, 20);
-        ctx.WithNoDataIn(MixEnum.Phoenix2).WithPeerScores(chart, 940_000, 950_000, 960_000);
-
-        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
-            CancellationToken.None);
-
-        Assert.True(result.ExpectedScores.ContainsKey(chart.Id));
+        Assert.DoesNotContain(chart.Id, result.ExpectedScores.Keys);
     }
 
     private sealed class ProjectionContext
@@ -407,7 +422,6 @@ public sealed class PumbilityProjectionSagaTests
 
         private readonly List<Chart> _charts = new();
         private readonly double _doubles;
-        private readonly HashSet<MixEnum> _myMissingMixes = new();
         private readonly Dictionary<Guid, HashSet<MixEnum>> _peerCohortMixes = new();
         private readonly List<PlayerRatingRecord> _peerHistory = new();
         private readonly Dictionary<Guid, double> _peerLevelNow = new();
@@ -415,6 +429,12 @@ public sealed class PumbilityProjectionSagaTests
         private readonly Dictionary<Guid, double> _scoringLevels = new();
         private readonly double _singles;
         private readonly List<RecordedPhoenixScore> _topScores = new();
+        // Phoenix 2: the viewer's total pool (their rung) and the size of their pool of each type,
+        // and each PUMBILITY peer's pool size — pools are counted from the score read, so the
+        // fixture answers that read with as many distinct filler charts as the size says.
+        private double _phoenix2Total;
+        private readonly Dictionary<ChartType, int> _phoenix2PoolSizes = new();
+        private readonly Dictionary<Guid, int> _pumbilityPeerPools = new();
 
         public ProjectionContext(double singlesCompetitive = 20, double doublesCompetitive = 20)
         {
@@ -423,9 +443,11 @@ public sealed class PumbilityProjectionSagaTests
 
             Stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), It.Is<Guid>(g => g == UserId),
                     It.IsAny<CancellationToken>()))
-                .ReturnsAsync((MixEnum mix, Guid _, CancellationToken _) => _myMissingMixes.Contains(mix)
-                    ? StatsFor(UserId, 1, 1)
-                    : StatsFor(UserId, _singles, _doubles));
+                .ReturnsAsync((MixEnum mix, Guid _, CancellationToken _) =>
+                    StatsFor(UserId, _singles, _doubles, mix == MixEnum.Phoenix2 ? _phoenix2Total : 0));
+            Stats.Setup(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(), It.IsAny<double>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => _pumbilityPeerPools.Keys.ToArray().AsEnumerable());
             Stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum mix, IEnumerable<Guid> ids, CancellationToken _) => ids
@@ -449,7 +471,7 @@ public sealed class PumbilityProjectionSagaTests
                     DifficultyLevel max, CancellationToken _) =>
                 {
                     var asked = userIds.ToHashSet();
-                    return _peerScores
+                    var real = _peerScores
                         .Where(p => p.Mix == mix && asked.Contains(p.Score.UserId))
                         .Where(p =>
                         {
@@ -457,7 +479,15 @@ public sealed class PumbilityProjectionSagaTests
                             return chart != null && chart.Type == type
                                                  && (int)chart.Level >= (int)min && (int)chart.Level <= (int)max;
                         })
-                        .Select(p => p.Score).ToArray().AsEnumerable();
+                        .Select(p => p.Score).ToArray();
+                    if (mix != MixEnum.Phoenix2) return real.AsEnumerable();
+                    // Phoenix 2 counts pools from this read: pad each asked player's real scores of
+                    // the type with distinct filler charts up to their declared pool size.
+                    var fillers = asked.SelectMany(id => Enumerable.Range(0,
+                            Math.Max(0, Phoenix2PoolSize(id, type) - real.Count(r => r.UserId == id)))
+                        .Select(i => new UserPhoenixScore(id, FillerChart(id, i), "Peer", 950_000,
+                            PhoenixPlate.FairGame, false)));
+                    return real.Concat(fillers).ToArray().AsEnumerable();
                 });
 
             Scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
@@ -537,27 +567,51 @@ public sealed class PumbilityProjectionSagaTests
             return this;
         }
 
-        /// <summary>One peer carrying a score in each mix — the pair a cross-mix read must reconcile.</summary>
-        public ProjectionContext WithPeerScoredInBothMixes(Chart chart, int phoenixScore, int phoenix2Score)
+        /// <summary>
+        ///     The viewer's Phoenix 2 standing: a total pool (which places them on the PUMBILITY
+        ///     ladder) and a pool of <paramref name="poolSize" /> charts of every type.
+        /// </summary>
+        public ProjectionContext WithPhoenix2Pool(int poolSize, double total)
         {
-            var peer = Guid.NewGuid();
-            var levelNow = chart.Type == ChartType.Single ? _singles : _doubles;
-            _peerLevelNow[peer] = levelNow;
-            _peerCohortMixes[peer] = new HashSet<MixEnum> { MixEnum.Phoenix, MixEnum.Phoenix2 };
-            var recordedAt = Now.AddDays(-100);
-            _peerScores.Add((MixEnum.Phoenix, new UserPhoenixScore(peer, chart.Id, "Peer", phoenixScore,
-                PhoenixPlate.MarvelousGame, false, true, recordedAt)));
-            _peerScores.Add((MixEnum.Phoenix2, new UserPhoenixScore(peer, chart.Id, "Peer", phoenix2Score,
-                PhoenixPlate.MarvelousGame, false, true, recordedAt.AddDays(40))));
-            _peerHistory.Add(new PlayerRatingRecord(peer, recordedAt.AddDays(-1), levelNow, levelNow, levelNow, 0, 0));
+            _phoenix2Total = total;
+            _phoenix2PoolSizes[ChartType.Single] = poolSize;
+            _phoenix2PoolSizes[ChartType.Double] = poolSize;
             return this;
         }
 
-        /// <summary>The player has no scores at all in <paramref name="mix" />, so no level there either.</summary>
-        public ProjectionContext WithNoDataIn(MixEnum mix)
+        /// <summary>
+        ///     One PUMBILITY peer — inside the viewer's rung band with a full pool of every type —
+        ///     holding a Phoenix 2 score and/or a Phoenix 1 score on <paramref name="chart" />.
+        /// </summary>
+        public ProjectionContext WithPumbilityPeer(Chart chart, int? phoenix2Score = null, int? phoenix1Score = null,
+            int poolSize = 50)
         {
-            _myMissingMixes.Add(mix);
+            var peer = Guid.NewGuid();
+            _pumbilityPeerPools[peer] = poolSize;
+            _peerLevelNow[peer] = 20;
+            _peerCohortMixes[peer] = new HashSet<MixEnum> { MixEnum.Phoenix, MixEnum.Phoenix2 };
+            if (phoenix2Score is { } p2)
+                _peerScores.Add((MixEnum.Phoenix2, new UserPhoenixScore(peer, chart.Id, "Peer", p2,
+                    PhoenixPlate.MarvelousGame, false, true, Now.AddDays(-10))));
+            if (phoenix1Score is { } p1)
+                _peerScores.Add((MixEnum.Phoenix, new UserPhoenixScore(peer, chart.Id, "Peer", p1,
+                    PhoenixPlate.MarvelousGame, false, true, Now.AddDays(-400))));
             return this;
+        }
+
+        private int Phoenix2PoolSize(Guid id, ChartType type)
+        {
+            if (id == UserId) return _phoenix2PoolSizes.GetValueOrDefault(type);
+            return _pumbilityPeerPools.GetValueOrDefault(id);
+        }
+
+        private static Guid FillerChart(Guid user, int index)
+        {
+            var bytes = user.ToByteArray();
+            bytes[0] = (byte)(index & 0xFF);
+            bytes[1] = (byte)((index >> 8) & 0xFF);
+            bytes[2] ^= 0x5A;
+            return new Guid(bytes);
         }
 
         public ChartType TypeOf(Guid chartId) => _charts.First(c => c.Id == chartId).Type;
@@ -603,10 +657,10 @@ public sealed class PumbilityProjectionSagaTests
                 .OrderByDescending(v => v).Take(50).Min();
         }
 
-        private static PlayerStatsRecord StatsFor(Guid userId, double singles, double doubles)
+        private static PlayerStatsRecord StatsFor(Guid userId, double singles, double doubles, double total = 0)
         {
             return new PlayerStatsRecord(userId, 0, 1, 0, 0, 0,
-                0, 0, 0,
+                total, 0, 0,
                 0, 0, 0,
                 0, 0, 0,
                 (singles + doubles) / 2,

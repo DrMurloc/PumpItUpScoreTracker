@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
@@ -8,8 +9,25 @@ namespace ScoreTracker.Domain.Services;
 
 /// <summary>
 ///     Gathers the peers <see cref="PeerEstimator" /> estimates from: who counts as a peer,
-///     what they scored, and — the part that is easy to get subtly wrong — what level each of
-///     them held at the moment they set that score.
+///     what they scored, and — on Phoenix 1, the part that is easy to get subtly wrong — what
+///     level each of them held at the moment they set that score.
+///     <para>
+///         Two definitions of "peer", one per mix, and nothing borrowed between them
+///         (docs/design/pumbility-overhaul.md D21):
+///     </para>
+///     <list type="bullet">
+///         <item>
+///             <b>Phoenix 1</b> (§4.1): players within a competitive-level band of the viewer,
+///             their scores in this mix, each discounted by how far they have grown since setting
+///             it, read at the 65th percentile.
+///         </item>
+///         <item>
+///             <b>Phoenix 2</b> (§4.8): PUMBILITY peers — players within ±3 rungs of the viewer
+///             on the PUMBILITY level ladder who hold a full pool of the chart type, as the viewer
+///             must — their Phoenix 2 scores at full voice, read at the median, and no opinion at
+///             all under five of them. Every number here is one the Phoenix 2 boards can confirm.
+///         </item>
+///     </list>
 ///     <para>
 ///         The arithmetic lives in <see cref="PeerEstimator" />, which is pure. This is the
 ///         plumbing around it, and it sits here rather than inside a vertical because two
@@ -19,10 +37,10 @@ namespace ScoreTracker.Domain.Services;
 public sealed class ScoreProjector : IScoreProjector
 {
     /// <summary>
-    ///     Levels of slack when reading the reference mix, which rerated these charts — a chart
-    ///     sitting at 21 here may sit at 22 or 20 there.
+    ///     The lowest level a Phoenix 2 chart prices above zero at — the pool's floor, and so the
+    ///     floor of the read that counts pools (docs/DOMAIN.md, PUMBILITY).
     /// </summary>
-    private const int ReferenceLevelSlack = 2;
+    private static readonly DifficultyLevel MinimumPricedLevel = DifficultyLevel.From(10);
 
     private readonly IPlayerHistoryRepository _history;
     private readonly IScoreReader _scores;
@@ -35,158 +53,95 @@ public sealed class ScoreProjector : IScoreProjector
         _history = history;
     }
 
-    public async Task<ScoreProjection> Project(ScoreProjectionRequest request,
+    public Task<ScoreProjection> Project(ScoreProjectionRequest request, CancellationToken cancellationToken)
+    {
+        if (request.Targets.Count == 0) return Task.FromResult(ScoreProjection.None());
+
+        return request.Mix == MixEnum.Phoenix2
+            ? ProjectFromPumbilityPeers(request, cancellationToken)
+            : ProjectFromCompetitiveBand(request, cancellationToken);
+    }
+
+    public async Task<double> CompetitiveLevel(MixEnum mix, ChartType chartType, Guid userId,
         CancellationToken cancellationToken)
     {
-        if (request.Targets.Count == 0) return ScoreProjection.None();
+        // The player is measured in the mix they are looking at, and only there. The Phoenix 2
+        // launch fallback that read the other mix's level for an account with no scores here
+        // went with the cross-mix reads (D21): the mix's own number, or the no-data floor.
+        return CompetitiveLevelFor(await _stats.GetStats(mix, userId, cancellationToken), chartType);
+    }
 
+    // ------------------------------------------------------------------ Phoenix 1
+
+    private async Task<ScoreProjection> ProjectFromCompetitiveBand(ScoreProjectionRequest request,
+        CancellationToken cancellationToken)
+    {
         var (mix, chartType, userId, targets, window) = request;
-        var reference = ReferenceMixFor(mix);
 
         var myLevel = await CompetitiveLevel(mix, chartType, userId, cancellationToken);
         // Competitive level 1 is the no-data floor: there is no band to draw peers from.
         if (myLevel <= 1) return ScoreProjection.None(myLevel);
 
-        var cohort = (await _stats.GetPlayersByCompetitiveRange(mix, chartType, myLevel, window,
-            cancellationToken)).ToHashSet();
-        if (reference != mix)
-            cohort.UnionWith(await _stats.GetPlayersByCompetitiveRange(reference, chartType, myLevel, window,
-                cancellationToken));
-        cohort.Remove(userId);
-        if (cohort.Count == 0) return ScoreProjection.None(myLevel);
+        var peers = (await _stats.GetPlayersByCompetitiveRange(mix, chartType, myLevel, window, cancellationToken))
+            .ToHashSet();
+        peers.Remove(userId);
+        if (peers.Count == 0) return ScoreProjection.None(myLevel, PeerGroup.Competitive(myLevel, window, 0));
 
-        var peerScores = await BestAcrossMixes(mix, reference, cohort, targets, chartType, cancellationToken);
+        // The target set spans a level band, so it is asked for as one: a range scan the index
+        // can serve, rather than several hundred chart GUIDs in an IN list. The exact set is
+        // applied in memory below, so the result is identical either way.
+        var wanted = targets.Select(t => t.ChartId).ToHashSet();
+        var peerScores = (await _scores.GetPlayerScoresInLevelRange(mix, peers, chartType,
+                targets.Min(t => t.Level), targets.Max(t => t.Level), cancellationToken))
+            .Where(s => wanted.Contains(s.ChartId))
+            .ToArray();
 
         // Their level NOW, and their level history, so a score can be dated against the player
-        // they were when they set it. Both come from the reference mix, which is where the level
-        // series actually runs; a peer the reference mix has never seen falls back to this one.
-        //
-        // History is read for the peers who ACTUALLY turned up in the sweep, not for the whole
-        // cohort — a cohort is several hundred players and each carries a full timeline, so the
-        // ones who never played one of these charts were pure freight.
+        // they were when they set it. History is read for the peers who ACTUALLY turned up in
+        // the sweep, not for the whole band — a band is several hundred players and each carries
+        // a full timeline, so the ones who never played one of these charts were pure freight.
         var voices = peerScores.Select(s => s.UserId).Distinct().ToArray();
-        if (voices.Length == 0) return ScoreProjection.None(myLevel);
+        if (voices.Length == 0) return ScoreProjection.None(myLevel, PeerGroup.Competitive(myLevel, window, 0));
 
-        var levelNow = (await _stats.GetStats(reference, voices, cancellationToken))
+        var levelNow = (await _stats.GetStats(mix, voices, cancellationToken))
             .ToDictionary(s => s.UserId, s => CompetitiveLevelFor(s, chartType));
-        if (reference != mix)
-            foreach (var stats in await _stats.GetStats(mix, voices, cancellationToken))
-                if (!levelNow.ContainsKey(stats.UserId))
-                    levelNow[stats.UserId] = CompetitiveLevelFor(stats, chartType);
-
-        var history = (await _history.GetHistory(reference, voices, cancellationToken))
+        var history = (await _history.GetHistory(mix, voices, cancellationToken))
             .GroupBy(h => h.UserId)
             .ToDictionary(g => g.Key, g => g.OrderBy(h => h.Date).ToArray());
 
-        return Estimate(peerScores, levelNow, history, chartType, myLevel);
-    }
-
-    /// <summary>
-    ///     One estimate per chart, plus the tally of what the estimates rested on. Split out of
-    ///     <see cref="Project" />, which is otherwise a page of gathering followed by a page of
-    ///     arithmetic and reads as neither.
-    /// </summary>
-    private static ScoreProjection Estimate(IReadOnlyCollection<UserPhoenixScore> peerScores,
-        IReadOnlyDictionary<Guid, double> levelNow,
-        IReadOnlyDictionary<Guid, PlayerRatingRecord[]> history, ChartType chartType, double myLevel)
-    {
         var projected = new Dictionary<Guid, PhoenixScore>();
         // Counted from the scores that actually reached an estimate rather than from the sweep:
-        // a peer the reference mix has no stats row for is dropped below, so the sweep's own
-        // distinct count would name players whose evidence never got used.
+        // a peer with no stats row is dropped below, so the sweep's own distinct count would name
+        // players whose evidence never got used.
         var contributors = new HashSet<Guid>();
         var freshnessSum = 0.0;
         var freshnessCount = 0;
         foreach (var group in peerScores.GroupBy(s => s.ChartId))
         {
             var contributing = group.Where(s => levelNow.ContainsKey(s.UserId)).ToArray();
-            var peers = contributing
+            var scored = contributing
                 .Select(s => new PeerScore((int)s.Score, levelNow[s.UserId],
                     LevelWhenSet(history, s.UserId, s.RecordedAt, chartType, levelNow[s.UserId])))
                 .ToArray();
 
-            var estimate = PeerEstimator.Estimate(peers);
+            var estimate = PeerEstimator.Estimate(scored);
             if (estimate == null) continue;
 
             // Per score rather than per player: the question a caller asks of this is how heavily
             // the EVIDENCE is discounted, and a peer who lent five scores lent five pieces of it.
-            for (var i = 0; i < peers.Length; i++)
+            for (var i = 0; i < scored.Length; i++)
             {
                 contributors.Add(contributing[i].UserId);
-                freshnessSum += PeerEstimator.GrowthWeight(peers[i].Growth);
+                freshnessSum += PeerEstimator.GrowthWeight(scored[i].Growth);
             }
 
-            freshnessCount += peers.Length;
+            freshnessCount += scored.Length;
             projected[group.Key] = estimate.Value;
         }
 
         return new ScoreProjection(projected, contributors.Count, myLevel,
-            freshnessCount == 0 ? 0 : freshnessSum / freshnessCount);
-    }
-
-    public async Task<double> CompetitiveLevel(MixEnum mix, ChartType chartType, Guid userId,
-        CancellationToken cancellationToken)
-    {
-        // The player is measured in the mix they are looking at. The reference mix is a detail
-        // of the PEER side only (see BestAcrossMixes) — except here, where a launch-mix account
-        // with no scores yet has nothing to match peers on, and the other mix names a level
-        // rather than the caller getting nothing at all.
-        var reference = ReferenceMixFor(mix);
-        var level = CompetitiveLevelFor(await _stats.GetStats(mix, userId, cancellationToken), chartType);
-        if (level > 1 || reference == mix) return level;
-
-        return CompetitiveLevelFor(await _stats.GetStats(reference, userId, cancellationToken), chartType);
-    }
-
-    /// <summary>
-    ///     The mix a peer's evidence may also be read from. Phoenix 2 rerated Phoenix 1's charts
-    ///     rather than restepping them, and the score scale did not move with them: across 2,241
-    ///     player-chart pairs scored in both mixes the median difference is zero, with 976 higher
-    ///     in Phoenix 2 against 994 lower. A changed scoring formula would show a consistent
-    ///     offset — that spread is practice, so a peer's Phoenix 1 score is real evidence of what
-    ///     they can do on the same steps today.
-    ///     <para>
-    ///         This matters most at a launch, which is exactly when the cohort is thinnest:
-    ///         Phoenix 2 has scores from tens of players where Phoenix 1 has thousands.
-    ///     </para>
-    /// </summary>
-    private static MixEnum ReferenceMixFor(MixEnum mix)
-    {
-        return mix == MixEnum.Phoenix2 ? MixEnum.Phoenix : mix;
-    }
-
-    /// <summary>
-    ///     Each peer's best attempt per chart across the projected mix and its reference mix.
-    ///     Only the peers pool — the player's own scores are never read from another mix, because
-    ///     what they are being shown is what they have done HERE.
-    /// </summary>
-    private async Task<IReadOnlyCollection<UserPhoenixScore>> BestAcrossMixes(MixEnum mix, MixEnum reference,
-        IReadOnlyCollection<Guid> cohort, IReadOnlyCollection<ProjectionTarget> targets, ChartType chartType,
-        CancellationToken cancellationToken)
-    {
-        var wanted = targets.Select(t => t.ChartId).ToHashSet();
-        // The target set spans a level band, so it is asked for as one: a range scan the index
-        // can serve, rather than several hundred chart GUIDs in an IN list. The exact set is
-        // applied in memory below, so the result is identical either way.
-        var min = targets.Min(t => t.Level);
-        var max = targets.Max(t => t.Level);
-
-        var scores = (await _scores.GetPlayerScoresInLevelRange(mix, cohort, chartType, min, max,
-            cancellationToken)).ToList();
-
-        if (reference != mix)
-            // Widened, because the reference mix rerated these charts and a chart's level there
-            // is not necessarily its level here. Over-fetching costs a few rows; the wanted-set
-            // filter below makes it exact.
-            scores.AddRange(await _scores.GetPlayerScoresInLevelRange(reference, cohort, chartType,
-                Math.Max(1, min - ReferenceLevelSlack), Math.Min(DifficultyLevel.Max, max + ReferenceLevelSlack),
-                cancellationToken));
-
-        return scores
-            .Where(s => wanted.Contains(s.ChartId))
-            .GroupBy(s => (s.UserId, s.ChartId))
-            .Select(g => g.OrderByDescending(s => (int)s.Score).First())
-            .ToArray();
+            freshnessCount == 0 ? 0 : freshnessSum / freshnessCount,
+            PeerGroup.Competitive(myLevel, window, contributors.Count));
     }
 
     /// <summary>
@@ -213,6 +168,72 @@ public sealed class ScoreProjector : IScoreProjector
         var chosen = preceding ?? rows[0];
         var level = chartType == ChartType.Single ? chosen.SinglesLevel : chosen.DoublesLevel;
         return level > 1 ? level : fallback;
+    }
+
+    // ------------------------------------------------------------------ Phoenix 2
+
+    private async Task<ScoreProjection> ProjectFromPumbilityPeers(ScoreProjectionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var (mix, chartType, userId, targets, _) = request;
+
+        // The viewer's rung, from the total pool — the merged top fifty across both types, which
+        // is the number the game's own badge is drawn from. One rung serves both chart types.
+        var mine = await _stats.GetStats(mix, userId, cancellationToken);
+        var myLevel = CompetitiveLevelFor(mine, chartType);
+        var rung = Phoenix2PumbilityLevel.From(mine.SkillRating);
+        var lowest = Phoenix2PumbilityLevel
+            .FromIndex(Math.Max(0, rung.Index - PeerGroup.PumbilityRungWindow))!.Value;
+        var highest = Phoenix2PumbilityLevel
+            .FromIndex(Math.Min(Phoenix2PumbilityLevel.CapstoneIndex, rung.Index + PeerGroup.PumbilityRungWindow))!
+            .Value;
+
+        // Half-open on the top: a rung's NextThreshold is where the rung above starts. The
+        // capstone has nothing above it, so a band reaching it is open-ended.
+        var candidates = (await _stats.GetPlayersByPumbilityRange(mix, lowest.Threshold,
+                highest.NextThreshold ?? double.MaxValue, cancellationToken))
+            .ToHashSet();
+        candidates.Remove(userId);
+
+        // One read answers two questions: what everyone scored on the charts asked about, and
+        // whether each of them — the viewer included — holds a full pool of the type. On Phoenix
+        // 2 every non-broken pass at level 10 or above prices above zero, so a player's records
+        // of the type at those levels ARE their pool, and fifty of them is a full one.
+        var records = (await _scores.GetPlayerScoresInLevelRange(mix, candidates.Append(userId), chartType,
+                MinimumPricedLevel, DifficultyLevel.Max, cancellationToken))
+            .ToArray();
+        var poolCounts = records
+            .GroupBy(s => s.UserId)
+            .ToDictionary(g => g.Key, g => g.Select(s => s.ChartId).Distinct().Count());
+
+        var peers = candidates
+            .Where(id => poolCounts.GetValueOrDefault(id) >= PeerGroup.PumbilityPoolSize)
+            .ToHashSet();
+        var group = PeerGroup.Pumbility(rung.Index, peers.Count, poolCounts.GetValueOrDefault(userId));
+
+        // The viewer's own pool of the type has to be real before the group means anything for
+        // them (D28); the page says how far they are rather than estimating.
+        if (!group.IsLit || peers.Count == 0) return ScoreProjection.None(myLevel, group);
+
+        var wanted = targets.Select(t => t.ChartId).ToHashSet();
+        var projected = new Dictionary<Guid, PhoenixScore>();
+        var contributors = new HashSet<Guid>();
+        foreach (var chart in records
+                     .Where(s => peers.Contains(s.UserId) && wanted.Contains(s.ChartId))
+                     .GroupBy(s => s.ChartId))
+        {
+            var voices = chart.ToArray();
+            // Full voice for every score: nothing here is dated against a level (D25).
+            var scored = voices.Select(s => new PeerScore((int)s.Score, 0, 0)).ToArray();
+            var estimate = PeerEstimator.Estimate(scored, 0, PeerEstimator.Phoenix2Quantile,
+                PeerEstimator.Phoenix2MinimumPeers);
+            if (estimate == null) continue;
+
+            foreach (var voice in voices) contributors.Add(voice.UserId);
+            projected[chart.Key] = estimate.Value;
+        }
+
+        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group);
     }
 
     private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)
