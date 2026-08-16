@@ -139,7 +139,10 @@ namespace ScoreTracker.PlayerProgress.Application
 
             return new PumbilityPageRecord(mix, request.Pool, total, bar, barChart,
                 pool, waiting, top, Breakdown(pool, charts, scoring), totals?.Totals,
-                totals?.Rails ?? Array.Empty<TitleRail>());
+                totals?.Rails ?? Array.Empty<TitleRail>(),
+                // Who the peer rows were drawn from, per type — the section's one line about
+                // its evidence (D27), and the dark state for a type without a pool (D28).
+                projection.Peers);
         }
 
         /// <summary>

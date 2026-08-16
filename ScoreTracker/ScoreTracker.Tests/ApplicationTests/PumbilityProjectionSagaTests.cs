@@ -12,6 +12,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
@@ -81,6 +82,52 @@ public sealed class PumbilityProjectionSagaTests
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId), CancellationToken.None);
 
         Assert.DoesNotContain(far.Id, result.ExpectedScores.Keys);
+    }
+
+    [Fact]
+    public async Task Phoenix2HasNoLevelWindow()
+    {
+        // D24: a level-20 player is shown a 26 when five PUMBILITY peers have passed it — the
+        // "D23 a level 18 can pass after memorizing one section" case, and the reason the
+        // window went. Only the five-peer floor and the bar arithmetic decide.
+        var ctx = new ProjectionContext(20).WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var far, ChartType.Single, 26, 26.0);
+        for (var i = 0; i < 5; i++) ctx.WithPumbilityPeer(far, phoenix2Score: 900_000 + i * 1_000);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.Contains(far.Id, result.ExpectedScores.Keys);
+        Assert.Equal(902_000, (int)result.ExpectedScores[far.Id]);
+        ctx.Mediator.Verify(m => m.Send(It.IsAny<GetChartScoringLevelsQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task TheSweepNamesThePeerGroupPerTypeAndTheDarkOne()
+    {
+        // Fifty singles, twenty-nine doubles: singles peers are lit and counted, doubles say how
+        // far the pool is from lighting up (D27, D28). Both ride the projection so the page can
+        // print them without a second sweep.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
+            .WithChart(out var single, ChartType.Single, 20)
+            .WithChart(out var dbl, ChartType.Double, 20);
+        for (var i = 0; i < 6; i++) ctx.WithPumbilityPeer(single, phoenix2Score: 970_000);
+        ctx.WithPhoenix2DoublesPool(29);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var singles = result.Peers![ChartType.Single];
+        Assert.Equal(PeerGroupKind.PumbilityBand, singles.Kind);
+        Assert.Equal(24, singles.Center); // 17,609.59 is DIAMOND LV.4
+        Assert.Equal(6, singles.Size);
+        Assert.True(singles.IsLit);
+        var doubles = result.Peers[ChartType.Double];
+        Assert.False(doubles.IsLit);
+        Assert.Equal(29, doubles.PoolCount);
+        Assert.Equal(50, doubles.PoolSize);
+        Assert.DoesNotContain(dbl.Id, result.ExpectedScores.Keys);
     }
 
     [Fact]
@@ -575,6 +622,12 @@ public sealed class PumbilityProjectionSagaTests
         {
             _phoenix2Total = total;
             _phoenix2PoolSizes[ChartType.Single] = poolSize;
+            _phoenix2PoolSizes[ChartType.Double] = poolSize;
+            return this;
+        }
+
+        public ProjectionContext WithPhoenix2DoublesPool(int poolSize)
+        {
             _phoenix2PoolSizes[ChartType.Double] = poolSize;
             return this;
         }
