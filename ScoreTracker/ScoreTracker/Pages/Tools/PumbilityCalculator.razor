@@ -1,0 +1,106 @@
+@page "/PumbilityCalculator"
+@page "/PumbilityCalculator/{MixSlug}"
+@using MediatR
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.PumbilityCalculator
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@inject IMediator Mediator
+@inject IUiSettingsAccessor UiSettings
+@inject NavigationManager Nav
+
+@* The PUMBILITY formula page (docs/design/pumbility-calculator.md). Static SSR — no
+   @rendermode — so the formula, every constant, both chart types' tables and the ruler are
+   real HTML a crawler reads; the head is StaticHeadResolver's, keyed off the route. What
+   moves (the type toggle, the table's contour click, the quick calculator) is
+   pumbility-calculator.js working on this markup and on the constants block each type block
+   emits. One URL per mix; the bare route serves the viewer's mix. *@
+
+@if (_model != null)
+{
+    <div class="pc-page" data-pc-page data-pc-default-type="@ChartType.Single">
+        <header class="pc-hero">
+            <div>
+                <div class="pc-eyebrow">
+                    <span>PUMBILITY</span><span class="pc-sep">/</span><span>@_model.Mix.GetName()</span>
+                    @foreach (var other in PumbilityCalculatorMixes.All.Where(m => m != _model.Mix))
+                    {
+                        <span class="pc-sep">·</span><a href="@PumbilityCalculatorMixes.PathFor(other)">@other.GetName() →</a>
+                    }
+                </div>
+                <h1 class="pc-h1"><span>PUMBILITY</span> @L["Calculator"]</h1>
+                <p class="pc-lede">
+                    @if (_model.HasTypes)
+                    {
+                        @L["PUMBILITY is the sum of your fifty highest-valued charts. Phoenix 2 keeps three pools — Singles, Doubles, and the total across both — each its own top fifty."]
+                        <span class="pc-muted"> @L["This page is the formula behind the number: what any grade on any level is worth, and where the number actually comes from."]</span>
+                    }
+                    else
+                    {
+                        @L["PUMBILITY is the sum of your fifty highest-valued charts — one pool across Singles and Doubles."]
+                        <span class="pc-muted"> @L["This page is the Phoenix formula behind the number: what any grade on any level was worth, and where the number came from."]</span>
+                    }
+                </p>
+            </div>
+            @if (_model.HasTypes)
+            {
+                <div class="pc-hero-right">
+                    <div class="pc-typegroup" role="group" aria-label="@L["Chart type"]" data-pc-typegroup>
+                        <button type="button" data-pc-type-button="@ChartType.Single" aria-pressed="true">@L["Singles"]</button>
+                        <button type="button" data-pc-type-button="@ChartType.Double" aria-pressed="false">@L["Doubles"]</button>
+                    </div>
+                    <span class="pc-hint">@L["Singles are priced one level up and read a few grades and plates differently."]</span>
+                </div>
+            }
+        </header>
+
+        <PumbilityFormulaCard Model="_model" />
+
+        @foreach (var type in _model.Types)
+        {
+            <div class="pc-type-block" data-pc-type="@type.Type" hidden="@(type.Type != ChartType.Single)">
+                <PumbilityValueTable Model="_model" Type="type" />
+            </div>
+        }
+
+        <PumbilityConstantsTables Model="_model" />
+    </div>
+}
+
+@code {
+    [Parameter] public string? MixSlug { get; set; }
+
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    private PumbilityCalculatorModel? _model;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        MixEnum mix;
+        if (MixSlug != null)
+        {
+            // Only mixes with a PUMBILITY formula have a page; anything else is a real 404.
+            if (!ChartSlugs.TryParseMixSlug(MixSlug, out mix) || !PumbilityCalculatorMixes.All.Contains(mix))
+            {
+                _model = null;
+                Nav.NotFound();
+                return;
+            }
+        }
+        else
+        {
+            // The bare route serves the viewer's mix; a mix without a formula falls back to the
+            // newest one that has one.
+            var selected = await UiSettings.GetSelectedMix();
+            mix = PumbilityCalculatorMixes.All.Contains(selected) ? selected : PumbilityCalculatorMixes.All[0];
+        }
+
+        var cancellation = HttpContext?.RequestAborted ?? default;
+        var charts = await Mediator.Send(new GetChartsQuery(mix), cancellation);
+        var counts = charts.GroupBy(c => (c.Type, (int)c.Level))
+            .ToDictionary(g => g.Key, g => g.Count());
+        _model = PumbilityCalculatorModel.For(mix, counts);
+    }
+}

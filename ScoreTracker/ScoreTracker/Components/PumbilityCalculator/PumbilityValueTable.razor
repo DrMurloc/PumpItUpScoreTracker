@@ -1,0 +1,94 @@
+@using System.Globalization
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services.PumbilityCalculator
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* Every level × every grade for one chart type: base × grade at the lowest plate, rounded to
+   the point on screen and exact in data-v for the script's contour click. Cell colour is the
+   level-equivalent on this type's own axis (pc-ramp-0…9), so the diagonal bands are the
+   equal-value lines (docs/design/pumbility-calculator.md D7). Score floors ride the headers
+   (D8). Static markup; the click is wired by pumbility-calculator.js. *@
+<section class="pc-sec">
+    <div class="pc-sec-head">
+        <h2 class="pc-h2">@L["Every level, every grade"]</h2>
+        <span class="pc-sub">@L["Base × grade at the lowest plate, rounded to the point."] <b>@L["Click any value"]</b> @L["to light up what equals it on every other level."]</span>
+    </div>
+    <div class="pc-tablewrap">
+        <table class="pc-vt" data-pc-table>
+            <thead>
+            <tr>
+                <th scope="col" class="pc-lv">@L["Level"]<span class="pc-floor">@(Model.HasTypes && Type.Type == ChartType.Single ? L["priced base"] : L["base"])</span></th>
+                @foreach (var grade in Grades)
+                {
+                    <th scope="col">@grade.GetName()<span class="pc-floor">@Floor(grade)</span><span class="pc-metal" style="background:@ThemeScales.GradeColor(grade)"></span></th>
+                }
+                <th scope="col">@L["Charts"]<span class="pc-floor">@(Model.HasTypes ? (Type.Type == ChartType.Single ? L["Singles"] : L["Doubles"]) : L["S + D"])</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var row in Type.Levels)
+            {
+                <tr>
+                    <td class="pc-lv">@Name(row.Level)@if (row.BaseIsExtrapolated)
+                        {<sup title="@L["No pool on PIU Scores has held this level yet, so its base follows the curve rather than a reading."]">†</sup>}<small>@row.PricedBase.ToString("N0")</small></td>
+                    @foreach (var cell in row.Cells)
+                    {
+                        <td class="pc-v pc-ramp-@PumbilityCalculatorModel.RampStep(Type, cell.EquivalentLevel)"
+                            data-v="@cell.Value.ToString("R", CultureInfo.InvariantCulture)" data-l="@row.Level" data-g="@cell.Grade.GetName()"
+                            title="@Name(row.Level) @cell.Grade.GetName() = @cell.Value.ToString("N2")">@cell.Value.ToString("N0")</td>
+                    }
+                    <td class="pc-n">@row.ChartCount.ToString("N0")</td>
+                </tr>
+            }
+            @if (!Model.HasPlates)
+            {
+                <tr class="pc-coop">
+                    <td class="pc-lv">CO-OP<small>@PumbilityCalculatorModel.PhoenixCoOpBase.ToString("N0")</small></td>
+                    @foreach (var grade in Grades)
+                    {
+                        <td class="pc-v pc-v-muted" title="@L["CO-OP was priced at a flat 2,000 base but never counted in the total."]">@((PumbilityCalculatorModel.PhoenixCoOpBase * Model.Scoring.LetterGradeModifierFor(grade, ChartType.Single)).ToString("N0"))</td>
+                    }
+                    <td class="pc-n">@Model.CoOpChartCount.ToString("N0")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="pc-contour-cap" data-pc-contour-cap>
+        <span>@L["Nothing selected — click a value."]</span>
+    </div>
+    <div class="pc-table-foot">
+        <span class="pc-rampkey"><i></i>@L["colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines"]</span>
+        @if (Model.HasPlates)
+        {
+            <span>@L["Score floors changed below AAA on Phoenix 2 — A {0} · A+ {1} · AA {2} · AA+ {3}.", Floor(PhoenixLetterGrade.A), Floor(PhoenixLetterGrade.APlus), Floor(PhoenixLetterGrade.AA), Floor(PhoenixLetterGrade.AAPlus)]</span>
+            @if (Model.UnreadLevels.Count > 0)
+            {
+                <span><sup class="pc-mark">†</sup> @L["No pool on PIU Scores has held a level {0} yet, so their base ({1}) follows the curve rather than a reading.", string.Join(" / ", Model.UnreadLevels), string.Join(", ", Model.UnreadLevels.Select(l => ScoringConfiguration.Phoenix2BaseRating(l).ToString("N0")))]</span>
+            }
+        }
+        else
+        {
+            <span>@L["CO-OP: priced at a flat 2,000 base, never counted in the total."]</span>
+        }
+    </div>
+</section>
+
+@code {
+    private static readonly PhoenixLetterGrade[] Grades = Enum.GetValues<PhoenixLetterGrade>();
+
+    [Parameter, EditorRequired] public PumbilityCalculatorModel Model { get; set; } = default!;
+    [Parameter, EditorRequired] public PumbilityCalculatorTypeView Type { get; set; } = default!;
+
+    private string Name(int level) => Model.HasTypes ? $"{Type.Type.GetShortHand()}{level}" : level.ToString();
+
+    // "920k" — the floor as players say it; F has no floor to print.
+    private string Floor(PhoenixLetterGrade grade)
+    {
+        var floor = Model.GradeTable.Floors[grade];
+        return floor == 0 ? "—" : $"{floor / 1000}k";
+    }
+}
