@@ -229,7 +229,7 @@ contracts it already dispatches (`GetChartsQuery`, `GetPhoenixRecordsQuery`).
 No new tables, ports, or jobs; nothing in `dev/export/*` or `api/*` changed.
 
 `IScoreProjector.Project` returns `ScoreProjection` (scores + cohort) rather than a
-bare dictionary — four call sites, two verticals. `CohortEstimator` is untouched:
+bare dictionary — four call sites, two verticals. `PeerEstimator` (then `CohortEstimator`) is untouched:
 `GrowthWeight` was already public for the exploration harness, so the freshness mean
 is computed where the peers already are and the PUMBILITY arithmetic cannot move.
 

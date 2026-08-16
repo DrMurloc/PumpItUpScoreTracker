@@ -7,11 +7,11 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.Domain.Services;
 
 /// <summary>
-///     Gathers the peers <see cref="CohortEstimator" /> estimates from: who counts as a peer,
+///     Gathers the peers <see cref="PeerEstimator" /> estimates from: who counts as a peer,
 ///     what they scored, and — the part that is easy to get subtly wrong — what level each of
 ///     them held at the moment they set that score.
 ///     <para>
-///         The arithmetic lives in <see cref="CohortEstimator" />, which is pure. This is the
+///         The arithmetic lives in <see cref="PeerEstimator" />, which is pure. This is the
 ///         plumbing around it, and it sits here rather than inside a vertical because two
 ///         verticals need it and neither may reference the other.
 ///     </para>
@@ -105,7 +105,7 @@ public sealed class ScoreProjector : IScoreProjector
                     LevelWhenSet(history, s.UserId, s.RecordedAt, chartType, levelNow[s.UserId])))
                 .ToArray();
 
-            var estimate = CohortEstimator.Estimate(peers);
+            var estimate = PeerEstimator.Estimate(peers);
             if (estimate == null) continue;
 
             // Per score rather than per player: the question a caller asks of this is how heavily
@@ -113,7 +113,7 @@ public sealed class ScoreProjector : IScoreProjector
             for (var i = 0; i < peers.Length; i++)
             {
                 contributors.Add(contributing[i].UserId);
-                freshnessSum += CohortEstimator.GrowthWeight(peers[i].Growth);
+                freshnessSum += PeerEstimator.GrowthWeight(peers[i].Growth);
             }
 
             freshnessCount += peers.Length;

@@ -186,7 +186,7 @@ namespace ScoreTracker.PlayerProgress.Application
             // ±1.0, measured optimal for predicting the score itself — this page quotes the
             // number, so its accuracy is what matters rather than the ranking.
             var projected = await _projector.Project(
-                new ScoreProjectionRequest(mix, chartType, userId, scoped, CohortEstimator.CompetitiveWindow),
+                new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow),
                 cancellationToken);
 
             foreach (var (chartId, score) in projected.Scores) into[chartId] = score;
