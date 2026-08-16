@@ -287,4 +287,52 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         Assert.Contains("S (970,000)", answer);
         Assert.Contains("1.6×", answer);
     }
+
+    [Fact]
+    public void TheScriptsConstantsAreExactlyTheConfiguration()
+    {
+        // The calculator multiplies what this block says, so it must be the same numbers the
+        // markup was built from — per type, with the singles-priced-up rule and the type's own
+        // grade and plate tables.
+        var page = RenderPhoenix2();
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var blocks = page.FindAll("script[data-pc-constants]");
+        Assert.Equal(2, blocks.Count);
+        foreach (var block in blocks)
+        {
+            using var json = System.Text.Json.JsonDocument.Parse(block.TextContent);
+            var root = json.RootElement;
+            var type = Enum.Parse<ChartType>(root.GetProperty("type").GetString()!);
+            Assert.True(root.GetProperty("additive").GetBoolean());
+            Assert.Equal(type == ChartType.Single, root.GetProperty("singlesUp").GetBoolean());
+            Assert.Equal(type.GetShortHand(), root.GetProperty("prefix").GetString());
+            Assert.Equal("A+", root.GetProperty("anchorGrade").GetString());
+            foreach (var grade in Enum.GetValues<PhoenixLetterGrade>())
+                Assert.Equal(scoring.LetterGradeModifierFor(grade, type), root.GetProperty("grades").GetProperty(grade.GetName()).GetDouble(), 9);
+            foreach (var plate in Enum.GetValues<PhoenixPlate>())
+                Assert.Equal(scoring.PlateModifierFor(plate, type), root.GetProperty("plates").GetProperty(plate.GetShorthand()).GetDouble(), 9);
+            Assert.Equal(ScoringConfiguration.Phoenix2PricedBase(type, 20), root.GetProperty("levels").GetProperty("20").GetInt32());
+            Assert.Equal(900_000, root.GetProperty("floors").GetProperty("A+").GetInt32());
+        }
+    }
+
+    [Fact]
+    public void TheCalculatorRendersItsDefaultWorkedOutBeforeAnyScriptRuns()
+    {
+        var page = RenderPhoenix2();
+        var singles = page.FindAll("[data-pc-type='Single']").First(b => b.QuerySelector("[data-pc-calc]") != null);
+        var calc = singles.QuerySelector("[data-pc-calc]")!;
+        // Default: S24 · S · Marvelous Game = Base(25) 260 × (1.45 + 0.006) = 378.56.
+        Assert.Equal("378.56", calc.QuerySelector("[data-pc-out]")!.TextContent.Trim());
+        Assert.Equal("24", calc.QuerySelector("[data-pc-level] option[selected]")!.GetAttribute("value"));
+        Assert.Equal("S", calc.QuerySelector("[data-pc-grade] option[selected]")!.GetAttribute("value"));
+        Assert.Equal("MG", calc.QuerySelector("[data-pc-plate] option[selected]")!.GetAttribute("value"));
+        Assert.Contains("260", calc.QuerySelector("[data-pc-math]")!.TextContent);
+        Assert.Contains("Base(25)", calc.QuerySelector("[data-pc-math]")!.TextContent);
+
+        var phoenix = RenderPhoenix().Find("[data-pc-calc]");
+        Assert.Null(phoenix.QuerySelector("[data-pc-plate]"));
+        // Phoenix default: level 24 · S = 1,150 × 1.20 = 1,380.00.
+        Assert.Equal("1,380.00", phoenix.QuerySelector("[data-pc-out]")!.TextContent.Trim());
+    }
 }

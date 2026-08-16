@@ -190,7 +190,10 @@ public sealed class PumbilityCalculatorModel
         {
             mix = mix.ToString(),
             type = type.ToString(),
+            // "S24" / "D24" on a mix that prices the types apart; a bare "24" on one that does not.
+            prefix = mix == MixEnum.Phoenix2 ? type.GetShortHand() : string.Empty,
             additive = mix == MixEnum.Phoenix2,
+            singlesUp = mix == MixEnum.Phoenix2 && type == ChartType.Single,
             anchorGrade = anchor.GetName(),
             levels = rows.OrderBy(r => r.Level).ToDictionary(r => r.Level.ToString(), r => r.PricedBase),
             grades = Grades.ToDictionary(g => g.GetName(), g => scoring.LetterGradeModifierFor(g, type)),

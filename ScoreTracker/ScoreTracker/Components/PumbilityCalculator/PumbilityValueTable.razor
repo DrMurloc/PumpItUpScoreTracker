@@ -17,7 +17,7 @@
         <span class="pc-sub">@L["Base × grade at the lowest plate, rounded to the point."] <b>@L["Click any value"]</b> @L["to light up what equals it on every other level."]</span>
     </div>
     <div class="pc-tablewrap">
-        <table class="pc-vt" data-pc-table>
+        <table class="pc-vt" data-pc-table data-pc-prefix="@(Model.HasTypes ? Type.Type.GetShortHand() : "")">
             <thead>
             <tr>
                 <th scope="col" class="pc-lv">@L["Level"]<span class="pc-floor">@(Model.HasTypes && Type.Type == ChartType.Single ? L["priced base"] : L["base"])</span></th>
@@ -57,7 +57,11 @@
             </tbody>
         </table>
     </div>
-    <div class="pc-contour-cap" data-pc-contour-cap>
+    @* The script rewrites this caption on a click; the strings it needs ride as attributes so it
+       prints the page's language without holding any copy of its own. *@
+    <div class="pc-contour-cap" data-pc-contour-cap
+         data-t-closest="@L["≈ the closest value on each other level:"]" data-t-none="@L["nothing within reach"]"
+         data-t-clear="@L["clear"]" data-t-on="@L["{0} on {1}"]">
         <span>@L["Nothing selected — click a value."]</span>
     </div>
     <div class="pc-table-foot">

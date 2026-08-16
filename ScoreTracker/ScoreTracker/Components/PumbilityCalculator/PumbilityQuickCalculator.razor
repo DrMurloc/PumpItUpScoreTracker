@@ -1,0 +1,108 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.PumbilityCalculator
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* Level · grade · plate → the exact per-chart PUMBILITY (docs/design/pumbility-calculator.md
+   D11). The server renders the default pick worked out; pumbility-calculator.js recomputes on
+   change from the constants block below, which is emitted from the same configuration as the
+   markup. The whole block rides one MarkupString: the static renderer drops a script element
+   whose content is an expression. No signed-in half — the PUMBILITY page is that. *@
+<section class="pc-sec">
+    <div class="pc-sec-head">
+        <h2 class="pc-h2">@L["Quick calculator"]</h2>
+        <span class="pc-sub">
+            @if (Model.HasPlates)
+            {
+                @L["Pick a chart’s level, the grade and the plate — the exact per-chart PUMBILITY, and what equals it elsewhere."]
+            }
+            else
+            {
+                @L["Pick a chart’s level and the grade — the exact per-chart PUMBILITY, and what equals it elsewhere."]
+            }
+        </span>
+    </div>
+    <form class="pc-card pc-calc" data-pc-calc onsubmit="return false">
+        @((MarkupString)$"<script type=\"application/json\" data-pc-constants>{Type.ConstantsJson}</script>")
+        <label class="pc-calc-field">
+            <span class="pc-lbl">@(Model.HasTypes ? L["Level · {0}", TypeName] : L["Level"])</span>
+            <select data-pc-level>
+                @foreach (var row in Type.Levels)
+                {
+                    <option value="@row.Level" selected="@(row.Level == DefaultLevel)">@Name(row.Level)</option>
+                }
+            </select>
+        </label>
+        <label class="pc-calc-field">
+            <span class="pc-lbl">@L["Grade"]</span>
+            <select data-pc-grade>
+                @foreach (var grade in Enumerable.Reverse(Grades))
+                {
+                    <option value="@grade.GetName()" selected="@(grade == DefaultGrade)">@grade.GetName()</option>
+                }
+            </select>
+        </label>
+        @if (Model.HasPlates)
+        {
+            <label class="pc-calc-field">
+                <span class="pc-lbl">@L["Plate"]</span>
+                <select data-pc-plate>
+                    @foreach (var plate in Enumerable.Reverse(Plates))
+                    {
+                        <option value="@plate.GetShorthand()" selected="@(plate == DefaultPlate)">@L[plate.GetName()]</option>
+                    }
+                </select>
+            </label>
+        }
+        else
+        {
+            <div class="pc-calc-field">
+                <span class="pc-lbl">@L["Plate"]</span>
+                <span class="pc-calc-static">@L["any — ×1.0"]</span>
+            </div>
+        }
+        <div class="pc-calc-out">
+            <span class="pc-calc-big" data-pc-out>@DefaultValue.ToString("N2")</span>
+            <span class="pc-calc-math" data-pc-math data-t-up="@L["Base({0}) — a Single is priced one level up"]">
+                @if (Model.HasPlates)
+                {
+                    <i class="pc-t-level">@DefaultBase.ToString("N0")</i> <text>× (</text><i class="pc-t-grade">@Model.Scoring.LetterGradeModifierFor(DefaultGrade, Type.Type).ToString("0.00")</i> <text>+</text> <i class="pc-t-plate">@Model.Scoring.PlateModifierFor(DefaultPlate, Type.Type).ToString("0.000")</i><text>)</text>
+                    @if (Type.Type == ChartType.Single)
+                    {
+                        <text> &nbsp;·&nbsp; </text>@L["Base({0}) — a Single is priced one level up", DefaultLevel + 1]
+                    }
+                }
+                else
+                {
+                    <i class="pc-t-level">@DefaultBase.ToString("N0")</i> <text>×</text> <i class="pc-t-grade">@Model.Scoring.LetterGradeModifierFor(DefaultGrade, Type.Type).ToString("0.00")</i>
+                }
+            </span>
+        </div>
+        <div class="pc-calc-eq" data-pc-eq
+             data-t-label="@L["Worth about the same"]" data-t-on="@L["{0} on {1}"]"
+             data-t-cant="@L["{0} can’t reach it (SSS+ = {1})"]" data-t-beats="@L["{0} beats it at any pass"]"></div>
+    </form>
+</section>
+
+@code {
+    private static readonly PhoenixLetterGrade[] Grades = Enum.GetValues<PhoenixLetterGrade>();
+    private static readonly PhoenixPlate[] Plates = Enum.GetValues<PhoenixPlate>();
+
+    [Parameter, EditorRequired] public PumbilityCalculatorModel Model { get; set; } = default!;
+    [Parameter, EditorRequired] public PumbilityCalculatorTypeView Type { get; set; } = default!;
+
+    // The default pick: an S with a Marvelous Game on the highest level up to 24 the table has.
+    private int DefaultLevel => Type.Levels.Select(r => r.Level).Where(l => l <= 24).DefaultIfEmpty(Type.Levels[^1].Level).Max();
+    private static PhoenixLetterGrade DefaultGrade => PhoenixLetterGrade.S;
+    private static PhoenixPlate DefaultPlate => PhoenixPlate.MarvelousGame;
+
+    private int DefaultBase => Type.Levels.First(r => r.Level == DefaultLevel).PricedBase;
+
+    private double DefaultValue => Model.Scoring.GetScore(Type.Type, DifficultyLevel.From(DefaultLevel),
+        DefaultGrade.GetMinimumScoreFor(Model.Mix), Model.HasPlates ? DefaultPlate : PhoenixPlate.RoughGame);
+
+    private string Name(int level) => Model.HasTypes ? $"{Type.Type.GetShortHand()}{level}" : level.ToString();
+    private string TypeName => Type.Type == ChartType.Single ? L["Single"].Value : L["Double"].Value;
+}

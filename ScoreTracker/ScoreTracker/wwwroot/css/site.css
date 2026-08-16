@@ -15764,3 +15764,102 @@ span.ct-console-pick { cursor: default; }
 .pc-type-block[hidden] {
     display: none;
 }
+
+/* --- the quick calculator --- */
+.pc-calc {
+    display: grid;
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+    gap: 14px 22px;
+    align-items: end;
+}
+
+.pc-calc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.pc-calc select {
+    appearance: none;
+    min-width: 130px;
+    padding: 8px 32px 8px 10px;
+    background: var(--mix-surface-muted);
+    color: var(--mix-ink);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    border-radius: 4px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    background-image: linear-gradient(45deg, transparent 50%, var(--mix-ink-muted) 50%), linear-gradient(135deg, var(--mix-ink-muted) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+}
+
+.pc-calc select:focus-visible {
+    outline: 2px solid var(--mix-secondary);
+    outline-offset: 1px;
+}
+
+.pc-calc-static {
+    padding: 8px 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-calc-out {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-self: end;
+    text-align: right;
+}
+
+.pc-calc-big {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: .01em;
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-calc-math {
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-calc-eq {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-calc-eq:empty {
+    display: none;
+}
+
+.pc-calc-eq b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+@media (max-width: 860px) {
+    .pc-calc {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .pc-calc-out {
+        grid-column: 1 / -1;
+        justify-self: start;
+        text-align: left;
+    }
+}
