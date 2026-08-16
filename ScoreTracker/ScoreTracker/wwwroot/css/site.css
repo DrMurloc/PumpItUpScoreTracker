@@ -13396,6 +13396,26 @@ span.ct-console-pick { cursor: default; }
     margin: 2px 0 14px;
 }
 
+/* The Phoenix 2 peer line under the targets' lede: one clause per chart type in the selected
+   pool, the count in the mix's ink and the five-peer note muted; a type without a pool reads
+   as its own muted line (docs/design/pumbility-overhaul.md §3.3). */
+.pmb-peer-line {
+    font-size: 13px;
+    max-width: 62ch;
+    margin: -6px 0 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-peer-line + .pmb-peer-line {
+    margin-top: -8px;
+}
+
+.pmb-peer-count {
+    color: var(--mix-ink);
+    font-weight: 600;
+    margin-right: 6px;
+}
+
 
 /* --- targets, comfortable --- */
 /* One treatment for both jacket badges: the mix accent on the mix accent, over the black

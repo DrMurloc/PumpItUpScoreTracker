@@ -11,6 +11,7 @@ using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -120,7 +121,32 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
         return Mock.Get((IUiSettingsAccessor)Services.GetService(typeof(IUiSettingsAccessor))!);
     }
 
-    private IRenderedFragment RenderPage(string? savedSort = null, bool movers = false)
+    [Fact]
+    public void OnPhoenix2TheStatsNameThePumbilityPeersAndTheirRungBand()
+    {
+        // The projection was drawn from PUMBILITY peers (docs/design/personalized-breakdown.md):
+        // the group and its rung band replace the competitive figures, and nothing is discounted,
+        // so the stale-weight figure is not printed at all.
+        var cut = RenderPage(peers: PeerGroup.Pumbility(24, 23, 50));
+
+        Assert.Contains("PUMBILITY peers", cut.Markup);
+        Assert.Contains("[P.B] DIAMOND LV.1 – [P.B] RED BERYL LV.2", cut.Markup);
+        Assert.Contains("you stand on [P.B] DIAMOND LV.4", cut.Markup);
+        Assert.DoesNotContain("you sit at", cut.Markup);
+        Assert.DoesNotContain("Stale weight", cut.Markup);
+    }
+
+    [Fact]
+    public void OnACompetitiveBandTheStatsKeepTheLevelFigures()
+    {
+        var cut = RenderPage(peers: PeerGroup.Competitive(18.4, 0.5, 148));
+
+        Assert.Contains("you sit at 18.4", cut.Markup);
+        Assert.Contains("Stale weight", cut.Markup);
+        Assert.DoesNotContain("PUMBILITY peers", cut.Markup);
+    }
+
+    private IRenderedFragment RenderPage(string? savedSort = null, bool movers = false, PeerGroup? peers = null)
     {
         var charts = Folder
             .Select(f => ChartNamed(f.Name))
@@ -156,7 +182,7 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
                         movers && i == 3 ? null : p.First.Projected))
                     .ToArray(),
                 Array.Empty<BreakdownSkillRecord>(), false, 0, 0, 0, 0,
-                0, 0, 0, 1, Folder.Length, Folder.Length, 148, 18.4, 0.5, 0.7, false));
+                0, 0, 0, 1, Folder.Length, Folder.Length, 148, 18.4, 0.5, 0.7, false, peers));
 
         this.RenderInteractive();
         // The lens is [SupplyParameterFromQuery], so it arrives through the URL rather than as a
