@@ -73,10 +73,12 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
     {
         var page = RenderPhoenix2();
 
+        // Two runs of type-specific sections (ruler + table, then the comparison), each once per type.
         var blocks = page.FindAll("[data-pc-type]");
-        Assert.Equal(new[] { "Single", "Double" }, blocks.Select(b => b.GetAttribute("data-pc-type")));
-        Assert.False(blocks[0].HasAttribute("hidden"));
-        Assert.True(blocks[1].HasAttribute("hidden"), "the Doubles block is in the HTML for a crawler and hidden until the toggle");
+        Assert.Equal(new[] { "Single", "Double", "Single", "Double" }, blocks.Select(b => b.GetAttribute("data-pc-type")));
+        Assert.All(blocks.Where(b => b.GetAttribute("data-pc-type") == "Single"), b => Assert.False(b.HasAttribute("hidden")));
+        Assert.All(blocks.Where(b => b.GetAttribute("data-pc-type") == "Double"),
+            b => Assert.True(b.HasAttribute("hidden"), "the Doubles blocks are in the HTML for a crawler and hidden until the toggle"));
         Assert.Equal(2, page.FindAll("[data-pc-type-button]").Count);
         Assert.Equal("true", page.Find("[data-pc-type-button='Single']").GetAttribute("aria-pressed"));
     }
@@ -87,7 +89,7 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         var page = RenderPhoenix2();
         var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
 
-        foreach (var block in page.FindAll("[data-pc-type]"))
+        foreach (var block in page.FindAll("[data-pc-type]").Where(b => b.QuerySelector("table.pc-vt") != null))
         {
             var type = Enum.Parse<ChartType>(block.GetAttribute("data-pc-type")!);
             var cells = block.QuerySelectorAll("td.pc-v[data-v]").ToArray();
@@ -109,8 +111,8 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
     public void Phoenix2RowsRunFromTheCatalogsTopLevelDownToTen()
     {
         var page = RenderPhoenix2();
-        var singles = page.Find("[data-pc-type='Single']").QuerySelectorAll("tbody tr").ToArray();
-        var doubles = page.Find("[data-pc-type='Double']").QuerySelectorAll("tbody tr").ToArray();
+        var singles = page.Find("[data-pc-type='Single'] table.pc-vt").QuerySelectorAll("tbody tr").ToArray();
+        var doubles = page.Find("[data-pc-type='Double'] table.pc-vt").QuerySelectorAll("tbody tr").ToArray();
         // Singles stop at 26 (the highest single in the catalog), doubles at 29.
         Assert.Equal(26 - 10 + 1, singles.Length);
         Assert.Equal(29 - 10 + 1, doubles.Length);
@@ -129,7 +131,7 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
     public void Phoenix2FootnotesTheExtrapolatedLevelsAndHasNoCoOpRow()
     {
         var page = RenderPhoenix2();
-        var doubles = page.Find("[data-pc-type='Double']");
+        var doubles = page.FindAll("[data-pc-type='Double']").First(b => b.QuerySelector("table.pc-vt") != null);
         Assert.NotNull(doubles.QuerySelector("tbody tr td.pc-lv sup"));
         Assert.Contains("28 / 29", doubles.QuerySelector(".pc-table-foot")!.TextContent);
         Assert.Contains("290, 300", doubles.QuerySelector(".pc-table-foot")!.TextContent);
@@ -146,8 +148,8 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         var page = RenderPhoenix();
 
         var blocks = page.FindAll("[data-pc-type]");
-        Assert.Single(blocks);
-        Assert.False(blocks[0].HasAttribute("hidden"));
+        Assert.Equal(2, blocks.Count);
+        Assert.All(blocks, b => Assert.False(b.HasAttribute("hidden")));
         Assert.Empty(page.FindAll("[data-pc-type-button]"));
 
         var coop = page.Find("tr.pc-coop");
@@ -214,5 +216,75 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         var page = RenderComponent<PumbilityCalculator>();
         Assert.Contains("Phoenix 2", page.Find(".pc-eyebrow").TextContent);
         Assert.Contains("/PumbilityCalculator/phoenix", page.Find(".pc-eyebrow a").GetAttribute("href"));
+    }
+
+    [Fact]
+    public void TheRulerAnchorsEveryRowOnItsOwnLevelAndReadsLevelsBought()
+    {
+        var page = RenderPhoenix2();
+        var doubles = page.FindAll("[data-pc-type='Double']").First(b => b.QuerySelector(".pc-ruler") != null);
+        var labels = doubles.QuerySelectorAll(".pc-ruler-lbl").Select(l => l.TextContent.Trim()).ToArray();
+        Assert.Equal("D29", labels[0]);
+        Assert.Equal("D10", labels[^1]);
+        // The end label is the kernel's number: an SSS+ on D20 buys 4.6 levels over a 900,000.
+        var d20 = Array.IndexOf(labels, "D20");
+        Assert.Equal("+4.6", doubles.QuerySelectorAll(".pc-ruler-end")[d20].TextContent.Trim());
+        var d24 = Array.IndexOf(labels, "D24");
+        Assert.Equal("+2.8", doubles.QuerySelectorAll(".pc-ruler-end")[d24].TextContent.Trim());
+        // Every row has one anchor tick and its bar segments; the tail is drawn faded.
+        var tracks = doubles.QuerySelectorAll(".pc-ruler-track").ToArray();
+        Assert.All(tracks, t => Assert.Single(t.QuerySelectorAll(".pc-ruler-anchor")));
+        Assert.All(tracks, t => Assert.NotEmpty(t.QuerySelectorAll(".pc-seg-tail")));
+        Assert.All(tracks, t => Assert.NotEmpty(t.QuerySelectorAll(".pc-seg-ice")));
+    }
+
+    [Fact]
+    public void TheRulerLegendNamesBandsByTheGradesTheyCover()
+    {
+        var phoenix2 = RenderPhoenix2().FindAll("[data-pc-type='Single'] .pc-legend").First().TextContent;
+        Assert.Contains("A+ · AA · AA+", phoenix2);
+        Assert.Contains("B · A", phoenix2);
+        Assert.Contains("900,000 on its own level — A+", phoenix2);
+
+        var phoenix = RenderPhoenix().Find(".pc-legend").TextContent;
+        Assert.Contains("AA · AA+", phoenix);
+        Assert.DoesNotContain("A+ · AA · AA+", phoenix);
+        Assert.Contains("A · A+", phoenix);
+        Assert.Contains("900,000 on its own level — AA", phoenix);
+    }
+
+    [Fact]
+    public void TheComparisonStatesTheRatioNotJustTheGradeSpan()
+    {
+        var page = RenderPhoenix2();
+        var compare = page.FindAll("[data-pc-type='Double']").First(b => b.QuerySelector(".pc-cmp") != null);
+        var facts = compare.QuerySelectorAll(".pc-cmp-fact").Select(f => f.TextContent.Replace('\n', ' ')).ToArray();
+        Assert.Equal(3, facts.Length);
+        // ① the grade span: +50% then +11.1%; ② one level: +17% then +2.2%; ③ the exchange rate.
+        Assert.Contains("+50", facts[0]);
+        Assert.Contains("+11.1", facts[0]);
+        Assert.Contains("+17", facts[1]);
+        Assert.Contains("+2.2", facts[1]);
+        Assert.Contains("2.7 levels", facts[2]);
+        Assert.Contains("4.6 levels", facts[2]);
+        Assert.Contains("1.7×", facts[2]);
+        // The paragraph names the inversion: S (970,000) there, AA+ (940,000) here for doubles.
+        var answer = compare.QuerySelector(".pc-answer")!.TextContent;
+        Assert.Contains("S (970,000)", answer);
+        Assert.Contains("AA+ (940,000)", answer);
+        // Paired bars for six levels, the other mix's bar and this mix's on every row.
+        Assert.Equal(6, compare.QuerySelectorAll(".pc-cmp-bar-other").Length);
+        Assert.Equal(6, compare.QuerySelectorAll(".pc-cmp-bar-mine").Length);
+    }
+
+    [Fact]
+    public void ThePhoenixPageComparesAgainstPhoenix2Singles()
+    {
+        var page = RenderPhoenix();
+        var compare = page.Find(".pc-cmp").ParentElement!.ParentElement!;
+        Assert.Contains("Phoenix 2", page.Find(".pc-h2.pc-q").TextContent);
+        var answer = page.Find(".pc-answer").TextContent;
+        Assert.Contains("S (970,000)", answer);
+        Assert.Contains("1.6×", answer);
     }
 }

@@ -58,14 +58,24 @@
 
         <PumbilityFormulaCard Model="_model" />
 
+        @* Every type-specific section carries data-pc-type; the script shows one type's set at a
+           time. Both are in the HTML for a reader that runs no script. *@
         @foreach (var type in _model.Types)
         {
             <div class="pc-type-block" data-pc-type="@type.Type" hidden="@(type.Type != ChartType.Single)">
+                <PumbilityLevelRuler Model="_model" Type="type" />
                 <PumbilityValueTable Model="_model" Type="type" />
             </div>
         }
 
         <PumbilityConstantsTables Model="_model" />
+
+        @foreach (var type in _model.Types)
+        {
+            <div class="pc-type-block" data-pc-type="@type.Type" hidden="@(type.Type != ChartType.Single)">
+                <PumbilityMixComparison Model="_model" Type="type" />
+            </div>
+        }
     </div>
 }
 

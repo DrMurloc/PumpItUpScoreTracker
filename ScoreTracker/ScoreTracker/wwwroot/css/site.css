@@ -15557,3 +15557,210 @@ span.ct-console-pick { cursor: default; }
         transition: none;
     }
 }
+
+/* --- the comparison (this mix in primary, the other in secondary) --- */
+.pc-cmp-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-cmp-legend i {
+    display: inline-block;
+    width: 18px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 2px;
+    vertical-align: 0;
+}
+
+.pc-cmp-swatch-other {
+    background: var(--mix-secondary);
+}
+
+.pc-cmp-swatch-mine {
+    background: var(--mix-primary);
+}
+
+.pc-cmp {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 62px;
+    gap: 0 10px;
+    margin-top: 12px;
+}
+
+.pc-cmp-axis {
+    grid-column: 2;
+    position: relative;
+    height: 22px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-cmp-axis span {
+    position: absolute;
+    bottom: 4px;
+    transform: translateX(-50%);
+}
+
+.pc-cmp-lbl {
+    height: 40px;
+    margin-bottom: 6px;
+    line-height: 40px;
+    text-align: right;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.pc-cmp-track {
+    position: relative;
+    height: 40px;
+    margin-bottom: 6px;
+}
+
+.pc-cmp-grid {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+.pc-cmp-bar {
+    position: absolute;
+    height: 14px;
+    border-radius: 0 3px 3px 0;
+}
+
+.pc-cmp-bar-other {
+    top: 4px;
+    background: var(--mix-secondary);
+}
+
+.pc-cmp-bar-mine {
+    top: 22px;
+    background: var(--mix-primary);
+}
+
+.pc-cmp-bar span {
+    position: absolute;
+    left: calc(100% + 6px);
+    top: -1px;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--mix-ink);
+}
+
+.pc-cmp-anchor {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    width: 2px;
+    background: var(--mix-ink);
+    transform: translateX(-1px);
+}
+
+.pc-cmp-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.pc-cmp-fact {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border-left: 3px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+}
+
+.pc-cmp-fact.pc-cmp-hero {
+    border-left-color: var(--mix-primary);
+    background: color-mix(in srgb, var(--mix-primary) 7%, var(--mix-surface));
+}
+
+.pc-cmp-fact.pc-cmp-hero .pc-lbl {
+    color: var(--mix-ink);
+}
+
+.pc-cmp-pair {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-cmp-hero .pc-cmp-pair {
+    font-size: 26px;
+}
+
+.pc-cmp-other {
+    color: var(--mix-secondary);
+}
+
+.pc-cmp-mine {
+    color: var(--mix-primary);
+}
+
+.pc-cmp-vs {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    color: var(--mix-ink-muted);
+}
+
+.pc-cmp-say {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-cmp-say b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.pc-answer {
+    margin: 0;
+    max-width: 78ch;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.pc-answer b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.pc-answer .pc-n {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+}
+
+@media (max-width: 860px) {
+    .pc-cmp-facts {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* A type block is a run of sections; the script hides the type not selected. The explicit
+   [hidden] rule matters: the flex display below would otherwise beat the attribute. */
+.pc-type-block {
+    display: flex;
+    flex-direction: column;
+    gap: 34px;
+}
+
+.pc-type-block[hidden] {
+    display: none;
+}

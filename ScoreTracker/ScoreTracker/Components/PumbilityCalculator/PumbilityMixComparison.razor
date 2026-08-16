@@ -1,0 +1,163 @@
+@using System.Globalization
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.PumbilityCalculator
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* Does scoring matter more than it did on the other mix? (docs/design/pumbility-calculator.md
+   D6). A grade is only worth something next to what a level is worth, so the comparison is the
+   exchange rate: paired bars per level (this mix in primary, the other in secondary) of how many
+   levels of pass-pushing an SSS+ over a 900,000 buys, then the argument in three facts — the
+   grade span shrank, the level shrank MORE, so the ratio moved the other way — with the ratio as
+   the hero. Static markup. *@
+<section class="pc-sec">
+    <div class="pc-sec-head">
+        <h2 class="pc-h2 pc-q">@L["Does scoring matter more than it did on {0}?", Other.GetName()]</h2>
+        <span class="pc-sub">
+            @L["A grade is only worth something"] <b>@L["next to what a level is worth"]</b>@L[", so the comparison is the exchange rate: taking one chart from a 900,000 to an SSS+ equals how many levels of pass-pushing, on each mix."]
+            @if (Model.HasTypes)
+            {
+                @L["{0} against {1}.", TypeName(Type.Type), Other.GetName()]
+            }
+            else
+            {
+                @L["Against {0} {1}.", Other.GetName(), TypeName(OtherType)]
+            }
+        </span>
+    </div>
+    <div class="pc-card">
+        <div class="pc-cmp-legend">
+            <span><i class="pc-cmp-swatch-other"></i>@Other.GetName()</span>
+            <span><i class="pc-cmp-swatch-mine"></i>@Model.Mix.GetName()</span>
+            <span class="pc-muted">@L["bar = 900,000 on the level → SSS+; label = levels bought"]</span>
+        </div>
+        <div class="pc-cmp">
+            <div></div>
+            <div class="pc-cmp-axis">
+                @for (var tick = AxisMin + 2; tick < AxisMax; tick += 2)
+                {
+                    <span style="left:@Pct(tick)%">@tick</span>
+                }
+            </div>
+            <div></div>
+            @foreach (var level in Levels)
+            {
+                <div class="pc-cmp-lbl">@level</div>
+                <div class="pc-cmp-track">
+                    @for (var line = AxisMin; line <= AxisMax; line += 2)
+                    {
+                        <div class="pc-cmp-grid" style="left:@Pct(line)%"></div>
+                    }
+                    <div class="pc-cmp-bar pc-cmp-bar-other" style="left:@Pct(level)%;width:@Width(level, level + OtherBought(level))%"
+                         title="@L["{0}: an SSS+ on {1} is worth a 900,000 on {2}", Other.GetName(), level, (level + OtherBought(level)).ToString("0.0")]"><span>+@OtherBought(level).ToString("0.0")</span></div>
+                    <div class="pc-cmp-bar pc-cmp-bar-mine" style="left:@Pct(level)%;width:@Width(level, level + MyBought(level))%"
+                         title="@L["{0}: an SSS+ on {1} is worth a 900,000 on {2}", Model.Mix.GetName(), level, (level + MyBought(level)).ToString("0.0")]"><span>+@MyBought(level).ToString("0.0")</span></div>
+                    <div class="pc-cmp-anchor" style="left:@Pct(level)%"></div>
+                </div>
+                <div></div>
+            }
+        </div>
+    </div>
+    <div class="pc-cmp-facts">
+        <div class="pc-card pc-cmp-fact">
+            <span class="pc-lbl">① @L["900,000 → SSS+ is worth"]</span>
+            <span class="pc-cmp-pair">@Pair("+" + Percent(OtherSpan), "+" + Percent(MySpan))</span>
+            <span class="pc-cmp-say">@L["the grade span got {0}× smaller", Ratio(Math.Max(OtherSpan, MySpan) / Math.Min(OtherSpan, MySpan))]</span>
+        </div>
+        <div class="pc-card pc-cmp-fact">
+            <span class="pc-lbl">② @L["one level higher is worth"]</span>
+            <span class="pc-cmp-pair">@Pair("+" + Percent(OtherStep), "+" + Percent(MyStep))</span>
+            <span class="pc-cmp-say">@L["but a level got {0}× smaller — more than the grade did", Ratio(Math.Max(OtherStep, MyStep) / Math.Min(OtherStep, MyStep))]</span>
+        </div>
+        <div class="pc-card pc-cmp-fact pc-cmp-hero">
+            <span class="pc-lbl">③ @L["so scoring one chart is worth"]</span>
+            <span class="pc-cmp-pair">@Pair(L["{0} levels", OtherBought(20).ToString("0.0")].Value, L["{0} levels", MyBought(20).ToString("0.0")].Value)</span>
+            <span class="pc-cmp-say">@L["the exchange rate — scoring got {0}× more powerful relative to passing", Ratio(Math.Max(OtherBought(20), MyBought(20)) / Math.Min(OtherBought(20), MyBought(20)))]</span>
+        </div>
+    </div>
+    <div class="pc-card">
+        <p class="pc-answer">
+            @if (Model.HasPlates)
+            {
+                <b>@L["Yes — about {0}× more, where most pools actually live.", Ratio(MyBought(20) / OtherBought(20))]</b>
+                @L["The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}. The gap closes above 24, where the base starts growing by 10 a level instead of 5 — and that is exactly where scoring stops being the cheap lever. It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level.",
+                    Percent(OtherSpan), Percent(MySpan), Percent(OtherStep), Percent(MyStep), MatchAt20(OtherScoring, OtherType), MatchAt20(Model.Scoring, Type.Type)]
+            }
+            else
+            {
+                <b>@L["Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does.", Ratio(OtherBought(20) / MyBought(20))]</b>
+                @L["Not because grades are worth more there — the span from a clean pass to an SSS+ fell from +{0} here to +{1} — but because a level fell further: Phoenix’s base is quadratic (+{2} at 20) against Phoenix 2’s flat +{3}. On Phoenix, passing one level higher takes a 900,000 to {4} to match on the chart you already have. That is why the ladder here is passing: the score lever is the expensive one.",
+                    Percent(MySpan), Percent(OtherSpan), Percent(MyStep), Percent(OtherStep), MatchAt20(Model.Scoring, Type.Type)]
+            }
+        </p>
+    </div>
+</section>
+
+@code {
+    private static readonly int[] Levels = { 16, 18, 20, 22, 24, 26 };
+    private const int AxisMin = 14;
+
+    [Parameter, EditorRequired] public PumbilityCalculatorModel Model { get; set; } = default!;
+    [Parameter, EditorRequired] public PumbilityCalculatorTypeView Type { get; set; } = default!;
+
+    // The other mix with a PUMBILITY formula. Phoenix prices both types alike, so a Phoenix
+    // page compares against Phoenix 2 Singles — the type most players play.
+    private MixEnum Other => Model.Mix == MixEnum.Phoenix2 ? MixEnum.Phoenix : MixEnum.Phoenix2;
+    private ChartType OtherType => Model.Mix == MixEnum.Phoenix2 ? ChartType.Single : ChartType.Single;
+    private ScoringConfiguration OtherScoring => ScoringConfiguration.PumbilityScoring(Other, false);
+
+    private int AxisMax => (int)Math.Ceiling(Levels.Max(l => l + Math.Max(MyBought(l), OtherBought(l)))) + 1;
+
+    private double MyBought(int level) =>
+        PumbilityLevelEquivalence.LevelsBought(Model.Scoring, Type.Type, DifficultyLevel.From(level), PhoenixLetterGrade.SSSPlus);
+
+    private double OtherBought(int level) =>
+        PumbilityLevelEquivalence.LevelsBought(OtherScoring, OtherType, DifficultyLevel.From(level), PhoenixLetterGrade.SSSPlus);
+
+    // 900,000 → SSS+ on one chart, and one level higher on one chart, both at level 20.
+    private double MySpan => Span(Model.Scoring, Type.Type);
+    private double OtherSpan => Span(OtherScoring, OtherType);
+    private double MyStep => Step(Model.Scoring, Type.Type);
+    private double OtherStep => Step(OtherScoring, OtherType);
+
+    private static double Span(ScoringConfiguration scoring, ChartType type)
+    {
+        var anchor = PumbilityLevelEquivalence.AnchorGrade(scoring.Mix);
+        return PumbilityLevelEquivalence.ValueAt(scoring, type, 20, PhoenixLetterGrade.SSSPlus) /
+            PumbilityLevelEquivalence.ValueAt(scoring, type, 20, anchor) - 1;
+    }
+
+    private static double Step(ScoringConfiguration scoring, ChartType type)
+    {
+        var anchor = PumbilityLevelEquivalence.AnchorGrade(scoring.Mix);
+        return PumbilityLevelEquivalence.ValueAt(scoring, type, 21, anchor) /
+            PumbilityLevelEquivalence.ValueAt(scoring, type, 20, anchor) - 1;
+    }
+
+    // "S (970,000)" — the grade that matches passing one level higher at 20, with its floor.
+    private string MatchAt20(ScoringConfiguration scoring, ChartType type)
+    {
+        var grade = PumbilityLevelEquivalence.GradeMatchingNextLevel(scoring, type, 20);
+        return grade == null
+            ? L["an SSS+"].Value
+            : $"{grade.Value.GetName()} ({((int)grade.Value.GetMinimumScoreFor(scoring.Mix)).ToString("N0")})";
+    }
+
+    // One decimal where the number is small enough for it to carry meaning (+11.1%, +2.2%),
+    // whole where it is not (+50%, +17%).
+    private static string Percent(double fraction) => fraction < 0.15 ? fraction.ToString("P1") : fraction.ToString("P0");
+    private static string Ratio(double ratio) => ratio.ToString("0.0");
+
+    private double PctValue(double level) => Math.Clamp((level - AxisMin) / (double)(AxisMax - AxisMin) * 100, 0, 100);
+    private string Pct(double level) => PctValue(level).ToString("0.##", CultureInfo.InvariantCulture);
+    private string Width(double from, double to) => Math.Max(0, PctValue(to) - PctValue(from)).ToString("0.##", CultureInfo.InvariantCulture);
+
+    private string TypeName(ChartType type) => type == ChartType.Single ? L["Singles"].Value : L["Doubles"].Value;
+
+    // Other mix first, this mix second, on both pages — the reader compares "then" against "now".
+    private MarkupString Pair(string other, string mine) => Model.Mix == MixEnum.Phoenix2
+        ? new MarkupString($"<span class=\"pc-cmp-other\">{other}</span><span class=\"pc-cmp-vs\">VS</span><span class=\"pc-cmp-mine\">{mine}</span>")
+        : new MarkupString($"<span class=\"pc-cmp-mine\">{mine}</span><span class=\"pc-cmp-vs\">VS</span><span class=\"pc-cmp-other\">{other}</span>");
+}
