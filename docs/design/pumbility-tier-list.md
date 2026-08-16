@@ -1,7 +1,7 @@
 # The PUMBILITY tier list
 
 Replaces **Personalized Pass** with a count of what players actually keep in their top-50
-PUMBILITY pool. Community and personalized are the same computation over different cohorts.
+PUMBILITY pool. Community and personalized are the same computation over different peer groups.
 
 Mocks: <https://claude.ai/code/artifact/0c0cf3e8-7bd3-4097-86ec-da506c7ee8bf>
 
@@ -40,7 +40,7 @@ Three structural properties make it a better primitive than a pass count:
 2. **Level cancels inside a folder.** Across folders, higher levels crowd every pool
    regardless of ease. Within one folder every chart is the same level, so what is left is
    relative value. Tier lists are per-folder, so this works out.
-3. **No tunable constants.** The Pass ladder has seven hand-picked cohort weights. The pool
+3. **No tunable constants.** The Pass ladder has seven hand-picked peer-group weights. The pool
    count has none — it is a `GROUP BY` over data already computed for `/Pumbility`.
 
 **Popularity bias does not carry over, and this is the subtle part.** For Pass, play is
@@ -81,13 +81,13 @@ set — is the argument for it earning a lens slot rather than replacing Pass.
 
 ## 4. The algorithm
 
-For a folder (mix, chart type, level) and a cohort:
+For a folder (mix, chart type, level) and a peer group:
 
-1. Every player in the cohort has a **full** top-50 pool per chart type, priced by
+1. Every player in the peer group has a **full** top-50 pool per chart type, priced by
    `ScoringConfiguration.PumbilityScoring(mix, includeCoOp: false)`. A player short of fifty is
    not counted at all — their total is low because they have imported little of the mix, not
-   because they are weak, and letting that stand drops them into a cohort of genuinely weaker
-   players *and* drags that cohort down with them. This is also what keeps Phoenix 2 dark until
+   because they are weak, and letting that stand drops them into a group of genuinely weaker
+   players *and* drags that group down with them. This is also what keeps Phoenix 2 dark until
    its pools are real, and lights it up on its own as they fill. The same gate applies to the
    reader: no pool, no personalized answer.
 2. For each chart in the folder, count how many of those pools contain it. That count is the
@@ -123,7 +123,7 @@ compound, so the spread is naturally in ratios.
 
 ### 4b. Real output
 
-S20, mid ~17k cohort, 236 peers — the actual log-banded split:
+S20, mid ~17k peer group, 236 peers — the actual log-banded split:
 
 | tier | Staple | Strong | Solid | Average | Modest | Slim | Poor | *not in any pool* |
 |---|---|---|---|---|---|---|---|---|
@@ -132,40 +132,50 @@ S20, mid ~17k cohort, 236 peers — the actual log-banded split:
 
 Earendel tops it at 175 of 236.
 
-## 5. Cohorts — "PUMBILITY peers"
+## 5. PUMBILITY peers
 
-A sibling to competitive peers, and a concept intended for reuse. Keyed on **title**, and
-resolved per mix:
+*"Peers", not "cohorts" — owner, 2026-08-15: "please stop calling 'peers' cohorts."*
 
-| Mix | Cohort key | Buckets | Cohort sizes |
+**Phoenix 2 (round three of the PUMBILITY overhaul, [pumbility-overhaul.md §4.8](pumbility-overhaul.md)):**
+your PUMBILITY peers are the players within **±3 rungs** of you on the PUMBILITY level ladder —
+`Phoenix2PumbilityLevel`, the hidden five-levels-per-gem ladder, so DIAMOND LV.4 reaches down to
+DIAMOND LV.1 and up to RED BERYL LV.2 — who hold a **full 50-chart pool of the chart type**. One
+rung, the total pool's (`PlayerStats.SkillRating`), serves both types; the full-pool rule is per
+type, and it applies to you as well: no full pool of the type, no peers for it. **This is the same
+definition the PUMBILITY page's projection draws its peers from** — the two surfaces answer "who is
+like me" identically, by ruling ("They need to be the same").
+
+| Mix | Peer key | Lists | Members |
 |---|---|---|---|
-| Phoenix 1 | highest **difficulty** title level (`UserHighestTitle`) | ~19 | 85–211 through levels 16–25; 11 at L10, 6 at L27, 1 at L28 |
-| Phoenix 2 | **PUMBILITY** title rung (`Phoenix2PumbilityTitle`) | ~30 | measured 50–126 per 250-point band |
+| Phoenix 1 | highest **difficulty** title level (`UserHighestTitle`), `L{n}` | ~19 | 85–211 through levels 16–25; 11 at L10, 6 at L27, 1 at L28 |
+| Phoenix 2 | the viewer's **PUMBILITY level rung**, `R{index}` | ≤ 37 per type | everyone within ±3 rungs with a full pool of the type — 20–35 players across GOLD → RED BERYL today |
 
-Phoenix 1 has no PUMBILITY-threshold titles — its difficulty titles stand in. Not perfect,
-and deliberately not worth more: Phoenix 1 PUMBILITY has a few weeks of relevance left.
+Phoenix 1 has no PUMBILITY level ladder — its difficulty titles stand in. Not perfect, and
+deliberately not worth more: Phoenix 1 PUMBILITY has a few weeks of relevance left.
 
-The P2 ladder already carries in-title levels — `[S] ADVANCED LV.1` at 15,000 through
-`LV.10` at 17,250, in 250-point steps — which is exactly the band width the cohort sizes
-above were measured at.
-
-- A player belongs to **one** cohort per chart type — cohorts are a partition, which is what
-  makes them materializable.
+- **It still materializes.** The key is the *viewer's* rung, and every viewer on rung *r* reads
+  the same list — one computed over the players in *r*±3. Member sets of neighbouring keys
+  overlap, which is fine: a list per key is what the nightly job writes, not a partition of
+  players. Thirty-seven keys per type per mix at most.
+- **The old per-viewer-union worry is moot.** The first version keyed on the own-type title rung
+  because a Singles∪Combined union was per viewer and could not be materialized. Keying on the
+  viewer's rung has the same property the own-type key had — everyone at one rung shares one
+  list — without the type track's failure: a thin pool of one type dragged its holder into a band
+  of players who had barely played that type (71 of 92 ranked players sit below ADVANCED on the
+  [D] track today), and the doubles list blanked for nearly everyone.
 - Phoenix 1 needs no new read: `ITitleRepository.GetUserIdsOnHighestLevel` already exists and
-  `ProcessPassTierList` already calls it.
+  `ProcessPassTierList` already calls it. Phoenix 2 reads `IPlayerStatsReader.GetStats` for the
+  rung and builds pools from scores as it always did.
 
-⚠️ **Deviation from the original intent, shipped deliberately.** The rule was "Singles reads
-Singles title ∪ Combined title, Doubles reads Doubles ∪ Combined, counted once". Implemented,
-that union is *per viewer* — my cohort is the union of the two ladders I personally sit on, and
-the player next to me sits on a different pair, so no two readers share a cohort and none of it
-can be materialized per cohort. Phoenix 2 therefore reads the **own-type ladder only**, and the
-Combined ladder is unused. Revisit when Phoenix 2 has score volume; the cheap version is to key
-a cohort on the *pair* of rungs, which stays a partition.
+⚠️ **The type-track refinement stays deferred, not rejected.** Peers on the *own-type* title
+track (∩ the gem band) would fix the total ladder's type-blindness — a singles-carried DIAMOND
+player is a doubles peer to a doubles-carried one — but it needs real per-type pools on both
+sides. Revisit when the [D] track has volume; the gate is the same full-pool rule.
 
 ## 6. Coverage, and what happens outside your band
 
 Personalized PUMBILITY only speaks for a **3–4 level band**, and the walls are absolute, not
-sloped. Singles cohorts at ±250 PUMBILITY, charts with ≥3 peer appearances:
+sloped. Measured on the first version's singles groups at ±250 PUMBILITY, charts with ≥3 peer appearances:
 
 | folder | low ~15.0k (91 peers) | mid ~17.0k (236) | high ~18.5k (62) |
 |---|---|---|---|
@@ -185,12 +195,12 @@ S22 is best for my PUMBILITY" genuinely has no answer.
 - **Below range** — the gate is arithmetic, not peer data: compare your 50th-place pool value
   against what the folder can pay at best (`PricedBase(type, level) × 1.52`). Verified against
   observation — a ~17k player's bar sits near 300 and S16 prices at 215, so S16 needs AA+ to
-  tie, and that cohort indeed holds *zero* S16 charts.
+  tie, and that group indeed holds *zero* S16 charts.
 - **Folders with no data are disabled in the folder selector**, and a direct URL **silently
   redirects** to the nearest folder that has data. No explanation, no dead-end page. There is
   no "fall back to community" state.
 - **Above range is still ranked normally.** No shortlist mode, no special casing. For the
-  ~15k cohort, S22 has exactly two charts anyone holds — *Hardkore of the North* and *Vector*,
+  ~15k group, S22 has exactly two charts anyone holds — *Hardkore of the North* and *Vector*,
   one peer each — and they go through the same banding as any folder. Two equal values give a
   standard deviation of zero, so both land in the top tier and read as **Staple**. That is a
   feature: they are the only two charts in S22 that can do anything for you.
@@ -210,8 +220,8 @@ S22 is best for my PUMBILITY" genuinely has no answer.
   card's existing tier-label slot and is shown on every view, because the count *is* the lens and
   a tier section heading cannot carry it; the tier name joins it only where the section is not
   already saying it.
-- **Cohort line**, on *every* personalized tier list, not just this one:
-  - PUMBILITY — "Ranked against **N players** in your PUMBILITY title ranges"
+- **Peer line**, on *every* personalized tier list, not just this one:
+  - PUMBILITY — "Ranked against **N PUMBILITY peers** — within 3 levels of you with a full singles pool" (Phoenix 2); "Ranked against **N players** on your difficulty title level" (Phoenix 1)
   - Score — "Ranked against **N players** of similar competitive level"
 
   Score's number is already plumbed (`TierListResult.PeerCount` off the projection); it has
@@ -221,14 +231,14 @@ S22 is best for my PUMBILITY" genuinely has no answer.
 
 `TierListEntry` cannot hold this — the cards show a peer count and that table has no count
 column — so the PUMBILITY tier lists get **their own table**, `scores.PumbilityTierListEntry`,
-keyed (MixId, ChartType, Level, ChartId, CohortKey) with the appearance count, category and
-order. It lives beside `TierListEntry` on `ITierListRepository` — one repository owns the
+keyed (MixId, ChartType, Level, ChartId, PeerKey) with the appearance count, the peer count, category
+and order (`PeerKey`/`PeerCount` were `CohortKey`/`CohortSize` until round three; renamed by migration). It lives beside `TierListEntry` on `ITierListRepository` — one repository owns the
 tier-list family — and the computation is a consumer on `TierListSaga`, where tier list
 calculations live.
 
 Written by the nightly `process-pumbility-tier-list` job, **once per mix**, one row set per
-cohort plus an "everyone" cohort for the community view. Per-cohort rather than per-user is
-what makes materializing tractable: ~34 folders × ~30 cohorts.
+peer key plus an "everyone" key for the community view. Per-key rather than per-user is
+what makes materializing tractable: ~34 folders × ~30 keys.
 
 **No Phoenix 2 fallback.** `GetTierListWithFallbackQuery` falls back P2 → P1 for stored lists,
 and that is *wrong* here: the two mixes price charts under completely different formulas and
@@ -257,7 +267,7 @@ the same commit as the manifest change, or `AccountPurgeCoverageTests` fails.
 - **The Personalized Breakdown page** keeps its Score half; its Pass half evaporates. Whether
   it gains a PUMBILITY mode is a later session. The `PersonalizedTierListBreakdown` contract
   keeps its now-always-empty skill and similar-players fields until then.
-- **Community Pass's inverted cohort weights** — level+1 counts 1, level+2 counts 2, level+3
+- **Community Pass's inverted peer-group weights** — level+1 counts 1, level+2 counts 2, level+3
   counts 3, so a player three levels stronger than the folder counts triple one a single level
   stronger. Below the folder it is correctly monotonic (7/6/5/4). Its own session.
 - **In-title levels for Phoenix 1** (the in-game Diamond 1–5 rungs that were never ingested).
@@ -265,6 +275,11 @@ the same commit as the manifest change, or `AccountPurgeCoverageTests` fails.
   Suggested Charts question, not a tier-list one.
 
 ## 11. Post-deploy, once
+
+**Round three re-keys Phoenix 2.** The migration renames the columns only; Phoenix 2 rows written
+under the old own-type title keys are stale until the job runs again — press the button once (or
+wait for the nightly). Until then the Phoenix 2 lens is dark and falls to Pass, exactly as it does
+for any thin peer group. Phoenix 1 rows keep their `L{n}` keys and are unaffected.
 
 The `PumbilityTierListEntry` table ships empty, so the lens shows nothing until the nightly job first runs.
 Press **Rebuild {mix} PUMBILITY tier lists** on `/Admin`, per mix. `/hangfire` works too, except
