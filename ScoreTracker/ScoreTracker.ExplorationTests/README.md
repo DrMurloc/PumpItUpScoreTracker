@@ -65,3 +65,21 @@ dotnet user-secrets set "CatalogProbe:ConnectionString" "Server=127.0.0.1,14330;
 dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj \
   --filter "FullyQualifiedName~TitleChartResolutionProbe"
 ```
+
+## PUMBILITY projection harness (`Pumbility/`)
+
+The measurement behind `docs/design/pumbility-overhaul.md` §4.8, against the same populated
+database as the catalog probes (same secret, same gate). `Phoenix2_launch_backtest_…` runs the
+shipping projector for every Phoenix 2 player on every chart they hold a Phoenix 2 score on — their
+own scores never enter their own peer group — and compares against the score they actually hold:
+bias, MAE, how often an SS call was right, coverage, split by chart origin and type.
+`One_players_list_…` prints one account's "What to play next" with the peer group behind each
+type (`PumbilityProbe:UserId` secret or `SCORETRACKER_PUMBILITY_PROBE_USER`, else the first Phoenix
+2 player). `The_estimator_and_the_harness_agree_…` is the pin — it needs no database and always
+runs. Read-only. Run it after touching `PeerEstimator`, `ScoreProjector`, the peer definition, or
+the Phoenix 2 pricing.
+
+```sh
+dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj \
+  --filter "FullyQualifiedName~PumbilityProjection"
+```
