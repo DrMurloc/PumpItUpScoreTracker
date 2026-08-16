@@ -33,4 +33,14 @@ public sealed record PumbilityPoolBandRecord(string Key, string? Title, double F
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityPoolCompositionRecord(MixEnum Mix, DateTimeOffset ComputedAt, int PoolsCounted,
-    IReadOnlyList<PumbilityPoolBandRecord> Bands);
+    IReadOnlyList<PumbilityPoolBandRecord> Bands)
+{
+    /// <summary>
+    ///     Fewer players than this and a band is not drawn — a bar built on one or two people is a
+    ///     picture of them, not of the rung. On the contract so the page and the sweep read one number.
+    /// </summary>
+    public const int MinimumPlayersToDraw = 5;
+
+    /// <summary>The bands with enough players to draw, lowest first.</summary>
+    public IEnumerable<PumbilityPoolBandRecord> Drawable => Bands.Where(b => b.Players >= MinimumPlayersToDraw);
+}

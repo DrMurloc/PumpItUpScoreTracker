@@ -1,0 +1,113 @@
+@using System.Globalization
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.PumbilityCalculator
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* How much do plates matter? On Phoenix 2: the plate magnified — Rough Game on every chart to
+   Perfect Game on every chart — with where the population's pools sit on it when the sweep has
+   run, and the answer in the formula's own numbers. On Phoenix: nothing, said plainly. *@
+<section class="pc-sec">
+    <div class="pc-sec-head">
+        <h2 class="pc-h2 pc-q">@L["How much do plates matter?"]</h2>
+    </div>
+    @if (Model.HasPlates)
+    {
+        <div class="pc-two">
+            <div class="pc-card pc-plate-rail">
+                <span class="pc-lbl">@L["The plate, magnified — Rough Game on every chart to Perfect Game on every chart"]</span>
+                <div class="pc-plate-track">
+                    @if (PoolPlateFill is { } fill)
+                    {
+                        <div class="pc-plate-fill" style="width:@((fill * 100).ToString("0.#", CultureInfo.InvariantCulture))%"></div>
+                    }
+                    @foreach (var plate in Plates)
+                    {
+                        <div class="pc-plate-tick" style="left:@((Bonus(plate) / MaxBonus * 100).ToString("0.#", CultureInfo.InvariantCulture))%" title="@L[plate.GetName()] +@Bonus(plate).ToString("0.000")"></div>
+                    }
+                </div>
+                <div class="pc-plate-ends">
+                    <span>+@Bonus(PhoenixPlate.RoughGame).ToString("0.000") · @L["Rough"]</span>
+                    @if (PoolPlateFill != null)
+                    {
+                        <span>@L["a typical pool sits at about +{0}", PoolPlateBonus!.Value.ToString("0.0000")]</span>
+                    }
+                    <span>+@MaxBonus.ToString("0.000") · @L["Perfect"]</span>
+                </div>
+            </div>
+            <div class="pc-card">
+                <p class="pc-answer">
+                    <b>@L["A tiebreaker."]</b>
+                    @L["A plate adds at most +{0} to a grade multiplier of {1}–{2}, so Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {3} — {4} of a level at 24, {5} of a level at 20.",
+                        MaxBonus.ToString("0.000"), Model.GradeTable.Doubles[PhoenixLetterGrade.F].ToString("0.00"), Model.GradeTable.Doubles[PhoenixLetterGrade.SSSPlus].ToString("0.00"),
+                        PoolShare.ToString("P1"), LevelsAt(24).ToString("0.0"), LevelsAt(20).ToString("0.0")]
+                    @if (PoolPlateShare is { } share)
+                    {
+                        @L["In the pools above, plates carry {0} of the number.", share.ToString("P1")]
+                    }
+                    @L["One plate step (+{0}) on one chart is a few hundredths of a point.", (Bonus(PhoenixPlate.FairGame) - Bonus(PhoenixPlate.RoughGame)).ToString("0.000")]
+                </p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="pc-card">
+            <p class="pc-answer">
+                <b>@L["Nothing."]</b>
+                @L["Every plate on Phoenix carried a modifier of exactly ×1.0, so the plate you walked away with never entered the number. Not a rounding argument — a Rough Game SSS+ and a Perfect Game SSS+ were worth the same PUMBILITY. Phoenix 2 is where plates start to count, and even there they are a tiebreaker."]
+            </p>
+        </div>
+    }
+</section>
+
+@code {
+    private static readonly PhoenixPlate[] Plates = Enum.GetValues<PhoenixPlate>();
+
+    [Parameter, EditorRequired] public PumbilityCalculatorModel Model { get; set; } = default!;
+    [Parameter] public PumbilityPoolCompositionRecord? Composition { get; set; }
+
+    private double Bonus(PhoenixPlate plate) => Model.Scoring.PlateModifierFor(plate, ChartType.Double);
+    private double MaxBonus => Plates.Max(Bonus);
+
+    // PG-on-all over RG-on-all, as a share of a pool scored at the anchor grade — the honest
+    // "how much can plates ever be worth" figure.
+    private double PoolShare => MaxBonus / (Model.Scoring.LetterGradeModifierFor(Model.AnchorGrade, ChartType.Double) + MaxBonus);
+
+    // That share expressed in levels, against how much one level is worth there.
+    private double LevelsAt(int level)
+    {
+        var here = PumbilityLevelEquivalence.ValueAt(Model.Scoring, ChartType.Double, level, Model.AnchorGrade);
+        var next = PumbilityLevelEquivalence.ValueAt(Model.Scoring, ChartType.Double, level + 1, Model.AnchorGrade);
+        return PoolShare / (next / here - 1);
+    }
+
+    // The base-weighted mean plate bonus across every drawable pool: PlatePart is Σ base × bonus
+    // and LevelPart is Σ base, so their ratio is the bonus a typical pooled chart carries.
+    private double? PoolPlateBonus
+    {
+        get
+        {
+            if (Composition == null) return null;
+            var live = Composition.Drawable.ToArray();
+            var levelPart = live.Sum(b => b.LevelPart);
+            return levelPart <= 0 ? null : live.Sum(b => b.PlatePart) / levelPart;
+        }
+    }
+
+    private double? PoolPlateFill => PoolPlateBonus is { } bonus ? Math.Clamp(bonus / MaxBonus, 0, 1) : null;
+
+    private double? PoolPlateShare
+    {
+        get
+        {
+            if (Composition == null) return null;
+            var live = Composition.Drawable.ToArray();
+            var total = live.Sum(b => b.Total);
+            return total <= 0 ? null : live.Sum(b => b.PlatePart) / total;
+        }
+    }
+}

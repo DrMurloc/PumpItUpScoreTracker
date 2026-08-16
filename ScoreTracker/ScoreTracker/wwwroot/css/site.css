@@ -15863,3 +15863,73 @@ span.ct-console-pick { cursor: default; }
         text-align: left;
     }
 }
+
+/* --- the population answers --- */
+.pc-two {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.pc-pop-bands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 0;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-pop-bands b {
+    color: var(--mix-ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.pc-plate-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* The sliver, on a scale it can be read on: the worst plate on all fifty to the best. */
+.pc-plate-track {
+    position: relative;
+    height: 12px;
+    border-radius: 2px;
+    background: var(--mix-surface-muted);
+    overflow: hidden;
+}
+
+.pc-plate-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: var(--mix-accent);
+    opacity: .85;
+}
+
+.pc-plate-tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--mix-ink);
+    opacity: .5;
+}
+
+.pc-plate-ends {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+}
+
+@media (max-width: 860px) {
+    .pc-two {
+        grid-template-columns: 1fr;
+    }
+}

@@ -32,9 +32,9 @@ internal static class PumbilityPoolBands
     /// <summary>
     ///     Fewer players than this and a band is not drawn — a bar built on one or two people is a
     ///     picture of them, not of the rung. The record still carries the band, so the page can say
-    ///     "not enough players yet" instead of pretending the rung is empty.
+    ///     "not enough players yet" instead of pretending the rung is empty. One number, on the contract.
     /// </summary>
-    public const int MinimumPlayers = 5;
+    public const int MinimumPlayers = Contracts.PumbilityPoolCompositionRecord.MinimumPlayersToDraw;
 
     /// <summary>The key of the Phoenix 2 band below BRONZE.</summary>
     public const string Phoenix2Unranked = "unranked";

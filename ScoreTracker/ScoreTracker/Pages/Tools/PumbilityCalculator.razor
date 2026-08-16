@@ -1,6 +1,7 @@
 @page "/PumbilityCalculator"
 @page "/PumbilityCalculator/{MixSlug}"
 @using MediatR
+@using ScoreTracker.ChartIntelligence.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
@@ -71,6 +72,9 @@
 
         <PumbilityConstantsTables Model="_model" />
 
+        <PumbilityPoolCompositionCard Model="_model" Composition="_composition" />
+        <PumbilityPlateAnswer Model="_model" Composition="_composition" />
+
         @foreach (var type in _model.Types)
         {
             <div class="pc-type-block" data-pc-type="@type.Type" hidden="@(type.Type != ChartType.Single)">
@@ -86,6 +90,7 @@
     [CascadingParameter] private HttpContext? HttpContext { get; set; }
 
     private PumbilityCalculatorModel? _model;
+    private PumbilityPoolCompositionRecord? _composition;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -113,5 +118,7 @@
         var counts = charts.GroupBy(c => (c.Type, (int)c.Level))
             .ToDictionary(g => g.Key, g => g.Count());
         _model = PumbilityCalculatorModel.For(mix, counts);
+        // Null until the nightly sweep has written the mix; the population sections say so.
+        _composition = await Mediator.Send(new GetPumbilityPoolCompositionQuery(mix), cancellation);
     }
 }

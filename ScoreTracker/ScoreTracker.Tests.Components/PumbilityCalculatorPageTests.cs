@@ -8,6 +8,8 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
+using ScoreTracker.ChartIntelligence.Contracts;
+using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -281,9 +283,9 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
     public void ThePhoenixPageComparesAgainstPhoenix2Singles()
     {
         var page = RenderPhoenix();
-        var compare = page.Find(".pc-cmp").ParentElement!.ParentElement!;
-        Assert.Contains("Phoenix 2", page.Find(".pc-h2.pc-q").TextContent);
-        var answer = page.Find(".pc-answer").TextContent;
+        var compare = page.Find(".pc-cmp").Closest("section")!;
+        Assert.Contains("Phoenix 2", compare.QuerySelector(".pc-h2.pc-q")!.TextContent);
+        var answer = compare.QuerySelector(".pc-answer")!.TextContent;
         Assert.Contains("S (970,000)", answer);
         Assert.Contains("1.6×", answer);
     }
@@ -334,5 +336,98 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         Assert.Null(phoenix.QuerySelector("[data-pc-plate]"));
         // Phoenix default: level 24 · S = 1,150 × 1.20 = 1,380.00.
         Assert.Equal("1,380.00", phoenix.QuerySelector("[data-pc-out]")!.TextContent.Trim());
+    }
+
+    private static PumbilityPoolBandRecord Band(string key, string? title, double floor, double? ceiling, int players,
+        double avgLevel, double levelPart, double scorePart, double platePart, int sOrBetterPerPool)
+    {
+        var charts = players * 50;
+        var grades = new Dictionary<PhoenixLetterGrade, int>
+        {
+            [PhoenixLetterGrade.SSSPlus] = sOrBetterPerPool * players,
+            [PhoenixLetterGrade.AAA] = charts - sOrBetterPerPool * players
+        };
+        return new PumbilityPoolBandRecord(key, title, floor, ceiling, players, charts, avgLevel * charts, levelPart,
+            scorePart, platePart, grades);
+    }
+
+    private void Population(PumbilityPoolCompositionRecord? composition)
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPoolCompositionQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(composition);
+    }
+
+    [Fact]
+    public void WithoutASweepThePopulationSectionSaysSoAndThePlateAnswerStaysFormulaOnly()
+    {
+        Population(null);
+        var page = RenderPhoenix2();
+        var section = page.FindAll(".pc-h2.pc-q").First(h => h.TextContent.Contains("push levels")).Closest("section")!;
+        Assert.Contains("Nothing to draw for Phoenix 2 yet", section.TextContent);
+        Assert.Null(section.QuerySelector(".pmb-wpc"));
+        var plates = page.FindAll(".pc-h2.pc-q").First(h => h.TextContent.Contains("plates")).Closest("section")!;
+        Assert.Contains("A tiebreaker.", plates.TextContent);
+        Assert.Null(plates.QuerySelector(".pc-plate-fill"));
+        Assert.DoesNotContain("In the pools above", plates.TextContent);
+    }
+
+    [Fact]
+    public void ThePopulationSectionDrawsOneAverageSplitAndNamesTheBandsItCameFrom()
+    {
+        // Two drawable gems and one too thin: the split is one bar over the drawable pools, the
+        // sentence says the split barely moves (31% at both ends), and the thin gem is named.
+        Population(new PumbilityPoolCompositionRecord(MixEnum.Phoenix2, new DateTimeOffset(2026, 8, 15, 0, 0, 0, TimeSpan.Zero), 28, new[]
+        {
+            Band("[P.B] SILVER", "[P.B] SILVER", 12_500, 15_000, 1, 13.4, 9_600, 4_500, 60, 49),
+            Band("[P.B] GOLD", "[P.B] GOLD", 15_000, 16_000, 8, 15.9, 84_000, 38_400, 520, 36),
+            Band("[P.B] DIAMOND", "[P.B] DIAMOND", 17_000, 18_000, 19, 20.6, 226_000, 104_000, 1_400, 40)
+        }));
+        var page = RenderPhoenix2();
+        var section = page.FindAll(".pc-h2.pc-q").First(h => h.TextContent.Contains("push levels")).Closest("section")!;
+
+        Assert.Single(section.QuerySelectorAll(".pmb-wpc-stack"));
+        Assert.Contains("27 pools", section.QuerySelector(".pmb-wpc-total")!.TextContent);
+        // Level 310,000 / total 454,320 = 68.2%; score 31.3%; plate 0.4%.
+        var keys = section.QuerySelectorAll(".pmb-wpc-k-num").Select(k => k.TextContent.Trim()).ToArray();
+        Assert.Equal("68.2%", keys[0]);
+        Assert.Equal("31.3%", keys[1]);
+        Assert.Equal("0.4%", keys[2]);
+        var say = section.QuerySelector(".pmb-wpc-say")!.TextContent;
+        Assert.Contains("barely moves", say);
+        Assert.Contains("GOLD", say);
+        Assert.Contains("DIAMOND", say);
+        Assert.DoesNotContain("[P.B]", say);
+        Assert.Contains("Push levels.", section.QuerySelector(".pc-answer")!.TextContent);
+        Assert.Contains("not enough players yet: SILVER", section.QuerySelector(".pc-pop-bands")!.TextContent);
+        Assert.Contains("Early days: 28 full pools", section.QuerySelector(".pc-answer")!.TextContent);
+
+        // The plate rail reads where those pools sit and the answer quotes their plate share.
+        var plates = page.FindAll(".pc-h2.pc-q").First(h => h.TextContent.Contains("plates")).Closest("section")!;
+        Assert.NotNull(plates.QuerySelector(".pc-plate-fill"));
+        Assert.Contains("In the pools above, plates carry 0.4% of the number.", plates.TextContent);
+    }
+
+    [Fact]
+    public void WhenTheSplitMovesBetweenBandsTheSentenceSaysSoInstead()
+    {
+        // Phoenix-shaped data: 11% score at the bottom, 27% at the top — "barely moves" would be a lie.
+        Population(new PumbilityPoolCompositionRecord(MixEnum.Phoenix, new DateTimeOffset(2026, 8, 15, 0, 0, 0, TimeSpan.Zero), 300, new[]
+        {
+            Band("lt20k", null, 0, 20_000, 260, 14.4, 890_000, 110_000, 0, 14),
+            Band("80k+", null, 80_000, null, 22, 24.6, 730_000, 270_000, 0, 47)
+        }));
+        var page = RenderPhoenix();
+        var section = page.FindAll(".pc-h2.pc-q").First(h => h.TextContent.Contains("push levels")).Closest("section")!;
+        var say = section.QuerySelector(".pmb-wpc-say")!.TextContent;
+        Assert.Contains("It moves", say);
+        Assert.Contains("under 20,000", say);
+        Assert.Contains("80,000 and up", say);
+        Assert.Contains("14 → 47 of fifty", say);
+        Assert.Contains("Levels first, then scores.", section.QuerySelector(".pc-answer")!.TextContent);
+        // Phoenix has no plate term: the plate key says so and the plate answer is "Nothing."
+        Assert.Contains("this mix's formula has no plate term", section.TextContent);
+        var plates = page.FindAll(".pc-h2.pc-q").First(h => h.TextContent.Contains("plates")).Closest("section")!;
+        Assert.Contains("Nothing.", plates.TextContent);
+        Assert.Null(plates.QuerySelector(".pc-plate-track"));
     }
 }
