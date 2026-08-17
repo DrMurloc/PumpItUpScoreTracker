@@ -68,7 +68,7 @@
             {
                 <MudText Typo="Typo.caption" Class="chart-record-age">@L["Recorded {0} days ago", _ageDays]</MudText>
             }
-            <ScoreJourneyList Entries="_journey"></ScoreJourneyList>
+            <ScoreJourneyList Entries="_journey" PageMix="Mix" NoteCount="Chart?.NoteCount"></ScoreJourneyList>
         }
     </div>
 }

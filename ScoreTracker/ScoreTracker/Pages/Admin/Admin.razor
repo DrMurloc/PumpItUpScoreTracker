@@ -38,6 +38,12 @@
    collides on every event id and changes nothing. *@
 <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="BackfillPlayerHighlights"
            data-testid="backfill-player-highlights">@L["Backfill Highlights"]</MudButton>
+@* Re-solves the max combo of every judged record and journal row from its score, its counts and
+   the catalog's note count — every judged row, not only the empty ones, so a corrected note
+   count catches up on the next press. Touches nothing but MaxCombo, announces nothing. Safe to
+   re-press. *@
+<MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="BackfillMaxCombos"
+           data-testid="backfill-max-combos">@L["Backfill max combos"]</MudButton>
 @* The exit path for a scoring-formula change. Every PUMBILITY figure a player can see is
    computed from raw scores at read time and is already correct on deploy; what a formula
    change leaves stale is the STORED ratings and per-chart values, which otherwise refresh
@@ -240,6 +246,13 @@
     {
         await Bus.Publish(new BackfillPlayerHighlightsCommand());
         Snackbar.Add(L["Copying existing highlights into the new feed store."].Value, Severity.Success);
+    }
+
+    private async Task BackfillMaxCombos()
+    {
+        await Bus.Publish(new BackfillMaxCombosCommand());
+        Snackbar.Add(L["Re-solving max combos from every judged score. Nothing is announced."].Value,
+            Severity.Success);
     }
 
     // The two mixes with a PUMBILITY formula. A legacy mix has no stored rating to re-price.
