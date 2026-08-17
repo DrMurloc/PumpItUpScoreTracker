@@ -1353,6 +1353,9 @@
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>コーオプパッド移動</value>
   </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>CO-OPレーティング</value>
+  </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
   </data>
@@ -1530,9 +1533,6 @@
   <data name="Completed" xml:space="preserve">
     <value>完了</value>
   </data>
-  <data name="Completion" xml:space="preserve">
-	  <value>達成</value>
-  </data>
   <data name="Completion %" xml:space="preserve">
     <value>達成率 %</value>
   </data>
@@ -1605,9 +1605,6 @@
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>CoOp</value>
-  </data>
-  <data name="CoOp Completion" xml:space="preserve">
-    <value>CoOpクリア率</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>コピーしました</value>
@@ -4823,8 +4820,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAMEログインはpiugame.comへの接続に依存します。予備のログイン方法を連携してください</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAMEはCO-OPランキングを公開していません - このボードはミラーリングしたCO-OPリーダーボードから独自に算出した推定で、プレートはスコアから推定します（SG、995,000からUG、1,000,000でPG）。</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAMEはCO-OPランキングを公開していません - このボードはミラーリングしたCO-OPリーダーボードをCO-OPレーティングの計算式で算出し、プレートはスコアから推定します（SG、995,000からUG、1,000,000でPG）。譜面ボードは上位300件までのため、実際のレーティングはこれより高いことがあります。</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>PIUGameセッション</value>

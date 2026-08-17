@@ -1353,6 +1353,9 @@
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>Glorg-mr Grorp Rglurgrglgro</value>
   </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>CO-OP Mrglrg</value>
+  </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
   </data>
@@ -1530,9 +1533,6 @@
   <data name="Completed" xml:space="preserve">
     <value>Morgrorp</value>
   </data>
-  <data name="Completion" xml:space="preserve">
-	  <value>Grglgrglblub</value>
-  </data>
   <data name="Completion %" xml:space="preserve">
     <value>Grglgrglblub %</value>
   </data>
@@ -1605,9 +1605,6 @@
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>Mrglrl</value>
-  </data>
-  <data name="CoOp Completion" xml:space="preserve">
-    <value>Mrglrl Grglgrglblub</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>Murgblarg</value>
@@ -4823,8 +4820,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAME lurgmrgl rglrgl lurg piugame.com morgmorg plglrglmr, morggrglglorg gro morgargl mrpmurp-mrp glorgmagl</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAME grorgllurg mrp CO-OP glarglro - grglmrp mrglblarg urg magl mrpblarg glorggrgl, maglmrglplgl romurg mrp grorpplglgrgl glorg-mr mrglrmrglrgl glgrgl murp rglmrpgrorp romurg mrglrgl (SG, UG romurg 995,000, PG mr 1,000,000).</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAME grorgllurg mrp CO-OP glarglro - grglmrp mrglblarg maglmrglplgl mrp grorpplglgrgl glorg-mr mrglrmrglrgl murm mrp CO-OP Mrglrg maglmrglurg, murp rglmrpgrorp romurg mrglrgl (SG, UG romurg 995,000, PG mr 1,000,000); mrgl murgl mrglblarg rorggrgl grglmrp mrp murgmrgl 300, glub mrgl mrogl mrglrg mrp murrgl.</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>PIUGame murgloborg</value>

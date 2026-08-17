@@ -1342,6 +1342,9 @@
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>Transiciones de pad en co-op</value>
   </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>Rating CO-OP</value>
+  </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
   </data>
@@ -1519,9 +1522,6 @@
   <data name="Completed" xml:space="preserve">
     <value>Conseguido</value>
   </data>
-  <data name="Completion" xml:space="preserve">
-    <value>Completado</value>
-  </data>
   <data name="Completion %" xml:space="preserve">
     <value>% de finalización</value>
   </data>
@@ -1593,9 +1593,6 @@
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>CoOp</value>
-  </data>
-  <data name="CoOp Completion" xml:space="preserve">
-    <value>Completado CoOp</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>Copiado</value>
@@ -4788,8 +4785,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>El inicio de sesión con PIUGAME depende de que piugame.com esté accesible; conecta un método de respaldo</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAME no publica una clasificación de CO-OP: esta tabla es nuestra mejor estimación, calculada a partir de las tablas de CO-OP replicadas, con placas inferidas de la puntuación (SG, UG desde 995.000, PG en 1.000.000).</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAME no publica una clasificación de CO-OP: esta tabla calcula las tablas de CO-OP replicadas con la fórmula del Rating CO-OP, con placas inferidas de la puntuación (SG, UG desde 995.000, PG en 1.000.000); una tabla de chart solo lista su top 300, así que un rating real puede ser mayor.</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>Sesión de PIUGame</value>
