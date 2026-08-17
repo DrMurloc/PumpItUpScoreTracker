@@ -52,7 +52,18 @@ public sealed class SiteSearchTests : ComponentTestBase
                     null, new PlayerVisibility(true, false, true, true, Array.Empty<Name>()))
             });
         Mediator.Setup(m => m.Send(It.IsAny<SearchOfficialBoardTagsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { new OfficialPlayerRecord(7, "ROXY#4471", null, RoxyId) });
+            .ReturnsAsync(new[]
+            {
+                new OfficialPlayerRecord(7, "ROXY#4471", null, RoxyId),
+                new OfficialPlayerRecord(8, "PROTO#1180", null, null)
+            });
+        // The linked board player is Roxy's account, seen on Roxy's bases.
+        Mediator.Setup(m => m.Send(It.Is<GetPlayersVisibilityQuery>(q => q.UserIds.Contains(RoxyId)),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, PlayerVisibility>
+            {
+                [RoxyId] = new(true, false, false, false, new[] { Name.From("Seoul Pump") })
+            });
     }
 
     private IRenderedComponent<SiteSearch> Render()
@@ -75,7 +86,7 @@ public sealed class SiteSearchTests : ComponentTestBase
         Assert.Equal(new[] { "Charts", "Players", "Board players" }, labels);
         Assert.Equal(8, hits.Count(h => h.Chart != null));
         Assert.Equal(2, hits.Count(h => h.Player != null));
-        Assert.Single(hits.Where(h => h.Board != null));
+        Assert.Equal(2, hits.Count(h => h.Board != null));
         // The label rows are disabled, which is what keeps the arrow keys off them.
         var disabled = cut.FindComponent<MudAutocomplete<SiteSearch.SearchHit>>().Instance.ItemDisabledFunc!;
         Assert.All(hits.Where(h => h.IsHeader), h => Assert.True(disabled(h)));
@@ -94,6 +105,22 @@ public sealed class SiteSearchTests : ComponentTestBase
         Mediator.Verify(m => m.Send(It.IsAny<SearchPlayersQuery>(), It.IsAny<CancellationToken>()), Times.Never);
         Mediator.Verify(m => m.Send(It.IsAny<SearchOfficialBoardTagsQuery>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    /// <summary>
+    ///     A board player whose tag is linked to an account glows on that account's bases — the
+    ///     same green/red/both ladder a site player's row wears; an unlinked tag glows on nothing.
+    /// </summary>
+    [Fact]
+    public async Task ALinkedBoardPlayerCarriesTheLinkedAccountsVisibilityAndAnUnlinkedOneNone()
+    {
+        var cut = Render();
+
+        var hits = (await SearchFor(cut, "ro")).ToArray();
+
+        var roxy = hits.Single(h => h.Board?.UserId == RoxyId);
+        Assert.Equal(new[] { Name.From("Seoul Pump") }, roxy.Visibility!.SharedCommunities);
+        Assert.Null(hits.Single(h => h.Board is { UserId: null }).Visibility);
     }
 
     [Fact]

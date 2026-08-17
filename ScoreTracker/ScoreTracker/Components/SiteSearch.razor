@@ -1,6 +1,7 @@
 @namespace ScoreTracker.Web.Components
 @using MediatR
 @using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Identity.Contracts
 @using ScoreTracker.Identity.Contracts.Queries
@@ -40,10 +41,7 @@
         }
         else if (context.Player is { } player)
         {
-            @* Why the row glows is the same ladder every board uses: green for a community you
-               share, red for your rival, split for both — never a chip. Yourself is a plain row
-               with a word, since you are always in your own pool. *@
-            <span class="site-search-row @PlayerRowClass(player)" data-testid="site-search-player">
+            <span class="site-search-row @RowClass(player.Visibility)" data-testid="site-search-player">
                 <MudAvatar Size="Size.Small"><MudImage Src="@player.Avatar.ToString()" Alt=""></MudImage></MudAvatar>
                 <span class="site-search-label">@((string)player.Name)</span>
                 @if (player.GameTag is { } tag && !string.Equals(tag.ToString(), player.Name.ToString(), StringComparison.OrdinalIgnoreCase))
@@ -58,12 +56,18 @@
         }
         else if (context.Board is { } board)
         {
-            <span class="site-search-row" data-testid="site-search-board">
+            @* A board player whose tag is linked to an account is that account: the row glows on
+               the same bases a site player's does. An unlinked tag is nobody the ladder knows. *@
+            <span class="site-search-row @RowClass(context.Visibility)" data-testid="site-search-board">
                 <MudAvatar Size="Size.Small"><MudImage Src="@(board.AvatarUrl?.ToString() ?? DefaultAvatar)" Alt=""></MudImage></MudAvatar>
                 <span class="site-search-label">@OfficialPlayerNames.Human(board.Username)</span>
                 @if (Discriminator(board.Username) is { Length: > 0 } discriminator)
                 {
                     <span class="site-search-sub">@discriminator</span>
+                }
+                @if (context.Visibility is { IsYou: true })
+                {
+                    <span class="site-search-note">@L["You"]</span>
                 }
                 @if (board.UserId != null)
                 {
@@ -90,9 +94,14 @@
     private SearchHit? _selected;
     private ChartSearchIndex _index = ChartSearchIndex.Empty;
 
-    /// <summary>One row of the list. Exactly one of Chart / Player / Board is set, or it is a header.</summary>
+    /// <summary>
+    ///     One row of the list. Exactly one of Chart / Player / Board is set, or it is a header.
+    ///     Visibility is how the viewer sees the person behind the row — the player hit's own for a
+    ///     site player, the linked account's for a board player, null for an unlinked tag.
+    /// </summary>
     public sealed record SearchHit(string Label, bool IsHeader = false, Chart? Chart = null,
-        PlayerSearchHit? Player = null, OfficialPlayerRecord? Board = null);
+        PlayerSearchHit? Player = null, OfficialPlayerRecord? Board = null,
+        PlayerVisibility? Visibility = null);
 
     protected override async Task OnInitializedAsync()
     {
@@ -118,10 +127,18 @@
             board = (await boardTask).ToArray();
         }
 
+        // A linked board player is an account, and the row glows on that account's bases — one
+        // more read, only when a board row is linked to anyone.
+        var linked = board.Where(b => b.UserId != null).Select(b => b.UserId!.Value).Distinct().ToArray();
+        var linkedVisibility = linked.Length == 0
+            ? new Dictionary<Guid, PlayerVisibility>()
+            : await Abandonable(() => Mediator.Send(new GetPlayersVisibilityQuery(linked), token), token);
+
         var hits = new List<SearchHit>();
         Section(hits, L["Charts"], charts.Select(c => new SearchHit(ChartSearchIndex.NameOf(c), Chart: c)));
-        Section(hits, L["Players"], players.Select(p => new SearchHit(p.Name.ToString(), Player: p)));
-        Section(hits, L["Board players"], board.Select(b => new SearchHit(b.Username, Board: b)));
+        Section(hits, L["Players"], players.Select(p => new SearchHit(p.Name.ToString(), Player: p, Visibility: p.Visibility)));
+        Section(hits, L["Board players"], board.Select(b => new SearchHit(b.Username, Board: b,
+            Visibility: b.UserId != null && linkedVisibility.TryGetValue(b.UserId.Value, out var v) ? v : null)));
         return hits;
     }
 
@@ -153,6 +170,19 @@
         }
     }
 
+    private static async Task<IReadOnlyDictionary<Guid, PlayerVisibility>> Abandonable(
+        Func<Task<IReadOnlyDictionary<Guid, PlayerVisibility>>> read, CancellationToken token)
+    {
+        try
+        {
+            return await read();
+        }
+        catch (Exception) when (token.IsCancellationRequested)
+        {
+            return new Dictionary<Guid, PlayerVisibility>();
+        }
+    }
+
     private void Pick(SearchHit? hit)
     {
         if (hit == null || hit.IsHeader) return;
@@ -165,9 +195,12 @@
             NavManager.NavigateTo($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(board.Username)}");
     }
 
-    private static string PlayerRowClass(PlayerSearchHit player) =>
-        CommunityGlowReader.RowClass(player.Visibility.IsYou, player.Visibility.IsYourRival,
-            player.Visibility.SharedCommunities.Count > 0, youClass: string.Empty);
+    // Why a row glows is the same ladder every board uses: green for a community you share, red for
+    // your rival, split for both — never a chip. Yourself is a plain row with a word.
+    private static string RowClass(PlayerVisibility? visibility) => visibility == null
+        ? string.Empty
+        : CommunityGlowReader.RowClass(visibility.IsYou, visibility.IsYourRival,
+            visibility.SharedCommunities.Count > 0, youClass: string.Empty);
 
     // A board tag is NAME#1234; the human part leads and the discriminator is what tells two
     // NAMEs apart in a list.

@@ -49,7 +49,7 @@ Owner calls, 2026-08-16, in his own words where it matters.
 | D14 | **A player matches on site name or piugame game tag.** |
 | D15 | **The Players section searches exactly the pool the page's access check uses** (D3), public-only when signed out. |
 | D16 | **Rows glow, no chips.** A player in one of your communities is a green row, a rival red, both split — the `.is-community` / `.is-rival` / `.is-both` states every board already uses. |
-| D17 | **A linked board player appears in both sections** — Players → their page, Board players → their official page. No dedupe. |
+| D17 | **A linked board player appears in both sections** — Players → their page, Board players → their official page. No dedupe. Field test: the board row of a linked player **glows on the linked account's bases** (community / rival / both), the way the site row does; an unlinked tag glows on nothing. |
 | D18 | **The rival picker reads the same visibility abstraction**, which also fixes it: it claimed "public ∪ your community members" but Identity's search dropped private users before the picker could OR them back in, so a private member of your community was unreachable there. |
 | D19 | **The official Players page is untouched, now and later.** Search links to it; nothing on it changes; it is not folded into `/Player/{id}`. |
 
