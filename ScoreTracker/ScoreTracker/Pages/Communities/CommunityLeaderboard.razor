@@ -1,4 +1,4 @@
-﻿@page "/Community/Leaderboard"
+@page "/Community/Leaderboard"
 @rendermode RenderModes.Interactive
 @using MediatR
 @using ScoreTracker.Catalog.Contracts.Queries
@@ -106,7 +106,7 @@
                 <span><RankDelta Rank="entry.Place"/></span>
                 <span style="display:flex;align-items:center;gap:6px;min-width:0">
                     <MudLink Style="cursor:pointer;display:flex;align-items:center;gap:8px;min-width:0" Underline="Underline.None"
-                             Href="@($"/Community/Player?CommunityName={HttpUtility.UrlEncode(CommunityName)}&UserId={entry.UserId}")">
+                             Href="@($"/Player/{entry.UserId}")">
                         <MudImage Src="@entry.ProfileImage.ToString()" Height="26" ObjectFit="ObjectFit.ScaleDown"></MudImage>
                         <span class="olb-player-name" title="@((string)entry.PlayerName)">
                             <UserLabel User="_users[entry.UserId]"></UserLabel>

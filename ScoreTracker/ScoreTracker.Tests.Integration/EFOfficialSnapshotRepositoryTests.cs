@@ -474,12 +474,31 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
         var (snapshotId, _, _, _) = await SeedSealedSnapshot(Week1);
 
         var matched = await Snapshots()
-            .SearchPlayerNamesInSnapshot(snapshotId, "li", 10, CancellationToken.None);
+            .SearchPlayersInSnapshot(snapshotId, "li", 10, CancellationToken.None);
         var capped = await Snapshots()
-            .SearchPlayerNamesInSnapshot(snapshotId, "b", 1, CancellationToken.None);
+            .SearchPlayersInSnapshot(snapshotId, "b", 1, CancellationToken.None);
 
-        Assert.Equal(new[] { "alice" }, matched);
+        Assert.Equal(new[] { "alice" }, matched.Select(p => p.Username));
         Assert.Single(capped);
+    }
+
+    [Fact]
+    public async Task TagSearchRanksAnExactTagThenAPrefixThenAnythingContainingTheTerm()
+    {
+        var snapshots = Snapshots();
+        var snapshotId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week1, CancellationToken.None);
+        var board = await snapshots.EnsureBoard(MixEnum.Phoenix2, LeaderboardTypes.Chart, "District 1 D26",
+            Guid.NewGuid(), "Double", 26, CancellationToken.None);
+        var players = await snapshots.EnsurePlayers(MixEnum.Phoenix2,
+            new[] { ("abe", (Uri?)null), ("bob", (Uri?)null), ("b", (Uri?)null) }, Week1, CancellationToken.None);
+        await snapshots.WritePlacements(snapshotId,
+            players.Select((p, i) => new PlacementRow(board.Id, p.Id, i + 1, 990000 - i)).ToArray(),
+            CancellationToken.None);
+        await snapshots.Seal(snapshotId, Week1.AddMinutes(41), CancellationToken.None);
+
+        var hits = await Snapshots().SearchPlayersInSnapshot(snapshotId, "b", 10, CancellationToken.None);
+
+        Assert.Equal(new[] { "b", "bob", "abe" }, hits.Select(p => p.Username));
     }
 
     [Fact]
@@ -492,9 +511,9 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
             CancellationToken.None);
 
         var matched = await Snapshots()
-            .SearchPlayerNamesInSnapshot(snapshotId, "ali", 10, CancellationToken.None);
+            .SearchPlayersInSnapshot(snapshotId, "ali", 10, CancellationToken.None);
 
-        Assert.Equal(new[] { "alice" }, matched);
+        Assert.Equal(new[] { "alice" }, matched.Select(p => p.Username));
     }
 
     [Fact]
@@ -515,9 +534,9 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     {
         var (snapshotId, _, _, _) = await SeedSealedSnapshot(Week1);
 
-        Assert.Empty(await Snapshots().SearchPlayerNamesInSnapshot(snapshotId, "  ", 10,
+        Assert.Empty(await Snapshots().SearchPlayersInSnapshot(snapshotId, "  ", 10,
             CancellationToken.None));
-        Assert.Empty(await Snapshots().SearchPlayerNamesInSnapshot(snapshotId, "alice", 0,
+        Assert.Empty(await Snapshots().SearchPlayersInSnapshot(snapshotId, "alice", 0,
             CancellationToken.None));
         Assert.Empty(await Snapshots().FilterNamesInSnapshot(snapshotId, Array.Empty<string>(),
             CancellationToken.None));

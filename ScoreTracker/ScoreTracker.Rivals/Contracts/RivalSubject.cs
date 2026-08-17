@@ -27,6 +27,14 @@ public sealed record RivalSubject(
 }
 
 /// <summary>
+///     Who a head-to-head is against. Lighter than <see cref="RivalSubject" /> because a comparison
+///     needs no edge: any site player the visibility port lets you look at can be compared, rival or
+///     not, so the record carries who they are and nothing about how they came to be on your roster.
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record HeadToHeadSubject(Guid UserId, string DisplayName, Uri? Avatar);
+
+/// <summary>
 ///     What a subject can answer for. Flags rather than a type hierarchy because the combinations
 ///     are real: a site player with no linked board tag has scores but no standings, and a linked
 ///     one has both.

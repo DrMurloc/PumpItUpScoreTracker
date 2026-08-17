@@ -14,19 +14,19 @@ internal sealed class GetMyRivalsHandler :
     IRequestHandler<GetRivalsOfMeQuery, IReadOnlyList<RivalOfMeRecord>>,
     IRequestHandler<GetMyBlockedPlayersQuery, IReadOnlyList<BlockedPlayerRecord>>
 {
-    private readonly RivalAudienceReader _audience;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly RivalSubjectResolver _resolver;
     private readonly IRivalRepository _rivals;
     private readonly IUserReader _users;
+    private readonly IPlayerVisibilityReader _visibility;
 
     public GetMyRivalsHandler(IRivalRepository rivals, RivalSubjectResolver resolver, IUserReader users,
-        RivalAudienceReader audience, ICurrentUserAccessor currentUser)
+        IPlayerVisibilityReader visibility, ICurrentUserAccessor currentUser)
     {
         _rivals = rivals;
         _resolver = resolver;
         _users = users;
-        _audience = audience;
+        _visibility = visibility;
         _currentUser = currentUser;
     }
 
@@ -54,7 +54,7 @@ internal sealed class GetMyRivalsHandler :
 
         var users = (await _users.GetUsers(inbound.Select(e => e.OwnerUserId).Distinct(), cancellationToken))
             .ToDictionary(u => u.Id);
-        var clubmates = await _audience.GetClubmates(cancellationToken);
+        var clubmates = (await _visibility.GetAudience(me, cancellationToken)).SharedCommunitiesByMember;
         var mine = (await _rivals.GetRivalsOwnedBy(me, cancellationToken))
             .Where(e => e.TargetUserId != null)
             .Select(e => e.TargetUserId!.Value)
@@ -66,7 +66,7 @@ internal sealed class GetMyRivalsHandler :
             {
                 var user = users[e.OwnerUserId];
                 return new RivalOfMeRecord(e.Id, e.OwnerUserId, user.Name.ToString(), user.ProfileImage,
-                    user.IsPublic, clubmates.Contains(e.OwnerUserId), mine.Contains(e.OwnerUserId), e.AddedAt);
+                    user.IsPublic, clubmates.ContainsKey(e.OwnerUserId), mine.Contains(e.OwnerUserId), e.AddedAt);
             })
             .ToArray();
     }

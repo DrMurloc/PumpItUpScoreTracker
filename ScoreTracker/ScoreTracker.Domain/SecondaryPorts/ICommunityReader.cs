@@ -18,6 +18,16 @@ public interface ICommunityReader
     Task<IEnumerable<Guid>> GetMembers(Name communityName, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     The members of every user-created community this user belongs to, keyed by community
+    ///     name, in one read. World and the per-country communities are left out — every account
+    ///     joins those, so counting them would make "shares a community with you" mean everybody —
+    ///     and a banned seat counts on neither side. This is the community basis of player
+    ///     visibility (<see cref="IPlayerVisibilityReader" />), read once per audience.
+    /// </summary>
+    Task<IReadOnlyDictionary<Name, IReadOnlyList<Guid>>> GetUserCommunityMembers(Guid userId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     The communities this user created, excluding the system ones (World and the
     ///     per-country communities) — nobody can transfer those, so counting them would block
     ///     every account on the site forever.

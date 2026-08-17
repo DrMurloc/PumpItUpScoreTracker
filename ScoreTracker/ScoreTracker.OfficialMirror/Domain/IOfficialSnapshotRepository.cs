@@ -1,4 +1,5 @@
-﻿using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.OfficialMirror.Contracts;
+using ScoreTracker.SharedKernel.Enums;
 
 namespace ScoreTracker.OfficialMirror.Domain;
 
@@ -95,7 +96,7 @@ internal interface IOfficialSnapshotRepository
     ///         moves the whole board population over the wire to keep ten rows, per keystroke.
     ///     </para>
     /// </summary>
-    Task<IReadOnlyList<string>> SearchPlayerNamesInSnapshot(int snapshotId, string term, int take,
+    Task<IReadOnlyList<OfficialPlayerRecord>> SearchPlayersInSnapshot(int snapshotId, string term, int take,
         CancellationToken ct);
 
     /// <summary>

@@ -611,10 +611,13 @@ Three things moved during the build and the decisions above already reflect them
 - **Localization.** Deferred to the pre-merge checks by the owner. Every new string already goes
   through `L[…]`; what remains is the `en-US` entries the ratchet needs plus the eight
   translations, inserted alphabetically, Murloc included.
-- **The `/Community/Player` summary lift (D29's second host).** `RivalComparison` was built
-  capability-gated and host-agnostic so it can take that page's subject, but the extraction from
-  `CommunityPlayer.razor` (513 lines) has not been done. The Rivals page uses the new component;
-  the community page still uses its own.
+- ~~**The `/Community/Player` summary lift (D29's second host).**~~ **Done 2026-08-16** — the
+  page is `/Player/{id}` ([player-page-and-site-search.md](player-page-and-site-search.md));
+  `RivalComparison` became `Components/Players/HeadToHead`, hosted by the player page for site
+  players and by `/Rivals` for board-only rivals. Compare on a site rival navigates to their page.
+  D19–D20 amended the same day: the site-side picker reads the published `IPlayerVisibilityReader`
+  (public ∪ your user-created-community members ∪ your rivals), which also fixed it — Identity's
+  public-only search had been dropping private members before the picker could OR them back in.
 - **Roster sort is newest-arrow-first, not recent-activity** (D18). Recent activity needs each
   rival's last import, which is a read the roster does not otherwise make; the sort control is
   the shape the field test should judge before that read gets added.
