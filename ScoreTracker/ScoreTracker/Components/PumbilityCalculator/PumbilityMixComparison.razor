@@ -59,6 +59,10 @@
                 <div></div>
             }
         </div>
+        @if (Flip is { } flip)
+        {
+            <p class="pc-cmp-note">@L["Below {0} a 900,000 → SSS+ buys more levels on Phoenix 2 than it did on Phoenix; from {0} up it buys fewer — up there a level counts for more against a score than it did on Phoenix.", flip]</p>
+        }
     </div>
     <div class="pc-cmp-facts">
         <div class="pc-card pc-cmp-fact">
@@ -72,7 +76,7 @@
             <span class="pc-cmp-say">@L["but a level got {0}× smaller — more than the grade did", Ratio(Math.Max(OtherStep, MyStep) / Math.Min(OtherStep, MyStep))]</span>
         </div>
         <div class="pc-card pc-cmp-fact pc-cmp-hero">
-            <span class="pc-lbl">③ @L["so scoring one chart is worth"]</span>
+            <span class="pc-lbl">③ @L["so scoring one chart at 20 is worth"]</span>
             <span class="pc-cmp-pair">@Pair(L["{0} levels", OtherBought(20).ToString("0.0")].Value, L["{0} levels", MyBought(20).ToString("0.0")].Value)</span>
             <span class="pc-cmp-say">@L["the exchange rate — scoring got {0}× more powerful relative to passing", Ratio(Math.Max(OtherBought(20), MyBought(20)) / Math.Min(OtherBought(20), MyBought(20)))]</span>
         </div>
@@ -82,8 +86,14 @@
             @if (Model.HasPlates)
             {
                 <b>@L["Yes — about {0}× more, where most pools actually live.", Ratio(MyBought(20) / OtherBought(20))]</b>
-                @L["The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}. The gap closes above 24, where the base starts growing by 10 a level instead of 5 — and that is exactly where scoring stops being the cheap lever. It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level.",
+                @L["The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}.",
                     Percent(OtherSpan), Percent(MySpan), Percent(OtherStep), Percent(MyStep), MatchAt20(OtherScoring, OtherType), MatchAt20(Model.Scoring, Type.Type)]
+                @if (Flip is { } flipsAt)
+                {
+                    @L["From {0} up it flips: Phoenix 2 prices every level above 24 at double the step, so at {1} an SSS+ buys {2} levels here against {3} on Phoenix — up there a level counts for more against a score than it did.",
+                        flipsAt, QuoteLevel(flipsAt), MyBought(QuoteLevel(flipsAt)).ToString("0.0"), OtherBought(QuoteLevel(flipsAt)).ToString("0.0")]
+                }
+                @L["It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level."]
             }
             else
             {
@@ -115,6 +125,32 @@
 
     private double OtherBought(int level) =>
         PumbilityLevelEquivalence.LevelsBought(OtherScoring, OtherType, DifficultyLevel.From(level), PhoenixLetterGrade.SSSPlus);
+
+    // Levels bought on each mix by name, whichever page this is.
+    private double Phoenix2Bought(int level) => Model.Mix == MixEnum.Phoenix2 ? MyBought(level) : OtherBought(level);
+    private double PhoenixBought(int level) => Model.Mix == MixEnum.Phoenix2 ? OtherBought(level) : MyBought(level);
+
+    // The level from which an SSS+ buys fewer levels on Phoenix 2 than it did on Phoenix, all
+    // the way up the scale — the two curves cross once and stay crossed, because Phoenix 2
+    // prices every level above 24 at double the step while Phoenix's quadratic base made each
+    // level a smaller share the higher it went. Null if they never cross inside the scale, or
+    // cross at its foot (then there is no "below" to speak of).
+    private int? Flip
+    {
+        get
+        {
+            int? flip = null;
+            for (var level = (int)DifficultyLevel.Max; level > 10; level--)
+            {
+                if (Phoenix2Bought(level) < PhoenixBought(level)) flip = level;
+                else break;
+            }
+            return flip is > 11 ? flip : null;
+        }
+    }
+
+    // The level the flip is quoted at: the first whole level clearly past it, inside the scale.
+    private static int QuoteLevel(int flip) => Math.Min(flip + 1, (int)DifficultyLevel.Max);
 
     // 900,000 → SSS+ on one chart, and one level higher on one chart, both at level 20.
     private double MySpan => Span(Model.Scoring, Type.Type);

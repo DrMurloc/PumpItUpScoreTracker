@@ -86,6 +86,22 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
     }
 
     [Fact]
+    public void TheTypeToggleSitsDirectlyAboveTheFirstSectionItChanges()
+    {
+        // The formula reads the same for both types, so a toggle up in the hero flipped nothing
+        // in view. It sits under the formula, immediately above the Singles run — the ruler is
+        // the first thing on the page that changes with it.
+        var page = RenderPhoenix2();
+        var bar = page.Find(".pc-typebar");
+        Assert.NotNull(bar.QuerySelector("[data-pc-typegroup]"));
+        Assert.Null(page.Find(".pc-hero").QuerySelector("[data-pc-typegroup]"));
+        Assert.Equal("formula", bar.PreviousElementSibling!.Id);
+        var next = bar.NextElementSibling!;
+        Assert.Equal("Single", next.GetAttribute("data-pc-type"));
+        Assert.NotNull(next.QuerySelector(".pc-ruler"));
+    }
+
+    [Fact]
     public void EveryValueCellIsExactlyWhatTheConfigurationSays()
     {
         var page = RenderPhoenix2();
@@ -267,16 +283,35 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         Assert.Contains("+11.1", facts[0]);
         Assert.Contains("+17", facts[1]);
         Assert.Contains("+2.2", facts[1]);
+        Assert.Contains("at 20", facts[2]);
         Assert.Contains("2.7 levels", facts[2]);
         Assert.Contains("4.6 levels", facts[2]);
         Assert.Contains("1.7×", facts[2]);
         // The paragraph names the inversion: S (970,000) there, AA+ (940,000) here for doubles.
-        var answer = compare.QuerySelector(".pc-answer")!.TextContent;
+        var answer = compare.QuerySelector(".pc-answer")!.TextContent.Replace('\n', ' ');
         Assert.Contains("S (970,000)", answer);
         Assert.Contains("AA+ (940,000)", answer);
         // Paired bars for six levels, the other mix's bar and this mix's on every row.
         Assert.Equal(6, compare.QuerySelectorAll(".pc-cmp-bar-other").Length);
         Assert.Equal(6, compare.QuerySelectorAll(".pc-cmp-bar-mine").Length);
+        // The curves cross at 23 and stay crossed: from there an SSS+ buys fewer levels on
+        // Phoenix 2 than it did on Phoenix — at 24, 2.8 for doubles against 3.5. Said under
+        // the bars and, with the numbers, in the paragraph.
+        Assert.Contains("Below 23 a 900,000 → SSS+ buys more levels on Phoenix 2 than it did on Phoenix; from 23 up it buys fewer",
+            compare.QuerySelector(".pc-cmp-note")!.TextContent);
+        Assert.Contains("From 23 up it flips: Phoenix 2 prices every level above 24 at double the step, so at 24 an SSS+ buys 2.8 levels here against 3.5 on Phoenix", answer);
+        Assert.DoesNotContain("The gap closes", answer);
+    }
+
+    [Fact]
+    public void TheSinglesComparisonFlipsAtTheSameLevel()
+    {
+        // Singles are priced a level up and wobble around the kink, but the crossing is 23 there
+        // too: 3.3 levels at 24 against Phoenix's 3.5.
+        var page = RenderPhoenix2();
+        var compare = page.FindAll("[data-pc-type='Single']").First(b => b.QuerySelector(".pc-cmp") != null);
+        Assert.Contains("from 23 up it buys fewer", compare.QuerySelector(".pc-cmp-note")!.TextContent);
+        Assert.Contains("so at 24 an SSS+ buys 3.3 levels here against 3.5 on Phoenix", compare.QuerySelector(".pc-answer")!.TextContent.Replace('\n', ' '));
     }
 
     [Fact]
@@ -288,6 +323,9 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         var answer = compare.QuerySelector(".pc-answer")!.TextContent;
         Assert.Contains("S (970,000)", answer);
         Assert.Contains("1.6×", answer);
+        // The same crossing, read from the Phoenix side.
+        Assert.Contains("from 23 up it buys fewer", compare.QuerySelector(".pc-cmp-note")!.TextContent);
+        Assert.Contains("at 20", compare.QuerySelectorAll(".pc-cmp-fact")[2].TextContent);
     }
 
     [Fact]
@@ -367,8 +405,51 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         Assert.Null(section.QuerySelector(".pmb-wpc"));
         var plates = page.FindAll(".pc-h2.pc-q").First(h => h.TextContent.Contains("plates")).Closest("section")!;
         Assert.Contains("A tiebreaker.", plates.TextContent);
-        Assert.Null(plates.QuerySelector(".pc-plate-fill"));
+        Assert.Null(plates.QuerySelector(".pc-plate-marker"));
+        Assert.Null(plates.QuerySelector(".pc-plate-pool"));
         Assert.DoesNotContain("In the pools above", plates.TextContent);
+    }
+
+    [Fact]
+    public void ThePlateBarPricesEveryPlateOnAD23InItsOwnColour()
+    {
+        // Seven segments (every plate above Rough Game), each sized by its bonus, wearing its
+        // plate token and carrying what that plate is worth on a D23 — GetScore's number, not
+        // the bonus: Base(23) 245 × 0.006 = +1.47 for a Marvelous Game.
+        Population(null);
+        var page = RenderPhoenix2();
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var plates = page.FindAll(".pc-h2.pc-q").First(h => h.TextContent.Contains("plates")).Closest("section")!;
+        var segments = plates.QuerySelectorAll(".pc-plate-seg").ToArray();
+        Assert.Equal(7, segments.Length);
+        Assert.Equal(new[] { "FG", "TG", "MG", "SG", "EG", "UG", "PG" },
+            segments.Select(s => s.QuerySelector(".pc-plate-seg-name")!.TextContent.Trim()));
+        var widths = segments.Select(s => double.Parse(
+            s.GetAttribute("style")!.Split(';').Single(p => p.StartsWith("width:"))["width:".Length..].TrimEnd('%'),
+            CultureInfo.InvariantCulture)).ToArray();
+        Assert.Equal(100, widths.Sum(), 1);
+        // The last three plates step twice as far as the first four.
+        Assert.Equal(widths[0] * 2, widths[6], 3);
+        foreach (var segment in segments)
+        {
+            var plate = PhoenixPlateHelperMethods.ParseShorthand(segment.QuerySelector(".pc-plate-seg-name")!.TextContent.Trim());
+            var expected = scoring.GetScore(ChartType.Double, 23, PhoenixLetterGrade.APlus.GetMinimumScoreFor(MixEnum.Phoenix2), plate)
+                - scoring.GetScore(ChartType.Double, 23, PhoenixLetterGrade.APlus.GetMinimumScoreFor(MixEnum.Phoenix2), PhoenixPlate.RoughGame);
+            Assert.Equal("+" + expected.ToString("0.00"), segment.QuerySelector(".pc-plate-seg-val")!.TextContent.Trim());
+            Assert.Contains($"--plate-{plate.GetShorthand().ToLowerInvariant()}", segment.GetAttribute("style"));
+        }
+        Assert.Contains("+1.47", segments[2].TextContent);
+        Assert.Contains("+4.90", segments[6].TextContent);
+        // The ends and the list beneath (the phone's copy of the labels) say the same.
+        Assert.Contains("+4.90 · Perfect", plates.QuerySelector(".pc-plate-ends")!.TextContent);
+        Assert.Equal(7, plates.QuerySelectorAll(".pc-plate-list li").Length);
+        Assert.Contains("Marvelous Game +1.47", plates.QuerySelector(".pc-plate-list")!.TextContent.Replace("\n", " "));
+        // And the answer prices the ladder in the same currency: the two step sizes, one grade
+        // rung and one level on the same chart for scale.
+        var answer = plates.QuerySelector(".pc-answer")!.TextContent.Replace('\n', ' ');
+        Assert.Contains("On a D23 each plate is worth +0.49 a step through Superb Game and +0.98 a step from Extreme Game up, so Rough Game to Perfect Game on one chart is +4.90.", answer);
+        Assert.Contains("AA → AA+ is +4.90, and the same A+ one level higher is +6.75.", answer);
+        Assert.Contains("worth about 1.5%", answer);
     }
 
     [Fact]
@@ -401,9 +482,13 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         Assert.Contains("not enough players yet: SILVER", section.QuerySelector(".pc-pop-bands")!.TextContent);
         Assert.Contains("Early days: 28 full pools", section.QuerySelector(".pc-answer")!.TextContent);
 
-        // The plate rail reads where those pools sit and the answer quotes their plate share.
+        // The plate bar marks where those pools sit, priced on the D23 like the plates are: the
+        // base-weighted mean bonus is 1,920 / 310,000 = 0.0062, which is +1.5 on a D23 and
+        // nearest a Marvelous Game. The answer quotes their plate share.
         var plates = page.FindAll(".pc-h2.pc-q").First(h => h.TextContent.Contains("plates")).Closest("section")!;
-        Assert.NotNull(plates.QuerySelector(".pc-plate-fill"));
+        var marker = plates.QuerySelector(".pc-plate-marker")!;
+        Assert.Contains("left:30.97%", marker.GetAttribute("style"));
+        Assert.Contains("the pools above average +1.5 — about a Marvelous Game", plates.QuerySelector(".pc-plate-pool")!.TextContent);
         Assert.Contains("In the pools above, plates carry 0.4% of the number.", plates.TextContent);
     }
 

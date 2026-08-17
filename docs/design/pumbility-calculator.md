@@ -118,25 +118,40 @@ title and a stat-loaded description from `StaticHeadResolver`.
 ## 2. Page anatomy (top to bottom)
 
 1. **Hero** — eyebrow with the other mix's link · H1 · two-sentence definition (fifty highest-valued
-   charts; Phoenix 2 keeps three pools) · the Singles/Doubles button group (Phoenix 2 only; governs
-   the whole page).
+   charts; Phoenix 2 keeps three pools).
 2. **The formula** — `Base(level) × (grade + plate)` / `Base(level) × grade` large, the three terms
    as coloured cells (level primary, grade secondary, plate accent — the pool page's split colours),
-   the zero rules, four worked examples.
-3. **What scoring buys, in levels** — the ruler (D4/D5) with its legend and a footnote carrying the
+   the zero rules, four worked examples. Reads the same for both types.
+3. **The Singles/Doubles button group** (Phoenix 2 only; governs every type-specific section below
+   it) — directly above the ruler, the first thing on the page that changes with it. It started in
+   the hero and looked broken there: the formula between it and the ruler is type-invariant, so a
+   click flipped nothing in view (owner, field test 2026-08-17).
+4. **What scoring buys, in levels** — the ruler (D4/D5) with its legend and a footnote carrying the
    numbers.
-4. **Every level, every grade** — the value table (D7/D8), chart counts, the contour caption, the
+5. **Every level, every grade** — the value table (D7/D8), chart counts, the contour caption, the
    ramp key, the 28/29 footnote (P2) / CO-OP note (P1).
-5. **Quick calculator** (D11) — level · grade · plate → exact value, the arithmetic, "worth about the
+6. **Quick calculator** (D11) — level · grade · plate → exact value, the arithmetic, "worth about the
    same as" on the levels around it.
-6. **The constants** — the grade ladder (Double row + Single overrides + floors) and the plate
-   bonuses (Double + Single overrides).
-7. **Q · Should I push levels or push scores?** (D9) — the average split card, the rung sentence,
+7. **The constants** — the grade ladder (Double row + Single overrides + floors) and, on its own line
+   beneath it, the plate bonuses (Double + Single overrides). Stacked, never side by side: seventeen
+   and nine columns don't share a row without a scroller.
+8. **Q · Should I push levels or push scores?** (D9) — the average split card, the rung sentence,
    the answer.
-8. **Q · How much do plates matter?** — the magnified plate rail (RG on all → PG on all) and the
-   answer; on Phoenix, "Nothing." in a sentence.
-9. **Q · Does scoring matter more than it did on Phoenix?** (D6) — paired bars per level, the three
-   fact cards with ③ as the hero, the paragraph.
+9. **Q · How much do plates matter?** — the plate ladder as one bar, Rough Game to Perfect Game:
+   every plate a segment in its own `--plate-*` colour, sized by its bonus, labelled with what it is
+   worth **in PUMBILITY on a D23** (Base 245 — FG +0.49 … PG +4.90) rather than in thousandths of a
+   multiplier, which meant nothing to anyone; the tracked pools' average plate marked on the same
+   scale ("about a Marvelous Game"); the answer in the same currency (the two step sizes, one grade
+   rung and one level on the same chart for scale, the pool-wide share). On a phone the segment labels
+   move into a list under the bar. On Phoenix, "Nothing." in a sentence.
+10. **Q · Does scoring matter more than it did on Phoenix?** (D6) — paired bars per level, then the
+    crossing said under them: the curves cross at **23** for both types and stay crossed — below it
+    an SSS+ buys more levels on Phoenix 2 than it did on Phoenix, from 23 up fewer (24: 3.5 on
+    Phoenix against 3.3 Singles / 2.8 Doubles), because Phoenix 2 prices every level above 24 at
+    double the step while Phoenix's quadratic base made each level a shrinking share. The three fact
+    cards with ③ as the hero — labelled "at 20", since the ratio is level-dependent — and the
+    paragraph, which now quotes the flip with the numbers at 24. The crossing is computed from the
+    same curves as the bars (`Flip`), so the sentence cannot drift from them.
 
 Mobile: the table scrolls inside its own container; the ruler is fluid (percent-positioned divs);
 everything else stacks.
@@ -169,9 +184,11 @@ the chart counts unchanged.
   handler's cache behaviour.
 - **Tests.Components** — the page renders both mixes as static markup; every value cell equals
   `GetScore`; the CO-OP row only on Phoenix, the 28/29 footnote only on Phoenix 2; both type blocks
-  present; the emitted constants JSON equals the configuration; the ruler's end labels and legend
-  band names; the comparison labels; the population card and its empty state; `StaticHeadResolver`
-  entries; the nav label.
+  present; the type toggle sits between the formula and the first type block; the emitted constants
+  JSON equals the configuration; the ruler's end labels and legend band names; the comparison labels,
+  the 23 crossing under the bars and in the paragraph for both types and from the Phoenix side; the
+  plate bar's seven segments (widths, plate tokens, every label equal to `GetScore` on a D23) and the
+  pool marker; the population card and its empty state; `StaticHeadResolver` entries; the nav label.
 - **Tests.Integration** — the composition repository round-trips; the sweep writes bands from
   seeded pools against a real database.
 - **Tests.E2E** — `/PumbilityCalculator/phoenix2` serves the formula line, both value tables and
@@ -185,8 +202,12 @@ Formula facts, 900,000 anchor: levels an SSS+ buys — Phoenix 2.1 @16 · 2.7 @2
 quadratic base); Phoenix 2 Doubles 4.7 @16 · 4.6 @20 · 2.8 @24, Singles 5.5 @16 · 4.5 @20 · 3.3 @24
 (narrows above 24 where the base steps 10 not 5). Both curves are non-monotonic at their ends and it
 is real: Phoenix 2 wobbles at 22–24 (the kink, plus singles priced a level up), Phoenix turns back up
-below level 13 (the quadratic flattens near 10). Plates: PG-on-all over RG-on-all ≈ 1.4 % of a
-Phoenix 2 pool ≈ a third of a level at 24; on Phoenix exactly nothing.
+below level 13 (the quadratic flattens near 10). The Phoenix 2 curves drop under Phoenix's at 23 for
+both types and stay under it to 29 (24: 3.5 vs 3.3 S / 2.8 D · 26: 4.0 vs 3.6 S / 3.0 D). Plates:
+PG-on-all over RG-on-all ≈ 1.5 % of a Phoenix 2 pool (0.020 / 1.370 at the A+ anchor) ≈ a third of
+a level at 24; on a D23 the plates step +0.49 through Superb Game and +0.98 from Extreme Game up, so
+Rough → Perfect on one chart is +4.90 — exactly one AA → AA+ rung, about 73 % of the next level at
+A+; on Phoenix exactly nothing.
 
 Population: **Phoenix** (1,369 full pools) — the grade multiplier sits flat at 1.13–1.16 (score
 11–13 % of the number from ×1.00 = AA) from under 20,000 through the 50,000s while the pool's average
@@ -199,5 +220,7 @@ the cheap lever on Phoenix 2 (§D6), everyone has already taken it, so what is l
 
 ## 6. Post-deploy
 
-One press of "Rebuild {mix} PUMBILITY tier lists" per mix on `/Admin` — the same button as before;
-the sweep now also writes the composition rows the population section reads.
+Nothing required. `scores.PumbilityPoolComposition` ships empty and the first nightly
+`process-pumbility-tier-list` sweep (10:30 UTC) fills it; until then the two population sections say
+there is nothing to draw yet. "Rebuild {mix} PUMBILITY tier lists" on `/Admin` is the same command
+and is only the same-day option.

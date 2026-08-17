@@ -45,19 +45,22 @@
                     }
                 </p>
             </div>
-            @if (_model.HasTypes)
-            {
-                <div class="pc-hero-right">
-                    <div class="pc-typegroup" role="group" aria-label="@L["Chart Type"]" data-pc-typegroup>
-                        <button type="button" data-pc-type-button="@ChartType.Single" aria-pressed="true">@L["Singles"]</button>
-                        <button type="button" data-pc-type-button="@ChartType.Double" aria-pressed="false">@L["Doubles"]</button>
-                    </div>
-                    <span class="pc-hint">@L["Singles are priced one level up and read a few grades and plates differently."]</span>
-                </div>
-            }
         </header>
 
         <PumbilityFormulaCard Model="_model" />
+
+        @* The type toggle sits directly above the first section it changes — the formula above
+           it reads the same for both types, so a toggle up in the hero looked like it did nothing. *@
+        @if (_model.HasTypes)
+        {
+            <div class="pc-typebar">
+                <div class="pc-typegroup" role="group" aria-label="@L["Chart Type"]" data-pc-typegroup>
+                    <button type="button" data-pc-type-button="@ChartType.Single" aria-pressed="true">@L["Singles"]</button>
+                    <button type="button" data-pc-type-button="@ChartType.Double" aria-pressed="false">@L["Doubles"]</button>
+                </div>
+                <span class="pc-hint">@L["Singles are priced one level up and read a few grades and plates differently."]</span>
+            </div>
+        }
 
         @* Every type-specific section carries data-pc-type; the script shows one type's set at a
            time. Both are in the HTML for a reader that runs no script. *@

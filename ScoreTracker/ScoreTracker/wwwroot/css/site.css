@@ -14817,11 +14817,15 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-ink-muted);
 }
 
-.pc-hero-right {
+/* The Singles/Doubles group heads the run of type-specific sections it governs — the ruler is
+   the first thing on the page that changes with it, so it sits right above the ruler's title,
+   pulled in against the page gap so the two read as one. */
+.pc-typebar {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: -18px;
 }
 
 .pc-hint {
@@ -14829,7 +14833,6 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-ink-muted);
 }
 
-/* The Singles/Doubles group governs every type-specific section on the page. */
 .pc-typegroup {
     display: inline-flex;
     border: 1px solid var(--mix-primary);
@@ -15472,9 +15475,12 @@ span.ct-console-pick { cursor: default; }
 }
 
 /* --- the constants --- */
+/* Stacked, never side by side: the grade ladder is seventeen columns and the plate table nine,
+   and neither fits in a share of the row without a scroller. Full width, the ladder's grade
+   columns also line up under the value table's. */
 .pc-consts {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
 }
 
@@ -15530,16 +15536,11 @@ span.ct-console-pick { cursor: default; }
         grid-template-columns: 1fr;
     }
 
-    .pc-hero-right {
-        align-items: flex-start;
-    }
-
     .pc-h1 {
         font-size: 38px;
     }
 
-    .pc-formula,
-    .pc-consts {
+    .pc-formula {
         grid-template-columns: 1fr;
     }
 
@@ -15665,6 +15666,15 @@ span.ct-console-pick { cursor: default; }
     width: 2px;
     background: var(--mix-ink);
     transform: translateX(-1px);
+}
+
+/* Where the two curves cross, said under the bars that show it. */
+.pc-cmp-note {
+    margin: 12px 0 0;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
 }
 
 .pc-cmp-facts {
@@ -15865,13 +15875,6 @@ span.ct-console-pick { cursor: default; }
 }
 
 /* --- the population answers --- */
-.pc-two {
-    display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    gap: 16px;
-    align-items: start;
-}
-
 .pc-pop-bands {
     display: flex;
     flex-wrap: wrap;
@@ -15891,32 +15894,72 @@ span.ct-console-pick { cursor: default; }
 .pc-plate-rail {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
-/* The sliver, on a scale it can be read on: the worst plate on all fifty to the best. */
+/* The plate ladder as one bar, Rough Game to Perfect Game: every plate a segment in its own
+   plate colour, sized by its bonus, carrying what it is worth on the reference chart. */
 .pc-plate-track {
     position: relative;
-    height: 12px;
-    border-radius: 2px;
+    display: flex;
+    height: 44px;
+    border-radius: 4px;
     background: var(--mix-surface-muted);
     overflow: hidden;
 }
 
-.pc-plate-fill {
-    position: absolute;
-    inset: 0 auto 0 0;
-    background: var(--mix-accent);
-    opacity: .85;
+.pc-plate-seg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    overflow: hidden;
+    /* The plate fills are light in every theme and the page ground is dark in every theme, so
+       the ground colour is the ink that reads on all of them. */
+    color: var(--mix-bg);
+    font-family: var(--font-display);
+    line-height: 1.15;
+    border-right: 2px solid var(--mix-surface);
 }
 
-.pc-plate-tick {
+.pc-plate-seg:last-child {
+    border-right: 0;
+}
+
+.pc-plate-seg-name {
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: .04em;
+}
+
+.pc-plate-seg-val {
+    font-weight: 600;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Where the tracked pools' average plate falls on the same scale. */
+.pc-plate-marker {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 1px;
+    width: 2px;
     background: var(--mix-ink);
-    opacity: .5;
+}
+
+.pc-plate-poolrow {
+    position: relative;
+    height: 16px;
+}
+
+.pc-plate-pool {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 11.5px;
+    color: var(--mix-ink);
 }
 
 .pc-plate-ends {
@@ -15928,8 +15971,51 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-ink-muted);
 }
 
-@media (max-width: 860px) {
-    .pc-two {
-        grid-template-columns: 1fr;
+/* On a phone the seven segments are too narrow to carry their labels: the bar stays coloured
+   and the labels move into a list beneath it. */
+.pc-plate-list {
+    display: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+@media (max-width: 640px) {
+    .pc-plate-track {
+        height: 14px;
+    }
+
+    .pc-plate-seg span {
+        display: none;
+    }
+
+    .pc-plate-poolrow {
+        height: auto;
+    }
+
+    .pc-plate-pool {
+        position: static;
+        transform: none;
+        white-space: normal;
+    }
+
+    .pc-plate-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 4px 12px;
+        font-size: 12px;
+    }
+
+    .pc-plate-list i {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 6px;
+        border-radius: 2px;
+        vertical-align: -1px;
+    }
+
+    .pc-plate-list b {
+        font-variant-numeric: tabular-nums;
     }
 }
