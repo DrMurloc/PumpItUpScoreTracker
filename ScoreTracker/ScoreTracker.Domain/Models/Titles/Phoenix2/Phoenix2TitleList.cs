@@ -14,7 +14,8 @@ namespace ScoreTracker.Domain.Models.Titles.Phoenix2;
 ///     isn't in the Phoenix 2 catalog yet never progress until the song imports.
 ///     The [S]/[D] ladders gate on the per-type top-50 pools and the Total ladder on the
 ///     merged top-50 across both types, all computed by <see cref="BuildProgress" /> with
-///     the official Phoenix 2 formula.
+///     the official Phoenix 2 formula; the [CO-OP] ladder accumulates the CO-OP Rating attempt
+///     by attempt (<see cref="Phoenix2CoOpTitle" />), since that one is an all-charts sum.
 /// </summary>
 public static class Phoenix2TitleList
 {
@@ -290,24 +291,23 @@ public static class Phoenix2TitleList
         // ---- Skill meta ----
         new Phoenix2TitleSetTitle("SPECIALIST", "Earn all skill titles", "Misc.", SkillCategories, 90),
 
-        // ---- CO-OP rating ladder (site-detected only) ----
-        // These stay site-detected by decision, not by omission. The site does price a CO-OP
-        // Rating — title.php quotes one in its requirement text — but exposes it on no
-        // leaderboard and in no per-chart breakdown, so a computed value would have nothing to
-        // agree or disagree with. Reading the worn title off the account is the whole answer.
-        new PhoenixBasicTitle("[CO-OP] LV.1", "[CO-OP Rating] 1000+", "CO-OP", "CO-OP", 1),
-        new PhoenixBasicTitle("[CO-OP] LV.2", "[CO-OP Rating] 2000+", "CO-OP", "CO-OP", 2),
-        new PhoenixBasicTitle("[CO-OP] LV.3", "[CO-OP Rating] 3000+", "CO-OP", "CO-OP", 3),
-        new PhoenixBasicTitle("[CO-OP] LV.4", "[CO-OP Rating] 4000+", "CO-OP", "CO-OP", 4),
-        new PhoenixBasicTitle("[CO-OP] LV.5", "[CO-OP Rating] 5000+", "CO-OP", "CO-OP", 5),
-        new PhoenixBasicTitle("[CO-OP] LV.6", "[CO-OP Rating] 6000+", "CO-OP", "CO-OP", 6),
-        new PhoenixBasicTitle("[CO-OP] LV.7", "[CO-OP Rating] 7000+", "CO-OP", "CO-OP", 7),
-        new PhoenixBasicTitle("[CO-OP] LV.8", "[CO-OP Rating] 8000+", "CO-OP", "CO-OP", 8),
-        new PhoenixBasicTitle("[CO-OP] LV.9", "[CO-OP Rating] 9000+", "CO-OP", "CO-OP", 9),
-        new PhoenixBasicTitle("[CO-OP] LV.10", "[CO-OP Rating] 10000+", "CO-OP", "CO-OP", 10),
-        new PhoenixBasicTitle("[CO-OP] ADVANCED", "[CO-OP Rating] 12000+", "CO-OP", "CO-OP", 11),
-        new PhoenixBasicTitle("[CO-OP] EXPERT", "[CO-OP Rating] 14000+", "CO-OP", "CO-OP", 12),
-        new PhoenixBasicTitle("[CO-OP] MASTER", "[CO-OP Rating] 16000+", "CO-OP", "CO-OP", 13),
+        // ---- CO-OP rating ladder ----
+        // Computed from scores like the Phoenix ladder: the CO-OP Rating is every co-op chart's
+        // best non-broken score at 80 × (grade + plate), summed. The site still awards these,
+        // and a site-detected completion wins as it does for every computed title.
+        new Phoenix2CoOpTitle("[CO-OP] LV.1", "[CO-OP Rating] 1000+", 1000, 1),
+        new Phoenix2CoOpTitle("[CO-OP] LV.2", "[CO-OP Rating] 2000+", 2000, 2),
+        new Phoenix2CoOpTitle("[CO-OP] LV.3", "[CO-OP Rating] 3000+", 3000, 3),
+        new Phoenix2CoOpTitle("[CO-OP] LV.4", "[CO-OP Rating] 4000+", 4000, 4),
+        new Phoenix2CoOpTitle("[CO-OP] LV.5", "[CO-OP Rating] 5000+", 5000, 5),
+        new Phoenix2CoOpTitle("[CO-OP] LV.6", "[CO-OP Rating] 6000+", 6000, 6),
+        new Phoenix2CoOpTitle("[CO-OP] LV.7", "[CO-OP Rating] 7000+", 7000, 7),
+        new Phoenix2CoOpTitle("[CO-OP] LV.8", "[CO-OP Rating] 8000+", 8000, 8),
+        new Phoenix2CoOpTitle("[CO-OP] LV.9", "[CO-OP Rating] 9000+", 9000, 9),
+        new Phoenix2CoOpTitle("[CO-OP] LV.10", "[CO-OP Rating] 10000+", 10000, 10),
+        new Phoenix2CoOpTitle("[CO-OP] ADVANCED", "[CO-OP Rating] 12000+", 12000, 11),
+        new Phoenix2CoOpTitle("[CO-OP] EXPERT", "[CO-OP Rating] 14000+", 14000, 12),
+        new Phoenix2CoOpTitle("[CO-OP] MASTER", "[CO-OP Rating] 16000+", 16000, 13),
 
         // ---- Boss breakers (chart clears) ----
         new Phoenix2ChartClearTitle("[THE 1ST] BOSS BREAKER", "THE 1ST", "Another Truth", ChartType.Single, 6),
@@ -354,8 +354,9 @@ public static class Phoenix2TitleList
     {
         // A pool's whole ladder is linked — [S] INTERMEDIATE LV.2 reads the same singles
         // PUMBILITY as LV.1, at a higher threshold — so each rung's progress starts where
-        // the rung below it finished.
+        // the rung below it finished. The [CO-OP] ladder reads one CO-OP Rating the same way.
         TitleHelpers.LinkLadder(Titles.OfType<Phoenix2PumbilityTitle>(), t => t.Pool);
+        TitleHelpers.LinkLadder(Titles.OfType<Phoenix2CoOpTitle>(), _ => 0);
 
         // Display rails. A pool is one rail here and one ladder above, which is the exception
         // rather than the rule — see Title.Ladder. A skill track's ten chart-grade rungs and
