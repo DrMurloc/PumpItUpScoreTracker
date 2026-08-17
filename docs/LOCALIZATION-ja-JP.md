@@ -211,3 +211,5 @@ of you on the PUMBILITY level ladder holding a full 50-chart pool of the type. J
 | within 3 levels of you with a full pool | あなたと3レベル以内で、プールが満杯のプレイヤー | Rungs of the PUMBILITY ladder; the badge itself reads LV. |
 | you stand on {0} | あなたは {0} | Same shape as the existing `you sit at {0}` → `あなたは {0}`; {0} is a rung name in the game's notation, never translated. |
 | Singles / Doubles (in these strings) | Singles / Doubles | Kept English, as the locale already does for the pool names. |
+| Peers IQR | ピアIQR | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` stays as the acronym — the label exists to tell a reader who knows the term that it is not a min–max. |
+| From {0} peers | ピア {0}人から算出 | The column's tooltip; same shape as `From {0} scores` → `{0} スコアから算出`. |

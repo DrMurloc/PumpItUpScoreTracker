@@ -216,3 +216,5 @@ than dropped. Kept deliberately short, since the length rule tracks the English.
 | than | grogrgl | Recovered from `More than 75%` → `Mrrgl grogrgl 75%`. |
 | them / their | grglblarg | Recovered from `kept their level` → `grglblarg grorpmurm`. |
 | stand (on) | morggrrgl ap | `morggrrgl` from `Where you stand`; `ap` is the existing "on". |
+| Peers IQR | Maglmurp IQR | The `/Pumbility` targets' column. `IQR` is an acronym and rides through as one. |
+| From {0} peers | Romurg {0} maglmurp | `Romurg` from `From {0} scores` → `Romurg {0} mgrlgmrg`. |

@@ -2484,6 +2484,9 @@
   <data name="From {0}" xml:space="preserve">
     <value>From {0}</value>
   </data>
+  <data name="From {0} peers" xml:space="preserve">
+    <value>From {0} peers</value>
+  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>From {0} scores</value>
   </data>
@@ -4609,6 +4612,9 @@
   </data>
   <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
     <value>Peer projections show once your singles pool has {0} charts.</value>
+  </data>
+  <data name="Peers IQR" xml:space="preserve">
+    <value>Peers IQR</value>
   </data>
   <data name="peers:" xml:space="preserve">
     <value>peers:</value>

@@ -588,3 +588,5 @@ of you on the PUMBILITY level ladder holding a full 50-chart pool of the type.
 | PUMBILITY peers | pares de PUMBILITY | `pares` for the named group; the existing `{0} jugadores similares` stays where the source says "peers" loosely. |
 | within 3 levels of you with a full pool | a ±3 niveles de ti y con el conjunto completo | `conjunto` for pool, per the existing Pool → Conjunto; Simples/Dobles as this locale already spells the pools. |
 | you stand on {0} | estás en {0} | Same as `you sit at {0}`; {0} is a rung name in the game's notation, never translated. |
+| Peers IQR | IQR de pares | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` rather than `RIC` — the site's audience reads the English acronym on every stats tool, and the label exists to tell a reader who knows the term that it is not a min–max. |
+| From {0} peers | Con {0} pares | The column's tooltip; same shape as `From {0} scores` → `Con {0} puntuaciones`. |

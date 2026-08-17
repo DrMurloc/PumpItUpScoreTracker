@@ -2483,6 +2483,9 @@
   <data name="From {0}" xml:space="preserve">
     <value>À partir de {0}</value>
   </data>
+  <data name="From {0} peers" xml:space="preserve">
+    <value>Sur {0} pairs</value>
+  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Sur {0} scores</value>
   </data>
@@ -4608,6 +4611,9 @@
   </data>
   <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
     <value>Les projections des pairs s'affichent dès que votre ensemble Singles atteint {0} charts.</value>
+  </data>
+  <data name="Peers IQR" xml:space="preserve">
+    <value>IQR des pairs</value>
   </data>
   <data name="peers:" xml:space="preserve">
     <value>ton niveau :</value>

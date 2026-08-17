@@ -436,3 +436,5 @@ of you on the PUMBILITY level ladder holding a full 50-chart pool of the type.
 | PUMBILITY peers | pari PUMBILITY | `pari`, per the existing `Vs. pari`. |
 | within 3 levels of you with a full pool | entro ±3 livelli da te, con l'insieme completo | `insieme` for pool, per the existing Pool → Insieme; `entro ±3` mirrors `entro ±1 livello`. |
 | you stand on {0} | sei su {0} | {0} is a rung name in the game's notation, never translated. |
+| Peers IQR | IQR dei pari | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` (scarto interquartile) stays as the English acronym the site's audience reads on every stats tool; the label exists to tell a reader who knows the term that it is not a min–max. |
+| From {0} peers | Da {0} pari | The column's tooltip; same shape as `From {0} scores` → `Da {0} punteggi`. |

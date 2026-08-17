@@ -2484,6 +2484,9 @@
   <data name="From {0}" xml:space="preserve">
     <value>{0}から</value>
   </data>
+  <data name="From {0} peers" xml:space="preserve">
+    <value>ピア {0}人から算出</value>
+  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0} スコアから算出</value>
   </data>
@@ -4609,6 +4612,9 @@
   </data>
   <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
     <value>Singlesのプールが{0}譜面になるとピア予測が表示されます。</value>
+  </data>
+  <data name="Peers IQR" xml:space="preserve">
+    <value>ピアIQR</value>
   </data>
   <data name="peers:" xml:space="preserve">
     <value>同水準:</value>

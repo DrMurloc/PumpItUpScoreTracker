@@ -225,3 +225,5 @@ existing `동급 {0}명` / `또래 대비` family.
 | within 3 levels of you with a full pool | 나와 3레벨 이내, 풀을 가득 채운 플레이어 | "levels" here are PUMBILITY ladder rungs, not chart levels; 레벨 stays because the game's own badge says LV. |
 | you stand on {0} | 내 위치: {0} | {0} is a rung name in the game's notation ("[P.B] DIAMOND LV.4"), never translated. |
 | Charts fewer than 5 of them have passed are not shown. | 그중 5명 미만이 클리어한 채보는 표시하지 않습니다. | 클리어 for "passed", per the existing Passed → 클리어. |
+| Peers IQR | 동료 IQR | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` stays as the acronym — the label exists to tell a reader who knows the term that it is not a min–max. |
+| From {0} peers | 동료 {0}명 기반 | The column's tooltip; same shape as `From {0} scores` → `{0}개 스코어 기반`. |
