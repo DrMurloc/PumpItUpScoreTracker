@@ -483,6 +483,25 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TagSearchRanksAnExactTagThenAPrefixThenAnythingContainingTheTerm()
+    {
+        var snapshots = Snapshots();
+        var snapshotId = await snapshots.CreateRun(MixEnum.Phoenix2, false, Week1, CancellationToken.None);
+        var board = await snapshots.EnsureBoard(MixEnum.Phoenix2, LeaderboardTypes.Chart, "District 1 D26",
+            Guid.NewGuid(), "Double", 26, CancellationToken.None);
+        var players = await snapshots.EnsurePlayers(MixEnum.Phoenix2,
+            new[] { ("abe", (Uri?)null), ("bob", (Uri?)null), ("b", (Uri?)null) }, Week1, CancellationToken.None);
+        await snapshots.WritePlacements(snapshotId,
+            players.Select((p, i) => new PlacementRow(board.Id, p.Id, i + 1, 990000 - i)).ToArray(),
+            CancellationToken.None);
+        await snapshots.Seal(snapshotId, Week1.AddMinutes(41), CancellationToken.None);
+
+        var hits = await Snapshots().SearchPlayersInSnapshot(snapshotId, "b", 10, CancellationToken.None);
+
+        Assert.Equal(new[] { "b", "bob", "abe" }, hits.Select(p => p.Username));
+    }
+
+    [Fact]
     public async Task TagSearchExcludesATagThatLeftTheBoards()
     {
         // The dimension keeps every tag ever seen; this snapshot is the population a PICKER may

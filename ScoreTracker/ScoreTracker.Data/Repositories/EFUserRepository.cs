@@ -181,19 +181,40 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
         // name prefix, tag prefix, then anything containing the term.
         var visible = alsoVisible.ToArray();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        return await database.User
-            .Where(u => u.Name.Contains(term) || (u.GameTag != null && u.GameTag.Contains(term)))
-            .Where(u => u.IsPublic || visible.Contains(u.Id))
-            .OrderBy(u => u.Name == term ? 0
-                : u.GameTag == term ? 1
-                : u.Name.StartsWith(term) ? 2
-                : u.GameTag != null && u.GameTag.StartsWith(term) ? 3
-                : 4)
+        var visibleUsers = database.User.Where(u => u.IsPublic || visible.Contains(u.Id));
+        var matched = term.Any(char.IsSurrogate)
+            ? SupplementaryMatches(visibleUsers, term)
+            : visibleUsers
+                .Where(u => u.Name.Contains(term) || (u.GameTag != null && u.GameTag.Contains(term)))
+                .OrderBy(u => u.Name == term ? 0
+                    : u.GameTag == term ? 1
+                    : u.Name.StartsWith(term) ? 2
+                    : u.GameTag != null && u.GameTag.StartsWith(term) ? 3
+                    : 4);
+        return await matched
             .ThenBy(u => u.Name)
             .Take(take)
             .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
                 u.IsContentLocked, u.ClaimsInvalidatedAt))
             .ToArrayAsync(cancellationToken);
+    }
+
+    // A supplementary-plane character — an emoji, most often — has no weight in the database's
+    // default collation, so LIKE '%😀%' matches every row and the player literally named with one is
+    // buried in noise. A supplementary-aware collation compares the pair as the character it is.
+    // Only a term carrying one takes this branch: every other search keeps the column's own rules.
+    private const string SupplementaryCollation = "Latin1_General_100_CI_AS_SC";
+
+    private static IOrderedQueryable<UserEntity> SupplementaryMatches(IQueryable<UserEntity> users, string term)
+    {
+        return users
+            .Where(u => EF.Functions.Collate(u.Name, SupplementaryCollation).Contains(term)
+                        || (u.GameTag != null && EF.Functions.Collate(u.GameTag, SupplementaryCollation).Contains(term)))
+            .OrderBy(u => EF.Functions.Collate(u.Name, SupplementaryCollation) == term ? 0
+                : u.GameTag != null && EF.Functions.Collate(u.GameTag, SupplementaryCollation) == term ? 1
+                : EF.Functions.Collate(u.Name, SupplementaryCollation).StartsWith(term) ? 2
+                : u.GameTag != null && EF.Functions.Collate(u.GameTag, SupplementaryCollation).StartsWith(term) ? 3
+                : 4);
     }
 
     public async Task<IEnumerable<User>> GetUsersByGameTag(Name gameTag,
