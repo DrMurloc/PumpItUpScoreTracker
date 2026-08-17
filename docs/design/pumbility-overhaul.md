@@ -88,6 +88,12 @@ Round three, 2026-08-15. Phoenix 2 only; Phoenix 1's projection is untouched.
 | D28 | **A type without a full pool is dark.** *"Have peers/projections only light up/show once you're at 50 charts for that type."* Charurun plays no singles and sees no singles peers; a 29-double pool sees "29 of 50" |
 | D29 | **The carried Phoenix 1 rows are untouched.** *"The projections we have in phoenix 2 that are just 'your phoenix scores, mapped to Phoenix 2 pumbility' — those should remain exactly as is. We are only changing projections."* `CarryoverTargets`, `/Pumbility/Phoenix1`, the pool, the bar, the titles and the ask do not move |
 
+Round four, 2026-08-17, after the owner's field test of round three.
+
+| # | Ruling |
+|---|---|
+| D30 | **A peer row carries a "Peers IQR"** — the peers' 25th and 75th percentile scores as two letter grades with a connector between them, beside the median. Owner: *"Can we do an estimated range? … If we do like 'Estimated P25 -> P75 letter grades'? It sort of helps visualize confidence levels a bit too. If like everyone in your pool is getting a SS, you'll probably get an SS. If P25 is A+ and P75 is SSS+, you know it's a specialized chart."* Named **IQR**, not "range": *"call it 'Peers IQR' so those who understand math nuance will know it's not a Min/Max range."* Grades only — no quartile numbers, no width figure — and *"at most a tooltip for 'From X peers'"*. **Compact is unchanged**: *"Only so much data we can fit there."* A carried Phoenix 1 row has no peers and prints a dash. This narrows D12: the numeric spread D12 removed stays removed; two grades that say whether the peers agree is the one per-row figure about the evidence that earned its place, because the field test read the median alone as a claim ("it's still giving me S22 SSs") when the peers behind it were split |
+
 ## 3. The section
 
 ### 3.1 The three pages
@@ -214,9 +220,11 @@ printing badge chips beside a projection would claim a causal path that does not
 site does not do that (rule: say what you cannot compute).
 
 What the estimator can honestly explain is *how many peers it heard from, how recent their
-scores are, and how spread they were* — an evidence line, not an attribution line. What the page
-may still show, separately and unattached to the projection, is the player's own thumbprint as
-descriptive data (§4.3). **Still open** — see §9.
+scores are, and how spread they were* — an evidence line, not an attribution line. Two of the
+three have since landed, in a different shape than a line: the peer count as a section chip (D27)
+and the spread as the Peers IQR grades (D30). What the page may still show, separately and
+unattached to the projection, is the player's own thumbprint as descriptive data (§4.3). **Still
+open** — see §9.
 
 **Phoenix 2, round three (D22, D24, D27, D28).** The list carries one **peer line** above it: a
 chip per chart type in the selected pool — *"23 PUMBILITY peers"* for a lit type, *"Doubles:
@@ -226,7 +234,22 @@ five-peer clause live in the chip's tooltip, not on the line — the first versi
 and the owner's field test read it as *"wordy af and filling up the screen"* (2026-08-16); a
 count, not a paragraph. Peer rows exist only for charts five or more of those peers have passed.
 Carried Phoenix 1 rows are unaffected by either state (D29): a dark doubles pool still lists your
-Phoenix 1 doubles repriced. Nothing per row changes — D12 stands.
+Phoenix 1 doubles repriced.
+
+**Round four: the Peers IQR (D30).** One thing per row did change after the field test. Beside
+the projected grade and number, a peer row prints the peers' **first and third quartiles as two
+grades** with a connector between them — *AAA ─ SSS* on a chart that splits the peers, *AAA+ ─
+AAA+* on one they agree about — under a **Peers IQR** column in Table and a **Peers IQR** line in
+the Comfortable card body. The connector is the width without a number: short and solid inside
+10,000 points, long and dashed past 25,000 (at the S band that is two grade steps and five;
+picked once, in points rather than letter steps because two scores a point either side of a grade
+line print as different letters while agreeing perfectly). The tooltip says *"From 13 peers"* and
+nothing else. Compact prints nothing new — a 72px card has one value and one picture. Carried
+Phoenix 1 rows have no peers and print a dash in Table, no line in Comfortable. Phoenix 1 rows
+get the same column from the same arithmetic (its quartiles are growth-weighted like its p65),
+because `ScoreProjection.Spreads` is filled by both branches of the projector — the IQR is read
+over exactly the voices and weights the median was, so the two cannot disagree about who was
+heard. The why-line stays what D12 left it: the source, in words.
 
 Density trio via `Density__Pumbility`, governing the targets only, using the site's standard
 control — a `MudButtonGroup` of `ViewComfy` / `GridView` / `TableRows` icon buttons, the same
@@ -998,17 +1021,19 @@ under the number. The nav row underneath fills the air that costs at desktop wid
   improved after the backtest cutoff reads as unplayed at it; the journal's 29,153 multi-event pairs
   are the subset with true history.
 - **The "why" line on a target row.** §3.3. The estimator carries no skill term, so badge chips would
-  assert a causal path that does not exist. Evidence line instead, or nothing? On Phoenix 2 the
-  answer became a **section** line — the peer count and its definition (D27) — with the rows still
-  carrying nothing (D12). Phoenix 1 still shows nothing.
+  assert a causal path that does not exist. Evidence line instead, or nothing? The answer became a
+  **section** chip for the count (D27) and a **column** for the spread — the Peers IQR, two grades
+  (D30) — with the row's why-line still carrying only the source (D12). What is left open is only
+  whether Phoenix 1 gets a peer-count chip too; its rows carry the IQR already.
 - **Does the page show the thumbprint as descriptive data?** It is a real, stable trait (§4.3)
   with genuine display value and zero predictive value. If yes it needs its own placement and
   copy, and must never sit adjacent to a projection where it reads as the explanation.
 - **A Singles/Doubles filter on Phoenix 1 targets** was raised and not decided. It is additive
   and does not invent a stat, unlike a Phoenix 1 pool split.
 - **Is ρ ≈ 0.66 good enough to print a point estimate?** Nothing tried moved it far, and the
-  ceiling looks structural rather than tunable. If the answer is no, the target list shows
-  ranges rather than numbers — a page decision, not an algorithm one.
+  ceiling looks structural rather than tunable. Round four's answer is *both*: the point estimate
+  stays, and the Peers IQR beside it (D30) prints the range as grades — so a reader can see when
+  the point is standing on agreement and when it is a median of a split field.
 - **What the tier list's Skill source is worth**, which this harness cannot measure — its output
   is a difficulty ordering with no equivalent ground truth. The 20% degradation figure for
   suggestions comes from separate work and is not reproduced here.
