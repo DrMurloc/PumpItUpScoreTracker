@@ -9,13 +9,14 @@ namespace ScoreTracker.Tests.Components;
 
 /// <summary>
 ///     The Phoenix 2 peer line under "What to play next" (docs/design/pumbility-overhaul.md §3.3,
-///     D27, D28): the count and definition for a lit type, the "N of 50" for a dark one, one line
-///     per type on the All pool, and nothing at all for a competitive band.
+///     D27, D28): a chip with the count for a lit type, "N/50 charts" for a dark one, one chip per
+///     type on the All pool, the definition in the tooltip rather than on the line, and nothing at
+///     all for a competitive band.
 /// </summary>
 public sealed class PumbilityPeerLineTests : ComponentTestBase
 {
     [Fact]
-    public void ALitTypePrintsTheCountItsDefinitionAndTheFivePeerClause()
+    public void ALitTypeIsACountWithTheDefinitionInItsTooltip()
     {
         var cut = RenderComponent<PumbilityPeerLine>(p => p
             .Add(x => x.Peers, new Dictionary<ChartType, PeerGroup>
@@ -24,11 +25,14 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
             })
             .Add(x => x.Pool, ChartType.Single));
 
-        var line = cut.Find(".pmb-peer-line");
-        Assert.Equal("true", line.GetAttribute("data-lit"));
-        Assert.Contains("23 PUMBILITY peers", cut.Markup);
-        Assert.Contains("within 3 levels of you with a full singles pool", cut.Markup);
-        Assert.Contains("Charts fewer than 5 of them have passed are not shown.", cut.Markup);
+        var chip = cut.Find(".pmb-peer-chip");
+        Assert.Equal("true", chip.GetAttribute("data-lit"));
+        Assert.Equal("23 PUMBILITY peers", chip.TextContent.Trim());
+        // The line is a count; the sentence lives in the chip's title.
+        Assert.DoesNotContain("within 3 levels", chip.TextContent);
+        var title = chip.GetAttribute("title")!;
+        Assert.Contains("within 3 levels of you with a full pool", title);
+        Assert.Contains("Charts fewer than 5 of them have passed are not shown.", title);
     }
 
     [Fact]
@@ -41,14 +45,15 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
             })
             .Add(x => x.Pool, ChartType.Double));
 
-        var line = cut.Find(".pmb-peer-line");
-        Assert.Equal("false", line.GetAttribute("data-lit"));
-        Assert.Contains("Doubles: 29 of 50 charts before peer projections show", cut.Markup);
-        Assert.DoesNotContain("PUMBILITY peers", cut.Markup);
+        var chip = cut.Find(".pmb-peer-chip");
+        Assert.Equal("false", chip.GetAttribute("data-lit"));
+        Assert.Equal("Doubles: 29/50 charts", chip.TextContent.Trim());
+        Assert.Contains("Peer projections show once your doubles pool has 50 charts.", chip.GetAttribute("title")!);
+        Assert.DoesNotContain("PUMBILITY peers", chip.TextContent);
     }
 
     [Fact]
-    public void TheAllPoolShowsOneLinePerType()
+    public void TheAllPoolShowsOneChipPerTypeNamingTheType()
     {
         var cut = RenderComponent<PumbilityPeerLine>(p => p
             .Add(x => x.Peers, new Dictionary<ChartType, PeerGroup>
@@ -58,10 +63,10 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
             })
             .Add(x => x.Pool, (ChartType?)null));
 
-        var lines = cut.FindAll(".pmb-peer-line");
-        Assert.Equal(2, lines.Count);
-        Assert.Contains("23 PUMBILITY peers", cut.Markup);
-        Assert.Contains("Doubles: 29 of 50", cut.Markup);
+        var chips = cut.FindAll(".pmb-peer-chip");
+        Assert.Equal(2, chips.Count);
+        Assert.Equal("Singles: 23 PUMBILITY peers", chips[0].TextContent.Trim());
+        Assert.Equal("Doubles: 29/50 charts", chips[1].TextContent.Trim());
     }
 
     [Fact]
@@ -89,6 +94,6 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
             })
             .Add(x => x.Pool, (ChartType?)null));
 
-        Assert.Single(cut.FindAll(".pmb-peer-line"));
+        Assert.Single(cut.FindAll(".pmb-peer-chip"));
     }
 }

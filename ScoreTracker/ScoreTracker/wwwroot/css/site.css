@@ -13396,24 +13396,32 @@ span.ct-console-pick { cursor: default; }
     margin: 2px 0 14px;
 }
 
-/* The Phoenix 2 peer line under the targets' lede: one clause per chart type in the selected
-   pool, the count in the mix's ink and the five-peer note muted; a type without a pool reads
-   as its own muted line (docs/design/pumbility-overhaul.md §3.3). */
+/* The Phoenix 2 peer line under the targets' lede: one chip per chart type in the selected pool —
+   the peer count, or "N/50 charts" for a type whose pool is not yet full — with the definition in
+   the chip's tooltip. A count, not a sentence (docs/design/pumbility-overhaul.md §3.3). */
 .pmb-peer-line {
-    font-size: 13px;
-    max-width: 62ch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     margin: -6px 0 12px;
-    color: var(--mix-ink-muted);
 }
 
-.pmb-peer-line + .pmb-peer-line {
-    margin-top: -8px;
-}
-
-.pmb-peer-count {
-    color: var(--mix-ink);
+.pmb-peer-chip {
+    display: inline-block;
+    font-size: 12px;
     font-weight: 600;
-    margin-right: 6px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    color: var(--mix-ink);
+    cursor: help;
+}
+
+.pmb-peer-chip[data-lit="false"] {
+    color: var(--mix-ink-muted);
+    font-weight: 500;
+    border-style: dashed;
 }
 
 

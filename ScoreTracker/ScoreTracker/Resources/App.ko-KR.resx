@@ -1999,8 +1999,11 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>더블 경쟁 레벨</value>
   </data>
-  <data name="Doubles: {0} of {1} charts before peer projections show" xml:space="preserve">
-    <value>더블: 동료 예측이 표시되기까지 {0}/{1}곡</value>
+  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>더블: PUMBILITY 동료 {0}명</value>
+  </data>
+  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+    <value>더블: {0}/{1}곡</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>더블스텝</value>
@@ -4569,6 +4572,12 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>링크 전체 또는 끝의 코드만 붙여넣으세요.</value>
   </data>
+  <data name="Peer projections show once your doubles pool has {0} charts." xml:space="preserve">
+    <value>더블 풀이 {0}곡을 채우면 동료 예측이 표시됩니다.</value>
+  </data>
+  <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
+    <value>싱글 풀이 {0}곡을 채우면 동료 예측이 표시됩니다.</value>
+  </data>
   <data name="peers:" xml:space="preserve">
     <value>동급:</value>
   </data>
@@ -6193,8 +6202,11 @@
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>싱글 vs 더블</value>
   </data>
-  <data name="Singles: {0} of {1} charts before peer projections show" xml:space="preserve">
-    <value>싱글: 동료 예측이 표시되기까지 {0}/{1}곡</value>
+  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>싱글: PUMBILITY 동료 {0}명</value>
+  </data>
+  <data name="Singles: {0}/{1} charts" xml:space="preserve">
+    <value>싱글: {0}/{1}곡</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
     <value>DrMurloc님이 제작하고 유지 관리합니다</value>
@@ -8506,11 +8518,8 @@
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>플레이어 {0}명 · {1} 주</value>
   </data>
-  <data name="{0} PUMBILITY peers — within 3 levels of you with a full doubles pool" xml:space="preserve">
-    <value>PUMBILITY 동료 {0}명 — 나와 3레벨 이내이고 더블 풀이 가득 찬 플레이어</value>
-  </data>
-  <data name="{0} PUMBILITY peers — within 3 levels of you with a full singles pool" xml:space="preserve">
-    <value>PUMBILITY 동료 {0}명 — 나와 3레벨 이내이고 싱글 풀이 가득 찬 플레이어</value>
+  <data name="{0} PUMBILITY peers" xml:space="preserve">
+    <value>PUMBILITY 동료 {0}명</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>PUMBILITY {0} 남음</value>

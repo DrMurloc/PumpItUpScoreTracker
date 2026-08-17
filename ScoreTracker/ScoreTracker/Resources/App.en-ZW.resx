@@ -2013,8 +2013,11 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Groggl arglrglmrmurm grorpmurm</value>
   </data>
-  <data name="Doubles: {0} of {1} charts before peer projections show" xml:space="preserve">
-    <value>Groggl: {0} mrgl {1} murgl arg maglmurp purgmorgl romorg</value>
+  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Groggl: {0} PUMBILITY maglmurp</value>
+  </data>
+  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+    <value>Groggl: {0}/{1} murgl</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>Romrmrpblgrl</value>
@@ -4601,6 +4604,12 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>Grabla argla, arplo grabla mrpgrogl blaromurp.</value>
   </data>
+  <data name="Peer projections show once your doubles pool has {0} charts." xml:space="preserve">
+    <value>Maglmurp purgmorgl romorg mrp gromurp Groggl blubgro mrglro {0} murgl.</value>
+  </data>
+  <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
+    <value>Maglmurp purgmorgl romorg mrp gromurp Mrglrlgl blubgro mrglro {0} murgl.</value>
+  </data>
   <data name="peers:" xml:space="preserve">
     <value>morp:</value>
   </data>
@@ -6246,8 +6255,11 @@
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Mrglrlgl grrgl Groggl</value>
   </data>
-  <data name="Singles: {0} of {1} charts before peer projections show" xml:space="preserve">
-    <value>Mrglrlgl: {0} mrgl {1} murgl arg maglmurp purgmorgl romorg</value>
+  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Mrglrlgl: {0} PUMBILITY maglmurp</value>
+  </data>
+  <data name="Singles: {0}/{1} charts" xml:space="preserve">
+    <value>Mrglrlgl: {0}/{1} murgl</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
 	  <value>Plglmorg murpmurpmrprgl ro grglarglurg murm DrMurloc</value>
@@ -8576,11 +8588,8 @@
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} morp · plglmorg mrgl {1}</value>
   </data>
-  <data name="{0} PUMBILITY peers — within 3 levels of you with a full doubles pool" xml:space="preserve">
-    <value>{0} PUMBILITY maglmurp — arglblgrl 3 plglgrrgl mrgl blub glgrgl gro mrglmr Groggl blubgro</value>
-  </data>
-  <data name="{0} PUMBILITY peers — within 3 levels of you with a full singles pool" xml:space="preserve">
-    <value>{0} PUMBILITY maglmurp — arglblgrl 3 plglgrrgl mrgl blub glgrgl gro mrglmr Mrglrlgl blubgro</value>
+  <data name="{0} PUMBILITY peers" xml:space="preserve">
+    <value>{0} PUMBILITY maglmurp</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>{0} PUMBILITY blurgmo</value>

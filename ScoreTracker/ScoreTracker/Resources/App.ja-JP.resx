@@ -2013,8 +2013,11 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Doublesの競技レベル</value>
   </data>
-  <data name="Doubles: {0} of {1} charts before peer projections show" xml:space="preserve">
-    <value>Doubles: ピア予測が表示されるまで {0}/{1} 譜面</value>
+  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Doubles: PUMBILITYピア {0}人</value>
+  </data>
+  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+    <value>Doubles: {0}/{1} 譜面</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>ダブルステップ</value>
@@ -4601,6 +4604,12 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>リンク全体、または末尾のコードだけを貼り付けてください。</value>
   </data>
+  <data name="Peer projections show once your doubles pool has {0} charts." xml:space="preserve">
+    <value>Doublesのプールが{0}譜面になるとピア予測が表示されます。</value>
+  </data>
+  <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
+    <value>Singlesのプールが{0}譜面になるとピア予測が表示されます。</value>
+  </data>
   <data name="peers:" xml:space="preserve">
     <value>同水準:</value>
   </data>
@@ -6246,8 +6255,11 @@
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Singles対Doubles</value>
   </data>
-  <data name="Singles: {0} of {1} charts before peer projections show" xml:space="preserve">
-    <value>Singles: ピア予測が表示されるまで {0}/{1} 譜面</value>
+  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Singles: PUMBILITYピア {0}人</value>
+  </data>
+  <data name="Singles: {0}/{1} charts" xml:space="preserve">
+    <value>Singles: {0}/{1} 譜面</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
 	  <value>サイト製作・運営：DrMurloc</value>
@@ -8576,11 +8588,8 @@
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>プレーヤー {0} 人・{1} の週</value>
   </data>
-  <data name="{0} PUMBILITY peers — within 3 levels of you with a full doubles pool" xml:space="preserve">
-    <value>PUMBILITYピア {0}人 — あなたと3レベル以内で、Doublesのプールが満杯のプレイヤー</value>
-  </data>
-  <data name="{0} PUMBILITY peers — within 3 levels of you with a full singles pool" xml:space="preserve">
-    <value>PUMBILITYピア {0}人 — あなたと3レベル以内で、Singlesのプールが満杯のプレイヤー</value>
+  <data name="{0} PUMBILITY peers" xml:space="preserve">
+    <value>PUMBILITYピア {0}人</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>PUMBILITY 残り {0}</value>

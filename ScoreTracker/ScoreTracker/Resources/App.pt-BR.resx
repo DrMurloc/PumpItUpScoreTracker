@@ -1999,8 +1999,11 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Nível competitivo de Doubles</value>
   </data>
-  <data name="Doubles: {0} of {1} charts before peer projections show" xml:space="preserve">
-    <value>Doubles: {0} de {1} charts até as projeções de pares aparecerem</value>
+  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Doubles: {0} pares de PUMBILITY</value>
+  </data>
+  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+    <value>Doubles: {0}/{1} charts</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>Doublesteps</value>
@@ -4569,6 +4572,12 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>Cole o link inteiro, ou apenas o código do final.</value>
   </data>
+  <data name="Peer projections show once your doubles pool has {0} charts." xml:space="preserve">
+    <value>As projeções de pares aparecem quando seu conjunto de Doubles tiver {0} charts.</value>
+  </data>
+  <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
+    <value>As projeções de pares aparecem quando seu conjunto de Singles tiver {0} charts.</value>
+  </data>
   <data name="peers:" xml:space="preserve">
     <value>seu nível:</value>
   </data>
@@ -6193,8 +6202,11 @@
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>Singles vs Doubles</value>
   </data>
-  <data name="Singles: {0} of {1} charts before peer projections show" xml:space="preserve">
-    <value>Singles: {0} de {1} charts até as projeções de pares aparecerem</value>
+  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Singles: {0} pares de PUMBILITY</value>
+  </data>
+  <data name="Singles: {0}/{1} charts" xml:space="preserve">
+    <value>Singles: {0}/{1} charts</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
     <value>Site criado e mantido por DrMurloc</value>
@@ -8506,11 +8518,8 @@
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} jogadores · semana de {1}</value>
   </data>
-  <data name="{0} PUMBILITY peers — within 3 levels of you with a full doubles pool" xml:space="preserve">
-    <value>{0} pares de PUMBILITY — a ±3 níveis de você e com o conjunto de Doubles completo</value>
-  </data>
-  <data name="{0} PUMBILITY peers — within 3 levels of you with a full singles pool" xml:space="preserve">
-    <value>{0} pares de PUMBILITY — a ±3 níveis de você e com o conjunto de Singles completo</value>
+  <data name="{0} PUMBILITY peers" xml:space="preserve">
+    <value>{0} pares de PUMBILITY</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>{0} PUMBILITY restantes</value>

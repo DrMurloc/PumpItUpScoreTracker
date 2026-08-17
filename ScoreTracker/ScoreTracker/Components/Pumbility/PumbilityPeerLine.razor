@@ -3,33 +3,33 @@
 @namespace ScoreTracker.Web.Components
 
 @* The section's one line about its evidence on Phoenix 2 (docs/design/pumbility-overhaul.md
-   §3.3, D27, D28): how many PUMBILITY peers the estimates were drawn from, per chart type the
-   selected pool covers, and — for a type whose pool is not yet fifty charts — how far the pool is
-   from lighting up, in place of estimates that do not exist. Peer rows for a chart fewer than five
-   of those peers have passed are simply absent, and the line says so in a clause rather than the
-   rows carrying a caption (D12 stands).
+   §3.3, D27, D28): a chip per chart type the selected pool covers — the peer count for a lit type,
+   "N/50 charts" for one whose pool is not yet fifty — with the definition and the five-peer clause
+   in the chip's title (a native tooltip) rather than on the line. The line is a count, not a paragraph (owner,
+   2026-08-16); nothing per row changes (D12 stands).
 
    Renders nothing for a competitive band: Phoenix 1's list has no peer line. *@
-@foreach (var type in TypesShown)
+@if (Chips.Any())
 {
-    if (!Peers.TryGetValue(type, out var group) || group.Kind != PeerGroupKind.PumbilityBand) continue;
-
-    <p class="pmb-peer-line" data-type="@type" data-lit="@(group.IsLit ? "true" : "false")">
-        @if (group.IsLit)
+    <p class="pmb-peer-line">
+        @foreach (var (type, group) in Chips)
         {
-            <span class="pmb-peer-count">
-                @(type == ChartType.Single
-                    ? L["{0} PUMBILITY peers — within 3 levels of you with a full singles pool", group.Size]
-                    : L["{0} PUMBILITY peers — within 3 levels of you with a full doubles pool", group.Size])
-            </span>
-            <span class="pmb-peer-note">@L["Charts fewer than 5 of them have passed are not shown."]</span>
-        }
-        else
-        {
-            <span class="pmb-peer-dark">
-                @(type == ChartType.Single
-                    ? L["Singles: {0} of {1} charts before peer projections show", group.PoolCount, group.PoolSize]
-                    : L["Doubles: {0} of {1} charts before peer projections show", group.PoolCount, group.PoolSize])
+            <span class="pmb-peer-chip" data-type="@type" data-lit="@(group.IsLit ? "true" : "false")"
+                  title="@TooltipFor(type, group)">
+                    @if (group.IsLit)
+                    {
+                        @(Pool == null
+                            ? type == ChartType.Single
+                                ? L["Singles: {0} PUMBILITY peers", group.Size]
+                                : L["Doubles: {0} PUMBILITY peers", group.Size]
+                            : L["{0} PUMBILITY peers", group.Size])
+                    }
+                    else
+                    {
+                        @(type == ChartType.Single
+                            ? L["Singles: {0}/{1} charts", group.PoolCount, group.PoolSize]
+                            : L["Doubles: {0}/{1} charts", group.PoolCount, group.PoolSize])
+                    }
             </span>
         }
     </p>
@@ -40,10 +40,21 @@
     [Parameter, EditorRequired]
     public IReadOnlyDictionary<ChartType, PeerGroup> Peers { get; set; } = new Dictionary<ChartType, PeerGroup>();
 
-    /// <summary>The selected pool: one type, or null for All, which shows a line per type.</summary>
+    /// <summary>The selected pool: one type, or null for All, which shows a chip per type.</summary>
     [Parameter]
     public ChartType? Pool { get; set; }
 
-    private IEnumerable<ChartType> TypesShown =>
-        Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double };
+    private IEnumerable<(ChartType Type, PeerGroup Group)> Chips =>
+        (Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
+        .Where(type => Peers.TryGetValue(type, out var group) && group.Kind == PeerGroupKind.PumbilityBand)
+        .Select(type => (type, Peers[type]));
+
+    private string TooltipFor(ChartType type, PeerGroup group)
+    {
+        if (!group.IsLit)
+            return type == ChartType.Single
+                ? L["Peer projections show once your singles pool has {0} charts.", group.PoolSize]
+                : L["Peer projections show once your doubles pool has {0} charts.", group.PoolSize];
+        return $"{L["within 3 levels of you with a full pool"]} — {L["Charts fewer than 5 of them have passed are not shown."]}";
+    }
 }

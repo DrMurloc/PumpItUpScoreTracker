@@ -218,13 +218,15 @@ scores are, and how spread they were* — an evidence line, not an attribution l
 may still show, separately and unattached to the projection, is the player's own thumbprint as
 descriptive data (§4.3). **Still open** — see §9.
 
-**Phoenix 2, round three (D22, D24, D27, D28).** The list carries one **peer line** above it, per
-selected pool — *"23 PUMBILITY peers — within 3 levels of you with a full singles pool"* — and,
-for a type whose pool is not yet full, a dark state in its place — *"Doubles: 29 of 50 charts
-before peer projections show"*. Peer rows exist only for charts five or more of those peers have
-passed; the line says so in a clause rather than the rows carrying a caption. Carried Phoenix 1
-rows are unaffected by either state (D29): a dark doubles pool still lists your Phoenix 1 doubles
-repriced. Nothing per row changes — D12 stands.
+**Phoenix 2, round three (D22, D24, D27, D28).** The list carries one **peer line** above it: a
+chip per chart type in the selected pool — *"23 PUMBILITY peers"* for a lit type, *"Doubles:
+29/50 charts"* for one whose pool is not yet full (on All, *"Singles: 23 PUMBILITY peers ·
+Doubles: 29/50 charts"*). The definition ("within 3 levels of you with a full pool") and the
+five-peer clause live in the chip's tooltip, not on the line — the first version spelled both out
+and the owner's field test read it as *"wordy af and filling up the screen"* (2026-08-16); a
+count, not a paragraph. Peer rows exist only for charts five or more of those peers have passed.
+Carried Phoenix 1 rows are unaffected by either state (D29): a dark doubles pool still lists your
+Phoenix 1 doubles repriced. Nothing per row changes — D12 stands.
 
 Density trio via `Density__Pumbility`, governing the targets only, using the site's standard
 control — a `MudButtonGroup` of `ViewComfy` / `GridView` / `TableRows` icon buttons, the same
