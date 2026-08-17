@@ -1,3 +1,4 @@
+@using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 @using ScoreTracker.Domain.Models.Titles.Phoenix2
 
@@ -37,8 +38,7 @@
     // which has no name anywhere, needs a word of ours.
     private string LabelFor(Phoenix2PumbilityLevel rung)
     {
-        if (rung.Gem is not { } gem) return L["Unranked"];
-        return rung.Level is { } level ? $"{gem} LV.{level}" : gem.ToString();
+        return PumbilityLevelLabel.Of(rung, L["Unranked"]);
     }
 
 }

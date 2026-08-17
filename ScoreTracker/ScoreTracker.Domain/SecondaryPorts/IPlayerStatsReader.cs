@@ -15,7 +15,17 @@ public interface IPlayerStatsReader
     Task<IEnumerable<PlayerStatsRecord>> GetStats(MixEnum mix, IEnumerable<Guid> userIds,
         CancellationToken cancellationToken);
 
-    /// <summary>Cohort lookup: players whose competitive level is within ±range of the given level.</summary>
+    /// <summary>Peer lookup: players whose competitive level is within ±range of the given level.</summary>
     Task<IEnumerable<Guid>> GetPlayersByCompetitiveRange(MixEnum mix, ChartType? chartType, double competitiveLevel,
         double range, CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Peer lookup on the PUMBILITY ladder: players whose total PUMBILITY pool sits at or above
+    ///     <paramref name="minimumTotal" /> and below <paramref name="maximumTotalExclusive" /> — a
+    ///     rung band expressed as the pool values its rungs start at (docs/design/pumbility-overhaul.md
+    ///     §4.8). Half-open on purpose: a rung's <c>NextThreshold</c> is where the next rung starts,
+    ///     and a pool exactly on it belongs above.
+    /// </summary>
+    Task<IEnumerable<Guid>> GetPlayersByPumbilityRange(MixEnum mix, double minimumTotal, double maximumTotalExclusive,
+        CancellationToken cancellationToken);
 }

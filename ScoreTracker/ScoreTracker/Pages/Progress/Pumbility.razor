@@ -41,6 +41,13 @@
             <p class="pmb-block-lede">
                 @L["Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar."]
             </p>
+            @* Phoenix 2 only: who the peer rows were drawn from, per type in the selected pool
+               (D27), and the "N of 50" a type without a pool shows instead (D28). Renders nothing
+               for a competitive band, so Phoenix 1 is unchanged. *@
+            @if (ctx.Page.Peers is { } peers)
+            {
+                <PumbilityPeerLine Peers="peers" Pool="ctx.Page.Pool_"></PumbilityPeerLine>
+            }
 
             <TargetList Targets="ctx.Page.Targets" Charts="ctx.Charts" Density="_density" Mix="ctx.Mix"
                         ShowToDo="true" ToDos="_todos" OnToDo="ToggleToDo"
