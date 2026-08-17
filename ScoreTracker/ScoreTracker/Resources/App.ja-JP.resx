@@ -160,9 +160,6 @@
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* 公式ボードのデータ（{0} 時点）。</value>
   </data>
-  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
-    <value>* 公式ボードのデータ（{0} 時点）。ボードはレベル20以上のみです。</value>
-  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>デイリーステップ {1} {2} で **#{0}**</value>
   </data>
@@ -887,12 +884,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>ここから連続で</value>
   </data>
-  <data name="Back to community" xml:space="preserve">
-    <value>コミュニティに戻る</value>
-  </data>
-  <data name="Back to rivals" xml:space="preserve">
-    <value>ライバルに戻る</value>
-  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>ティアリストに戻る</value>
   </data>
@@ -1070,14 +1061,14 @@
   <data name="Board only" xml:space="preserve">
     <value>ボードのみ</value>
   </data>
+  <data name="Board players" xml:space="preserve">
+    <value>ボードのプレーヤー</value>
+  </data>
   <data name="Boards" xml:space="preserve">
     <value>ボード</value>
   </data>
   <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
     <value>ボードはバージョンごとに動いており、このバージョンにはまだ専用のローテーションがありません。</value>
-  </data>
-  <data name="Boards you're both on" xml:space="preserve">
-    <value>二人とも載っているボード</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>ボスブレイカー</value>
@@ -1354,12 +1345,6 @@
   <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
     <value>次の称号に向けた譜面と、SSSまであと一歩のスキル称号。</value>
   </data>
-  <data name="Charts you lose" xml:space="preserve">
-    <value>負けている譜面</value>
-  </data>
-  <data name="Charts you win" xml:space="preserve">
-    <value>勝っている譜面</value>
-  </data>
   <data name="ChartScoring" xml:space="preserve">
 	  <value>ChartScoring</value>
 	  
@@ -1460,6 +1445,9 @@
   </data>
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>コーオプパッド移動</value>
+  </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>CO-OPレーティング</value>
   </data>
   <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
     <value>CO-OPは固定ベース2,000で計算されましたが合計には数えられませんでした。</value>
@@ -1602,9 +1590,6 @@
   <data name="Compare" xml:space="preserve">
     <value>比較</value>
   </data>
-  <data name="Compare in folder" xml:space="preserve">
-    <value>フォルダー内で比較</value>
-  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>譜面{0}件を比較（{1}）— 基準を超えた譜面はありません。</value>
   </data>
@@ -1638,6 +1623,9 @@
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>シングル競争力（PIUScores全体）</value>
   </data>
+  <data name="Compiling this player's page." xml:space="preserve">
+    <value>このプレーヤーのページを作成しています。</value>
+  </data>
   <data name="Compiling your personalized breakdown." xml:space="preserve">
     <value>パーソナライズの内訳を作成しています。</value>
   </data>
@@ -1652,9 +1640,6 @@
   </data>
   <data name="Completion %" xml:space="preserve">
     <value>達成率 %</value>
-  </data>
-  <data name="Completion (you / them)" xml:space="preserve">
-    <value>クリア率（自分／相手）</value>
   </data>
   <data name="Completionist" xml:space="preserve">
     <value>Completionist</value>
@@ -1724,7 +1709,7 @@
     <value>CoOp</value>
   </data>
   <data name="CoOp Completion" xml:space="preserve">
-    <value>CoOpクリア率</value>
+	  <value>CoOpクリア率</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>コピーしました</value>
@@ -2493,6 +2478,9 @@
   <data name="Find a chart and its pages" xml:space="preserve">
     <value>譜面とそのページを検索</value>
   </data>
+  <data name="Find a chart or player" xml:space="preserve">
+    <value>チャートやプレーヤーを探す</value>
+  </data>
   <data name="Find a player" xml:space="preserve">
     <value>プレイヤーを探す</value>
   </data>
@@ -2540,9 +2528,6 @@
   </data>
   <data name="Folder Cleared" xml:space="preserve">
     <value>フォルダクリア</value>
-  </data>
-  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
-    <value>フォルダー比較・称号・進行状況には piuscores のアカウントが必要です。{0} がインポートすればここに表示されます。</value>
   </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>フォルダークリア率</value>
@@ -4685,11 +4670,17 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>変更があった譜面を持つ曲のみ表示しています。</value>
   </data>
+  <data name="Only you" xml:space="preserve">
+    <value>自分のみ</value>
+  </data>
   <data name="Only you can see this" xml:space="preserve">
     <value>これはあなたにしか見えません</value>
   </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>いまはあなただけがこのツールを使えます。</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>{0}のみ</value>
   </data>
   <data name="only {0} have it" xml:space="preserve">
     <value>保有率{0}</value>
@@ -4947,8 +4938,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · 実際のトップ50</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>Phoenix 2もCO-OP譜面に値を付けます — Phoenixが{1}で付けたように固定ベース{0}で — ただしその数字は称号ページにしか出てきません。どちらのバージョンでもPUMBILITYには何も足しません。</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>Phoenix 2もCO-OP譜面に値を付けます — Phoenixが{1}で付けたように固定ベース{0}で — ただしそれはCO-OPレーティングという別の数字で、独自の称号とボードを持ちます。どちらのバージョンでもPUMBILITYには何も足しません。</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2はPhoenixより約{0}倍スコアに寄りかかっています。</value>
@@ -5023,9 +5014,6 @@
   </data>
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>リストから難度を選ぶと、詳細と類似譜面が表示されます。</value>
-  </data>
-  <data name="Pick a folder to compare your scores." xml:space="preserve">
-    <value>フォルダーを選ぶとスコアを比較できます。</value>
   </data>
   <data name="pick a mix first" xml:space="preserve">
     <value>先にバージョンを選んでください</value>
@@ -5111,8 +5099,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAMEログインはpiugame.comへの接続に依存します。予備のログイン方法を連携してください</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAMEはCO-OPランキングを公開していません - このボードはミラーリングしたCO-OPリーダーボードから独自に算出した推定で、プレートはスコアから推定します（SG、995,000からUG、1,000,000でPG）。</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAMEはCO-OPランキングを公開していません - このボードはミラーリングしたCO-OPリーダーボードをCO-OPレーティングの計算式で算出し、プレートはスコアから推定します（SG、995,000からUG、1,000,000でPG）。譜面ボードは上位300件までのため、実際のレーティングはこれより高いことがあります。</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>PIUGameセッション</value>
@@ -5216,9 +5204,6 @@
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
 	  <value>テスト対象プレーヤー（公開設定必須）</value>
-  </data>
-  <data name="Player was not found in this community." xml:space="preserve">
-    <value>このコミュニティにプレーヤーが見つかりませんでした。</value>
   </data>
   <data name="Players" xml:space="preserve">
     <value>プレーヤー達</value>
@@ -5939,6 +5924,9 @@
   <data name="Revoked" xml:space="preserve">
     <value>取り消し済み</value>
   </data>
+  <data name="Rival" xml:space="preserve">
+    <value>ライバル</value>
+  </data>
   <data name="Rival invite" xml:space="preserve">
     <value>ライバル招待</value>
   </data>
@@ -6047,9 +6035,6 @@
   </data>
   <data name="Score" xml:space="preserve">
     <value>スコア</value>
-  </data>
-  <data name="Score average (you / them)" xml:space="preserve">
-    <value>平均スコア（自分／相手）</value>
   </data>
   <data name="Score Completion" xml:space="preserve">
     <value>スコア達成率</value>
@@ -6479,6 +6464,9 @@
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>このチャンネルの登録内容を表示</value>
+  </data>
+  <data name="Show {0} unshared charts" xml:space="preserve">
+    <value>共通以外の{0}譜面を表示</value>
   </data>
   <data name="Showing" xml:space="preserve">
     <value>表示中</value>
@@ -7227,9 +7215,6 @@
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>解除するまで、新しいツールは作れません。</value>
   </data>
-  <data name="They haven't placed on any board you've played." xml:space="preserve">
-    <value>あなたがプレイしたチャートのボードには載っていません。</value>
-  </data>
   <data name="They stay in the community and can read everything, but can't post, reply or edit comments here until the mute is lifted. Existing comments stay." xml:space="preserve">
     <value>コミュニティには残り、すべて閲覧できますが、ミュートが解除されるまでここでのコメントの投稿・返信・編集はできません。既存のコメントはそのまま残ります。</value>
   </data>
@@ -7424,9 +7409,6 @@
   </data>
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>「すべてのツールと共有」経由</value>
-  </data>
-  <data name="Tie" xml:space="preserve">
-    <value>引き分け</value>
   </data>
   <data name="Tier" xml:space="preserve">
     <value>帯</value>
@@ -8191,9 +8173,6 @@
   </data>
   <data name="Will be skipped" xml:space="preserve">
     <value>スキップされます</value>
-  </data>
-  <data name="Winner" xml:space="preserve">
-    <value>勝者</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>同範囲内で優勝</value>
@@ -8999,6 +8978,9 @@
   <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
     <value>{1} 譜面中 {0} · フォルダーランプまで {2}</value>
   </data>
+  <data name="{0} Official Top {1}s" xml:space="preserve">
+    <value>公式トップ{1}入り {0}件</value>
+  </data>
   <data name="{0} on board" xml:space="preserve">
     <value>ボードに{0}人</value>
   </data>
@@ -9110,9 +9092,6 @@
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0}個のツールが読み取り中</value>
   </data>
-  <data name="{0} top-board charts" xml:space="preserve">
-    <value>ランキング入り譜面{0}件</value>
-  </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>合計 {0} · {1} 譜面</value>
   </data>
@@ -9169,9 +9148,6 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}分前</value>
-  </data>
-  <data name="{0}y old" xml:space="preserve">
-    <value>{0}年前</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>公式ランキングで ~#{0}</value>

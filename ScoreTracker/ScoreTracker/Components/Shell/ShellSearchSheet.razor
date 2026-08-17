@@ -1,7 +1,7 @@
 @namespace ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services
 
-@* The phone's door to a chart page. Before this there was none: /Charts listed charts but
+@* The phone's door to a chart page — and a player's. Before this there was none: /Charts listed charts but
    never linked to one, so every route into /Chart/{id} ran through the app bar's search —
    which is desktop-only — or a session highlight.
    Static chrome, island filling: nav.js toggles .open exactly as it does for the More sheet,
@@ -11,7 +11,7 @@
 <div class="more-sheet-scrim" data-sheet-scrim></div>
 <div class="search-sheet shell-mobile-only" data-search-sheet aria-hidden="true">
     <div class="search-sheet-body">
-        <span class="search-sheet-label">@L["Find a chart"]</span>
+        <span class="search-sheet-label">@L["Find a chart or player"]</span>
         @* Same pill as the app bar's — it is the same control, so it should not look like a
            different one. Only the box around it changes. *@
         <AppBarSearch @rendermode="Interactive" Mix="Model.CurrentMix"

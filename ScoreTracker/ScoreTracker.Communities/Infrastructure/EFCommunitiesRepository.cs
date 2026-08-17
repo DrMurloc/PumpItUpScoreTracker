@@ -295,6 +295,27 @@ namespace ScoreTracker.Communities.Infrastructure
                         .Count(m => m.CommunityId == c.Id && m.Role == adminRole))).ToArrayAsync(cancellationToken);
         }
 
+        async Task<IReadOnlyDictionary<Name, IReadOnlyList<Guid>>> ICommunityReader.GetUserCommunityMembers(
+            Guid userId, CancellationToken cancellationToken)
+        {
+            // One statement: the viewer's live seats in user-created communities, joined back to
+            // every live seat in those communities. A banned row is a retained block, not a
+            // membership, so it is out on both sides.
+            var banned = nameof(CommunityRole.Banned);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await (from mine in database.Set<CommunityMembershipEntity>()
+                where mine.UserId == userId && mine.Role != banned
+                join c in database.Set<CommunityEntity>() on mine.CommunityId equals c.Id
+                where !c.IsRegional && c.Name != SystemCommunityName
+                join member in database.Set<CommunityMembershipEntity>() on c.Id equals member.CommunityId
+                where member.Role != banned
+                select new { c.Name, member.UserId }).ToArrayAsync(cancellationToken);
+
+            return rows.GroupBy(r => r.Name)
+                .ToDictionary(g => Name.From(g.Key),
+                    g => (IReadOnlyList<Guid>)g.Select(r => r.UserId).Distinct().ToArray());
+        }
+
         async Task<IEnumerable<Guid>> ICommunityReader.GetMembers(Name communityName,
             CancellationToken cancellationToken)
         {

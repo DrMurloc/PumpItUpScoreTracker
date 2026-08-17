@@ -17,16 +17,23 @@ public sealed class PumbilityCalculatorModel
     /// <summary>The value ramp's number of steps (`pc-ramp-0` … `pc-ramp-9`).</summary>
     public const int RampSteps = 10;
 
-    /// <summary>The Phoenix formula prices CO-OP at a flat 2,000 base — shown, and marked as never counted.</summary>
-    public const int PhoenixCoOpBase = 2000;
+    /// <summary>
+    ///     The Phoenix formula prices CO-OP at a flat 2,000 base — shown, and marked as never counted.
+    ///     Read off the engine's own CO-OP Rating configuration so this page cannot state a base the
+    ///     formula does not use.
+    /// </summary>
+    public static readonly int PhoenixCoOpBase =
+        (int)ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix, true).CoOpBaseRating;
 
     /// <summary>
-    ///     Phoenix 2 prices CO-OP at a flat 100 base, the way Phoenix priced it at a flat 2,000.
-    ///     The number surfaces on the titles page and nowhere else, and a CO-OP chart still adds
-    ///     nothing to PUMBILITY — which is why the page states it as a footnote against the zero
-    ///     rules rather than as a row of values nobody's pool can hold.
+    ///     Phoenix 2 prices CO-OP at a flat 80 base, the way Phoenix priced it at a flat 2,000 —
+    ///     the CO-OP Rating, a separate number with its own title ladder and its own board, that a
+    ///     CO-OP chart still adds nothing to PUMBILITY. Which is why the page states it as a
+    ///     footnote against the zero rules rather than as a row of values nobody's pool can hold.
+    ///     Read off the same configuration <c>PlayerRatingSaga</c> sums the rating with.
     /// </summary>
-    public const int Phoenix2CoOpBase = 100;
+    public static readonly int Phoenix2CoOpBase =
+        (int)ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, true).CoOpBaseRating;
 
     /// <summary>Levels below this price at zero on both formulas and are not rows.</summary>
     public const int LowestPricedLevel = 10;

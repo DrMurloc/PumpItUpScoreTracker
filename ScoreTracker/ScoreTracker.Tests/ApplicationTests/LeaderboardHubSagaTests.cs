@@ -249,12 +249,29 @@ public sealed class LeaderboardHubSagaTests
         Assert.Equal(2, result.Rankings.Count);
         var top = result.Rankings[0];
         Assert.Equal("PLAYER11", top.Player.Username);
-        // 2000 × (1.50 + .020) at the perfect + 2000 × (1.50 + .016) at 995k.
-        Assert.Equal(3040 + 3032, top.Rating);
+        // Phoenix 2's CO-OP Rating: 80 × (1.50 + .020) at the perfect + 80 × (1.50 + .016) at 995k.
+        Assert.Equal(121.60m + 121.28m, top.Rating, 2);
         Assert.Equal(2, top.BoardsInTop);
         var second = result.Rankings[1];
-        Assert.Equal(2996, second.Rating); // SSS with an inferred SG — the standard chart stays out.
+        Assert.Equal(119.84m, second.Rating, 2); // SSS with an inferred SG — the standard chart stays out.
         Assert.Equal(1, second.BoardsInTop);
+    }
+
+    [Fact]
+    public async Task CoOpRankingsSumEveryMirroredChartWithNoTopFiftyCut()
+    {
+        // The CO-OP Rating is an all-charts sum — the [CO-OP] LV.10 title sits at 10,000, which
+        // fifty perfects (6,080) could never reach. Sixty perfects on the board: 60 × 121.60.
+        var f = Arrange(Run(2, Week2));
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Range(0, 60).Select(_ => CoOpChart(11, Guid.NewGuid(), 1, 1_000_000)).ToArray());
+
+        var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix2, "CoOp"),
+            CancellationToken.None);
+
+        var top = Assert.Single(result.Rankings);
+        Assert.Equal(60 * 121.60m, top.Rating, 2);
+        Assert.Equal(60, top.BoardsInTop);
     }
 
     [Fact]

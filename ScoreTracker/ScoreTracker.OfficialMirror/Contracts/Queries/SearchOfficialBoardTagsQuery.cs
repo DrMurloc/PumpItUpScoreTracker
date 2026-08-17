@@ -4,8 +4,11 @@ using ScoreTracker.SharedKernel.Messaging;
 namespace ScoreTracker.OfficialMirror.Contracts.Queries;
 
 /// <summary>
-///     Board tags matching <paramref name="Term" /> that placed in the latest sealed snapshot,
-///     capped at <paramref name="Take" />.
+///     Board players whose tag matches <paramref name="Term" /> and who placed in the latest sealed
+///     snapshot, capped at <paramref name="Take" /> — best matches first: an exact tag, then a tag
+///     that starts with the term, then anything containing it, so a one-letter tag is reachable from
+///     one letter. Each carries the mirrored avatar and the linked site account when there is one,
+///     which is what a search row and a picker row both want to show.
 ///     <para>
 ///         The term and the cap are part of the question because the caller is a per-keystroke
 ///         picker. Asking for the snapshot's whole tag population and filtering it in the handler
@@ -20,4 +23,4 @@ namespace ScoreTracker.OfficialMirror.Contracts.Queries;
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record SearchOfficialBoardTagsQuery(MixEnum Mix, string Term, int Take = 10)
-    : IQuery<IReadOnlyList<string>>;
+    : IQuery<IReadOnlyList<OfficialPlayerRecord>>;

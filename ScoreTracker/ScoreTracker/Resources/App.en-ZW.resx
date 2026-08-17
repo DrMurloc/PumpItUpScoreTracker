@@ -160,9 +160,6 @@
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* Urgmrmurg mrglblarg glorgmurg, mrp {0}.</value>
   </data>
-  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
-    <value>* Urgmrmurg mrglblarg glorgmurg, mrp {0}. Grrglplgl murgm mrglrg 20+ argl.</value>
-  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>**#{0}** lurg {1} {2} Gromorg Glorgmagl</value>
   </data>
@@ -887,12 +884,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>Arglblgrl grgl arglblgrl, romurg blubmorg</value>
   </data>
-  <data name="Back to community" xml:space="preserve">
-    <value>Arglblgrl grgl plglmurgblub</value>
-  </data>
-  <data name="Back to rivals" xml:space="preserve">
-    <value>Arglblgrl grgl Murgmorp</value>
-  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Arglblgrl grgl Mrpgrrgl Grog</value>
   </data>
@@ -1070,14 +1061,14 @@
   <data name="Board only" xml:space="preserve">
     <value>Mrglblarg argl</value>
   </data>
+  <data name="Board players" xml:space="preserve">
+    <value>Mrglblarg morp</value>
+  </data>
   <data name="Boards" xml:space="preserve">
     <value>Grrglplgl</value>
   </data>
   <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
     <value>Mrglrmrgl gurgl blub Mrg, ur mrgla brogl gromrgl arglub mrgl urg.</value>
-  </data>
-  <data name="Boards you're both on" xml:space="preserve">
-    <value>Grrglplgl blub mrogl mrp</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Blubblgrl rglmurpmurp</value>
@@ -1354,12 +1345,6 @@
   <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
     <value>Murgl blubblub gromurp grorpglorg mrgl, grglgrrgl morgmurm mrgl argl SSS glorgmurg.</value>
   </data>
-  <data name="Charts you lose" xml:space="preserve">
-    <value>Murgl blub grrglgrrgl</value>
-  </data>
-  <data name="Charts you win" xml:space="preserve">
-    <value>Murgl blub mrgl</value>
-  </data>
   <data name="ChartScoring" xml:space="preserve">
 	  <value>Plglblgrlglblub</value>
 	  <comment>Page title on /Experiments/ChartScoring; the source has no space between "Chart" and "Scoring".</comment>
@@ -1460,6 +1445,9 @@
   </data>
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>Glorg-mr Grorp Rglurgrglgro</value>
+  </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>CO-OP Mrglrg</value>
   </data>
   <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
     <value>CO-OP lu gogl og a plom 2,000 gogl bum bo gramb lo a urgargl.</value>
@@ -1602,9 +1590,6 @@
   <data name="Compare" xml:space="preserve">
     <value>Lurgplglgrgl</value>
   </data>
-  <data name="Compare in folder" xml:space="preserve">
-    <value>Lurgplglgrgl mrp grrgllurg</value>
-  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>Glorgmurplurg {0} murgl ({1}) — rglmagl blarggrrglglorg mrp mr.</value>
   </data>
@@ -1638,6 +1623,9 @@
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>arglrglmrmurm mrglrlgl, rgl Urgrogrgl morp</value>
   </data>
+  <data name="Compiling this player's page." xml:space="preserve">
+    <value>Murgablar morp plargl.</value>
+  </data>
   <data name="Compiling your personalized breakdown." xml:space="preserve">
     <value>Murgablar gromurp urgblargmurmmorg maglgrogrrgl.</value>
   </data>
@@ -1652,9 +1640,6 @@
   </data>
   <data name="Completion %" xml:space="preserve">
     <value>Grglgrglblub %</value>
-  </data>
-  <data name="Completion (you / them)" xml:space="preserve">
-    <value>Grglgrglblub (blub / gllurg)</value>
   </data>
   <data name="Completionist" xml:space="preserve">
     <value>Blubmorggrglargl</value>
@@ -1724,7 +1709,7 @@
     <value>Mrglrl</value>
   </data>
   <data name="CoOp Completion" xml:space="preserve">
-    <value>Mrglrl Grglgrglblub</value>
+	  <value>Mrglrl Grglgrglblub</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>Murgblarg</value>
@@ -2493,6 +2478,9 @@
   <data name="Find a chart and its pages" xml:space="preserve">
     <value>Blubgl gro murgl ro argl gromagl</value>
   </data>
+  <data name="Find a chart or player" xml:space="preserve">
+    <value>Blubgl gro murgl ol morp</value>
+  </data>
   <data name="Find a player" xml:space="preserve">
     <value>Blubgl gro morp</value>
   </data>
@@ -2540,9 +2528,6 @@
   </data>
   <data name="Folder Cleared" xml:space="preserve">
     <value>Grrgllurg Blarggrrglglorg</value>
-  </data>
-  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
-    <value>Grrgllurg lurgplglgrgl, mrgl arga mrglrlgl murgm gro piuscores grgl. Gro mrpo blubmorg mrp {0} glorggl.</value>
   </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>Grrgllurg Grglgrglblub</value>
@@ -4685,11 +4670,17 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Mrpmurg mrgl glgrgl gro maglrogrorp murgl mrp glorgmurg.</value>
   </data>
+  <data name="Only you" xml:space="preserve">
+    <value>Argl blub</value>
+  </data>
   <data name="Only you can see this" xml:space="preserve">
     <value>Blu morp mrgl blub</value>
   </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>Bo murgm murp murgm rorgl argla.</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>Argl {0}</value>
   </data>
   <data name="only {0} have it" xml:space="preserve">
     <value>mrpmurg {0} mrglro gl</value>
@@ -4947,8 +4938,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · morp mrgl 50</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>Phoenix 2 gab arglglarg a CO-OP murgl, og a plom gogl ba {0} — a plag Phoenix gogl mrp og {1} — bum plab gramb rglmurplrgl ap a mrgl mrpblarg ur murglmurmgrg mrrglmagl. Mo roglub bomo ro PUMBILITY ap blgrlmrp mrg.</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>Phoenix 2 gab arglglarg a CO-OP murgl, og a plom gogl ba {0} — a plag Phoenix gogl mrp og {1} — bum plab ur mrp CO-OP Mrglrg, a glorgargl mrpblarg murm murp mrgl mrglrgl ur mrglblarg. Mo roglub bomo ro PUMBILITY ap blgrlmrp mrg.</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2 murpurg ap mrglrgl brglo {0}× mrrglmrgl ulg Phoenix gab.</value>
@@ -5023,9 +5014,6 @@
   </data>
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>Rglgro gro glorgmurpgrrgl romurg mrp grog ro argl maglgrogrrgl ro maglarglblgrl murgl.</value>
-  </data>
-  <data name="Pick a folder to compare your scores." xml:space="preserve">
-    <value>Rglgro gro grrgllurg grgl lurgplglgrgl gromurp mgrlgmrg.</value>
   </data>
   <data name="pick a mix first" xml:space="preserve">
     <value>lurga mulgo polu</value>
@@ -5111,8 +5099,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAME lurgmrgl rglrgl lurg piugame.com morgmorg plglrglmr, morggrglglorg gro morgargl mrpmurp-mrp glorgmagl</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAME grorgllurg mrp CO-OP glarglro - grglmrp mrglblarg urg magl mrpblarg glorggrgl, maglmrglplgl romurg mrp grorpplglgrgl glorg-mr mrglrmrglrgl glgrgl murp rglmrpgrorp romurg mrglrgl (SG, UG romurg 995,000, PG mr 1,000,000).</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAME grorgllurg mrp CO-OP glarglro - grglmrp mrglblarg maglmrglplgl mrp grorpplglgrgl glorg-mr mrglrmrglrgl murm mrp CO-OP Mrglrg maglmrglurg, murp rglmrpgrorp romurg mrglrgl (SG, UG romurg 995,000, PG mr 1,000,000); mrgl murgl mrglblarg rorggrgl grglmrp mrp murgmrgl 300, glub mrgl mrogl mrglrg mrp murrgl.</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>PIUGame murgloborg</value>
@@ -5216,9 +5204,6 @@
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
 	  <value>Morp Grgl Rglgrgl (Romurm Glorg Gro Grgl Mrglrgll)</value>
-  </data>
-  <data name="Player was not found in this community." xml:space="preserve">
-    <value>Morp ro murm arglurg mrp grglmrp plglmurgblub.</value>
   </data>
   <data name="Players" xml:space="preserve">
     <value>Morp</value>
@@ -5939,6 +5924,9 @@
   <data name="Revoked" xml:space="preserve">
     <value>Murgloo</value>
   </data>
+  <data name="Rival" xml:space="preserve">
+    <value>Murgmorp</value>
+  </data>
   <data name="Rival invite" xml:space="preserve">
     <value>Murgmorp Blargmurgl</value>
   </data>
@@ -6047,9 +6035,6 @@
   </data>
   <data name="Score" xml:space="preserve">
     <value>Mrglrgl</value>
-  </data>
-  <data name="Score average (you / them)" xml:space="preserve">
-    <value>Mrglrgl rorg (blub / gllurg)</value>
   </data>
   <data name="Score Completion" xml:space="preserve">
     <value>Mrglrgl Grglgrglblub</value>
@@ -6479,6 +6464,9 @@
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Romorg rglmorg grglmrp glmurmblarg urg rolurgrgl ro</value>
+  </data>
+  <data name="Show {0} unshared charts" xml:space="preserve">
+    <value>Romorg {0} momurpro murgl</value>
   </data>
   <data name="Showing" xml:space="preserve">
     <value>Murlo</value>
@@ -7227,9 +7215,6 @@
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>Murgm bam murgblub blomurp rorgl blarg murgm blorp mo.</value>
   </data>
-  <data name="They haven't placed on any board you've played." xml:space="preserve">
-    <value>Gro bo mrp argl mrglblarg blub gurgl.</value>
-  </data>
   <data name="They stay in the community and can read everything, but can't post, reply or edit comments here until the mute is lifted. Existing comments stay." xml:space="preserve">
     <value>Ombra plglmurgblub, mrgl-og blurp blub; mrglup gromp, blurp umbra. Blurp o blurp.</value>
   </data>
@@ -7424,9 +7409,6 @@
   </data>
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>Blu murgblub blu argla Rorgl</value>
-  </data>
-  <data name="Tie" xml:space="preserve">
-    <value>Mrp</value>
   </data>
   <data name="Tier" xml:space="preserve">
     <value>Mrpgrrgl</value>
@@ -8191,9 +8173,6 @@
   </data>
   <data name="Will be skipped" xml:space="preserve">
     <value>Murmurg glorg rorolurg</value>
-  </data>
-  <data name="Winner" xml:space="preserve">
-    <value>Plglrgl</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>blgrlblarg mrp blubmrgl</value>
@@ -8999,6 +8978,9 @@
   <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
     <value>{0} mrgl {1} · {2} grgl Grrgllurg Maglmrgl</value>
   </data>
+  <data name="{0} Official Top {1}s" xml:space="preserve">
+    <value>{0} Urgmrmurg Blarg {1}</value>
+  </data>
   <data name="{0} on board" xml:space="preserve">
     <value>{0} lurg mrglblarg</value>
   </data>
@@ -9110,9 +9092,6 @@
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0} Rorgl blurglmurp</value>
   </data>
-  <data name="{0} top-board charts" xml:space="preserve">
-    <value>{0} blarg-mrglblarg murgl</value>
-  </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>{0} murgro · {1} murgl</value>
   </data>
@@ -9169,9 +9148,6 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}m mrgla</value>
-  </data>
-  <data name="{0}y old" xml:space="preserve">
-    <value>{0}ro rgl</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} orb pum</value>

@@ -63,6 +63,17 @@ public sealed class TitleLadderFloorTests
     }
 
     [Fact]
+    public void Phoenix2CoOpTitlesAreOneLadder()
+    {
+        // One CO-OP Rating read at rising thresholds, like Phoenix's — ADVANCED measures the
+        // climb from LV.10's 10,000, not from nothing.
+        Assert.Equal(0, Phoenix2("[CO-OP] LV.1").CompletionFloor);
+        Assert.Equal(1000, Phoenix2("[CO-OP] LV.2").CompletionFloor);
+        Assert.Equal(10000, Phoenix2("[CO-OP] ADVANCED").CompletionFloor);
+        Assert.Equal(14000, Phoenix2("[CO-OP] MASTER").CompletionFloor);
+    }
+
+    [Fact]
     public void Phoenix2SkillTitlesAreNotALadder()
     {
         // Each rung is a different chart at a fixed grade — a pass/fail, not an accumulation.

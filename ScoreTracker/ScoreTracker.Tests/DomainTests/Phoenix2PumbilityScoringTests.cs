@@ -2,6 +2,7 @@ using System;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.TestData;
 using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
@@ -27,6 +28,11 @@ namespace ScoreTracker.Tests.DomainTests;
 ///         three days, and <see cref="PassingFsPriceAsTheBottomRungNotAnExclusion" /> carries
 ///         the story. The base curve above level 27 is the formula's one remaining
 ///         extrapolation (<see cref="TheTopOfTheBaseCurveIsExtrapolatedNotMeasured" />).
+///     </para>
+///     <para>
+///         The CO-OP Rating rides the same shape over a flat base of 80 when a caller asks for
+///         co-op — never inside a pool — and is pinned separately below
+///         (<see cref="CoOpPricesAtEightyTimesGradePlusPlateWhenAskedFor" />).
 ///     </para>
 /// </summary>
 public sealed class Phoenix2PumbilityScoringTests
@@ -326,14 +332,93 @@ public sealed class Phoenix2PumbilityScoringTests
         Assert.Equal(0, result);
     }
 
-    [Fact]
-    public void CoOpStaysExcludedEvenWhenTheCallerAsksForIt()
+    private static ScoringConfiguration CoOpScoring()
     {
-        // includeCoOp is Phoenix-era semantics; the official Phoenix 2 formula has no CoOp.
-        var result = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, true)
-            .GetScore(ChartType.CoOp, DifficultyLevel.From(20), PhoenixScore.From(995_000),
-                PhoenixPlate.PerfectGame);
+        return ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, true);
+    }
+
+    /// <summary>
+    ///     The Phoenix 2 CO-OP Rating prices a co-op chart at 80 × (grade + plate) on the shared
+    ///     constant tables — the PUMBILITY shape over a flat base, since a co-op has no level.
+    ///     These rows are the measured cells of a third party's grade × plate table (2026-08-17)
+    ///     that land on the formula to the cent; the same table's SSS+ MG→UG step of exactly
+    ///     0.80 is what names the Doubles plate table (0.016 − 0.006 = 0.010 × 80; the Singles
+    ///     table would give 0.88). Its three other measured cells miss and are the anchors of
+    ///     rows the collector extrapolated from — their SS+ MG 118.39 is an SS+ RG 118.40 —
+    ///     which is why the base is also pinned the other way: every Phoenix 2 account wearing a
+    ///     site-detected [CO-OP] title sums inside its title's band under this formula, and the
+    ///     ones sitting 33–57 points over a threshold hold the base to (79.3, 83.9).
+    /// </summary>
+    [Theory]
+    [InlineData(PhoenixLetterGrade.AAPlus, PhoenixPlate.RoughGame, 111.20)]
+    [InlineData(PhoenixLetterGrade.AAAPlus, PhoenixPlate.RoughGame, 114.40)]
+    [InlineData(PhoenixLetterGrade.S, PhoenixPlate.RoughGame, 116.00)]
+    [InlineData(PhoenixLetterGrade.S, PhoenixPlate.TalentedGame, 116.32)]
+    [InlineData(PhoenixLetterGrade.SPlus, PhoenixPlate.FairGame, 116.96)]
+    [InlineData(PhoenixLetterGrade.SPlus, PhoenixPlate.TalentedGame, 117.12)]
+    [InlineData(PhoenixLetterGrade.SSS, PhoenixPlate.TalentedGame, 119.52)]
+    [InlineData(PhoenixLetterGrade.SSS, PhoenixPlate.MarvelousGame, 119.68)]
+    [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.MarvelousGame, 120.48)]
+    [InlineData(PhoenixLetterGrade.SSSPlus, PhoenixPlate.UltimateGame, 121.28)]
+    public void CoOpPricesAtEightyTimesGradePlusPlateWhenAskedFor(PhoenixLetterGrade grade, PhoenixPlate plate,
+        double expected)
+    {
+        var result = CoOpScoring().GetScore(ChartType.CoOp, DifficultyLevel.From(2),
+            grade.GetMinimumScoreFor(MixEnum.Phoenix2), plate);
+        Assert.Equal(expected, result, 2);
+    }
+
+    [Fact]
+    public void CoOpBaseIsFlatAcrossPlayerCounts()
+    {
+        // A co-op's "level" is its player count. The base does not scale with it — the accounts
+        // with the most ×3/×4 co-ops in their sums are exactly the ones a 40-per-player base
+        // pushes into a title they do not wear.
+        var duo = CoOpScoring().GetScore(ChartType.CoOp, DifficultyLevel.From(2), PhoenixScore.From(1_000_000),
+            PhoenixPlate.PerfectGame);
+        var quintet = CoOpScoring().GetScore(ChartType.CoOp, DifficultyLevel.From(5), PhoenixScore.From(1_000_000),
+            PhoenixPlate.PerfectGame);
+        Assert.Equal(121.60, duo, 2);
+        Assert.Equal(duo, quintet);
+    }
+
+    [Fact]
+    public void CoOpIsNotSwallowedByTheSubTenRule()
+    {
+        // Levels 2–5 are below ten; a Single or Double there prices at zero, a co-op does not.
+        Assert.Equal(0, Scoring().GetScore(ChartType.Double, DifficultyLevel.From(5), PhoenixScore.From(995_000),
+            PhoenixPlate.PerfectGame));
+        Assert.True(CoOpScoring().GetScore(ChartType.CoOp, DifficultyLevel.From(5), PhoenixScore.From(995_000),
+            PhoenixPlate.PerfectGame) > 0);
+    }
+
+    [Fact]
+    public void ABrokenCoOpPlayContributesNothing()
+    {
+        // Three accounts would jump a [CO-OP] rung they do not wear if broken plays counted.
+        var result = CoOpScoring().GetScore(ChartType.CoOp, DifficultyLevel.From(2), PhoenixScore.From(966_486),
+            PhoenixPlate.RoughGame, isBroken: true);
         Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public void CoOpStaysOutOfThePoolsWhenTheCallerDoesNotAskForIt()
+    {
+        // The pool configuration is what every top-50 caller holds; a co-op never enters one.
+        var result = Scoring().GetScore(ChartType.CoOp, DifficultyLevel.From(2), PhoenixScore.From(1_000_000),
+            PhoenixPlate.PerfectGame);
+        Assert.Equal(0, result);
+    }
+
+    [Fact]
+    public void CoOpDecomposesIntoPartsThatSumToItsContribution()
+    {
+        var chart = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(3).WithMix(MixEnum.Phoenix2).Build();
+        var scoring = CoOpScoring();
+        var parts = scoring.Decompose(chart, PhoenixScore.From(985_000), PhoenixPlate.RoughGame, false);
+        var total = scoring.GetScore(chart, PhoenixScore.From(985_000), PhoenixPlate.RoughGame, false);
+        Assert.Equal(118.40, total, 2);
+        Assert.Equal(total, parts.Total, 6);
     }
 
     [Fact]

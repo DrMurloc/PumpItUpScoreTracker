@@ -14,19 +14,19 @@ namespace ScoreTracker.Rivals.Application;
 /// </summary>
 internal sealed class RivalAdder
 {
-    private readonly RivalAudienceReader _audience;
     private readonly IDateTimeOffsetAccessor _dateTime;
     private readonly IMediator _mediator;
     private readonly IRivalRepository _rivals;
     private readonly IUserReader _users;
+    private readonly IPlayerVisibilityReader _visibility;
 
     public RivalAdder(IRivalRepository rivals, IUserReader users, IMediator mediator,
-        RivalAudienceReader audience, IDateTimeOffsetAccessor dateTime)
+        IPlayerVisibilityReader visibility, IDateTimeOffsetAccessor dateTime)
     {
         _rivals = rivals;
         _users = users;
         _mediator = mediator;
-        _audience = audience;
+        _visibility = visibility;
         _dateTime = dateTime;
     }
 
@@ -96,7 +96,8 @@ internal sealed class RivalAdder
         // Only ask the community question when the answer could matter: a public target is
         // already addable, and the union read walks every club the caller belongs to.
         var sharesCommunity = target is { IsPublic: false } && !viaInviteCode
-                              && (await _audience.GetClubmates(cancellationToken)).Contains(targetUserId);
+                              && (await _visibility.GetAudience(ownerUserId, cancellationToken))
+                              .SharedCommunitiesByMember.ContainsKey(targetUserId);
 
         return new RivalAddCandidate(targetUserId, target?.IsPublic ?? false, sharesCommunity, viaInviteCode,
             blocked, false);

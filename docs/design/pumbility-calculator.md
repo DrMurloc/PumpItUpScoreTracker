@@ -110,13 +110,17 @@ counted in the total; the official Phoenix formula priced it, and Phoenix had th
 it. "Max Rating" (chart count × SSS+) is gone — a leaderboard-era leftover meaningless against a
 fifty-chart pool. Chart counts per level stay.
 
-**D13a — Phoenix 2 prices CO-OP too, at a flat base of 100** (owner, 2026-08-17), the way Phoenix
-priced one at 2,000 — but the number surfaces on the **titles page and nowhere else**, and CO-OP still
-adds nothing to PUMBILITY. So it is an **asterisk against the zero rules**, not a row: a row of values
-would imply a pool could hold them. The constant is `PumbilityCalculatorModel.Phoenix2CoOpBase`;
-`ScoringConfiguration`'s CO-OP base stays 2,000 for every mix on purpose, because that base is read by
-configurations far outside PUMBILITY (`ChartTypeModifiers[CoOp] = 0` is what zeroes CO-OP in the
-Phoenix 2 formula), and re-pricing it there would silently move tournament and tier-list scoring.
+**D13a — Phoenix 2 prices CO-OP too, at a flat base of 80**, the way Phoenix priced one at 2,000 —
+but that number is the **CO-OP Rating** ([DOMAIN.md](../DOMAIN.md)), a separate figure with its own
+title ladder and boards, and CO-OP still adds nothing to PUMBILITY. So it is an **asterisk against the
+zero rules**, not a row: a row of values would imply a pool could hold them. The page states the base
+the engine uses — `PumbilityCalculatorModel.Phoenix2CoOpBase` reads
+`ScoringConfiguration.PumbilityScoring(Phoenix2, includeCoOp: true).CoOpBaseRating`, never a literal —
+so it cannot drift from the formula it explains. (First written on 2026-08-17 as a hand-typed 100 from
+the owner's recollection; the same day's measurement against a third party's grade × plate table and
+46 title-holding accounts settled 80, and the constant moved onto the engine.) `CoOpBaseRating`
+defaults to 2,000, which is what every serialized tournament configuration and the Phoenix formula
+keep; only the Phoenix 2 PUMBILITY configuration sets 80, and only when a caller asks for co-op.
 
 **D14 — The section headings are the questions.** "Should I push levels or push scores?", "How much do
 plates matter?", "Does scoring matter more than it did on Phoenix?" — literal H2s with the measured

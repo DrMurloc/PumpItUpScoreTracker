@@ -56,6 +56,17 @@ namespace ScoreTracker.SharedKernel.Models
         public double PgLetterGradeModifier { get; set; } = PhoenixLetterGrade.SSSPlus.GetModifier();
 
         /// <summary>
+        ///     What a co-op chart is priced on in place of a level rating. A co-op carries a player
+        ///     count (×2–×5) rather than a level, and the game does not scale it by that either: the
+        ///     base is flat. Phoenix's CO-OP Rating pays 2000 per chart ("2000 per AA", the default
+        ///     here, which is also what every serialized tournament configuration keeps); Phoenix 2's
+        ///     pays 80 — read off a measured grade × plate table and confirmed against every account
+        ///     wearing a site-detected [CO-OP] title (docs/DOMAIN.md, CO-OP Rating). Whether a co-op
+        ///     contributes at all is <see cref="ChartTypeModifiers" />'s call, not this one's.
+        /// </summary>
+        public double CoOpBaseRating { get; set; } = 2000;
+
+        /// <summary>
         ///     The multiplier a grade earns on a chart of this type — the Singles override when one
         ///     is present for that grade, the shared table otherwise. Every read of the grade table
         ///     inside the formula goes through here, so a type split cannot be honoured on one code
@@ -103,7 +114,7 @@ namespace ScoreTracker.SharedKernel.Models
         private double GetBaseRating(Guid chartId, ChartType chartType, DifficultyLevel level,
             bool includeLevelOverride)
         {
-            double rating = chartType == ChartType.CoOp ? 2000 : LevelRatings[level];
+            double rating = chartType == ChartType.CoOp ? CoOpBaseRating : LevelRatings[level];
             if (chartType == ChartType.CoOp || ChartLevelSnapshot == null || !includeLevelOverride ||
                 !ChartLevelSnapshot.TryGetValue(chartId, out var levelOverride) || level >= 29) return rating;
 
@@ -181,8 +192,10 @@ namespace ScoreTracker.SharedKernel.Models
                     // 2026-07-19): charts below level 10 price at ZERO, singles price one level
                     // UP the shared base curve (an S17 is worth Base(18) — the kink at 24 rides
                     // along), and the grade multiplier and plate bonus combine ADDITIVELY
-                    // before multiplying the base.
-                    if (Mix == MixEnum.Phoenix2 && (int)level < 10) return 0;
+                    // before multiplying the base. A co-op's "level" is its player count, 2–5,
+                    // which the sub-10 rule would swallow — it prices on the flat co-op base
+                    // instead (the CO-OP Rating), when the configuration counts co-op at all.
+                    if (Mix == MixEnum.Phoenix2 && chartType != ChartType.CoOp && (int)level < 10) return 0;
                     var result = GetScorelessScore(chartId, level, chartType, songType, duration,
                         includeLevelOverride);
                     if (Mix == MixEnum.Phoenix2 && chartType == ChartType.Single && result > 0)
@@ -316,7 +329,8 @@ namespace ScoreTracker.SharedKernel.Models
                 }
                 case CalculationType.GradePlusPlate:
                 {
-                    if (Mix == MixEnum.Phoenix2 && (int)chart.Level < 10) return default;
+                    if (Mix == MixEnum.Phoenix2 && chart.Type != ChartType.CoOp && (int)chart.Level < 10)
+                        return default;
                     var scoreless = GetScorelessScore(chart, includeLevelOverride);
                     if (Mix == MixEnum.Phoenix2 && chart.Type == ChartType.Single && scoreless > 0)
                         scoreless += (int)chart.Level + 1 > 24 ? 10 : 5;
@@ -373,15 +387,21 @@ namespace ScoreTracker.SharedKernel.Models
         /// <summary>
         ///     The PUMBILITY formula for a mix — Phoenix and Phoenix 2 compute per-chart
         ///     PUMBILITY differently, so every caller must say which era it is scoring.
-        ///     <paramref name="includeCoOp" /> only applies to Phoenix: on Phoenix 2 the
-        ///     official formula never counts CO-OP, whatever the caller asks for.
+        ///     <para>
+        ///         <paramref name="includeCoOp" /> asks for the mix's <b>CO-OP Rating</b> pricing on
+        ///         top: a co-op chart never enters a PUMBILITY pool on either mix, but each mix rates
+        ///         co-op play separately on the same grade/plate shape over a flat base
+        ///         (<see cref="CoOpBaseRating" />), and that is what a caller summing every co-op
+        ///         chart into <c>PlayerStats.CoOpRating</c> wants. Callers building a pool pass
+        ///         false and get zero for a co-op, whichever mix.
+        ///     </para>
         /// </summary>
         public static ScoringConfiguration PumbilityScoring(MixEnum mix, bool includeCoOp)
         {
             return mix switch
             {
                 MixEnum.Phoenix => PhoenixPumbilityScoring(includeCoOp),
-                MixEnum.Phoenix2 => Phoenix2PumbilityScoring(),
+                MixEnum.Phoenix2 => Phoenix2PumbilityScoring(includeCoOp),
                 _ => throw new ArgumentOutOfRangeException(nameof(mix), mix,
                     "No PUMBILITY formula exists for this mix")
             };
@@ -453,12 +473,22 @@ namespace ScoreTracker.SharedKernel.Models
         ///     Base(level) × (gradeMultiplier + plateBonus), grade and plate combining
         ///     ADDITIVELY — where SINGLES price one level up the base curve (an S17 is worth
         ///     Base(18)) and charts below level 10 price at zero (both verified per-chart from
-        ///     my_page/pumbility.php, 2026-07-19). CO-OP, U.C.S. and half-double (performance)
-        ///     charts never contribute, and broken plays never contribute. This config prices
-        ///     a single chart; the caller aggregates — Singles and Doubles each into their own
-        ///     top-50 pool, and the overall total from the top 50 across both types.
+        ///     my_page/pumbility.php, 2026-07-19). U.C.S. and half-double (performance) charts
+        ///     never contribute, and broken plays never contribute. This config prices a single
+        ///     chart; the caller aggregates — Singles and Doubles each into their own top-50
+        ///     pool, and the overall total from the top 50 across both types.
+        ///     <para>
+        ///         CO-OP is not PUMBILITY either, but Phoenix 2 rates it separately — the CO-OP
+        ///         Rating behind the [CO-OP] title ladder — on this same shape over a flat base of
+        ///         80: an S RG co-op is 116.00, an SSS+ UG 121.28, a PG 121.60, every co-op chart
+        ///         summed rather than a top 50. Ten of thirteen cells of a measured grade × plate
+        ///         table land on it to the cent, and all 46 accounts wearing a site-detected
+        ///         [CO-OP] title sit inside their title's band (2026-08-17; docs/DOMAIN.md). It
+        ///         prices only when <paramref name="includeCoOp" /> asks, so a pool caller still
+        ///         sees zero for a co-op.
+        ///     </para>
         /// </summary>
-        private static ScoringConfiguration Phoenix2PumbilityScoring()
+        private static ScoringConfiguration Phoenix2PumbilityScoring(bool includeCoOp)
         {
             var config = new ScoringConfiguration
             {
@@ -469,9 +499,10 @@ namespace ScoreTracker.SharedKernel.Models
                 // A perfect 1,000,000 stays on the SSS+ grade multiplier — PG's bump is the
                 // plate bonus, not a grade override.
                 PgLetterGradeModifier = 1.50,
-                LevelRatings = DifficultyLevel.All.ToDictionary(l => l, Phoenix2BaseRating)
+                LevelRatings = DifficultyLevel.All.ToDictionary(l => l, Phoenix2BaseRating),
+                CoOpBaseRating = 80
             };
-            config.ChartTypeModifiers[ChartType.CoOp] = 0.0;
+            config.ChartTypeModifiers[ChartType.CoOp] = includeCoOp ? 1.0 : 0.0;
             // SinglePerformance/DoublePerformance stay 0 from the defaults (half-double excluded).
 
             // Grade multipliers. Like the plate table this is what a DOUBLE prices; AA and A+

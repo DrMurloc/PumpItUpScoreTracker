@@ -160,9 +160,6 @@
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* Official board data, as of {0}.</value>
   </data>
-  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
-    <value>* Official board data, as of {0}. Boards cover level 20+ only.</value>
-  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>**#{0}** on {1} {2} Daily Step</value>
   </data>
@@ -887,12 +884,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>Back to back, from here</value>
   </data>
-  <data name="Back to community" xml:space="preserve">
-    <value>Back to community</value>
-  </data>
-  <data name="Back to rivals" xml:space="preserve">
-    <value>Back to rivals</value>
-  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Back to Tier List</value>
   </data>
@@ -1070,14 +1061,14 @@
   <data name="Board only" xml:space="preserve">
     <value>Board only</value>
   </data>
+  <data name="Board players" xml:space="preserve">
+    <value>Board players</value>
+  </data>
   <data name="Boards" xml:space="preserve">
     <value>Boards</value>
   </data>
   <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
     <value>Boards run per mix, and this one doesn't have its own rotation yet.</value>
-  </data>
-  <data name="Boards you're both on" xml:space="preserve">
-    <value>Boards you're both on</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
@@ -1354,12 +1345,6 @@
   <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
     <value>Charts toward your next title, plus skill titles one SSS away.</value>
   </data>
-  <data name="Charts you lose" xml:space="preserve">
-    <value>Charts you lose</value>
-  </data>
-  <data name="Charts you win" xml:space="preserve">
-    <value>Charts you win</value>
-  </data>
   <data name="ChartScoring" xml:space="preserve">
 	  <value>ChartScoring</value>
 	  <comment>Page title on /Experiments/ChartScoring; the source has no space between "Chart" and "Scoring".</comment>
@@ -1460,6 +1445,9 @@
   </data>
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>Co-op Pad Transitions</value>
+  </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>CO-OP Rating</value>
   </data>
   <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
     <value>CO-OP was priced at a flat 2,000 base but never counted in the total.</value>
@@ -1602,9 +1590,6 @@
   <data name="Compare" xml:space="preserve">
     <value>Compare</value>
   </data>
-  <data name="Compare in folder" xml:space="preserve">
-    <value>Compare in folder</value>
-  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>Compared {0} charts ({1}) — none cleared the bar.</value>
   </data>
@@ -1638,6 +1623,9 @@
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>competitive singles, all PIUScores players</value>
   </data>
+  <data name="Compiling this player's page." xml:space="preserve">
+    <value>Compiling this player's page.</value>
+  </data>
   <data name="Compiling your personalized breakdown." xml:space="preserve">
     <value>Compiling your personalized breakdown.</value>
   </data>
@@ -1652,9 +1640,6 @@
   </data>
   <data name="Completion %" xml:space="preserve">
     <value>Completion %</value>
-  </data>
-  <data name="Completion (you / them)" xml:space="preserve">
-    <value>Completion (you / them)</value>
   </data>
   <data name="Completionist" xml:space="preserve">
     <value>Completionist</value>
@@ -1724,7 +1709,7 @@
     <value>CoOp</value>
   </data>
   <data name="CoOp Completion" xml:space="preserve">
-    <value>CoOp Completion</value>
+	  <value>CoOp Completion</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>Copied</value>
@@ -2493,6 +2478,9 @@
   <data name="Find a chart and its pages" xml:space="preserve">
     <value>Find a chart and its pages</value>
   </data>
+  <data name="Find a chart or player" xml:space="preserve">
+    <value>Find a chart or player</value>
+  </data>
   <data name="Find a player" xml:space="preserve">
     <value>Find a player</value>
   </data>
@@ -2540,9 +2528,6 @@
   </data>
   <data name="Folder Cleared" xml:space="preserve">
     <value>Folder Cleared</value>
-  </data>
-  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
-    <value>Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports.</value>
   </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>Folder Completion</value>
@@ -4685,11 +4670,17 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Only songs with a changed chart are listed.</value>
   </data>
+  <data name="Only you" xml:space="preserve">
+    <value>Only you</value>
+  </data>
   <data name="Only you can see this" xml:space="preserve">
     <value>Only you can see this</value>
   </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>Only you can use this tool right now.</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>Only {0}</value>
   </data>
   <data name="only {0} have it" xml:space="preserve">
     <value>only {0} have it</value>
@@ -4947,8 +4938,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · your real top 50</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix.</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix.</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does.</value>
@@ -5023,9 +5014,6 @@
   </data>
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>Pick a difficulty from the list for its breakdown and similar charts.</value>
-  </data>
-  <data name="Pick a folder to compare your scores." xml:space="preserve">
-    <value>Pick a folder to compare your scores.</value>
   </data>
   <data name="pick a mix first" xml:space="preserve">
     <value>pick a mix first</value>
@@ -5111,8 +5099,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000).</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher.</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>PIUGame session</value>
@@ -5216,9 +5204,6 @@
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
 	  <value>Player To Test (Must Be Set To Public)</value>
-  </data>
-  <data name="Player was not found in this community." xml:space="preserve">
-    <value>Player was not found in this community.</value>
   </data>
   <data name="Players" xml:space="preserve">
     <value>Players</value>
@@ -5939,6 +5924,9 @@
   <data name="Revoked" xml:space="preserve">
     <value>Revoked</value>
   </data>
+  <data name="Rival" xml:space="preserve">
+    <value>Rival</value>
+  </data>
   <data name="Rival invite" xml:space="preserve">
     <value>Rival invite</value>
   </data>
@@ -6047,9 +6035,6 @@
   </data>
   <data name="Score" xml:space="preserve">
     <value>Score</value>
-  </data>
-  <data name="Score average (you / them)" xml:space="preserve">
-    <value>Score average (you / them)</value>
   </data>
   <data name="Score Completion" xml:space="preserve">
     <value>Score Completion</value>
@@ -6479,6 +6464,9 @@
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Show what this channel is registered for</value>
+  </data>
+  <data name="Show {0} unshared charts" xml:space="preserve">
+    <value>Show {0} unshared charts</value>
   </data>
   <data name="Showing" xml:space="preserve">
     <value>Showing</value>
@@ -7227,9 +7215,6 @@
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>They can't create a new tool until you lift this.</value>
   </data>
-  <data name="They haven't placed on any board you've played." xml:space="preserve">
-    <value>They haven't placed on any board you've played.</value>
-  </data>
   <data name="They stay in the community and can read everything, but can't post, reply or edit comments here until the mute is lifted. Existing comments stay." xml:space="preserve">
     <value>They stay in the community and can read everything, but can't post, reply or edit comments here until the mute is lifted. Existing comments stay.</value>
   </data>
@@ -7424,9 +7409,6 @@
   </data>
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>Through "share with all tools"</value>
-  </data>
-  <data name="Tie" xml:space="preserve">
-    <value>Tie</value>
   </data>
   <data name="Tier" xml:space="preserve">
     <value>Tier</value>
@@ -8191,9 +8173,6 @@
   </data>
   <data name="Will be skipped" xml:space="preserve">
     <value>Will be skipped</value>
-  </data>
-  <data name="Winner" xml:space="preserve">
-    <value>Winner</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>wins in range</value>
@@ -8999,6 +8978,9 @@
   <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
     <value>{0} of {1} · {2} to Folder Lamp</value>
   </data>
+  <data name="{0} Official Top {1}s" xml:space="preserve">
+    <value>{0} Official Top {1}s</value>
+  </data>
   <data name="{0} on board" xml:space="preserve">
     <value>{0} on board</value>
   </data>
@@ -9110,9 +9092,6 @@
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0} tools reading now</value>
   </data>
-  <data name="{0} top-board charts" xml:space="preserve">
-    <value>{0} top-board charts</value>
-  </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>{0} total · {1} charts</value>
   </data>
@@ -9169,9 +9148,6 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}m ago</value>
-  </data>
-  <data name="{0}y old" xml:space="preserve">
-    <value>{0}y old</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} on the official board</value>

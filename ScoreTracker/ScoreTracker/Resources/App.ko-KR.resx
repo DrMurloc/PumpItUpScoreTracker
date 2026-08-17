@@ -160,9 +160,6 @@
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* 공식 보드 데이터, {0} 기준.</value>
   </data>
-  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
-    <value>* 공식 보드 데이터, {0} 기준. 보드는 레벨 20 이상만 다룹니다.</value>
-  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>데일리 스텝 {1} {2} **#{0}**</value>
   </data>
@@ -880,12 +877,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>여기서부터 연속으로</value>
   </data>
-  <data name="Back to community" xml:space="preserve">
-    <value>커뮤니티로 돌아가기</value>
-  </data>
-  <data name="Back to rivals" xml:space="preserve">
-    <value>라이벌로 돌아가기</value>
-  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>티어리스트로 돌아가기</value>
   </data>
@@ -1063,14 +1054,14 @@
   <data name="Board only" xml:space="preserve">
     <value>보드 전용</value>
   </data>
+  <data name="Board players" xml:space="preserve">
+    <value>보드 유저</value>
+  </data>
   <data name="Boards" xml:space="preserve">
     <value>보드</value>
   </data>
   <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
     <value>보드는 시리즈별로 운영되며, 이 시리즈는 아직 자체 로테이션이 없습니다.</value>
-  </data>
-  <data name="Boards you're both on" xml:space="preserve">
-    <value>둘 다 오른 보드</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>보스 브레이커</value>
@@ -1345,12 +1336,6 @@
   <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
     <value>다음 칭호를 위한 채보와 SSS까지 한 걸음 남은 스킬 칭호.</value>
   </data>
-  <data name="Charts you lose" xml:space="preserve">
-    <value>지고 있는 채보</value>
-  </data>
-  <data name="Charts you win" xml:space="preserve">
-    <value>이기고 있는 채보</value>
-  </data>
   <data name="ChartScoring" xml:space="preserve">
     <value>채보 점수</value>
   </data>
@@ -1449,6 +1434,9 @@
   </data>
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>코옵 패드 이동</value>
+  </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>코옵 레이팅</value>
   </data>
   <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
     <value>CO-OP은 고정 베이스 2,000으로 책정됐지만 총합에는 포함되지 않았습니다.</value>
@@ -1591,9 +1579,6 @@
   <data name="Compare" xml:space="preserve">
     <value>비교</value>
   </data>
-  <data name="Compare in folder" xml:space="preserve">
-    <value>폴더 내 비교</value>
-  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>채보 {0}개 비교 ({1}) — 기준을 넘은 채보가 없습니다.</value>
   </data>
@@ -1627,6 +1612,9 @@
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>싱글 경쟁 레벨 (PIUScores 전체)</value>
   </data>
+  <data name="Compiling this player's page." xml:space="preserve">
+    <value>이 유저의 페이지를 만드는 중입니다.</value>
+  </data>
   <data name="Compiling your personalized breakdown." xml:space="preserve">
     <value>개인화 분석을 만드는 중입니다.</value>
   </data>
@@ -1637,13 +1625,10 @@
     <value>완료</value>
   </data>
   <data name="Completion" xml:space="preserve">
-    <value>완료율</value>
+	  <value>완료율</value>
   </data>
   <data name="Completion %" xml:space="preserve">
     <value>완료율 %</value>
-  </data>
-  <data name="Completion (you / them)" xml:space="preserve">
-    <value>완료율 (나 / 상대)</value>
   </data>
   <data name="Completionist" xml:space="preserve">
     <value>Completionist</value>
@@ -1712,7 +1697,7 @@
     <value>코옵</value>
   </data>
   <data name="CoOp Completion" xml:space="preserve">
-    <value>코옵 완료율</value>
+	  <value>코옵 완료율</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>복사됨</value>
@@ -2476,6 +2461,9 @@
   <data name="Find a chart and its pages" xml:space="preserve">
     <value>채보와 관련 페이지 찾기</value>
   </data>
+  <data name="Find a chart or player" xml:space="preserve">
+    <value>채보 또는 유저 찾기</value>
+  </data>
   <data name="Find a player" xml:space="preserve">
     <value>플레이어 찾기</value>
   </data>
@@ -2523,9 +2511,6 @@
   </data>
   <data name="Folder Cleared" xml:space="preserve">
     <value>폴더 클리어</value>
-  </data>
-  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
-    <value>폴더 비교, 칭호, 진행도는 piuscores 계정이 필요합니다. {0} 이(가) 임포트하면 여기에 표시됩니다.</value>
   </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>폴더 완료율</value>
@@ -4654,11 +4639,17 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>변경된 채보가 있는 노래만 표시됩니다.</value>
   </data>
+  <data name="Only you" xml:space="preserve">
+    <value>나만</value>
+  </data>
   <data name="Only you can see this" xml:space="preserve">
     <value>나만 볼 수 있습니다</value>
   </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>지금은 여러분만 이 도구를 쓸 수 있습니다.</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>{0}만</value>
   </data>
   <data name="only {0} have it" xml:space="preserve">
     <value>보유율 {0}</value>
@@ -4914,8 +4905,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · 실제 상위 50</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>Phoenix 2도 CO-OP 채보에 값을 매깁니다 — Phoenix가 {1}로 매겼듯이 고정 베이스 {0}으로 — 하지만 그 숫자는 칭호 페이지에만 나타나고 다른 곳에는 나오지 않습니다. 두 시리즈 모두에서 PUMBILITY에는 아무것도 더하지 않습니다.</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>Phoenix 2도 CO-OP 채보에 값을 매깁니다 — Phoenix가 {1}로 매겼듯이 고정 베이스 {0}으로 — 하지만 그것은 코옵 레이팅이라는 별도의 숫자로, 자체 칭호와 보드가 있습니다. 두 시리즈 모두에서 PUMBILITY에는 아무것도 더하지 않습니다.</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2는 Phoenix보다 약 {0}배 더 점수에 기댑니다.</value>
@@ -4988,9 +4979,6 @@
   </data>
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>목록에서 난이도를 선택하면 상세 정보와 유사 채보를 볼 수 있습니다.</value>
-  </data>
-  <data name="Pick a folder to compare your scores." xml:space="preserve">
-    <value>폴더를 선택하면 점수를 비교할 수 있습니다.</value>
   </data>
   <data name="pick a mix first" xml:space="preserve">
     <value>먼저 시리즈를 선택하세요</value>
@@ -5076,8 +5064,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAME 로그인은 piugame.com 접속 가능 여부에 따라 달라지므로 예비 로그인 방법을 연결하세요</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAME는 CO-OP 랭킹을 제공하지 않습니다 - 이 보드는 미러링된 CO-OP 리더보드로 자체 계산한 최선의 추정치이며, 플레이트는 점수로 추정합니다 (SG, 995,000부터 UG, 1,000,000은 PG).</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAME는 CO-OP 랭킹을 제공하지 않습니다 - 이 보드는 미러링된 CO-OP 리더보드를 CO-OP 레이팅 공식으로 계산하며, 플레이트는 점수로 추정합니다 (SG, 995,000부터 UG, 1,000,000은 PG). 채보 보드는 상위 300위까지만 있으므로 실제 레이팅은 더 높을 수 있습니다.</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>PIUGame 세션</value>
@@ -5180,9 +5168,6 @@
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
     <value>테스트할 플레이어 (공개 설정 필수)</value>
-  </data>
-  <data name="Player was not found in this community." xml:space="preserve">
-    <value>이 커뮤니티에서 유저를 찾을 수 없습니다.</value>
   </data>
   <data name="Players" xml:space="preserve">
     <value>유저</value>
@@ -5896,6 +5881,9 @@
   <data name="Revoked" xml:space="preserve">
     <value>취소됨</value>
   </data>
+  <data name="Rival" xml:space="preserve">
+    <value>라이벌</value>
+  </data>
   <data name="Rival invite" xml:space="preserve">
     <value>라이벌 초대</value>
   </data>
@@ -6003,9 +5991,6 @@
   </data>
   <data name="Score" xml:space="preserve">
     <value>점수</value>
-  </data>
-  <data name="Score average (you / them)" xml:space="preserve">
-    <value>평균 점수 (나 / 상대)</value>
   </data>
   <data name="Score Completion" xml:space="preserve">
     <value>점수 완료율</value>
@@ -6426,6 +6411,9 @@
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>이 채널의 등록 내역 보기</value>
+  </data>
+  <data name="Show {0} unshared charts" xml:space="preserve">
+    <value>공통 외 {0}개 채보 표시</value>
   </data>
   <data name="Showing" xml:space="preserve">
     <value>표시 중</value>
@@ -7168,9 +7156,6 @@
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>해제하기 전까지는 새 도구를 만들 수 없습니다.</value>
   </data>
-  <data name="They haven't placed on any board you've played." xml:space="preserve">
-    <value>내가 플레이한 차트의 보드에는 오르지 않았습니다.</value>
-  </data>
   <data name="They stay in the community and can read everything, but can't post, reply or edit comments here until the mute is lifted. Existing comments stay." xml:space="preserve">
     <value>커뮤니티에는 남아 모든 것을 읽을 수 있지만, 음소거가 해제될 때까지 여기에서 댓글 작성·답글·수정은 할 수 없습니다. 기존 댓글은 유지됩니다.</value>
   </data>
@@ -7365,9 +7350,6 @@
   </data>
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>"모든 도구와 공유"를 통해</value>
-  </data>
-  <data name="Tie" xml:space="preserve">
-    <value>무승부</value>
   </data>
   <data name="Tier" xml:space="preserve">
     <value>구간</value>
@@ -8127,9 +8109,6 @@
   </data>
   <data name="Will be skipped" xml:space="preserve">
     <value>건너뜀 예정</value>
-  </data>
-  <data name="Winner" xml:space="preserve">
-    <value>승자</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>범위 내 우승</value>
@@ -8929,6 +8908,9 @@
   <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
     <value>{1}개 중 {0}개 · 폴더 램프까지 {2}개</value>
   </data>
+  <data name="{0} Official Top {1}s" xml:space="preserve">
+    <value>공식 상위 {1} {0}개</value>
+  </data>
   <data name="{0} on board" xml:space="preserve">
     <value>보드에 {0}명</value>
   </data>
@@ -9040,9 +9022,6 @@
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0}개 도구가 읽는 중</value>
   </data>
-  <data name="{0} top-board charts" xml:space="preserve">
-    <value>랭킹 진입 채보 {0}개</value>
-  </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>총 {0} · 차트 {1}개</value>
   </data>
@@ -9099,9 +9078,6 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}분 전</value>
-  </data>
-  <data name="{0}y old" xml:space="preserve">
-    <value>{0}년 전</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>공식 순위표 ~#{0}</value>

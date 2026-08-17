@@ -19,6 +19,18 @@ public interface IUserRepository
         CancellationToken cancellationToken = default);
 
     Task<IEnumerable<User>> SearchForUsersByName(string searchText, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     The per-keystroke search: players whose site name or game tag contains the term, limited
+    ///     to public players plus the ids in <paramref name="alsoVisible" />, best matches first —
+    ///     an exact name, then a name that starts with the term, then anything that contains it,
+    ///     alphabetical inside each rung. The whole predicate, the order and the cap run in SQL:
+    ///     a one-character term over the player table has to stay cheap, and a player named
+    ///     "D" has to come first.
+    /// </summary>
+    Task<IReadOnlyList<User>> SearchVisibleUsers(string term, int take, IReadOnlyCollection<Guid> alsoVisible,
+        CancellationToken cancellationToken = default);
+
     Task<IEnumerable<User>> GetUsersByGameTag(Name gameTag, CancellationToken cancellationToken = default);
     Task<User?> GetUser(Guid userId, CancellationToken cancellationToken = default);
     Task<DateTimeOffset> GetClaimsInvalidatedAt(Guid userId, CancellationToken cancellationToken = default);

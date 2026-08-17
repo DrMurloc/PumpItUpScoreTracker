@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Models.Titles.Phoenix;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
 using Xunit;
@@ -169,5 +170,28 @@ public sealed class PhoenixTitleProgressTests
         var progress = new PhoenixTitleProgress(coOpTitle);
 
         Assert.Contains("Passes", progress.AdditionalNote);
+    }
+
+    [Fact]
+    public void AdditionalNoteReportsPassRangeForAPhoenix2CoOpTitleOnItsOwnScale()
+    {
+        // 1,000 to go: 9 perfects (121.60 each) at best, 10 bare AAs (109.60) at most —
+        // Phoenix's 2000-per-AA arithmetic would answer "1-1".
+        var coOpTitle = new Phoenix2CoOpTitle(Name.From("[CO-OP] LV.1"),
+            "[CO-OP Rating] 1000+", 1000, 1);
+        var progress = new PhoenixTitleProgress(coOpTitle);
+
+        Assert.Equal("9-10 Passes, assuming AA or higher", progress.AdditionalNote);
+    }
+
+    [Fact]
+    public void AdditionalNoteFallsSilentOnceAPhoenix2CoOpTitleIsEarned()
+    {
+        var coOpTitle = new Phoenix2CoOpTitle(Name.From("[CO-OP] LV.1"),
+            "[CO-OP Rating] 1000+", 1000, 1);
+        var progress = new PhoenixTitleProgress(coOpTitle);
+        progress.ApplyDirectProgress(1000);
+
+        Assert.Equal(string.Empty, progress.AdditionalNote);
     }
 }

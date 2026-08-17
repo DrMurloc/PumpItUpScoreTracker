@@ -79,20 +79,20 @@ public enum RivalScoreSource
 }
 
 /// <summary>
-///     A comparison. <see cref="Capabilities" /> travels with it so the renderer knows which
-///     sections are ABSENT-with-a-reason rather than merely empty (D29).
+///     A comparison between two site players. The tallies count the charts you have BOTH scored;
+///     <see cref="OnlyYou" /> and <see cref="OnlyThem" /> count the rows only one of you has, which
+///     ride along in <see cref="Rows" /> with the other side null so a switch can show or hide them
+///     without another read.
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record RivalHeadToHeadRecord(
-    RivalSubject Subject,
+    HeadToHeadSubject Subject,
     int YouAhead,
     int TheyAhead,
     int Shared,
-    DateTimeOffset? OfficialAsOf,
-    IReadOnlyList<RivalHeadToHeadRow> Rows)
-{
-    public RivalCapabilities Capabilities => Subject.Capabilities;
-}
+    IReadOnlyList<RivalHeadToHeadRow> Rows,
+    int OnlyYou = 0,
+    int OnlyThem = 0);
 
 [ExcludeFromCodeCoverage]
 public sealed record RivalHeadToHeadRow(
