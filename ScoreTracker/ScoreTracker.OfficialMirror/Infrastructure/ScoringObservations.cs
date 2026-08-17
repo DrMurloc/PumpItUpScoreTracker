@@ -53,15 +53,16 @@ internal static class ScoringObservations
 
         foreach (var play in plays)
         {
-            if (play.Grade == null) continue;
+            // A stage break carries no grade and no score: nothing to compare.
+            if (play.Grade == null || play.Score == null) continue;
 
-            var ours = play.Score.LetterGradeFor(mix);
+            var ours = play.Score.Value.LetterGradeFor(mix);
             var disagrees = play.Grade.Value != ours;
 
             // A play that agrees with us and sits above the unverified band says nothing worth
             // a line. WHICH MIX this runs for is the caller's decision, not this method's —
             // detection here, policy there.
-            if (!disagrees && (int)play.Score >= UnverifiedGradeCeiling) continue;
+            if (!disagrees && (int)play.Score.Value >= UnverifiedGradeCeiling) continue;
 
             // Each placeholder appears exactly ONCE. Message templates are positional, not
             // named — repeating one silently demands another argument and throws FormatException

@@ -8,7 +8,12 @@ internal sealed class PiuGameGetRecentScoresResult
     public Name SongName { get; set; }
     public DifficultyLevel Level { get; set; }
     public ChartType ChartType { get; set; }
-    public PhoenixScore Score { get; set; }
+
+    /// <summary>
+    ///     NULL on a stage break: the card prints "STAGE BREAK" where the number would be, and
+    ///     the game has no chart score for a song it stopped short.
+    /// </summary>
+    public PhoenixScore? Score { get; set; }
 
     /// <summary>
     ///     NULL on a broken play — the game awards no plate for a failed stage. Deriving one
@@ -27,6 +32,15 @@ internal sealed class PiuGameGetRecentScoresResult
 
     public int NoteCount { get; set; }
     public bool IsBroken { get; set; }
+
+    /// <summary>
+    ///     The stage broke — the song ended before its last note. Always broken too. The card
+    ///     says so with "STAGE BREAK" in the score slot and an empty grade slot; a failed but
+    ///     finished stage prints a number and an x_-prefixed grade instead. Its judgement counts
+    ///     stop where the stage did (docs/design/stage-breaks-and-max-combo.md).
+    /// </summary>
+    public bool IsStageBroken { get; set; }
+
     public int Perfects { get; set; }
     public int Greats { get; set; }
     public int Goods { get; set; }

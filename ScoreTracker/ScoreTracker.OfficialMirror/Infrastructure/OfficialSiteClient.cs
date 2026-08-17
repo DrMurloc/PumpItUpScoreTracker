@@ -482,7 +482,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         var entries = recentPlays.Select(p =>
         {
             var best = BestOf(p.Plays);
-            return new ScoreImportCompletedEvent.ImportedScore(p.Chart.Id, best.Score,
+            return new ScoreImportCompletedEvent.ImportedScore(p.Chart.Id, best.Score!.Value,
                 best.Plate?.ToString(), best.IsBroken);
         }).ToArray();
         // Every dated play is journal history, best or not. Undated ones are skipped: the site's
@@ -577,7 +577,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                     c.Level == chartGroup.Key.Level && c.Type == chartGroup.Key.ChartType);
                 if (chart == null) continue;
 
+                // Stage breaks are read now but not yet kept: the parser stopped skipping them
+                // and the import learns what to do with them in the next change.
                 var plays = chartGroup
+                    .Where(s => !s.IsStageBroken)
                     .Where(s => !BestAttemptPolicy.IsWalkOff(s.IsBroken, s.Score, JudgementsOf(s)))
                     .ToArray();
                 if (plays.Length == 0) continue;
@@ -692,7 +695,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             if (includeBroken && !results.ContainsKey(chart.Id))
             {
                 var best = BestOf(plays);
-                results[chart.Id] = new OfficialRecordedScore(chart, best.Score, best.Plate, best.IsBroken);
+                results[chart.Id] = new OfficialRecordedScore(chart, best.Score!.Value, best.Plate, best.IsBroken);
             }
 
             if (!results.TryGetValue(chart.Id, out var saved)) continue;
@@ -870,7 +873,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 continue;
             }
 
-            result.Add(new OfficialRecordedScore(chart, record.Score, record.Plate, record.IsBroken));
+            // A stage break is not a recorded score: no chart score to carry.
+            if (record.IsStageBroken || record.Score == null) continue;
+
+            result.Add(new OfficialRecordedScore(chart, record.Score.Value, record.Plate, record.IsBroken));
         }
 
         return (result, nonMapped);
