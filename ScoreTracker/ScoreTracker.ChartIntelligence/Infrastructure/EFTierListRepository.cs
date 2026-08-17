@@ -66,7 +66,7 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
         public async Task<IEnumerable<Guid>> GetUsersOnLevel(MixEnum mix, DifficultyLevel level,
             CancellationToken cancellationToken, bool requireActive = false)
         {
-            // Title cohorts come from PlayerProgress's ITitleRepository and activity from
+            // Title peerGroups come from PlayerProgress's ITitleRepository and activity from
             // the Ledger's IScoreReader — reads through published contracts, not joins onto
             // other verticals' tables (UserHighestTitle went PlayerProgress-internal at C50).
             var onLevel = await _titles.GetUserIdsOnHighestLevel(mix, level, cancellationToken);
@@ -144,7 +144,7 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
         }
 
         public async Task SavePumbilityTierLists(MixEnum mix, ChartType chartType, DifficultyLevel level,
-            IReadOnlyDictionary<string, PumbilityTierListFolder> byCohort,
+            IReadOnlyDictionary<string, PumbilityTierListFolder> byPeerKey,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
@@ -155,17 +155,17 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
                 .Where(e => e.MixId == mixId && e.ChartType == typeName && e.Level == levelInt)
                 .ToArrayAsync(cancellationToken);
             database.Set<PumbilityTierListEntryEntity>().RemoveRange(existing);
-            foreach (var (cohortKey, folder) in byCohort)
+            foreach (var (peerKey, folder) in byPeerKey)
             foreach (var entry in folder.Entries)
                 await database.Set<PumbilityTierListEntryEntity>().AddAsync(new PumbilityTierListEntryEntity
                 {
                     MixId = mixId,
                     ChartType = typeName,
                     Level = levelInt,
-                    CohortKey = cohortKey,
+                    PeerKey = peerKey,
                     ChartId = entry.ChartId,
                     Appearances = entry.Appearances,
-                    CohortSize = folder.CohortSize,
+                    PeerCount = folder.PeerCount,
                     Category = entry.Category.ToString(),
                     Order = entry.Order
                 }, cancellationToken);
@@ -174,7 +174,7 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
         }
 
         public async Task<PumbilityTierListFolder> GetPumbilityTierList(MixEnum mix, ChartType chartType,
-            DifficultyLevel level, string cohortKey, CancellationToken cancellationToken)
+            DifficultyLevel level, string peerKey, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
@@ -182,24 +182,24 @@ namespace ScoreTracker.ChartIntelligence.Infrastructure
             var levelInt = (int)level;
             var rows = await database.Set<PumbilityTierListEntryEntity>()
                 .Where(e => e.MixId == mixId && e.ChartType == typeName && e.Level == levelInt
-                            && e.CohortKey == cohortKey)
+                            && e.PeerKey == peerKey)
                 .ToArrayAsync(cancellationToken);
             return new PumbilityTierListFolder(
                 rows.Select(e => new PumbilityTierListRecord(e.ChartId, e.Appearances,
                     Enum.Parse<TierListCategory>(e.Category), e.Order)).ToArray(),
-                rows.Length == 0 ? 0 : rows[0].CohortSize);
+                rows.Length == 0 ? 0 : rows[0].PeerCount);
         }
 
         public async Task<IEnumerable<(ChartType ChartType, int Level)>> GetPumbilityTierListFolders(
-            MixEnum mix, string cohortKey, CancellationToken cancellationToken)
+            MixEnum mix, string peerKey, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var mixId = MixIds.For(mix);
-            // A folder every one of whose rows reads zero is a folder this cohort cannot speak
+            // A folder every one of whose rows reads zero is a folder this peer group cannot speak
             // for — it is written, so the rebuild does not have to remember which folders it
             // skipped, but it must not be offered.
             return (await database.Set<PumbilityTierListEntryEntity>()
-                    .Where(e => e.MixId == mixId && e.CohortKey == cohortKey && e.Appearances > 0)
+                    .Where(e => e.MixId == mixId && e.PeerKey == peerKey && e.Appearances > 0)
                     .Select(e => new { e.ChartType, e.Level })
                     .Distinct()
                     .ToArrayAsync(cancellationToken))

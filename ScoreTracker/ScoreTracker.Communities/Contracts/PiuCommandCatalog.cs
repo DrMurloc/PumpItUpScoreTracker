@@ -196,8 +196,9 @@ namespace ScoreTracker.Communities.Contracts
                     Count("bads", "Bad count"),
                     Count("misses", "Miss count"),
                     Count("combo", "Max combo"),
+                    // A decimal option: the result screen's kcal readout carries a fraction.
                     new BotCommandOption("calories", "Calories burned (optional — estimates step count)",
-                        BotCommandOptionType.Integer, MinValue: 0)
+                        BotCommandOptionType.Number, MinValue: 0)
                 });
 
         private static BotCommandOption Count(string name, string description) =>

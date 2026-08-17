@@ -171,6 +171,21 @@ namespace ScoreTracker.PlayerProgress.Infrastructure
             return await query.Select(p => p.UserId).Distinct().ToArrayAsync(cancellationToken);
         }
 
+        public async Task<IEnumerable<Guid>> GetPlayersByPumbilityRange(MixEnum mix, double minimumTotal,
+            double maximumTotalExclusive, CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var mixId = MixIds.For(mix);
+            // SkillRating IS the total pool — the merged top fifty across both chart types, stored
+            // unrounded (docs/UX-GUIDELINES.md, the PUMBILITY precision rule), which is what the
+            // level ladder is read from.
+            return await database.Set<PlayerStatsEntity>()
+                .Where(p => p.MixId == mixId && p.SkillRating >= minimumTotal && p.SkillRating < maximumTotalExclusive)
+                .Select(p => p.UserId)
+                .Distinct()
+                .ToArrayAsync(cancellationToken);
+        }
+
         public async Task<PlayerStatsRecord> Handle(GetPlayerStatsQuery request, CancellationToken cancellationToken)
         {
             return await GetStats(request.Mix, request.UserId, cancellationToken);

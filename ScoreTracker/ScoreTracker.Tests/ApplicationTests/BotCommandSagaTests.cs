@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
@@ -73,6 +74,32 @@ public sealed class BotCommandSagaTests
         Assert.Contains("#LETTERGRADE|", reply.Text);
         Assert.Contains("#PLATE|", reply.Text);
         Assert.Contains("Lost to Greats", reply.Text);
+    }
+
+    [Fact]
+    public async Task CalcAcceptsDecimalCaloriesAndEstimatesStepsFromThem()
+    {
+        // The kcal readout carries a fraction. The bot adapter hands the option over as an
+        // invariant string, so the estimate must hold under a host culture whose decimal
+        // separator is a comma — a culture-sensitive parse there reads "62.1" as 621.
+        var previousCulture = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de-DE");
+        try
+        {
+            var reply = await Saga().Handle(Invoke(new[] { "calc" }, new Dictionary<string, string>
+            {
+                ["perfects"] = "950", ["greats"] = "40", ["goods"] = "5",
+                ["bads"] = "3", ["misses"] = "2", ["combo"] = "900", ["calories"] = "62.1"
+            }), CancellationToken.None);
+
+            // 1,000 notes burn .0621 kcal per press, so 62.1 kcal is exactly 1,000 presses; a
+            // parse that dropped the fraction (62 → 998) or mangled it lands somewhere else.
+            Assert.Contains($"{1000d.ToString("N0")} Estimated Arrow Presses", reply.Text);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
     }
 
     [Fact]

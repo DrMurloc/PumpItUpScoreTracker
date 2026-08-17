@@ -1228,6 +1228,9 @@
   <data name="Charts covered" xml:space="preserve">
     <value>Charts couverts</value>
   </data>
+  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
+    <value>Les charts que moins de 5 d'entre eux ont passés ne sont pas affichés.</value>
+  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>Charts dans le pool</value>
   </data>
@@ -1997,6 +2000,12 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Niveau compétitif Doubles</value>
   </data>
+  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Doubles : {0} pairs PUMBILITY</value>
+  </data>
+  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+    <value>Doubles : {0}/{1} charts</value>
+  </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>Doublesteps</value>
   </data>
@@ -2464,6 +2473,9 @@
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>À partir de {0}</value>
+  </data>
+  <data name="From {0} peers" xml:space="preserve">
+    <value>Sur {0} pairs</value>
   </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Sur {0} scores</value>
@@ -4591,6 +4603,15 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>Collez le lien entier, ou juste le code à la fin.</value>
   </data>
+  <data name="Peer projections show once your doubles pool has {0} charts." xml:space="preserve">
+    <value>Les projections des pairs s'affichent dès que votre ensemble Doubles atteint {0} charts.</value>
+  </data>
+  <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
+    <value>Les projections des pairs s'affichent dès que votre ensemble Singles atteint {0} charts.</value>
+  </data>
+  <data name="Peers IQR" xml:space="preserve">
+    <value>IQR des pairs</value>
+  </data>
   <data name="peers:" xml:space="preserve">
     <value>ton niveau :</value>
   </data>
@@ -5136,6 +5157,9 @@
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY dans le temps</value>
   </data>
+  <data name="PUMBILITY peers" xml:space="preserve">
+    <value>Pairs PUMBILITY</value>
+  </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Poussée de Pumbility</value>
   </data>
@@ -5241,11 +5265,14 @@
   </data>
   <!-- Tier-lists overhaul (PR #135). « Why Don't You Get Up and Dance, Man? » est un
        mème du jeu : terme universel, ne pas traduire. -->
-  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
-    <value>Classé face à {0} joueurs dans vos paliers de titre PUMBILITY</value>
-  </data>
   <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
     <value>Classé face à {0} joueurs de niveau compétitif similaire</value>
+  </data>
+  <data name="Ranked against {0} players on your difficulty title level" xml:space="preserve">
+    <value>Classé face à {0} joueurs à votre niveau de titre de difficulté</value>
+  </data>
+  <data name="Ranked against {0} PUMBILITY peers within 3 levels of you" xml:space="preserve">
+    <value>Classé face à {0} pairs PUMBILITY à ±3 niveaux de vous</value>
   </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Classé par</value>
@@ -6226,6 +6253,12 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>Singles vs Doubles</value>
+  </data>
+  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Singles : {0} pairs PUMBILITY</value>
+  </data>
+  <data name="Singles: {0}/{1} charts" xml:space="preserve">
+    <value>Singles : {0}/{1} charts</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
     <value>Site construit et maintenu par DrMurloc</value>
@@ -7756,6 +7789,9 @@
   <data name="within 1 level" xml:space="preserve">
     <value>à ±1 niveau</value>
   </data>
+  <data name="within 3 levels of you with a full pool" xml:space="preserve">
+    <value>à ±3 niveaux de vous, avec un ensemble complet</value>
+  </data>
   <data name="Within days" xml:space="preserve">
     <value>Jours (max.)</value>
   </data>
@@ -7908,6 +7944,9 @@
   </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
     <value>Vous vous retrouvez d'une manière ou d'une autre dans un état entre les réalités. Rechargez la page pour réessayer.</value>
+  </data>
+  <data name="you stand on {0}" xml:space="preserve">
+    <value>vous êtes sur {0}</value>
   </data>
   <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
     <value>Vous commencez chaque chanson avec 500 de vie et un multiplicateur proche de zéro : {0} Miss d'affilée vous tuent, à tous les niveaux. Survivez à l'ouverture et un {1} vous en donne {2}. Démarrez fort.</value>
@@ -8541,6 +8580,9 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} joueurs · semaine du {1}</value>
+  </data>
+  <data name="{0} PUMBILITY peers" xml:space="preserve">
+    <value>{0} pairs PUMBILITY</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>{0} PUMBILITY restants</value>

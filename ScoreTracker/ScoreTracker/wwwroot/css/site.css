@@ -13730,6 +13730,34 @@ span.ct-console-pick { cursor: default; }
     margin: 2px 0 14px;
 }
 
+/* The Phoenix 2 peer line under the targets' lede: one chip per chart type in the selected pool —
+   the peer count, or "N/50 charts" for a type whose pool is not yet full — with the definition in
+   the chip's tooltip. A count, not a sentence (docs/design/pumbility-overhaul.md §3.3). */
+.pmb-peer-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: -6px 0 12px;
+}
+
+.pmb-peer-chip {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    color: var(--mix-ink);
+    cursor: help;
+}
+
+.pmb-peer-chip[data-lit="false"] {
+    color: var(--mix-ink-muted);
+    font-weight: 500;
+    border-style: dashed;
+}
+
 
 /* --- targets, comfortable --- */
 /* One treatment for both jacket badges: the mix accent on the mix accent, over the black
@@ -13818,6 +13846,30 @@ span.ct-console-pick { cursor: default; }
 .pmb-gain-cell {
     color: var(--mix-primary);
     font-variant-numeric: tabular-nums;
+}
+
+/* The Peers IQR: the peers' first and third quartiles as two grades with a dash between them
+   (docs/design/pumbility-overhaul.md D30). One dash on every row — the grades say the width. */
+.pmb-iqr {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: help;
+}
+
+.pmb-iqr-conn {
+    color: var(--mix-ink-muted);
+    font-size: 12px;
+    line-height: 1;
+}
+
+.pmb-iqr-label {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
 }
 
 /* --- the pool board --- */

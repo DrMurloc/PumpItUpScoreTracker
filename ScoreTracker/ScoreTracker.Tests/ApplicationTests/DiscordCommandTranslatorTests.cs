@@ -27,6 +27,11 @@ public sealed class DiscordCommandTranslatorTests
                     {
                         new BotCommandOption("count", "How many", BotCommandOptionType.Integer, MinValue: 1, MaxValue: 10)
                     }),
+                new BotSubCommand("calc", "Score a result screen",
+                    new[]
+                    {
+                        new BotCommandOption("calories", "Calories burned", BotCommandOptionType.Number, MinValue: 0)
+                    }),
                 new BotSubCommand("suggest", "Personal picks", new BotCommandOption[0], Ephemeral: true)
             },
             new[]
@@ -67,6 +72,8 @@ public sealed class DiscordCommandTranslatorTests
         var name = chart.Options.Single(o => o.Name == "name");
         var random = props.Options.Value.Single(o => o.Name == "random");
         var count = random.Options.Single(o => o.Name == "count");
+        var calc = props.Options.Value.Single(o => o.Name == "calc");
+        var calories = calc.Options.Single(o => o.Name == "calories");
 
         Assert.Equal(ApplicationCommandOptionType.String, name.Type);
         Assert.True(name.IsRequired);
@@ -74,6 +81,11 @@ public sealed class DiscordCommandTranslatorTests
         Assert.Equal(ApplicationCommandOptionType.Integer, count.Type);
         Assert.Equal(1, count.MinValue);
         Assert.Equal(10, count.MaxValue);
+        // A decimal option registers as Discord's Number kind — Integer would make the
+        // client reject a fractional value before it ever reached the handler.
+        Assert.Equal(ApplicationCommandOptionType.Number, calories.Type);
+        Assert.Equal(0, calories.MinValue);
+        Assert.False(calories.IsRequired);
     }
 
     [Fact]

@@ -1228,6 +1228,9 @@
   <data name="Charts covered" xml:space="preserve">
     <value>対象の譜面</value>
   </data>
+  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
+    <value>そのうち5人未満しかクリアしていない譜面は表示されません。</value>
+  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>課題譜面数</value>
   </data>
@@ -1998,6 +2001,12 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Doublesの競技レベル</value>
   </data>
+  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Doubles: PUMBILITYピア {0}人</value>
+  </data>
+  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+    <value>Doubles: {0}/{1} 譜面</value>
+  </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>ダブルステップ</value>
   </data>
@@ -2465,6 +2474,9 @@
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>{0}から</value>
+  </data>
+  <data name="From {0} peers" xml:space="preserve">
+    <value>ピア {0}人から算出</value>
   </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0} スコアから算出</value>
@@ -4592,6 +4604,15 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>リンク全体、または末尾のコードだけを貼り付けてください。</value>
   </data>
+  <data name="Peer projections show once your doubles pool has {0} charts." xml:space="preserve">
+    <value>Doublesのプールが{0}譜面になるとピア予測が表示されます。</value>
+  </data>
+  <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
+    <value>Singlesのプールが{0}譜面になるとピア予測が表示されます。</value>
+  </data>
+  <data name="Peers IQR" xml:space="preserve">
+    <value>ピアIQR</value>
+  </data>
   <data name="peers:" xml:space="preserve">
     <value>同水準:</value>
   </data>
@@ -5137,6 +5158,9 @@
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITYの推移</value>
   </data>
+  <data name="PUMBILITY peers" xml:space="preserve">
+    <value>PUMBILITYピア</value>
+  </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility更新</value>
   </data>
@@ -5242,11 +5266,14 @@
   </data>
   <!-- Tier-lists overhaul (PR #135)。"Why Don't You Get Up and Dance, Man?" は
        ゲーム内ミームのため全ロケール共通・翻訳しない。 -->
-  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
-    <value>あなたのPUMBILITY称号帯の{0}人と比較</value>
-  </data>
   <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
     <value>同程度の競技レベルの{0}人と比較</value>
+  </data>
+  <data name="Ranked against {0} players on your difficulty title level" xml:space="preserve">
+    <value>あなたの難易度称号レベルの{0}人と比較</value>
+  </data>
+  <data name="Ranked against {0} PUMBILITY peers within 3 levels of you" xml:space="preserve">
+    <value>あなたと3レベル以内のPUMBILITYピア {0}人と比較</value>
   </data>
   <data name="Ranked by" xml:space="preserve">
     <value>ランキング基準</value>
@@ -6227,6 +6254,12 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Singles対Doubles</value>
+  </data>
+  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Singles: PUMBILITYピア {0}人</value>
+  </data>
+  <data name="Singles: {0}/{1} charts" xml:space="preserve">
+    <value>Singles: {0}/{1} 譜面</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
 	  <value>サイト製作・運営：DrMurloc</value>
@@ -7757,6 +7790,9 @@
   <data name="within 1 level" xml:space="preserve">
     <value>レベル±1以内</value>
   </data>
+  <data name="within 3 levels of you with a full pool" xml:space="preserve">
+    <value>あなたと3レベル以内で、プールが満杯のプレイヤー</value>
+  </data>
   <data name="Within days" xml:space="preserve">
     <value>最大日数</value>
   </data>
@@ -7909,6 +7945,9 @@
   </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
 	  <value>なんらかの理由で現実の狭間の状態になりました。ページを再読み込みして再試行してください。</value>
+  </data>
+  <data name="you stand on {0}" xml:space="preserve">
+    <value>あなたは {0}</value>
   </data>
   <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
     <value>どの曲も体力500・倍率ほぼゼロから始まります。連続 {0} Miss でどのレベルでも死にます。序盤を乗り切れば、レベル {1} では {2} 回まで耐えられます。走り出しは強く。</value>
@@ -8542,6 +8581,9 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>プレーヤー {0} 人・{1} の週</value>
+  </data>
+  <data name="{0} PUMBILITY peers" xml:space="preserve">
+    <value>PUMBILITYピア {0}人</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>PUMBILITY 残り {0}</value>

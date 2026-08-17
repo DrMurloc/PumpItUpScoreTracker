@@ -92,4 +92,32 @@ public sealed class EFPlayerStatsRepositoryTests : IAsyncLifetime
         Assert.DoesNotContain(doubles, n => n.UserId == id); // 18.00 outside ±1 of 21.34
         Assert.Contains(combined, n => n.UserId == id);      // 20.00 within ±1 of 20.20
     }
+
+    private static PlayerStatsRecord Pool(Guid userId, double total) =>
+        new(userId, 0, 1, 0, 0, 0, total, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    [Fact]
+    public async Task GetPlayersByPumbilityRangeIsHalfOpenOnTheTotalPoolAndScopedToTheMix()
+    {
+        // The DIAMOND LV.1 .. RED BERYL LV.2 band of a DIAMOND LV.4 player: 17,000 inclusive up to
+        // 18,400 exclusive (RED BERYL LV.3 starts at 18,400). Boundaries in SQL, not in memory.
+        var onTheFloor = Guid.NewGuid();   // 17,000.00 — in
+        var inside = Guid.NewGuid();       // 17,609.59 — in
+        var justUnderTop = Guid.NewGuid(); // 18,399.99 — in
+        var onTheCeiling = Guid.NewGuid(); // 18,400.00 — out (belongs to the rung above)
+        var below = Guid.NewGuid();        // 16,999.99 — out
+        var otherMix = Guid.NewGuid();     // 17,500 on Phoenix — out, wrong mix
+        var repo = BuildRepository();
+        await repo.SaveStats(MixEnum.Phoenix2, onTheFloor, Pool(onTheFloor, 17_000.00), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix2, inside, Pool(inside, 17_609.59), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix2, justUnderTop, Pool(justUnderTop, 18_399.99), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix2, onTheCeiling, Pool(onTheCeiling, 18_400.00), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix2, below, Pool(below, 16_999.99), CancellationToken.None);
+        await repo.SaveStats(MixEnum.Phoenix, otherMix, Pool(otherMix, 17_500), CancellationToken.None);
+
+        var result = (await repo.GetPlayersByPumbilityRange(MixEnum.Phoenix2, 17_000, 18_400, CancellationToken.None))
+            .ToHashSet();
+
+        Assert.Equal(new HashSet<Guid> { onTheFloor, inside, justUnderTop }, result);
+    }
 }

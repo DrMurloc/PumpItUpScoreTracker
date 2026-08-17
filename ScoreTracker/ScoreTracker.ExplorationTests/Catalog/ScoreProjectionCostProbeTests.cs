@@ -121,10 +121,10 @@ public sealed class ScoreProjectionCostProbeTests
                 cancellationToken: CancellationToken.None)).ToArray();
             atOne.Add(await Measure(projector, run.ChartType, run.UserId, run.Anchor, run.Level,
                 folder.Select(c => new ProjectionTarget(c.Id, (int)c.Level)).ToArray(),
-                CohortEstimator.CompetitiveWindow));
+                PeerEstimator.CompetitiveWindow));
         }
 
-        if (atOne.Count > 0) Report("same folders, ±" + CohortEstimator.CompetitiveWindow, atOne);
+        if (atOne.Count > 0) Report("same folders, ±" + PeerEstimator.CompetitiveWindow, atOne);
 
         // The one hard assertion. Timing is reported rather than asserted — a wall clock on one
         // machine is not a gate — but a projection that reaches nothing in a player's OWN folder
