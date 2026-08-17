@@ -67,6 +67,16 @@ public sealed record GetRivalHeadToHeadQuery(MixEnum Mix, Guid EdgeId, ChartType
     DifficultyLevel? Level = null) : IQuery<RivalHeadToHeadRecord?>;
 
 /// <summary>
+///     Any player you may look at, compared — rival or not. Null when there is no such player, when
+///     the visibility port says you may not see them, or when they are you. Same record and the same
+///     folder semantics as the edge-keyed read; the player page is its host
+///     (docs/design/player-page-and-site-search.md §2.2).
+/// </summary>
+[ExcludeFromCodeCoverage]
+public sealed record GetPlayerHeadToHeadQuery(MixEnum Mix, Guid OpponentUserId, ChartType? ChartType = null,
+    DifficultyLevel? Level = null) : IQuery<RivalHeadToHeadRecord?>;
+
+/// <summary>
 ///     The rivals feed. Ghosts never appear (D30) — wins come from imports, and a board-only
 ///     player has none.
 /// </summary>

@@ -7,6 +7,7 @@ using ScoreTracker.Rivals.Contracts;
 using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Rivals.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Rivals.Application;
 
@@ -19,8 +20,10 @@ internal sealed class RivalReadSaga :
     IRequestHandler<SearchRivalTagsQuery, IReadOnlyList<string>>,
     IRequestHandler<GetRivalScoresForChartsQuery, RivalChartScores>,
     IRequestHandler<GetRivalHeadToHeadQuery, RivalHeadToHeadRecord?>,
+    IRequestHandler<GetPlayerHeadToHeadQuery, RivalHeadToHeadRecord?>,
     IRequestHandler<GetMyRivalHighlightsQuery, IEnumerable<PlayerHighlightRecord>>
 {
+    private readonly IChartRepository _charts;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
     private readonly RivalSubjectResolver _resolver;
@@ -31,8 +34,8 @@ internal sealed class RivalReadSaga :
     private readonly IPlayerVisibilityReader _visibility;
 
     public RivalReadSaga(IRivalRepository rivals, RivalSubjectResolver resolver, RivalScoreReader rivalScores,
-        IPlayerVisibilityReader visibility, IScoreReader scores, IUserReader users, IMediator mediator,
-        ICurrentUserAccessor currentUser)
+        IPlayerVisibilityReader visibility, IScoreReader scores, IUserReader users, IChartRepository charts,
+        IMediator mediator, ICurrentUserAccessor currentUser)
     {
         _rivals = rivals;
         _resolver = resolver;
@@ -40,6 +43,7 @@ internal sealed class RivalReadSaga :
         _visibility = visibility;
         _scores = scores;
         _users = users;
+        _charts = charts;
         _mediator = mediator;
         _currentUser = currentUser;
     }
@@ -103,33 +107,100 @@ internal sealed class RivalReadSaga :
             .FirstOrDefault();
         if (subject == null) return null;
 
-        // A record with no score at all, or one set on a run that broke, is not a comparable
-        // result — the same bar the community folder compare uses. Both halves matter: the
-        // ledger holds scoreless break rows, and counting a break as a number would report
-        // losses nobody played. An official placement is a completed run by construction, so
-        // excluding breaks on OUR side only would hand every ghost comparison a free win.
-        // Read from whichever store this mix records into. A legacy best has a letter and
-        // usually no number, so "comparable result" there means a pass — the score is a
-        // tiebreak when both sides happen to have typed one.
-        var isLegacy = request.Mix.UsesLegacyScoring();
-        var mine = isLegacy
-            ? (await _scores.GetBestXXAttempts(request.Mix, me, cancellationToken))
-            .Where(b => b.BestAttempt is { IsBroken: false })
-            .ToDictionary(b => b.Chart.Id, b => (Score: (int?)b.BestAttempt!.Score, Plate: (PhoenixPlate?)null,
-                Grade: (XXLetterGrade?)b.BestAttempt.LetterGrade))
-            : (await _scores.GetBestScores(request.Mix, me, cancellationToken))
+        return subject.UserId is { } them
+            ? await SiteHeadToHead(subject.ForHeadToHead(), request.Mix, me, them, request.ChartType, request.Level,
+                cancellationToken)
+            : await GhostHeadToHead(subject, request.Mix, me, cancellationToken);
+    }
+
+    /// <summary>
+    ///     The same comparison for anyone the visibility port lets you look at. The gate is the
+    ///     port's, not an edge — a rival is one basis among four — and you are not your own opponent.
+    /// </summary>
+    public async Task<RivalHeadToHeadRecord?> Handle(GetPlayerHeadToHeadQuery request,
+        CancellationToken cancellationToken)
+    {
+        if (!_currentUser.IsLoggedIn) return null;
+        var me = _currentUser.User.Id;
+        if (request.OpponentUserId == me) return null;
+
+        var opponent = await _users.GetUser(request.OpponentUserId, cancellationToken);
+        if (opponent == null) return null;
+        var visibility = (await _visibility.GetAudience(me, cancellationToken)).Describe(opponent.Id, opponent.IsPublic);
+        if (!visibility.CanView) return null;
+
+        var subject = new HeadToHeadSubject(opponent.Id, null, opponent.Name.ToString(), opponent.ProfileImage,
+            RivalCapabilities.LiveScores | RivalCapabilities.FolderCompare | RivalCapabilities.Progression);
+        return await SiteHeadToHead(subject, request.Mix, me, opponent.Id, request.ChartType, request.Level,
+            cancellationToken);
+    }
+
+    /// <summary>One side of a comparison: a comparable result a player holds on a chart.</summary>
+    private sealed record Side(int? Score, PhoenixPlate? Plate, XXLetterGrade? Grade);
+
+    /// <summary>
+    ///     A record with no score at all, or one set on a run that broke, is not a comparable
+    ///     result. Both halves matter: the ledger holds scoreless break rows, and counting a break
+    ///     as a number would report losses nobody played. Read from whichever store this mix
+    ///     records into. A legacy best has a letter and usually no number, so "comparable result"
+    ///     there means a pass — the score is a tiebreak when both sides happen to have typed one.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, Side>> ComparableBests(MixEnum mix, Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (mix.UsesLegacyScoring())
+            return (await _scores.GetBestXXAttempts(mix, userId, cancellationToken))
+                .Where(b => b.BestAttempt is { IsBroken: false })
+                .ToDictionary(b => b.Chart.Id,
+                    b => new Side((int?)b.BestAttempt!.Score, null, b.BestAttempt.LetterGrade));
+
+        return (await _scores.GetBestScores(mix, userId, cancellationToken))
             .Where(s => s.Score != null && !s.IsBroken)
-            .ToDictionary(s => s.ChartId, s => (Score: (int?)(int)s.Score!.Value, Plate: s.Plate,
-                Grade: (XXLetterGrade?)null));
+            .ToDictionary(s => s.ChartId, s => new Side((int)s.Score!.Value, s.Plate, null));
+    }
 
-        // A site rival compares within a folder; a board-only one compares on the charts we are
-        // BOTH on, because the mirror covers a scattering of level 20+ boards rather than a
-        // folder. Same table either way — the unit is what differs, and the count says so.
-        var chartIds = subject.IsGhost
-            ? mine.Keys.ToArray()
-            : await FolderChartIds(request, me, mine.Keys, cancellationToken);
+    /// <summary>
+    ///     Two site players, both sides read from the ledger. The universe is the folder's chart list
+    ///     when a folder is named, otherwise every chart either of you has scored — so a chart only
+    ///     one of you has played is a row with the other side empty, counted in OnlyYou / OnlyThem
+    ///     rather than dropped, while the shared tallies still count only the charts you both hold.
+    /// </summary>
+    private async Task<RivalHeadToHeadRecord> SiteHeadToHead(HeadToHeadSubject subject, MixEnum mix, Guid me,
+        Guid them, ChartType? chartType, DifficultyLevel? level, CancellationToken cancellationToken)
+    {
+        var mine = await ComparableBests(mix, me, cancellationToken);
+        var theirs = await ComparableBests(mix, them, cancellationToken);
 
-        var theirs = await _rivalScores.Read(new[] { subject }, request.Mix, chartIds, cancellationToken);
+        IEnumerable<Guid> universe = chartType != null && level != null
+            ? (await _charts.GetCharts(mix, level, chartType, null, cancellationToken)).Select(c => c.Id)
+            : mine.Keys.Union(theirs.Keys);
+
+        var rows = new List<RivalHeadToHeadRow>();
+        foreach (var chartId in universe.Distinct())
+        {
+            var hasMine = mine.TryGetValue(chartId, out var my);
+            var hasTheirs = theirs.TryGetValue(chartId, out var their);
+            if (!hasMine && !hasTheirs) continue;
+            rows.Add(new RivalHeadToHeadRow(chartId, hasMine ? my!.Score : null, hasTheirs ? their!.Score : null,
+                RivalScoreSource.Site, hasMine ? my!.Plate : null, false, hasTheirs ? their!.Plate : null, false,
+                hasMine ? my!.Grade : null, hasTheirs ? their!.Grade : null));
+        }
+
+        return Tally(subject, rows, mix.UsesLegacyScoring(), null);
+    }
+
+    /// <summary>
+    ///     A board-only rival compares on the charts we are BOTH on, because the mirror covers a
+    ///     scattering of level 20+ boards rather than a folder. Same table — the unit is what
+    ///     differs, and the count says so. No one-sided rows: every chart you have played that is
+    ///     not on a board they placed on would be one, which is not information.
+    /// </summary>
+    private async Task<RivalHeadToHeadRecord> GhostHeadToHead(RivalSubject subject, MixEnum mix, Guid me,
+        CancellationToken cancellationToken)
+    {
+        var isLegacy = mix.UsesLegacyScoring();
+        var mine = await ComparableBests(mix, me, cancellationToken);
+        var theirs = await _rivalScores.Read(new[] { subject }, mix, mine.Keys.ToArray(), cancellationToken);
 
         var rows = new List<RivalHeadToHeadRow>();
         foreach (var (chartId, scores) in theirs.ByChart)
@@ -137,25 +208,36 @@ internal sealed class RivalReadSaga :
             var theirScore = scores.FirstOrDefault(s => !s.IsBroken);
             if (theirScore == null) continue;
             var hasMine = mine.TryGetValue(chartId, out var my);
-            rows.Add(new RivalHeadToHeadRow(chartId, hasMine ? my.Score : null,
+            rows.Add(new RivalHeadToHeadRow(chartId, hasMine ? my!.Score : null,
                 isLegacy && theirScore.Score == 0 ? null : theirScore.Score, theirScore.Source,
-                hasMine ? my.Plate : null, false,
+                hasMine ? my!.Plate : null, false,
                 theirScore.Plate, theirScore.IsBroken,
-                hasMine ? my.Grade : null, theirScore.LegacyGrade));
+                hasMine ? my!.Grade : null, theirScore.LegacyGrade));
         }
 
-        // The score is the comparison, on every mix. Two era scores on the SAME chart are
-        // directly comparable — it is only across charts that they mean nothing, and this
-        // table never compares across charts. The letter breaks a tie, which on a raw point
-        // total is close to a never.
-        //
-        // A legacy row still counts as comparable when both sides recorded a grade and
-        // neither typed a number: only 4.8% of legacy records carry one, so requiring a score
-        // would report almost every real rivalry as empty. Those rows tie on 0 and the letter
-        // decides them, which is the case the tiebreak actually exists for.
-        bool Comparable(RivalHeadToHeadRow r) => isLegacy
-            ? r.YourLegacyGrade != null && r.TheirLegacyGrade != null
-            : r.YourScore != null && r.TheirScore != null;
+        return Tally(subject.ForHeadToHead(), rows, isLegacy, theirs.OfficialAsOf);
+    }
+
+    /// <summary>
+    ///     The score is the comparison, on every mix. Two era scores on the SAME chart are directly
+    ///     comparable — it is only across charts that they mean nothing, and this table never
+    ///     compares across charts. The letter breaks a tie, which on a raw point total is close to
+    ///     a never. A legacy row still counts as comparable when both sides recorded a grade and
+    ///     neither typed a number: only 4.8% of legacy records carry one, so requiring a score
+    ///     would report almost every real rivalry as empty. Those rows tie on 0 and the letter
+    ///     decides them, which is the case the tiebreak actually exists for.
+    ///     <para>
+    ///         Order: the charts you both hold first, biggest deficit first — the table's job is
+    ///         to lead with where you are behind — then the ones only they have, then the ones only
+    ///         you have. Score decides, grade breaks the tie, matching Margin() exactly.
+    ///     </para>
+    /// </summary>
+    private static RivalHeadToHeadRecord Tally(HeadToHeadSubject subject, IReadOnlyList<RivalHeadToHeadRow> rows,
+        bool isLegacy, DateTimeOffset? officialAsOf)
+    {
+        bool HasMine(RivalHeadToHeadRow r) => isLegacy ? r.YourLegacyGrade != null : r.YourScore != null;
+        bool HasTheirs(RivalHeadToHeadRow r) => isLegacy ? r.TheirLegacyGrade != null : r.TheirScore != null;
+        bool Comparable(RivalHeadToHeadRow r) => HasMine(r) && HasTheirs(r);
 
         int Margin(RivalHeadToHeadRow r)
         {
@@ -166,18 +248,23 @@ internal sealed class RivalReadSaga :
         }
 
         var comparable = rows.Where(Comparable).ToArray();
-        var shared = comparable.Length;
+        var onlyMine = rows.Where(r => HasMine(r) && !HasTheirs(r)).ToArray();
+        var onlyTheirs = rows.Where(r => !HasMine(r) && HasTheirs(r)).ToArray();
+
+        var ordered = comparable
+            .OrderByDescending(r => (r.TheirScore ?? 0) - (r.YourScore ?? 0))
+            .ThenByDescending(r => ((int?)r.TheirLegacyGrade ?? 0) - ((int?)r.YourLegacyGrade ?? 0))
+            .Concat(onlyTheirs.OrderByDescending(r => r.TheirScore ?? 0)
+                .ThenByDescending(r => (int?)r.TheirLegacyGrade ?? 0))
+            .Concat(onlyMine.OrderByDescending(r => r.YourScore ?? 0)
+                .ThenByDescending(r => (int?)r.YourLegacyGrade ?? 0))
+            .ToArray();
+
         return new RivalHeadToHeadRecord(subject,
             comparable.Count(r => Margin(r) > 0),
             comparable.Count(r => Margin(r) < 0),
-            shared, theirs.OfficialAsOf,
-            // Biggest deficit first — the table's job is to lead with where you are behind.
-            // Score decides, grade breaks the tie, matching Margin() exactly: on a legacy mix
-            // nearly every row ties at 0 on the number, and without the grade term the order
-            // there was arbitrary.
-            rows.OrderByDescending(r => (r.TheirScore ?? 0) - (r.YourScore ?? 0))
-                .ThenByDescending(r => ((int?)r.TheirLegacyGrade ?? 0) - ((int?)r.YourLegacyGrade ?? 0))
-                .ToArray());
+            comparable.Length, officialAsOf, ordered,
+            onlyMine.Length, onlyTheirs.Length);
     }
 
     /// <summary>
@@ -206,19 +293,4 @@ internal sealed class RivalReadSaga :
         return await _resolver.Resolve(edges, mix, cancellationToken);
     }
 
-    private async Task<IReadOnlyCollection<Guid>> FolderChartIds(GetRivalHeadToHeadQuery request, Guid me,
-        IEnumerable<Guid> myScoredCharts, CancellationToken cancellationToken)
-    {
-        // No folder named: the universe is every chart you hold a comparable score on, which the
-        // caller has already read. Asking the ledger for the same rows a second time also asked a
-        // different question — that read kept scoreless breaks, so the two paths disagreed about
-        // which charts are in play.
-        if (request.ChartType == null || request.Level == null)
-            return myScoredCharts.ToArray();
-
-        return (await _scores.GetPlayerScores(request.Mix, new[] { me }, request.ChartType.Value,
-                request.Level.Value, cancellationToken))
-            .Select(s => s.record.ChartId)
-            .ToArray();
-    }
 }
