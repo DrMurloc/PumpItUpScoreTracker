@@ -512,7 +512,10 @@ body {
     padding: 6px 16px;
 }
 
+/* The name is the row; it keeps its width and the game tag beside it is what gives way when a
+   row runs short — a name cut to "12be…" next to a whole tag was the wrong thing truncated. */
 .site-search-label {
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -520,6 +523,11 @@ body {
 }
 
 .site-search-sub {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: .72rem;
     color: var(--mix-ink-muted);
     white-space: nowrap;

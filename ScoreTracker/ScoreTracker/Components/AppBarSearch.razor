@@ -15,5 +15,10 @@
     /// <summary>The frame is the caller's — an app-bar slot and a sheet want different boxes.</summary>
     [Parameter] public string Class { get; set; } = "d-flex align-center appbar-search mr-3 shell-desktop-only";
 
-    [Parameter] public string? Style { get; set; } = "min-width: 170px; max-width: 220px;";
+    /// <summary>
+    ///     The desktop pill's width. It grew from 220px when players joined the list: a name, a
+    ///     game tag and a row state need room, and the app bar has it — the spacer gives way
+    ///     first, and the pill only shrinks toward its floor when the nav itself is squeezed.
+    /// </summary>
+    [Parameter] public string? Style { get; set; } = "flex: 0 1 340px; min-width: 240px; max-width: 340px;";
 }
