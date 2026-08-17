@@ -186,6 +186,34 @@ than dropped. Kept deliberately short, since the length rule tracks the English.
 | enough | blurg | Coined 2026-08-07. |
 | fifty | murgro | Coined 2026-08-07 for *Fifty charts, {0} plate.* — the numeral spelled out, where `mrp` ("one") is the pronoun. Digits stay digits; only a spelled-out English numeral needs this. |
 
+### The PUMBILITY calculator batch (2026-08-16)
+
+Coined for `/PumbilityCalculator/{mix}` ([pumbility-calculator.md](design/pumbility-calculator.md)) and
+reusable everywhere. Its formula vocabulary is the part most likely to recur.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| base | gogl | The formula's `Base(level)`. Also the verb — *priced / pays / costs* all read `gogl`, since Murloc does not mark the difference. |
+| formula | blargmurm | |
+| multiplier / modifier | murmgrog | |
+| bonus | roglubgl | `roglub` (gain) + `gl`. |
+| floor (a grade's) | blogl | Distinct from `grogl` (ceiling). |
+| ladder | gropla | A rung of it is `grop`, which also carries *step*. |
+| exchange | blorg | The exchange rate is `blorg mrglrg` — `mrglrg` (rating) doubles as *rate*. |
+| worth | gromb | The adjective. The noun *value* stays `grumb`. |
+| buys / bought | blogub | What scoring buys, in levels. |
+| push / pushing | gruplo | *Push levels* — the imperative the answer section leads with. |
+| band | grolgub | Shares the word with *row*, which is what a band is on the page. |
+| population | morpgro | `morp` (player) + `gro`. |
+| sweep (the nightly job) | grrgro | |
+| axis | plagub | |
+| curve | grulub | Quadratic doubles it: `grulubgrulub`. |
+| span / gap | grulm | |
+| tiebreaker | grulmplub | |
+| magnified | grrglgro | |
+| lever | graplub | |
+| ⚠ a lone grade letter | Ｓ Ｄ Ｃ Ｆ | **Fullwidth**, when the letter stands alone as game notation (*the S grades*, *a D pays*, *S + D*). A bare Latin `S` or `D` is a one-letter English word to the alphabet ratchet, and a Murloc syllable in its place would stop naming the grade. Grade names of two or more characters (`AA`, `SSS+`) are already exempt as acronyms. |
+
 ## Process for future batches
 
 1. A new en-US key gets an en-ZW value **in the same pass**, like every other locale.
@@ -202,3 +230,19 @@ than dropped. Kept deliberately short, since the length rule tracks the English.
 - The 2023 originals contained three joke shout-outs to real people (`MR_WEQ`, `daryen`) and left
   the word `votes` in English in two entries. Those keys have since been deleted as orphans, so
   the jokes are gone. If they are wanted back, they need new homes rather than restored keys.
+
+## PUMBILITY peers (Phoenix 2 projection, 2026-08-16)
+
+| English | en-ZW | Notes |
+|---|---|---|
+| Peer / Peers | maglmurp | Recovered from the existing `#{0} of {1} peers` (`maglmurp`); `PUMBILITY peers` is `PUMBILITY maglmurp`. Distinct from `Murgmorp` (rival) and `Morp` (player). |
+| Pool | blubgro | Recovered from the existing `Pool` → `Blubgro`; lowercase mid-sentence. |
+| within | arglblgrl | Recovered from `within 1 level` → `arglblgrl 1 grorpmurm`. |
+| full | mrglmr | Recovered from `Full board` → `Mrglmr mrglblarg`. |
+| projection / projections | purgmorgl | Recovered from `{0} have no projection` → `purgmorgl`. |
+| show / shown | romorg / blgrlargl | `Romorg` from `Show fewer`; `blgrlargl` (shown) from the score-history line. |
+| than | grogrgl | Recovered from `More than 75%` → `Mrrgl grogrgl 75%`. |
+| them / their | grglblarg | Recovered from `kept their level` → `grglblarg grorpmurm`. |
+| stand (on) | morggrrgl ap | `morggrrgl` from `Where you stand`; `ap` is the existing "on". |
+| Peers IQR | Maglmurp IQR | The `/Pumbility` targets' column. `IQR` is an acronym and rides through as one. |
+| From {0} peers | Romurg {0} maglmurp | `Romurg` from `From {0} scores` → `Romurg {0} mgrlgmrg`. |

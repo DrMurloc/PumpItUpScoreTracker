@@ -76,7 +76,8 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 | `scores.TierListEntry` | Tier list entries per mix (the site's most-used feature) |
 | `scores.ChartScoreStats` | Population score variance per chart, refreshed by the daily scores tier-list rebuild (tier-lists overhaul C1) |
 | `scores.FolderCohortStats` | Folder pass-count histograms per competitive-level bucket, refreshed by the daily scores tier-list rebuild — powers the "Folder Passes vs Similar Players" bar (tier-lists overhaul C16) |
-| `scores.PumbilityTierListEntry` | The PUMBILITY tier lists: how many players in a cohort hold each of a folder's charts in their top-50 PUMBILITY pool, with the log-banded tier that count produced. One row set per folder per cohort (`CohortKey` = a P1 difficulty title level, a P2 PUMBILITY title rung, or `*` for everyone), rewritten nightly per mix ([pumbility-tier-list.md](design/pumbility-tier-list.md)) |
+| `scores.PumbilityTierListEntry` | The PUMBILITY tier lists: how many of a viewer's PUMBILITY peers hold each of a folder's charts in their top-50 PUMBILITY pool, with the log-banded tier that count produced. One row set per folder per peer key (`PeerKey` = a P1 difficulty title level `L{n}`, a P2 PUMBILITY level rung `R{index}` whose members are the players within ±3 rungs with a full pool of the type, or `*` for everyone; `PeerCount` = how many players that key counted), rewritten nightly per mix ([pumbility-tier-list.md](design/pumbility-tier-list.md)). `PeerKey`/`PeerCount` were `CohortKey`/`CohortSize` before 2026-08-15 (rename migration) |
+| `scores.PumbilityPoolComposition` | Where PUMBILITY comes from, across every full 50-chart pool on a mix: one row per (mix, band) — the band a merged Singles+Doubles pool total falls in (P2 = a `[P.B]` gem rung, P1 = one of eight total bands) — with the player count, the pool-average level, the summed level/score/plate parts of the D16 decomposition and a 16-grade histogram (`GradeCountsJson`). No `UserId`. Rewritten by the nightly PUMBILITY tier-list sweep and read by `/PumbilityCalculator/{mix}` ([pumbility-calculator.md](design/pumbility-calculator.md)) |
 | `scores.ChartScoringLevel` | Calculated scoring-difficulty level per chart+mix |
 | `scores.ChartSimilarity` | Similarity-graph edges: the top-20 nearest charts per chart+mix, stored **floor-free** so the shelf can move its own bar and render near-misses without a rebuild. `SignalsJson` carries the skill/intensity breakdown plus the shared badges the shelf names each match from. Rebuilt wholesale by the nightly similarity job ([design](design/chart-similarity.md)) |
 | `scores.ChartLetterDifficulty` | Letter-grade (AA–PG) difficulty percentiles per chart |
@@ -139,10 +140,15 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.Tournament` | Competitive event definition: configuration, location, visibility, and the Discord channel the randomizer's Push to Discord posts into |
+| `scores.Tournament` | Competitive event definition: configuration, location, visibility, and the Discord channel the randomizer's Push to Discord posts into. MoM rows are legacy — copied onto the `MoM*` tables (march-of-murlocs.md §7) and no longer read |
 | `scores.UserTournamentRegistration` | Player registrations |
-| `scores.UserTournamentSession` | A player's session: charts played, scores, approval state, and the mix it was played on |
-| `scores.PhotoVerification` | Photo proofs attached to sessions |
+| `scores.UserTournamentSession` | Legacy MoM session storage (JSON chart blob) — copied onto `MoMSession`/`MoMSessionChart` and no longer read |
+| `scores.PhotoVerification` | Photo proofs attached to sessions (verification deleted, D5 — rows kept, never written) |
+| `scores.MoMSeason` | A March of Murlocs season; filtered unique (Year, Quarter) is the anti-runaway guarantee (D2); Year/Quarter NULL for off-grid legacy seasons |
+| `scores.MoMBoard` | One board of a season — (mix, chart type) with its frozen serialized scoring config; legacy boards keep their legacy tournament Guid |
+| `scores.MoMChartLevel` | Season balance snapshot, delta rows only (a missing row means folder level + 0.5) |
+| `scores.MoMSession` | A recorded MoM session: derived cache columns over its chart rows; PublishedAt NULL = draft; no unique (Board, User) — boards rank sessions, not players (D16) |
+| `scores.MoMSessionChart` | The session's charts, normalized out of the legacy JSON blob; PlayedAt lands with timestamps (Slice 3) |
 | `scores.TournamentChartLevel` | Per-tournament chart level overrides |
 | `scores.TournamentRole` | Per-tournament roles (organizer, judge, …) |
 | `scores.TournamentRoleInvite` | Role-carrying invite link tokens (Head TO mints; optional expiry) |

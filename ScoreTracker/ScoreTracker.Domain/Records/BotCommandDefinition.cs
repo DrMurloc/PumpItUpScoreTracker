@@ -1,11 +1,15 @@
 namespace ScoreTracker.Domain.Records;
 
-/// <summary>The provider-agnostic option kinds a bot command exposes.</summary>
+/// <summary>
+///     The provider-agnostic option kinds a bot command exposes. <see cref="Number" /> is a
+///     decimal — the client accepts a fractional value where <see cref="Integer" /> rejects one.
+/// </summary>
 public enum BotCommandOptionType
 {
     String,
     Integer,
-    Boolean
+    Boolean,
+    Number
 }
 
 /// <summary>

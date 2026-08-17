@@ -198,3 +198,18 @@ extend the existing Life / Lifebar rows above.
 3. For typo / questionable-word fixes, prefer one batch per category (e.g. "Fix yarikoto → yarukoto across the file") so the diff is reviewable.
 4. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
 5. PR titled like `Translate <Folder> to ja-JP` or `Fix ja-JP <typo / inconsistency>`.
+
+## PUMBILITY peers (Phoenix 2 projection, 2026-08-16)
+
+The `/Pumbility` peer line and the tier lists' PUMBILITY lens name one group: players within ±3 rungs
+of you on the PUMBILITY level ladder holding a full 50-chart pool of the type. Joins the existing
+`同レベル{0}人` / `同レベル比` family.
+
+| English | ja-JP | Notes |
+|---|---|---|
+| PUMBILITY peers | PUMBILITYピア | ピア as a loanword, since 同レベル already means the competitive band and this group is a different one. |
+| within 3 levels of you with a full pool | あなたと3レベル以内で、プールが満杯のプレイヤー | Rungs of the PUMBILITY ladder; the badge itself reads LV. |
+| you stand on {0} | あなたは {0} | Same shape as the existing `you sit at {0}` → `あなたは {0}`; {0} is a rung name in the game's notation, never translated. |
+| Singles / Doubles (in these strings) | Singles / Doubles | Kept English, as the locale already does for the pool names. |
+| Peers IQR | ピアIQR | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` stays as the acronym — the label exists to tell a reader who knows the term that it is not a min–max. |
+| From {0} peers | ピア {0}人から算出 | The column's tooltip; same shape as `From {0} scores` → `{0} スコアから算出`. |

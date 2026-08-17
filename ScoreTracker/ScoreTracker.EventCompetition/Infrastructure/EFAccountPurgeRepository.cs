@@ -15,6 +15,9 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
     internal static readonly Type[] UserOwned =
     {
         typeof(UserTournamentSessionEntity),
+        // MoMSessionChart rows are not listed: they carry no user key and cascade with
+        // their session's FK.
+        typeof(MoMSessionEntity),
         typeof(UserTournamentRegistrationEntity),
         typeof(TournamentRoleEntity),
         typeof(PhotoVerificationEntity),

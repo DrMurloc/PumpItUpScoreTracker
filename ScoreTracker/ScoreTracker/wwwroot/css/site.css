@@ -13396,6 +13396,34 @@ span.ct-console-pick { cursor: default; }
     margin: 2px 0 14px;
 }
 
+/* The Phoenix 2 peer line under the targets' lede: one chip per chart type in the selected pool —
+   the peer count, or "N/50 charts" for a type whose pool is not yet full — with the definition in
+   the chip's tooltip. A count, not a sentence (docs/design/pumbility-overhaul.md §3.3). */
+.pmb-peer-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: -6px 0 12px;
+}
+
+.pmb-peer-chip {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    color: var(--mix-ink);
+    cursor: help;
+}
+
+.pmb-peer-chip[data-lit="false"] {
+    color: var(--mix-ink-muted);
+    font-weight: 500;
+    border-style: dashed;
+}
+
 
 /* --- targets, comfortable --- */
 /* One treatment for both jacket badges: the mix accent on the mix accent, over the black
@@ -13484,6 +13512,30 @@ span.ct-console-pick { cursor: default; }
 .pmb-gain-cell {
     color: var(--mix-primary);
     font-variant-numeric: tabular-nums;
+}
+
+/* The Peers IQR: the peers' first and third quartiles as two grades with a dash between them
+   (docs/design/pumbility-overhaul.md D30). One dash on every row — the grades say the width. */
+.pmb-iqr {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: help;
+}
+
+.pmb-iqr-conn {
+    color: var(--mix-ink-muted);
+    font-size: 12px;
+    line-height: 1;
+}
+
+.pmb-iqr-label {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
 }
 
 /* --- the pool board --- */
@@ -14741,4 +14793,1281 @@ span.ct-console-pick { cursor: default; }
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+/* ============================================================================
+   PUMBILITY Calculator (/PumbilityCalculator/{mix}) — docs/design/pumbility-calculator.md
+   A static reference page: the formula, its constants, the value tables, the
+   level-equivalent ruler and the population answers, all real HTML. What moves
+   (the type toggle, the table's contour click, the quick calculator) is
+   wwwroot/js/pumbility-calculator.js working on this markup. Tokens only.
+   ============================================================================ */
+
+.pc-page {
+    display: flex;
+    flex-direction: column;
+    gap: 34px;
+    padding: 16px 0 72px;
+}
+
+/* --- hero --- */
+.pc-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px 32px;
+    align-items: end;
+}
+
+.pc-eyebrow {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.pc-eyebrow .pc-sep {
+    color: color-mix(in srgb, var(--mix-ink) 18%, transparent);
+}
+
+.pc-eyebrow a {
+    color: var(--mix-ink-muted);
+    border-bottom: 1px dotted var(--mix-ink-muted);
+    text-decoration: none;
+}
+
+.pc-eyebrow a:hover {
+    color: var(--mix-ink);
+}
+
+.pc-h1 {
+    margin: 8px 0 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 46px;
+    line-height: 1;
+    letter-spacing: .005em;
+    text-wrap: balance;
+}
+
+.pc-h1 span {
+    color: var(--mix-primary);
+}
+
+.pc-lede {
+    max-width: 66ch;
+    margin: 12px 0 0;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.pc-lede .pc-muted {
+    color: var(--mix-ink-muted);
+}
+
+/* The Singles/Doubles group heads the run of type-specific sections it governs — the ruler is
+   the first thing on the page that changes with it, so it sits right above the ruler's title,
+   pulled in against the page gap so the two read as one. */
+.pc-typebar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: -18px;
+}
+
+.pc-hint {
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-typegroup {
+    display: inline-flex;
+    border: 1px solid var(--mix-primary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.pc-typegroup button {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: var(--mix-primary);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    cursor: pointer;
+}
+
+.pc-typegroup button + button {
+    border-left: 1px solid var(--mix-primary);
+}
+
+.pc-typegroup button[aria-pressed="true"] {
+    background: var(--mix-primary);
+    color: var(--mix-primary-contrast);
+}
+
+.pc-typegroup button:focus-visible {
+    outline: 2px solid var(--mix-secondary);
+    outline-offset: -2px;
+}
+
+/* --- shared section vocabulary --- */
+.pc-sec {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pc-sec-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.pc-h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: .005em;
+    text-wrap: balance;
+}
+
+.pc-h2.pc-q {
+    font-size: 26px;
+}
+
+.pc-h2.pc-q::before {
+    content: "Q";
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin-right: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    background: var(--mix-secondary);
+    color: var(--mix-primary-contrast);
+    vertical-align: 4px;
+}
+
+.pc-h3 {
+    margin: 0 0 8px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: .02em;
+}
+
+.pc-sub {
+    max-width: 72ch;
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-sub b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.pc-card {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 6px;
+    padding: 16px 18px;
+}
+
+.pc-lbl {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.pc-muted {
+    color: var(--mix-ink-muted);
+}
+
+.pc-foot {
+    margin: 10px 0 0;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-mark {
+    color: var(--mix-accent);
+}
+
+/* --- the formula --- */
+.pc-formula {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 16px;
+}
+
+.pc-formula-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 10px;
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1.1;
+    letter-spacing: .01em;
+}
+
+.pc-formula-line small {
+    width: 100%;
+    font: 400 15px/1.4 var(--font-body);
+    color: var(--mix-ink-muted);
+}
+
+.pc-op {
+    color: var(--mix-ink-muted);
+    font-weight: 600;
+}
+
+.pc-t-level {
+    color: var(--mix-primary);
+    font-style: normal;
+}
+
+.pc-t-grade {
+    color: var(--mix-secondary);
+    font-style: normal;
+}
+
+.pc-t-plate {
+    color: var(--mix-accent);
+    font-style: normal;
+}
+
+.pc-terms {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.pc-term {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    padding-left: 10px;
+    border-left: 3px solid var(--mix-ink-muted);
+}
+
+.pc-term-level {
+    border-left-color: var(--mix-primary);
+}
+
+.pc-term-grade {
+    border-left-color: var(--mix-secondary);
+}
+
+.pc-term-plate {
+    border-left-color: var(--mix-accent);
+}
+
+.pc-term-val {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 1.15;
+}
+
+.pc-term-val small {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mix-ink-muted);
+}
+
+.pc-term-say {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-zero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    align-items: baseline;
+    margin-top: 14px;
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-zero-item {
+    color: var(--mix-ink);
+}
+
+.pc-examples {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pc-example {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    align-items: baseline;
+    font-size: 13px;
+}
+
+.pc-example-who {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+.pc-example-math {
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-example-math b {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--mix-ink);
+}
+
+/* --- the ruler --- */
+.pc-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    align-items: center;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-legend i {
+    display: inline-block;
+    width: 18px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 2px;
+    vertical-align: 0;
+}
+
+.pc-legend i.pc-legend-tail {
+    height: 5px;
+    opacity: .45;
+}
+
+.pc-legend i.pc-legend-anchor {
+    width: 2px;
+    height: 14px;
+    background: var(--mix-ink);
+    vertical-align: -3px;
+}
+
+.pc-ruler {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 46px;
+    gap: 0 10px;
+    margin-top: 12px;
+}
+
+.pc-ruler-axis {
+    grid-column: 2;
+    position: relative;
+    height: 22px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-ruler-axis span {
+    position: absolute;
+    bottom: 4px;
+    transform: translateX(-50%);
+}
+
+.pc-ruler-axis .pc-ruler-cap {
+    left: 0;
+    transform: none;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.pc-ruler-axis .pc-ruler-cap-past {
+    transform: translateX(6px);
+    opacity: .7;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.pc-ruler-lbl {
+    height: 22px;
+    margin-bottom: 4px;
+    line-height: 22px;
+    text-align: right;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-ruler-track {
+    position: relative;
+    height: 22px;
+    margin-bottom: 4px;
+}
+
+.pc-ruler-grid {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+.pc-ruler-grid.pc-ruler-grid-5 {
+    background: color-mix(in srgb, var(--mix-ink) 18%, transparent);
+}
+
+.pc-ruler-past {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--mix-ink) 6%, transparent) 4px 5px);
+}
+
+.pc-seg {
+    position: absolute;
+    top: 5px;
+    height: 12px;
+}
+
+.pc-seg-tail {
+    top: 8px;
+    height: 6px;
+    opacity: .45;
+    background: var(--plate-rg);
+}
+
+.pc-seg-copper {
+    background: var(--plate-fg);
+}
+
+.pc-seg-silver {
+    background: var(--plate-tg);
+}
+
+.pc-seg-gold {
+    background: var(--plate-sg);
+}
+
+.pc-seg-ice {
+    background: var(--plate-ug);
+}
+
+.pc-ruler-track:hover .pc-seg {
+    filter: brightness(1.15);
+}
+
+.pc-ruler-anchor {
+    position: absolute;
+    top: 2px;
+    width: 2px;
+    height: 18px;
+    background: var(--mix-ink);
+    transform: translateX(-1px);
+}
+
+.pc-ruler-end {
+    height: 22px;
+    margin-bottom: 4px;
+    line-height: 22px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-ruler-foot {
+    margin: 10px 0 0;
+    max-width: 80ch;
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-ruler-foot b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+/* --- the value table --- */
+.pc-tablewrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 6px;
+    background: var(--mix-surface);
+}
+
+.pc-tablewrap-plain {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.pc-vt {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-vt th,
+.pc-vt td {
+    padding: 0;
+    text-align: center;
+    font-size: 12.5px;
+}
+
+.pc-vt thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 8px 4px 6px;
+    background: var(--mix-surface);
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .02em;
+}
+
+.pc-vt .pc-floor {
+    display: block;
+    margin-top: 1px;
+    font: 400 10.5px/1.3 var(--font-body);
+    color: var(--mix-ink-muted);
+    letter-spacing: 0;
+}
+
+.pc-metal {
+    display: block;
+    width: 60%;
+    height: 3px;
+    margin: 4px auto 0;
+    border-radius: 2px;
+}
+
+.pc-vt thead th.pc-lv,
+.pc-vt tbody td.pc-lv {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    text-align: left;
+    padding-left: 12px;
+    background: var(--mix-surface);
+}
+
+.pc-vt thead th.pc-lv {
+    z-index: 3;
+}
+
+.pc-vt tbody td.pc-lv {
+    white-space: nowrap;
+    border-right: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.pc-vt tbody td.pc-lv small {
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--mix-ink-muted);
+}
+
+.pc-vt tbody td.pc-lv sup {
+    margin-left: 2px;
+    font-size: 10px;
+    color: var(--mix-accent);
+}
+
+.pc-vt tbody td.pc-v {
+    height: 30px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 3px;
+    transition: transform .08s;
+}
+
+.pc-vt tbody td.pc-v:hover {
+    position: relative;
+    z-index: 1;
+    transform: scale(1.06);
+}
+
+.pc-vt tbody td.pc-v.pc-hit {
+    border-color: var(--mix-ink);
+    box-shadow: 0 0 0 1px var(--mix-bg) inset;
+}
+
+.pc-vt tbody td.pc-v.pc-pick {
+    border-color: var(--mix-secondary);
+    box-shadow: 0 0 0 2px var(--mix-secondary), 0 0 12px var(--mix-secondary);
+}
+
+.pc-vt tbody td.pc-v.pc-far {
+    opacity: .35;
+}
+
+.pc-vt tbody td.pc-v-muted {
+    background: var(--mix-surface-muted);
+    color: var(--mix-ink-muted);
+    cursor: default;
+}
+
+.pc-vt tbody td.pc-n {
+    padding: 0 10px;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-vt tbody tr.pc-coop td.pc-lv {
+    border-top: 1px dashed color-mix(in srgb, var(--mix-ink) 18%, transparent);
+}
+
+/* The value ramp: one hue, the mix's primary, from the surface up — a set of classes on the
+   tokens rather than an inline colour, so the ratchet reads it and a theme can re-hue it. */
+.pc-ramp-0 { background: color-mix(in oklab, var(--mix-primary) 6%, var(--mix-surface-muted)); color: var(--mix-ink); }
+.pc-ramp-1 { background: color-mix(in oklab, var(--mix-primary) 15%, var(--mix-surface-muted)); color: var(--mix-ink); }
+.pc-ramp-2 { background: color-mix(in oklab, var(--mix-primary) 24%, var(--mix-surface-muted)); color: var(--mix-ink); }
+.pc-ramp-3 { background: color-mix(in oklab, var(--mix-primary) 33%, var(--mix-surface-muted)); color: var(--mix-ink); }
+.pc-ramp-4 { background: color-mix(in oklab, var(--mix-primary) 42%, var(--mix-surface-muted)); color: var(--mix-ink); }
+.pc-ramp-5 { background: color-mix(in oklab, var(--mix-primary) 51%, var(--mix-surface-muted)); color: var(--mix-primary-contrast); }
+.pc-ramp-6 { background: color-mix(in oklab, var(--mix-primary) 60%, var(--mix-surface-muted)); color: var(--mix-primary-contrast); }
+.pc-ramp-7 { background: color-mix(in oklab, var(--mix-primary) 70%, var(--mix-surface-muted)); color: var(--mix-primary-contrast); }
+.pc-ramp-8 { background: color-mix(in oklab, var(--mix-primary) 80%, var(--mix-surface-muted)); color: var(--mix-primary-contrast); }
+.pc-ramp-9 { background: color-mix(in oklab, var(--mix-primary) 90%, var(--mix-surface-muted)); color: var(--mix-primary-contrast); }
+
+.pc-contour-cap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    align-items: baseline;
+    min-height: 20px;
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-contour-cap b {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--mix-ink);
+}
+
+.pc-contour-cap .pc-eq {
+    color: var(--mix-ink);
+}
+
+.pc-contour-cap button {
+    appearance: none;
+    background: transparent;
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--mix-ink-muted);
+    cursor: pointer;
+}
+
+.pc-table-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-rampkey {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pc-rampkey i {
+    display: inline-block;
+    width: 90px;
+    height: 8px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--mix-surface-muted), var(--mix-primary));
+}
+
+/* --- the constants --- */
+/* Stacked, never side by side: the grade ladder is seventeen columns and the plate table nine,
+   and neither fits in a share of the row without a scroller. Full width, the ladder's grade
+   columns also line up under the value table's. */
+.pc-consts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+}
+
+.pc-ct {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-ct th,
+.pc-ct td {
+    padding: 6px 4px;
+    text-align: center;
+    font-size: 12.5px;
+    border-bottom: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+.pc-ct th {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13.5px;
+}
+
+.pc-ct td.pc-rl,
+.pc-ct th.pc-rl {
+    text-align: left;
+    padding-right: 8px;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.pc-ct td.pc-diff {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.pc-ct td.pc-same {
+    color: var(--mix-ink-muted);
+}
+
+.pc-ct td.pc-floor-cell {
+    font-size: 11px;
+    color: var(--mix-ink-muted);
+}
+
+@media (max-width: 860px) {
+    .pc-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .pc-h1 {
+        font-size: 38px;
+    }
+
+    .pc-formula {
+        grid-template-columns: 1fr;
+    }
+
+    .pc-formula-line {
+        font-size: 28px;
+    }
+
+    .pc-terms {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pc-vt tbody td.pc-v {
+        transition: none;
+    }
+}
+
+/* --- the comparison (this mix in primary, the other in secondary) --- */
+.pc-cmp-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-cmp-legend i {
+    display: inline-block;
+    width: 18px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 2px;
+    vertical-align: 0;
+}
+
+.pc-cmp-swatch-other {
+    background: var(--mix-secondary);
+}
+
+.pc-cmp-swatch-mine {
+    background: var(--mix-primary);
+}
+
+.pc-cmp {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 62px;
+    gap: 0 10px;
+    margin-top: 12px;
+}
+
+.pc-cmp-axis {
+    grid-column: 2;
+    position: relative;
+    height: 22px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-cmp-axis span {
+    position: absolute;
+    bottom: 4px;
+    transform: translateX(-50%);
+}
+
+.pc-cmp-lbl {
+    height: 40px;
+    margin-bottom: 6px;
+    line-height: 40px;
+    text-align: right;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.pc-cmp-track {
+    position: relative;
+    height: 40px;
+    margin-bottom: 6px;
+}
+
+.pc-cmp-grid {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: color-mix(in srgb, var(--mix-ink) 10%, transparent);
+}
+
+.pc-cmp-bar {
+    position: absolute;
+    height: 14px;
+    border-radius: 0 3px 3px 0;
+}
+
+.pc-cmp-bar-other {
+    top: 4px;
+    background: var(--mix-secondary);
+}
+
+.pc-cmp-bar-mine {
+    top: 22px;
+    background: var(--mix-primary);
+}
+
+.pc-cmp-bar span {
+    position: absolute;
+    left: calc(100% + 6px);
+    top: -1px;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--mix-ink);
+}
+
+.pc-cmp-anchor {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    width: 2px;
+    background: var(--mix-ink);
+    transform: translateX(-1px);
+}
+
+/* Where the two curves cross, said under the bars that show it. */
+.pc-cmp-note {
+    margin: 12px 0 0;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    font-size: 12.5px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-cmp-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.pc-cmp-fact {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border-left: 3px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+}
+
+.pc-cmp-fact.pc-cmp-hero {
+    border-left-color: var(--mix-primary);
+    background: color-mix(in srgb, var(--mix-primary) 7%, var(--mix-surface));
+}
+
+.pc-cmp-fact.pc-cmp-hero .pc-lbl {
+    color: var(--mix-ink);
+}
+
+.pc-cmp-pair {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-cmp-hero .pc-cmp-pair {
+    font-size: 26px;
+}
+
+.pc-cmp-other {
+    color: var(--mix-secondary);
+}
+
+.pc-cmp-mine {
+    color: var(--mix-primary);
+}
+
+.pc-cmp-vs {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    color: var(--mix-ink-muted);
+}
+
+.pc-cmp-say {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-cmp-say b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.pc-answer {
+    margin: 0;
+    max-width: 78ch;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.pc-answer b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.pc-answer .pc-n {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+}
+
+@media (max-width: 860px) {
+    .pc-cmp-facts {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* A type block is a run of sections; the script hides the type not selected. The explicit
+   [hidden] rule matters: the flex display below would otherwise beat the attribute. */
+.pc-type-block {
+    display: flex;
+    flex-direction: column;
+    gap: 34px;
+}
+
+.pc-type-block[hidden] {
+    display: none;
+}
+
+/* --- the quick calculator --- */
+.pc-calc {
+    display: grid;
+    grid-template-columns: auto auto auto minmax(0, 1fr);
+    gap: 14px 22px;
+    align-items: end;
+}
+
+.pc-calc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.pc-calc select {
+    appearance: none;
+    min-width: 130px;
+    padding: 8px 32px 8px 10px;
+    background: var(--mix-surface-muted);
+    color: var(--mix-ink);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 18%, transparent);
+    border-radius: 4px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    background-image: linear-gradient(45deg, transparent 50%, var(--mix-ink-muted) 50%), linear-gradient(135deg, var(--mix-ink-muted) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+}
+
+.pc-calc select:focus-visible {
+    outline: 2px solid var(--mix-secondary);
+    outline-offset: 1px;
+}
+
+.pc-calc-static {
+    padding: 8px 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-calc-out {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-self: end;
+    text-align: right;
+}
+
+.pc-calc-big {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: .01em;
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-calc-math {
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.pc-calc-eq {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    font-size: 13px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-calc-eq:empty {
+    display: none;
+}
+
+.pc-calc-eq b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+@media (max-width: 860px) {
+    .pc-calc {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .pc-calc-out {
+        grid-column: 1 / -1;
+        justify-self: start;
+        text-align: left;
+    }
+}
+
+/* --- the population answers --- */
+.pc-pop-bands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 0;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+}
+
+.pc-pop-bands b {
+    color: var(--mix-ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.pc-plate-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* The plate ladder as one bar, Rough Game to Perfect Game: every plate a segment in its own
+   plate colour, sized by its bonus, carrying what it is worth on the reference chart. */
+.pc-plate-track {
+    position: relative;
+    display: flex;
+    height: 44px;
+    border-radius: 4px;
+    background: var(--mix-surface-muted);
+    overflow: hidden;
+}
+
+.pc-plate-seg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    overflow: hidden;
+    /* The plate fills are light in every theme and the page ground is dark in every theme, so
+       the ground colour is the ink that reads on all of them. */
+    color: var(--mix-bg);
+    font-family: var(--font-display);
+    line-height: 1.15;
+    border-right: 2px solid var(--mix-surface);
+}
+
+.pc-plate-seg:last-child {
+    border-right: 0;
+}
+
+.pc-plate-seg-name {
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: .04em;
+}
+
+.pc-plate-seg-val {
+    font-weight: 600;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Where the tracked pools' average plate falls on the same scale. */
+.pc-plate-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--mix-ink);
+}
+
+.pc-plate-poolrow {
+    position: relative;
+    height: 16px;
+}
+
+.pc-plate-pool {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 11.5px;
+    color: var(--mix-ink);
+}
+
+.pc-plate-ends {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+}
+
+/* On a phone the seven segments are too narrow to carry their labels: the bar stays coloured
+   and the labels move into a list beneath it. */
+.pc-plate-list {
+    display: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+@media (max-width: 640px) {
+    .pc-plate-track {
+        height: 14px;
+    }
+
+    .pc-plate-seg span {
+        display: none;
+    }
+
+    .pc-plate-poolrow {
+        height: auto;
+    }
+
+    .pc-plate-pool {
+        position: static;
+        transform: none;
+        white-space: normal;
+    }
+
+    .pc-plate-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 4px 12px;
+        font-size: 12px;
+    }
+
+    .pc-plate-list i {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 6px;
+        border-radius: 2px;
+        vertical-align: -1px;
+    }
+
+    .pc-plate-list b {
+        font-variant-numeric: tabular-nums;
+    }
 }

@@ -181,6 +181,18 @@ backwards yank by another name — and two thumbs parked on the same value could
 all, the second input in the DOM winning every overlap and having nowhere to go. The rule
 generalizes to anything that follows a finger: a scrub bar, a reorder drag, a resize handle.
 
+**13. A reference page is real HTML, and its interactions are a script, not a circuit.** A page
+whose job is to be found and quoted — the PUMBILITY calculator is the worked example
+([pumbility-calculator.md](design/pumbility-calculator.md)) — renders static SSR with *everything a
+reader could want to cite* in the markup: every constant, every table, every variant (both chart
+types, both in the HTML). What moves on the page — a type toggle, a click-to-highlight, a small
+calculator — is one vanilla module under `wwwroot/js/` served through `@Assets`, working on the
+markup and on a JSON block the server emitted from the same source of truth the markup came from.
+The script owns no data of its own, so it cannot disagree with the page; without it the page loses
+a convenience, never a fact. Islands are for things that need a server round trip. A page-scoped
+value ramp on such a page (`pc-ramp-0…9`) is a set of classes built with `color-mix` on the mix's
+tokens, never a literal.
+
 ---
 
 ### Writing a PUMBILITY figure

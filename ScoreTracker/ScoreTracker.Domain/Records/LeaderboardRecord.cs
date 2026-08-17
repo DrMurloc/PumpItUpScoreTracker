@@ -7,9 +7,7 @@ namespace ScoreTracker.Domain.Records
 {
     [ExcludeFromCodeCoverage]
     public sealed record LeaderboardRecord(int Place, Guid UserId, Name UserName, int TotalScore,
-        TimeSpan TotalRestTime, double AverageDifficulty, int ChartsPlayed,
-        SubmissionVerificationType VerificationType,
-        bool NeedsApproval, Uri? VideoUrl)
+        TimeSpan TotalRestTime, double AverageDifficulty, int ChartsPlayed, Uri? VideoUrl)
     {
         public TournamentSession Session { get; set; }
         public int TotalBonusScore => Session.Entries.Sum(e => e.BonusPoints);

@@ -60,12 +60,18 @@ public sealed class ChartIntelligenceModelContribution : IDbModelContribution
         modelBuilder.Entity<FolderCohortStatsEntity>().ToTable("FolderCohortStats")
             .HasKey(e => new { e.MixId, e.ChartType, e.Level, e.Bucket });
 
-        // The PUMBILITY tier lists (docs/design/pumbility-tier-list.md): per cohort, how many
+        // The PUMBILITY tier lists (docs/design/pumbility-tier-list.md): per peer key, how many
         // players hold each of a folder's charts in their top-50 pool. The key prefix IS the
-        // read — a folder for one cohort is a single seek, which is the only shape the page
+        // read — a folder for one peer key is a single seek, which is the only shape the page
         // and the nightly rewrite ask for.
         modelBuilder.Entity<PumbilityTierListEntryEntity>().ToTable("PumbilityTierListEntry")
-            .HasKey(e => new { e.MixId, e.ChartType, e.Level, e.CohortKey, e.ChartId });
+            .HasKey(e => new { e.MixId, e.ChartType, e.Level, e.PeerKey, e.ChartId });
+
+        // Where PUMBILITY comes from per band of the total (docs/design/pumbility-calculator.md D9):
+        // a handful of rows per mix, rewritten wholesale by the same nightly sweep, read as one
+        // keyed range by the calculator page.
+        modelBuilder.Entity<PumbilityPoolCompositionEntity>().ToTable("PumbilityPoolComposition")
+            .HasKey(e => new { e.MixId, e.BandKey });
 
         modelBuilder.Entity<ChartScoringLevelEntity>().ToTable("ChartScoringLevel");
         modelBuilder.Entity<UserPreferenceRatingEntity>().ToTable("UserPreferenceRating");

@@ -655,8 +655,11 @@ namespace ScoreTracker.Communities.Application
             var bads = ReadInt(interaction, "bads");
             var misses = ReadInt(interaction, "misses");
             var combo = ReadInt(interaction, "combo");
+            // Option values arrive as invariant strings from the bot adapter, so a decimal
+            // parses the same way whatever culture the host process runs under.
             double? calories = interaction.Options.TryGetValue("calories", out var calorieString) &&
-                               double.TryParse(calorieString, out var parsed)
+                               double.TryParse(calorieString, NumberStyles.Float, CultureInfo.InvariantCulture,
+                                   out var parsed)
                 ? parsed
                 : null;
 

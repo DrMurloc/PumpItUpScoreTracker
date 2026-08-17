@@ -1,3 +1,5 @@
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.Domain.Services.Contracts
 @page "/TierLists/{ChartTypeRoute}/{LevelRoute:int}/Breakdown"
 @rendermode RenderModes.Interactive
 @using System.Globalization
@@ -120,26 +122,65 @@ else
                 @if (_breakdown.ProjectedChartCount >= 3)
                 {
                     <div class="bd-stats">
-                        <div class="bd-stat bd-stat-accent">
-                            <span class="bd-stat-v">@_breakdown.PeerCount.ToString("N0")</span>
-                            <span class="bd-stat-l">@L["Players"]</span>
-                            <span class="bd-stat-s">@L["who played these charts"]</span>
-                        </div>
-                        <div class="bd-stat">
-                            <span class="bd-stat-v">@BandLow–@BandHigh</span>
-                            <span class="bd-stat-l">@L["Level band"]</span>
-                            <span class="bd-stat-s">@L["you sit at {0}", _breakdown.CompetitiveLevel.ToString("N1")]</span>
-                        </div>
+                        @if (_breakdown.Peers is { Kind: PeerGroupKind.PumbilityBand } pumbilityPeers)
+                        {
+                            @* Phoenix 2 reads PUMBILITY peers (docs/design/personalized-breakdown.md):
+                               the group and its rung band replace the competitive figures, and
+                               nothing is discounted, so the stale-weight figure has nothing to say. *@
+                            <div class="bd-stat bd-stat-accent">
+                                <span class="bd-stat-v">@pumbilityPeers.Size.ToString("N0")</span>
+                                <span class="bd-stat-l">@L["PUMBILITY peers"]</span>
+                                <span class="bd-stat-s">@L["within 3 levels of you with a full pool"]</span>
+                            </div>
+                            <div class="bd-stat">
+                                <span class="bd-stat-v">@RungBand(pumbilityPeers)</span>
+                                <span class="bd-stat-l">@L["Level band"]</span>
+                                <span class="bd-stat-s">@L["you stand on {0}", RungLabel((int)pumbilityPeers.Center)]</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="bd-stat bd-stat-accent">
+                                <span class="bd-stat-v">@_breakdown.PeerCount.ToString("N0")</span>
+                                <span class="bd-stat-l">@L["Players"]</span>
+                                <span class="bd-stat-s">@L["who played these charts"]</span>
+                            </div>
+                            <div class="bd-stat">
+                                <span class="bd-stat-v">@BandLow–@BandHigh</span>
+                                <span class="bd-stat-l">@L["Level band"]</span>
+                                <span class="bd-stat-s">@L["you sit at {0}", _breakdown.CompetitiveLevel.ToString("N1")]</span>
+                            </div>
+                        }
                         <div class="bd-stat">
                             <span class="bd-stat-v">@_breakdown.ProjectedChartCount / @_breakdown.FolderChartCount</span>
                             <span class="bd-stat-l">@L["Charts covered"]</span>
                             <span class="bd-stat-s">@L["{0} have no peer score", _breakdown.FolderChartCount - _breakdown.ProjectedChartCount]</span>
                         </div>
-                        <div class="bd-stat">
-                            <span class="bd-stat-v">▾ @((1 - _breakdown.MeanFreshness).ToString("P0"))</span>
-                            <span class="bd-stat-l">@L["Stale weight"]</span>
-                            <span class="bd-stat-s">@L["discount for peers who outgrew the score"]</span>
-                        </div>
+                        @if (_breakdown.Peers is not { Kind: PeerGroupKind.PumbilityBand })
+                        {
+                            <div class="bd-stat">
+                                <span class="bd-stat-v">▾ @((1 - _breakdown.MeanFreshness).ToString("P0"))</span>
+                                <span class="bd-stat-l">@L["Stale weight"]</span>
+                                <span class="bd-stat-s">@L["discount for peers who outgrew the score"]</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else if (_breakdown.Peers is { Kind: PeerGroupKind.PumbilityBand, IsLit: false } dark)
+                {
+                    @* Phoenix 2, and the viewer's own pool of the type is short (D28): the silence is
+                       theirs, not the peers', and the page says how far they are — the same figure
+                       the PUMBILITY page's chip prints — rather than blaming a group that was never
+                       asked. *@
+                    <div class="bd-quiet">
+                        <span>
+                            @(_chartType == ChartType.Single
+                                ? L["Singles: {0}/{1} charts", dark.PoolCount, dark.PoolSize]
+                                : L["Doubles: {0}/{1} charts", dark.PoolCount, dark.PoolSize])
+                            · @(_chartType == ChartType.Single
+                                ? L["Peer projections show once your singles pool has {0} charts.", dark.PoolSize]
+                                : L["Peer projections show once your doubles pool has {0} charts.", dark.PoolSize])
+                        </span>
                     </div>
                 }
                 else
@@ -1291,6 +1332,20 @@ else
     // Mix-required: a score resolves to a different letter under Phoenix 2's floors, and there
     // is deliberately no mix-less way to ask.
     private PhoenixLetterGrade GradeOf(int score) => ((PhoenixScore)score).LetterGradeFor(_currentMix);
+
+    /// <summary>"[P.B] DIAMOND LV.1 – [P.B] RED BERYL LV.2": the rungs a Phoenix 2 peer group spans.</summary>
+    private string RungBand(PeerGroup peers)
+    {
+        var (lowest, highest) = PeerGroup.PumbilityBand((int)peers.Center);
+        return $"{RungLabel(lowest)} – {RungLabel(highest)}";
+    }
+
+    private string RungLabel(int index)
+    {
+        return Phoenix2PumbilityLevel.FromIndex(index) is { } rung
+            ? PumbilityLevelLabel.Of(rung, L["Unranked"])
+            : L["Unranked"];
+    }
 
     private string BandLow => Math.Max(1, _breakdown!.CompetitiveLevel - _breakdown.CompetitiveWindow)
         .ToString("N1");

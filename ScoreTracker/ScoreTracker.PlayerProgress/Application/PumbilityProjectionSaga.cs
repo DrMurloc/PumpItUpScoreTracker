@@ -13,7 +13,8 @@ namespace ScoreTracker.PlayerProgress.Application
 {
     /// <summary>
     ///     Projects what a player would score on charts they have not played, and what that
-    ///     would add to their PUMBILITY (docs/design/pumbility-overhaul.md §4.1).
+    ///     would add to their PUMBILITY (docs/design/pumbility-overhaul.md §4.1 on Phoenix 1,
+    ///     §4.8 on Phoenix 2).
     ///     <para>
     ///         The projection itself is <see cref="IScoreProjector" />, shared with the
     ///         personalized Score tier list so the two surfaces cannot answer "what would you
@@ -25,9 +26,11 @@ namespace ScoreTracker.PlayerProgress.Application
     internal sealed class PumbilityProjectionSaga : IRequestHandler<ProjectPumbilityGainsQuery, PumbilityProjection>
     {
         /// <summary>
-        ///     How far a chart's scoring level may sit from the player's competitive level and
-        ///     still be worth projecting. Beyond this the estimate is arithmetically fine and
-        ///     practically useless — nobody grinding 21s needs a number for a 26.
+        ///     Phoenix 1: how far a chart's scoring level may sit from the player's competitive
+        ///     level and still be worth projecting. Beyond this the estimate is arithmetically
+        ///     fine and practically useless — nobody grinding 21s needs a number for a 26.
+        ///     Phoenix 2 has no window (D24): its peers are drawn on the PUMBILITY ladder, not on a
+        ///     level, and the five-peer floor is what keeps an unrealistic chart off the list.
         /// </summary>
         private const double ScoringLevelWindow = 2.0;
 
@@ -49,14 +52,14 @@ namespace ScoreTracker.PlayerProgress.Application
         public async Task<PumbilityProjection> Handle(ProjectPumbilityGainsQuery request,
             CancellationToken cancellationToken)
         {
-            // Two halves with nothing in common. The estimates are the cohort sweep — sized by
+            // Two halves with nothing in common. The estimates are the peer sweep — sized by
             // the player population, the same for all three pools, and unchanged by anything
-            // the viewer does, since a player's own scores never enter their own cohort. The
+            // the viewer does, since a player's own scores never enter their own peer group. The
             // pricing is arithmetic over their top hundred, and moves the moment they play.
             // So one is held for a day and the other is redone on every visit.
-            var estimates = await _cache.GetOrAdd(request.UserId, request.Mix,
+            var sweep = await _cache.GetOrAdd(request.UserId, request.Mix,
                 () => Estimate(request.UserId, request.Mix));
-            return await Price(estimates, request, cancellationToken);
+            return await Price(sweep, request, cancellationToken);
         }
 
         /// <summary>
@@ -65,7 +68,7 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     bar an estimate is measured against, never the estimate, so all three selector
         ///     positions share one sweep instead of paying for three.
         /// </summary>
-        private async Task<IReadOnlyDictionary<Guid, PhoenixScore>> Estimate(Guid userId, MixEnum mix)
+        private async Task<ProjectionSweep> Estimate(Guid userId, MixEnum mix)
         {
             var charts = (await _mediator.Send(new GetChartsQuery(mix), CancellationToken.None))
                 .ToDictionary(c => c.Id);
@@ -78,15 +81,21 @@ namespace ScoreTracker.PlayerProgress.Application
                 (await BuildPool(ChartType.Single, userId, mix, charts, scoring, CancellationToken.None)).Baseline,
                 (await BuildPool(ChartType.Double, userId, mix, charts, scoring, CancellationToken.None)).Baseline);
 
-            var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(mix), CancellationToken.None);
+            // Phoenix 1 scopes its window on scoring levels; Phoenix 2 has no window and does
+            // not read them.
+            var scoringLevels = mix == MixEnum.Phoenix2
+                ? new Dictionary<Guid, double>()
+                : await _mediator.Send(new GetChartScoringLevelsQuery(mix), CancellationToken.None);
 
             var expectedScore = new Dictionary<Guid, PhoenixScore>();
+            var spreads = new Dictionary<Guid, PeerSpread>();
+            var peers = new Dictionary<ChartType, PeerGroup>();
             var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor);
 
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
-                await ProjectType(chartType, userId, scope, expectedScore, CancellationToken.None);
+                await ProjectType(chartType, userId, scope, expectedScore, spreads, peers, CancellationToken.None);
 
-            return expectedScore;
+            return new ProjectionSweep(expectedScore, peers, spreads);
         }
 
         /// <summary>
@@ -94,7 +103,7 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     their own top hundred and one tier-list read — and never cached, because the bar
         ///     it measures against moves every time they play.
         /// </summary>
-        private async Task<PumbilityProjection> Price(IReadOnlyDictionary<Guid, PhoenixScore> estimates,
+        private async Task<PumbilityProjection> Price(ProjectionSweep sweep,
             ProjectPumbilityGainsQuery request, CancellationToken cancellationToken)
         {
             var mix = request.Mix;
@@ -108,9 +117,9 @@ namespace ScoreTracker.PlayerProgress.Application
 
             // The pool scopes the LIST, where the estimates are deliberately type-blind.
             var expectedScore = request.ChartType is { } only
-                ? estimates.Where(kv => charts.TryGetValue(kv.Key, out var c) && c.Type == only)
+                ? sweep.ExpectedScores.Where(kv => charts.TryGetValue(kv.Key, out var c) && c.Type == only)
                     .ToDictionary(kv => kv.Key, kv => kv.Value)
-                : estimates.Where(kv => charts.ContainsKey(kv.Key))
+                : sweep.ExpectedScores.Where(kv => charts.ContainsKey(kv.Key))
                     .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             var chartDifficulty = (await _mediator.Send(new GetTierListQuery("Pass Count", mix), cancellationToken))
@@ -152,7 +161,9 @@ namespace ScoreTracker.PlayerProgress.Application
             return new PumbilityProjection(
                 expectedScore.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value),
                 ranked,
-                chartDifficulty);
+                chartDifficulty,
+                sweep.Peers,
+                sweep.Spreads.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
@@ -160,36 +171,47 @@ namespace ScoreTracker.PlayerProgress.Application
             IDictionary<Guid, double> ScoringLevels, ScoringConfiguration Scoring, double Baseline);
 
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
-            IDictionary<Guid, PhoenixScore> into, CancellationToken cancellationToken)
+            IDictionary<Guid, PhoenixScore> into, IDictionary<Guid, PeerSpread> spreads,
+            IDictionary<ChartType, PeerGroup> peers, CancellationToken cancellationToken)
         {
             var (mix, charts, scoringLevels, scoring, baseline) = scope;
 
-            // The same level the projector draws peers around, so the charts asked about and the
-            // players asked cannot end up centred on different numbers.
-            var myLevel = await _projector.CompetitiveLevel(mix, chartType, userId, cancellationToken);
-            // Competitive level 1 is the no-data floor; below 10 the pool contributes nothing
-            // to PUMBILITY anyway, so there is no projection worth making.
-            if (myLevel <= 1) return;
+            var candidates = charts.Values.Where(c => c.Type == chartType);
+            if (mix != MixEnum.Phoenix2)
+            {
+                // The same level the projector draws peers around, so the charts asked about and
+                // the players asked cannot end up centred on different numbers. Phoenix 2 skips
+                // this: no level window (D24) — every chart of the type is a candidate, and the
+                // five-peer floor inside the projector decides which ones get a number.
+                var myLevel = await _projector.CompetitiveLevel(mix, chartType, userId, cancellationToken);
+                // Competitive level 1 is the no-data floor; below 10 the pool contributes nothing
+                // to PUMBILITY anyway, so there is no projection worth making.
+                if (myLevel <= 1) return;
+                candidates = candidates
+                    .Where(c => Math.Abs(ScoringLevelOf(c, scoringLevels) - myLevel) <= ScoringLevelWindow);
+            }
 
-            var scoped = charts.Values
-                .Where(c => c.Type == chartType)
-                .Where(c => Math.Abs(ScoringLevelOf(c, scoringLevels) - myLevel) <= ScoringLevelWindow)
+            var scoped = candidates
                 // A chart whose value at a PERFECT game still sits under the bar can never pay,
                 // so nothing downstream would keep it. Dropping it here costs nothing and is
                 // exact — but it is the difference between asking the database for every peer's
-                // scores on ~600 charts and asking for the couple hundred that could matter.
+                // scores on every chart and asking for the ones that could matter.
                 .Where(c => scoring.GetScore(c, PhoenixScore.Max, PhoenixPlate.PerfectGame, false) > baseline)
                 .Select(c => new ProjectionTarget(c.Id, (int)c.Level))
                 .ToArray();
             if (scoped.Length == 0) return;
 
-            // ±1.0, measured optimal for predicting the score itself — this page quotes the
-            // number, so its accuracy is what matters rather than the ranking.
+            // ±1.0 on Phoenix 1, measured optimal for predicting the score itself — this page
+            // quotes the number, so its accuracy is what matters rather than the ranking.
+            // Phoenix 2 ignores the window; its peers are the PUMBILITY band.
             var projected = await _projector.Project(
-                new ScoreProjectionRequest(mix, chartType, userId, scoped, CohortEstimator.CompetitiveWindow),
+                new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow),
                 cancellationToken);
 
             foreach (var (chartId, score) in projected.Scores) into[chartId] = score;
+            if (projected.Spreads != null)
+                foreach (var (chartId, spread) in projected.Spreads) spreads[chartId] = spread;
+            if (projected.Group is { } group) peers[chartType] = group;
         }
 
         private static double ScoringLevelOf(Chart chart, IDictionary<Guid, double> scoringLevels)

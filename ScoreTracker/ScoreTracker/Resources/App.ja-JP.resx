@@ -220,6 +220,9 @@
   <data name="+ {0} more on this week's board" xml:space="preserve">
     <value>今週のボードに他 {0} 件</value>
   </data>
+  <data name="+5 more per level above 24" xml:space="preserve">
+    <value>24以上はレベルごとにさらに+5</value>
+  </data>
   <data name="+{0} levels up" xml:space="preserve">
     <value>+{0}レベル上</value>
   </data>
@@ -234,6 +237,12 @@
   </data>
   <data name="+{0} over P1" xml:space="preserve">
     <value>P1 から +{0}</value>
+  </data>
+  <data name=", plate under half a percent" xml:space="preserve">
+    <value>、プレートは0.5%未満</value>
+  </data>
+  <data name=", so the comparison is the exchange rate: taking one chart from a 900,000 to an SSS+ equals how many levels of pass-pushing, on each mix." xml:space="preserve">
+    <value>。だから比較は交換レートです。1譜面を900,000からSSS+へ引き上げることが、各バージョンでレベル上げ何レベル分に当たるか。</value>
   </data>
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
@@ -301,6 +310,15 @@
   <data name="90% -> 99.9%" xml:space="preserve">
     <value>90% -> 99.9%</value>
   </data>
+  <data name="900,000 is exactly the {0} floor on {1}." xml:space="preserve">
+    <value>900,000は{1}ではちょうど{0}の下限です。</value>
+  </data>
+  <data name="900,000 on its own level — {0}" xml:space="preserve">
+    <value>自分のレベルでの900,000 — {0}</value>
+  </data>
+  <data name="900,000 → SSS+ is worth" xml:space="preserve">
+    <value>900,000 → SSS+ の価値</value>
+  </data>
   <data name="A bad is a flat −50 at any life; a miss is up to −270. But a bad still halves your multiplier, so back-to-back bads strangle recovery just as effectively." xml:space="preserve">
     <value>Bad はどの体力でも一律 −50、Miss は最大 −270 です。ただし Bad も倍率を半減させるため、連続する Bad は同じくらい確実に回復の首を絞めます。</value>
   </data>
@@ -312,6 +330,9 @@
   </data>
   <data name="A breakdown for Pass Difficulty is coming." xml:space="preserve">
     <value>パス難易度の内訳は準備中です。</value>
+  </data>
+  <data name="a broken run" xml:space="preserve">
+    <value>ブレイクしたプレイ</value>
   </data>
   <data name="a chart" xml:space="preserve">
     <value>譜面</value>
@@ -339,6 +360,9 @@
   </data>
   <data name="A good, always." xml:space="preserve">
     <value>Good は常に。</value>
+  </data>
+  <data name="A grade is only worth something" xml:space="preserve">
+    <value>ランクの価値は</value>
   </data>
   <data name="A great at a capped multiplier." xml:space="preserve">
     <value>倍率上限での Great。</value>
@@ -397,8 +421,23 @@
   <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
     <value>Phoenix 1 で既に出したスコアを、Phoenix 2 の基準で再計算した値です。</value>
   </data>
+  <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
+    <value>Singlesは1レベル上で計算されます。S17はBase(18)で払われます。レベル10未満の譜面の価値は0です。</value>
+  </data>
   <data name="A snapshot zip imports a fetched data release directly - same pipeline as the crawl, no fetching" xml:space="preserve">
     <value>スナップショットzipは取得済みのデータリリースを直接インポートします。クロールと同じ処理で、フェッチはありません</value>
+  </data>
+  <data name="A tiebreaker." xml:space="preserve">
+    <value>タイブレーカーです。</value>
+  </data>
+  <data name="AA is exactly ×1.00. Steps of 0.05 up to S, then 0.06 a rung to SSS+; 0.10 a rung below AA." xml:space="preserve">
+    <value>AAはちょうど×1.00です。Sまでは0.05刻み、そこからSSS+までは1段0.06、AAより下は1段0.10。</value>
+  </data>
+  <data name="AA is the neutral point; every grade above it adds, every grade below it takes away." xml:space="preserve">
+    <value>AAが基準点です。上のランクは足し、下のランクは引きます。</value>
+  </data>
+  <data name="AA+ and above are identical on both types. On a Double the ladder steps −0.01 a rung through the S grades, −0.02 a rung from AAA+ to A+, −0.05 a rung down to C, then −0.10 a rung to F; a Single runs a notch lower from AA down. A perfect 1,000,000 keeps SSS+’s ×1.50 — Perfect Game is a plate." xml:space="preserve">
+    <value>AA+以上は両タイプで同じです。Doublesではランク表がSランク帯で1段−0.01、AAA+からA+まで1段−0.02、Cまで1段−0.05、そしてFまで1段−0.10。SinglesはAA以下が一段低くなります。1,000,000の完璧でもSSS+の×1.50のまま — Perfect Gameはプレートです。</value>
   </data>
   <data name="About" xml:space="preserve">
     <value>概要</value>
@@ -509,6 +548,9 @@
   <data name="Added to Favorites!" xml:space="preserve">
     <value>気に入れに追加しました！</value>
   </data>
+  <data name="Added to the grade multiplier before the base multiplies it. Perfect Game needs a 1,000,000." xml:space="preserve">
+    <value>ベースを掛ける前にランク倍率へ足されます。Perfect Gameには1,000,000が必要です。</value>
+  </data>
   <data name="Added to ToDo List!" xml:space="preserve">
 	  <value>やることリストに追加しました！</value>
   </data>
@@ -544,6 +586,9 @@
   </data>
   <data name="After the upload, if there are some rows/charts/attempts that did not upload correctly, you will be given the option to download a list of the failed rows and the reason they failed." xml:space="preserve">
 	  <value>アップロード後、正しくアップロードされなかった行・譜面・試行があれば、失敗した行とその理由のリストをダウンロードできます。</value>
+  </data>
+  <data name="Against {0} {1}." xml:space="preserve">
+    <value>{0} {1} との比較。</value>
   </data>
   <data name="Age" xml:space="preserve">
 	  <value>歳</value>
@@ -630,11 +675,23 @@
   <data name="An account with game tag {0} already exists, is that you?" xml:space="preserve">
     <value>ゲームタグ{0}のアカウントがすでに存在します。あなたですか？</value>
   </data>
+  <data name="An additive bonus, not a multiplier — at most {0} of a chart." xml:space="preserve">
+    <value>倍率ではなく加算ボーナス — 譜面1つの最大{0}。</value>
+  </data>
   <data name="An estimate from players at your competitive level." xml:space="preserve">
     <value>同じ競技レベルのプレイヤーからの推定です。</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>インポートは既に実行中です</value>
+  </data>
+  <data name="an SSS+" xml:space="preserve">
+    <value>SSS+</value>
+  </data>
+  <data name="An SSS+ on a level 20 reaches {0} — the same PUMBILITY as a 900,000 there, so taking one chart from a pass to a perfect is worth {1} levels of pass-pushing. The reach grows with level because Phoenix’s base is quadratic: {2} levels at 16, {1} at 20, {3} at 24. Below the pass line a chart falls off the same way: an A pays ×{4}, an F ×{5}." xml:space="preserve">
+    <value>レベル20のSSS+は{0}に届きます — そこの900,000と同じPUMBILITYなので、1譜面をクリアからパーフェクトへ引き上げるのはレベル上げ{1}レベル分の価値です。Phoenixのベースは二次式なので届く範囲はレベルとともに広がります。16で{2}レベル、20で{1}、24で{3}。クリア線より下も同じように落ちます。Aは×{4}、Fは×{5}。</value>
+  </data>
+  <data name="An SSS+ on a {0} reaches {1} — the same PUMBILITY as a 900,000 there, so taking one chart from a pass to a perfect is worth {2} levels of pass-pushing. The reach narrows above 24, where Phoenix 2’s base starts growing by 10 a level instead of 5: {3} levels at 16, {2} at 20, {4} at 24. Below the pass line a chart drops off fast — a D pays ×{5} against {6}’s ×{7}." xml:space="preserve">
+    <value>{0}のSSS+は{1}に届きます — そこの900,000と同じPUMBILITYなので、1譜面をクリアからパーフェクトへ引き上げるのはレベル上げ{2}レベル分の価値です。Phoenix 2のベースがレベルごとに5ではなく10ずつ増え始める24より上では届く範囲が狭まります。16で{3}レベル、20で{2}、24で{4}。クリア線より下では譜面の価値は急に落ちます — Dは×{5}、{6}は×{7}。</value>
   </data>
   <data name="An unknown error occurred" xml:space="preserve">
 	  <value>不明なエラーが発生しました</value>
@@ -644,6 +701,9 @@
   </data>
   <data name="Ancient" xml:space="preserve">
     <value>大昔</value>
+  </data>
+  <data name="And it barely moves from band to band: score is {0} of the number in {1} and {2} in {3}. What changes between the bands is the level of the charts — average {4} in {1}, {5} in {3} — with S or better on {6}–{7} of the fifty throughout." xml:space="preserve">
+    <value>そして帯ごとにほとんど動きません。スコアは{1}で数字の{0}、{3}で{2}です。帯の間で変わるのは譜面のレベルです — {1}で平均{4}、{3}で{5} — 50譜面中S以上は通して{6}–{7}譜面です。</value>
   </data>
   <data name="and {0} notes of multiplier" xml:space="preserve">
     <value>さらに倍率 {0} ノート分</value>
@@ -669,6 +729,9 @@
   </data>
   <data name="Any tool that publishes its source code will be able to read your scores — that's what powers most score-analysis tools. It's a separate switch and you can turn it off right after, on this page." xml:space="preserve">
     <value>ソースコードを公開しているツールがあなたのスコアを読み取れるようになります。ほとんどのスコア分析ツールがこれを使っています。別の設定なので、このページですぐにオフにできます。</value>
+  </data>
+  <data name="any — ×1.0" xml:space="preserve">
+    <value>どれでも — ×1.0</value>
   </data>
   <data name="Anyone with an invite link can connect, whether their profile is public or private." xml:space="preserve">
     <value>招待リンクがあれば、プロフィールが公開でも非公開でも接続できます。</value>
@@ -878,8 +941,20 @@
   <data name="BanYa Lover" xml:space="preserve">
     <value>BanYa Lover</value>
   </data>
+  <data name="bar = 900,000 on the level → SSS+; label = levels bought" xml:space="preserve">
+    <value>バー = そのレベルの900,000 → SSS+、ラベル = 買えるレベル数</value>
+  </data>
   <data name="Bar off — any play that raised your competitive level counts." xml:space="preserve">
     <value>基準オフ — コンペティティブレベルを上げたプレイはすべて対象です。</value>
+  </data>
+  <data name="base" xml:space="preserve">
+    <value>ベース</value>
+  </data>
+  <data name="Base × grade at the lowest plate, rounded to the point." xml:space="preserve">
+    <value>最低プレートでのベース × ランク、整数に丸め。</value>
+  </data>
+  <data name="Base({0}) — a Single is priced one level up" xml:space="preserve">
+    <value>Base({0}) — Singlesは1レベル上で計算</value>
   </data>
   <data name="Based on" xml:space="preserve">
     <value>根拠</value>
@@ -908,8 +983,17 @@
   <data name="below" xml:space="preserve">
     <value>下回る</value>
   </data>
+  <data name="below level 10" xml:space="preserve">
+    <value>レベル10未満</value>
+  </data>
+  <data name="below the pass line" xml:space="preserve">
+    <value>クリア線より下</value>
+  </data>
   <data name="Below this life a miss costs less than a bad." xml:space="preserve">
     <value>この体力を下回ると Miss の方が Bad より安くなります。</value>
+  </data>
+  <data name="Below {0} a 900,000 → SSS+ buys more levels on Phoenix 2 than it did on Phoenix; from {0} up it buys fewer — up there a level counts for more against a score than it did on Phoenix." xml:space="preserve">
+    <value>{0}より下では900,000 → SSS+はPhoenixよりPhoenix 2の方が多くのレベルを買えますが、{0}から上では買えるレベルが少なくなります — その上ではスコアに対してレベルの方がPhoenixのときより重くなります。</value>
   </data>
   <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
     <value>Miss の間隔が {0} ノート未満だと、どのレベルでも死にます。{0} ならおよそ1%の体力で踏みとどまります。緩やかな中間はありません。崖の下では倍率が建て直せず、回復量がゼロに丸められます。</value>
@@ -997,6 +1081,9 @@
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>ボスブレイカー</value>
+  </data>
+  <data name="both" xml:space="preserve">
+    <value>両方</value>
   </data>
   <data name="Both are needed before anyone else can use your tool." xml:space="preserve">
     <value>ほかの人があなたのツールを使うには、どちらも必要です。</value>
@@ -1089,6 +1176,9 @@
   <data name="Bursty" xml:space="preserve">
     <value>瞬間密度型</value>
   </data>
+  <data name="but a level got {0}× smaller — more than the grade did" xml:space="preserve">
+    <value>でもレベルは{0}倍小さくなりました — ランクよりも</value>
+  </data>
   <data name="By Chart" xml:space="preserve">
     <value>譜面別</value>
   </data>
@@ -1103,6 +1193,9 @@
   </data>
   <data name="Calculate a Phoenix score from a result screen" xml:space="preserve">
     <value>リザルト画面から Phoenix スコアを計算</value>
+  </data>
+  <data name="Calculator" xml:space="preserve">
+    <value>計算機</value>
   </data>
   <data name="Calculators" xml:space="preserve">
     <value>計算機</value>
@@ -1237,6 +1330,9 @@
   <data name="Charts covered" xml:space="preserve">
     <value>対象の譜面</value>
   </data>
+  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
+    <value>そのうち5人未満しかクリアしていない譜面は表示されません。</value>
+  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>課題譜面数</value>
   </data>
@@ -1316,6 +1412,9 @@
   <data name="Clearly Has Friends" xml:space="preserve">
     <value>Clearly Has Friends</value>
   </data>
+  <data name="Click any value" xml:space="preserve">
+    <value>どの値でもクリックすると</value>
+  </data>
   <data name="Clicks" xml:space="preserve">
     <value>クリック</value>
   </data>
@@ -1362,14 +1461,23 @@
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>コーオプパッド移動</value>
   </data>
+  <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
+    <value>CO-OPは固定ベース2,000で計算されましたが合計には数えられませんでした。</value>
+  </data>
   <data name="CO-OP {0}" xml:space="preserve">
     <value>CO-OP {0}</value>
+  </data>
+  <data name="CO-OP: priced at a flat 2,000 base, never counted in the total." xml:space="preserve">
+    <value>CO-OP：固定ベース2,000で計算、合計には未算入。</value>
   </data>
   <data name="Code" xml:space="preserve">
     <value>コード</value>
   </data>
   <data name="Coldest Charts" xml:space="preserve">
     <value>人気ワースト譜面</value>
+  </data>
+  <data name="colour = worth a 900,000 on a low level → a high one; the diagonal bands are the equal-value lines" xml:space="preserve">
+    <value>色 = 低いレベル → 高いレベルの900,000相当。斜めの帯が等価値の線です</value>
   </data>
   <data name="Coloured by your standing among players at your level" xml:space="preserve">
     <value>同レベル帯での順位で色分け</value>
@@ -1995,6 +2103,9 @@
 	  <value>実行</value>
 	  
   </data>
+  <data name="Does scoring matter more than it did on {0}?" xml:space="preserve">
+    <value>スコアは{0}より重要になった？</value>
+  </data>
   <data name="Doesn't Match My Personal Skills" xml:space="preserve">
 	  <value>自分のスキルに合わない</value>
   </data>
@@ -2024,6 +2135,15 @@
   </data>
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Doublesの競技レベル</value>
+  </data>
+  <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
+    <value>Doublesの表です。SinglesはAA以下が一段低くなります（AA {0}、A+ {1} …）。全段は下に。</value>
+  </data>
+  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Doubles: PUMBILITYピア {0}人</value>
+  </data>
+  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+    <value>Doubles: {0}/{1} 譜面</value>
   </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>ダブルステップ</value>
@@ -2085,11 +2205,17 @@
   <data name="Duration (seconds)" xml:space="preserve">
     <value>時間（秒）</value>
   </data>
+  <data name="Each row is a level. The bar starts at a 900,000 on that level — a clean pass — and climbs through the grades; the axis is" xml:space="preserve">
+    <value>各行がレベルです。バーはそのレベルの900,000 — 無難なクリア — から始まり、ランクを上っていきます。軸は</value>
+  </data>
   <data name="Each rung asks a flat value of every one of your fifty charts. Switch pools above to see the other ladders." xml:space="preserve">
     <value>各段は50譜面すべてに一定の値を求めます。上でプールを切り替えると他のラダーを見られます。</value>
   </data>
   <data name="Each source votes on every chart. Sources with more weight move charts further." xml:space="preserve">
     <value>各ソースが各譜面に投票します。重みの大きいソースほど譜面を大きく動かします。</value>
+  </data>
+  <data name="Early days: {0} full pools." xml:space="preserve">
+    <value>まだ初期です。完成プール{0}件。</value>
   </data>
   <data name="Earned" xml:space="preserve">
     <value>獲得済み</value>
@@ -2177,14 +2303,32 @@
   <data name="Every grade stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>フォルダごとに全グレードを積み上げ、未クリア／未プレイの区分でフォルダ総数も表示。</value>
   </data>
+  <data name="Every level, every grade" xml:space="preserve">
+    <value>全レベル、全ランク</value>
+  </data>
   <data name="Every level, Singles and Doubles" xml:space="preserve">
     <value>全レベル、シングルもダブルも</value>
   </data>
   <data name="Every miss wipes the gain multiplier to zero. It takes {0} perfects — or {1} greats — to build it back to the cap. Until then you are hitting notes for almost no life." xml:space="preserve">
     <value>Miss は回復倍率をゼロにします。上限まで戻すには Perfect {0} 回、または Great {1} 回かかります。それまではほとんど体力の増えないノートを叩くことになります。</value>
   </data>
+  <data name="Every multiplier and bonus in the formula. Where a Single reads differently from a Double the Single’s value is written in full; a dash means the two agree." xml:space="preserve">
+    <value>式の全倍率と全ボーナスです。SinglesがDoublesと違う所はSinglesの値を書き、ダッシュは両者が同じという意味です。</value>
+  </data>
+  <data name="Every multiplier in the formula. One table serves both types." xml:space="preserve">
+    <value>式の全倍率です。1つの表が両タイプに使えます。</value>
+  </data>
+  <data name="every plate" xml:space="preserve">
+    <value>全プレート</value>
+  </data>
   <data name="every plate at once, end to end, is worth {0}" xml:space="preserve">
     <value>全プレートを端から端まで合わせて {0}</value>
+  </data>
+  <data name="Every plate carried ×1.0. Not a rounding argument — the plate never entered the number." xml:space="preserve">
+    <value>全プレートが×1.0でした。丸めの話ではありません — プレートは数字に一度も入りませんでした。</value>
+  </data>
+  <data name="Every plate on Phoenix carried a modifier of exactly ×1.0, so the plate you walked away with never entered the number. Not a rounding argument — a Rough Game SSS+ and a Perfect Game SSS+ were worth the same PUMBILITY. Phoenix 2 is where plates start to count, and even there they are a tiebreaker." xml:space="preserve">
+    <value>Phoenixの全プレートは修正値がちょうど×1.0で、どのプレートを持ち帰っても数字には入りませんでした。丸めの話ではありません — Rough GameのSSS+とPerfect GameのSSS+は同じPUMBILITYでした。プレートが効き始めるのはPhoenix 2からで、そこでもタイブレーカーに過ぎません。</value>
   </data>
   <data name="Every plate stacked per folder, with a broken / unplayed cap for the folder count." xml:space="preserve">
     <value>フォルダごとに全プレートを積み上げ、未クリア／未プレイの区分でフォルダ総数も表示。</value>
@@ -2433,6 +2577,9 @@
   <data name="For re-importing older scores" xml:space="preserve">
     <value>古いスコアの再インポート用</value>
   </data>
+  <data name="For scale, on that same chart AA → AA+ is +{0}, and the same {1} one level higher is +{2}." xml:space="preserve">
+    <value>目安として、同じ譜面でAA → AA+は+{0}、同じ{1}を1レベル上でやると+{2}です。</value>
+  </data>
   <data name="For the record" xml:space="preserve">
     <value>記録のために</value>
   </data>
@@ -2493,8 +2640,17 @@
   <data name="From {0}" xml:space="preserve">
     <value>{0}から</value>
   </data>
+  <data name="From {0} peers" xml:space="preserve">
+    <value>ピア {0}人から算出</value>
+  </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>{0} スコアから算出</value>
+  </data>
+  <data name="From {0} to {1} the split barely moves — level {2}, score {3}{4} — while the pool’s average level climbs from {5} to {6}. Grades are already S or better on {7}–{8} of the fifty in every band: pools here are scored close to the ceiling, and what separates one band from the next is the level of the charts in it. Scoring is how a chart enters the pool — an SSS+ about {9} levels down ties a clean pass — but the pool climbs on level." xml:space="preserve">
+    <value>{0}から{1}まで内訳はほとんど動きません — レベル{2}、スコア{3}{4} — その間にプールの平均レベルは{5}から{6}へ上がります。どの帯でも50譜面中{7}–{8}譜面が既にS以上です。ここのプールは天井近くまでスコアが出ていて、帯を分けるのは中にある譜面のレベルです。スコアは譜面がプールに入る手段ですが — 約{9}レベル下のSSS+が無難なクリアと並びます — プールはレベルで上がります。</value>
+  </data>
+  <data name="From {0} up it flips: Phoenix 2 prices every level above 24 at double the step, so at {1} an SSS+ buys {2} levels here against {3} on Phoenix — up there a level counts for more against a score than it did." xml:space="preserve">
+    <value>{0}から上では逆転します。Phoenix 2は24より上のレベルを倍の刻みで値付けするので、{1}ではSSS+がここでは{2}レベル分、Phoenixでは{3}レベル分を買えます — その上ではスコアに対してレベルの方が以前より重くなります。</value>
   </data>
   <data name="Full board" xml:space="preserve">
     <value>ランキング全体</value>
@@ -2772,6 +2928,9 @@
   <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
     <value>失敗の間にどれだけクリーンコンボを稼ぎ直す必要があるか、そしてそれをちょうど払い続けた場合に体力がどこへ落ち着くか。</value>
   </data>
+  <data name="How much do plates matter?" xml:space="preserve">
+    <value>プレートはどれくらい重要？</value>
+  </data>
   <data name="How much of every folder you've cleared, per level." xml:space="preserve">
     <value>How much of every folder you've cleared, per level.</value>
   </data>
@@ -2967,9 +3126,6 @@
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>私たちのデータベース内にあり、単体では開けないようロックされています。</value>
   </data>
-  <data name="In Person" xml:space="preserve">
-	  <value>現地</value>
-  </data>
   <data name="In progress" xml:space="preserve">
     <value>進行中</value>
   </data>
@@ -2979,6 +3135,9 @@
   <data name="In Swagger: press Authorize and paste the key into toolKey — the key on its own, without the word Bearer." xml:space="preserve">
     <value>Swagger では: Authorize を押して toolKey にキーを貼り付けてください — Bearer という語は付けず、キーだけです。</value>
   </data>
+  <data name="In the pools above, plates carry {0} of the number." xml:space="preserve">
+    <value>上のプールではプレートは数字の{0}を占めます。</value>
+  </data>
   <data name="in the top ten" xml:space="preserve">
     <value>件がトップ10以内</value>
   </data>
@@ -2987,6 +3146,9 @@
   </data>
   <data name="In your PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITYトップ50入り</value>
+  </data>
+  <data name="In {0} the split is level {1} / score {2}; in {3} it is {4} / {5}. The pool’s average level climbs from {6} to {7} along the way and S or better from {8} to {9} of fifty: passing harder charts is the whole ladder for most players, and scoring is what the last stretch is made of." xml:space="preserve">
+    <value>{0}では内訳がレベル{1} / スコア{2}、{3}では{4} / {5}です。その間にプールの平均レベルは{6}から{7}へ、50譜面中S以上は{8}から{9}譜面へ上がります。ほとんどのプレーヤーにとって階段はより難しい譜面をクリアすることで、スコアは最後の一区間を作るものです。</value>
   </data>
   <data name="Include an unplayed segment" xml:space="preserve">
     <value>未プレイのセグメントを含める</value>
@@ -3052,6 +3214,9 @@
 	  <value>IsBroken</value>
 	  
   </data>
+  <data name="It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level." xml:space="preserve">
+    <value>上のプールもこれで説明がつきます。みんな安いレバーはもう引いてしまったので、残っているのはレベルを上げることです。</value>
+  </data>
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>スコアの記録やアカウントの変更はできません。コミュニティツールからいつでも接続を解除できます。</value>
   </data>
@@ -3066,6 +3231,9 @@
   </data>
   <data name="It may have been revoked, or the tool may be gone. Ask whoever sent it for a fresh link." xml:space="preserve">
     <value>取り消されたか、ツールが削除された可能性があります。送った人に新しいリンクをもらってください。</value>
+  </data>
+  <data name="It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty." xml:space="preserve">
+    <value>動きます、それが答えの全てです。スコアは{1}で数字の{0}、{3}で{2}です。その間にプールの平均レベルは{4} → {5}、50譜面中S以上は{6} → {7}譜面です。</value>
   </data>
   <data name="It reads player scores" xml:space="preserve">
     <value>プレイヤーのスコアを読む</value>
@@ -3084,6 +3252,9 @@
   </data>
   <data name="It stops showing. Anyone who replied keeps their reply." xml:space="preserve">
     <value>表示されなくなります。返信した人の返信は残ります。</value>
+  </data>
+  <data name="It was AA on Phoenix — the floors moved." xml:space="preserve">
+    <value>PhoenixではAAでした — 下限が動きました。</value>
   </data>
   <data name="It was probably interrupted by a site update. Anything it saved is already on your account — importing again picks up the rest." xml:space="preserve">
     <value>サイトの更新で中断された可能性が高いです。保存済みの分はすでにアカウントにあります。もう一度インポートすれば残りを取得できます。</value>
@@ -3272,6 +3443,9 @@
   <data name="Level {0}" xml:space="preserve">
     <value>レベル {0}</value>
   </data>
+  <data name="Level · {0}" xml:space="preserve">
+    <value>レベル · {0}</value>
+  </data>
   <data name="Levels" xml:space="preserve">
 	  <value>レベル</value>
   </data>
@@ -3280,6 +3454,9 @@
   </data>
   <data name="Levels below" xml:space="preserve">
     <value>下のレベル数</value>
+  </data>
+  <data name="Levels first, then scores." xml:space="preserve">
+    <value>まずレベル、それからスコア。</value>
   </data>
   <data name="life += trunc(weight x multiplier) · perfect weight 12 · great weight 10" xml:space="preserve">
     <value>life += trunc(weight x multiplier) · perfect weight 12 · great weight 10</value>
@@ -3494,9 +3671,6 @@
 	  <value>最高ノーツ数</value>
 	  
   <comment>Max Note Count</comment></data>
-  <data name="Max Rating" xml:space="preserve">
-    <value>最高評定</value>
-  </data>
   <data name="Maximum" xml:space="preserve">
     <value>最大</value>
   </data>
@@ -3685,6 +3859,9 @@
   </data>
   <data name="Movers of the week" xml:space="preserve">
     <value>今週のムーバー</value>
+  </data>
+  <data name="multiplier" xml:space="preserve">
+    <value>倍率</value>
   </data>
   <data name="multiplier already gone" xml:space="preserve">
     <value>倍率はすでにゼロ</value>
@@ -3901,6 +4078,9 @@
   <data name="Next title" xml:space="preserve">
     <value>次のタイトル</value>
   </data>
+  <data name="next to what a level is worth" xml:space="preserve">
+    <value>レベルの価値と並べて初めて意味を持ちます</value>
+  </data>
   <data name="Next: your home page — a board of widgets you pick. We'll start you with a good default and you can rearrange it from there." xml:space="preserve">
     <value>次はホームページです。自分で選んだウィジェットのボードで、まずは既定の構成から始めて、あとから並べ替えられます。</value>
   </data>
@@ -3972,6 +4152,12 @@
   </data>
   <data name="No Phoenix 2 chart" xml:space="preserve">
     <value>Phoenix 2 に譜面なし</value>
+  </data>
+  <data name="No pool on PIU Scores has held a level {0} yet, so their base ({1}) follows the curve rather than a reading." xml:space="preserve">
+    <value>PIU Scoresのどのプールにもまだレベル{0}は入っていないので、そのベース（{1}）は実測ではなく曲線に従います。</value>
+  </data>
+  <data name="No pool on PIU Scores has held this level yet, so its base follows the curve rather than a reading." xml:space="preserve">
+    <value>PIU Scoresのどのプールにもまだこのレベルは入っていないので、そのベースは実測ではなく曲線に従います。</value>
   </data>
   <data name="No popularity snapshot yet - it lands with the weekly import." xml:space="preserve">
     <value>人気ランキングのスナップショットはまだありません - 週次インポートで作成されます。</value>
@@ -4114,6 +4300,9 @@
   <data name="Not available on {0}." xml:space="preserve">
     <value>{0}では利用できません。</value>
   </data>
+  <data name="Not because grades are worth more there — the span from a clean pass to an SSS+ fell from +{0} here to +{1} — but because a level fell further: Phoenix’s base is quadratic (+{2} at 20) against Phoenix 2’s flat +{3}. On Phoenix, passing one level higher takes a 900,000 to {4} to match on the chart you already have. That is why the ladder here is passing: the score lever is the expensive one." xml:space="preserve">
+    <value>そこでランクの価値が高いからではなく — 無難なクリアからSSS+までの幅はここの+{0}から+{1}に縮みました — レベルの方がもっと縮んだからです。Phoenixのベースは二次式（20で+{2}）、Phoenix 2は固定の+{3}です。Phoenixで1レベル上のクリアに追いつくには、手持ちの譜面で900,000を{4}まで上げる必要があります。だからここの階段はクリアです。スコアの方が高くつくレバーなのです。</value>
+  </data>
   <data name="Not checked" xml:space="preserve">
     <value>未確認</value>
   </data>
@@ -4134,6 +4323,9 @@
   </data>
   <data name="Not enough players in range to provide results" xml:space="preserve">
     <value>同水準のプレイヤーが少なすぎて結果を出せません</value>
+  </data>
+  <data name="not enough players yet: {0}" xml:space="preserve">
+    <value>まだプレーヤーが足りません：{0}</value>
   </data>
   <data name="not full" xml:space="preserve">
     <value>未満員</value>
@@ -4277,8 +4469,14 @@
   <data name="Nothing on your desk." xml:space="preserve">
     <value>対応するものはありません。</value>
   </data>
+  <data name="Nothing selected — click a value." xml:space="preserve">
+    <value>何も選択されていません — 値をクリックしてください。</value>
+  </data>
   <data name="Nothing to compare yet" xml:space="preserve">
     <value>まだ比較できるものがありません</value>
+  </data>
+  <data name="Nothing to draw for {0} yet — the population figures build with the nightly PUMBILITY sweep, and a band needs at least {1} full pools before it is drawn." xml:space="preserve">
+    <value>{0}にはまだ描くものがありません — 人口の数字は毎晩のPUMBILITY集計で貯まり、帯を描くには完成プールが最低{1}件必要です。</value>
   </data>
   <data name="Nothing to suggest yet — play and import some scores first." xml:space="preserve">
     <value>まだ提案できるものがありません — プレイしてスコアをインポートしてください。</value>
@@ -4295,8 +4493,14 @@
   <data name="Nothing was sent — post in the Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>自動では何も送られていません — Discord に書き込めば誰かが見ます。その間もツールは動き続けます。</value>
   </data>
+  <data name="nothing within reach" xml:space="preserve">
+    <value>届くものなし</value>
+  </data>
   <data name="Nothing yet." xml:space="preserve">
     <value>まだ何もありません。</value>
+  </data>
+  <data name="Nothing." xml:space="preserve">
+    <value>何も。</value>
   </data>
   <data name="now" xml:space="preserve">
     <value>たった今</value>
@@ -4409,6 +4613,9 @@
   <data name="Oldest Score" xml:space="preserve">
     <value>最も古いスコア</value>
   </data>
+  <data name="On a {0} each plate is worth +{1} a step through {2} and +{3} a step from {4} up, so Rough Game to Perfect Game on one chart is +{5}." xml:space="preserve">
+    <value>{0}ではプレートは{2}までは1段ごとに+{1}、{4}から上は1段ごとに+{3}の価値なので、1譜面でRough GameからPerfect Gameまでは+{5}です。</value>
+  </data>
   <data name="on any chart board" xml:space="preserve">
     <value>譜面ボード基準</value>
   </data>
@@ -4429,6 +4636,9 @@
   </data>
   <data name="One configurable graph of your scores, grades, plates, or clears by level." xml:space="preserve">
     <value>スコア・グレード・プレート・クリアをレベル別に表示する設定可能なグラフ。</value>
+  </data>
+  <data name="one level higher is worth" xml:space="preserve">
+    <value>1レベル上の価値</value>
   </data>
   <data name="One minute, then you're in" xml:space="preserve">
     <value>1分で完了します</value>
@@ -4453,6 +4663,9 @@
   </data>
   <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
     <value>共有ボードはひとつ、期間は一週間 — 全員が同じチャートでベストを競います。</value>
+  </data>
+  <data name="One table for both types — Phoenix priced a Single and a Double at the same level alike." xml:space="preserve">
+    <value>1つの表で両タイプ — Phoenixは同じレベルのSinglesとDoublesを同じに計算しました。</value>
   </data>
   <data name="One-click import" xml:space="preserve">
     <value>ワンクリックインポート</value>
@@ -4634,8 +4847,20 @@
   <data name="Password saved on this device" xml:space="preserve">
     <value>パスワードをこのデバイスに保存しました</value>
   </data>
+  <data name="past {0}" xml:space="preserve">
+    <value>{0}より先</value>
+  </data>
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>リンク全体、または末尾のコードだけを貼り付けてください。</value>
+  </data>
+  <data name="Peer projections show once your doubles pool has {0} charts." xml:space="preserve">
+    <value>Doublesのプールが{0}譜面になるとピア予測が表示されます。</value>
+  </data>
+  <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
+    <value>Singlesのプールが{0}譜面になるとピア予測が表示されます。</value>
+  </data>
+  <data name="Peers IQR" xml:space="preserve">
+    <value>ピアIQR</value>
   </data>
   <data name="peers:" xml:space="preserve">
     <value>同水準:</value>
@@ -4644,6 +4869,12 @@
     <value>未決定</value>
     
   <comment>未決定</comment></data>
+  <data name="per chart · grade and plate add, then multiply the base · your best fifty summed" xml:space="preserve">
+    <value>譜面ごと · ランクとプレートを足してからベースに掛ける · 上位50譜面の合計</value>
+  </data>
+  <data name="per chart · plates never entered it · your best fifty summed" xml:space="preserve">
+    <value>譜面ごと · プレートは入らない · 上位50譜面の合計</value>
+  </data>
   <data name="Per-channel language" xml:space="preserve">
     <value>チャンネルごとの言語</value>
   </data>
@@ -4670,6 +4901,9 @@
   </data>
   <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
 	  <value>パーフェクトスコア倍率（SSS+を超えるランクとして機能）</value>
+  </data>
+  <data name="Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {0} — {1} of a level at 24, {2} of a level at 20." xml:space="preserve">
+    <value>プールの全譜面をRough GameからPerfect Gameにしても価値は約{0} — 24でレベル{1}分、20でレベル{2}分です。</value>
   </data>
   <data name="Perfectionist" xml:space="preserve">
     <value>Perfectionist</value>
@@ -4712,6 +4946,12 @@
   </data>
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · 実際のトップ50</value>
+  </data>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+    <value>Phoenix 2もCO-OP譜面に値を付けます — Phoenixが{1}で付けたように固定ベース{0}で — ただしその数字は称号ページにしか出てきません。どちらのバージョンでもPUMBILITYには何も足しません。</value>
+  </data>
+  <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
+    <value>Phoenix 2はPhoenixより約{0}倍スコアに寄りかかっています。</value>
   </data>
   <data name="Phoenix 2 prices a Singles chart one level up the base curve — an S22 is paid like a 23. Grinding the same charts you ground last mix is the wrong plan." xml:space="preserve">
     <value>Phoenix 2 では Singles の譜面が基準カーブ上で1レベル上として計算されます。S22 は 23 と同じ扱いです。前のバージョンと同じ譜面を掘るのは正しい戦略ではありません。</value>
@@ -4775,6 +5015,12 @@
     <value>写真</value>
     
   <comment>写真</comment></data>
+  <data name="Pick a chart’s level and the grade — the exact per-chart PUMBILITY, and what equals it elsewhere." xml:space="preserve">
+    <value>譜面のレベルとランクを選ぶと — 譜面ごとの正確なPUMBILITYと、他でそれに等しいもの。</value>
+  </data>
+  <data name="Pick a chart’s level, the grade and the plate — the exact per-chart PUMBILITY, and what equals it elsewhere." xml:space="preserve">
+    <value>譜面のレベル、ランク、プレートを選ぶと — 譜面ごとの正確なPUMBILITYと、他でそれに等しいもの。</value>
+  </data>
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>リストから難度を選ぶと、詳細と類似譜面が表示されます。</value>
   </data>
@@ -5085,6 +5331,9 @@
   <data name="Previously rejected: {0}" xml:space="preserve">
     <value>以前の却下理由: {0}</value>
   </data>
+  <data name="priced base" xml:space="preserve">
+    <value>計算ベース</value>
+  </data>
   <data name="Prime" xml:space="preserve">
     <value>Prime</value>
   </data>
@@ -5182,11 +5431,26 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY Calculator" xml:space="preserve">
+    <value>PUMBILITY計算機</value>
+  </data>
+  <data name="PUMBILITY Calculator — {0}" xml:space="preserve">
+    <value>PUMBILITY計算機 — {0}</value>
+  </data>
+  <data name="PUMBILITY is the sum of your fifty highest-valued charts — one pool across Singles and Doubles." xml:space="preserve">
+    <value>PUMBILITYは価値の高い上位50譜面の合計です — SinglesとDoublesをまたぐ1つのプール。</value>
+  </data>
+  <data name="PUMBILITY is the sum of your fifty highest-valued charts. Phoenix 2 keeps three pools — Singles, Doubles, and the total across both — each its own top fifty." xml:space="preserve">
+    <value>PUMBILITYは価値の高い上位50譜面の合計です。Phoenix 2はプールを3つ持ちます — Singles、Doubles、両方を合わせた合計 — それぞれ独自の上位50。</value>
+  </data>
   <data name="PUMBILITY level {0}" xml:space="preserve">
     <value>PUMBILITYレベル {0}</value>
   </data>
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITYの推移</value>
+  </data>
+  <data name="PUMBILITY peers" xml:space="preserve">
+    <value>PUMBILITYピア</value>
   </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility更新</value>
@@ -5203,11 +5467,17 @@
   <data name="Pump It Up didn't award titles until Prime 2." xml:space="preserve">
     <value>Pump It Upにタイトルが登場したのは Prime 2 からです。</value>
   </data>
+  <data name="Push levels." xml:space="preserve">
+    <value>レベルを押し上げよう。</value>
+  </data>
   <data name="Push PGs" xml:space="preserve">
     <value>PGを狙う</value>
   </data>
   <data name="Pushing Title Charts" xml:space="preserve">
     <value>挑戦中の称号の譜面</value>
+  </data>
+  <data name="Quadratic: a level is worth {0} at 20 and {1} at 27. Below level 10 a chart is worth 0. CO-OP charts were priced at a flat 2,000 but never counted in the total." xml:space="preserve">
+    <value>二次式。1レベルの価値は20で{0}、27で{1}です。レベル10未満の譜面の価値は0です。CO-OP譜面は固定2,000で計算されましたが合計には数えられませんでした。</value>
   </data>
   <data name="Qualifier Existing Score" xml:space="preserve">
     <value>すでに {0} {1} が登録されています。提出すると置き換わります。</value>
@@ -5267,6 +5537,9 @@
   <data name="Queued" xml:space="preserve">
     <value>キューに追加しました</value>
   </data>
+  <data name="Quick calculator" xml:space="preserve">
+    <value>簡易計算機</value>
+  </data>
   <data name="Quick Record" xml:space="preserve">
     <value>クイック記録</value>
   </data>
@@ -5293,11 +5566,14 @@
   </data>
   <!-- Tier-lists overhaul (PR #135)。"Why Don't You Get Up and Dance, Man?" は
        ゲーム内ミームのため全ロケール共通・翻訳しない。 -->
-  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
-    <value>あなたのPUMBILITY称号帯の{0}人と比較</value>
-  </data>
   <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
     <value>同程度の競技レベルの{0}人と比較</value>
+  </data>
+  <data name="Ranked against {0} players on your difficulty title level" xml:space="preserve">
+    <value>あなたの難易度称号レベルの{0}人と比較</value>
+  </data>
+  <data name="Ranked against {0} PUMBILITY peers within 3 levels of you" xml:space="preserve">
+    <value>あなたと3レベル以内のPUMBILITYピア {0}人と比較</value>
   </data>
   <data name="Ranked by" xml:space="preserve">
     <value>ランキング基準</value>
@@ -5338,9 +5614,6 @@
     <value>評定</value>
     
   <comment>レーティング</comment></data>
-  <data name="Rating Calculator" xml:space="preserve">
-    <value>評定の計算</value>
-  </data>
   <data name="Re-price {0} ratings" xml:space="preserve">
     <value>{0} の評定を再計算</value>
   </data>
@@ -5361,6 +5634,9 @@
   </data>
   <data name="Reached {0}" xml:space="preserve">
     <value>{0}に到達</value>
+  </data>
+  <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
+    <value>バーの端から真上に読むと、どのレベルと同じか分かります。</value>
   </data>
   <data name="Read the source" xml:space="preserve">
     <value>ソースを読む</value>
@@ -5693,6 +5969,9 @@
   <data name="Rotation started." xml:space="preserve">
     <value>更新を開始しました。</value>
   </data>
+  <data name="Rough" xml:space="preserve">
+    <value>Rough</value>
+  </data>
   <data name="Rows with this edge come from the player's PIU Scores account, not the official board." xml:space="preserve">
     <value>この縁が付いた行は公式ボードではなく、プレーヤーの PIU Scores アカウントからのものです。</value>
   </data>
@@ -5723,6 +6002,9 @@
   </data>
   <data name="Runs Without Twists" xml:space="preserve">
     <value>捻りなしラン</value>
+  </data>
+  <data name="S + D" xml:space="preserve">
+    <value>S + D</value>
   </data>
   <data name="Same skills, two questions: this folder view asks how the charts you've played here actually go — the blend view asks which skills run hot or cold across everything you've scored nearby. A skill can look fine here and still move charts." xml:space="preserve">
     <value>同じスキルにふたつの問い: フォルダ表示は「ここでプレイした譜面は実際どうか」を、ブレンド表示は「近隣でスコアしたすべての中でどのスキルが強い/弱いか」を問います。ここでは問題なく見えるスキルが譜面を動かすこともあります。</value>
@@ -5780,6 +6062,12 @@
   </data>
   <data name="Score Distribution" xml:space="preserve">
 	  <value>スコア分布</value>
+  </data>
+  <data name="score floor" xml:space="preserve">
+    <value>スコア下限</value>
+  </data>
+  <data name="Score floors changed below AAA on Phoenix 2 — A {0} · A+ {1} · AA {2} · AA+ {3}." xml:space="preserve">
+    <value>Phoenix 2ではAAAより下のスコア下限が変わりました — A {0} · A+ {1} · AA {2} · AA+ {3}。</value>
   </data>
   <data name="Score Formula Shoutout" xml:space="preserve">
     <value>このスコアの計算均等化を レバースエンジニアリングしてと提供したMR_WEQさんありがとうがします！</value>
@@ -6113,6 +6401,9 @@
   <data name="Short Cut" xml:space="preserve">
     <value>ショートカット</value>
   </data>
+  <data name="Should I push levels or push scores?" xml:space="preserve">
+    <value>レベルを上げるべき？スコアを上げるべき？</value>
+  </data>
   <data name="Show" xml:space="preserve">
 	  <value>表示</value>
   </data>
@@ -6282,6 +6573,9 @@
   <data name="Singles + Doubles" xml:space="preserve">
     <value>Singles + Doubles</value>
   </data>
+  <data name="Singles are priced one level up and read a few grades and plates differently." xml:space="preserve">
+    <value>Singlesは1レベル上で計算され、いくつかのランクとプレートを別に読みます。</value>
+  </data>
   <data name="Singles competitive level" xml:space="preserve">
     <value>Singlesの競技レベル</value>
   </data>
@@ -6290,6 +6584,12 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Singles対Doubles</value>
+  </data>
+  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Singles: PUMBILITYピア {0}人</value>
+  </data>
+  <data name="Singles: {0}/{1} charts" xml:space="preserve">
+    <value>Singles: {0}/{1} 譜面</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
 	  <value>サイト製作・運営：DrMurloc</value>
@@ -6339,6 +6639,9 @@
   </data>
   <data name="Slim" xml:space="preserve">
     <value>わずか</value>
+  </data>
+  <data name="so scoring one chart at 20 is worth" xml:space="preserve">
+    <value>だからレベル20で1譜面をスコアすることの価値は</value>
   </data>
   <data name="Socialite" xml:space="preserve">
     <value>Socialite</value>
@@ -6735,6 +7038,9 @@
   <data name="The code may have been revoked, or the community no longer exists." xml:space="preserve">
     <value>コードが取り消されたか、コミュニティが存在しなくなりました。</value>
   </data>
+  <data name="The constants" xml:space="preserve">
+    <value>定数</value>
+  </data>
   <data name="The digest posts after the weekly Sunday sweep." xml:space="preserve">
     <value>毎週日曜の集計後にダイジェストが投稿されます。</value>
   </data>
@@ -6750,11 +7056,23 @@
   <data name="The exact numbers" xml:space="preserve">
     <value>正確な数値</value>
   </data>
+  <data name="the exchange rate — scoring got {0}× more powerful relative to passing" xml:space="preserve">
+    <value>交換レート — スコアはクリアに対して{0}倍強くなりました</value>
+  </data>
   <data name="The first Phoenix 2 score to beat your Phoenix 1 best" xml:space="preserve">
     <value>Phoenix 1 のベストを初めて超えた Phoenix 2 のスコア</value>
   </data>
   <data name="The first weekly snapshot has not landed yet - highlights light up after the next Sunday import." xml:space="preserve">
     <value>最初の週次スナップショットはまだありません - 次の日曜のインポート後にハイライトが表示されます。</value>
+  </data>
+  <data name="The formula" xml:space="preserve">
+    <value>式</value>
+  </data>
+  <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
+    <value>ランクの幅は確かに縮みました。無難なクリアの上のSSS+はPhoenixで+{0}、ここでは+{1}です。でもそれはレベルの価値と並べて初めて意味を持ち、レベルの方がもっと縮みました — Phoenixのベースは二次式（20で+{2}）、Phoenix 2は固定5ずつ（+{3}）増えます。裏返せば、Phoenixで1レベル上のクリアに追いつくには手持ちの譜面で900,000を{4}まで上げる必要があり、Phoenix 2では同じ1レベルを{5}で追いつけます。</value>
+  </data>
+  <data name="the grade span got {0}× smaller" xml:space="preserve">
+    <value>ランクの幅は{0}倍小さくなりました</value>
   </data>
   <data name="The grind" xml:space="preserve">
     <value>グラインド</value>
@@ -6801,11 +7119,26 @@
   <data name="The piugame.com session key is forwarded so you run your own import." xml:space="preserve">
     <value>piugame.com のセッションキーが転送され、自分でインポートを実行できます。</value>
   </data>
+  <data name="The plate you walked away with never entered the number." xml:space="preserve">
+    <value>持ち帰ったプレートは数字に一度も入りませんでした。</value>
+  </data>
   <data name="The plate, magnified" xml:space="preserve">
     <value>プレート、拡大</value>
   </data>
+  <data name="The plate, magnified — Rough Game to Perfect Game, priced on a {0}" xml:space="preserve">
+    <value>プレートを拡大 — Rough GameからPerfect Gameまで、{0}での価値</value>
+  </data>
+  <data name="the pools above average +{0} — about a {1}" xml:space="preserve">
+    <value>上のプールは平均+{0} — およそ{1}</value>
+  </data>
   <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
     <value>POST には「このプレイヤーが取り込んだ」だけが入ります。必要なものは取りに来てください。</value>
+  </data>
+  <data name="The Pump It Up Phoenix 2 PUMBILITY formula: Base(level) × (grade + plate), Base = 130 + 5 × level, singles priced one level up. Every grade multiplier and plate bonus, what any level and grade is worth, and how much scoring buys against passing." xml:space="preserve">
+    <value>Pump It Up Phoenix 2のPUMBILITY式：Base(level) × (grade + plate)、Base = 130 + 5 × level、Singlesは1レベル上で計算。全ランク倍率と全プレートボーナス、どのレベルとランクがいくらか、スコアがクリアに対してどれだけ買えるか。</value>
+  </data>
+  <data name="The Pump It Up Phoenix PUMBILITY formula: Base(level) × grade, Base = 100 + 5 × (level − 10) × (level − 9), plates ×1.0. Every grade multiplier, what any level and grade was worth, and how much scoring bought against passing." xml:space="preserve">
+    <value>Pump It Up PhoenixのPUMBILITY式：Base(level) × grade、Base = 100 + 5 × (level − 10) × (level − 9)、プレートは×1.0。全ランク倍率、どのレベルとランクがいくらだったか、スコアがクリアに対してどれだけ買えたか。</value>
   </data>
   <data name="The rainbow bar is 1000 life on a 1 and 1000 life on a 29. What a harder chart hands you is life behind the bar — invisible on the cabinet, and the only thing that changes with level. The combo you need per miss is identical all the way up." xml:space="preserve">
     <value>虹色バーはレベル1でも29でも1000体力です。難しい譜面が与えてくれるのはバーの裏側の体力、つまり筐体には見えず、レベルによって変わる唯一のものです。Miss 1回あたりに必要なコンボは、どのレベルでも同じです。</value>
@@ -6818,6 +7151,9 @@
   </data>
   <data name="The rules" xml:space="preserve">
     <value>ルール</value>
+  </data>
+  <data name="The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}." xml:space="preserve">
+    <value>S17はBase(18) = {0}で払われます — Singlesは1レベル上で計算されます。Perfect Gameはランクではなくプレートボーナスです。1,000,000でもSSS+の×{1}のまま、+{2}が足されます。</value>
   </data>
   <data name="The same perfect at the start of a song, before any combo." xml:space="preserve">
     <value>同じ Perfect でも、コンボ前の曲開始時。</value>
@@ -7017,6 +7353,12 @@
   <data name="This page is full." xml:space="preserve">
     <value>このページは満杯です。</value>
   </data>
+  <data name="This page is the formula behind the number: what any grade on any level is worth, and where the number actually comes from." xml:space="preserve">
+    <value>このページはその数字の裏にある式です。どのレベルのどのランクがいくらか、そして数字が実際どこから来るか。</value>
+  </data>
+  <data name="This page is the Phoenix formula behind the number: what any grade on any level was worth, and where the number came from." xml:space="preserve">
+    <value>このページはその数字の裏にあるPhoenixの式です。どのレベルのどのランクがいくらだったか、そして数字がどこから来たか。</value>
+  </data>
   <data name="This recap hasn&apos;t been computed yet — check back soon." xml:space="preserve">
     <value>このリキャップはまだ計算されていません。後でもう一度お試しください。</value>
   </data>
@@ -7148,6 +7490,9 @@
   </data>
   <data name="To Leaderboard" xml:space="preserve">
     <value>ランキングチェック</value>
+  </data>
+  <data name="to light up what equals it on every other level." xml:space="preserve">
+    <value>他の全レベルで等しい値が光ります。</value>
   </data>
   <data name="To page" xml:space="preserve">
     <value>終了ページ</value>
@@ -7351,6 +7696,9 @@
   <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
     <value>Phoenix および Phoenix 2 では未確認です。ページ上部の注記を参照してください。</value>
   </data>
+  <data name="under {0}" xml:space="preserve">
+    <value>{0}未満</value>
+  </data>
   <data name="Underrated" xml:space="preserve">
     <value>過小評価</value>
   </data>
@@ -7506,9 +7854,6 @@
   </data>
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>ランキングに残るはずが消えた</value>
-  </data>
-  <data name="Verification" xml:space="preserve">
-	  <value>確認</value>
   </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>公式インポートで確認済み</value>
@@ -7730,6 +8075,9 @@
   <data name="What players at your level score here" xml:space="preserve">
     <value>同水準のプレイヤーのここでのスコア</value>
   </data>
+  <data name="What scoring buys, in levels" xml:space="preserve">
+    <value>スコアが買えるもの、レベル換算</value>
+  </data>
   <data name="What should they change?" xml:space="preserve">
     <value>何を直すべきですか?</value>
   </data>
@@ -7781,6 +8129,9 @@
   <data name="Where players read your code — GitHub, GitLab, Codeberg, anywhere public. A listed tool links straight to it." xml:space="preserve">
     <value>プレイヤーがあなたのコードを読む場所です — GitHub、GitLab、Codeberg、公開されていればどこでも。掲載されたツールはここへ直接リンクします。</value>
   </data>
+  <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
+    <value>{0}でPUMBILITYはどこから来るか — 平均プール</value>
+  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>この譜面のクリアがどの競技レベルにあるかを示します。</value>
   </data>
@@ -7801,6 +8152,9 @@
   </data>
   <data name="Which charts are honest for their level — and which lie." xml:space="preserve">
     <value>レベル表記に正直なチャートはどれか — 嘘をついているのはどれか。</value>
+  </data>
+  <data name="which level’s 900,000 is worth the same" xml:space="preserve">
+    <value>どのレベルの900,000が同じ価値か</value>
   </data>
   <data name="Which mix" xml:space="preserve">
     <value>バージョン</value>
@@ -7850,11 +8204,17 @@
   <data name="within 1 level" xml:space="preserve">
     <value>レベル±1以内</value>
   </data>
+  <data name="within 3 levels of you with a full pool" xml:space="preserve">
+    <value>あなたと3レベル以内で、プールが満杯のプレイヤー</value>
+  </data>
   <data name="Within days" xml:space="preserve">
     <value>最大日数</value>
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>なくても動きます — あなた自身の、あなたのスコアに対しては。</value>
+  </data>
+  <data name="Worked examples" xml:space="preserve">
+    <value>計算例</value>
   </data>
   <data name="Working out what this session moved — your titles, your pool, and where each score stands among players at your level." xml:space="preserve">
     <value>このセッションが動かしたものを計算中 — 称号、プール、そして同レベル帯での各スコアの位置。</value>
@@ -7876,6 +8236,21 @@
   </data>
   <data name="World Rankings" xml:space="preserve">
     <value>世界ランキング</value>
+  </data>
+  <data name="worth a 900,000 on level →" xml:space="preserve">
+    <value>レベル →の900,000相当</value>
+  </data>
+  <data name="worth a 900,000 on {0}" xml:space="preserve">
+    <value>{0}の900,000相当</value>
+  </data>
+  <data name="Worth about the same" xml:space="preserve">
+    <value>ほぼ同じ価値</value>
+  </data>
+  <data name="worth more than a 900,000 on any chart in the game" xml:space="preserve">
+    <value>ゲーム内のどの譜面の900,000より高い</value>
+  </data>
+  <data name="Worth zero" xml:space="preserve">
+    <value>価値ゼロ</value>
   </data>
   <data name="Wouldn't You Like To Know" xml:space="preserve">
 	  <value>知りたいかい</value>
@@ -7912,6 +8287,9 @@
   <data name="XXLetterGrade" xml:space="preserve">
 	  <value>XXLetterGrade</value>
 	  
+  </data>
+  <data name="Yes — about {0}× more, where most pools actually live." xml:space="preserve">
+    <value>はい — ほとんどのプールが実際にいる所では約{0}倍。</value>
   </data>
   <data name="Yes, cycle all keys" xml:space="preserve">
     <value>はい、すべてのキーを再生成</value>
@@ -8008,6 +8386,9 @@
   </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
 	  <value>なんらかの理由で現実の狭間の状態になりました。ページを再読み込みして再試行してください。</value>
+  </data>
+  <data name="you stand on {0}" xml:space="preserve">
+    <value>あなたは {0}</value>
   </data>
   <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
     <value>どの曲も体力500・倍率ほぼゼロから始まります。連続 {0} Miss でどのレベルでも死にます。序盤を乗り切れば、レベル {1} では {2} 回まで耐えられます。走り出しは強く。</value>
@@ -8354,6 +8735,12 @@
   <data name="{0} admins" xml:space="preserve">
     <value>管理者 {0} 人</value>
   </data>
+  <data name="{0} against {1}." xml:space="preserve">
+    <value>{0}、{1}との比較。</value>
+  </data>
+  <data name="{0} and up" xml:space="preserve">
+    <value>{0}以上</value>
+  </data>
   <data name="{0} API calls" xml:space="preserve">
     <value>{0} 件の API 呼び出し</value>
   </data>
@@ -8365,6 +8752,9 @@
   </data>
   <data name="{0} at {1}" xml:space="preserve">
     <value>{1} の {0}</value>
+  </data>
+  <data name="{0} beats it at any pass" xml:space="preserve">
+    <value>{0}はどんなクリアでも上回ります</value>
   </data>
   <data name="{0} becomes the creator of this community and you become an admin. There is only one creator seat, so you can't take it back yourself." xml:space="preserve">
     <value>{0} がこのコミュニティの作成者になり、あなたは管理者になります。作成者は 1 人だけなので、自分では戻せません。</value>
@@ -8386,6 +8776,9 @@
   </data>
   <data name="{0} can now read your scores" xml:space="preserve">
     <value>{0}があなたのスコアを読み取れるようになりました</value>
+  </data>
+  <data name="{0} can’t reach it (SSS+ = {1})" xml:space="preserve">
+    <value>{0}は届きません（SSS+ = {1}）</value>
   </data>
   <data name="{0} changed {1} chart levels from {2} — {3} harder, {4} easier — added {5} songs and removed {6}." xml:space="preserve">
     <value>{0} は {2} から {1} 譜面の難度を変更（上昇 {3}、低下 {4}）し、{5} 曲を追加、{6} 曲を削除しました。</value>
@@ -8513,6 +8906,9 @@
   <data name="{0} left" xml:space="preserve">
     <value>{0} 件が出た</value>
   </data>
+  <data name="{0} levels" xml:space="preserve">
+    <value>{0}レベル</value>
+  </data>
   <data name="{0} match the community tier" xml:space="preserve">
     <value>{0}譜面がコミュニティと一致</value>
   </data>
@@ -8609,6 +9005,9 @@
   <data name="{0} on the board" xml:space="preserve">
     <value>{0}人が参加中</value>
   </data>
+  <data name="{0} on {1}" xml:space="preserve">
+    <value>{1}の{0}</value>
+  </data>
   <data name="{0} only" xml:space="preserve">
     <value>{0}のみ</value>
   </data>
@@ -8639,8 +9038,23 @@
   <data name="{0} players lose access" xml:space="preserve">
     <value>{0} 人のプレイヤーがアクセスを失います</value>
   </data>
+  <data name="{0} players on PIU Scores with a full pool of fifty — {1} players, {2}. The split is measured from a bare base of ×1.00, the same split as on your PUMBILITY page." xml:space="preserve">
+    <value>完成プール50譜面を持つPIU Scoresの{0}プレーヤー — {1}人、{2}。内訳は×1.00の素のベースから測り、PUMBILITYページと同じ内訳です。</value>
+  </data>
+  <data name="{0} players on PIU Scores with a full pool of fifty. The split is measured from a bare base of ×1.00, the same split as on your PUMBILITY page." xml:space="preserve">
+    <value>完成プール50譜面を持つPIU Scoresの{0}プレーヤー。内訳は×1.00の素のベースから測り、PUMBILITYページと同じ内訳です。</value>
+  </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>プレーヤー {0} 人・{1} の週</value>
+  </data>
+  <data name="{0} pools" xml:space="preserve">
+    <value>プール{0}件</value>
+  </data>
+  <data name="{0} pools · average level {1}" xml:space="preserve">
+    <value>プール{0}件 · 平均レベル{1}</value>
+  </data>
+  <data name="{0} PUMBILITY peers" xml:space="preserve">
+    <value>PUMBILITYピア {0}人</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>PUMBILITY 残り {0}</value>
@@ -8735,6 +9149,9 @@
   <data name="{0}% to next title" xml:space="preserve">
     <value>次のタイトルまで {0}%</value>
   </data>
+  <data name="{0}: an SSS+ on {1} is worth a 900,000 on {2}" xml:space="preserve">
+    <value>{0}：{1}のSSS+は{2}の900,000相当</value>
+  </data>
   <data name="{0}d ago" xml:space="preserve">
     <value>{0}日前</value>
   </data>
@@ -8767,6 +9184,9 @@
   </data>
   <data name="— Zelllooo" xml:space="preserve">
     <value>— Zelllooo</value>
+  </data>
+  <data name="≈ the closest value on each other level:" xml:space="preserve">
+    <value>≈ 他の各レベルで最も近い値：</value>
   </data>
   <data name="▲ Harder" xml:space="preserve">
     <value>▲ 難化</value>

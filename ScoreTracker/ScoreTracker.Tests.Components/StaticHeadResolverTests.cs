@@ -33,7 +33,52 @@ public sealed class StaticHeadResolverTests
     private StaticHeadResolver Build()
     {
         var urls = new ChartUrlResolver(_mediator.Object, new MemoryCache(new MemoryCacheOptions()));
-        return new StaticHeadResolver(urls, _mediator.Object, Mock.Of<IStringLocalizer<App>>());
+        return new StaticHeadResolver(urls, _mediator.Object, PassThroughLocalizer());
+    }
+
+    // Keys are English UI text verbatim, so the key IS the display string.
+    private static IStringLocalizer<App> PassThroughLocalizer()
+    {
+        var localizer = new Mock<IStringLocalizer<App>>();
+        localizer.Setup(l => l[It.IsAny<string>()])
+            .Returns((string key) => new LocalizedString(key, key));
+        localizer.Setup(l => l[It.IsAny<string>(), It.IsAny<object[]>()])
+            .Returns((string key, object[] args) => new LocalizedString(key, string.Format(key, args)));
+        return localizer.Object;
+    }
+
+    [Theory]
+    [InlineData("/PumbilityCalculator/phoenix-2", MixEnum.Phoenix, "Phoenix 2", "phoenix-2")]
+    [InlineData("/PumbilityCalculator/phoenix", MixEnum.Phoenix2, "Phoenix", "phoenix")]
+    [InlineData("/PumbilityCalculator", MixEnum.Phoenix2, "Phoenix 2", "phoenix-2")]
+    [InlineData("/PumbilityCalculator", MixEnum.Phoenix, "Phoenix", "phoenix")]
+    [InlineData("/PumbilityCalculator", MixEnum.XX, "Phoenix 2", "phoenix-2")]
+    public async Task ThePumbilityCalculatorHeadIsOnePerMixAndSelfCanonical(string path, MixEnum viewerMix,
+        string mixName, string canonicalSlug)
+    {
+        // The slug wins; the bare route serves the viewer's mix, or the newest mix with a formula
+        // when the viewer's has none. No query behind it — the formula is a constant.
+        var head = await Build().Resolve(path, viewerMix, CancellationToken.None);
+
+        Assert.NotNull(head);
+        Assert.Equal($"PUMBILITY Calculator — {mixName}", head!.Title);
+        Assert.Equal($"https://piuscores.arroweclip.se/PumbilityCalculator/{canonicalSlug}", head.Canonical);
+        Assert.Contains("PUMBILITY formula", head.Description);
+        Assert.Contains(mixName == "Phoenix 2" ? "Base(level) × (grade + plate)" : "Base(level) × grade", head.Description);
+        Assert.NotNull(head.Calculator);
+        Assert.Equal(mixName, head.Calculator!.MixName);
+        Assert.Null(head.OgImage);
+        Assert.Null(head.SongName);
+        Assert.Null(head.MixDiff);
+    }
+
+    [Theory]
+    [InlineData("/PumbilityCalculator/xx")]
+    [InlineData("/PumbilityCalculator/nonsense")]
+    [InlineData("/PumbilityCalculator/phoenix-2/doubles")]
+    public async Task AMixWithoutAFormulaOrAnUnknownSlugHasNoCalculatorHead(string path)
+    {
+        Assert.Null(await Build().Resolve(path, MixEnum.Phoenix2, CancellationToken.None));
     }
 
     private void Catalog(MixEnum mix, params Chart[] charts)

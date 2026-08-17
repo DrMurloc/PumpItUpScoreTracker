@@ -210,3 +210,16 @@ extend the existing `lifebar` (untranslated) / `Vida` split above.
 4. Translate using this glossary. **If a new term needs a decision, add a row to "Established term mappings" before translating.**
 5. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
 6. PR titled like `Translate <Folder> to pt-BR (Phase N)`.
+
+## PUMBILITY peers (Phoenix 2 projection, 2026-08-16)
+
+The `/Pumbility` peer line and the tier lists' PUMBILITY lens name one group: players within ±3 rungs
+of you on the PUMBILITY level ladder holding a full 50-chart pool of the type.
+
+| English | pt-BR | Notes |
+|---|---|---|
+| PUMBILITY peers | pares de PUMBILITY | `pares`, per the existing `Vs. pares`. |
+| within 3 levels of you with a full pool | a ±3 níveis de você e com o conjunto completo | `conjunto` for pool, per the existing Pool → Conjunto; `±3` mirrors `em ±1 nível`. |
+| you stand on {0} | você está em {0} | Same as `you sit at {0}`; {0} is a rung name in the game's notation, never translated. |
+| Peers IQR | IQR dos pares | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` rather than `IIQ`/`AIQ` — the site's audience reads the English acronym on every stats tool, and the label exists to tell a reader who knows the term that it is not a min–max. |
+| From {0} peers | Com {0} pares | The column's tooltip; same shape as `From {0} scores` → `Com {0} pontuações`. |

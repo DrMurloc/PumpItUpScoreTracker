@@ -46,18 +46,18 @@ internal sealed class PumbilityFoldersHandler
             // the lens cannot speak for.
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
             entry.SlidingExpiration = TimeSpan.FromHours(1);
-            // The cohort is per chart type on Phoenix 2, so both are asked and merged - a
-            // folder is offered when the reader's cohort for THAT type can speak for it.
+            // The peer group is per chart type on Phoenix 2, so both are asked and merged - a
+            // folder is offered when the reader's peer group for THAT type can speak for it.
             var folders = new List<PumbilityFolderRecord>();
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
             {
-                var cohortKey = userId == null
-                    ? PumbilityCohortKeys.Community
-                    : await _builder.ResolveViewerCohort(chartType, request.Mix, userId.Value,
+                var peerKey = userId == null
+                    ? PumbilityPeers.Community
+                    : await _builder.ResolveViewerPeers(chartType, request.Mix, userId.Value,
                         cancellationToken);
-                if (cohortKey == null) continue;
+                if (peerKey == null) continue;
                 folders.AddRange(
-                    (await _tierLists.GetPumbilityTierListFolders(request.Mix, cohortKey, cancellationToken))
+                    (await _tierLists.GetPumbilityTierListFolders(request.Mix, peerKey, cancellationToken))
                     .Where(f => f.ChartType == chartType)
                     .Select(f => new PumbilityFolderRecord(f.ChartType, f.Level)));
             }

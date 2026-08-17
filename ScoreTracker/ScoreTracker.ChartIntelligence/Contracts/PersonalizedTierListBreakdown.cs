@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -50,7 +51,8 @@ namespace ScoreTracker.ChartIntelligence.Contracts
         double CompetitiveLevel,
         double CompetitiveWindow,
         double MeanFreshness,
-        bool IsProvisionalFallback);
+        bool IsProvisionalFallback,
+        PeerGroup? Peers = null);
 
     /// <summary>
     ///     One chart's tier under each vote: the stored community sources alone, the

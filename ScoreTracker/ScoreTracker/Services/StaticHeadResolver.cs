@@ -6,6 +6,7 @@ using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.WeeklyChallenge.Contracts.Queries;
+using ScoreTracker.Web.Services.PumbilityCalculator;
 
 namespace ScoreTracker.Web.Services;
 
@@ -17,7 +18,15 @@ namespace ScoreTracker.Web.Services;
 ///     weekly hub Canonical is the clean path its filter/week variants fold into.
 /// </summary>
 public sealed record StaticHeadModel(string Title, string Description, string? OgImage, string? Canonical,
-    string? SongName = null, string? Artist = null, MixDiffHeadModel? MixDiff = null);
+    string? SongName = null, string? Artist = null, MixDiffHeadModel? MixDiff = null,
+    PumbilityCalculatorHeadModel? Calculator = null);
+
+/// <summary>
+///     The PUMBILITY calculator's structured-data payload: an explainer of one mix's formula, so it
+///     marks up as a TechArticle about that game — the type that tells a reader "this page explains
+///     the calculation" rather than tabulating results.
+/// </summary>
+public sealed record PumbilityCalculatorHeadModel(string MixName);
 
 /// <summary>
 ///     The mix-diff page's structured-data payload. It is a tabulation, so it marks up as a
@@ -60,6 +69,9 @@ public sealed class StaticHeadResolver
     {
         if (path.Equals("/WeeklyCharts", StringComparison.OrdinalIgnoreCase))
             return await ResolveWeeklyCharts(currentMix, cancellationToken);
+
+        if (path.StartsWithSegments(PumbilityCalculatorMixes.Root, out var calculatorRest))
+            return ResolvePumbilityCalculator(calculatorRest, currentMix);
 
         if (path.StartsWithSegments("/MixChanges", out var pair))
             return await ResolveMixChanges(pair, currentMix, cancellationToken);
@@ -193,6 +205,43 @@ public sealed class StaticHeadResolver
         return new StaticHeadModel(title, description, null, canonical, null, null,
             new MixDiffHeadModel(from.GetName(), to.GetName(), diff.Rerated.Count, diff.ArrivedSongs.Count,
                 diff.DepartedSongs.Count, diff.NoteCountsTracked ? diff.Restepped.Count : null));
+    }
+
+    /// <summary>
+    ///     The PUMBILITY calculator's head (docs/design/pumbility-calculator.md D1/D14): one page per
+    ///     mix with a formula, self-canonical; the bare route canonicalises to the viewer's mix like the
+    ///     page itself serves it. The description carries the formula's headline facts, so a snippet
+    ///     answers the question a searcher typed. Pure — no query, the formula is a constant.
+    /// </summary>
+    private StaticHeadModel? ResolvePumbilityCalculator(PathString rest, MixEnum currentMix)
+    {
+        var segments = rest.Value?.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries)
+                       ?? Array.Empty<string>();
+        MixEnum mix;
+        if (segments.Length == 0)
+        {
+            mix = PumbilityCalculatorMixes.All.Contains(currentMix) ? currentMix : PumbilityCalculatorMixes.All[0];
+        }
+        else if (segments.Length == 1 && ChartSlugs.TryParseMixSlug(segments[0], out mix) &&
+                 PumbilityCalculatorMixes.All.Contains(mix))
+        {
+            // The slug named a mix with a formula.
+        }
+        else
+        {
+            return null;
+        }
+
+        var name = mix.GetName();
+        var title = _localizer["PUMBILITY Calculator — {0}", name];
+        var description = mix == MixEnum.Phoenix2
+            ? _localizer[
+                "The Pump It Up Phoenix 2 PUMBILITY formula: Base(level) × (grade + plate), Base = 130 + 5 × level, singles priced one level up. Every grade multiplier and plate bonus, what any level and grade is worth, and how much scoring buys against passing."].Value
+            : _localizer[
+                "The Pump It Up Phoenix PUMBILITY formula: Base(level) × grade, Base = 100 + 5 × (level − 10) × (level − 9), plates ×1.0. Every grade multiplier, what any level and grade was worth, and how much scoring bought against passing."].Value;
+        return new StaticHeadModel(title, description, null,
+            $"https://piuscores.arroweclip.se{PumbilityCalculatorMixes.PathFor(mix)}",
+            Calculator: new PumbilityCalculatorHeadModel(name));
     }
 
     /// <summary>

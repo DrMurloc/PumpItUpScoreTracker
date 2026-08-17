@@ -9,6 +9,7 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
@@ -98,6 +99,30 @@ public sealed class PumbilityPageSagaTests
         Assert.Equal(biggest, page.Targets[0].ChartId);
         Assert.True(page.Targets.Select(t => t.Gain).SequenceEqual(
             page.Targets.Select(t => t.Gain).OrderByDescending(g => g)));
+    }
+
+    [Fact]
+    public async Task APeerTargetCarriesThePeersIqrAndACarriedScoreDoesNot()
+    {
+        // D30: the IQR is a property of a peer estimate. A row carried from your own Phoenix 1
+        // record has no peers behind it, so it has no range to print — the column reads a dash.
+        var ctx = new PageContext().WithPool(55, ChartType.Single, 20);
+        ctx.WithTarget(out var estimated, gain: 400, projected: 975_000,
+            spread: new PeerSpread(956_500, 986_250, 12));
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPageQuery(ctx.UserId), CancellationToken.None);
+
+        var row = page.Targets.Single(t => t.ChartId == estimated);
+        Assert.Equal(TargetSource.Peers, row.Source);
+        Assert.NotNull(row.Spread);
+        Assert.Equal(956_500, (int)row.Spread!.Quartile1);
+        Assert.Equal(986_250, (int)row.Spread.Quartile3);
+        Assert.Equal(12, row.Spread.PeerCount);
+
+        var carried = new PageContext().WithPhoenixScores(ChartType.Single, 22, 55, 985_000);
+        var phoenix2 = await carried.Saga.Handle(new GetPumbilityPageQuery(carried.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+        Assert.All(phoenix2.Targets, t => Assert.Null(t.Spread));
     }
 
     [Fact]
@@ -552,6 +577,7 @@ public sealed class PumbilityPageSagaTests
         private readonly Dictionary<Guid, RecordedPhoenixScore> _phoenix2Scores = new();
         private readonly Dictionary<Guid, PhoenixScore> _projected = new();
         private readonly Dictionary<Guid, double> _gains = new();
+        private readonly Dictionary<Guid, PeerSpread> _spreads = new();
         private readonly List<RecordedPhoenixScore> _top = new();
 
         public PageContext()
@@ -580,7 +606,7 @@ public sealed class PumbilityPageSagaTests
                 });
             Mediator.Setup(m => m.Send(It.IsAny<ProjectPumbilityGainsQuery>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(() => new PumbilityProjection(_projected, _gains,
-                    new Dictionary<Guid, TierListCategory>()));
+                    new Dictionary<Guid, TierListCategory>(), null, _spreads));
 
             Scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum mix, Guid _, CancellationToken _) =>
@@ -622,12 +648,14 @@ public sealed class PumbilityPageSagaTests
             return this;
         }
 
-        public PageContext WithTarget(out Guid chartId, int gain, int projected, int? current = null)
+        public PageContext WithTarget(out Guid chartId, int gain, int projected, int? current = null,
+            PeerSpread? spread = null)
         {
             var chart = AddChart(ChartType.Single, 21);
             chartId = chart.Id;
             _projected[chart.Id] = projected;
             _gains[chart.Id] = gain;
+            if (spread != null) _spreads[chart.Id] = spread;
             if (current != null)
                 _myBests[chart.Id] = new RecordedPhoenixScore(chart.Id, current.Value,
                     PhoenixPlate.TalentedGame, false, Now.AddDays(-200));

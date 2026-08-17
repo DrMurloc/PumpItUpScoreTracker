@@ -17,9 +17,6 @@ public interface ITournamentRepository
     Task<IEnumerable<LeaderboardRecord>> GetLeaderboardRecords(Guid tournamentId,
         CancellationToken cancellationToken);
 
-    Task CreateScoringLevelSnapshots(Guid tournamentId,
-        IEnumerable<(Guid, double)> snapshots, CancellationToken cancellationToken);
-
     Task<IDictionary<Guid, double>?> GetScoringLevelSnapshot(Guid tournamentId,
         CancellationToken cancellationToken);
 

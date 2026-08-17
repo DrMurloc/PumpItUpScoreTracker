@@ -632,6 +632,58 @@ namespace ScoreTracker.Data.Migrations
                     b.ToTable("FolderCohortStats", "scores");
                 });
 
+            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.PumbilityPoolCompositionEntity", b =>
+                {
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BandKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<double?>("Ceiling")
+                        .HasColumnType("float");
+
+                    b.Property<int>("ChartsPooled")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<double>("Floor")
+                        .HasColumnType("float");
+
+                    b.Property<string>("GradeCountsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("LevelPart")
+                        .HasColumnType("float");
+
+                    b.Property<double>("LevelSum")
+                        .HasColumnType("float");
+
+                    b.Property<double>("PlatePart")
+                        .HasColumnType("float");
+
+                    b.Property<int>("Players")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PoolsCounted")
+                        .HasColumnType("int");
+
+                    b.Property<double>("ScorePart")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("MixId", "BandKey");
+
+                    b.ToTable("PumbilityPoolComposition", "scores");
+                });
+
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.PumbilityTierListEntryEntity", b =>
                 {
                     b.Property<Guid>("MixId")
@@ -644,7 +696,7 @@ namespace ScoreTracker.Data.Migrations
                     b.Property<int>("Level")
                         .HasColumnType("int");
 
-                    b.Property<string>("CohortKey")
+                    b.Property<string>("PeerKey")
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
@@ -659,13 +711,13 @@ namespace ScoreTracker.Data.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
 
-                    b.Property<int>("CohortSize")
-                        .HasColumnType("int");
-
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
-                    b.HasKey("MixId", "ChartType", "Level", "CohortKey", "ChartId");
+                    b.Property<int>("PeerCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("MixId", "ChartType", "Level", "PeerKey", "ChartId");
 
                     b.ToTable("PumbilityTierListEntry", "scores");
                 });
@@ -1715,6 +1767,180 @@ namespace ScoreTracker.Data.Migrations
                     b.HasIndex("TournamentId");
 
                     b.ToTable("CoOpTeam", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMBoardEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("ChartType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ScoringConfig")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SeasonId", "MixId", "ChartType")
+                        .IsUnique();
+
+                    b.ToTable("MoMBoard", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMChartLevelEntity", b =>
+                {
+                    b.Property<Guid>("SeasonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MixId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("Level")
+                        .HasColumnType("float");
+
+                    b.HasKey("SeasonId", "MixId", "ChartId");
+
+                    b.ToTable("MoMChartLevel", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMSeasonEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("EndsAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte?>("Quarter")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Year", "Quarter")
+                        .IsUnique()
+                        .HasDatabaseName("UX_MoMSeason_Quarter")
+                        .HasFilter("[Quarter] IS NOT NULL");
+
+                    b.ToTable("MoMSeason", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMSessionChartEntity", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BonusPoints")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ChartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsBroken")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Plate")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTimeOffset?>("PlayedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SessionScore")
+                        .HasColumnType("int");
+
+                    b.HasKey("SessionId", "Ordinal");
+
+                    b.ToTable("MoMSessionChart", "scores");
+                });
+
+            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMSessionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("AverageDifficulty")
+                        .HasColumnType("float");
+
+                    b.Property<double>("AverageGrade")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("BoardId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ChartsPlayed")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte>("HighestLevel")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte>("LowestLevel")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("RestTime")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("TotalScore")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VideoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BoardId", "TotalScore")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_MoMSession_Board")
+                        .HasFilter("[PublishedAt] IS NOT NULL");
+
+                    b.ToTable("MoMSession", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.PhotoVerificationEntity", b =>
@@ -3955,6 +4181,42 @@ namespace ScoreTracker.Data.Migrations
                     b.HasOne("ScoreTracker.Data.Persistence.Entities.UserEntity", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMBoardEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMSeasonEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMChartLevelEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMSeasonEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMSessionChartEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMSessionEntity", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMSessionEntity", b =>
+                {
+                    b.HasOne("ScoreTracker.EventCompetition.Infrastructure.Entities.MoMBoardEntity", null)
+                        .WithMany()
+                        .HasForeignKey("BoardId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

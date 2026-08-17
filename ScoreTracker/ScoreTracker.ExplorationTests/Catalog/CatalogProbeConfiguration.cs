@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace ScoreTracker.ExplorationTests.Catalog;
 
@@ -20,4 +20,7 @@ internal static class CatalogProbeConfiguration
         ?? Configuration.Value["CatalogProbe:ConnectionString"];
 
     public static bool ConnectionConfigured => !string.IsNullOrWhiteSpace(ConnectionString);
+
+    /// <summary>Any other probe setting from the same store — a probe that wants one names it.</summary>
+    public static string? Setting(string key) => Configuration.Value[key];
 }
