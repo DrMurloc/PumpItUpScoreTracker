@@ -82,8 +82,10 @@ internal sealed class RivalReadSaga :
     {
         if (string.IsNullOrWhiteSpace(request.Term)) return Array.Empty<string>();
 
-        return await _mediator.Send(
-            new SearchOfficialBoardTagsQuery(request.Mix, request.Term, request.Take), cancellationToken);
+        return (await _mediator.Send(
+                new SearchOfficialBoardTagsQuery(request.Mix, request.Term, request.Take), cancellationToken))
+            .Select(p => p.Username)
+            .ToArray();
     }
 
     public async Task<RivalChartScores> Handle(GetRivalScoresForChartsQuery request,

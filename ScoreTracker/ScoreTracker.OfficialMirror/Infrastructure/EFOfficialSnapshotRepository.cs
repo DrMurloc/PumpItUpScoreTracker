@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Domain;
 using ScoreTracker.OfficialMirror.Infrastructure.Entities;
 using ScoreTracker.SharedKernel.Enums;
@@ -449,24 +450,31 @@ internal sealed class EFOfficialSnapshotRepository : IOfficialSnapshotRepository
             .ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyList<string>> SearchPlayerNamesInSnapshot(int snapshotId, string term,
+    public async Task<IReadOnlyList<OfficialPlayerRecord>> SearchPlayersInSnapshot(int snapshotId, string term,
         int take, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(term) || take <= 0) return Array.Empty<string>();
+        if (string.IsNullOrWhiteSpace(term) || take <= 0) return Array.Empty<OfficialPlayerRecord>();
 
         await using var database = await _factory.CreateDbContextAsync(ct);
         // Player-first with an EXISTS, not placements-first with a DISTINCT. The placement table
         // holds every board position in the snapshot and the player dimension holds one row per
         // tag, so filtering the dimension by name and then testing membership reads orders of
         // magnitude fewer rows than de-duplicating the join's output.
-        return await database.Set<OfficialPlayerEntity>()
+        // Match rank in the ORDER BY: an exact tag, then a prefix, then anything containing the
+        // term — a one-letter tag has to come first for a one-letter term.
+        var rows = await database.Set<OfficialPlayerEntity>()
             .Where(x => x.Username.Contains(term))
             .Where(x => database.Set<OfficialLeaderboardPlacementEntity>()
                 .Any(p => p.SnapshotId == snapshotId && p.PlayerId == x.Id))
-            .OrderBy(x => x.Username)
-            .Select(x => x.Username)
+            .OrderBy(x => x.Username == term ? 0 : x.Username.StartsWith(term) ? 1 : 2)
+            .ThenBy(x => x.Username)
+            .Select(x => new { x.Id, x.Username, x.AvatarUrl, x.UserId })
             .Take(take)
             .ToArrayAsync(ct);
+        return rows
+            .Select(x => new OfficialPlayerRecord(x.Id, x.Username,
+                x.AvatarUrl == null ? null : new Uri(x.AvatarUrl), x.UserId))
+            .ToArray();
     }
 
     public async Task<IReadOnlyList<string>> FilterNamesInSnapshot(int snapshotId,

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
@@ -22,7 +22,7 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialPlayerProfileQuery, OfficialPlayerProfileRecord?>,
     IRequestHandler<GetOfficialPlayerStandingQuery, OfficialPlayerStandingRecord?>,
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
-    IRequestHandler<SearchOfficialBoardTagsQuery, IReadOnlyList<string>>,
+    IRequestHandler<SearchOfficialBoardTagsQuery, IReadOnlyList<OfficialPlayerRecord>>,
     IRequestHandler<ResolveOfficialPlayerQuery, OfficialPlayerResolution?>,
     IRequestHandler<ResolveOfficialPlayersQuery, IReadOnlyList<OfficialPlayerResolution>>,
     IRequestHandler<GetOfficialScoresForTagsQuery, OfficialTagScores>,
@@ -399,15 +399,15 @@ internal sealed class LeaderboardHubSaga :
             request.Supplemented ? PlacementScope.IncludingSupplemented : PlacementScope.OfficialOnly,
             cancellationToken);
 
-    public async Task<IReadOnlyList<string>> Handle(SearchOfficialBoardTagsQuery request,
+    public async Task<IReadOnlyList<OfficialPlayerRecord>> Handle(SearchOfficialBoardTagsQuery request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Term)) return Array.Empty<string>();
+        if (string.IsNullOrWhiteSpace(request.Term)) return Array.Empty<OfficialPlayerRecord>();
 
         var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
         return latest == null
-            ? Array.Empty<string>()
-            : await _snapshots.SearchPlayerNamesInSnapshot(latest.Id, request.Term, request.Take,
+            ? Array.Empty<OfficialPlayerRecord>()
+            : await _snapshots.SearchPlayersInSnapshot(latest.Id, request.Term, request.Take,
                 cancellationToken);
     }
 

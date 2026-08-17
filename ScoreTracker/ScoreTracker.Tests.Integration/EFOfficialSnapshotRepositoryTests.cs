@@ -474,11 +474,11 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
         var (snapshotId, _, _, _) = await SeedSealedSnapshot(Week1);
 
         var matched = await Snapshots()
-            .SearchPlayerNamesInSnapshot(snapshotId, "li", 10, CancellationToken.None);
+            .SearchPlayersInSnapshot(snapshotId, "li", 10, CancellationToken.None);
         var capped = await Snapshots()
-            .SearchPlayerNamesInSnapshot(snapshotId, "b", 1, CancellationToken.None);
+            .SearchPlayersInSnapshot(snapshotId, "b", 1, CancellationToken.None);
 
-        Assert.Equal(new[] { "alice" }, matched);
+        Assert.Equal(new[] { "alice" }, matched.Select(p => p.Username));
         Assert.Single(capped);
     }
 
@@ -492,9 +492,9 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
             CancellationToken.None);
 
         var matched = await Snapshots()
-            .SearchPlayerNamesInSnapshot(snapshotId, "ali", 10, CancellationToken.None);
+            .SearchPlayersInSnapshot(snapshotId, "ali", 10, CancellationToken.None);
 
-        Assert.Equal(new[] { "alice" }, matched);
+        Assert.Equal(new[] { "alice" }, matched.Select(p => p.Username));
     }
 
     [Fact]
@@ -515,9 +515,9 @@ public sealed class EFOfficialSnapshotRepositoryTests : IAsyncLifetime
     {
         var (snapshotId, _, _, _) = await SeedSealedSnapshot(Week1);
 
-        Assert.Empty(await Snapshots().SearchPlayerNamesInSnapshot(snapshotId, "  ", 10,
+        Assert.Empty(await Snapshots().SearchPlayersInSnapshot(snapshotId, "  ", 10,
             CancellationToken.None));
-        Assert.Empty(await Snapshots().SearchPlayerNamesInSnapshot(snapshotId, "alice", 0,
+        Assert.Empty(await Snapshots().SearchPlayersInSnapshot(snapshotId, "alice", 0,
             CancellationToken.None));
         Assert.Empty(await Snapshots().FilterNamesInSnapshot(snapshotId, Array.Empty<string>(),
             CancellationToken.None));
