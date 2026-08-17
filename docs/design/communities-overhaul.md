@@ -229,6 +229,10 @@ fallback.)
 
 ### 5.3 Player summary — new route `/Community/{name}/Player/{userId}`
 
+> **Superseded 2026-08-16.** The community player page retired for the site-wide `/Player/{id}`
+> ([player-page-and-site-search.md](player-page-and-site-search.md)); the leaderboard row links there.
+> The community name was only ever the gate on those two reads — no data depended on it.
+
 Home-page-style: **big glowy PUMBILITY top-left** of the identity card; name, country,
 competitive level, official placement pill + "N Top-300 charts →" link (when resolvable), and the
 stat tiles. Below: **folder-completion vertical bars** (completed over remaining, minimal labels —

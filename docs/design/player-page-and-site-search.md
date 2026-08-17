@@ -69,12 +69,18 @@ The first is `IPlayerVisibilityReader`, a published Domain port:
 
 ```
 IPlayerVisibilityReader
-  Task<PlayerVisibility> Describe(Guid? viewerId, Guid targetId, ct)
-  Task<IReadOnlySet<Guid>> VisibleUserIds(Guid? viewerId, ct)   // self ∪ community members ∪ rival targets
+  Task<PlayerAudience> GetAudience(Guid? viewerId, ct)     // one read; null viewer = anonymous
+
+PlayerAudience(ViewerId, SharedCommunitiesByMember, RivalTargetIds)   // Domain/Models — pure
+  IReadOnlySet<Guid> VisibleUserIds                        // self ∪ community members ∪ rival targets
+  PlayerVisibility Describe(Guid targetId, bool targetIsPublic)
 
 PlayerVisibility(bool CanView, bool IsYou, bool IsPublic, bool IsYourRival,
                  IReadOnlyList<Name> SharedCommunities)
 ```
+
+As built, the port returns the audience once and the per-player question is answered by a pure
+method on it — a search asks it four times, a page once, and neither pays a second round trip.
 
 `Public` is a predicate, not a member of the set — the set is the *extra* people a private viewer
 may see. **Rivals implements the port for now**: it is the one vertical that can already see
@@ -91,8 +97,8 @@ and its hero tags, off the same record), and the rival picker.
 | Read | Vertical | Shape |
 |---|---|---|
 | Profile | PlayerProgress | `GetPlayerProfileQuery(userId, mix)` → `PlayerProfileRecord?` — name, avatar, country, PUMBILITY, ratings, **Singles/Doubles** competitive levels, highest clear, folder completion, and the `PlayerVisibility` it was gated on. Null when you may not look. Moved from `CommunityPlayerSaga`, legacy branch included, minus the overall competitive level. |
-| Head-to-head | Rivals | `GetPlayerHeadToHeadQuery(mix, opponentUserId, chartType?, level?)` → the existing `RivalHeadToHeadRecord`, gated by the port; the edge-keyed `GetRivalHeadToHeadQuery` stays for ghosts. Rows now include one-sided entries and the record carries `OnlyYou` / `OnlyThem`, so the switch is client-side. Folder mode = the folder's chart list; All folders = the union of both score sets. `RivalSubject.EdgeId` is nullable — a subject you may compare with need not be your rival. |
-| Player search | Identity | `SearchPlayersQuery(term, take)` → hits with the visibility bases for the row glow; the whole predicate is SQL (`Name` or `GameTag` LIKE, `IsPublic OR Id IN @visible` via `OPENJSON`, exact/prefix/contains order, `TOP`). `SearchForUsersQuery` is untouched — the session builder asks it for a thousand rows; different job. |
+| Head-to-head | Rivals | `GetPlayerHeadToHeadQuery(mix, opponentUserId, chartType?, level?)` → the existing `RivalHeadToHeadRecord`, gated by the port; the edge-keyed `GetRivalHeadToHeadQuery` stays for ghosts. Rows now include one-sided entries and the record carries `OnlyYou` / `OnlyThem`, so the switch is client-side. Folder mode = the folder's chart list; All folders = the union of both score sets. As built the record's subject is a lighter `HeadToHeadSubject` (user id / tag, name, avatar, capabilities) rather than a `RivalSubject` with a nullable edge — a comparison no longer needs an edge, and faking one was worse than not carrying it. |
+| Player search | Identity | `SearchPlayersQuery(term, take)` → hits with the visibility bases for the row glow; the whole predicate is SQL (`Name` or `GameTag` LIKE, `IsPublic OR Id IN @visible` via `OPENJSON`, exact/prefix/contains order, `TOP`). `SearchForUsersQuery` is untouched — the session builder asks it for a thousand rows; different job. One thing the real-DB test found: a supplementary-plane character (an emoji) has no weight in the default collation, so `LIKE '%😀%'` matched every row — a term carrying one now compares under `Latin1_General_100_CI_AS_SC`; every other search keeps the column's own rules. |
 | Board search | OfficialMirror | `SearchOfficialBoardTagsQuery` returns `(Username, AvatarUrl?, IsLinked)` instead of bare strings, same ordering rule. |
 | Community members | Communities | `GetMyCommunityMembersQuery()` — one read for the member ids of your user-created communities, replacing the per-community loop the picker did per keystroke. |
 
@@ -127,6 +133,9 @@ Sessions / Recap links, public or you (D4). Legacy mixes hide the Phoenix-lineag
 as the community page did; the folder graphs read the legacy store.
 
 ### 3.2 `HeadToHead` (`Components/Players/`)
+
+The page itself lives in `Pages/Progress/Player.razor`, beside the Sessions and Recap pages of the
+same family.
 
 `RivalComparison` moved and grown: the switch, dashed one-sided rows, the two extra tiles, a pager.
 Two hosts — the page, and `/Rivals` for board-only rivals (D2).
