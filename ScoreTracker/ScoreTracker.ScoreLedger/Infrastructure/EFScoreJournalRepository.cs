@@ -303,6 +303,48 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ExecuteDeleteAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Guid>> GetUsersWithJudgedEntries(MixEnum mix, CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.MixId == mixId && e.Perfects != null)
+            .Select(e => e.UserId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedEntries(Guid userId, MixEnum mix,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return (await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.UserId == userId && e.MixId == mixId && e.Perfects != null)
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
+    }
+
+    public async Task SetMaxCombos(Guid userId, MixEnum mix,
+        IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, int? MaxCombo)> combos,
+        CancellationToken cancellationToken)
+    {
+        if (combos.Count == 0) return;
+
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var rows = await database.Set<ScoreEventJournalEntity>()
+            .Where(e => e.UserId == userId && e.MixId == mixId && e.Perfects != null)
+            .ToArrayAsync(cancellationToken);
+        var byKey = rows.ToDictionary(r => (r.ChartId, r.OccurredAt));
+        foreach (var (chartId, occurredAt, maxCombo) in combos)
+            if (byKey.TryGetValue((chartId, occurredAt), out var row))
+                row.MaxCombo = maxCombo;
+
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
     private static ScoreJournalEntry Map(ScoreEventJournalEntity e)
     {
         var mix = MixIds.ToEnum(e.MixId);

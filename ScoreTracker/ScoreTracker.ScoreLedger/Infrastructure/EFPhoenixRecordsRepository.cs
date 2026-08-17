@@ -757,6 +757,37 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return removed;
     }
 
+    public async Task<IReadOnlyList<Guid>> GetUsersWithJudgedRecords(MixEnum mix,
+        CancellationToken cancellationToken = default)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.MixId == mixId && p.Perfects != null)
+            .Select(p => p.UserId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task SetMaxCombos(MixEnum mix, Guid userId, IReadOnlyList<(Guid ChartId, int? MaxCombo)> combos,
+        CancellationToken cancellationToken = default)
+    {
+        if (combos.Count == 0) return;
+
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var rows = await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId && p.MixId == mixId && p.Perfects != null)
+            .ToArrayAsync(cancellationToken);
+        var byChart = rows.ToDictionary(r => r.ChartId);
+        foreach (var (chartId, maxCombo) in combos)
+            if (byChart.TryGetValue(chartId, out var row))
+                row.MaxCombo = maxCombo;
+
+        await database.SaveChangesAsync(cancellationToken);
+        _cache.Remove(ScoreCache(userId, mix));
+    }
+
     public async Task DeleteAllForUser(Guid userId, MixEnum? mix = null,
         CancellationToken cancellationToken = default)
     {
