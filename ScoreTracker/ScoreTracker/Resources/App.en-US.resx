@@ -1641,6 +1641,9 @@
   <data name="Completed" xml:space="preserve">
     <value>Completed</value>
   </data>
+  <data name="Completion" xml:space="preserve">
+	  <value>Completion</value>
+  </data>
   <data name="Completion %" xml:space="preserve">
     <value>Completion %</value>
   </data>
@@ -1713,6 +1716,9 @@
   </data>
   <data name="CoOp" xml:space="preserve">
     <value>CoOp</value>
+  </data>
+  <data name="CoOp Completion" xml:space="preserve">
+	  <value>CoOp Completion</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>Copied</value>

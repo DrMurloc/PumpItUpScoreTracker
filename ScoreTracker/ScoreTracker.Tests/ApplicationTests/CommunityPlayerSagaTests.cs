@@ -172,6 +172,32 @@ public sealed class CommunityPlayerSagaTests
     }
 
     [Fact]
+    public async Task CoOpCompletionPoolsEveryPlayerCountFolder()
+    {
+        GivenCommunity(CommunityPrivacyType.Public, Caller, Target);
+        var duo = new ChartBuilder().WithLevel(2).WithType(ChartType.CoOp).Build();
+        var trio = new ChartBuilder().WithLevel(3).WithType(ChartType.CoOp).Build();
+        _charts.Setup(c => c.GetCharts(It.IsAny<MixEnum>(), It.IsAny<DifficultyLevel?>(),
+                ChartType.CoOp, It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { duo, trio });
+        _scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+                ChartType.CoOp, It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<(Guid, RecordedPhoenixScore)>());
+        _scores.Setup(s => s.GetPlayerScores(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+                ChartType.CoOp, It.Is<DifficultyLevel>(d => (int)d == 2), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                (Target, new RecordedPhoenixScore(duo.Id, 950000, null, false, DateTimeOffset.MinValue))
+            });
+
+        var completion = await Build().Handle(
+            new GetCommunityCoOpCompletionQuery(Name.From("Acme"), MixEnum.Phoenix), CancellationToken.None);
+
+        // One of the two co-op charts passed, ×2–×5 pooled into a single figure.
+        Assert.Equal(0.5, completion[Target]);
+    }
+
+    [Fact]
     public async Task PlayCountsComeFromTheFullJournalForTheMemberSet()
     {
         GivenCommunity(CommunityPrivacyType.Public, Caller, Target);
