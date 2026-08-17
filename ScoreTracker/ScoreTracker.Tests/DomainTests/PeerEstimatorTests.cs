@@ -6,27 +6,27 @@ using Xunit;
 
 namespace ScoreTracker.Tests.DomainTests;
 
-public sealed class CohortEstimatorTests
+public sealed class PeerEstimatorTests
 {
     private static PeerScore Peer(int score, double growth = 0) => new(score, 20.0, 20.0 - growth);
 
     [Fact]
     public void NoPeersMeansNoOpinion()
     {
-        Assert.Null(CohortEstimator.Estimate(Array.Empty<PeerScore>()));
+        Assert.Null(PeerEstimator.Estimate(Array.Empty<PeerScore>()));
     }
 
     [Fact]
     public void ASinglePeerIsTheEstimateAtEveryQuantile()
     {
         var one = new[] { Peer(950_000) };
-        Assert.Equal(950_000, CohortEstimator.Estimate(one, quantile: 0.0));
-        Assert.Equal(950_000, CohortEstimator.Estimate(one, quantile: 0.65));
-        Assert.Equal(950_000, CohortEstimator.Estimate(one, quantile: 1.0));
+        Assert.Equal(950_000, PeerEstimator.Estimate(one, quantile: 0.0));
+        Assert.Equal(950_000, PeerEstimator.Estimate(one, quantile: 0.65));
+        Assert.Equal(950_000, PeerEstimator.Estimate(one, quantile: 1.0));
     }
 
     [Fact]
-    public void TheEstimateSitsAboveTheMeanOnALeftSkewedCohort()
+    public void TheEstimateSitsAboveTheMeanOnALeftSkewedGroup()
     {
         // The shape every real chart has: a cluster of good scores plus a tail of
         // barely-passed attempts. A mean lands in the tail; p65 lands in the cluster.
@@ -36,10 +36,10 @@ public sealed class CohortEstimatorTests
             Peer(965_000), Peer(970_000), Peer(975_000), Peer(980_000), Peer(985_000)
         };
         var mean = peers.Average(p => p.Score);
-        var estimate = CohortEstimator.Estimate(peers)!.Value;
+        var estimate = PeerEstimator.Estimate(peers)!.Value;
 
         Assert.True(estimate > mean,
-            $"expected p65 ({estimate:N0}) above the mean ({mean:N0}) on a left-skewed cohort");
+            $"expected p65 ({estimate:N0}) above the mean ({mean:N0}) on a left-skewed group");
         Assert.True(estimate >= 960_000, $"expected the estimate inside the cluster, got {estimate:N0}");
     }
 
@@ -50,7 +50,7 @@ public sealed class CohortEstimatorTests
         var previous = int.MinValue;
         foreach (var q in new[] { 0.1, 0.3, 0.5, 0.65, 0.8, 0.95 })
         {
-            var estimate = CohortEstimator.Estimate(peers, quantile: q)!.Value;
+            var estimate = PeerEstimator.Estimate(peers, quantile: q)!.Value;
             Assert.True(estimate >= previous, $"q={q} produced {estimate:N0} below the previous {previous:N0}");
             previous = estimate;
         }
@@ -59,15 +59,15 @@ public sealed class CohortEstimatorTests
     [Fact]
     public void APlayerWhoNeverLevelledCountsAtFullVoice()
     {
-        Assert.Equal(1.0, CohortEstimator.GrowthWeight(0), 6);
+        Assert.Equal(1.0, PeerEstimator.GrowthWeight(0), 6);
     }
 
     [Fact]
     public void GrowthWeightFallsAsTheOwnerOutgrowsTheScore()
     {
-        var flat = CohortEstimator.GrowthWeight(0);
-        var oneLevel = CohortEstimator.GrowthWeight(1);
-        var twoLevels = CohortEstimator.GrowthWeight(2);
+        var flat = PeerEstimator.GrowthWeight(0);
+        var oneLevel = PeerEstimator.GrowthWeight(1);
+        var twoLevels = PeerEstimator.GrowthWeight(2);
 
         Assert.True(oneLevel < flat);
         Assert.True(twoLevels < oneLevel);
@@ -79,9 +79,9 @@ public sealed class CohortEstimatorTests
     {
         // Falling below where you were does not make a past score less representative;
         // only growth does. Guards against a signed subtraction leaking through.
-        Assert.Equal(1.0, CohortEstimator.GrowthWeight(-3), 6);
-        Assert.Equal(CohortEstimator.Estimate(new[] { new PeerScore(950_000, 18.0, 22.0) }),
-            CohortEstimator.Estimate(new[] { new PeerScore(950_000, 22.0, 22.0) }));
+        Assert.Equal(1.0, PeerEstimator.GrowthWeight(-3), 6);
+        Assert.Equal(PeerEstimator.Estimate(new[] { new PeerScore(950_000, 18.0, 22.0) }),
+            PeerEstimator.Estimate(new[] { new PeerScore(950_000, 22.0, 22.0) }));
     }
 
     [Fact]
@@ -93,22 +93,22 @@ public sealed class CohortEstimatorTests
         var current = Enumerable.Range(0, 6).Select(i => new PeerScore(970_000 + i * 1_000, 22.0, 22.0));
         var peers = stale.Concat(current).ToArray();
 
-        var weighted = CohortEstimator.Estimate(peers)!.Value;
-        var unweighted = CohortEstimator.Estimate(peers, growthDecayLevels: 0)!.Value;
+        var weighted = PeerEstimator.Estimate(peers)!.Value;
+        var unweighted = PeerEstimator.Estimate(peers, growthDecayLevels: 0)!.Value;
 
         Assert.True(weighted > unweighted,
             $"growth weighting should favour current scores: {weighted:N0} vs {unweighted:N0}");
     }
 
     [Fact]
-    public void AStableCohortIsUnaffectedByGrowthWeighting()
+    public void AStableGroupIsUnaffectedByGrowthWeighting()
     {
         // The self-conditioning property: nobody grew, so the weight is inert and the
         // estimate matches the unweighted one exactly.
         var peers = Enumerable.Range(0, 12).Select(i => Peer(930_000 + i * 4_000)).ToArray();
 
-        Assert.Equal(CohortEstimator.Estimate(peers, growthDecayLevels: 0),
-            CohortEstimator.Estimate(peers));
+        Assert.Equal(PeerEstimator.Estimate(peers, growthDecayLevels: 0),
+            PeerEstimator.Estimate(peers));
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public sealed class CohortEstimatorTests
         // Three peers, two of them badly outgrown, are worth about one voice between them.
         // The page no longer prints that number, but every quantile Estimate reads is taken
         // over these weights, so the property still has to hold.
-        var voices = new[] { 0.0, 3.0, 3.0 }.Sum(g => CohortEstimator.GrowthWeight(g));
+        var voices = new[] { 0.0, 3.0, 3.0 }.Sum(g => PeerEstimator.GrowthWeight(g));
 
         Assert.True(voices < 1.2, $"three peers, two badly outgrown, should be worth ~1 voice; got {voices:N2}");
     }
@@ -127,8 +127,50 @@ public sealed class CohortEstimatorTests
     {
         var peers = new[] { Peer(880_000), Peer(915_000, growth: 2), Peer(1_000_000, growth: 0.5) };
 
-        var estimate = CohortEstimator.Estimate(peers)!.Value;
+        var estimate = PeerEstimator.Estimate(peers)!.Value;
 
         Assert.InRange(estimate, 880_000, 1_000_000);
+    }
+
+    [Fact]
+    public void FewerPeersThanTheFloorIsNoOpinion()
+    {
+        // Phoenix 2 asks for five (§4.8, D24). Four peers, however confident, is nothing;
+        // the fifth is an estimate.
+        var four = Enumerable.Range(0, 4).Select(i => Peer(970_000 + i * 1_000)).ToArray();
+        var five = four.Append(Peer(974_000)).ToArray();
+
+        Assert.Null(PeerEstimator.Estimate(four, minimumPeers: PeerEstimator.Phoenix2MinimumPeers));
+        Assert.NotNull(PeerEstimator.Estimate(five, minimumPeers: PeerEstimator.Phoenix2MinimumPeers));
+    }
+
+    [Fact]
+    public void TheDefaultFloorIsOnePeerSoPhoenixOneIsUnchanged()
+    {
+        Assert.Equal(950_000, PeerEstimator.Estimate(new[] { Peer(950_000) }));
+        // A floor below one is treated as one: zero peers is never an opinion.
+        Assert.Null(PeerEstimator.Estimate(Array.Empty<PeerScore>(), minimumPeers: 0));
+    }
+
+    [Fact]
+    public void TheMedianOfAnOddPeerCountIsTheMiddleScore()
+    {
+        // The Phoenix 2 quantile with the growth weighting off: five equal voices, so the
+        // midpoint convention lands exactly on the third value.
+        var peers = new[] { Peer(940_000), Peer(985_000), Peer(962_000), Peer(990_000), Peer(975_000) };
+
+        Assert.Equal(975_000, PeerEstimator.Estimate(peers, growthDecayLevels: 0,
+            quantile: PeerEstimator.Phoenix2Quantile, minimumPeers: PeerEstimator.Phoenix2MinimumPeers));
+    }
+
+    [Fact]
+    public void GrowthWeightingOffMeansEveryScoreIsAFullVoice()
+    {
+        // The Phoenix 2 configuration: a decay of zero is "off", so a peer who climbed three
+        // levels since the score counts exactly like one who did not.
+        Assert.Equal(1.0, PeerEstimator.GrowthWeight(3.0, decayLevels: 0), 6);
+        Assert.Equal(
+            PeerEstimator.Estimate(new[] { new PeerScore(950_000, 22.0, 19.0), Peer(980_000) }, growthDecayLevels: 0),
+            PeerEstimator.Estimate(new[] { Peer(950_000), Peer(980_000) }, growthDecayLevels: 0));
     }
 }

@@ -7,8 +7,10 @@ using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Events;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -119,7 +121,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     public async Task Consume(ConsumeContext<ProcessPassTierListCommand> context)
     {
         var mix = context.Message.Mix;
-        // Levels 10 through 29 — DifficultyLevel.Max. The cohort guards below stop reaching
+        // Levels 10 through 29 — DifficultyLevel.Max. The peer group guards below stop reaching
         // above 29 for the upper folders rather than the loop stopping short of them.
         foreach (var level in Enumerable.Range(10, 20))
         {
@@ -397,7 +399,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     }
 
     // --- The PUMBILITY tier lists (docs/design/pumbility-tier-list.md) -----------------------
-    // For every folder and every cohort, how many of that cohort's top-50 pools hold each
+    // For every folder and every peer group, how many of that peer group's top-50 pools hold each
     // chart. Pools are built once per chart type from a level-by-level bulk read rather than
     // per-player — the alternative is roughly three thousand round trips for a job that only
     // ever wants every pool at once.
@@ -412,7 +414,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     ///     reach someone's top 50 still displaces correctly — it just never gets a folder of
     ///     its own.
     /// </summary>
-    private const int LowestPumbilityFolder = 10;
+    private static readonly int LowestPumbilityFolder = (int)PeerGroup.PumbilityPoolFloor;
 
     public async Task Consume(ConsumeContext<ProcessPumbilityTierListCommand> context)
     {
@@ -432,7 +434,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             var rated = await RateCharts(mix, chartType, allCharts, scoring, cancellationToken);
             ratedByType[chartType] = rated;
             var pools = PoolsFrom(rated);
-            var cohorts = await ResolveCohorts(mix, chartType, pools, cancellationToken);
+            var peerGroups = await ResolvePeers(mix, chartType, pools, cancellationToken);
             var holders = HoldersByChart(pools);
 
             for (var level = LowestPumbilityFolder; level <= (int)DifficultyLevel.Max; level++)
@@ -442,23 +444,26 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
                     .Select(c => c.Id).ToArray();
                 if (!folderCharts.Any()) continue;
 
-                var byCohort = new Dictionary<string, PumbilityTierListFolder>();
-                foreach (var (cohortKey, members) in cohorts)
+                var byPeerKey = new Dictionary<string, PumbilityTierListFolder>();
+                foreach (var (peerKey, members) in peerGroups)
                 {
                     var counts = folderCharts.ToDictionary(id => id,
                         id => holders.TryGetValue(id, out var who) ? who.Count(members.Contains) : 0);
-                    // A cohort whose pools reach nothing here does not get a row set. Writing a
-                    // full folder of zeros for every cohort that cannot reach it would be most
-                    // of the table — a cohort only covers a three-to-four level band.
+                    // A peer group whose pools reach nothing here does not get a row set. Writing a
+                    // full folder of zeros for every peer group that cannot reach it would be most
+                    // of the table — a peer group only covers a three-to-four level band.
                     if (counts.Values.Sum() == 0) continue;
 
-                    byCohort[cohortKey] = new PumbilityTierListFolder(TierListProcessor
+                    // Counted over every member, the reader included when they are one: the list is
+                    // one per peer group, and a player is never one of their own peers, so the
+                    // reader takes their own pool back out at read time (TierListBlendBuilder).
+                    byPeerKey[peerKey] = new PumbilityTierListFolder(TierListProcessor
                         .ProcessIntoLogScaledTierList(PumbilityListName, counts)
                         .Select(e => new PumbilityTierListRecord(e.ChartId, counts[e.ChartId], e.Category, e.Order))
                         .ToArray(), members.Count);
                 }
 
-                await _tierLists.SavePumbilityTierLists(mix, chartType, DifficultyLevel.From(level), byCohort,
+                await _tierLists.SavePumbilityTierLists(mix, chartType, DifficultyLevel.From(level), byPeerKey,
                     cancellationToken);
             }
         }
@@ -495,20 +500,23 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     }
 
     /// <summary>
-    ///     Every player's top-50 for one chart type. Only full pools count. A player with thirty
-    ///     charts has a low total because they have played thirty charts, not because they are
-    ///     weak, and letting that stand puts them in a cohort of genuinely weaker players — which is
-    ///     exactly what a mix with no score volume yet produces for everyone. It also keeps Phoenix
-    ///     2 dark until its pools are real, and lights it up on its own as they fill
+    ///     Every player's top-50 for one chart type, through the one definition of a pool
+    ///     (<see cref="PumbilityPeers.TopPool" />) so the writer and the reader cannot disagree
+    ///     about what one is. Only full pools count. A player with thirty charts has a low total
+    ///     because they have played thirty charts, not because they are weak, and letting that
+    ///     stand puts them in a peer group of genuinely weaker players — which is exactly what a
+    ///     mix with no score volume yet produces for everyone. It also keeps Phoenix 2 dark until
+    ///     its pools are real, and lights it up on its own as they fill
     ///     (docs/design/pumbility-tier-list.md §8).
     /// </summary>
-    private static IReadOnlyDictionary<Guid, PlayerPool> PoolsFrom(IReadOnlyDictionary<Guid, List<RatedChart>> rated)
+    private static IReadOnlyDictionary<Guid, IReadOnlySet<Guid>> PoolsFrom(
+        IReadOnlyDictionary<Guid, List<RatedChart>> rated)
     {
-        return rated.Where(kv => kv.Value.Count >= PumbilityCohortKeys.PoolSize).ToDictionary(kv => kv.Key, kv =>
-        {
-            var top = TopFifty(kv.Value);
-            return new PlayerPool(top.Select(s => s.ChartId).ToHashSet(), top.Sum(s => s.Rating));
-        });
+        var pools = new Dictionary<Guid, IReadOnlySet<Guid>>();
+        foreach (var (userId, scores) in rated)
+            if (PumbilityPeers.TopPool(scores.Select(s => (s.ChartId, s.Rating))) is { } pool)
+                pools[userId] = pool;
+        return pools;
     }
 
     /// <summary>
@@ -529,23 +537,23 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         }
 
         var builder = new PumbilityPoolCompositionBuilder(mix);
-        foreach (var charts in merged.Values.Where(c => c.Count >= PumbilityCohortKeys.PoolSize))
+        foreach (var charts in merged.Values.Where(c => c.Count >= PumbilityPeers.PoolSize))
             builder.Add(TopFifty(charts).Select(c => c.Pooled).ToArray());
         return builder.Build(_clock.Now);
     }
 
     private static RatedChart[] TopFifty(IEnumerable<RatedChart> charts)
     {
-        return charts.OrderByDescending(c => c.Rating).Take(PumbilityCohortKeys.PoolSize).ToArray();
+        return charts.OrderByDescending(c => c.Rating).Take(PumbilityPeers.PoolSize).ToArray();
     }
 
     /// <summary>Which of a folder's charts each player pools, inverted so a count is one scan.</summary>
     private static IReadOnlyDictionary<Guid, IReadOnlyList<Guid>> HoldersByChart(
-        IReadOnlyDictionary<Guid, PlayerPool> pools)
+        IReadOnlyDictionary<Guid, IReadOnlySet<Guid>> pools)
     {
         var holders = new Dictionary<Guid, List<Guid>>();
         foreach (var (userId, pool) in pools)
-        foreach (var chartId in pool.ChartIds)
+        foreach (var chartId in pool)
         {
             if (!holders.TryGetValue(chartId, out var who)) holders[chartId] = who = new List<Guid>();
             who.Add(userId);
@@ -555,32 +563,38 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     }
 
     /// <summary>
-    ///     The cohorts to count over, plus the community cohort that is every player at once.
-    ///     Phoenix 1 groups by the level of a player's highest difficulty title; Phoenix 2 by
-    ///     the PUMBILITY rung their pool total clears.
+    ///     The peer groups to count over, plus the community group that is every player at once.
+    ///     Phoenix 1 groups by the level of a player's highest difficulty title; Phoenix 2 by the
+    ///     viewer's PUMBILITY rung, each group being the band of three rungs either side of it.
     /// </summary>
-    private async Task<IReadOnlyDictionary<string, IReadOnlySet<Guid>>> ResolveCohorts(MixEnum mix,
-        ChartType chartType, IReadOnlyDictionary<Guid, PlayerPool> pools,
+    private async Task<IReadOnlyDictionary<string, IReadOnlySet<Guid>>> ResolvePeers(MixEnum mix,
+        ChartType chartType, IReadOnlyDictionary<Guid, IReadOnlySet<Guid>> pools,
         CancellationToken cancellationToken)
     {
-        var cohorts = new Dictionary<string, IReadOnlySet<Guid>>
+        var peerGroups = new Dictionary<string, IReadOnlySet<Guid>>
         {
-            [PumbilityCohortKeys.Community] = pools.Keys.ToHashSet()
+            [PumbilityPeers.Community] = pools.Keys.ToHashSet()
         };
 
         if (mix == MixEnum.Phoenix2)
         {
-            var byRung = new Dictionary<string, HashSet<Guid>>();
-            foreach (var (userId, pool) in pools)
+            // PUMBILITY peers (docs/design/pumbility-tier-list.md §5, the same definition the
+            // projection uses): a list per VIEWER rung, counted over every full-pool player within
+            // three rungs of it. The rung is the total pool's — the merged top fifty across both
+            // types, the number the game's badge is drawn from — read from stats rather than from
+            // the per-type pool this pass built, because that pool is only one type's half of it.
+            var rungOf = (await _playerStats.GetStats(mix, pools.Keys, cancellationToken))
+                .ToDictionary(s => s.UserId, s => Phoenix2PumbilityLevel.From(s.SkillRating).Index);
+            for (var rung = 0; rung <= Phoenix2PumbilityLevel.CapstoneIndex; rung++)
             {
-                var key = PumbilityCohortKeys.ForPhoenix2Pool(chartType, pool.Total);
-                if (key == null) continue;
-                if (!byRung.TryGetValue(key, out var members)) byRung[key] = members = new HashSet<Guid>();
-                members.Add(userId);
+                var (lowest, highest) = PumbilityPeers.Phoenix2Band(rung);
+                var members = pools.Keys
+                    .Where(id => rungOf.TryGetValue(id, out var r) && r >= lowest && r <= highest)
+                    .ToHashSet();
+                if (members.Count > 0) peerGroups[PumbilityPeers.ForPhoenix2Rung(rung)] = members;
             }
 
-            foreach (var (key, members) in byRung) cohorts[key] = members;
-            return cohorts;
+            return peerGroups;
         }
 
         for (var level = (int)DifficultyLevel.Min; level <= (int)DifficultyLevel.Max; level++)
@@ -588,14 +602,11 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
             var onLevel = (await _titles.GetUserIdsOnHighestLevel(mix, DifficultyLevel.From(level),
                     cancellationToken))
                 .Where(pools.ContainsKey).ToHashSet();
-            if (onLevel.Any()) cohorts[PumbilityCohortKeys.ForDifficultyTitleLevel(level)] = onLevel;
+            if (onLevel.Any()) peerGroups[PumbilityPeers.ForDifficultyTitleLevel(level)] = onLevel;
         }
 
-        return cohorts;
+        return peerGroups;
     }
-
-    /// <summary>A player's top 50 for one chart type: what is in it, and what it sums to.</summary>
-    private sealed record PlayerPool(IReadOnlySet<Guid> ChartIds, double Total);
 
     /// <summary>One priced chart of a player's, with the composition's view of it alongside the rating.</summary>
     private sealed record RatedChart(Guid ChartId, double Rating, PooledChart Pooled);

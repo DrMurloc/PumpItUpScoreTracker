@@ -15,7 +15,7 @@ namespace ScoreTracker.ChartIntelligence.Contracts
     ///     touched cannot rank anything, and saying so beats a column of Not Rated.
     /// </param>
     /// <param name="Appearances">
-    ///     Per chart, how many of the cohort's PUMBILITY pools hold it — what the cards print as
+    ///     Per chart, how many of the peer group's PUMBILITY pools hold it — what the cards print as
     ///     "175 peers". Null on every lens but PUMBILITY, which is the only one counting people
     ///     rather than combining stored opinions.
     /// </param>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ScoreTracker.Data.Persistence;
 
@@ -11,9 +12,11 @@ using ScoreTracker.Data.Persistence;
 namespace ScoreTracker.Data.Migrations
 {
     [DbContext(typeof(ChartAttemptDbContext))]
-    partial class ChartAttemptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260816115601_PumbilityTierListPeerColumns")]
+    partial class PumbilityTierListPeerColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -490,58 +493,6 @@ namespace ScoreTracker.Data.Migrations
                     b.HasKey("MixId", "ChartType", "Level", "Bucket");
 
                     b.ToTable("FolderCohortStats", "scores");
-                });
-
-            modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.PumbilityPoolCompositionEntity", b =>
-                {
-                    b.Property<Guid>("MixId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("BandKey")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<double?>("Ceiling")
-                        .HasColumnType("float");
-
-                    b.Property<int>("ChartsPooled")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("ComputedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<double>("Floor")
-                        .HasColumnType("float");
-
-                    b.Property<string>("GradeCountsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("LevelPart")
-                        .HasColumnType("float");
-
-                    b.Property<double>("LevelSum")
-                        .HasColumnType("float");
-
-                    b.Property<double>("PlatePart")
-                        .HasColumnType("float");
-
-                    b.Property<int>("Players")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PoolsCounted")
-                        .HasColumnType("int");
-
-                    b.Property<double>("ScorePart")
-                        .HasColumnType("float");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("MixId", "BandKey");
-
-                    b.ToTable("PumbilityPoolComposition", "scores");
                 });
 
             modelBuilder.Entity("ScoreTracker.ChartIntelligence.Infrastructure.Entities.PumbilityTierListEntryEntity", b =>

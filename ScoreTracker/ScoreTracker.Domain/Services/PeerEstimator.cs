@@ -12,36 +12,41 @@ public readonly record struct PeerScore(int Score, double LevelNow, double Level
 }
 
 /// <summary>
-///     The score estimator (docs/design/pumbility-overhaul.md §4.1). Pure — no I/O, no clock,
-///     no randomness — so the exploration harness and every shipping caller run the same
-///     arithmetic and cannot drift.
+///     The score estimator (docs/design/pumbility-overhaul.md §4.1 on Phoenix 1, §4.8 on
+///     Phoenix 2). Pure — no I/O, no clock, no randomness — so the exploration harness and
+///     every shipping caller run the same arithmetic and cannot drift.
 ///     <para>
-///         Given the peers inside a competitive band who have played a chart, it answers
-///         "what would a player at this level score here": each peer's score discounted by how
-///         much they have grown since setting it, then a weighted quantile of what remains.
+///         Given the peers who have played a chart, it answers "what would a player like this
+///         score here": each peer's score discounted by how much they have grown since setting
+///         it, then a weighted quantile of what remains. Who the peers are is the caller's
+///         business — a competitive band on Phoenix 1, PUMBILITY peers on Phoenix 2 — and so
+///         is the quantile and whether growth is weighed at all; this class only does the sum.
 ///     </para>
 ///     <para>
 ///         It deliberately takes no argument describing the player being predicted for. Four
-///         attempts to personalize beyond competitive level — the chabala skill nudge,
+///         attempts to personalize beyond the peer group — the chabala skill nudge,
 ///         chart-similarity residual transfer, skill-thumbprint matching, and direct
 ///         score-pattern matching — each measured at or under 0.3% and are recorded as rejected
 ///         in §4.3. The peers' scores already encode who the chart suits.
 ///     </para>
 /// </summary>
-public static class CohortEstimator
+public static class PeerEstimator
 {
     /// <summary>
     ///     Growth decay, in competitive levels. A peer who has not moved counts at full voice;
     ///     one who has gained two levels counts at about an eighth. Self-conditioning: it needs
     ///     no threshold and no "was this player improving" detector, because a stable player's
-    ///     growth is zero and the weight is 1.0 for their whole record (§4.2c).
+    ///     growth is zero and the weight is 1.0 for their whole record (§4.2c). Zero or below
+    ///     turns the weighting off — every score at full voice — which is what Phoenix 2 asks
+    ///     for (§4.8: its levels climbed three rungs in the first month, so the discount was
+    ///     silencing more than half of the evidence).
     /// </summary>
     public const double GrowthDecayLevels = 1.0;
 
     /// <summary>
-    ///     Which quantile of the peer distribution to read off. NOT the mean: per-chart scores
-    ///     are left-skewed by a tail of barely-passed attempts, and the mean sits in that tail —
-    ///     measured, a mean carries −8,319 bias where this carries +180.
+    ///     Which quantile of the peer distribution to read off on Phoenix 1. NOT the mean:
+    ///     per-chart scores are left-skewed by a tail of barely-passed attempts, and the mean
+    ///     sits in that tail — measured, a mean carries −8,319 bias where this carries +180.
     ///     <para>
     ///         ⚠ Fitted against a ONE-YEAR truth horizon and re-fittable by design. It is the
     ///         same species of constant as the ×0.95 fudge it replaces, and it moves bias by
@@ -52,9 +57,26 @@ public static class CohortEstimator
     public const double Quantile = 0.65;
 
     /// <summary>
-    ///     Competitive-level half-width of the peer gate for the PUMBILITY projection, measured
-    ///     optimal for that page's job — predicting the score itself, where ±0.5 costs 3.1%,
-    ///     ±2.0 costs 3.1% and ±3.0 costs 12.4% of accuracy (§4.5).
+    ///     The Phoenix 2 quantile: the median. Measured rather than chosen (§4.8) — against
+    ///     every Phoenix 2 player's actual score, <see cref="Quantile" /> read +6,000 median
+    ///     on Phoenix 2 evidence, and the median read −44 under the PUMBILITY-peer rule. The
+    ///     two constants differ because the evidence does: Phoenix 1 lends eventual bests,
+    ///     Phoenix 2 lends the same weeks-old scores the estimate is compared against.
+    /// </summary>
+    public const double Phoenix2Quantile = 0.50;
+
+    /// <summary>
+    ///     How many peers Phoenix 2 requires before it holds an opinion on a chart (§4.8, D24).
+    ///     Below it the chart is not shown at all. Phoenix 1 keeps the default of one — its
+    ///     coverage was measured as the transformative part of the estimator (§4.2), and a
+    ///     Phoenix 1 peer group is hundreds of players.
+    /// </summary>
+    public const int Phoenix2MinimumPeers = 5;
+
+    /// <summary>
+    ///     Competitive-level half-width of the peer gate for the PUMBILITY projection on
+    ///     Phoenix 1, measured optimal for that page's job — predicting the score itself, where
+    ///     ±0.5 costs 3.1%, ±2.0 costs 3.1% and ±3.0 costs 12.4% of accuracy (§4.5).
     ///     <para>
     ///         It is not a site-wide rule, and callers pass their own. A tier list only needs
     ///         the folder's charts ranked against each other rather than the number quoted, and
@@ -64,14 +86,15 @@ public static class CohortEstimator
     public const double CompetitiveWindow = 1.0;
 
     /// <summary>
-    ///     The estimate, or null when no peer has played the chart. Null means "no opinion" and
-    ///     callers must render it as such — a fabricated number here is the failure mode the
-    ///     old estimator's silent gates produced.
+    ///     The estimate, or null when too few peers have played the chart — fewer than
+    ///     <paramref name="minimumPeers" />, which is one unless the caller says otherwise. Null
+    ///     means "no opinion" and callers must render it as such — a fabricated number here is
+    ///     the failure mode the old estimator's silent gates produced.
     /// </summary>
     public static int? Estimate(IReadOnlyCollection<PeerScore> peers,
-        double growthDecayLevels = GrowthDecayLevels, double quantile = Quantile)
+        double growthDecayLevels = GrowthDecayLevels, double quantile = Quantile, int minimumPeers = 1)
     {
-        if (peers.Count == 0) return null;
+        if (peers.Count < Math.Max(1, minimumPeers)) return null;
 
         var weighted = peers
             .Select(p => (Value: (double)p.Score, Weight: GrowthWeight(p.Growth, growthDecayLevels)))
@@ -83,9 +106,14 @@ public static class CohortEstimator
         return (int)Math.Round(WeightedQuantile(weighted, quantile));
     }
 
+    /// <summary>The quartiles a "Peers IQR" reads — the same quantile arithmetic, at 25 and 75.</summary>
+    public const double LowerQuartile = 0.25;
+
+    public const double UpperQuartile = 0.75;
+
     /// <summary>
     ///     exp(−growth / decay). Public so the exploration harness can measure the weighting
-    ///     independently of the estimate it feeds.
+    ///     independently of the estimate it feeds. A decay of zero or below is "off": 1.0.
     /// </summary>
     public static double GrowthWeight(double growth, double decayLevels = GrowthDecayLevels)
     {

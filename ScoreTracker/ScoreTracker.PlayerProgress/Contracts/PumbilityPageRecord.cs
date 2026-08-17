@@ -1,4 +1,5 @@
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -39,7 +40,8 @@ public sealed record PumbilityPageRecord(
     IReadOnlyList<PumbilityTarget> Targets,
     PoolBreakdown? Breakdown = null,
     PoolTotals? Totals = null,
-    IReadOnlyList<TitleRail>? Rails = null)
+    IReadOnlyList<TitleRail>? Rails = null,
+    IReadOnlyDictionary<ChartType, PeerGroup>? Peers = null)
 {
     /// <summary>Highest and lowest values in the pool — the curve's read-out.</summary>
     public double PoolTop => Pool.Count == 0 ? 0 : Pool[0].Value;
@@ -200,7 +202,7 @@ public sealed record AskExample(PhoenixLetterGrade Grade, DifficultyLevel Level,
 [ExcludeFromCodeCoverage]
 public sealed record PumbilityTarget(Guid ChartId, PhoenixScore Projected, double Gain,
     PhoenixScore? Current, bool CurrentIsBroken, TierListCategory? Difficulty,
-    TargetSource Source = TargetSource.Peers);
+    TargetSource Source = TargetSource.Peers, PeerSpread? Spread = null);
 
 /// <summary>
 ///     What a projected score is built on.
