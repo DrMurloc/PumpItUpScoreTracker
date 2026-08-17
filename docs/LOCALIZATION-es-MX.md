@@ -577,3 +577,16 @@ register fork in Known issues.
 5. For the remaining inconsistency fixes (the es-ES contamination / register-fork sweep once a direction is settled, `Cosas que hacer` → `Pendientes` if adopted, the `Simples`/`Dobles` vs `Singles`/`Doubles` split-treatment), do **one batch per category** so the diff is reviewable.
 6. `dotnet build ScoreTracker/ScoreTracker.sln -c Release` to confirm resx well-formedness.
 7. PR titled like `Translate <Folder> to es-MX` or `Fix es-MX <inconsistency>`.
+
+## PUMBILITY peers (Phoenix 2 projection, 2026-08-16)
+
+The `/Pumbility` peer line and the tier lists' PUMBILITY lens name one group: players within ±3 rungs
+of you on the PUMBILITY level ladder holding a full 50-chart pool of the type.
+
+| English | es-MX | Notes |
+|---|---|---|
+| PUMBILITY peers | pares de PUMBILITY | `pares` for the named group; the existing `{0} jugadores similares` stays where the source says "peers" loosely. |
+| within 3 levels of you with a full pool | a ±3 niveles de ti y con el conjunto completo | `conjunto` for pool, per the existing Pool → Conjunto; Simples/Dobles as this locale already spells the pools. |
+| you stand on {0} | estás en {0} | Same as `you sit at {0}`; {0} is a rung name in the game's notation, never translated. |
+| Peers IQR | IQR de pares | The `/Pumbility` targets' column: the peers' first and third quartiles as two grades. `IQR` rather than `RIC` — the site's audience reads the English acronym on every stats tool, and the label exists to tell a reader who knows the term that it is not a min–max. |
+| From {0} peers | Con {0} pares | The column's tooltip; same shape as `From {0} scores` → `Con {0} puntuaciones`. |

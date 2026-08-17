@@ -98,6 +98,12 @@ The offline half of that guard — spelling drift between the two title lists, p
 
 ### Translation workbench — spends real money, manual runs only
 
+`ExplorationTests/Pumbility/` is the PUMBILITY projection's measurement harness — the Phoenix 2 launch backtest behind [design/pumbility-overhaul.md §4.8](design/pumbility-overhaul.md): every Phoenix 2 player, every chart they hold a score on, the estimator run without them, truth = their actual score, reported as bias / MAE / how often an SS call was right — plus a reproduction of one account's "What to play next" list with the peers behind each row. It needs a populated database (`CatalogProbe:ConnectionString`, the prod-synced local Aspire instance) and skips without one. Read-only. One test in it is a **pin**: it runs `PeerEstimator` and the harness's own arithmetic on a fixed input and asserts they agree, so a change to either shows up here rather than as a silent drift between what was measured and what ships. Run it after touching the estimator, the peer definition, or the pricing.
+
+```bash
+dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj --filter "FullyQualifiedName~PumbilityProjection"
+```
+
 `ExplorationTests/Translations/` renders 23 real community comments — English, Korean, Spanish and Portuguese — into es-ES, fr-FR, ko-KR and pt-BR across three model tiers, to find the cheapest one that still does the job. It is the only place in the solution that calls a metered LLM: the `ILanguageModelClient` Domain port has no implementation in `Data` and no DI registration, so nothing that ships can reach one.
 
 **Every run bills the owner's account.** Run `SmokeOneCommentOnSonnet` first (a couple of cents, proves the plumbing) before `SweepThreeArmsOverTheCorpus` (~$1.50, writes a markdown report). `BatchTransportTests` proves the Batch API path separately — batching halves the bill and suits production, but an hour-long round trip is an hour per prompt revision, so the sweep runs synchronously.

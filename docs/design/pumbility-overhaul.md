@@ -8,6 +8,13 @@ The **second round** (2026-08-08) splits the result into a three-page section sh
 and adds two things the first round never answered: what your number is *made of*, and what it is
 *for*. §2 D13–D20 are that round's rulings.
 
+The **third round** (2026-08-15) replaces who the Phoenix 2 projection asks. The engine in §4.1
+was built on Phoenix 1 competitive levels and Phoenix 1 evidence; on Phoenix 2 that admitted
+players two levels stronger as "peers" and printed SS on charts the viewer would not SS. Phoenix
+2 now projects from **PUMBILITY peers** — the game's own PUMBILITY level ladder, Phoenix 2 data
+alone — and the tier list's PUMBILITY lens shares the definition. §2 D21–D29 are that round's
+rulings; §4.8 is the formula and the measurement; §6.6 the scope.
+
 Mocks: round 1 https://claude.ai/code/artifact/5dded5e4-03d7-4d70-80ed-d5ecfac68aa2 ·
 round 2 https://claude.ai/code/artifact/2196691e-b756-458c-b84c-229061046745
 
@@ -66,6 +73,27 @@ Round two, 2026-08-08.
 | D18 | **The what-if calculator is deleted**, moving to the rating-calculator overhaul. ⚠ It loses the "what would this **add**" framing in transit: it prices against *your bar* today, and `/RatingCalculator` has no pool |
 | D19 | **`GetPumbilityPageQuery` stays one query.** Splitting the cheap pool read from the expensive projection was offered and declined — performance gets its own pass. This does **not** worsen the cold read (§6.5) |
 | D20 | **A chart worth zero never occupies a pool slot** — the general rule D10 was one case of. See §3.8 |
+
+Round three, 2026-08-15. Phoenix 2 only; Phoenix 1's projection is untouched.
+
+| # | Ruling |
+|---|---|
+| D21 | **The Phoenix 2 projection is mix-independent.** *"Treat the projections as mix independent, then go off of pumbility level in phoenix 2 alone, NOT Phoenix 1."* Peers, evidence and levels come from Phoenix 2; the peer estimator performs no cross-mix read. §4.7's pooling of Phoenix 1 evidence is superseded for Phoenix 2 |
+| D22 | **PUMBILITY peers** — the players within **±3 rungs** of you on the Phoenix 2 PUMBILITY level ladder (`Phoenix2PumbilityLevel`, the hidden five-levels-per-gem ladder: DIAMOND LV.4 reaches down to DIAMOND LV.1 and up to RED BERYL LV.2), where **you and each peer hold a full 50-chart pool of the chart type**. *"This would formally introduce the idea of 'PUMBILITY Peers'."* One rung, the total pool's, serves both chart types; the full-pool rule is per type. Measured against every alternative in §4.8 |
+| D23 | **The tier list's PUMBILITY lens uses the same definition.** *"They need to be the same."* And the word is **peers**: *"please stop calling 'peers' cohorts."* The lens's keys, columns and code rename accordingly ([pumbility-tier-list.md §5](pumbility-tier-list.md)) |
+| D24 | **A chart shows only when five or more peers have passed it.** No level window: *"That was already a bit flaky, I think the '5 or more peers have to have passed it' covers us on not showing unrealistic charts. This lets the occasional 'D23 that a level 18 player can actually pass if they spend a few minutes memorizing a single section' entry show."* The perfect-score-cannot-clear-your-bar filter (§6.5) stays — it is arithmetic, not a level |
+| D25 | **No competitive level on this page.** *"Competitive level isn't really the answer here. It is built for score alone, it doesn't view scores <950k as valid ... pass pushing is a valid competency."* The peer band replaces it in who is asked, the five-peer floor replaces it in which charts, and the growth weighting — a competitive-level delta — is dropped: *"drop it."* Measured: on Phoenix 2 the weighting discounted 58% of the evidence, because everyone's level climbed three rungs in the first month |
+| D26 | **The Phoenix 2 estimate is the median (p50), not p65.** Measured, not chosen: p65 was fitted on Phoenix 1 eventual bests; on Phoenix 2 evidence it reads +6k median, p50 reads +1.8k, and with the full-pool rule −44 (§4.8) |
+| D27 | **The peer count is shown**, per type, in one clause: *"a disclaimer on 'this is how many PUMBILITY Peers you have' somewhere."* This is a section line, not the per-row evidence caption D12 removed |
+| D28 | **A type without a full pool is dark.** *"Have peers/projections only light up/show once you're at 50 charts for that type."* Charurun plays no singles and sees no singles peers; a 29-double pool sees "29 of 50" |
+| D29 | **The carried Phoenix 1 rows are untouched.** *"The projections we have in phoenix 2 that are just 'your phoenix scores, mapped to Phoenix 2 pumbility' — those should remain exactly as is. We are only changing projections."* `CarryoverTargets`, `/Pumbility/Phoenix1`, the pool, the bar, the titles and the ask do not move |
+
+Round four, 2026-08-17, after the owner's field test of round three.
+
+| # | Ruling |
+|---|---|
+| D30 | **A peer row carries a "Peers IQR"** — the peers' 25th and 75th percentile scores as two letter grades with a dash between them, beside the median. Owner: *"Can we do an estimated range? … If we do like 'Estimated P25 -> P75 letter grades'? It sort of helps visualize confidence levels a bit too. If like everyone in your pool is getting a SS, you'll probably get an SS. If P25 is A+ and P75 is SSS+, you know it's a specialized chart."* Named **IQR**, not "range": *"call it 'Peers IQR' so those who understand math nuance will know it's not a Min/Max range."* Grades only — no quartile numbers, no width figure — and *"at most a tooltip for 'From X peers'"*. **Compact is unchanged**: *"Only so much data we can fit there."* A carried Phoenix 1 row has no peers and prints a dash. This narrows D12: the numeric spread D12 removed stays removed; two grades that say whether the peers agree is the one per-row figure about the evidence that earned its place, because the field test read the median alone as a claim ("it's still giving me S22 SSs") when the peers behind it were split |
+| D31 | **You are never one of your own peers** (owner, 2026-08-17). The projection has always drawn its band with the viewer removed; the tier lists' PUMBILITY lens now does the same at read time — the stored list is one per peer group and counts every member's pool, so the reader's own pool is taken back out (one from the peer count, one from every chart it holds, the bands redrawn), and both lenses' captions on Phoenix 2 name PUMBILITY peers. Nightly is the caveat: a pool that filled since the last build was never counted in, and for that day the subtraction runs one deep |
 
 ## 3. The section
 
@@ -193,9 +221,37 @@ printing badge chips beside a projection would claim a causal path that does not
 site does not do that (rule: say what you cannot compute).
 
 What the estimator can honestly explain is *how many peers it heard from, how recent their
-scores are, and how spread they were* — an evidence line, not an attribution line. What the page
-may still show, separately and unattached to the projection, is the player's own thumbprint as
-descriptive data (§4.3). **Still open** — see §9.
+scores are, and how spread they were* — an evidence line, not an attribution line. Two of the
+three have since landed, in a different shape than a line: the peer count as a section chip (D27)
+and the spread as the Peers IQR grades (D30). What the page may still show, separately and
+unattached to the projection, is the player's own thumbprint as descriptive data (§4.3). **Still
+open** — see §9.
+
+**Phoenix 2, round three (D22, D24, D27, D28).** The list carries one **peer line** above it: a
+chip per chart type in the selected pool — *"23 PUMBILITY peers"* for a lit type, *"Doubles:
+29/50 charts"* for one whose pool is not yet full (on All, *"Singles: 23 PUMBILITY peers ·
+Doubles: 29/50 charts"*). The definition ("within 3 levels of you with a full pool") and the
+five-peer clause live in the chip's tooltip, not on the line — the first version spelled both out
+and the owner's field test read it as *"wordy af and filling up the screen"* (2026-08-16); a
+count, not a paragraph. Peer rows exist only for charts five or more of those peers have passed.
+Carried Phoenix 1 rows are unaffected by either state (D29): a dark doubles pool still lists your
+Phoenix 1 doubles repriced.
+
+**Round four: the Peers IQR (D30).** One thing per row did change after the field test. Beside
+the projected grade and number, a peer row prints the peers' **first and third quartiles as two
+grades** with a dash between them — *AAA — SSS* on a chart that splits the peers, *AAA+ — AAA+*
+on one they agree about — under a **Peers IQR** column in Table and a **Peers IQR** line in the
+Comfortable card body. **The dash is one treatment on every row.** The first cut drew it as a
+connector that encoded the width (short and solid inside 10,000 points, long and dashed past
+25,000) and the owner's field test read it as noise the same day: *"why is it dotted lines vs a
+solid line for different entries? just make it the dash."* The grades already say the width; a
+second encoding of the same fact is a thing to explain. The tooltip says *"From 13 peers"* and
+nothing else. Compact prints nothing new — a 72px card has one value and one picture. Carried
+Phoenix 1 rows have no peers and print a dash in Table, no line in Comfortable. Phoenix 1 rows
+get the same column from the same arithmetic (its quartiles are growth-weighted like its p65),
+because `ScoreProjection.Spreads` is filled by both branches of the projector — the IQR is read
+over exactly the voices and weights the median was, so the two cannot disagree about who was
+heard. The why-line stays what D12 left it: the source, in words.
 
 Density trio via `Density__Pumbility`, governing the targets only, using the site's standard
 control — a `MudButtonGroup` of `ViewComfy` / `GridView` / `TableRows` icon buttons, the same
@@ -375,9 +431,10 @@ all, harmless while the value was an int and full-precision noise the moment it 
 
 ## 4. The projection engine
 
-Rebuilt from scratch and measured before anything was written. **§4.1 is the formula.**
-Everything after it is the evidence, including four approaches that were tried and rejected —
-read §4.3 before re-proposing any of them.
+Rebuilt from scratch and measured before anything was written. **§4.1 is the formula on
+Phoenix 1; §4.8 is the formula on Phoenix 2** (round three — the two share the estimator's
+arithmetic and nothing about who is asked). Everything after §4.1 is the evidence, including
+four approaches that were tried and rejected — read §4.3 before re-proposing any of them.
 
 Harness in `Downloads/pumbility-harness/`. Backtest shape: cutoff **T = 2026-01-01**, player
 state = scores before T, ground truth = their eventual best on charts they had **not** scored at
@@ -544,7 +601,13 @@ An earlier draft worried that D2's floor silenced the skill nudge across many ta
 87,520 targets project below 900,000 — 0.2%.** Moot either way now that the estimator carries no
 skill term, but recorded so the concern is not re-raised.
 
-### 4.7 The peer cohort pools Phoenix 1 and Phoenix 2
+### 4.7 The peer cohort pools Phoenix 1 and Phoenix 2 — ⚠ superseded for Phoenix 2 by §4.8
+
+⚠ **Round three reversed this for Phoenix 2 (D21).** Everything below was measured and true, and it
+is kept because it says why the pooling looked right; what it did not foresee is in §4.8: the
+Phoenix 2 competitive bands were built from thin, warm-up-heavy pools, so a "peer" drawn by
+Phoenix 2 band at face value was routinely a Phoenix 1 24 who had played forty charts. Phoenix 2
+now reads Phoenix 2 alone. **Phoenix 1 never read Phoenix 2, and still does not.**
 
 Phoenix 2 has scores from **74 players**. Phoenix 1 has **1,529**. A cohort drawn from the
 launch mix alone is too thin to estimate from, and stays thin for as long as it takes the
@@ -581,6 +644,87 @@ projecting nothing. Their own Phoenix 1 scores still reach the page, but as **ca
 
 The reference mix runs one way only. A Phoenix 1 projection never reads Phoenix 2: it would add
 nothing, and it would make the older page's numbers drift as the newer mix fills up.
+
+### 4.8 Phoenix 2 — PUMBILITY peers (round three, 2026-08-15)
+
+Owner report: the Phoenix 2 list recommended SS on charts he had not played, and no peer he could
+see held one. Reproduced exactly against the prod-synced database (BLAZOR S20 → 995,948, Rise Up
+D20 → 996,935), then every candidate rule was measured on the same backtest before one was picked.
+This section is the formula, the measurement, and the reason.
+
+**The formula, Phoenix 2 only.** For a player **P** and a chart **C** of type **T**:
+
+1. **Who counts as a peer.** Every player within **±3 rungs** of P on the PUMBILITY level ladder
+   (`Phoenix2PumbilityLevel.From(total pool)`, 37 rungs, five per gem) who holds a **full 50-chart
+   pool of type T** — and P holds one too, or T is dark (D28). One rung, from the total pool, serves
+   both types. Read from `PlayerStats.SkillRating`; the peers' pool fullness is the count of their
+   Phoenix 2 records of the type in the very read that fetches the evidence, so it needs no column.
+2. **The evidence.** Each peer's best non-broken Phoenix 2 score on C. Nothing from Phoenix 1; no
+   growth weighting (D25).
+3. **The prediction.** The **median** of those scores (D26).
+4. **The floor.** Fewer than **five** peers with a score on C → no opinion; the row does not exist
+   (D24). There is no level window (D24) — every chart of the type is a candidate, and the bar
+   arithmetic of §6.5 removes the ones that cannot pay.
+
+**Why the Phoenix 1 machinery failed here.** Competitive level is the mean Fung score of the top
+fifty; a Phoenix 2 pool of forty charts averages the warm-ups. Every launch player's Phoenix 2 level
+was therefore deflated — across the dual-mix population by 1.45 levels singles, 2.63 doubles — and
+the union cohort admitted by that band at face value. The reporter (Phoenix 2 S 21.40 / D 21.12) was
+handed XIUMIN99 (Phoenix 1 24.11, Phoenix 2 22.04) and Tomatonium (24.12 / 21.97) as singles
+peers, and GODDISH (Phoenix 1 doubles 25.34) as a doubles peer: BANG BANG D23 → 977,897 from three
+of them; INFiNiTE ENERZY S23 → 980,198 from six players at Phoenix 1 22.9–24.1. On the P2 chart
+boards those SS holders read as the strong names they are — which is exactly why "no peers with SSs"
+was what he saw. His own Phoenix 2 form on the same levels: S22 965k, S23 935k, D22 974k, D23 964k.
+
+**The launch backtest** — every Phoenix 2 player, every chart in their window they actually hold a
+Phoenix 2 score on, cohort minus themselves, truth = that score. Self-selected, so it *favours* an
+estimator. Shipped (Phoenix 1 machinery): centered overall by offsetting errors — median −988, MAE
+12,364, SS calls right 69% — and wrong exactly where the ranking looks: P2-debut charts **+4,952**,
+rows carrying ≥50% of their weight from above-band players **+7,771** (SS calls right 58%), fewer
+than five peers **+6,382**. Shared charts with deep Phoenix 1 evidence −2,856. The quantile is not
+the lever: p50 pushes everything to −6k. Level-based repairs (gate peers on the mature-scale level;
+use the Phoenix 1 level while the pool is thin) each traded the over-estimates for under-estimates
+without moving accuracy — and were wrong in principle for a returning player, whose Phoenix 1 level
+is a frozen peak, not a strength.
+
+| rule (Phoenix 2 alone unless noted) | pairs answered | bias, median | MAE | says SS+ | of which true | >20k high |
+|---|---|---|---|---|---|---|
+| shipped — Phoenix 1 levels and evidence, p65 | 4,674 | −1.7k | 12,194 | 39% | 71% | 10.0% |
+| gem rung ±3 with Phoenix 1 evidence, p65 | 4,323 | **+9.6k** | 15,981 | 82% | 52% | 28.5% |
+| gem rung ±3, p65 | 2,018 | +6.0k | 12,607 | 81% | 63% | 20.1% |
+| gem rung ±3, p50 | 2,018 | +1.8k | 11,867 | 67% | 66% | 14.3% |
+| P2 competitive level ±1, p50 | 1,822 | +0.4k | 11,173 | 60% | 72% | 11.4% |
+| **gem rung ±3, full pools both sides, p50, ≥5, no window, no growth** | 2,020 | **−44** | **9,174** | 78% | **80%** | 9.8% |
+
+The last row is D22–D26. Growth weighting on Phoenix 2 discounted 58% of the reporter's singles
+evidence below 0.7 (levels climbed three rungs in a month) and turning it off was marginally more
+accurate (MAE 9,637 vs 9,930). Removing the level window raised the share of players' own records
+the estimator can answer from 21% to 37% and stayed centered. Under the final rule 49 of 92 ranked
+players light up for singles and 16 for doubles today — that is the state of Phoenix 2 doubles, not
+the rule — and the reporter's singles list reads 23 peers, 86 rows, S18–S21 SSS rows that are simply
+correct, and the soft S22 debut charts at "your peers SS'd it".
+
+**Two rules that were argued for and measured out.** The **overlap of the type title track and the
+gem group** (both ±3) fixes type-blindness in principle, but the type track inherits the viewer's own
+thin pool — a 29-double player's [D] rung is INTERMEDIATE LV.5, so "within 3 titles" is players with
+6–12k doubles pools; 71 of 92 ranked players sit there today, and the doubles list blanks. Members
+also score no more alike than the gem group alone (per-chart spread 25.6k vs 26.5k, against 21.3k
+for a level band). Once per-type pools are real it is the right refinement. **Pool-shape peers**
+(±1 on the pool's average level and ±12k on its average score) measured best of everything on the
+Phoenix 1-referenced population (MAE 10,631) and separate pass-pushers from scorers — the group the
+level-based estimator serves worst (+10.1k, and 20.6% of their Phoenix 2 plays sit above the ±2
+window) — but it read each player's shape from a Phoenix 1 pool, i.e. a peak-era shape. Shelved
+until it can be re-measured on Phoenix 2 pools.
+
+**What Phoenix 2 alone cannot see, stated.** A rusty 24 whose Phoenix 2 stats read 21–22 is invisible
+to any Phoenix 2 rule; the ladder does better than competitive level here — XIUMIN99's re-grinding
+already carried him to RED BERYL LV.3, out of a DIAMOND LV.4 band — but the total ladder still admits
+a singles-carried doubles-25 to a doubles band. Those rows are no longer fabricated: *"9 of your 23
+peers played this; the median is 982k"* is a fact the P2 board confirms, and it self-corrects as the
+strong player's rung leaves yours. That is the residual, and it was accepted with eyes open.
+
+**Naming.** The projection's peers and the tier list's PUMBILITY lens are one definition (D23) —
+[pumbility-tier-list.md §5](pumbility-tier-list.md). "Cohort" is not used for either.
 
 ## 5. Phoenix 2 carryover — the Phoenix 1 page
 
@@ -804,6 +948,23 @@ be the one that waits — land on Your Pool first and you sit behind the `Patien
 that page never renders. An inelegance, not a regression, and the reason the card belongs to the
 frame rather than to Play.
 
+### 6.6 Round three — PUMBILITY peers
+
+**No new table, no new package. One new port read, one rename migration, and a deletion.**
+
+| Vertical / layer | Change |
+|---|---|
+| **Domain** | `PeerEstimator` (was `CohortEstimator`): a `minimumPeers` floor (default 1 — Phoenix 1 unchanged) and `Phoenix2Quantile = 0.50` beside `Quantile = 0.65`. `ScoreProjector` gains the Phoenix 2 branch of §4.8 and **loses** the cross-mix plumbing — `ReferenceMixFor`, `BestAcrossMixes`, the union cohort, the reference-side stats and history reads, `ReferenceLevelSlack` — which nothing uses once Phoenix 2 stops. `ScoreProjection` carries a `PeerGroup` (a competitive band or a rung band, its bounds, count, and the viewer's pool count against 50) so a surface can name the group without knowing the mix. `IPlayerStatsReader.GetPlayersByPumbilityRange(mix, min, maxExclusive)` — the only new port read; `IScoreReader` already answers "every Phoenix 2 record of the type" (`GetPlayerScoresInLevelRange` at 10..Max) and that one read yields both the evidence and each peer's pool fullness |
+| **PlayerProgress** | `EFPlayerStatsRepository`: the range read on `SkillRating`. `PumbilityProjectionSaga`: no window and no `CompetitiveLevel` call on Phoenix 2; a type dark while its pool is short of fifty; the per-type peer summary on `PumbilityProjection` and through `GetPumbilityPageQuery`. `PumbilityPageSaga` passes it through; `CarryoverTargets` untouched (D29). The projection cache is unchanged and gets cheaper |
+| **ChartIntelligence** | The lens and the projection share the definition (D23): `PumbilityPeers` (was `PumbilityCohortKeys`); `TierListSaga` writes one list per **viewer rung** — members are the players within ±3 with a full pool of the type, rung from `SkillRating` — which still materializes (37 keys per type per mix at most) because every viewer at rung *r* reads the same list; the reader gates on a full pool of the **type** and resolves `R{rung}`. `PersonalizedTierListBreakdown` carries the peer group so the breakdown page stops printing a competitive band on Phoenix 2. Phoenix 1 keeps `L{n}` |
+| **Data** | Migration `PumbilityTierListPeerColumns`: `CohortKey` → `PeerKey`, `CohortSize` → `PeerCount` on `scores.PumbilityTierListEntry`. Rename only |
+| **Web** | `Pumbility.razor`: the peer line, the dark type, the five-peer clause (§3.3). `PersonalizedBreakdown.razor`: the peer block by kind. Nine locales |
+| **ExplorationTests** | `Pumbility/`: the launch backtest and the reporter's-list reproduction, config-gated on the catalog connection, with one pin fact asserting `PeerEstimator` and the harness agree — the ratchet §9 asked for |
+
+Not in this round: the other "cohort" family — `CohortScoreProvider`, `FolderCohortStats*`, the score-quality percentiles — a different feature, its own sweep.
+
+**Post-deploy:** press *Rebuild Phoenix 2 PUMBILITY tier lists* once, or wait for the nightly — Phoenix 2 rows re-key from title names to rungs; until then the lens is dark and falls to Pass as it does for any thin peer group. Phoenix 1 rows are unaffected. The projection cache is in-process and clears with the deploy.
+
 ## 7. Responsive
 
 The class ladder in [UX-GUIDELINES.md §1](../UX-GUIDELINES.md), no new numbers:
@@ -845,34 +1006,36 @@ under the number. The nav row underneath fills the air that costs at desktop wid
 
 ## 9. Open
 
-- **The page's truth horizon.** Bias is strongly horizon-dependent (the old formula ran +207 at 30
-  days against −2,300 at a year), and §4.1's `p65` is fitted at **one year**. *"What would you score
-  if you played this now"* implies a much shorter horizon. Nobody has ruled on it, so every projected
-  score on the page is calibrated to *what you would eventually score*, and reads **high** for a
-  near-term reading. `CohortEstimator.Quantile` is one constant in one pure class — re-fitting is a
-  one-line change and a re-run, and nothing built on top of it has to move.
-- **The harness was never ported.** §4.2's numbers come from the scratchpad scripts in
-  `Downloads/pumbility-harness/` on levels 19–21. Nothing in the repo can reproduce them, and the
-  ratchet that would catch a drift between the harness and `CohortEstimator` does not exist. Its home
-  when it lands is `ScoreTracker.ExplorationTests/Pumbility/`, config-gated like the catalog probes,
-  with one pin fact asserting the real estimator and the harness's agree — a genuine equivalence
-  check, since `CohortEstimator` is pure. Metrics ρ ahead of MAE: §4.5 is the cautionary tale, where
-  every constant moved MAE and none moved ρ.
+- **The page's truth horizon — answered for Phoenix 2, open for Phoenix 1.** Bias is strongly
+  horizon-dependent (the old formula ran +207 at 30 days against −2,300 at a year), and §4.1's `p65`
+  is fitted at **one year**. On Phoenix 2 the question was measured (§4.8): against players' actual
+  Phoenix 2 scores the shipped `p65` was centered only by offsetting errors, and on Phoenix 2 evidence
+  it read +6k; the median is the Phoenix 2 constant (D26). Phoenix 1 keeps `p65` and the open question
+  with it. `PeerEstimator.Quantile` / `Phoenix2Quantile` are two constants in one pure class.
+- **The harness is ported** (round three): `ScoreTracker.ExplorationTests/Pumbility/`, config-gated
+  like the catalog probes, with the pin fact asserting the real estimator and the harness agree. The
+  original Phoenix 1 backtest (§4.2, levels 19–21) is still not in it — that harness lived in
+  `Downloads/pumbility-harness/` and its numbers are recorded here only. Metrics ρ ahead of MAE: §4.5
+  is the cautionary tale, where every constant moved MAE and none moved ρ.
 - **Two data limits, stated not fixed.** `PlayerHistory` begins **2024-06-04**, so a score older than
   that resolves to the player's earliest known level and the growth weight under-states how much they
   improved on the site's oldest records. And `PhoenixRecord` stores only the current best, so a chart
   improved after the backtest cutoff reads as unplayed at it; the journal's 29,153 multi-event pairs
   are the subset with true history.
 - **The "why" line on a target row.** §3.3. The estimator carries no skill term, so badge chips would
-  assert a causal path that does not exist. Evidence line instead, or nothing?
+  assert a causal path that does not exist. Evidence line instead, or nothing? The answer became a
+  **section** chip for the count (D27) and a **column** for the spread — the Peers IQR, two grades
+  (D30) — with the row's why-line still carrying only the source (D12). What is left open is only
+  whether Phoenix 1 gets a peer-count chip too; its rows carry the IQR already.
 - **Does the page show the thumbprint as descriptive data?** It is a real, stable trait (§4.3)
   with genuine display value and zero predictive value. If yes it needs its own placement and
   copy, and must never sit adjacent to a projection where it reads as the explanation.
 - **A Singles/Doubles filter on Phoenix 1 targets** was raised and not decided. It is additive
   and does not invent a stat, unlike a Phoenix 1 pool split.
 - **Is ρ ≈ 0.66 good enough to print a point estimate?** Nothing tried moved it far, and the
-  ceiling looks structural rather than tunable. If the answer is no, the target list shows
-  ranges rather than numbers — a page decision, not an algorithm one.
+  ceiling looks structural rather than tunable. Round four's answer is *both*: the point estimate
+  stays, and the Peers IQR beside it (D30) prints the range as grades — so a reader can see when
+  the point is standing on agreement and when it is a median of a split field.
 - **What the tier list's Skill source is worth**, which this harness cannot measure — its output
   is a difficulty ordering with no equivalent ground truth. The 20% degradation figure for
   suggestions comes from separate work and is not reproduced here.

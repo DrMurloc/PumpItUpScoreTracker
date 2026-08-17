@@ -1,4 +1,5 @@
-﻿@using ScoreTracker.PlayerProgress.Contracts
+﻿@using ScoreTracker.Domain.Services.Contracts
+@using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Enums
@@ -19,7 +20,15 @@
 
    The "why" is an EVIDENCE line, never an attribution: the estimator carries no skill term,
    so naming skills beside a projection would assert a causal path that does not exist
-   (docs/design/pumbility-overhaul.md §3.3). *@
+   (docs/design/pumbility-overhaul.md §3.3).
+
+   Beside a peer estimate sits the "Peers IQR" -- the peers' first and third quartiles as two
+   grades and a connector (D30). It is the one per-row figure about the evidence: the median
+   says where you would land, the IQR says whether the peers agree about it. Named IQR and not
+   "range" so a reader who knows the term knows it is not the min and max. Table and
+   Comfortable carry it; Compact does not, because a 72px card prints one value and one picture
+   and there is no room for a third thing. A carried Phoenix 1 row has no peers and prints a
+   dash. *@
 @if (Targets.Count == 0)
 {
     <p class="pmb-empty">@L["Nothing here clears your bar yet — play a few more charts and check back."]</p>
@@ -37,6 +46,7 @@ else if (Density == UiDensity.Table)
                 }
                 <th>@L["You have"]</th>
                 <th>@L["Projected"]</th>
+                <th>@L["Peers IQR"]</th>
                 <th class="pmb-r">@L["Gain"]</th>
             </tr>
             </thead>
@@ -61,6 +71,7 @@ else if (Density == UiDensity.Table)
                         <LetterGradeIcon Grade="target.Projected.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
                         <span class="pmb-num pmb-score-text">@(((int)target.Projected).ToString("N0"))</span>
                     </td>
+                    <td>@SpreadCell(target)</td>
                     <td class="pmb-r pmb-gain-cell"><PumbilityDelta Value="target.Gain"></PumbilityDelta></td>
                 </tr>
             }
@@ -223,9 +234,58 @@ else
         builder.CloseElement();
         builder.CloseElement();
 
-        builder.OpenElement(12, "div");
-        builder.AddAttribute(13, "class", "pmb-tcard-why pmb-muted");
-        builder.AddContent(14, CornerMeaning(target));
+        // The IQR is a line of its own, and only on a row that has one: a carried Phoenix 1
+        // score has no peers, and a card should not print a dash for a thing it never had.
+        if (target.Spread != null)
+        {
+            builder.OpenElement(12, "div");
+            builder.AddAttribute(13, "class", "pmb-tcard-meta pmb-tcard-iqr");
+            builder.OpenElement(14, "span");
+            builder.AddAttribute(15, "class", "pmb-iqr-label");
+            builder.AddContent(16, L["Peers IQR"]);
+            builder.CloseElement();
+            builder.AddContent(17, SpreadCell(target));
+            builder.CloseElement();
+        }
+
+        builder.OpenElement(18, "div");
+        builder.AddAttribute(19, "class", "pmb-tcard-why pmb-muted");
+        builder.AddContent(20, CornerMeaning(target));
+        builder.CloseElement();
+    };
+
+    // Two grades with a dash between them, the count of peers behind them in the tooltip and
+    // nothing else (owner, 2026-08-17: "at most a tooltip for 'From X peers'"). The dash is one
+    // treatment on every row — the grades already say how far apart the quartiles are, and a
+    // connector that changed shape with the width read as noise ("just make it the dash"). A
+    // row without peers — a carried Phoenix 1 score — prints the same dash the You-have cell
+    // prints for nothing.
+    private RenderFragment SpreadCell(PumbilityTarget target) => builder =>
+    {
+        if (target.Spread is not { } spread)
+        {
+            builder.OpenElement(0, "span");
+            builder.AddAttribute(1, "class", "pmb-none");
+            builder.AddContent(2, "—");
+            builder.CloseElement();
+            return;
+        }
+
+        builder.OpenElement(3, "span");
+        builder.AddAttribute(4, "class", "pmb-iqr");
+        builder.AddAttribute(5, "title", L["From {0} peers", spread.PeerCount].ToString());
+        builder.OpenComponent<LetterGradeIcon>(6);
+        builder.AddComponentParameter(7, nameof(LetterGradeIcon.Grade), spread.Quartile1.LetterGradeFor(Mix));
+        builder.AddComponentParameter(8, nameof(LetterGradeIcon.Height), 18);
+        builder.CloseComponent();
+        builder.OpenElement(9, "span");
+        builder.AddAttribute(10, "class", "pmb-iqr-conn");
+        builder.AddContent(11, "—");
+        builder.CloseElement();
+        builder.OpenComponent<LetterGradeIcon>(12);
+        builder.AddComponentParameter(13, nameof(LetterGradeIcon.Grade), spread.Quartile3.LetterGradeFor(Mix));
+        builder.AddComponentParameter(14, nameof(LetterGradeIcon.Height), 18);
+        builder.CloseComponent();
         builder.CloseElement();
     };
 

@@ -1228,6 +1228,9 @@
   <data name="Charts covered" xml:space="preserve">
     <value>Murgl grorp</value>
   </data>
+  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
+    <value>Murgl mrglglorg grogrgl 5 mrgl grglblarg rglplgl bo blgrlargl.</value>
+  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>Murgl lo grubo</value>
   </data>
@@ -2007,6 +2010,12 @@
   <data name="Doubles competitive level" xml:space="preserve">
     <value>Groggl arglrglmrmurm grorpmurm</value>
   </data>
+  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Groggl: {0} PUMBILITY maglmurp</value>
+  </data>
+  <data name="Doubles: {0}/{1} charts" xml:space="preserve">
+    <value>Groggl: {0}/{1} murgl</value>
+  </data>
   <data name="Doublesteps" xml:space="preserve">
     <value>Romrmrpblgrl</value>
   </data>
@@ -2471,6 +2480,9 @@
   </data>
   <data name="From {0}" xml:space="preserve">
     <value>Romurg {0}</value>
+  </data>
+  <data name="From {0} peers" xml:space="preserve">
+    <value>Romurg {0} maglmurp</value>
   </data>
   <data name="From {0} scores" xml:space="preserve">
     <value>Romurg {0} mgrlgmrg</value>
@@ -4592,6 +4604,15 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>Grabla argla, arplo grabla mrpgrogl blaromurp.</value>
   </data>
+  <data name="Peer projections show once your doubles pool has {0} charts." xml:space="preserve">
+    <value>Maglmurp purgmorgl romorg mrp gromurp Groggl blubgro mrglro {0} murgl.</value>
+  </data>
+  <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
+    <value>Maglmurp purgmorgl romorg mrp gromurp Mrglrlgl blubgro mrglro {0} murgl.</value>
+  </data>
+  <data name="Peers IQR" xml:space="preserve">
+    <value>Maglmurp IQR</value>
+  </data>
   <data name="peers:" xml:space="preserve">
     <value>morp:</value>
   </data>
@@ -5143,6 +5164,9 @@
   <data name="PUMBILITY over time" xml:space="preserve">
     <value>PUMBILITY grglglorg grglmrgl</value>
   </data>
+  <data name="PUMBILITY peers" xml:space="preserve">
+    <value>PUMBILITY maglmurp</value>
+  </data>
   <data name="Pumbility Push" xml:space="preserve">
     <value>Pumbility Morggrgl</value>
   </data>
@@ -5248,11 +5272,14 @@
   </data>
   <!-- Tier-lists overhaul (PR #135). "Why Don't You Get Up and Dance, Man?" is an
        in-game meme and a universal do-not-translate term in every locale. -->
-  <data name="Ranked against {0} players in your PUMBILITY title ranges" xml:space="preserve">
-    <value>Blublurg glorg {0} morp mrp gromurp PUMBILITY mrgl grorpmurm</value>
-  </data>
   <data name="Ranked against {0} players of similar competitive level" xml:space="preserve">
     <value>Blublurg glorg {0} morp mrp maglarglblgrl grorpmurm</value>
+  </data>
+  <data name="Ranked against {0} players on your difficulty title level" xml:space="preserve">
+    <value>Blublurg glorg {0} morp ap gromurp Glorgmurpgrrgl mrgl grorpmurm</value>
+  </data>
+  <data name="Ranked against {0} PUMBILITY peers within 3 levels of you" xml:space="preserve">
+    <value>Blublurg glorg {0} PUMBILITY maglmurp arglblgrl 3 plglgrrgl mrgl blub</value>
   </data>
   <data name="Ranked by" xml:space="preserve">
     <value>Blublurg murm</value>
@@ -6230,6 +6257,12 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Mrglrlgl grrgl Groggl</value>
+  </data>
+  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
+    <value>Mrglrlgl: {0} PUMBILITY maglmurp</value>
+  </data>
+  <data name="Singles: {0}/{1} charts" xml:space="preserve">
+    <value>Mrglrlgl: {0}/{1} murgl</value>
   </data>
   <data name="Site constructed and maintained by DrMurloc" xml:space="preserve">
 	  <value>Plglmorg murpmurpmrprgl ro grglarglurg murm DrMurloc</value>
@@ -7766,6 +7799,9 @@
   <data name="within 1 level" xml:space="preserve">
     <value>arglblgrl 1 grorpmurm</value>
   </data>
+  <data name="within 3 levels of you with a full pool" xml:space="preserve">
+    <value>arglblgrl 3 plglgrrgl mrgl blub glgrgl gro mrglmr blubgro</value>
+  </data>
   <data name="Within days" xml:space="preserve">
     <value>Arglblgrl grrglmrgl</value>
   </data>
@@ -7918,6 +7954,9 @@
   </data>
   <data name="You somehow ended up in a state between realities. Refresh the page to try again." xml:space="preserve">
 	  <value>Blub urgmaglblub lurgblub morg mrp gro grrglrgl blgrlarglblgrl blargarglmr. Grogrrgllurg mrp urggrgl grgl lurg morgro.</value>
+  </data>
+  <data name="you stand on {0}" xml:space="preserve">
+    <value>blub morggrrgl ap {0}</value>
   </data>
   <data name="You start every song at 500 life with the multiplier near zero — {0} straight misses kill you, at any level. Survive the opening and a {1} gives you {2}. Start runs strong." xml:space="preserve">
     <value>Blub romurm murgglorg mrgl mr 500 glorgrgl glgrgl mrp glmurmargl murpblub romurg — {0} rorglmurm blubgl murgblgrl blub, mr ro grorpmurm. Mrpblgrlmr mrp maglblubplgl ro gro {1} mrmurg blub {2}. Romurm morgplgl maglgro.</value>
@@ -8551,6 +8590,9 @@
   </data>
   <data name="{0} players · week of {1}" xml:space="preserve">
     <value>{0} morp · plglmorg mrgl {1}</value>
+  </data>
+  <data name="{0} PUMBILITY peers" xml:space="preserve">
+    <value>{0} PUMBILITY maglmurp</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>{0} PUMBILITY blurgmo</value>

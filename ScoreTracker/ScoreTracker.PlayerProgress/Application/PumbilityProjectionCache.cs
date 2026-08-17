@@ -1,11 +1,22 @@
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.PlayerProgress.Application
 {
     /// <summary>
-    ///     Holds the cohort sweep behind a player's Pumbility projection between visits.
+    ///     What one sweep produced: the estimate per chart, and the peer group per chart type it
+    ///     was drawn from — held together because both are answers about the same population at
+    ///     the same moment, and the page prints the group beside the estimates.
+    /// </summary>
+    internal sealed record ProjectionSweep(
+        IReadOnlyDictionary<Guid, PhoenixScore> ExpectedScores,
+        IReadOnlyDictionary<ChartType, PeerGroup> Peers,
+        IReadOnlyDictionary<Guid, PeerSpread> Spreads);
+
+    /// <summary>
+    ///     Holds the peer sweep behind a player's Pumbility projection between visits.
     ///     <para>
     ///         What is kept is only what the sweep produced — what players around this one
     ///         score on the charts in range. Everything else the page shows is priced from it
@@ -68,11 +79,11 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     same thing seconds apart, and caching the result would let the second arrival
         ///     start a second sweep while the first was still running.
         /// </summary>
-        public Task<IReadOnlyDictionary<Guid, PhoenixScore>> GetOrAdd(Guid userId, MixEnum mix,
-            Func<Task<IReadOnlyDictionary<Guid, PhoenixScore>>> compute)
+        public Task<ProjectionSweep> GetOrAdd(Guid userId, MixEnum mix,
+            Func<Task<ProjectionSweep>> compute)
         {
             var key = Key(userId, mix);
-            if (_cache.TryGetValue(key, out Task<IReadOnlyDictionary<Guid, PhoenixScore>>? running) &&
+            if (_cache.TryGetValue(key, out Task<ProjectionSweep>? running) &&
                 running != null)
                 return running;
 
@@ -111,8 +122,8 @@ namespace ScoreTracker.PlayerProgress.Application
         ///     would be handed to every later one for a day, and the only cure would be a
         ///     restart.
         /// </summary>
-        private async Task<IReadOnlyDictionary<Guid, PhoenixScore>> Run(string key,
-            Func<Task<IReadOnlyDictionary<Guid, PhoenixScore>>> compute)
+        private async Task<ProjectionSweep> Run(string key,
+            Func<Task<ProjectionSweep>> compute)
         {
             try
             {

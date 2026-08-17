@@ -6,7 +6,7 @@ namespace ScoreTracker.ChartIntelligence.Contracts.Queries;
 
 /// <summary>
 ///     Which folders the PUMBILITY lens has an answer for — everyone's pools when Personalized
-///     is false, the reader's own cohort when it is. Drives the folder picker's disabled entries
+///     is false, the reader's own peer group when it is. Drives the folder picker's disabled entries
 ///     and the redirect that sends a direct URL to the nearest folder with data
 ///     (docs/design/pumbility-tier-list.md §6).
 /// </summary>
