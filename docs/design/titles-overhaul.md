@@ -75,10 +75,13 @@ collapse a rail.
 ## Officially-awarded titles
 
 A title with `CompletionRequired == 0` — every `PhoenixBasicTitle`, which is 77 of Phoenix's 213
-and 66 of Phoenix 2's 272 — has no formula behind it. Play counts and step-artist plays are things
-piuscores never sees at all; Phoenix 2's CO-OP rating is deliberately not computed, since the site
-surfaces it on no leaderboard for a computed value to be checked against; and the plate
-titles do not count what they appear to (see below).
+and 53 of Phoenix 2's 272 — has no formula behind it. Play counts and step-artist plays are things
+piuscores never sees at all, and the plate titles do not count what they appear to (see below).
+Phoenix 2's `[CO-OP]` rating ladder used to sit here too, on the reasoning that the site surfaces
+the CO-OP Rating on no leaderboard for a computed value to be checked against; since 2026-08-17 it
+computes like Phoenix's (`Phoenix2CoOpTitle`, 80 × (grade + plate) per co-op chart, every chart
+summed — [phoenix2-implementation.md](phoenix2-implementation.md) has the evidence), so both mixes'
+CO-OP rails now draw real progress.
 
 These **never show partial progress** — the old page drew them as 0% of a requirement that does
 not exist. A dashed edge is the only mark they carry on the page itself; the drawer says the rest

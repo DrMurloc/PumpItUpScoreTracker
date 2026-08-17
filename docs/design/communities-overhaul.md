@@ -215,7 +215,13 @@ multi-player head-to-head tool is **removed** (superseded by the player-page fol
   the rows, so it sheds the same columns at the same breakpoints — because a board of four
   unlabeled figures per player is a board nobody can read. Labels stay short (Charts, Comp Lv):
   below 760 the columns size to their content, and a spelled-out heading takes width away from
-  the player it describes.
+  the player it describes. The board types ride the tier-list-style toggle (Combined / Singles /
+  Doubles / CoOp) showing that type's PUMBILITY and competitive level; the **CoOp board ranks on
+  the CO-OP Rating** ([DOMAIN.md](../DOMAIN.md) — `PlayerStats.CoOpRating`, an all-charts sum on
+  both mixes since 2026-08-17) and carries no second figure — it swapped competitive level for a
+  pooled ×2–×5 completion percentage between field-test round 1 (2026-07-19) and then, which was
+  a stand-in for a rating Phoenix 2 did not yet compute, and a percentage of the catalog is not a
+  ranking. Its header says CO-OP Rating rather than PUMBILITY, because it is not one.
 - **By Chart** — the existing per-chart community board (`ChartSelector` →
   `GetPhoenixRecordsForCommunityQuery`), kept as its own tab.
 - **Members** — roster visible to all; promote/demote/ban/unban/edit-perms controls gated by
