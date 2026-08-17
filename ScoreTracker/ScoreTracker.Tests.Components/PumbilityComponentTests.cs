@@ -1,5 +1,6 @@
 using Bunit;
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
@@ -330,9 +331,10 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     [Fact]
     public void TheWhyLineSaysWhereTheNumberCameFromAndNothingElse()
     {
-        // Peer counts and spreads used to live here and told a player nothing they could act
-        // on. What is left is the source — the only thing about a projection that changes how
-        // much you should trust it, and the card's border already says the rest.
+        // Peer counts and numeric spreads used to live here and told a player nothing they
+        // could act on. What is left is the source — the only thing about a projection that
+        // changes how much you should trust it, and the card's border already says the rest.
+        // The peers' agreement came back as its own line of two grades (D30), never as prose here.
         var estimated = NewChart(ChartType.Single, 20);
         var carried = NewChart(ChartType.Single, 20);
         var targets = new[]
@@ -349,6 +351,108 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         var whys = cut.FindAll(".pmb-tcard-why").Select(w => w.TextContent.Trim()).ToArray();
         Assert.Contains("Carried from Phoenix 1", whys);
         Assert.Contains("Projected", whys);
+    }
+
+    [Fact]
+    public void TheTablePrintsThePeersIqrAsTwoGradesAndACarriedRowPrintsADash()
+    {
+        // D30: beside the median, the peers' first and third quartiles as grade art with the
+        // peer count in the tooltip — and nothing else. A carried Phoenix 1 row has no peers,
+        // so its cell is the same dash the You-have cell prints for nothing.
+        var estimated = NewChart(ChartType.Single, 22);
+        var carried = NewChart(ChartType.Single, 22);
+        var targets = new[]
+        {
+            new PumbilityTarget(estimated.Id, 986_000, 300, null, false, null,
+                Spread: new PeerSpread(952_000, 991_000, 13)),
+            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, TargetSource.Phoenix1)
+        };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [estimated.Id] = estimated, [carried.Id] = carried })
+            .Add(x => x.Density, UiDensity.Table));
+
+        Assert.Contains("Peers IQR", cut.Find("thead").TextContent);
+        var iqr = cut.Find(".pmb-iqr");
+        Assert.Equal("From 13 peers", iqr.GetAttribute("title"));
+        Assert.Equal(2, iqr.QuerySelectorAll("img").Length);
+        Assert.All(iqr.QuerySelectorAll("img"), img => Assert.Contains("/letters/", img.GetAttribute("src")));
+        Assert.Single(iqr.QuerySelectorAll(".pmb-iqr-conn"));
+        Assert.DoesNotContain("952,000", iqr.TextContent);
+
+        var rows = cut.FindAll("tbody tr");
+        Assert.Equal(2, rows.Count);
+        var carriedRow = rows.Single(r => r.QuerySelectorAll(".pmb-iqr").Length == 0);
+        Assert.Contains("—", carriedRow.QuerySelectorAll("td")[^2].TextContent);
+    }
+
+    [Fact]
+    public void TheConnectorSaysHowFarApartTheQuartilesAre()
+    {
+        // The width in points, not in letters: two scores a point either side of a grade line
+        // print as different letters while agreeing perfectly. Under 10,000 the peers agree,
+        // over 25,000 the chart splits them, and the connector is drawn to say which.
+        var tight = NewChart(ChartType.Single, 22);
+        var mid = NewChart(ChartType.Single, 22);
+        var wide = NewChart(ChartType.Single, 22);
+        var targets = new[]
+        {
+            new PumbilityTarget(tight.Id, 963_000, 300, null, false, null, Spread: new PeerSpread(960_000, 966_000, 6)),
+            new PumbilityTarget(mid.Id, 978_000, 200, null, false, null, Spread: new PeerSpread(970_000, 985_000, 10)),
+            new PumbilityTarget(wide.Id, 986_000, 100, null, false, null, Spread: new PeerSpread(952_000, 991_000, 13))
+        };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [tight.Id] = tight, [mid.Id] = mid, [wide.Id] = wide })
+            .Add(x => x.Density, UiDensity.Table));
+
+        var widths = cut.FindAll(".pmb-iqr").Select(i => i.GetAttribute("data-spread")).ToArray();
+        Assert.Equal(new[] { "tight", "mid", "wide" }, widths);
+    }
+
+    [Fact]
+    public void ComfortableCarriesTheIqrLineOnlyOnARowThatHasPeers()
+    {
+        var estimated = NewChart(ChartType.Single, 22);
+        var carried = NewChart(ChartType.Single, 22);
+        var targets = new[]
+        {
+            new PumbilityTarget(estimated.Id, 986_000, 300, null, false, null,
+                Spread: new PeerSpread(952_000, 991_000, 13)),
+            new PumbilityTarget(carried.Id, 985_000, 400, null, false, null, TargetSource.Phoenix1)
+        };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [estimated.Id] = estimated, [carried.Id] = carried })
+            .Add(x => x.Density, UiDensity.Comfortable));
+
+        var line = Assert.Single(cut.FindAll(".pmb-tcard-iqr"));
+        Assert.Contains("Peers IQR", line.TextContent);
+        Assert.Single(line.QuerySelectorAll(".pmb-iqr"));
+        Assert.Equal(2, line.QuerySelectorAll("img").Length);
+    }
+
+    [Fact]
+    public void CompactStaysAsItWasBecauseAStickerHasNoRoomForAThirdThing()
+    {
+        // Owner, 2026-08-17: "compact unchanged. Only so much data we can fit there."
+        var estimated = NewChart(ChartType.Single, 22);
+        var targets = new[]
+        {
+            new PumbilityTarget(estimated.Id, 986_000, 300, null, false, null,
+                Spread: new PeerSpread(952_000, 991_000, 13))
+        };
+
+        var cut = RenderComponent<TargetList>(p => p
+            .Add(x => x.Targets, targets)
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [estimated.Id] = estimated })
+            .Add(x => x.Density, UiDensity.Compact));
+
+        Assert.Empty(cut.FindAll(".pmb-iqr"));
+        Assert.DoesNotContain("Peers IQR", cut.Markup);
     }
 
     [Fact]

@@ -13514,6 +13514,44 @@ span.ct-console-pick { cursor: default; }
     font-variant-numeric: tabular-nums;
 }
 
+/* The Peers IQR: the peers' first and third quartiles as two grades with a connector between
+   them (docs/design/pumbility-overhaul.md D30). The connector is the width without a number —
+   short and solid when the peers agree, long and dashed when the chart splits them; the
+   component sets data-spread from the points between the quartiles. */
+.pmb-iqr {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: help;
+}
+
+.pmb-iqr-conn {
+    display: inline-block;
+    height: 2px;
+    width: 14px;
+    border-radius: 1px;
+    background: color-mix(in srgb, var(--mix-ink) 45%, transparent);
+}
+
+.pmb-iqr[data-spread="tight"] .pmb-iqr-conn {
+    width: 8px;
+}
+
+.pmb-iqr[data-spread="wide"] .pmb-iqr-conn {
+    width: 22px;
+    background: repeating-linear-gradient(90deg,
+        color-mix(in srgb, var(--mix-ink) 45%, transparent) 0 3px, transparent 3px 6px);
+}
+
+.pmb-iqr-label {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
 /* --- the pool board --- */
 .pmb-board {
     display: flex;
