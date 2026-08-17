@@ -1,15 +1,12 @@
 @namespace ScoreTracker.Web.Components
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Web.Services
-@inject NavigationManager NavManager
 
-@* The chart search. An island: the shell around it is static HTML, but an autocomplete needs
+@* The site search. An island: the shell around it is static HTML, but an autocomplete needs
    a circuit. Mounted twice — the app bar on desktop, the search sheet on mobile — because it
    is the same question in two places and the answer must not drift; the caller supplies the
-   frame, this owns the behaviour. *@
+   frame, SiteSearch owns the behaviour (charts, then players, then board players). *@
 <div class="@Class" style="@Style">
-    <ChartSelector Mix="Mix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined"
-                   Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
+    <SiteSearch Mix="Mix" Placeholder="@L["Find a chart or player"].Value"></SiteSearch>
 </div>
 
 @code {
@@ -19,12 +16,4 @@
     [Parameter] public string Class { get; set; } = "d-flex align-center appbar-search mr-3 shell-desktop-only";
 
     [Parameter] public string? Style { get; set; } = "min-width: 170px; max-width: 220px;";
-
-    private Task GoToChart(Chart chart)
-    {
-        // nav.js closes the mobile sheet off the history push this causes — the sheet is
-        // chrome over the page you left, and no link click happens here to catch.
-        NavManager.NavigateTo(chart.CanonicalPath());
-        return Task.CompletedTask;
-    }
 }

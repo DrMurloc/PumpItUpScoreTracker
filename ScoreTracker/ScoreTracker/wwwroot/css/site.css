@@ -480,6 +480,63 @@ body {
     display: none;
 }
 
+/* The site search's list: three sections in one MudAutocomplete. A section label is a
+   disabled row — the arrow keys skip it — and a player row wears the board row-glow states
+   (.is-community / .is-rival / .is-both) by bleeding its own box out to the list item's edges,
+   since the item element is Mud's. */
+.site-search-list .mud-list-item-disabled {
+    opacity: 1;
+    pointer-events: none;
+}
+
+.site-search-head {
+    display: block;
+    font-family: var(--font-display);
+    font-size: .74rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    padding-top: 4px;
+}
+
+.site-search-list .mud-list-item-disabled + .mud-list-item .site-search-row {
+    margin-top: 0;
+}
+
+.site-search-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    margin: -6px -16px;
+    padding: 6px 16px;
+}
+
+.site-search-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.site-search-sub {
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.site-search-note {
+    margin-left: auto;
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.site-search-verified {
+    margin-left: auto;
+    flex: none;
+}
+
 /* One pulse when something opens the search programmatically (shell.openSearch) —
    settles into the same ring the focused field already wears. */
 @media (prefers-reduced-motion: no-preference) {

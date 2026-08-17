@@ -1,0 +1,179 @@
+@namespace ScoreTracker.Web.Components
+@using MediatR
+@using ScoreTracker.Catalog.Contracts.Queries
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts
+@using ScoreTracker.Identity.Contracts.Queries
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.HomeDashboard
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject NavigationManager NavManager
+
+@* The app-bar search: charts, then players on this site, then players on the official boards —
+   three sections in one list, capped 8 / 4 / 4, each label a row you cannot land on
+   (docs/design/player-page-and-site-search.md D12–D17). Charts stay client-side over the same
+   index every chart picker uses; the two player sections are per-keystroke server reads that
+   abandon themselves when the next character arrives. Picking a row navigates: a chart to its
+   page, a site player to /Player/{id}, a board player to the official Players page. *@
+<MudAutocomplete @ref="_autocomplete" T="SearchHit" Value="_selected" ValueChanged="Pick" Dense="true"
+                 MaxItems="24" MinCharacters="0" DebounceInterval="250" CoerceValue="false" CoerceText="false"
+                 ResetValueOnEmptyText="true" Label="" Placeholder="@Placeholder" Variant="Variant.Outlined"
+                 Margin="Margin.Dense" SearchFunc="Search" ToStringFunc="@(h => h?.Label ?? string.Empty)"
+                 ItemDisabledFunc="@(h => h.IsHeader)" ListClass="site-search-list" data-testid="site-search">
+    <ItemTemplate>
+        @if (context.IsHeader)
+        {
+            <span class="site-search-head" data-testid="site-search-head">@context.Label</span>
+        }
+        else if (context.Chart is { } chart)
+        {
+            <span class="site-search-row" data-testid="site-search-chart">
+                <SongImage Song="chart.Song" Small="true"></SongImage>
+                <DifficultyBubble Chart="chart" Small="true"></DifficultyBubble>
+                <span class="site-search-label">@chart.Song.Name</span>
+            </span>
+        }
+        else if (context.Player is { } player)
+        {
+            @* Why the row glows is the same ladder every board uses: green for a community you
+               share, red for your rival, split for both — never a chip. Yourself is a plain row
+               with a word, since you are always in your own pool. *@
+            <span class="site-search-row @PlayerRowClass(player)" data-testid="site-search-player">
+                <MudAvatar Size="Size.Small"><MudImage Src="@player.Avatar.ToString()" Alt=""></MudImage></MudAvatar>
+                <span class="site-search-label">@((string)player.Name)</span>
+                @if (player.GameTag is { } tag && !string.Equals(tag.ToString(), player.Name.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    <span class="site-search-sub">@((string)tag)</span>
+                }
+                @if (player.Visibility.IsYou)
+                {
+                    <span class="site-search-note">@L["You"]</span>
+                }
+            </span>
+        }
+        else if (context.Board is { } board)
+        {
+            <span class="site-search-row" data-testid="site-search-board">
+                <MudAvatar Size="Size.Small"><MudImage Src="@(board.AvatarUrl?.ToString() ?? DefaultAvatar)" Alt=""></MudImage></MudAvatar>
+                <span class="site-search-label">@OfficialPlayerNames.Human(board.Username)</span>
+                @if (Discriminator(board.Username) is { Length: > 0 } discriminator)
+                {
+                    <span class="site-search-sub">@discriminator</span>
+                }
+                @if (board.UserId != null)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" Color="Color.Primary"
+                             Title="@L["Linked to a site account"]" Class="site-search-verified"/>
+                }
+            </span>
+        }
+    </ItemTemplate>
+</MudAutocomplete>
+
+@code {
+    /// <summary>The mix the chart section and the board section read — players are mix-less.</summary>
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix;
+
+    [Parameter] public string? Placeholder { get; set; }
+
+    private const int ChartCap = 8;
+    private const int PlayerCap = 4;
+    private const int BoardCap = 4;
+    private const string DefaultAvatar = "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
+
+    private MudAutocomplete<SearchHit>? _autocomplete;
+    private SearchHit? _selected;
+    private ChartSearchIndex _index = ChartSearchIndex.Empty;
+
+    /// <summary>One row of the list. Exactly one of Chart / Player / Board is set, or it is a header.</summary>
+    public sealed record SearchHit(string Label, bool IsHeader = false, Chart? Chart = null,
+        PlayerSearchHit? Player = null, OfficialPlayerRecord? Board = null);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _index = ChartSearchIndex.Build(await Mediator.Send(new GetChartsQuery(Mix)));
+    }
+
+    /// <summary>Hosts opening this in a sheet can put the cursor straight in the box.</summary>
+    public ValueTask FocusAsync() => _autocomplete?.FocusAsync() ?? ValueTask.CompletedTask;
+
+    private async Task<IEnumerable<SearchHit>> Search(string? term, CancellationToken token)
+    {
+        term ??= string.Empty;
+        var charts = _index.Search(term).Take(ChartCap).ToArray();
+
+        // A blank box shows the catalog's first page and asks the server nothing.
+        var players = Array.Empty<PlayerSearchHit>();
+        var board = Array.Empty<OfficialPlayerRecord>();
+        if (!string.IsNullOrWhiteSpace(term))
+        {
+            var playersTask = Abandonable(() => Mediator.Send(new SearchPlayersQuery(term, PlayerCap), token), token);
+            var boardTask = Abandonable(() => Mediator.Send(new SearchOfficialBoardTagsQuery(Mix, term, BoardCap), token), token);
+            players = (await playersTask).ToArray();
+            board = (await boardTask).ToArray();
+        }
+
+        var hits = new List<SearchHit>();
+        Section(hits, L["Charts"], charts.Select(c => new SearchHit(ChartSearchIndex.NameOf(c), Chart: c)));
+        Section(hits, L["Players"], players.Select(p => new SearchHit(p.Name.ToString(), Player: p)));
+        Section(hits, L["Board players"], board.Select(b => new SearchHit(b.Username, Board: b)));
+        return hits;
+    }
+
+    // A section is its label plus its rows, and does not exist without rows.
+    private static void Section(List<SearchHit> hits, string label, IEnumerable<SearchHit> rows)
+    {
+        var list = rows.ToArray();
+        if (list.Length == 0) return;
+        hits.Add(new SearchHit(label, IsHeader: true));
+        hits.AddRange(list);
+    }
+
+    // MudAutocomplete cancels the in-flight search the moment the next character arrives, so an
+    // abandoned search is the normal case here, not a failure. It does not always arrive as an
+    // OperationCanceledException: a cancelled SqlCommand surfaces as a provider error instead, and
+    // catching by exception type would miss that and tear the circuit down mid-keystroke. The token
+    // is the reliable signal — swallow only what this component already abandoned, and let a real
+    // failure through to be reported.
+    private static async Task<IReadOnlyList<T>> Abandonable<T>(Func<Task<IReadOnlyList<T>>> search,
+        CancellationToken token)
+    {
+        try
+        {
+            return await search();
+        }
+        catch (Exception) when (token.IsCancellationRequested)
+        {
+            return Array.Empty<T>();
+        }
+    }
+
+    private void Pick(SearchHit? hit)
+    {
+        if (hit == null || hit.IsHeader) return;
+        _selected = null;
+        // nav.js closes the mobile sheet off the history push this causes — the sheet is chrome
+        // over the page you left, and no link click happens here to catch.
+        if (hit.Chart is { } chart) NavManager.NavigateTo(chart.CanonicalPath());
+        else if (hit.Player is { } player) NavManager.NavigateTo($"/Player/{player.UserId}");
+        else if (hit.Board is { } board)
+            NavManager.NavigateTo($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(board.Username)}");
+    }
+
+    private static string PlayerRowClass(PlayerSearchHit player) =>
+        CommunityGlowReader.RowClass(player.Visibility.IsYou, player.Visibility.IsYourRival,
+            player.Visibility.SharedCommunities.Count > 0, youClass: string.Empty);
+
+    // A board tag is NAME#1234; the human part leads and the discriminator is what tells two
+    // NAMEs apart in a list.
+    private static string Discriminator(string username)
+    {
+        var hash = username.IndexOf('#');
+        return hash > 0 ? username[hash..] : string.Empty;
+    }
+}
