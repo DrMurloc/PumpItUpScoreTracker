@@ -16,9 +16,11 @@
     [Parameter] public string Class { get; set; } = "d-flex align-center appbar-search mr-3 shell-desktop-only";
 
     /// <summary>
-    ///     The desktop pill's width. It grew from 220px when players joined the list: a name, a
-    ///     game tag and a row state need room, and the app bar has it — the spacer gives way
-    ///     first, and the pill only shrinks toward its floor when the nav itself is squeezed.
+    ///     The desktop pill's width: elastic between the 170px it always had and 340px. It grew
+    ///     when players joined the list — a name, a game tag and a row state need room — but the
+    ///     app bar between 960px and about 1120px has no room to give: the nav's buttons cannot
+    ///     shrink, so a hard floor above 170px pushed the mix pill and the avatar off the edge.
+    ///     Grow into spare width, give it all back when the nav needs it.
     /// </summary>
-    [Parameter] public string? Style { get; set; } = "flex: 0 1 340px; min-width: 240px; max-width: 340px;";
+    [Parameter] public string? Style { get; set; } = "flex: 1 1 200px; min-width: 170px; max-width: 340px;";
 }
