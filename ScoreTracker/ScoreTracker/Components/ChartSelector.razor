@@ -1,9 +1,9 @@
-﻿@namespace ScoreTracker.Web.Components
+@namespace ScoreTracker.Web.Components
 @using MediatR
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Domain.SecondaryPorts
-@using System.Text.RegularExpressions
+@using ScoreTracker.Web.Services
 @using Microsoft.AspNetCore.Mvc.ModelBinding.Validation
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
@@ -63,33 +63,11 @@
         return _autocomplete?.FocusAsync() ?? ValueTask.CompletedTask;
     }
 
-    private static readonly Regex DifficultyRegex = new Regex(@"\s(S|D|C)[0-9]{1,2}$",RegexOptions.Compiled |RegexOptions.IgnoreCase);
     private Task<IEnumerable<string>> SearchSongs(string v)
     {
-        var difficultyMatch = DifficultyRegex.Match(v);
-        ChartType? type = null;
-        DifficultyLevel? level = null;
-        if (difficultyMatch.Success)
-        {
-            try
-            {
-
-                var parse = DifficultyLevel.ParseShortHand(difficultyMatch.Value);
-                type = parse.chartType;
-                level = parse.level;
-                v = v.Replace(difficultyMatch.Value, "");
-            }
-            catch (Exception)
-            {
-                //Likely difficulty couldn't parse, don't worry about this failing
-            }
-        }
-        var result = _chartNames
-            .Where(c=>type==null || level==null || (c.Value.Type==type && c.Value.Level==level))
-            .Where(c => string.IsNullOrWhiteSpace(v) || c.Key.Contains(v, StringComparison.OrdinalIgnoreCase)).OrderBy(c => string.IsNullOrWhiteSpace(v) ? c.Value.Song.Name.ToString() : c.Value.Song.Name == v ? "a" + c.Value.Song.Name : "b" + c.Value.Song.Name).ThenBy(c => c.Value.Type).ThenBy(c => c.Value.Level).Select(kv => kv.Key);
-
-
-        return Task.FromResult(result);
+        // The chart-name search is shared with the site search (ChartSearchIndex): one answer to
+        // what a term finds, including the trailing "S22" that narrows to a difficulty.
+        return Task.FromResult(_index.SearchNames(v));
     }
 
     private async Task SetChart(string selected)
@@ -102,17 +80,13 @@
         await ChartIdSelected(_chartNames[selected]);
     }
 
-    private IDictionary<string, Chart> _chartNames = new Dictionary<string, Chart>(StringComparer.OrdinalIgnoreCase);
+    private ChartSearchIndex _index = ChartSearchIndex.Empty;
+    private IReadOnlyDictionary<string, Chart> _chartNames => _index.ByName;
 
     private async Task UpdateChartList()
     {
-        // DifficultyDisplay, not DifficultyString: pre-Exceed slots make "S6" ambiguous
-        // (Hard 6 vs Crazy 6). GroupBy guards the shell against any residual duplicate
-        // display names — a data quirk must not take down the circuit.
         var source = Charts ?? await Mediator.Send(new GetChartsQuery(Mix));
-        _chartNames = source
-            .GroupBy(c => c.Song.Name + " " + c.DifficultyDisplay, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+        _index = ChartSearchIndex.Build(source);
     }
     protected override void OnParametersSet()
     {
