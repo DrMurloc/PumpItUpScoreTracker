@@ -46,8 +46,8 @@
         }
 
         function pick(cell) {
-            var v = parseFloat(cell.getAttribute('data-v'));
-            var l0 = parseInt(cell.getAttribute('data-l'), 10);
+            var v = Number.parseFloat(cell.getAttribute('data-v'));
+            var l0 = Number.parseInt(cell.getAttribute('data-l'), 10);
             var g0 = cell.getAttribute('data-g');
             var eqs = [];
             table.querySelectorAll('tbody tr').forEach(function (tr) {
@@ -56,17 +56,17 @@
                 if (!cells.length) return;
                 var best = null, bd = Infinity;
                 cells.forEach(function (c) {
-                    var d = Math.abs(parseFloat(c.getAttribute('data-v')) - v);
+                    var d = Math.abs(Number.parseFloat(c.getAttribute('data-v')) - v);
                     if (d < bd) { bd = d; best = c; }
                 });
-                var l = parseInt(best.getAttribute('data-l'), 10);
+                var l = Number.parseInt(best.getAttribute('data-l'), 10);
                 if (l === l0) { best.classList.add('pc-pick'); return; }
-                var top = parseFloat(cells[cells.length - 1].getAttribute('data-v'));
-                var bottom = parseFloat(cells[0].getAttribute('data-v'));
+                var top = Number.parseFloat(cells[cells.length - 1].getAttribute('data-v'));
+                var bottom = Number.parseFloat(cells[0].getAttribute('data-v'));
                 if (top < v * 0.985 || bottom > v * 1.015) { cells.forEach(function (c) { c.classList.add('pc-far'); }); return; }
                 best.classList.add('pc-hit');
-                if (Math.abs(l - l0) <= 2 || Math.abs(parseFloat(best.getAttribute('data-v')) - v) / v < 0.004) {
-                    eqs.push({ l: l, g: best.getAttribute('data-g'), v: parseFloat(best.getAttribute('data-v')) });
+                if (Math.abs(l - l0) <= 2 || Math.abs(Number.parseFloat(best.getAttribute('data-v')) - v) / v < 0.004) {
+                    eqs.push({ l: l, g: best.getAttribute('data-g'), v: Number.parseFloat(best.getAttribute('data-v')) });
                 }
             });
             if (!cap) return;
@@ -111,7 +111,7 @@
         }
 
         function update() {
-            var level = parseInt(levelSel.value, 10);
+            var level = Number.parseInt(levelSel.value, 10);
             var grade = gradeSel.value;
             var plate = plateSel ? plateSel.value : 'RG';
             var v = value(level, grade, plate);

@@ -112,10 +112,13 @@
     [Parameter, EditorRequired] public PumbilityCalculatorModel Model { get; set; } = default!;
     [Parameter, EditorRequired] public PumbilityCalculatorTypeView Type { get; set; } = default!;
 
-    // The other mix with a PUMBILITY formula. Phoenix prices both types alike, so a Phoenix
-    // page compares against Phoenix 2 Singles — the type most players play.
+    // The other mix with a PUMBILITY formula.
     private MixEnum Other => Model.Mix == MixEnum.Phoenix2 ? MixEnum.Phoenix : MixEnum.Phoenix2;
-    private ChartType OtherType => Model.Mix == MixEnum.Phoenix2 ? ChartType.Single : ChartType.Single;
+
+    // Singles whichever page this is, for two different reasons that land on the same answer:
+    // Phoenix prices both types alike, and a Phoenix page compares against Phoenix 2 Singles —
+    // the type most players play.
+    private const ChartType OtherType = ChartType.Single;
     private ScoringConfiguration OtherScoring => ScoringConfiguration.PumbilityScoring(Other, false);
 
     private int AxisMax => (int)Math.Ceiling(Levels.Max(l => l + Math.Max(MyBought(l), OtherBought(l)))) + 1;

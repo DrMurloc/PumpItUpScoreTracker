@@ -93,8 +93,8 @@ public sealed class PumbilityCalculatorModel
 
         var grades = new PumbilityGradeTable(
             Grades.ToDictionary(g => g, g => scoring.LetterGradeModifierFor(g, ChartType.Double)),
-            Grades.Where(g => scoring.LetterGradeModifierFor(g, ChartType.Single) !=
-                              scoring.LetterGradeModifierFor(g, ChartType.Double))
+            Grades.Where(g => Differs(scoring.LetterGradeModifierFor(g, ChartType.Single),
+                    scoring.LetterGradeModifierFor(g, ChartType.Double)))
                 .ToDictionary(g => g, g => scoring.LetterGradeModifierFor(g, ChartType.Single)),
             Grades.ToDictionary(g => g, g => (int)g.GetMinimumScoreFor(mix)));
 
@@ -103,13 +103,25 @@ public sealed class PumbilityCalculatorModel
         var plates = mix == MixEnum.Phoenix2
             ? new PumbilityPlateTable(
                 Plates.ToDictionary(p => p, p => scoring.PlateModifierFor(p, ChartType.Double)),
-                Plates.Where(p => scoring.PlateModifierFor(p, ChartType.Single) !=
-                                  scoring.PlateModifierFor(p, ChartType.Double))
+                Plates.Where(p => Differs(scoring.PlateModifierFor(p, ChartType.Single),
+                        scoring.PlateModifierFor(p, ChartType.Double)))
                     .ToDictionary(p => p, p => scoring.PlateModifierFor(p, ChartType.Single)))
             : null;
 
         return new PumbilityCalculatorModel(mix, scoring, anchor, types, grades, plates, unread,
             BuildExamples(mix, scoring), chartCounts.Where(kv => kv.Key.Type == ChartType.CoOp).Sum(kv => kv.Value));
+    }
+
+    /// <summary>
+    ///     Whether a Single prices this rung differently from a Double — the test that decides
+    ///     which cells the constants table spells out and which read as a dash. Both sides are
+    ///     authored constants rather than measurements, so the question is a plain inequality;
+    ///     it still goes through a tolerance, three orders of magnitude under the smallest step
+    ///     either ladder takes (0.001), because a bare != on doubles is a trap wherever it sits.
+    /// </summary>
+    private static bool Differs(double singles, double doubles)
+    {
+        return Math.Abs(singles - doubles) > 1e-9;
     }
 
     private static PumbilityCalculatorTypeView BuildType(MixEnum mix, ScoringConfiguration scoring, ChartType type,
