@@ -4854,6 +4854,9 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · 실제 상위 50</value>
   </data>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+    <value>Phoenix 2도 CO-OP 채보에 값을 매깁니다 — Phoenix가 {1}로 매겼듯이 고정 베이스 {0}으로 — 하지만 그 숫자는 칭호 페이지에만 나타나고 다른 곳에는 나오지 않습니다. 두 시리즈 모두에서 PUMBILITY에는 아무것도 더하지 않습니다.</value>
+  </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2는 Phoenix보다 약 {0}배 더 점수에 기댑니다.</value>
   </data>

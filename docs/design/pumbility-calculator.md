@@ -110,6 +110,14 @@ counted in the total; the official Phoenix formula priced it, and Phoenix had th
 it. "Max Rating" (chart count × SSS+) is gone — a leaderboard-era leftover meaningless against a
 fifty-chart pool. Chart counts per level stay.
 
+**D13a — Phoenix 2 prices CO-OP too, at a flat base of 100** (owner, 2026-08-17), the way Phoenix
+priced one at 2,000 — but the number surfaces on the **titles page and nowhere else**, and CO-OP still
+adds nothing to PUMBILITY. So it is an **asterisk against the zero rules**, not a row: a row of values
+would imply a pool could hold them. The constant is `PumbilityCalculatorModel.Phoenix2CoOpBase`;
+`ScoringConfiguration`'s CO-OP base stays 2,000 for every mix on purpose, because that base is read by
+configurations far outside PUMBILITY (`ChartTypeModifiers[CoOp] = 0` is what zeroes CO-OP in the
+Phoenix 2 formula), and re-pricing it there would silently move tournament and tier-list scoring.
+
 **D14 — The section headings are the questions.** "Should I push levels or push scores?", "How much do
 plates matter?", "Does scoring matter more than it did on Phoenix?" — literal H2s with the measured
 answers under them. No FAQ schema (the mix-diff precedent); `TechArticle` + `BreadcrumbList` JSON-LD,
@@ -121,7 +129,8 @@ title and a stat-loaded description from `StaticHeadResolver`.
    charts; Phoenix 2 keeps three pools).
 2. **The formula** — `Base(level) × (grade + plate)` / `Base(level) × grade` large, the three terms
    as coloured cells (level primary, grade secondary, plate accent — the pool page's split colours),
-   the zero rules, four worked examples. Reads the same for both types.
+   the zero rules (CO-OP carries the D13a asterisk on Phoenix 2), four worked examples. Reads the
+   same for both types.
 3. **The Singles/Doubles button group** (Phoenix 2 only; governs every type-specific section below
    it) — directly above the ruler, the first thing on the page that changes with it. It started in
    the hero and looked broken there: the formula between it and the ruler is type-invariant, so a

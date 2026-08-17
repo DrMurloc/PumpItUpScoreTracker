@@ -20,6 +20,14 @@ public sealed class PumbilityCalculatorModel
     /// <summary>The Phoenix formula prices CO-OP at a flat 2,000 base — shown, and marked as never counted.</summary>
     public const int PhoenixCoOpBase = 2000;
 
+    /// <summary>
+    ///     Phoenix 2 prices CO-OP at a flat 100 base, the way Phoenix priced it at a flat 2,000.
+    ///     The number surfaces on the titles page and nowhere else, and a CO-OP chart still adds
+    ///     nothing to PUMBILITY — which is why the page states it as a footnote against the zero
+    ///     rules rather than as a row of values nobody's pool can hold.
+    /// </summary>
+    public const int Phoenix2CoOpBase = 100;
+
     /// <summary>Levels below this price at zero on both formulas and are not rows.</summary>
     public const int LowestPricedLevel = 10;
 
