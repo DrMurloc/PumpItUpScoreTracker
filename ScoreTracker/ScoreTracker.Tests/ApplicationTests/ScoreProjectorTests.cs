@@ -113,6 +113,41 @@ public sealed class ScoreProjectorTests
     }
 
     [Fact]
+    public async Task TheSpreadBracketsTheMedianWithTheSamePeers()
+    {
+        // The Peers IQR: first and third quartiles of the same five voices the median came from,
+        // read with the same midpoint-convention quantile, and how many peers voted.
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
+        var scores = new[] { 940_000, 962_000, 975_000, 985_000, 990_000 };
+        for (var i = 0; i < 5; i++) ctx.WithScore(peers[i], ChartA, scores[i]);
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        var spread = result.Spreads![ChartA];
+        Assert.Equal(975_000, (int)result.Scores[ChartA]);
+        // Midpoint positions of five equal voices are 0.1, 0.3, 0.5, 0.7, 0.9: q25 interpolates
+        // three-quarters of the way from 940k to 962k, q75 a quarter of the way from 985k to 990k.
+        Assert.Equal(956_500, (int)spread.Quartile1);
+        Assert.Equal(986_250, (int)spread.Quartile3);
+        Assert.Equal(5, spread.PeerCount);
+        Assert.True((int)spread.Quartile1 <= (int)result.Scores[ChartA]);
+        Assert.True((int)spread.Quartile3 >= (int)result.Scores[ChartA]);
+    }
+
+    [Fact]
+    public async Task AChartWithNoOpinionHasNoSpreadEither()
+    {
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        for (var i = 0; i < 4; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 970_000);
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        Assert.DoesNotContain(ChartA, result.Scores.Keys);
+        Assert.DoesNotContain(ChartA, result.Spreads!.Keys);
+    }
+
+    [Fact]
     public async Task Phoenix2ReadsNothingFromPhoenix1AndWeighsNoGrowth()
     {
         var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
@@ -171,6 +206,8 @@ public sealed class ScoreProjectorTests
         var result = await ctx.Project(MixEnum.Phoenix, ChartType.Single, 1.0, ChartA);
 
         Assert.Equal(970_000, (int)result.Scores[ChartA]);
+        Assert.Equal(1, result.Spreads![ChartA].PeerCount);
+        Assert.Equal(970_000, (int)result.Spreads[ChartA].Quartile1);
         Assert.Equal(PeerGroupKind.CompetitiveBand, result.Group!.Kind);
         Assert.Equal(21.4, result.Group.Center);
         Assert.Equal(1.0, result.Group.HalfWidth);

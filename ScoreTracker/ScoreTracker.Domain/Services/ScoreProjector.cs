@@ -110,6 +110,7 @@ public sealed class ScoreProjector : IScoreProjector
             .ToDictionary(g => g.Key, g => g.OrderBy(h => h.Date).ToArray());
 
         var projected = new Dictionary<Guid, PhoenixScore>();
+        var spreads = new Dictionary<Guid, PeerSpread>();
         // Counted from the scores that actually reached an estimate rather than from the sweep:
         // a peer with no stats row is dropped below, so the sweep's own distinct count would name
         // players whose evidence never got used.
@@ -137,11 +138,12 @@ public sealed class ScoreProjector : IScoreProjector
 
             freshnessCount += scored.Length;
             projected[group.Key] = estimate.Value;
+            spreads[group.Key] = SpreadOf(scored, PeerEstimator.GrowthDecayLevels, 1);
         }
 
         return new ScoreProjection(projected, contributors.Count, myLevel,
             freshnessCount == 0 ? 0 : freshnessSum / freshnessCount,
-            PeerGroup.Competitive(myLevel, window, contributors.Count));
+            PeerGroup.Competitive(myLevel, window, contributors.Count), spreads);
     }
 
     /// <summary>
@@ -217,6 +219,7 @@ public sealed class ScoreProjector : IScoreProjector
 
         var wanted = targets.Select(t => t.ChartId).ToHashSet();
         var projected = new Dictionary<Guid, PhoenixScore>();
+        var spreads = new Dictionary<Guid, PeerSpread>();
         var contributors = new HashSet<Guid>();
         foreach (var chart in records
                      .Where(s => peers.Contains(s.UserId) && wanted.Contains(s.ChartId))
@@ -231,9 +234,24 @@ public sealed class ScoreProjector : IScoreProjector
 
             foreach (var voice in voices) contributors.Add(voice.UserId);
             projected[chart.Key] = estimate.Value;
+            spreads[chart.Key] = SpreadOf(scored, 0, PeerEstimator.Phoenix2MinimumPeers);
         }
 
-        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group);
+        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group, spreads);
+    }
+
+    /// <summary>
+    ///     The peers' first and third quartiles on one chart, read exactly as the estimate is —
+    ///     same scores, same growth weights, same quantile arithmetic — so a page's "Peers IQR"
+    ///     brackets the very median it prints. Called only after the estimate exists, so the
+    ///     quartiles always do too.
+    /// </summary>
+    private static PeerSpread SpreadOf(IReadOnlyCollection<PeerScore> scored, double growthDecayLevels,
+        int minimumPeers)
+    {
+        var lower = PeerEstimator.Estimate(scored, growthDecayLevels, PeerEstimator.LowerQuartile, minimumPeers)!.Value;
+        var upper = PeerEstimator.Estimate(scored, growthDecayLevels, PeerEstimator.UpperQuartile, minimumPeers)!.Value;
+        return new PeerSpread(lower, upper, scored.Count);
     }
 
     private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)

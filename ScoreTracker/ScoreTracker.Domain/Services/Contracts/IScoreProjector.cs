@@ -93,6 +93,15 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
 }
 
 /// <summary>
+///     The middle half of the peers' scores on one chart — the first and third quartiles read
+///     with the same quantile the estimate is, over the same voices — and how many peers voted.
+///     A page prints it as two grades ("Peers IQR"), which says what the median cannot: whether
+///     the peers agree (AAA+ to AAA+) or the chart splits them (AA+ to SS+). Deliberately the
+///     interquartile range and not the min–max: the extremes are one player each.
+/// </summary>
+public sealed record PeerSpread(PhoenixScore Quartile1, PhoenixScore Quartile3, int PeerCount);
+
+/// <summary>
 ///     What a projection run produced, and the peers it produced it from.
 /// </summary>
 /// <param name="Scores">
@@ -118,12 +127,18 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
 ///     own evidence. Zero when nothing contributed. Always 1.0 on Phoenix 2, which weighs nothing.
 /// </param>
 /// <param name="Group">Who was asked, in a form a surface can name. Null only where nothing was.</param>
+/// <param name="Spreads">
+///     The peers' interquartile range per chart, for every chart in <paramref name="Scores" /> —
+///     same voices, same weights, same quantile arithmetic, so the two cannot disagree about
+///     which peers were heard.
+/// </param>
 public sealed record ScoreProjection(
     IReadOnlyDictionary<Guid, PhoenixScore> Scores,
     int PeerCount,
     double CompetitiveLevel,
     double MeanFreshness,
-    PeerGroup? Group = null)
+    PeerGroup? Group = null,
+    IReadOnlyDictionary<Guid, PeerSpread>? Spreads = null)
 {
     /// <summary>No opinion, for the runs that stop before a peer group exists.</summary>
     public static ScoreProjection None(double competitiveLevel = 0, PeerGroup? group = null)

@@ -106,6 +106,11 @@ public static class PeerEstimator
         return (int)Math.Round(WeightedQuantile(weighted, quantile));
     }
 
+    /// <summary>The quartiles a "Peers IQR" reads — the same quantile arithmetic, at 25 and 75.</summary>
+    public const double LowerQuartile = 0.25;
+
+    public const double UpperQuartile = 0.75;
+
     /// <summary>
     ///     exp(−growth / decay). Public so the exploration harness can measure the weighting
     ///     independently of the estimate it feeds. A decay of zero or below is "off": 1.0.
