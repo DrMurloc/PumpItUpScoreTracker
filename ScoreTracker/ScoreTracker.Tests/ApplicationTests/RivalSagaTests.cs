@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Moq;
-using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Exceptions;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
@@ -27,6 +26,7 @@ public sealed class RivalSagaTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 2, 0, 0, 0, TimeSpan.Zero);
 
+    private readonly Mock<ICommunityReader> _communities = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Guid _me = Guid.NewGuid();
@@ -39,13 +39,13 @@ public sealed class RivalSagaTests
         _currentUser.Setup(c => c.User).Returns(new UserBuilder().WithId(_me).Build());
         _rivals.Setup(r => r.GetRivalsOwnedBy(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RivalEdge>());
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>().AsEnumerable());
+        _communities.Setup(c => c.GetUserCommunityMembers(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Name, IReadOnlyList<Guid>>());
     }
 
     private RivalSaga Saga()
     {
-        var audience = new RivalAudienceReader(_mediator.Object);
+        var audience = new PlayerVisibilityReader(_communities.Object, _rivals.Object);
         var adder = new RivalAdder(_rivals.Object, _users.Object, _mediator.Object, audience,
             FakeDateTime.At(Now).Object);
         return new RivalSaga(_rivals.Object, adder, _currentUser.Object, FakeDateTime.At(Now).Object);
@@ -57,13 +57,8 @@ public sealed class RivalSagaTests
 
     private void SharesCommunityWith(Guid userId)
     {
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[]
-            {
-                new CommunityOverviewRecord(Name.From("Crew"), CommunityPrivacyType.Public, 2, false, Guid.NewGuid())
-            }.AsEnumerable());
-        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMembersQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { userId }.AsEnumerable());
+        _communities.Setup(c => c.GetUserCommunityMembers(_me, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Name, IReadOnlyList<Guid>> { [Name.From("Crew")] = new[] { _me, userId } });
     }
 
     private void TagResolvesTo(string tag, Guid? linkedUserId) =>

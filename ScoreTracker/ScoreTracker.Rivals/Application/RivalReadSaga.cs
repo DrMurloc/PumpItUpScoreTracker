@@ -21,7 +21,6 @@ internal sealed class RivalReadSaga :
     IRequestHandler<GetRivalHeadToHeadQuery, RivalHeadToHeadRecord?>,
     IRequestHandler<GetMyRivalHighlightsQuery, IEnumerable<PlayerHighlightRecord>>
 {
-    private readonly RivalAudienceReader _audience;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly IMediator _mediator;
     private readonly RivalSubjectResolver _resolver;
@@ -29,15 +28,16 @@ internal sealed class RivalReadSaga :
     private readonly RivalScoreReader _rivalScores;
     private readonly IScoreReader _scores;
     private readonly IUserReader _users;
+    private readonly IPlayerVisibilityReader _visibility;
 
     public RivalReadSaga(IRivalRepository rivals, RivalSubjectResolver resolver, RivalScoreReader rivalScores,
-        RivalAudienceReader audience, IScoreReader scores, IUserReader users, IMediator mediator,
+        IPlayerVisibilityReader visibility, IScoreReader scores, IUserReader users, IMediator mediator,
         ICurrentUserAccessor currentUser)
     {
         _rivals = rivals;
         _resolver = resolver;
         _rivalScores = rivalScores;
-        _audience = audience;
+        _visibility = visibility;
         _scores = scores;
         _users = users;
         _mediator = mediator;
@@ -60,16 +60,16 @@ internal sealed class RivalReadSaga :
             new ScoreTracker.Identity.Contracts.Queries.SearchForUsersQuery(request.Term, 1, request.Take * 4),
             cancellationToken)).Results;
 
-        var clubmates = await _audience.GetClubmates(cancellationToken);
+        var clubmates = (await _visibility.GetAudience(me, cancellationToken)).SharedCommunitiesByMember;
         var already = (await _rivals.GetRivalsOwnedBy(me, cancellationToken))
             .Where(e => e.TargetUserId != null).Select(e => e.TargetUserId!.Value).ToHashSet();
 
         return matches
             .Where(u => u.Id != me)
-            .Where(u => u.IsPublic || clubmates.Contains(u.Id))
+            .Where(u => u.IsPublic || clubmates.ContainsKey(u.Id))
             .Take(request.Take)
             .Select(u => new RivalCandidateRecord(u.Id, u.Name.ToString(), u.ProfileImage, u.IsPublic,
-                clubmates.Contains(u.Id), already.Contains(u.Id)))
+                clubmates.ContainsKey(u.Id), already.Contains(u.Id)))
             .ToArray();
     }
 

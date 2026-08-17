@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Moq;
-using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
@@ -37,6 +36,7 @@ public sealed class RivalReadSagaTests
     private readonly Guid _edgeId = Guid.NewGuid();
     private readonly Guid _me = Guid.NewGuid();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<ICommunityReader> _communities = new();
     private readonly Mock<IRivalRepository> _rivals = new();
     private readonly Guid _rival = Guid.NewGuid();
     private readonly Mock<IScoreReader> _scores = new();
@@ -52,14 +52,16 @@ public sealed class RivalReadSagaTests
             .ReturnsAsync(new[] { new UserBuilder().WithId(_rival).Build() }.AsEnumerable());
         _mediator.Setup(m => m.Send(It.IsAny<GetOfficialScoresForTagsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new OfficialTagScores(null, Array.Empty<OfficialTagScore>()));
-        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>().AsEnumerable());
+        _communities.Setup(c => c.GetUserCommunityMembers(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Name, IReadOnlyList<Guid>>());
+        _rivals.Setup(r => r.GetRivalsOwnedBy(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<RivalEdge>());
     }
 
     private RivalReadSaga Saga() => new(_rivals.Object,
         new RivalSubjectResolver(_users.Object, _mediator.Object),
         new RivalScoreReader(_scores.Object, _mediator.Object),
-        new RivalAudienceReader(_mediator.Object), _scores.Object, _users.Object, _mediator.Object,
+        new PlayerVisibilityReader(_communities.Object, _rivals.Object), _scores.Object, _users.Object, _mediator.Object,
         _currentUser.Object);
 
     private void MyBestsAre(params RecordedPhoenixScore[] records) =>
