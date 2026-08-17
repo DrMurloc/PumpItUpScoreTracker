@@ -15,7 +15,6 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Components.Rivals
-@using ScoreTracker.Web.Components.Players
 
 <PageTitle>@L["Rivals"]</PageTitle>
 
@@ -48,20 +47,9 @@ else
 
     <MudTabs Elevation="0" Class="mt-3" ApplyEffectsToContainer="true">
         <MudTabPanel Text="@L["Your rivals"]">
-            @if (_selected != null)
-            {
-                <MudButton StartIcon="@Icons.Material.Filled.ArrowBack" Size="Size.Small"
-                           OnClick="() => _selected = null" Class="mb-2">@L["Back to rivals"]</MudButton>
-                <HeadToHead Record="_headToHead" Charts="_charts" YourAvatar="@MyAvatar"
-                            Mix="CurrentMix" FolderType="_compareType" FolderLevel="_compareLevel"
-                            FolderChanged="OnFolderChanged" OnOpenChart="OpenChart"></HeadToHead>
-            }
-            else
-            {
-                <RivalRoster Rivals="_rivals" OnCompare="Compare" OnRemove="RemoveRival"></RivalRoster>
-                <AddRivalPanel CurrentMix="CurrentMix" OnAdded="Reload"></AddRivalPanel>
-                <RivalInviteCard Code="@_inviteCode" OnRecycle="RecycleCode"></RivalInviteCard>
-            }
+            <RivalRoster Rivals="_rivals" OnCompare="Compare" OnRemove="RemoveRival"></RivalRoster>
+            <AddRivalPanel CurrentMix="CurrentMix" OnAdded="Reload"></AddRivalPanel>
+            <RivalInviteCard Code="@_inviteCode" OnRecycle="RecycleCode"></RivalInviteCard>
         </MudTabPanel>
 
         <MudTabPanel Text="@L["Rivals of you"]">
@@ -91,8 +79,6 @@ else
     // accessor (ShellContext seeds it from the request), which is how every other page reads it.
     private MixEnum CurrentMix = MixEnum.Phoenix;
 
-    private ChartType _compareType = ChartType.Double;
-    private int? _compareLevel;
     private bool _detailsOpen;
     private Chart? _detailsChart;
 
@@ -109,12 +95,6 @@ else
     private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
     private IReadOnlySet<Guid> _clubmateIds = new HashSet<Guid>();
     private string? _inviteCode;
-    private RivalSubject? _selected;
-    private RivalHeadToHeadRecord? _headToHead;
-
-    private string MyAvatar => CurrentUser.IsLoggedIn
-        ? CurrentUser.User.ProfileImage.ToString()
-        : string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -137,37 +117,15 @@ else
 
     /// <summary>
     ///     A site rival has a page, and the comparison lives there with the rest of them. A
-    ///     board-only rival has no page — the official Players page is theirs and it does not
-    ///     compare — so its head-to-head stays here, inline, on the charts you are both on.
+    ///     board-only rival has no page here; the official Players page is theirs, and that is
+    ///     where Compare takes you — the mirror's boards are everything there is to compare on.
     /// </summary>
-    private async Task Compare(RivalSubject subject)
+    private void Compare(RivalSubject subject)
     {
         if (subject.UserId is { } userId)
-        {
             NavManager.NavigateTo($"/Player/{userId}");
-            return;
-        }
-
-        _selected = subject;
-        _headToHead = null;
-        _compareLevel = null;
-        await LoadHeadToHead();
-    }
-
-    /// <summary>Null level is "All folders" — the query treats a missing folder as unfiltered.</summary>
-    private async Task OnFolderChanged((ChartType Type, int? Level) folder)
-    {
-        _compareType = folder.Type;
-        _compareLevel = folder.Level;
-        await LoadHeadToHead();
-    }
-
-    private async Task LoadHeadToHead()
-    {
-        if (_selected == null) return;
-        _headToHead = await Mediator.Send(new GetRivalHeadToHeadQuery(CurrentMix, _selected.EdgeId,
-            _compareLevel == null ? null : _compareType,
-            _compareLevel == null ? null : DifficultyLevel.From(_compareLevel.Value)));
+        else if (subject.Tag is { } tag)
+            NavManager.NavigateTo($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(tag)}");
     }
 
     private async Task RemoveRival(Guid edgeId)

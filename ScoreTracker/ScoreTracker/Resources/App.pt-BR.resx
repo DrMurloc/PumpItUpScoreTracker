@@ -160,9 +160,6 @@
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* Dados do placar oficial, em {0}.</value>
   </data>
-  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
-    <value>* Dados do placar oficial, em {0}. Os placares cobrem apenas nível 20+.</value>
-  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>**#{0}** em {1} {2} Passo Diário</value>
   </data>
@@ -871,9 +868,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>Seguidos, a partir daqui</value>
   </data>
-  <data name="Back to rivals" xml:space="preserve">
-    <value>Voltar aos rivais</value>
-  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Voltar à Tier List</value>
   </data>
@@ -1059,9 +1053,6 @@
   </data>
   <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
     <value>Os quadros são por versão, e esta ainda não tem a sua própria rotação.</value>
-  </data>
-  <data name="Boards you're both on" xml:space="preserve">
-    <value>Placares em que vocês dois estão</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
@@ -1608,6 +1599,9 @@
   </data>
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>singles competitivo, todos jogadores PIUScores</value>
+  </data>
+  <data name="Compiling this player's page." xml:space="preserve">
+    <value>Compilando a página deste jogador.</value>
   </data>
   <data name="Compiling your personalized breakdown." xml:space="preserve">
     <value>Compilando seu detalhamento personalizado.</value>
@@ -2499,9 +2493,6 @@
   </data>
   <data name="Folder Cleared" xml:space="preserve">
     <value>Pasta concluída</value>
-  </data>
-  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
-    <value>A comparação por pasta, os títulos e a progressão precisam de uma conta piuscores. Aparecerão aqui se {0} importar.</value>
   </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>Conclusão por folder</value>
@@ -6361,11 +6352,11 @@
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Mostrar os charts menos parecidos</value>
   </data>
-  <data name="Show unshared" xml:space="preserve">
-    <value>Mostrar não compartilhados</value>
-  </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Mostre para o que este canal está registrado</value>
+  </data>
+  <data name="Show {0} unshared charts" xml:space="preserve">
+    <value>Mostrar {0} charts não compartilhados</value>
   </data>
   <data name="Showing" xml:space="preserve">
     <value>Mostrando</value>
@@ -7101,9 +7092,6 @@
   </data>
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>Essa pessoa não poderá criar uma ferramenta nova até você desfazer isto.</value>
-  </data>
-  <data name="They haven't placed on any board you've played." xml:space="preserve">
-    <value>Eles não entraram em nenhum placar dos charts que você jogou.</value>
   </data>
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>Já é um dos seus rivais.</value>
@@ -8836,6 +8824,9 @@
   <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
     <value>{0} de {1} · {2} para o Folder Lamp</value>
   </data>
+  <data name="{0} Official Top {1}s" xml:space="preserve">
+    <value>{0} Top {1} oficiais</value>
+  </data>
   <data name="{0} on board" xml:space="preserve">
     <value>{0} no quadro</value>
   </data>
@@ -8946,9 +8937,6 @@
   </data>
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0} ferramentas lendo agora</value>
-  </data>
-  <data name="{0} top-board charts" xml:space="preserve">
-    <value>{0} charts no top oficial</value>
   </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>{0} no total · {1} gráficos</value>

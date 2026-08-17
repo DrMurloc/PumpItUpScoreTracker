@@ -160,9 +160,6 @@
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* 公式ボードのデータ（{0} 時点）。</value>
   </data>
-  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
-    <value>* 公式ボードのデータ（{0} 時点）。ボードはレベル20以上のみです。</value>
-  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>デイリーステップ {1} {2} で **#{0}**</value>
   </data>
@@ -878,9 +875,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>ここから連続で</value>
   </data>
-  <data name="Back to rivals" xml:space="preserve">
-    <value>ライバルに戻る</value>
-  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>ティアリストに戻る</value>
   </data>
@@ -1066,9 +1060,6 @@
   </data>
   <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
     <value>ボードはバージョンごとに動いており、このバージョンにはまだ専用のローテーションがありません。</value>
-  </data>
-  <data name="Boards you're both on" xml:space="preserve">
-    <value>二人とも載っているボード</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>ボスブレイカー</value>
@@ -1619,6 +1610,9 @@
   </data>
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>シングル競争力（PIUScores全体）</value>
+  </data>
+  <data name="Compiling this player's page." xml:space="preserve">
+    <value>このプレーヤーのページを作成しています。</value>
   </data>
   <data name="Compiling your personalized breakdown." xml:space="preserve">
     <value>パーソナライズの内訳を作成しています。</value>
@@ -2516,9 +2510,6 @@
   </data>
   <data name="Folder Cleared" xml:space="preserve">
     <value>フォルダクリア</value>
-  </data>
-  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
-    <value>フォルダー比較・称号・進行状況には piuscores のアカウントが必要です。{0} がインポートすればここに表示されます。</value>
   </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>フォルダークリア率</value>
@@ -6414,11 +6405,11 @@
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>最も似ていない譜面を表示</value>
   </data>
-  <data name="Show unshared" xml:space="preserve">
-    <value>共通以外も表示</value>
-  </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>このチャンネルの登録内容を表示</value>
+  </data>
+  <data name="Show {0} unshared charts" xml:space="preserve">
+    <value>共通以外の{0}譜面を表示</value>
   </data>
   <data name="Showing" xml:space="preserve">
     <value>表示中</value>
@@ -7160,9 +7151,6 @@
   </data>
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>解除するまで、新しいツールは作れません。</value>
-  </data>
-  <data name="They haven't placed on any board you've played." xml:space="preserve">
-    <value>あなたがプレイしたチャートのボードには載っていません。</value>
   </data>
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>すでにあなたのライバルです。</value>
@@ -8906,6 +8894,9 @@
   <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
     <value>{1} 譜面中 {0} · フォルダーランプまで {2}</value>
   </data>
+  <data name="{0} Official Top {1}s" xml:space="preserve">
+    <value>公式トップ{1}入り {0}件</value>
+  </data>
   <data name="{0} on board" xml:space="preserve">
     <value>ボードに{0}人</value>
   </data>
@@ -9016,9 +9007,6 @@
   </data>
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0}個のツールが読み取り中</value>
-  </data>
-  <data name="{0} top-board charts" xml:space="preserve">
-    <value>ランキング入り譜面{0}件</value>
   </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>合計 {0} · {1} 譜面</value>

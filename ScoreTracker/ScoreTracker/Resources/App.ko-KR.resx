@@ -160,9 +160,6 @@
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* 공식 보드 데이터, {0} 기준.</value>
   </data>
-  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
-    <value>* 공식 보드 데이터, {0} 기준. 보드는 레벨 20 이상만 다룹니다.</value>
-  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>데일리 스텝 {1} {2} **#{0}**</value>
   </data>
@@ -871,9 +868,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>여기서부터 연속으로</value>
   </data>
-  <data name="Back to rivals" xml:space="preserve">
-    <value>라이벌로 돌아가기</value>
-  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>티어리스트로 돌아가기</value>
   </data>
@@ -1059,9 +1053,6 @@
   </data>
   <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
     <value>보드는 시리즈별로 운영되며, 이 시리즈는 아직 자체 로테이션이 없습니다.</value>
-  </data>
-  <data name="Boards you're both on" xml:space="preserve">
-    <value>둘 다 오른 보드</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>보스 브레이커</value>
@@ -1608,6 +1599,9 @@
   </data>
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>싱글 경쟁 레벨 (PIUScores 전체)</value>
+  </data>
+  <data name="Compiling this player's page." xml:space="preserve">
+    <value>이 유저의 페이지를 만드는 중입니다.</value>
   </data>
   <data name="Compiling your personalized breakdown." xml:space="preserve">
     <value>개인화 분석을 만드는 중입니다.</value>
@@ -2499,9 +2493,6 @@
   </data>
   <data name="Folder Cleared" xml:space="preserve">
     <value>폴더 클리어</value>
-  </data>
-  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
-    <value>폴더 비교, 칭호, 진행도는 piuscores 계정이 필요합니다. {0} 이(가) 임포트하면 여기에 표시됩니다.</value>
   </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>폴더 완료율</value>
@@ -6361,11 +6352,11 @@
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>가장 안 닮은 채보 보기</value>
   </data>
-  <data name="Show unshared" xml:space="preserve">
-    <value>공통 외 표시</value>
-  </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>이 채널의 등록 내역 보기</value>
+  </data>
+  <data name="Show {0} unshared charts" xml:space="preserve">
+    <value>공통 외 {0}개 채보 표시</value>
   </data>
   <data name="Showing" xml:space="preserve">
     <value>표시 중</value>
@@ -7101,9 +7092,6 @@
   </data>
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>해제하기 전까지는 새 도구를 만들 수 없습니다.</value>
-  </data>
-  <data name="They haven't placed on any board you've played." xml:space="preserve">
-    <value>내가 플레이한 차트의 보드에는 오르지 않았습니다.</value>
   </data>
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>이미 내 라이벌입니다.</value>
@@ -8836,6 +8824,9 @@
   <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
     <value>{1}개 중 {0}개 · 폴더 램프까지 {2}개</value>
   </data>
+  <data name="{0} Official Top {1}s" xml:space="preserve">
+    <value>공식 상위 {1} {0}개</value>
+  </data>
   <data name="{0} on board" xml:space="preserve">
     <value>보드에 {0}명</value>
   </data>
@@ -8946,9 +8937,6 @@
   </data>
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0}개 도구가 읽는 중</value>
-  </data>
-  <data name="{0} top-board charts" xml:space="preserve">
-    <value>랭킹 진입 채보 {0}개</value>
   </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>총 {0} · 차트 {1}개</value>

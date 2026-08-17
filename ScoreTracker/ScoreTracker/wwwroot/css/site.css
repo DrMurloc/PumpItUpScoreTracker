@@ -12779,6 +12779,12 @@ button.chart-card-art {
     border-color: color-mix(in srgb, var(--daily-community) 45%, transparent);
 }
 
+/* The player page's "Rival" tag: the rival red, the same token every board row wears for one. */
+.rvl-tag-rival {
+    color: var(--daily-rival);
+    border-color: color-mix(in srgb, var(--daily-rival) 45%, transparent);
+}
+
 .rvl-tag-priv, .rvl-tag-gone {
     color: var(--mix-ink-muted);
     border-color: color-mix(in srgb, var(--mix-ink-muted) 40%, transparent);

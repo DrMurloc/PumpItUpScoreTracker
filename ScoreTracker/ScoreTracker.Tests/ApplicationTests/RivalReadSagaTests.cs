@@ -50,8 +50,6 @@ public sealed class RivalReadSagaTests
     {
         _currentUser.Setup(c => c.IsLoggedIn).Returns(true);
         _currentUser.Setup(c => c.User).Returns(new UserBuilder().WithId(_me).Build());
-        _rivals.Setup(r => r.GetEdge(_edgeId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new RivalEdge(_edgeId, _me, _rival, null, Added));
         _rivals.Setup(r => r.GetRivalsOwnedBy(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<RivalEdge>());
         _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
@@ -91,9 +89,6 @@ public sealed class RivalReadSagaTests
         new(chart, score == null ? null : score.Value, plate, broken, Played);
 
     private Task<RivalHeadToHeadRecord?> Compare() =>
-        Saga().Handle(new GetRivalHeadToHeadQuery(MixEnum.Phoenix, _edgeId), CancellationToken.None);
-
-    private Task<RivalHeadToHeadRecord?> CompareByUser() =>
         Saga().Handle(new GetPlayerHeadToHeadQuery(MixEnum.Phoenix, _rival), CancellationToken.None);
 
     /// <summary>
@@ -108,7 +103,7 @@ public sealed class RivalReadSagaTests
         FolderHolds(ChartType.Single, 21, ChartA);
 
         var result = await Saga().Handle(
-            new GetRivalHeadToHeadQuery(MixEnum.Phoenix, _edgeId, ChartType.Single, DifficultyLevel.From(21)),
+            new GetPlayerHeadToHeadQuery(MixEnum.Phoenix, _rival, ChartType.Single, DifficultyLevel.From(21)),
             CancellationToken.None);
 
         Assert.NotNull(result);
@@ -228,12 +223,11 @@ public sealed class RivalReadSagaTests
         MyBestsAre(Score(ChartA, 990_000));
         TheirBestsAre(Score(ChartA, 980_000));
 
-        var result = await CompareByUser();
+        var result = await Compare();
 
         Assert.NotNull(result);
         Assert.Equal("RIVAL", result!.Subject.DisplayName);
-        Assert.False(result.Subject.IsGhost);
-        Assert.True(result.Subject.Can(RivalCapabilities.FolderCompare));
+        Assert.Equal(_rival, result.Subject.UserId);
         Assert.Equal(1, result.YouAhead);
     }
 
@@ -243,7 +237,7 @@ public sealed class RivalReadSagaTests
         _users.Setup(u => u.GetUser(_rival, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserBuilder().WithId(_rival).WithIsPublic(false).Build());
 
-        Assert.Null(await CompareByUser());
+        Assert.Null(await Compare());
         _scores.Verify(s => s.GetBestScores(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
@@ -258,7 +252,7 @@ public sealed class RivalReadSagaTests
         MyBestsAre(Score(ChartA, 990_000));
         TheirBestsAre(Score(ChartA, 999_000));
 
-        var result = await CompareByUser();
+        var result = await Compare();
 
         Assert.NotNull(result);
         Assert.Equal(1, result!.TheyAhead);

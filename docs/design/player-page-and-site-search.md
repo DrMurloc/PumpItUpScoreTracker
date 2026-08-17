@@ -29,14 +29,14 @@ Owner calls, 2026-08-16, in his own words where it matters.
 | # | Decision |
 |---|---|
 | D1 | **One player page, retiring both.** `/Community/Player` is deleted (its one link, the community leaderboard row, repoints); the inline compare on `/Rivals` is retired for site rivals — Compare navigates to `/Player/{id}`. |
-| D2 | **The ghost head-to-head stays inline on `/Rivals`, and only for board-only rivals.** A ghost has no `/Player/{id}`; the official Players page is **not** changed — "leave them EXACTLY as they are" — so the mirror-only compare keeps its home on the rivals page. |
+| D2 | ~~The ghost head-to-head stays inline on `/Rivals`, and only for board-only rivals.~~ **Reversed in the field test (2026-08-17):** Compare on a board-only rival **links to the official Players page** for that tag; there is no inline compare on `/Rivals` any more, and the mirror-only head-to-head is retired — "accepting that this potentially loses functionality for now." The official Players page is still not changed. |
 | D3 | **Access = self ∪ public ∪ shares a user-created community with you ∪ you hold a rival edge onto them.** The union of what the two retiring pages allowed; nobody gains or loses visibility. World and Region do not count as shared communities. |
 | D4 | **`/Sessions` and `/PhoenixRecap` stay public-or-self.** The page links them only when they would open. |
-| D5 | **The compare counts comparable pairs** (the rivals semantics: You ahead / They ahead / Shared), with a **Show unshared** switch — off by default — that reveals the rows only one of you has played and two more tiles (Only you / Only them). The community page's "you win because they never played it" counts are gone. |
+| D5 | **The compare counts comparable pairs** (the rivals semantics: You ahead / They ahead / Shared), with a **Show N unshared charts** switch — off by default — that reveals the rows only one of you has played and two more tiles (Only you / Only them). The community page's "you win because they never played it" counts are gone. |
 | D6 | **The `{N}y old` stale marker is dropped** — it was the community page's; rivals never had it. So is the Winner column (colour carries it) and the community breadcrumbs. |
 | D7 | **The hero**: PUMBILITY with the Phoenix 2 level gem beside it, then the identity, **on one row**, stacking only at 1:1 aspect or narrower; the four rating tiles a full-width row beneath. |
 | D8 | **The overall competitive level never shows.** Singles and Doubles competitive levels, stacked (the account widget's pool-row treatment). |
-| D9 | **The "N top-board charts →" link lives on the Official Boards card**, not the hero. |
+| D9 | **The "N top-board charts →" link lives on the Official Boards card**, not the hero. Field test: it reads **"N Official Top 300s"** on Phoenix 2 and **"N Official Top 100s"** on Phoenix — the depth piugame publishes each chart board at. |
 | D10 | **Tags under the name are `Rival` and the shared community's own name.** The word "clubmate" is not used anywhere in copy. |
 | D11 | **No nav entry.** Your own page is reachable through leaderboard rows and by searching yourself. |
 
@@ -138,11 +138,12 @@ The page itself lives in `Pages/Progress/Player.razor`, beside the Sessions and 
 same family.
 
 `RivalComparison` moved and grown: the switch, dashed one-sided rows, the two extra tiles, a pager.
-Two hosts — the page, and `/Rivals` for board-only rivals (D2).
+One host — the player page — and site players only; the ghost branches went with D2's reversal. The
+page's loading state is the `PatienceCard` the tier lists use, not a spinner.
 
 ### 3.3 `/Rivals`
 
-Compare on a site rival navigates to `/Player/{id}`; on a ghost it opens inline, as before.
+Compare on a site rival navigates to `/Player/{id}`; on a board-only rival it navigates to their official Players page (D2 as reversed). Nothing opens inline.
 
 ### 3.4 The search
 

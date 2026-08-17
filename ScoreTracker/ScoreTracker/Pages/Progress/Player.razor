@@ -25,7 +25,7 @@
 
 @if (_loading)
 {
-    <MudProgressCircular Indeterminate="true" Color="Color.Primary"/>
+    <PatienceCard Explanation="@L["Compiling this player's page."]"></PatienceCard>
 }
 else if (_profile != null)
 {
@@ -101,7 +101,7 @@ else if (_profile != null)
                 <MudText Typo="Typo.h6">@L["Official Boards"]</MudText>
                 <MudLink Href="@($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(_standing.Username)}")">
                     <MudChip T="string" Size="Size.Small" Color="Color.Primary">
-                        @L["{0} top-board charts", _standing.BoardsInTop] →
+                        @L["{0} Official Top {1}s", _standing.BoardsInTop, BoardDepth] →
                     </MudChip>
                 </MudLink>
             </div>
@@ -188,6 +188,10 @@ else if (_profile != null)
     private MixEnum _currentMix = MixEnum.Phoenix;
 
     private bool IsLegacy => _currentMix.UsesLegacyScoring();
+
+    // piugame publishes each chart board 300 deep on Phoenix 2 and 100 deep on Phoenix, so a
+    // placement is a "Top 300" or a "Top 100" by mix.
+    private int BoardDepth => _currentMix == MixEnum.Phoenix2 ? 300 : 100;
 
     private ChartType _compareType = ChartType.Double;
     private int? _compareLevel;

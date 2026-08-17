@@ -24,30 +24,15 @@ public sealed record RivalSubject(
     public bool IsGhost => UserId == null;
 
     public bool Can(RivalCapabilities capability) => Capabilities.HasFlag(capability);
-
-    /// <summary>The same person as a comparison subject — the edge falls away, the capabilities stay.</summary>
-    public HeadToHeadSubject ForHeadToHead() => new(UserId, Tag, DisplayName, Avatar, Capabilities);
 }
 
 /// <summary>
 ///     Who a head-to-head is against. Lighter than <see cref="RivalSubject" /> because a comparison
-///     no longer needs an edge: any player the visibility port lets you look at can be compared,
-///     rival or not, so the record carries who they are and what they can answer for, and nothing
-///     about how they came to be on your roster.
+///     needs no edge: any site player the visibility port lets you look at can be compared, rival or
+///     not, so the record carries who they are and nothing about how they came to be on your roster.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record HeadToHeadSubject(
-    Guid? UserId,
-    string? Tag,
-    string DisplayName,
-    Uri? Avatar,
-    RivalCapabilities Capabilities)
-{
-    /// <summary>No account behind the tag — the mirror is everything we know about them.</summary>
-    public bool IsGhost => UserId == null;
-
-    public bool Can(RivalCapabilities capability) => Capabilities.HasFlag(capability);
-}
+public sealed record HeadToHeadSubject(Guid UserId, string DisplayName, Uri? Avatar);
 
 /// <summary>
 ///     What a subject can answer for. Flags rather than a type hierarchy because the combinations

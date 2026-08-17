@@ -19,7 +19,6 @@ internal sealed class RivalReadSaga :
     IRequestHandler<SearchRivalCandidatesQuery, IReadOnlyList<RivalCandidateRecord>>,
     IRequestHandler<SearchRivalTagsQuery, IReadOnlyList<string>>,
     IRequestHandler<GetRivalScoresForChartsQuery, RivalChartScores>,
-    IRequestHandler<GetRivalHeadToHeadQuery, RivalHeadToHeadRecord?>,
     IRequestHandler<GetPlayerHeadToHeadQuery, RivalHeadToHeadRecord?>,
     IRequestHandler<GetMyRivalHighlightsQuery, IEnumerable<PlayerHighlightRecord>>
 {
@@ -96,25 +95,6 @@ internal sealed class RivalReadSaga :
         return await _rivalScores.Read(rivals, request.Mix, request.ChartIds, cancellationToken);
     }
 
-    public async Task<RivalHeadToHeadRecord?> Handle(GetRivalHeadToHeadQuery request,
-        CancellationToken cancellationToken)
-    {
-        if (!_currentUser.IsLoggedIn) return null;
-        var me = _currentUser.User.Id;
-
-        var edge = await _rivals.GetEdge(request.EdgeId, cancellationToken);
-        if (edge == null || edge.OwnerUserId != me) return null;
-
-        var subject = (await _resolver.Resolve(new[] { edge }, request.Mix, cancellationToken))
-            .FirstOrDefault();
-        if (subject == null) return null;
-
-        return subject.UserId is { } them
-            ? await SiteHeadToHead(subject.ForHeadToHead(), request.Mix, me, them, request.ChartType, request.Level,
-                cancellationToken)
-            : await GhostHeadToHead(subject, request.Mix, me, cancellationToken);
-    }
-
     /// <summary>
     ///     The same comparison for anyone the visibility port lets you look at. The gate is the
     ///     port's, not an edge — a rival is one basis among four — and you are not your own opponent.
@@ -131,8 +111,7 @@ internal sealed class RivalReadSaga :
         var visibility = (await _visibility.GetAudience(me, cancellationToken)).Describe(opponent.Id, opponent.IsPublic);
         if (!visibility.CanView) return null;
 
-        var subject = new HeadToHeadSubject(opponent.Id, null, opponent.Name.ToString(), opponent.ProfileImage,
-            RivalCapabilities.LiveScores | RivalCapabilities.FolderCompare | RivalCapabilities.Progression);
+        var subject = new HeadToHeadSubject(opponent.Id, opponent.Name.ToString(), opponent.ProfileImage);
         return await SiteHeadToHead(subject, request.Mix, me, opponent.Id, request.ChartType, request.Level,
             cancellationToken);
     }
@@ -162,7 +141,8 @@ internal sealed class RivalReadSaga :
     }
 
     /// <summary>
-    ///     Two site players, both sides read from the ledger. The universe is the folder's chart list
+    ///     Two site players, both sides read from the ledger — the only shape a head-to-head has now
+    ///     that a board-only rival is compared on the official Players page instead. The universe is the folder's chart list
     ///     when a folder is named, otherwise every chart either of you has scored — so a chart only
     ///     one of you has played is a row with the other side empty, counted in OnlyYou / OnlyThem
     ///     rather than dropped, while the shared tallies still count only the charts you both hold.
@@ -188,36 +168,7 @@ internal sealed class RivalReadSaga :
                 hasMine ? my!.Grade : null, hasTheirs ? their!.Grade : null));
         }
 
-        return Tally(subject, rows, mix.UsesLegacyScoring(), null);
-    }
-
-    /// <summary>
-    ///     A board-only rival compares on the charts we are BOTH on, because the mirror covers a
-    ///     scattering of level 20+ boards rather than a folder. Same table — the unit is what
-    ///     differs, and the count says so. No one-sided rows: every chart you have played that is
-    ///     not on a board they placed on would be one, which is not information.
-    /// </summary>
-    private async Task<RivalHeadToHeadRecord> GhostHeadToHead(RivalSubject subject, MixEnum mix, Guid me,
-        CancellationToken cancellationToken)
-    {
-        var isLegacy = mix.UsesLegacyScoring();
-        var mine = await ComparableBests(mix, me, cancellationToken);
-        var theirs = await _rivalScores.Read(new[] { subject }, mix, mine.Keys.ToArray(), cancellationToken);
-
-        var rows = new List<RivalHeadToHeadRow>();
-        foreach (var (chartId, scores) in theirs.ByChart)
-        {
-            var theirScore = scores.FirstOrDefault(s => !s.IsBroken);
-            if (theirScore == null) continue;
-            var hasMine = mine.TryGetValue(chartId, out var my);
-            rows.Add(new RivalHeadToHeadRow(chartId, hasMine ? my!.Score : null,
-                isLegacy && theirScore.Score == 0 ? null : theirScore.Score, theirScore.Source,
-                hasMine ? my!.Plate : null, false,
-                theirScore.Plate, theirScore.IsBroken,
-                hasMine ? my!.Grade : null, theirScore.LegacyGrade));
-        }
-
-        return Tally(subject.ForHeadToHead(), rows, isLegacy, theirs.OfficialAsOf);
+        return Tally(subject, rows, mix.UsesLegacyScoring());
     }
 
     /// <summary>
@@ -235,7 +186,7 @@ internal sealed class RivalReadSaga :
     ///     </para>
     /// </summary>
     private static RivalHeadToHeadRecord Tally(HeadToHeadSubject subject, IReadOnlyList<RivalHeadToHeadRow> rows,
-        bool isLegacy, DateTimeOffset? officialAsOf)
+        bool isLegacy)
     {
         bool HasMine(RivalHeadToHeadRow r) => isLegacy ? r.YourLegacyGrade != null : r.YourScore != null;
         bool HasTheirs(RivalHeadToHeadRow r) => isLegacy ? r.TheirLegacyGrade != null : r.TheirScore != null;
@@ -265,7 +216,7 @@ internal sealed class RivalReadSaga :
         return new RivalHeadToHeadRecord(subject,
             comparable.Count(r => Margin(r) > 0),
             comparable.Count(r => Margin(r) < 0),
-            comparable.Length, officialAsOf, ordered,
+            comparable.Length, ordered,
             onlyMine.Length, onlyTheirs.Length);
     }
 

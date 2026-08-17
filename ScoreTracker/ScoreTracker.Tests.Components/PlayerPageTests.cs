@@ -9,6 +9,7 @@ using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -52,9 +53,10 @@ public sealed class PlayerPageTests : ComponentTestBase
             .ReturnsAsync(new PlayerStatsRecord(Guid.NewGuid(), 0, 1, 0, 0, 0, 867, 0, 1,
                 0, 0, 1, 0, 0, 1, 20.6, 20.8, 20.2));
         Mediator.Setup(m => m.Send(It.IsAny<GetPlayerHeadToHeadQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new RivalHeadToHeadRecord(
-                new HeadToHeadSubject(TargetId, null, "Reno", null, RivalCapabilities.FolderCompare), 0, 0, 0, null,
+            .ReturnsAsync(new RivalHeadToHeadRecord(new HeadToHeadSubject(TargetId, "Reno", null), 0, 0, 0,
                 Array.Empty<RivalHeadToHeadRow>()));
+        // The page's loading state is a PatienceCard, which draws a phrase through the RNG seam.
+        Services.AddSingleton(new Mock<IRandomNumberGenerator>().Object);
     }
 
     private static PlayerProfileRecord Profile(PlayerVisibility visibility) => new(TargetId, Name.From("Reno"),
@@ -106,7 +108,7 @@ public sealed class PlayerPageTests : ComponentTestBase
         Assert.Contains("21.63", cut.Markup);
         Assert.Contains("22.05", cut.Markup);
         Assert.Contains("Competitive Level", cut.Markup);
-        Assert.DoesNotContain("top-board charts", cut.Markup);
+        Assert.DoesNotContain("Official Top", cut.Markup);
         // The Phoenix 2 gem sits beside the number.
         Assert.NotEmpty(cut.FindComponents<PumbilityLevelBadge>());
     }
@@ -120,7 +122,8 @@ public sealed class PlayerPageTests : ComponentTestBase
 
         var cut = Render();
 
-        Assert.Contains("61 top-board charts", cut.Markup);
+        // Phoenix 2 boards run 300 deep; the chip says so.
+        Assert.Contains("61 Official Top 300s", cut.Markup);
         Assert.Contains("/OfficialLeaderboards/Players?player=RENO", cut.Markup);
         Assert.Contains("#88", cut.Markup);
         Assert.Contains("#90", cut.Markup);
