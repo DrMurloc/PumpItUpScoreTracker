@@ -4905,8 +4905,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · morp mrgl 50</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>Phoenix 2 gab arglglarg a CO-OP murgl, og a plom gogl ba {0} — a plag Phoenix gogl mrp og {1} — bum plab gramb rglmurplrgl ap a mrgl mrpblarg ur murglmurmgrg mrrglmagl. Mo roglub bomo ro PUMBILITY ap blgrlmrp mrg.</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>Phoenix 2 gab arglglarg a CO-OP murgl, og a plom gogl ba {0} — a plag Phoenix gogl mrp og {1} — bum plab ur mrp CO-OP Mrglrg, a glorgargl mrpblarg murm murp mrgl mrglrgl ur mrglblarg. Mo roglub bomo ro PUMBILITY ap blgrlmrp mrg.</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2 murpurg ap mrglrgl brglo {0}× mrrglmrgl ulg Phoenix gab.</value>

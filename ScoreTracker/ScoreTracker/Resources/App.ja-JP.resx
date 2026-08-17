@@ -4905,8 +4905,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · 実際のトップ50</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>Phoenix 2もCO-OP譜面に値を付けます — Phoenixが{1}で付けたように固定ベース{0}で — ただしその数字は称号ページにしか出てきません。どちらのバージョンでもPUMBILITYには何も足しません。</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>Phoenix 2もCO-OP譜面に値を付けます — Phoenixが{1}で付けたように固定ベース{0}で — ただしそれはCO-OPレーティングという別の数字で、独自の称号とボードを持ちます。どちらのバージョンでもPUMBILITYには何も足しません。</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2はPhoenixより約{0}倍スコアに寄りかかっています。</value>

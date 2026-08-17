@@ -230,21 +230,21 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
     [Fact]
     public void Phoenix2FootnotesTheCoOpBaseItPricesButNeverCounts()
     {
-        // CO-OP is worth zero PUMBILITY on Phoenix 2 — but it is priced, at a flat 100, and that
-        // number shows on the titles page. The zero rule keeps the asterisk that says so.
+        // CO-OP is worth zero PUMBILITY on Phoenix 2 — but it is priced, at the engine's flat 80,
+        // and that number is the CO-OP Rating. The zero rule keeps the asterisk that says so.
         var page = RenderPhoenix2();
         var zero = page.Find(".pc-zero");
         var coop = zero.QuerySelectorAll(".pc-zero-item").Single(i => i.TextContent.StartsWith("CO-OP"));
         Assert.Equal("*", coop.QuerySelector("sup.pc-mark")!.TextContent);
         var note = page.FindAll(".pc-formula .pc-foot").Select(f => f.TextContent.Replace('\n', ' ')).ToArray();
-        Assert.Contains(note, n => n.Contains("a flat base of 100") && n.Contains("priced one at 2,000")
-                                                                   && n.Contains("titles page and nowhere else"));
+        Assert.Contains(note, n => n.Contains("a flat base of 80") && n.Contains("priced one at 2,000")
+                                                                  && n.Contains("CO-OP Rating"));
 
         // Phoenix says it in its own words, on the row it still shows.
         var phoenix = RenderPhoenix();
         Assert.DoesNotContain(phoenix.FindAll(".pc-zero .pc-zero-item"), i => i.TextContent.StartsWith("CO-OP"));
         Assert.Contains("flat 2,000 but never counted", phoenix.Find(".pc-term-level").TextContent);
-        Assert.DoesNotContain("titles page", phoenix.Find(".pc-formula").TextContent);
+        Assert.DoesNotContain("CO-OP Rating", phoenix.Find(".pc-formula").TextContent);
     }
 
     [Fact]
