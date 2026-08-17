@@ -170,6 +170,32 @@ public sealed class EFUserRepository : IUserRepository, IUserReader
             .ToArrayAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<User>> SearchVisibleUsers(string term, int take,
+        IReadOnlyCollection<Guid> alsoVisible, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(term) || take <= 0) return Array.Empty<User>();
+
+        // The id set travels as one JSON parameter (EF Core turns a collection parameter into
+        // OPENJSON), so a viewer with a few thousand community members does not hit the
+        // parameter ceiling. Match rank is a CASE in the ORDER BY: exact name, exact tag,
+        // name prefix, tag prefix, then anything containing the term.
+        var visible = alsoVisible.ToArray();
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.User
+            .Where(u => u.Name.Contains(term) || (u.GameTag != null && u.GameTag.Contains(term)))
+            .Where(u => u.IsPublic || visible.Contains(u.Id))
+            .OrderBy(u => u.Name == term ? 0
+                : u.GameTag == term ? 1
+                : u.Name.StartsWith(term) ? 2
+                : u.GameTag != null && u.GameTag.StartsWith(term) ? 3
+                : 4)
+            .ThenBy(u => u.Name)
+            .Take(take)
+            .Select(u => new User(u.Id, u.Name, u.IsPublic, u.GameTag, new Uri(u.ProfileImage), u.CountryName,
+                u.IsContentLocked, u.ClaimsInvalidatedAt))
+            .ToArrayAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<User>> GetUsersByGameTag(Name gameTag,
         CancellationToken cancellationToken = default)
     {
