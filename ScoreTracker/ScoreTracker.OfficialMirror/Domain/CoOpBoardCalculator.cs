@@ -5,27 +5,29 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.OfficialMirror.Domain;
 
 /// <summary>
-///     Prices co-op board placements for the reverse-engineered CO-OP ranking. No official
-///     CO-OP rating exists, so this estimates one with the mix's own PUMBILITY formula:
-///     the engine's flat co-op base × (grade + plate), with the plate inferred from the
-///     score alone — chart boards expose no plates. The flat base makes the ranking order
-///     independent of the base's value; only the displayed magnitude depends on it.
+///     Prices co-op board placements for the CO-OP ranking. PIUGAME publishes no CO-OP
+///     leaderboard, so this builds one from the mirrored co-op chart boards with the mix's own
+///     CO-OP Rating formula — the engine's flat co-op base × (grade + plate), 2000 per chart on
+///     Phoenix and 80 on Phoenix 2 — with the plate inferred from the score alone, since chart
+///     boards expose no plates. The number is a lower bound on the account's real rating rather
+///     than a guess at a different one: a chart board lists only its top 300, so a chart the
+///     player is not top-300 on never reaches the sum, and an inferred plate can only sit under
+///     the real one where the two differ.
 /// </summary>
 internal static class CoOpBoardCalculator
 {
-    // Co-op pricing ignores the level argument entirely (the engine's co-op base is flat),
-    // but the scoring API requires one.
-    private static readonly DifficultyLevel PlaceholderLevel = DifficultyLevel.From(10);
+    // A co-op's "level" is its player count and the flat base ignores it entirely, but the
+    // scoring API requires one.
+    private static readonly DifficultyLevel PlaceholderLevel = DifficultyLevel.From(2);
 
     /// <summary>
-    ///     The mix's PUMBILITY formula with co-op charts counted instead of zeroed —
-    ///     the official Phoenix 2 formula excludes co-op, this estimate deliberately doesn't.
+    ///     The mix's PUMBILITY formula with co-op charts counted — the same configuration
+    ///     <c>PlayerRatingSaga</c> sums an account's own CO-OP Rating with, so a board row and
+    ///     the account price a chart identically.
     /// </summary>
     public static ScoringConfiguration EstimateScoring(MixEnum mix)
     {
-        var scoring = ScoringConfiguration.PumbilityScoring(mix, true);
-        scoring.ChartTypeModifiers[ChartType.CoOp] = 1.0;
-        return scoring;
+        return ScoringConfiguration.PumbilityScoring(mix, true);
     }
 
     /// <summary>

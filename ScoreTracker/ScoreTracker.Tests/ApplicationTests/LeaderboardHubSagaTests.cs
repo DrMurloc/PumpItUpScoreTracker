@@ -258,6 +258,23 @@ public sealed class LeaderboardHubSagaTests
     }
 
     [Fact]
+    public async Task CoOpRankingsSumEveryMirroredChartWithNoTopFiftyCut()
+    {
+        // The CO-OP Rating is an all-charts sum — the [CO-OP] LV.10 title sits at 10,000, which
+        // fifty perfects (6,080) could never reach. Sixty perfects on the board: 60 × 121.60.
+        var f = Arrange(Run(2, Week2));
+        f.Snapshots.Setup(s => s.GetPlacementDetails(2, It.IsAny<PlacementScope>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Enumerable.Range(0, 60).Select(_ => CoOpChart(11, Guid.NewGuid(), 1, 1_000_000)).ToArray());
+
+        var result = await f.Saga.Handle(new GetOfficialRankingsQuery(MixEnum.Phoenix2, "CoOp"),
+            CancellationToken.None);
+
+        var top = Assert.Single(result.Rankings);
+        Assert.Equal(60 * 121.60m, top.Rating, 2);
+        Assert.Equal(60, top.BoardsInTop);
+    }
+
+    [Fact]
     public async Task StandardRankingsNeverCountCoOpBoards()
     {
         var f = Arrange(Run(2, Week2));
