@@ -254,23 +254,12 @@ else
         builder.CloseElement();
     };
 
-    // The connector between the two grades says the width without the reader comparing
-    // letters: short and solid when the peers agree, long and dashed when the chart splits
-    // them. The cut is in points rather than letter steps because two scores a point either
-    // side of a grade line print as different letters while agreeing perfectly. At the S band
-    // 10,000 is two grade steps and 25,000 is five; picked once, not fitted.
-    private const int TightSpread = 10_000;
-    private const int WideSpread = 25_000;
-
-    private static string SpreadWidth(PeerSpread spread)
-    {
-        var width = (int)spread.Quartile3 - (int)spread.Quartile1;
-        return width < TightSpread ? "tight" : width > WideSpread ? "wide" : "mid";
-    }
-
-    // Two grades and a connector, the count of peers behind them in the tooltip and nothing
-    // else (owner, 2026-08-17: "at most a tooltip for 'From X peers'"). A row without peers
-    // — a carried Phoenix 1 score — prints the same dash the You-have cell prints for nothing.
+    // Two grades with a dash between them, the count of peers behind them in the tooltip and
+    // nothing else (owner, 2026-08-17: "at most a tooltip for 'From X peers'"). The dash is one
+    // treatment on every row — the grades already say how far apart the quartiles are, and a
+    // connector that changed shape with the width read as noise ("just make it the dash"). A
+    // row without peers — a carried Phoenix 1 score — prints the same dash the You-have cell
+    // prints for nothing.
     private RenderFragment SpreadCell(PumbilityTarget target) => builder =>
     {
         if (target.Spread is not { } spread)
@@ -284,14 +273,14 @@ else
 
         builder.OpenElement(3, "span");
         builder.AddAttribute(4, "class", "pmb-iqr");
-        builder.AddAttribute(5, "data-spread", SpreadWidth(spread));
-        builder.AddAttribute(6, "title", L["From {0} peers", spread.PeerCount].ToString());
-        builder.OpenComponent<LetterGradeIcon>(7);
-        builder.AddComponentParameter(8, nameof(LetterGradeIcon.Grade), spread.Quartile1.LetterGradeFor(Mix));
-        builder.AddComponentParameter(9, nameof(LetterGradeIcon.Height), 18);
+        builder.AddAttribute(5, "title", L["From {0} peers", spread.PeerCount].ToString());
+        builder.OpenComponent<LetterGradeIcon>(6);
+        builder.AddComponentParameter(7, nameof(LetterGradeIcon.Grade), spread.Quartile1.LetterGradeFor(Mix));
+        builder.AddComponentParameter(8, nameof(LetterGradeIcon.Height), 18);
         builder.CloseComponent();
-        builder.OpenElement(10, "span");
-        builder.AddAttribute(11, "class", "pmb-iqr-conn");
+        builder.OpenElement(9, "span");
+        builder.AddAttribute(10, "class", "pmb-iqr-conn");
+        builder.AddContent(11, "—");
         builder.CloseElement();
         builder.OpenComponent<LetterGradeIcon>(12);
         builder.AddComponentParameter(13, nameof(LetterGradeIcon.Grade), spread.Quartile3.LetterGradeFor(Mix));

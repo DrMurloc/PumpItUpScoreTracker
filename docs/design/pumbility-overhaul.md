@@ -92,7 +92,7 @@ Round four, 2026-08-17, after the owner's field test of round three.
 
 | # | Ruling |
 |---|---|
-| D30 | **A peer row carries a "Peers IQR"** — the peers' 25th and 75th percentile scores as two letter grades with a connector between them, beside the median. Owner: *"Can we do an estimated range? … If we do like 'Estimated P25 -> P75 letter grades'? It sort of helps visualize confidence levels a bit too. If like everyone in your pool is getting a SS, you'll probably get an SS. If P25 is A+ and P75 is SSS+, you know it's a specialized chart."* Named **IQR**, not "range": *"call it 'Peers IQR' so those who understand math nuance will know it's not a Min/Max range."* Grades only — no quartile numbers, no width figure — and *"at most a tooltip for 'From X peers'"*. **Compact is unchanged**: *"Only so much data we can fit there."* A carried Phoenix 1 row has no peers and prints a dash. This narrows D12: the numeric spread D12 removed stays removed; two grades that say whether the peers agree is the one per-row figure about the evidence that earned its place, because the field test read the median alone as a claim ("it's still giving me S22 SSs") when the peers behind it were split |
+| D30 | **A peer row carries a "Peers IQR"** — the peers' 25th and 75th percentile scores as two letter grades with a dash between them, beside the median. Owner: *"Can we do an estimated range? … If we do like 'Estimated P25 -> P75 letter grades'? It sort of helps visualize confidence levels a bit too. If like everyone in your pool is getting a SS, you'll probably get an SS. If P25 is A+ and P75 is SSS+, you know it's a specialized chart."* Named **IQR**, not "range": *"call it 'Peers IQR' so those who understand math nuance will know it's not a Min/Max range."* Grades only — no quartile numbers, no width figure — and *"at most a tooltip for 'From X peers'"*. **Compact is unchanged**: *"Only so much data we can fit there."* A carried Phoenix 1 row has no peers and prints a dash. This narrows D12: the numeric spread D12 removed stays removed; two grades that say whether the peers agree is the one per-row figure about the evidence that earned its place, because the field test read the median alone as a claim ("it's still giving me S22 SSs") when the peers behind it were split |
 
 ## 3. The section
 
@@ -238,12 +238,13 @@ Phoenix 1 doubles repriced.
 
 **Round four: the Peers IQR (D30).** One thing per row did change after the field test. Beside
 the projected grade and number, a peer row prints the peers' **first and third quartiles as two
-grades** with a connector between them — *AAA ─ SSS* on a chart that splits the peers, *AAA+ ─
-AAA+* on one they agree about — under a **Peers IQR** column in Table and a **Peers IQR** line in
-the Comfortable card body. The connector is the width without a number: short and solid inside
-10,000 points, long and dashed past 25,000 (at the S band that is two grade steps and five;
-picked once, in points rather than letter steps because two scores a point either side of a grade
-line print as different letters while agreeing perfectly). The tooltip says *"From 13 peers"* and
+grades** with a dash between them — *AAA — SSS* on a chart that splits the peers, *AAA+ — AAA+*
+on one they agree about — under a **Peers IQR** column in Table and a **Peers IQR** line in the
+Comfortable card body. **The dash is one treatment on every row.** The first cut drew it as a
+connector that encoded the width (short and solid inside 10,000 points, long and dashed past
+25,000) and the owner's field test read it as noise the same day: *"why is it dotted lines vs a
+solid line for different entries? just make it the dash."* The grades already say the width; a
+second encoding of the same fact is a thing to explain. The tooltip says *"From 13 peers"* and
 nothing else. Compact prints nothing new — a 72px card has one value and one picture. Carried
 Phoenix 1 rows have no peers and print a dash in Table, no line in Comfortable. Phoenix 1 rows
 get the same column from the same arithmetic (its quartiles are growth-weighted like its p65),

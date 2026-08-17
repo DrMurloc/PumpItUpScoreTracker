@@ -388,28 +388,29 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheConnectorSaysHowFarApartTheQuartilesAre()
+    public void TheDashBetweenTheQuartilesIsTheSameHoweverWideTheyAre()
     {
-        // The width in points, not in letters: two scores a point either side of a grade line
-        // print as different letters while agreeing perfectly. Under 10,000 the peers agree,
-        // over 25,000 the chart splits them, and the connector is drawn to say which.
+        // The first cut drew the connector short and solid on a tight IQR and long and dashed
+        // on a wide one; the owner's field test read that as noise ("why is it dotted lines vs
+        // a solid line for different entries? just make it the dash", 2026-08-17). The grades
+        // already say the width, so the connector says nothing.
         var tight = NewChart(ChartType.Single, 22);
-        var mid = NewChart(ChartType.Single, 22);
         var wide = NewChart(ChartType.Single, 22);
         var targets = new[]
         {
             new PumbilityTarget(tight.Id, 963_000, 300, null, false, null, Spread: new PeerSpread(960_000, 966_000, 6)),
-            new PumbilityTarget(mid.Id, 978_000, 200, null, false, null, Spread: new PeerSpread(970_000, 985_000, 10)),
             new PumbilityTarget(wide.Id, 986_000, 100, null, false, null, Spread: new PeerSpread(952_000, 991_000, 13))
         };
 
         var cut = RenderComponent<TargetList>(p => p
             .Add(x => x.Targets, targets)
-            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [tight.Id] = tight, [mid.Id] = mid, [wide.Id] = wide })
+            .Add(x => x.Charts, new Dictionary<Guid, Chart> { [tight.Id] = tight, [wide.Id] = wide })
             .Add(x => x.Density, UiDensity.Table));
 
-        var widths = cut.FindAll(".pmb-iqr").Select(i => i.GetAttribute("data-spread")).ToArray();
-        Assert.Equal(new[] { "tight", "mid", "wide" }, widths);
+        var connectors = cut.FindAll(".pmb-iqr .pmb-iqr-conn");
+        Assert.Equal(2, connectors.Count);
+        Assert.All(connectors, c => Assert.Equal("—", c.TextContent));
+        Assert.All(cut.FindAll(".pmb-iqr"), i => Assert.Null(i.GetAttribute("data-spread")));
     }
 
     [Fact]
