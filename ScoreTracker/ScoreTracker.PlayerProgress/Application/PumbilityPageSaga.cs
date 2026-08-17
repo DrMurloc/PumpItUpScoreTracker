@@ -94,7 +94,12 @@ namespace ScoreTracker.PlayerProgress.Application
                     kv.Value,
                     mine.TryGetValue(kv.Key, out var held) ? held.Score : null,
                     mine.TryGetValue(kv.Key, out var broken) && broken.IsBroken,
-                    projection.ChartDifficulty.TryGetValue(kv.Key, out var d) ? d : null))
+                    projection.ChartDifficulty.TryGetValue(kv.Key, out var d) ? d : null,
+                    TargetSource.Peers,
+                    // The Peers IQR (D30): the peers' middle half, beside the median they voted.
+                    projection.Spreads != null && projection.Spreads.TryGetValue(kv.Key, out var spread)
+                        ? spread
+                        : null))
                 .ToDictionary(t => t.ChartId);
 
             // In Phoenix 2, a chart the player already cleared in Phoenix 1 does not need

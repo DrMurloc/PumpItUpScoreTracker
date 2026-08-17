@@ -88,13 +88,14 @@ namespace ScoreTracker.PlayerProgress.Application
                 : await _mediator.Send(new GetChartScoringLevelsQuery(mix), CancellationToken.None);
 
             var expectedScore = new Dictionary<Guid, PhoenixScore>();
+            var spreads = new Dictionary<Guid, PeerSpread>();
             var peers = new Dictionary<ChartType, PeerGroup>();
             var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor);
 
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
-                await ProjectType(chartType, userId, scope, expectedScore, peers, CancellationToken.None);
+                await ProjectType(chartType, userId, scope, expectedScore, spreads, peers, CancellationToken.None);
 
-            return new ProjectionSweep(expectedScore, peers);
+            return new ProjectionSweep(expectedScore, peers, spreads);
         }
 
         /// <summary>
@@ -161,7 +162,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 expectedScore.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value),
                 ranked,
                 chartDifficulty,
-                sweep.Peers);
+                sweep.Peers,
+                sweep.Spreads.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
@@ -169,8 +171,8 @@ namespace ScoreTracker.PlayerProgress.Application
             IDictionary<Guid, double> ScoringLevels, ScoringConfiguration Scoring, double Baseline);
 
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
-            IDictionary<Guid, PhoenixScore> into, IDictionary<ChartType, PeerGroup> peers,
-            CancellationToken cancellationToken)
+            IDictionary<Guid, PhoenixScore> into, IDictionary<Guid, PeerSpread> spreads,
+            IDictionary<ChartType, PeerGroup> peers, CancellationToken cancellationToken)
         {
             var (mix, charts, scoringLevels, scoring, baseline) = scope;
 
@@ -207,6 +209,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 cancellationToken);
 
             foreach (var (chartId, score) in projected.Scores) into[chartId] = score;
+            if (projected.Spreads != null)
+                foreach (var (chartId, spread) in projected.Spreads) spreads[chartId] = spread;
             if (projected.Group is { } group) peers[chartType] = group;
         }
 

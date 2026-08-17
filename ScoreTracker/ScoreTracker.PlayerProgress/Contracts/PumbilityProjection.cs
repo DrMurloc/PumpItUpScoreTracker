@@ -16,7 +16,10 @@ namespace ScoreTracker.PlayerProgress.Contracts;
 ///         What IS carried is the peer group per chart type (<paramref name="Peers" />): who was
 ///         asked, how many there are, and — on Phoenix 2 — whether the viewer's own pool of the
 ///         type is deep enough for the group to exist (D27, D28). One line for the section, not
-///         a caption per row.
+///         a caption per row. And, per chart, the peers' interquartile range
+///         (<paramref name="Spreads" />) — two grades that say whether the peers agree, which is
+///         the one per-row figure the owner asked back for (D30): "if P25 is A+ and P75 is SSS+,
+///         you know it's a specialized chart".
 ///     </para>
 /// </summary>
 [ExcludeFromCodeCoverage]
@@ -24,4 +27,5 @@ public sealed record PumbilityProjection(
     IReadOnlyDictionary<Guid, PhoenixScore> ExpectedScores,
     IReadOnlyDictionary<Guid, double> ProjectedGains,
     IReadOnlyDictionary<Guid, TierListCategory> ChartDifficulty,
-    IReadOnlyDictionary<ChartType, PeerGroup>? Peers = null);
+    IReadOnlyDictionary<ChartType, PeerGroup>? Peers = null,
+    IReadOnlyDictionary<Guid, PeerSpread>? Spreads = null);

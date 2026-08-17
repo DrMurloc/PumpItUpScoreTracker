@@ -12,7 +12,8 @@ namespace ScoreTracker.PlayerProgress.Application
     /// </summary>
     internal sealed record ProjectionSweep(
         IReadOnlyDictionary<Guid, PhoenixScore> ExpectedScores,
-        IReadOnlyDictionary<ChartType, PeerGroup> Peers);
+        IReadOnlyDictionary<ChartType, PeerGroup> Peers,
+        IReadOnlyDictionary<Guid, PeerSpread> Spreads);
 
     /// <summary>
     ///     Holds the peer sweep behind a player's Pumbility projection between visits.

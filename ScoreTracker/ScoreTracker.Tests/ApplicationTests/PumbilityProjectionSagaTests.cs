@@ -418,6 +418,26 @@ public sealed class PumbilityProjectionSagaTests
     }
 
     [Fact]
+    public async Task ThePeersIqrRidesAlongWithTheMedianItBrackets()
+    {
+        // D30: the same five voices the median was read from, at the quartiles, plus how many
+        // there were — the page's "Peers IQR" and its "From N peers" tooltip.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var chart, ChartType.Single, 20);
+        foreach (var score in new[] { 940_000, 985_000, 962_000, 990_000, 975_000 })
+            ctx.WithPumbilityPeer(chart, phoenix2Score: score);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var spread = result.Spreads![chart.Id];
+        Assert.Equal(956_500, (int)spread.Quartile1);
+        Assert.Equal(986_250, (int)spread.Quartile3);
+        Assert.Equal(5, spread.PeerCount);
+        Assert.Equal(result.ProjectedGains.Keys.OrderBy(k => k), result.Spreads.Keys.OrderBy(k => k));
+    }
+
+    [Fact]
     public async Task FourPumbilityPeersAreNotAnOpinion()
     {
         var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
