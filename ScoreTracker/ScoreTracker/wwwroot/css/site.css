@@ -3087,6 +3087,34 @@ html.sheet-open .more-sheet-scrim {
     margin: 6px 0 10px;
 }
 
+/* The picker and the unshared switch share one row above the compare table; the switch sits at
+   the far end so the folder controls keep their place whether or not it renders. */
+.rvl-cmp-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.rvl-cmp-controls .rvl-cmp-folder {
+    margin: 6px 0;
+}
+
+.rvl-cmp-switch {
+    margin-left: auto;
+}
+
+/* A row only one of you has played: same table, muted, so the shared rows above stay the
+   comparison and these read as the appendix they are. */
+.rvl-cmp-table tr.rvl-cmp-unshared td {
+    color: var(--mix-ink-muted);
+}
+
+.rvl-tile-unshared {
+    outline: 1px dashed rgba(255, 255, 255, .14);
+    outline-offset: -1px;
+}
+
 /* The rail and its arrows. The native horizontal scrollbar is hidden on the desktop rail: it
    is chunky, it steals a row of height under the cards, and it is the only scrollbar on the
    page that runs sideways, so it reads as a stray control rather than a hint. The arrows

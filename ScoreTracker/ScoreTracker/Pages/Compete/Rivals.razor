@@ -15,6 +15,7 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Components.Rivals
+@using ScoreTracker.Web.Components.Players
 
 <PageTitle>@L["Rivals"]</PageTitle>
 
@@ -51,9 +52,9 @@ else
             {
                 <MudButton StartIcon="@Icons.Material.Filled.ArrowBack" Size="Size.Small"
                            OnClick="() => _selected = null" Class="mb-2">@L["Back to rivals"]</MudButton>
-                <RivalComparison Record="_headToHead" Charts="_charts" YourAvatar="@MyAvatar"
-                                 Mix="CurrentMix" FolderType="_compareType" FolderLevel="_compareLevel"
-                                 FolderChanged="OnFolderChanged" OnOpenChart="OpenChart"></RivalComparison>
+                <HeadToHead Record="_headToHead" Charts="_charts" YourAvatar="@MyAvatar"
+                            Mix="CurrentMix" FolderType="_compareType" FolderLevel="_compareLevel"
+                            FolderChanged="OnFolderChanged" OnOpenChart="OpenChart"></HeadToHead>
             }
             else
             {

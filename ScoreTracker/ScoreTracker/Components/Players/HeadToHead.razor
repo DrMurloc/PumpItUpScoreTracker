@@ -5,12 +5,18 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @using Microsoft.AspNetCore.Components.Web
 @using ScoreTracker.Web.Components
-@namespace ScoreTracker.Web.Components.Rivals
+@namespace ScoreTracker.Web.Components.Players
 
-@* One rival, compared. Takes a RESOLVED SUBJECT rather than a user id, so the sections it can't
-   fill are absent with a reason instead of empty (docs/design/rivals.md D29). A board-only rival
-   is short by construction: the mirror covers level 20+ at roughly 300 deep, so "the charts we're
-   both on" is the honest unit where a folder would be a lie.
+@* One player, compared with you. Two hosts: the player page, and /Rivals for a board-only rival.
+   Takes a RESOLVED SUBJECT rather than a user id, so the sections it can't fill are absent with a
+   reason instead of empty (docs/design/rivals.md D29). A board-only rival is short by
+   construction: the mirror covers level 20+ at roughly 300 deep, so "the charts we're both on" is
+   the honest unit where a folder would be a lie.
+
+   The tallies count the charts you both hold. A chart only one of you has played is in the record
+   with the other side empty; the switch shows those rows and their two tiles, and starts off — the
+   default answer to "how do we compare" is the charts you can actually compare on
+   (docs/design/player-page-and-site-search.md D5).
 
    Win/loss reuses the row-glow vocabulary — ahead is the community green, behind is the rival
    red. One vocabulary, two uses. *@
@@ -50,25 +56,45 @@ else
         <div class="rvl-tile">
             <b>@Record.Shared</b><span>@L["Shared"]</span>
         </div>
+        @if (_showUnshared)
+        {
+            <div class="rvl-tile rvl-tile-unshared" data-testid="only-you-tile">
+                <b class="rvl-muted">@Record.OnlyYou</b><span>@L["Only you"]</span>
+            </div>
+            <div class="rvl-tile rvl-tile-unshared" data-testid="only-them-tile">
+                <b class="rvl-muted">@Record.OnlyThem</b><span>@L["Only {0}", Record.Subject.DisplayName]</span>
+            </div>
+        }
     </div>
 
     <MudCard Class="mt-3">
         <MudCardContent>
             <div class="sbd-section-head">
                 <span class="sbd-eyebrow">@BoardTitle</span>
-                <span class="sbd-section-note">@L["{0} charts", Record.Rows.Count]</span>
+                <span class="sbd-section-note">@L["{0} charts", VisibleRows.Count]</span>
             </div>
-            @* Only a site rival has folders to pick between. A ghost's unit is "boards we're both
-               on" — the mirror covers a scattering of level 20+ boards, not folders — so a picker
-               there would offer a filter the population cannot honour. *@
-            @if (Record.Subject.Can(RivalCapabilities.FolderCompare))
-            {
-                <div class="rvl-cmp-folder">
-                    <FolderPicker Type="FolderType" Level="FolderLevel" ShowCoOp="false"
-                                  FolderChanged="OnFolder"></FolderPicker>
-                </div>
-            }
-            @if (Record.Rows.Count == 0)
+            <div class="rvl-cmp-controls">
+                @* Only a site player has folders to pick between. A ghost's unit is "boards we're
+                   both on" — the mirror covers a scattering of level 20+ boards, not folders — so a
+                   picker there would offer a filter the population cannot honour. *@
+                @if (Record.Subject.Can(RivalCapabilities.FolderCompare))
+                {
+                    <div class="rvl-cmp-folder">
+                        <FolderPicker Type="FolderType" Level="FolderLevel" ShowCoOp="false"
+                                      FolderChanged="OnFolder"></FolderPicker>
+                    </div>
+                }
+                @* The switch exists only where there is something to switch on: a board-only
+                   subject never has one-sided rows, and neither does a pair who have played
+                   exactly the same charts. *@
+                @if (HasUnshared)
+                {
+                    <MudSwitch T="bool" Value="_showUnshared" ValueChanged="ToggleUnshared" Color="Color.Primary"
+                               Size="Size.Small" Class="rvl-cmp-switch" data-testid="show-unshared"
+                               Label="@L["Show unshared"]"></MudSwitch>
+                }
+            </div>
+            @if (VisibleRows.Count == 0)
             {
                 <div class="sbd-empty">
                     <b>@L["Nothing to compare yet"]</b>
@@ -78,10 +104,9 @@ else
             else
             {
                 @* The community folder-compare table, same vocabulary: sortable columns, the
-                   song's art, and the letter grade + plate every other board prints. It was a
-                   bare div list of numbers, which read as a lesser table than the one the
-                   community page shows for the same question. *@
-                <MudTable T="CompareRow" Items="Rows" Breakpoint="Breakpoint.None" Dense="true"
+                   song's art, and the letter grade + plate every other board prints. *@
+                <MudTable T="CompareRow" Items="VisibleRows" Breakpoint="Breakpoint.None" Dense="true"
+                          RowsPerPage="50" RowClassFunc="@((r, _) => r.OneSided ? "rvl-cmp-unshared" : string.Empty)"
                           Class="olb-board-table olb-pager-tight rvl-cmp-table" data-testid="rival-compare-table">
                     <HeaderContent>
                         <MudTh>
@@ -122,49 +147,66 @@ else
                             }
                         </MudTd>
                         <MudTd Style="text-align:right">
-                            <span class="@YoursClass(context.Row) sbd-score-stack">
-                                @if (context.Row.YourLegacyGrade != null)
-                                {
-                                    @* ScoreBreakdown is built around the 1,000,000 scale, and
-                                       PhoenixScore.From throws on an era score — which three
-                                       scored legacy records in four are. *@
-                                    <LetterGradeIcon LegacyGrade="context.Row.YourLegacyGrade"
-                                                     IsBroken="context.Row.YourIsBroken" Height="18"></LetterGradeIcon>
-                                }
-                                else
-                                {
-                                    <ScoreBreakdown Score="@(context.Row.YourScore == null ? null : PhoenixScore.From(context.Row.YourScore.Value))"
-                                                    Plate="context.Row.YourPlate" IsBroken="context.Row.YourIsBroken"
-                                                    Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
-                                }
-                            </span>
+                            @if (!HasYours(context.Row))
+                            {
+                                <span class="rvl-muted rvl-cmp-score">—</span>
+                            }
+                            else
+                            {
+                                <span class="@YoursClass(context.Row) sbd-score-stack">
+                                    @if (context.Row.YourLegacyGrade != null)
+                                    {
+                                        @* ScoreBreakdown is built around the 1,000,000 scale, and
+                                           PhoenixScore.From throws on an era score — which three
+                                           scored legacy records in four are. *@
+                                        <LetterGradeIcon LegacyGrade="context.Row.YourLegacyGrade"
+                                                         IsBroken="context.Row.YourIsBroken" Height="18"></LetterGradeIcon>
+                                    }
+                                    else
+                                    {
+                                        <ScoreBreakdown Score="@(context.Row.YourScore == null ? null : PhoenixScore.From(context.Row.YourScore.Value))"
+                                                        Plate="context.Row.YourPlate" IsBroken="context.Row.YourIsBroken"
+                                                        Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
+                                    }
+                                </span>
+                            }
                         </MudTd>
                         <MudTd Style="text-align:right">
-                            <span class="@TheirsClass(context.Row) sbd-score-stack">
-                                @* The mirror records no plates, so an official row must not be
-                                   handed an inferred one. *@
-                                @if (context.Row.TheirLegacyGrade != null)
-                                {
-                                    <LetterGradeIcon LegacyGrade="context.Row.TheirLegacyGrade"
-                                                     IsBroken="context.Row.TheirIsBroken" Height="18"></LetterGradeIcon>
-                                }
-                                else
-                                {
-                                    <ScoreBreakdown Score="@(context.Row.TheirScore == null ? null : PhoenixScore.From(context.Row.TheirScore.Value))"
-                                                    Plate="context.Row.TheirPlate" IsBroken="context.Row.TheirIsBroken"
-                                                    InferPlate="@(context.Row.TheirSource != RivalScoreSource.Official)"
-                                                    Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
-                                }
-                                @if (context.Row.TheirSource == RivalScoreSource.Official)
-                                {
-                                    <span class="rival-official-mark" title="@L["Official board data"]">*</span>
-                                }
-                            </span>
+                            @if (!HasTheirs(context.Row))
+                            {
+                                <span class="rvl-muted rvl-cmp-score">—</span>
+                            }
+                            else
+                            {
+                                <span class="@TheirsClass(context.Row) sbd-score-stack">
+                                    @* The mirror records no plates, so an official row must not be
+                                       handed an inferred one. *@
+                                    @if (context.Row.TheirLegacyGrade != null)
+                                    {
+                                        <LetterGradeIcon LegacyGrade="context.Row.TheirLegacyGrade"
+                                                         IsBroken="context.Row.TheirIsBroken" Height="18"></LetterGradeIcon>
+                                    }
+                                    else
+                                    {
+                                        <ScoreBreakdown Score="@(context.Row.TheirScore == null ? null : PhoenixScore.From(context.Row.TheirScore.Value))"
+                                                        Plate="context.Row.TheirPlate" IsBroken="context.Row.TheirIsBroken"
+                                                        InferPlate="@(context.Row.TheirSource != RivalScoreSource.Official)"
+                                                        Mix="Mix" OneLine="true" ShowScore="true" Tooltip="false"></ScoreBreakdown>
+                                    }
+                                    @if (context.Row.TheirSource == RivalScoreSource.Official)
+                                    {
+                                        <span class="rival-official-mark" title="@L["Official board data"]">*</span>
+                                    }
+                                </span>
+                            }
                         </MudTd>
                         <MudTd Style="text-align:right" Class="rvl-cmp-diff-col">
                             <span class="@DeltaClass(context.Row)">@Delta(context.Row)</span>
                         </MudTd>
                     </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager HideRowsPerPage="true"/>
+                    </PagerContent>
                 </MudTable>
                 @if (Footnote is { Length: > 0 } footnote)
                 {
@@ -194,7 +236,7 @@ else
 
     /// <summary>
     ///     The folder being compared. A null level is "All folders" — the head-to-head query
-    ///     treats a missing folder as unfiltered, which is every chart you have scored.
+    ///     treats a missing folder as unfiltered, which is every chart either of you has scored.
     /// </summary>
     [Parameter] public ChartType FolderType { get; set; } = ChartType.Double;
 
@@ -213,6 +255,13 @@ else
 
     private const string DefaultAvatar = "https://piuimages.arroweclip.se/avatars/4f617606e7751b2dc2559d80f09c40bf.png";
 
+    // A lens, not a preference: it resets with the page rather than persisting per user.
+    private bool _showUnshared;
+
+    private void ToggleUnshared(bool value) => _showUnshared = value;
+
+    private bool HasUnshared => Record is { } r && r.OnlyYou + r.OnlyThem > 0;
+
     // A folder for a site rival, "boards we're both on" for a board-only one. Same table, and the
     // heading is what says which unit is being counted.
     private string BoardTitle => Record!.Subject.Can(RivalCapabilities.FolderCompare)
@@ -228,14 +277,26 @@ else
         : null;
 
     /// <summary>Sortable projection: the chart resolved once, plus the delta the table sorts on.</summary>
-    private sealed record CompareRow(RivalHeadToHeadRow Row, Chart? Chart, string SongName, int? Difference);
+    private sealed record CompareRow(RivalHeadToHeadRow Row, Chart? Chart, string SongName, int? Difference, bool OneSided);
 
-    private IEnumerable<CompareRow> Rows => Record!.Rows.Select(r =>
-    {
-        var chart = Charts.TryGetValue(r.ChartId, out var found) ? found : null;
-        return new CompareRow(r, chart, chart?.Song.Name.ToString() ?? string.Empty,
-            r.YourScore != null && r.TheirScore != null ? r.YourScore - r.TheirScore : null);
-    });
+    // A side is present when it holds a comparable result: a score on Phoenix, a letter on a legacy
+    // mix — the same rule the record was tallied with.
+    private bool HasYours(RivalHeadToHeadRow row) =>
+        Mix.UsesLegacyScoring() ? row.YourLegacyGrade != null : row.YourScore != null;
+
+    private bool HasTheirs(RivalHeadToHeadRow row) =>
+        Mix.UsesLegacyScoring() ? row.TheirLegacyGrade != null : row.TheirScore != null;
+
+    private IReadOnlyList<CompareRow> VisibleRows => Record!.Rows
+        .Where(r => _showUnshared || (HasYours(r) && HasTheirs(r)))
+        .Select(r =>
+        {
+            var chart = Charts.TryGetValue(r.ChartId, out var found) ? found : null;
+            return new CompareRow(r, chart, chart?.Song.Name.ToString() ?? string.Empty,
+                r.YourScore != null && r.TheirScore != null ? r.YourScore - r.TheirScore : null,
+                !(HasYours(r) && HasTheirs(r)));
+        })
+        .ToArray();
 
     private string YoursClass(RivalHeadToHeadRow row) =>
         row.YourScore != null && row.TheirScore != null && row.YourScore > row.TheirScore
