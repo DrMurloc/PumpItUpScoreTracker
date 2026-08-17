@@ -198,9 +198,81 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
         Assert.True(row.IsBest);
     }
 
+    [Fact]
+    public async Task AStageBreakRoundTripsFlaggedScorelessAndNeverBest()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var judgements = new JudgementCounts(134, 2, 0, 0, 70);
+
+        await repo.AppendObservations(new[] { StageBreak(userId, chart, Now, judgements) },
+            CancellationToken.None);
+
+        var row = Assert.Single(await repo.GetChartHistories(userId, new[] { chart }, CancellationToken.None));
+        Assert.True(row.IsStageBroken);
+        Assert.True(row.IsBroken);
+        Assert.False(row.IsBest);
+        Assert.Null(row.Score);
+        Assert.Null(row.Plate);
+        Assert.Equal(judgements, row.Judgements);
+    }
+
+    [Fact]
+    public async Task TheJudgedTwinOfAStageBreakWinsWhicheverOrderTheTwoArrive()
+    {
+        // The same play reaches us twice: the best list keeps a stage break as a chart's first
+        // attempt (no breakdown), the recent window still holds the play (with one). One row,
+        // carrying the breakdown, whether they land in one batch or across two imports.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var judgements = new JudgementCounts(334, 7, 0, 0, 60);
+        var fromList = StageBreak(userId, chart, Now, null);
+        var fromWindow = StageBreak(userId, chart, Now, judgements);
+
+        // Unjudged first inside one batch.
+        await repo.AppendObservations(new[] { fromList, fromWindow }, CancellationToken.None);
+        var row = Assert.Single(await repo.GetChartHistories(userId, new[] { chart }, CancellationToken.None));
+        Assert.Equal(judgements, row.Judgements);
+
+        // Unjudged already stored, judged arrives on a later import.
+        var later = await _seed.SeedChartAsync();
+        await repo.AppendObservations(new[] { StageBreak(userId, later, Now, null) }, CancellationToken.None);
+        await repo.AppendObservations(new[] { StageBreak(userId, later, Now, judgements) }, CancellationToken.None);
+        var filled = Assert.Single(await repo.GetChartHistories(userId, new[] { later }, CancellationToken.None));
+        Assert.Equal(judgements, filled.Judgements);
+        Assert.True(filled.IsStageBroken);
+    }
+
+    [Fact]
+    public async Task TheComboRoundTripsWithTheBreakdownOnBothWritePaths()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var judgements = new JudgementCounts(939, 6, 2, 2, 1, 947);
+
+        await repo.Append(Entry(userId, chart, Now.AddMinutes(-1), 991725) with { Judgements = judgements },
+            CancellationToken.None);
+        await repo.AppendObservations(new[] { Observation(userId, chart, Now, 990000) with { Judgements = judgements } },
+            CancellationToken.None);
+
+        var history = await repo.GetChartHistories(userId, new[] { chart }, CancellationToken.None);
+        Assert.Equal(2, history.Count);
+        Assert.All(history, h => Assert.Equal(947, h.Judgements!.MaxCombo));
+    }
+
     private static ScoreJournalEntry Observation(Guid userId, Guid chartId, DateTimeOffset at, int score)
     {
         return Entry(userId, chartId, at, score) with { IsBest = false };
+    }
+
+    private static ScoreJournalEntry StageBreak(Guid userId, Guid chartId, DateTimeOffset at,
+        JudgementCounts? judgements)
+    {
+        return new ScoreJournalEntry(at, ScoreJournalEntry.OfficialImportSource, userId, chartId, null, null,
+            true, MixEnum.Phoenix2, null, judgements, false, IsStageBroken: true);
     }
 
     // The partner API's read. Keyset rather than offset because the journal is appended to while a

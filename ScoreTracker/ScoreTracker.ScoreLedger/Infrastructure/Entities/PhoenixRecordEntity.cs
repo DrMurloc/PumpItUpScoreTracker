@@ -38,4 +38,12 @@ internal sealed class PhoenixRecordEntity
     public int? Goods { get; set; }
     public int? Bads { get; set; }
     public int? Misses { get; set; }
+
+    /// <summary>
+    ///     The max combo solved from the breakdown above and the score at write time
+    ///     (PhoenixComboSolver). NULL when there is no breakdown, the chart's note count is
+    ///     unknown, or the breakdown falls short of it — and re-derived wholesale by the
+    ///     Backfill max combos admin button, so a corrected note count catches up.
+    /// </summary>
+    public int? MaxCombo { get; set; }
 }

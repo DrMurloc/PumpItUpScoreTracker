@@ -51,29 +51,50 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         var chartIds = entries.Select(e => e.ChartId).Distinct().ToArray();
         var occurred = entries.Select(e => e.OccurredAt).Distinct().ToArray();
         // One read of the candidate window, then insert only what isn't there. An existing row
-        // is never touched: it may already be a best, and an observation must not demote it.
+        // is never demoted: it may already be a best. The one thing an observation may add to a
+        // row already there is a judgement breakdown the row lacks — the same play reaches us
+        // twice when the best list keeps a stage break as a chart's first attempt (no breakdown)
+        // and the recent window still holds the play (with one), and the judged twin is the
+        // one worth keeping whichever order they arrive in.
         var known = (await database.Set<ScoreEventJournalEntity>()
                 .Where(e => e.UserId == userId && chartIds.Contains(e.ChartId) &&
                             occurred.Contains(e.OccurredAt))
-                .Select(e => new { e.MixId, e.ChartId, e.OccurredAt })
                 .ToArrayAsync(cancellationToken))
-            .Select(e => (e.MixId, e.ChartId, e.OccurredAt))
-            .ToHashSet();
+            .ToDictionary(e => (e.MixId, e.ChartId, e.OccurredAt));
 
-        foreach (var entry in entries)
+        // Judged entries first, so that within one batch the twin that carries a breakdown is
+        // the one that gets inserted and the unjudged one is the duplicate.
+        foreach (var entry in entries.OrderByDescending(e => e.Judgements != null))
         {
             var mixId = MixIds.For(entry.Mix);
-            if (!known.Add((mixId, entry.ChartId, entry.OccurredAt))) continue;
+            var key = (mixId, entry.ChartId, entry.OccurredAt);
+            if (known.TryGetValue(key, out var existing))
+            {
+                if (existing.Perfects == null && entry.Judgements != null) SetJudgements(existing, entry.Judgements);
+                continue;
+            }
 
-            await database.AddAsync(Entity(entry, mixId, false), cancellationToken);
+            var entity = Entity(entry, mixId, false);
+            known.Add(key, entity);
+            await database.AddAsync(entity, cancellationToken);
         }
 
         await database.SaveChangesAsync(cancellationToken);
     }
 
+    private static void SetJudgements(ScoreEventJournalEntity entity, JudgementCounts? judgements)
+    {
+        entity.Perfects = judgements?.Perfects;
+        entity.Greats = judgements?.Greats;
+        entity.Goods = judgements?.Goods;
+        entity.Bads = judgements?.Bads;
+        entity.Misses = judgements?.Misses;
+        entity.MaxCombo = judgements?.MaxCombo;
+    }
+
     private static ScoreEventJournalEntity Entity(ScoreJournalEntry entry, Guid mixId, bool isBest)
     {
-        return new ScoreEventJournalEntity
+        var entity = new ScoreEventJournalEntity
         {
             Id = Guid.NewGuid(),
             EventId = Guid.NewGuid(),
@@ -90,14 +111,13 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             Plate = entry.Plate?.GetName(),
             LetterGrade = entry.LegacyGrade?.ToString(),
             IsBroken = entry.IsBroken,
-            IsBest = isBest,
-            SessionId = entry.SessionId,
-            Perfects = entry.Judgements?.Perfects,
-            Greats = entry.Judgements?.Greats,
-            Goods = entry.Judgements?.Goods,
-            Bads = entry.Judgements?.Bads,
-            Misses = entry.Judgements?.Misses
+            // A stage break is never a best, whatever the caller said: the flag wins.
+            IsStageBroken = entry.IsStageBroken,
+            IsBest = isBest && !entry.IsStageBroken,
+            SessionId = entry.SessionId
         };
+        SetJudgements(entity, entry.Judgements);
+        return entity;
     }
 
     public async Task<(int TotalGroups, IReadOnlyList<JournalSessionRows> Groups)> GetSessionGroups(
@@ -295,13 +315,15 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             isLegacy ? null : PhoenixPlateHelperMethods.TryParse(e.Plate),
             e.IsBroken, mix, e.SessionId, JudgementsOf(e), e.IsBest,
             isLegacy && e.Score != null ? (XXScore?)e.Score.Value : null,
-            Enum.TryParse<XXLetterGrade>(e.LetterGrade, out var grade) ? grade : null);
+            Enum.TryParse<XXLetterGrade>(e.LetterGrade, out var grade) ? grade : null,
+            e.IsStageBroken);
     }
 
     internal static JudgementCounts? JudgementsOf(ScoreEventJournalEntity e)
     {
         return e.Perfects == null
             ? null
-            : new JudgementCounts(e.Perfects.Value, e.Greats!.Value, e.Goods!.Value, e.Bads!.Value, e.Misses!.Value);
+            : new JudgementCounts(e.Perfects.Value, e.Greats!.Value, e.Goods!.Value, e.Bads!.Value, e.Misses!.Value,
+                e.MaxCombo);
     }
 }

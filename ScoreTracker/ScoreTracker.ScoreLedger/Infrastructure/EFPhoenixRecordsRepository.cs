@@ -316,7 +316,17 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return pba.Perfects == null
             ? null
             : new JudgementCounts(pba.Perfects.Value, pba.Greats!.Value, pba.Goods!.Value, pba.Bads!.Value,
-                pba.Misses!.Value);
+                pba.Misses!.Value, pba.MaxCombo);
+    }
+
+    private static void SetJudgements(PhoenixRecordEntity entity, JudgementCounts? judgements)
+    {
+        entity.Perfects = judgements?.Perfects;
+        entity.Greats = judgements?.Greats;
+        entity.Goods = judgements?.Goods;
+        entity.Bads = judgements?.Bads;
+        entity.Misses = judgements?.Misses;
+        entity.MaxCombo = judgements?.MaxCombo;
     }
 
     public async Task UpdateBestAttempt(MixEnum mix, Guid userId, RecordedPhoenixScore score,
@@ -330,7 +340,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 cancellationToken);
         if (existing == null)
         {
-            await database.AddAsync(new PhoenixRecordEntity
+            var entity = new PhoenixRecordEntity
             {
                 ChartId = score.ChartId,
                 UserId = userId,
@@ -341,13 +351,10 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 LetterGrade = score.Score?.LetterGradeFor(mix).GetName(),
                 Plate = score.Plate?.GetName(),
                 RecordedDate = score.RecordedDate,
-                Source = score.Source,
-                Perfects = score.Judgements?.Perfects,
-                Greats = score.Judgements?.Greats,
-                Goods = score.Judgements?.Goods,
-                Bads = score.Judgements?.Bads,
-                Misses = score.Judgements?.Misses
-            }, cancellationToken);
+                Source = score.Source
+            };
+            SetJudgements(entity, score.Judgements);
+            await database.AddAsync(entity, cancellationToken);
         }
         else
         {
@@ -357,11 +364,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             existing.IsBroken = score.IsBroken;
             existing.RecordedDate = score.RecordedDate;
             existing.Source = score.Source;
-            existing.Perfects = score.Judgements?.Perfects;
-            existing.Greats = score.Judgements?.Greats;
-            existing.Goods = score.Judgements?.Goods;
-            existing.Bads = score.Judgements?.Bads;
-            existing.Misses = score.Judgements?.Misses;
+            SetJudgements(existing, score.Judgements);
         }
 
         await database.SaveChangesAsync(cancellationToken);
