@@ -79,6 +79,7 @@ else
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
+@inject NavigationManager NavManager
 @inject ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache ChartCatalog
 @inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings
 @code {
@@ -134,34 +135,22 @@ else
         _inviteCode = await Mediator.Send(new GetMyRivalInviteCodeQuery());
     }
 
+    /// <summary>
+    ///     A site rival has a page, and the comparison lives there with the rest of them. A
+    ///     board-only rival has no page — the official Players page is theirs and it does not
+    ///     compare — so its head-to-head stays here, inline, on the charts you are both on.
+    /// </summary>
     private async Task Compare(RivalSubject subject)
     {
-        _selected = subject;
-        _headToHead = null;
-
-        // Open on the folder where the two of you are closest, the way the community compare
-        // does. Without one the table is every chart you have ever scored — thousands of rows
-        // answering a question nobody asked. A ghost has no competitive level and its unit is
-        // "boards we're both on" rather than a folder, so it stays unfiltered.
-        // A legacy mix has no competitive level to centre the folder on, so the compare opens
-        // unfiltered — the same shape a ghost gets, and for the same reason: there is no
-        // number to pick a folder with.
-        _compareLevel = null;
-        if (subject.Can(RivalCapabilities.FolderCompare) && subject.UserId is { } rivalId
-            && !CurrentMix.UsesLegacyScoring())
+        if (subject.UserId is { } userId)
         {
-            var mine = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, CurrentMix));
-            var theirs = await Mediator.Send(new GetPlayerStatsQuery(rivalId, CurrentMix));
-            var singlesGap = Math.Abs(mine.SinglesCompetitiveLevel - theirs.SinglesCompetitiveLevel);
-            var doublesGap = Math.Abs(mine.DoublesCompetitiveLevel - theirs.DoublesCompetitiveLevel);
-            var (type, myLevel, theirLevel) = singlesGap <= doublesGap
-                ? (ChartType.Single, mine.SinglesCompetitiveLevel, theirs.SinglesCompetitiveLevel)
-                : (ChartType.Double, mine.DoublesCompetitiveLevel, theirs.DoublesCompetitiveLevel);
-            _compareType = type;
-            _compareLevel = Math.Clamp((int)Math.Round((myLevel + theirLevel) / 2), 1,
-                (int)DifficultyLevel.Max);
+            NavManager.NavigateTo($"/Player/{userId}");
+            return;
         }
 
+        _selected = subject;
+        _headToHead = null;
+        _compareLevel = null;
         await LoadHeadToHead();
     }
 
