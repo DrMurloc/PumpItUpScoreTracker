@@ -269,4 +269,37 @@ public sealed class RivalReadSagaTests
     {
         Assert.Null(await Saga().Handle(new GetPlayerHeadToHeadQuery(MixEnum.Phoenix, _me), CancellationToken.None));
     }
+
+    /// <summary>
+    ///     The picker runs on Identity's visible-player search, so a private player you share a
+    ///     community with is offered — the pool the player page opens for is the pool you can add
+    ///     from. You are never a candidate; someone already on the roster is flagged, not hidden.
+    /// </summary>
+    [Fact]
+    public async Task ThePickerOffersTheVisiblePoolMinusYourself()
+    {
+        var mate = Guid.NewGuid();
+        var visible = new PlayerVisibility(true, false, false, false, new[] { Name.From("Crew") });
+        _mediator.Setup(m => m.Send(It.Is<ScoreTracker.Identity.Contracts.Queries.SearchPlayersQuery>(q => q.Term == "ro"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ScoreTracker.Identity.Contracts.PlayerSearchHit[]
+            {
+                new(_me, Name.From("Robby"), null, new Uri("https://x/me.png"), null,
+                    new PlayerVisibility(true, true, true, false, Array.Empty<Name>())),
+                new(mate, Name.From("Roxy"), null, new Uri("https://x/roxy.png"), null, visible),
+                new(_rival, Name.From("RIVAL"), null, new Uri("https://x/rival.png"), null,
+                    new PlayerVisibility(true, false, true, true, Array.Empty<Name>()))
+            });
+        _rivals.Setup(r => r.GetRivalsOwnedBy(_me, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new RivalEdge(_edgeId, _me, _rival, null, Added) });
+
+        var candidates = await Saga().Handle(new SearchRivalCandidatesQuery("ro"), CancellationToken.None);
+
+        Assert.DoesNotContain(candidates, c => c.UserId == _me);
+        var roxy = candidates.Single(c => c.UserId == mate);
+        Assert.False(roxy.IsPublic);
+        Assert.True(roxy.SharesCommunity);
+        Assert.False(roxy.AlreadyRival);
+        Assert.True(candidates.Single(c => c.UserId == _rival).AlreadyRival);
+    }
 }

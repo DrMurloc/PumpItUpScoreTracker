@@ -49,9 +49,10 @@ internal sealed class RivalReadSaga :
     }
 
     /// <summary>
-    ///     Public players plus the caller's clubmates. The private-stranger exclusion happens
-    ///     HERE rather than in Identity: Identity has no idea what a community is, and teaching it
-    ///     would put the membership graph in the wrong vertical.
+    ///     The site-side picker: everyone the visibility port lets you see — public players plus
+    ///     the members of your user-created communities and your rivals — through Identity's
+    ///     player search, minus yourself. The one place a private player can be added from is
+    ///     therefore the same pool the player page opens for.
     /// </summary>
     public async Task<IReadOnlyList<RivalCandidateRecord>> Handle(SearchRivalCandidatesQuery request,
         CancellationToken cancellationToken)
@@ -60,20 +61,19 @@ internal sealed class RivalReadSaga :
             return Array.Empty<RivalCandidateRecord>();
 
         var me = _currentUser.User.Id;
-        var matches = (await _mediator.Send(
-            new ScoreTracker.Identity.Contracts.Queries.SearchForUsersQuery(request.Term, 1, request.Take * 4),
-            cancellationToken)).Results;
+        // One extra row covers the caller matching their own name.
+        var hits = await _mediator.Send(
+            new ScoreTracker.Identity.Contracts.Queries.SearchPlayersQuery(request.Term, request.Take + 1),
+            cancellationToken);
 
-        var clubmates = (await _visibility.GetAudience(me, cancellationToken)).SharedCommunitiesByMember;
         var already = (await _rivals.GetRivalsOwnedBy(me, cancellationToken))
             .Where(e => e.TargetUserId != null).Select(e => e.TargetUserId!.Value).ToHashSet();
 
-        return matches
-            .Where(u => u.Id != me)
-            .Where(u => u.IsPublic || clubmates.ContainsKey(u.Id))
+        return hits
+            .Where(h => h.UserId != me)
             .Take(request.Take)
-            .Select(u => new RivalCandidateRecord(u.Id, u.Name.ToString(), u.ProfileImage, u.IsPublic,
-                clubmates.ContainsKey(u.Id), already.Contains(u.Id)))
+            .Select(h => new RivalCandidateRecord(h.UserId, h.Name.ToString(), h.Avatar, h.Visibility.IsPublic,
+                h.Visibility.SharedCommunities.Count > 0, already.Contains(h.UserId)))
             .ToArray();
     }
 
