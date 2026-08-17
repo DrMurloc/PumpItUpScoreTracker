@@ -23,6 +23,7 @@
    business: it answers null to anyone the player is hidden from, and the page goes home. *@
 <PageTitle>@(_profile == null ? L["Player"] : (string)_profile.PlayerName)</PageTitle>
 
+<div class="ph-page">
 @if (_loading)
 {
     <PatienceCard Explanation="@L["Compiling this player's page."]"></PatienceCard>
@@ -172,6 +173,7 @@ else if (_profile != null)
         </MudPaper>
     }
 }
+</div>
 
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser

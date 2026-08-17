@@ -3178,6 +3178,13 @@ html.sheet-open .more-sheet-scrim {
    The row stacks only at 1:1 or narrower — the same breakpoint the compare table uses to drop
    its difference column, so the page folds in one place. The .cmp-* vocabulary is the community
    player page's, moved here when that page retired. */
+
+/* The shell leaves the page flush against the nav, and this one opens on a paper's edge (or the
+   patience card's) rather than on a heading, so it owes itself the breathing room. */
+.ph-page {
+    margin-top: 16px;
+}
+
 .ph-top {
     display: flex;
     align-items: center;
