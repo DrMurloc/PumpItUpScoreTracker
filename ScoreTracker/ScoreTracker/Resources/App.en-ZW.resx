@@ -1437,6 +1437,9 @@
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>Glorg-mr Grorp Rglurgrglgro</value>
   </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>CO-OP Mrglrg</value>
+  </data>
   <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
     <value>CO-OP lu gogl og a plom 2,000 gogl bum bo gramb lo a urgargl.</value>
   </data>
@@ -1697,7 +1700,7 @@
     <value>Mrglrl</value>
   </data>
   <data name="CoOp Completion" xml:space="preserve">
-    <value>Mrglrl Grglgrglblub</value>
+	  <value>Mrglrl Grglgrglblub</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>Murgblarg</value>
@@ -4896,8 +4899,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · morp mrgl 50</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>Phoenix 2 gab arglglarg a CO-OP murgl, og a plom gogl ba {0} — a plag Phoenix gogl mrp og {1} — bum plab gramb rglmurplrgl ap a mrgl mrpblarg ur murglmurmgrg mrrglmagl. Mo roglub bomo ro PUMBILITY ap blgrlmrp mrg.</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>Phoenix 2 gab arglglarg a CO-OP murgl, og a plom gogl ba {0} — a plag Phoenix gogl mrp og {1} — bum plab ur mrp CO-OP Mrglrg, a glorgargl mrpblarg murm murp mrgl mrglrgl ur mrglblarg. Mo roglub bomo ro PUMBILITY ap blgrlmrp mrg.</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2 murpurg ap mrglrgl brglo {0}× mrrglmrgl ulg Phoenix gab.</value>
@@ -5057,8 +5060,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAME lurgmrgl rglrgl lurg piugame.com morgmorg plglrglmr, morggrglglorg gro morgargl mrpmurp-mrp glorgmagl</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAME grorgllurg mrp CO-OP glarglro - grglmrp mrglblarg urg magl mrpblarg glorggrgl, maglmrglplgl romurg mrp grorpplglgrgl glorg-mr mrglrmrglrgl glgrgl murp rglmrpgrorp romurg mrglrgl (SG, UG romurg 995,000, PG mr 1,000,000).</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAME grorgllurg mrp CO-OP glarglro - grglmrp mrglblarg maglmrglplgl mrp grorpplglgrgl glorg-mr mrglrmrglrgl murm mrp CO-OP Mrglrg maglmrglurg, murp rglmrpgrorp romurg mrglrgl (SG, UG romurg 995,000, PG mr 1,000,000); mrgl murgl mrglblarg rorggrgl grglmrp mrp murgmrgl 300, glub mrgl mrogl mrglrg mrp murrgl.</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>PIUGame murgloborg</value>

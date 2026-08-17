@@ -731,12 +731,15 @@ internal sealed class LeaderboardHubSaga :
                 .OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);
             var playerType = RecapPlayerTypeCalculator.Calculate(
                 top50.Select(x => PhoenixScore.From((int)x.Detail.Score)).ToArray());
-            // Chart ratings merge both pools — consumers filter by chart type, so the
-            // co-op estimate scale never competes with real PUMBILITY contributions.
+            // The CO-OP Rating is every co-op chart summed, not a top 50 — the mirror only holds
+            // the charts a player is top-300 on, so this reads as a lower bound on the account's
+            // own number rather than a differently-shaped one. Chart ratings merge both pools —
+            // consumers filter by chart type, so the co-op scale never competes with real
+            // PUMBILITY contributions.
             byPlayer[playerId] = new PlayerSnapshotStats(playerId,
                 contributions.Length,
                 top50.Sum(x => x.Rating), singles, doubles,
-                coop.OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating),
+                coop.Sum(x => x.Rating),
                 coop.Length,
                 playerType,
                 contributions.Concat(coop).Where(x => x.Detail.ChartId != null)

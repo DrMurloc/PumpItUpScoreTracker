@@ -1437,6 +1437,9 @@
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>コーオプパッド移動</value>
   </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>CO-OPレーティング</value>
+  </data>
   <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
     <value>CO-OPは固定ベース2,000で計算されましたが合計には数えられませんでした。</value>
   </data>
@@ -1697,7 +1700,7 @@
     <value>CoOp</value>
   </data>
   <data name="CoOp Completion" xml:space="preserve">
-    <value>CoOpクリア率</value>
+	  <value>CoOpクリア率</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>コピーしました</value>
@@ -4896,8 +4899,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · 実際のトップ50</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>Phoenix 2もCO-OP譜面に値を付けます — Phoenixが{1}で付けたように固定ベース{0}で — ただしその数字は称号ページにしか出てきません。どちらのバージョンでもPUMBILITYには何も足しません。</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>Phoenix 2もCO-OP譜面に値を付けます — Phoenixが{1}で付けたように固定ベース{0}で — ただしそれはCO-OPレーティングという別の数字で、独自の称号とボードを持ちます。どちらのバージョンでもPUMBILITYには何も足しません。</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2はPhoenixより約{0}倍スコアに寄りかかっています。</value>
@@ -5057,8 +5060,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAMEログインはpiugame.comへの接続に依存します。予備のログイン方法を連携してください</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAMEはCO-OPランキングを公開していません - このボードはミラーリングしたCO-OPリーダーボードから独自に算出した推定で、プレートはスコアから推定します（SG、995,000からUG、1,000,000でPG）。</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAMEはCO-OPランキングを公開していません - このボードはミラーリングしたCO-OPリーダーボードをCO-OPレーティングの計算式で算出し、プレートはスコアから推定します（SG、995,000からUG、1,000,000でPG）。譜面ボードは上位300件までのため、実際のレーティングはこれより高いことがあります。</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>PIUGameセッション</value>

@@ -1426,6 +1426,9 @@
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>Transições de pad em co-op</value>
   </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>Rating CO-OP</value>
+  </data>
   <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
     <value>CO-OP era precificado numa base fixa de 2.000 mas nunca contou no total.</value>
   </data>
@@ -1613,7 +1616,7 @@
     <value>Concluído</value>
   </data>
   <data name="Completion" xml:space="preserve">
-    <value>Conclusão</value>
+	  <value>Conclusão</value>
   </data>
   <data name="Completion %" xml:space="preserve">
     <value>% de conclusão</value>
@@ -1685,7 +1688,7 @@
     <value>CoOp</value>
   </data>
   <data name="CoOp Completion" xml:space="preserve">
-    <value>Conclusão CoOp</value>
+	  <value>Conclusão CoOp</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>Copiado</value>
@@ -4863,8 +4866,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · seu top 50 real</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>O Phoenix 2 até precifica um chart CO-OP, com uma base fixa de {0} — do jeito que o Phoenix precificava em {1} —, mas esse número só aparece na página de títulos. Não soma nada à PUMBILITY em nenhuma das duas versões.</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>O Phoenix 2 até precifica um chart CO-OP, com uma base fixa de {0} — do jeito que o Phoenix precificava em {1} —, mas isso é o Rating CO-OP, um número à parte com os seus próprios títulos e o seu próprio placar. Não soma nada à PUMBILITY em nenhuma das duas versões.</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>O Phoenix 2 se apoia na pontuação cerca de {0}× mais que o Phoenix.</value>
@@ -5022,8 +5025,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>Os logins do PIUGAME dependem do piugame.com estar acessível, conecte um método de login de reserva</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>A PIUGAME não publica um ranking de CO-OP - este ranking é a nossa melhor estimativa, calculado a partir dos leaderboards de CO-OP espelhados, com placas inferidas pela pontuação (SG, UG a partir de 995.000, PG em 1.000.000).</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>A PIUGAME não publica um ranking de CO-OP - este ranking calcula os leaderboards de CO-OP espelhados com a fórmula do Rating CO-OP, com placas inferidas pela pontuação (SG, UG a partir de 995.000, PG em 1.000.000); um leaderboard de chart lista apenas o seu top 300, então um rating real pode ser maior.</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>Sessão do PIUGame</value>

@@ -209,11 +209,24 @@ shipped on `claude/phoenix2-pumbility-crawl-cf2710`:
   `[P.B] BRONZE`..`ALEXANDRITE` (10000..19000) confirmed from worn titles on the live PUMBILITY
   ranking 2026-07-23, the 20000 tier still unreached so its name stays masked); nine skill ladders
   (chart + SSS, `Phoenix2ChartGradeTitle`) with EXPERT/SPECIALIST metas; 34 boss breakers
-  (`Phoenix2ChartClearTitle`; `1948 D??` matches any level); step-artist/play-count/CO-OP/judgment
-  badges site-detected only. **CO-OP Rating is deliberately not computed** — the site prices one
-  and quotes it in title.php's requirement text, but surfaces it on no leaderboard and in no
-  per-chart breakdown, so a computed value would have nothing to agree or disagree with (owner,
-  2026-08-12). Reading the worn title off the account is the whole answer. **The `/Titles` page is live
+  (`Phoenix2ChartClearTitle`; `1948 D??` matches any level); step-artist/play-count/CO-OP-play/judgment
+  badges site-detected only. **The `[CO-OP]` rating ladder computes** (`Phoenix2CoOpTitle`, 2026-08-17)
+  — it was site-detected only until then on the reasoning that the site surfaces the CO-OP Rating on
+  no leaderboard and in no breakdown, so nothing could check a computed value. A third party's
+  measured grade × plate table settled it: per co-op chart `80 × (gradeMultiplier + plateBonus)` on
+  the shared constant tables (ten of thirteen measured cells exact to the cent; the three that miss
+  are the anchors of rows the collector extrapolated from, e.g. their SS+ MG 118.39 is SS+ RG
+  118.40), summed over **every** co-op chart, broken plays zero. Checked against the prod-synced
+  database: all 46 Phoenix 2 accounts with co-op plays land inside the band of the site-detected
+  `[CO-OP]` title they wear — an 87-chart account at 10,264.96 wears LV.10 and not ADVANCED
+  (12,000); the ones sitting 33–57 points over a threshold pin the flat base to (79.3, 83.9). The
+  same 46 rule out a base of 40 × players (two accounts would wear a rung they don't), a top-50
+  pool (the LV.10 holder would cap near 6,000) and counting broken plays (three accounts would
+  jump a rung). `ScoringConfiguration.CoOpBaseRating` is 2000 on Phoenix and 80 on Phoenix 2, and
+  `PumbilityScoring(Phoenix2, includeCoOp: true)` prices co-op — `PlayerRatingSaga` already sums it
+  into `PlayerStats.CoOpRating`, so the community CoOp board and the title rail read the same number.
+  Only AA+ and up is exercised by real co-op data (lowest co-op score in the base is 893,669);
+  the sub-A+ rungs are assumed to follow the Doubles ladder. **The `/Titles` page is live
   for Phoenix 2** (2026-07-21) — renders through the same grid as Phoenix. **`[Legacy]` titles
   are deliberately excluded**: the site ports the Phoenix 1 titles into Phoenix 2 prefixed
   `[Legacy]`, and we already carry the real Phoenix 1 list, so mirroring them would double every

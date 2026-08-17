@@ -20,16 +20,18 @@ public sealed class CoOpBoardCalculatorTests
     }
 
     [Fact]
-    public void TheEstimateCountsCoOpWhereTheOfficialPhoenix2FormulaZeroesIt()
+    public void TheBoardPricesAtTheMixesRealCoOpRatingScale()
     {
         var estimate = CoOpBoardCalculator.EstimateScoring(MixEnum.Phoenix2);
-        var official = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, true);
         var perfect = PhoenixScore.From(1_000_000);
 
-        // Flat co-op base 2000 × (PG grade 1.50 + PG plate bonus 0.020).
-        Assert.Equal(3040, CoOpBoardCalculator.Rating(estimate, perfect));
-        Assert.Equal(0, (int)official.GetScore(ChartType.CoOp, DifficultyLevel.From(10), perfect,
-            PhoenixPlate.PerfectGame));
+        // Phoenix 2's flat co-op base 80 × (PG grade 1.50 + PG plate bonus 0.020) — the same
+        // number the account's own CO-OP Rating pays for that chart, so the board reads on the
+        // scale of the [CO-OP] title ladder (LV.1 at 1,000, MASTER at 16,000).
+        Assert.Equal(121.60, CoOpBoardCalculator.Rating(estimate, perfect), 2);
+        Assert.Equal(CoOpBoardCalculator.Rating(estimate, perfect),
+            ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, true)
+                .GetScore(ChartType.CoOp, DifficultyLevel.From(2), perfect, PhoenixPlate.PerfectGame));
     }
 
     [Fact]
@@ -37,19 +39,27 @@ public sealed class CoOpBoardCalculatorTests
     {
         var estimate = CoOpBoardCalculator.EstimateScoring(MixEnum.Phoenix2);
 
-        // 995,000 is both the SSS+ grade line and the inferred-UG line: 2000 × (1.50 + 0.016).
-        Assert.Equal(3032, CoOpBoardCalculator.Rating(estimate, PhoenixScore.From(995_000)));
-        // One point under sits on SSS with an inferred SG: 2000 × (1.49 + 0.008).
-        Assert.Equal(2996, CoOpBoardCalculator.Rating(estimate, PhoenixScore.From(994_999)));
+        // 995,000 is both the SSS+ grade line and the inferred-UG line: 80 × (1.50 + 0.016).
+        Assert.Equal(121.28, CoOpBoardCalculator.Rating(estimate, PhoenixScore.From(995_000)), 2);
+        // One point under sits on SSS with an inferred SG: 80 × (1.49 + 0.008).
+        Assert.Equal(119.84, CoOpBoardCalculator.Rating(estimate, PhoenixScore.From(994_999)), 2);
     }
 
     [Fact]
-    public void BuildingTheEstimateNeverLeaksIntoAFreshOfficialConfig()
+    public void ThePhoenixBoardKeepsItsTwoThousandPerChartScale()
+    {
+        // Phoenix's CO-OP Rating is 2000 × grade, plate-blind: a perfect co-op is 3,000.
+        var estimate = CoOpBoardCalculator.EstimateScoring(MixEnum.Phoenix);
+        Assert.Equal(3000, CoOpBoardCalculator.Rating(estimate, PhoenixScore.From(1_000_000)), 2);
+    }
+
+    [Fact]
+    public void BuildingTheEstimateNeverLeaksIntoAFreshPoolConfig()
     {
         _ = CoOpBoardCalculator.EstimateScoring(MixEnum.Phoenix2);
 
         Assert.Equal(0.0,
-            ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, true)
+            ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false)
                 .ChartTypeModifiers[ChartType.CoOp]);
     }
 }

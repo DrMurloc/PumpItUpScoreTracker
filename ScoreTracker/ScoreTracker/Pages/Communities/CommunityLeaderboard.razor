@@ -65,7 +65,10 @@
        and PUMBILITY never stack (owner call) — they stay side by side at every width. One
        grid template drives every row, so the columns line up down the board, and the row
        sheds a whole column at a time as it narrows: 600 drops the play count, 500 drops the
-       playstyle chip entirely (no initials). Values carry their label as a tooltip. *@
+       playstyle chip entirely (no initials). Values carry their label as a tooltip. The CoOp
+       board is its own board with the same seven columns: the pooled ×2–×5 completion sits
+       where the competitive level does, beside the CO-OP Rating (owner, 2026-08-17 — a
+       dedicated board has the room for both). *@
     <div class="olb-rank-cards"
          style="--olb-grid-cols:34px minmax(150px,1.6fr) 1fr 1fr 1fr 1fr 40px;--olb-grid-cols-600:34px minmax(140px,1.6fr) 1fr 1fr 1fr 40px;--olb-grid-cols-500:30px minmax(96px,1fr) 1fr 1fr 34px">
         @* The figures only read as columns if something names them. The header is the row
@@ -91,6 +94,12 @@
                     @if (IsLegacy)
                     {
                         <span class="olb-grid-num" title="@L["Net Score"]">@L["Net Score"]</span>
+                    }
+                    else if (_currentType == LeaderboardType.CoOp)
+                    {
+                        @* The game's own name for it — it is not PUMBILITY, and the site's
+                           [CO-OP] titles are what the number is measured against. *@
+                        <span class="olb-grid-num">@L["CO-OP Rating"]</span>
                     }
                     else
                     {
@@ -157,6 +166,10 @@
                         @* A zero here is nearly always "recorded grades, never typed a score",
                            so it says so rather than printing a 0 that reads as a verdict. *@
                         <b class="olb-grid-num" title="@L["Net Score"]">@NetScoreText(entry)</b>
+                    }
+                    else if (_currentType == LeaderboardType.CoOp)
+                    {
+                        <b class="olb-grid-num" style="color:@entry.Color" title="@L["CO-OP Rating"]">@entry.Rating.ToString("N0")</b>
                     }
                     else
                     {

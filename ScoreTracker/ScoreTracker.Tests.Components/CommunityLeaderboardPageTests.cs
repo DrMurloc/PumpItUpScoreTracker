@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Bunit;
 using Bunit.TestDoubles;
 using MediatR;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -125,13 +127,19 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void CoOpBoardSwapsCompetitiveForCompletion()
+    public async Task CoOpBoardRanksOnTheCoOpRatingWithCompletionBesideIt()
     {
+        // The CoOp board is its own board, so it carries both figures: the CO-OP Rating (300 in
+        // the fixture) as the ranked number under the game's own name for it — not PUMBILITY —
+        // and the pooled ×2–×5 completion (50%) where the competitive level would sit.
         var cut = Render();
-        cut.FindAll("button").First(b => b.TextContent.Trim() == "CoOp").Click();
+        await cut.FindAll("button").First(b => b.TextContent.Trim() == "CoOp").ClickAsync(new MouseEventArgs());
+        Assert.Contains("title=\"CO-OP Rating\"", cut.Markup);
+        Assert.Contains(">300<", cut.Markup);
         Assert.Contains("title=\"CoOp Completion\"", cut.Markup);
-        Assert.DoesNotContain("title=\"Comp Lv\"", cut.Markup);
         Assert.Contains("50", cut.Markup);
+        Assert.DoesNotContain("title=\"Comp Lv\"", cut.Markup);
+        Assert.DoesNotContain("title=\"PUMBILITY\"", cut.Markup);
     }
 
     [Fact]

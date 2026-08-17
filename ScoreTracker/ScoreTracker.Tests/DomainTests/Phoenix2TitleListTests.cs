@@ -89,6 +89,67 @@ public sealed class Phoenix2TitleListTests
         Assert.Equal(19604, progress.Single(p => p.Title.Name == "[S] INTERMEDIATE LV.1").CompletionCount, 2);
     }
 
+    [Fact]
+    public void CoOpLadderProgressIsTheCoOpRatingAndNothingElseFeedsIt()
+    {
+        // An S RG duo (116.00) and an SSS+ UG trio (121.28) — the flat base pays a x3 the same
+        // as a x2 — plus a broken co-op and a standard chart, neither of which is a co-op point.
+        var duo = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).Build();
+        var trio = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(3).Build();
+        var walkoff = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).Build();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(24).Build();
+        var charts = new[] { duo, trio, walkoff, single }.ToDictionary(c => c.Id);
+
+        var progress = Phoenix2TitleList.BuildProgress(charts, new[]
+        {
+            Attempt(duo.Id, 970000, plate: PhoenixPlate.RoughGame),
+            Attempt(trio.Id, 995000, plate: PhoenixPlate.UltimateGame),
+            Attempt(walkoff.Id, 990000, isBroken: true),
+            Attempt(single.Id, 995000)
+        }, new HashSet<Name>());
+
+        var lv1 = progress.Single(p => p.Title.Name == "[CO-OP] LV.1");
+        Assert.Equal(116.00 + 121.28, lv1.CompletionCount, 2);
+        Assert.False(lv1.IsComplete);
+        // And the co-ops stayed out of the pools.
+        Assert.Equal(392.08, progress.Single(p => p.Title.Name == "[P.B] BRONZE").CompletionCount, 2);
+    }
+
+    [Fact]
+    public void CoOpLadderSumsEveryChartWithNoTopFiftyCut()
+    {
+        // 87 charts at 121.60 apiece = 10,579.20: LV.10 (10,000) earned, ADVANCED (12,000) not — a
+        // top-50 pool would stop at 6,080 and never reach LV.7. Every rung below LV.10 completes
+        // with it, and each rung's floor is the rung beneath (LV.10 measures the climb from LV.9).
+        var charts = Enumerable.Range(0, 87)
+            .Select(_ => new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).Build())
+            .ToDictionary(c => c.Id);
+
+        var progress = Phoenix2TitleList.BuildProgress(charts,
+            charts.Keys.Select(id => Attempt(id, 1000000, plate: PhoenixPlate.PerfectGame)).ToArray(),
+            new HashSet<Name>());
+
+        var lv10 = progress.Single(p => p.Title.Name == "[CO-OP] LV.10");
+        Assert.Equal(87 * 121.60, lv10.CompletionCount, 2);
+        Assert.True(lv10.IsComplete);
+        Assert.Equal(9000, lv10.Title.CompletionFloor);
+        Assert.False(progress.Single(p => p.Title.Name == "[CO-OP] ADVANCED").IsComplete);
+        Assert.All(Enumerable.Range(1, 9),
+            i => Assert.True(progress.Single(p => p.Title.Name == $"[CO-OP] LV.{i}").IsComplete));
+    }
+
+    [Fact]
+    public void ASiteDetectedCoOpTitleStillCompletesWithoutTheScoresBehindIt()
+    {
+        // The site awards these itself; an account whose co-op plays never imported keeps what
+        // it wears.
+        var progress = Phoenix2TitleList.BuildProgress(new Dictionary<Guid, Chart>(),
+            Array.Empty<RecordedPhoenixScore>(), new HashSet<Name> { Name.From("[CO-OP] LV.3") });
+
+        Assert.True(progress.Single(p => p.Title.Name == "[CO-OP] LV.3").IsComplete);
+        Assert.False(progress.Single(p => p.Title.Name == "[CO-OP] LV.4").IsComplete);
+    }
+
     [Theory]
     [InlineData(990000, false, true)] // SSS meets the bar
     [InlineData(985000, false, false)] // SS+ does not
