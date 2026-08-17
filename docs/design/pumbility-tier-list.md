@@ -157,6 +157,14 @@ deliberately not worth more: Phoenix 1 PUMBILITY has a few weeks of relevance le
   the same list — one computed over the players in *r*±3. Member sets of neighbouring keys
   overlap, which is fine: a list per key is what the nightly job writes, not a partition of
   players. Thirty-seven keys per type per mix at most.
+- **You are never one of your own peers** (owner, 2026-08-17; [pumbility-overhaul.md D31](pumbility-overhaul.md)).
+  The stored list counts every member's pool, the reader's among them when they hold one, so the
+  reader takes their own back out at read time (`TierListBlendBuilder.ComputePumbility`): one from
+  the peer count, one from every chart their pool holds — the pool rebuilt from their records with
+  the writer's own rule, `PumbilityPeers.TopPool` — and the bands redrawn with the writer's own
+  processor. On Phoenix 1 the same subtraction applies when the reader holds a full pool of the type
+  (a short one was never counted among the title-level members). Nightly is the caveat: a pool that
+  filled since the last build was never counted in, and for that day the subtraction runs one deep.
 - **The old per-viewer-union worry is moot.** The first version keyed on the own-type title rung
   because a Singles∪Combined union was per viewer and could not be materialized. Keying on the
   viewer's rung has the same property the own-type key had — everyone at one rung shares one

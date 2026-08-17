@@ -137,6 +137,19 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
     }
 
     [Fact]
+    public void OnPhoenix2AShortPoolSaysSoRatherThanBlamingThePeers()
+    {
+        // D28: the viewer holds 29 of the 50 doubles a pool takes, so there is no peer group for
+        // them yet. The silence is theirs, and the page prints the same figure the PUMBILITY
+        // page's chip does instead of claiming the peers scored nothing.
+        var cut = RenderPage(peers: PeerGroup.Pumbility(24, 0, 29), projectedCount: 0);
+
+        Assert.Contains("Doubles: 29/50 charts", cut.Markup);
+        Assert.Contains("Peer projections show once your doubles pool has 50 charts.", cut.Markup);
+        Assert.DoesNotContain("players at your level have only scored", cut.Markup);
+    }
+
+    [Fact]
     public void OnACompetitiveBandTheStatsKeepTheLevelFigures()
     {
         var cut = RenderPage(peers: PeerGroup.Competitive(18.4, 0.5, 148));
@@ -146,7 +159,8 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
         Assert.DoesNotContain("PUMBILITY peers", cut.Markup);
     }
 
-    private IRenderedFragment RenderPage(string? savedSort = null, bool movers = false, PeerGroup? peers = null)
+    private IRenderedFragment RenderPage(string? savedSort = null, bool movers = false, PeerGroup? peers = null,
+        int? projectedCount = null)
     {
         var charts = Folder
             .Select(f => ChartNamed(f.Name))
@@ -182,7 +196,7 @@ public sealed class PersonalizedBreakdownPageTests : ComponentTestBase
                         movers && i == 3 ? null : p.First.Projected))
                     .ToArray(),
                 Array.Empty<BreakdownSkillRecord>(), false, 0, 0, 0, 0,
-                0, 0, 0, 1, Folder.Length, Folder.Length, 148, 18.4, 0.5, 0.7, false, peers));
+                0, 0, 0, 1, projectedCount ?? Folder.Length, Folder.Length, 148, 18.4, 0.5, 0.7, false, peers));
 
         this.RenderInteractive();
         // The lens is [SupplyParameterFromQuery], so it arrives through the URL rather than as a

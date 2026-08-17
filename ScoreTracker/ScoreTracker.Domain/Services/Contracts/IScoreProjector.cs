@@ -1,3 +1,4 @@
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -53,11 +54,13 @@ public enum PeerGroupKind
 /// </param>
 /// <param name="HalfWidth">Levels on a competitive band; rungs on a PUMBILITY band.</param>
 /// <param name="Size">
-///     Players in the group, the viewer excluded. On a competitive band this is the number
-///     whose scores actually reached an estimate — most of a level band has played none of the
-///     charts asked about, so the honest figure is the one that voted. On a PUMBILITY band it is
-///     the group itself: every player meeting the definition, whether or not they played the
-///     charts asked about, because that group is a thing the page names.
+///     Players in the group, the viewer excluded — a player is never one of their own peers. On
+///     a competitive band this is the number whose scores actually reached an estimate — most of
+///     a level band has played none of the charts asked about, so the honest figure is the one
+///     that voted. On a PUMBILITY band it is the group itself: every player meeting the
+///     definition, whether or not they played the charts asked about, because that group is a
+///     thing the page names. Zero for a Phoenix 2 viewer whose own pool of the type is short: the
+///     band is not counted for a viewer it cannot yet serve, and the page prints the pool instead.
 /// </param>
 /// <param name="PoolCount">
 ///     The viewer's rated charts of the type, capped at <paramref name="PoolSize" />. Zero on a
@@ -72,6 +75,28 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
 
     /// <summary>The pool a Phoenix 2 viewer, and each of their peers, must hold of the chart type.</summary>
     public const int PumbilityPoolSize = 50;
+
+    /// <summary>
+    ///     The lowest level a Phoenix 2 chart prices above zero at — the pool's floor, so a
+    ///     player's non-broken records of the type from here up ARE their pool, and
+    ///     <see cref="PumbilityPoolSize" /> of them is a full one. One constant, because the
+    ///     projection, the tier lists' PUMBILITY lens and the nightly list builder all count the
+    ///     same pool and must agree on where it starts.
+    /// </summary>
+    public static readonly DifficultyLevel PumbilityPoolFloor = DifficultyLevel.From(10);
+
+    /// <summary>
+    ///     The rung indices a Phoenix 2 peer band spans around <paramref name="rungIndex" />:
+    ///     <see cref="PumbilityRungWindow" /> either side, clipped to the ladder (nothing lies
+    ///     below index 0 or above the capstone). The one place the clip lives — the projector
+    ///     draws its peers with it, the tier-list builder keys its lists with it, and a page that
+    ///     names the band prints it.
+    /// </summary>
+    public static (int Lowest, int Highest) PumbilityBand(int rungIndex)
+    {
+        return (Math.Max(0, rungIndex - PumbilityRungWindow),
+            Math.Min(Phoenix2PumbilityLevel.CapstoneIndex, rungIndex + PumbilityRungWindow));
+    }
 
     /// <summary>
     ///     False only for a Phoenix 2 viewer whose pool of the type is short of fifty: the group

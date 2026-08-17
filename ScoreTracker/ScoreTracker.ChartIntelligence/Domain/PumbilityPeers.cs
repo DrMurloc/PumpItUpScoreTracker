@@ -31,8 +31,21 @@ internal static class PumbilityPeers
     /// </summary>
     public const int PoolSize = PeerGroup.PumbilityPoolSize;
 
-    /// <summary>Rungs either side of the viewer's that count as PUMBILITY peers on Phoenix 2.</summary>
-    public const int RungWindow = PeerGroup.PumbilityRungWindow;
+    /// <summary>
+    ///     A player's PUMBILITY pool of one chart type from their priced records: the fifty highest
+    ///     ratings above zero, or null when they hold fewer than fifty — a short pool is not one
+    ///     yet. The nightly writer builds every player's pool with this and the reader rebuilds
+    ///     the viewer's own with it, so the two cannot disagree about what a pool is.
+    /// </summary>
+    public static IReadOnlySet<Guid>? TopPool(IEnumerable<(Guid ChartId, double Rating)> rated)
+    {
+        var top = rated.Where(r => r.Rating > 0)
+            .OrderByDescending(r => r.Rating)
+            .Take(PoolSize)
+            .Select(r => r.ChartId)
+            .ToHashSet();
+        return top.Count >= PoolSize ? top : null;
+    }
 
     /// <summary>Phoenix 1: the level of the player's highest difficulty title.</summary>
     public static string ForDifficultyTitleLevel(int level)
@@ -61,7 +74,6 @@ internal static class PumbilityPeers
     /// </summary>
     public static (int Lowest, int Highest) Phoenix2Band(int rungIndex)
     {
-        return (Math.Max(0, rungIndex - RungWindow),
-            Math.Min(Phoenix2PumbilityLevel.CapstoneIndex, rungIndex + RungWindow));
+        return PeerGroup.PumbilityBand(rungIndex);
     }
 }

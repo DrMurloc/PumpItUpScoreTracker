@@ -90,8 +90,17 @@ public sealed class ScoreProjectorTests
         Assert.False(result.Group!.IsLit);
         Assert.Equal(29, result.Group.PoolCount);
         Assert.Equal(50, result.Group.PoolSize);
-        // The peers still exist and are still counted, so the page can say what would light up.
-        Assert.Equal(6, result.Group.Size);
+        // The band is not swept for a viewer it cannot yet serve: their own pool is read first and
+        // alone, and a short one ends the run before anyone else's records are asked for.
+        Assert.Equal(0, result.Group.Size);
+        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(It.IsAny<MixEnum>(), It.IsAny<double>(),
+            It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(),
+            It.Is<IEnumerable<Guid>>(ids => ids.Count() == 1 && ids.Single() == Viewer), It.IsAny<ChartType>(),
+            It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(),
+            It.Is<IEnumerable<Guid>>(ids => ids.Count() != 1 || ids.Single() != Viewer), It.IsAny<ChartType>(),
+            It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -183,15 +192,19 @@ public sealed class ScoreProjectorTests
     [Fact]
     public async Task ThePeerReadCoversEveryPricedLevelNotTheTargetsBand()
     {
-        // Pool fullness is counted from the same read as the evidence, so the read spans the
-        // whole priced range (10..Max) whatever levels the targets sit at.
+        // Pool fullness is counted from the same read as the evidence — the viewer's own first,
+        // then the band's — so both reads span the whole priced range (10..Max) whatever levels
+        // the targets sit at, and neither is ever narrowed to the targets' band.
         var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
 
         await ctx.Project(ChartType.Single, ChartA);
 
         ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(MixEnum.Phoenix2, It.IsAny<IEnumerable<Guid>>(),
             ChartType.Single, DifficultyLevel.From(10), DifficultyLevel.Max, It.IsAny<CancellationToken>()),
-            Times.Once);
+            Times.Exactly(2));
+        ctx.Scores.Verify(s => s.GetPlayerScoresInLevelRange(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
+            It.IsAny<ChartType>(), It.IsAny<DifficultyLevel>(), It.IsAny<DifficultyLevel>(),
+            It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     // ------------------------------------------------------------------ Phoenix 1

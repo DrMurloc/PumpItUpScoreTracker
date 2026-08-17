@@ -166,6 +166,23 @@ else
                         }
                     </div>
                 }
+                else if (_breakdown.Peers is { Kind: PeerGroupKind.PumbilityBand, IsLit: false } dark)
+                {
+                    @* Phoenix 2, and the viewer's own pool of the type is short (D28): the silence is
+                       theirs, not the peers', and the page says how far they are — the same figure
+                       the PUMBILITY page's chip prints — rather than blaming a group that was never
+                       asked. *@
+                    <div class="bd-quiet">
+                        <span>
+                            @(_chartType == ChartType.Single
+                                ? L["Singles: {0}/{1} charts", dark.PoolCount, dark.PoolSize]
+                                : L["Doubles: {0}/{1} charts", dark.PoolCount, dark.PoolSize])
+                            · @(_chartType == ChartType.Single
+                                ? L["Peer projections show once your singles pool has {0} charts.", dark.PoolSize]
+                                : L["Peer projections show once your doubles pool has {0} charts.", dark.PoolSize])
+                        </span>
+                    </div>
+                }
                 else
                 {
                     <div class="bd-quiet">
@@ -1319,9 +1336,8 @@ else
     /// <summary>"[P.B] DIAMOND LV.1 – [P.B] RED BERYL LV.2": the rungs a Phoenix 2 peer group spans.</summary>
     private string RungBand(PeerGroup peers)
     {
-        var centre = (int)peers.Center;
-        var width = (int)peers.HalfWidth;
-        return $"{RungLabel(Math.Max(0, centre - width))} – {RungLabel(Math.Min(Phoenix2PumbilityLevel.CapstoneIndex, centre + width))}";
+        var (lowest, highest) = PeerGroup.PumbilityBand((int)peers.Center);
+        return $"{RungLabel(lowest)} – {RungLabel(highest)}";
     }
 
     private string RungLabel(int index)

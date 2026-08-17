@@ -36,12 +36,6 @@ namespace ScoreTracker.Domain.Services;
 /// </summary>
 public sealed class ScoreProjector : IScoreProjector
 {
-    /// <summary>
-    ///     The lowest level a Phoenix 2 chart prices above zero at — the pool's floor, and so the
-    ///     floor of the read that counts pools (docs/DOMAIN.md, PUMBILITY).
-    /// </summary>
-    private static readonly DifficultyLevel MinimumPricedLevel = DifficultyLevel.From(10);
-
     private readonly IPlayerHistoryRepository _history;
     private readonly IScoreReader _scores;
     private readonly IPlayerStatsReader _stats;
@@ -138,7 +132,7 @@ public sealed class ScoreProjector : IScoreProjector
 
             freshnessCount += scored.Length;
             projected[group.Key] = estimate.Value;
-            spreads[group.Key] = SpreadOf(scored, PeerEstimator.GrowthDecayLevels, 1);
+            spreads[group.Key] = SpreadOf(scored, PeerEstimator.GrowthDecayLevels);
         }
 
         return new ScoreProjection(projected, contributors.Count, myLevel,
@@ -184,38 +178,42 @@ public sealed class ScoreProjector : IScoreProjector
         var mine = await _stats.GetStats(mix, userId, cancellationToken);
         var myLevel = CompetitiveLevelFor(mine, chartType);
         var rung = Phoenix2PumbilityLevel.From(mine.SkillRating);
-        var lowest = Phoenix2PumbilityLevel
-            .FromIndex(Math.Max(0, rung.Index - PeerGroup.PumbilityRungWindow))!.Value;
-        var highest = Phoenix2PumbilityLevel
-            .FromIndex(Math.Min(Phoenix2PumbilityLevel.CapstoneIndex, rung.Index + PeerGroup.PumbilityRungWindow))!
-            .Value;
+
+        // The viewer's own pool of the type first, and alone. On Phoenix 2 every non-broken pass
+        // at the pool floor or above prices above zero, so a player's records of the type at
+        // those levels ARE their pool, and fifty of them is a full one. A short one is the common
+        // case at a mix launch and costs one player's records to find out; their group means
+        // nothing for them until the pool is real (D28), so the band is not swept for a viewer it
+        // cannot yet serve — the page says how far they are rather than estimating.
+        var ownPool = PoolCount(await _scores.GetPlayerScoresInLevelRange(mix, new[] { userId }, chartType,
+            PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken));
+        if (ownPool < PeerGroup.PumbilityPoolSize)
+            return ScoreProjection.None(myLevel, PeerGroup.Pumbility(rung.Index, 0, ownPool));
+
+        var (lowestIndex, highestIndex) = PeerGroup.PumbilityBand(rung.Index);
+        var lowest = Phoenix2PumbilityLevel.FromIndex(lowestIndex)!.Value;
+        var highest = Phoenix2PumbilityLevel.FromIndex(highestIndex)!.Value;
 
         // Half-open on the top: a rung's NextThreshold is where the rung above starts. The
-        // capstone has nothing above it, so a band reaching it is open-ended.
+        // capstone has nothing above it, so a band reaching it is open-ended. The viewer is never
+        // one of their own peers.
         var candidates = (await _stats.GetPlayersByPumbilityRange(mix, lowest.Threshold,
                 highest.NextThreshold ?? double.MaxValue, cancellationToken))
             .ToHashSet();
         candidates.Remove(userId);
 
-        // One read answers two questions: what everyone scored on the charts asked about, and
-        // whether each of them — the viewer included — holds a full pool of the type. On Phoenix
-        // 2 every non-broken pass at level 10 or above prices above zero, so a player's records
-        // of the type at those levels ARE their pool, and fifty of them is a full one.
-        var records = (await _scores.GetPlayerScoresInLevelRange(mix, candidates.Append(userId), chartType,
-                MinimumPricedLevel, DifficultyLevel.Max, cancellationToken))
+        // One read answers two questions: what everyone in the band scored on the charts asked
+        // about, and which of them hold a full pool of the type.
+        var records = (await _scores.GetPlayerScoresInLevelRange(mix, candidates, chartType,
+                PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken))
             .ToArray();
-        var poolCounts = records
+        var peers = records
             .GroupBy(s => s.UserId)
-            .ToDictionary(g => g.Key, g => g.Select(s => s.ChartId).Distinct().Count());
-
-        var peers = candidates
-            .Where(id => poolCounts.GetValueOrDefault(id) >= PeerGroup.PumbilityPoolSize)
+            .Where(g => PoolCount(g) >= PeerGroup.PumbilityPoolSize)
+            .Select(g => g.Key)
             .ToHashSet();
-        var group = PeerGroup.Pumbility(rung.Index, peers.Count, poolCounts.GetValueOrDefault(userId));
-
-        // The viewer's own pool of the type has to be real before the group means anything for
-        // them (D28); the page says how far they are rather than estimating.
-        if (!group.IsLit || peers.Count == 0) return ScoreProjection.None(myLevel, group);
+        var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool);
+        if (peers.Count == 0) return ScoreProjection.None(myLevel, group);
 
         var wanted = targets.Select(t => t.ChartId).ToHashSet();
         var projected = new Dictionary<Guid, PhoenixScore>();
@@ -234,7 +232,7 @@ public sealed class ScoreProjector : IScoreProjector
 
             foreach (var voice in voices) contributors.Add(voice.UserId);
             projected[chart.Key] = estimate.Value;
-            spreads[chart.Key] = SpreadOf(scored, 0, PeerEstimator.Phoenix2MinimumPeers);
+            spreads[chart.Key] = SpreadOf(scored, 0);
         }
 
         return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group, spreads);
@@ -246,12 +244,17 @@ public sealed class ScoreProjector : IScoreProjector
     ///     brackets the very median it prints. Called only after the estimate exists, so the
     ///     quartiles always do too.
     /// </summary>
-    private static PeerSpread SpreadOf(IReadOnlyCollection<PeerScore> scored, double growthDecayLevels,
-        int minimumPeers)
+    private static PeerSpread SpreadOf(IReadOnlyCollection<PeerScore> scored, double growthDecayLevels)
     {
-        var lower = PeerEstimator.Estimate(scored, growthDecayLevels, PeerEstimator.LowerQuartile, minimumPeers)!.Value;
-        var upper = PeerEstimator.Estimate(scored, growthDecayLevels, PeerEstimator.UpperQuartile, minimumPeers)!.Value;
+        var lower = PeerEstimator.Estimate(scored, growthDecayLevels, PeerEstimator.LowerQuartile)!.Value;
+        var upper = PeerEstimator.Estimate(scored, growthDecayLevels, PeerEstimator.UpperQuartile)!.Value;
         return new PeerSpread(lower, upper, scored.Count);
+    }
+
+    /// <summary>Distinct charts among a player's records of the type — their pool of it.</summary>
+    private static int PoolCount(IEnumerable<UserPhoenixScore> records)
+    {
+        return records.Select(s => s.ChartId).Distinct().Count();
     }
 
     private static double CompetitiveLevelFor(PlayerStatsRecord stats, ChartType chartType)

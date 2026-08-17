@@ -175,17 +175,18 @@ else
             {
                 <MudChip T="string" Color="Color.Warning" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Construction">@L["Provisional — based on Phoenix data"]</MudChip>
             }
-            @* Same slot on every personalized lens; only the peer group differs — PUMBILITY
-               peers here (the rung band on Phoenix 2, the difficulty-title level standing in on
-               Phoenix 1), competitive level on Score. *@
+            @* Same slot on every personalized lens; only the peer group differs. On Phoenix 2
+               both lenses read PUMBILITY peers — the projection behind the Score lens draws them
+               too (D23) — while Phoenix 1 keeps the difficulty-title level on PUMBILITY and the
+               competitive band on Score. *@
             @if (PersonalizedActive && _peerCount > 0)
             {
                 <span>
-                    @(_tierListType == "PUMBILITY"
-                        ? _currentMix == MixEnum.Phoenix2
-                            ? L["Ranked against {0} PUMBILITY peers within 3 levels of you", _peerCount]
-                            : L["Ranked against {0} players on your difficulty title level", _peerCount]
-                        : L["Ranked against {0} players of similar competitive level", _peerCount])
+                    @(_currentMix == MixEnum.Phoenix2
+                        ? L["Ranked against {0} PUMBILITY peers within 3 levels of you", _peerCount]
+                        : _tierListType == "PUMBILITY"
+                            ? L["Ranked against {0} players on your difficulty title level", _peerCount]
+                            : L["Ranked against {0} players of similar competitive level", _peerCount])
                 </span>
                 @* Score only: the Breakdown page explains the Score projection and coerces any
                    other lens to it, so linking it from Personalized PUMBILITY would answer a
@@ -1508,10 +1509,10 @@ else
     private IReadOnlyDictionary<Guid, PhoenixScore> _projectedScores = new Dictionary<Guid, PhoenixScore>();
     private IReadOnlyList<TierGroup> _groups = Array.Empty<TierGroup>();
     private IEnumerable<SongTierListEntry> _finalEntries = Array.Empty<SongTierListEntry>();
-    // PUMBILITY only: how many of the cohort's pools hold each chart, and how big the cohort is.
+    // PUMBILITY only: how many of the peers' pools hold each chart, and how many peers there are.
     private IReadOnlyDictionary<Guid, int> _appearances = new Dictionary<Guid, int>();
     private int _peerCount;
-    // Folders the PUMBILITY lens can answer for, for whichever cohort is in play. Null while
+    // Folders the PUMBILITY lens can answer for, for whichever peer group is in play. Null while
     // the lens is not selected, which is also what makes the picker gate a no-op elsewhere.
     private HashSet<(ChartType Type, int Level)>? _pumbilityFolders;
     private bool _isProvisionalFallback = false;
@@ -1796,7 +1797,7 @@ else
         _isLoading = true;
         StateHasChanged();
 
-        // The PUMBILITY lens only answers for a band of folders around the cohort, and the
+        // The PUMBILITY lens only answers for a band of folders around the peer group, and the
         // routes for the others still exist and are crawlable. Land on the nearest folder that
         // has an answer rather than on a dead page — silently, per the owner: an explanation
         // for a folder the reader may not have chosen deliberately is noise.
