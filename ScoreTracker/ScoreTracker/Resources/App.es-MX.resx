@@ -808,9 +808,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>Seguidos, desde aquí</value>
   </data>
-  <data name="Back to community" xml:space="preserve">
-    <value>Volver a la comunidad</value>
-  </data>
   <data name="Back to rivals" xml:space="preserve">
     <value>Volver a rivales</value>
   </data>
@@ -969,6 +966,9 @@
   </data>
   <data name="Board only" xml:space="preserve">
     <value>Solo marcador</value>
+  </data>
+  <data name="Board players" xml:space="preserve">
+    <value>Jugadores del marcador</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>Tableros</value>
@@ -1240,12 +1240,6 @@
   <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
     <value>Charts hacia tu próximo título, y títulos de habilidad a un SSS.</value>
   </data>
-  <data name="Charts you lose" xml:space="preserve">
-    <value>Charts que pierde</value>
-  </data>
-  <data name="Charts you win" xml:space="preserve">
-    <value>Charts que gana</value>
-  </data>
   <data name="ChartScoring" xml:space="preserve">
     <value>ChartScoring</value>
   </data>
@@ -1474,9 +1468,6 @@
   <data name="Compare" xml:space="preserve">
     <value>Comparar</value>
   </data>
-  <data name="Compare in folder" xml:space="preserve">
-    <value>Comparar en el folder</value>
-  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>{0} charts comparados ({1}): ninguno superó el listón.</value>
   </data>
@@ -1524,9 +1515,6 @@
   </data>
   <data name="Completion %" xml:space="preserve">
     <value>% de finalización</value>
-  </data>
-  <data name="Completion (you / them)" xml:space="preserve">
-    <value>Completitud (usted / ellos)</value>
   </data>
   <data name="Completionist" xml:space="preserve">
     <value>Completionist</value>
@@ -2316,6 +2304,9 @@
   </data>
   <data name="Find a chart and its pages" xml:space="preserve">
     <value>Encuentra un chart y sus páginas</value>
+  </data>
+  <data name="Find a chart or player" xml:space="preserve">
+    <value>Buscar un chart o jugador</value>
   </data>
   <data name="Find a player" xml:space="preserve">
     <value>Buscar jugador</value>
@@ -4399,11 +4390,17 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Solo aparecen las canciones con algún chart que cambió.</value>
   </data>
+  <data name="Only you" xml:space="preserve">
+    <value>Solo tú</value>
+  </data>
   <data name="Only you can see this" xml:space="preserve">
     <value>Solo tú puedes ver esto</value>
   </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>Ahora mismo solo tú puedes usar esta herramienta.</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>Solo {0}</value>
   </data>
   <data name="only {0} have it" xml:space="preserve">
     <value>solo el {0} lo tiene</value>
@@ -4701,9 +4698,6 @@
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>Elige una dificultad de la lista para ver su desglose y charts similares.</value>
   </data>
-  <data name="Pick a folder to compare your scores." xml:space="preserve">
-    <value>Elija un folder para comparar sus puntajes.</value>
-  </data>
   <data name="pick a mix first" xml:space="preserve">
     <value>elige una versión primero</value>
   </data>
@@ -4892,9 +4886,6 @@
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
     <value>Jugador a probar (debe estar configurado como Pública)</value>
-  </data>
-  <data name="Player was not found in this community." xml:space="preserve">
-    <value>No se encontró al jugador en esta comunidad.</value>
   </data>
   <data name="Players" xml:space="preserve">
     <value>Jugadores</value>
@@ -5563,6 +5554,9 @@
   <data name="Revoked" xml:space="preserve">
     <value>Revocada</value>
   </data>
+  <data name="Rival" xml:space="preserve">
+    <value>Rival</value>
+  </data>
   <data name="Rival invite" xml:space="preserve">
     <value>Invitación de rival</value>
   </data>
@@ -5664,9 +5658,6 @@
   </data>
   <data name="Score" xml:space="preserve">
     <value>Puntaje</value>
-  </data>
-  <data name="Score average (you / them)" xml:space="preserve">
-    <value>Puntaje promedio (usted / ellos)</value>
   </data>
   <data name="Score Completion" xml:space="preserve">
     <value>Finalización de puntuación</value>
@@ -6075,6 +6066,9 @@
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Mostrar los charts menos parecidos</value>
+  </data>
+  <data name="Show unshared" xml:space="preserve">
+    <value>Mostrar no compartidos</value>
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Muestra para qué está registrado este canal</value>
@@ -6952,9 +6946,6 @@
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>Mediante «compartir con todas las herramientas»</value>
   </data>
-  <data name="Tie" xml:space="preserve">
-    <value>Empate</value>
-  </data>
   <data name="Tier" xml:space="preserve">
     <value>Rango</value>
   </data>
@@ -7692,9 +7683,6 @@
   </data>
   <data name="Will be skipped" xml:space="preserve">
     <value>Se omitirá</value>
-  </data>
-  <data name="Winner" xml:space="preserve">
-    <value>Ganador</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>victorias en tu rango</value>
@@ -8595,9 +8583,6 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>hace {0} min</value>
-  </data>
-  <data name="{0}y old" xml:space="preserve">
-    <value>{0} años</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} en la tabla oficial</value>

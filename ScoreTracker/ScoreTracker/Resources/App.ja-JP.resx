@@ -815,9 +815,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>ここから連続で</value>
   </data>
-  <data name="Back to community" xml:space="preserve">
-    <value>コミュニティに戻る</value>
-  </data>
   <data name="Back to rivals" xml:space="preserve">
     <value>ライバルに戻る</value>
   </data>
@@ -976,6 +973,9 @@
   </data>
   <data name="Board only" xml:space="preserve">
     <value>ボードのみ</value>
+  </data>
+  <data name="Board players" xml:space="preserve">
+    <value>ボードのプレーヤー</value>
   </data>
   <data name="Boards" xml:space="preserve">
     <value>ボード</value>
@@ -1249,12 +1249,6 @@
   <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
     <value>次の称号に向けた譜面と、SSSまであと一歩のスキル称号。</value>
   </data>
-  <data name="Charts you lose" xml:space="preserve">
-    <value>負けている譜面</value>
-  </data>
-  <data name="Charts you win" xml:space="preserve">
-    <value>勝っている譜面</value>
-  </data>
   <data name="ChartScoring" xml:space="preserve">
 	  <value>ChartScoring</value>
 	  
@@ -1485,9 +1479,6 @@
   <data name="Compare" xml:space="preserve">
     <value>比較</value>
   </data>
-  <data name="Compare in folder" xml:space="preserve">
-    <value>フォルダー内で比較</value>
-  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>譜面{0}件を比較（{1}）— 基準を超えた譜面はありません。</value>
   </data>
@@ -1535,9 +1526,6 @@
   </data>
   <data name="Completion %" xml:space="preserve">
     <value>達成率 %</value>
-  </data>
-  <data name="Completion (you / them)" xml:space="preserve">
-    <value>クリア率（自分／相手）</value>
   </data>
   <data name="Completionist" xml:space="preserve">
     <value>Completionist</value>
@@ -2333,6 +2321,9 @@
   </data>
   <data name="Find a chart and its pages" xml:space="preserve">
     <value>譜面とそのページを検索</value>
+  </data>
+  <data name="Find a chart or player" xml:space="preserve">
+    <value>チャートやプレーヤーを探す</value>
   </data>
   <data name="Find a player" xml:space="preserve">
     <value>プレイヤーを探す</value>
@@ -4430,11 +4421,17 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>変更があった譜面を持つ曲のみ表示しています。</value>
   </data>
+  <data name="Only you" xml:space="preserve">
+    <value>自分のみ</value>
+  </data>
   <data name="Only you can see this" xml:space="preserve">
     <value>これはあなたにしか見えません</value>
   </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>いまはあなただけがこのツールを使えます。</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>{0}のみ</value>
   </data>
   <data name="only {0} have it" xml:space="preserve">
     <value>保有率{0}</value>
@@ -4736,9 +4733,6 @@
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>リストから難度を選ぶと、詳細と類似譜面が表示されます。</value>
   </data>
-  <data name="Pick a folder to compare your scores." xml:space="preserve">
-    <value>フォルダーを選ぶとスコアを比較できます。</value>
-  </data>
   <data name="pick a mix first" xml:space="preserve">
     <value>先にバージョンを選んでください</value>
   </data>
@@ -4928,9 +4922,6 @@
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
 	  <value>テスト対象プレーヤー（公開設定必須）</value>
-  </data>
-  <data name="Player was not found in this community." xml:space="preserve">
-    <value>このコミュニティにプレーヤーが見つかりませんでした。</value>
   </data>
   <data name="Players" xml:space="preserve">
     <value>プレーヤー達</value>
@@ -5606,6 +5597,9 @@
   <data name="Revoked" xml:space="preserve">
     <value>取り消し済み</value>
   </data>
+  <data name="Rival" xml:space="preserve">
+    <value>ライバル</value>
+  </data>
   <data name="Rival invite" xml:space="preserve">
     <value>ライバル招待</value>
   </data>
@@ -5708,9 +5702,6 @@
   </data>
   <data name="Score" xml:space="preserve">
     <value>スコア</value>
-  </data>
-  <data name="Score average (you / them)" xml:space="preserve">
-    <value>平均スコア（自分／相手）</value>
   </data>
   <data name="Score Completion" xml:space="preserve">
     <value>スコア達成率</value>
@@ -6128,6 +6119,9 @@
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>最も似ていない譜面を表示</value>
+  </data>
+  <data name="Show unshared" xml:space="preserve">
+    <value>共通以外も表示</value>
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>このチャンネルの登録内容を表示</value>
@@ -7011,9 +7005,6 @@
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>「すべてのツールと共有」経由</value>
   </data>
-  <data name="Tie" xml:space="preserve">
-    <value>引き分け</value>
-  </data>
   <data name="Tier" xml:space="preserve">
     <value>帯</value>
   </data>
@@ -7756,9 +7747,6 @@
   </data>
   <data name="Will be skipped" xml:space="preserve">
     <value>スキップされます</value>
-  </data>
-  <data name="Winner" xml:space="preserve">
-    <value>勝者</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>同範囲内で優勝</value>
@@ -8665,9 +8653,6 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}分前</value>
-  </data>
-  <data name="{0}y old" xml:space="preserve">
-    <value>{0}年前</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>公式ランキングで ~#{0}</value>
