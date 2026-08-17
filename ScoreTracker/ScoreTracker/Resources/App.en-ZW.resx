@@ -397,9 +397,6 @@
   <data name="A perfect plate on every chart in your pool would add {0} — {1} of it." xml:space="preserve">
     <value>Murp murgloo ap mrglro murgl blarg urgl grorgl roglub {0} — {1} blarg murgro.</value>
   </data>
-  <data name="A plate adds at most +{0} to a grade multiplier of {1}–{2}, so Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {3} — {4} of a level at 24, {5} of a level at 20." xml:space="preserve">
-    <value>A murp roglub og mrrrgl +{0} ro a rorgl murmgrog ba {1}–{2}, ro Murgloo-Grgllurg mrglro murgl lo a blubgro grogro Brglug-Grgllurg mrglro mrp lu gromb brgl {3} — {4} ba a grorpmurm og 24, {5} ba a grorpmurm og 20.</value>
-  </data>
   <data name="A player connected" xml:space="preserve">
     <value>Morp golba</value>
   </data>
@@ -426,9 +423,6 @@
   </data>
   <data name="A tiebreaker." xml:space="preserve">
     <value>A grulmplub.</value>
-  </data>
-  <data name="a typical pool sits at about +{0}" xml:space="preserve">
-    <value>a plom blubgro ap og brgl +{0}</value>
   </data>
   <data name="AA is exactly ×1.00. Steps of 0.05 up to S, then 0.06 a rung to SSS+; 0.10 a rung below AA." xml:space="preserve">
     <value>AA lu plomo ×1.00. Grop ba 0.05 gro ro Ｓ, ulgo 0.06 a grop ro SSS+; 0.10 a grop bloblo AA.</value>
@@ -988,6 +982,9 @@
   </data>
   <data name="Below this life a miss costs less than a bad." xml:space="preserve">
     <value>Blgrlblarg grglmrp glorgrgl gro murpblarg maglro mgl grogrgl gro urg.</value>
+  </data>
+  <data name="Below {0} a 900,000 → SSS+ buys more levels on Phoenix 2 than it did on Phoenix; from {0} up it buys fewer — up there a level counts for more against a score than it did on Phoenix." xml:space="preserve">
+    <value>Bloblo {0} a 900,000 → SSS+ blogub mrrgl plglgrrgl ap Phoenix 2 ulg mo gab ap Phoenix; blarg {0} gro mo blogub blargblarg — gro plab a grorpmurm gramb ba mrrgl gab a mrglrgl ulg mo gab ap Phoenix.</value>
   </data>
   <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
     <value>Blgrlblarg {0} roblub blgrlarglblgrl blubgl blub mrgl mr murgglorg grorpmurm. Mr {0} blub roargl lurg mr rrglrmrgl 1% glorgrgl. Blgrlgrrgl urg mrp mrpglorg glgrgl: murgblub mrp murmargl gromurp glmurmargl glargl murgrglplgl, blarg gromurp gromurg blubmr grgl blarggllurg.</value>
@@ -2556,6 +2553,9 @@
   <data name="For re-importing older scores" xml:space="preserve">
     <value>Ro gl-murggrrglmrgl grrglgro mgrlgmrg</value>
   </data>
+  <data name="For scale, on that same chart AA → AA+ is +{0}, and the same {1} one level higher is +{2}." xml:space="preserve">
+    <value>Ba grglgrrgl, ap plab plom murgl AA → AA+ lu +{0}, ur a plom {1} mrp grorpmurm grogro lu +{2}.</value>
+  </data>
   <data name="For the record" xml:space="preserve">
     <value>Ro mrp blubgrorp</value>
   </data>
@@ -2618,6 +2618,9 @@
   </data>
   <data name="From {0} to {1} the split barely moves — level {2}, score {3}{4} — while the pool’s average level climbs from {5} to {6}. Grades are already S or better on {7}–{8} of the fifty in every band: pools here are scored close to the ceiling, and what separates one band from the next is the level of the charts in it. Scoring is how a chart enters the pool — an SSS+ about {9} levels down ties a clean pass — but the pool climbs on level." xml:space="preserve">
     <value>Blarg {0} ro {1} a grulm mglmgl mrgloru — grorpmurm {2}, mrglrgl {3}{4} — lug a blubgro’a rorg grorpmurm gragro blarg {5} ro {6}. Rorgl lu gulp Ｓ ol mrrgl ap {7}–{8} ba a murgro lo mrglro grolgub: blubgro plub lu murglblarg grup ro a grogl, ur urg olb mrp grolgub blarg a grup lu a grorpmurm ba a murgl lo mo. Mrglrgl lu gam a murgl lo a blubgro — a SSS+ brgl {9} plglgrrgl blo plom a moplgl maglplgl — bum a blubgro gragro ap grorpmurm.</value>
+  </data>
+  <data name="From {0} up it flips: Phoenix 2 prices every level above 24 at double the step, so at {1} an SSS+ buys {2} levels here against {3} on Phoenix — up there a level counts for more against a score than it did." xml:space="preserve">
+    <value>Blarg {0} gro mo brglmo: Phoenix 2 gogl mrglro grorpmurm grogro 24 og groggl a grop, ro og {1} a SSS+ blogub {2} plglgrrgl plub gab {3} ap Phoenix — gro plab a grorpmurm gramb ba mrrgl gab a mrglrgl ulg mo gab.</value>
   </data>
   <data name="Full board" xml:space="preserve">
     <value>Mrglmr mrglblarg</value>
@@ -3177,6 +3180,9 @@
   <data name="IsBroken" xml:space="preserve">
 	  <value>Rogrorpro</value>
 	  <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+  </data>
+  <data name="It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level." xml:space="preserve">
+    <value>Mo amo blub a blubgro grogro: plurbmorp gab gulp grab a mglgro graplub, ro urg lu blo ro gragro lu grorpmurm.</value>
   </data>
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>Murp bo murpmurp Mgrlgmrg arplo murgloo gromurp Grgl. Gromurp murp blugrorp bam blu Plglmurgblub Rorgl.</value>
@@ -4556,6 +4562,9 @@
   <data name="Oldest Score" xml:space="preserve">
     <value>Lurgmorg Mrglrgl</value>
   </data>
+  <data name="On a {0} each plate is worth +{1} a step through {2} and +{3} a step from {4} up, so Rough Game to Perfect Game on one chart is +{5}." xml:space="preserve">
+    <value>Ap a {0} mrglro murp lu gromb +{1} a grop plglarg {2} ur +{3} a grop blarg {4} gro, ro Brglug Gurgl ro Murgloo Gurgl ap mrp murgl lu +{5}.</value>
+  </data>
   <data name="on any chart board" xml:space="preserve">
     <value>lurg ro murgl mrglblarg</value>
   </data>
@@ -4600,9 +4609,6 @@
   </data>
   <data name="one per level bucket" xml:space="preserve">
     <value>argl morg grorpmurm urgrgl</value>
-  </data>
-  <data name="One plate step (+{0}) on one chart is a few hundredths of a point." xml:space="preserve">
-    <value>Mrp murp grop (+{0}) ap mrp murgl lu a mgl gromrgprgl ba a plom.</value>
   </data>
   <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
     <value>Argl murpro mrglblarg, argl plglmorg — lurgblargmurg urgmurg grglblarg mrpblarg lurg mrp blubmurm murgl.</value>
@@ -4835,6 +4841,9 @@
   </data>
   <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
 	  <value>Lurggrrglargl Mrglrgl Blgrlblargblarg (Murpglorg lurg gro mrlurg rorgl murmmurg SSS+)</value>
+  </data>
+  <data name="Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {0} — {1} of a level at 24, {2} of a level at 20." xml:space="preserve">
+    <value>Murgloo-Grgllurg mrglro murgl lo a blubgro grogro Brglug-Grgllurg mrglro mrp lu gromb brgl {0} — {1} ba a grorpmurm og 24, {2} ba a grorpmurm og 20.</value>
   </data>
   <data name="Perfectionist" xml:space="preserve">
     <value>Grrglmurplurggro</value>
@@ -6541,8 +6550,8 @@
   <data name="Slim" xml:space="preserve">
     <value>Brgl</value>
   </data>
-  <data name="so scoring one chart is worth" xml:space="preserve">
-    <value>ro mrglrgl mrp murgl lu gromb</value>
+  <data name="so scoring one chart at 20 is worth" xml:space="preserve">
+    <value>ro mrglrgl mrp murgl og 20 lu gromb</value>
   </data>
   <data name="Socialite" xml:space="preserve">
     <value>Plglmurmmorg</value>
@@ -6963,8 +6972,8 @@
   <data name="The formula" xml:space="preserve">
     <value>A blargmurm</value>
   </data>
-  <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}. The gap closes above 24, where the base starts growing by 10 a level instead of 5 — and that is exactly where scoring stops being the cheap lever. It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level." xml:space="preserve">
-    <value>A rorgl grulm gab mglo: a SSS+ grogro a moplgl maglplgl lu gromb +{0} ap Phoenix ur lu +{1} plub. Bum plab mrpo murgmurprorgl gab urg a grorpmurm lu gromb, ur a grorpmurm mglo mrrglmrgl — Phoenix’murgl gogl lu grulubgrulub (+{2} og 20), Phoenix 2’a grogro bu a plom 5 (+{3}). Murg a olb plag gro: ap Phoenix, maglplgl mrp grorpmurm grogro grab a 900,000 ro {4} ro plom ap a murgl urgm gulp gab; ap Phoenix 2 a plom grorpmurm grop lu plom bu {5}. A grulm grup grogro 24, plom a gogl gramp grogro bu 10 a grorpmurm olbo ba 5 — ur plab lu plomo plom mrglrgl gulp lu a mglgro graplub. Mo amo blub a blubgro grogro: plurbmorp gab gulp grab a mglgro graplub, ro urg lu blo ro gragro lu grorpmurm.</value>
+  <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
+    <value>A rorgl grulm gab mglo: a SSS+ grogro a moplgl maglplgl lu gromb +{0} ap Phoenix ur lu +{1} plub. Bum plab mrpo murgmurprorgl gab urg a grorpmurm lu gromb, ur a grorpmurm mglo mrrglmrgl — Phoenix’murgl gogl lu grulubgrulub (+{2} og 20), Phoenix 2’a grogro bu a plom 5 (+{3}). Murg a olb plag gro: ap Phoenix, maglplgl mrp grorpmurm grogro grab a 900,000 ro {4} ro plom ap a murgl urgm gulp gab; ap Phoenix 2 a plom grorpmurm grop lu plom bu {5}.</value>
   </data>
   <data name="the grade span got {0}× smaller" xml:space="preserve">
     <value>a rorgl grulm grab {0}× mglmgl</value>
@@ -7020,8 +7029,11 @@
   <data name="The plate, magnified" xml:space="preserve">
     <value>Murp, mrgloomarg</value>
   </data>
-  <data name="The plate, magnified — Rough Game on every chart to Perfect Game on every chart" xml:space="preserve">
-    <value>A murp, grrglgro — Brglug Gurgl ap mrglro murgl ro Murgloo Gurgl ap mrglro murgl</value>
+  <data name="The plate, magnified — Rough Game to Perfect Game, priced on a {0}" xml:space="preserve">
+    <value>A murp, grrglgro — Brglug Gurgl ro Murgloo Gurgl, gogl ap a {0}</value>
+  </data>
+  <data name="the pools above average +{0} — about a {1}" xml:space="preserve">
+    <value>a blubgro grogro rorg +{0} — brgl a {1}</value>
   </data>
   <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
     <value>Marogl POST "pragl bloop golba". Bloop am olo grumba mo.</value>

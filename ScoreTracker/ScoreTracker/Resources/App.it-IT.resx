@@ -397,9 +397,6 @@
   <data name="A perfect plate on every chart in your pool would add {0} — {1} of it." xml:space="preserve">
     <value>Una piastra perfetta su ogni tracciato del tuo gruppo aggiungerebbe {0} — il {1} del totale.</value>
   </data>
-  <data name="A plate adds at most +{0} to a grade multiplier of {1}–{2}, so Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {3} — {4} of a level at 24, {5} of a level at 20." xml:space="preserve">
-    <value>Un plate aggiunge al massimo +{0} a un moltiplicatore di grado di {1}–{2}, quindi fare Perfect Game su ogni chart di un pool invece di Rough Game vale circa {3} — {4} di livello a 24, {5} di livello a 20.</value>
-  </data>
   <data name="A player connected" xml:space="preserve">
     <value>Un giocatore si è collegato</value>
   </data>
@@ -426,9 +423,6 @@
   </data>
   <data name="A tiebreaker." xml:space="preserve">
     <value>Uno spareggio.</value>
-  </data>
-  <data name="a typical pool sits at about +{0}" xml:space="preserve">
-    <value>un pool tipico si trova intorno a +{0}</value>
   </data>
   <data name="AA is exactly ×1.00. Steps of 0.05 up to S, then 0.06 a rung to SSS+; 0.10 a rung below AA." xml:space="preserve">
     <value>AA è esattamente ×1,00. Passi di 0,05 fino a S, poi 0,06 a gradino fino a SSS+; 0,10 a gradino sotto AA.</value>
@@ -988,6 +982,9 @@
   </data>
   <data name="Below this life a miss costs less than a bad." xml:space="preserve">
     <value>Sotto questa vita un Miss costa meno di un Bad.</value>
+  </data>
+  <data name="Below {0} a 900,000 → SSS+ buys more levels on Phoenix 2 than it did on Phoenix; from {0} up it buys fewer — up there a level counts for more against a score than it did on Phoenix." xml:space="preserve">
+    <value>Sotto il {0} un 900.000 → SSS+ compra più livelli su Phoenix 2 di quanti ne comprasse su Phoenix; dal {0} in su ne compra meno — lassù un livello conta più di un punteggio di quanto contasse su Phoenix.</value>
   </data>
   <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
     <value>Sotto {0} note tra un Miss e l'altro muori a qualsiasi livello. A {0} ti reggi intorno all'1% di vita. Non c'è una via di mezzo: sotto il dirupo il moltiplicatore non si ricostruisce mai, quindi il guadagno viene arrotondato a nulla.</value>
@@ -2556,6 +2553,9 @@
   <data name="For re-importing older scores" xml:space="preserve">
     <value>Per reimportare punteggi più vecchi</value>
   </data>
+  <data name="For scale, on that same chart AA → AA+ is +{0}, and the same {1} one level higher is +{2}." xml:space="preserve">
+    <value>Per dare la scala, sullo stesso chart AA → AA+ è +{0}, e lo stesso {1} un livello più su è +{2}.</value>
+  </data>
   <data name="For the record" xml:space="preserve">
     <value>Per la cronaca</value>
   </data>
@@ -2618,6 +2618,9 @@
   </data>
   <data name="From {0} to {1} the split barely moves — level {2}, score {3}{4} — while the pool’s average level climbs from {5} to {6}. Grades are already S or better on {7}–{8} of the fifty in every band: pools here are scored close to the ceiling, and what separates one band from the next is the level of the charts in it. Scoring is how a chart enters the pool — an SSS+ about {9} levels down ties a clean pass — but the pool climbs on level." xml:space="preserve">
     <value>Da {0} a {1} la ripartizione si muove appena — livello {2}, punteggio {3}{4} — mentre il livello medio del pool sale da {5} a {6}. I gradi sono già S o meglio su {7}–{8} dei cinquanta in ogni fascia: qui i pool sono a punteggio vicino al soffitto, e ciò che separa una fascia dalla successiva è il livello dei chart che contiene. Il punteggio è come un chart entra nel pool — un SSS+ circa {9} livelli più in basso pareggia un pass pulito — ma il pool sale di livello.</value>
+  </data>
+  <data name="From {0} up it flips: Phoenix 2 prices every level above 24 at double the step, so at {1} an SSS+ buys {2} levels here against {3} on Phoenix — up there a level counts for more against a score than it did." xml:space="preserve">
+    <value>Dal {0} in su si ribalta: Phoenix 2 prezza ogni livello sopra il 24 al doppio del gradino, quindi al {1} un SSS+ compra {2} livelli qui contro {3} su Phoenix — lassù un livello conta più di un punteggio di quanto contasse.</value>
   </data>
   <data name="Full board" xml:space="preserve">
     <value>Classifica completa</value>
@@ -3177,6 +3180,9 @@
   <data name="IsBroken" xml:space="preserve">
     <value>IsBroken</value>
     <comment>Column header on the XX-score upload preview grid; matches the legacy property name.</comment>
+  </data>
+  <data name="It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level." xml:space="preserve">
+    <value>Spiega anche i pool sopra: tutti hanno già tirato la leva economica, quindi ciò che resta da scalare è il livello.</value>
   </data>
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>Non può registrare punteggi né modificare nulla del tuo account. Puoi scollegarlo quando vuoi da Strumenti della community.</value>
@@ -4556,6 +4562,9 @@
   <data name="Oldest Score" xml:space="preserve">
     <value>Punteggio più vecchio</value>
   </data>
+  <data name="On a {0} each plate is worth +{1} a step through {2} and +{3} a step from {4} up, so Rough Game to Perfect Game on one chart is +{5}." xml:space="preserve">
+    <value>Su un {0} ogni plate vale +{1} a gradino fino a {2} e +{3} a gradino da {4} in su, quindi da Rough Game a Perfect Game su un chart sono +{5}.</value>
+  </data>
   <data name="on any chart board" xml:space="preserve">
     <value>in almeno una classifica dei chart</value>
   </data>
@@ -4600,9 +4609,6 @@
   </data>
   <data name="one per level bucket" xml:space="preserve">
     <value>uno per fascia di livello</value>
-  </data>
-  <data name="One plate step (+{0}) on one chart is a few hundredths of a point." xml:space="preserve">
-    <value>Un gradino di plate (+{0}) su un chart è qualche centesimo di punto.</value>
   </data>
   <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
     <value>Una sola classifica condivisa, una settimana — tutti registrano il proprio meglio sugli stessi chart.</value>
@@ -4835,6 +4841,9 @@
   </data>
   <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
     <value>Modificatore di punteggio perfetto (funziona come un voto in lettere oltre SSS+)</value>
+  </data>
+  <data name="Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {0} — {1} of a level at 24, {2} of a level at 20." xml:space="preserve">
+    <value>Fare Perfect Game su ogni chart di un pool invece di Rough Game vale circa {0} — {1} di livello a 24, {2} di livello a 20.</value>
   </data>
   <data name="Perfectionist" xml:space="preserve">
     <value>Perfectionist</value>
@@ -6541,8 +6550,8 @@
   <data name="Slim" xml:space="preserve">
     <value>Scarso</value>
   </data>
-  <data name="so scoring one chart is worth" xml:space="preserve">
-    <value>quindi il punteggio su un chart vale</value>
+  <data name="so scoring one chart at 20 is worth" xml:space="preserve">
+    <value>quindi il punteggio su un chart a 20 vale</value>
   </data>
   <data name="Socialite" xml:space="preserve">
     <value>Socialite</value>
@@ -6963,8 +6972,8 @@
   <data name="The formula" xml:space="preserve">
     <value>La formula</value>
   </data>
-  <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}. The gap closes above 24, where the base starts growing by 10 a level instead of 5 — and that is exactly where scoring stops being the cheap lever. It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level." xml:space="preserve">
-    <value>La distanza di grado si è davvero ridotta: un SSS+ sopra un pass pulito valeva +{0} su Phoenix ed è +{1} qui. Ma conta solo accanto a quanto vale un livello, e il livello si è ridotto di più — la base di Phoenix è quadratica (+{2} a 20), quella di Phoenix 2 cresce di 5 fissi (+{3}). Detto al contrario: su Phoenix, pareggiare un pass un livello più su richiedeva di portare un 900.000 a {4} sul chart che avevi già; su Phoenix 2 lo stesso gradino di livello si pareggia con {5}. Il divario si chiude sopra il 24, dove la base inizia a crescere di 10 a livello invece di 5 — ed è esattamente lì che il punteggio smette di essere la leva economica. Spiega anche i pool sopra: tutti hanno già tirato la leva economica, quindi ciò che resta da scalare è il livello.</value>
+  <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
+    <value>La distanza di grado si è davvero ridotta: un SSS+ sopra un pass pulito valeva +{0} su Phoenix ed è +{1} qui. Ma conta solo accanto a quanto vale un livello, e il livello si è ridotto di più — la base di Phoenix è quadratica (+{2} a 20), quella di Phoenix 2 cresce di 5 fissi (+{3}). Detto al contrario: su Phoenix, pareggiare un pass un livello più su richiedeva di portare un 900.000 a {4} sul chart che avevi già; su Phoenix 2 lo stesso gradino di livello si pareggia con {5}.</value>
   </data>
   <data name="the grade span got {0}× smaller" xml:space="preserve">
     <value>la distanza di grado è diventata {0}× più piccola</value>
@@ -7020,8 +7029,11 @@
   <data name="The plate, magnified" xml:space="preserve">
     <value>La piastra, ingrandita</value>
   </data>
-  <data name="The plate, magnified — Rough Game on every chart to Perfect Game on every chart" xml:space="preserve">
-    <value>Il plate, ingrandito — da Rough Game su ogni chart a Perfect Game su ogni chart</value>
+  <data name="The plate, magnified — Rough Game to Perfect Game, priced on a {0}" xml:space="preserve">
+    <value>Il plate, ingrandito — da Rough Game a Perfect Game, valutato su un {0}</value>
+  </data>
+  <data name="the pools above average +{0} — about a {1}" xml:space="preserve">
+    <value>i pool sopra fanno in media +{0} — circa un {1}</value>
   </data>
   <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
     <value>Il POST dice solo "questo giocatore ha importato". Vieni tu a prendere ciò che ti serve.</value>

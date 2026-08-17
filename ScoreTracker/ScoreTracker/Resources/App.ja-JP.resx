@@ -397,9 +397,6 @@
   <data name="A perfect plate on every chart in your pool would add {0} — {1} of it." xml:space="preserve">
     <value>プール内の全譜面でパーフェクトプレートを取ると {0} 増えます — 全体の {1}。</value>
   </data>
-  <data name="A plate adds at most +{0} to a grade multiplier of {1}–{2}, so Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {3} — {4} of a level at 24, {5} of a level at 20." xml:space="preserve">
-    <value>プレートは{1}–{2}のランク倍率に最大+{0}を足すだけなので、プールの全譜面をRough GameからPerfect Gameにしても価値は約{3} — 24でレベル{4}分、20でレベル{5}分です。</value>
-  </data>
   <data name="A player connected" xml:space="preserve">
     <value>プレイヤーが接続しました</value>
   </data>
@@ -426,9 +423,6 @@
   </data>
   <data name="A tiebreaker." xml:space="preserve">
     <value>タイブレーカーです。</value>
-  </data>
-  <data name="a typical pool sits at about +{0}" xml:space="preserve">
-    <value>典型的なプールは約+{0}</value>
   </data>
   <data name="AA is exactly ×1.00. Steps of 0.05 up to S, then 0.06 a rung to SSS+; 0.10 a rung below AA." xml:space="preserve">
     <value>AAはちょうど×1.00です。Sまでは0.05刻み、そこからSSS+までは1段0.06、AAより下は1段0.10。</value>
@@ -988,6 +982,9 @@
   </data>
   <data name="Below this life a miss costs less than a bad." xml:space="preserve">
     <value>この体力を下回ると Miss の方が Bad より安くなります。</value>
+  </data>
+  <data name="Below {0} a 900,000 → SSS+ buys more levels on Phoenix 2 than it did on Phoenix; from {0} up it buys fewer — up there a level counts for more against a score than it did on Phoenix." xml:space="preserve">
+    <value>{0}より下では900,000 → SSS+はPhoenixよりPhoenix 2の方が多くのレベルを買えますが、{0}から上では買えるレベルが少なくなります — その上ではスコアに対してレベルの方がPhoenixのときより重くなります。</value>
   </data>
   <data name="Below {0} notes between misses you die at every level. At {0} you cling on at about 1% life. There is no gentle middle: under the cliff your multiplier never rebuilds, so your gain rounds to nothing." xml:space="preserve">
     <value>Miss の間隔が {0} ノート未満だと、どのレベルでも死にます。{0} ならおよそ1%の体力で踏みとどまります。緩やかな中間はありません。崖の下では倍率が建て直せず、回復量がゼロに丸められます。</value>
@@ -2556,6 +2553,9 @@
   <data name="For re-importing older scores" xml:space="preserve">
     <value>古いスコアの再インポート用</value>
   </data>
+  <data name="For scale, on that same chart AA → AA+ is +{0}, and the same {1} one level higher is +{2}." xml:space="preserve">
+    <value>目安として、同じ譜面でAA → AA+は+{0}、同じ{1}を1レベル上でやると+{2}です。</value>
+  </data>
   <data name="For the record" xml:space="preserve">
     <value>記録のために</value>
   </data>
@@ -2618,6 +2618,9 @@
   </data>
   <data name="From {0} to {1} the split barely moves — level {2}, score {3}{4} — while the pool’s average level climbs from {5} to {6}. Grades are already S or better on {7}–{8} of the fifty in every band: pools here are scored close to the ceiling, and what separates one band from the next is the level of the charts in it. Scoring is how a chart enters the pool — an SSS+ about {9} levels down ties a clean pass — but the pool climbs on level." xml:space="preserve">
     <value>{0}から{1}まで内訳はほとんど動きません — レベル{2}、スコア{3}{4} — その間にプールの平均レベルは{5}から{6}へ上がります。どの帯でも50譜面中{7}–{8}譜面が既にS以上です。ここのプールは天井近くまでスコアが出ていて、帯を分けるのは中にある譜面のレベルです。スコアは譜面がプールに入る手段ですが — 約{9}レベル下のSSS+が無難なクリアと並びます — プールはレベルで上がります。</value>
+  </data>
+  <data name="From {0} up it flips: Phoenix 2 prices every level above 24 at double the step, so at {1} an SSS+ buys {2} levels here against {3} on Phoenix — up there a level counts for more against a score than it did." xml:space="preserve">
+    <value>{0}から上では逆転します。Phoenix 2は24より上のレベルを倍の刻みで値付けするので、{1}ではSSS+がここでは{2}レベル分、Phoenixでは{3}レベル分を買えます — その上ではスコアに対してレベルの方が以前より重くなります。</value>
   </data>
   <data name="Full board" xml:space="preserve">
     <value>ランキング全体</value>
@@ -3177,6 +3180,9 @@
   <data name="IsBroken" xml:space="preserve">
 	  <value>IsBroken</value>
 	  
+  </data>
+  <data name="It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level." xml:space="preserve">
+    <value>上のプールもこれで説明がつきます。みんな安いレバーはもう引いてしまったので、残っているのはレベルを上げることです。</value>
   </data>
   <data name="It cannot record scores or change anything on your account. You can disconnect any time from Community Tools." xml:space="preserve">
     <value>スコアの記録やアカウントの変更はできません。コミュニティツールからいつでも接続を解除できます。</value>
@@ -4556,6 +4562,9 @@
   <data name="Oldest Score" xml:space="preserve">
     <value>最も古いスコア</value>
   </data>
+  <data name="On a {0} each plate is worth +{1} a step through {2} and +{3} a step from {4} up, so Rough Game to Perfect Game on one chart is +{5}." xml:space="preserve">
+    <value>{0}ではプレートは{2}までは1段ごとに+{1}、{4}から上は1段ごとに+{3}の価値なので、1譜面でRough GameからPerfect Gameまでは+{5}です。</value>
+  </data>
   <data name="on any chart board" xml:space="preserve">
     <value>譜面ボード基準</value>
   </data>
@@ -4600,9 +4609,6 @@
   </data>
   <data name="one per level bucket" xml:space="preserve">
     <value>レベル帯ごとに 1 譜面</value>
-  </data>
-  <data name="One plate step (+{0}) on one chart is a few hundredths of a point." xml:space="preserve">
-    <value>1譜面でのプレート1段（+{0}）は小数点以下2桁で数個分です。</value>
   </data>
   <data name="One shared board, one week — everyone posts their best on the same charts." xml:space="preserve">
     <value>共有ボードはひとつ、期間は一週間 — 全員が同じチャートでベストを競います。</value>
@@ -4835,6 +4841,9 @@
   </data>
   <data name="Perfect Score Modifier (Acts as a letter grade beyond SSS+)" xml:space="preserve">
 	  <value>パーフェクトスコア倍率（SSS+を超えるランクとして機能）</value>
+  </data>
+  <data name="Perfect-Gaming every chart in a pool over Rough-Gaming every one is worth about {0} — {1} of a level at 24, {2} of a level at 20." xml:space="preserve">
+    <value>プールの全譜面をRough GameからPerfect Gameにしても価値は約{0} — 24でレベル{1}分、20でレベル{2}分です。</value>
   </data>
   <data name="Perfectionist" xml:space="preserve">
     <value>Perfectionist</value>
@@ -6541,8 +6550,8 @@
   <data name="Slim" xml:space="preserve">
     <value>わずか</value>
   </data>
-  <data name="so scoring one chart is worth" xml:space="preserve">
-    <value>だから1譜面をスコアすることの価値は</value>
+  <data name="so scoring one chart at 20 is worth" xml:space="preserve">
+    <value>だからレベル20で1譜面をスコアすることの価値は</value>
   </data>
   <data name="Socialite" xml:space="preserve">
     <value>Socialite</value>
@@ -6963,8 +6972,8 @@
   <data name="The formula" xml:space="preserve">
     <value>式</value>
   </data>
-  <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}. The gap closes above 24, where the base starts growing by 10 a level instead of 5 — and that is exactly where scoring stops being the cheap lever. It also explains the pools above: everyone has already taken the cheap lever, so what is left to climb is level." xml:space="preserve">
-    <value>ランクの幅は確かに縮みました。無難なクリアの上のSSS+はPhoenixで+{0}、ここでは+{1}です。でもそれはレベルの価値と並べて初めて意味を持ち、レベルの方がもっと縮みました — Phoenixのベースは二次式（20で+{2}）、Phoenix 2は固定5ずつ（+{3}）増えます。裏返せば、Phoenixで1レベル上のクリアに追いつくには手持ちの譜面で900,000を{4}まで上げる必要があり、Phoenix 2では同じ1レベルを{5}で追いつけます。差はベースがレベルごとに5ではなく10ずつ増え始める24より上で閉じます — まさにそこでスコアは安いレバーではなくなります。上のプールもこれで説明がつきます。みんな安いレバーはもう引いてしまったので、残っているのはレベルを上げることです。</value>
+  <data name="The grade span did shrink: an SSS+ over a clean pass was worth +{0} on Phoenix and is +{1} here. But that only matters against what a level is worth, and the level shrank harder — Phoenix’s base is quadratic (+{2} at 20), Phoenix 2’s grows by a flat 5 (+{3}). Put the other way round: on Phoenix, passing one level higher took a 900,000 to {4} to match on the chart you already had; on Phoenix 2 the same level step is matched by {5}." xml:space="preserve">
+    <value>ランクの幅は確かに縮みました。無難なクリアの上のSSS+はPhoenixで+{0}、ここでは+{1}です。でもそれはレベルの価値と並べて初めて意味を持ち、レベルの方がもっと縮みました — Phoenixのベースは二次式（20で+{2}）、Phoenix 2は固定5ずつ（+{3}）増えます。裏返せば、Phoenixで1レベル上のクリアに追いつくには手持ちの譜面で900,000を{4}まで上げる必要があり、Phoenix 2では同じ1レベルを{5}で追いつけます。</value>
   </data>
   <data name="the grade span got {0}× smaller" xml:space="preserve">
     <value>ランクの幅は{0}倍小さくなりました</value>
@@ -7020,8 +7029,11 @@
   <data name="The plate, magnified" xml:space="preserve">
     <value>プレート、拡大</value>
   </data>
-  <data name="The plate, magnified — Rough Game on every chart to Perfect Game on every chart" xml:space="preserve">
-    <value>プレートを拡大 — 全譜面Rough Gameから全譜面Perfect Gameまで</value>
+  <data name="The plate, magnified — Rough Game to Perfect Game, priced on a {0}" xml:space="preserve">
+    <value>プレートを拡大 — Rough GameからPerfect Gameまで、{0}での価値</value>
+  </data>
+  <data name="the pools above average +{0} — about a {1}" xml:space="preserve">
+    <value>上のプールは平均+{0} — およそ{1}</value>
   </data>
   <data name="The POST says only &quot;this player imported&quot;. You come and fetch what you need." xml:space="preserve">
     <value>POST には「このプレイヤーが取り込んだ」だけが入ります。必要なものは取りに来てください。</value>
