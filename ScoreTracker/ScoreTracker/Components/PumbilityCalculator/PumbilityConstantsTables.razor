@@ -1,0 +1,156 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services.PumbilityCalculator
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* The grade ladder and the plate bonuses as tables a reader can quote: the Doubles row is the
+   shared table, a Singles row spells out only the cells that read differently (a dash means
+   the two agree), and the score floors ride along. Phoenix gets one grade row and the plain
+   statement that every plate carried ×1.0. Static markup. *@
+<section class="pc-sec" id="constants">
+    <div class="pc-sec-head">
+        <h2 class="pc-h2">@L["The constants"]</h2>
+        <span class="pc-sub">
+            @if (Model.HasTypes)
+            {
+                @L["Every multiplier and bonus in the formula. Where a Single reads differently from a Double the Single’s value is written in full; a dash means the two agree."]
+            }
+            else
+            {
+                @L["Every multiplier in the formula. One table serves both types."]
+            }
+        </span>
+    </div>
+    <div class="pc-consts">
+        <div class="pc-card">
+            <h3 class="pc-h3">@L["Grade multipliers"]</h3>
+            <div class="pc-tablewrap pc-tablewrap-plain">
+                <table class="pc-ct">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="pc-rl">@L["Grade"]</th>
+                        @foreach (var grade in Grades)
+                        {
+                            <th scope="col">@grade.GetName()<span class="pc-metal" style="background:@ThemeScales.GradeColor(grade)"></span></th>
+                        }
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="pc-rl">@(Model.HasTypes ? L["Double"] : L["multiplier"])</td>
+                        @foreach (var grade in Grades)
+                        {
+                            <td class="pc-num">@Model.GradeTable.Doubles[grade].ToString("0.00")</td>
+                        }
+                    </tr>
+                    @if (Model.HasTypes)
+                    {
+                        <tr>
+                            <td class="pc-rl">@L["Single"]</td>
+                            @foreach (var grade in Grades)
+                            {
+                                @if (Model.GradeTable.SinglesOverrides.TryGetValue(grade, out var single))
+                                {
+                                    <td class="pc-num pc-diff">@single.ToString("0.00")</td>
+                                }
+                                else
+                                {
+                                    <td class="pc-same">–</td>
+                                }
+                            }
+                        </tr>
+                    }
+                    <tr>
+                        <td class="pc-rl">@L["score floor"]</td>
+                        @foreach (var grade in Grades)
+                        {
+                            <td class="pc-num pc-floor-cell">@FloorText(grade)</td>
+                        }
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.HasTypes)
+            {
+                <p class="pc-foot">@L["AA+ and above are identical on both types. On a Double the ladder steps −0.01 a rung through the S grades, −0.02 a rung from AAA+ to A+, −0.05 a rung down to C, then −0.10 a rung to F; a Single runs a notch lower from AA down. A perfect 1,000,000 keeps SSS+’s ×1.50 — Perfect Game is a plate."]</p>
+            }
+            else
+            {
+                <p class="pc-foot">@L["AA is exactly ×1.00. Steps of 0.05 up to S, then 0.06 a rung to SSS+; 0.10 a rung below AA."]</p>
+            }
+        </div>
+        <div class="pc-card">
+            <h3 class="pc-h3">@L["Plate bonuses"]</h3>
+            <div class="pc-tablewrap pc-tablewrap-plain">
+                <table class="pc-ct">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="pc-rl">@L["Plate"]</th>
+                        @foreach (var plate in Plates)
+                        {
+                            <th scope="col" title="@plate.GetName()">@plate.GetShorthand()</th>
+                        }
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model.PlateTable is { } plates)
+                    {
+                        <tr>
+                            <td class="pc-rl">@L["Double"]</td>
+                            @foreach (var plate in Plates)
+                            {
+                                <td class="pc-num">+@plates.Doubles[plate].ToString("0.000")</td>
+                            }
+                        </tr>
+                        <tr>
+                            <td class="pc-rl">@L["Single"]</td>
+                            @foreach (var plate in Plates)
+                            {
+                                @if (plates.SinglesOverrides.TryGetValue(plate, out var single))
+                                {
+                                    <td class="pc-num pc-diff">+@single.ToString("0.000")</td>
+                                }
+                                else
+                                {
+                                    <td class="pc-same">–</td>
+                                }
+                            }
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td class="pc-rl">@L["both"]</td>
+                            @foreach (var _ in Plates)
+                            {
+                                <td class="pc-num pc-muted">×1.0</td>
+                            }
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.HasPlates)
+            {
+                <p class="pc-foot">@L["Added to the grade multiplier before the base multiplies it. Perfect Game needs a 1,000,000."]</p>
+            }
+            else
+            {
+                <p class="pc-foot">@L["Every plate carried ×1.0. Not a rounding argument — the plate never entered the number."]</p>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private static readonly PhoenixLetterGrade[] Grades = Enum.GetValues<PhoenixLetterGrade>();
+    private static readonly PhoenixPlate[] Plates = Enum.GetValues<PhoenixPlate>();
+
+    [Parameter, EditorRequired] public PumbilityCalculatorModel Model { get; set; } = default!;
+
+    private string FloorText(PhoenixLetterGrade grade)
+    {
+        var floor = Model.GradeTable.Floors[grade];
+        return floor == 0 ? "—" : $"{floor / 1000}k";
+    }
+}

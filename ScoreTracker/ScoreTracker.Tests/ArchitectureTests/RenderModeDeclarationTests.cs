@@ -29,7 +29,11 @@ public sealed class RenderModeDeclarationTests
         "NotFoundCatchAll.razor",
         // The challenges hub: real HTML for crawlers, its dialogs islanded
         // (docs/design/weekly-charts-overhaul.md).
-        "Competition/WeeklyCharts.razor"
+        "Competition/WeeklyCharts.razor",
+        // The PUMBILITY formula page: the formula, constants and tables are real HTML; the
+        // three interactions are a vanilla script, so it runs no circuit at all
+        // (docs/design/pumbility-calculator.md D2).
+        "Tools/PumbilityCalculator.razor"
     };
 
     [Fact]

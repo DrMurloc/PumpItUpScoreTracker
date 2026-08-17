@@ -170,6 +170,51 @@ public sealed class NonComponentEndpointTests : IAsyncLifetime
     }
 
     /// <summary>
+    ///     The PUMBILITY calculator exists to be found and quoted (docs/design/pumbility-calculator.md
+    ///     D2): the formula, both chart types' value tables, the constants block the script reads
+    ///     and the head must all be in the raw HTML — the static renderer once dropped a script
+    ///     element silently, and a browser would never show that regression. Read as a crawler reads.
+    /// </summary>
+    [Fact]
+    public async Task ThePumbilityCalculatorServesItsFormulaTablesAndHeadWithoutACircuit()
+    {
+        var response = await _client.GetAsync("/PumbilityCalculator/phoenix-2");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        // The em dash in the title serves as a numeric entity, so the assert brackets it.
+        Assert.Contains("<title>PUMBILITY Calculator ", body);
+        Assert.Contains("Phoenix 2 | PIU Scores</title>", body);
+        Assert.Contains("rel=\"canonical\" href=\"https://piuscores.arroweclip.se/PumbilityCalculator/phoenix-2\"", body);
+        Assert.Contains("\"@type\":\"TechArticle\"", body);
+        Assert.Contains("BreadcrumbList", body);
+        // The formula and both types' tables are real markup, the second type hidden not absent.
+        Assert.Contains("Base(level)", body);
+        Assert.Contains("data-pc-type=\"Single\"", body);
+        Assert.Contains("data-pc-type=\"Double\"", body);
+        // A cell the configuration prices: D24 at S is 250 × 1.45.
+        Assert.Contains("data-v=\"362.5\" data-l=\"24\" data-g=\"S\"", body);
+        // The constants block the script multiplies survived the static renderer.
+        Assert.Contains("data-pc-constants", body);
+        Assert.Contains("\"additive\":true", body);
+        Assert.Contains("\"singlesUp\":true", body);
+        // And the script that works the page is included under its hashed name.
+        Assert.Contains("pumbility-calculator", body);
+    }
+
+    [Fact]
+    public async Task TheOldRatingCalculatorNameRedirectsPermanently()
+    {
+        using var handler = new HttpClientHandler { AllowAutoRedirect = false };
+        using var client = new HttpClient(handler) { BaseAddress = new Uri(_fixture.BaseUrl) };
+
+        var response = await client.GetAsync("/RatingCalculator");
+
+        Assert.Equal(HttpStatusCode.MovedPermanently, response.StatusCode);
+        Assert.Equal("/PumbilityCalculator", response.Headers.Location?.ToString());
+    }
+
+    /// <summary>
     ///     The front door carries the site-name signals: WebSite JSON-LD plus og:site_name
     ///     on the root is what lets a search result say "PIU Scores" instead of the bare
     ///     domain. Its title carries the searchable descriptor, and data-nosnippet keeps
