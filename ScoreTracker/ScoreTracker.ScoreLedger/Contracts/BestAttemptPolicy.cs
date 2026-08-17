@@ -56,15 +56,32 @@ public static class BestAttemptPolicy
     }
 
     /// <summary>
-    ///     A stage break with nothing judged: someone started a song and let it fail out. The
-    ///     official site records those; we never store one, in any table, for any reason.
-    ///     Recognized either by an explicit zero-note judgement breakdown or — on the redesigned
-    ///     best list, which carries no breakdown — by a broken card scoring zero.
+    ///     A stage break — the song interrupted, the play ended before its last note — is never
+    ///     a personal best. No opt-in reaches it and no source may seat one: the game gives it no
+    ///     grade and no chart score (the running number the Phoenix 2 best list prints for one is
+    ///     normalised over the notes judged so far, and reads like a near-pass), so it is a play
+    ///     for the journal and nothing more (docs/design/stage-breaks-and-max-combo.md D10).
+    ///     Published here beside <see cref="Beats" /> for the same reason that is: the acquisition
+    ///     side must page and filter by exactly the rule the ledger will apply.
+    /// </summary>
+    public static bool CanBeRecord(bool isStageBroken)
+    {
+        return !isStageBroken;
+    }
+
+    /// <summary>
+    ///     A break with nothing hit: someone started a song and let it fail out. The official
+    ///     site records those; we never store one, in any table, for any reason. Recognized by a
+    ///     breakdown with no perfect, great, good or bad in it — the misses are the life bar
+    ///     draining, so "nothing judged" is the wrong test (a walk-off's card reads 0/0/0/0/51) —
+    ///     or, on the redesigned best list, which carries no breakdown, by a broken card scoring
+    ///     zero.
     /// </summary>
     public static bool IsWalkOff(bool isBroken, PhoenixScore? score, JudgementCounts? judgements)
     {
         if (!isBroken) return false;
-        if (judgements != null) return judgements.NoteCount == 0;
+        if (judgements != null)
+            return judgements.Perfects + judgements.Greats + judgements.Goods + judgements.Bads == 0;
 
         return score != null && (int)score.Value == 0;
     }

@@ -20,6 +20,11 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         DateTimeOffset End,
         IReadOnlyList<ScoreEventRecord> Rows);
 
+    /// <summary>
+    ///     One play on the page. A stage break carries <see cref="IsStageBroken" /> and no score;
+    ///     <see cref="JudgedNotes" /> is how many notes the play judged, when the site's card had
+    ///     a breakdown — the row divides it by the chart's note count to say how far the run got.
+    /// </summary>
     [ExcludeFromCodeCoverage]
     public sealed record ScoreEventRecord(
         Guid ChartId,
@@ -31,5 +36,7 @@ public sealed record RecentSessionsPage(int TotalGroups, IReadOnlyList<RecentSes
         Guid? SessionId,
         ScoreEventClassification Classification,
         int? PreviousBest,
-        bool IsReclear = false);
+        bool IsReclear = false,
+        bool IsStageBroken = false,
+        int? JudgedNotes = null);
 }
