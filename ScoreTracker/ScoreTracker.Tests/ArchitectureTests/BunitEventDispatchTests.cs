@@ -58,7 +58,6 @@ public sealed class BunitEventDispatchTests
         ["ChartsExportDialogTests.cs"] = 1,
         ["ChartsPageTests.cs"] = 28,
         ["CommunityInvitePageTests.cs"] = 4,
-        ["CommunityLeaderboardPageTests.cs"] = 1,
         ["CommunityToolsReviewPageTests.cs"] = 5,
         ["ConsoleWebhooksPageTests.cs"] = 4,
         ["DrawCardTileTests.cs"] = 2,

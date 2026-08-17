@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Bunit;
 using Bunit.TestDoubles;
 using MediatR;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ScoreTracker.Catalog.Contracts.Queries;
@@ -64,8 +66,6 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
             .ReturnsAsync(new Communities.Contracts.CommunityRoleRecord(CommunityRole.Member, CommunityPermission.None));
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityPlayCountsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<Guid, int> { [PlayerId] = 42 });
-        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityCoOpCompletionQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<Guid, double> { [PlayerId] = 0.5 });
         _mediator.Setup(m => m.Send(It.IsAny<GetCommunityRosterQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[]
             {
@@ -125,13 +125,19 @@ public sealed class CommunityLeaderboardPageTests : ComponentTestBase
     }
 
     [Fact]
-    public void CoOpBoardSwapsCompetitiveForCompletion()
+    public async Task CoOpBoardRanksOnTheCoOpRatingAlone()
     {
+        // One figure on the CoOp board: the CO-OP Rating (300 in the fixture), under the game's
+        // own name for it — no competitive level, no completion percentage, and not PUMBILITY.
         var cut = Render();
-        cut.FindAll("button").First(b => b.TextContent.Trim() == "CoOp").Click();
-        Assert.Contains("title=\"CoOp Completion\"", cut.Markup);
+        await cut.FindAll("button").First(b => b.TextContent.Trim() == "CoOp").ClickAsync(new MouseEventArgs());
+        Assert.Contains("title=\"CO-OP Rating\"", cut.Markup);
+        Assert.Contains(">300<", cut.Markup);
         Assert.DoesNotContain("title=\"Comp Lv\"", cut.Markup);
-        Assert.Contains("50", cut.Markup);
+        Assert.DoesNotContain("Completion", cut.Markup);
+        Assert.DoesNotContain("title=\"PUMBILITY\"", cut.Markup);
+        // And the row template drops the competitive-level column rather than leaving a hole.
+        Assert.Contains("--olb-grid-cols:34px minmax(150px,1.6fr) 1fr 1fr 1fr 40px", cut.Markup);
     }
 
     [Fact]

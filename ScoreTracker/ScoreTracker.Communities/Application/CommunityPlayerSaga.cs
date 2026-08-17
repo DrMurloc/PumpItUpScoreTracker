@@ -21,8 +21,7 @@ namespace ScoreTracker.Communities.Application;
 internal sealed class CommunityPlayerSaga :
     IRequestHandler<GetCommunityPlayerProfileQuery, CommunityPlayerProfileRecord?>,
     IRequestHandler<GetCommunityFolderComparisonQuery, IEnumerable<CommunityChartComparisonRecord>>,
-    IRequestHandler<GetCommunityPlayCountsQuery, IReadOnlyDictionary<Guid, int>>,
-    IRequestHandler<GetCommunityCoOpCompletionQuery, IReadOnlyDictionary<Guid, double>>
+    IRequestHandler<GetCommunityPlayCountsQuery, IReadOnlyDictionary<Guid, int>>
 {
     private readonly IChartRepository _charts;
     private readonly ICommunityRepository _communities;
@@ -145,26 +144,6 @@ internal sealed class CommunityPlayerSaga :
     {
         var community = await GuardCommunity(request.CommunityName, cancellationToken);
         return await _scores.GetJournaledChartCounts(request.Mix, community.MemberIds, cancellationToken);
-    }
-
-    public async Task<IReadOnlyDictionary<Guid, double>> Handle(GetCommunityCoOpCompletionQuery request,
-        CancellationToken cancellationToken)
-    {
-        var community = await GuardCommunity(request.CommunityName, cancellationToken);
-        var coOpCharts = (await _charts.GetCharts(request.Mix, null, ChartType.CoOp, null, cancellationToken))
-            .Count();
-        if (coOpCharts == 0) return new Dictionary<Guid, double>();
-
-        var members = community.MemberIds.ToArray();
-        var passed = new Dictionary<Guid, int>();
-        // Co-op "levels" are player counts ×2–×5 — pool every folder into one completion figure.
-        for (var players = 2; players <= 5; players++)
-        foreach (var (userId, record) in await _scores.GetPlayerScores(request.Mix, members, ChartType.CoOp,
-                     players, cancellationToken))
-            if (record.Score != null && !record.IsBroken)
-                passed[userId] = passed.GetValueOrDefault(userId) + 1;
-
-        return passed.ToDictionary(kv => kv.Key, kv => (double)kv.Value / coOpCharts);
     }
 
     // The same gate the community's boards use: private communities are members-only, and the
