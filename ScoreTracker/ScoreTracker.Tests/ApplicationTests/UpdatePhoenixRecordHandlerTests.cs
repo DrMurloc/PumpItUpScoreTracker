@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Moq;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Events;
@@ -164,6 +165,119 @@ public sealed class UpdatePhoenixRecordHandlerTests
             It.IsAny<RecordedPhoenixScore>(), It.IsAny<CancellationToken>()), Times.Never);
         ctx.Journal.Verify(j => j.Append(It.IsAny<ScoreJournalEntry>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task AStageBreakIsJournaledAsAPlayAndNeverRecordedWhateverTheOptIn(bool keepBestStats)
+    {
+        // The site said the stage broke. Whatever the opt-in and whatever the number on the
+        // card, it is history — an observation with no score — and never the record. It touches
+        // no batch either: nothing was seated, so there is nothing to announce.
+        var ctx = new HandlerContext();
+        var playedAt = new DateTimeOffset(2026, 8, 15, 2, 17, 51, TimeSpan.FromHours(9));
+        var judgements = new JudgementCounts(244, 5, 2, 1, 110);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: 683059, Plate: null,
+                KeepBestStats: keepBestStats, Source: ScoreJournalEntry.OfficialImportSource,
+                Mix: MixEnum.Phoenix2, RecordedAt: playedAt, Judgements: judgements, IsStageBroken: true),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Journal.Verify(j => j.Append(It.IsAny<ScoreJournalEntry>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        ctx.Journal.Verify(j => j.AppendObservations(
+            It.Is<IReadOnlyList<ScoreJournalEntry>>(list => list.Count == 1
+                                                          && list[0].IsStageBroken && list[0].IsBroken && !list[0].IsBest
+                                                          && list[0].Score == null && list[0].Plate == null
+                                                          && list[0].OccurredAt == playedAt
+                                                          && list[0].Mix == MixEnum.Phoenix2
+                                                          && list[0].ChartId == ChartId
+                                                          && Equals(list[0].Judgements, judgements)),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Batches.Verify(b => b.AddToBatch(It.IsAny<MixEnum>(), It.IsAny<Guid>(), It.IsAny<DateTime>(),
+            It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<PhoenixScore?>(), It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AnUndatedStageBreakHasNoPlayKeyAndIsDropped()
+    {
+        var ctx = new HandlerContext();
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: null, Plate: null,
+                Judgements: new JudgementCounts(244, 5, 2, 1, 110), IsStageBroken: true),
+            CancellationToken.None);
+
+        ctx.Journal.Verify(j => j.AppendObservations(It.IsAny<IReadOnlyList<ScoreJournalEntry>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Records.Verify(r => r.UpdateBestAttempt(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.IsAny<RecordedPhoenixScore>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AStageBreakWithNothingHitIsAWalkOffAndNeverJournaled()
+    {
+        // 0/0/0/0/51: the life bar draining on a song nobody played. Not even history.
+        var ctx = new HandlerContext();
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: null, Plate: null,
+                RecordedAt: Now, Judgements: new JudgementCounts(0, 0, 0, 0, 51), IsStageBroken: true),
+            CancellationToken.None);
+
+        ctx.Journal.Verify(j => j.AppendObservations(It.IsAny<IReadOnlyList<ScoreJournalEntry>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TheComboIsSolvedAgainstTheCatalogAndStoredWithTheJudgements()
+    {
+        var ctx = new HandlerContext();
+        var counts = new JudgementCounts(900, 40, 5, 2, 3);
+        var screen = new ScoreScreen(900, 40, 5, 2, 3, 947);
+        ctx.GivenNoteCount(counts.NoteCount);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: screen.CalculatePhoenixScore,
+                Plate: PhoenixPlate.FairGame, Judgements: counts),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => s.Judgements != null && s.Judgements.MaxCombo == 947),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Journal.Verify(j => j.Append(
+            It.Is<ScoreJournalEntry>(e => e.Judgements != null && e.Judgements.MaxCombo == 947),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Logger.Verify(l => l.Log(LogLevel.Warning, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(),
+            It.IsAny<Exception?>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AJudgedPlayThatDisagreesWithTheCatalogIsWrittenUnchangedAndLogsOnce()
+    {
+        // The catalog says 1,000 notes; a pass judged 950. The catalog is write-once and the
+        // play is what the site said it was, so nothing is refused, reclassified or rewritten —
+        // one warning names the chart so the drift can be found in a query.
+        var ctx = new HandlerContext();
+        var counts = new JudgementCounts(900, 40, 5, 2, 3);
+        ctx.GivenNoteCount(1000);
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: false, Score: 985000,
+                Plate: PhoenixPlate.FairGame, Judgements: counts),
+            CancellationToken.None);
+
+        ctx.Records.Verify(r => r.UpdateBestAttempt(MixEnum.Phoenix, UserId,
+            It.Is<RecordedPhoenixScore>(s => !s.IsBroken && s.Score == (PhoenixScore)985000
+                                             && s.Judgements != null && s.Judgements.MaxCombo == null
+                                             && s.Judgements.NoteCount == 950),
+            It.IsAny<CancellationToken>()), Times.Once);
+        ctx.Logger.Verify(l => l.Log(LogLevel.Warning, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(),
+            It.IsAny<Exception?>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }
 
     [Fact]
@@ -834,6 +948,8 @@ public sealed class UpdatePhoenixRecordHandlerTests
         public Mock<IPlayerScoreBatchAccumulator> Batches { get; } = new();
         public Mock<IScoreJournalRepository> Journal { get; } = new();
         public Mock<IScoreSessionRepository> Sessions { get; } = new();
+        public Mock<IChartRepository> Charts { get; } = new();
+        public Mock<ILogger<UpdatePhoenixRecordHandler>> Logger { get; } = new();
 
         /// <summary>
         ///     A real cache, not a mock: it is an in-process dictionary rather than a boundary, and
@@ -847,7 +963,15 @@ public sealed class UpdatePhoenixRecordHandlerTests
         {
             CurrentUser.SetupGet(u => u.User).Returns(new UserBuilder().WithId(UserId).Build());
             Handler = new UpdatePhoenixRecordHandler(Records.Object, CurrentUser.Object, DateTime.Object,
-                Bus.Object, Scheduler.Object, Batches.Object, Journal.Object, Sessions.Object, Cache);
+                Bus.Object, Scheduler.Object, Batches.Object, Journal.Object, Sessions.Object, Cache,
+                Charts.Object, Logger.Object);
+        }
+
+        /// <summary>The catalog's note count for the chart under test, as the write path reads it.</summary>
+        public void GivenNoteCount(int noteCount)
+        {
+            Charts.Setup(c => c.GetChart(MixEnum.Phoenix, ChartId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ChartBuilder().WithId(ChartId).WithNoteCount(noteCount).Build());
         }
 
         public void GivenExistingScore(PhoenixScore score, PhoenixPlate plate, bool isBroken,
