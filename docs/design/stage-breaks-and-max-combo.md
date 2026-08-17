@@ -1,7 +1,8 @@
 # Stage breaks and max combo
 
-Status: **owner-workshopped 2026-08-17, three rounds, settled (§11); in flight on
-`claude/stage-broken-scoring-9d7b44` in the commit order of §12.** Splits
+Status: **owner-workshopped 2026-08-17, three rounds, settled (§11); built the same day on
+`claude/stage-broken-scoring-9d7b44` in the commit order of §12 — the repair script (§8) is
+still to run after deploy.** Splits
 "broken" into a stage that was *failed* and a stage that was *interrupted*, keeps the second out
 of every personal best no matter what the import opt-in says, journals it, and puts a stored max
 combo beside the five judgement counts on the record and the journal.

@@ -198,6 +198,7 @@ extend the existing `lifebar` (untranslated) / `Vida` split above.
 | Rainbow (the full visible bar) | Rainbow | Stays English, matching the judgment-term loanword policy. |
 | Gain multiplier | multiplicador de ganho | Bare "multiplier" mid-sentence → `multiplicador`. |
 | Break (a miss or bad that ends a combo) | quebra | `Combo between breaks` → `Combo entre quebras`. |
+| Stage break (the song interrupted) | `stage break` (EN) | Jargão PIU, mantido em inglês minúsculo em prosa — distinto de `quebrada` (Broken), que é uma tentativa que terminou e falhou. `Stage break · {0}% in` → `Stage break · aos {0}%`. |
 | Settles at (converges to) | estabiliza em | `Where life settles` → `Onde a vida se estabiliza`. |
 | Cliff (the survival threshold) | penhasco | Deliberately literal — the metaphor is the point. |
 | Run (a single play attempt) | run | Untranslated, matching the community's own usage. |

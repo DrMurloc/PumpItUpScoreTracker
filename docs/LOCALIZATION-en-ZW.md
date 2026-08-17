@@ -246,3 +246,18 @@ reusable everywhere. Its formula vocabulary is the part most likely to recur.
 | stand (on) | morggrrgl ap | `morggrrgl` from `Where you stand`; `ap` is the existing "on". |
 | Peers IQR | Maglmurp IQR | The `/Pumbility` targets' column. `IQR` is an acronym and rides through as one. |
 | From {0} peers | Romurg {0} maglmurp | `Romurg` from `From {0} scores` → `Romurg {0} mgrlgmrg`. |
+
+## Stage breaks and max combo (2026-08-17)
+
+Coined for [stage-breaks-and-max-combo.md](design/stage-breaks-and-max-combo.md) — the session
+row, the chart journey and the admin backfill.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| Stage break | Mrpmurg arglglorg | `Mrpmurg` (stage) + `arglglorg` (break), both recovered — the compound is what a Murloc calls a song that stopped. Distinct from `Morgl` (broken), which is a run that failed and finished. |
+| in (how far through) | gropmur | Recovered from `On charts you've never passed` → `Lurg murgl **gropmur**` — the "through/into" sense, not the preposition `ap`/`ur` (on) or `og` (at). `31% gropmur` is 31% of the way in. |
+| max (superlative) | gro | Recovered from `Max combo` → `Gro grogrgl`. Reused for `Backfill max combos` → `Mrglrglmrp gro grogrgl`. |
+| re-solve / recalculate | mrgrglmurm | Coined for the backfill's snackbar; `mrg` (again) + `rglmurm`. |
+| judged | blgrlmurgro | Coined 2026-08-17 — a score the game handed a breakdown for. |
+| note (a step) | roblub | Recovered from the life-calculator's `clean notes` → `plglmurm **roblub**`. |
+| history | lurgmrmorg | Recovered from the existing `History` entry. |

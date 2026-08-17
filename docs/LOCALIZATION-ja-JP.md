@@ -188,6 +188,7 @@ extend the existing Life / Lifebar rows above.
 | Rainbow (the full visible bar) | 虹色 | Matches the established 虹色ライフ. |
 | Gain multiplier | 回復倍率 | The hidden multiplier that scales life gain. Bare "multiplier" mid-sentence → 倍率. |
 | Break (a miss or bad that ends a combo) | 失敗 | Follows the established Bad失敗 / Miss失敗 forms. "Combo between breaks" → 失敗の間のコンボ. |
+| Stage break (the song interrupted) | Stage Break | Left English, matching the existing `Break Off` treatment for Broken — the two are different things, so the two English terms keep them apart. "Stage break · {0}% in" → Stage Break · {0}%地点. |
 | Settles at (converges to) | 落ち着く | "Where life settles" → 体力の落ち着き先. |
 | Cliff (the survival threshold) | 崖 | Deliberately literal — the metaphor is the point: below it you die outright. |
 

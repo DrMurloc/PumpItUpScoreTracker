@@ -892,6 +892,9 @@
   <data name="Backfill Highlights" xml:space="preserve">
     <value>하이라이트 백필</value>
   </data>
+  <data name="Backfill max combos" xml:space="preserve">
+    <value>최대 콤보 백필</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>BAD</value>
   </data>
@@ -2984,13 +2987,13 @@
     <value>가져오고 확인</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다. 시리즈를 따르면 Phoenix 2에서는 켜지고 Phoenix에서는 꺼집니다.</value>
+    <value>아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다. 시리즈를 따르면 Phoenix 2에서는 켜지고 Phoenix에서는 꺼집니다. 스테이지 브레이크 — 마지막 노트 전에 끝난 판 — 는 어느 쪽이든 기록이 되지 않고 플레이 기록에만 남습니다.</value>
   </data>
   <data name="Import Broken Helper Phoenix" xml:space="preserve">
-    <value>Phoenix는 브레이크 오프를 개인 최고 기록으로 저장하지 않으므로 이 설정은 기본값이 꺼짐입니다. 아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다.</value>
+    <value>Phoenix는 브레이크 오프를 개인 최고 기록으로 저장하지 않으므로 이 설정은 기본값이 꺼짐입니다. 아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다. 스테이지 브레이크 — 마지막 노트 전에 끝난 판 — 는 어느 쪽이든 기록이 되지 않고 플레이 기록에만 남습니다.</value>
   </data>
   <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
-    <value>Phoenix 2는 브레이크 오프를 개인 최고 기록으로 저장하므로 이 설정은 기본값이 켜짐입니다. 아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다.</value>
+    <value>Phoenix 2는 브레이크 오프를 개인 최고 기록으로 저장하므로 이 설정은 기본값이 켜짐입니다. 아직 클리어하지 못한 채보에서는 최고 브레이크 오프 점수가 기록이 됩니다. 클리어가 항상 우선합니다. 스테이지 브레이크 — 마지막 노트 전에 끝난 판 — 는 어느 쪽이든 기록이 되지 않고 플레이 기록에만 남습니다.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>가져오기 완료</value>
@@ -5545,6 +5548,9 @@
   <data name="Re-rated" xml:space="preserve">
     <value>난이도 변경</value>
   </data>
+  <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
+    <value>판정이 기록된 모든 점수에서 최대 콤보를 다시 계산합니다. 아무것도 알리지 않습니다.</value>
+  </data>
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>채보 변경 — {0}노트, 이전에는 {1}.</value>
   </data>
@@ -6625,8 +6631,14 @@
   <data name="Stage" xml:space="preserve">
     <value>단계</value>
   </data>
+  <data name="Stage break" xml:space="preserve">
+    <value>스테이지 브레이크</value>
+  </data>
   <data name="Stage Break Modifier" xml:space="preserve">
     <value>스테이지 실패 배율</value>
+  </data>
+  <data name="Stage break · {0}% in" xml:space="preserve">
+    <value>스테이지 브레이크 · {0}% 지점</value>
   </data>
   <data name="Stage Pass" xml:space="preserve">
     <value>스테이지 클리어</value>

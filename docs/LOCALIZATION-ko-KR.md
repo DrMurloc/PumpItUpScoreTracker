@@ -200,6 +200,7 @@ Settled with the `/LifeCalculator` rebuild ([design](design/life-calculator-rede
 | Rainbow (the full visible bar) | 레인보우 | Loanword, matching the in-game term players use. |
 | Gain multiplier | 회복 배율 | Bare "multiplier" mid-sentence → 배율. |
 | Break (a miss or bad that ends a combo) | 브레이크 | Loanword, consistent with the 브레이크 오프 treatment. "Combo between breaks" → 브레이크 사이 콤보. |
+| Stage break (the song interrupted) | 스테이지 브레이크 | Loanword, matching the 브레이크 오프 treatment for Broken. The two are different things: 브레이크 오프 is a run that finished and failed. "Stage break · {0}% in" → 스테이지 브레이크 · {0}% 지점. |
 | Settles at (converges to) | 머무르다 | "Where life settles" → 라이프가 머무는 곳. |
 | Cliff (the survival threshold) | 절벽 | Deliberately literal — the metaphor is the point. |
 
