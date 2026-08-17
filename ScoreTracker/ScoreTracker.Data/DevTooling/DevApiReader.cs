@@ -135,7 +135,7 @@ internal sealed class DevApiReader
                 scores.Add(new DevScoreRow(score.ChartId, mix, score.RecordedAt, score.Score,
                     score.LetterGrade, score.Plate, score.IsBroken, score.Source,
                     score.Judgments?.Perfects, score.Judgments?.Greats, score.Judgments?.Goods,
-                    score.Judgments?.Bads, score.Judgments?.Misses));
+                    score.Judgments?.Bads, score.Judgments?.Misses, score.Judgments?.MaxCombo));
         }
 
         reportProgress($"Writing {scores.Count:N0} scores…");
@@ -331,7 +331,8 @@ internal sealed class DevApiReader
     private sealed record TierListWire(Guid ChartId, string Category, int Order);
 
 
-    private sealed record JudgmentsWire(int? Perfects, int? Greats, int? Goods, int? Bads, int? Misses);
+    private sealed record JudgmentsWire(int? Perfects, int? Greats, int? Goods, int? Bads, int? Misses,
+        int? MaxCombo = null);
 
     private sealed record ScoreWire(Guid ChartId, DateTimeOffset RecordedAt, string? Source, int? Score,
         string? LetterGrade, string? Plate, bool IsBroken, JudgmentsWire? Judgments);
