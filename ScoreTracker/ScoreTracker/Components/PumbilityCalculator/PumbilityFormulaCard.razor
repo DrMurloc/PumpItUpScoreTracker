@@ -1,0 +1,153 @@
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.PumbilityCalculator
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* The formula in words, its three terms as coloured cells (the same three colours the PUMBILITY
+   page's split bar wears: level primary, grade secondary, plate accent), the zero rules, and
+   four worked examples with real arithmetic. Every number is read off the model, which read it
+   off ScoringConfiguration (docs/design/pumbility-calculator.md D3). Static markup. *@
+<section class="pc-sec" id="formula">
+    <div class="pc-sec-head">
+        <h2 class="pc-h2">@L["The formula"]</h2>
+    </div>
+    <div class="pc-formula">
+        <div class="pc-card">
+            @if (Model.HasPlates)
+            {
+                <p class="pc-formula-line">
+                    <span class="pc-t-level">Base(level)</span><span class="pc-op">×</span><span class="pc-op">(</span><span class="pc-t-grade">grade</span><span class="pc-op">+</span><span class="pc-t-plate">plate</span><span class="pc-op">)</span>
+                    <small>@L["per chart · grade and plate add, then multiply the base · your best fifty summed"]</small>
+                </p>
+                <div class="pc-terms">
+                    <div class="pc-term pc-term-level">
+                        <span class="pc-lbl">Base(level)</span>
+                        <span class="pc-term-val">130 + 5 × level <small>@L["+5 more per level above 24"]</small></span>
+                        <span class="pc-term-say">@L["A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0."]</span>
+                    </div>
+                    <div class="pc-term pc-term-grade">
+                        <span class="pc-lbl">@L["Grade"]</span>
+                        <span class="pc-term-val">×@Mult(PhoenixLetterGrade.F, ChartType.Double) <small>F</small> … ×@Mult(PhoenixLetterGrade.SSSPlus, ChartType.Double) <small>SSS+</small></span>
+                        <span class="pc-term-say">@L["Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below.", Mult(PhoenixLetterGrade.AA, ChartType.Single), Mult(PhoenixLetterGrade.APlus, ChartType.Single)]</span>
+                    </div>
+                    <div class="pc-term pc-term-plate">
+                        <span class="pc-lbl">@L["Plate"]</span>
+                        <span class="pc-term-val">+@Bonus(PhoenixPlate.RoughGame) <small>@L["Rough"]</small> … +@Bonus(PhoenixPlate.PerfectGame) <small>@L["Perfect"]</small></span>
+                        <span class="pc-term-say">@L["An additive bonus, not a multiplier — at most {0} of a chart.", PlateCeilingShare]</span>
+                    </div>
+                </div>
+                <div class="pc-zero">
+                    <span class="pc-lbl">@L["Worth zero"]</span>
+                    <span class="pc-zero-item">@L["below level 10"]</span>
+                    <span class="pc-zero-item">@L["a broken run"]</span>
+                    <span class="pc-zero-item">CO-OP<sup class="pc-mark">*</sup></span>
+                    <span class="pc-zero-item">U.C.S.</span>
+                    <span class="pc-zero-item">@L["Half-Double"]</span>
+                </div>
+                <p class="pc-foot"><sup class="pc-mark">*</sup> @L["Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix.", PumbilityCalculatorModel.Phoenix2CoOpBase.ToString("N0"), PumbilityCalculatorModel.PhoenixCoOpBase.ToString("N0")]</p>
+            }
+            else
+            {
+                <p class="pc-formula-line">
+                    <span class="pc-t-level">Base(level)</span><span class="pc-op">×</span><span class="pc-t-grade">grade</span>
+                    <small>@L["per chart · plates never entered it · your best fifty summed"]</small>
+                </p>
+                <div class="pc-terms">
+                    <div class="pc-term pc-term-level">
+                        <span class="pc-lbl">Base(level)</span>
+                        <span class="pc-term-val">100 + 5 × (level − 10) × (level − 9)</span>
+                        <span class="pc-term-say">@L["Quadratic: a level is worth {0} at 20 and {1} at 27. Below level 10 a chart is worth 0. CO-OP charts were priced at a flat 2,000 but never counted in the total.", LevelStep(20), LevelStep(27)]</span>
+                    </div>
+                    <div class="pc-term pc-term-grade">
+                        <span class="pc-lbl">@L["Grade"]</span>
+                        <span class="pc-term-val">×@Mult(PhoenixLetterGrade.F, ChartType.Single) <small>F</small> … ×@Mult(PhoenixLetterGrade.AA, ChartType.Single) <small>AA</small> … ×@Mult(PhoenixLetterGrade.SSSPlus, ChartType.Single) <small>SSS+</small></span>
+                        <span class="pc-term-say">@L["AA is the neutral point; every grade above it adds, every grade below it takes away."]</span>
+                    </div>
+                    <div class="pc-term pc-term-plate">
+                        <span class="pc-lbl">@L["Plate"]</span>
+                        <span class="pc-term-val">×1.0 <small>@L["every plate"]</small></span>
+                        <span class="pc-term-say">@L["The plate you walked away with never entered the number."]</span>
+                    </div>
+                </div>
+                <div class="pc-zero">
+                    <span class="pc-lbl">@L["Worth zero"]</span>
+                    <span class="pc-zero-item">@L["below level 10"]</span>
+                    <span class="pc-zero-item">@L["a broken run"]</span>
+                    <span class="pc-zero-item">U.C.S.</span>
+                    <span class="pc-zero-item">@L["Half-Double"]</span>
+                </div>
+            }
+        </div>
+        <div class="pc-card pc-examples">
+            <span class="pc-lbl">@L["Worked examples"]</span>
+            @foreach (var example in Model.Examples)
+            {
+                <div class="pc-example">
+                    <span class="pc-example-who">@Who(example)</span>
+                    <span class="pc-example-math">
+                        @if (Model.HasPlates)
+                        {
+                            <i class="pc-t-level">@example.PricedBase.ToString("N0")</i> <text>× (</text><i class="pc-t-grade">@example.GradeMultiplier.ToString("0.00")</i> <text>+</text> <i class="pc-t-plate">@example.PlateBonus.ToString("0.000")</i><text>) = </text><b>@example.Value.ToString("N2")</b>
+                        }
+                        else
+                        {
+                            <i class="pc-t-level">@example.PricedBase.ToString("N0")</i> <text>×</text> <i class="pc-t-grade">@example.GradeMultiplier.ToString("0.00")</i> <text>= </text><b>@example.Value.ToString("N2")</b>
+                        }
+                    </span>
+                </div>
+            }
+            @if (Model.HasPlates)
+            {
+                <p class="pc-foot">@L["The S17 pays Base(18) = {0} — a Single is priced one level up. Perfect Game is the plate bonus, not a grade: a 1,000,000 keeps SSS+’s ×{1} and adds +{2}.", SinglesPricedBase(17), Mult(PhoenixLetterGrade.SSSPlus, ChartType.Single), Bonus(PhoenixPlate.PerfectGame)]</p>
+            }
+            else
+            {
+                <p class="pc-foot">@L["One table for both types — Phoenix priced a Single and a Double at the same level alike."]</p>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public PumbilityCalculatorModel Model { get; set; } = default!;
+
+    private string Mult(PhoenixLetterGrade grade, ChartType type) =>
+        Model.Scoring.LetterGradeModifierFor(grade, type).ToString("0.00");
+
+    private string Bonus(PhoenixPlate plate) =>
+        Model.Scoring.PlateModifierFor(plate, ChartType.Double).ToString("0.000");
+
+    private string SinglesPricedBase(int level) =>
+        ScoringConfiguration.Phoenix2PricedBase(ChartType.Single, DifficultyLevel.From(level)).ToString("N0");
+
+    // The most a plate can add, against the biggest multiplier it can add to.
+    private string PlateCeilingShare
+    {
+        get
+        {
+            var top = Model.Scoring.PlateModifierFor(PhoenixPlate.PerfectGame, ChartType.Double);
+            var grade = Model.Scoring.LetterGradeModifierFor(PhoenixLetterGrade.SSSPlus, ChartType.Double);
+            return (top / (grade + top)).ToString("P1");
+        }
+    }
+
+    // How much one level is worth on the Phoenix base curve at a given level, as a percentage.
+    private string LevelStep(int level)
+    {
+        var here = DifficultyLevel.From(level).BaseRating;
+        var next = DifficultyLevel.From(level + 1).BaseRating;
+        return "+" + ((double)next / here - 1).ToString("P0");
+    }
+
+    private string Who(PumbilityWorkedExample example)
+    {
+        var chart = Model.HasTypes
+            ? $"{example.Type.GetShortHand()}{example.Level}"
+            : L["Level {0}", example.Level].Value;
+        return Model.HasPlates
+            ? $"{chart} · {example.Grade.GetName()} · {example.Plate.GetName()}"
+            : $"{chart} · {example.Grade.GetName()}";
+    }
+}

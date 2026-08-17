@@ -1,0 +1,158 @@
+@using System.Globalization
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.PumbilityCalculator
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* What scoring buys, in levels (docs/design/pumbility-calculator.md D4/D5). Each row is a
+   level; the bar starts at a 900,000 on that level (the anchor tick sits at its own level) and
+   climbs through the grades on the axis of "which level's 900,000 is worth the same"; the
+   number at the end is levels bought. Bands wear the grade metals; the legend names a band by
+   the grades it covers. Static markup, percent-positioned, fluid. *@
+<section class="pc-sec">
+    <div class="pc-sec-head">
+        <h2 class="pc-h2">@L["What scoring buys, in levels"]</h2>
+        <span class="pc-sub">
+            @L["Each row is a level. The bar starts at a 900,000 on that level — a clean pass — and climbs through the grades; the axis is"] <b>@L["which level’s 900,000 is worth the same"]</b>. @L["Read straight up from the end of a bar to see which level it matches."]
+            @L["900,000 is exactly the {0} floor on {1}.", Model.AnchorGrade.GetName(), Model.Mix.GetName()]
+            @if (Model.HasPlates)
+            {
+                @L["It was AA on Phoenix — the floors moved."]
+            }
+        </span>
+    </div>
+    <div class="pc-card">
+        <div class="pc-legend">
+            <span><i class="pc-legend-anchor"></i>@L["900,000 on its own level — {0}", Model.AnchorGrade.GetName()]</span>
+            <span><i class="pc-legend-tail pc-seg-tail"></i>@BelowNames <span class="pc-muted">(@L["below the pass line"])</span></span>
+            <span><i class="pc-seg-copper"></i>@CopperNames</span>
+            <span><i class="pc-seg-silver"></i>AAA · AAA+</span>
+            <span><i class="pc-seg-gold"></i>S · S+ · SS · SS+</span>
+            <span><i class="pc-seg-ice"></i>SSS · SSS+</span>
+        </div>
+        <div class="pc-ruler">
+            <div></div>
+            <div class="pc-ruler-axis">
+                @for (var tick = FirstTick; tick <= Type.AxisMax; tick += 5)
+                {
+                    <span style="left:@Pct(tick)%">@tick</span>
+                }
+                <span class="pc-ruler-cap">@L["worth a 900,000 on level →"]</span>
+                @if (Type.AxisMax > (int)DifficultyLevel.Max)
+                {
+                    <span class="pc-ruler-cap-past" style="left:@Pct(DifficultyLevel.Max)%">@L["past {0}", (int)DifficultyLevel.Max]</span>
+                }
+            </div>
+            <div></div>
+            @foreach (var row in Type.Levels)
+            {
+                <div class="pc-ruler-lbl">@Name(row.Level)</div>
+                <div class="pc-ruler-track">
+                    @for (var line = Type.AxisMin; line <= Type.AxisMax; line++)
+                    {
+                        <div class="pc-ruler-grid @(line % 5 == 0 ? "pc-ruler-grid-5" : "")" style="left:@Pct(line)%"></div>
+                    }
+                    @if (Type.AxisMax > (int)DifficultyLevel.Max)
+                    {
+                        <div class="pc-ruler-past" style="width:@(100 - PctValue(DifficultyLevel.Max)).ToString("0.##", CultureInfo.InvariantCulture)%"></div>
+                    }
+                    @for (var i = 1; i < row.RulerPoints.Count; i++)
+                    {
+                        var from = row.RulerPoints[i - 1];
+                        var to = row.RulerPoints[i];
+                        var value = row.Cells.First(c => c.Grade == to.Grade).Value;
+                        <div class="pc-seg @SegmentClass(to)" style="left:@Pct(from.EquivalentLevel)%;width:@Width(from.EquivalentLevel, to.EquivalentLevel)%"
+                             title="@Name(row.Level) @to.Grade.GetName(): @value.ToString("N2") — @Reach(to.EquivalentLevel)"></div>
+                    }
+                    <div class="pc-ruler-anchor" style="left:@Pct(row.Level)%"></div>
+                </div>
+                <div class="pc-ruler-end"><b>+@row.LevelsBought.ToString("0.0")</b></div>
+            }
+        </div>
+        <p class="pc-ruler-foot">
+            @if (Model.HasPlates)
+            {
+                @L["An SSS+ on a {0} reaches {1} — the same PUMBILITY as a 900,000 there, so taking one chart from a pass to a perfect is worth {2} levels of pass-pushing. The reach narrows above 24, where Phoenix 2’s base starts growing by 10 a level instead of 5: {3} levels at 16, {2} at 20, {4} at 24. Below the pass line a chart drops off fast — a D pays ×{5} against {6}’s ×{7}.",
+                    Name(20), Name(20 + Bought(20)), Bought(20).ToString("0.0"), Bought(16).ToString("0.0"), Bought(24).ToString("0.0"),
+                    Model.Scoring.LetterGradeModifierFor(PhoenixLetterGrade.D, Type.Type).ToString("0.00"), Model.AnchorGrade.GetName(),
+                    Model.Scoring.LetterGradeModifierFor(Model.AnchorGrade, Type.Type).ToString("0.00")]
+            }
+            else
+            {
+                @L["An SSS+ on a level 20 reaches {0} — the same PUMBILITY as a 900,000 there, so taking one chart from a pass to a perfect is worth {1} levels of pass-pushing. The reach grows with level because Phoenix’s base is quadratic: {2} levels at 16, {1} at 20, {3} at 24. Below the pass line a chart falls off the same way: an A pays ×{4}, an F ×{5}.",
+                    (20 + Bought(20)).ToString("0.0"), Bought(20).ToString("0.0"), Bought(16).ToString("0.0"), Bought(24).ToString("0.0"),
+                    Model.Scoring.LetterGradeModifierFor(PhoenixLetterGrade.A, Type.Type).ToString("0.00"),
+                    Model.Scoring.LetterGradeModifierFor(PhoenixLetterGrade.F, Type.Type).ToString("0.00")]
+            }
+        </p>
+    </div>
+</section>
+
+@code {
+    private static readonly PhoenixLetterGrade[] Grades = Enum.GetValues<PhoenixLetterGrade>();
+
+    [Parameter, EditorRequired] public PumbilityCalculatorModel Model { get; set; } = default!;
+    [Parameter, EditorRequired] public PumbilityCalculatorTypeView Type { get; set; } = default!;
+
+    private int FirstTick => (int)Math.Ceiling(Type.AxisMin / 5.0) * 5;
+
+    private double PctValue(double level) =>
+        Math.Clamp((level - Type.AxisMin) / (Type.AxisMax - Type.AxisMin) * 100, 0, 100);
+
+    private string Pct(double level) => PctValue(level).ToString("0.##", CultureInfo.InvariantCulture);
+
+    private string Width(double from, double to) =>
+        Math.Max(0, PctValue(to) - PctValue(from)).ToString("0.##", CultureInfo.InvariantCulture);
+
+    private string Name(int level) => Model.HasTypes ? $"{Type.Type.GetShortHand()}{level}" : level.ToString();
+
+    private string Name(double level) => Model.HasTypes
+        ? $"{Type.Type.GetShortHand()}{level.ToString("0.0")}"
+        : level.ToString("0.0");
+
+    private double Bought(int level) =>
+        PumbilityLevelEquivalence.LevelsBought(Model.Scoring, Type.Type, DifficultyLevel.From(level), PhoenixLetterGrade.SSSPlus);
+
+    private string Reach(double equivalentLevel) => equivalentLevel > (int)DifficultyLevel.Max
+        ? L["worth more than a 900,000 on any chart in the game"].Value
+        : L["worth a 900,000 on {0}", Name(equivalentLevel)].Value;
+
+    // Bands wear the grade metals: copper up to AA+, silver AAA/AAA+, gold S–SS+, ice SSS/SSS+;
+    // the two grades below the pass line are one faded copper tail whatever they are.
+    private static string SegmentClass(PumbilityRulerPoint to) => to.BelowAnchor
+        ? "pc-seg-tail"
+        : to.Grade switch
+        {
+            >= PhoenixLetterGrade.SSS => "pc-seg-ice",
+            >= PhoenixLetterGrade.S => "pc-seg-gold",
+            >= PhoenixLetterGrade.AAA => "pc-seg-silver",
+            _ => "pc-seg-copper"
+        };
+
+    // A band is named by the grades it covers, left to right: the tail covers the grades below
+    // the pass line, and the first solid band starts AT the pass line — so on Phoenix 2 the copper
+    // band is A+ · AA · AA+ (A+ is the anchor there), on Phoenix AA · AA+.
+    private string BelowNames
+    {
+        get
+        {
+            var anchorIx = Array.IndexOf(Grades, Model.AnchorGrade);
+            return string.Join(" · ", Grades.Skip(Math.Max(0, anchorIx - 2)).Take(Math.Min(2, anchorIx)).Select(g => g.GetName()));
+        }
+    }
+
+    private string CopperNames
+    {
+        get
+        {
+            var names = new List<string>();
+            if (Model.AnchorGrade < PhoenixLetterGrade.AA) names.Add(Model.AnchorGrade.GetName());
+            names.Add("AA");
+            names.Add("AA+");
+            return string.Join(" · ", names);
+        }
+    }
+}

@@ -186,6 +186,34 @@ than dropped. Kept deliberately short, since the length rule tracks the English.
 | enough | blurg | Coined 2026-08-07. |
 | fifty | murgro | Coined 2026-08-07 for *Fifty charts, {0} plate.* — the numeral spelled out, where `mrp` ("one") is the pronoun. Digits stay digits; only a spelled-out English numeral needs this. |
 
+### The PUMBILITY calculator batch (2026-08-16)
+
+Coined for `/PumbilityCalculator/{mix}` ([pumbility-calculator.md](design/pumbility-calculator.md)) and
+reusable everywhere. Its formula vocabulary is the part most likely to recur.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| base | gogl | The formula's `Base(level)`. Also the verb — *priced / pays / costs* all read `gogl`, since Murloc does not mark the difference. |
+| formula | blargmurm | |
+| multiplier / modifier | murmgrog | |
+| bonus | roglubgl | `roglub` (gain) + `gl`. |
+| floor (a grade's) | blogl | Distinct from `grogl` (ceiling). |
+| ladder | gropla | A rung of it is `grop`, which also carries *step*. |
+| exchange | blorg | The exchange rate is `blorg mrglrg` — `mrglrg` (rating) doubles as *rate*. |
+| worth | gromb | The adjective. The noun *value* stays `grumb`. |
+| buys / bought | blogub | What scoring buys, in levels. |
+| push / pushing | gruplo | *Push levels* — the imperative the answer section leads with. |
+| band | grolgub | Shares the word with *row*, which is what a band is on the page. |
+| population | morpgro | `morp` (player) + `gro`. |
+| sweep (the nightly job) | grrgro | |
+| axis | plagub | |
+| curve | grulub | Quadratic doubles it: `grulubgrulub`. |
+| span / gap | grulm | |
+| tiebreaker | grulmplub | |
+| magnified | grrglgro | |
+| lever | graplub | |
+| ⚠ a lone grade letter | Ｓ Ｄ Ｃ Ｆ | **Fullwidth**, when the letter stands alone as game notation (*the S grades*, *a D pays*, *S + D*). A bare Latin `S` or `D` is a one-letter English word to the alphabet ratchet, and a Murloc syllable in its place would stop naming the grade. Grade names of two or more characters (`AA`, `SSS+`) are already exempt as acronyms. |
+
 ## Process for future batches
 
 1. A new en-US key gets an en-ZW value **in the same pass**, like every other locale.
