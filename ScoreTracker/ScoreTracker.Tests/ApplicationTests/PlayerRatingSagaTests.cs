@@ -791,6 +791,41 @@ public sealed class PlayerRatingSagaTests
     }
 
     [Fact]
+    public async Task Phoenix2CoOpRatingSumsEveryCoOpChartAtEightyTimesGradePlusPlate()
+    {
+        // The CO-OP Rating is what the [CO-OP] title ladder gates on: every co-op chart's best
+        // non-broken score at 80 × (grade + plate), summed — no top-50 cut, and never a
+        // PUMBILITY pool member (the merged/S/D pools stay at the two standard charts).
+        var userId = Guid.NewGuid();
+        var single = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var dbl = new ChartBuilder().WithType(ChartType.Double).WithLevel(22).Build();
+        var duo = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).Build();
+        var trio = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(3).Build();
+        var walkoff = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).Build();
+        var stats = new Mock<IPlayerStatsRepository>();
+        stats.Setup(s => s.GetStats(MixEnum.Phoenix2, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ZeroStats(userId));
+        var saga = BuildSaga(
+            charts: ChartsMockReturning(new[] { single, dbl, duo, trio, walkoff }, MixEnum.Phoenix2),
+            scores: ScoresMockReturning(userId, new[]
+            {
+                Score(single.Id, 950000), Score(dbl.Id, 960000),
+                Score(duo.Id, 970000, plate: PhoenixPlate.RoughGame), // S RG: 116.00
+                Score(trio.Id, 995000, plate: PhoenixPlate.UltimateGame), // SSS+ UG: 121.28, ×3 pays the same base
+                Score(walkoff.Id, 990000, isBroken: true) // a stage break adds nothing
+            }, MixEnum.Phoenix2),
+            stats: stats);
+
+        await saga.Handle(new RecalculateStatsCommand(userId, MixEnum.Phoenix2), CancellationToken.None);
+
+        stats.Verify(s => s.SaveStats(MixEnum.Phoenix2, userId,
+            // S20 AAA SG = Base(21) 235 × 1.418, D22 AAA+ SG = Base(22) 240 × 1.438.
+            It.Is<PlayerStatsRecord>(r => Math.Abs(r.CoOpRating - (116.00 + 121.28)) < 0.005
+                                          && Math.Abs(r.SkillRating - (333.23 + 345.12)) < 0.005),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task PhoenixSessionsNeverMintPerTypePumbilityMilestones()
     {
         // Phoenix stays total-only: its S/D ratings exist too, but pre-P2 sessions never

@@ -249,11 +249,11 @@ public sealed class LeaderboardHubSagaTests
         Assert.Equal(2, result.Rankings.Count);
         var top = result.Rankings[0];
         Assert.Equal("PLAYER11", top.Player.Username);
-        // 2000 × (1.50 + .020) at the perfect + 2000 × (1.50 + .016) at 995k.
-        Assert.Equal(3040 + 3032, top.Rating);
+        // Phoenix 2's CO-OP Rating: 80 × (1.50 + .020) at the perfect + 80 × (1.50 + .016) at 995k.
+        Assert.Equal(121.60m + 121.28m, top.Rating, 2);
         Assert.Equal(2, top.BoardsInTop);
         var second = result.Rankings[1];
-        Assert.Equal(2996, second.Rating); // SSS with an inferred SG — the standard chart stays out.
+        Assert.Equal(119.84m, second.Rating, 2); // SSS with an inferred SG — the standard chart stays out.
         Assert.Equal(1, second.BoardsInTop);
     }
 
