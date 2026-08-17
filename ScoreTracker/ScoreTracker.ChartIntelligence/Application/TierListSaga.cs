@@ -33,13 +33,18 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
     private readonly IChartScoreStatsRepository _chartStats;
     private readonly IFolderCohortStatsRepository _cohortStats;
     private readonly ITitleRepository _titles;
+    private readonly IPumbilityPoolCompositionRepository _composition;
+    private readonly IDateTimeOffsetAccessor _clock;
 
     public TierListSaga(IChartDifficultyRatingRepository chartRatings, IChartRepository chartRepository,
         ITierListRepository tierLists, IScoreReader scores,
         ICurrentUserAccessor currentUser, IPlayerStatsReader playerStats,
         IChartScoringLevelRepository scoringLevels, IChartScoreStatsRepository chartStats,
-        IFolderCohortStatsRepository cohortStats, ITitleRepository titles)
+        IFolderCohortStatsRepository cohortStats, ITitleRepository titles,
+        IPumbilityPoolCompositionRepository composition, IDateTimeOffsetAccessor clock)
     {
+        _composition = composition;
+        _clock = clock;
         _cohortStats = cohortStats;
         _chartStats = chartStats;
         _scoringLevels = scoringLevels;
@@ -419,9 +424,16 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
         var allCharts = (await _chartRepository.GetCharts(mix, cancellationToken: cancellationToken))
             .ToDictionary(c => c.Id);
 
+        // One read of the scores serves both products: the per-type pools the tier lists count
+        // over, and the merged Singles+Doubles pools the population composition is built from —
+        // the latter being the pool a player's total and title rung actually come from
+        // (docs/design/pumbility-calculator.md D10).
+        var ratedByType = new Dictionary<ChartType, IReadOnlyDictionary<Guid, List<RatedChart>>>();
         foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
         {
-            var pools = await BuildPools(mix, chartType, allCharts, scoring, cancellationToken);
+            var rated = await RateCharts(mix, chartType, allCharts, scoring, cancellationToken);
+            ratedByType[chartType] = rated;
+            var pools = PoolsFrom(rated);
             var peerGroups = await ResolvePeers(mix, chartType, pools, cancellationToken);
             var holders = HoldersByChart(pools);
 
@@ -455,38 +467,84 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
                     cancellationToken);
             }
         }
+
+        await _composition.Save(BuildComposition(mix, ratedByType.Values), cancellationToken);
     }
 
     /// <summary>
-    ///     Every player's top-50 for one chart type, priced by the mix's own PUMBILITY formula.
-    ///     Read level by level because that is the bulk shape the score store offers.
+    ///     Every player's charts of one type, priced by the mix's own PUMBILITY formula and split
+    ///     into the parts the population section sums. Read level by level because that is the
+    ///     bulk shape the score store offers. Charts worth nothing (broken, sub-10, excluded types)
+    ///     are left out here, so a pool can only ever hold contributing charts.
     /// </summary>
-    private async Task<IReadOnlyDictionary<Guid, IReadOnlySet<Guid>>> BuildPools(MixEnum mix, ChartType chartType,
+    private async Task<IReadOnlyDictionary<Guid, List<RatedChart>>> RateCharts(MixEnum mix, ChartType chartType,
         IReadOnlyDictionary<Guid, Chart> allCharts, ScoringConfiguration scoring,
         CancellationToken cancellationToken)
     {
-        var rated = new Dictionary<Guid, List<(Guid ChartId, double Rating)>>();
+        var rated = new Dictionary<Guid, List<RatedChart>>();
         for (var level = (int)DifficultyLevel.Min; level <= (int)DifficultyLevel.Max; level++)
         foreach (var (userId, record) in await _scores.GetScores(mix, chartType, DifficultyLevel.From(level),
                      cancellationToken))
         {
             if (record.Score == null || !allCharts.TryGetValue(record.ChartId, out var chart)) continue;
-            var rating = scoring.GetScore(chart, record.Score.Value, record.Plate ?? PhoenixPlate.RoughGame,
-                record.IsBroken);
-            if (!rated.TryGetValue(userId, out var scores)) rated[userId] = scores = new List<(Guid, double)>();
-            scores.Add((record.ChartId, rating));
+            var plate = record.Plate ?? PhoenixPlate.RoughGame;
+            var rating = scoring.GetScore(chart, record.Score.Value, plate, record.IsBroken);
+            if (rating <= 0) continue;
+            if (!rated.TryGetValue(userId, out var scores)) rated[userId] = scores = new List<RatedChart>();
+            scores.Add(new RatedChart(record.ChartId, rating,
+                new PooledChart((int)chart.Level, record.Score.Value.LetterGradeFor(mix),
+                    scoring.Decompose(chart, record.Score.Value, plate, record.IsBroken))));
         }
 
-        // Only full pools count. A player with thirty charts has a low total because they have
-        // played thirty charts, not because they are weak, and letting that stand puts them in a
-        // peer group of genuinely weaker players — which is exactly what a mix with no score volume
-        // yet produces for everyone. It also keeps Phoenix 2 dark until its pools are real, and
-        // lights it up on its own as they fill (docs/design/pumbility-tier-list.md §8).
+        return rated;
+    }
+
+    /// <summary>
+    ///     Every player's top-50 for one chart type, through the one definition of a pool
+    ///     (<see cref="PumbilityPeers.TopPool" />) so the writer and the reader cannot disagree
+    ///     about what one is. Only full pools count. A player with thirty charts has a low total
+    ///     because they have played thirty charts, not because they are weak, and letting that
+    ///     stand puts them in a peer group of genuinely weaker players — which is exactly what a
+    ///     mix with no score volume yet produces for everyone. It also keeps Phoenix 2 dark until
+    ///     its pools are real, and lights it up on its own as they fill
+    ///     (docs/design/pumbility-tier-list.md §8).
+    /// </summary>
+    private static IReadOnlyDictionary<Guid, IReadOnlySet<Guid>> PoolsFrom(
+        IReadOnlyDictionary<Guid, List<RatedChart>> rated)
+    {
         var pools = new Dictionary<Guid, IReadOnlySet<Guid>>();
         foreach (var (userId, scores) in rated)
-            if (PumbilityPeers.TopPool(scores) is { } pool)
+            if (PumbilityPeers.TopPool(scores.Select(s => (s.ChartId, s.Rating))) is { } pool)
                 pools[userId] = pool;
         return pools;
+    }
+
+    /// <summary>
+    ///     The population composition: every player's merged Singles+Doubles top-50 — the pool their
+    ///     total and title rung come from — accumulated per band. The same full-pool gate applies,
+    ///     to the merged fifty: a player short of fifty contributing charts across both types has
+    ///     no pool to be counted in yet.
+    /// </summary>
+    private PumbilityPoolCompositionRecord BuildComposition(MixEnum mix,
+        IEnumerable<IReadOnlyDictionary<Guid, List<RatedChart>>> ratedByType)
+    {
+        var merged = new Dictionary<Guid, List<RatedChart>>();
+        foreach (var rated in ratedByType)
+        foreach (var (userId, charts) in rated)
+        {
+            if (!merged.TryGetValue(userId, out var all)) merged[userId] = all = new List<RatedChart>();
+            all.AddRange(charts);
+        }
+
+        var builder = new PumbilityPoolCompositionBuilder(mix);
+        foreach (var charts in merged.Values.Where(c => c.Count >= PumbilityPeers.PoolSize))
+            builder.Add(TopFifty(charts).Select(c => c.Pooled).ToArray());
+        return builder.Build(_clock.Now);
+    }
+
+    private static RatedChart[] TopFifty(IEnumerable<RatedChart> charts)
+    {
+        return charts.OrderByDescending(c => c.Rating).Take(PumbilityPeers.PoolSize).ToArray();
     }
 
     /// <summary>Which of a folder's charts each player pools, inverted so a count is one scan.</summary>
@@ -549,4 +607,7 @@ internal sealed class TierListSaga : IConsumer<ChartDifficultyUpdatedEvent>,
 
         return peerGroups;
     }
+
+    /// <summary>One priced chart of a player's, with the composition's view of it alongside the rating.</summary>
+    private sealed record RatedChart(Guid ChartId, double Rating, PooledChart Pooled);
 }

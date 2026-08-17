@@ -1,0 +1,167 @@
+@using System.Globalization
+@using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Services.PumbilityCalculator
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* Should I push levels or push scores? (docs/design/pumbility-calculator.md D9). The split is
+   drawn ONCE, as the average over every full pool on the mix, in the pool page's own vocabulary
+   (level / score / plate, true to scale, from a bare base of ×1.00 so the two pages agree); the
+   movement it does have between the first and last band with enough players rides one sentence,
+   and the answer under it is written from the same numbers. Nothing here is typed in. *@
+<section class="pc-sec">
+    <div class="pc-sec-head">
+        <h2 class="pc-h2 pc-q">@L["Should I push levels or push scores?"]</h2>
+        <span class="pc-sub">
+            @if (Composition != null && Composition.PoolsCounted > 0)
+            {
+                @L["{0} players on PIU Scores with a full pool of fifty — {1} players, {2}. The split is measured from a bare base of ×1.00, the same split as on your PUMBILITY page.", Model.Mix.GetName(), Composition.PoolsCounted.ToString("N0"), Composition.ComputedAt.ToString("d")]
+            }
+            else
+            {
+                @L["{0} players on PIU Scores with a full pool of fifty. The split is measured from a bare base of ×1.00, the same split as on your PUMBILITY page.", Model.Mix.GetName()]
+            }
+        </span>
+    </div>
+    @if (Composition == null || !Live.Any())
+    {
+        <div class="pc-card pc-answer pc-muted">
+            @L["Nothing to draw for {0} yet — the population figures build with the nightly PUMBILITY sweep, and a band needs at least {1} full pools before it is drawn.", Model.Mix.GetName(), PumbilityPoolCompositionRecord.MinimumPlayersToDraw]
+        </div>
+    }
+    else
+    {
+        <div class="pc-card pmb-wpc">
+            <div class="pmb-wpc-head">
+                <span class="pmb-wpc-title">@L["Where PUMBILITY comes from on {0} — the average pool", Model.Mix.GetName()]</span>
+                <span class="pmb-wpc-total">@L["{0} pools · average level {1}", LivePlayers.ToString("N0"), AverageLevel.ToString("0.0")]</span>
+            </div>
+            <div class="pmb-wpc-stack">
+                <div class="pmb-wpc-seg pmb-wpc-level" style="flex-grow:@Grow(LevelShare)">@L["Level"]</div>
+                <div class="pmb-wpc-seg pmb-wpc-score" style="flex-grow:@Grow(ScoreShare)">@L["Score"]</div>
+                @if (PlateShare > 0)
+                {
+                    <div class="pmb-wpc-seg pmb-wpc-plate" style="flex-grow:@Grow(PlateShare)"></div>
+                }
+            </div>
+            <div class="pmb-wpc-keys">
+                <div class="pmb-wpc-key pmb-wpc-level">
+                    <span class="pmb-wpc-k-lbl">@L["Level"]</span>
+                    <span class="pmb-wpc-k-num">@LevelShare.ToString("P1")</span>
+                    <span class="pmb-wpc-k-pct">@L["the charts themselves"]</span>
+                </div>
+                <div class="pmb-wpc-key pmb-wpc-score">
+                    <span class="pmb-wpc-k-lbl">@L["Score"]</span>
+                    <span class="pmb-wpc-k-num">@ScoreShare.ToString("P1")</span>
+                    <span class="pmb-wpc-k-pct">@L["what your grades add"]</span>
+                </div>
+                <div class="pmb-wpc-key pmb-wpc-plate">
+                    <span class="pmb-wpc-k-lbl">@L["Plate"]</span>
+                    <span class="pmb-wpc-k-num @(Model.HasPlates ? "" : "pmb-muted")">@(Model.HasPlates ? PlateShare.ToString("P1") : "0%")</span>
+                    <span class="pmb-wpc-k-pct">@(Model.HasPlates ? L["what your plates add"] : L["this mix's formula has no plate term"])</span>
+                </div>
+            </div>
+            @if (Lowest != null && Highest != null && Lowest != Highest)
+            {
+                <p class="pmb-wpc-say">
+                    @if (Moves)
+                    {
+                        @L["It moves, and that is the whole answer: score is {0} of the number in {1} and {2} in {3}. The pool’s average level runs {4} → {5} along the way, and S or better {6} → {7} of fifty.",
+                            ScoreShareOf(Lowest).ToString("P0"), BandName(Lowest), ScoreShareOf(Highest).ToString("P0"), BandName(Highest),
+                            Lowest.AverageLevel.ToString("0.0"), Highest.AverageLevel.ToString("0.0"), SOrBetter(Lowest).ToString("0"), SOrBetter(Highest).ToString("0")]
+                    }
+                    else
+                    {
+                        @L["And it barely moves from band to band: score is {0} of the number in {1} and {2} in {3}. What changes between the bands is the level of the charts — average {4} in {1}, {5} in {3} — with S or better on {6}–{7} of the fifty throughout.",
+                            ScoreShareOf(Lowest).ToString("P0"), BandName(Lowest), ScoreShareOf(Highest).ToString("P0"), BandName(Highest),
+                            Lowest.AverageLevel.ToString("0.0"), Highest.AverageLevel.ToString("0.0"), SOrBetter(Lowest).ToString("0"), SOrBetter(Highest).ToString("0")]
+                    }
+                </p>
+            }
+            <p class="pc-pop-bands">
+                @foreach (var band in Live)
+                {
+                    <span><b>@BandName(band)</b> @L["{0} pools", band.Players]</span>
+                }
+                @if (Thin.Any())
+                {
+                    <span class="pc-muted">@L["not enough players yet: {0}", string.Join(", ", Thin.Select(BandName))]</span>
+                }
+            </p>
+        </div>
+        <div class="pc-card">
+            <p class="pc-answer">
+                @if (Moves)
+                {
+                    <b>@L["Levels first, then scores."]</b>
+                    @L["In {0} the split is level {1} / score {2}; in {3} it is {4} / {5}. The pool’s average level climbs from {6} to {7} along the way and S or better from {8} to {9} of fifty: passing harder charts is the whole ladder for most players, and scoring is what the last stretch is made of.",
+                        BandName(Lowest!), LevelShareOf(Lowest!).ToString("P0"), ScoreShareOf(Lowest!).ToString("P0"), BandName(Highest!), LevelShareOf(Highest!).ToString("P0"), ScoreShareOf(Highest!).ToString("P0"),
+                        Lowest!.AverageLevel.ToString("0.0"), Highest!.AverageLevel.ToString("0.0"), SOrBetter(Lowest!).ToString("0"), SOrBetter(Highest!).ToString("0")]
+                }
+                else
+                {
+                    <b>@L["Push levels."]</b>
+                    @L["From {0} to {1} the split barely moves — level {2}, score {3}{4} — while the pool’s average level climbs from {5} to {6}. Grades are already S or better on {7}–{8} of the fifty in every band: pools here are scored close to the ceiling, and what separates one band from the next is the level of the charts in it. Scoring is how a chart enters the pool — an SSS+ about {9} levels down ties a clean pass — but the pool climbs on level.",
+                        BandName(Lowest!), BandName(Highest!), LevelShare.ToString("P0"), ScoreShare.ToString("P0"),
+                        Model.HasPlates ? L[", plate under half a percent"].Value : "",
+                        Lowest!.AverageLevel.ToString("0.0"), Highest!.AverageLevel.ToString("0.0"), SOrBetter(Lowest!).ToString("0"), SOrBetter(Highest!).ToString("0"),
+                        Math.Round(PumbilityLevelEquivalence.LevelsBought(Model.Scoring, ChartType.Double, 20, PhoenixLetterGrade.SSSPlus)).ToString("0")]
+                }
+                @if (Composition!.PoolsCounted < 100)
+                {
+                    <span class="pc-muted"> @L["Early days: {0} full pools.", Composition.PoolsCounted]</span>
+                }
+            </p>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public PumbilityCalculatorModel Model { get; set; } = default!;
+    [Parameter] public PumbilityPoolCompositionRecord? Composition { get; set; }
+
+    private IReadOnlyList<PumbilityPoolBandRecord> Live =>
+        Composition?.Drawable.ToArray() ?? Array.Empty<PumbilityPoolBandRecord>();
+
+    private IEnumerable<PumbilityPoolBandRecord> Thin =>
+        Composition?.Bands.Where(b => b.Players > 0 && b.Players < PumbilityPoolCompositionRecord.MinimumPlayersToDraw)
+        ?? Array.Empty<PumbilityPoolBandRecord>();
+
+    private PumbilityPoolBandRecord? Lowest => Live.FirstOrDefault();
+    private PumbilityPoolBandRecord? Highest => Live.LastOrDefault();
+
+    private int LivePlayers => Live.Sum(b => b.Players);
+    private double LiveTotal => Live.Sum(b => b.Total);
+    private double LevelShare => LiveTotal == 0 ? 0 : Live.Sum(b => b.LevelPart) / LiveTotal;
+    private double ScoreShare => LiveTotal == 0 ? 0 : Live.Sum(b => b.ScorePart) / LiveTotal;
+    private double PlateShare => LiveTotal == 0 ? 0 : Live.Sum(b => b.PlatePart) / LiveTotal;
+    private double AverageLevel => Live.Sum(b => b.ChartsPooled) == 0 ? 0 : Live.Sum(b => b.LevelSum) / Live.Sum(b => b.ChartsPooled);
+
+    // "Barely moves" is a claim the numbers have to earn: more than three points of score share
+    // between the first and last drawable band, and the sentence says so instead.
+    private bool Moves => Lowest != null && Highest != null &&
+                          Math.Abs(ScoreShareOf(Highest) - ScoreShareOf(Lowest)) > 0.03;
+
+    private static double ScoreShareOf(PumbilityPoolBandRecord band) => band.Total == 0 ? 0 : band.ScorePart / band.Total;
+    private static double LevelShareOf(PumbilityPoolBandRecord band) => band.Total == 0 ? 0 : band.LevelPart / band.Total;
+
+    // Charts at S or better, per pool of fifty, in this band.
+    private static double SOrBetter(PumbilityPoolBandRecord band) => band.Players == 0
+        ? 0
+        : band.GradeCounts.Where(kv => kv.Key >= PhoenixLetterGrade.S).Sum(kv => kv.Value) / (double)band.Players;
+
+    // A gem title reads without its [P.B] prefix here ("GOLD"); a Phoenix range reads as its totals.
+    private string BandName(PumbilityPoolBandRecord band)
+    {
+        if (band.Title != null) return band.Title.Replace("[P.B] ", string.Empty);
+        if (band.Floor == 0) return L["under {0}", ((int)band.Ceiling!).ToString("N0")].Value;
+        if (band.Ceiling == null) return L["{0} and up", ((int)band.Floor).ToString("N0")].Value;
+        return $"{((int)band.Floor).ToString("N0")}–{((int)band.Ceiling - 1).ToString("N0")}";
+    }
+
+    // The stack is true to scale, so a part worth nothing takes no width.
+    private static string Grow(double part) => Math.Max(0, part).ToString("0.####", CultureInfo.InvariantCulture);
+}

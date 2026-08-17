@@ -23,6 +23,7 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -229,7 +230,8 @@ public sealed class TierListSagaTests
         titles ??= new Mock<ITitleRepository>();
         return new TierListSaga(chartRatings.Object, charts.Object, tierLists.Object, scores.Object,
             currentUser.Object, playerStats.Object, new Mock<IChartScoringLevelRepository>().Object,
-            chartStats.Object, cohortStats.Object, titles.Object);
+            chartStats.Object, cohortStats.Object, titles.Object,
+            new Mock<IPumbilityPoolCompositionRepository>().Object, FakeDateTime.At(2026, 8, 16).Object);
     }
 
     private static Mock<IChartRepository> EmptyChartsMock()

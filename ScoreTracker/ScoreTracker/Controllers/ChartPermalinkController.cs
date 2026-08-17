@@ -40,5 +40,14 @@ namespace ScoreTracker.Web.Controllers
         {
             return RedirectPermanent("/MixChanges");
         }
+
+        // "Rating" is what this site called the number before the game named it PUMBILITY; the
+        // rebuilt page wears the game's word and one URL per mix. The old name 301s to the bare
+        // route, which serves the viewer's mix (docs/design/pumbility-calculator.md D1).
+        [HttpGet("/RatingCalculator")]
+        public IActionResult ToPumbilityCalculator()
+        {
+            return RedirectPermanent(Services.PumbilityCalculator.PumbilityCalculatorMixes.Root);
+        }
     }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MassTransit;
 using Moq;
 using ScoreTracker.ChartIntelligence.Application;
+using ScoreTracker.ChartIntelligence.Contracts;
 using ScoreTracker.ChartIntelligence.Contracts.Messages;
 using ScoreTracker.ChartIntelligence.Domain;
 using ScoreTracker.Domain.Models;
@@ -15,6 +16,7 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.TestData;
+using ScoreTracker.Tests.TestHelpers;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -243,6 +245,68 @@ public sealed class TierListSagaPumbilityTests
         Assert.DoesNotContain(PumbilityPeers.ForPhoenix2Rung(34), folder.ByPeerKey.Keys);
     }
 
+    [Fact]
+    public async Task TheCompositionIsBuiltFromMergedPoolsAndOnlyFullOnes()
+    {
+        // Thirty singles and thirty doubles: no per-type pool is full, so the tier lists count
+        // nobody, but the merged sixty make one full pool — the pool a player's total and title
+        // rung come from — and the composition counts exactly that player, once, in the band the
+        // merged top-50 total lands in.
+        var user = Guid.NewGuid();
+        var singles = Enumerable.Range(0, 30)
+            .Select(_ => new ChartBuilder().WithLevel(20).WithType(ChartType.Single).Build()).ToArray();
+        var doubles = Enumerable.Range(0, 30)
+            .Select(_ => new ChartBuilder().WithLevel(20).WithType(ChartType.Double).Build()).ToArray();
+        var scores = singles.Concat(doubles).Select(c => (user, Score(c, 990_000))).ToList();
+        var saved = new List<SavedFolder>();
+        var compositions = new List<PumbilityPoolCompositionRecord>();
+        var saga = BuildSaga(singles.Concat(doubles), scores, saved, mix: MixEnum.Phoenix2,
+            compositions: compositions);
+
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand(MixEnum.Phoenix2)));
+
+        Assert.All(saved, f => Assert.Empty(f.ByPeerKey));
+        var composition = Assert.Single(compositions);
+        Assert.Equal(MixEnum.Phoenix2, composition.Mix);
+        Assert.Equal(Recorded, composition.ComputedAt);
+        Assert.Equal(1, composition.PoolsCounted);
+        var band = Assert.Single(composition.Bands.Where(b => b.Players > 0));
+        Assert.Equal(50, band.ChartsPooled);
+        // The pool total is the sum of the parts, and it is what picked the band.
+        Assert.True(band.Floor <= band.Total && (band.Ceiling == null || band.Total < band.Ceiling),
+            $"{band.Total} filed under {band.Key} [{band.Floor}, {band.Ceiling})");
+        Assert.Equal(50, band.GradeCounts[PhoenixLetterGrade.SSS]);
+        Assert.Equal(20, band.AverageLevel);
+    }
+
+    [Fact]
+    public async Task TheCompositionSumsAreExactlyTheDecomposePartsOfTheTopFifty()
+    {
+        // Sixty charts on one level, scores descending: the pool is the best fifty, and every one of
+        // its three sums is the same Decompose part the PUMBILITY page shows for those fifty.
+        var user = Guid.NewGuid();
+        var charts = Enumerable.Range(0, 60)
+            .Select(_ => new ChartBuilder().WithLevel(22).WithType(ChartType.Double).Build()).ToArray();
+        var scores = charts.Select((c, i) => (user, Score(c, 999_000 - i * 1000))).ToList();
+        var compositions = new List<PumbilityPoolCompositionRecord>();
+        var saga = BuildSaga(charts, scores, new List<SavedFolder>(), mix: MixEnum.Phoenix2,
+            compositions: compositions);
+
+        await saga.Consume(Context(new ProcessPumbilityTierListCommand(MixEnum.Phoenix2)));
+
+        var scoring = ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false);
+        var expected = scores.OrderByDescending(s => (int)s.Item2.Score!.Value)
+            .Take(50)
+            .Select(s => scoring.Decompose(charts.Single(c => c.Id == s.Item2.ChartId), s.Item2.Score!.Value,
+                PhoenixPlate.MarvelousGame, false))
+            .ToArray();
+        var band = Assert.Single(Assert.Single(compositions).Bands.Where(b => b.Players > 0));
+        Assert.Equal(expected.Sum(p => p.Base), band.LevelPart, 6);
+        Assert.Equal(expected.Sum(p => p.FromGrade), band.ScorePart, 6);
+        Assert.Equal(expected.Sum(p => p.FromPlate), band.PlatePart, 6);
+        Assert.True(band.PlatePart > 0);
+    }
+
     /// <summary>
     ///     Fifty low-level charts per player, so their pool is a pool. The rebuild ignores anyone
     ///     short of a full fifty — a partial pool's total says how much someone has imported, not
@@ -285,7 +349,8 @@ public sealed class TierListSagaPumbilityTests
     private static TierListSaga BuildSaga(IEnumerable<Chart> charts,
         IReadOnlyCollection<(Guid UserId, RecordedPhoenixScore Record)> scores, List<SavedFolder> saved,
         IReadOnlyDictionary<int, Guid[]>? titleLevels = null, MixEnum mix = MixEnum.Phoenix,
-        Mock<ITitleRepository>? titles = null, IReadOnlyDictionary<Guid, double>? totals = null)
+        Mock<ITitleRepository>? titles = null, IReadOnlyDictionary<Guid, double>? totals = null,
+        List<PumbilityPoolCompositionRecord>? compositions = null)
     {
         // Phoenix 2 reads each pooled player's total pool off their stats row to place them on
         // the PUMBILITY ladder; a player with no total stands on rung 0.
@@ -340,10 +405,15 @@ public sealed class TierListSagaPumbilityTests
 
         // The PUMBILITY rebuild reads charts, scores, titles and writes tier lists; the rest of
         // TierListSaga's dependencies belong to its other consumers and stay inert dummies here.
+        var composition = new Mock<IPumbilityPoolCompositionRepository>();
+        composition.Setup(c => c.Save(It.IsAny<PumbilityPoolCompositionRecord>(), It.IsAny<CancellationToken>()))
+            .Callback((PumbilityPoolCompositionRecord record, CancellationToken _) => compositions?.Add(record))
+            .Returns(Task.CompletedTask);
+
         return new TierListSaga(new Mock<IChartDifficultyRatingRepository>().Object, chartRepo.Object,
             tierLists.Object, scoreReader.Object, new Mock<ICurrentUserAccessor>().Object,
             playerStats.Object, new Mock<IChartScoringLevelRepository>().Object,
             new Mock<IChartScoreStatsRepository>().Object, new Mock<IFolderCohortStatsRepository>().Object,
-            titles.Object);
+            titles.Object, composition.Object, FakeDateTime.At(Recorded).Object);
     }
 }
