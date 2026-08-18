@@ -182,6 +182,42 @@ public sealed class ScoreJournalRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ABestLandingOnAnotherPlaysKeyLeavesThatPlayAlone()
+    {
+        // The Phoenix 2 case that started this: a chart failed on the 12th and passed on the 14th
+        // carries the 12th on its best card, because the card is stamped when the chart reaches
+        // the list and never moves. The pass must not take over the fail's row — the fail happened.
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+        var firstAttempt = Now.AddDays(-2);
+
+        await repo.Append(Entry(userId, chart, firstAttempt, 900931, isBroken: true), CancellationToken.None);
+        await repo.Append(Entry(userId, chart, firstAttempt, 955291), CancellationToken.None);
+
+        var row = Assert.Single(await repo.GetChartHistories(userId, new[] { chart }, CancellationToken.None));
+        Assert.True(row.IsBroken);
+        Assert.Equal((PhoenixScore)900931, row.Score);
+    }
+
+    [Fact]
+    public async Task ABestLandingOnAStageBreaksKeyLeavesTheStageBreakAlone()
+    {
+        var userId = await _seed.SeedUserAsync();
+        var chart = await _seed.SeedChartAsync();
+        var repo = BuildRepository();
+
+        await repo.AppendObservations(new[] { StageBreak(userId, chart, Now, new JudgementCounts(244, 5, 2, 1, 110)) },
+            CancellationToken.None);
+        await repo.Append(Entry(userId, chart, Now, 955291, mix: MixEnum.Phoenix2), CancellationToken.None);
+
+        var row = Assert.Single(await repo.GetChartHistories(userId, new[] { chart }, CancellationToken.None));
+        Assert.True(row.IsStageBroken);
+        Assert.False(row.IsBest);
+        Assert.Null(row.Score);
+    }
+
+    [Fact]
     public async Task AnObservationNeverDemotesAPlayAlreadyRecordedAsTheBest()
     {
         var userId = await _seed.SeedUserAsync();

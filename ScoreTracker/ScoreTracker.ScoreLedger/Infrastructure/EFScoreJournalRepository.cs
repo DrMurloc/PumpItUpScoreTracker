@@ -31,6 +31,15 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
                  e.OccurredAt == entry.OccurredAt, cancellationToken);
         if (existing != null)
         {
+            // Same key, different result: these are two plays, and the timestamp cannot tell them
+            // apart because it did not come from a play at all — a best-list card is stamped when
+            // the chart first reaches the list and keeps that stamp as the score improves. Raising
+            // the flag here would leave one play's row wearing another play's standing (the shape
+            // that put a broken score under a passing record). The row is left exactly as it is:
+            // what it says happened, happened. The record itself is written either way, and the
+            // play earns its own row as soon as a recent window dates it.
+            if (!IsSamePlay(existing, entry)) return;
+
             existing.IsBest = true;
             existing.SessionId ??= entry.SessionId;
             await database.SaveChangesAsync(cancellationToken);
@@ -80,6 +89,21 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
         }
 
         await database.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    ///     Whether a stored row and an incoming entry are the same play rather than two plays
+    ///     sharing a fabricated timestamp. Result, not metadata: an import sees one play twice —
+    ///     as a recently-played observation and as the best-list card that produced it — and those
+    ///     two agree on every axis below, which is what makes them collapse onto one row.
+    /// </summary>
+    private static bool IsSamePlay(ScoreEventJournalEntity existing, ScoreJournalEntry entry)
+    {
+        var score = entry.Score != null ? (int?)entry.Score.Value
+            : entry.LegacyScore != null ? (int?)entry.LegacyScore.Value : null;
+        return existing.Score == score
+               && existing.IsBroken == entry.IsBroken
+               && existing.IsStageBroken == entry.IsStageBroken;
     }
 
     private static void SetJudgements(ScoreEventJournalEntity entity, JudgementCounts? judgements)

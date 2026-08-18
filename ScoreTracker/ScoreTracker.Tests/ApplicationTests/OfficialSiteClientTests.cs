@@ -532,6 +532,47 @@ public sealed class OfficialSiteClientTests
     }
 
     [Fact]
+    public async Task TheProducingPlaysOwnTimeBeatsTheBestCardsStamp()
+    {
+        // The card's date is stamped when the chart first reaches the list and never moves, so a
+        // chart failed days ago and passed last night shows the OLD date beside the new score
+        // (measured live, 2026-08-18). The play's own time is what the journal keys on, so the
+        // pass has to travel with its own — otherwise it lands on the earlier attempt's row.
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Rush-More").WithType(ChartType.Double)
+            .WithLevel(23).WithNoteCount(1000).Build());
+        var firstAttempt = T0.AddDays(-2);
+        var card = Card(chart, 955291, firstAttempt);
+        h.GivenBestScorePage(1, card);
+        h.GivenBestScorePage(2, card);
+        h.GivenRecentScores(Play(chart, 955291, T0, perfects: 940, greats: 40, goods: 10, bads: 5, misses: 5));
+
+        var saved = Assert.Single((await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, CancellationToken.None)).Bests);
+
+        Assert.Equal(T0, saved.RecordedAt);
+        Assert.Equal(new JudgementCounts(940, 40, 10, 5, 5), saved.Judgements);
+    }
+
+    [Fact]
+    public async Task ABestTheWindowNoLongerReachesKeepsTheCardsStamp()
+    {
+        // Nothing better is available: the window has moved on, so the card's date is all there is.
+        var h = new ImportHarness();
+        var chart = h.GivenChart(new ChartBuilder().WithSongName("Long Ago").WithType(ChartType.Single)
+            .WithLevel(18).WithNoteCount(600).Build());
+        var cardDate = T0.AddDays(-30);
+        var card = Card(chart, 970000, cardDate);
+        h.GivenBestScorePage(1, card);
+        h.GivenBestScorePage(2, card);
+
+        var saved = Assert.Single((await h.Client.GetRecordedScores(MixEnum.Phoenix2, ImportUserId, "sid", "card1",
+            includeBroken: false, maxPages: null, CancellationToken.None)).Bests);
+
+        Assert.Equal(cardDate, saved.RecordedAt);
+    }
+
+    [Fact]
     public async Task AHigherBrokenRecentPlayNeverBecomesAPassingRecord()
     {
         // The franken-record: Max(score) with All(broken) for the flag used to save the break's

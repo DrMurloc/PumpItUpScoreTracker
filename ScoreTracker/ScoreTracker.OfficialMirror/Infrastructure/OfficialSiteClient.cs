@@ -754,10 +754,18 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 .FirstOrDefault();
             if (producing == null) continue;
 
+            // The producing play's own time WINS over the best card's stamp. The card's date is
+            // not when that score was set: it is stamped when the chart first reaches the list and
+            // never moves again, so a chart failed on the 12th and passed on the 14th still shows
+            // the 12th beside the passing score (measured against the live site, 2026-08-18 —
+            // docs/design/stage-breaks-and-max-combo.md §6). Taking the card's date made every such
+            // pass collide with the earlier attempt's journal row, which is one play's key holding
+            // another play's result. The card's stamp is the fallback, for a best the recent window
+            // no longer reaches.
             results[chart.Id] = saved with
             {
                 Judgements = JudgementsOf(producing),
-                RecordedAt = saved.RecordedAt ?? producing.RecordedAt
+                RecordedAt = producing.RecordedAt ?? saved.RecordedAt
             };
         }
     }
