@@ -160,9 +160,6 @@
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* Dados do placar oficial, em {0}.</value>
   </data>
-  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
-    <value>* Dados do placar oficial, em {0}. Os placares cobrem apenas nível 20+.</value>
-  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>**#{0}** em {1} {2} Passo Diário</value>
   </data>
@@ -343,6 +340,12 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>Já existe uma comunidade com esse nome.</value>
   </data>
+  <data name="A deleted community" xml:space="preserve">
+    <value>Uma comunidade excluída</value>
+  </data>
+  <data name="a deleted user" xml:space="preserve">
+    <value>um usuário excluído</value>
+  </data>
   <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
     <value>Uma entrega pode chegar duas vezes. Se o PIU Scores reiniciar durante uma importação, essa importação é enviada de novo quando ele voltar: use o chart e o horário registrado da pontuação como chave, em vez de supor que cada entrega é única. As entregas de sessão do PIUGame são a exceção: nunca são reenviadas, porque a sessão já se foi.</value>
   </data>
@@ -456,6 +459,9 @@
   </data>
   <data name="Account" xml:space="preserve">
     <value>Conta</value>
+  </data>
+  <data name="Account locked." xml:space="preserve">
+    <value>Conta bloqueada.</value>
   </data>
   <data name="Account Stats" xml:space="preserve">
     <value>Estatísticas da conta</value>
@@ -871,12 +877,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>Seguidos, a partir daqui</value>
   </data>
-  <data name="Back to community" xml:space="preserve">
-    <value>Voltar para a comunidade</value>
-  </data>
-  <data name="Back to rivals" xml:space="preserve">
-    <value>Voltar aos rivais</value>
-  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>Voltar à Tier List</value>
   </data>
@@ -1057,14 +1057,14 @@
   <data name="Board only" xml:space="preserve">
     <value>Somente placar</value>
   </data>
+  <data name="Board players" xml:space="preserve">
+    <value>Jogadores do placar</value>
+  </data>
   <data name="Boards" xml:space="preserve">
     <value>Placares</value>
   </data>
   <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
     <value>Os quadros são por versão, e esta ainda não tem a sua própria rotação.</value>
-  </data>
-  <data name="Boards you're both on" xml:space="preserve">
-    <value>Placares em que vocês dois estão</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>Boss breakers</value>
@@ -1339,12 +1339,6 @@
   <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
     <value>Charts rumo ao seu próximo título, e títulos de habilidade a um SSS.</value>
   </data>
-  <data name="Charts you lose" xml:space="preserve">
-    <value>Charts que você perde</value>
-  </data>
-  <data name="Charts you win" xml:space="preserve">
-    <value>Charts que você vence</value>
-  </data>
   <data name="ChartScoring" xml:space="preserve">
     <value>Pontuação de chart</value>
   </data>
@@ -1443,6 +1437,9 @@
   </data>
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>Transições de pad em co-op</value>
+  </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>Rating CO-OP</value>
   </data>
   <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
     <value>CO-OP era precificado numa base fixa de 2.000 mas nunca contou no total.</value>
@@ -1585,9 +1582,6 @@
   <data name="Compare" xml:space="preserve">
     <value>Comparar</value>
   </data>
-  <data name="Compare in folder" xml:space="preserve">
-    <value>Comparar no folder</value>
-  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>{0} charts comparados ({1}) — nenhum passou do corte.</value>
   </data>
@@ -1621,6 +1615,9 @@
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>singles competitivo, todos jogadores PIUScores</value>
   </data>
+  <data name="Compiling this player's page." xml:space="preserve">
+    <value>Compilando a página deste jogador.</value>
+  </data>
   <data name="Compiling your personalized breakdown." xml:space="preserve">
     <value>Compilando seu detalhamento personalizado.</value>
   </data>
@@ -1631,13 +1628,10 @@
     <value>Concluído</value>
   </data>
   <data name="Completion" xml:space="preserve">
-    <value>Conclusão</value>
+	  <value>Conclusão</value>
   </data>
   <data name="Completion %" xml:space="preserve">
     <value>% de conclusão</value>
-  </data>
-  <data name="Completion (you / them)" xml:space="preserve">
-    <value>Conclusão (você / eles)</value>
   </data>
   <data name="Completionist" xml:space="preserve">
     <value>Completionist</value>
@@ -1706,7 +1700,7 @@
     <value>CoOp</value>
   </data>
   <data name="CoOp Completion" xml:space="preserve">
-    <value>Conclusão CoOp</value>
+	  <value>Conclusão CoOp</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>Copiado</value>
@@ -1743,6 +1737,12 @@
   </data>
   <data name="Could not find song" xml:space="preserve">
     <value>Música não encontrada</value>
+  </data>
+  <data name="Could not lift the mute." xml:space="preserve">
+    <value>Não foi possível remover o silêncio.</value>
+  </data>
+  <data name="Could not mute this member." xml:space="preserve">
+    <value>Não foi possível silenciar este membro.</value>
   </data>
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>Não foi possível conectar ao PIUGAME, tente novamente mais tarde</value>
@@ -2464,6 +2464,9 @@
   <data name="Find a chart and its pages" xml:space="preserve">
     <value>Encontre um chart e suas páginas</value>
   </data>
+  <data name="Find a chart or player" xml:space="preserve">
+    <value>Buscar um chart ou jogador</value>
+  </data>
   <data name="Find a player" xml:space="preserve">
     <value>Buscar jogador</value>
   </data>
@@ -2511,9 +2514,6 @@
   </data>
   <data name="Folder Cleared" xml:space="preserve">
     <value>Pasta concluída</value>
-  </data>
-  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
-    <value>A comparação por pasta, os títulos e a progressão precisam de uma conta piuscores. Aparecerão aqui se {0} importar.</value>
   </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>Conclusão por folder</value>
@@ -2586,6 +2586,9 @@
   </data>
   <data name="From" xml:space="preserve">
     <value>De</value>
+  </data>
+  <data name="From another mix" xml:space="preserve">
+    <value>De outra versão</value>
   </data>
   <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
     <value>De agora em diante, cada importação e sessão de jogo aparece aqui e você pode desfazer qualquer uma. As pontuações que você já tinha ainda podem ser excluídas.</value>
@@ -2779,6 +2782,9 @@
   <data name="Has errors" xml:space="preserve">
     <value>Contém erros</value>
   </data>
+  <data name="Hate or discrimination" xml:space="preserve">
+    <value>Ódio ou discriminação</value>
+  </data>
   <data name="Have an invite link?" xml:space="preserve">
     <value>Tem um link de convite?</value>
   </data>
@@ -2928,6 +2934,9 @@
   </data>
   <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
     <value>I Hope You Held Hands on Canon D</value>
+  </data>
+  <data name="I just want attention. Hi." xml:space="preserve">
+    <value>Só quero atenção. Oi.</value>
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>Só quero ocultar este chart</value>
@@ -3262,6 +3271,9 @@
   <data name="just now" xml:space="preserve">
     <value>agora mesmo</value>
   </data>
+  <data name="Just saying hi" xml:space="preserve">
+    <value>Só dando oi</value>
+  </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>Só continuar vivo</value>
   </data>
@@ -3483,6 +3495,9 @@
   </data>
   <data name="Location" xml:space="preserve">
     <value>Local</value>
+  </data>
+  <data name="Lock account" xml:space="preserve">
+    <value>Bloquear conta</value>
   </data>
   <data name="Lock Status" xml:space="preserve">
     <value>Status do Bloqueio</value>
@@ -3739,6 +3754,9 @@
   <data name="Moderate" xml:space="preserve">
     <value>Moderar</value>
   </data>
+  <data name="Moderate comments (remove/mute)" xml:space="preserve">
+    <value>Moderar comentários (remover/silenciar)</value>
+  </data>
   <data name="Modern" xml:space="preserve">
     <value>Atuais</value>
   </data>
@@ -3819,6 +3837,12 @@
   </data>
   <data name="Must give the community a name." xml:space="preserve">
     <value>Você precisa dar um nome à comunidade.</value>
+  </data>
+  <data name="Mute" xml:space="preserve">
+    <value>Silenciar</value>
+  </data>
+  <data name="Mute {0}" xml:space="preserve">
+    <value>Silenciar {0}</value>
   </data>
   <data name="My Bads" xml:space="preserve">
     <value>Meus Bads</value>
@@ -4405,6 +4429,9 @@
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Nada mudou — todas as {0} charts mantiveram o nível.</value>
   </data>
+  <data name="Nothing on your desk." xml:space="preserve">
+    <value>Nada pendente.</value>
+  </data>
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>Nada selecionado — clique em um valor.</value>
   </data>
@@ -4485,6 +4512,9 @@
   </data>
   <data name="off the scale" xml:space="preserve">
     <value>fora da escala</value>
+  </data>
+  <data name="Off topic" xml:space="preserve">
+    <value>Fora do assunto</value>
   </data>
   <data name="Off — only you can see your scores" xml:space="preserve">
     <value>Desativado: só você pode ver suas pontuações</value>
@@ -4618,11 +4648,17 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Só aparecem as músicas com alguma chart que mudou.</value>
   </data>
+  <data name="Only you" xml:space="preserve">
+    <value>Só você</value>
+  </data>
   <data name="Only you can see this" xml:space="preserve">
     <value>Só você pode ver isto</value>
   </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>Por enquanto só você pode usar esta ferramenta.</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>Só {0}</value>
   </data>
   <data name="only {0} have it" xml:space="preserve">
     <value>só {0} têm</value>
@@ -4878,8 +4914,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · seu top 50 real</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>O Phoenix 2 até precifica um chart CO-OP, com uma base fixa de {0} — do jeito que o Phoenix precificava em {1} —, mas esse número só aparece na página de títulos. Não soma nada à PUMBILITY em nenhuma das duas versões.</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>O Phoenix 2 até precifica um chart CO-OP, com uma base fixa de {0} — do jeito que o Phoenix precificava em {1} —, mas isso é o Rating CO-OP, um número à parte com os seus próprios títulos e o seu próprio placar. Não soma nada à PUMBILITY em nenhuma das duas versões.</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>O Phoenix 2 se apoia na pontuação cerca de {0}× mais que o Phoenix.</value>
@@ -4952,9 +4988,6 @@
   </data>
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>Escolha uma dificuldade da lista para ver os detalhes e charts semelhantes.</value>
-  </data>
-  <data name="Pick a folder to compare your scores." xml:space="preserve">
-    <value>Escolha um folder para comparar suas pontuações.</value>
   </data>
   <data name="pick a mix first" xml:space="preserve">
     <value>escolha uma versão primeiro</value>
@@ -5040,8 +5073,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>Os logins do PIUGAME dependem do piugame.com estar acessível, conecte um método de login de reserva</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>A PIUGAME não publica um ranking de CO-OP - este ranking é a nossa melhor estimativa, calculado a partir dos leaderboards de CO-OP espelhados, com placas inferidas pela pontuação (SG, UG a partir de 995.000, PG em 1.000.000).</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>A PIUGAME não publica um ranking de CO-OP - este ranking calcula os leaderboards de CO-OP espelhados com a fórmula do Rating CO-OP, com placas inferidas pela pontuação (SG, UG a partir de 995.000, PG em 1.000.000); um leaderboard de chart lista apenas o seu top 300, então um rating real pode ser maior.</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>Sessão do PIUGame</value>
@@ -5144,9 +5177,6 @@
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
     <value>Jogador para teste (deve estar definido como público)</value>
-  </data>
-  <data name="Player was not found in this community." xml:space="preserve">
-    <value>Jogador não encontrado nesta comunidade.</value>
   </data>
   <data name="Players" xml:space="preserve">
     <value>Jogadores</value>
@@ -5584,6 +5614,9 @@
   <data name="Reason" xml:space="preserve">
     <value>Motivo</value>
   </data>
+  <data name="Reason (optional)" xml:space="preserve">
+    <value>Motivo (opcional)</value>
+  </data>
   <data name="Rebuild Latest Sessions" xml:space="preserve">
     <value>Reconstruir as últimas sessões</value>
   </data>
@@ -5740,6 +5773,9 @@
   <data name="Removed" xml:space="preserve">
     <value>Removido</value>
   </data>
+  <data name="Removed by a moderator" xml:space="preserve">
+    <value>Removido por um moderador</value>
+  </data>
   <data name="Removed by the site admin" xml:space="preserve">
     <value>Removido pelo administrador do site</value>
   </data>
@@ -5772,6 +5808,21 @@
   </data>
   <data name="Reply…" xml:space="preserve">
     <value>Responder…</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>Denunciar</value>
+  </data>
+  <data name="Reported as just wanting attention. Nothing to moderate unless you decide otherwise." xml:space="preserve">
+    <value>Denunciado como só querendo atenção. Nada a moderar, a menos que você decida o contrário.</value>
+  </data>
+  <data name="reported by {0}" xml:space="preserve">
+    <value>denunciado por {0}</value>
+  </data>
+  <data name="Reported comments" xml:space="preserve">
+    <value>Comentários denunciados</value>
+  </data>
+  <data name="Reports" xml:space="preserve">
+    <value>Denúncias</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>Cabeçalho da requisição</value>
@@ -5847,6 +5898,9 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>Revogada</value>
+  </data>
+  <data name="Rival" xml:space="preserve">
+    <value>Rival</value>
   </data>
   <data name="Rival invite" xml:space="preserve">
     <value>Convite de rival</value>
@@ -5955,9 +6009,6 @@
   </data>
   <data name="Score" xml:space="preserve">
     <value>Pontuação</value>
-  </data>
-  <data name="Score average (you / them)" xml:space="preserve">
-    <value>Pontuação média (você / eles)</value>
   </data>
   <data name="Score Completion" xml:space="preserve">
     <value>Conclusão de pontuação</value>
@@ -6379,6 +6430,9 @@
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Mostre para o que este canal está registrado</value>
   </data>
+  <data name="Show {0} unshared charts" xml:space="preserve">
+    <value>Mostrar {0} charts não compartilhados</value>
+  </data>
   <data name="Showing" xml:space="preserve">
     <value>Mostrando</value>
   </data>
@@ -6606,6 +6660,9 @@
   </data>
   <data name="Source Code" xml:space="preserve">
     <value>Código-fonte</value>
+  </data>
+  <data name="Spam or advertising" xml:space="preserve">
+    <value>Spam ou propaganda</value>
   </data>
   <data name="Speaks your language." xml:space="preserve">
     <value>Fala o seu idioma.</value>
@@ -6852,6 +6909,9 @@
   </data>
   <data name="Test With Player Data" xml:space="preserve">
     <value>Testar com dados do jogador</value>
+  </data>
+  <data name="Thanks — a moderator will take a look." xml:space="preserve">
+    <value>Obrigado — um moderador vai dar uma olhada.</value>
   </data>
   <data name="That command isn't available yet." xml:space="preserve">
     <value>Esse comando ainda não está disponível.</value>
@@ -7120,8 +7180,8 @@
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>Essa pessoa não poderá criar uma ferramenta nova até você desfazer isto.</value>
   </data>
-  <data name="They haven't placed on any board you've played." xml:space="preserve">
-    <value>Eles não entraram em nenhum placar dos charts que você jogou.</value>
+  <data name="They stay in the community and can read everything, but can't post, reply or edit comments here until the mute is lifted. Existing comments stay." xml:space="preserve">
+    <value>Continua na comunidade e pode ler tudo, mas não pode publicar, responder nem editar comentários aqui até o silêncio ser removido. Os comentários existentes permanecem.</value>
   </data>
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>Já é um dos seus rivais.</value>
@@ -7134,6 +7194,9 @@
   </data>
   <data name="This account is scheduled for deletion" xml:space="preserve">
     <value>Esta conta está agendada para exclusão</value>
+  </data>
+  <data name="This account needs a display name to lock — use the Admin page." xml:space="preserve">
+    <value>Esta conta precisa de um nome de exibição para ser bloqueada — use a página Admin.</value>
   </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>Esta conta será excluída</value>
@@ -7300,6 +7363,9 @@
   <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
     <value>Isso assume Perfects no meio. Com Greats, esses mesmos três custam {0}, {1} e {2} notas.</value>
   </data>
+  <data name="Threats or harassment" xml:space="preserve">
+    <value>Ameaças ou assédio</value>
+  </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Três anos e meio de Pump, um só recap. Vá ver o seu — e tire prints das melhores partes.</value>
   </data>
@@ -7308,9 +7374,6 @@
   </data>
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>Via «compartilhar com todas as ferramentas»</value>
-  </data>
-  <data name="Tie" xml:space="preserve">
-    <value>Empate</value>
   </data>
   <data name="Tier" xml:space="preserve">
     <value>Faixa</value>
@@ -7629,6 +7692,9 @@
   </data>
   <data name="Unmatched PIU Center Keys" xml:space="preserve">
     <value>Chaves do PIU Center sem correspondência</value>
+  </data>
+  <data name="Unmute" xml:space="preserve">
+    <value>Remover silêncio</value>
   </data>
   <data name="Unpassed" xml:space="preserve">
     <value>Sem pass</value>
@@ -8056,6 +8122,9 @@
   <data name="Why" xml:space="preserve">
     <value>Por quê</value>
   </data>
+  <data name="Why are you reporting this?" xml:space="preserve">
+    <value>Por que você está denunciando?</value>
+  </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
   </data>
@@ -8064,9 +8133,6 @@
   </data>
   <data name="Will be skipped" xml:space="preserve">
     <value>Será ignorada</value>
-  </data>
-  <data name="Winner" xml:space="preserve">
-    <value>Vencedor</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>vitórias no seu alcance</value>
@@ -8130,6 +8196,9 @@
   </data>
   <data name="Write a description to enable this." xml:space="preserve">
     <value>Escreva uma descrição para habilitar.</value>
+  </data>
+  <data name="Wrong information" xml:space="preserve">
+    <value>Informação incorreta</value>
   </data>
   <data name="X Charts" xml:space="preserve">
     <value>{0} charts</value>
@@ -8205,6 +8274,9 @@
   </data>
   <data name="You can take that back at any time." xml:space="preserve">
     <value>Você pode revogar quando quiser.</value>
+  </data>
+  <data name="You can't post here right now." xml:space="preserve">
+    <value>No momento você não pode publicar aqui.</value>
   </data>
   <data name="You connected directly" xml:space="preserve">
     <value>Você conectou diretamente</value>
@@ -8860,6 +8932,9 @@
   <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
     <value>{0} de {1} · {2} para o Folder Lamp</value>
   </data>
+  <data name="{0} Official Top {1}s" xml:space="preserve">
+    <value>{0} Top {1} oficiais</value>
+  </data>
   <data name="{0} on board" xml:space="preserve">
     <value>{0} no quadro</value>
   </data>
@@ -8971,9 +9046,6 @@
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0} ferramentas lendo agora</value>
   </data>
-  <data name="{0} top-board charts" xml:space="preserve">
-    <value>{0} charts no top oficial</value>
-  </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>{0} no total · {1} gráficos</value>
   </data>
@@ -9030,9 +9102,6 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>há {0} min</value>
-  </data>
-  <data name="{0}y old" xml:space="preserve">
-    <value>{0} anos</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>~#{0} no ranking oficial</value>

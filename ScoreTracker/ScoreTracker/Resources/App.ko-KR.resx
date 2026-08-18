@@ -160,9 +160,6 @@
   <data name="* Official board data, as of {0}." xml:space="preserve">
     <value>* 공식 보드 데이터, {0} 기준.</value>
   </data>
-  <data name="* Official board data, as of {0}. Boards cover level 20+ only." xml:space="preserve">
-    <value>* 공식 보드 데이터, {0} 기준. 보드는 레벨 20 이상만 다룹니다.</value>
-  </data>
   <data name="**#{0}** on {1} {2} Daily Step" xml:space="preserve">
     <value>데일리 스텝 {1} {2} **#{0}**</value>
   </data>
@@ -343,6 +340,12 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>이미 같은 이름의 커뮤니티가 있습니다.</value>
   </data>
+  <data name="A deleted community" xml:space="preserve">
+    <value>삭제된 커뮤니티</value>
+  </data>
+  <data name="a deleted user" xml:space="preserve">
+    <value>삭제된 사용자</value>
+  </data>
   <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
     <value>전송이 두 번 도착할 수 있습니다. 가져오기 도중에 PIU Scores가 다시 시작되면 복구 후 해당 가져오기가 다시 전송됩니다. 전송이 한 번뿐이라고 가정하지 말고 차트와 기록 시각을 기준으로 처리하세요. PIUGame 세션 전송은 예외입니다. 그때는 세션이 이미 사라졌기 때문에 다시 보내지 않습니다.</value>
   </data>
@@ -456,6 +459,9 @@
   </data>
   <data name="Account" xml:space="preserve">
     <value>나의 계정</value>
+  </data>
+  <data name="Account locked." xml:space="preserve">
+    <value>계정을 잠갔습니다.</value>
   </data>
   <data name="Account Stats" xml:space="preserve">
     <value>계정 통계</value>
@@ -871,12 +877,6 @@
   <data name="Back to back, from here" xml:space="preserve">
     <value>여기서부터 연속으로</value>
   </data>
-  <data name="Back to community" xml:space="preserve">
-    <value>커뮤니티로 돌아가기</value>
-  </data>
-  <data name="Back to rivals" xml:space="preserve">
-    <value>라이벌로 돌아가기</value>
-  </data>
   <data name="Back to Tier List" xml:space="preserve">
     <value>티어리스트로 돌아가기</value>
   </data>
@@ -1057,14 +1057,14 @@
   <data name="Board only" xml:space="preserve">
     <value>보드 전용</value>
   </data>
+  <data name="Board players" xml:space="preserve">
+    <value>보드 유저</value>
+  </data>
   <data name="Boards" xml:space="preserve">
     <value>보드</value>
   </data>
   <data name="Boards run per mix, and this one doesn't have its own rotation yet." xml:space="preserve">
     <value>보드는 시리즈별로 운영되며, 이 시리즈는 아직 자체 로테이션이 없습니다.</value>
-  </data>
-  <data name="Boards you're both on" xml:space="preserve">
-    <value>둘 다 오른 보드</value>
   </data>
   <data name="Boss breakers" xml:space="preserve">
     <value>보스 브레이커</value>
@@ -1339,12 +1339,6 @@
   <data name="Charts toward your next title, plus skill titles one SSS away." xml:space="preserve">
     <value>다음 칭호를 위한 채보와 SSS까지 한 걸음 남은 스킬 칭호.</value>
   </data>
-  <data name="Charts you lose" xml:space="preserve">
-    <value>지고 있는 채보</value>
-  </data>
-  <data name="Charts you win" xml:space="preserve">
-    <value>이기고 있는 채보</value>
-  </data>
   <data name="ChartScoring" xml:space="preserve">
     <value>채보 점수</value>
   </data>
@@ -1443,6 +1437,9 @@
   </data>
   <data name="Co-op Pad Transitions" xml:space="preserve">
     <value>코옵 패드 이동</value>
+  </data>
+  <data name="CO-OP Rating" xml:space="preserve">
+	  <value>코옵 레이팅</value>
   </data>
   <data name="CO-OP was priced at a flat 2,000 base but never counted in the total." xml:space="preserve">
     <value>CO-OP은 고정 베이스 2,000으로 책정됐지만 총합에는 포함되지 않았습니다.</value>
@@ -1585,9 +1582,6 @@
   <data name="Compare" xml:space="preserve">
     <value>비교</value>
   </data>
-  <data name="Compare in folder" xml:space="preserve">
-    <value>폴더 내 비교</value>
-  </data>
   <data name="Compared {0} charts ({1}) — none cleared the bar." xml:space="preserve">
     <value>채보 {0}개 비교 ({1}) — 기준을 넘은 채보가 없습니다.</value>
   </data>
@@ -1621,6 +1615,9 @@
   <data name="competitive singles, all PIUScores players" xml:space="preserve">
     <value>싱글 경쟁 레벨 (PIUScores 전체)</value>
   </data>
+  <data name="Compiling this player's page." xml:space="preserve">
+    <value>이 유저의 페이지를 만드는 중입니다.</value>
+  </data>
   <data name="Compiling your personalized breakdown." xml:space="preserve">
     <value>개인화 분석을 만드는 중입니다.</value>
   </data>
@@ -1631,13 +1628,10 @@
     <value>완료</value>
   </data>
   <data name="Completion" xml:space="preserve">
-    <value>완료율</value>
+	  <value>완료율</value>
   </data>
   <data name="Completion %" xml:space="preserve">
     <value>완료율 %</value>
-  </data>
-  <data name="Completion (you / them)" xml:space="preserve">
-    <value>완료율 (나 / 상대)</value>
   </data>
   <data name="Completionist" xml:space="preserve">
     <value>Completionist</value>
@@ -1706,7 +1700,7 @@
     <value>코옵</value>
   </data>
   <data name="CoOp Completion" xml:space="preserve">
-    <value>코옵 완료율</value>
+	  <value>코옵 완료율</value>
   </data>
   <data name="Copied" xml:space="preserve">
     <value>복사됨</value>
@@ -1743,6 +1737,12 @@
   </data>
   <data name="Could not find song" xml:space="preserve">
     <value>음악을 찾을 수 없습니다</value>
+  </data>
+  <data name="Could not lift the mute." xml:space="preserve">
+    <value>음소거를 해제하지 못했습니다.</value>
+  </data>
+  <data name="Could not mute this member." xml:space="preserve">
+    <value>이 멤버를 음소거하지 못했습니다.</value>
   </data>
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>PIUGAME에 연결할 수 없습니다. 나중에 다시 시도해 주세요</value>
@@ -2464,6 +2464,9 @@
   <data name="Find a chart and its pages" xml:space="preserve">
     <value>채보와 관련 페이지 찾기</value>
   </data>
+  <data name="Find a chart or player" xml:space="preserve">
+    <value>채보 또는 유저 찾기</value>
+  </data>
   <data name="Find a player" xml:space="preserve">
     <value>플레이어 찾기</value>
   </data>
@@ -2511,9 +2514,6 @@
   </data>
   <data name="Folder Cleared" xml:space="preserve">
     <value>폴더 클리어</value>
-  </data>
-  <data name="Folder compare, titles and progression need a piuscores account. They'll appear here if {0} ever imports." xml:space="preserve">
-    <value>폴더 비교, 칭호, 진행도는 piuscores 계정이 필요합니다. {0} 이(가) 임포트하면 여기에 표시됩니다.</value>
   </data>
   <data name="Folder Completion" xml:space="preserve">
     <value>폴더 완료율</value>
@@ -2586,6 +2586,9 @@
   </data>
   <data name="From" xml:space="preserve">
     <value>원본</value>
+  </data>
+  <data name="From another mix" xml:space="preserve">
+    <value>다른 시리즈의 채보</value>
   </data>
   <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
     <value>이제부터 모든 가져오기와 플레이 세션이 여기에 표시되며 언제든 되돌릴 수 있습니다. 이미 있던 점수도 삭제는 가능합니다.</value>
@@ -2779,6 +2782,9 @@
   <data name="Has errors" xml:space="preserve">
     <value>오류 있음</value>
   </data>
+  <data name="Hate or discrimination" xml:space="preserve">
+    <value>혐오 또는 차별</value>
+  </data>
   <data name="Have an invite link?" xml:space="preserve">
     <value>초대 링크가 있으신가요?</value>
   </data>
@@ -2928,6 +2934,9 @@
   </data>
   <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
     <value>I Hope You Held Hands on Canon D</value>
+  </data>
+  <data name="I just want attention. Hi." xml:space="preserve">
+    <value>그냥 관심받고 싶어요. 안녕하세요.</value>
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>그냥 채보를 숨기고 싶음</value>
@@ -3262,6 +3271,9 @@
   <data name="just now" xml:space="preserve">
     <value>방금</value>
   </data>
+  <data name="Just saying hi" xml:space="preserve">
+    <value>그냥 인사</value>
+  </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>그냥 살아남기</value>
   </data>
@@ -3483,6 +3495,9 @@
   </data>
   <data name="Location" xml:space="preserve">
     <value>장소</value>
+  </data>
+  <data name="Lock account" xml:space="preserve">
+    <value>계정 잠금</value>
   </data>
   <data name="Lock Status" xml:space="preserve">
     <value>잠금 상태</value>
@@ -3739,6 +3754,9 @@
   <data name="Moderate" xml:space="preserve">
     <value>관리</value>
   </data>
+  <data name="Moderate comments (remove/mute)" xml:space="preserve">
+    <value>댓글 관리 (삭제/음소거)</value>
+  </data>
   <data name="Modern" xml:space="preserve">
     <value>현행</value>
   </data>
@@ -3819,6 +3837,12 @@
   </data>
   <data name="Must give the community a name." xml:space="preserve">
     <value>커뮤니티 이름을 입력해주세요.</value>
+  </data>
+  <data name="Mute" xml:space="preserve">
+    <value>음소거</value>
+  </data>
+  <data name="Mute {0}" xml:space="preserve">
+    <value>{0} 음소거</value>
   </data>
   <data name="My Bads" xml:space="preserve">
     <value>내 배드</value>
@@ -4405,6 +4429,9 @@
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>변경 없음 — {0}개 채보 모두 난이도를 유지했습니다.</value>
   </data>
+  <data name="Nothing on your desk." xml:space="preserve">
+    <value>처리할 항목이 없습니다.</value>
+  </data>
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>선택된 것이 없습니다 — 값을 클릭하세요.</value>
   </data>
@@ -4485,6 +4512,9 @@
   </data>
   <data name="off the scale" xml:space="preserve">
     <value>범위 밖</value>
+  </data>
+  <data name="Off topic" xml:space="preserve">
+    <value>주제와 무관</value>
   </data>
   <data name="Off — only you can see your scores" xml:space="preserve">
     <value>꺼짐 — 나만 내 점수를 볼 수 있습니다</value>
@@ -4618,11 +4648,17 @@
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>변경된 채보가 있는 노래만 표시됩니다.</value>
   </data>
+  <data name="Only you" xml:space="preserve">
+    <value>나만</value>
+  </data>
   <data name="Only you can see this" xml:space="preserve">
     <value>나만 볼 수 있습니다</value>
   </data>
   <data name="Only you can use this tool right now." xml:space="preserve">
     <value>지금은 여러분만 이 도구를 쓸 수 있습니다.</value>
+  </data>
+  <data name="Only {0}" xml:space="preserve">
+    <value>{0}만</value>
   </data>
   <data name="only {0} have it" xml:space="preserve">
     <value>보유율 {0}</value>
@@ -4878,8 +4914,8 @@
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · 실제 상위 50</value>
   </data>
-  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that number surfaces on the titles page and nowhere else. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
-    <value>Phoenix 2도 CO-OP 채보에 값을 매깁니다 — Phoenix가 {1}로 매겼듯이 고정 베이스 {0}으로 — 하지만 그 숫자는 칭호 페이지에만 나타나고 다른 곳에는 나오지 않습니다. 두 시리즈 모두에서 PUMBILITY에는 아무것도 더하지 않습니다.</value>
+  <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
+	  <value>Phoenix 2도 CO-OP 채보에 값을 매깁니다 — Phoenix가 {1}로 매겼듯이 고정 베이스 {0}으로 — 하지만 그것은 코옵 레이팅이라는 별도의 숫자로, 자체 칭호와 보드가 있습니다. 두 시리즈 모두에서 PUMBILITY에는 아무것도 더하지 않습니다.</value>
   </data>
   <data name="Phoenix 2 leans on scoring roughly {0}× harder than Phoenix does." xml:space="preserve">
     <value>Phoenix 2는 Phoenix보다 약 {0}배 더 점수에 기댑니다.</value>
@@ -4952,9 +4988,6 @@
   </data>
   <data name="Pick a difficulty from the list for its breakdown and similar charts." xml:space="preserve">
     <value>목록에서 난이도를 선택하면 상세 정보와 유사 채보를 볼 수 있습니다.</value>
-  </data>
-  <data name="Pick a folder to compare your scores." xml:space="preserve">
-    <value>폴더를 선택하면 점수를 비교할 수 있습니다.</value>
   </data>
   <data name="pick a mix first" xml:space="preserve">
     <value>먼저 시리즈를 선택하세요</value>
@@ -5040,8 +5073,8 @@
   <data name="PIUGAME logins depend on piugame.com being reachable, connect a backup sign-in method" xml:space="preserve">
     <value>PIUGAME 로그인은 piugame.com 접속 가능 여부에 따라 달라지므로 예비 로그인 방법을 연결하세요</value>
   </data>
-  <data name="PIUGAME publishes no CO-OP ranking - this board is our best guess, computed from the mirrored co-op leaderboards with plates inferred from score (SG, UG from 995,000, PG at 1,000,000)." xml:space="preserve">
-    <value>PIUGAME는 CO-OP 랭킹을 제공하지 않습니다 - 이 보드는 미러링된 CO-OP 리더보드로 자체 계산한 최선의 추정치이며, 플레이트는 점수로 추정합니다 (SG, 995,000부터 UG, 1,000,000은 PG).</value>
+  <data name="PIUGAME publishes no CO-OP ranking - this board prices the mirrored co-op leaderboards with the CO-OP Rating formula, plates inferred from score (SG, UG from 995,000, PG at 1,000,000); a chart board lists only its top 300, so a real rating can run higher." xml:space="preserve">
+	  <value>PIUGAME는 CO-OP 랭킹을 제공하지 않습니다 - 이 보드는 미러링된 CO-OP 리더보드를 CO-OP 레이팅 공식으로 계산하며, 플레이트는 점수로 추정합니다 (SG, 995,000부터 UG, 1,000,000은 PG). 채보 보드는 상위 300위까지만 있으므로 실제 레이팅은 더 높을 수 있습니다.</value>
   </data>
   <data name="PIUGame session" xml:space="preserve">
     <value>PIUGame 세션</value>
@@ -5144,9 +5177,6 @@
   </data>
   <data name="Player To Test (Must Be Set To Public)" xml:space="preserve">
     <value>테스트할 플레이어 (공개 설정 필수)</value>
-  </data>
-  <data name="Player was not found in this community." xml:space="preserve">
-    <value>이 커뮤니티에서 유저를 찾을 수 없습니다.</value>
   </data>
   <data name="Players" xml:space="preserve">
     <value>유저</value>
@@ -5584,6 +5614,9 @@
   <data name="Reason" xml:space="preserve">
     <value>사유</value>
   </data>
+  <data name="Reason (optional)" xml:space="preserve">
+    <value>사유 (선택)</value>
+  </data>
   <data name="Rebuild Latest Sessions" xml:space="preserve">
     <value>최근 세션 재생성</value>
   </data>
@@ -5740,6 +5773,9 @@
   <data name="Removed" xml:space="preserve">
     <value>제거됨</value>
   </data>
+  <data name="Removed by a moderator" xml:space="preserve">
+    <value>관리자가 삭제한 댓글</value>
+  </data>
   <data name="Removed by the site admin" xml:space="preserve">
     <value>사이트 관리자가 삭제했습니다</value>
   </data>
@@ -5772,6 +5808,21 @@
   </data>
   <data name="Reply…" xml:space="preserve">
     <value>답글…</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>신고</value>
+  </data>
+  <data name="Reported as just wanting attention. Nothing to moderate unless you decide otherwise." xml:space="preserve">
+    <value>그냥 관심을 원한다고 신고됨. 달리 판단하지 않는 한 조치할 것은 없습니다.</value>
+  </data>
+  <data name="reported by {0}" xml:space="preserve">
+    <value>{0} 님이 신고</value>
+  </data>
+  <data name="Reported comments" xml:space="preserve">
+    <value>신고된 댓글</value>
+  </data>
+  <data name="Reports" xml:space="preserve">
+    <value>신고</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>요청 헤더</value>
@@ -5847,6 +5898,9 @@
   </data>
   <data name="Revoked" xml:space="preserve">
     <value>취소됨</value>
+  </data>
+  <data name="Rival" xml:space="preserve">
+    <value>라이벌</value>
   </data>
   <data name="Rival invite" xml:space="preserve">
     <value>라이벌 초대</value>
@@ -5955,9 +6009,6 @@
   </data>
   <data name="Score" xml:space="preserve">
     <value>점수</value>
-  </data>
-  <data name="Score average (you / them)" xml:space="preserve">
-    <value>평균 점수 (나 / 상대)</value>
   </data>
   <data name="Score Completion" xml:space="preserve">
     <value>점수 완료율</value>
@@ -6379,6 +6430,9 @@
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>이 채널의 등록 내역 보기</value>
   </data>
+  <data name="Show {0} unshared charts" xml:space="preserve">
+    <value>공통 외 {0}개 채보 표시</value>
+  </data>
   <data name="Showing" xml:space="preserve">
     <value>표시 중</value>
   </data>
@@ -6606,6 +6660,9 @@
   </data>
   <data name="Source Code" xml:space="preserve">
     <value>소스 코드</value>
+  </data>
+  <data name="Spam or advertising" xml:space="preserve">
+    <value>스팸 또는 광고</value>
   </data>
   <data name="Speaks your language." xml:space="preserve">
     <value>여러분의 언어로 말합니다.</value>
@@ -6852,6 +6909,9 @@
   </data>
   <data name="Test With Player Data" xml:space="preserve">
     <value>플레이어 데이터로 테스트</value>
+  </data>
+  <data name="Thanks — a moderator will take a look." xml:space="preserve">
+    <value>감사합니다. 관리자가 확인할 예정입니다.</value>
   </data>
   <data name="That command isn't available yet." xml:space="preserve">
     <value>아직 사용할 수 없는 명령어입니다.</value>
@@ -7120,8 +7180,8 @@
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>해제하기 전까지는 새 도구를 만들 수 없습니다.</value>
   </data>
-  <data name="They haven't placed on any board you've played." xml:space="preserve">
-    <value>내가 플레이한 차트의 보드에는 오르지 않았습니다.</value>
+  <data name="They stay in the community and can read everything, but can't post, reply or edit comments here until the mute is lifted. Existing comments stay." xml:space="preserve">
+    <value>커뮤니티에는 남아 모든 것을 읽을 수 있지만, 음소거가 해제될 때까지 여기에서 댓글 작성·답글·수정은 할 수 없습니다. 기존 댓글은 유지됩니다.</value>
   </data>
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>이미 내 라이벌입니다.</value>
@@ -7134,6 +7194,9 @@
   </data>
   <data name="This account is scheduled for deletion" xml:space="preserve">
     <value>이 계정은 삭제 예정입니다</value>
+  </data>
+  <data name="This account needs a display name to lock — use the Admin page." xml:space="preserve">
+    <value>이 계정을 잠그려면 표시 이름이 필요합니다. 관리 페이지를 이용하세요.</value>
   </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>이 계정은 삭제됩니다</value>
@@ -7300,6 +7363,9 @@
   <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
     <value>위 수치는 사이를 Perfect로 채운 경우입니다. Great이라면 같은 세 값이 {0}, {1}, {2}노트가 됩니다.</value>
   </data>
+  <data name="Threats or harassment" xml:space="preserve">
+    <value>협박 또는 괴롭힘</value>
+  </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>3년 반의 펌프를 하나의 리캡으로. 지금 확인하고 멋진 부분은 스크린샷으로 남기세요.</value>
   </data>
@@ -7308,9 +7374,6 @@
   </data>
   <data name="Through &quot;share with all tools&quot;" xml:space="preserve">
     <value>"모든 도구와 공유"를 통해</value>
-  </data>
-  <data name="Tie" xml:space="preserve">
-    <value>무승부</value>
   </data>
   <data name="Tier" xml:space="preserve">
     <value>구간</value>
@@ -7629,6 +7692,9 @@
   </data>
   <data name="Unmatched PIU Center Keys" xml:space="preserve">
     <value>매칭되지 않은 PIU Center 키</value>
+  </data>
+  <data name="Unmute" xml:space="preserve">
+    <value>음소거 해제</value>
   </data>
   <data name="Unpassed" xml:space="preserve">
     <value>미클리어</value>
@@ -8056,6 +8122,9 @@
   <data name="Why" xml:space="preserve">
     <value>이유</value>
   </data>
+  <data name="Why are you reporting this?" xml:space="preserve">
+    <value>신고 이유가 무엇인가요?</value>
+  </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
   </data>
@@ -8064,9 +8133,6 @@
   </data>
   <data name="Will be skipped" xml:space="preserve">
     <value>건너뜀 예정</value>
-  </data>
-  <data name="Winner" xml:space="preserve">
-    <value>승자</value>
   </data>
   <data name="wins in range" xml:space="preserve">
     <value>범위 내 우승</value>
@@ -8130,6 +8196,9 @@
   </data>
   <data name="Write a description to enable this." xml:space="preserve">
     <value>설명을 적으면 사용할 수 있습니다.</value>
+  </data>
+  <data name="Wrong information" xml:space="preserve">
+    <value>잘못된 정보</value>
   </data>
   <data name="X Charts" xml:space="preserve">
     <value>{0}채보</value>
@@ -8205,6 +8274,9 @@
   </data>
   <data name="You can take that back at any time." xml:space="preserve">
     <value>언제든지 되돌릴 수 있습니다.</value>
+  </data>
+  <data name="You can't post here right now." xml:space="preserve">
+    <value>지금은 여기에 댓글을 쓸 수 없습니다.</value>
   </data>
   <data name="You connected directly" xml:space="preserve">
     <value>직접 연결함</value>
@@ -8860,6 +8932,9 @@
   <data name="{0} of {1} · {2} to Folder Lamp" xml:space="preserve">
     <value>{1}개 중 {0}개 · 폴더 램프까지 {2}개</value>
   </data>
+  <data name="{0} Official Top {1}s" xml:space="preserve">
+    <value>공식 상위 {1} {0}개</value>
+  </data>
   <data name="{0} on board" xml:space="preserve">
     <value>보드에 {0}명</value>
   </data>
@@ -8971,9 +9046,6 @@
   <data name="{0} tools reading now" xml:space="preserve">
     <value>{0}개 도구가 읽는 중</value>
   </data>
-  <data name="{0} top-board charts" xml:space="preserve">
-    <value>랭킹 진입 채보 {0}개</value>
-  </data>
   <data name="{0} total · {1} charts" xml:space="preserve">
     <value>총 {0} · 차트 {1}개</value>
   </data>
@@ -9030,9 +9102,6 @@
   </data>
   <data name="{0}m ago" xml:space="preserve">
     <value>{0}분 전</value>
-  </data>
-  <data name="{0}y old" xml:space="preserve">
-    <value>{0}년 전</value>
   </data>
   <data name="~#{0} on the official board" xml:space="preserve">
     <value>공식 순위표 ~#{0}</value>

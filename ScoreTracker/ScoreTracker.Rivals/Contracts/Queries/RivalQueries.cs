@@ -58,12 +58,14 @@ public sealed record GetRivalScoresForChartsQuery(MixEnum Mix, IReadOnlyCollecti
     : IQuery<RivalChartScores>;
 
 /// <summary>
-///     One rival, compared. <paramref name="ChartType" />/<paramref name="Level" /> pick a folder
-///     for a site rival; a board-only rival ignores them and returns the charts you are BOTH on,
-///     which is the honest unit when the mirror covers level 20+ at roughly 300 deep (D29).
+///     Any player you may look at, compared — rival or not. Null when there is no such player, when
+///     the visibility port says you may not see them, or when they are you. <paramref name="ChartType" />
+///     and <paramref name="Level" /> pick a folder; without them the universe is every chart either
+///     of you has scored. The player page is its host (docs/design/player-page-and-site-search.md
+///     §2.2). A board-only rival is not compared here — the official Players page is theirs.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record GetRivalHeadToHeadQuery(MixEnum Mix, Guid EdgeId, ChartType? ChartType = null,
+public sealed record GetPlayerHeadToHeadQuery(MixEnum Mix, Guid OpponentUserId, ChartType? ChartType = null,
     DifficultyLevel? Level = null) : IQuery<RivalHeadToHeadRecord?>;
 
 /// <summary>

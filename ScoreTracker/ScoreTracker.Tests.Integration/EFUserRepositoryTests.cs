@@ -101,6 +101,81 @@ public sealed class EFUserRepositoryTests : IAsyncLifetime
         Assert.Contains(results, u => (string)u.Name == "Calice");
     }
 
+    private async Task<Guid> Player(string name, bool isPublic = true, string? gameTag = null)
+    {
+        var id = Guid.NewGuid();
+        await BuildRepository().SaveUser(new User(id, name, isPublic, gameTag,
+            new Uri("https://example.invalid/p.png"), null));
+        return id;
+    }
+
+    /// <summary>
+    ///     The site search's ordering, all in SQL: an exact name, then a name that starts with the
+    ///     term, then anything containing it, alphabetical inside each rung — which is what makes a
+    ///     player called "D" reachable from a single "d".
+    /// </summary>
+    [Fact]
+    public async Task SearchVisibleUsersRanksExactThenPrefixThenContains()
+    {
+        await Player("Andy");
+        await Player("Ed");
+        await Player("Dave");
+        await Player("D");
+        await Player("Bob");
+
+        var hits = await BuildRepository().SearchVisibleUsers("d", 10, Array.Empty<Guid>());
+
+        Assert.Equal(new[] { "D", "Dave", "Andy", "Ed" }, hits.Select(u => (string)u.Name));
+    }
+
+    [Fact]
+    public async Task SearchVisibleUsersMatchesTheGameTagToo()
+    {
+        await Player("Zed", gameTag: "ROXY#3");
+        await Player("Roxanne");
+
+        var hits = await BuildRepository().SearchVisibleUsers("roxy", 10, Array.Empty<Guid>());
+
+        Assert.Equal(new[] { "Zed" }, hits.Select(u => (string)u.Name));
+    }
+
+    [Fact]
+    public async Task SearchVisibleUsersFindsAPlayerNamedWithASingleSymbolOrEmoji()
+    {
+        await Player("!");
+        await Player("😀");
+        await Player("!Bang");
+
+        var bang = await BuildRepository().SearchVisibleUsers("!", 10, Array.Empty<Guid>());
+        var smiley = await BuildRepository().SearchVisibleUsers("😀", 10, Array.Empty<Guid>());
+
+        Assert.Equal(new[] { "!", "!Bang" }, bang.Select(u => (string)u.Name));
+        Assert.Equal(new[] { "😀" }, smiley.Select(u => (string)u.Name));
+    }
+
+    [Fact]
+    public async Task SearchVisibleUsersHidesAPrivatePlayerUnlessTheyAreInTheAllowance()
+    {
+        var hidden = await Player("Private Pete", isPublic: false);
+        await Player("Public Pat");
+
+        var withoutAllowance = await BuildRepository().SearchVisibleUsers("p", 10, Array.Empty<Guid>());
+        var withAllowance = await BuildRepository().SearchVisibleUsers("p", 10, new[] { hidden });
+
+        Assert.Equal(new[] { "Public Pat" }, withoutAllowance.Select(u => (string)u.Name));
+        Assert.Equal(new[] { "Private Pete", "Public Pat" }, withAllowance.Select(u => (string)u.Name));
+    }
+
+    [Fact]
+    public async Task SearchVisibleUsersCapsInSqlAndAsksNothingForABlankTerm()
+    {
+        for (var i = 0; i < 5; i++) await Player($"Cap{i}");
+
+        Assert.Equal(2, (await BuildRepository().SearchVisibleUsers("cap", 2, Array.Empty<Guid>())).Count);
+        Assert.Empty(await BuildRepository().SearchVisibleUsers("  ", 10, Array.Empty<Guid>()));
+        Assert.Empty(await BuildRepository().SearchVisibleUsers("cap", 0, Array.Empty<Guid>()));
+    }
+
     [Fact]
     public async Task GetUserByExternalLoginResolvesAfterCreateExternalLogin()
     {

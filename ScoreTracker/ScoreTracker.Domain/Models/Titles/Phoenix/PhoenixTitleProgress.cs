@@ -22,6 +22,17 @@ public sealed class PhoenixTitleProgress : TitleProgress
     {
         get
         {
+            if (PhoenixTitle is Phoenix2.Phoenix2CoOpTitle)
+            {
+                // Same hint as the Phoenix ladder below, priced on Phoenix 2's co-op range: a
+                // perfect at the top, a bare AA on a Rough Game at the bottom.
+                if (Title.CompletionRequired <= CompletionCount) return string.Empty;
+                var (best, least) = Phoenix2.Phoenix2CoOpTitle.ContributionRange();
+                var fewest = Math.Ceiling((Title.CompletionRequired - CompletionCount) / best);
+                var most = Math.Ceiling((Title.CompletionRequired - CompletionCount) / least);
+                return $"{fewest}-{most} Passes, assuming AA or higher";
+            }
+
             var rating = PhoenixTitle switch
             {
                 PhoenixDifficultyTitle difficultyTitle => difficultyTitle.Level.BaseRating,

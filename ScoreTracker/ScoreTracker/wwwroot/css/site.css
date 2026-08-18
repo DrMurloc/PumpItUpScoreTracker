@@ -480,6 +480,71 @@ body {
     display: none;
 }
 
+/* The site search's list: three sections in one MudAutocomplete. A section label is a
+   disabled row — the arrow keys skip it — and a player row wears the board row-glow states
+   (.is-community / .is-rival / .is-both) by bleeding its own box out to the list item's edges,
+   since the item element is Mud's. */
+.site-search-list .mud-list-item-disabled {
+    opacity: 1;
+    pointer-events: none;
+}
+
+.site-search-head {
+    display: block;
+    font-family: var(--font-display);
+    font-size: .74rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+    padding-top: 4px;
+}
+
+.site-search-list .mud-list-item-disabled + .mud-list-item .site-search-row {
+    margin-top: 0;
+}
+
+.site-search-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    margin: -6px -16px;
+    padding: 6px 16px;
+}
+
+/* The name is the row; it keeps its width and the game tag beside it is what gives way when a
+   row runs short — a name cut to "12be…" next to a whole tag was the wrong thing truncated. */
+.site-search-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.site-search-sub {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: .72rem;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.site-search-note {
+    margin-left: auto;
+    font-size: .68rem;
+    color: var(--mix-ink-muted);
+    white-space: nowrap;
+}
+
+.site-search-verified {
+    margin-left: auto;
+    flex: none;
+}
+
 /* One pulse when something opens the search programmatically (shell.openSearch) —
    settles into the same ring the focused field already wears. */
 @media (prefers-reduced-motion: no-preference) {
@@ -3085,6 +3150,290 @@ html.sheet-open .more-sheet-scrim {
 
 .rvl-cmp-folder {
     margin: 6px 0 10px;
+}
+
+/* The picker and the unshared switch share one row above the compare table; the switch sits at
+   the far end so the folder controls keep their place whether or not it renders. */
+.rvl-cmp-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.rvl-cmp-controls .rvl-cmp-folder {
+    margin: 6px 0;
+}
+
+.rvl-cmp-switch {
+    margin-left: auto;
+}
+
+/* A row only one of you has played: same table, muted, so the shared rows above stay the
+   comparison and these read as the appendix they are. */
+.rvl-cmp-table tr.rvl-cmp-unshared td {
+    color: var(--mix-ink-muted);
+}
+
+.rvl-tile-unshared {
+    outline: 1px dashed rgba(255, 255, 255, .14);
+    outline-offset: -1px;
+}
+
+/* ---------------------------------------------------------------------------
+   The player page (/Player/{id}) — docs/design/player-page-and-site-search.md.
+   Hero: gem + PUMBILITY + identity on ONE row, the four rating tiles a full-width row beneath.
+   The row stacks only at 1:1 or narrower — the same breakpoint the compare table uses to drop
+   its difference column, so the page folds in one place. The .cmp-* vocabulary is the community
+   player page's, moved here when that page retired. */
+
+/* The shell leaves the page flush against the nav, and this one opens on a paper's edge (or the
+   patience card's) rather than on a heading, so it owes itself the breathing room. */
+.ph-page {
+    margin-top: 16px;
+}
+
+.ph-top {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+}
+
+.ph-pum {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+}
+
+/* The level gem tucks against the number, eating the art's transparent frame, so gem and
+   number read as one unit — the account widget's treatment. */
+.ph-pum .pumbility-level-badge {
+    flex: none;
+    margin-right: -6px;
+}
+
+.ph-identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.ph-identity-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex: none;
+}
+
+/* Competitive level, stacked S over D the way the account widget stacks its S/D pools beside
+   the total. Never the overall figure. */
+.ph-cl {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 16px;
+    border-left: 1px solid rgba(255, 255, 255, .08);
+}
+
+.ph-cl-eyebrow {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--mix-ink-muted);
+    margin-bottom: 2px;
+}
+
+.ph-cl-row {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    white-space: nowrap;
+    font-size: .9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.ph-cl-row > span:first-child {
+    font-weight: 600;
+}
+
+.ph-cl-row b {
+    font-weight: 700;
+}
+
+.ph-cl-singles {
+    color: var(--chart-singles);
+}
+
+.ph-cl-doubles {
+    color: var(--chart-doubles);
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .ph-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+
+.ph-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ph-links {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.cmp-hero-pum {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.cmp-hero-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 3.4rem;
+    line-height: 1;
+    color: var(--rarity-gold);
+    text-shadow: 0 0 14px var(--mix-glow);
+    font-variant-numeric: tabular-nums;
+}
+
+.cmp-hero-cap {
+    font-size: .62rem;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--mix-ink-muted);
+    margin-top: 4px;
+}
+
+.cmp-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+    .cmp-tiles {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.cmp-tile {
+    background: var(--mix-surface-muted);
+    border-radius: 11px;
+    padding: 12px;
+}
+
+.cmp-tile-label {
+    font-size: .62rem;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--mix-ink-muted);
+}
+
+.cmp-tile-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+    margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Folder completion keeps the real folder slope: each track's height follows the folder's chart
+   count (no per-folder normalization). Singles and doubles are separate folders with separate
+   standings, so they get separate graphs side by side, and each column fills with its folder's
+   own grade spectrum — height says how big the folder is, fill says how far through it you
+   are, hue says how well. */
+.cmp-folder-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(14px, 3vw, 30px);
+}
+
+@media (max-width: 700px) {
+    .cmp-folder-pair {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cmp-folder-head {
+    font-family: var(--font-display);
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.cmp-folder-head-singles {
+    color: var(--type-singles);
+}
+
+.cmp-folder-head-doubles {
+    color: var(--type-doubles);
+}
+
+/* Twenty-odd folders at a fixed bar width is wider than a phone, so the columns share the width
+   they have: each takes an equal fraction and the bar fills its column up to the full-size 34px.
+   The MudTooltip wrapper sits between the two and defaults to an auto-width inline-block, which
+   is what collapsed a percentage-width bar to nothing before — it stretches with the column now. */
+.cmp-folders {
+    display: flex;
+    align-items: flex-end;
+    gap: clamp(3px, 1.2vw, 10px);
+    height: 150px;
+    padding-top: 4px;
+}
+
+.cmp-folder-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: flex-end;
+    height: 100%;
+}
+
+.cmp-folder-col > .mud-tooltip-root {
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+
+.cmp-folder-track {
+    width: 100%;
+    max-width: 34px;
+    margin: 0 auto;
+    border-radius: 5px 5px 0 0;
+    overflow: hidden;
+}
+
+/* The spectrum is horizontal everywhere else, so the column hands it a full-height box and the
+   vertical variant grows from the base. */
+.cmp-folder-track > .fl-spectrum,
+.cmp-folder-track > .fl-spectrum > .fl-track {
+    height: 100%;
+}
+
+/* A two-digit label is wider than its column once the bars are sharing a phone. */
+.cmp-folder-label {
+    font-size: clamp(.54rem, 1.8vw, .72rem);
+    line-height: 1;
+    font-weight: 700;
+    color: var(--mix-ink-muted);
 }
 
 /* The rail and its arrows. The native horizontal scrollbar is hidden on the desktop rail: it
@@ -12455,6 +12804,12 @@ button.chart-card-art {
 .rvl-tag-crew {
     color: var(--daily-community);
     border-color: color-mix(in srgb, var(--daily-community) 45%, transparent);
+}
+
+/* The player page's "Rival" tag: the rival red, the same token every board row wears for one. */
+.rvl-tag-rival {
+    color: var(--daily-rival);
+    border-color: color-mix(in srgb, var(--daily-rival) 45%, transparent);
 }
 
 .rvl-tag-priv, .rvl-tag-gone {

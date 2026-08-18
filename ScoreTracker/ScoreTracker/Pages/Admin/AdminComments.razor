@@ -1,0 +1,287 @@
+@page "/Admin/Comments"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.ChartComments.Contracts
+@using ScoreTracker.ChartComments.Contracts.Commands
+@using ScoreTracker.ChartComments.Contracts.Queries
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Identity.Contracts.Commands
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.ChartComments
+@using ScoreTracker.Web.Services.Contracts
+
+<PageTitle>@L["Reported comments"]</PageTitle>
+
+@* The site admin's desk: every open report on a public comment, hate and threats escalated out
+   of communities, and — in its own pile so it never crowds a real report — the "I just want
+   attention" hellos, which route here alone. The contents are ON the page because the open
+   report is what grants the read; Open takes you into the thread as well, with a read-only
+   moderator chip for a club you need not belong to. There is deliberately no community-mute
+   here: communities moderate themselves, and the site tools are Remove and the account lock. *@
+
+<MudBreadcrumbs Items="_crumbs" Class="pa-0 mb-2"></MudBreadcrumbs>
+<MudText Typo="Typo.h4" Class="mb-1">@L["Reported comments"]</MudText>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Small"/>
+}
+else if (_rows.Count == 0)
+{
+    <MudText Typo="Typo.body2" Class="mud-text-secondary" data-testid="admin-comments-empty">
+        @L["Nothing on your desk."]
+    </MudText>
+}
+else
+{
+    @if (Reports.Count > 0)
+    {
+        <MudText Typo="Typo.h6" Class="mb-2 mt-2" data-testid="admin-comments-reports-heading">@L["Reports"]</MudText>
+        @foreach (var row in Reports)
+        {
+            @Card(row)
+        }
+    }
+    @if (Hellos.Count > 0)
+    {
+        @* Its own section, under the real work: nobody should have to read past a hello to find a
+           threat, and nobody should mistake a hello for one. *@
+        <MudText Typo="Typo.h6" Class="mb-2 mt-4" data-testid="admin-comments-hellos-heading">@L["Just saying hi"]</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-2">@L["Reported as just wanting attention. Nothing to moderate unless you decide otherwise."]</MudText>
+        @foreach (var row in Hellos)
+        {
+            @Card(row)
+        }
+    }
+}
+
+<ChartDetailsDialog @bind-Visible="_dialogOpen" Chart="_dialogChart" Mix="_mix"
+                    InitialTab="ChartDetailsDialog.DetailsTab.Comments"
+                    FocusCommentId="_focusCommentId"
+                    InitialCommentAudience="_focusAudience"></ChartDetailsDialog>
+
+<style>
+    .acr-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 4px;
+    }
+
+    .acr-song {
+        font-weight: 600;
+        font-size: .85rem;
+    }
+
+    .acr-reason {
+        font-size: .68rem;
+        padding: 1px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--mud-palette-error);
+        color: var(--mud-palette-error);
+        white-space: nowrap;
+    }
+
+    .acr-where {
+        font-size: .74rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .acr-meta {
+        font-size: .78rem;
+        color: var(--mud-palette-text-secondary);
+        margin-bottom: 6px;
+    }
+
+    /* The reported words, quoted. overflow-wrap for the same reason the tab carries it: a
+       500-character comment can be one 300-character URL. */
+    .acr-quoted {
+        border-left: 2px solid var(--mud-palette-lines-default);
+        padding: 2px 0 2px 10px;
+        margin-bottom: 8px;
+        font-size: .85rem;
+        overflow-wrap: anywhere;
+    }
+
+    .acr-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+</style>
+
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject NavigationManager NavManager
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+
+@code {
+    private IReadOnlyList<SiteReportedCommentRecord> _rows = Array.Empty<SiteReportedCommentRecord>();
+    private Dictionary<Guid, Chart> _charts = new();
+    private MixEnum _mix;
+    private bool _loading = true;
+    private bool _working;
+    private List<BreadcrumbItem> _crumbs = new();
+    private bool _dialogOpen;
+    private Chart? _dialogChart;
+    private Guid? _focusCommentId;
+    private CommentAudience? _focusAudience;
+
+    private IReadOnlyList<SiteReportedCommentRecord> Reports =>
+        _rows.Where(r => r.Reason != CommentReportReason.JustWantAttention).ToArray();
+
+    private IReadOnlyList<SiteReportedCommentRecord> Hellos =>
+        _rows.Where(r => r.Reason == CommentReportReason.JustWantAttention).ToArray();
+
+    private RenderFragment Card(SiteReportedCommentRecord row) => @<MudPaper Class="pa-4 mb-3" Outlined="true" data-testid="@($"rcard-{row.ReportId}")">
+        <div class="acr-head">
+            @if (_charts.TryGetValue(row.ChartId, out var chart))
+            {
+                <DifficultyBubble Chart="chart" Small="true" Tooltip="false"></DifficultyBubble>
+                <span class="acr-song">@chart.Song.Name</span>
+            }
+            else
+            {
+                <span class="acr-song acr-where">@L["From another mix"]</span>
+            }
+            <span class="acr-reason">@ReasonLabel(row.Reason)</span>
+            <MudSpacer></MudSpacer>
+            @* A null NAME is not a null COMMUNITY: comments outlive a deleted club, and labeling
+               an escalated one "Public" would misstate the scope the site admin is judging. *@
+            <span class="acr-where">@(row.CommunityId == null ? L["Public"].Value : row.CommunityName?.ToString() ?? L["A deleted community"].Value)</span>
+        </div>
+        <div class="acr-meta">
+            <b>@(row.ReportedUserName?.ToString() ?? L["a deleted user"])</b>
+            — @L["reported by {0}", row.ReporterName?.ToString() ?? L["a deleted user"].Value]
+        </div>
+        <div class="acr-quoted">
+            <CommentTextView Body="row.Body"></CommentTextView>
+        </div>
+        <div class="acr-actions">
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="_working"
+                       data-testid="@($"remove-{row.ReportId}")"
+                       OnClick="() => Remove(row)">@L["Remove"]</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="_working"
+                       data-testid="@($"dismiss-{row.ReportId}")"
+                       OnClick="() => Dismiss(row)">@L["Dismiss"]</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Disabled="_working"
+                       data-testid="@($"lock-{row.ReportId}")"
+                       OnClick="() => LockAccount(row)">@L["Lock account"]</MudButton>
+            @if (_charts.ContainsKey(row.ChartId))
+            {
+                @* Into the thread, anchored on the reported comment. A community comment opens
+                   standing in that club — the tab adds a read-only moderator chip for a club the
+                   site admin need not belong to. No chart in the selected mix, no dialog to host it. *@
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_working"
+                           data-testid="@($"open-{row.ReportId}")"
+                           OnClick="() => Open(row)">@L["Open"]</MudButton>
+            }
+        </div>
+    </MudPaper>;
+
+    private void Open(SiteReportedCommentRecord row)
+    {
+        _dialogChart = _charts[row.ChartId];
+        _focusCommentId = row.CommentId;
+        _focusAudience = row.CommunityId is { } clubId ? CommentAudience.Community(clubId) : CommentAudience.Public;
+        _dialogOpen = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUser.User.IsAdmin)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        _crumbs = new List<BreadcrumbItem>
+        {
+            new(L["Admin"].Value, "/Admin"),
+            new(L["Reported comments"].Value, null, true)
+        };
+        await Load();
+        _loading = false;
+    }
+
+    private async Task Load()
+    {
+        _rows = await Mediator.Send(new GetSiteReportedCommentsQuery());
+        if (_rows.Count == 0) return;
+
+        _mix = await UiSettings.GetSelectedMix();
+        _charts = (await Mediator.Send(new GetChartsQuery(_mix,
+                ChartIds: _rows.Select(row => row.ChartId).Distinct().ToArray())))
+            .ToDictionary(chart => chart.Id);
+    }
+
+    /// <summary>Removal closes every open report on the comment, so the whole card goes at once.</summary>
+    private Task Remove(SiteReportedCommentRecord row) =>
+        Dispatch(new RemoveCommentCommand(row.CommentId));
+
+    private Task Dismiss(SiteReportedCommentRecord row) =>
+        Dispatch(new DismissCommentReportCommand(row.ReportId, CommentReportQueue.Site));
+
+    /// <summary>
+    ///     The site soft ban — the one site-scope sanction, shared with everything else that
+    ///     generates content. Locking may need a rename when the account has no GameTag; that
+    ///     flow lives on /Admin, so this shortcut points there instead of duplicating it.
+    /// </summary>
+    private async Task LockAccount(SiteReportedCommentRecord row)
+    {
+        _working = true;
+        try
+        {
+            await Mediator.Send(new SetUserContentLockCommand(row.ReportedUserId, true, null));
+            Snackbar.Add(L["Account locked."].Value, Severity.Success);
+        }
+        catch (InvalidNameException)
+        {
+            Snackbar.Add(L["This account needs a display name to lock — use the Admin page."].Value,
+                Severity.Warning);
+        }
+        finally
+        {
+            _working = false;
+        }
+    }
+
+    // Generic rather than taking IRequest, for the same reason ChartCommentsTab's is: with the
+    // parameter typed as the interface, MediatR binds the non-generic Send and the concrete
+    // command type is erased at the call.
+    private async Task Dispatch<TRequest>(TRequest command) where TRequest : IRequest
+    {
+        _working = true;
+        try
+        {
+            await Mediator.Send(command);
+            await Load();
+        }
+        catch (CommentNotAllowedException exception)
+        {
+            Snackbar.Add(exception.Message, Severity.Warning);
+        }
+        finally
+        {
+            // An unexpected failure that skipped this would leave every button dead until refresh.
+            _working = false;
+        }
+    }
+
+    private string ReasonLabel(CommentReportReason reason)
+    {
+        return reason switch
+        {
+            CommentReportReason.SpamOrAdvertising => L["Spam or advertising"],
+            CommentReportReason.OffTopic => L["Off topic"],
+            CommentReportReason.WrongInformation => L["Wrong information"],
+            CommentReportReason.HateOrDiscrimination => L["Hate or discrimination"],
+            CommentReportReason.JustWantAttention => L["I just want attention. Hi."],
+            _ => L["Threats or harassment"]
+        };
+    }
+}

@@ -1,15 +1,12 @@
 @namespace ScoreTracker.Web.Components
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Web.Services
-@inject NavigationManager NavManager
 
-@* The chart search. An island: the shell around it is static HTML, but an autocomplete needs
+@* The site search. An island: the shell around it is static HTML, but an autocomplete needs
    a circuit. Mounted twice — the app bar on desktop, the search sheet on mobile — because it
    is the same question in two places and the answer must not drift; the caller supplies the
-   frame, this owns the behaviour. *@
+   frame, SiteSearch owns the behaviour (charts, then players, then board players). *@
 <div class="@Class" style="@Style">
-    <ChartSelector Mix="Mix" Label="" Placeholder="@L["Find a chart"].Value" Variant="Variant.Outlined"
-                   Margin="Margin.Dense" ChartIdSelected="GoToChart"></ChartSelector>
+    <SiteSearch Mix="Mix" Placeholder="@L["Find a chart or player"].Value"></SiteSearch>
 </div>
 
 @code {
@@ -18,13 +15,12 @@
     /// <summary>The frame is the caller's — an app-bar slot and a sheet want different boxes.</summary>
     [Parameter] public string Class { get; set; } = "d-flex align-center appbar-search mr-3 shell-desktop-only";
 
-    [Parameter] public string? Style { get; set; } = "min-width: 170px; max-width: 220px;";
-
-    private Task GoToChart(Chart chart)
-    {
-        // nav.js closes the mobile sheet off the history push this causes — the sheet is
-        // chrome over the page you left, and no link click happens here to catch.
-        NavManager.NavigateTo(chart.CanonicalPath());
-        return Task.CompletedTask;
-    }
+    /// <summary>
+    ///     The desktop pill's width: elastic between the 170px it always had and 340px. It grew
+    ///     when players joined the list — a name, a game tag and a row state need room — but the
+    ///     app bar between 960px and about 1120px has no room to give: the nav's buttons cannot
+    ///     shrink, so a hard floor above 170px pushed the mix pill and the avatar off the edge.
+    ///     Grow into spare width, give it all back when the nav needs it.
+    /// </summary>
+    [Parameter] public string? Style { get; set; } = "flex: 1 1 200px; min-width: 170px; max-width: 340px;";
 }

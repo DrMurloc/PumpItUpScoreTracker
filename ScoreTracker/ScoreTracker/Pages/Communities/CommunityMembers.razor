@@ -1,6 +1,8 @@
 @page "/Community/Members"
 @rendermode RenderModes.Interactive
 @using MediatR
+@using ScoreTracker.ChartComments.Contracts.Commands
+@using ScoreTracker.ChartComments.Contracts.Queries
 @using ScoreTracker.Communities.Contracts
 @using ScoreTracker.Communities.Contracts.Commands
 @using ScoreTracker.Communities.Contracts.Queries
@@ -10,6 +12,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components.ChartComments
 
 <PageTitle>@L["Members"]</PageTitle>
 
@@ -32,6 +35,11 @@ else
         <MudAlert Severity="Severity.Info" Class="mb-4">
             @L["You are the Creator. Only you can transfer the community, delete it, change its privacy, set default admin permissions, and set the notification language."]
         </MudAlert>
+    }
+
+    @if (CanModerateComments && _communityId != null)
+    {
+        <ReportedCommentsPanel CommunityId="_communityId.Value"></ReportedCommentsPanel>
     }
 
     @if (CanManageInvites)
@@ -116,6 +124,24 @@ else
                         <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Disabled="_isSaving"
                                    OnClick="() => AskTransfer(context)">@L["Make Creator"]</MudButton>
                     }
+                    @* The mute is lighter than the ban — you stay in the club and lose the mic —
+                       and follows the hierarchy: the creator over admins and members, an admin
+                       with the flag over members only, nobody over the creator. *@
+                    @if (CanMute(context))
+                    {
+                        @if (_mutedUserIds.Contains(context.UserId))
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_isSaving"
+                                       data-testid="@($"unmute-{context.UserId}")"
+                                       OnClick="() => Unmute(context)">@L["Unmute"]</MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Disabled="_isSaving"
+                                       data-testid="@($"mute-{context.UserId}")"
+                                       OnClick="() => AskMute(context)">@L["Mute"]</MudButton>
+                        }
+                    }
                     @if (CanManageUsers && context.Role is CommunityRole.Member or CommunityRole.Admin)
                     {
                         <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Error" Disabled="_isSaving"
@@ -195,6 +221,25 @@ else
     </DialogActions>
 </MudDialog>
 
+<MudDialog @bind-Visible="_showMute">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Mute {0}", _muteTarget?.Name.ToString() ?? string.Empty]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            @L["They stay in the community and can read everything, but can't post, reply or edit comments here until the mute is lifted. Existing comments stay."]
+        </MudText>
+        <MudTextField T="string" @bind-Value="_muteReason" Label="@L["Reason (optional)"]"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" MaxLength="500"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudSpacer></MudSpacer>
+        <MudButton Variant="Variant.Text" OnClick="() => _showMute = false">@L["Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" Disabled="_isSaving"
+                   data-testid="mute-go" OnClick="ConfirmMute">@L["Mute"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
 <MudDialog @bind-Visible="_showTransferConfirm">
     <TitleContent>
         <MudText Typo="Typo.h6">@L["Make Creator"]</MudText>
@@ -215,6 +260,7 @@ else
 @inject ISnackbar Snackbar
 @inject NavigationManager NavManager
 @inject IJSRuntime JSRuntime
+@inject ICurrentUserAccessor CurrentUser
 
 @code {
     [Parameter, SupplyParameterFromQuery] public string? CommunityName { get; set; }
@@ -238,14 +284,52 @@ else
 
     private bool _showDelete;
 
+    // Comment moderation state. The id comes from the viewer's own role rows — the domain
+    // Community model is name-shaped, and only a moderator (who necessarily holds a row here)
+    // ever needs the id.
+    private Guid? _communityId;
+    private HashSet<Guid> _mutedUserIds = new();
+    private bool _showMute;
+    private CommunityMemberRecord? _muteTarget;
+    private string? _muteReason;
+
     private static readonly CommunityPermission[] ManageablePermissions =
     {
         CommunityPermission.ManageInviteLinks, CommunityPermission.PromoteAdmins,
-        CommunityPermission.ManageUsers, CommunityPermission.ManageChannelSubscriptions
+        CommunityPermission.ManageUsers, CommunityPermission.ManageChannelSubscriptions,
+        CommunityPermission.ModerateComments
     };
 
     private bool CanPromote => _myRole != null && _myRole.Permissions.HasFlag(CommunityPermission.PromoteAdmins);
     private bool CanManageUsers => _myRole != null && _myRole.Permissions.HasFlag(CommunityPermission.ManageUsers);
+
+    // Role == Admin as well as the flag, matching the server gate exactly: permissions are only
+    // meaningful for admins, and a stray flag bit on a Member row (bad data — demote clears
+    // permissions in every normal flow) would otherwise render a panel whose first query throws
+    // and takes the whole page load with it.
+    private bool CanModerateComments => _myRole != null &&
+                                        (_myRole.Role == CommunityRole.Creator ||
+                                         (_myRole.Role == CommunityRole.Admin &&
+                                          _myRole.Permissions.HasFlag(CommunityPermission.ModerateComments)));
+
+    /// <summary>
+    ///     The mute ladder, mirrored from the saga's authority so a button never offers what the
+    ///     command would refuse: the creator over admins and members, an admin with the flag over
+    ///     members only. Banned members are not offered — the ban already took the whole seat.
+    /// </summary>
+    private bool CanMute(CommunityMemberRecord member)
+    {
+        if (_myRole == null || !CurrentUser.IsLoggedIn || member.UserId == CurrentUser.User.Id)
+            return false;
+
+        return _myRole.Role switch
+        {
+            CommunityRole.Creator => member.Role is CommunityRole.Member or CommunityRole.Admin,
+            CommunityRole.Admin => _myRole.Permissions.HasFlag(CommunityPermission.ModerateComments) &&
+                                   member.Role == CommunityRole.Member,
+            _ => false
+        };
+    }
 
     private bool CanManageInvites => _community is { RequiresCode: true } && _myRole != null &&
                                      (_myRole.Role == CommunityRole.Creator ||
@@ -297,6 +381,17 @@ else
             _defaultAdminPermissions = _community.DefaultAdminPermissions;
             _privacy = _community.PrivacyType;
             _language = _community.DefaultLanguage ?? string.Empty;
+
+            if (CanModerateComments)
+            {
+                _communityId = (await Mediator.Send(new GetMyCommunityRolesQuery()))
+                    .FirstOrDefault(role => role.CommunityName == _community.Name)?.CommunityId;
+                _mutedUserIds = _communityId is { } id
+                    ? (await Mediator.Send(new GetCommunityCommentRestrictionsQuery(id)))
+                    .Select(mute => mute.UserId)
+                    .ToHashSet()
+                    : new HashSet<Guid>();
+            }
             _crumbs = new List<BreadcrumbItem>
             {
                 new(L["Communities"].Value, "/Communities"),
@@ -340,6 +435,27 @@ else
 
     private Task Unban(CommunityMemberRecord member) =>
         Dispatch(new UnbanMemberCommand(_community!.Name, member.UserId), "Could not unban this member.");
+
+    private void AskMute(CommunityMemberRecord member)
+    {
+        _muteTarget = member;
+        _muteReason = null;
+        _showMute = true;
+    }
+
+    private async Task ConfirmMute()
+    {
+        _showMute = false;
+        if (_muteTarget == null || _communityId is not { } id) return;
+        await Dispatch(new RestrictCommentingCommand(id, _muteTarget.UserId, _muteReason),
+            "Could not mute this member.");
+        _muteTarget = null;
+    }
+
+    private Task Unmute(CommunityMemberRecord member) =>
+        _communityId is { } id
+            ? Dispatch(new LiftCommentRestrictionCommand(id, member.UserId), "Could not lift the mute.")
+            : Task.CompletedTask;
 
     // One click used to hand away the only creator seat. Survivable while the members page was
     // somewhere you went on purpose to manage roles; account deletion now sends people here to
@@ -435,6 +551,7 @@ else
         CommunityPermission.PromoteAdmins => L["Promote other admins"].Value,
         CommunityPermission.ManageUsers => L["Manage users (ban/unban)"].Value,
         CommunityPermission.ManageChannelSubscriptions => L["Manage channel subscriptions"].Value,
+        CommunityPermission.ModerateComments => L["Moderate comments (remove/mute)"].Value,
         _ => permission.ToString()
     };
 

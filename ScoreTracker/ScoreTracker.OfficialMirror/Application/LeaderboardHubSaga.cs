@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Contracts;
@@ -22,7 +22,7 @@ internal sealed class LeaderboardHubSaga :
     IRequestHandler<GetOfficialPlayerProfileQuery, OfficialPlayerProfileRecord?>,
     IRequestHandler<GetOfficialPlayerStandingQuery, OfficialPlayerStandingRecord?>,
     IRequestHandler<GetOfficialPlayerNamesQuery, IReadOnlyList<string>>,
-    IRequestHandler<SearchOfficialBoardTagsQuery, IReadOnlyList<string>>,
+    IRequestHandler<SearchOfficialBoardTagsQuery, IReadOnlyList<OfficialPlayerRecord>>,
     IRequestHandler<ResolveOfficialPlayerQuery, OfficialPlayerResolution?>,
     IRequestHandler<ResolveOfficialPlayersQuery, IReadOnlyList<OfficialPlayerResolution>>,
     IRequestHandler<GetOfficialScoresForTagsQuery, OfficialTagScores>,
@@ -399,15 +399,15 @@ internal sealed class LeaderboardHubSaga :
             request.Supplemented ? PlacementScope.IncludingSupplemented : PlacementScope.OfficialOnly,
             cancellationToken);
 
-    public async Task<IReadOnlyList<string>> Handle(SearchOfficialBoardTagsQuery request,
+    public async Task<IReadOnlyList<OfficialPlayerRecord>> Handle(SearchOfficialBoardTagsQuery request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Term)) return Array.Empty<string>();
+        if (string.IsNullOrWhiteSpace(request.Term)) return Array.Empty<OfficialPlayerRecord>();
 
         var latest = await _snapshots.GetLatestSealed(request.Mix, cancellationToken);
         return latest == null
-            ? Array.Empty<string>()
-            : await _snapshots.SearchPlayerNamesInSnapshot(latest.Id, request.Term, request.Take,
+            ? Array.Empty<OfficialPlayerRecord>()
+            : await _snapshots.SearchPlayersInSnapshot(latest.Id, request.Term, request.Take,
                 cancellationToken);
     }
 
@@ -731,12 +731,15 @@ internal sealed class LeaderboardHubSaga :
                 .OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating);
             var playerType = RecapPlayerTypeCalculator.Calculate(
                 top50.Select(x => PhoenixScore.From((int)x.Detail.Score)).ToArray());
-            // Chart ratings merge both pools — consumers filter by chart type, so the
-            // co-op estimate scale never competes with real PUMBILITY contributions.
+            // The CO-OP Rating is every co-op chart summed, not a top 50 — the mirror only holds
+            // the charts a player is top-300 on, so this reads as a lower bound on the account's
+            // own number rather than a differently-shaped one. Chart ratings merge both pools —
+            // consumers filter by chart type, so the co-op scale never competes with real
+            // PUMBILITY contributions.
             byPlayer[playerId] = new PlayerSnapshotStats(playerId,
                 contributions.Length,
                 top50.Sum(x => x.Rating), singles, doubles,
-                coop.OrderByDescending(x => x.Rating).Take(50).Sum(x => x.Rating),
+                coop.Sum(x => x.Rating),
                 coop.Length,
                 playerType,
                 contributions.Concat(coop).Where(x => x.Detail.ChartId != null)

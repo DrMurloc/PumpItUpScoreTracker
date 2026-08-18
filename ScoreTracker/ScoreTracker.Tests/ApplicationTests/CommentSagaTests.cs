@@ -11,6 +11,7 @@ using ScoreTracker.ChartComments.Contracts;
 using ScoreTracker.ChartComments.Contracts.Commands;
 using ScoreTracker.ChartComments.Contracts.Queries;
 using ScoreTracker.ChartComments.Domain;
+using ScoreTracker.Communities.Contracts;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.CommunityTools.Contracts;
 using ScoreTracker.CommunityTools.Contracts.Queries;
@@ -33,6 +34,8 @@ public sealed class CommentSagaTests
 
     private readonly Mock<ICommentRepository> _comments = new();
     private readonly Mock<ICommentConsentRepository> _consents = new();
+    private readonly Mock<ICommentReportRepository> _reports = new();
+    private readonly Mock<ICommentRestrictionRepository> _restrictions = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IMediator> _mediator = new();
     private readonly Mock<IUserReader> _users = new();
@@ -49,17 +52,43 @@ public sealed class CommentSagaTests
         _currentUser.SetupGet(c => c.User).Returns(() => _viewer);
         _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunityRolesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<MyCommunityRoleRecord>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMemberRolesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityMemberRoleRecord>());
         _mediator.Setup(m => m.Send(It.IsAny<GetPublicToolsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<PublicToolRecord>());
         _users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<User>());
+        _restrictions.Setup(r => r.GetActive(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CommentRestriction?)null);
+        _restrictions.Setup(r => r.GetActiveForUser(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommentRestriction>());
+        _reports.Setup(r => r.GetOpenForComment(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommentReport>());
     }
 
     private CommentSaga Subject()
     {
-        return new CommentSaga(_comments.Object, _consents.Object, _currentUser.Object,
-            FakeDateTime.At(Now).Object, _mediator.Object, _users.Object,
-            new MemoryCache(new MemoryCacheOptions()));
+        return new CommentSaga(_comments.Object, _consents.Object, _reports.Object,
+            _restrictions.Object, _currentUser.Object, FakeDateTime.At(Now).Object, _mediator.Object,
+            _users.Object, new MemoryCache(new MemoryCacheOptions()));
+    }
+
+    /// <summary>Gives the viewer a seat (and optionally others their roles) in ClubId.</summary>
+    private void StandingInClub(CommunityRole myRole, CommunityPermission myPermissions,
+        params (Guid UserId, CommunityRole Role)[] members)
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetMyCommunityRolesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new MyCommunityRoleRecord(ClubId, Name.From("Murloc Lab"), myRole, myPermissions)
+            });
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityMemberRolesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(members
+                .Select(member => new CommunityMemberRoleRecord(member.UserId, member.Role))
+                .Concat(new[] { new CommunityMemberRoleRecord(_viewer.Id, myRole) })
+                .ToArray());
     }
 
     private void Communities(params (string Name, Guid Id, bool Regional)[] communities)
@@ -191,8 +220,10 @@ public sealed class CommentSagaTests
     // honours the flag; nothing below the saga sets it.
 
     [Fact]
-    public async Task OnlyTheSiteAdminRemoves()
+    public async Task PublicCommentsAreTheSiteAdminsAlone()
     {
+        // Even standing in a club with the flag grants nothing over a PUBLIC comment.
+        StandingInClub(CommunityRole.Admin, CommunityPermission.ModerateComments);
         var comment = Comment.Post(ChartId, Guid.NewGuid(), CommentAudience.Public, "words", Now);
         _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
 
@@ -200,6 +231,68 @@ public sealed class CommentSagaTests
             () => Subject().Handle(new RemoveCommentCommand(comment.Id), CancellationToken.None));
 
         _comments.Verify(c => c.Save(It.IsAny<Comment>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData(CommunityRole.Admin, CommunityRole.Member, true)]   // admins moderate members
+    [InlineData(CommunityRole.Admin, CommunityRole.Admin, false)]   // admins never act on each other
+    [InlineData(CommunityRole.Admin, CommunityRole.Creator, false)] // nobody touches the creator
+    [InlineData(CommunityRole.Creator, CommunityRole.Admin, true)]  // creators moderate admins
+    [InlineData(CommunityRole.Member, CommunityRole.Member, false)] // members moderate nobody
+    public async Task CommunityRemovalFollowsTheHierarchy(CommunityRole mine, CommunityRole theirs,
+        bool allowed)
+    {
+        var author = Guid.NewGuid();
+        StandingInClub(mine, CommunityPermission.ModerateComments, (author, theirs));
+        var comment = Comment.Post(ChartId, author, CommentAudience.Community(ClubId), "words", Now);
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+
+        if (allowed)
+        {
+            await Subject().Handle(new RemoveCommentCommand(comment.Id), CancellationToken.None);
+            _comments.Verify(c => c.Save(It.Is<Comment>(saved =>
+                    saved.IsDeleted && saved.DeletedByUserId == _viewer.Id),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+        else
+        {
+            await Assert.ThrowsAsync<CommentNotAllowedException>(
+                () => Subject().Handle(new RemoveCommentCommand(comment.Id), CancellationToken.None));
+            _comments.Verify(c => c.Save(It.IsAny<Comment>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+    }
+
+    [Fact]
+    public async Task AnAdminWithoutTheFlagRemovesNothing()
+    {
+        var author = Guid.NewGuid();
+        StandingInClub(CommunityRole.Admin, CommunityPermission.ManageUsers, (author, CommunityRole.Member));
+        var comment = Comment.Post(ChartId, author, CommentAudience.Community(ClubId), "words", Now);
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+
+        await Assert.ThrowsAsync<CommentNotAllowedException>(
+            () => Subject().Handle(new RemoveCommentCommand(comment.Id), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task RemovalResolvesEveryOpenReportOnTheComment()
+    {
+        _currentUser.SetupGet(c => c.User).Returns(Admin);
+        var comment = Comment.Post(ChartId, Guid.NewGuid(), CommentAudience.Public, "words", Now);
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+        var report = CommentReport.File(comment.Id, Guid.NewGuid(),
+            CommentReportReason.HateOrDiscrimination, null, Now);
+        _reports.Setup(r => r.GetOpenForComment(comment.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { report });
+
+        await Subject().Handle(new RemoveCommentCommand(comment.Id), CancellationToken.None);
+
+        // A removed comment leaves nothing to act on in any queue — both desks stamped at once.
+        _reports.Verify(r => r.Save(It.Is<CommentReport>(saved =>
+                !saved.IsOpenForCommunity && !saved.IsOpenForSite &&
+                saved.SiteResolvedByUserId == Admin.Id),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -242,14 +335,47 @@ public sealed class CommentSagaTests
         Assert.Equal(expected, record.ViewerMayModerate);
     }
 
-    [Fact]
-    public async Task ACommunityAdminHoldsNoShieldYet()
+    [Theory]
+    [InlineData(CommunityRole.Admin, CommunityRole.Member, true)]
+    [InlineData(CommunityRole.Admin, CommunityRole.Admin, false)]
+    [InlineData(CommunityRole.Creator, CommunityRole.Admin, true)]
+    [InlineData(CommunityRole.Member, CommunityRole.Member, false)]
+    public async Task TheCommunityShieldFollowsTheHierarchy(CommunityRole mine, CommunityRole theirs,
+        bool expected)
     {
-        // Community moderation is a later slice. Until ModerateComments exists, a club's own admin
-        // has exactly the powers a member does — asserted rather than assumed, because the day the
-        // flag lands this test is what says the plumbing changed on purpose.
-        Communities(("Murloc Lab", ClubId, false));
-        SetupRows(Row(Guid.NewGuid()));
+        // The flag-day counterpart of the old ACommunityAdminHoldsNoShieldYet: ModerateComments
+        // exists now, and the shield is computed per comment from the same authority removal uses.
+        var author = Guid.NewGuid();
+        StandingInClub(mine, CommunityPermission.ModerateComments, (author, theirs));
+        SetupRows(Row(author));
+
+        var record = Assert.Single((await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Community(ClubId)),
+            CancellationToken.None)).Roots);
+
+        Assert.Equal(expected, record.ViewerMayModerate);
+    }
+
+    [Fact]
+    public async Task AnAdminWithoutTheFlagHoldsNoShield()
+    {
+        var author = Guid.NewGuid();
+        StandingInClub(CommunityRole.Admin, CommunityPermission.ManageUsers, (author, CommunityRole.Member));
+        SetupRows(Row(author));
+
+        var record = Assert.Single((await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Community(ClubId)),
+            CancellationToken.None)).Roots);
+
+        Assert.False(record.ViewerMayModerate);
+    }
+
+    [Fact]
+    public async Task NoShieldOnYourOwnComment()
+    {
+        // Your own row carries Edit and Delete; a shield there would be a second delete button.
+        StandingInClub(CommunityRole.Creator, CommunityPermission.All);
+        SetupRows(Row(_viewer.Id));
 
         var record = Assert.Single((await Subject().Handle(
             new GetChartCommentsQuery(ChartId, CommentAudience.Community(ClubId)),
@@ -319,6 +445,131 @@ public sealed class CommentSagaTests
         _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
 
         Assert.Null(await Subject().Handle(new GetMyCommentTextQuery(comment.Id), CancellationToken.None));
+    }
+
+    // ----- the write gates ----------------------------------------------------------------------
+    //
+    // The lock is the site's soft ban and the mute is the club's; both reach post, reply and EDIT
+    // (an edit is a way to keep talking through old comments), neither reaches delete or votes,
+    // and a personal note passes everything — a note has no audience to protect.
+
+    private void Locked()
+    {
+        _currentUser.SetupGet(c => c.User).Returns(_viewer with { IsContentLocked = true });
+    }
+
+    private void MutedInClub()
+    {
+        _restrictions.Setup(r => r.GetActive(_viewer.Id, ClubId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CommentRestriction.Impose(_viewer.Id, ClubId, Guid.NewGuid(), null, Now));
+        _restrictions.Setup(r => r.GetActiveForUser(_viewer.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                CommentRestriction.Impose(_viewer.Id, ClubId, Guid.NewGuid(), null, Now)
+            });
+    }
+
+    [Fact]
+    public async Task ALockedAccountCannotPostAnywherePublic()
+    {
+        Locked();
+        Communities(("Murloc Lab", ClubId, false));
+
+        await Assert.ThrowsAsync<CommentNotAllowedException>(() => Subject().Handle(
+            new PostCommentCommand(ChartId, CommentAudience.Public, "words"), CancellationToken.None));
+        await Assert.ThrowsAsync<CommentNotAllowedException>(() => Subject().Handle(
+            new PostCommentCommand(ChartId, CommentAudience.Community(ClubId), "words"),
+            CancellationToken.None));
+
+        _comments.Verify(c => c.Save(It.IsAny<Comment>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ALockedAccountStillKeepsNotes()
+    {
+        Locked();
+
+        await Subject().Handle(new PostCommentCommand(ChartId, CommentAudience.Private, "left foot"),
+            CancellationToken.None);
+
+        _comments.Verify(c => c.Save(It.Is<Comment>(saved => saved.Audience.IsPrivate),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ALockedAccountCannotEditButCanStillDelete()
+    {
+        Locked();
+        var comment = Comment.Post(ChartId, _viewer.Id, CommentAudience.Public, "before", Now);
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+
+        await Assert.ThrowsAsync<CommentNotAllowedException>(() => Subject().Handle(
+            new EditCommentCommand(comment.Id, "after"), CancellationToken.None));
+
+        // Taking your own words down always works — the gate deliberately does not reach delete.
+        await Subject().Handle(new DeleteCommentCommand(comment.Id), CancellationToken.None);
+        _comments.Verify(c => c.Save(It.Is<Comment>(saved => saved.IsDeleted),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AMuteReachesPostReplyAndEditInItsClubAndNothingElse()
+    {
+        MutedInClub();
+        Communities(("Murloc Lab", ClubId, false));
+        var root = Comment.Post(ChartId, Guid.NewGuid(), CommentAudience.Community(ClubId), "root", Now);
+        var mine = Comment.Post(ChartId, _viewer.Id, CommentAudience.Community(ClubId), "mine", Now);
+        _comments.Setup(c => c.GetById(root.Id, It.IsAny<CancellationToken>())).ReturnsAsync(root);
+        _comments.Setup(c => c.GetById(mine.Id, It.IsAny<CancellationToken>())).ReturnsAsync(mine);
+
+        await Assert.ThrowsAsync<CommentNotAllowedException>(() => Subject().Handle(
+            new PostCommentCommand(ChartId, CommentAudience.Community(ClubId), "words"),
+            CancellationToken.None));
+        await Assert.ThrowsAsync<CommentNotAllowedException>(() => Subject().Handle(
+            new ReplyToCommentCommand(root.Id, "words"), CancellationToken.None));
+        await Assert.ThrowsAsync<CommentNotAllowedException>(() => Subject().Handle(
+            new EditCommentCommand(mine.Id, "edited"), CancellationToken.None));
+
+        // The mute is that club's and only that club's: public still takes a comment.
+        await Subject().Handle(new PostCommentCommand(ChartId, CommentAudience.Public, "elsewhere"),
+            CancellationToken.None);
+        _comments.Verify(c => c.Save(It.Is<Comment>(saved => saved.Audience.IsPublic),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        // And their own delete still works there.
+        await Subject().Handle(new DeleteCommentCommand(mine.Id), CancellationToken.None);
+        _comments.Verify(c => c.Save(It.Is<Comment>(saved => saved.IsDeleted),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheRailSaysWhereYouCannotPost()
+    {
+        MutedInClub();
+        Communities(("Murloc Lab", ClubId, false), ("NYC Pump", Guid.NewGuid(), false));
+
+        var scopes = await Subject().Handle(new GetMyCommentScopesQuery(), CancellationToken.None);
+
+        // The chip stays — reading is never revoked — with a disabled composer behind it.
+        Assert.Collection(scopes,
+            s => Assert.True(s.CanPost),  // Public
+            s => Assert.True(s.CanPost),  // Notes
+            s => Assert.False(s.CanPost), // Murloc Lab, muted
+            s => Assert.True(s.CanPost)); // NYC Pump
+    }
+
+    [Fact]
+    public async Task TheRailUnderALockKeepsOnlyNotes()
+    {
+        Locked();
+        Communities(("Murloc Lab", ClubId, false));
+
+        var scopes = await Subject().Handle(new GetMyCommentScopesQuery(), CancellationToken.None);
+
+        Assert.Collection(scopes,
+            s => Assert.False(s.CanPost), // Public
+            s => Assert.True(s.CanPost),  // Notes — no audience to protect
+            s => Assert.False(s.CanPost)); // the club
     }
 
     // ----- consent ------------------------------------------------------------------------------

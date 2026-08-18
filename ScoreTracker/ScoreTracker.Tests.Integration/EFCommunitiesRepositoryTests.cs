@@ -6,6 +6,7 @@ using ScoreTracker.Communities.Infrastructure;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Tests.Integration.Fixtures;
 
 namespace ScoreTracker.Tests.Integration;
@@ -172,6 +173,30 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task ABanEndsBelongingButNotTheRowTheUnbanMachineryNeeds()
+    {
+        // The ban RETAINS its membership row to block rejoin, so the two reads deliberately
+        // diverge: GetCommunities ("clubs I belong to" — the directory, leaderboard scopes,
+        // feeds, rivals audience, recap, comment scopes) drops the club, while GetUserRoles
+        // ("rows I hold") keeps it — the roster's Unban button and comment moderation read roles.
+        var owner = Guid.NewGuid();
+        var banned = Guid.NewGuid();
+        var writer = BuildRepository();
+        var community = new Community("Clubhouse", owner, CommunityPrivacyType.Public,
+            new[] { owner, banned }, Array.Empty<Community.ChannelConfiguration>(),
+            new Dictionary<Guid, DateOnly?>(), false);
+        community.Ban(owner, banned);
+        await writer.SaveCommunity(community, CancellationToken.None);
+
+        var belongs = await BuildRepository().GetCommunities(banned, CancellationToken.None);
+        var holds = await BuildRepository().GetUserRoles(banned, CancellationToken.None);
+
+        Assert.DoesNotContain(belongs, c => (string)c.CommunityName == "Clubhouse");
+        var row = Assert.Single(holds, r => (string)r.CommunityName == "Clubhouse");
+        Assert.Equal(CommunityRole.Banned, row.Role);
+    }
+
+    [Fact]
     public async Task GetPublicCommunitiesReturnsOnlyPublicAndPublicWithCodeCommunities()
     {
         var owner = Guid.NewGuid();
@@ -213,6 +238,46 @@ public sealed class EFCommunitiesRepositoryTests : IAsyncLifetime
         Assert.NotNull(world);
         foreach (var joiner in joiners) Assert.Contains(joiner, world!.MemberIds);
         Assert.Contains(owner, world!.MemberIds);
+    }
+
+    /// <summary>
+    ///     The community basis of player visibility: every live seat in every user-created community
+    ///     you hold a live seat in, keyed by name — World and the regional communities out, banned
+    ///     seats out on both sides.
+    /// </summary>
+    [Fact]
+    public async Task GetUserCommunityMembersReadsYourUserCreatedCommunitiesInOneGoWithoutBansOrWorld()
+    {
+        var me = Guid.NewGuid();
+        var mate = Guid.NewGuid();
+        var banned = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
+        var repository = BuildRepository();
+
+        var crew = new Community("Crew", me, CommunityPrivacyType.Public, new[] { me, mate, banned },
+            Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(), false);
+        crew.Ban(me, banned);
+        await repository.SaveCommunity(crew, CancellationToken.None);
+        await repository.SaveCommunity(new Community("Doubles Club", mate, CommunityPrivacyType.Private,
+            new[] { mate, me }, Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(),
+            false), CancellationToken.None);
+        // A community you are not in, and the two system communities everyone is in.
+        await repository.SaveCommunity(new Community("Elsewhere", stranger, CommunityPrivacyType.Public,
+            new[] { stranger, mate }, Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(),
+            false), CancellationToken.None);
+        await repository.SaveCommunity(new Community("World", me, CommunityPrivacyType.Public,
+            new[] { me, stranger }, Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(),
+            false), CancellationToken.None);
+        await repository.SaveCommunity(new Community("Narnia", me, CommunityPrivacyType.Public,
+            new[] { me, stranger }, Array.Empty<Community.ChannelConfiguration>(), new Dictionary<Guid, DateOnly?>(),
+            true), CancellationToken.None);
+
+        var members = await ((ICommunityReader)BuildRepository()).GetUserCommunityMembers(me, CancellationToken.None);
+
+        Assert.Equal(new[] { "Crew", "Doubles Club" }, members.Keys.Select(k => k.ToString()).OrderBy(k => k));
+        Assert.Equal(new[] { mate, me }.OrderBy(g => g), members[Name.From("Crew")].OrderBy(g => g));
+        Assert.DoesNotContain(banned, members[Name.From("Crew")]);
+        Assert.Equal(new[] { mate, me }.OrderBy(g => g), members[Name.From("Doubles Club")].OrderBy(g => g));
     }
 
     [Fact]

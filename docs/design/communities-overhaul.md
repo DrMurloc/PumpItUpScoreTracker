@@ -215,7 +215,14 @@ multi-player head-to-head tool is **removed** (superseded by the player-page fol
   the rows, so it sheds the same columns at the same breakpoints — because a board of four
   unlabeled figures per player is a board nobody can read. Labels stay short (Charts, Comp Lv):
   below 760 the columns size to their content, and a spelled-out heading takes width away from
-  the player it describes.
+  the player it describes. The board types ride the tier-list-style toggle (Combined / Singles /
+  Doubles / CoOp) showing that type's PUMBILITY and competitive level; the **CoOp board ranks on
+  the CO-OP Rating** ([DOMAIN.md](../DOMAIN.md) — `PlayerStats.CoOpRating`, an all-charts sum on
+  both mixes since 2026-08-17; before that Phoenix 2 read 0 here) with the pooled ×2–×5
+  **completion percentage beside it** where the competitive level would sit — it is a dedicated
+  board rather than a column packed onto the main table, so it has the room for both (owner,
+  2026-08-17, reversing a same-day cut). Its header says CO-OP Rating rather than PUMBILITY,
+  because it is not one.
 - **By Chart** — the existing per-chart community board (`ChartSelector` →
   `GetPhoenixRecordsForCommunityQuery`), kept as its own tab.
 - **Members** — roster visible to all; promote/demote/ban/unban/edit-perms controls gated by
@@ -228,6 +235,10 @@ one component. (If we'd rather not touch Official, clone into Communities instea
 fallback.)
 
 ### 5.3 Player summary — new route `/Community/{name}/Player/{userId}`
+
+> **Superseded 2026-08-16.** The community player page retired for the site-wide `/Player/{id}`
+> ([player-page-and-site-search.md](player-page-and-site-search.md)); the leaderboard row links there.
+> The community name was only ever the gate on those two reads — no data depended on it.
 
 Home-page-style: **big glowy PUMBILITY top-left** of the identity card; name, country,
 competitive level, official placement pill + "N Top-300 charts →" link (when resolvable), and the

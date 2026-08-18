@@ -1,0 +1,176 @@
+@namespace ScoreTracker.Web.Components.ChartComments
+@using MediatR
+@using ScoreTracker.ChartComments.Contracts
+@using ScoreTracker.ChartComments.Contracts.Commands
+@using ScoreTracker.ChartComments.Contracts.Queries
+@using ScoreTracker.Domain.Exceptions
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Services.Contracts
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject IUiSettingsAccessor UiSettings
+
+@* The community moderator's queue, on the page that already holds the role machinery. Renders
+   only while there are open reports — an empty moderation panel is furniture. Open launches the
+   details dialog on the reported comment: moderation happens in the surface the comment lives
+   in, and a community admin is IN the club, so the scope chip is there and the thread reads
+   normally. (The site admin's escalations land on /Admin/Comments instead, where the contents
+   are on the page — they may hold no scope here.) *@
+
+@if (_rows.Count > 0)
+{
+    <MudPaper Class="pa-4 mb-4" Outlined="true" data-testid="reported-comments-panel">
+        <MudText Typo="Typo.h5" Class="mb-2">@L["Reported comments"]</MudText>
+        @foreach (var row in _rows)
+        {
+            <div class="rcp-row" data-testid="@($"reported-{row.ReportId}")">
+                @if (_charts.TryGetValue(row.ChartId, out var chart))
+                {
+                    <DifficultyBubble Chart="chart" Small="true" Tooltip="false"></DifficultyBubble>
+                    <span class="rcp-song">@chart.Song.Name</span>
+                }
+                else
+                {
+                    @* Comments are cross-mix; the chart may not exist in the selected mix. The
+                       row must still say SOMETHING about where it lives, or the moderator can
+                       only dismiss blind. *@
+                    <span class="rcp-song rcp-meta">@L["From another mix"]</span>
+                }
+                <span class="rcp-who">
+                    <b>@(row.ReportedUserName?.ToString() ?? L["a deleted user"])</b>
+                    <span class="rcp-meta"> — @L["reported by {0}", row.ReporterName?.ToString() ?? L["a deleted user"].Value]</span>
+                </span>
+                <span class="rcp-reason">@ReasonLabel(row.Reason)</span>
+                <span class="rcp-actions">
+                    <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="_working"
+                               data-testid="@($"dismiss-{row.ReportId}")"
+                               OnClick="() => Dismiss(row)">@L["Dismiss"]</MudButton>
+                    @if (_charts.ContainsKey(row.ChartId))
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_working"
+                                   data-testid="@($"open-{row.ReportId}")"
+                                   OnClick="() => Open(row)">@L["Open"]</MudButton>
+                    }
+                </span>
+            </div>
+        }
+    </MudPaper>
+
+    <ChartDetailsDialog @bind-Visible="_dialogOpen" Chart="_dialogChart" Mix="_mix"
+                        InitialTab="ChartDetailsDialog.DetailsTab.Comments"
+                        FocusCommentId="_focusCommentId"
+                        InitialCommentAudience="@CommentAudience.Community(CommunityId)"></ChartDetailsDialog>
+}
+
+<style>
+    .rcp-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 8px 0;
+        border-top: 1px solid var(--mud-palette-lines-default);
+        font-size: .82rem;
+    }
+
+    .rcp-song {
+        font-weight: 600;
+    }
+
+    .rcp-who {
+        min-width: 0;
+    }
+
+    .rcp-meta {
+        color: var(--mud-palette-text-secondary);
+        font-size: .74rem;
+    }
+
+    .rcp-reason {
+        font-size: .68rem;
+        padding: 1px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--mud-palette-error);
+        color: var(--mud-palette-error);
+        white-space: nowrap;
+    }
+
+    .rcp-actions {
+        margin-left: auto;
+        display: flex;
+        gap: 6px;
+    }
+</style>
+
+@code {
+    private IReadOnlyList<ReportedCommentRecord> _rows = Array.Empty<ReportedCommentRecord>();
+    private Dictionary<Guid, Chart> _charts = new();
+    private MixEnum _mix;
+    private bool _working;
+    private bool _dialogOpen;
+    private Chart? _dialogChart;
+    private Guid? _focusCommentId;
+
+    /// <summary>The one community this panel serves — the Members page it sits on.</summary>
+    [Parameter] [EditorRequired] public Guid CommunityId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _mix = await UiSettings.GetSelectedMix();
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _rows = await Mediator.Send(new GetOpenCommentReportsQuery(CommunityId));
+        if (_rows.Count == 0) return;
+
+        // Chart display data is Web's join to Catalog — ChartComments stores an id and knows
+        // nothing about charts. A chart missing from the selected mix renders without Open;
+        // the dialog could not host it anyway.
+        _charts = (await Mediator.Send(new GetChartsQuery(_mix,
+                ChartIds: _rows.Select(row => row.ChartId).Distinct().ToArray())))
+            .ToDictionary(chart => chart.Id);
+    }
+
+    private async Task Dismiss(ReportedCommentRecord row)
+    {
+        _working = true;
+        try
+        {
+            await Mediator.Send(new DismissCommentReportCommand(row.ReportId, CommentReportQueue.Community));
+            await Load();
+        }
+        catch (CommentNotAllowedException exception)
+        {
+            Snackbar.Add(exception.Message, Severity.Warning);
+        }
+        finally
+        {
+            // Not after the try: an unexpected failure that skipped this would leave every
+            // button in the panel dead until a full page refresh.
+            _working = false;
+        }
+    }
+
+    private void Open(ReportedCommentRecord row)
+    {
+        _dialogChart = _charts[row.ChartId];
+        _focusCommentId = row.CommentId;
+        _dialogOpen = true;
+    }
+
+    private string ReasonLabel(CommentReportReason reason)
+    {
+        return reason switch
+        {
+            CommentReportReason.SpamOrAdvertising => L["Spam or advertising"],
+            CommentReportReason.OffTopic => L["Off topic"],
+            CommentReportReason.WrongInformation => L["Wrong information"],
+            CommentReportReason.HateOrDiscrimination => L["Hate or discrimination"],
+            CommentReportReason.JustWantAttention => L["I just want attention. Hi."],
+            _ => L["Threats or harassment"]
+        };
+    }
+}

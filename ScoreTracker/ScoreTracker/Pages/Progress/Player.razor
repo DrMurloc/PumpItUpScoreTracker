@@ -1,0 +1,312 @@
+@page "/Player/{UserIdParam:guid}"
+@rendermode RenderModes.Interactive
+@using MediatR
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.OfficialMirror.Contracts
+@using ScoreTracker.OfficialMirror.Contracts.Queries
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.Rivals.Contracts
+@using ScoreTracker.Rivals.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Components
+@using ScoreTracker.Web.Components.Players
+@using Chart = ScoreTracker.SharedKernel.Models.Chart
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+
+@* The one page for looking at a player (docs/design/player-page-and-site-search.md). The root of a
+   family that already existed — /Player/{id}/Sessions and /Player/{id}/PhoenixRecap — and the page
+   the community leaderboard and the rivals roster both land on. Who may look is the profile read's
+   business: it answers null to anyone the player is hidden from, and the page goes home. *@
+<PageTitle>@(_profile == null ? L["Player"] : (string)_profile.PlayerName)</PageTitle>
+
+<div class="ph-page">
+@if (_loading)
+{
+    <PatienceCard Explanation="@L["Compiling this player's page."]"></PatienceCard>
+}
+else if (_profile != null)
+{
+    <MudPaper Class="pa-4 mb-4" data-testid="player-hero">
+        <div class="ph-top">
+            @if (!IsLegacy)
+            {
+                <div class="ph-pum">
+                    @* The level gem is Phoenix 2's ladder alone; on Phoenix the number stands by
+                       itself. It self-hides on a 404 until the art is mirrored. *@
+                    @if (_currentMix == MixEnum.Phoenix2)
+                    {
+                        <PumbilityLevelBadge Level="Phoenix2PumbilityLevel.From(_profile.Pumbility)" Height="60"/>
+                    }
+                    <div class="cmp-hero-pum">
+                        <span class="cmp-hero-num">@_profile.Pumbility.ToString("N0")</span>
+                        <span class="cmp-hero-cap">PUMBILITY</span>
+                    </div>
+                </div>
+            }
+            <div class="ph-identity">
+                <MudImage Src="@_profile.ProfileImage.ToString()" Class="ph-identity-avatar" ObjectFit="ObjectFit.Cover"></MudImage>
+                <div>
+                    <MudText Typo="Typo.h5">@((string)_profile.PlayerName)</MudText>
+                    @if (_profile.Country != null)
+                    {
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary">@((string)_profile.Country.Value)</MudText>
+                    }
+                    @* Why you can see a private player: the tags name the basis — your rival, and
+                       each user-created community you share, by its own name. *@
+                    @if (_profile.Visibility.IsYourRival || _profile.Visibility.SharedCommunities.Count > 0)
+                    {
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            @if (_profile.Visibility.IsYourRival)
+                            {
+                                <span class="rvl-tag rvl-tag-rival">@L["Rival"]</span>
+                            }
+                            @foreach (var community in _profile.Visibility.SharedCommunities)
+                            {
+                                <span class="rvl-tag rvl-tag-crew">@((string)community)</span>
+                            }
+                        </div>
+                    }
+                </div>
+                @if (!IsLegacy)
+                {
+                    <div class="ph-cl">
+                        <span class="ph-cl-eyebrow">@L["Competitive Level"]</span>
+                        <div class="ph-cl-row"><span class="ph-cl-singles">S</span><b>@_profile.SinglesCompetitiveLevel.ToString("N2")</b></div>
+                        <div class="ph-cl-row"><span class="ph-cl-doubles">D</span><b>@_profile.DoublesCompetitiveLevel.ToString("N2")</b></div>
+                    </div>
+                }
+            </div>
+        </div>
+        @* Ratings are Phoenix-lineage and come back empty on a legacy mix; the page hides what they
+           feed rather than printing zeros as if they were measurements. *@
+        @if (!IsLegacy)
+        {
+            <div class="cmp-tiles">
+                <div class="cmp-tile"><div class="cmp-tile-label">@L["Total Rating"]</div><div class="cmp-tile-num">@_profile.TotalRating.ToString("N0")</div></div>
+                <div class="cmp-tile"><div class="cmp-tile-label">@L["Singles"]</div><div class="cmp-tile-num">@_profile.SinglesRating.ToString("N0")</div></div>
+                <div class="cmp-tile"><div class="cmp-tile-label">@L["Doubles"]</div><div class="cmp-tile-num">@_profile.DoublesRating.ToString("N0")</div></div>
+                <div class="cmp-tile"><div class="cmp-tile-label">@L["Highest Clear"]</div><div class="cmp-tile-num">@L["Lv {0}", _profile.HighestLevel]</div></div>
+            </div>
+        }
+    </MudPaper>
+
+    @* Official tiles are strictly if-applicable: no import-stamped link → no card. *@
+    @if (_standing != null)
+    {
+        <MudPaper Class="pa-4 mb-4" data-testid="official-boards">
+            <div class="ph-card-head mb-1">
+                <MudText Typo="Typo.h6">@L["Official Boards"]</MudText>
+                <MudLink Href="@($"/OfficialLeaderboards/Players?player={Uri.EscapeDataString(_standing.Username)}")">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary">
+                        @L["{0} Official Top {1}s", _standing.BoardsInTop, BoardDepth] →
+                    </MudChip>
+                </MudLink>
+            </div>
+            <div class="cmp-tiles" style="margin-top:8px">
+                @if (_standing.PumbilityRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">PUMBILITY</div><div class="cmp-tile-num">#@_standing.PumbilityRank</div></div>
+                }
+                @if (_standing.SinglesRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Singles"]</div><div class="cmp-tile-num" style="color:var(--chart-singles)">#@_standing.SinglesRank</div></div>
+                }
+                @if (_standing.DoublesRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Doubles"]</div><div class="cmp-tile-num" style="color:var(--chart-doubles)">#@_standing.DoublesRank</div></div>
+                }
+                @if (_standing.CoOpRank != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["CoOp"]</div><div class="cmp-tile-num">#@_standing.CoOpRank</div></div>
+                }
+                @if (_standing.NumberOnes > 0)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Chart #1s"]</div><div class="cmp-tile-num">@_standing.NumberOnes</div></div>
+                }
+                @if (_standing.BestPlace != null)
+                {
+                    <div class="cmp-tile"><div class="cmp-tile-label">@L["Best chart placement"]</div><div class="cmp-tile-num">#@_standing.BestPlace</div></div>
+                }
+            </div>
+        </MudPaper>
+    }
+
+    @* Singles and doubles are separate folders with separate standings, so they get separate
+       graphs (docs/design/folder-level-progression.md §6). Column height is the folder's real
+       chart count; the fill is the folder's grade spectrum. *@
+    <MudPaper Class="pa-4 mb-4">
+        <MudText Typo="Typo.h6" Class="mb-1">@L["Folder Completion"]</MudText>
+        <div class="cmp-folder-pair">
+            @RenderFolderGraph(ChartType.Single, L["Singles"], "cmp-folder-head-singles")
+            @RenderFolderGraph(ChartType.Double, L["Doubles"], "cmp-folder-head-doubles")
+        </div>
+    </MudPaper>
+
+    @* You against them — signed in, and not looking at yourself. The component takes the resolved
+       subject; a folder is picked to open on, All folders is a click away. *@
+    @if (ShowsHeadToHead)
+    {
+        <MudPaper Class="pa-4 mb-4" data-testid="head-to-head">
+            <HeadToHead Record="_headToHead" Charts="_charts" YourAvatar="@MyAvatar" Mix="_currentMix"
+                        FolderType="_compareType" FolderLevel="_compareLevel"
+                        FolderChanged="OnFolderChanged" OnOpenChart="OpenChart"></HeadToHead>
+        </MudPaper>
+        <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="_currentMix"></ChartDetailsDialog>
+    }
+
+    @* Sessions and the recap keep their own gate — public or you — so the links appear only where
+       they would open. *@
+    @if (_profile.Visibility.IsPublic || _profile.Visibility.IsYou)
+    {
+        <MudPaper Class="pa-4">
+            <div class="ph-links">
+                <MudLink Href="@($"/Player/{_profile.UserId}/Sessions")">@L["Sessions"] →</MudLink>
+                @if (_currentMix == MixEnum.Phoenix)
+                {
+                    <MudLink Href="@($"/Player/{_profile.UserId}/PhoenixRecap")">@L["Phoenix Recap"] →</MudLink>
+                }
+            </div>
+        </MudPaper>
+    }
+}
+</div>
+
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject NavigationManager NavManager
+@inject ScoreTracker.Web.Services.HomeDashboard.ChartCatalogCache ChartCatalog
+@inject ScoreTracker.Web.Services.Contracts.IUiSettingsAccessor UiSettings
+@code {
+    [Parameter] public Guid UserIdParam { get; set; }
+
+    private bool _loading = true;
+    private PlayerProfileRecord? _profile;
+    private OfficialPlayerStandingRecord? _standing;
+    private IReadOnlyDictionary<Guid, Chart> _charts = new Dictionary<Guid, Chart>();
+    private MixEnum _currentMix = MixEnum.Phoenix;
+
+    private bool IsLegacy => _currentMix.UsesLegacyScoring();
+
+    // piugame publishes each chart board 300 deep on Phoenix 2 and 100 deep on Phoenix, so a
+    // placement is a "Top 300" or a "Top 100" by mix.
+    private int BoardDepth => _currentMix == MixEnum.Phoenix2 ? 300 : 100;
+
+    private ChartType _compareType = ChartType.Double;
+    private int? _compareLevel;
+    private RivalHeadToHeadRecord? _headToHead;
+    private bool _detailsOpen;
+    private Chart? _detailsChart;
+
+    private bool ShowsHeadToHead => _profile != null && CurrentUser.IsLoggedIn && !_profile.Visibility.IsYou;
+
+    private string MyAvatar => CurrentUser.IsLoggedIn ? CurrentUser.User.ProfileImage.ToString() : string.Empty;
+
+    // Low folders exist but tell little at a glance — the graph starts where content does.
+    private const int MinFolderLevel = 6;
+
+    // Both graphs share one height scale so the two disciplines stay visually comparable —
+    // a level's column means the same thing whichever half of the pair it sits in.
+    private RenderFragment RenderFolderGraph(ChartType type, string title, string headClass) =>@<div>
+        <div class="cmp-folder-head @headClass">@title</div>
+        <div class="cmp-folders">
+            @{
+                var all = _profile!.FolderCompletion.Where(f => f.Total > 0 && f.Level >= MinFolderLevel).ToArray();
+                var maxTotal = all.Length == 0 ? 1 : all.Max(f => f.Total);
+                var folders = all.Where(f => f.Type == type).OrderBy(f => f.Level).ToArray();
+            }
+            @foreach (var folder in folders)
+            {
+                var trackHeight = Math.Max(6, (int)(118.0 * folder.Total / maxTotal));
+                <div class="cmp-folder-col">
+                    <MudTooltip Text="@FolderTip(folder)">
+                        <div class="cmp-folder-track" style="height:@(trackHeight)px">
+                            <FolderSpectrum GradesDescending="Expand(folder)" Size="folder.Total"
+                                            Vertical="true" ShowTicks="false"></FolderSpectrum>
+                        </div>
+                    </MudTooltip>
+                    <span class="cmp-folder-label">@folder.Level</span>
+                </div>
+            }
+        </div>
+    </div>;
+
+    // The payload carries a grade histogram rather than a chart-by-chart list; the spectrum
+    // wants the list, and best-first is the order it draws in.
+    private static IReadOnlyList<PhoenixLetterGrade> Expand(PlayerFolderCompletionRecord folder) =>
+        folder.GradeCounts
+            .OrderByDescending(kv => kv.Key)
+            .SelectMany(kv => Enumerable.Repeat(kv.Key, kv.Value))
+            .ToArray();
+
+    private string FolderTip(PlayerFolderCompletionRecord folder)
+    {
+        var percent = folder.Total == 0 ? 0 : (int)Math.Floor(100.0 * folder.Passed / folder.Total);
+        return L["{0} of {1} charts ({2}%)", folder.Passed, folder.Total, percent].Value;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentMix = await UiSettings.GetSelectedMix();
+
+        // Null is "no such player" and "not yours to look at" alike; both go home, the way the
+        // Sessions page does. The read is what gates — this is presentation.
+        _profile = await Mediator.Send(new GetPlayerProfileQuery(UserIdParam, _currentMix));
+        if (_profile == null)
+        {
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        // The official site publishes boards for the current generation only, so an older mix
+        // has no standing to ask about.
+        _standing = IsLegacy ? null : await Mediator.Send(new GetOfficialPlayerStandingQuery(_currentMix, UserIdParam));
+        _charts = await ChartCatalog.GetCharts(_currentMix);
+        _loading = false;
+
+        // The comparison opens on the pairing that means the most: the chart type where the
+        // two competitive levels sit closest, at the folder between them. A legacy mix has no
+        // competitive level to centre on, so it opens unfiltered.
+        if (ShowsHeadToHead)
+        {
+            _compareLevel = null;
+            if (!IsLegacy)
+            {
+                var mine = await Mediator.Send(new GetPlayerStatsQuery(CurrentUser.User.Id, _currentMix));
+                var singlesGap = Math.Abs(mine.SinglesCompetitiveLevel - _profile.SinglesCompetitiveLevel);
+                var doublesGap = Math.Abs(mine.DoublesCompetitiveLevel - _profile.DoublesCompetitiveLevel);
+                var (type, myLevel, theirLevel) = singlesGap <= doublesGap
+                    ? (ChartType.Single, mine.SinglesCompetitiveLevel, _profile.SinglesCompetitiveLevel)
+                    : (ChartType.Double, mine.DoublesCompetitiveLevel, _profile.DoublesCompetitiveLevel);
+                _compareType = type;
+                _compareLevel = Math.Clamp((int)Math.Round((myLevel + theirLevel) / 2), 1, (int)DifficultyLevel.Max);
+            }
+
+            await LoadHeadToHead();
+        }
+    }
+
+    /// <summary>Null level is "All folders" — the query treats a missing folder as unfiltered.</summary>
+    private async Task OnFolderChanged((ChartType Type, int? Level) folder)
+    {
+        _compareType = folder.Type;
+        _compareLevel = folder.Level;
+        await LoadHeadToHead();
+    }
+
+    private async Task LoadHeadToHead()
+    {
+        _headToHead = await Mediator.Send(new GetPlayerHeadToHeadQuery(_currentMix, UserIdParam,
+            _compareLevel == null ? null : _compareType,
+            _compareLevel == null ? null : DifficultyLevel.From(_compareLevel.Value)));
+    }
+
+    private void OpenChart(Chart chart)
+    {
+        _detailsChart = chart;
+        _detailsOpen = true;
+    }
+}

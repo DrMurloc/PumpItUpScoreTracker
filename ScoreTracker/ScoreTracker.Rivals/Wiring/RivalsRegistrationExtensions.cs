@@ -1,6 +1,7 @@
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Rivals.Application;
 using ScoreTracker.Rivals.Domain;
 using ScoreTracker.Rivals.Infrastructure;
@@ -21,7 +22,9 @@ public static class RivalsRegistrationExtensions
         services.AddTransient<IRivalInviteCodeRepository, EFRivalInviteCodeRepository>();
         services.AddTransient<IAccountPurgeRepository, EFAccountPurgeRepository>();
         services.AddTransient<RivalSubjectResolver>();
-        services.AddTransient<RivalAudienceReader>();
+        // The published visibility port (docs/design/peers-abstraction.md §1): Rivals hosts the
+        // implementation because it can see both non-public bases; consumers bind to the port.
+        services.AddTransient<IPlayerVisibilityReader, PlayerVisibilityReader>();
         services.AddTransient<RivalAdder>();
         services.AddTransient<RivalScoreReader>();
         services.AddSingleton<IDbModelContribution, RivalsModelContribution>();

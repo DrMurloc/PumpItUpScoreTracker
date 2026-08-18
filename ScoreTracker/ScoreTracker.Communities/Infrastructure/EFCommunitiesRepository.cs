@@ -241,12 +241,18 @@ namespace ScoreTracker.Communities.Infrastructure
             return rows.Select(r => new ChannelCommunityInfo(Name.From(r.Name), r.IsRegional, r.Culture)).ToArray();
         }
 
+        // "Clubs I belong to", which a ban ends — deliberately narrower than GetUserRoles below,
+        // which returns every row the user HOLDS, bans included, because the roster's Unban
+        // machinery and comment moderation need to see them. A ban retains its membership row to
+        // block rejoin; without this filter every "my communities" surface (directory, leaderboard
+        // scopes, feeds, rivals audience, recap, comment scopes) kept showing the club.
         public async Task<IEnumerable<CommunityOverviewRecord>> GetCommunities(Guid userId,
             CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var banned = nameof(CommunityRole.Banned);
             return (await (from cm in database.Set<CommunityMembershipEntity>()
-                where cm.UserId == userId
+                where cm.UserId == userId && cm.Role != banned
                 join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
                 join members in database.Set<CommunityMembershipEntity>() on c.Id equals members.CommunityId
                 group c by new { c.Id, c.Name, c.IsRegional, c.PrivacyType, cm.UserId }
@@ -287,6 +293,27 @@ namespace ScoreTracker.Communities.Infrastructure
                     database.Set<CommunityMembershipEntity>().Count(m => m.CommunityId == c.Id),
                     database.Set<CommunityMembershipEntity>()
                         .Count(m => m.CommunityId == c.Id && m.Role == adminRole))).ToArrayAsync(cancellationToken);
+        }
+
+        async Task<IReadOnlyDictionary<Name, IReadOnlyList<Guid>>> ICommunityReader.GetUserCommunityMembers(
+            Guid userId, CancellationToken cancellationToken)
+        {
+            // One statement: the viewer's live seats in user-created communities, joined back to
+            // every live seat in those communities. A banned row is a retained block, not a
+            // membership, so it is out on both sides.
+            var banned = nameof(CommunityRole.Banned);
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await (from mine in database.Set<CommunityMembershipEntity>()
+                where mine.UserId == userId && mine.Role != banned
+                join c in database.Set<CommunityEntity>() on mine.CommunityId equals c.Id
+                where !c.IsRegional && c.Name != SystemCommunityName
+                join member in database.Set<CommunityMembershipEntity>() on c.Id equals member.CommunityId
+                where member.Role != banned
+                select new { c.Name, member.UserId }).ToArrayAsync(cancellationToken);
+
+            return rows.GroupBy(r => r.Name)
+                .ToDictionary(g => Name.From(g.Key),
+                    g => (IReadOnlyList<Guid>)g.Select(r => r.UserId).Distinct().ToArray());
         }
 
         async Task<IEnumerable<Guid>> ICommunityReader.GetMembers(Name communityName,
@@ -397,13 +424,13 @@ namespace ScoreTracker.Communities.Infrastructure
                 (CommunityPermission)entity.DefaultAdminPermissions, entity.DefaultLanguage);
         }
 
-        public async Task DeleteCommunity(Name communityName, CancellationToken cancellationToken)
+        public async Task<Guid?> DeleteCommunity(Name communityName, CancellationToken cancellationToken)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
             var nameString = communityName.ToString();
             var entity = await database.Set<CommunityEntity>()
                 .FirstOrDefaultAsync(c => c.Name == nameString, cancellationToken);
-            if (entity == null) return;
+            if (entity == null) return null;
             var id = entity.Id;
 
             await database.Set<CommunityMembershipEntity>().Where(m => m.CommunityId == id)
@@ -419,6 +446,8 @@ namespace ScoreTracker.Communities.Infrastructure
 
             // The non-regional count is a cached front-door stat — evict so it reflects the deletion.
             _cache.Remove(CommunityCountCacheKey);
+
+            return id;
         }
 
         public async Task<IEnumerable<CommunityCompetitiveRangeRecord>> GetCompetitiveRanges(MixEnum mix,
@@ -469,12 +498,39 @@ namespace ScoreTracker.Communities.Infrastructure
             var rows = await (from cm in database.Set<CommunityMembershipEntity>()
                     where cm.UserId == userId
                     join c in database.Set<CommunityEntity>() on cm.CommunityId equals c.Id
-                    select new { c.Name, cm.Role, cm.Permissions })
+                    select new { c.Id, c.Name, cm.Role, cm.Permissions })
                 .ToArrayAsync(cancellationToken);
 
-            return rows.Select(r => new MyCommunityRoleRecord(r.Name,
+            return rows.Select(r => new MyCommunityRoleRecord(r.Id, r.Name,
                 Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member,
                 (CommunityPermission)r.Permissions)).ToArray();
+        }
+
+        public async Task<IEnumerable<CommunityMemberRoleRecord>> GetMemberRoles(Guid communityId,
+            CancellationToken cancellationToken)
+        {
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await database.Set<CommunityMembershipEntity>()
+                .Where(cm => cm.CommunityId == communityId)
+                .Select(cm => new { cm.UserId, cm.Role })
+                .ToArrayAsync(cancellationToken);
+
+            return rows.Select(r => new CommunityMemberRoleRecord(r.UserId,
+                Enum.TryParse<CommunityRole>(r.Role, out var role) ? role : CommunityRole.Member)).ToArray();
+        }
+
+        public async Task<IReadOnlyDictionary<Guid, Name>> GetCommunityNames(
+            IReadOnlyCollection<Guid> communityIds, CancellationToken cancellationToken)
+        {
+            if (communityIds.Count == 0) return new Dictionary<Guid, Name>();
+
+            await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+            var rows = await database.Set<CommunityEntity>()
+                .Where(c => communityIds.Contains(c.Id))
+                .Select(c => new { c.Id, c.Name })
+                .ToArrayAsync(cancellationToken);
+
+            return rows.ToDictionary(r => r.Id, r => Name.From(r.Name));
         }
 
         public async Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName,

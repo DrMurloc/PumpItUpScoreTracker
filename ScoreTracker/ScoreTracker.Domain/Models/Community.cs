@@ -21,7 +21,7 @@ public sealed class Community : UserGroup
 {
     public const CommunityPermission DefaultAdminPermissionsSeed =
         CommunityPermission.ManageInviteLinks | CommunityPermission.ManageUsers |
-        CommunityPermission.ManageChannelSubscriptions;
+        CommunityPermission.ManageChannelSubscriptions | CommunityPermission.ModerateComments;
 
     // Role overlays on top of MemberIds. Admins and their permissions; who granted them; the
     // banned set (retained to block rejoin); optional join timestamps hydrated from storage.
