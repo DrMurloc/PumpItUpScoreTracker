@@ -149,10 +149,15 @@ Measured collision risk before the unique index: **14 rows across 7 keys**, out 
 The two official-site surfaces have distinct, non-overlapping jobs.
 
 **My Best Scores (`my_best_score.php`)** — the record. On Phoenix 1 it lists passes only. On
-Phoenix 2 (the redesign) it also lists broken bests, detected by the empty plate slot. Its
-displayed date is the chart's *first* play and is not a recency signal
-(see [phoenix2-import-go-live.md §2](phoenix2-import-go-live.md) and the 5-page up-score window
-in `WalkDatedBestScores`).
+Phoenix 2 (the redesign) it also lists broken bests, detected by the empty plate slot. **Its
+displayed date is not when the displayed score was set**: it is stamped when the chart first
+reaches the list and never moves again, so the card shows the newest score against the oldest
+date (measured against the live site 2026-08-18 —
+[stage-breaks-and-max-combo.md §6](stage-breaks-and-max-combo.md); see also
+[phoenix2-import-go-live.md §2](phoenix2-import-go-live.md) and the 5-page up-score window in
+`WalkDatedBestScores`). It is therefore not a play time and never keys a journal row while a
+real one is available: the import takes the producing play's own stamp from the recent window
+and falls back to the card only for a best the window no longer reaches.
 
 **Recently played (`recently_played.php`)** — the plays. It supplies judgement breakdowns,
 the Daily Step observation, non-best journal rows, and — when D2 is on — a broken best for a

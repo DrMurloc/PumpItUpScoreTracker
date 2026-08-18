@@ -11,7 +11,8 @@ Companion spec: [score-truth-model.md](score-truth-model.md) — this extends it
 decisions here continue its numbering (D10 onward) and its D1/D7 are refined in §2. Measurements
 were taken against the prod-synced local database on 2026-08-17; the card-shape evidence in §3
 came from a read-only walk of the owner's own my_page on both sites the same day
-(`ExplorationTests/LiveSite/StageBreakCardShapeReconTests`).
+(`ExplorationTests/LiveSite/StageBreakCardShapeReconTests`), and the date semantics in §6's D18
+from a second such walk on 2026-08-18 (`BestCardDateSemanticsReconTests`).
 
 ## 1. Context
 
@@ -276,6 +277,37 @@ the same import walked past the card and left 426,227 standing. Whatever the sit
 is not "highest score", and our records for unpassed charts mirror it: they hold the first
 attempt. This predates and is separate from the stage-break question, but it interacts with it —
 D17.
+
+### D18 — the card's date is not a play time (measured live, 2026-08-18)
+
+The stamp is set when the chart first reaches the best list and never moves; the score beside it
+updates without it. Read directly from the owner's my_page
+(`ExplorationTests/LiveSite/BestCardDateSemanticsReconTests`, read-only): of the 27 charts whose
+recently-played window held a play at exactly the card's score, 19 agreed — every one of them a
+single-attempt chart, where the first play *is* the best play and the two readings cannot be told
+apart — and all 8 that could discriminate showed the card holding the best score against the
+**first** play's date. `Switronic` D10's card reads 1,000,000 stamped 00:44:52, the time of a
+573,510 three plays earlier; `Caprice of DJ Otada` S21 carries a 07-19 stamp against a score set
+on 08-15. `Rush-More` D23 is the case that prompted the measurement: failed 08-12, passed 08-14,
+and the card reads the pass against **08-12** to this day.
+
+Two consequences, both fixed here:
+
+- **The import prefers the producing play's own timestamp.** `EnrichBestsFromRecentPlays` used to
+  keep the card's stamp and fall back to the play; the preference is now the other way round. The
+  card's stamp survives only for a best the recent window no longer reaches, where nothing better
+  exists.
+- **`Append` refuses a row that disagrees with it.** Keying on a fabricated stamp meant a later
+  pass landed on the earlier attempt's row and flipped its `IsBest`, leaving one play's row
+  wearing another play's standing — 640 such rows on the prod-synced copy, 174 of them broken
+  under a passing record, and after this branch the row landed on could be a scoreless stage
+  break. Same key with a different score, broken or stage-broken state is now left exactly as it
+  is; the record is written either way, and the play earns its own row as soon as a window dates
+  it. The cost is deliberate: a pass imported long after the fact has no journal row until a
+  window catches it, which is better than a row that misdates a play or overwrites a real one.
+
+The rows already carrying this shape are a data question, not a code one — they are repaired
+with the §8 script or left alone.
 
 **Journal, broken rows:** 6 rows across 4 users have a judged sum below the note count, all
 `IsBest = false`, all Phoenix, all August 2026. They fall in two groups: three charts where
