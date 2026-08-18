@@ -203,6 +203,27 @@ public sealed class UpdatePhoenixRecordHandlerTests
     }
 
     [Fact]
+    public async Task AStageBreakNeverCarriesACallerSuppliedCombo()
+    {
+        // The combo is a function of the score, and a stage break has none — so a value a caller
+        // put on the judgements is dropped rather than stored against a play that cannot have one.
+        var ctx = new HandlerContext();
+
+        await ctx.Handler.Handle(
+            new UpdatePhoenixBestAttemptCommand(ChartId, IsBroken: true, Score: null, Plate: null,
+                RecordedAt: Now, Judgements: new JudgementCounts(244, 5, 2, 1, 110, 900),
+                IsStageBroken: true),
+            CancellationToken.None);
+
+        ctx.Journal.Verify(j => j.AppendObservations(
+            It.Is<IReadOnlyList<ScoreJournalEntry>>(list => list.Count == 1
+                                                          && list[0].Judgements != null
+                                                          && list[0].Judgements!.MaxCombo == null
+                                                          && list[0].Judgements!.Perfects == 244),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AnUndatedStageBreakHasNoPlayKeyAndIsDropped()
     {
         var ctx = new HandlerContext();

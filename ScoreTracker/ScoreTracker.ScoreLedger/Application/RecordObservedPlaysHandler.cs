@@ -35,11 +35,15 @@ internal sealed class RecordObservedPlaysHandler(IScoreJournalRepository journal
         foreach (var chartId in plays.Where(p => p.Judgements != null).Select(p => p.ChartId).Distinct())
             noteCounts[chartId] = await NoteCountWatch.NoteCountFor(charts, request.Mix, chartId, cancellationToken);
 
+        // One line per chart, not per play: a window holds several runs of the same song, and a
+        // drifted catalog would otherwise repeat itself inside a single import.
+        var warned = new HashSet<Guid>();
         var entries = plays.Select(p =>
             {
                 var noteCount = noteCounts.GetValueOrDefault(p.ChartId);
-                NoteCountWatch.WarnOnDisagreement(logger, request.Mix, p.ChartId, p.Judgements, noteCount, p.IsBroken,
-                    p.IsStageBroken);
+                if (warned.Add(p.ChartId))
+                    NoteCountWatch.WarnOnDisagreement(logger, request.Mix, p.ChartId, p.Judgements, noteCount,
+                        p.IsBroken, p.IsStageBroken);
                 // A stage break is broken by definition and never scored: the running number the
                 // site prints for one is not a chart score, and the plate is null on any break.
                 var isBroken = p.IsBroken || p.IsStageBroken;

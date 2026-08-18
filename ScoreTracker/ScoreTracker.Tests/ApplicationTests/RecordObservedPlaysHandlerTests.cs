@@ -131,6 +131,25 @@ public sealed class RecordObservedPlaysHandlerTests
     }
 
     [Fact]
+    public async Task ADriftedChartIsNamedOncePerImportNotOncePerPlay()
+    {
+        // A window holds several runs of the same song; the drift is one fact about the chart.
+        var ctx = new HandlerContext();
+        var counts = new JudgementCounts(900, 40, 5, 2, 3);
+        ctx.GivenNoteCount(ChartId, 1000);
+
+        await ctx.Handler.Handle(Command(
+            new RecordObservedPlaysCommand.ObservedPlay(ChartId, 985000, PhoenixPlate.FairGame, false, PlayedAt,
+                counts),
+            new RecordObservedPlaysCommand.ObservedPlay(ChartId, 980000, PhoenixPlate.FairGame, false,
+                PlayedAt.AddMinutes(4), counts)), CancellationToken.None);
+
+        Assert.Equal(2, ctx.Written.Count);
+        ctx.Logger.Verify(l => l.Log(LogLevel.Warning, It.IsAny<EventId>(), It.IsAny<It.IsAnyType>(),
+            It.IsAny<Exception?>(), It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AStageBreakIsNotADisagreementWhateverItJudged()
     {
         var ctx = new HandlerContext();

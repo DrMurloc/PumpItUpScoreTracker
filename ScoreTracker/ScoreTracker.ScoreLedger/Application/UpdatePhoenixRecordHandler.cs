@@ -65,8 +65,12 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
             if (request.RecordedAt is { } playedAt)
                 await journal.AppendObservations(new[]
                 {
+                    // The combo is re-solved rather than carried: it is a function of the score,
+                    // and a stage break has none — so whatever a caller sent is dropped instead of
+                    // stored against a play that cannot support one.
                     new ScoreJournalEntry(playedAt, request.Source, user.User.Id, request.ChartId, null, null, true,
-                        request.Mix, sessionId, request.Judgements, false, IsStageBroken: true)
+                        request.Mix, sessionId, PhoenixComboSolver.WithMaxCombo(request.Judgements, null, null),
+                        false, IsStageBroken: true)
                 }, cancellationToken);
             return;
         }
