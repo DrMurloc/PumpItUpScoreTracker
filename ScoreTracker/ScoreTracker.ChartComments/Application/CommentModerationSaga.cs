@@ -90,6 +90,12 @@ internal sealed class CommentModerationSaga :
         }
         else
         {
+            // A site-only report was never on any community's desk, so there is nothing there
+            // to dismiss — refusing here keeps the community slot from being stamped by a queue
+            // the report never entered.
+            if (CommentReportRouting.IsSiteOnly(report.Reason))
+                throw new CommentNotAllowedException("That report is not on your desk.");
+
             var comment = await _comments.GetById(report.CommentId, cancellationToken)
                           ?? throw new CommentNotAllowedException("That comment is no longer there.");
             // Dismissal takes the same standing as removal: you can only close what you could

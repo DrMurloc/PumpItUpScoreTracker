@@ -15,6 +15,7 @@ using MudBlazor.Services;
 using ScoreTracker.ChartComments.Contracts;
 using ScoreTracker.ChartComments.Contracts.Commands;
 using ScoreTracker.ChartComments.Contracts.Queries;
+using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -268,6 +269,53 @@ public sealed class ChartCommentsTabTests : TestContext
         page.WaitForAssertion(() => _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q =>
                 q.Audience == CommentAudience.Community(Club) && q.TakeRoots == 500),
             It.IsAny<CancellationToken>()), Times.Once));
+    }
+
+    [Fact]
+    public void TheSiteAdminHandedAForeignClubGetsAReadOnlyModeratorChip()
+    {
+        // /Admin/Comments opens the site admin into a club they may not belong to. The rail has
+        // no chip for it, so the tab adds one — labeled with the club's name, read-only, because
+        // the open report grants a read and the admin is not a member who posts there.
+        var admin = new User(Guid.Parse("E38954C4-B1B1-418A-93F6-C4B25C98B713"), Name.From("DrMurloc"),
+            true, null, new Uri("https://example.com/d.png"), Name.From("US"));
+        _currentUser.SetupGet(u => u.User).Returns(admin);
+        var foreignClub = Guid.NewGuid();
+        Scopes(new CommentScopeRecord(CommentAudience.Public, Name.From("Public")),
+            new CommentScopeRecord(CommentAudience.Private, Name.From("Notes")));
+        _mediator.Setup(m => m.Send(It.IsAny<GetCommunityNamesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, Name> { [foreignClub] = Name.From("Their Club") });
+
+        var page = RenderComponent<ChartCommentsTab>(p => p
+            .Add(c => c.ChartId, Chart)
+            .Add(c => c.Active, true)
+            .Add(c => c.InitialAudience, CommentAudience.Community(foreignClub)));
+
+        var chips = page.FindAll(".cld-chip").Select(c => c.TextContent.Trim()).ToArray();
+        Assert.Equal(new[] { "Public", "Notes", "Their Club" }, chips);
+        // Standing in it, and read-only: the composer is the sentence, not a field.
+        Assert.Contains("cld-chip-on", page.Find("[data-testid='cmt-scope-Their Club']").ClassName);
+        page.Find("[data-testid='cmt-cannot-post']");
+    }
+
+    [Fact]
+    public void AnOrdinaryReaderHandedAForeignClubGetsNoExtraChip()
+    {
+        // The chip is the site admin's; anyone else handed a foreign audience gets nothing extra,
+        // and the read query is what refuses what they may not see.
+        var foreignClub = Guid.NewGuid();
+        Scopes(new CommentScopeRecord(CommentAudience.Public, Name.From("Public")),
+            new CommentScopeRecord(CommentAudience.Private, Name.From("Notes")));
+
+        var page = RenderComponent<ChartCommentsTab>(p => p
+            .Add(c => c.ChartId, Chart)
+            .Add(c => c.Active, true)
+            .Add(c => c.InitialAudience, CommentAudience.Community(foreignClub)));
+
+        Assert.Equal(new[] { "Public", "Notes" },
+            page.FindAll(".cld-chip").Select(c => c.TextContent.Trim()).ToArray());
+        _mediator.Verify(m => m.Send(It.IsAny<GetCommunityNamesQuery>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

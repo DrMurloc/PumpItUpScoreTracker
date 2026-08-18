@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using ScoreTracker.ChartComments.Contracts;
 using ScoreTracker.ChartComments.Domain;
 using ScoreTracker.SharedKernel.Enums;
@@ -115,8 +117,26 @@ public sealed class CommentModerationAuthorityTests
     [InlineData(CommentReportReason.SpamOrAdvertising, false)]
     [InlineData(CommentReportReason.OffTopic, false)]
     [InlineData(CommentReportReason.WrongInformation, false)]
+    [InlineData(CommentReportReason.JustWantAttention, false)] // site-ONLY is not "escalates" — it never had a community desk
     public void HateAndThreatsEscalateAndNothingElseDoes(CommentReportReason reason, bool escalates)
     {
         Assert.Equal(escalates, CommentReportRouting.EscalatesToSite(reason));
+    }
+
+    [Fact]
+    public void JustWantAttentionIsTheSiteAdminsAloneAndEveryOtherReasonReachesTheClub()
+    {
+        // The one reason outside the deal: a hello goes to the site admin and never fills a
+        // club's queue. Everything else reaches the community's own moderators.
+        Assert.True(CommentReportRouting.IsSiteOnly(CommentReportReason.JustWantAttention));
+        Assert.False(CommentReportRouting.ReachesCommunity(CommentReportReason.JustWantAttention));
+        Assert.True(CommentReportRouting.ReachesSiteFromCommunity(CommentReportReason.JustWantAttention));
+
+        foreach (var reason in Enum.GetValues<CommentReportReason>()
+                     .Where(r => r != CommentReportReason.JustWantAttention))
+        {
+            Assert.False(CommentReportRouting.IsSiteOnly(reason));
+            Assert.True(CommentReportRouting.ReachesCommunity(reason));
+        }
     }
 }

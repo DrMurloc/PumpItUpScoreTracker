@@ -79,7 +79,11 @@
         CommentReportReason.OffTopic,
         CommentReportReason.WrongInformation,
         CommentReportReason.HateOrDiscrimination,
-        CommentReportReason.ThreatsOrHarassment
+        CommentReportReason.ThreatsOrHarassment,
+        // Last, and deliberately worded as a confession rather than a category: it is the escape
+        // valve for someone who wants to be heard, not to report anything, and it goes to the site
+        // admin alone — never a club's queue.
+        CommentReportReason.JustWantAttention
     };
 
     private CommentReportReason? _selected;
@@ -103,6 +107,7 @@
             CommentReportReason.OffTopic => L["Off topic"],
             CommentReportReason.WrongInformation => L["Wrong information"],
             CommentReportReason.HateOrDiscrimination => L["Hate or discrimination"],
+            CommentReportReason.JustWantAttention => L["I just want attention. Hi."],
             _ => L["Threats or harassment"]
         };
     }

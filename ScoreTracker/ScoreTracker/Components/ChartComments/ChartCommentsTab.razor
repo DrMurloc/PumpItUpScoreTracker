@@ -3,8 +3,10 @@
 @using ScoreTracker.ChartComments.Contracts
 @using ScoreTracker.ChartComments.Contracts.Commands
 @using ScoreTracker.ChartComments.Contracts.Queries
+@using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Domain.Exceptions
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.SharedKernel.ValueTypes
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject ISnackbar Snackbar
@@ -540,12 +542,33 @@ else
         }
 
         if (_scopes.Count == 0 && CurrentUser.IsLoggedIn)
+        {
             _scopes = await Mediator.Send(new GetMyCommentScopesQuery());
+            await AddModeratorScopeIfNeeded();
+        }
 
         var key = (ChartId, _audience, _sort, _take);
         if (_loadedFor == key) return;
         _loadedFor = key;
         await Load();
+    }
+
+    /// <summary>
+    ///     The moderator's chip. The site admin arrives from /Admin/Comments standing in a club they
+    ///     need not belong to, so the rail has no chip for it — this adds one, read-only, labeled
+    ///     with the club's name. Read-only because reading is what the open report grants; the
+    ///     admin is not a member and does not post there. Anyone else handed a foreign audience
+    ///     gets nothing extra: the read query already refuses what they may not see.
+    /// </summary>
+    private async Task AddModeratorScopeIfNeeded()
+    {
+        if (InitialAudience is not { Kind: CommentAudienceKind.Community, CommunityId: { } clubId })
+            return;
+        if (!CurrentUser.User.IsAdmin || _scopes.Any(s => s.Audience == InitialAudience)) return;
+
+        var names = await Mediator.Send(new GetCommunityNamesQuery(new[] { clubId }));
+        var label = names.TryGetValue(clubId, out var name) ? name : Name.From("Community");
+        _scopes = _scopes.Append(new CommentScopeRecord(InitialAudience.Value, label, CanPost: false)).ToArray();
     }
 
     private async Task Load()

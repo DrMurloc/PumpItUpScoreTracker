@@ -2932,6 +2932,9 @@
   <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
     <value>I Hope You Held Hands on Canon D</value>
   </data>
+  <data name="I just want attention. Hi." xml:space="preserve">
+    <value>그냥 관심받고 싶어요. 안녕하세요.</value>
+  </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>그냥 채보를 숨기고 싶음</value>
   </data>
@@ -3264,6 +3267,9 @@
   </data>
   <data name="just now" xml:space="preserve">
     <value>방금</value>
+  </data>
+  <data name="Just saying hi" xml:space="preserve">
+    <value>그냥 인사</value>
   </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>그냥 살아남기</value>
@@ -5800,11 +5806,17 @@
   <data name="Report" xml:space="preserve">
     <value>신고</value>
   </data>
+  <data name="Reported as just wanting attention. Nothing to moderate unless you decide otherwise." xml:space="preserve">
+    <value>그냥 관심을 원한다고 신고됨. 달리 판단하지 않는 한 조치할 것은 없습니다.</value>
+  </data>
   <data name="reported by {0}" xml:space="preserve">
     <value>{0} 님이 신고</value>
   </data>
   <data name="Reported comments" xml:space="preserve">
     <value>신고된 댓글</value>
+  </data>
+  <data name="Reports" xml:space="preserve">
+    <value>신고</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>요청 헤더</value>

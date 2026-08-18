@@ -15,12 +15,14 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartComments.Contracts;
 using ScoreTracker.ChartComments.Contracts.Commands;
 using ScoreTracker.ChartComments.Contracts.Queries;
+using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Web;
+using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Components.ChartComments;
 using ScoreTracker.Web.Configuration;
 using ScoreTracker.Web.Pages.Admin;
@@ -150,14 +152,58 @@ public sealed class ModerationQueueTests : TestContext
         var page = RenderComponent<AdminComments>();
 
         // The read grant: the reported comment's body renders here, with the club named — and
-        // there is no Open, because the site admin may hold no scope chip for that club.
+        // Open is there too, into the thread with a read-only moderator chip for the club.
         var markup = page.Markup;
         Assert.Contains("the reported words", markup);
         Assert.Contains("Murloc Lab", markup);
-        Assert.Empty(page.FindAll($"[data-testid='open-{reportId}']"));
+        page.Find($"[data-testid='open-{reportId}']");
         page.Find($"[data-testid='remove-{reportId}']");
         page.Find($"[data-testid='dismiss-{reportId}']");
         page.Find($"[data-testid='lock-{reportId}']");
+    }
+
+    [Fact]
+    public async Task OpenFromTheSitePageHandsTheDialogTheClubScopeAndTheComment()
+    {
+        // The dialog's own dependency set is ChartDetailsDialogTests' business; here the page's
+        // job is to hand it the right parameters. The tab's moderator chip — the piece that makes
+        // a foreign club readable — is pinned in ChartCommentsTabTests.
+        var reportId = Guid.NewGuid();
+        var row = SiteRow(reportId, escalated: true);
+        _mediator.Setup(m => m.Send(It.IsAny<GetSiteReportedCommentsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { row });
+        var page = RenderComponent<AdminComments>();
+
+        await page.Find($"[data-testid='open-{reportId}']").ClickAsync(new MouseEventArgs());
+
+        var dialog = page.FindComponent<ChartDetailsDialog>();
+        Assert.True(dialog.Instance.Visible);
+        Assert.Equal(row.CommentId, dialog.Instance.FocusCommentId);
+        Assert.Equal(CommentAudience.Community(Club), dialog.Instance.InitialCommentAudience);
+        Assert.Equal(ChartDetailsDialog.DetailsTab.Comments, dialog.Instance.InitialTab);
+    }
+
+    [Fact]
+    public void HellosSitInTheirOwnSectionUnderTheRealReports()
+    {
+        var real = SiteRow(Guid.NewGuid(), escalated: false);
+        var hello = SiteRow(Guid.NewGuid(), escalated: false) with { Reason = CommentReportReason.JustWantAttention };
+        _mediator.Setup(m => m.Send(It.IsAny<GetSiteReportedCommentsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { hello, real });
+
+        var page = RenderComponent<AdminComments>();
+
+        // Two headings, reports first; each card under its own.
+        var reportsHeading = page.Find("[data-testid='admin-comments-reports-heading']");
+        var hellosHeading = page.Find("[data-testid='admin-comments-hellos-heading']");
+        var markup = page.Markup;
+        Assert.True(markup.IndexOf("admin-comments-reports-heading", StringComparison.Ordinal)
+                    < markup.IndexOf($"rcard-{real.ReportId}", StringComparison.Ordinal));
+        Assert.True(markup.IndexOf($"rcard-{real.ReportId}", StringComparison.Ordinal)
+                    < markup.IndexOf("admin-comments-hellos-heading", StringComparison.Ordinal));
+        Assert.True(markup.IndexOf("admin-comments-hellos-heading", StringComparison.Ordinal)
+                    < markup.IndexOf($"rcard-{hello.ReportId}", StringComparison.Ordinal));
+        Assert.Contains("I just want attention. Hi.", markup);
     }
 
     [Fact]

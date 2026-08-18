@@ -447,6 +447,7 @@ never has to work out whose problem it is, and the routing is **not advertised i
 |---|---|
 | Spam or advertising · Off topic · Wrong information | Community admins (or the site admin, if public) |
 | **Hate or discrimination** · **Threats or harassment** | Community admins **and** the site admin |
+| **I just want attention. Hi.** | The site admin **alone** — never a community's desk, wherever the comment lives (owner, 2026-08-16). The escape valve for someone who wants to be heard rather than to report anything; a club's queue must never fill with hellos. Its openness is the site slot only, and it lands in its own **"Just saying hi"** section under the real reports on `/Admin/Comments` |
 
 ⚠ **The report row stamps the rendering the reporter was reading.** Translation launders the thing
 being detected, and the language-asymmetry case (benign Korean, hostile Spanish) is *only* a
@@ -473,11 +474,13 @@ on the community admin page. One row: difficulty bubble → song image → repor
 They are in the club, so the scope chip is there and the thread reads normally.
 
 **The site admin gets `/Admin/Comments`**, linked from `/Admin`, where the reported comment's text is
-on the page beside Remove, Dismiss and the mute. There is no **Open** there and it is not an
-oversight: hate and threats escalate out of a community the site admin need not belong to, so the
-dialog would offer no scope chip for it and the button would land on an empty tab. Rather than
-granting a scope — which hands over the whole club — **an open report grants a read of exactly the
-comment it names**, and nothing else in the thread.
+on the page beside Remove, Dismiss, the account lock — and **Open** (owner, 2026-08-16, reversing
+the first cut). Hate and threats escalate out of a community the site admin need not belong to,
+so the rail would offer no chip for it; the tab therefore adds a **read-only moderator chip** for
+the club when the site admin arrives holding a foreign `InitialAudience` — labeled with the club's
+name, composer replaced by the cannot-post sentence. The read itself was never membership-gated
+(only posting is), so this grants no new data — it grants a place to stand. Anyone who is not the
+site admin and is handed a foreign audience gets no extra chip.
 
 ⚠ That page is also the only place a *public* comment's report is actioned, so it is not a special
 case built for escalation — it is the site admin's queue, and escalated community comments simply

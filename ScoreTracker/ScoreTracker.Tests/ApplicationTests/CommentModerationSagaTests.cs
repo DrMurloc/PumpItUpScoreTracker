@@ -198,6 +198,30 @@ public sealed class CommentModerationSagaTests
     }
 
     [Fact]
+    public async Task AHelloWasNeverOnTheClubsDeskSoTheClubCannotDismissIt()
+    {
+        // Even the creator, with every power the club can grant: a site-only report has no
+        // community slot to stamp, because it never entered that queue.
+        var author = Guid.NewGuid();
+        StandingInClub(CommunityRole.Creator, CommunityPermission.All, (author, CommunityRole.Member));
+        var comment = SavedComment(CommentAudience.Community(ClubId), author);
+        var report = CommentReport.File(comment.Id, Guid.NewGuid(),
+            CommentReportReason.JustWantAttention, null, Now);
+        _reports.Setup(r => r.GetById(report.Id, It.IsAny<CancellationToken>())).ReturnsAsync(report);
+
+        await Assert.ThrowsAsync<CommentNotAllowedException>(() => Subject().Handle(
+            new DismissCommentReportCommand(report.Id, CommentReportQueue.Community),
+            CancellationToken.None));
+
+        // The site admin's dismissal is the one that lands.
+        _currentUser.SetupGet(c => c.User).Returns(Admin);
+        await Subject().Handle(new DismissCommentReportCommand(report.Id, CommentReportQueue.Site),
+            CancellationToken.None);
+        _reports.Verify(r => r.Save(It.Is<CommentReport>(saved => !saved.IsOpenForSite),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task AnAdminCannotDismissAReportAgainstAFellowAdmin()
     {
         var author = Guid.NewGuid();

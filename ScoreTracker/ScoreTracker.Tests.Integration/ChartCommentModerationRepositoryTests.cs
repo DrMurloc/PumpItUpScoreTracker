@@ -248,6 +248,28 @@ public sealed class ChartCommentModerationRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AHelloReachesTheSiteDeskAloneAndItsOpennessIsTheSiteSlot()
+    {
+        // "I just want attention" on a community comment: never on the club's desk, on the site
+        // desk regardless of escalation, and the reporter is freed by the SITE dismissal alone —
+        // the community slot was never reachable, so it must not count as open.
+        var clubComment = await SavedComment(CommentAudience.Community(Club));
+        var hello = CommentReport.File(clubComment, _reporter, CommentReportReason.JustWantAttention,
+            null, Now);
+        await Reports.Save(hello);
+
+        Assert.Empty(await Reports.GetOpenForCommunities(new[] { Club }));
+        Assert.Single(await Reports.GetOpenForSite());
+        Assert.True(await Reports.HasOpenFrom(clubComment, _reporter));
+
+        hello.ResolveForSite(_moderator, Now);
+        await Reports.Save(hello);
+
+        Assert.Empty(await Reports.GetOpenForSite());
+        Assert.False(await Reports.HasOpenFrom(clubComment, _reporter));
+    }
+
+    [Fact]
     public async Task ADeletedCommentsReportsAppearInNoQueue()
     {
         var reported = await SavedComment(CommentAudience.Community(Club));

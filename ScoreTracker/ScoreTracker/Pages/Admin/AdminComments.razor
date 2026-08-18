@@ -14,12 +14,12 @@
 
 <PageTitle>@L["Reported comments"]</PageTitle>
 
-@* The site admin's desk: every open report on a public comment, plus hate and threats escalated
-   out of communities. The contents are ON the page — an escalated comment lives in a club the
-   site admin need not belong to, so the dialog would offer no scope chip for it, and the open
-   report is what grants the read of exactly this one comment. There is deliberately no
-   community-mute here: communities moderate themselves, and the site tools are Remove and the
-   account lock. *@
+@* The site admin's desk: every open report on a public comment, hate and threats escalated out
+   of communities, and — in its own pile so it never crowds a real report — the "I just want
+   attention" hellos, which route here alone. The contents are ON the page because the open
+   report is what grants the read; Open takes you into the thread as well, with a read-only
+   moderator chip for a club you need not belong to. There is deliberately no community-mute
+   here: communities moderate themselves, and the site tools are Remove and the account lock. *@
 
 <MudBreadcrumbs Items="_crumbs" Class="pa-0 mb-2"></MudBreadcrumbs>
 <MudText Typo="Typo.h4" Class="mb-1">@L["Reported comments"]</MudText>
@@ -36,46 +36,31 @@ else if (_rows.Count == 0)
 }
 else
 {
-    @foreach (var row in _rows)
+    @if (Reports.Count > 0)
     {
-        <MudPaper Class="pa-4 mb-3" Outlined="true" data-testid="@($"rcard-{row.ReportId}")">
-            <div class="acr-head">
-                @if (_charts.TryGetValue(row.ChartId, out var chart))
-                {
-                    <DifficultyBubble Chart="chart" Small="true" Tooltip="false"></DifficultyBubble>
-                    <span class="acr-song">@chart.Song.Name</span>
-                }
-                else
-                {
-                    <span class="acr-song acr-where">@L["From another mix"]</span>
-                }
-                <span class="acr-reason">@ReasonLabel(row.Reason)</span>
-                <MudSpacer></MudSpacer>
-                @* A null NAME is not a null COMMUNITY: comments outlive a deleted club, and labeling
-                   an escalated one "Public" would misstate the scope the site admin is judging. *@
-                <span class="acr-where">@(row.CommunityId == null ? L["Public"].Value : row.CommunityName?.ToString() ?? L["A deleted community"].Value)</span>
-            </div>
-            <div class="acr-meta">
-                <b>@(row.ReportedUserName?.ToString() ?? L["a deleted user"])</b>
-                — @L["reported by {0}", row.ReporterName?.ToString() ?? L["a deleted user"].Value]
-            </div>
-            <div class="acr-quoted">
-                <CommentTextView Body="row.Body"></CommentTextView>
-            </div>
-            <div class="acr-actions">
-                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="_working"
-                           data-testid="@($"remove-{row.ReportId}")"
-                           OnClick="() => Remove(row)">@L["Remove"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="_working"
-                           data-testid="@($"dismiss-{row.ReportId}")"
-                           OnClick="() => Dismiss(row)">@L["Dismiss"]</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Disabled="_working"
-                           data-testid="@($"lock-{row.ReportId}")"
-                           OnClick="() => LockAccount(row)">@L["Lock account"]</MudButton>
-            </div>
-        </MudPaper>
+        <MudText Typo="Typo.h6" Class="mb-2 mt-2" data-testid="admin-comments-reports-heading">@L["Reports"]</MudText>
+        @foreach (var row in Reports)
+        {
+            @Card(row)
+        }
+    }
+    @if (Hellos.Count > 0)
+    {
+        @* Its own section, under the real work: nobody should have to read past a hello to find a
+           threat, and nobody should mistake a hello for one. *@
+        <MudText Typo="Typo.h6" Class="mb-2 mt-4" data-testid="admin-comments-hellos-heading">@L["Just saying hi"]</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mb-2">@L["Reported as just wanting attention. Nothing to moderate unless you decide otherwise."]</MudText>
+        @foreach (var row in Hellos)
+        {
+            @Card(row)
+        }
     }
 }
+
+<ChartDetailsDialog @bind-Visible="_dialogOpen" Chart="_dialogChart" Mix="_mix"
+                    InitialTab="ChartDetailsDialog.DetailsTab.Comments"
+                    FocusCommentId="_focusCommentId"
+                    InitialCommentAudience="_focusAudience"></ChartDetailsDialog>
 
 <style>
     .acr-head {
@@ -137,9 +122,74 @@ else
 @code {
     private IReadOnlyList<SiteReportedCommentRecord> _rows = Array.Empty<SiteReportedCommentRecord>();
     private Dictionary<Guid, Chart> _charts = new();
+    private MixEnum _mix;
     private bool _loading = true;
     private bool _working;
     private List<BreadcrumbItem> _crumbs = new();
+    private bool _dialogOpen;
+    private Chart? _dialogChart;
+    private Guid? _focusCommentId;
+    private CommentAudience? _focusAudience;
+
+    private IReadOnlyList<SiteReportedCommentRecord> Reports =>
+        _rows.Where(r => r.Reason != CommentReportReason.JustWantAttention).ToArray();
+
+    private IReadOnlyList<SiteReportedCommentRecord> Hellos =>
+        _rows.Where(r => r.Reason == CommentReportReason.JustWantAttention).ToArray();
+
+    private RenderFragment Card(SiteReportedCommentRecord row) => @<MudPaper Class="pa-4 mb-3" Outlined="true" data-testid="@($"rcard-{row.ReportId}")">
+        <div class="acr-head">
+            @if (_charts.TryGetValue(row.ChartId, out var chart))
+            {
+                <DifficultyBubble Chart="chart" Small="true" Tooltip="false"></DifficultyBubble>
+                <span class="acr-song">@chart.Song.Name</span>
+            }
+            else
+            {
+                <span class="acr-song acr-where">@L["From another mix"]</span>
+            }
+            <span class="acr-reason">@ReasonLabel(row.Reason)</span>
+            <MudSpacer></MudSpacer>
+            @* A null NAME is not a null COMMUNITY: comments outlive a deleted club, and labeling
+               an escalated one "Public" would misstate the scope the site admin is judging. *@
+            <span class="acr-where">@(row.CommunityId == null ? L["Public"].Value : row.CommunityName?.ToString() ?? L["A deleted community"].Value)</span>
+        </div>
+        <div class="acr-meta">
+            <b>@(row.ReportedUserName?.ToString() ?? L["a deleted user"])</b>
+            — @L["reported by {0}", row.ReporterName?.ToString() ?? L["a deleted user"].Value]
+        </div>
+        <div class="acr-quoted">
+            <CommentTextView Body="row.Body"></CommentTextView>
+        </div>
+        <div class="acr-actions">
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="_working"
+                       data-testid="@($"remove-{row.ReportId}")"
+                       OnClick="() => Remove(row)">@L["Remove"]</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="_working"
+                       data-testid="@($"dismiss-{row.ReportId}")"
+                       OnClick="() => Dismiss(row)">@L["Dismiss"]</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Warning" Disabled="_working"
+                       data-testid="@($"lock-{row.ReportId}")"
+                       OnClick="() => LockAccount(row)">@L["Lock account"]</MudButton>
+            @if (_charts.ContainsKey(row.ChartId))
+            {
+                @* Into the thread, anchored on the reported comment. A community comment opens
+                   standing in that club — the tab adds a read-only moderator chip for a club the
+                   site admin need not belong to. No chart in the selected mix, no dialog to host it. *@
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Disabled="_working"
+                           data-testid="@($"open-{row.ReportId}")"
+                           OnClick="() => Open(row)">@L["Open"]</MudButton>
+            }
+        </div>
+    </MudPaper>;
+
+    private void Open(SiteReportedCommentRecord row)
+    {
+        _dialogChart = _charts[row.ChartId];
+        _focusCommentId = row.CommentId;
+        _focusAudience = row.CommunityId is { } clubId ? CommentAudience.Community(clubId) : CommentAudience.Public;
+        _dialogOpen = true;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -163,7 +213,8 @@ else
         _rows = await Mediator.Send(new GetSiteReportedCommentsQuery());
         if (_rows.Count == 0) return;
 
-        _charts = (await Mediator.Send(new GetChartsQuery(await UiSettings.GetSelectedMix(),
+        _mix = await UiSettings.GetSelectedMix();
+        _charts = (await Mediator.Send(new GetChartsQuery(_mix,
                 ChartIds: _rows.Select(row => row.ChartId).Distinct().ToArray())))
             .ToDictionary(chart => chart.Id);
     }
@@ -229,6 +280,7 @@ else
             CommentReportReason.OffTopic => L["Off topic"],
             CommentReportReason.WrongInformation => L["Wrong information"],
             CommentReportReason.HateOrDiscrimination => L["Hate or discrimination"],
+            CommentReportReason.JustWantAttention => L["I just want attention. Hi."],
             _ => L["Threats or harassment"]
         };
     }

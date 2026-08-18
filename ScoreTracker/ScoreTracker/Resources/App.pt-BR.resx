@@ -2932,6 +2932,9 @@
   <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
     <value>I Hope You Held Hands on Canon D</value>
   </data>
+  <data name="I just want attention. Hi." xml:space="preserve">
+    <value>Só quero atenção. Oi.</value>
+  </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>Só quero ocultar este chart</value>
   </data>
@@ -3264,6 +3267,9 @@
   </data>
   <data name="just now" xml:space="preserve">
     <value>agora mesmo</value>
+  </data>
+  <data name="Just saying hi" xml:space="preserve">
+    <value>Só dando oi</value>
   </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>Só continuar vivo</value>
@@ -5800,11 +5806,17 @@
   <data name="Report" xml:space="preserve">
     <value>Denunciar</value>
   </data>
+  <data name="Reported as just wanting attention. Nothing to moderate unless you decide otherwise." xml:space="preserve">
+    <value>Denunciado como só querendo atenção. Nada a moderar, a menos que você decida o contrário.</value>
+  </data>
   <data name="reported by {0}" xml:space="preserve">
     <value>denunciado por {0}</value>
   </data>
   <data name="Reported comments" xml:space="preserve">
     <value>Comentários denunciados</value>
+  </data>
+  <data name="Reports" xml:space="preserve">
+    <value>Denúncias</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>Cabeçalho da requisição</value>

@@ -17,6 +17,12 @@ internal sealed class EFCommentReportRepository : ICommentReportRepository
         .Select(r => r.ToString())
         .ToArray();
 
+    /// <summary>The site-admin-only reasons as stored strings — never a community desk's business.</summary>
+    private static readonly string[] SiteOnlyReasons = Enum.GetValues<CommentReportReason>()
+        .Where(CommentReportRouting.IsSiteOnly)
+        .Select(r => r.ToString())
+        .ToArray();
+
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
 
     public EFCommentReportRepository(IDbContextFactory<ChartAttemptDbContext> factory)
@@ -80,8 +86,10 @@ internal sealed class EFCommentReportRepository : ICommentReportRepository
                 where report.CommentId == commentId && report.ReporterUserId == reporterUserId &&
                       ((comment.Audience == publicKind && report.SiteResolvedAt == null) ||
                        (comment.Audience == communityKind &&
-                        (report.CommunityResolvedAt == null ||
-                         (EscalatingReasons.Contains(report.Reason) && report.SiteResolvedAt == null))))
+                        (SiteOnlyReasons.Contains(report.Reason)
+                            ? report.SiteResolvedAt == null
+                            : report.CommunityResolvedAt == null ||
+                              (EscalatingReasons.Contains(report.Reason) && report.SiteResolvedAt == null))))
                 select report.Id)
             .AnyAsync(cancellationToken);
     }
@@ -116,6 +124,7 @@ internal sealed class EFCommentReportRepository : ICommentReportRepository
                     on report.CommentId equals comment.Id
                 where comment.DeletedAt == null &&
                       report.CommunityResolvedAt == null &&
+                      !SiteOnlyReasons.Contains(report.Reason) &&
                       comment.CommunityId != null &&
                       communityIds.Contains(comment.CommunityId.Value)
                 orderby report.CreatedAt
@@ -140,7 +149,8 @@ internal sealed class EFCommentReportRepository : ICommentReportRepository
                       report.SiteResolvedAt == null &&
                       (comment.Audience == publicKind ||
                        (comment.Audience == communityKind &&
-                        EscalatingReasons.Contains(report.Reason)))
+                        (EscalatingReasons.Contains(report.Reason) ||
+                         SiteOnlyReasons.Contains(report.Reason))))
                 orderby report.CreatedAt
                 select new { report, comment })
             .ToArrayAsync(cancellationToken);
