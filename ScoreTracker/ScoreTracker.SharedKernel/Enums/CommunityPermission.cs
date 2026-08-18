@@ -16,6 +16,8 @@ namespace ScoreTracker.SharedKernel.Enums
         PromoteAdmins = 1 << 1,
         ManageUsers = 1 << 2,
         ManageChannelSubscriptions = 1 << 3,
-        All = ManageInviteLinks | PromoteAdmins | ManageUsers | ManageChannelSubscriptions
+        ModerateComments = 1 << 4,
+        All = ManageInviteLinks | PromoteAdmins | ManageUsers | ManageChannelSubscriptions |
+              ModerateComments
     }
 }

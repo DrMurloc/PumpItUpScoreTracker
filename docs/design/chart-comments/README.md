@@ -7,7 +7,7 @@ the dialog already renders.
 **[mock.html](mock.html) is the UI reference.** Open it before building any surface described here:
 it carries the real Phoenix palette at true widths (572 px desktop, 390 px mobile) and shows every
 state in one place — language badges, threads, the composer, the rules card, the link interstitial,
-the report dialog, the moderation queue row.
+the inline report panel, the moderation queue and the admin page.
 
 > **Two parts of this folder are scaffolding and get deleted when the feature ships:**
 > **`mock.html`**, and **Part 2 — Technical scope** below. What survives is Part 1, the feature
@@ -31,10 +31,12 @@ and standing. Three things you want without a click.
 not, and before Slice 1 all of them showed a bookmark whose click invoked an unbound
 `EventCallback` and silently did nothing.
 
-**Tab strip is sticky** inside the scroll container, so a tall header scrolls away underneath it
-instead of taking the tabs with it. On 390 px the strip **scrolls horizontally** rather than
-truncating labels to jargon — the header alone is 274 px, so the fourth tab peeking is honest about
-what is off-screen.
+**Tab strip scrolls with the content** — it is *not* sticky (owner, 2026-08-16, reversing the
+Slice 1 call). Slice 1 pinned it to the top of the scroll container so a tall header could scroll
+away underneath it; at the Slice 3 field test that read as the dialog freezing rather than as a
+feature, and a control that looks broken is worse than one more scroll to reach it. On 390 px the
+strip **scrolls horizontally** rather than truncating labels to jargon — the header alone is 274 px,
+so the fourth tab peeking is honest about what is off-screen.
 
 | Tab | Contents |
 |---|---|
@@ -104,7 +106,11 @@ player has, and it must not get pushed off the end by someone who joins six comm
 
 The list comes from `GetMyCommunitiesQuery`, filtered exactly the way `ChartLeaderboardScopes`
 already filters it — `!IsRegional` **and** not the World community, which carries `IsRegional = 0`
-and would otherwise mean everybody.
+and would otherwise mean everybody. A ban *retains* its membership row to block rejoin, and
+`GetMyCommunitiesQuery` filters those rows **at the source** (owner call at the bug-check round), so
+every "my communities" surface — this rail, the leaderboard scopes, the directory, feeds — drops a
+club the moment you are banned from it. `GetMyCommunityRolesQuery` deliberately still returns the
+row: the roster's Unban machinery and comment moderation read roles, bans included.
 
 ### Personal notes are an audience of one
 
@@ -406,17 +412,31 @@ ModerateComments = 1 << 4        // All: 15 → 31,  DefaultAdminPermissionsSeed
 
 ### Sanctions
 
-One table, two scopes:
+One table, one scope:
 
-`CommentRestriction(UserId, Scope: Site|Community, CommunityId?, RestrictedByUserId, Reason?, CreatedAt, LiftedAt?)`
+`CommentRestriction(UserId, CommunityId, RestrictedByUserId, Reason?, CreatedAt, LiftedAt?)`
 
-- **Site scope** is the owner's content lock — blocks commenting everywhere.
-- **Community scope** is the admin's mute — blocks that community only. This is deliberately
-  *lighter* than the existing community ban, which ejects someone entirely; you stay in the club and
-  lose the mic.
-- Both are **prospective**. Existing comments stay unless separately deleted, matching the
+- **Community scope only** — the admin's mute, blocking that community. Deliberately *lighter* than
+  the existing community ban, which ejects someone entirely; you stay in the club and lose the mic.
+- ⚠ **There is no site scope, because there already is one.** `User.IsContentLocked` is the soft ban
+  — the existing lock on generating content, persisted on `User` and carried in the claims — and a
+  second site-wide mechanism beside it would be two switches for one decision, with the usual
+  outcome that one of them gets flipped and the other doesn't. The post gate reads both: the lock
+  for everywhere, a restriction row for one club.
+- Restrictions are **prospective**. Existing comments stay unless separately deleted, matching the
   tool-maker ban pattern.
-- A community **ban** already blocks commenting for free — no membership, no community comments.
+- **The hierarchy** (owner, 2026-08-13): the creator moderates admins and members; an admin with
+  `ModerateComments` moderates members only. Admins never mute or remove each other, and nobody
+  touches the creator. Lifting a mute follows the same ladder as imposing one. The **site admin acts
+  from outside the hierarchy and with site tools only** — Remove and the account lock, never a
+  community mute: communities moderate themselves.
+- **A mute blocks post, reply and edit** in that community — an edit is a way to keep talking
+  through old comments. **Delete always works**, and **votes are untouched**: a vote is not content.
+  The site lock blocks the same three everywhere; a **personal note passes both**, because a note has
+  no audience to protect.
+- A community **ban** blocks commenting — enforced at the source: `GetMyCommunitiesQuery` drops
+  banned rows for every "my communities" surface at once (§2). A mute is its own row, so it
+  survives leaving and rejoining the club.
 - ⚠ Two Guid `*UserId` columns means `[PurgeKey(nameof(UserId))]` is required, exactly as on
   `CommunityMembership.GrantedByUserId`. Without it account deletion purges the wrong person.
 
@@ -429,6 +449,7 @@ never has to work out whose problem it is, and the routing is **not advertised i
 |---|---|
 | Spam or advertising · Off topic · Wrong information | Community admins (or the site admin, if public) |
 | **Hate or discrimination** · **Threats or harassment** | Community admins **and** the site admin |
+| **I just want attention. Hi.** | The site admin **alone** — never a community's desk, wherever the comment lives (owner, 2026-08-16). The escape valve for someone who wants to be heard rather than to report anything; a club's queue must never fill with hellos. Its openness is the site slot only, and it lands in its own **"Just saying hi"** section under the real reports on `/Admin/Comments` |
 
 ⚠ **The report row stamps the rendering the reporter was reading.** Translation launders the thing
 being detected, and the language-asymmetry case (benign Korean, hostile Spanish) is *only* a
@@ -436,12 +457,48 @@ moderation problem, because a moderator ever sees one language. The moderation v
 **the original and what the reporter saw**. Without it, an admin reading ko-KR cannot evaluate a
 report filed against the es-ES rendering.
 
+### Every report resolves
+
+**Remove** takes the comment down and closes every open report against it in **every** queue.
+**Dismiss is per-queue**: a community admin's dismissal clears their panel and only theirs — an
+escalated hate report stays on the site admin's desk until the site admin acts, because escalation
+exists precisely for the club that won't. Each resolution carries its resolver and a timestamp, so a
+second moderator arriving later sees it was handled rather than handling it again. Without this the
+queue only ever grows, and the first duplicate report teaches everyone to stop reading it.
+
+One open report per reporter per comment — reporting again while yours is open changes nothing.
+
 ### Surfacing
 
-A conditional panel — rendered only when that moderator has open reports — on the community admin
-page and on `/Admin`. One row: difficulty bubble → song image → reported user → reporter → **Open**,
-which launches the dialog with `InitialTab=Comments` and `FocusCommentId`. Moderation happens in the
-surface the comment lives in; there is no second console to build or keep in sync.
+**Community admins** get a conditional panel — rendered only when that moderator has open reports —
+on the community admin page. One row: difficulty bubble → song image → reported user → reporter →
+**Dismiss** and **Open**, which launches the dialog with `InitialTab=Comments` and `FocusCommentId`.
+They are in the club, so the scope chip is there and the thread reads normally.
+
+**The site admin gets `/Admin/Comments`**, linked from `/Admin`, where the reported comment's text is
+on the page beside Remove, Dismiss, the account lock — and **Open** (owner, 2026-08-16, reversing
+the first cut). Hate and threats escalate out of a community the site admin need not belong to,
+so the rail would offer no chip for it; the tab therefore adds a **read-only moderator chip** for
+the club when the site admin arrives holding a foreign `InitialAudience` — labeled with the club's
+name, composer replaced by the cannot-post sentence. The read itself was never membership-gated
+(only posting is), so this grants no new data — it grants a place to stand. Anyone who is not the
+site admin and is handed a foreign audience gets no extra chip.
+
+⚠ That page is also the only place a *public* comment's report is actioned, so it is not a special
+case built for escalation — it is the site admin's queue, and escalated community comments simply
+arrive in it.
+
+### A deleted community archives its comments
+
+Deleting a club publishes `CommunityDeletedEvent(CommunityId, CommunityName)` — the last moment the
+id/name pair exists — and ChartComments settles what it holds (owner call, 2026-08-14): the club's
+comments move to `scores.ChartCommentArchive` with the name snapshot and an `ArchivedAt`, and
+everything that only meant something while the club lived goes — votes, revisions, **reports open
+and resolved** (a report on an archived comment is a row nobody can open), and the club's mutes.
+One transaction, idempotent, because the in-memory transport re-fires. Nothing renders the archive;
+it exists so a revival starts from real data, the never-drop-tables standard applied to a club's
+death. Archived rows stay in the account-purge manifest — words surviving a club's deletion must
+not survive their author's.
 
 The **shield glyph on a comment is the permission** — site admin sees it everywhere, a community
 admin only inside their own club, nobody else renders it. Report lives in the `⋯` for everyone
@@ -536,7 +593,7 @@ clean for one join that only presentation needs.
 | **Domain** | One new port: `ILanguageModelBatchClient` (submit / status / results), beside `ILanguageModelClient`. `Complete()` is synchronous-per-request and cannot express a 24-hour batch. |
 | **Application** | Nothing. It is shrinking by design and this does not reverse that. |
 | **Data** | `AnthropicBatchClient : ILanguageModelBatchClient` in `Clients/`, plus migrations. Reflection DI binds it automatically. |
-| **Web** | Dialog restructure + `ChartCommentsTab`, `CommentThread`, `CommentComposer`, `CommentTextView`, `CommentRulesCard`, `LinkInterstitialDialog`, `ReportCommentDialog`, `SimilarChartsCompactGrid`, `ChartScoreHistoryTab`, `ReportedCommentsPanel`. **No JS file** — plain text needs no `wrapSelection`. Plus `ChartCommentsConfiguration` + `IOptions<T>`, following `DevAuthConfiguration`. |
+| **Web** | Dialog restructure + `ChartCommentsTab`, `CommentThread`, `CommentComposer`, `CommentTextView`, `CommentRulesCard`, `LinkInterstitialDialog`, `CommentReportPanel` (inline under the comment, for the reason the rules card is), `SimilarChartsCompactGrid`, `ChartScoreHistoryTab`, `ReportedCommentsPanel`, the `/Admin/Comments` page. **No JS file** — plain text needs no `wrapSelection`. Plus `ChartCommentsConfiguration` + `IOptions<T>`, following `DevAuthConfiguration`. |
 | **CompositionRoot** | `AddChartComments()`; `ChartCommentsModelContribution` into `VerticalModelContributions.All()`. |
 
 ### ChartComments internals

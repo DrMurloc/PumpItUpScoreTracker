@@ -187,6 +187,18 @@ public sealed class CommunityTests
         Assert.Equal(Community.DefaultAdminPermissionsSeed, community.DefaultAdminPermissions);
         Assert.False(community.DefaultAdminPermissions.HasFlag(CommunityPermission.PromoteAdmins));
         Assert.True(community.DefaultAdminPermissions.HasFlag(CommunityPermission.ManageInviteLinks));
+        Assert.True(community.DefaultAdminPermissions.HasFlag(CommunityPermission.ModerateComments));
+    }
+
+    [Fact]
+    public void PermissionValuesMatchTheModerationBackfill()
+    {
+        // The ChartCommentModeration migration rewrites stored permission ints 13 -> 29 and
+        // 15 -> 31. Those literals are only correct while the flags keep these values, so a
+        // reordering of the enum fails here instead of silently corrupting the backfill.
+        Assert.Equal(16, (int)CommunityPermission.ModerateComments);
+        Assert.Equal(29, (int)Community.DefaultAdminPermissionsSeed);
+        Assert.Equal(31, (int)CommunityPermission.All);
     }
 
     [Fact]

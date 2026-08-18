@@ -32,14 +32,27 @@ namespace ScoreTracker.Communities.Domain
         /// </summary>
         Task RemoveMembership(Name communityName, Guid userId, CancellationToken cancellationToken);
 
-        /// <summary>Delete a community and all of its member/invite/channel/highlight rows.</summary>
-        Task DeleteCommunity(Name communityName, CancellationToken cancellationToken);
+        /// <summary>
+        ///     Delete a community and all of its member/invite/channel/highlight rows. Returns the
+        ///     deleted club's id (null when nothing matched): the domain model is name-shaped, and
+        ///     the id is what CommunityDeletedEvent carries so other verticals can settle what THEY
+        ///     hold against the club.
+        /// </summary>
+        Task<Guid?> DeleteCommunity(Name communityName, CancellationToken cancellationToken);
 
         /// <summary>The member roster (including retained bans) joined to user display identity + role.</summary>
         Task<IEnumerable<CommunityMemberRecord>> GetRoster(Name communityName, CancellationToken cancellationToken);
 
         /// <summary>One row per community the user holds a membership row in (bans included).</summary>
         Task<IEnumerable<MyCommunityRoleRecord>> GetUserRoles(Guid userId, CancellationToken cancellationToken);
+
+        /// <summary>Every membership row of one community as (user, role) pairs, bans included.</summary>
+        Task<IEnumerable<CommunityMemberRoleRecord>> GetMemberRoles(Guid communityId,
+            CancellationToken cancellationToken);
+
+        /// <summary>Names for the given community ids; unknown ids are absent from the result.</summary>
+        Task<IReadOnlyDictionary<Guid, Name>> GetCommunityNames(IReadOnlyCollection<Guid> communityIds,
+            CancellationToken cancellationToken);
 
         /// <summary>
         ///     Directory metadata: every community's Singles/Doubles competitive-level spread over

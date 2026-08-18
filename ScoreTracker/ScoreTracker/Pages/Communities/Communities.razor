@@ -598,7 +598,7 @@
             // here is keyed by name, and a reload brings back the real record.
             _communities = _communities.Append(new CommunityOverviewRecord(_name, _privacyType, 1, false, Guid.Empty)).ToArray();
             _myCommunities.Add(_name);
-            _roles[_name] = new MyCommunityRoleRecord(_name, CommunityRole.Creator, CommunityPermission.All);
+            _roles[_name] = new MyCommunityRoleRecord(Guid.Empty, _name, CommunityRole.Creator, CommunityPermission.All);
             _showCreateDialog = false;
             Split();
         }
@@ -621,7 +621,7 @@
         {
             await Mediator.Send(new JoinCommunityCommand(communityName, null));
             _myCommunities.Add(communityName);
-            _roles[communityName] = new MyCommunityRoleRecord(communityName, CommunityRole.Member, CommunityPermission.None);
+            _roles[communityName] = new MyCommunityRoleRecord(Guid.Empty, communityName, CommunityRole.Member, CommunityPermission.None);
             Split();
         }
         catch (Exception)

@@ -39,8 +39,10 @@ public sealed record CommentPageRecord(
     bool HasMore);
 
 /// <summary>
-///     One chip on the scope rail: an audience the reader may read and post to. Public and Notes
-///     are always present for a signed-in reader; the rest are their non-regional communities.
+///     One chip on the scope rail: an audience the reader may read, and — when
+///     <see cref="CanPost" /> holds — post to. False means the chip stays (reading is never
+///     revoked) and the composer renders disabled: a mute in that club, or the account lock
+///     anywhere public. Notes are always postable — a note has no audience to protect.
 /// </summary>
 [ExcludeFromCodeCoverage]
-public sealed record CommentScopeRecord(CommentAudience Audience, Name Label);
+public sealed record CommentScopeRecord(CommentAudience Audience, Name Label, bool CanPost = true);

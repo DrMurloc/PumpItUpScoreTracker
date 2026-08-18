@@ -9,9 +9,10 @@ using ScoreTracker.Tests.Integration.TestData;
 namespace ScoreTracker.Tests.Integration;
 
 /// <summary>
-///     Comments are the one table a vertical purges by hand, so <c>AccountPurgeTests</c>' generic
-///     sweep does not reach them: it walks <c>UserOwned</c> manifests, and this vertical
-///     deliberately has none.
+///     Comments are purged by hand, so <c>AccountPurgeTests</c>' generic sweep does not reach
+///     them: it walks <c>UserOwned</c> manifests, and <c>CommentEntity</c> is deliberately not in
+///     this vertical's (the manifest holds only the moderation tables, which have no orphan
+///     problem).
 ///     <para>
 ///         The failure this guards is quiet. A blanket <c>DELETE … WHERE UserId</c> takes a root
 ///         out from under its replies, and every row-counting assertion still reads exactly right —
@@ -159,5 +160,35 @@ public sealed class ChartCommentPurgeTests : IAsyncLifetime
 
         await using var database = await _fixture.DbContextFactory.CreateDbContextAsync();
         Assert.Equal(2, await database.Set<CommentEntity>().CountAsync(c => c.ChartId == Chart));
+    }
+
+    [Fact]
+    public async Task ReportsVanishWithTheCommentsTheyNameAndWithTheirReporter()
+    {
+        var lonely = Comment.Post(Chart, _leaver, CommentAudience.Public, "reported words", Now);
+        var answered = Comment.Post(Chart, _leaver, CommentAudience.Public, "tombstoned words", Now);
+        var theirs = Comment.Post(Chart, _bystander, CommentAudience.Public, "innocent", Now);
+        await Comments.Save(lonely);
+        await Comments.Save(answered);
+        await Comments.Save(theirs);
+        await Comments.Save(Comment.Reply(answered, _bystander, "keeps the thread", Now));
+
+        var reports = new EFCommentReportRepository(_fixture.DbContextFactory);
+        // Two against the leaver's comments — one that hard-deletes, one that tombstones — and
+        // one the leaver FILED against a survivor, which the manifest reaches by ReporterUserId.
+        await reports.Save(CommentReport.File(lonely.Id, _bystander,
+            CommentReportReason.SpamOrAdvertising, null, Now));
+        await reports.Save(CommentReport.File(answered.Id, _bystander,
+            CommentReportReason.OffTopic, null, Now));
+        await reports.Save(CommentReport.File(theirs.Id, _leaver,
+            CommentReportReason.OffTopic, null, Now));
+
+        await Purge.DeleteAllForUser(_leaver);
+
+        await using var database = await _fixture.DbContextFactory.CreateDbContextAsync();
+        // A stub with no words left is nothing a moderator can act on, and a report is its
+        // reporter's row — so nothing survives: two went with the comments, one with its filer.
+        Assert.False(await database.Set<CommentReportEntity>().AnyAsync());
+        Assert.True(await database.Set<CommentEntity>().AnyAsync(c => c.Id == theirs.Id));
     }
 }

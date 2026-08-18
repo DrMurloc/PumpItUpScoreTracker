@@ -340,6 +340,12 @@
   <data name="A community with this name already exists." xml:space="preserve">
     <value>Esiste già una comunità con questo nome.</value>
   </data>
+  <data name="A deleted community" xml:space="preserve">
+    <value>Una community eliminata</value>
+  </data>
+  <data name="a deleted user" xml:space="preserve">
+    <value>un utente eliminato</value>
+  </data>
   <data name="A delivery can arrive twice. If PIU Scores restarts mid-import, that import is sent again once it comes back — key your handler on the chart and the score's recorded time rather than on each delivery being unique. PIUGame session deliveries are the exception: those are never re-sent, because the session is gone by then." xml:space="preserve">
     <value>Una consegna può arrivare due volte. Se PIU Scores si riavvia durante un'importazione, quell'importazione viene inviata di nuovo al ritorno: usa la chart e l'ora registrata del punteggio come chiave, invece di dare per scontato che ogni consegna sia unica. Le consegne di sessione PIUGame sono l'eccezione: non vengono mai reinviate, perché la sessione non c'è più.</value>
   </data>
@@ -453,6 +459,9 @@
   </data>
   <data name="Account" xml:space="preserve">
     <value>Account</value>
+  </data>
+  <data name="Account locked." xml:space="preserve">
+    <value>Account bloccato.</value>
   </data>
   <data name="Account Stats" xml:space="preserve">
     <value>Statistiche account</value>
@@ -1738,6 +1747,12 @@
   <data name="Could not find song" xml:space="preserve">
     <value>Impossibile trovare la canzone</value>
   </data>
+  <data name="Could not lift the mute." xml:space="preserve">
+    <value>Impossibile revocare il silenziamento.</value>
+  </data>
+  <data name="Could not mute this member." xml:space="preserve">
+    <value>Impossibile silenziare questo membro.</value>
+  </data>
   <data name="Could not reach PIUGAME, try again later" xml:space="preserve">
     <value>Impossibile raggiungere PIUGAME, riprova più tardi</value>
   </data>
@@ -2586,6 +2601,9 @@
   <data name="From" xml:space="preserve">
     <value>Da</value>
   </data>
+  <data name="From another mix" xml:space="preserve">
+    <value>Da un altro mix</value>
+  </data>
   <data name="From now on, every import and play session shows up here and you can undo any of them. Scores you already had can still be deleted." xml:space="preserve">
     <value>D'ora in poi ogni importazione e sessione compare qui e puoi annullarne una qualsiasi. I punteggi che avevi già restano eliminabili.</value>
   </data>
@@ -2778,6 +2796,9 @@
   <data name="Has errors" xml:space="preserve">
     <value>Contiene errori</value>
   </data>
+  <data name="Hate or discrimination" xml:space="preserve">
+    <value>Odio o discriminazione</value>
+  </data>
   <data name="Have an invite link?" xml:space="preserve">
     <value>Hai un link d'invito?</value>
   </data>
@@ -2927,6 +2948,9 @@
   </data>
   <data name="I Hope You Held Hands on Canon D" xml:space="preserve">
     <value>I Hope You Held Hands on Canon D</value>
+  </data>
+  <data name="I just want attention. Hi." xml:space="preserve">
+    <value>Voglio solo attenzione. Ciao.</value>
   </data>
   <data name="I Just Want to Hide The Chart" xml:space="preserve">
     <value>Voglio solo nascondere il chart</value>
@@ -3262,6 +3286,9 @@
   <data name="just now" xml:space="preserve">
     <value>proprio ora</value>
   </data>
+  <data name="Just saying hi" xml:space="preserve">
+    <value>Solo un saluto</value>
+  </data>
   <data name="Just stay alive" xml:space="preserve">
     <value>Restare solo vivo</value>
   </data>
@@ -3486,6 +3513,9 @@
   </data>
   <data name="Location" xml:space="preserve">
     <value>Luogo</value>
+  </data>
+  <data name="Lock account" xml:space="preserve">
+    <value>Blocca account</value>
   </data>
   <data name="Lock Status" xml:space="preserve">
     <value>Stato del blocco</value>
@@ -3749,6 +3779,9 @@
   <data name="Moderate" xml:space="preserve">
     <value>Modera</value>
   </data>
+  <data name="Moderate comments (remove/mute)" xml:space="preserve">
+    <value>Moderare i commenti (rimuovere/silenziare)</value>
+  </data>
   <data name="Modern" xml:space="preserve">
     <value>Attuali</value>
   </data>
@@ -3829,6 +3862,12 @@
   </data>
   <data name="Must give the community a name." xml:space="preserve">
     <value>Devi dare un nome alla comunità.</value>
+  </data>
+  <data name="Mute" xml:space="preserve">
+    <value>Silenzia</value>
+  </data>
+  <data name="Mute {0}" xml:space="preserve">
+    <value>Silenzia {0}</value>
   </data>
   <data name="My Bads" xml:space="preserve">
     <value>I miei Bad</value>
@@ -4418,6 +4457,9 @@
   <data name="Nothing moved — all {0} charts kept their level." xml:space="preserve">
     <value>Nulla è cambiato — tutte le {0} chart hanno mantenuto il livello.</value>
   </data>
+  <data name="Nothing on your desk." xml:space="preserve">
+    <value>Niente da esaminare.</value>
+  </data>
   <data name="Nothing selected — click a value." xml:space="preserve">
     <value>Niente selezionato — clicca un valore.</value>
   </data>
@@ -4498,6 +4540,9 @@
   </data>
   <data name="off the scale" xml:space="preserve">
     <value>fuori scala</value>
+  </data>
+  <data name="Off topic" xml:space="preserve">
+    <value>Fuori tema</value>
   </data>
   <data name="Off — only you can see your scores" xml:space="preserve">
     <value>Disattivo: solo tu puoi vedere i tuoi punteggi</value>
@@ -5602,6 +5647,9 @@
   <data name="Reason" xml:space="preserve">
     <value>Motivo</value>
   </data>
+  <data name="Reason (optional)" xml:space="preserve">
+    <value>Motivo (facoltativo)</value>
+  </data>
   <data name="Rebuild Latest Sessions" xml:space="preserve">
     <value>Ricostruisci le ultime sessioni</value>
   </data>
@@ -5761,6 +5809,9 @@
   <data name="Removed" xml:space="preserve">
     <value>Rimosso</value>
   </data>
+  <data name="Removed by a moderator" xml:space="preserve">
+    <value>Rimosso da un moderatore</value>
+  </data>
   <data name="Removed by the site admin" xml:space="preserve">
     <value>Rimosso dall’amministratore del sito</value>
   </data>
@@ -5793,6 +5844,21 @@
   </data>
   <data name="Reply…" xml:space="preserve">
     <value>Rispondi…</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>Segnala</value>
+  </data>
+  <data name="Reported as just wanting attention. Nothing to moderate unless you decide otherwise." xml:space="preserve">
+    <value>Segnalato come una semplice richiesta di attenzione. Niente da moderare, a meno che tu non decida diversamente.</value>
+  </data>
+  <data name="reported by {0}" xml:space="preserve">
+    <value>segnalato da {0}</value>
+  </data>
+  <data name="Reported comments" xml:space="preserve">
+    <value>Commenti segnalati</value>
+  </data>
+  <data name="Reports" xml:space="preserve">
+    <value>Segnalazioni</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>Intestazione della richiesta</value>
@@ -6644,6 +6710,9 @@
   <data name="Source Code" xml:space="preserve">
     <value>Codice sorgente</value>
   </data>
+  <data name="Spam or advertising" xml:space="preserve">
+    <value>Spam o pubblicità</value>
+  </data>
   <data name="Speaks your language." xml:space="preserve">
     <value>Parla la tua lingua.</value>
   </data>
@@ -6887,6 +6956,9 @@
   </data>
   <data name="Test With Player Data" xml:space="preserve">
     <value>Testa con i dati di un giocatore</value>
+  </data>
+  <data name="Thanks — a moderator will take a look." xml:space="preserve">
+    <value>Grazie — un moderatore darà un'occhiata.</value>
   </data>
   <data name="That command isn't available yet." xml:space="preserve">
     <value>Questo comando non è ancora disponibile.</value>
@@ -7155,6 +7227,9 @@
   <data name="They can't create a new tool until you lift this." xml:space="preserve">
     <value>Non potrà creare un nuovo strumento finché non lo revochi.</value>
   </data>
+  <data name="They stay in the community and can read everything, but can't post, reply or edit comments here until the mute is lifted. Existing comments stay." xml:space="preserve">
+    <value>Resta nella community e può leggere tutto, ma non può pubblicare, rispondere o modificare commenti qui finché il silenziamento non viene revocato. I commenti esistenti restano.</value>
+  </data>
   <data name="They're already one of your rivals." xml:space="preserve">
     <value>È già uno dei tuoi rivali.</value>
   </data>
@@ -7166,6 +7241,9 @@
   </data>
   <data name="This account is scheduled for deletion" xml:space="preserve">
     <value>Questo account è programmato per l'eliminazione</value>
+  </data>
+  <data name="This account needs a display name to lock — use the Admin page." xml:space="preserve">
+    <value>Questo account ha bisogno di un nome visibile per essere bloccato — usa la pagina Admin.</value>
   </data>
   <data name="This account will be deleted" xml:space="preserve">
     <value>Questo account verrà eliminato</value>
@@ -7331,6 +7409,9 @@
   </data>
   <data name="Those assume perfects in between. On greats the same three cost {0}, {1} and {2} notes." xml:space="preserve">
     <value>Questo presuppone Perfect nel mezzo. Con i Great, quegli stessi tre costano {0}, {1} e {2} note.</value>
+  </data>
+  <data name="Threats or harassment" xml:space="preserve">
+    <value>Minacce o molestie</value>
   </data>
   <data name="Three and a half years of Pump, one recap. Go see yours — and screenshot the good parts." xml:space="preserve">
     <value>Tre anni e mezzo di Pump, un solo recap. Vai a vedere il tuo — e fai screenshot dei momenti migliori.</value>
@@ -7659,6 +7740,9 @@
   </data>
   <data name="Unmatched PIU Center Keys" xml:space="preserve">
     <value>Chiavi PIU Center non abbinate</value>
+  </data>
+  <data name="Unmute" xml:space="preserve">
+    <value>Riattiva</value>
   </data>
   <data name="Unpassed" xml:space="preserve">
     <value>Unpassed</value>
@@ -8090,6 +8174,9 @@
   <data name="Why" xml:space="preserve">
     <value>Perché</value>
   </data>
+  <data name="Why are you reporting this?" xml:space="preserve">
+    <value>Perché lo stai segnalando?</value>
+  </data>
   <data name="Why Don't You Get Up and Dance, Man?" xml:space="preserve">
     <value>Why Don't You Get Up and Dance, Man?</value>
   </data>
@@ -8162,6 +8249,9 @@
   </data>
   <data name="Write a description to enable this." xml:space="preserve">
     <value>Scrivi una descrizione per abilitarlo.</value>
+  </data>
+  <data name="Wrong information" xml:space="preserve">
+    <value>Informazioni errate</value>
   </data>
   <data name="X Charts" xml:space="preserve">
     <value>{0} chart</value>
@@ -8242,6 +8332,9 @@
   </data>
   <data name="You can take that back at any time." xml:space="preserve">
     <value>Puoi revocarlo quando vuoi.</value>
+  </data>
+  <data name="You can't post here right now." xml:space="preserve">
+    <value>Al momento non puoi pubblicare qui.</value>
   </data>
   <data name="You connected directly" xml:space="preserve">
     <value>Ti sei collegato direttamente</value>

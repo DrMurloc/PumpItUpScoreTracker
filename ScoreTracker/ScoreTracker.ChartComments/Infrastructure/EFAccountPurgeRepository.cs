@@ -8,18 +8,34 @@ using ScoreTracker.Domain.SecondaryPorts;
 namespace ScoreTracker.ChartComments.Infrastructure;
 
 /// <summary>
-///     Erases one account's comments, notes and votes.
+///     Erases one account's comments, notes, votes, reports and mutes.
 ///     <para>
-///         There is no <c>UserOwned</c> manifest here on purpose, and
-///         <see cref="CommentEntity" /> sits in <c>AccountPurgeCoverageTests.Exempt</c> with that
-///         reason. <c>UserDataPurge</c> issues a blanket <c>DELETE … WHERE UserId</c>, which for
-///         this table would take a root out from under its replies — and the coverage test counts
-///         rows, so it would pass green while the Comments tab threw. The two-step below is what
-///         the exemption is standing in for.
+///         <see cref="CommentEntity" /> is deliberately NOT in the <c>UserOwned</c> manifest and
+///         sits in <c>AccountPurgeCoverageTests.Exempt</c> with that reason. <c>UserDataPurge</c>
+///         issues a blanket <c>DELETE … WHERE UserId</c>, which for this table would take a root
+///         out from under its replies — and the coverage test counts rows, so it would pass green
+///         while the Comments tab threw. The two-step below is what the exemption is standing in
+///         for. The moderation tables have no orphan problem, so they ride the manifest.
 ///     </para>
 /// </summary>
 internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
 {
+    /// <summary>
+    ///     Every table this vertical purges by convention. AccountPurgeCoverageTests checks this
+    ///     against the assembly, and <see cref="UserDataPurge" /> executes it — one list, so a
+    ///     table cannot be declared without also being deleted. A report is the reporter's row
+    ///     ([PurgeKey] on ReporterUserId — an open report vanishing with its reporter is
+    ///     accepted); a mute is the muted player's row, not the moderator's; an archived comment
+    ///     is still its author's words, and words surviving a club's death must not survive the
+    ///     author's deletion (blanket delete is safe there — nothing renders archives as threads).
+    /// </summary>
+    internal static readonly Type[] UserOwned =
+    {
+        typeof(CommentArchiveEntity),
+        typeof(CommentReportEntity),
+        typeof(CommentRestrictionEntity)
+    };
+
     private readonly IDbContextFactory<ChartAttemptDbContext> _factory;
     private readonly IDateTimeOffsetAccessor _clock;
 
@@ -85,10 +101,23 @@ internal sealed class EFAccountPurgeRepository : IAccountPurgeRepository
             .Where(v => v.UserId == userId || myCommentIds.Contains(v.CommentId))
             .ExecuteDeleteAsync(cancellationToken);
 
+        // 4. Reports filed against this account's comments go with them — tombstoned roots
+        //    included, because a stub with no words left is nothing a moderator can act on. The
+        //    reporter loses their report row; the thing reported no longer exists. Reports this
+        //    account FILED are the manifest's job below, keyed on ReporterUserId.
+        await database.Set<CommentReportEntity>()
+            .Where(r => myCommentIds.Contains(r.CommentId) || tombstonedIds.Contains(r.CommentId))
+            .ExecuteDeleteAsync(cancellationToken);
+
         await comments.Where(c => c.UserId == userId).ExecuteDeleteAsync(cancellationToken);
 
         await database.Set<CommentConsentEntity>()
             .Where(c => c.UserId == userId)
             .ExecuteDeleteAsync(cancellationToken);
+
+        // 5. The convention-resolved tables: reports this account filed, mutes this account
+        //    carries. Mutes this account IMPOSED on others stay — the mute belongs to the club,
+        //    not the moderator, like DeletedByUserId outliving its account.
+        await UserDataPurge.DeleteAll(_factory, UserOwned, userId, cancellationToken);
     }
 }
