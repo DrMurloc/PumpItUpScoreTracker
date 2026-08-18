@@ -152,7 +152,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .muted { color: var(--mix-ink-muted); }
 .tiny { font-size: 11.5px; }
 
-/* tab strip — sticky inside the scroll container */
+/* tab strip — in flow, scrolls with the content (was sticky through Slice 2; owner reversed it at the Slice 3 field test) */
 .tabs { display: flex; gap: 2px; background: var(--mix-nav); border-top: 1px solid var(--mix-lines);
         border-bottom: 1px solid var(--mix-lines); padding: 0 6px; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
@@ -438,7 +438,7 @@ table.spec td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
       <h3>What stays out of the tabs</h3>
       <p>Video, identity, and your standing — the three things you want without a click. Everything else moved.</p>
       <ul>
-        <li><b>The tab strip is sticky</b> inside the scroll container, so a tall header scrolls away underneath it rather than taking the tabs with it.</li>
+        <li><b>The tab strip scrolls with the content</b> — <em>not</em> sticky. Slice 1 pinned it so a tall header could scroll away underneath; at the Slice 3 field test that read as the dialog freezing, and a control that looks broken is worse than one more scroll to reach it (owner, 2026-08-16).</li>
         <li><b>Every tab is lazy</b> — no queries until selected. Nineteen call sites render this dialog; the board gates on <code>Active="Visible"</code> and the rest follow.</li>
         <li><b>Default tab is Leaderboard</b>, last choice persisted in a <code>ChartDetails__Tab</code> UiSetting.</li>
         <li><b>History hides when logged out.</b> It's your journal plus your score inputs; both are meaningless signed out. <b>Comments does not hide</b> — it renders read-only, because a logged-out visitor arriving from a link is exactly who the conversation is for.</li>

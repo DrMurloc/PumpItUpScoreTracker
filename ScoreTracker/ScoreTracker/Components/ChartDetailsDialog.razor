@@ -187,13 +187,13 @@
         margin: 8px 0;
     }
 
-    /* Sticky against the dialog content, which is the scroll container. It does not bleed to
-       the content's padding edges on purpose: matching MudBlazor's own gutter by hand risks
-       overflowing it, and a dialog that scrolls sideways is a worse bug than a 24px gutter. */
+    /* In flow, not sticky (owner, 2026-08-16, reversing the Slice 1 call): the strip was pinned
+       to the top of the scroll container so a tall header could scroll away underneath it, and
+       at the field test that read as the dialog freezing rather than as a feature. It scrolls
+       with everything else now. It does not bleed to the content's padding edges on purpose:
+       matching MudBlazor's own gutter by hand risks overflowing it, and a dialog that scrolls
+       sideways is a worse bug than a 24px gutter. */
     .chart-details-tabs {
-        position: sticky;
-        top: 0;
-        z-index: 3;
         display: flex;
         gap: 2px;
         margin-top: 10px;

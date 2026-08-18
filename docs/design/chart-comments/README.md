@@ -31,10 +31,12 @@ and standing. Three things you want without a click.
 not, and before Slice 1 all of them showed a bookmark whose click invoked an unbound
 `EventCallback` and silently did nothing.
 
-**Tab strip is sticky** inside the scroll container, so a tall header scrolls away underneath it
-instead of taking the tabs with it. On 390 px the strip **scrolls horizontally** rather than
-truncating labels to jargon — the header alone is 274 px, so the fourth tab peeking is honest about
-what is off-screen.
+**Tab strip scrolls with the content** — it is *not* sticky (owner, 2026-08-16, reversing the
+Slice 1 call). Slice 1 pinned it to the top of the scroll container so a tall header could scroll
+away underneath it; at the Slice 3 field test that read as the dialog freezing rather than as a
+feature, and a control that looks broken is worse than one more scroll to reach it. On 390 px the
+strip **scrolls horizontally** rather than truncating labels to jargon — the header alone is 274 px,
+so the fourth tab peeking is honest about what is off-screen.
 
 | Tab | Contents |
 |---|---|
