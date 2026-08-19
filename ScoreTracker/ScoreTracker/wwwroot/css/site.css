@@ -2176,6 +2176,14 @@ html.sheet-open .more-sheet-scrim {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
 }
 
+.tier-chart-card-stripe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
 .tier-chart-card-tier {
     display: block;
 }
@@ -14072,6 +14080,28 @@ span.ct-console-pick { cursor: default; }
     display: block;
     height: 100%;
     background: var(--mix-secondary);
+}
+
+/* Legend swatches for the marks a Compact tile wears that a border cannot say. */
+.pmb-legend-corner {
+    position: static;
+    display: inline-block;
+}
+
+.pmb-legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 2px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
+}
+
+.pmb-legend-stripe {
+    display: inline-block;
+    width: 20px;
+    height: 3px;
+    vertical-align: middle;
 }
 
 .pmb-roster-note {

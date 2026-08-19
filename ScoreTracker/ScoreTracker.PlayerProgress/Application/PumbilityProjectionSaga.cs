@@ -142,7 +142,7 @@ namespace ScoreTracker.PlayerProgress.Application
                         tier.Order, chart.Scored, chart.Median, chart.Quartile1, chart.Quartile3,
                         variability.TryGetValue(chartId, out var level) ? level : null,
                         myRank.TryGetValue(chartId, out var rank) ? rank : null,
-                        myScore,
+                        myScore, record?.Plate,
                         myScore is { } s ? chart.PercentileOf((int)s) : null));
                 }
 

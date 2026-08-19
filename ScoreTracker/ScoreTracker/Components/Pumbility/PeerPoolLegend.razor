@@ -1,0 +1,54 @@
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* Compact prints numbers and marks and no words, so this names every mark the peers grid can
+   carry (UX rule 8, the target list's CornerLegend precedent): the three borders, the gain
+   corner, the variability dots, and — under Projected gains — the prevalence stripe. Only under
+   Compact; the other densities say all of it in words on the card. *@
+@if (Density == UiDensity.Compact)
+{
+    <div class="border-legend pmb-legend" data-testid="ppl-legend">
+        <span class="border-legend-item">
+            <span class="border-legend-swatch tier-chart-card-pass"></span>@L["Passed"]
+        </span>
+        <span class="border-legend-item">
+            <span class="border-legend-swatch tier-chart-card-todo"></span>@L["To Do"]
+        </span>
+        @if (HasCarried)
+        {
+            <span class="border-legend-item">
+                <span class="border-legend-swatch tier-chart-card-other-mix"></span>@L["Carried from Phoenix 1"]
+            </span>
+        }
+        <span class="border-legend-item">
+            <span class="border-legend-swatch"></span>@L["Not yet played"]
+        </span>
+        <span class="border-legend-item">
+            <span class="tier-chart-card-corner pmb-corner-gain pmb-legend-corner">+19</span>@L["projected gain"]
+        </span>
+        <span class="border-legend-item">
+            @foreach (var level in Enum.GetValues<PeerVariabilityLevel>())
+            {
+                <span class="pmb-legend-dot" style="background:@ThemeScales.VariabilityColor(level)" title="@L[VariabilityMeter.Word(level)]"></span>
+            }
+            @L["variability, consistent to split"]
+        </span>
+        @if (GroupBy == PeerGrouping.ProjectedGains)
+        {
+            <span class="border-legend-item">
+                <span class="pmb-legend-stripe" style="background:@ThemeScales.PumbilityColor(SharedKernel.Enums.TierListCategory.Easy)"></span>@L["top stripe: prevalence tier"]
+            </span>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public UiDensity Density { get; set; }
+
+    [Parameter] public PeerGrouping GroupBy { get; set; }
+
+    /// <summary>A swatch for a state no card wears reads as one you failed to find, so the carried swatch shows only when carried rows exist.</summary>
+    [Parameter] public bool HasCarried { get; set; }
+}

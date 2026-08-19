@@ -1,0 +1,115 @@
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* Who the peers are (docs/design/pumbility-overhaul.md D39): public accounts strongest first with
+   their level, total, competitive levels, which types they are a peer for under All, and how many of
+   the viewer's fifty of each type they also hold. The viewer's own row rides the sort, unnumbered
+   and highlighted, so the table also answers "where do I sit". Private peers are counted in every
+   number on the page and named nowhere; the line beneath says how many there are. *@
+@if (Rows.Count == 0 && PrivatePeers == 0)
+{
+    <p class="pmb-empty" data-testid="roster-empty">@L["No peers yet."]</p>
+}
+else
+{
+    <div class="tier-table-wrap">
+        <table class="tier-table pmb-table pmb-roster" data-testid="roster">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>@L["Player"]</th>
+                <th>@L["Level"]</th>
+                <th class="pmb-r">@L["PUMBILITY"]</th>
+                <th title="@L["Competitive level, singles"]">@L["Singles"]</th>
+                <th title="@L["Competitive level, doubles"]">@L["Doubles"]</th>
+                @if (ShowPeerFor)
+                {
+                    <th>@L["Peer for"]</th>
+                }
+                <th title="@L["How many of your 50 they also hold"]">@L["Overlap with you"]</th>
+            </tr>
+            </thead>
+            <tbody>
+            @{
+                var place = 0;
+            }
+            @foreach (var row in Ordered)
+            {
+                var isYou = You != null && row.User.Id == You.User.Id;
+                if (!isYou) place++;
+                <tr class="@(isYou ? "pmb-roster-you" : null)" data-testid="@(isYou ? "roster-you" : "roster-peer")">
+                    <td class="pmb-num pmb-muted">@(isYou ? string.Empty : place.ToString())</td>
+                    <td>
+                        <UserLabel User="row.User"></UserLabel>
+                        @if (isYou)
+                        {
+                            <span class="pmb-roster-you-tag">@L["You"]</span>
+                        }
+                    </td>
+                    <td>
+                        <span class="pmb-roster-level" title="@LevelText(row)">
+                            <PumbilityLevelBadge Level="Phoenix2PumbilityLevel.FromIndex(row.RungIndex)" Height="18"></PumbilityLevelBadge>
+                            @LevelText(row)
+                        </span>
+                    </td>
+                    <td class="pmb-r pmb-num">@row.Total.ToString("N2")</td>
+                    <td class="pmb-num">@(row.SinglesLevel > 1 ? row.SinglesLevel.ToString("N2") : "—")</td>
+                    <td class="pmb-num">@(row.DoublesLevel > 1 ? row.DoublesLevel.ToString("N2") : "—")</td>
+                    @if (ShowPeerFor)
+                    {
+                        <td>@PeerForText(row)</td>
+                    }
+                    <td>
+                        @foreach (var (type, count) in row.Overlap.OrderBy(kv => kv.Key))
+                        {
+                            <span class="pmb-overlap" title="@OverlapTitle(type, count)">
+                                <span class="pmb-overlap-bar"><b style="width:@((2 * count).ToString())%"></b></span>
+                                <span class="pmb-num">@count</span>
+                            </span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    @if (PrivatePeers > 0)
+    {
+        <p class="pmb-roster-note" data-testid="roster-private">
+            @(PrivatePeers == 1
+                ? L["1 private account is a peer but is not shown."]
+                : L["{0} private accounts are peers but are not shown.", PrivatePeers])
+        </p>
+    }
+}
+
+@code {
+    [Parameter] [EditorRequired] public IReadOnlyList<PeerRosterEntry> Rows { get; set; } = Array.Empty<PeerRosterEntry>();
+
+    [Parameter] public PeerRosterEntry? You { get; set; }
+
+    [Parameter] public int PrivatePeers { get; set; }
+
+    /// <summary>Under All the roster spans both types, and which type each peer is a peer for is worth a column.</summary>
+    [Parameter] public bool ShowPeerFor { get; set; }
+
+    private IEnumerable<PeerRosterEntry> Ordered =>
+        (You == null ? Rows : Rows.Append(You)).OrderByDescending(r => r.Total);
+
+    private string PeerForText(PeerRosterEntry row)
+    {
+        if (row.PeerFor.Count == 0) return string.Empty;
+        if (row.PeerFor.Count > 1) return L["Both"];
+        return row.PeerFor.Contains(ChartType.Single) ? L["Singles"] : L["Doubles"];
+    }
+
+    private string LevelText(PeerRosterEntry row) =>
+        Phoenix2PumbilityLevel.FromIndex(row.RungIndex) is { } rung ? PumbilityLevelLabel.Of(rung, L["Unranked"]) : string.Empty;
+
+    private string OverlapTitle(ChartType type, int count) =>
+        type == ChartType.Single ? L["{0} of your singles pool", count] : L["{0} of your doubles pool", count];
+}

@@ -1,0 +1,470 @@
+@using ScoreTracker.Domain.Models
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* What the viewer's PUMBILITY peers build their number from, in the tier list's own shape
+   (docs/design/pumbility-overhaul.md §3.10, D34): collapsible sections of TierListChartCard —
+   grouped by prevalence (Staple … Poor, D33) or by projected gain in bands of points (D36) — in
+   the three densities. The jacket carries the gain and nothing else, and only when the chart
+   pays (D38); the peers' median and how split they are ride the card body, the count rides the
+   caption; the border language and its precedence are the tier list's (passed, To-Do, carried).
+
+   Gains are not this component's to compute: it is handed the target list's own answer per
+   chart (carried Phoenix 1 wins, D29), so the number here and the number there are one number. *@
+@if (_sections.Count == 0)
+{
+    <p class="pmb-empty" data-testid="ppl-empty">@EmptyText</p>
+}
+else
+{
+    @foreach (var section in _sections)
+    {
+        <div class="@section.WrapperClass" data-testid="@($"ppl-section-{section.Key}")">
+            <TierSection Name="@section.Name" Color="@section.Color" Count="section.Rows.Count" Stat="@section.Stat"
+                         Collapsed="_collapsed.Contains(section.Key)" CollapsedChanged="c => SetCollapsed(section.Key, c)">
+                @if (Density == UiDensity.Table)
+                {
+                    <div class="tier-table-wrap">
+                        <table class="tier-table pmb-table">
+                            <thead>
+                            <tr>
+                                <th class="tier-table-jacket-cell"></th>
+                                <th>@L["Song Name"]</th>
+                                <th>@L["Chart"]</th>
+                                <th title="@L["How many of your PUMBILITY peers hold it in their top 50"]">@L["Peers"]</th>
+                                <th>@L["Peers' median"]</th>
+                                <th>@L["Variability"]</th>
+                                <th class="pmb-r" title="@L["What it would add to your PUMBILITY, measured against your bar as it stands"]">@L["Gain"]</th>
+                                <th>@L["My Score"]</th>
+                                <th>@L["Better Than"]</th>
+                                <th>@L["Your pool"]</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var row in section.Rows)
+                            {
+                                <tr class="@RowClass(row)">
+                                    <td class="tier-table-jacket-cell">
+                                        <div class="tier-table-jacket" role="button" tabindex="0"
+                                             @onclick="() => OnOpen.InvokeAsync(row.Chart)"
+                                             style="background-image:url('@row.Chart.Song.ImagePath')"></div>
+                                    </td>
+                                    <td>@row.Chart.Song.Name</td>
+                                    <td>@row.Chart.DifficultyString</td>
+                                    <td title="@WeightedSum(row)">@HoldText(row)</td>
+                                    <td>
+                                        @if (row.Entry?.Median is { } median)
+                                        {
+                                            <LetterGradeIcon Grade="median.LetterGradeFor(Mix)" Height="18"></LetterGradeIcon>
+                                            <span class="pmb-num pmb-score-text">@(((int)median).ToString("N0"))</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="pmb-none">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (row.Entry?.Variability is { } level)
+                                        {
+                                            <VariabilityMeter Level="level" Title="@FromPeers(row)"></VariabilityMeter>
+                                        }
+                                        else
+                                        {
+                                            <span class="pmb-none">—</span>
+                                        }
+                                    </td>
+                                    <td class="pmb-r pmb-gain-cell">
+                                        @if (row.Pays)
+                                        {
+                                            <PumbilityDelta Value="row.Gain"></PumbilityDelta>
+                                            @if (row.Carried)
+                                            {
+                                                <span class="pmb-src pmb-src-carry" title="@CarriedTitle(row)">@L["Phoenix 1"]</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (row.MyScore is { } mine)
+                                        {
+                                            <ScoreBreakdown Score="mine" Mix="Mix" OneLine="true" ShowScore="true" Plate="row.MyPlate"></ScoreBreakdown>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (row.Entry?.MyPercentile is { } percentile)
+                                        {
+                                            <span style="@ThemeScales.RarityStyle(percentile)">@((100.0 * percentile).ToString("N0"))%</span>
+                                        }
+                                    </td>
+                                    <td>@PoolText(row)</td>
+                                    <td>
+                                        @if (ShowToDo)
+                                        {
+                                            <MudIconButton Size="Size.Small"
+                                                           Icon="@(ToDos.Contains(row.Chart.Id) ? Icons.Material.Filled.Bookmark : Icons.Material.Outlined.BookmarkBorder)"
+                                                           Color="@(ToDos.Contains(row.Chart.Id) ? Color.Info : Color.Default)"
+                                                           OnClick="() => OnToDo.InvokeAsync(row.Chart.Id)" aria-label="@L["To Do"]"></MudIconButton>
+                                        }
+                                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Info"
+                                                       OnClick="() => OnOpen.InvokeAsync(row.Chart)" aria-label="@L["Details"]"></MudIconButton>
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="@(Density == UiDensity.Compact ? "tier-card-grid tier-card-grid-compact" : "tier-card-grid")">
+                        @foreach (var row in section.Rows)
+                        {
+                            <TierListChartCard Chart="row.Chart"
+                                               Density="Density"
+                                               Score="@ScoreOf(row)"
+                                               Passed="row.MyScore != null"
+                                               IsToDo="ToDos.Contains(row.Chart.Id)"
+                                               PassedInAnotherMix="row.Carried"
+                                               ShowToDo="ShowToDo"
+                                               ShowPlay="@(Density == UiDensity.Comfortable)"
+                                               CornerBadge="@(row.Pays ? $"+{PumbilityFormat.Gain(row.Gain)}" : null)"
+                                               CornerBadgeClass="pmb-corner-gain"
+                                               CornerBadgeStart="@(Density == UiDensity.Compact && row.Pays ? ProjectedGrade(row) : null)"
+                                               CornerBadgeStartClass="pmb-corner-gain"
+                                               TopRightDotColor="@(Density == UiDensity.Compact && row.Entry?.Variability is { } v ? ThemeScales.VariabilityColor(v) : null)"
+                                               TopRightDotTitle="@(row.Entry?.Variability is { } w ? L[VariabilityMeter.Word(w)].ToString() : null)"
+                                               TopStripeColor="@(Density == UiDensity.Compact && GroupBy == PeerGrouping.ProjectedGains && row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : null)"
+                                               TopStripeTitle="@(row.Entry != null ? TierCaption(row) : null)"
+                                               TierLabel="@(Density == UiDensity.Comfortable ? CaptionFor(row) : null)"
+                                               TierColor="@(row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : ThemeScales.PumbilityColor(TierListCategory.Unrecorded))"
+                                               TooltipNote="@CompactNote(row)"
+                                               Body="@CardBody(row)"
+                                               OnToDo="OnToDo"
+                                               OnOpen="OpenById"
+                                               OnPlay="PlayById"></TierListChartCard>
+                        }
+                    </div>
+                }
+            </TierSection>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] [EditorRequired] public PumbilityPeersPageRecord Page { get; set; } = null!;
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    /// <summary>
+    ///     The target list's own answer per chart — carried Phoenix 1 rows winning where they
+    ///     exist (D29) — which is the gain the jacket prints (D38). Whatever the page passes is
+    ///     the truth here: with the Phoenix 1 switch off it passes the peer-only gains instead.
+    /// </summary>
+    [Parameter] public IReadOnlyDictionary<Guid, PumbilityTarget> Gains { get; set; } =
+        new Dictionary<Guid, PumbilityTarget>();
+
+    [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix2;
+
+    [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
+
+    [Parameter] public PeerGrouping GroupBy { get; set; } = PeerGrouping.Prevalence;
+
+    /// <summary>Prevalence only: cut the tiers to what pays, and add the carried rows no peer holds (§3.10).</summary>
+    [Parameter] public bool GainsOnly { get; set; }
+
+    [Parameter] public bool ShowToDo { get; set; }
+
+    [Parameter] public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
+
+    [Parameter] public EventCallback<Guid> OnToDo { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
+
+    /// <summary>Section keys folded when the list first renders; Slim and Poor by default (D34).</summary>
+    [Parameter] public IReadOnlySet<string>? Collapsed { get; set; }
+
+    [Parameter] public EventCallback<IReadOnlySet<string>> CollapsedChanged { get; set; }
+
+    /// <summary>The section keys, so a host can persist and restore the folds by name.</summary>
+    public const string CarriedKey = "Carried";
+
+    public const string AloneKey = "Alone";
+
+    public static readonly IReadOnlySet<string> DefaultCollapsed = new HashSet<string>
+    {
+        TierListCategory.VeryHard.ToString(), TierListCategory.Underrated.ToString()
+    };
+
+    /// <summary>The gain bands under Projected gains, in PUMBILITY points, biggest first (D42).</summary>
+    private static readonly (double Low, double High)[] GainBands =
+    {
+        (25, double.PositiveInfinity), (15, 25), (10, 15), (5, 10), (2, 5), (0, 2)
+    };
+
+    private sealed record Row(Chart Chart, PeerPoolEntry? Entry, PumbilityTarget? Target, PeerAloneEntry? Alone)
+    {
+        public bool Pays => Target is { Gain: > 0 };
+        public double Gain => Target?.Gain ?? 0;
+        public bool Carried => Target?.Source == TargetSource.Phoenix1;
+
+        public PhoenixScore? MyScore => Entry?.MyScore ?? Alone?.Score ??
+                                       (Target is { Current: not null, CurrentIsBroken: false } ? Target.Current : null);
+
+        public PhoenixPlate? MyPlate => Entry?.MyPlate ?? Alone?.Plate;
+        public int? MyPoolRank => Entry?.MyPoolRank ?? Alone?.MyPoolRank;
+    }
+
+    private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows, string? Stat,
+        string WrapperClass);
+
+    private HashSet<string> _collapsed = new();
+    private bool _collapsedInitialised;
+    private IReadOnlyList<Section> _sections = Array.Empty<Section>();
+
+    protected override void OnParametersSet()
+    {
+        if (!_collapsedInitialised)
+        {
+            _collapsed = new HashSet<string>(Collapsed ?? DefaultCollapsed);
+            _collapsedInitialised = true;
+        }
+
+        _sections = Build();
+    }
+
+    private async Task SetCollapsed(string key, bool collapsed)
+    {
+        if (collapsed) _collapsed.Add(key);
+        else _collapsed.Remove(key);
+        await CollapsedChanged.InvokeAsync(_collapsed);
+    }
+
+    private IReadOnlyList<Section> Build()
+    {
+        var held = Page.Entries.Where(e => Charts.ContainsKey(e.ChartId))
+            .Select(e => new Row(Charts[e.ChartId], e, Gains.GetValueOrDefault(e.ChartId), null))
+            .ToList();
+        var heldIds = held.Select(r => r.Chart.Id).ToHashSet();
+        // Carried Phoenix 1 rows the target list holds that no peer holds — they belong to the
+        // gains view, and to the prevalence view only under its gains cut (§3.10).
+        var carriedUnheld = Gains.Values
+            .Where(t => t.Source == TargetSource.Phoenix1 && t.Gain > 0 && !heldIds.Contains(t.ChartId) && Charts.ContainsKey(t.ChartId))
+            .Select(t => new Row(Charts[t.ChartId], null, t, null))
+            .ToList();
+
+        var sections = new List<Section>();
+        if (GroupBy == PeerGrouping.ProjectedGains)
+        {
+            var paying = held.Where(r => r.Pays).Concat(carriedUnheld).OrderByDescending(r => r.Gain).ToList();
+            foreach (var (low, high) in GainBands)
+            {
+                var rows = paying.Where(r => r.Gain >= low && r.Gain < high).ToArray();
+                if (rows.Length == 0) continue;
+                var inPool = rows.Count(r => r.MyPoolRank != null);
+                var stat = inPool > 0
+                    ? L["{0} charts · {1} already in your pool", rows.Length, inPool].ToString()
+                    : L["{0} charts", rows.Length].ToString();
+                sections.Add(new Section($"gain-{low}", BandName(low, high), "var(--mix-primary)", rows, stat, "pmb-gain-section"));
+            }
+
+            return sections;
+        }
+
+        if (GainsOnly)
+        {
+            held = held.Where(r => r.Pays).ToList();
+            if (carriedUnheld.Count > 0)
+                sections.Add(new Section(CarriedKey, L["Carried from Phoenix 1"], "var(--mud-palette-success)",
+                    carriedUnheld.OrderByDescending(r => r.Gain).ToArray(),
+                    L["{0} of your Phoenix 1 scores would pay here · no peer holds these", carriedUnheld.Count], "pmb-carried-section"));
+        }
+
+        foreach (var tier in PumbilityTierNames.Tiers)
+        {
+            var rows = held.Where(r => r.Entry!.Tier == tier);
+            var ordered = (GainsOnly
+                    ? rows.OrderByDescending(r => r.Gain)
+                    : rows.OrderByDescending(r => r.Entry!.Share).ThenByDescending(r => r.Entry!.Points))
+                .ToArray();
+            if (ordered.Length == 0) continue;
+            var inPool = ordered.Count(r => r.MyPoolRank != null);
+            sections.Add(new Section(tier.ToString(), L[PumbilityTierNames.NameOf(tier)], ThemeScales.PumbilityColor(tier),
+                ordered, L["{0} of {1} in your pool", inPool, ordered.Length], "pmb-tier-section"));
+        }
+
+        if (!GainsOnly)
+        {
+            var alone = Page.YoursAlone.Where(a => Charts.ContainsKey(a.ChartId))
+                .OrderBy(a => a.MyPoolRank)
+                .Select(a => new Row(Charts[a.ChartId], null, null, a))
+                .ToArray();
+            if (alone.Length > 0)
+                sections.Add(new Section(AloneKey, L["Yours alone"], "var(--mix-accent)", alone,
+                    L["{0} in your pool that no peer holds", alone.Length], "pmb-alone-section"));
+        }
+
+        return sections;
+    }
+
+    private string BandName(double low, double high)
+    {
+        if (double.IsPositiveInfinity(high)) return L["+{0} and up", low];
+        return low == 0 ? L["Under +{0}", high] : L["+{0} to +{1}", low, high];
+    }
+
+    private string EmptyText => GroupBy == PeerGrouping.ProjectedGains || GainsOnly
+        ? L["Nothing your peers hold would clear your bar right now — play a few more charts and check back."]
+        : L["Your peers' pools have nothing in them yet."];
+
+    private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
+
+    private Task PlayById(Guid chartId) => OnPlay.InvokeAsync(Charts[chartId]);
+
+    private string RowClass(Row row) =>
+        row.MyScore != null ? "pmb-row tier-row-pass" : ToDos.Contains(row.Chart.Id) ? "pmb-row tier-row-todo" : row.Carried ? "pmb-row tier-row-other-mix" : "pmb-row";
+
+    private RecordedPhoenixScore? ScoreOf(Row row) =>
+        row.MyScore is { } score ? new RecordedPhoenixScore(row.Chart.Id, score, row.MyPlate, false, DateTimeOffset.MinValue) : null;
+
+    /// <summary>"17 of 23 peers" — the count that prints; the weighted sum rides its tooltip (D33).</summary>
+    private string HoldText(Row row) =>
+        row.Entry is { } e ? L["{0} of {1} peers", e.Holders, e.PeerCount] : row.Alone != null ? L["No peer holds it"] : L["{0} of {1} peers", 0, PeersOf(row.Chart.Type)];
+
+    private int PeersOf(ChartType type) => Page.Peers.TryGetValue(type, out var g) ? g.Size : 0;
+
+    private string WeightedSum(Row row) => row.Entry is { } e ? L["Weighted sum: {0}", e.Points] : string.Empty;
+
+    private string TierCaption(Row row) => row.Entry is { } e ? L[PumbilityTierNames.NameOf(e.Tier)] : string.Empty;
+
+    /// <summary>The Comfortable caption under the score line: the count, with the tier in front where the section is not the tier.</summary>
+    private string? CaptionFor(Row row)
+    {
+        if (row.Entry == null) return row.Alone != null ? L["No peer holds it"] : null;
+        return GroupBy == PeerGrouping.ProjectedGains ? $"{TierCaption(row)} · {HoldText(row)}" : HoldText(row);
+    }
+
+    private string PoolText(Row row) =>
+        row.MyPoolRank is { } rank ? L["In your pool #{0}", rank] : row.MyScore != null ? L["Played, not in your pool"] : L["Not yet played"];
+
+    private string FromPeers(Row row) => row.Entry is { } e ? L["From {0} peers", e.Scored] : string.Empty;
+
+    private string CarriedTitle(Row row) =>
+        row.Target is { } t ? L["Carried from Phoenix 1: your {0} there, repriced here", ((int)t.Projected).ToString("N0")] : string.Empty;
+
+    // Compact prints numbers and no words, so the tooltip carries them (rule 7): the tier, the
+    // count, the weighted sum, what the peers do, your state, and the gain when there is one.
+    private string CompactNote(Row row)
+    {
+        var parts = new List<string>();
+        if (row.Entry is { } e)
+        {
+            parts.Add(TierCaption(row));
+            parts.Add(HoldText(row));
+            parts.Add(WeightedSum(row));
+            if (e.Median is { } median)
+                parts.Add($"{L["Peers"]} {median.LetterGradeFor(Mix).GetName()}" + (e.Variability is { } v ? $" · {L[VariabilityMeter.Word(v)]}" : string.Empty));
+        }
+        else if (row.Alone != null)
+        {
+            parts.Add(L["No peer holds it"]);
+        }
+
+        parts.Add(PoolText(row));
+        if (row.Pays) parts.Add($"+{PumbilityFormat.Gain(row.Gain)}" + (row.Carried ? $" · {L["Carried from Phoenix 1"]}" : string.Empty));
+        return string.Join(" · ", parts);
+    }
+
+    // The grade a paying tile lands on, in Compact's other corner: your peers' median for a peer
+    // row, your own Phoenix 1 grade for a carried one — the target list's own rule.
+    private RenderFragment ProjectedGrade(Row row) => builder =>
+    {
+        var grade = row.Carried && row.Target is { } t ? t.Projected : row.Entry?.Median ?? row.Target?.Projected;
+        if (grade == null) return;
+        builder.OpenComponent<LetterGradeIcon>(0);
+        builder.AddComponentParameter(1, nameof(LetterGradeIcon.Grade), grade.Value.LetterGradeFor(Mix));
+        builder.AddComponentParameter(2, nameof(LetterGradeIcon.Height), 14);
+        builder.CloseComponent();
+    };
+
+    // The card body, Comfortable only: what the peers do on it, a carried row's Phoenix 1 line,
+    // and where the chart sits for you.
+    private RenderFragment CardBody(Row row) => builder =>
+    {
+        var seq = 0;
+        if (row.Carried && row.Target is { } target)
+        {
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "pmb-carried-line");
+            builder.AddAttribute(seq++, "title", CarriedTitle(row));
+            builder.OpenElement(seq++, "span");
+            builder.AddContent(seq++, L["Phoenix 1:"]);
+            builder.CloseElement();
+            builder.OpenElement(seq++, "span");
+            builder.AddAttribute(seq++, "class", "pmb-num pmb-score-text");
+            builder.AddContent(seq++, ((int)target.Projected).ToString("N0"));
+            builder.CloseElement();
+            builder.OpenComponent<LetterGradeIcon>(seq++);
+            builder.AddComponentParameter(seq++, nameof(LetterGradeIcon.Grade), target.Projected.LetterGradeFor(Mix));
+            builder.AddComponentParameter(seq++, nameof(LetterGradeIcon.Height), 16);
+            builder.CloseComponent();
+            builder.OpenElement(seq++, "span");
+            builder.AddAttribute(seq++, "class", "pmb-muted");
+            builder.AddContent(seq++, L["repriced here"]);
+            builder.CloseElement();
+            builder.CloseElement();
+        }
+
+        if (row.Entry is { } entry)
+        {
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class", "pmb-peers-line");
+            builder.OpenElement(seq++, "span");
+            builder.AddAttribute(seq++, "class", "pmb-peers-line-label");
+            builder.AddContent(seq++, L["Peers"]);
+            builder.CloseElement();
+            if (entry.Median is { } median)
+            {
+                builder.OpenComponent<LetterGradeIcon>(seq++);
+                builder.AddComponentParameter(seq++, nameof(LetterGradeIcon.Grade), median.LetterGradeFor(Mix));
+                builder.AddComponentParameter(seq++, nameof(LetterGradeIcon.Height), 18);
+                builder.CloseComponent();
+                if (entry.Variability is { } level)
+                {
+                    builder.OpenElement(seq++, "span");
+                    builder.AddAttribute(seq++, "class", "pmb-dot");
+                    builder.AddContent(seq++, "·");
+                    builder.CloseElement();
+                    builder.OpenComponent<VariabilityMeter>(seq++);
+                    builder.AddComponentParameter(seq++, nameof(VariabilityMeter.Level), level);
+                    builder.AddComponentParameter(seq++, nameof(VariabilityMeter.Title), FromPeers(row));
+                    builder.CloseComponent();
+                }
+            }
+            else
+            {
+                builder.OpenElement(seq++, "span");
+                builder.AddAttribute(seq++, "class", "pmb-peers-none");
+                builder.AddContent(seq++, L["Fewer than 5 peers scored it"]);
+                builder.CloseElement();
+            }
+
+            builder.CloseElement();
+        }
+
+        builder.OpenElement(seq++, "span");
+        builder.AddAttribute(seq++, "class", "pmb-pool-line");
+        builder.AddContent(seq++, PoolText(row));
+        builder.CloseElement();
+    };
+}

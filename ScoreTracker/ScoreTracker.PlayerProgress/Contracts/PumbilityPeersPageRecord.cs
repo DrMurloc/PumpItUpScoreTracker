@@ -61,6 +61,7 @@ public sealed record PumbilityPeersPageRecord(
 /// <param name="Variability">How split the peers are, or null under five scorers (D35).</param>
 /// <param name="MyPoolRank">The chart's slot in the viewer's own pool of the type, or null when it holds no slot.</param>
 /// <param name="MyScore">The viewer's own non-broken score, or null when they have none.</param>
+/// <param name="MyPlate">The plate on that score, when it carries one.</param>
 /// <param name="MyPercentile">The share of scorers the viewer's score beats, on 0..1; null without a score or scorers.</param>
 [ExcludeFromCodeCoverage]
 public sealed record PeerPoolEntry(
@@ -78,6 +79,7 @@ public sealed record PeerPoolEntry(
     PeerVariabilityLevel? Variability,
     int? MyPoolRank,
     PhoenixScore? MyScore,
+    PhoenixPlate? MyPlate,
     double? MyPercentile)
 {
     /// <summary>The chart's share of its electorate's points, on 0..1 — comparable across types (D37).</summary>

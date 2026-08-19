@@ -2004,18 +2004,8 @@ else
         { TierListCategory.Unrecorded, "Not Rated" }
     };
     // The PUMBILITY lens counts how many peers keep a chart in their top 50, so its rungs
-    // say what that is worth to you rather than how hard it is (design doc §7).
-    private static readonly IDictionary<TierListCategory, string> _pumbilityNames = new Dictionary<TierListCategory, string>()
-    {
-        { TierListCategory.Overrated, "Staple" },
-        { TierListCategory.VeryEasy, "Strong" },
-        { TierListCategory.Easy, "Solid" },
-        { TierListCategory.Medium, "Average" },
-        { TierListCategory.Hard, "Modest" },
-        { TierListCategory.VeryHard, "Slim" },
-        { TierListCategory.Underrated, "Poor" },
-        { TierListCategory.Unrecorded, "Not in anyone's PUMBILITY" }
-    };
+    // say what that is worth to you rather than how hard it is (design doc §7). One vocabulary
+    // with the peers page's prevalence tiers: PumbilityTierNames.
     private static readonly IDictionary<TierListCategory, string> _scoreNames = new Dictionary<TierListCategory, string>()
     {
         { TierListCategory.Overrated, "Amazing" },
@@ -2109,7 +2099,7 @@ else
 
     private string TierName(TierListCategory category) =>
         _tierListType == "Chabala" && category == TierListCategory.Unrecorded ? "Subjective" :
-        _tierListType == "PUMBILITY" ? _pumbilityNames[category] :
+        _tierListType == "PUMBILITY" ? PumbilityTierNames.NameOf(category) :
         _tierNames[category];
 
     /// <summary>

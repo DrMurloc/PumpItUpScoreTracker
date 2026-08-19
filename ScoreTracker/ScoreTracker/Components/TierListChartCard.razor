@@ -23,7 +23,19 @@
                 <div class="tier-chart-card-bubble">
                     <DifficultyBubble Chart="Chart" Height="18"></DifficultyBubble>
                 </div>
-                @if (TierLabel != null)
+                @if (TopStripeColor != null)
+                {
+                    @* A second, quieter annotation along the top edge — the peers page's
+                       prevalence tier while its corner is the gain's and its dot is the
+                       variability's. The tooltip carries the word (rule 8). *@
+                    <span class="tier-chart-card-stripe" style="background:@TopStripeColor" title="@TopStripeTitle"></span>
+                }
+                @if (TopRightDotColor != null)
+                {
+                    @* A caller-supplied mark in the lens dot's place, with its own word. *@
+                    <span class="tier-chart-card-lens-dot" style="background:@TopRightDotColor" title="@TopRightDotTitle"></span>
+                }
+                else if (TierLabel != null)
                 {
                     @* Lens tier when the section grouping isn't the lens; the tooltip
                        prints the word so the hue never travels alone (rule 8). *@
@@ -195,6 +207,20 @@ else
     [Parameter] public string? TierLabel { get; set; }
 
     [Parameter] public string? TierColor { get; set; }
+
+    /// <summary>
+    ///     Compact only: a mark in the top-right corner with its word, for a caller whose
+    ///     grouping is neither the lens nor nothing — the peers page's variability dot. Wins
+    ///     the corner over the lens dot; a token reference, never a literal.
+    /// </summary>
+    [Parameter] public string? TopRightDotColor { get; set; }
+
+    [Parameter] public string? TopRightDotTitle { get; set; }
+
+    /// <summary>Compact only: a hairline along the jacket's top edge, with its word — a second annotation when the corners are spoken for.</summary>
+    [Parameter] public string? TopStripeColor { get; set; }
+
+    [Parameter] public string? TopStripeTitle { get; set; }
 
     // Optional column info (the drawer's Display switches) — Comfortable only; the page
     // passes null in other densities.
