@@ -7,8 +7,9 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.Domain.Services;
 
 /// <summary>
-///     What a Phoenix 2 peer group's PUMBILITY pools are made of, from the peers' records
-///     (docs/design/pumbility-overhaul.md §3.10, D33). Pure: hand it the records, the peers and the
+///     What a peer group's PUMBILITY pools are made of, from the peers' records
+///     (docs/design/pumbility-overhaul.md §3.10, D33; both mixes since D43 — the scoring handed in
+///     is what makes it Phoenix 1 or Phoenix 2). Pure: hand it the records, the peers and the
 ///     catalog, and it hands back <see cref="PeerPoolSummary" />.
 ///     <para>
 ///         A peer's pool is their fifty highest-priced non-broken records of the type — the same
@@ -70,9 +71,9 @@ public static class PumbilityPeerPools
             }
         }
 
-        // A peer who never scored anything priceable still counts as a peer with an empty pool
-        // — they were admitted by the caller's own full-pool rule, so this cannot happen on a
-        // Phoenix 2 band, but the summary should not invent a pool for them if it does.
+        // A peer who never scored anything priceable still counts as a peer with an empty pool:
+        // a Phoenix 2 band admits only full pools so it cannot happen there, a competitive band
+        // has no such rule (D43) — either way the summary must not invent a pool for them.
         foreach (var peer in peers) pools.TryAdd(peer, new HashSet<Guid>());
 
         var summary = new Dictionary<Guid, PeerPoolChart>();

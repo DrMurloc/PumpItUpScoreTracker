@@ -40,7 +40,11 @@ public sealed record ScoreProjectionRequest(
 /// <summary>How a peer group was drawn — the two definitions the site has.</summary>
 public enum PeerGroupKind
 {
-    /// <summary>Phoenix 1: players within a competitive-level band of the viewer.</summary>
+    /// <summary>
+    ///     Phoenix 1: players within a competitive-level band of the viewer — the viewer out,
+    ///     nobody gated on a pool. Since round six the page's peers too (D43), so the group's
+    ///     size is the band's size, not the number whose evidence reached an estimate.
+    /// </summary>
     CompetitiveBand,
 
     /// <summary>
