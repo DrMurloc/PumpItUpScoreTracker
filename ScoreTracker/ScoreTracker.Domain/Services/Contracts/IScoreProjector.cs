@@ -150,8 +150,19 @@ public sealed record PeerSpread(PhoenixScore Quartile1, PhoenixScore Quartile3, 
 /// </param>
 /// <param name="Quartile1">The first quartile over the same voices, or null with the median.</param>
 /// <param name="Quartile3">The third quartile over the same voices, or null with the median.</param>
+/// <param name="Scores">
+///     Every scorer's score, ascending — the voices the median and quartiles were read from, kept
+///     so a page can place the viewer's own score among them without a second read.
+/// </param>
 public sealed record PeerPoolChart(int Holders, int Points, int Scored, PhoenixScore? Median,
-    PhoenixScore? Quartile1, PhoenixScore? Quartile3);
+    PhoenixScore? Quartile1, PhoenixScore? Quartile3, IReadOnlyList<int> Scores)
+{
+    /// <summary>The share of scorers strictly below <paramref name="score" />, on 0..1; null with no scorers.</summary>
+    public double? PercentileOf(int score)
+    {
+        return Scores.Count == 0 ? null : Scores.Count(s => s < score) / (double)Scores.Count;
+    }
+}
 
 /// <summary>
 ///     What a Phoenix 2 peer group's pools are made of: who the peers are, what each of them

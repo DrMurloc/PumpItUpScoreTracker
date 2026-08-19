@@ -86,10 +86,12 @@ public static class PumbilityPeerPools
             var median = PeerEstimator.Estimate(scored, 0, PeerEstimator.Phoenix2Quantile, MinimumScored);
             var q1 = median == null ? null : PeerEstimator.Estimate(scored, 0, PeerEstimator.LowerQuartile, MinimumScored);
             var q3 = median == null ? null : PeerEstimator.Estimate(scored, 0, PeerEstimator.UpperQuartile, MinimumScored);
+            voices.Sort();
             summary[chartId] = new PeerPoolChart(held, points.GetValueOrDefault(chartId), voices.Count,
                 median == null ? null : PhoenixScore.From(median.Value),
                 q1 == null ? null : PhoenixScore.From(q1.Value),
-                q3 == null ? null : PhoenixScore.From(q3.Value));
+                q3 == null ? null : PhoenixScore.From(q3.Value),
+                voices);
         }
 
         return new PeerPoolSummary(peers, pools, summary);

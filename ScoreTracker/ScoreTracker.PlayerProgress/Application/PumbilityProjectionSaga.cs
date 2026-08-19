@@ -1,6 +1,9 @@
 using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
+using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Contracts;
@@ -23,7 +26,9 @@ namespace ScoreTracker.PlayerProgress.Application
     ///         top-50 bar.
     ///     </para>
     /// </summary>
-    internal sealed class PumbilityProjectionSaga : IRequestHandler<ProjectPumbilityGainsQuery, PumbilityProjection>
+    internal sealed class PumbilityProjectionSaga : IRequestHandler<ProjectPumbilityGainsQuery, PumbilityProjection>,
+        IRequestHandler<GetPumbilityPeersPageQuery, PumbilityPeersPageRecord>,
+        IRequestHandler<GetPumbilityPeersQuery, IReadOnlyCollection<Guid>>
     {
         /// <summary>
         ///     Phoenix 1: how far a chart's scoring level may sit from the player's competitive
@@ -37,16 +42,28 @@ namespace ScoreTracker.PlayerProgress.Application
         /// <summary>How many peer-estimated suggestions survive to the merge (owner, 2026-08-06).</summary>
         private const int MaxTargets = 100;
 
+        /// <summary>The list name the prevalence tiers are banded under.</summary>
+        internal const string PrevalenceListName = "Prevalence";
+
         private readonly PumbilityProjectionCache _cache;
+        private readonly ICurrentUserAccessor _currentUser;
         private readonly IMediator _mediator;
         private readonly IScoreProjector _projector;
+        private readonly IScoreReader _scores;
+        private readonly IPlayerStatsReader _stats;
+        private readonly IUserReader _users;
 
         public PumbilityProjectionSaga(IMediator mediator, IScoreProjector projector,
-            PumbilityProjectionCache cache)
+            PumbilityProjectionCache cache, IScoreReader scores, IPlayerStatsReader stats, IUserReader users,
+            ICurrentUserAccessor currentUser)
         {
             _mediator = mediator;
             _projector = projector;
             _cache = cache;
+            _scores = scores;
+            _stats = stats;
+            _users = users;
+            _currentUser = currentUser;
         }
 
         public async Task<PumbilityProjection> Handle(ProjectPumbilityGainsQuery request,
@@ -60,6 +77,174 @@ namespace ScoreTracker.PlayerProgress.Application
             var sweep = await _cache.GetOrAdd(request.UserId, request.Mix,
                 () => Estimate(request.UserId, request.Mix));
             return await Price(sweep, request, cancellationToken);
+        }
+
+        /// <summary>
+        ///     The Phoenix 2 Play page (docs/design/pumbility-overhaul.md §3.10): the peers' pools
+        ///     out of the cached sweep, tiered by prevalence per type, with the viewer's own pool and
+        ///     scores laid over them, and the roster. Any other mix, or a viewer with no lit type,
+        ///     answers empty — the page prints the dark chips from the group record either way.
+        /// </summary>
+        public async Task<PumbilityPeersPageRecord> Handle(GetPumbilityPeersPageQuery request,
+            CancellationToken cancellationToken)
+        {
+            var (userId, mix, pool) = request;
+            if (mix != MixEnum.Phoenix2) return PumbilityPeersPageRecord.Empty(mix, pool);
+
+            var sweep = await _cache.GetOrAdd(userId, mix, () => Estimate(userId, mix));
+            var types = pool is { } only ? new[] { only } : new[] { ChartType.Single, ChartType.Double };
+            var groups = types.Where(sweep.Peers.ContainsKey).ToDictionary(t => t, t => sweep.Peers[t]);
+            var lit = types.Where(sweep.PeerPools.ContainsKey).ToArray();
+            if (lit.Length == 0)
+                return PumbilityPeersPageRecord.Empty(mix, pool) with { Peers = groups };
+
+            var charts = (await _mediator.Send(new GetChartsQuery(mix), cancellationToken)).ToDictionary(c => c.Id);
+            var scoring = ScoringConfiguration.PumbilityScoring(mix, false);
+            var mine = (await _scores.GetBestScores(mix, userId, cancellationToken))
+                .Where(r => r.Score != null && !r.IsBroken && charts.ContainsKey(r.ChartId))
+                .ToDictionary(r => r.ChartId);
+
+            var entries = new List<PeerPoolEntry>();
+            var alone = new List<PeerAloneEntry>();
+            var compare = new Dictionary<ChartType, PeerCompare>();
+            var myPools = new Dictionary<ChartType, IReadOnlyDictionary<Guid, int>>();
+            foreach (var type in lit)
+            {
+                var summary = sweep.PeerPools[type];
+                var peerCount = summary.PeerIds.Count;
+
+                // The viewer's own pool of the type, by the same rule the peers' were built with:
+                // the fifty highest-priced non-broken records above zero, ranked.
+                var myPool = mine.Values
+                    .Where(r => charts[r.ChartId].Type == type)
+                    .Select(r => (r.ChartId, Rating: scoring.GetScore(charts[r.ChartId], r.Score!.Value,
+                        r.Plate ?? PhoenixPlate.RoughGame, r.IsBroken)))
+                    .Where(r => r.Rating > 0)
+                    .OrderByDescending(r => r.Rating).ThenBy(r => r.ChartId)
+                    .Take(PumbilityPeerPools.PoolSize)
+                    .ToArray();
+                var myRank = myPool.Select((r, i) => (r.ChartId, Rank: i + 1)).ToDictionary(r => r.ChartId, r => r.Rank);
+                myPools[type] = myRank;
+
+                var held = summary.Charts.Where(kv => kv.Value.Holders > 0).ToDictionary(kv => kv.Key, kv => kv.Value.Points);
+                var tiers = TierListProcessor.ProcessIntoLogScaledTierList(PrevalenceListName, held)
+                    .ToDictionary(e => e.ChartId);
+                var variability = PeerVariability.Band(summary.Charts
+                    .Where(kv => kv.Value.Median != null)
+                    .Select(kv => (kv.Key, kv.Value.Quartile1!.Value, kv.Value.Quartile3!.Value)));
+
+                foreach (var (chartId, chart) in summary.Charts)
+                {
+                    if (chart.Holders == 0) continue;
+                    var tier = tiers[chartId];
+                    var myScore = mine.TryGetValue(chartId, out var record) ? record.Score : null;
+                    entries.Add(new PeerPoolEntry(chartId, type, chart.Holders, peerCount, chart.Points, tier.Category,
+                        tier.Order, chart.Scored, chart.Median, chart.Quartile1, chart.Quartile3,
+                        variability.TryGetValue(chartId, out var level) ? level : null,
+                        myRank.TryGetValue(chartId, out var rank) ? rank : null,
+                        myScore,
+                        myScore is { } s ? chart.PercentileOf((int)s) : null));
+                }
+
+                foreach (var (chartId, rating) in myPool)
+                {
+                    if (summary.Charts.TryGetValue(chartId, out var c) && c.Holders > 0) continue;
+                    var record = mine[chartId];
+                    alone.Add(new PeerAloneEntry(chartId, type, myRank[chartId], record.Score!.Value, record.Plate, rating));
+                }
+
+                compare[type] = CompareWith(summary, myPool.Select(r => r.ChartId).ToArray(), charts);
+            }
+
+            var (roster, privatePeers, you) = await Roster(mix, userId, lit, sweep, myPools, cancellationToken);
+            return new PumbilityPeersPageRecord(mix, pool, groups, entries, alone, roster, privatePeers, you, compare);
+        }
+
+        /// <summary>
+        ///     The current user's PUMBILITY peers of a type, out of the cached sweep — empty for a
+        ///     dark type, on any mix but Phoenix 2, or for nobody signed in.
+        /// </summary>
+        public async Task<IReadOnlyCollection<Guid>> Handle(GetPumbilityPeersQuery request,
+            CancellationToken cancellationToken)
+        {
+            if (!_currentUser.IsLoggedIn || request.Mix != MixEnum.Phoenix2) return Array.Empty<Guid>();
+            var userId = _currentUser.User.Id;
+            var sweep = await _cache.GetOrAdd(userId, request.Mix, () => Estimate(userId, request.Mix));
+            return sweep.PeerPools.TryGetValue(request.ChartType, out var summary)
+                ? summary.PeerIds.ToArray()
+                : Array.Empty<Guid>();
+        }
+
+        /// <summary>
+        ///     How the viewer's pool of one type differs from what the peers hold (D41): how many of
+        ///     it sit in the peers' fifty most prevalent, how many are held by one peer or none, and
+        ///     where the levels sit on each side.
+        /// </summary>
+        private static PeerCompare CompareWith(PeerPoolSummary summary, IReadOnlyCollection<Guid> myPool,
+            IReadOnlyDictionary<Guid, Chart> charts)
+        {
+            var topFifty = summary.Charts.Where(kv => kv.Value.Holders > 0)
+                .OrderByDescending(kv => kv.Value.Points).ThenByDescending(kv => kv.Value.Holders)
+                .Take(PumbilityPeerPools.PoolSize).Select(kv => kv.Key).ToHashSet();
+            int HoldersOf(Guid id) => summary.Charts.TryGetValue(id, out var c) ? c.Holders : 0;
+            var totalPoints = summary.Charts.Values.Sum(c => (double)c.Points);
+            var shareByLevel = summary.Charts
+                .Where(kv => kv.Value.Points > 0 && charts.ContainsKey(kv.Key))
+                .GroupBy(kv => (int)charts[kv.Key].Level)
+                .ToDictionary(g => g.Key, g => totalPoints == 0 ? 0 : g.Sum(kv => kv.Value.Points) / totalPoints);
+            return new PeerCompare(
+                myPool.Count(topFifty.Contains),
+                myPool.Count(id => HoldersOf(id) <= 1),
+                myPool.Count(id => HoldersOf(id) == 0),
+                myPool.Where(charts.ContainsKey).GroupBy(id => (int)charts[id].Level).ToDictionary(g => g.Key, g => g.Count()),
+                shareByLevel);
+        }
+
+        /// <summary>
+        ///     Who the peers are, across the lit types: public accounts listed strongest first with
+        ///     their level, total, competitive levels, the types they are a peer for and how many of
+        ///     the viewer's fifty of each type they also hold; private accounts counted and not
+        ///     named; and the viewer's own row, for the page to place among them.
+        /// </summary>
+        private async Task<(IReadOnlyList<PeerRosterEntry> Roster, int PrivatePeers, PeerRosterEntry? You)> Roster(
+            MixEnum mix, Guid userId, IReadOnlyCollection<ChartType> lit, ProjectionSweep sweep,
+            IReadOnlyDictionary<ChartType, IReadOnlyDictionary<Guid, int>> myPools, CancellationToken cancellationToken)
+        {
+            var peerFor = new Dictionary<Guid, HashSet<ChartType>>();
+            foreach (var type in lit)
+            foreach (var peer in sweep.PeerPools[type].PeerIds)
+            {
+                if (!peerFor.TryGetValue(peer, out var types)) peerFor[peer] = types = new HashSet<ChartType>();
+                types.Add(type);
+            }
+
+            var ids = peerFor.Keys.Append(userId).Distinct().ToArray();
+            var users = (await _users.GetUsers(ids, cancellationToken)).ToDictionary(u => u.Id);
+            var stats = (await _stats.GetStats(mix, ids, cancellationToken)).ToDictionary(s => s.UserId);
+
+            PeerRosterEntry Row(Guid id, User user)
+            {
+                var stat = stats.GetValueOrDefault(id);
+                var total = stat?.SkillRating ?? 0;
+                var overlap = new Dictionary<ChartType, int>();
+                if (peerFor.TryGetValue(id, out var types))
+                    foreach (var type in types)
+                        overlap[type] = sweep.PeerPools[type].Pools.TryGetValue(id, out var held)
+                            ? held.Count(myPools[type].ContainsKey)
+                            : 0;
+                return new PeerRosterEntry(user, total, Phoenix2PumbilityLevel.From(total).Index,
+                    stat?.SinglesCompetitiveLevel ?? 0, stat?.DoublesCompetitiveLevel ?? 0,
+                    types ?? new HashSet<ChartType>(), overlap);
+            }
+
+            var roster = peerFor.Keys
+                .Where(id => users.TryGetValue(id, out var u) && u.IsPublic)
+                .Select(id => Row(id, users[id]))
+                .OrderByDescending(r => r.Total)
+                .ToArray();
+            var privatePeers = peerFor.Keys.Count(id => !users.TryGetValue(id, out var u) || !u.IsPublic);
+            var you = users.TryGetValue(userId, out var me) ? Row(userId, me) : null;
+            return (roster, privatePeers, you);
         }
 
         /// <summary>
@@ -90,12 +275,13 @@ namespace ScoreTracker.PlayerProgress.Application
             var expectedScore = new Dictionary<Guid, PhoenixScore>();
             var spreads = new Dictionary<Guid, PeerSpread>();
             var peers = new Dictionary<ChartType, PeerGroup>();
+            var pools = new Dictionary<ChartType, PeerPoolSummary>();
             var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor);
 
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
-                await ProjectType(chartType, userId, scope, expectedScore, spreads, peers, CancellationToken.None);
+                await ProjectType(chartType, userId, scope, expectedScore, spreads, peers, pools, CancellationToken.None);
 
-            return new ProjectionSweep(expectedScore, peers, spreads);
+            return new ProjectionSweep(expectedScore, peers, spreads, pools);
         }
 
         /// <summary>
@@ -172,7 +358,8 @@ namespace ScoreTracker.PlayerProgress.Application
 
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
             IDictionary<Guid, PhoenixScore> into, IDictionary<Guid, PeerSpread> spreads,
-            IDictionary<ChartType, PeerGroup> peers, CancellationToken cancellationToken)
+            IDictionary<ChartType, PeerGroup> peers, IDictionary<ChartType, PeerPoolSummary> pools,
+            CancellationToken cancellationToken)
         {
             var (mix, charts, scoringLevels, scoring, baseline) = scope;
 
@@ -203,15 +390,18 @@ namespace ScoreTracker.PlayerProgress.Application
 
             // ±1.0 on Phoenix 1, measured optimal for predicting the score itself — this page
             // quotes the number, so its accuracy is what matters rather than the ranking.
-            // Phoenix 2 ignores the window; its peers are the PUMBILITY band.
+            // Phoenix 2 ignores the window; its peers are the PUMBILITY band — and it is handed
+            // the catalog, so the same read also yields what those peers' pools are made of.
             var projected = await _projector.Project(
-                new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow),
+                new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow,
+                    mix == MixEnum.Phoenix2 ? charts : null),
                 cancellationToken);
 
             foreach (var (chartId, score) in projected.Scores) into[chartId] = score;
             if (projected.Spreads != null)
                 foreach (var (chartId, spread) in projected.Spreads) spreads[chartId] = spread;
             if (projected.Group is { } group) peers[chartType] = group;
+            if (projected.PeerPools is { } summary) pools[chartType] = summary;
         }
 
         private static double ScoringLevelOf(Chart chart, IDictionary<Guid, double> scoringLevels)
