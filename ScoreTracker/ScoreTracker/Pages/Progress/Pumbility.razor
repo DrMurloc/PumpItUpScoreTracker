@@ -11,12 +11,23 @@
 @rendermode RenderModes.Interactive
 @namespace ScoreTracker.Web.Pages.Progress
 
-@* The section's front page: what to play, and nothing else. The number and the bar it has
-   to beat come from the frame, because every other page measures from them too
-   (docs/design/pumbility-overhaul.md §3.1). *@
+@* The section's front page. The number and the bar it has to beat come from the frame, because
+   every other page measures from them too (docs/design/pumbility-overhaul.md §3.1).
+
+   Two pages under one route, by mix (D32): on Phoenix 2 the front page is your PUMBILITY peers —
+   what they build their number from, grouped by prevalence or by projected gain, and who they
+   are (§3.10) — with the target list's own gains on every jacket; on Phoenix 1 it is the target
+   list of §3.3, exactly as it was. *@
 
 <PumbilitySectionFrame Active="play">
     <Body Context="ctx">
+        @if (ctx.Mix == MixEnum.Phoenix2)
+        {
+            <PeersSection Page="ctx.Page" Charts="ctx.Charts" Pool="ctx.Pool"
+                          ToDos="_todos" OnToDo="ToggleToDo" OnOpen="ShowChartDetails" OnPlay="PlayChart"></PeersSection>
+        }
+        else
+        {
         <section class="pmb-block">
             <div class="pmb-block-head">
                 <h2 class="pmb-block-title">@L["What to play next"]</h2>
@@ -53,6 +64,7 @@
                         ShowToDo="true" ToDos="_todos" OnToDo="ToggleToDo"
                         OnOpen="ShowChartDetails" OnPlay="PlayChart"></TargetList>
         </section>
+        }
 
         @* AutoPlay is bound rather than fixed: the card's play button and its jacket open the
            same dialog, and only one of them asked for the video. *@
