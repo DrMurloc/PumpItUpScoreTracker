@@ -113,20 +113,43 @@ public sealed class PiuGameApiTests
 
         // No pager on the fixture — MaxPage falls back to the requested page.
         Assert.Equal(1, result.MaxPage);
-        Assert.Equal(5, result.Scores.Length);
+        Assert.Equal(7, result.Scores.Length);
 
-        // Card 1: a stage-failed best — empty plate slot, still scored and dated.
-        var broken = result.Scores[0];
+        // Card 1: a stage break kept as the chart's first attempt — no plate, an EMPTY grade
+        // slot, and the running score at the moment the stage broke printed as a number. The
+        // number is not a chart score; the empty grade slot is the one signal this surface gives.
+        var stageBreak = result.Scores[0];
+        Assert.Equal("Arcana Force", (string)stageBreak.SongName);
+        Assert.Equal(ChartType.Double, stageBreak.ChartType);
+        Assert.Equal(20, (int)stageBreak.Level);
+        Assert.Equal(683059, (int)stageBreak.Score);
+        Assert.True(stageBreak.IsBroken);
+        Assert.True(stageBreak.IsStageBroken);
+        Assert.Null(stageBreak.Plate);
+        Assert.Equal(new DateTimeOffset(2026, 8, 15, 2, 17, 51, TimeSpan.FromHours(9)), stageBreak.RecordedAt);
+
+        // Card 2: a failed-but-finished best — no plate, but an x_-prefixed grade beside a real
+        // score. Broken, not stage broken.
+        var finishedFail = result.Scores[1];
+        Assert.Equal("Till the end of time", (string)finishedFail.SongName);
+        Assert.Equal(590032, (int)finishedFail.Score);
+        Assert.True(finishedFail.IsBroken);
+        Assert.False(finishedFail.IsStageBroken);
+        Assert.Null(finishedFail.Plate);
+
+        // Card 3: the walk-off form of a stage break — empty grade slot, running score 0.
+        var broken = result.Scores[2];
         Assert.Equal("Chimera", (string)broken.SongName);
         Assert.Equal(ChartType.Double, broken.ChartType);
         Assert.Equal(26, (int)broken.Level);
         Assert.Equal(0, (int)broken.Score);
         Assert.True(broken.IsBroken);
+        Assert.True(broken.IsStageBroken);
         Assert.Null(broken.Plate);
         Assert.Equal(new DateTimeOffset(2026, 7, 17, 23, 16, 30, TimeSpan.FromHours(9)), broken.RecordedAt);
 
-        // Card 2: a passing best — plate parsed from its image, grade imagery ignored.
-        var pass = result.Scores[1];
+        // Card 4: a passing best — plate parsed from its image, grade imagery ignored.
+        var pass = result.Scores[3];
         Assert.Equal("ALiVE", (string)pass.SongName);
         Assert.Equal(ChartType.Double, pass.ChartType);
         Assert.Equal(21, (int)pass.Level);
@@ -152,12 +175,25 @@ public sealed class PiuGameApiTests
         var result = (await api.GetRecentScores(MixEnum.Phoenix2, HttpClientReturning(html), CancellationToken.None))
             .ToList();
 
-        // 5 cards; the STAGE BREAK card is skipped as always (broken data arrives via the
-        // best list on the redesigned site).
-        Assert.Equal(4, result.Count);
+        // 5 cards, the first a STAGE BREAK: no longer skipped, it parses flagged, scoreless,
+        // broken, with the judgements the card shows (0/0/0/0/51 — the walk-off form, which the
+        // import drops downstream; the parser's job is to read the card).
+        Assert.Equal(5, result.Count);
 
-        var first = result[0];
+        var stageBreak = result[0];
+        Assert.Equal("Chimera", (string)stageBreak.SongName);
+        Assert.True(stageBreak.IsStageBroken);
+        Assert.True(stageBreak.IsBroken);
+        Assert.Null(stageBreak.Score);
+        Assert.Null(stageBreak.Plate);
+        Assert.Null(stageBreak.Grade);
+        Assert.Equal(51, stageBreak.Misses);
+        Assert.Equal(51, stageBreak.NoteCount);
+        Assert.Equal(new DateTimeOffset(2026, 7, 17, 23, 16, 30, TimeSpan.FromHours(9)), stageBreak.RecordedAt);
+
+        var first = result[1];
         Assert.Equal("ALiVE", (string)first.SongName);
+        Assert.False(first.IsStageBroken);
         Assert.Equal(978147, (int)first.Score);
         Assert.Equal(1100, first.Perfects);
         Assert.Equal(14, first.Greats);
@@ -203,12 +239,17 @@ public sealed class PiuGameApiTests
         var result = (await api.GetRecentScores(MixEnum.Phoenix, HttpClientReturning(html), CancellationToken.None))
             .ToList();
 
-        var broken = Assert.Single(result, r => r.IsBroken);
-        Assert.Equal(940078, (int)broken.Score);
+        var broken = Assert.Single(result, r => r.IsBroken && !r.IsStageBroken);
+        Assert.Equal(940078, (int)broken.Score!.Value);
         Assert.Equal(PhoenixLetterGrade.AAPlus, broken.Grade);
 
         var passed = Assert.Single(result, r => !r.IsBroken);
         Assert.Equal(PhoenixLetterGrade.AAAPlus, passed.Grade);
+
+        // The STAGE BREAK card prints no grade art at all — the game assigns none to an
+        // interrupted stage — so it is the one card that carries no grade.
+        var stageBreak = Assert.Single(result, r => r.IsStageBroken);
+        Assert.Null(stageBreak.Grade);
     }
 
     [Fact]
@@ -222,10 +263,10 @@ public sealed class PiuGameApiTests
         var result = (await api.GetRecentScores(MixEnum.Phoenix2, HttpClientReturning(html), CancellationToken.None))
             .ToList();
 
-        Assert.All(result, r =>
+        Assert.All(result.Where(r => !r.IsStageBroken), r =>
         {
             Assert.NotNull(r.Grade);
-            Assert.Equal(r.Score.LetterGradeFor(MixEnum.Phoenix2), r.Grade!.Value);
+            Assert.Equal(r.Score!.Value.LetterGradeFor(MixEnum.Phoenix2), r.Grade!.Value);
         });
     }
 
@@ -252,24 +293,31 @@ public sealed class PiuGameApiTests
 
             var result = (await api.GetRecentScores(MixEnum.Phoenix, stubbedClient, CancellationToken.None)).ToList();
 
-            // The fixture has 3 cards; card 2 is STAGE BREAK and is auto-skipped by the parser.
-            Assert.Equal(2, result.Count);
+            // The fixture has 3 cards; card 2 is STAGE BREAK and now parses flagged rather
+            // than being skipped, so every culture yields all three.
+            Assert.Equal(3, result.Count);
 
-            // First parsed entry — TRICKL4SH 220, Double 20, broken stage (no plate image present).
+            // First parsed entry — TRICKL4SH 220, Double 20, failed but finished (x_ grade, no plate).
             var first = result[0];
             Assert.Equal("TRICKL4SH 220", (string)first.SongName);
             Assert.Equal(ChartType.Double, first.ChartType);
             Assert.Equal(20, (int)first.Level);
-            Assert.Equal(940078, (int)first.Score);
+            Assert.Equal(940078, (int)first.Score!.Value);
             Assert.Equal(1042, first.NoteCount); // 974 + 8 + 3 + 2 + 55
             Assert.True(first.IsBroken);
+            Assert.False(first.IsStageBroken);
 
-            // Second parsed entry — Appassionata Double 21, PERFECT=1,144 (the bug-trigger value).
-            var second = result[1];
+            // Second — the STAGE BREAK card: flagged, scoreless, broken.
+            Assert.True(result[1].IsStageBroken);
+            Assert.True(result[1].IsBroken);
+            Assert.Null(result[1].Score);
+
+            // Third parsed entry — Appassionata Double 21, PERFECT=1,144 (the bug-trigger value).
+            var second = result[2];
             Assert.Equal("Appassionata", (string)second.SongName);
             Assert.Equal(ChartType.Double, second.ChartType);
             Assert.Equal(21, (int)second.Level);
-            Assert.Equal(965679, (int)second.Score);
+            Assert.Equal(965679, (int)second.Score!.Value);
             Assert.Equal(1200, second.NoteCount); // 1144 + 23 + 11 + 9 + 13
             Assert.False(second.IsBroken);
         }
@@ -295,26 +343,27 @@ public sealed class PiuGameApiTests
 
         var result = (await api.GetRecentScores(MixEnum.Phoenix, stubbedClient, CancellationToken.None)).ToList();
 
-        // Same 3 cards as the English fixture; STAGE BREAK card is auto-skipped → 2 entries.
-        Assert.Equal(2, result.Count);
+        // Same 3 cards as the English fixture; the STAGE BREAK card in the middle parses flagged.
+        Assert.Equal(3, result.Count);
+        Assert.True(result[1].IsStageBroken);
 
         // Korean song name preserved verbatim.
         Assert.Equal("트릭크래쉬 220", (string)result[0].SongName);
-        Assert.Equal("열정", (string)result[1].SongName);
+        Assert.Equal("열정", (string)result[2].SongName);
 
         // Numbers, chart types, and pagination markers don't depend on language — same values
         // as the English fixture parses to.
         Assert.Equal(ChartType.Double, result[0].ChartType);
         Assert.Equal(20, (int)result[0].Level);
-        Assert.Equal(940078, (int)result[0].Score);
+        Assert.Equal(940078, (int)result[0].Score!.Value);
         Assert.Equal(1042, result[0].NoteCount);
         Assert.True(result[0].IsBroken);
 
-        Assert.Equal(ChartType.Double, result[1].ChartType);
-        Assert.Equal(21, (int)result[1].Level);
-        Assert.Equal(965679, (int)result[1].Score);
-        Assert.Equal(1200, result[1].NoteCount);
-        Assert.False(result[1].IsBroken);
+        Assert.Equal(ChartType.Double, result[2].ChartType);
+        Assert.Equal(21, (int)result[2].Level);
+        Assert.Equal(965679, (int)result[2].Score!.Value);
+        Assert.Equal(1200, result[2].NoteCount);
+        Assert.False(result[2].IsBroken);
     }
 
     [Theory]
@@ -439,20 +488,21 @@ public sealed class PiuGameApiTests
 
         var result = (await api.GetRecentScores(MixEnum.Phoenix2, stubbedClient, CancellationToken.None)).ToList();
 
-        // Same 3 cards as the happy path; STAGE BREAK card auto-skipped → 2 entries.
-        Assert.Equal(2, result.Count);
+        // Same 3 cards as the happy path; the STAGE BREAK card in the middle parses flagged.
+        Assert.Equal(3, result.Count);
+        Assert.True(result[1].IsStageBroken);
 
         Assert.Equal("TRICKL4SH 220", (string)result[0].SongName);
         Assert.Equal(ChartType.Double, result[0].ChartType);
         Assert.Equal(20, (int)result[0].Level);
-        Assert.Equal(940078, (int)result[0].Score);
+        Assert.Equal(940078, (int)result[0].Score!.Value);
         Assert.True(result[0].IsBroken);
 
-        Assert.Equal("Appassionata", (string)result[1].SongName);
-        Assert.Equal(ChartType.Double, result[1].ChartType);
-        Assert.Equal(21, (int)result[1].Level);
-        Assert.Equal(965679, (int)result[1].Score);
-        Assert.False(result[1].IsBroken);
+        Assert.Equal("Appassionata", (string)result[2].SongName);
+        Assert.Equal(ChartType.Double, result[2].ChartType);
+        Assert.Equal(21, (int)result[2].Level);
+        Assert.Equal(965679, (int)result[2].Score!.Value);
+        Assert.False(result[2].IsBroken);
     }
 
     [Fact]

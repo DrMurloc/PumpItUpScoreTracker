@@ -72,12 +72,24 @@ public sealed class BestAttemptPolicyTests
     }
 
     [Fact]
-    public void AWalkOffIsAZeroNoteBreak()
+    public void AWalkOffIsABreakWithNothingHit()
     {
-        // Nothing judged at all — the play the owner described as "started a song and let it
-        // fail out". Judged counts decide it when we have them.
+        // The play the owner described as "started a song and let it fail out". Its card reads
+        // 0/0/0/0/51 — the misses are the life bar draining — so the test is "nothing hit", not
+        // "nothing judged". Judged counts decide it when we have them.
+        Assert.True(BestAttemptPolicy.IsWalkOff(true, 0, new JudgementCounts(0, 0, 0, 0, 51)));
         Assert.True(BestAttemptPolicy.IsWalkOff(true, 0, new JudgementCounts(0, 0, 0, 0, 0)));
-        Assert.False(BestAttemptPolicy.IsWalkOff(true, 0, new JudgementCounts(0, 0, 0, 0, 51)));
+        Assert.False(BestAttemptPolicy.IsWalkOff(true, null, new JudgementCounts(134, 2, 0, 0, 70)));
+        Assert.False(BestAttemptPolicy.IsWalkOff(true, null, new JudgementCounts(0, 0, 1, 0, 51)));
+    }
+
+    [Fact]
+    public void AStageBreakCanNeverBeARecordAndAFinishedFailCan()
+    {
+        // The rule the ledger refuses on and the importer pages by. A finished fail is broken
+        // too, and stays eligible under the opt-in.
+        Assert.False(BestAttemptPolicy.CanBeRecord(true));
+        Assert.True(BestAttemptPolicy.CanBeRecord(false));
     }
 
     [Fact]

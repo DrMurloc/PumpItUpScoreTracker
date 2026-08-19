@@ -21,7 +21,7 @@
     {
         <MudText Typo="Typo.overline">@L["Score History"]</MudText>
     }
-    <ScoreJourneyList Entries="_journey" ShowWhenEmpty="true"></ScoreJourneyList>
+    <ScoreJourneyList Entries="_journey" ShowWhenEmpty="true" PageMix="Mix" NoteCount="Chart?.NoteCount"></ScoreJourneyList>
     @* Round 10: buttons never shrink into vertical letter-stacks (nowrap + wrap
        to their own line instead).
        Round 11: the score inputs are always visible (no Record Score toggle) and

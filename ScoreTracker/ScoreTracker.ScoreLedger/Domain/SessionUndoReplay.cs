@@ -26,7 +26,11 @@ internal static class SessionUndoReplay
     public static ScoreJournalEntry? BestOf(IEnumerable<ScoreJournalEntry> surviving)
     {
         ScoreJournalEntry? best = null;
-        foreach (var play in surviving.OrderBy(p => p.OccurredAt))
+        // A stage break is history and nothing else (BestAttemptPolicy.CanBeRecord): the write
+        // path never seated one, so the rebuild must not crown one either — which it would, if
+        // it were the only survivor, since the first survivor is taken unconditionally below.
+        foreach (var play in surviving.Where(p => BestAttemptPolicy.CanBeRecord(p.IsStageBroken))
+                     .OrderBy(p => p.OccurredAt))
         {
             if (best == null || IsAuthoritative(play))
             {

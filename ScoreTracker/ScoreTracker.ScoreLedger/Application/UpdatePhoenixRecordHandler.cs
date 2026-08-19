@@ -1,6 +1,7 @@
 using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Events;
 using ScoreTracker.ScoreLedger.Contracts.Messages;
@@ -12,6 +13,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.SharedKernel.ValueTypes;
 
@@ -25,7 +27,9 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         IPlayerScoreBatchAccumulator batches,
         IScoreJournalRepository journal,
         IScoreSessionRepository sessions,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        IChartRepository charts,
+        ILogger<UpdatePhoenixRecordHandler> logger)
     : IRequestHandler<UpdatePhoenixBestAttemptCommand>,
         IConsumer<UpdatePhoenixRecordHandler.TryFireScoreCommand>,
         IConsumer<FlushOverdueScoreBatchesCommand>
@@ -49,8 +53,27 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
         if (isNewSession)
             await sessions.Open(sessionId, user.User.Id, request.Mix, request.Source, null, null,
                 dateTimeOffset.Now, cancellationToken);
-        // A stage break with nothing judged never enters the system, from any source.
+        // A break with nothing hit never enters the system, from any source.
         if (BestAttemptPolicy.IsWalkOff(request.IsBroken, request.Score, request.Judgements)) return;
+
+        // A stage break is never a best, whatever the opt-in said — but it is a play, and a dated
+        // one is journaled as such: it is what "attempts before this clear" counts. Undated ones
+        // have no play key and are dropped; the site dates every card, so that is a manual entry
+        // claiming a stage break, which has nothing to say.
+        if (!BestAttemptPolicy.CanBeRecord(request.IsStageBroken))
+        {
+            if (request.RecordedAt is { } playedAt)
+                await journal.AppendObservations(new[]
+                {
+                    // The combo is re-solved rather than carried: it is a function of the score,
+                    // and a stage break has none — so whatever a caller sent is dropped instead of
+                    // stored against a play that cannot support one.
+                    new ScoreJournalEntry(playedAt, request.Source, user.User.Id, request.ChartId, null, null, true,
+                        request.Mix, sessionId, PhoenixComboSolver.WithMaxCombo(request.Judgements, null, null),
+                        false, IsStageBroken: true)
+                }, cancellationToken);
+            return;
+        }
 
         var existing = await records.GetRecordedScore(request.Mix, user.User.Id, request.ChartId, cancellationToken);
         // The game awards no plate on a failed stage, so a broken attempt carries none.
@@ -71,8 +94,15 @@ internal sealed class UpdatePhoenixRecordHandler(IPhoenixRecordRepository record
 
         // Judgements decompose one specific play's score. Reaching this line means the result
         // changed, so a different play produced it — the previous play's counts describe the
-        // old result and are dropped rather than mislabeled onto the new one.
-        var judgements = request.Judgements;
+        // old result and are dropped rather than mislabeled onto the new one. They travel with
+        // their solved combo, and against the catalog's count they are the tripwire that says
+        // the catalog has drifted — a log line, never a refusal.
+        var noteCount = request.Judgements == null
+            ? null
+            : await NoteCountWatch.NoteCountFor(charts, request.Mix, request.ChartId, cancellationToken);
+        NoteCountWatch.WarnOnDisagreement(logger, request.Mix, request.ChartId, request.Judgements, noteCount,
+            request.IsBroken, false);
+        var judgements = PhoenixComboSolver.WithMaxCombo(request.Judgements, request.Score, noteCount);
         // The site's saved timestamp, when it supplied one, is the truthful record/journal
         // time; the clock only stamps submissions the site never dated.
         var recordedAt = request.RecordedAt ?? dateTimeOffset.Now;

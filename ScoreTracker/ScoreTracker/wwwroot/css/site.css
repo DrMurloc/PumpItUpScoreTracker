@@ -5065,6 +5065,10 @@ html.sheet-open .more-sheet-scrim {
     font-variant-numeric: tabular-nums;
 }
 
+.score-journey-stagebreak {
+    color: var(--mix-ink-muted);
+}
+
 .score-journey-empty {
     color: var(--mix-ink-muted);
 }
@@ -12270,6 +12274,14 @@ button.chart-card-art {
 
 .sbd-peerpct {
     font-size: .68rem;
+    color: var(--mix-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* "Stage break · 31% in" — where a grade, plate and number would sit on a finished play. Muted
+   ink, no glow, no colour: the run set no score, so there is nothing to rank or to celebrate,
+   and the row must not read as a result. */
+.sbd-stagebreak {
     color: var(--mix-ink-muted);
     font-variant-numeric: tabular-nums;
 }

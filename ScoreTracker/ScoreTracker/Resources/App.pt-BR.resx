@@ -892,6 +892,9 @@
   <data name="Backfill Highlights" xml:space="preserve">
     <value>Preencher destaques</value>
   </data>
+  <data name="Backfill max combos" xml:space="preserve">
+    <value>Preencher combos máximos</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
   </data>
@@ -2993,13 +2996,13 @@
     <value>Importar e conferir</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence. Seguir a versão quer dizer ligado no Phoenix 2 e desligado no Phoenix.</value>
+    <value>Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence. Seguir a versão quer dizer ligado no Phoenix 2 e desligado no Phoenix. Um stage break — uma tentativa que terminou antes da última nota — nunca é seu recorde de jeito nenhum; fica só no seu histórico de partidas.</value>
   </data>
   <data name="Import Broken Helper Phoenix" xml:space="preserve">
-    <value>O Phoenix não guarda recorde pessoal para tentativas quebradas, então isso vem desligado por padrão. Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence.</value>
+    <value>O Phoenix não guarda recorde pessoal para tentativas quebradas, então isso vem desligado por padrão. Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence. Um stage break — uma tentativa que terminou antes da última nota — nunca é seu recorde de jeito nenhum; fica só no seu histórico de partidas.</value>
   </data>
   <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
-    <value>O Phoenix 2 guarda recorde pessoal para tentativas quebradas, então isso vem ligado por padrão. Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence.</value>
+    <value>O Phoenix 2 guarda recorde pessoal para tentativas quebradas, então isso vem ligado por padrão. Em charts que você nunca passou, sua melhor tentativa quebrada vira seu recorde. Um pass sempre vence. Um stage break — uma tentativa que terminou antes da última nota — nunca é seu recorde de jeito nenhum; fica só no seu histórico de partidas.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importação concluída</value>
@@ -5575,6 +5578,9 @@
   <data name="Re-rated" xml:space="preserve">
     <value>Renivelados</value>
   </data>
+  <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
+    <value>Recalculando os combos máximos de cada score com judgments. Nada é anunciado.</value>
+  </data>
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>Repisado — {0} notas, antes {1}.</value>
   </data>
@@ -6682,8 +6688,14 @@
   <data name="Stage" xml:space="preserve">
     <value>Etapa</value>
   </data>
+  <data name="Stage break" xml:space="preserve">
+    <value>Stage break</value>
+  </data>
   <data name="Stage Break Modifier" xml:space="preserve">
     <value>Modificador de quebra de estágio</value>
+  </data>
+  <data name="Stage break · {0}% in" xml:space="preserve">
+    <value>Stage break · aos {0}%</value>
   </data>
   <data name="Stage Pass" xml:space="preserve">
     <value>Pass do estágio</value>

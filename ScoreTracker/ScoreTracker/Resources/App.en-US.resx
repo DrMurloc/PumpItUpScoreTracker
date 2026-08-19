@@ -899,6 +899,9 @@
   <data name="Backfill Highlights" xml:space="preserve">
     <value>Backfill Highlights</value>
   </data>
+  <data name="Backfill max combos" xml:space="preserve">
+    <value>Backfill max combos</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
   </data>
@@ -3010,13 +3013,13 @@
     <value>Import and check</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>On charts you've never passed, your best break becomes your record — a pass always wins. Following the mix means on for Phoenix 2, off for Phoenix.</value>
+    <value>On charts you've never passed, your best break becomes your record — a pass always wins. Following the mix means on for Phoenix 2, off for Phoenix. A stage break — a run that ended before the last note — is never your record either way; it stays in your play history.</value>
   </data>
   <data name="Import Broken Helper Phoenix" xml:space="preserve">
-    <value>Phoenix keeps no personal best for broken scores, so this defaults to off. On charts you've never passed, your best break becomes your record — a pass always wins.</value>
+    <value>Phoenix keeps no personal best for broken scores, so this defaults to off. On charts you've never passed, your best break becomes your record — a pass always wins. A stage break — a run that ended before the last note — is never your record either way; it stays in your play history.</value>
   </data>
   <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
-    <value>Phoenix 2 keeps a personal best for broken scores, so this defaults to on. On charts you've never passed, your best break becomes your record — a pass always wins.</value>
+    <value>Phoenix 2 keeps a personal best for broken scores, so this defaults to on. On charts you've never passed, your best break becomes your record — a pass always wins. A stage break — a run that ended before the last note — is never your record either way; it stays in your play history.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Import complete</value>
@@ -5614,6 +5617,9 @@
   <data name="Re-rated" xml:space="preserve">
     <value>Re-rated</value>
   </data>
+  <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
+    <value>Re-solving max combos from every judged score. Nothing is announced.</value>
+  </data>
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>Re-stepped — {0} notes, was {1}.</value>
   </data>
@@ -6738,8 +6744,14 @@
   <data name="Stage" xml:space="preserve">
     <value>Stage</value>
   </data>
+  <data name="Stage break" xml:space="preserve">
+    <value>Stage break</value>
+  </data>
   <data name="Stage Break Modifier" xml:space="preserve">
 	  <value>Stage Break Modifier</value>
+  </data>
+  <data name="Stage break · {0}% in" xml:space="preserve">
+    <value>Stage break · {0}% in</value>
   </data>
   <data name="Stage Pass" xml:space="preserve">
 	  <value>Stage Pass</value>

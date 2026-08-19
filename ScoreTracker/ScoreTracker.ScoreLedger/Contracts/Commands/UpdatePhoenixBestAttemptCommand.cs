@@ -14,6 +14,9 @@ public sealed record UpdatePhoenixBestAttemptCommand(Guid ChartId,
     // When the official site supplied the save time (the redesigned my_page stamps every
     // card), it becomes the record's date and the journal's OccurredAt; null = clock time.
     DateTimeOffset? RecordedAt = null,
-    JudgementCounts? Judgements = null) : IRequest
+    JudgementCounts? Judgements = null,
+    // The site's word that the stage broke: the play is journaled and never seated, whatever
+    // the opt-in says (docs/design/stage-breaks-and-max-combo.md D10).
+    bool IsStageBroken = false) : IRequest
 {
 }

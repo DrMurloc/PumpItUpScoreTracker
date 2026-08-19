@@ -91,6 +91,22 @@ internal interface IScoreJournalRepository
 
     /// <summary>Removes one session's plays. The survivors are what the replay rebuilds from.</summary>
     Task DeleteSession(Guid userId, Guid sessionId, CancellationToken cancellationToken);
+
+    /// <summary>Every player holding at least one judged row in the mix — the backfill's work list.</summary>
+    Task<IReadOnlyList<Guid>> GetUsersWithJudgedEntries(MixEnum mix, CancellationToken cancellationToken);
+
+    /// <summary>One player's judged rows in one mix, for the backfill to re-solve.</summary>
+    Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedEntries(Guid userId, MixEnum mix,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    ///     Writes re-solved combos onto one player's rows in one mix, keyed by the play key's
+    ///     chart and time. The one sanctioned in-place write besides raising IsBest: the combo is a
+    ///     function of the row's other columns and the catalog, not history.
+    /// </summary>
+    Task SetMaxCombos(Guid userId, MixEnum mix,
+        IReadOnlyList<(Guid ChartId, DateTimeOffset OccurredAt, int? MaxCombo)> combos,
+        CancellationToken cancellationToken);
 }
 
 internal sealed record JournalSessionRows(

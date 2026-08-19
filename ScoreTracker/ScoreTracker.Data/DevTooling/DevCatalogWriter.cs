@@ -163,6 +163,7 @@ internal sealed class DevCatalogWriter : IDevCatalogWriter
                 row["Goods"] = (object?)s.Goods ?? DBNull.Value;
                 row["Bads"] = (object?)s.Bads ?? DBNull.Value;
                 row["Misses"] = (object?)s.Misses ?? DBNull.Value;
+                row["MaxCombo"] = (object?)s.MaxCombo ?? DBNull.Value;
             }, cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);

@@ -899,6 +899,9 @@
   <data name="Backfill Highlights" xml:space="preserve">
     <value>Ripopola i momenti salienti</value>
   </data>
+  <data name="Backfill max combos" xml:space="preserve">
+    <value>Ripopola i combo massimi</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
   </data>
@@ -3010,13 +3013,13 @@
     <value>Importa e controlla</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre. Seguire il mix vuol dire attivo su Phoenix 2 e disattivo su Phoenix.</value>
+    <value>Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre. Seguire il mix vuol dire attivo su Phoenix 2 e disattivo su Phoenix. Uno Stage Break — un tentativo finito prima dell'ultima nota — non è mai il tuo record in nessun caso; resta nella cronologia delle partite.</value>
   </data>
   <data name="Import Broken Helper Phoenix" xml:space="preserve">
-    <value>Phoenix non tiene un record personale per i tentativi rotti, quindi questa opzione è disattivata per impostazione predefinita. Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
+    <value>Phoenix non tiene un record personale per i tentativi rotti, quindi questa opzione è disattivata per impostazione predefinita. Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre. Uno Stage Break — un tentativo finito prima dell'ultima nota — non è mai il tuo record in nessun caso; resta nella cronologia delle partite.</value>
   </data>
   <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
-    <value>Phoenix 2 tiene un record personale per i tentativi rotti, quindi questa opzione è attiva per impostazione predefinita. Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre.</value>
+    <value>Phoenix 2 tiene un record personale per i tentativi rotti, quindi questa opzione è attiva per impostazione predefinita. Sui chart mai superati, il tuo miglior tentativo rotto diventa il tuo record. Un pass vince sempre. Uno Stage Break — un tentativo finito prima dell'ultima nota — non è mai il tuo record in nessun caso; resta nella cronologia delle partite.</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>Importazione completata</value>
@@ -5614,6 +5617,9 @@
   <data name="Re-rated" xml:space="preserve">
     <value>Rivalutate</value>
   </data>
+  <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
+    <value>Ricalcolo dei combo massimi da ogni score con i judgment. Non viene annunciato nulla.</value>
+  </data>
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>Ripassato — {0} note, prima {1}.</value>
   </data>
@@ -6738,8 +6744,14 @@
   <data name="Stage" xml:space="preserve">
     <value>Fase</value>
   </data>
+  <data name="Stage break" xml:space="preserve">
+    <value>Stage Break</value>
+  </data>
   <data name="Stage Break Modifier" xml:space="preserve">
     <value>Modificatore Stage Break</value>
+  </data>
+  <data name="Stage break · {0}% in" xml:space="preserve">
+    <value>Stage Break · al {0}%</value>
   </data>
   <data name="Stage Pass" xml:space="preserve">
     <value>Stage Pass</value>

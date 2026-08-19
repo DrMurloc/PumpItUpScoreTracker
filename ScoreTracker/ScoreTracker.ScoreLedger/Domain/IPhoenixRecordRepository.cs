@@ -96,4 +96,14 @@ internal interface IPhoenixRecordRepository
 
     /// <summary>Deletes the user's records and per-score stats. Null mix means every mix.</summary>
     Task DeleteAllForUser(Guid userId, MixEnum? mix = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Every player holding at least one judged record in the mix — the backfill's work list.</summary>
+    Task<IReadOnlyList<Guid>> GetUsersWithJudgedRecords(MixEnum mix, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Writes re-solved combos onto one player's records in one mix, keyed by chart, and drops
+    ///     the player's cached scores so the next read carries them.
+    /// </summary>
+    Task SetMaxCombos(MixEnum mix, Guid userId, IReadOnlyList<(Guid ChartId, int? MaxCombo)> combos,
+        CancellationToken cancellationToken = default);
 }

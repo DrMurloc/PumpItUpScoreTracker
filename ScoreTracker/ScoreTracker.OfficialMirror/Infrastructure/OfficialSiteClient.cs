@@ -382,7 +382,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             }
         }
 
-        return (await MapBestList(mix, cards, includeBroken, cancellationToken)).Values.ToArray();
+        return (await MapBestList(mix, cards, includeBroken, cancellationToken)).Bests.Values.ToArray();
     }
 
     private static string PageStatus(string bucket, int page)
@@ -471,7 +471,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             ? await WalkDatedBestScores(mix, userId, sessionId, firstPage, cancellationToken)
             : await WalkClassicBestScores(mix, userId, sessionId, firstPage, maxPages, cancellationToken);
 
-        var results = await MapBestList(mix, responses, includeBroken, cancellationToken);
+        var (results, listStageBreaks) = await MapBestList(mix, responses, includeBroken, cancellationToken);
         var recentPlays = await ResolveRecentPlays(mix, sessionId, cancellationToken);
 
         await LearnNoteCounts(mix, recentPlays, cancellationToken);
@@ -479,18 +479,21 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         await AnnounceDailySteps(mix, userId, recentPlays, cancellationToken);
         EnrichBestsFromRecentPlays(recentPlays, results, includeBroken);
 
-        var entries = recentPlays.Select(p =>
-        {
-            var best = BestOf(p.Plays);
-            return new ScoreImportCompletedEvent.ImportedScore(p.Chart.Id, best.Score,
-                best.Plate?.ToString(), best.IsBroken);
-        }).ToArray();
-        // Every dated play is journal history, best or not. Undated ones are skipped: the site's
-        // play time IS the row's identity, and without it a re-import would duplicate the window.
+        // A chart whose whole recent window is stage breaks has no best to announce.
+        var entries = recentPlays
+            .Select(p => (p.Chart, Best: BestOf(p.Plays)))
+            .Where(x => x.Best != null)
+            .Select(x => new ScoreImportCompletedEvent.ImportedScore(x.Chart.Id, x.Best!.Score!.Value,
+                x.Best.Plate?.ToString(), x.Best.IsBroken))
+            .ToArray();
+        // Every dated play is journal history, best or not — stage breaks included, from both
+        // surfaces. Undated ones are skipped: the site's play time IS the row's identity, and
+        // without it a re-import would duplicate the window.
         var observed = recentPlays
             .SelectMany(p => p.Plays.Where(s => s.RecordedAt != null)
                 .Select(s => new RecordObservedPlaysCommand.ObservedPlay(p.Chart.Id, s.Score, s.Plate,
-                    s.IsBroken, s.RecordedAt!.Value, JudgementsOf(s))))
+                    s.IsBroken, s.RecordedAt!.Value, JudgementsOf(s), s.IsStageBroken)))
+            .Concat(listStageBreaks)
             .ToArray();
 
         await _bus.Publish(ScoreImportCompletedEvent.Create(_dateTime.Now,
@@ -510,26 +513,41 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
     /// <summary>
     ///     ONE play wins a chart's recent window, and its score, plate and broken flag travel
     ///     together. Taking the best of each column independently produced attempts nobody
-    ///     played — a higher break's score wearing a lower pass's cleared flag.
+    ///     played — a higher break's score wearing a lower pass's cleared flag. A stage break is
+    ///     never in the running (BestAttemptPolicy.CanBeRecord), so a window that holds nothing
+    ///     else has no best: null.
     /// </summary>
-    private static PiuGameGetRecentScoresResult BestOf(PiuGameGetRecentScoresResult[] plays)
+    private static PiuGameGetRecentScoresResult? BestOf(IEnumerable<PiuGameGetRecentScoresResult> plays)
     {
-        return plays.Aggregate((winner, next) =>
-            BestAttemptPolicy.Beats(winner.Score, winner.Plate, winner.IsBroken,
-                next.Score, next.Plate, next.IsBroken)
-                ? next
-                : winner);
+        PiuGameGetRecentScoresResult? winner = null;
+        foreach (var next in plays.Where(p => BestAttemptPolicy.CanBeRecord(p.IsStageBroken)))
+            if (winner == null || BestAttemptPolicy.Beats(winner.Score, winner.Plate, winner.IsBroken,
+                    next.Score, next.Plate, next.IsBroken))
+                winner = next;
+
+        return winner;
     }
+
+    /// <summary>
+    ///     What the best list maps to: the bests themselves, keyed by chart, and the stage breaks
+    ///     the redesigned list keeps as an unpassed chart's first attempt — history to journal, never
+    ///     a record. Those carry the card's date and nothing else: no judgements (the list prints
+    ///     none) and no score (the number on the card is the running score at the moment the stage
+    ///     broke, which is not a chart score).
+    /// </summary>
+    private sealed record MappedBestList(Dictionary<Guid, OfficialRecordedScore> Bests,
+        IReadOnlyList<RecordObservedPlaysCommand.ObservedPlay> StageBreaks);
 
     /// <summary>
     ///     My Best Scores is the source of truth for the record (score-truth-model.md D3): this
     ///     maps its cards onto charts, and nothing here consults the recent window.
     /// </summary>
-    private async Task<Dictionary<Guid, OfficialRecordedScore>> MapBestList(MixEnum mix,
+    private async Task<MappedBestList> MapBestList(MixEnum mix,
         IEnumerable<PiuGameGetBestScoresResult.ScoreDto> responses, bool includeBroken,
         CancellationToken cancellationToken)
     {
         var results = new Dictionary<Guid, OfficialRecordedScore>();
+        var stageBreaks = new List<RecordObservedPlaysCommand.ObservedPlay>();
         foreach (var response in responses)
         {
             var song = await GetMappedName(response.SongName, cancellationToken);
@@ -537,12 +555,26 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 .FirstOrDefault(c => c.Type == response.ChartType && c.Level == response.Level);
             if (chart == null) continue;
 
-            // The redesigned best list includes stage-failed bests (no plate, real partial
-            // score) — they honor the same opt-in as recent-play breaks.
-            if (response.IsBroken && !includeBroken) continue;
             // Someone started the song and let it fail out. The site lists those; we never
             // store one.
             if (BestAttemptPolicy.IsWalkOff(response.IsBroken, response.Score, null)) continue;
+
+            // A stage break is never a best, whatever the opt-in says (stage-breaks-and-max-combo.md
+            // D10). The list freezes an unpassed chart's first attempt, so a stage-broken card's
+            // date IS a play's date: it is journaled as one when the card is dated, and it never
+            // reaches the record. Dropping it from the bests is also what lets the recent window
+            // seat a finished fail on the chart under the opt-in.
+            if (!BestAttemptPolicy.CanBeRecord(response.IsStageBroken))
+            {
+                if (response.RecordedAt is { } playedAt)
+                    stageBreaks.Add(new RecordObservedPlaysCommand.ObservedPlay(chart.Id, null, null, true,
+                        playedAt, null, IsStageBroken: true));
+                continue;
+            }
+
+            // The redesigned best list includes failed-but-finished bests (no plate, x_ grade,
+            // real score) — they honor the same opt-in as recent-play breaks.
+            if (response.IsBroken && !includeBroken) continue;
 
             // A chart surfacing twice in one walk (its score changed mid-walk) keeps the
             // newest-dated card; undated cards keep the classic last-wins overwrite.
@@ -554,7 +586,7 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 response.IsBroken, response.RecordedAt);
         }
 
-        return results;
+        return new MappedBestList(results, stageBreaks);
     }
 
     /// <summary>
@@ -577,6 +609,8 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                     c.Level == chartGroup.Key.Level && c.Type == chartGroup.Key.ChartType);
                 if (chart == null) continue;
 
+                // Stage breaks stay: they are plays, and the journal wants them. Only the
+                // walk-off — a break with nothing hit — goes.
                 var plays = chartGroup
                     .Where(s => !BestAttemptPolicy.IsWalkOff(s.IsBroken, s.Score, JudgementsOf(s)))
                     .ToArray();
@@ -669,30 +703,45 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
         var dailyChartIds = (await _dailyStep.GetCurrentChartIds(mix, cancellationToken)).ToHashSet();
         foreach (var (chart, plays) in recentPlays.Where(p => dailyChartIds.Contains(p.Chart.Id)))
         {
+            // A window of nothing but stage breaks observed no score for the board.
             var best = BestOf(plays);
-            var lowestPass = plays.Where(s => !s.IsBroken).OrderBy(s => (int)s.Score).FirstOrDefault();
+            if (best == null) continue;
+
+            var lowestPass = plays.Where(s => !s.IsBroken).OrderBy(s => (int)s.Score!.Value).FirstOrDefault();
             await _bus.Publish(new DailyStepScoreObservedEvent(userId, mix, chart.Id,
-                (int)best.Score, best.Plate?.ToString(), best.IsBroken,
-                lowestPass == null ? (int?)null : (int)lowestPass.Score,
+                (int)best.Score!.Value, best.Plate?.ToString(), best.IsBroken,
+                lowestPass == null ? (int?)null : (int)lowestPass.Score!.Value,
                 lowestPass?.Plate?.ToString()), cancellationToken);
         }
     }
 
     /// <summary>
     ///     What the recent window contributes to the RECORD, which the best list otherwise owns:
-    ///     a broken best for a chart the best page never listed (opt-in only), and the judgement
-    ///     breakdown — plus the timestamp, when the best list carried none — of the play that
-    ///     produced whatever is being saved.
+    ///     a broken best for a chart the best page never listed (opt-in only); a better finished
+    ///     fail than a broken card — the list freezes an unpassed chart's first attempt, so the
+    ///     window often holds a higher one, and broken may replace broken through the ordinary
+    ///     policy while a passing card is never touched from here (stage-breaks-and-max-combo.md
+    ///     D17); and the judgement breakdown — plus the timestamp, when the best list carried none
+    ///     — of the play that produced whatever is being saved.
     /// </summary>
     private static void EnrichBestsFromRecentPlays(IReadOnlyList<ChartPlays> recentPlays,
         IDictionary<Guid, OfficialRecordedScore> results, bool includeBroken)
     {
         foreach (var (chart, plays) in recentPlays)
         {
-            if (includeBroken && !results.ContainsKey(chart.Id))
+            var best = BestOf(plays);
+            if (best != null)
             {
-                var best = BestOf(plays);
-                results[chart.Id] = new OfficialRecordedScore(chart, best.Score, best.Plate, best.IsBroken);
+                if (!results.ContainsKey(chart.Id))
+                {
+                    if (includeBroken)
+                        results[chart.Id] = new OfficialRecordedScore(chart, best.Score!.Value, best.Plate, best.IsBroken);
+                }
+                else if (results[chart.Id] is { IsBroken: true } card && BestAttemptPolicy.Beats(card.Score, card.Plate,
+                             card.IsBroken, best.Score, best.Plate, best.IsBroken))
+                {
+                    results[chart.Id] = new OfficialRecordedScore(chart, best.Score!.Value, best.Plate, best.IsBroken);
+                }
             }
 
             if (!results.TryGetValue(chart.Id, out var saved)) continue;
@@ -705,10 +754,18 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 .FirstOrDefault();
             if (producing == null) continue;
 
+            // The producing play's own time WINS over the best card's stamp. The card's date is
+            // not when that score was set: it is stamped when the chart first reaches the list and
+            // never moves again, so a chart failed on the 12th and passed on the 14th still shows
+            // the 12th beside the passing score (measured against the live site, 2026-08-18 —
+            // docs/design/stage-breaks-and-max-combo.md §6). Taking the card's date made every such
+            // pass collide with the earlier attempt's journal row, which is one play's key holding
+            // another play's result. The card's stamp is the fallback, for a best the recent window
+            // no longer reaches.
             results[chart.Id] = saved with
             {
                 Judgements = JudgementsOf(producing),
-                RecordedAt = saved.RecordedAt ?? producing.RecordedAt
+                RecordedAt = producing.RecordedAt ?? saved.RecordedAt
             };
         }
     }
@@ -784,6 +841,9 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
             .FirstOrDefault(c => c.Type == card.ChartType && c.Level == card.Level);
         if (chart == null) return false;
         if (BestAttemptPolicy.IsWalkOff(card.IsBroken, card.Score, null)) return false;
+        // A stage break is history, never a best: it seats nothing, so it is not work — otherwise
+        // every stage break on the list would keep the walk going.
+        if (!BestAttemptPolicy.CanBeRecord(card.IsStageBroken)) return false;
 
         return BestAttemptPolicy.Beats(storedBests.GetValueOrDefault(chart.Id), card.Score,
             BestAttemptPolicy.PlateFor(card.IsBroken, card.Plate), card.IsBroken);
@@ -870,7 +930,10 @@ internal sealed class OfficialSiteClient : IOfficialSiteClient
                 continue;
             }
 
-            result.Add(new OfficialRecordedScore(chart, record.Score, record.Plate, record.IsBroken));
+            // A stage break is not a recorded score: no chart score to carry.
+            if (record.IsStageBroken || record.Score == null) continue;
+
+            result.Add(new OfficialRecordedScore(chart, record.Score.Value, record.Plate, record.IsBroken));
         }
 
         return (result, nonMapped);

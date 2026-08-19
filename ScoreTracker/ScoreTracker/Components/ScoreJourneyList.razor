@@ -21,7 +21,16 @@
             <div class="score-journey-row">
                 <span class="score-journey-date">@entry.OccurredAt.ToString("yyyy-MM-dd")</span>
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@entry.Mix.GetName()</MudChip>
-                <span class="score-journey-score">@ScoreText(entry)</span>
+                @if (entry.IsStageBroken)
+                {
+                    @* The stage broke: no grade, no plate, no chart score — the phrase says so, and how
+                       far the run got when the row's mix is the page's, since the note count is per mix. *@
+                    <span class="score-journey-score score-journey-stagebreak">@StageBreakText(entry)</span>
+                }
+                else
+                {
+                    <span class="score-journey-score">@ScoreText(entry)</span>
+                }
                 @if (entry.Mix.UsesLegacyScoring())
                 {
                     @if (entry.LegacyGrade != null)
@@ -55,6 +64,15 @@ else if (ShowWhenEmpty)
     [Parameter] public bool ShowWhenEmpty { get; set; }
 
     /// <summary>
+    ///     The host page's mix and the chart's note count in it, so a stage-broken row can say how
+    ///     far the run got. A note count is per mix (the same chart is re-stepped between mixes),
+    ///     so rows from another mix get the plain phrase.
+    /// </summary>
+    [Parameter] public MixEnum? PageMix { get; set; }
+
+    [Parameter] public int? NoteCount { get; set; }
+
+    /// <summary>
     ///     Whichever number this row's scoring model uses, formatted with separators — an era
     ///     score can run to eight digits and is unreadable without them.
     /// </summary>
@@ -64,5 +82,13 @@ else if (ShowWhenEmpty)
             return entry.LegacyScore is { } legacy ? ((int)legacy).ToString("N0") : "—";
 
         return entry.Score?.ToString() ?? "—";
+    }
+
+    private string StageBreakText(ScoreJournalEntry entry)
+    {
+        var judged = entry.Judgements?.NoteCount;
+        return entry.Mix == PageMix && StageBreakProgress.PercentIn(judged, NoteCount) is { } percent
+            ? L["Stage break · {0}% in", percent]
+            : L["Stage break"];
     }
 }

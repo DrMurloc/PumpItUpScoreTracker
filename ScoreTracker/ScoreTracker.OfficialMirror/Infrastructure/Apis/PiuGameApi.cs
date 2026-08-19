@@ -10,6 +10,7 @@ using Microsoft.VisualBasic.FileIO;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis.Contracts;
 using ScoreTracker.OfficialMirror.Infrastructure.Apis.Dtos;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.ValueTypes;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.OfficialMirror.Wiring;
@@ -408,17 +409,18 @@ internal sealed class PiuGameApi : IPiuGameApi
         foreach (var card in cards)
             try
             {
-                if (card.SelectNodes(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
-                        ?.Any(n => n.InnerText == "STAGE BREAK") ?? false)
-                    continue;
                 var isBroken = !(card.SelectNodes(".//div[contains(@class,'li_in')]/img")
                     ?.Any(n => n.GetAttributeValue("src", "").Contains("/plate/")) ?? false);
-
-                var score = int.Parse(card
-                                          .SelectSingleNode(".//div[contains(@class,'li_in')]/i[contains(@class,'tx')]")
-                                          ?.InnerText.Replace(",", "") ??
-                                      "",
-                    NumberStyles.AllowThousands);
+                // The stage broke: the song ended before its last note. The card says so twice —
+                // "STAGE BREAK" where the score would be, and an empty grade slot, because the
+                // game assigns no grade to an interrupted stage. Either signal is enough. A
+                // failed-but-finished stage prints a number and an x_-prefixed grade instead.
+                var scoreCell = card.SelectSingleNode(".//div[contains(@class,'li_in') and contains(@class,'ac')]");
+                var scoreText = scoreCell?.SelectSingleNode("./i[contains(@class,'tx')]")?.InnerText.Trim() ?? "";
+                var isStageBroken = isBroken && (scoreText == "STAGE BREAK" || GradeSlotIsEmpty(scoreCell));
+                PhoenixScore? score = isStageBroken
+                    ? null
+                    : int.Parse(scoreText.Replace(",", ""), NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
                 var songName =
                     HttpUtility.HtmlDecode(card.SelectSingleNode(".//div[contains(@class,'song_name')]/p").InnerText);
                 var chartTypeUrl = card
@@ -474,6 +476,7 @@ internal sealed class PiuGameApi : IPiuGameApi
                     Grade = GradeFrom(card.InnerHtml),
                     SongName = songName,
                     IsBroken = isBroken,
+                    IsStageBroken = isStageBroken,
                     Score = score,
                     Perfects = perfects,
                     Greats = greats,
@@ -707,6 +710,19 @@ internal sealed class PiuGameApi : IPiuGameApi
         return maxPageStrings.Length > 0 ? int.Parse(maxPageStrings[^1].TrimEnd('\'') ?? "") : page;
     }
 
+    /// <summary>
+    ///     Whether a card's score cell carries no grade art. The game assigns no grade to an
+    ///     interrupted stage, so both the recently-played card and the redesigned best-list card
+    ///     render one with an <c>&lt;img src=""&gt;</c> where a graded play — passed or failed and
+    ///     finished — has a grade file. The one signal the best list gives, since it prints no
+    ///     STAGE BREAK label and no judgement table.
+    /// </summary>
+    private static bool GradeSlotIsEmpty(HtmlNode? scoreCell)
+    {
+        var grade = scoreCell?.SelectSingleNode("./img");
+        return grade != null && string.IsNullOrWhiteSpace(grade.GetAttributeValue("src", ""));
+    }
+
     // "2026-07-17 23:16:30 (GMT+9)" — my_page timestamps carry their UTC offset inline.
     private static readonly Regex RecordedAtRegex =
         new(@"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s*\(GMT([+-]\d{1,2})\)", RegexOptions.Compiled);
@@ -763,19 +779,22 @@ internal sealed class PiuGameApi : IPiuGameApi
 
                 if (level == 0) level = 29;
 
+                var scoreCell = card.SelectSingleNode(".//div[contains(@class,'li_in') and contains(@class,'ac')]");
                 var score = int.Parse(
-                    card.SelectSingleNode(
-                            ".//div[contains(@class,'li_in') and contains(@class,'ac')]/i[contains(@class,'tx')]")
-                        .InnerText.Replace(",", ""),
+                    scoreCell.SelectSingleNode("./i[contains(@class,'tx')]").InnerText.Replace(",", ""),
                     NumberStyles.AllowThousands, CultureInfo.InvariantCulture);
 
                 // The plate renders in its own li_in beside the score's (which holds the grade
-                // image); no plate image anywhere on the card means a broken (stage-failed)
-                // best — the redesign lists those too, usually with a real partial score.
+                // image); no plate image anywhere on the card means a broken best — the redesign
+                // lists those too. Two kinds hide behind that: a failed-but-finished stage, which
+                // prints an x_-prefixed grade beside a real score, and a stage break — the song
+                // interrupted — which prints an EMPTY grade slot beside the running score at the
+                // moment it broke, a number that reads like a near-pass and is not a chart score.
                 var plateMatch = card
                     .SelectNodes(".//div[contains(@class,'li_in')]/img")
                     ?.Select(i => PlateRegex.Match(i.GetAttributeValue("src", "")))
                     .FirstOrDefault(m => m.Success);
+                var isBroken = plateMatch == null;
 
                 scores.Add(new PiuGameGetBestScoresResult.ScoreDto
                 {
@@ -787,7 +806,8 @@ internal sealed class PiuGameApi : IPiuGameApi
                     Plate = plateMatch == null
                         ? null
                         : PhoenixPlateHelperMethods.ParseShorthand(plateMatch.Groups[1].Value),
-                    IsBroken = plateMatch == null,
+                    IsBroken = isBroken,
+                    IsStageBroken = isBroken && GradeSlotIsEmpty(scoreCell),
                     RecordedAt = ParseRecordedAt(card)
                 });
             }

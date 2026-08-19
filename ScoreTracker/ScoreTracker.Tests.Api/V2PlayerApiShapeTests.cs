@@ -50,7 +50,7 @@ public sealed class V2PlayerApiShapeTests
     {
         SetupScores(new RecordedPhoenixScore(ApiTestData.ChartId1, PhoenixScore.From(978210),
             PhoenixPlate.MarvelousGame, false, ApiTestData.Date1, "officialImport",
-            new JudgementCounts(1013, 4, 0, 0, 1)));
+            new JudgementCounts(1013, 4, 0, 0, 1, 1016)));
 
         var result = await _controller.GetScores("me", "Phoenix");
 
@@ -62,6 +62,25 @@ public sealed class V2PlayerApiShapeTests
         Assert.Equal("Marvelous Game", row.Plate);
         Assert.Equal(1013, row.Judgments!.Perfects);
         Assert.Equal(1, row.Judgments.Misses);
+        // Additive 2026-08-17: the solved combo rides beside the five counts.
+        Assert.Equal(1016, row.Judgments.MaxCombo);
+    }
+
+    // The combo is solved, not reported: where the inputs cannot support one it is null, and the
+    // five counts still travel.
+    [Fact]
+    public async Task AnUnsolvableComboReportsNullBesideTheCounts()
+    {
+        SetupScores(new RecordedPhoenixScore(ApiTestData.ChartId1, PhoenixScore.From(978210),
+            PhoenixPlate.MarvelousGame, false, ApiTestData.Date1, "officialImport",
+            new JudgementCounts(1013, 4, 0, 0, 1)));
+
+        var result = await _controller.GetScores("me", "Phoenix");
+
+        var page = Assert.IsType<PlayerScorePageDto>(Assert.IsType<JsonResult>(result).Value);
+        var judgments = Assert.Single(page.Data).Judgments!;
+        Assert.Equal(1013, judgments.Perfects);
+        Assert.Null(judgments.MaxCombo);
     }
 
     // Zeros would read as a perfect game, so a source that never carried judgments reports none.
@@ -183,8 +202,36 @@ public sealed class V2PlayerApiShapeTests
         var page = Assert.IsType<CursorPageDto<JournalEntryDto>>(Assert.IsType<JsonResult>(result).Value);
         var row = Assert.Single(page.Data);
         Assert.False(row.IsBest);
+        Assert.False(row.IsStageBroken);
         Assert.Equal(1013, row.Judgments!.Perfects);
         // Unbounded history: counting it would cost a second pass, so total stays null.
         Assert.Null(page.Total);
+    }
+
+    // Additive 2026-08-17: a stage break is a journal entry too — flagged, never best, no score,
+    // the judgments up to where the song stopped.
+    [Fact]
+    public async Task JournalCarriesAStageBreakFlaggedAndScoreless()
+    {
+        _mediator.Setup(m => m.Send(It.IsAny<GetPlayerJournalQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new ScoreJournalEntry(ApiTestData.Date2, ScoreJournalEntry.OfficialImportSource,
+                    ApiTestData.PublicUserId, ApiTestData.ChartId1, null, null, true, MixEnum.Phoenix2, null,
+                    new JudgementCounts(134, 2, 0, 0, 70), false, IsStageBroken: true)
+            });
+
+        var result = await _controller.GetJournal("me", "Phoenix2");
+
+        var page = Assert.IsType<CursorPageDto<JournalEntryDto>>(Assert.IsType<JsonResult>(result).Value);
+        var row = Assert.Single(page.Data);
+        Assert.True(row.IsStageBroken);
+        Assert.True(row.IsBroken);
+        Assert.False(row.IsBest);
+        Assert.Null(row.Score);
+        Assert.Null(row.LetterGrade);
+        Assert.Null(row.Plate);
+        Assert.Equal(70, row.Judgments!.Misses);
+        Assert.Null(row.Judgments.MaxCombo);
     }
 }
