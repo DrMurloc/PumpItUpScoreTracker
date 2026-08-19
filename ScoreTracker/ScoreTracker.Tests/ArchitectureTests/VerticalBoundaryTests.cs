@@ -235,6 +235,9 @@ public sealed class VerticalBoundaryTests
         // them looks interrupted and the next boot replays the world
         // (docs/design/import-restart-recovery.md §4.1).
         Assert.Contains(services, d => d.ServiceType == typeof(SessionRecoverySaga));
+        // The admin's Backfill max combos button publishes a bus command; unregistered, the press
+        // is silently a no-op.
+        Assert.Contains(services, d => d.ServiceType == typeof(BackfillMaxCombosConsumer));
     }
 
     [Fact]

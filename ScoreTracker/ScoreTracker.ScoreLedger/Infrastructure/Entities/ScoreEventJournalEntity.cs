@@ -46,6 +46,17 @@ internal sealed class ScoreEventJournalEntity
     [Required] public bool IsBroken { get; set; }
 
     /// <summary>
+    ///     A play the stage interrupted — the song ended before its last note. Always broken,
+    ///     never best, never scored: the running number the Phoenix 2 best list prints for one
+    ///     is normalised over the notes judged so far and is not a chart score. Defaults to
+    ///     FALSE in the CLR and the column: every row written before the parser read the
+    ///     site's STAGE BREAK label was a finished play, because the label was skipped outright
+    ///     (docs/design/stage-breaks-and-max-combo.md D11).
+    /// </summary>
+    [Required]
+    public bool IsStageBroken { get; set; }
+
+    /// <summary>
     ///     Whether this play became the player's record when it was written. False for the
     ///     plays the official site's recently-played list reports that never beat a best.
     ///     Defaults to TRUE, in both the CLR and the column: every row written before the
@@ -72,4 +83,12 @@ internal sealed class ScoreEventJournalEntity
     public int? Goods { get; set; }
     public int? Bads { get; set; }
     public int? Misses { get; set; }
+
+    /// <summary>
+    ///     The max combo solved from the breakdown above and the score at write time
+    ///     (PhoenixComboSolver). NULL when there is no breakdown, the chart's note count is
+    ///     unknown, the breakdown falls short of it, or the play is a stage break — and
+    ///     re-derived wholesale by the Backfill max combos admin button.
+    /// </summary>
+    public int? MaxCombo { get; set; }
 }

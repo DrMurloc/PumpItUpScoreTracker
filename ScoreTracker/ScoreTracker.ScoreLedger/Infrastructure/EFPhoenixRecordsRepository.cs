@@ -108,7 +108,8 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 .ToArrayAsync(cancellationToken))
             .Select(e => new ScoreJournalEntry(e.OccurredAt, e.Source, e.UserId, e.ChartId,
                 e.Score, PhoenixPlateHelperMethods.TryParse(e.Plate), e.IsBroken, MixIds.ToEnum(e.MixId),
-                Judgements: EFScoreJournalRepository.JudgementsOf(e), IsBest: e.IsBest));
+                Judgements: EFScoreJournalRepository.JudgementsOf(e), IsBest: e.IsBest,
+                IsStageBroken: e.IsStageBroken));
     }
 
     async Task<IReadOnlySet<Guid>> IScoreReader.GetActiveUserIds(MixEnum mix, DateTimeOffset since,
@@ -316,7 +317,17 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
         return pba.Perfects == null
             ? null
             : new JudgementCounts(pba.Perfects.Value, pba.Greats!.Value, pba.Goods!.Value, pba.Bads!.Value,
-                pba.Misses!.Value);
+                pba.Misses!.Value, pba.MaxCombo);
+    }
+
+    private static void SetJudgements(PhoenixRecordEntity entity, JudgementCounts? judgements)
+    {
+        entity.Perfects = judgements?.Perfects;
+        entity.Greats = judgements?.Greats;
+        entity.Goods = judgements?.Goods;
+        entity.Bads = judgements?.Bads;
+        entity.Misses = judgements?.Misses;
+        entity.MaxCombo = judgements?.MaxCombo;
     }
 
     public async Task UpdateBestAttempt(MixEnum mix, Guid userId, RecordedPhoenixScore score,
@@ -330,7 +341,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 cancellationToken);
         if (existing == null)
         {
-            await database.AddAsync(new PhoenixRecordEntity
+            var entity = new PhoenixRecordEntity
             {
                 ChartId = score.ChartId,
                 UserId = userId,
@@ -341,13 +352,10 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
                 LetterGrade = score.Score?.LetterGradeFor(mix).GetName(),
                 Plate = score.Plate?.GetName(),
                 RecordedDate = score.RecordedDate,
-                Source = score.Source,
-                Perfects = score.Judgements?.Perfects,
-                Greats = score.Judgements?.Greats,
-                Goods = score.Judgements?.Goods,
-                Bads = score.Judgements?.Bads,
-                Misses = score.Judgements?.Misses
-            }, cancellationToken);
+                Source = score.Source
+            };
+            SetJudgements(entity, score.Judgements);
+            await database.AddAsync(entity, cancellationToken);
         }
         else
         {
@@ -357,11 +365,7 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             existing.IsBroken = score.IsBroken;
             existing.RecordedDate = score.RecordedDate;
             existing.Source = score.Source;
-            existing.Perfects = score.Judgements?.Perfects;
-            existing.Greats = score.Judgements?.Greats;
-            existing.Goods = score.Judgements?.Goods;
-            existing.Bads = score.Judgements?.Bads;
-            existing.Misses = score.Judgements?.Misses;
+            SetJudgements(existing, score.Judgements);
         }
 
         await database.SaveChangesAsync(cancellationToken);
@@ -752,6 +756,37 @@ internal sealed class EFPhoenixRecordsRepository : IPhoenixRecordRepository,
             .ExecuteDeleteAsync(cancellationToken);
         _cache.Remove(ScoreCache(userId, mix));
         return removed;
+    }
+
+    public async Task<IReadOnlyList<Guid>> GetUsersWithJudgedRecords(MixEnum mix,
+        CancellationToken cancellationToken = default)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        return await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.MixId == mixId && p.Perfects != null)
+            .Select(p => p.UserId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public async Task SetMaxCombos(MixEnum mix, Guid userId, IReadOnlyList<(Guid ChartId, int? MaxCombo)> combos,
+        CancellationToken cancellationToken = default)
+    {
+        if (combos.Count == 0) return;
+
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var rows = await database.Set<PhoenixRecordEntity>()
+            .Where(p => p.UserId == userId && p.MixId == mixId && p.Perfects != null)
+            .ToArrayAsync(cancellationToken);
+        var byChart = rows.ToDictionary(r => r.ChartId);
+        foreach (var (chartId, maxCombo) in combos)
+            if (byChart.TryGetValue(chartId, out var row))
+                row.MaxCombo = maxCombo;
+
+        await database.SaveChangesAsync(cancellationToken);
+        _cache.Remove(ScoreCache(userId, mix));
     }
 
     public async Task DeleteAllForUser(Guid userId, MixEnum? mix = null,

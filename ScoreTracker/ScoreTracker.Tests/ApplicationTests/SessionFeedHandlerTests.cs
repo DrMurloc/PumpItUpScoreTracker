@@ -12,6 +12,7 @@ using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.ScoreLedger.Domain;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Tests.TestData;
 using Xunit;
 
@@ -91,6 +92,32 @@ public sealed class SessionFeedHandlerTests
         Assert.Equal(ScoreEventClassification.Upscore, byTime[2].Classification);
         Assert.Equal(900000, byTime[2].PreviousBest);
         Assert.Equal(ScoreEventClassification.Played, byTime[3].Classification);
+    }
+
+    [Fact]
+    public async Task AStageBreakReadsAsPlayedAndCarriesTheFlagAndHowManyNotesItJudged()
+    {
+        // History and nothing else: it moved no record, so it classifies like any observation,
+        // and the row gets what it needs to say how far the run got.
+        var ctx = new HandlerContext();
+        var judgements = new JudgementCounts(244, 5, 2, 1, 110);
+        var stageBreak = new ScoreJournalEntry(Now, "officialImport", UserId, ChartId, null, null, true,
+            MixEnum.Phoenix2, null, judgements, false, IsStageBroken: true);
+        var rows = new[] { Entry(Now.AddDays(-1), 900000, mix: MixEnum.Phoenix2), stageBreak };
+        ctx.GivenGroups(new JournalSessionRows(null, DateOnly.FromDateTime(Now.Date), MixEnum.Phoenix2, rows));
+        ctx.GivenHistories(rows);
+
+        var page = await ctx.Handler.Handle(new GetRecentSessionsQuery(UserId), CancellationToken.None);
+
+        var row = page.Groups.Single().Rows.Single(r => r.OccurredAt == Now);
+        Assert.True(row.IsStageBroken);
+        Assert.True(row.IsBroken);
+        Assert.Null(row.Score);
+        Assert.Equal(362, row.JudgedNotes);
+        Assert.Equal(ScoreEventClassification.Played, row.Classification);
+        var pass = page.Groups.Single().Rows.Single(r => r.OccurredAt != Now);
+        Assert.False(pass.IsStageBroken);
+        Assert.Null(pass.JudgedNotes);
     }
 
     [Fact]

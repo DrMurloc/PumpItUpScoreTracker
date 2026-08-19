@@ -21,11 +21,30 @@ public sealed class SessionUndoReplayTests
             (PhoenixScore)score, plate, isBroken, MixEnum.Phoenix);
     }
 
+    private static ScoreJournalEntry StageBreak(int minutesIn)
+    {
+        return new ScoreJournalEntry(Start.AddMinutes(minutesIn), ScoreJournalEntry.OfficialImportSource,
+            Guid.NewGuid(), Chart, null, null, true, MixEnum.Phoenix, IsBest: false, IsStageBroken: true);
+    }
+
     [Fact]
     public void NothingSurvivingMeansTheRecordGoesEntirely()
     {
         // A chart the undone session was the first to touch returns to never having been played.
         Assert.Null(SessionUndoReplay.BestOf(Array.Empty<ScoreJournalEntry>()));
+    }
+
+    [Fact]
+    public void AStageBreakIsNeverCrownedEvenAsTheOnlySurvivor()
+    {
+        // The first survivor is taken unconditionally, which is exactly how an undo could seat
+        // a stage break the write path refused. It cannot: a stage break is history, not a
+        // candidate.
+        Assert.Null(SessionUndoReplay.BestOf(new[] { StageBreak(0), StageBreak(5) }));
+
+        var best = SessionUndoReplay.BestOf(new[] { StageBreak(0), Play(10, 900_000, isBroken: true), StageBreak(20) });
+        Assert.Equal((PhoenixScore)900_000, best!.Score);
+        Assert.False(best.IsStageBroken);
     }
 
     [Fact]

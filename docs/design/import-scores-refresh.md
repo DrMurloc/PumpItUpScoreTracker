@@ -102,6 +102,13 @@ with the truth-model work.
   score is a run that failed the stage"; anyone reading an import option on this site already
   knows, and the sentence spent the caption's first line teaching them nothing.
 
+  **Amended 2026-08-17 ([stage-breaks-and-max-combo.md](stage-breaks-and-max-combo.md)).** All
+  three helper variants end with one more sentence: *"A stage break — a run that ended before the
+  last note — is never your record either way; it stays in your play history."* It is the one
+  definition the caption carries, kept because it draws the line the option itself stops at: the
+  box governs failed-and-finished runs, and a player who has just seen a 900k number vanish from
+  their bests needs to know a stage break was never eligible, on or off.
+
   The tools line beneath it names PIU Tracker as a link out (new tab), alongside the existing
   Community Tools link. Both live inside one localized sentence rendered as markup — splitting it
   into fragments would assume an English word order that ja-JP and ko-KR do not share.

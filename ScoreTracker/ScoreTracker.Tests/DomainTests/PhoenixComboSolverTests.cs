@@ -68,4 +68,40 @@ public sealed class PhoenixComboSolverTests
         // combo lands above the note count, which is a contradiction rather than a reading.
         Assert.Null(PhoenixComboSolver.MaxComboFor(counts, 1000000, counts.NoteCount));
     }
+
+    /// <summary>
+    ///     The stored shape: the counts carry their own combo, and the count itself is untouched
+    ///     by the carry — NoteCount is still the five, never six.
+    /// </summary>
+    [Fact]
+    public void TheCarriedComboRidesTheCountsWithoutChangingThem()
+    {
+        var screen = new ScoreScreen(900, 40, 5, 2, 3, 947);
+        var counts = new JudgementCounts(900, 40, 5, 2, 3);
+
+        var carried = PhoenixComboSolver.WithMaxCombo(counts, screen.CalculatePhoenixScore, counts.NoteCount);
+
+        Assert.NotNull(carried);
+        Assert.Equal(947, carried!.MaxCombo);
+        Assert.Equal(950, carried.NoteCount);
+        Assert.Equal(counts with { MaxCombo = 947 }, carried);
+    }
+
+    /// <summary>
+    ///     A stale carried value must not survive a re-solve: the combo is a function of the other
+    ///     inputs, so when they cannot support one the carry goes back to null rather than keeping
+    ///     whatever it arrived with.
+    /// </summary>
+    [Fact]
+    public void ReSolvingReplacesAStaleCarriedCombo()
+    {
+        var counts = new JudgementCounts(400, 10, 2, 1, 5, 410);
+        var screen = new ScoreScreen(400, 10, 2, 1, 5, 410);
+
+        var carried = PhoenixComboSolver.WithMaxCombo(counts, screen.CalculatePhoenixScore, 1000);
+
+        Assert.NotNull(carried);
+        Assert.Null(carried!.MaxCombo);
+        Assert.Null(PhoenixComboSolver.WithMaxCombo(null, 985000, 950));
+    }
 }

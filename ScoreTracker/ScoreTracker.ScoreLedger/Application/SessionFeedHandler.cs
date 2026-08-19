@@ -108,11 +108,14 @@ internal sealed class SessionFeedHandler : IRequestHandler<GetRecentSessionsQuer
                         && (chartHistory.Any(h => h.IsBest && h.Mix != row.Mix && !h.IsBroken)
                             || (xxCleared?.Contains(row.ChartId) ?? false));
 
+        // A stage break carries its flag and how many notes it judged, so the row can say how
+        // far the run got; the classification stays Played — it moved nothing, like any
+        // observation.
         return new RecentSessionsPage.ScoreEventRecord(row.ChartId, row.OccurredAt,
             row.Score == null ? null : (int)row.Score.Value, row.Plate?.ToString(), row.IsBroken, row.Source,
             row.SessionId, classification,
             classification == ScoreEventClassification.Upscore ? priorBest : null,
-            isReclear);
+            isReclear, row.IsStageBroken, row.Judgements?.NoteCount);
     }
 
     private static ScoreEventClassification ClassifyRow(ScoreJournalEntry row, bool priorPassed, int? priorBest,

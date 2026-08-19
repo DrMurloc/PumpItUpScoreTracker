@@ -50,4 +50,18 @@ public static class PhoenixComboSolver
         // nothing rather than print it.
         return rounded < 0 || rounded > total ? null : rounded;
     }
+
+    /// <summary>
+    ///     The same breakdown carrying its solved combo — the shape both write paths and the
+    ///     backfill store. Whatever combo the counts arrived with is replaced, not kept: the value
+    ///     is a function of the other inputs, and a stale one (a corrected note count, an
+    ///     earlier bug) must not survive a re-solve. Null in, null out.
+    /// </summary>
+    public static JudgementCounts? WithMaxCombo(JudgementCounts? judgements, PhoenixScore? score,
+        int? chartNoteCount)
+    {
+        return judgements == null
+            ? null
+            : judgements with { MaxCombo = MaxComboFor(judgements, score, chartNoteCount) };
+    }
 }

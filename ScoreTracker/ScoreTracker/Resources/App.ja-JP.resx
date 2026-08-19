@@ -908,6 +908,9 @@
   <data name="Backfill Highlights" xml:space="preserve">
     <value>ハイライトをバックフィル</value>
   </data>
+  <data name="Backfill max combos" xml:space="preserve">
+    <value>最大コンボをバックフィル</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>BAD</value>
   </data>
@@ -3040,13 +3043,13 @@
     <value>インポートして確認</value>
   </data>
   <data name="Import Broken Helper" xml:space="preserve">
-    <value>まだクリアしていない譜面では、最高のBreak Offスコアが記録になります。クリアは常に優先されます。バージョンに従う場合はPhoenix 2でオン、Phoenixでオフです。</value>
+    <value>まだクリアしていない譜面では、最高のBreak Offスコアが記録になります。クリアは常に優先されます。バージョンに従う場合はPhoenix 2でオン、Phoenixでオフです。Stage Break — 最後のノートより前に終わったプレイ — はどちらでも記録にならず、プレイ履歴にだけ残ります。</value>
   </data>
   <data name="Import Broken Helper Phoenix" xml:space="preserve">
-    <value>PhoenixはBreak Offの自己ベストを保存しないため、この設定は既定でオフです。まだクリアしていない譜面では、最高のBreak Offスコアが記録になります。クリアは常に優先されます。</value>
+    <value>PhoenixはBreak Offの自己ベストを保存しないため、この設定は既定でオフです。まだクリアしていない譜面では、最高のBreak Offスコアが記録になります。クリアは常に優先されます。Stage Break — 最後のノートより前に終わったプレイ — はどちらでも記録にならず、プレイ履歴にだけ残ります。</value>
   </data>
   <data name="Import Broken Helper Phoenix 2" xml:space="preserve">
-    <value>Phoenix 2はBreak Offの自己ベストを保存するため、この設定は既定でオンです。まだクリアしていない譜面では、最高のBreak Offスコアが記録になります。クリアは常に優先されます。</value>
+    <value>Phoenix 2はBreak Offの自己ベストを保存するため、この設定は既定でオンです。まだクリアしていない譜面では、最高のBreak Offスコアが記録になります。クリアは常に優先されます。Stage Break — 最後のノートより前に終わったプレイ — はどちらでも記録にならず、プレイ履歴にだけ残ります。</value>
   </data>
   <data name="Import complete" xml:space="preserve">
     <value>インポート完了</value>
@@ -5716,6 +5719,9 @@
   <data name="Re-rated" xml:space="preserve">
     <value>難度変更</value>
   </data>
+  <data name="Re-solving max combos from every judged score. Nothing is announced." xml:space="preserve">
+    <value>判定が記録されたすべてのスコアから最大コンボを再計算します。通知は行いません。</value>
+  </data>
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>譜面変更 — {0} ノーツ（以前は {1}）。</value>
   </data>
@@ -6855,8 +6861,14 @@
   <data name="Stage" xml:space="preserve">
     <value>ステージ</value>
   </data>
+  <data name="Stage break" xml:space="preserve">
+    <value>Stage Break</value>
+  </data>
   <data name="Stage Break Modifier" xml:space="preserve">
 	  <value>Stage失敗倍率</value>
+  </data>
+  <data name="Stage break · {0}% in" xml:space="preserve">
+    <value>Stage Break · {0}%地点</value>
   </data>
   <data name="Stage Pass" xml:space="preserve">
 	  <value>Stageクリア</value>

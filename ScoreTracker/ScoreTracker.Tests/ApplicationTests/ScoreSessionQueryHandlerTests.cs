@@ -40,6 +40,12 @@ public sealed class ScoreSessionQueryHandlerTests
             chartId, (PhoenixScore)950_000, null, false, MixEnum.Phoenix, sessionId);
     }
 
+    private static ScoreJournalEntry StageBreak(Guid chartId, Guid? sessionId, int minute)
+    {
+        return new ScoreJournalEntry(Now.AddMinutes(minute), ScoreJournalEntry.OfficialImportSource, UserId,
+            chartId, null, null, true, MixEnum.Phoenix, sessionId, null, false, IsStageBroken: true);
+    }
+
     private static ScoreSessionRecord Session(Guid? owner = null)
     {
         return new ScoreSessionRecord(SessionId, owner ?? UserId, MixEnum.Phoenix,
@@ -67,6 +73,45 @@ public sealed class ScoreSessionQueryHandlerTests
         Assert.Equal(1, preview!.ChartsRestored);
         Assert.Equal(1, preview.ChartsRemoved);
         Assert.Equal(2, preview.PlaysRemoved);
+    }
+
+    [Fact]
+    public async Task AChartTouchedOnlyByAStageBreakIsNeitherRestoredNorRemoved()
+    {
+        // Undoing the session deletes the stage break's row, but no record ever came from it —
+        // so the chart numbers must not claim one moved. The play still counts as removed.
+        _sessions.Setup(s => s.Get(SessionId, It.IsAny<CancellationToken>())).ReturnsAsync(Session());
+        _journal.Setup(j => j.GetSessionEntries(UserId, SessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { StageBreak(Removed, SessionId, 11) });
+        _journal.Setup(j => j.GetChartHistories(UserId, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<ScoreJournalEntry>());
+
+        var preview = await Build().Handle(new GetScoreSessionUndoPreviewQuery(UserId, SessionId),
+            CancellationToken.None);
+
+        Assert.Equal(0, preview!.ChartsRestored);
+        Assert.Equal(0, preview.ChartsRemoved);
+        Assert.Equal(1, preview.PlaysRemoved);
+    }
+
+    [Fact]
+    public async Task AChartWhoseOnlySurvivorIsAStageBreakReadsAsRemovedRatherThanRestored()
+    {
+        // The replay seats no record from a stage break (SessionUndoReplay.BestOf), so the chart
+        // loses its record entirely — the preview has to say the same thing the undo will do.
+        _sessions.Setup(s => s.Get(SessionId, It.IsAny<CancellationToken>())).ReturnsAsync(Session());
+        _journal.Setup(j => j.GetSessionEntries(UserId, SessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Play(Removed, SessionId, 11) });
+        _journal.Setup(j => j.GetChartHistories(UserId, It.IsAny<IEnumerable<Guid>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { Play(Removed, SessionId, 11), StageBreak(Removed, null, 1) });
+
+        var preview = await Build().Handle(new GetScoreSessionUndoPreviewQuery(UserId, SessionId),
+            CancellationToken.None);
+
+        Assert.Equal(0, preview!.ChartsRestored);
+        Assert.Equal(1, preview.ChartsRemoved);
     }
 
     [Fact]

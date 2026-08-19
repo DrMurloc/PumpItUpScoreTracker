@@ -156,6 +156,7 @@ extend the existing `barra de vida` / `vida` rows above.
 | Rainbow (the full visible bar) | Rainbow | Stays English, per the established Rainbow row. |
 | Gain multiplier | multiplicador de ganancia | Bare "multiplier" mid-sentence → `multiplicador`. |
 | Break (a miss or bad that ends a combo) | fallo | `Combo between breaks` → `Combo entre fallos`. Avoids `rotura`, which reads mechanical. |
+| Stage break (the song interrupted) | `stage break` (EN) | Jerga PIU, en inglés y en minúscula en prosa — distinto de `intento con break` (Broken), que es un intento que terminó y falló. `Stage break · {0}% in` → `Stage break · al {0}%`. |
 | Settles at (converges to) | se estabiliza en | `Where life settles` → `Dónde se estabiliza la vida`. |
 | Cliff (the survival threshold) | acantilado | Deliberately literal — the metaphor is the point. |
 

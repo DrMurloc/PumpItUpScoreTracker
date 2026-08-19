@@ -57,4 +57,4 @@ internal sealed record DevScoringLevelRow(MixEnum Mix, Guid ChartId, double Scor
 [ExcludeFromCodeCoverage]
 internal sealed record DevScoreRow(Guid ChartId, MixEnum Mix, DateTimeOffset RecordedAt, int? Score,
     string? LetterGrade, string? Plate, bool IsBroken, string? Source,
-    int? Perfects, int? Greats, int? Goods, int? Bads, int? Misses);
+    int? Perfects, int? Greats, int? Goods, int? Bads, int? Misses, int? MaxCombo = null);

@@ -33,12 +33,21 @@
                 }
             </div>
             <div class="sbd-row-line">
-                <span class="sbd-score @GlowClass" style="@ScoreColor">
-                    <ScoreBreakdown Score="Score.Row.Score == null ? null : PhoenixScore.From(Score.Row.Score.Value)"
-                                    Mix="Score.Chart.Mix" IsBroken="Score.Row.IsBroken"
-                                    Plate="PhoenixPlateHelperMethods.TryParse(Score.Row.Plate)"
-                                    ShowScore="true" OneLine="true"></ScoreBreakdown>
-                </span>
+                @if (Score.Row.IsStageBroken)
+                {
+                    @* The stage broke: no grade, no plate, no chart score. The phrase says so, and how
+                       far the run got when the card carried a breakdown and the chart a note count. *@
+                    <span class="sbd-stagebreak" data-testid="session-row-stage-break">@StageBreakText</span>
+                }
+                else
+                {
+                    <span class="sbd-score @GlowClass" style="@ScoreColor">
+                        <ScoreBreakdown Score="Score.Row.Score == null ? null : PhoenixScore.From(Score.Row.Score.Value)"
+                                        Mix="Score.Chart.Mix" IsBroken="Score.Row.IsBroken"
+                                        Plate="PhoenixPlateHelperMethods.TryParse(Score.Row.Plate)"
+                                        ShowScore="true" OneLine="true"></ScoreBreakdown>
+                    </span>
+                }
                 @if (StandingText != null)
                 {
                     <span class="sbd-peerpct">@StandingText</span>
@@ -94,6 +103,16 @@
     }
 
     private const int PerfectGame = 1_000_000;
+
+    /// <summary>
+    ///     "Stage break · 31% in" — the notes the card judged over the chart's note count — or the
+    ///     bare phrase when either side is unknown (a best-list stage break carries no breakdown;
+    ///     a chart nobody has passed carries no count).
+    /// </summary>
+    private string StageBreakText =>
+        StageBreakProgress.PercentIn(Score.Row.JudgedNotes, Score.Chart?.NoteCount) is { } percent
+            ? L["Stage break · {0}% in", percent]
+            : L["Stage break"];
 
     /// <summary>
     ///     One item in the strip. Most are a glyph and an optional suffix; two are numbers that

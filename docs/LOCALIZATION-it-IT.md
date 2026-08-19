@@ -412,6 +412,7 @@ extend the existing `lifebar` loanword rows above.
 | Rainbow (the full visible bar) | Rainbow | Stays English, matching the other locales. |
 | Gain multiplier | moltiplicatore di guadagno | Bare "multiplier" mid-sentence → `moltiplicatore`. |
 | Break (a miss or bad that ends a combo) | rottura | `Combo between breaks` → `Combo tra le rotture`. |
+| Stage break (the song interrupted) | `Stage Break` (EN) | Già nel gergo PIU lasciato in inglese; maiuscolo come etichetta. Distinto da `Rotto` (Broken), un tentativo finito e fallito. `Stage break · {0}% in` → `Stage Break · al {0}%`. |
 | Settles at (converges to) | si stabilizza a | `Where life settles` → `Dove si stabilizza la vita`. |
 | Cliff (the survival threshold) | dirupo | Deliberately literal — the metaphor is the point. `Dirupo` over `scogliera` (which is coastal). |
 | Run (a single play attempt) | run | Untranslated, masculine (`la run` would need `corsa`, which reads athletic). |

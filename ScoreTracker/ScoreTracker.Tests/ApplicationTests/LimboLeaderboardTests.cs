@@ -5,8 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Application;
 using ScoreTracker.ScoreLedger.Contracts;
 using ScoreTracker.ScoreLedger.Contracts.Commands;
@@ -97,7 +99,8 @@ public sealed class LimboLeaderboardTests
         var key = LedgerCacheKeys.LimboBoard(MixEnum.Phoenix2, Gargoyle);
         cache.Set(key, new[] { Row("STALE", 999_999) });
 
-        var handler = new RecordObservedPlaysHandler(Mock.Of<IScoreJournalRepository>(), cache);
+        var handler = new RecordObservedPlaysHandler(Mock.Of<IScoreJournalRepository>(), cache, Mock.Of<IChartRepository>(),
+            NullLogger<RecordObservedPlaysHandler>.Instance);
         await handler.Handle(new RecordObservedPlaysCommand(Guid.NewGuid(), MixEnum.Phoenix2, "officialImport",
             Guid.NewGuid(), new[] { Play(Gargoyle, 312_004) }), CancellationToken.None);
 
@@ -111,7 +114,8 @@ public sealed class LimboLeaderboardTests
         var untouched = LedgerCacheKeys.LimboBoard(MixEnum.Phoenix2, Unflagged);
         cache.Set(untouched, new[] { Row("KEEP", 180_000) });
 
-        var handler = new RecordObservedPlaysHandler(Mock.Of<IScoreJournalRepository>(), cache);
+        var handler = new RecordObservedPlaysHandler(Mock.Of<IScoreJournalRepository>(), cache, Mock.Of<IChartRepository>(),
+            NullLogger<RecordObservedPlaysHandler>.Instance);
         await handler.Handle(new RecordObservedPlaysCommand(Guid.NewGuid(), MixEnum.Phoenix2, "officialImport",
             Guid.NewGuid(), new[] { Play(Gargoyle, 312_004) }), CancellationToken.None);
 
@@ -125,7 +129,8 @@ public sealed class LimboLeaderboardTests
         var key = LedgerCacheKeys.LimboBoard(MixEnum.Phoenix2, Gargoyle);
         cache.Set(key, new[] { Row("KEEP", 312_004) });
 
-        var handler = new RecordObservedPlaysHandler(Mock.Of<IScoreJournalRepository>(), cache);
+        var handler = new RecordObservedPlaysHandler(Mock.Of<IScoreJournalRepository>(), cache, Mock.Of<IChartRepository>(),
+            NullLogger<RecordObservedPlaysHandler>.Instance);
         // Broken, nothing judged: never journaled (score-truth-model D7), so the board did not move.
         await handler.Handle(new RecordObservedPlaysCommand(Guid.NewGuid(), MixEnum.Phoenix2, "officialImport",
                 Guid.NewGuid(),

@@ -159,9 +159,47 @@ public sealed class SessionScoreRowTests : ComponentTestBase
         Assert.DoesNotContain("sbd-gain", row.Markup);
     }
 
+    [Fact]
+    public void AStageBreakSaysSoAndHowFarTheRunGot()
+    {
+        // 362 notes judged of 1,163: the row prints the phrase and the share where a grade, plate
+        // and number would sit — no grade image, no number, no glow.
+        var row = Render(StageBreak(judgedNotes: 362, chartNoteCount: 1163));
+
+        Assert.Contains("Stage break · 31% in", row.Markup);
+        Assert.Contains("session-row-stage-break", row.Markup);
+        Assert.DoesNotContain("piuimages.arroweclip.se/letters", row.Markup);
+        Assert.DoesNotContain("sbd-score", row.Markup);
+    }
+
+    [Fact]
+    public void AStageBreakWithNoBreakdownOrNoNoteCountKeepsThePlainPhrase()
+    {
+        // A best-list stage break carries no breakdown; a chart nobody has passed carries no count.
+        // Either way the row says what it knows and invents no figure.
+        var noBreakdown = Render(StageBreak(judgedNotes: null, chartNoteCount: 1163));
+        var noCount = Render(StageBreak(judgedNotes: 362, chartNoteCount: null));
+
+        Assert.Contains("Stage break", noBreakdown.Markup);
+        Assert.DoesNotContain("% in", noBreakdown.Markup);
+        Assert.Contains("Stage break", noCount.Markup);
+        Assert.DoesNotContain("% in", noCount.Markup);
+    }
+
     private IRenderedComponent<SessionScoreRow> Render(SessionScore score)
     {
         return RenderComponent<SessionScoreRow>(p => p.Add(r => r.Score, score));
+    }
+
+    private static SessionScore StageBreak(int? judgedNotes, int? chartNoteCount)
+    {
+        var song = new Song("Arcana Force", SongType.Arcade, new Uri("https://example.invalid/a.png"),
+            TimeSpan.FromMinutes(2), "Artist", null);
+        var chart = new Chart(Guid.NewGuid(), MixEnum.Phoenix2, song, ChartType.Double,
+            DifficultyLevel.From(20), MixEnum.Phoenix2, null, chartNoteCount, new HashSet<Skill>());
+        var row = new RecentSessionsPage.ScoreEventRecord(chart.Id, Start, null, null, true,
+            "officialImport", Session, ScoreEventClassification.Played, null, false, true, judgedNotes);
+        return new SessionScore(row, chart, HighlightFlags.None, null);
     }
 
     private static SessionScore Score(int score, HighlightDetail? detail,

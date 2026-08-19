@@ -1,6 +1,8 @@
 # Score truth model
 
-Status: **owner-workshopped 2026-07-30, not yet built.** What counts as a personal best, what
+Status: **owner-workshopped 2026-07-30, built.** Extended 2026-08-17 by
+[stage-breaks-and-max-combo.md](stage-breaks-and-max-combo.md) (D10–D17), which splits *broken*
+into failed-and-finished versus interrupted, narrows D3, and restates D7 — pointers at each. What counts as a personal best, what
 counts as a play, which source may lower a record, and where each of those lives. Measurements
 in this doc were taken against the prod-synced local database on 2026-07-30.
 
@@ -27,7 +29,9 @@ This doc replaces four rules with one, and states what each store is for.
 
 - **D1 — `PhoenixRecord` holds your best *passing* score.** A broken attempt lives there only
   when you have no pass on that chart, and only when you opted in (D2). A pass outranks a break
-  no matter the numbers.
+  no matter the numbers. *Broken* here means failed-and-finished; a **stage break** — the song
+  interrupted — is never a personal best at all, from any source, opt-in or not
+  ([stage-breaks-and-max-combo.md](stage-breaks-and-max-combo.md) D10).
 
 - **D2 — "Record broken scores as your best" is the opt-in**, renamed from "Include Broken
   Scores". It governs whether a break may *become* the record on a chart you have never passed.
@@ -50,7 +54,11 @@ This doc replaces four rules with one, and states what each store is for.
   best list still carries the run.
 
 - **D3 — the official site's My Best Scores page is the source of truth for your best.** The
-  import's best-page walk is primary; recently-played is a supplement, never an override.
+  import's best-page walk is primary; recently-played is a supplement, never an override — with
+  one narrowing (2026-08-17): the Phoenix 2 list freezes the first non-pass attempt, so when the
+  card is *broken*, the recent window's best finished fail competes with it through the policy
+  and may replace it, broken against broken; a passing card is never touched from the window
+  ([stage-breaks-and-max-combo.md](stage-breaks-and-max-combo.md) D17).
 
 - **D4 — a plate improvement alone is not a personal best.** Plate is a tiebreak at equal score
   and nothing more. It can never pull a score down with it.
@@ -63,7 +71,9 @@ This doc replaces four rules with one, and states what each store is for.
   was written.
 
 - **D7 — a zero-note stage break is never stored, anywhere, for any reason.** Someone started a
-  song and let it fail out. PIUGAME records it; we do not.
+  song and let it fail out. PIUGAME records it; we do not. Restated once stage breaks were
+  journaled: the walk-off is a stage break with **nothing hit** — only misses — since the life bar
+  draining leaves a miss count behind ([stage-breaks-and-max-combo.md](stage-breaks-and-max-combo.md) D11).
 
 - **D8 — plate is null on anything that is not a pass.** The game awards no plate on a failed
   stage. Any code deriving one for a broken attempt goes away. This propagates the whole way
@@ -139,10 +149,15 @@ Measured collision risk before the unique index: **14 rows across 7 keys**, out 
 The two official-site surfaces have distinct, non-overlapping jobs.
 
 **My Best Scores (`my_best_score.php`)** — the record. On Phoenix 1 it lists passes only. On
-Phoenix 2 (the redesign) it also lists broken bests, detected by the empty plate slot. Its
-displayed date is the chart's *first* play and is not a recency signal
-(see [phoenix2-import-go-live.md §2](phoenix2-import-go-live.md) and the 5-page up-score window
-in `WalkDatedBestScores`).
+Phoenix 2 (the redesign) it also lists broken bests, detected by the empty plate slot. **Its
+displayed date is not when the displayed score was set**: it is stamped when the chart first
+reaches the list and never moves again, so the card shows the newest score against the oldest
+date (measured against the live site 2026-08-18 —
+[stage-breaks-and-max-combo.md §6](stage-breaks-and-max-combo.md); see also
+[phoenix2-import-go-live.md §2](phoenix2-import-go-live.md) and the 5-page up-score window in
+`WalkDatedBestScores`). It is therefore not a play time and never keys a journal row while a
+real one is available: the import takes the producing play's own stamp from the recent window
+and falls back to the card only for a best the window no longer reaches.
 
 **Recently played (`recently_played.php`)** — the plays. It supplies judgement breakdowns,
 the Daily Step observation, non-best journal rows, and — when D2 is on — a broken best for a

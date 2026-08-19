@@ -28,7 +28,11 @@ public sealed record ScoreJournalEntry(
     // Both map to the same two columns underneath; the type split exists so neither model can
     // be read through the other's parser.
     XXScore? LegacyScore = null,
-    XXLetterGrade? LegacyGrade = null)
+    XXLetterGrade? LegacyGrade = null,
+    // A play the stage interrupted -- the song ended before its last note. Always broken, never
+    // best, never scored (the running number the site prints for one is not a chart score), and
+    // journaled all the same: it is what "attempts before this clear" counts.
+    bool IsStageBroken = false)
 {
     public const string ManualSource = "manual";
     public const string OfficialImportSource = "officialImport";

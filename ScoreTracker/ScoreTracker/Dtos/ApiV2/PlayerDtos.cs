@@ -49,6 +49,13 @@ public sealed class JudgmentsDto
     public int Goods { get; set; }
     public int Bads { get; set; }
     public int Misses { get; set; }
+
+    /// <summary>
+    ///     The longest unbroken run of the play, solved from the score and the five counts (the
+    ///     official site prints no combo). Null when it cannot be solved — the chart's note count is
+    ///     unknown, the counts do not cover the chart, or the play was a stage break.
+    /// </summary>
+    public int? MaxCombo { get; set; }
 }
 
 public sealed class PlayerScoreDto
@@ -103,7 +110,7 @@ public sealed class PlayerScoreDto
             : new JudgmentsDto
             {
                 Perfects = counts.Perfects, Greats = counts.Greats, Goods = counts.Goods,
-                Bads = counts.Bads, Misses = counts.Misses
+                Bads = counts.Bads, Misses = counts.Misses, MaxCombo = counts.MaxCombo
             };
     }
 }
@@ -134,6 +141,7 @@ public sealed class JournalEntryDto
         LetterGrade = entry.Score?.LetterGradeFor(mix).GetName();
         Plate = entry.Plate?.GetName();
         IsBroken = entry.IsBroken;
+        IsStageBroken = entry.IsStageBroken;
         Judgments = PlayerScoreDto.MapJudgments(entry.Judgements);
     }
 
@@ -149,6 +157,14 @@ public sealed class JournalEntryDto
     public string? LetterGrade { get; set; }
     public string? Plate { get; set; }
     public bool IsBroken { get; set; }
+
+    /// <summary>
+    ///     The stage broke — the song ended before its last note. Always broken and never best, with
+    ///     no score (the site prints none for one) and, when the recently-played card carried them,
+    ///     the judgments up to where it stopped.
+    /// </summary>
+    public bool IsStageBroken { get; set; }
+
     public JudgmentsDto? Judgments { get; set; }
 }
 

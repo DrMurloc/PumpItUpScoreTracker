@@ -558,6 +558,7 @@ extend the existing `lifebar` loanword rows above.
 | Rainbow (the full visible bar) | Rainbow | Stays English, matching the other locales. |
 | Gain multiplier | multiplicateur de gain | Bare "multiplier" mid-sentence → `multiplicateur`. |
 | Break (a miss or bad that ends a combo) | cassure | `Combo between breaks` → `Combo entre cassures`. |
+| Stage break (the song interrupted) | `stage break` (EN) | Déjà dans le jargon PIU laissé en anglais ; minuscule en prose. Distinct de `Cassé` (Broken), un essai terminé et raté. `Stage break · {0}% in` → `Stage break · à {0}%`. |
 | Settles at (converges to) | se stabilise à | `Where life settles` → `Où la vie se stabilise`. |
 | Cliff (the survival threshold) | falaise | Deliberately literal — the metaphor is the point. |
 | Cap (the multiplier ceiling) | plafond | |

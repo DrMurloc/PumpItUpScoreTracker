@@ -564,6 +564,7 @@ register fork in Known issues.
 | Rainbow (the full visible bar) | Rainbow | Stays English, as in es-ES. |
 | Gain multiplier | multiplicador de ganancia | Bare "multiplier" mid-sentence → `multiplicador`. |
 | Break (a miss or bad that ends a combo) | corte | Mexican usage prefers `corte` over Spain's `fallo` here. `Combo between breaks` → `Combo entre cortes`. |
+| Stage break (the song interrupted) | `Stage Break` (EN) | Ya listado en la jerga PIU que se queda en inglés; capitalizado como etiqueta. Distinto de `Roto` (Broken), que es un intento que terminó y falló. `Stage break · {0}% in` → `Stage Break · al {0}%`. |
 | Settles at (converges to) | se estabiliza en | |
 | Cliff (the survival threshold) | acantilado | Deliberately literal — the metaphor is the point. |
 | thinner (than one miss) | más delgado | Mexico prefers `delgado` over Spain's `fino` for thickness. |
