@@ -360,8 +360,15 @@ from their unanimous finished-fail samples behind an off-by-default flag. Dry-ru
 the prod-synced copy (rolled back). Press *Clear Cache* after it — the catalog is cached in
 memory.
 
-**Stage breaks — one script, run once after deploy** (owner, 2026-08-17: withdraw B and C/D,
-"let import fix"; the re-seat rides in the same script).
+**Stage breaks — `stage-break-withdrawal-2026-08-19.sql`, delivered, run once after deploy**
+(owner, 2026-08-17: withdraw B and C/D, "let import fix"; the re-seat rides in the same script).
+It needs the migration's `IsStageBroken` column, so it is one batch that refuses to compile
+before the deploy; `@DryRun = 1` (the default) runs every step in a transaction, prints what each
+would change, and rolls back. Class B is keyed on the *record* being unjudged, never the journal
+row — after the first post-deploy import a leaked journal row may already carry its window twin's
+judgements, but the record gains none. Re-runs find nothing: every write is keyed on evidence the
+run removes (applied and re-run against the prod-synced copy inside a rolled-back transaction,
+2026-08-19; the second pass changed zero rows).
 
 1. **Withdraw classes B, C and D** (§6): 945 `PhoenixRecord` rows. Their `PhoenixRecordStats`
    rows go with them (the Your Data cleanup deletes the same pair). Class A's 11 stay; the 7 with a
@@ -372,9 +379,19 @@ memory.
    play stays in the player's history, minus the judgements the skip threw away. Class C/D's rows
    are unknown: `IsBest = 0` only, score kept, so a re-import that finds them again as `x_` fails
    re-seats them and the history never claimed more than it knew.
-3. **Re-seat from the journal**: 25 of the withdrawn charts hold a judged finished fail by the same
-   player (a later, real run the site's frozen card hid). The best of those becomes the record —
-   score, no plate, broken, judgements — exactly what D17 does going forward.
+3. **Re-seat from the journal**: 37 of the withdrawn charts hold a judged finished fail by the same
+   player that is *later* than the card and came from an import window (a real run the site's
+   frozen card hid). The best of those becomes the record — score, no plate, broken, judgements,
+   its journal row flagged — exactly what D17 does going forward. A passing journal row is never a
+   candidate: a pass that is not the record was removed by the player, and the import would have
+   seated it otherwise (one withdrawn chart holds a CSV-uploaded pass; it stays a journal row).
+3b. **Optional, `@RepairMisplacedBestFlags`** (off by default): D18's 653 mis-keyed passing
+   records — for the 619 whose producing pass sits in the journal as an observation (the one row
+   with the record's score and outcome, later than the stamp; each matches exactly one), flag that
+   row `IsBest` so the session breakdown reads it as the New Pass / Upscore it was. Nothing is
+   cleared. Plate is not part of the match: the card's plate is the chart's *best* plate, which
+   can come from a different play than its best score (measured — `995,532` Superb Game on the
+   card, the producing play Marvelous Game, the chart's first play Superb Game at 993,246).
 4. **Press** *Re-price Phoenix2 ratings* (breaks rate zero on Phoenix 2, so this is belt and
    braces) and *Clear Cache* (the per-user score cache would otherwise serve the withdrawn rows
    until it aged out).
