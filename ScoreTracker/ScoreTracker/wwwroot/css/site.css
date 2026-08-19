@@ -13893,6 +13893,292 @@ span.ct-console-pick { cursor: default; }
     color: var(--mix-ink-muted);
 }
 
+/* --- Your PUMBILITY peers: the Phoenix 2 Play page (docs/design/pumbility-overhaul.md §3.10) --- */
+/* The control row above the list: grouped-by, its switch, then the density trio at the far end. */
+.pmb-peers-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px 14px;
+    flex-wrap: wrap;
+    margin: 6px 0 4px;
+}
+
+.pmb-peers-controls-select {
+    min-width: 170px;
+}
+
+.pmb-peers-controls-end {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Variability: five dots and the word (D35). The dots take the level's own token; the word
+   always prints beside them, so the colour never carries the level alone. */
+.pmb-vary {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.pmb-vary-dots {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.pmb-vary-dots i {
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--mix-ink) 22%, transparent);
+}
+
+.pmb-vary-dots i.on {
+    background: var(--pmb-vary-color, var(--mix-ink-muted));
+}
+
+/* Compact's top-right dot — the only place the level is a mark rather than a word; the tile's
+   tooltip carries the word (D35). */
+.pmb-vary-dot {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
+}
+
+/* Under Projected gains the prevalence tier rides a top-edge stripe on a Compact tile, since
+   the corner is the gain's and the top-right dot is the variability's. */
+.pmb-prevalence-stripe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+/* The card body's peers line: label, the median grade, the variability. */
+.pmb-peers-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+    line-height: 1.5;
+}
+
+.pmb-peers-line-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-size: 10.5px;
+}
+
+.pmb-peers-none {
+    color: color-mix(in srgb, var(--mix-ink-muted) 75%, transparent);
+    font-size: 11.5px;
+}
+
+.pmb-pool-line {
+    display: block;
+    font-size: 11.5px;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-pool-line b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+/* A carried Phoenix 1 row's line: your score there, repriced here (D29, D38). */
+.pmb-carried-line {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    font-size: 11.5px;
+    color: var(--mud-palette-success);
+}
+
+/* Gain-band sections under Projected gains wear the gain's own colour, not a ramp — the
+   rarity ramp is the prevalence tiers' and one hue meaning two things on one page is a mess. */
+.pmb-gain-section .tier-section-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: .01em;
+}
+
+/* The roster (D39): the tier table's skin, your own row highlighted where you would sit. */
+.pmb-roster tr.pmb-roster-you td {
+    background: color-mix(in srgb, var(--daily-you) 12%, transparent);
+}
+
+.pmb-roster tr.pmb-roster-you td:first-child {
+    box-shadow: inset 3px 0 0 var(--daily-you);
+}
+
+.pmb-roster-you-tag {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--daily-you);
+    border: 1px solid color-mix(in srgb, var(--daily-you) 60%, transparent);
+    border-radius: 3px;
+    padding: 0 5px;
+    margin-left: 6px;
+}
+
+.pmb-roster-level {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+
+.pmb-roster-level small {
+    font-weight: 600;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-overlap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pmb-overlap-bar {
+    display: inline-block;
+    width: 60px;
+    height: 5px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--mix-ink) 12%, transparent);
+    overflow: hidden;
+}
+
+.pmb-overlap-bar b {
+    display: block;
+    height: 100%;
+    background: var(--mix-secondary);
+}
+
+.pmb-roster-note {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+    margin: 8px 0 0;
+}
+
+/* The compare strip (D41): three surface tiles, the level bars in you-vs-peers colours. */
+.pmb-compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 10px;
+    margin: 0 0 14px;
+}
+
+.pmb-compare-tile {
+    background: var(--mix-surface);
+    border: 1px solid color-mix(in srgb, var(--mix-ink) 10%, transparent);
+    border-radius: 6px;
+    padding: 10px 12px 11px;
+    min-width: 0;
+}
+
+.pmb-compare-label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-compare-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 1;
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+}
+
+.pmb-compare-num small {
+    font-size: 14px;
+    color: var(--mix-ink-muted);
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.pmb-compare-say {
+    font-size: 12px;
+    color: var(--mix-ink-muted);
+    margin-top: 3px;
+}
+
+.pmb-compare-say b {
+    color: var(--mix-ink);
+    font-weight: 600;
+}
+
+.pmb-levelbars {
+    display: grid;
+    grid-template-columns: 38px 1fr;
+    gap: 3px 8px;
+    align-items: end;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--mix-ink-muted);
+}
+
+.pmb-levelrow {
+    display: flex;
+    gap: 2px;
+    align-items: flex-end;
+    height: 22px;
+}
+
+.pmb-levelrow i {
+    flex: 1;
+    display: block;
+    min-height: 2px;
+    border-radius: 1px 1px 0 0;
+}
+
+.pmb-levelrow-you i {
+    background: var(--mix-accent);
+}
+
+.pmb-levelrow-peers i {
+    background: var(--mix-secondary);
+}
+
+.pmb-levelaxis {
+    display: flex;
+    gap: 2px;
+    grid-column: 2;
+}
+
+.pmb-levelaxis span {
+    flex: 1;
+    text-align: center;
+    font-size: 9.5px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+
 /* --- the pool board --- */
 .pmb-board {
     display: flex;
