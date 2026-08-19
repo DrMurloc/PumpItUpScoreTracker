@@ -22,10 +22,11 @@
    never disagree about a number. With the Phoenix 1 switch off the peer-only projection stands
    in, read once and kept.
 
-   The controls: Grouped by, then the one switch that means something under that grouping —
-   Project Phoenix 1 scores under Projected gains and only when the record holds carried rows;
-   Only projected PUMBILITY gains under Prevalence — then the density trio at the far end,
-   right above the list (D34, D36). Every preference persists as a UiSetting. *@
+   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then the one
+   switch that means something under that grouping — Project Phoenix 1 scores under Projected
+   gains and only when the record holds carried rows; Only projected PUMBILITY gains under
+   Prevalence; nothing under Your top 50 — then the density trio at the far end, right above the
+   list (D34, D36). Every preference persists as a UiSetting. *@
 <section class="pmb-block" data-testid="peers-section">
     <div class="pmb-block-head">
         <h2 class="pmb-block-title">@L["Your peers"]</h2>
@@ -48,6 +49,7 @@
                        Value="_groupBy" ValueChanged="SetGrouping" data-testid="peers-groupby">
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.Prevalence">@L["Prevalence"]</MudSelectItem>
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.ProjectedGains">@L["Projected gains"]</MudSelectItem>
+                <MudSelectItem T="PeerGrouping" Value="PeerGrouping.YourTop50">@L["Your top 50"]</MudSelectItem>
             </MudSelect>
             @if (_groupBy == PeerGrouping.ProjectedGains && HasCarried)
             {
@@ -80,7 +82,7 @@
             </span>
         </div>
         <PeerPoolLegend Density="_density" GroupBy="_groupBy" HasCarried="HasCarried && _projectPhoenix1"></PeerPoolLegend>
-        <PeerPoolList Page="_peers" Charts="Charts" Gains="Gains" Mix="Page.Mix" Density="_density"
+        <PeerPoolList Page="_peers" Charts="Charts" Gains="Gains" Mix="Page.Mix" Density="_density" PoolRecord="Page"
                       GroupBy="_groupBy" GainsOnly="_gainsOnly"
                       ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
                       Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
@@ -158,7 +160,9 @@
     /// <summary>Who a peer is: the PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
     private bool IsPumbilityBand => Page.Mix == MixEnum.Phoenix2;
 
-    private string Lede => _groupBy == PeerGrouping.ProjectedGains
+    private string Lede => _groupBy == PeerGrouping.YourTop50
+        ? L["Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar."]
+        : _groupBy == PeerGrouping.ProjectedGains
         ? L["Ranked by what each chart would add if you played it to the standard your peers set — priced against your bar as it stands now, so every row means what the first one does. Everything here clears your bar."]
         : _gainsOnly
             ? IsPumbilityBand

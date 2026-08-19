@@ -10,10 +10,11 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 
-@* What the viewer's PUMBILITY peers build their number from, in the tier list's own shape
+@* What the viewer's peers build their number from, in the tier list's own shape
    (docs/design/pumbility-overhaul.md §3.10, D34): collapsible sections of TierListChartCard —
-   grouped by prevalence (Staple … Poor, D33) or by projected gain in bands of points (D36) — in
-   the three densities. The jacket carries the gain and nothing else, and only when the chart
+   grouped by prevalence (Staple … Poor, D33), by projected gain in bands of points (D36), or as
+   the viewer's own top 50 by place, split at the bar, with the peers' data on every row (D44) —
+   in the three densities. The jacket carries the gain and nothing else, and only when the chart
    pays (D38); the peers' median and how split they are ride the card body, the count rides the
    caption; the border language and its precedence are the tier list's (passed, To-Do, carried).
 
@@ -37,6 +38,10 @@ else
                             <thead>
                             <tr>
                                 <th class="tier-table-jacket-cell"></th>
+                                @if (IsPoolLens)
+                                {
+                                    <th>#</th>
+                                }
                                 <th>@L["Song Name"]</th>
                                 <th>@L["Chart"]</th>
                                 <th title="@L["How many of your PUMBILITY peers hold it in their top 50"]">@L["Peers"]</th>
@@ -44,8 +49,15 @@ else
                                 <th>@L["Variability"]</th>
                                 <th class="pmb-r" title="@L["What it would add to your PUMBILITY, measured against your bar as it stands"]">@L["Gain"]</th>
                                 <th>@L["My Score"]</th>
+                                @if (IsPoolLens)
+                                {
+                                    <th class="pmb-r" title="@L["What the chart is worth in your pool right now"]">@L["Value"]</th>
+                                }
                                 <th>@L["Better Than"]</th>
-                                <th>@L["Your pool"]</th>
+                                @if (!IsPoolLens)
+                                {
+                                    <th>@L["Your pool"]</th>
+                                }
                                 <th></th>
                             </tr>
                             </thead>
@@ -58,6 +70,10 @@ else
                                              @onclick="() => OnOpen.InvokeAsync(row.Chart)"
                                              style="background-image:url('@row.Chart.Song.ImagePath')"></div>
                                     </td>
+                                    @if (IsPoolLens)
+                                    {
+                                        <td class="pmb-num pmb-muted">@row.Slot?.Place</td>
+                                    }
                                     <td>@row.Chart.Song.Name</td>
                                     <td>@row.Chart.DifficultyString</td>
                                     <td title="@WeightedSum(row)">@HoldText(row)</td>
@@ -98,13 +114,20 @@ else
                                             <ScoreBreakdown Score="mine" Mix="Mix" OneLine="true" ShowScore="true" Plate="row.MyPlate"></ScoreBreakdown>
                                         }
                                     </td>
+                                    @if (IsPoolLens)
+                                    {
+                                        <td class="pmb-r pmb-num pmb-val">@row.Slot?.Value.ToString("N2")</td>
+                                    }
                                     <td>
                                         @if (row.Entry?.MyPercentile is { } percentile)
                                         {
                                             <span style="@ThemeScales.RarityStyle(percentile)">@((100.0 * percentile).ToString("N0"))%</span>
                                         }
                                     </td>
-                                    <td>@PoolText(row)</td>
+                                    @if (!IsPoolLens)
+                                    {
+                                        <td>@PoolText(row)</td>
+                                    }
                                     <td>
                                         @if (ShowToDo)
                                         {
@@ -141,7 +164,7 @@ else
                                                CornerBadgeStartClass="pmb-corner-gain"
                                                TopRightDotColor="@(Density == UiDensity.Compact && row.Entry?.Variability is { } v ? ThemeScales.VariabilityColor(v) : null)"
                                                TopRightDotTitle="@(row.Entry?.Variability is { } w ? L[VariabilityMeter.Word(w)].ToString() : null)"
-                                               TopStripeColor="@(Density == UiDensity.Compact && GroupBy == PeerGrouping.ProjectedGains && row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : null)"
+                                               TopStripeColor="@(Density == UiDensity.Compact && GroupBy != PeerGrouping.Prevalence && row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : null)"
                                                TopStripeTitle="@(row.Entry != null ? TierCaption(row) : null)"
                                                TierLabel="@(Density == UiDensity.Comfortable ? CaptionFor(row) : null)"
                                                TierColor="@(row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : ThemeScales.PumbilityColor(TierListCategory.Unrecorded))"
@@ -172,6 +195,13 @@ else
     [Parameter] public IReadOnlyDictionary<Guid, PumbilityTarget> Gains { get; set; } =
         new Dictionary<Guid, PumbilityTarget>();
 
+    /// <summary>
+    ///     The frame's record — the selected pool's fifty and the waiting room beneath it — which
+    ///     the Your top 50 lens lists, by place, with the peers' entry joined to each by chart id
+    ///     (D44). Nothing is read twice: the frame already loaded it.
+    /// </summary>
+    [Parameter] public PumbilityPageRecord? PoolRecord { get; set; }
+
     [Parameter] public MixEnum Mix { get; set; } = MixEnum.Phoenix2;
 
     [Parameter] public UiDensity Density { get; set; } = UiDensity.Comfortable;
@@ -201,6 +231,10 @@ else
 
     public const string AloneKey = "Alone";
 
+    public const string PoolKey = "Pool";
+
+    public const string WaitingKey = "Waiting";
+
     public static readonly IReadOnlySet<string> DefaultCollapsed = new HashSet<string>
     {
         TierListCategory.VeryHard.ToString(), TierListCategory.Underrated.ToString()
@@ -212,17 +246,23 @@ else
         (25, double.PositiveInfinity), (15, 25), (10, 15), (5, 10), (2, 5), (0, 2)
     };
 
-    private sealed record Row(Chart Chart, PeerPoolEntry? Entry, PumbilityTarget? Target, PeerAloneEntry? Alone)
+    /// <summary>
+    ///     One chart in the list. <paramref name="Slot" /> is its place in the frame's pool under
+    ///     the Your top 50 lens — the pool's own score and value win there, since the pool is what
+    ///     the lens is about — and <paramref name="Waiting" /> says the slot is below the bar.
+    /// </summary>
+    private sealed record Row(Chart Chart, PeerPoolEntry? Entry, PumbilityTarget? Target, PeerAloneEntry? Alone,
+        PoolEntry? Slot = null, bool Waiting = false)
     {
         public bool Pays => Target is { Gain: > 0 };
         public double Gain => Target?.Gain ?? 0;
         public bool Carried => Target?.Source == TargetSource.Phoenix1;
 
-        public PhoenixScore? MyScore => Entry?.MyScore ?? Alone?.Score ??
+        public PhoenixScore? MyScore => Slot?.Score ?? Entry?.MyScore ?? Alone?.Score ??
                                        (Target is { Current: not null, CurrentIsBroken: false } ? Target.Current : null);
 
-        public PhoenixPlate? MyPlate => Entry?.MyPlate ?? Alone?.Plate;
-        public int? MyPoolRank => Entry?.MyPoolRank ?? Alone?.MyPoolRank;
+        public PhoenixPlate? MyPlate => Slot != null ? Slot.Plate : Entry?.MyPlate ?? Alone?.Plate;
+        public int? MyPoolRank => Slot != null ? Waiting ? null : Slot.Place : Entry?.MyPoolRank ?? Alone?.MyPoolRank;
     }
 
     private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows, string? Stat,
@@ -264,6 +304,31 @@ else
             .ToList();
 
         var sections = new List<Section>();
+        if (IsPoolLens)
+        {
+            // The frame's pool by place, split at the bar (D44): the peers' entry rides each row
+            // where one exists, the yours-alone entry where none does, and the gain as everywhere.
+            if (PoolRecord == null) return sections;
+            var entries = held.ToDictionary(r => r.Chart.Id);
+            var alone = Page.YoursAlone.ToDictionary(a => a.ChartId);
+            Row Slot(PoolEntry slot, bool waiting) => new(Charts[slot.ChartId],
+                entries.GetValueOrDefault(slot.ChartId)?.Entry, Gains.GetValueOrDefault(slot.ChartId),
+                alone.GetValueOrDefault(slot.ChartId), slot, waiting);
+
+            var pool = PoolRecord.Pool.Where(s => Charts.ContainsKey(s.ChartId)).OrderBy(s => s.Place)
+                .Select(s => Slot(s, false)).ToArray();
+            if (pool.Length > 0)
+                sections.Add(new Section(PoolKey, L["Your top 50"], "var(--mix-primary)", pool,
+                    L["{0} charts · {1} down to {2}", pool.Length, PoolRecord.PoolTop.ToString("N2"), PoolRecord.PoolBottom.ToString("N2")],
+                    "pmb-pool-section"));
+            var waiting = PoolRecord.WaitingRoom.Where(s => Charts.ContainsKey(s.ChartId)).OrderBy(s => s.Place)
+                .Select(s => Slot(s, true)).ToArray();
+            if (waiting.Length > 0)
+                sections.Add(new Section(WaitingKey, L["Waiting room"], "var(--mix-ink-muted)", waiting,
+                    L["{0} charts", waiting.Length], "pmb-waiting-section"));
+            return sections;
+        }
+
         if (GroupBy == PeerGrouping.ProjectedGains)
         {
             var paying = held.Where(r => r.Pays).Concat(carriedUnheld).OrderByDescending(r => r.Gain).ToList();
@@ -323,9 +388,13 @@ else
         return low == 0 ? L["Under +{0}", high] : L["+{0} to +{1}", low, high];
     }
 
-    private string EmptyText => GroupBy == PeerGrouping.ProjectedGains || GainsOnly
-        ? L["Nothing your peers hold would clear your bar right now — play a few more charts and check back."]
-        : L["Your peers' pools have nothing in them yet."];
+    private bool IsPoolLens => GroupBy == PeerGrouping.YourTop50;
+
+    private string EmptyText => IsPoolLens
+        ? L["Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot."]
+        : GroupBy == PeerGrouping.ProjectedGains || GainsOnly
+            ? L["Nothing your peers hold would clear your bar right now — play a few more charts and check back."]
+            : L["Your peers' pools have nothing in them yet."];
 
     private Task OpenById(Guid chartId) => OnOpen.InvokeAsync(Charts[chartId]);
 
@@ -350,12 +419,17 @@ else
     /// <summary>The Comfortable caption under the score line: the count, with the tier in front where the section is not the tier.</summary>
     private string? CaptionFor(Row row)
     {
-        if (row.Entry == null) return row.Alone != null ? L["No peer holds it"] : null;
-        return GroupBy == PeerGrouping.ProjectedGains ? $"{TierCaption(row)} · {HoldText(row)}" : HoldText(row);
+        if (row.Entry == null) return row.Alone != null || row.Slot != null ? L["No peer holds it"] : null;
+        return GroupBy == PeerGrouping.Prevalence ? HoldText(row) : $"{TierCaption(row)} · {HoldText(row)}";
     }
 
-    private string PoolText(Row row) =>
-        row.MyPoolRank is { } rank ? L["In your pool #{0}", rank] : row.MyScore != null ? L["Played, not in your pool"] : L["Not yet played"];
+    /// <summary>Where the chart sits for you; under the lens, its place and what it is worth there.</summary>
+    private string PoolText(Row row)
+    {
+        if (row.Slot is { } slot)
+            return (row.Waiting ? L["Waiting room #{0}", slot.Place] : L["In your pool #{0}", slot.Place]) + $" · {slot.Value.ToString("N2")}";
+        return row.MyPoolRank is { } rank ? L["In your pool #{0}", rank] : row.MyScore != null ? L["Played, not in your pool"] : L["Not yet played"];
+    }
 
     private string FromPeers(Row row) => row.Entry is { } e ? L["From {0} peers", e.Scored] : string.Empty;
 
@@ -375,7 +449,7 @@ else
             if (e.Median is { } median)
                 parts.Add($"{L["Peers"]} {median.LetterGradeFor(Mix).GetName()}" + (e.Variability is { } v ? $" · {L[VariabilityMeter.Word(v)]}" : string.Empty));
         }
-        else if (row.Alone != null)
+        else if (row.Alone != null || row.Slot != null)
         {
             parts.Add(L["No peer holds it"]);
         }

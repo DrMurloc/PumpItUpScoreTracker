@@ -177,6 +177,72 @@ public sealed class PeerPoolListTests : ComponentTestBase
         Assert.Contains("tier-row-pass", row.ClassName);
     }
 
+    [Fact]
+    public void YourTop50ListsTheFramesPoolByPlaceSplitAtTheBarWithThePeersDataOnEveryRow()
+    {
+        // D44: the pool is the frame's, by place; the peers' entry rides where one exists, the
+        // yours-alone row reads "No peer holds it", the waiting room is its own section.
+        var f = new Fixture()
+            .Held("Shared", TierListCategory.Easy, holders: 8, points: 200, mine: 966_887, myRank: 2,
+                median: 985_000, variability: PeerVariabilityLevel.Mixed, gain: 10.2, projected: 985_000)
+            .Alone("Mine", myRank: 1, score: 990_000)
+            .Held("Unplayed", TierListCategory.Overrated, holders: 17, points: 550, mine: null)
+            .InPool("Mine", place: 1, value: 412.5).InPool("Shared", place: 2, value: 398.25)
+            .Waiting("Below", place: 51, value: 301.22);
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.Gains, f.Gains).Add(x => x.PoolRecord, f.PoolRecord()).Add(x => x.GroupBy, PeerGrouping.YourTop50)
+            .Add(x => x.Density, UiDensity.Comfortable));
+
+        var names = cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray();
+        Assert.Equal(new[] { "Your top 50", "Waiting room" }, names);
+        Assert.Contains("2 charts · 412.50 down to 398.25", cut.FindAll(".tier-section-stat")[0].TextContent);
+        var cards = cut.FindAll("[data-testid=ppl-section-Pool] .tier-chart-card");
+        Assert.Equal(2, cards.Count);
+        // By place: Mine first, then Shared — and the unplayed peer chart is nowhere in this lens.
+        Assert.Contains("Mine", cards[0].TextContent);
+        Assert.Contains("No peer holds it", cards[0].TextContent);
+        Assert.Contains("In your pool #1 · 412.50", cards[0].TextContent);
+        Assert.Contains("Shared", cards[1].TextContent);
+        Assert.Contains("8 of 23 peers", cards[1].TextContent);
+        Assert.Contains("In your pool #2 · 398.25", cards[1].TextContent);
+        Assert.StartsWith("+10", cards[1].QuerySelector(".tier-chart-card-corner")!.TextContent.Trim());
+        Assert.DoesNotContain("Unplayed", cut.Markup);
+        var waiting = cut.Find("[data-testid=ppl-section-Waiting] .tier-chart-card");
+        Assert.Contains("Waiting room #51 · 301.22", waiting.TextContent);
+    }
+
+    [Fact]
+    public void YourTop50TableCarriesPlaceAndValueInsteadOfThePoolColumn()
+    {
+        var f = new Fixture()
+            .Held("Shared", TierListCategory.Easy, holders: 8, points: 200, mine: 966_887, myRank: 1, median: 985_000)
+            .InPool("Shared", place: 1, value: 398.25);
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.PoolRecord, f.PoolRecord()).Add(x => x.GroupBy, PeerGrouping.YourTop50).Add(x => x.Density, UiDensity.Table));
+
+        var headers = cut.FindAll("thead th").Select(h => h.TextContent.Trim()).ToArray();
+        Assert.Equal("#", headers[1]);
+        Assert.Contains("Value", headers);
+        Assert.DoesNotContain("Your pool", headers);
+        var row = cut.Find("tbody tr");
+        Assert.Equal("1", row.QuerySelectorAll("td")[1].TextContent.Trim());
+        Assert.Contains("398.25", row.TextContent);
+        Assert.Contains("8 of 23 peers", row.TextContent);
+    }
+
+    [Fact]
+    public void YourTop50WithNoPoolRecordOrAnEmptyPoolSaysSo()
+    {
+        var f = new Fixture().Held("Shared", TierListCategory.Easy, holders: 8, points: 200, mine: null);
+
+        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.PoolRecord, f.PoolRecord()).Add(x => x.GroupBy, PeerGrouping.YourTop50));
+
+        Assert.Contains("Nothing in your pool yet", cut.Find("[data-testid=ppl-empty]").TextContent);
+    }
+
     // ------------------------------------------------------------------ fixture
 
     private sealed class Fixture
@@ -185,6 +251,8 @@ public sealed class PeerPoolListTests : ComponentTestBase
         private readonly List<PeerAloneEntry> _alone = new();
         private readonly Dictionary<Guid, PumbilityTarget> _gains = new();
         private readonly Dictionary<string, Guid> _ids = new();
+        private readonly List<PoolEntry> _pool = new();
+        private readonly List<PoolEntry> _waiting = new();
 
         public Dictionary<Guid, Chart> Charts { get; } = new();
 
@@ -217,6 +285,28 @@ public sealed class PeerPoolListTests : ComponentTestBase
             var chart = NewChart(name);
             _alone.Add(new PeerAloneEntry(chart.Id, ChartType.Single, myRank, score, PhoenixPlate.RoughGame, 300));
             return this;
+        }
+
+        /// <summary>A chart already named in this fixture, at a place in the frame's pool with a value.</summary>
+        public Fixture InPool(string name, int place, double value)
+        {
+            _pool.Add(new PoolEntry(place, _ids[name], 966_887, PhoenixPlate.MarvelousGame, false, DateTimeOffset.MinValue, value));
+            return this;
+        }
+
+        /// <summary>A new chart below the bar, in the frame's waiting room.</summary>
+        public Fixture Waiting(string name, int place, double value)
+        {
+            var chart = NewChart(name);
+            _waiting.Add(new PoolEntry(place, chart.Id, 950_000, PhoenixPlate.FairGame, false, DateTimeOffset.MinValue, value));
+            return this;
+        }
+
+        /// <summary>The frame's record: the pool and the waiting room this fixture declared, nothing else.</summary>
+        public PumbilityPageRecord PoolRecord()
+        {
+            return new PumbilityPageRecord(MixEnum.Phoenix2, ChartType.Single, _pool.Sum(p => p.Value), null, null,
+                _pool.OrderBy(p => p.Place).ToArray(), _waiting.OrderBy(p => p.Place).ToArray(), Array.Empty<PumbilityTarget>());
         }
 
         public PumbilityPeersPageRecord Page()

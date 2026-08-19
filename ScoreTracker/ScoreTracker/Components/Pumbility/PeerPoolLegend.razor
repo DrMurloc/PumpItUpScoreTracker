@@ -5,8 +5,9 @@
 
 @* Compact prints numbers and marks and no words, so this names every mark the peers grid can
    carry (UX rule 8, the precedent the target list's legend set): the three borders, the gain
-   corner, the variability dots, and — under Projected gains — the prevalence stripe. Only under
-   Compact; the other densities say all of it in words on the card. *@
+   corner, the variability dots, and — under Projected gains and Your top 50, where the section is
+   not the tier — the prevalence stripe. Only under Compact; the other densities say all of it in
+   words on the card. *@
 @if (Density == UiDensity.Compact)
 {
     <div class="border-legend pmb-legend" data-testid="ppl-legend">
@@ -35,7 +36,7 @@
             }
             @L["variability, consistent to split"]
         </span>
-        @if (GroupBy == PeerGrouping.ProjectedGains)
+        @if (GroupBy != PeerGrouping.Prevalence)
         {
             <span class="border-legend-item">
                 <span class="pmb-legend-stripe" style="background:@ThemeScales.PumbilityColor(SharedKernel.Enums.TierListCategory.Easy)"></span>@L["top stripe: prevalence tier"]

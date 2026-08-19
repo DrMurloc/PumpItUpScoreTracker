@@ -14022,6 +14022,20 @@ span.ct-console-pick { cursor: default; }
     letter-spacing: .01em;
 }
 
+/* The Your top 50 lens (D44): the pool section reads like the gain bands — a name, not a ramp
+   tier — and the waiting room is ghosted the way the curve ghosts it, because it is the same
+   six charts below the same bar. */
+.pmb-pool-section .tier-section-name,
+.pmb-waiting-section .tier-section-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: .01em;
+}
+
+.pmb-waiting-section .tier-section-body {
+    opacity: .72;
+}
+
 /* The roster (D39): the tier table's skin, your own row highlighted where you would sit. */
 .pmb-roster tr.pmb-roster-you td {
     background: color-mix(in srgb, var(--daily-you) 12%, transparent);

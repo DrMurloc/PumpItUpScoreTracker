@@ -174,6 +174,29 @@ public sealed class PeersSectionTests : ComponentTestBase
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public void YourTop50IsTheThirdOptionAndCarriesNoSwitches()
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        var settings = new Mock<IUiSettingsAccessor>();
+        settings.Setup(s => s.GetSetting(PeersSection.GroupBySettingKey)).ReturnsAsync(PeerGrouping.YourTop50.ToString());
+        Services.AddSingleton(settings.Object);
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p.Add(x => x.Page, Page(carried: true)).Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        var controls = cut.Find("[data-testid=peers-controls]");
+        Assert.Null(controls.QuerySelector("[data-testid=peers-p1-switch]"));
+        Assert.Null(controls.QuerySelector("[data-testid=peers-gains-switch]"));
+        Assert.NotNull(controls.QuerySelector(".pmb-peers-controls-end .mud-button-group-root"));
+        Assert.Contains("Your pool by place", cut.Find(".pmb-block-lede").TextContent);
+        // The frame's pool in this fixture is empty, and the lens says so rather than showing tiers.
+        Assert.Contains("Nothing in your pool yet", cut.Find("[data-testid=ppl-empty]").TextContent);
+        Assert.DoesNotContain("Staple", cut.Markup);
+    }
+
     private static PeerGroup Group(MixEnum mix) =>
         mix == MixEnum.Phoenix2 ? PeerGroup.Pumbility(24, 23, 50) : PeerGroup.Competitive(21.4, 1.0, 144);
 
