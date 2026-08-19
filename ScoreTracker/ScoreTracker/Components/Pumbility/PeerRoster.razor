@@ -103,7 +103,7 @@ else
     private string PeerForText(PeerRosterEntry row)
     {
         if (row.PeerFor.Count == 0) return string.Empty;
-        if (row.PeerFor.Count > 1) return L["Both"];
+        if (row.PeerFor.Count > 1) return L["Singles and doubles"];
         return row.PeerFor.Contains(ChartType.Single) ? L["Singles"] : L["Doubles"];
     }
 
