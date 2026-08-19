@@ -135,23 +135,6 @@ public sealed class PumbilityComponentTests : ComponentTestBase
         Assert.False(string.IsNullOrWhiteSpace(cut.Find(".pmb-curve-read").TextContent));
     }
 
-    // ------------------------------------------------------------------ board
-
-    [Fact]
-    public void ThePoolBoardRulesTheBarAcrossTheList()
-    {
-        var page = Page(poolSize: 50, waiting: 6);
-
-        var cut = RenderComponent<PoolBoard>(p => p
-            .Add(x => x.Page, page)
-            .Add(x => x.Charts, page.Charts()));
-
-        Assert.Equal(56, cut.FindAll(".pmb-rankrow").Count);
-        Assert.Single(cut.FindAll(".pmb-barrule"));
-        Assert.Equal(6, cut.FindAll(".pmb-rankrow.pmb-below").Count);
-        Assert.Single(cut.FindAll(".pmb-rankrow.pmb-at-bar"));
-    }
-
     // ------------------------------------------------------------------ carryover
 
     [Fact]
@@ -173,7 +156,7 @@ public sealed class PumbilityComponentTests : ComponentTestBase
     [Fact]
     public void TheCarryoverChipsSayWouldRatherThanClaimingATitleHeld()
     {
-        // These and the rails on Your Pool say opposite things about the same three ladders at
+        // These and the rails on PUMBILITY Breakdown say opposite things about the same three ladders at
         // a launch, so the conditional wording and the pool value beside each chip are what
         // keeps them apart (§8.2).
         var carry = new Phoenix2CarryoverRecord(18041, 358, 15, 49, new[]

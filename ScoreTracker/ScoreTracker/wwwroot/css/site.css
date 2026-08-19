@@ -14223,76 +14223,12 @@ span.ct-console-pick { cursor: default; }
     letter-spacing: .04em;
 }
 
-/* --- the pool board --- */
-.pmb-board {
-    display: flex;
-    flex-direction: column;
-}
-
-.pmb-rankrow {
-    cursor: pointer;
-    gap: 10px;
-}
-
-.pmb-place {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--mix-ink-muted);
-    width: 26px;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
-.pmb-rankrow .pmb-ident {
-    min-width: 0;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.pmb-rname {
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pmb-tail {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-left: auto;
-}
-
+/* The chart's value, as the Your top 50 lens prints it. */
 .pmb-val {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 15px;
     font-variant-numeric: tabular-nums;
-}
-
-.pmb-at-bar {
-    background: color-mix(in srgb, var(--mix-accent) 10%, transparent);
-}
-
-.pmb-below {
-    opacity: .55;
-}
-
-.pmb-barrule {
-    display: flex;
-    align-items: center;
-    margin: 2px 0;
-    padding: 3px 8px;
-    border-top: 1px dashed var(--mix-accent);
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 10.5px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--mix-accent);
 }
 
 /* --- Phoenix 2 carryover --- */
@@ -14996,8 +14932,7 @@ span.ct-console-pick { cursor: default; }
 /* Fold: the song name steps aside; jacket and difficulty bubble already say which
    chart it is (the .olb-song-text rule). */
 @media (max-width: 699.98px) {
-    .pmb-ident-name,
-    .pmb-rname {
+    .pmb-ident-name {
         display: none;
     }
 
@@ -15009,8 +14944,7 @@ span.ct-console-pick { cursor: default; }
 /* Mobile: scores drop to grade art alone. The art is narrower than the number it
    replaces and the score still rides the row tooltip. */
 @media (max-width: 499.98px) {
-    .pmb-score-text,
-    .pmb-rscore {
+    .pmb-score-text {
         display: none;
     }
 

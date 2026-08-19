@@ -306,7 +306,7 @@ is this worth"* until it picks up the pool read.
 
 ### 3.6 Where your PUMBILITY comes from
 
-A band on Your Pool. **The split is exact, not modelled.** A pool entry is
+A band on the PUMBILITY Breakdown page (Your Pool until round six, D45). **The split is exact, not modelled.** A pool entry is
 `Base(level) × grade × plate` and nothing else — `AdjustToTime` is off in both PUMBILITY configs,
 every `SongTypeModifier` is 1.0, and `ChartLevelSnapshot` is null, so the base is a pure function of
 level (plus Phoenix 2's singles bump). The three parts therefore **sum to the real total**, which is
@@ -1084,7 +1084,7 @@ superset of either single type's, so it never sits below both.
 **This is why splitting the page into three did not have to split the query** (D19). The cache keys
 on `(userId, mix)` and is pool-free, so all three pages share one entry: still one sweep per player
 per mix per day, the same wait the single page had. What the section changes is only *which* page can
-be the one that waits — land on Your Pool first and you sit behind the `PatienceCard` for a result
+be the one that waits — land on the Breakdown page first and you sit behind the `PatienceCard` for a result
 that page never renders. An inelegance, not a regression, and the reason the card belongs to the
 frame rather than to Play.
 
@@ -1194,7 +1194,7 @@ under the number. The nav row underneath fills the air that costs at desktop wid
    number of charts is exactly that the gains do not sum, so it is expressed as a per-chart value
    instead — which is order-free and therefore true however you play. D13 is this boundary enforced
    rather than annotated.
-4. **A title you hold is not a projection.** The rails on Your Pool state what you have and what the
+4. **A title you hold is not a projection.** The rails on the Breakdown page state what you have and what the
    next rung asks. The chips on Phoenix 1 state where a record *would* land you. The one word
    between them is the whole difference, and it is why D17 refuses to spend "projected" twice.
 
