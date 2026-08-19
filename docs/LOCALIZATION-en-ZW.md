@@ -260,4 +260,6 @@ reusable everywhere. Its formula vocabulary is the part most likely to recur.
 | here | ap | Same word; position is carried by word order. |
 | there | gro | Coined alongside it for the carried line. |
 | most | mrrgl | Recovered from `More than` → `Mrrgl grogrgl`. |
+| below / under | glub | Coined for the roster's window and the waiting room, opposite `mrrgl` (above/most). |
+| worth / value | grumb | Recovered from `Value` → `Grumb`. |
 | only | ub | Recovered from `#{0} of {1}` → `#{0} ub {1}` — the same particle carries "of" and "only". |

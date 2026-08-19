@@ -250,6 +250,12 @@
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
+  <data name="1 more peer above" xml:space="preserve">
+    <value>上に 1 人</value>
+  </data>
+  <data name="1 more peer below" xml:space="preserve">
+    <value>下に 1 人</value>
+  </data>
   <data name="1 paragon" xml:space="preserve">
     <value>パラゴン 1 件</value>
   </data>
@@ -423,9 +429,6 @@
   </data>
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>ドキュメント完備の公開 API がコミュニティ製ツールを支えます — ボット、オーバーレイ、統計サイト。アカウントからトークンを取得して、私たちと同じデータの上に作ってください。</value>
-  </data>
-  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
-    <value>Phoenix 1 で既に出したスコアを、Phoenix 2 の基準で再計算した値です。</value>
   </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>Singlesは1レベル上で計算されます。S17はBase(18)で払われます。レベル10未満の譜面の価値は0です。</value>
@@ -683,9 +686,6 @@
   </data>
   <data name="An additive bonus, not a multiplier — at most {0} of a chart." xml:space="preserve">
     <value>倍率ではなく加算ボーナス — 譜面1つの最大{0}。</value>
-  </data>
-  <data name="An estimate from players at your competitive level." xml:space="preserve">
-    <value>同じ競技レベルのプレイヤーからの推定です。</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>インポートは既に実行中です</value>
@@ -955,9 +955,6 @@
   </data>
   <data name="Base({0}) — a Single is priced one level up" xml:space="preserve">
     <value>Base({0}) — Singlesは1レベル上で計算</value>
-  </data>
-  <data name="Based on" xml:space="preserve">
-    <value>根拠</value>
   </data>
   <data name="based on your scores" xml:space="preserve">
     <value>あなたのスコアに基づく</value>
@@ -2144,6 +2141,9 @@
   </data>
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Doublesの表です。SinglesはAA以下が一段低くなります（AA {0}、A+ {1} …）。全段は下に。</value>
+  </data>
+  <data name="Doubles: {0} peers" xml:space="preserve">
+    <value>Doubles: ピア {0}人</value>
   </data>
   <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
     <value>Doubles: PUMBILITYピア {0}人</value>
@@ -4478,14 +4478,14 @@
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>申請しても自動で通知は飛びません。PIU Scores の Discord に書き込めば誰かが見ます。その間もツールは動き続けます。</value>
   </data>
-  <data name="Nothing here clears your bar yet — play a few more charts and check back." xml:space="preserve">
-    <value>まだ基準を超えるものがありません。もう少し譜面をプレイしてから確認してください。</value>
-  </data>
   <data name="Nothing here yet." xml:space="preserve">
     <value>まだ何もありません。</value>
   </data>
   <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
     <value>まだ何もありません。この譜面について知っていることを共有しましょう。</value>
+  </data>
+  <data name="Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot." xml:space="preserve">
+    <value>プールにはまだ何もありません — レベル 10 以上でステージブレイクしていないクリアはすべて 1 枠を占めます。</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>何も削除されません。ツールも、アクティビティも、配信履歴もそのまま残るので、何が起きたか確認できますし、取り消すこともできます。</value>
@@ -5307,6 +5307,9 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>ディレクトリからあなたのサイトやソースを開いたプレイヤーの数です。掲載開始以降の合計です。</value>
   </data>
+  <data name="Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
+    <value>その種別であなたと競技レベル 1 以内のプレイヤーです。自分自身がピアになることはありません。強調行があなたの位置です。</value>
+  </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>競技レベルが±1以内のプレイヤー — レベルが近いほど、そしてフォルダ評価があなたと一致するほど重く数えられます。</value>
   </data>
@@ -5514,6 +5517,9 @@
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY Breakdown" xml:space="preserve">
+    <value>PUMBILITY 内訳</value>
   </data>
   <data name="PUMBILITY Calculator" xml:space="preserve">
     <value>PUMBILITY計算機</value>
@@ -6690,6 +6696,9 @@
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Singles対Doubles</value>
   </data>
+  <data name="Singles: {0} peers" xml:space="preserve">
+    <value>Singles: ピア {0}人</value>
+  </data>
   <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
     <value>Singles: PUMBILITYピア {0}人</value>
   </data>
@@ -7107,9 +7116,6 @@
   <data name="The bar this pool would set" xml:space="preserve">
     <value>このプールが定める基準</value>
   </data>
-  <data name="The bar — everything below is waiting" xml:space="preserve">
-    <value>基準 — これより下は待機中</value>
-  </data>
   <data name="The Best" xml:space="preserve">
     <value>トップ</value>
   </data>
@@ -7133,9 +7139,6 @@
   </data>
   <data name="the charts themselves" xml:space="preserve">
     <value>譜面そのもの</value>
-  </data>
-  <data name="The charts your PUMBILITY is made of" xml:space="preserve">
-    <value>PUMBILITY を構成する譜面</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>暗号文はブラウザに、ラップされた鍵はデータベースに、マスターキーは Key Vault にあります。復号には3つすべてが必要です。1つ、あるいは2つが流出しても何も得られません。パスワードがデータベースやログに書き込まれることは決してありません。</value>
@@ -8083,6 +8086,9 @@
   <data name="Waiting room" xml:space="preserve">
     <value>待機中</value>
   </data>
+  <data name="Waiting room #{0}" xml:space="preserve">
+    <value>待機中 #{0}</value>
+  </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>パッドを温めています</value>
   </data>
@@ -8201,6 +8207,12 @@
   <data name="What players at your level score here" xml:space="preserve">
     <value>同水準のプレイヤーのここでのスコア</value>
   </data>
+  <data name="What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
+    <value>あなたと競技レベル 1 以内のプレイヤーがPUMBILITYを何で築いているか — 基準を超える譜面に絞り、それぞれ今の基準に対して算定し、持っているピアの数でまとめました。</value>
+  </data>
+  <data name="What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
+    <value>あなたと競技レベル 1 以内のプレイヤーがPUMBILITYを何で築いているか: ピアがトップ50に持つすべての譜面を、プール内での高さ順に、彼らのスコアとあなたの位置とともに示します。</value>
+  </data>
   <data name="What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
     <value>あなたと3レベル以内のプレイヤーがPUMBILITYを何で築いているか — 基準を超える譜面に絞り、それぞれ今の基準に対して算定し、持っているピアの数でまとめました。</value>
   </data>
@@ -8212,6 +8224,9 @@
   </data>
   <data name="What should they change?" xml:space="preserve">
     <value>何を直すべきですか?</value>
+  </data>
+  <data name="What the chart is worth in your pool right now" xml:space="preserve">
+    <value>現在あなたのプールでのこの譜面の値</value>
   </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>このプレイが PUMBILITY に加えた分</value>
@@ -8350,6 +8365,9 @@
   </data>
   <data name="Within days" xml:space="preserve">
     <value>最大日数</value>
+  </data>
+  <data name="within one competitive level of you" xml:space="preserve">
+    <value>あなたと競技レベル 1 以内のプレイヤー</value>
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>なくても動きます — あなた自身の、あなたのスコアに対しては。</value>
@@ -8500,9 +8518,6 @@
   </data>
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
 	  <value>一部のスコアダウンロードが失敗しました。失敗したCSVファイルはダウンロードして編集して、もう一回アップロード可能です。</value>
-  </data>
-  <data name="You have" xml:space="preserve">
-    <value>現在</value>
   </data>
   <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
     <value>この種別のPUMBILITYピアはまだいません。プールが 50 で埋まると現れます。</value>
@@ -8678,6 +8693,9 @@
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>最新のセッションのすべて</value>
   </data>
+  <data name="Your peers" xml:space="preserve">
+    <value>あなたのピア</value>
+  </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>ピアのプールにはまだ何もありません。</value>
   </data>
@@ -8704,6 +8722,9 @@
   </data>
   <data name="Your pool" xml:space="preserve">
     <value>あなたのプール</value>
+  </data>
+  <data name="Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar." xml:space="preserve">
+    <value>あなたのプールを順位順に、各譜面についてピアの記録とともに — 何人が持っているか、中央値とどれだけ割れているか — そして基準の下の待機中も。</value>
   </data>
   <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
     <value>プールは 50 のうち {0} です。埋まるまでは、プレイした譜面がそのまま加算されます。まだ超えるべき基準はありません。</value>
@@ -8740,9 +8761,6 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>あなたのPumbilityと競技レベル、そして最も近いライバル。</value>
-  </data>
-  <data name="Your PUMBILITY peers" xml:space="preserve">
-    <value>あなたのPUMBILITYピア</value>
   </data>
   <data name="Your PUMBILITY titles" xml:space="preserve">
     <value>あなたのPUMBILITY称号</value>
@@ -9094,6 +9112,12 @@
   </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>他 {0} 人はプロフィールを非公開にしています。</value>
+  </data>
+  <data name="{0} more peers above" xml:space="preserve">
+    <value>上に {0} 人</value>
+  </data>
+  <data name="{0} more peers below" xml:space="preserve">
+    <value>下に {0} 人</value>
   </data>
   <data name="{0} more perfects to cap" xml:space="preserve">
     <value>上限まであと Perfect {0} 回</value>

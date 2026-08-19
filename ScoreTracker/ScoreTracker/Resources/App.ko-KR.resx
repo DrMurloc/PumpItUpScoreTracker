@@ -250,6 +250,12 @@
   <data name="0 -> 10%" xml:space="preserve">
     <value>0 -> 10%</value>
   </data>
+  <data name="1 more peer above" xml:space="preserve">
+    <value>위로 1명 더</value>
+  </data>
+  <data name="1 more peer below" xml:space="preserve">
+    <value>아래로 1명 더</value>
+  </data>
   <data name="1 paragon" xml:space="preserve">
     <value>파라곤 1개</value>
   </data>
@@ -423,9 +429,6 @@
   </data>
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>문서가 완비된 공개 API가 커뮤니티 툴을 움직입니다 — 봇, 오버레이, 통계 사이트. 계정에서 토큰을 받아 우리와 같은 데이터 위에 만들어 보세요.</value>
-  </data>
-  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
-    <value>Phoenix 1에서 이미 낸 점수를 Phoenix 2 기준으로 재산정한 값입니다.</value>
   </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>싱글은 한 레벨 위로 책정됩니다: S17은 Base(18)로 계산됩니다. 10레벨 미만 채보의 가치는 0입니다.</value>
@@ -681,9 +684,6 @@
   </data>
   <data name="An additive bonus, not a multiplier — at most {0} of a chart." xml:space="preserve">
     <value>배율이 아닌 가산 보너스 — 채보 하나의 최대 {0}.</value>
-  </data>
-  <data name="An estimate from players at your competitive level." xml:space="preserve">
-    <value>같은 경쟁 레벨 플레이어들에게서 얻은 추정치입니다.</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>이미 가져오기가 실행 중입니다</value>
@@ -948,9 +948,6 @@
   </data>
   <data name="Base({0}) — a Single is priced one level up" xml:space="preserve">
     <value>Base({0}) — 싱글은 한 레벨 위로 책정</value>
-  </data>
-  <data name="Based on" xml:space="preserve">
-    <value>근거</value>
   </data>
   <data name="based on your scores" xml:space="preserve">
     <value>내 점수 기반</value>
@@ -2130,6 +2127,9 @@
   </data>
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>더블 표입니다; 싱글은 AA 이하를 한 칸씩 낮게 읽습니다 (AA {0}, A+ {1} …). 전체 사다리는 아래에.</value>
+  </data>
+  <data name="Doubles: {0} peers" xml:space="preserve">
+    <value>더블: 동료 {0}명</value>
   </data>
   <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
     <value>더블: PUMBILITY 동료 {0}명</value>
@@ -4447,14 +4447,14 @@
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>요청해도 자동으로 전달되는 알림은 없습니다. PIU Scores 디스코드에 글을 남기면 누군가 확인합니다. 그동안에도 도구는 계속 작동합니다.</value>
   </data>
-  <data name="Nothing here clears your bar yet — play a few more charts and check back." xml:space="preserve">
-    <value>아직 기준선을 넘는 채보가 없습니다 — 채보를 조금 더 플레이한 뒤 다시 확인하세요.</value>
-  </data>
   <data name="Nothing here yet." xml:space="preserve">
     <value>아직 아무것도 없습니다.</value>
   </data>
   <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
     <value>아직 아무것도 없습니다. 이 채보에 대해 아는 것을 공유해 보세요.</value>
+  </data>
+  <data name="Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot." xml:space="preserve">
+    <value>아직 풀에 아무것도 없습니다 — 레벨 10 이상에서 스테이지 브레이크 없이 클리어한 기록은 모두 한 칸을 차지합니다.</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>아무것도 삭제되지 않습니다. 도구도, 활동 기록도, 전달 이력도 그대로 남으므로 무슨 일이 있었는지 확인할 수 있고 되돌릴 수도 있습니다.</value>
@@ -5271,6 +5271,9 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>디렉터리에서 여러분의 사이트나 소스를 연 플레이어 수입니다. 목록에 오른 이후의 누계입니다.</value>
   </data>
+  <data name="Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
+    <value>해당 유형에서 나와 경쟁 레벨 1 이내인 플레이어입니다. 나는 나 자신의 동료가 될 수 없으며, 강조된 행이 내가 있을 자리입니다.</value>
+  </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>경쟁 레벨이 ±1 이내인 플레이어 — 레벨이 가까울수록, 그리고 폴더 평가가 나와 일치할수록 더 크게 반영됩니다.</value>
   </data>
@@ -5477,6 +5480,9 @@
   </data>
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
+  </data>
+  <data name="PUMBILITY Breakdown" xml:space="preserve">
+    <value>PUMBILITY 구성</value>
   </data>
   <data name="PUMBILITY Calculator" xml:space="preserve">
     <value>PUMBILITY 계산기</value>
@@ -6637,6 +6643,9 @@
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>싱글 vs 더블</value>
   </data>
+  <data name="Singles: {0} peers" xml:space="preserve">
+    <value>싱글: 동료 {0}명</value>
+  </data>
   <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
     <value>싱글: PUMBILITY 동료 {0}명</value>
   </data>
@@ -7048,9 +7057,6 @@
   <data name="The bar this pool would set" xml:space="preserve">
     <value>이 풀이 만들 기준선</value>
   </data>
-  <data name="The bar — everything below is waiting" xml:space="preserve">
-    <value>기준선 — 아래는 모두 대기 중</value>
-  </data>
   <data name="The Best" xml:space="preserve">
     <value>최고</value>
   </data>
@@ -7074,9 +7080,6 @@
   </data>
   <data name="the charts themselves" xml:space="preserve">
     <value>차트 자체</value>
-  </data>
-  <data name="The charts your PUMBILITY is made of" xml:space="preserve">
-    <value>PUMBILITY를 구성하는 채보</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>암호문은 브라우저에, 래핑된 키는 데이터베이스에, 마스터 키는 Key Vault에 있습니다. 복호화에는 세 가지 모두가 필요합니다 — 하나, 또는 둘이 유출되어도 아무것도 얻지 못합니다. 비밀번호는 데이터베이스나 로그에 절대 기록되지 않습니다.</value>
@@ -8020,6 +8023,9 @@
   <data name="Waiting room" xml:space="preserve">
     <value>대기실</value>
   </data>
+  <data name="Waiting room #{0}" xml:space="preserve">
+    <value>대기실 #{0}</value>
+  </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>발판 예열하는 중</value>
   </data>
@@ -8137,6 +8143,12 @@
   <data name="What players at your level score here" xml:space="preserve">
     <value>여기서 내 레벨 플레이어가 내는 점수</value>
   </data>
+  <data name="What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
+    <value>나와 경쟁 레벨 1 이내의 플레이어들이 PUMBILITY를 무엇으로 쌓는지, 그중 기준선을 넘는 채보만 — 각각 지금의 기준선에 대해 산정하고, 보유한 동료 수로 묶었습니다.</value>
+  </data>
+  <data name="What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
+    <value>나와 경쟁 레벨 1 이내의 플레이어들이 PUMBILITY를 무엇으로 쌓는지: 동료들이 상위 50에 보유한 모든 채보를 풀에서의 높이 순으로, 그들의 점수와 내 위치와 함께 보여줍니다.</value>
+  </data>
   <data name="What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
     <value>나와 3레벨 이내의 플레이어들이 PUMBILITY를 무엇으로 쌓는지, 그중 기준선을 넘는 채보만 — 각각 지금의 기준선에 대해 산정하고, 보유한 동료 수로 묶었습니다.</value>
   </data>
@@ -8148,6 +8160,9 @@
   </data>
   <data name="What should they change?" xml:space="preserve">
     <value>무엇을 바꿔야 하나요?</value>
+  </data>
+  <data name="What the chart is worth in your pool right now" xml:space="preserve">
+    <value>지금 내 풀에서 이 채보의 값</value>
   </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>이 플레이가 PUMBILITY에 더한 값</value>
@@ -8286,6 +8301,9 @@
   </data>
   <data name="Within days" xml:space="preserve">
     <value>최대 일수</value>
+  </data>
+  <data name="within one competitive level of you" xml:space="preserve">
+    <value>나와 경쟁 레벨 1 이내의 플레이어</value>
   </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>없어도 동작합니다 — 여러분 자신의 점수에 대해서는요.</value>
@@ -8430,9 +8448,6 @@
   </data>
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
     <value>일부 채보를 다운로드하지 못했습니다. 실패 목록의 CSV를 다운로드하여 조정 후 다시 시도하실 수 있습니다.</value>
-  </data>
-  <data name="You have" xml:space="preserve">
-    <value>현재 기록</value>
   </data>
   <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
     <value>이 유형의 PUMBILITY 동료가 아직 없습니다 — 풀 50개를 채우면 나타납니다.</value>
@@ -8608,6 +8623,9 @@
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>가장 최근 세션 전체</value>
   </data>
+  <data name="Your peers" xml:space="preserve">
+    <value>나의 동료</value>
+  </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>동료들의 풀에 아직 아무것도 없습니다.</value>
   </data>
@@ -8634,6 +8652,9 @@
   </data>
   <data name="Your pool" xml:space="preserve">
     <value>내 풀</value>
+  </data>
+  <data name="Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar." xml:space="preserve">
+    <value>내 풀을 순위 순으로, 각 채보에 대한 동료들의 기록과 함께 — 몇 명이 보유하는지, 중앙값과 얼마나 갈리는지 — 그리고 기준선 아래의 대기실까지.</value>
   </data>
   <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
     <value>풀은 50개 중 {0}개입니다. 다 차기 전까지는 플레이한 채보가 그대로 더해집니다 — 아직 넘어야 할 기준선이 없습니다.</value>
@@ -8670,9 +8691,6 @@
   </data>
   <data name="Your Pumbility and competitive level, plus your closest matches." xml:space="preserve">
     <value>당신의 Pumbility와 경쟁 레벨, 그리고 가장 가까운 상대.</value>
-  </data>
-  <data name="Your PUMBILITY peers" xml:space="preserve">
-    <value>나의 PUMBILITY 동료</value>
   </data>
   <data name="Your PUMBILITY titles" xml:space="preserve">
     <value>나의 PUMBILITY 칭호</value>
@@ -9024,6 +9042,12 @@
   </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>{0}명이 프로필을 비공개로 설정했습니다.</value>
+  </data>
+  <data name="{0} more peers above" xml:space="preserve">
+    <value>위로 {0}명 더</value>
+  </data>
+  <data name="{0} more peers below" xml:space="preserve">
+    <value>아래로 {0}명 더</value>
   </data>
   <data name="{0} more perfects to cap" xml:space="preserve">
     <value>상한까지 Perfect {0}개 더</value>
