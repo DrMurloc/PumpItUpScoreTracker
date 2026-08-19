@@ -95,6 +95,23 @@ Round four, 2026-08-17, after the owner's field test of round three.
 | D30 | **A peer row carries a "Peers IQR"** — the peers' 25th and 75th percentile scores as two letter grades with a dash between them, beside the median. Owner: *"Can we do an estimated range? … If we do like 'Estimated P25 -> P75 letter grades'? It sort of helps visualize confidence levels a bit too. If like everyone in your pool is getting a SS, you'll probably get an SS. If P25 is A+ and P75 is SSS+, you know it's a specialized chart."* Named **IQR**, not "range": *"call it 'Peers IQR' so those who understand math nuance will know it's not a Min/Max range."* Grades only — no quartile numbers, no width figure — and *"at most a tooltip for 'From X peers'"*. **Compact is unchanged**: *"Only so much data we can fit there."* A carried Phoenix 1 row has no peers and prints a dash. This narrows D12: the numeric spread D12 removed stays removed; two grades that say whether the peers agree is the one per-row figure about the evidence that earned its place, because the field test read the median alone as a claim ("it's still giving me S22 SSs") when the peers behind it were split |
 | D31 | **You are never one of your own peers** (owner, 2026-08-17). The projection has always drawn its band with the viewer removed; the tier lists' PUMBILITY lens now does the same at read time — the stored list is one per peer group and counts every member's pool, so the reader's own pool is taken back out (one from the peer count, one from every chart it holds, the bands redrawn), and both lenses' captions on Phoenix 2 name PUMBILITY peers. Nightly is the caveat: a pool that filled since the last build was never counted in, and for that day the subtraction runs one deep |
 
+Round five, 2026-08-18. Phoenix 2 only; Phoenix 1's Play page is untouched. The page these rulings
+describe is §3.10; the measurements behind them are §4.9.
+
+| # | Ruling |
+|---|---|
+| D32 | **Your PUMBILITY peers replace "What to play next" on Phoenix 2.** Owner: *"And yes, this replaces 'what to play next'."* `/Pumbility` on Phoenix 2 renders the peers page in the target list's place; the section stays three tabs; Phoenix 1 keeps the target list of §3.3 exactly as it is. Measured first (§4.9): every peer-projected target is a chart at least one peer holds, so nothing the old list said is lost — what changes is the order it says it in, and where the carried Phoenix 1 rows sit |
+| D33 | **The grouping is called Prevalence** — *"Prevalence is good. I like that. Go with that."* — and it is a weighted count: a chart at #1 in a peer's pool scores 50, at #50 scores 1, summed over the peers (a Borda count; each peer casts an equal 1,275-point vote, so the band's strong tail cannot dominate the way a raw value sum would). **The hold count is what prints** — "17 of 23 peers" — and the weighted number rides a tooltip that says **"Weighted sum: 550"**: *"don't call it borda there."* Measured: the weighting barely reorders (top-50 overlap 39/50 against the plain count) and is not level-sorted inside a band |
+| D34 | **It is a tier list and follows the tier list page's pattern** — *"Follow the Tier List page's pattern for all of this (UI/UX wise too)."* Staple · Strong · Solid · Average · Modest · Slim · Poor by the PUMBILITY lens's own log-scaled banding on the rarity ramp; collapsible sections with **Slim and Poor folded** by default; Comfortable / Compact / Table via the standard trio, which sits **right above the list, right-aligned**; the To-Do bookmark and its dashed-blue ring exactly as the tier list wears them. **No song-name filter, no other filters, no applied-filters row, no sorting** (*"No, no sorting"*) |
+| D35 | **Variability, not IQR grades.** The Peers IQR (D30) survives as a data point but prints as a level: the peers' interquartile width in points, `log(1 + w/1000)`, banded ±0.5σ / ±1.5σ across the charts they play — five levels named **Very consistent · Consistent · Mixed · Split · Very split** (*"i like a"*), per chart type, only where five or more peers scored the chart. Measured: raw widths skew +1.10 and the bottom band never fires; on the log they skew −0.25 and all five assign (7/34/36/34/9 on the reporter's singles peers). The word always prints; **Compact carries a dot top-right and Comfortable does not** — *"Comfortable doesn't need the variability dot, only compact does"* |
+| D36 | **Grouped by: Prevalence (default) · Projected gains.** Under Projected gains the list is only what pays, biggest first, in bands of PUMBILITY points, and carried Phoenix 1 rows interleave by gain exactly as the target list did — it *is* the old page. A **Project Phoenix 1 scores** switch appears there, and only there, and only *"when the player has phoenix 1 scores that would change the data"*: on (the default) is the carried-wins rule of D11/D29; off drops the carried rows and the peer projection shows through where one exists. Under Prevalence an **Only projected PUMBILITY gains** switch cuts the tiers to the charts that pay; the front page opens with it on |
+| D37 | **The pool selector's All is one merged list** — *"merge into one"* — tiers and order computed per chart type (different electorates: 23 singles peers, 7 doubles), the sections interleaving both, ordered within a tier by each chart's share of its own electorate, and every card saying "5 of 7 peers" so the electorate is visible. Not stacked lists |
+| D38 | **The jacket carries the gain and nothing else.** *"Switch out the X/Y peers for the green/blue outlined Projected PUMBILITY (if you're projected to have a gain)"*, then *"drop the X/Y peers number on the song jacket for both comfortable and compact."* The badge is the target list's own — mix-primary outline, `+18` — and the gain is the target list's own rule (D11/D29, carried wins, measured against the bar as it stands, D13), so the two pages can never disagree about a number. A chart that would not pay wears no corner at all; the hold count lives in the Comfortable body and the Compact tooltip. Compact's other bottom corner is the projected grade, as on the target list |
+| D39 | **The peers get a roster** — *"give them a dedicated table at the bottom"* — name, PUMBILITY level, PUMBILITY total (N2, it is a pool), **competitive levels too** (*"maybe competitive level too"*), which type they are a peer for under All, and how many of your fifty they also hold; sorted by total with your own row highlighted where you would sit. **Private accounts are counted as peers and not named**, with *"X private accounts not shown"* beneath |
+| D40 | **The chart leaderboard gets one Peers chip with a sub-row** — Competitive · PUMBILITY — *"for now"*; the sub-row appears only where both exist (Phoenix 2, the viewer's type lit), and the default when clicked cold is **Competitive** (*"do competitive for now"*). Hosts pass the sub-scope: a card on this page opens on PUMBILITY, a session score row on Competitive as before. Private peers stay on the board as Anonymous rows, exactly as Competitive Peers keeps them. This is the first surface presenting two of the [peer pools](peers-abstraction.md) as one control |
+| D41 | **The compare strip and the Yours-alone section ship, on the mock's evidence, as cuttable.** The owner has not ruled on either (*"not sure yet"*); each is its own commit so a "cut it" costs a revert and nothing else. In common · Yours alone · where the levels sit, and the last section listing your pool charts no peer holds |
+| D42 | **What is assumed until the field test says otherwise:** the front page lands on **Prevalence with the gains switch on**; the block title is **"Your PUMBILITY peers"** and does not change with the grouping; the gain-band sections are fixed point bands (+25 and up · +15 to +25 · +10 to +15 · +5 to +10 · +2 to +5 · under +2), the unit the bar and the ask are read in, rather than σ-banded |
+
 ## 3. The section
 
 ### 3.1 The three pages
@@ -106,7 +123,8 @@ nav links as real document loads.
 FRAME   your number · pool selector · the bar        ← left-aligned, all three pages
         [ Play ]  [ Your Pool ]  [ Phoenix 1 ]
 
-Play          what to play next  (density trio)                  /Pumbility
+Play          Phoenix 1: what to play next  (density trio)       /Pumbility
+              Phoenix 2: your PUMBILITY peers  (§3.10, round five)
 Your Pool     where your PUMBILITY comes from                    /Pumbility/Pool
               your PUMBILITY titles
               the pool curve  ·  your top 50
@@ -147,9 +165,13 @@ curve the same pool reads **2.5%**.
 
 The curve replaces the eight rating bands. They are deleted, not relocated.
 
-### 3.3 Targets — "what to play next"
+### 3.3 Targets — "what to play next" (Phoenix 1 since round five)
 
-Ranked by projected gain.
+Ranked by projected gain. **Phoenix 1 only since round five (D32)** — on Phoenix 2 the Play page is
+§3.10, and everything below describes the target list as Phoenix 1 still renders it. The Phoenix 2
+paragraphs kept here (the peer line, the Peers IQR) are the record of what the Phoenix 2 list looked
+like between rounds three and five; the arithmetic they describe still runs, because §3.10 prices its
+gains through exactly this list.
 
 **Comfortable and Compact are the tier list's chart card** (`TierListChartCard`), not a
 lookalike — the same component, extended. A grid of chart cards is one concept, and the tier
@@ -428,6 +450,62 @@ both. Two traps worth remembering —
 `TiedAtBar` compared pool values to the bar with `==`, which on doubles is a coin toss and would have
 taken the count silently to zero; and three sites rendered a raw `@value` with no format string at
 all, harmless while the value was an int and full-precision noise the moment it stopped being one.
+
+### 3.10 Your PUMBILITY peers — the Phoenix 2 Play page (round five)
+
+The owner's framing: *"a page/tab for the PUMBILITY page called 'Your Peers' … breaks down the peer
+based suggestions and creates a cross-folder tier list based on how many charts show up in how many
+peers … weighted, so a chart in 1st place on a peer scores 50 points … a chart in 50th place is 1
+point. It can then show more data on the score variability within peers."* It began as a fourth tab
+and ended as the Play page (D32), because a filter for "only charts that pay" over it reproduced the
+target list's peer half exactly (§4.9) — at which point two pages were one page with a switch.
+
+**What it is.** Every chart your PUMBILITY peers (D22) hold in their top-50 pool of the type, tiered
+by prevalence (D33, D34): how many hold it, weighted by how high. Each card says what the peers do on
+it — their median grade, how far apart they are (D35), how many hold it — and where you stand: your
+score and its percentile among them, whether it is in your pool and at what slot, or that you have
+never played it. Under it, who they are (D39). Above it, one line of chips per type (D27/D28,
+unchanged) and, on the mock's evidence, a strip saying how your pool differs from theirs (D41).
+
+**Two groupings, one control (D36).** *Prevalence* is the page's own order. *Projected gains* is the
+old page: only what pays, biggest first, the carried Phoenix 1 rows interleaved (D29), in bands of
+points rather than one paginated list, with each card annotated *"Staple · 17 of 23 peers"* so the
+prevalence travels along. The `Grouped by` select is the tier list's own control; the two switches
+beside it (Only projected PUMBILITY gains under Prevalence; Project Phoenix 1 scores under Projected
+gains) are the page's only filters, and each shows only where it means something.
+
+**Where the gain comes from (D38).** Not recomputed. `PumbilityPageRecord.Targets` is the target
+list's own merged, carried-wins, top-100 answer, and that is the badge; with the Phoenix 1 switch off
+the badge is `ProjectPumbilityGainsQuery`'s peer-only gain instead. Both already exist. Consequence:
+a paying chart past the hundredth wears no badge here either. Under Prevalence with the gains switch
+on, the carried rows no peer holds cannot land in a prevalence tier — they get a **Carried from
+Phoenix 1** section of their own, dashed-green as the target list drew them (§4.9 says why this is not
+an edge case: 28 of the reporter's 74 carried rows are held by nobody).
+
+**The card.** `TierListChartCard`, extended nowhere: jacket, bubble, the gain corner when it pays
+(D38), the projected grade in Compact's other corner, the body slot carrying the peers line
+(`LetterGradeIcon` for the median · the variability meter and its word · the count), the pool line,
+and the tier list's border language with the tier list's precedence — passed, To-Do, carried. Compact
+prints no words: its tooltip carries the tier, the count, the weighted sum, the peers' median and
+variability, and your state; a top-right dot is the variability (D35) and, under Projected gains, a
+top-edge stripe is the prevalence tier. The legend under the trio names every mark the grid contains,
+as the target list's did.
+
+**Table** — Song · Chart · Peers (`17 of 23`, weighted sum in the title) · Peers' median · Variability
+· Gain · My Score · Your pool · the two actions.
+
+**Roster (D39)** — `#` · Player · Level (gem + LV) · PUMBILITY · Singles · Doubles (competitive levels)
+· Peer for (All only) · Overlap with you (a bar and the count, of your fifty of that type). Your own
+row rides in the sort, unnumbered and highlighted, so the table also answers "where do I sit". Private
+peers are counted in every number on the page and named nowhere.
+
+**Dark types (D28)** — a type whose pool is short shows its chip and nothing else; under All that
+type's peers, sections and roster rows are simply absent. Nothing here changes what dark means.
+
+**The leaderboard (D40)** — `ChartLeaderboardScopes` gains a *PUMBILITY* peer scope under one *Peers*
+chip. The board is the World breakdown filtered to your peers of the chart's type, private peers kept
+as Anonymous rows (a peer group is a cohort, not a roster — the same reasoning that keeps them on
+Competitive Peers), your standing above it as `#9 of 10 · PUMBILITY peers`.
 
 ## 4. The projection engine
 
@@ -726,6 +804,47 @@ strong player's rung leaves yours. That is the residual, and it was accepted wit
 **Naming.** The projection's peers and the tier list's PUMBILITY lens are one definition (D23) —
 [pumbility-tier-list.md §5](pumbility-tier-list.md). "Cohort" is not used for either.
 
+### 4.9 Round five — what the peers' pools look like, measured
+
+Every number here is from the prod-synced snapshot on 2026-08-18, the reporter's account (DIAMOND
+LV.4, band rungs 21–27: 23 singles peers, 7 doubles, his doubles pool dark at 29/50), through
+`ScoreTracker.ExplorationTests/Pumbility/PumbilityPeerPoolProbeTests` — the same peer definition,
+the viewer excluded, pools rebuilt with the writer's own rule.
+
+**Prevalence is not level-sorted inside a band.** 79% of the singles Borda mass sits at S20/S21/S22
+(26 / 26 / 27%) and the top fifty spans S19–S23 with the levels interleaved: 404 (New Era) S21 is #1
+(17 of 23 hold it, 550 points), We Love Your Step S20 #10 above most S22s. The tier-list doc's worry
+that higher levels crowd every pool ([pumbility-tier-list.md §2](pumbility-tier-list.md)) is real
+across the population and moot inside a ±3-rung band.
+
+**The weighting barely reorders, and that is fine.** Top-50 overlap: Borda ∩ plain hold count 39/50,
+Borda ∩ raw value sum 39/50, count ∩ value 50/50 (doubles: 46 and 38). Borda earns its place on a
+different property — every peer casts the same 1,275 points, so a RED BERYL 2's #50 counts one and a
+DIAMOND 1's #1 counts fifty, and the strong tail cannot dominate the list the way a value sum lets it.
+
+**The overlay is the story.** 9 of his 50 pool charts are in the band's Borda top 50; 21 are held by
+at most one peer and 10 by nobody (Paradoxx S26 at his #3, Achluoias S24, Neo Catharsis S25, HTTP,
+Vacuum …). Same levels — 35 of his 50 are S20/S21 too — different songs. The 41 consensus charts he
+does not hold are all unplayed in Phoenix 2.
+
+**Variability bands.** Over the 120 singles charts five or more peers scored, IQR width runs 455 →
+44,771 points, median 12,235. Raw widths skew +1.10 and a ±0.5σ/±1.5σ cut leaves the bottom band
+empty; `log(1 + w/1000)` skews −0.25 and gives 7 / 34 / 36 / 34 / 9. Solve My Hurt S21 (4k) reads
+very consistent, Crash-Landing Rendezvous S19 (5k) consistent, 404 S21 (12k) mixed, OVERNIGHT FLOWER
+S22 (23k) split, Freedom Dive S22 (43k) very split — which is what the owner's own field-test words
+described (*"if P25 is A+ and P75 is SSS+, you know it's a specialized chart"*).
+
+**The merge question, answered before it was decided.** From the peers' evidence 86 singles charts
+clear his bar (peers' median priced as the projection prices it, against his singles bar of 337.18)
+and **all 86 are held by at least one peer** — a "gains only" cut of the prevalence list is the
+target list's peer half exactly. What the shipping target list actually held for him: **100 rows =
+26 peer-projected + 74 carried Phoenix 1** (doubles: 100 of 100 carried), the carried rows winning
+where both exist; **28 of the 74 carried rows are held by no peer**. That is why the merged page needs
+a Carried section under Prevalence (§3.10) and why the Projected-gains grouping keeps the carried rows
+interleaved: it reproduces the shipping order row for row (OVERNIGHT FLOWER +26.9, QUATTUORUX +26.9,
+Cleaner, Cross Over, Aragami +24.9). Under All the same charts re-base against the merged bar (345.94)
+and read +18 / +18 / +16.
+
 ## 5. Phoenix 2 carryover — the Phoenix 1 page
 
 Its own route since round two (`/Pumbility/Phoenix1`, D14), and only on the Phoenix 2 view; Phoenix 1
@@ -965,6 +1084,39 @@ Not in this round: the other "cohort" family — `CohortScoreProvider`, `FolderC
 
 **Post-deploy:** press *Rebuild Phoenix 2 PUMBILITY tier lists* once, or wait for the nightly — Phoenix 2 rows re-key from title names to rungs; until then the lens is dark and falls to Pass as it does for any thin peer group. Phoenix 1 rows are unaffected. The projection cache is in-process and clears with the deploy.
 
+### 6.7 Round five — Your PUMBILITY peers
+
+**No new table, no new port, no new package, no migration, no job.** The peers' pools come out of the
+read the Phoenix 2 projector already does; everything else is arithmetic over it and reads the site
+already performs.
+
+| Vertical / layer | Change |
+|---|---|
+| **Domain** | `ScoreProjectionRequest` gains an optional `Charts` lookup; when it is present the Phoenix 2 branch of `ScoreProjector` prices every band record and fills `ScoreProjection.PeerPools` — a `PeerPoolSummary` (the peer ids, each peer's top-50 set, and per chart the holders, the weighted sum, how many scored it and their median and quartiles where five or more did). Pure `PumbilityPeerPools.Build` does the arithmetic; pure `PeerVariability` bands quartile widths into the five levels. The tier list's Score-lens caller passes no charts and pays nothing; Phoenix 1 never fills it. Prevalence tiers use `TierListProcessor.ProcessIntoLogScaledTierList` as they stand |
+| **PlayerProgress** | `ProjectionSweep` carries the pools per type; the sweep passes charts on Phoenix 2. Two new contracts on `PumbilityProjectionSaga`, which owns the cache: `GetPumbilityPeersPageQuery(UserId, Mix, Pool)` → `PumbilityPeersPageRecord` (per type the group; the prevalence entries with tier, order, count, weighted sum, scored, median, quartiles, variability, and the viewer's slot / score / percentile; the yours-alone list; the roster from `IUserReader` + `IPlayerStatsReader` with overlap and the private count; the compare figures) and `GetPumbilityPeersQuery(Mix, ChartType)` → the peer ids, for the leaderboard chip. Gains are **not** computed here (D38). `PumbilityPageSaga`, `CarryoverTargets`, `TargetList`'s data path and Phoenix 1's projector are untouched. **A judgment call, flagged:** the tier-list family rule puts tier-list *calculations* in `TierListSaga`; this is a PUMBILITY-page product banded with the shared Domain processor and never stored, so it stays in PlayerProgress |
+| **Data · Catalog · ScoreLedger · ChartIntelligence** | Nothing |
+| **Web** | `Pumbility.razor` branches on the mix: Phoenix 2 renders the peers block, Phoenix 1 keeps `TargetList`. `Components/Pumbility/`: `PeerPoolList` (sections + the three densities over `TierSection` and `TierListChartCard`), `VariabilityMeter`, `PeerRoster`, `PeerPoolLegend`, `PeerCompareStrip`. `MixThemes` emits a mix-invariant `--vary-1..5` group with a `ThemeScales.VariabilityColor` accessor ([UX-GUIDELINES.md](../UX-GUIDELINES.md)). `ChartLeaderboardScopes`: the Peers chip, the sub-row, the `PumbilityPeers` scope; `ChartDetailsDialog.BoardScope` carries the sub-scope. UiSettings: `Density__Pumbility` kept, `Pumbility__GroupBy`, `Pumbility__ProjectPhoenix1`, `Pumbility__GainsOnly`, `Pumbility__CollapsedTiers` new. Nine locales |
+| **ExplorationTests** | `Pumbility/PumbilityPeerPoolProbeTests` — the §4.9 measurement and the JSON export the mock is fed from |
+
+**Tests.** `DomainTests`: `PumbilityPeerPoolsTests` (points, holders, the viewer excluded, the
+five-peer gate, quartiles, per-peer sets), `PeerVariabilityTests` (log bands, cut points, under five →
+none); `ScoreProjectorTests` (pools with `Charts`, none without, never on Phoenix 1).
+`ApplicationTests`: `PumbilityPeersPageTests` (tiers through the processor, yours-alone, roster,
+private count, overlap, the ids from a warm and a cold cache). `Tests.Components`: `PeerPoolListTests`
+(grouping → tiers vs bands, ring precedence, gain-only jacket, dot Compact-only, table columns),
+`PeerRosterTests`, `VariabilityMeterTests`, `PumbilityComponentTests` (the Phoenix 2 branch, the
+switch visibility rules, Phoenix 1 unchanged), `ChartLeaderboardScopesTests` (the chip, the sub-row,
+the default, the host-passed sub-scope, Anonymous rows kept). Ratchets that bite: `PumbilityPrecisionTests`,
+`UiColorTokenTests`, `RenderModeDeclarationTests`, `MessageTaxonomyTests`, the resx tests. Nothing in
+Integration or E2E — nothing new below the port line, and this is component-level UI by the ladder.
+
+**Build order** — docs first, i18n last, pushed per commit: (1) this section and D32–D42; (2) Domain;
+(3) PlayerProgress; (4) the theme tokens; (5) the components; (6) the page swap; (7) the compare strip,
+alone so it can be cut; (8) the leaderboard chip; (9) the probe; (10) nine locales.
+
+**Post-deploy:** nothing. The sweep cache is in-process; the first Phoenix 2 visit after the deploy
+builds the pools with the sweep it was going to run anyway.
+
 ## 7. Responsive
 
 The class ladder in [UX-GUIDELINES.md §1](../UX-GUIDELINES.md), no new numbers:
@@ -1041,3 +1193,10 @@ under the number. The nav row underneath fills the air that costs at desktop wid
   suggestions comes from separate work and is not reproduced here.
 - **N5 (the badge re-key) is now unblocked from this page** and should ship on its own schedule
   for the tier-list blend. It is no longer a dependency of anything here.
+- **Round five, awaiting the field test (D41, D42).** Whether the compare strip and the Yours-alone
+  section survive; whether the front page should open on the gains switch or on the whole prevalence
+  list; whether the gain bands stay fixed points or go σ-relative; and whether the target list's
+  hundred-row cap, which the badge inherits (D38), should lift now that the page has no pagination.
+- **Two peer pools in one chip (D40)** is the first place the [peers abstraction](peers-abstraction.md)
+  shows through the UI. When Peers becomes a vertical, the sub-row is where "which pool am I measured
+  against" would surface — nothing here anticipates that beyond keeping the two scopes as one enum.
