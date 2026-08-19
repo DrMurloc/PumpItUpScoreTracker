@@ -473,7 +473,9 @@ unchanged) and, on the mock's evidence, a strip saying how your pool differs fro
 **Two groupings, one control (D36).** *Prevalence* is the page's own order. *Projected gains* is the
 old page: only what pays, biggest first, the carried Phoenix 1 rows interleaved (D29), in bands of
 points rather than one paginated list, with each card annotated *"Staple · 17 of 23 peers"* so the
-prevalence travels along. The `Grouped by` select is the tier list's own control; the two switches
+prevalence travels along, and its section prints no per-tier pool count — *"X of Y in your pool"* read
+as a claim about the tier rather than about you (field test round one). The `Grouped by` select is the
+tier list's own control, capped in width so the density trio stays beside it; the two switches
 beside it (Only projected PUMBILITY gains under Prevalence; Project Phoenix 1 scores under Projected
 gains) are the page's only filters, and each shows only where it means something.
 
@@ -481,18 +483,21 @@ gains) are the page's only filters, and each shows only where it means something
 list's own merged, carried-wins, top-100 answer, and that is the badge; with the Phoenix 1 switch off
 the badge is `ProjectPumbilityGainsQuery`'s peer-only gain instead. Both already exist. Consequence:
 a paying chart past the hundredth wears no badge here either. Under Prevalence with the gains switch
-on, the carried rows no peer holds cannot land in a prevalence tier — they get a **Carried from
-Phoenix 1** section of their own, dashed-green as the target list drew them (§4.9 says why this is not
-an edge case: 28 of the reporter's 74 carried rows are held by nobody).
+on, the carried rows no peer holds simply do not appear: they have no prevalence to sort on, and the
+switch that produced them is not shown under this grouping. ~~they get a **Carried from Phoenix 1**
+section of their own, dashed-green as the target list drew them~~ — cut in field test round one. They
+are still what Projected gains is for, where §4.9 says why they are no edge case: 28 of the reporter's
+74 carried rows are held by nobody.
 
 **The card.** `TierListChartCard`, extended nowhere: jacket, bubble, the gain corner when it pays
 (D38), the projected grade in Compact's other corner, the body slot carrying the peers line
 (`LetterGradeIcon` for the median · the variability meter and its word · the count), the pool line,
 and the tier list's border language with the tier list's precedence — passed, To-Do, carried. Compact
 prints no words: its tooltip carries the tier, the count, the weighted sum, the peers' median and
-variability, and your state; a top-right dot is the variability (D35) and, under Projected gains, a
-top-edge stripe is the prevalence tier. The legend under the trio names every mark the grid contains,
-as the target list's did.
+variability, and your state; a top-right dot is the variability (D35). ~~and, under Projected gains, a
+top-edge stripe is the prevalence tier~~ — the stripe is **cut** (field test round one): the dot, the
+corner and the section already annotate one tile, and a fourth mark made the grid read as a chart. The
+legend under the trio names every mark the grid contains, as the target list's did.
 
 **Table** — Song · Chart · Peers (`17 of 23`, weighted sum in the title) · Peers' median · Variability
 · Gain · My Score · Your pool · the two actions.
