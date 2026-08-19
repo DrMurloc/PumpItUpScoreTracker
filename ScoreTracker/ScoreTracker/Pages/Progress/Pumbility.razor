@@ -1,12 +1,9 @@
 @using MediatR
 @using ScoreTracker.Application.Commands
 @using ScoreTracker.Application.Queries
-@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
-@using ScoreTracker.Web.Enums
-@using ScoreTracker.Web.Services.Contracts
 @page "/Pumbility"
 @rendermode RenderModes.Interactive
 @namespace ScoreTracker.Web.Pages.Progress
@@ -14,82 +11,33 @@
 @* The section's front page. The number and the bar it has to beat come from the frame, because
    every other page measures from them too (docs/design/pumbility-overhaul.md §3.1).
 
-   Two pages under one route, by mix (D32): on Phoenix 2 the front page is your PUMBILITY peers —
-   what they build their number from, grouped by prevalence or by projected gain, and who they
-   are (§3.10) — with the target list's own gains on every jacket; on Phoenix 1 it is the target
-   list of §3.3, exactly as it was. *@
+   Your peers, on both mixes (D32, D43): what the players the projection draws from build their
+   number from — grouped by prevalence, by projected gain, or as your own top 50 — and who they
+   are (§3.10), with the projection's own gains on every jacket. Who a peer is differs by mix and
+   the block's lede says so; the page does not branch. *@
 
 <PumbilitySectionFrame Active="play">
     <Body Context="ctx">
-        @if (ctx.Mix == MixEnum.Phoenix2)
-        {
-            <PeersSection Page="ctx.Page" Charts="ctx.Charts" Pool="ctx.Pool"
-                          ToDos="_todos" OnToDo="ToggleToDo" OnOpen="ShowChartDetails" OnPlay="PlayChart"></PeersSection>
-        }
-        else
-        {
-        <section class="pmb-block">
-            <div class="pmb-block-head">
-                <h2 class="pmb-block-title">@L["What to play next"]</h2>
-                <MudButtonGroup OverrideStyles="false">
-                    <MudTooltip Text="@L["Comfortable"]">
-                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
-                                       Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
-                                       OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="@L["Compact"]">
-                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
-                                       Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
-                                       OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
-                    </MudTooltip>
-                    <MudTooltip Text="@L["Table"]">
-                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
-                                       Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
-                                       OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
-                    </MudTooltip>
-                </MudButtonGroup>
-            </div>
-            <p class="pmb-block-lede">
-                @L["Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar."]
-            </p>
-            @* Phoenix 2 only: who the peer rows were drawn from, per type in the selected pool
-               (D27), and the "N of 50" a type without a pool shows instead (D28). Renders nothing
-               for a competitive band, so Phoenix 1 is unchanged. *@
-            @if (ctx.Page.Peers is { } peers)
-            {
-                <PumbilityPeerLine Peers="peers" Pool="ctx.Page.Pool_"></PumbilityPeerLine>
-            }
-
-            <TargetList Targets="ctx.Page.Targets" Charts="ctx.Charts" Density="_density" Mix="ctx.Mix"
-                        ShowToDo="true" ToDos="_todos" OnToDo="ToggleToDo"
-                        OnOpen="ShowChartDetails" OnPlay="PlayChart"></TargetList>
-        </section>
-        }
+        <PeersSection Page="ctx.Page" Charts="ctx.Charts" Pool="ctx.Pool"
+                      ToDos="_todos" OnToDo="ToggleToDo" OnOpen="ShowChartDetails" OnPlay="PlayChart"></PeersSection>
 
         @* AutoPlay is bound rather than fixed: the card's play button and its jacket open the
            same dialog, and only one of them asked for the video. *@
-        @* On Phoenix 2 a card is a PUMBILITY-peers card, so its board opens on that pool — the
-           cohort its numbers came from, auditable rather than asserted (D40). *@
+        @* A card is a peers card, so its board opens on the pool its numbers came from — the
+           PUMBILITY peers on Phoenix 2, the competitive band on Phoenix 1 — auditable rather than
+           asserted (D40, D43). *@
         <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="ctx.Mix"
                             AutoPlay="_detailsAutoPlay"
-                            BoardScope="@(ctx.Mix == MixEnum.Phoenix2 ? ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers : ChartLeaderboardScopes.LeaderboardScope.World)"
+                            BoardScope="@(ctx.Mix == MixEnum.Phoenix2 ? ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers : ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers)"
                             IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
                             OnToDo="ToggleToDo"></ChartDetailsDialog>
     </Body>
 </PumbilitySectionFrame>
 
 @inject IMediator Mediator
-@inject IUiSettingsAccessor UiSettings
 @inject ISnackbar Snackbar
 
 @code {
-    // Kept as the section's original key rather than renamed for the new page: the convention
-    // is per page, but renaming resets the preference for everyone holding one, and Play is
-    // the only tab with a toggle.
-    private const string DensitySettingKey = "Density__Pumbility";
-
-    private UiDensity _density = UiDensity.Comfortable;
-
     private Chart? _detailsChart;
     private bool _detailsOpen;
     private bool _detailsAutoPlay;
@@ -98,18 +46,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density))
-            _density = density;
-
         foreach (var saved in (await Mediator.Send(new GetSavedChartsQuery()))
                  .Where(c => c.ListType == ChartListType.ToDo))
             _todos.Add(saved.ChartId);
-    }
-
-    private async Task SetDensity(UiDensity density)
-    {
-        _density = density;
-        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
     }
 
     private void ShowChartDetails(Chart chart)

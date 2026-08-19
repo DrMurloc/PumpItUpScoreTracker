@@ -20,11 +20,11 @@ using Xunit;
 namespace ScoreTracker.Tests.Components;
 
 /// <summary>
-///     The Phoenix 2 Play block (docs/design/pumbility-overhaul.md §3.10): it reads the peers page
-///     off the mediator for the frame's pool, opens on Prevalence with the gains switch on, shows
-///     the Phoenix 1 switch only under Projected gains and only when carried rows exist, keeps the
-///     density trio right above the list, and swaps the gains to the peer-only projection when the
-///     switch goes off.
+///     The Play block (docs/design/pumbility-overhaul.md §3.10): it reads the peers page off the
+///     mediator for the frame's pool, opens on Prevalence with the gains switch on, shows the
+///     Phoenix 1 switch only under Projected gains and only when carried rows exist, keeps the
+///     density trio right above the list, swaps the gains to the peer-only projection when the
+///     switch goes off — and on Phoenix 1 is the same block over the competitive band (D43).
 /// </summary>
 public sealed class PeersSectionTests : ComponentTestBase
 {
@@ -153,8 +153,32 @@ public sealed class PeersSectionTests : ComponentTestBase
         return chart;
     }
 
-    /// <summary>A Phoenix 2 page record whose target list holds one paying peer row and, optionally, one carried row.</summary>
-    private PumbilityPageRecord Page(bool carried)
+    [Fact]
+    public void OnPhoenix1TheSameBlockRendersOverTheCompetitiveBand()
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers(MixEnum.Phoenix));
+
+        this.RenderInteractive();
+        var cut = RenderComponent<PeersSection>(p => p.Add(x => x.Page, Page(carried: false, MixEnum.Phoenix)).Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        Assert.Equal("Your peers", cut.Find(".pmb-block-title").TextContent.Trim());
+        Assert.Contains("within one competitive level of you", cut.Find(".pmb-block-lede").TextContent);
+        Assert.DoesNotContain("PUMBILITY levels", cut.Markup);
+        // The chips line counts the band; the list and the controls are the Phoenix 2 page's.
+        Assert.Equal("Singles: 144 peers", cut.Find(".pmb-peer-chip").TextContent.Trim());
+        Assert.NotNull(cut.Find("[data-testid=peers-controls]").QuerySelector("[data-testid=peers-gains-switch]"));
+        Assert.Contains("Staple", cut.Markup);
+        Mediator.Verify(m => m.Send(It.Is<GetPumbilityPeersPageQuery>(q => q.UserId == Viewer && q.Mix == MixEnum.Phoenix),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static PeerGroup Group(MixEnum mix) =>
+        mix == MixEnum.Phoenix2 ? PeerGroup.Pumbility(24, 23, 50) : PeerGroup.Competitive(21.4, 1.0, 144);
+
+    /// <summary>A page record whose target list holds one paying peer row and, optionally, one carried row.</summary>
+    private PumbilityPageRecord Page(bool carried, MixEnum mix = MixEnum.Phoenix2)
     {
         var pays = _charts.Values.FirstOrDefault(c => c.Song.Name == "Pays") ?? NewChart("Pays");
         _ = _charts.Values.FirstOrDefault(c => c.Song.Name == "Free") ?? NewChart("Free");
@@ -165,17 +189,17 @@ public sealed class PeersSectionTests : ComponentTestBase
             targets.Add(new PumbilityTarget(further.Id, 980_127, 24.4, null, false, null, TargetSource.Phoenix1));
         }
 
-        return new PumbilityPageRecord(MixEnum.Phoenix2, null, 17_609.59, 345.94, null, Array.Empty<PoolEntry>(),
+        return new PumbilityPageRecord(mix, null, 17_609.59, 345.94, null, Array.Empty<PoolEntry>(),
             Array.Empty<PoolEntry>(), targets,
-            Peers: new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = PeerGroup.Pumbility(24, 23, 50) });
+            Peers: new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = Group(mix) });
     }
 
-    private PumbilityPeersPageRecord Peers()
+    private PumbilityPeersPageRecord Peers(MixEnum mix = MixEnum.Phoenix2)
     {
         var pays = _charts.Values.FirstOrDefault(c => c.Song.Name == "Pays") ?? NewChart("Pays");
         var free = _charts.Values.FirstOrDefault(c => c.Song.Name == "Free") ?? NewChart("Free");
-        return new PumbilityPeersPageRecord(MixEnum.Phoenix2, null,
-            new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = PeerGroup.Pumbility(24, 23, 50) },
+        return new PumbilityPeersPageRecord(mix, null,
+            new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = Group(mix) },
             new[]
             {
                 new PeerPoolEntry(pays.Id, ChartType.Single, 12, 23, 500, TierListCategory.Overrated, 0, 12, 987_475, 980_000, 991_000, null, null, null, null, null),

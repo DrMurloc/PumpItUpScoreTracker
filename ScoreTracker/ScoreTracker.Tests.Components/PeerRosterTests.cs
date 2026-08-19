@@ -83,7 +83,42 @@ public sealed class PeerRosterTests : ComponentTestBase
         Assert.Equal("Very consistent", calm.Find(".pmb-vary-word").TextContent);
     }
 
-    private static PeerRosterEntry Row(string name, double total, int rung, double singles, double doubles, int overlap,
+    [Fact]
+    public void ABandSizedRosterKeepsTheFiftyAroundYouAndCountsTheRest()
+    {
+        // D43: a competitive band is several hundred players. The window is the fifty nearest the
+        // viewer in the sort, the viewer in place, places unbroken, and the rest counted either side.
+        var rows = Enumerable.Range(0, 120).Select(i => Row($"Peer {i}", 20_000 - i * 10, null, 21, 21, 2)).ToArray();
+        var you = Row("Viewer", 20_000 - 80 * 10 + 5, null, 21, 21, 0); // 80 peers above, 40 below
+
+        var cut = RenderComponent<PeerRoster>(p => p.Add(x => x.Rows, rows).Add(x => x.You, you));
+
+        Assert.Equal(PeerRoster.Window, cut.FindAll("tbody tr").Count);
+        Assert.Single(cut.FindAll("[data-testid=roster-you]"));
+        Assert.Equal("55 more peers above", cut.Find("[data-testid=roster-more-above]").TextContent.Trim());
+        Assert.Equal("16 more peers below", cut.Find("[data-testid=roster-more-below]").TextContent.Trim());
+        var places = cut.FindAll("[data-testid=roster-peer] td:first-child").Select(c => int.Parse(c.TextContent.Trim())).ToArray();
+        Assert.Equal(56, places[0]);
+        Assert.Equal(Enumerable.Range(56, 49), places);
+        // No ladder on the mix: no gem column.
+        Assert.DoesNotContain(cut.FindAll("thead th"), th => th.TextContent.Trim() == "Level");
+    }
+
+    [Fact]
+    public void FiftyOrFewerRowsIsTheWholeRosterWithNoWindowNotes()
+    {
+        var rows = Enumerable.Range(0, 49).Select(i => Row($"Peer {i}", 20_000 - i * 10, 24, 21, 21, 2)).ToArray();
+        var you = Row("Viewer", 19_755, 24, 21, 21, 0);
+
+        var cut = RenderComponent<PeerRoster>(p => p.Add(x => x.Rows, rows).Add(x => x.You, you));
+
+        Assert.Equal(50, cut.FindAll("tbody tr").Count);
+        Assert.Empty(cut.FindAll("[data-testid=roster-more-above]"));
+        Assert.Empty(cut.FindAll("[data-testid=roster-more-below]"));
+        Assert.Contains(cut.FindAll("thead th"), th => th.TextContent.Trim() == "Level");
+    }
+
+    private static PeerRosterEntry Row(string name, double total, int? rung, double singles, double doubles, int overlap,
         params ChartType[] peerFor)
     {
         var types = peerFor.Length == 0 ? new[] { ChartType.Single } : peerFor;

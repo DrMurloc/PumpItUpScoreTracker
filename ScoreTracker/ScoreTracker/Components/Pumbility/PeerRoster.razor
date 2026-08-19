@@ -9,13 +9,22 @@
    their level, total, competitive levels, which types they are a peer for under All, and how many of
    the viewer's fifty of each type they also hold. The viewer's own row rides the sort, unnumbered
    and highlighted, so the table also answers "where do I sit". Private peers are counted in every
-   number on the page and named nowhere; the line beneath says how many there are. *@
+   number on the page and named nowhere; the line beneath says how many there are.
+
+   A competitive band is several hundred players (D43), so past fifty rows the table keeps the fifty
+   nearest the viewer in the sort — the viewer in place — and says how many sit above and below. *@
 @if (Rows.Count == 0 && PrivatePeers == 0)
 {
     <p class="pmb-empty" data-testid="roster-empty">@L["No peers yet."]</p>
 }
 else
 {
+    @if (Visible.Above > 0)
+    {
+        <p class="pmb-roster-note" data-testid="roster-more-above">
+            @(Visible.Above == 1 ? L["1 more peer above"] : L["{0} more peers above", Visible.Above])
+        </p>
+    }
     <div class="tier-table-wrap">
         <table class="tier-table pmb-table pmb-roster" data-testid="roster">
             <thead>
@@ -37,13 +46,8 @@ else
             </tr>
             </thead>
             <tbody>
-            @{
-                var place = 0;
-            }
-            @foreach (var row in Ordered)
+            @foreach (var (row, place, isYou) in Visible.Rows)
             {
-                var isYou = You != null && row.User.Id == You.User.Id;
-                if (!isYou) place++;
                 <tr class="@(isYou ? "pmb-roster-you" : null)" data-testid="@(isYou ? "roster-you" : "roster-peer")">
                     <td class="pmb-num pmb-muted">@(isYou ? string.Empty : place.ToString())</td>
                     <td>
@@ -83,6 +87,12 @@ else
             </tbody>
         </table>
     </div>
+    @if (Visible.Below > 0)
+    {
+        <p class="pmb-roster-note" data-testid="roster-more-below">
+            @(Visible.Below == 1 ? L["1 more peer below"] : L["{0} more peers below", Visible.Below])
+        </p>
+    }
     @if (PrivatePeers > 0)
     {
         <p class="pmb-roster-note" data-testid="roster-private">
@@ -103,8 +113,35 @@ else
     /// <summary>Under All the roster spans both types, and which type each peer is a peer for is worth a column.</summary>
     [Parameter] public bool ShowPeerFor { get; set; }
 
+    /// <summary>Rows shown at most; past it the table is a window around the viewer (D43).</summary>
+    public const int Window = 50;
+
     private IEnumerable<PeerRosterEntry> Ordered =>
         (You == null ? Rows : Rows.Append(You)).OrderByDescending(r => r.Total);
+
+    /// <summary>
+    ///     The rows that render, each with its place among the peers (the viewer is unnumbered and
+    ///     does not shift the places), and how many rows the window leaves out above and below it.
+    /// </summary>
+    private (IReadOnlyList<(PeerRosterEntry Row, int Place, bool IsYou)> Rows, int Above, int Below) Visible
+    {
+        get
+        {
+            var all = new List<(PeerRosterEntry Row, int Place, bool IsYou)>();
+            var place = 0;
+            foreach (var row in Ordered)
+            {
+                var isYou = You != null && row.User.Id == You.User.Id;
+                if (!isYou) place++;
+                all.Add((row, place, isYou));
+            }
+
+            if (all.Count <= Window) return (all, 0, 0);
+            var me = all.FindIndex(r => r.IsYou);
+            var start = me < 0 ? 0 : Math.Clamp(me - Window / 2, 0, all.Count - Window);
+            return (all.GetRange(start, Window), start, all.Count - start - Window);
+        }
+    }
 
     private string PeerForText(PeerRosterEntry row)
     {

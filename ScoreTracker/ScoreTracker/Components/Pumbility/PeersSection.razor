@@ -12,9 +12,10 @@
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
 
-@* The Phoenix 2 Play page's block (docs/design/pumbility-overhaul.md §3.10, D32): what your
-   PUMBILITY peers build their number from, grouped by prevalence or by projected gain, and who
-   they are. Held by a component rather than the page because the pool it is scoped to arrives
+@* The Play page's block (docs/design/pumbility-overhaul.md §3.10, D32, D43): what your peers
+   build their number from, grouped by prevalence or by projected gain, and who they are — the
+   PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1, and the ledes say which. Held
+   by a component rather than the page because the pool it is scoped to arrives
    from the section frame — a parameter, so a pool change re-fetches on its own — and because
    the page record the frame already loaded is where the gains come from (D38): the target
    list's own answer per chart, carried Phoenix 1 winning, so this page and the old one can
@@ -27,7 +28,7 @@
    right above the list (D34, D36). Every preference persists as a UiSetting. *@
 <section class="pmb-block" data-testid="peers-section">
     <div class="pmb-block-head">
-        <h2 class="pmb-block-title">@L["Your PUMBILITY peers"]</h2>
+        <h2 class="pmb-block-title">@L["Your peers"]</h2>
     </div>
     <p class="pmb-block-lede">@Lede</p>
     @if (Page.Peers is { } peers)
@@ -92,7 +93,11 @@
         <div class="pmb-block-head">
             <h2 class="pmb-block-title">@L["Who your peers are"]</h2>
         </div>
-        <p class="pmb-block-lede">@L["Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit."]</p>
+        <p class="pmb-block-lede">
+            @(IsPumbilityBand
+                ? L["Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit."]
+                : L["Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit."])
+        </p>
         <PeerRoster Rows="_peers.Roster" You="_peers.You" PrivatePeers="_peers.PrivatePeers" ShowPeerFor="Pool == null"></PeerRoster>
     </section>
 }
@@ -150,11 +155,18 @@
             ? _peerOnlyGains
             : Page.Targets.GroupBy(t => t.ChartId).ToDictionary(g => g.Key, g => g.First());
 
+    /// <summary>Who a peer is: the PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
+    private bool IsPumbilityBand => Page.Mix == MixEnum.Phoenix2;
+
     private string Lede => _groupBy == PeerGrouping.ProjectedGains
         ? L["Ranked by what each chart would add if you played it to the standard your peers set — priced against your bar as it stands now, so every row means what the first one does. Everything here clears your bar."]
         : _gainsOnly
-            ? L["What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it."]
-            : L["What players within three levels of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."];
+            ? IsPumbilityBand
+                ? L["What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it."]
+                : L["What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it."]
+            : IsPumbilityBand
+                ? L["What players within three levels of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."]
+                : L["What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."];
 
     protected override async Task OnParametersSetAsync()
     {

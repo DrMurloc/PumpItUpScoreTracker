@@ -70,9 +70,10 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
     }
 
     [Fact]
-    public void ACompetitiveBandRendersNothing()
+    public void ACompetitiveBandPrintsItsSizesAndNamesItselfInTheTooltip()
     {
-        // Phoenix 1's list carries no peer line: the group is a competitive band, not PUMBILITY peers.
+        // Phoenix 1's peers are the competitive band (D43): the chips count it and the title says
+        // what it is, with the same five-peer clause.
         var cut = RenderComponent<PumbilityPeerLine>(p => p
             .Add(x => x.Peers, new Dictionary<ChartType, PeerGroup>
             {
@@ -81,7 +82,13 @@ public sealed class PumbilityPeerLineTests : ComponentTestBase
             })
             .Add(x => x.Pool, (ChartType?)null));
 
-        Assert.Empty(cut.FindAll(".pmb-peer-line"));
+        var chips = cut.FindAll(".pmb-peer-chip");
+        Assert.Equal(new[] { "Singles: 144 peers", "Doubles: 98 peers" }, chips.Select(c => c.TextContent.Trim()).ToArray());
+        Assert.All(chips, c => Assert.Equal("true", c.GetAttribute("data-lit")));
+        var title = chips[0].GetAttribute("title")!;
+        Assert.Contains("within one competitive level of you", title);
+        Assert.DoesNotContain("PUMBILITY", title);
+        Assert.Contains("Charts fewer than 5 of them have passed are not shown.", title);
     }
 
     [Fact]
