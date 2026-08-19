@@ -3,6 +3,7 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.Services;
@@ -70,7 +71,7 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromCompetitiveBand(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, window) = request;
+        var (mix, chartType, userId, targets, window, _) = request;
 
         var myLevel = await CompetitiveLevel(mix, chartType, userId, cancellationToken);
         // Competitive level 1 is the no-data floor: there is no band to draw peers from.
@@ -171,7 +172,7 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromPumbilityPeers(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, _) = request;
+        var (mix, chartType, userId, targets, _, catalog) = request;
 
         // The viewer's rung, from the total pool — the merged top fifty across both types, which
         // is the number the game's own badge is drawn from. One rung serves both chart types.
@@ -215,6 +216,12 @@ public sealed class ScoreProjector : IScoreProjector
         var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool);
         if (peers.Count == 0) return ScoreProjection.None(myLevel, group);
 
+        // The peers' pools ride the same read when the caller brought the catalog to price it with
+        // (§3.10): every chart they hold and everything they scored, the viewer already out.
+        var pools = catalog == null
+            ? null
+            : PumbilityPeerPools.Build(records, peers, catalog, ScoringConfiguration.PumbilityScoring(mix, false));
+
         var wanted = targets.Select(t => t.ChartId).ToHashSet();
         var projected = new Dictionary<Guid, PhoenixScore>();
         var spreads = new Dictionary<Guid, PeerSpread>();
@@ -235,7 +242,7 @@ public sealed class ScoreProjector : IScoreProjector
             spreads[chart.Key] = SpreadOf(scored, 0);
         }
 
-        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group, spreads);
+        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group, spreads, pools);
     }
 
     /// <summary>

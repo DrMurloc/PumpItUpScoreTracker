@@ -1,5 +1,6 @@
 using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.Services.Contracts;
@@ -22,12 +23,19 @@ public readonly record struct ProjectionTarget(Guid ChartId, int Level);
 ///     default here would let one of them drift onto the other's answer silently. Ignored on
 ///     Phoenix 2, whose peers are drawn on the PUMBILITY ladder and not on a level at all.
 /// </param>
+/// <param name="Charts">
+///     The mix's catalog, keyed by chart id, for a caller that also wants the peers' pools
+///     (<see cref="ScoreProjection.PeerPools" />). Pricing a record needs the chart, and the
+///     projector reads no catalog of its own; without this the Phoenix 2 run still estimates and
+///     simply returns no pools. Ignored on Phoenix 1, whose peers hold no PUMBILITY pool.
+/// </param>
 public sealed record ScoreProjectionRequest(
     MixEnum Mix,
     ChartType ChartType,
     Guid UserId,
     IReadOnlyCollection<ProjectionTarget> Targets,
-    double CompetitiveWindow);
+    double CompetitiveWindow,
+    IReadOnlyDictionary<Guid, Chart>? Charts = null);
 
 /// <summary>How a peer group was drawn — the two definitions the site has.</summary>
 public enum PeerGroupKind
@@ -127,6 +135,40 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
 public sealed record PeerSpread(PhoenixScore Quartile1, PhoenixScore Quartile3, int PeerCount);
 
 /// <summary>
+///     One chart as the peers' pools and scores see it (docs/design/pumbility-overhaul.md §3.10).
+/// </summary>
+/// <param name="Holders">Peers holding the chart in their top-50 pool of the type.</param>
+/// <param name="Points">
+///     Its prevalence — a peer's #1 chart contributes 50, their #50 contributes 1, summed over
+///     the holders (a Borda count, D33). Every peer casts the same 1,275 points, which is what
+///     keeps a strong peer from outvoting a weak one. Zero when nobody holds it.
+/// </param>
+/// <param name="Scored">Peers with a non-broken score on it, holders or not.</param>
+/// <param name="Median">
+///     The peers' median score, read exactly as the estimate is — the same voices, the same
+///     quantile arithmetic — and null under the five-peer floor. Null means no opinion.
+/// </param>
+/// <param name="Quartile1">The first quartile over the same voices, or null with the median.</param>
+/// <param name="Quartile3">The third quartile over the same voices, or null with the median.</param>
+public sealed record PeerPoolChart(int Holders, int Points, int Scored, PhoenixScore? Median,
+    PhoenixScore? Quartile1, PhoenixScore? Quartile3);
+
+/// <summary>
+///     What a Phoenix 2 peer group's pools are made of: who the peers are, what each of them
+///     holds, and every chart any of them holds or five of them scored, as
+///     <see cref="PeerPoolChart" />. Read from the same records the estimate is, with the viewer
+///     removed (D31), so a page listing "what players like me build their number from" and the
+///     projection beside it cannot disagree about who those players are.
+/// </summary>
+/// <param name="PeerIds">The peers — every player in the band holding a full pool of the type.</param>
+/// <param name="Pools">Each peer's top-50 chart set, keyed by peer.</param>
+/// <param name="Charts">Every chart at least one peer holds, or at least five scored.</param>
+public sealed record PeerPoolSummary(
+    IReadOnlySet<Guid> PeerIds,
+    IReadOnlyDictionary<Guid, IReadOnlySet<Guid>> Pools,
+    IReadOnlyDictionary<Guid, PeerPoolChart> Charts);
+
+/// <summary>
 ///     What a projection run produced, and the peers it produced it from.
 /// </summary>
 /// <param name="Scores">
@@ -157,13 +199,19 @@ public sealed record PeerSpread(PhoenixScore Quartile1, PhoenixScore Quartile3, 
 ///     same voices, same weights, same quantile arithmetic, so the two cannot disagree about
 ///     which peers were heard.
 /// </param>
+/// <param name="PeerPools">
+///     The peers' pools, on Phoenix 2 and only when the request carried the catalog
+///     (<see cref="ScoreProjectionRequest.Charts" />); null otherwise, which means "not asked",
+///     never "nobody holds anything".
+/// </param>
 public sealed record ScoreProjection(
     IReadOnlyDictionary<Guid, PhoenixScore> Scores,
     int PeerCount,
     double CompetitiveLevel,
     double MeanFreshness,
     PeerGroup? Group = null,
-    IReadOnlyDictionary<Guid, PeerSpread>? Spreads = null)
+    IReadOnlyDictionary<Guid, PeerSpread>? Spreads = null,
+    PeerPoolSummary? PeerPools = null)
 {
     /// <summary>No opinion, for the runs that stop before a peer group exists.</summary>
     public static ScoreProjection None(double competitiveLevel = 0, PeerGroup? group = null)

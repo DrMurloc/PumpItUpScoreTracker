@@ -9,7 +9,9 @@ using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.TestData;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
@@ -207,6 +209,75 @@ public sealed class ScoreProjectorTests
             It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
+    // ------------------------------------------------------------------ the peers' pools (§3.10)
+
+    [Fact]
+    public async Task ThePeersPoolsRideThePhoenix2RunWhenTheCatalogIsHandedIn()
+    {
+        var ctx = new Context(viewerTotal: 17_609.59, viewerPoolSize: 50);
+        var peer = ctx.WithPeer(50);
+        var other = ctx.WithPeer(50);
+        ctx.WithScore(peer, ChartA, 985_000);
+        ctx.WithScore(other, ChartA, 975_000);
+        ctx.WithScore(other, ChartB, 990_000);
+
+        var result = await ctx.Project(ChartType.Single, ctx.Catalog(ChartA, ChartB), ChartA);
+
+        var pools = result.PeerPools!;
+        Assert.Equal(new[] { peer, other }.ToHashSet(), pools.PeerIds);
+        // Only the catalog charts are priced into a pool: each peer's real scores are their whole
+        // pool here, so A sits at other's #2 (49) and peer's #1 (50), B at other's #1 (50).
+        Assert.Equal(2, pools.Charts[ChartA].Holders);
+        Assert.Equal(99, pools.Charts[ChartA].Points);
+        Assert.Equal(50, pools.Charts[ChartB].Points);
+        Assert.Contains(ChartB, pools.Pools[other]);
+        Assert.DoesNotContain(ChartB, pools.Pools[peer]);
+        // Two scorers: held, so present, and under the five-peer floor for a median.
+        Assert.Equal(2, pools.Charts[ChartA].Scored);
+        Assert.Null(pools.Charts[ChartA].Median);
+    }
+
+    [Fact]
+    public async Task WithoutTheCatalogThePhoenix2RunReturnsNoPoolsAndStillEstimates()
+    {
+        var ctx = new Context(viewerTotal: 17_609.59, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(50)).ToArray();
+        foreach (var peer in peers) ctx.WithScore(peer, ChartA, 980_000);
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        Assert.Null(result.PeerPools);
+        Assert.Equal(980_000, (int)result.Scores[ChartA]);
+    }
+
+    [Fact]
+    public async Task TheViewerIsNotInTheirOwnPeersPools()
+    {
+        var ctx = new Context(viewerTotal: 17_609.59, viewerPoolSize: 50);
+        var peer = ctx.WithPeer(50);
+        ctx.WithScore(peer, ChartA, 985_000);
+        ctx.WithScore(Viewer, ChartA, 999_000);
+
+        var result = await ctx.Project(ChartType.Single, ctx.Catalog(ChartA), ChartA);
+
+        Assert.DoesNotContain(Viewer, result.PeerPools!.PeerIds);
+        Assert.Equal(1, result.PeerPools.Charts[ChartA].Holders);
+        Assert.Equal(1, result.PeerPools.Charts[ChartA].Scored);
+    }
+
+    [Fact]
+    public async Task Phoenix1NeverFillsPoolsEvenWithTheCatalog()
+    {
+        var ctx = new Context(viewerTotal: 0, viewerPoolSize: 0, phoenix1SinglesLevel: 21.4);
+        var peer = ctx.WithPhoenix1Peer(21.0);
+        ctx.WithPhoenix1Score(peer, ChartA, 970_000);
+
+        var result = await ctx.Project(MixEnum.Phoenix, ChartType.Single, 1.0, ctx.Catalog(ChartA), ChartA);
+
+        Assert.Null(result.PeerPools);
+        Assert.Equal(970_000, (int)result.Scores[ChartA]);
+    }
+
     // ------------------------------------------------------------------ Phoenix 1
 
     [Fact]
@@ -336,13 +407,32 @@ public sealed class ScoreProjectorTests
 
         public Task<ScoreProjection> Project(ChartType type, params Guid[] charts)
         {
-            return Project(MixEnum.Phoenix2, type, 1.0, charts);
+            return Project(MixEnum.Phoenix2, type, 1.0, null, charts);
+        }
+
+        public Task<ScoreProjection> Project(ChartType type, IReadOnlyDictionary<Guid, Chart> catalog,
+            params Guid[] charts)
+        {
+            return Project(MixEnum.Phoenix2, type, 1.0, catalog, charts);
         }
 
         public Task<ScoreProjection> Project(MixEnum mix, ChartType type, double window, params Guid[] charts)
         {
+            return Project(mix, type, window, null, charts);
+        }
+
+        public Task<ScoreProjection> Project(MixEnum mix, ChartType type, double window,
+            IReadOnlyDictionary<Guid, Chart>? catalog, params Guid[] charts)
+        {
             return Projector.Project(new ScoreProjectionRequest(mix, type, Viewer,
-                charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), window), CancellationToken.None);
+                charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), window, catalog), CancellationToken.None);
+        }
+
+        /// <summary>A Phoenix 2 catalog of the given singles charts at level 22 — the pools price against it.</summary>
+        public IReadOnlyDictionary<Guid, Chart> Catalog(params Guid[] charts)
+        {
+            return charts.ToDictionary(id => id, id => new ChartBuilder().WithId(id).WithMix(MixEnum.Phoenix2)
+                .WithType(ChartType.Single).WithLevel(22).Build());
         }
 
         /// <summary>
