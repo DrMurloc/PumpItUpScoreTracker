@@ -51,6 +51,8 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             .ReturnsAsync(Array.Empty<CommunityOverviewRecord>());
         _mediator.Setup(m => m.Send(It.IsAny<GetCompetitivePlayersQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<Guid>());
+        _mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<Guid>());
         // Every chart view asks whether it carries a limbo board. Unstubbed this hands back null
         // and the component dereferences it during load, which takes out every test in the file
         // rather than just the limbo ones.
@@ -362,6 +364,91 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
             Assert.Equal(new[] { "#1", "#2", "#3" },
                 dialog.FindAll(".weekly-lb-place").Select(e => e.TextContent.Trim()).ToArray());
         });
+    }
+
+    // ------------------------------------------------------------------ the Peers chip (D40)
+
+    [Fact]
+    public void OnPhoenix1ThePeersChipIsTheCompetitiveBoardAndNoSubRowAppears()
+    {
+        SignedIn();
+        var dialog = RenderDialog(MixEnum.Phoenix, ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers);
+
+        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll("[data-testid='cld-scope-CompetitivePeers']")));
+        Assert.Contains("Competitive Peers", dialog.Find("[data-testid='cld-scope-CompetitivePeers']").TextContent);
+        Assert.Empty(dialog.FindAll("[data-testid='cld-peer-picker']"));
+        // PUMBILITY peers is never a chip of its own.
+        Assert.Empty(dialog.FindAll("[data-testid='cld-scope-PumbilityPeers']"));
+    }
+
+    [Fact]
+    public void OnPhoenix2ThePeersChipOpensOnCompetitiveWithASubRowToSwitchPools()
+    {
+        SignedIn();
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.CompetitivePeers);
+
+        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll("[data-testid='cld-peer-picker']")));
+        Assert.Contains("Peers", dialog.Find("[data-testid='cld-scope-CompetitivePeers']").TextContent);
+        Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-scope-CompetitivePeers']").ClassName);
+        // Cold, the sub-row is on Competitive — "do competitive for now" — and the PUMBILITY read is untouched.
+        Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-peers-competitive']").ClassName);
+        Assert.DoesNotContain("cld-chip-on", dialog.Find("[data-testid='cld-peers-pumbility']").ClassName);
+        _mediator.Verify(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ThePumbilityPeersBoardIsTheWorldBoardCutToYourPeersPrivateOnesKept()
+    {
+        SignedIn();
+        var peer = Guid.NewGuid();
+        var hidden = Guid.NewGuid();
+        var stranger = Guid.NewGuid();
+        _mediator.Setup(m => m.Send(It.IsAny<GetPhoenixRecordsForCommunityQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                ScoreFor(peer, 990_000, "PEER"),
+                new UserPhoenixScore(hidden, ChartId, Name.From("Anonymous"), PhoenixScore.From(985_000), PhoenixPlate.SuperbGame, false, false, When),
+                ScoreFor(stranger, 999_000, "STRANGER")
+            });
+        _mediator.Setup(m => m.Send(It.Is<GetPumbilityPeersQuery>(q => q.Mix == MixEnum.Phoenix2 && q.ChartType == ScoreTracker.SharedKernel.Enums.ChartType.Single),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { peer, hidden });
+
+        // A host that means the PUMBILITY board passes it as the initial scope — a peers-page card does.
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
+
+        dialog.WaitForAssertion(() =>
+        {
+            var names = dialog.FindAll(".weekly-lb-user").Select(e => e.TextContent.Trim()).ToArray();
+            Assert.Equal(new[] { "PEER", "Anonymous" }, names);
+        });
+        Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-peers-pumbility']").ClassName);
+        Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-scope-CompetitivePeers']").ClassName);
+        Assert.Contains("PUMBILITY", dialog.Find("[data-testid='cld-peers-pumbility']").TextContent);
+
+        // Switching to the other pool re-ranks off the competitive read; back again re-uses the kept ids.
+        await dialog.Find("[data-testid='cld-peers-competitive']").ClickAsync(new MouseEventArgs());
+        dialog.WaitForAssertion(() => Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-peers-competitive']").ClassName));
+        await dialog.Find("[data-testid='cld-peers-pumbility']").ClickAsync(new MouseEventArgs());
+        dialog.WaitForAssertion(() => Assert.Contains("cld-chip-on", dialog.Find("[data-testid='cld-peers-pumbility']").ClassName));
+        _mediator.Verify(m => m.Send(It.IsAny<GetPumbilityPeersQuery>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public void NoPumbilityPeersYetSaysWhatLightsThemUp()
+    {
+        SignedIn();
+        var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
+
+        dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll("[data-testid='cld-empty']")));
+        Assert.Contains("a full pool of 50", dialog.Find("[data-testid='cld-empty']").TextContent);
+    }
+
+    private void SignedIn()
+    {
+        CurrentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        CurrentUser.SetupGet(c => c.User).Returns(new User(Guid.NewGuid(), Name.From("ME"), true, null,
+            new Uri("https://example.invalid/me.png"), null));
     }
 
     private void GivenAFlaggedChart()

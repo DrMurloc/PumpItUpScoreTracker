@@ -68,8 +68,11 @@
 
         @* AutoPlay is bound rather than fixed: the card's play button and its jacket open the
            same dialog, and only one of them asked for the video. *@
+        @* On Phoenix 2 a card is a PUMBILITY-peers card, so its board opens on that pool — the
+           cohort its numbers came from, auditable rather than asserted (D40). *@
         <ChartDetailsDialog @bind-Visible="_detailsOpen" Chart="_detailsChart" Mix="ctx.Mix"
                             AutoPlay="_detailsAutoPlay"
+                            BoardScope="@(ctx.Mix == MixEnum.Phoenix2 ? ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers : ChartLeaderboardScopes.LeaderboardScope.World)"
                             IsToDo="_detailsChart != null && _todos.Contains(_detailsChart.Id)"
                             OnToDo="ToggleToDo"></ChartDetailsDialog>
     </Body>
