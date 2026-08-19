@@ -22,7 +22,10 @@ else
             <tr>
                 <th>#</th>
                 <th>@L["Player"]</th>
-                <th>@L["Level"]</th>
+                @if (ShowLevel)
+                {
+                    <th>@L["Level"]</th>
+                }
                 <th class="pmb-r">@L["PUMBILITY"]</th>
                 <th title="@L["Competitive level, singles"]">@L["Singles"]</th>
                 <th title="@L["Competitive level, doubles"]">@L["Doubles"]</th>
@@ -50,12 +53,15 @@ else
                             <span class="pmb-roster-you-tag">@L["You"]</span>
                         }
                     </td>
-                    <td>
-                        <span class="pmb-roster-level" title="@LevelText(row)">
-                            <PumbilityLevelBadge Level="Phoenix2PumbilityLevel.FromIndex(row.RungIndex)" Height="18"></PumbilityLevelBadge>
-                            @LevelText(row)
-                        </span>
-                    </td>
+                    @if (ShowLevel)
+                    {
+                        <td>
+                            <span class="pmb-roster-level" title="@LevelText(row)">
+                                <PumbilityLevelBadge Level="Rung(row)" Height="18"></PumbilityLevelBadge>
+                                @LevelText(row)
+                            </span>
+                        </td>
+                    }
                     <td class="pmb-r pmb-num">@row.Total.ToString("N2")</td>
                     <td class="pmb-num">@(row.SinglesLevel > 1 ? row.SinglesLevel.ToString("N2") : "—")</td>
                     <td class="pmb-num">@(row.DoublesLevel > 1 ? row.DoublesLevel.ToString("N2") : "—")</td>
@@ -107,8 +113,14 @@ else
         return row.PeerFor.Contains(ChartType.Single) ? L["Singles"] : L["Doubles"];
     }
 
+    /// <summary>The gem column exists only where the mix has a ladder to read one from (Phoenix 2; D43).</summary>
+    private bool ShowLevel => Rows.Any(r => r.RungIndex != null) || You?.RungIndex != null;
+
+    private static Phoenix2PumbilityLevel? Rung(PeerRosterEntry row) =>
+        row.RungIndex is { } index ? Phoenix2PumbilityLevel.FromIndex(index) : null;
+
     private string LevelText(PeerRosterEntry row) =>
-        Phoenix2PumbilityLevel.FromIndex(row.RungIndex) is { } rung ? PumbilityLevelLabel.Of(rung, L["Unranked"]) : string.Empty;
+        Rung(row) is { } rung ? PumbilityLevelLabel.Of(rung, L["Unranked"]) : string.Empty;
 
     private string OverlapTitle(ChartType type, int count) =>
         type == ChartType.Single ? L["{0} of your singles pool", count] : L["{0} of your doubles pool", count];

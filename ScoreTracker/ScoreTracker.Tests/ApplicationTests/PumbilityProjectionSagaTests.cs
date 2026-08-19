@@ -714,6 +714,14 @@ public sealed partial class PumbilityProjectionSagaTests
             return this;
         }
 
+        /// <summary>A Phoenix 1 score for a peer this fixture already knows, on another chart.</summary>
+        public ProjectionContext WithPeerPhoenix1Score(Guid peer, Chart chart, int score)
+        {
+            _peerScores.Add((MixEnum.Phoenix, new UserPhoenixScore(peer, chart.Id, "Peer", score,
+                PhoenixPlate.MarvelousGame, false, true, Now.AddDays(-400))));
+            return this;
+        }
+
         /// <summary>One of the viewer's own scores, as the best-score read and the top-fifty query both see it.</summary>
         public ProjectionContext WithOwnScore(Chart chart, int score, PhoenixPlate plate = PhoenixPlate.MarvelousGame)
         {

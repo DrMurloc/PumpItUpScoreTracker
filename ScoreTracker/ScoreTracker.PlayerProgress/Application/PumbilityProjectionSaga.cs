@@ -80,16 +80,16 @@ namespace ScoreTracker.PlayerProgress.Application
         }
 
         /// <summary>
-        ///     The Phoenix 2 Play page (docs/design/pumbility-overhaul.md §3.10): the peers' pools
-        ///     out of the cached sweep, tiered by prevalence per type, with the viewer's own pool and
-        ///     scores laid over them, and the roster. Any other mix, or a viewer with no lit type,
-        ///     answers empty — the page prints the dark chips from the group record either way.
+        ///     The Play page (docs/design/pumbility-overhaul.md §3.10): the peers' pools out of the
+        ///     cached sweep — the PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1 (D43)
+        ///     — tiered by prevalence per type, with the viewer's own pool and scores laid over them,
+        ///     and the roster. A viewer with no lit type answers empty — the page prints the dark
+        ///     chips from the group record either way.
         /// </summary>
         public async Task<PumbilityPeersPageRecord> Handle(GetPumbilityPeersPageQuery request,
             CancellationToken cancellationToken)
         {
             var (userId, mix, pool) = request;
-            if (mix != MixEnum.Phoenix2) return PumbilityPeersPageRecord.Empty(mix, pool);
 
             var sweep = await _cache.GetOrAdd(userId, mix, () => Estimate(userId, mix));
             var types = pool is { } only ? new[] { only } : new[] { ChartType.Single, ChartType.Double };
@@ -161,13 +161,14 @@ namespace ScoreTracker.PlayerProgress.Application
         }
 
         /// <summary>
-        ///     The current user's PUMBILITY peers of a type, out of the cached sweep — empty for a
-        ///     dark type, on any mix but Phoenix 2, or for nobody signed in.
+        ///     The current user's peers of a type, out of the cached sweep — the PUMBILITY band on
+        ///     Phoenix 2, the competitive band on Phoenix 1 (D43) — empty for a dark type or for
+        ///     nobody signed in.
         /// </summary>
         public async Task<IReadOnlyCollection<Guid>> Handle(GetPumbilityPeersQuery request,
             CancellationToken cancellationToken)
         {
-            if (!_currentUser.IsLoggedIn || request.Mix != MixEnum.Phoenix2) return Array.Empty<Guid>();
+            if (!_currentUser.IsLoggedIn) return Array.Empty<Guid>();
             var userId = _currentUser.User.Id;
             var sweep = await _cache.GetOrAdd(userId, request.Mix, () => Estimate(userId, request.Mix));
             return sweep.PeerPools.TryGetValue(request.ChartType, out var summary)
@@ -232,7 +233,9 @@ namespace ScoreTracker.PlayerProgress.Application
                         overlap[type] = sweep.PeerPools[type].Pools.TryGetValue(id, out var held)
                             ? held.Count(myPools[type].ContainsKey)
                             : 0;
-                return new PeerRosterEntry(user, total, Phoenix2PumbilityLevel.From(total).Index,
+                // The gem is read off the total on the one mix that has a ladder to read it from.
+                return new PeerRosterEntry(user, total,
+                    mix == MixEnum.Phoenix2 ? Phoenix2PumbilityLevel.From(total).Index : null,
                     stat?.SinglesCompetitiveLevel ?? 0, stat?.DoublesCompetitiveLevel ?? 0,
                     types ?? new HashSet<ChartType>(), overlap);
             }
@@ -390,11 +393,10 @@ namespace ScoreTracker.PlayerProgress.Application
 
             // ±1.0 on Phoenix 1, measured optimal for predicting the score itself — this page
             // quotes the number, so its accuracy is what matters rather than the ranking.
-            // Phoenix 2 ignores the window; its peers are the PUMBILITY band — and it is handed
-            // the catalog, so the same read also yields what those peers' pools are made of.
+            // Phoenix 2 ignores the window; its peers are the PUMBILITY band. Both are handed the
+            // catalog, so the same read also yields what the peers' pools are made of (D43).
             var projected = await _projector.Project(
-                new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow,
-                    mix == MixEnum.Phoenix2 ? charts : null),
+                new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow, charts),
                 cancellationToken);
 
             foreach (var (chartId, score) in projected.Scores) into[chartId] = score;

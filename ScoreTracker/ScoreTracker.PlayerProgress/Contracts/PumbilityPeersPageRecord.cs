@@ -97,12 +97,14 @@ public sealed record PeerAloneEntry(Guid ChartId, ChartType ChartType, int MyPoo
 /// <summary>
 ///     One row of the roster: who, their level and total, their competitive levels, which types
 ///     they are a peer for, and how many of the viewer's pool charts of each type they also hold.
+///     <paramref name="RungIndex" /> is null where the mix has no PUMBILITY ladder to read a gem
+///     from (Phoenix 1, D43).
 /// </summary>
 [ExcludeFromCodeCoverage]
 public sealed record PeerRosterEntry(
     User User,
     double Total,
-    int RungIndex,
+    int? RungIndex,
     double SinglesLevel,
     double DoublesLevel,
     IReadOnlySet<ChartType> PeerFor,

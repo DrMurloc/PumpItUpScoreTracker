@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using Xunit;
@@ -11,8 +12,9 @@ using Xunit;
 namespace ScoreTracker.Tests.ApplicationTests;
 
 /// <summary>
-///     The Phoenix 2 Play page's read (docs/design/pumbility-overhaul.md §3.10) and the peer-ids
-///     read behind the leaderboard chip, both off the same cached sweep the projection uses.
+///     The Play page's read (docs/design/pumbility-overhaul.md §3.10) and the peer-ids read behind
+///     the leaderboard chip, both off the same cached sweep the projection uses — Phoenix 2's
+///     PUMBILITY band and, since D43, Phoenix 1's competitive band.
 /// </summary>
 public sealed partial class PumbilityProjectionSagaTests
 {
@@ -111,12 +113,41 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.False(page.Peers[ChartType.Single].IsLit);
         Assert.Equal(29, page.Peers[ChartType.Single].PoolCount);
 
-        var phoenix1 = await dark.Saga.Handle(new GetPumbilityPeersPageQuery(dark.UserId, MixEnum.Phoenix, ChartType.Single),
+    }
+
+    [Fact]
+    public async Task Phoenix1AnswersFromTheCompetitiveBandWithNoRungAndNoGate()
+    {
+        // D43: the band is the peer group. The viewer's pool is nowhere near fifty and it does not
+        // matter; the peer's pool is two charts and they still cast their (short) vote.
+        var ctx = new ProjectionContext()
+            .WithChart(out var chart, ChartType.Single, 21)
+            .WithChart(out var other, ChartType.Single, 20);
+        ctx.WithPumbilityPeer(out var peer, chart, phoenix1Score: 975_000, name: "Rival", total: 1_234.5)
+            .WithOwnScore(chart, 960_000);
+        ctx.WithPeerPhoenix1Score(peer, other, 990_000);
+
+        var page = await ctx.Saga.Handle(new GetPumbilityPeersPageQuery(ctx.UserId, MixEnum.Phoenix),
             CancellationToken.None);
-        Assert.Empty(phoenix1.Entries);
-        Assert.Empty(phoenix1.Peers);
-        dark.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix, It.IsAny<double>(), It.IsAny<double>(),
+
+        Assert.Equal(PeerGroupKind.CompetitiveBand, page.Peers[ChartType.Single].Kind);
+        Assert.True(page.Peers[ChartType.Single].IsLit);
+        Assert.Equal(1, page.Peers[ChartType.Single].Size);
+        var entry = Assert.Single(page.Entries, e => e.ChartId == chart.Id);
+        Assert.Equal(1, entry.Holders);
+        Assert.Equal(1, entry.MyPoolRank);
+        Assert.Equal(960_000, (int)entry.MyScore!.Value);
+        Assert.Contains(page.Entries, e => e.ChartId == other.Id && e.MyPoolRank == null);
+        var row = Assert.Single(page.Roster);
+        Assert.Equal("Rival", row.User.Name.ToString());
+        Assert.Null(row.RungIndex);
+        Assert.Equal(1_234.5, row.Total);
+        Assert.Equal(1, row.Overlap[ChartType.Single]);
+        Assert.Null(page.You!.RungIndex);
+        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(It.IsAny<MixEnum>(), It.IsAny<double>(), It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        ctx.Stats.Verify(s => s.GetPlayersByCompetitiveRange(MixEnum.Phoenix, ChartType.Single, It.IsAny<double>(),
+            It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -137,6 +168,10 @@ public sealed partial class PumbilityProjectionSagaTests
         // One sweep served all three reads.
         ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(), It.IsAny<double>(),
             It.IsAny<CancellationToken>()), Times.Once); // the one sweep; the dark doubles type never reaches the band read
+
+        // On Phoenix 1 the same question answers the competitive band — these peers are in both.
+        Assert.Equal(new[] { a, b }.ToHashSet(),
+            (await ctx.Saga.Handle(new GetPumbilityPeersQuery(ChartType.Single, MixEnum.Phoenix), CancellationToken.None)).ToHashSet());
 
         ctx.CurrentUser.Setup(c => c.IsLoggedIn).Returns(false);
         Assert.Empty(await ctx.Saga.Handle(new GetPumbilityPeersQuery(ChartType.Single, MixEnum.Phoenix2), CancellationToken.None));
