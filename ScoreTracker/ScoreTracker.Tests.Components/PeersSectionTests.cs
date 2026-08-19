@@ -117,6 +117,31 @@ public sealed class PeersSectionTests : ComponentTestBase
         settings.Verify(s => s.SetSetting(PeersSection.ProjectPhoenix1SettingKey, "False"), Times.Once);
     }
 
+    [Fact]
+    public void TheCompareStripSaysHowYourPoolDiffersPerLitType()
+    {
+        var page = new PumbilityPeersPageRecord(MixEnum.Phoenix2, null,
+            new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = PeerGroup.Pumbility(24, 23, 50) },
+            Array.Empty<PeerPoolEntry>(), Array.Empty<PeerAloneEntry>(), Array.Empty<PeerRosterEntry>(), 0, null,
+            new Dictionary<ChartType, PeerCompare>
+            {
+                [ChartType.Single] = new(9, 21, 10,
+                    new Dictionary<int, int> { [20] = 16, [21] = 19, [26] = 1 },
+                    new Dictionary<int, double> { [20] = .26, [21] = .26, [22] = .27 })
+            });
+
+        var cut = RenderComponent<PeerCompareStrip>(p => p.Add(x => x.Page, page));
+
+        Assert.Contains("9 of your 50 singles sit in your peers' top 50.", cut.Markup);
+        Assert.Contains("10 singles no peer holds.", cut.Markup);
+        Assert.Contains("21 singles held by one at most.", cut.Markup);
+        // One axis for both rows, spanning every level either side reaches: 20 through 26.
+        Assert.Equal(7, cut.FindAll(".pmb-levelaxis span").Count);
+        Assert.Equal(7, cut.FindAll(".pmb-levelrow-you i").Count);
+        Assert.Contains("You: 19 charts at 21", cut.Markup);
+        Assert.Contains("Peers: 27% of their pool weight at 22", cut.Markup);
+    }
+
     // ------------------------------------------------------------------ fixture
 
     private Chart NewChart(string name)

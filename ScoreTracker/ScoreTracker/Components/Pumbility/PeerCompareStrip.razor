@@ -1,0 +1,90 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* How your pool differs from what your peers hold (docs/design/pumbility-overhaul.md D41): how
+   much of it sits in their fifty most prevalent, how much of it is yours alone, and where the
+   levels sit on each side. Three surface tiles, per lit type; the level bars are you against
+   peers in the you-and-peers colours, each bar carrying its number in the title. Cuttable by
+   ruling — its own commit, its own component, nothing depends on it. *@
+@if (Page.Compare.Count > 0)
+{
+    <div class="pmb-compare" data-testid="peers-compare">
+        <div class="pmb-compare-tile">
+            <div class="pmb-compare-label">@L["In common"]</div>
+            <div class="pmb-compare-num">@Figure(c => c.InCommon)<small>@L["of {0}", 50]</small></div>
+            <div class="pmb-compare-say">@Say(c => c.InCommon, L["{0} of your 50 {1} sit in your peers' top 50."])</div>
+        </div>
+        <div class="pmb-compare-tile">
+            <div class="pmb-compare-label">@L["Yours alone"]</div>
+            <div class="pmb-compare-num">@Figure(c => c.Alone)<small>@L["of {0}", 50]</small></div>
+            <div class="pmb-compare-say">@Say(c => c.Alone, L["{0} {1} no peer holds."]) @Say(c => c.HeldByAtMostOne, L["{0} {1} held by one at most."])</div>
+        </div>
+        @foreach (var (type, compare) in Page.Compare.OrderBy(kv => kv.Key))
+        {
+            var levels = Levels(compare);
+            <div class="pmb-compare-tile" data-testid="@($"peers-compare-levels-{type}")">
+                <div class="pmb-compare-label">
+                    @(Page.Compare.Count > 1
+                        ? type == ChartType.Single ? L["Where the levels sit · singles"] : L["Where the levels sit · doubles"]
+                        : L["Where the levels sit"])
+                </div>
+                <div class="pmb-levelbars">
+                    <span>@L["You"]</span>
+                    <span class="pmb-levelrow pmb-levelrow-you">
+                        @foreach (var level in levels)
+                        {
+                            var mine = compare.MyLevels.GetValueOrDefault(level);
+                            <i style="height:@Height(mine, MaxMine(compare))" title="@L["You: {0} charts at {1}", mine, level]"></i>
+                        }
+                    </span>
+                    <span>@L["Peers"]</span>
+                    <span class="pmb-levelrow pmb-levelrow-peers">
+                        @foreach (var level in levels)
+                        {
+                            var share = compare.PeerShareByLevel.GetValueOrDefault(level);
+                            <i style="height:@Height(share, MaxShare(compare))" title="@L["Peers: {0}% of their pool weight at {1}", (100 * share).ToString("N0"), level]"></i>
+                        }
+                    </span>
+                    <span></span>
+                    <span class="pmb-levelaxis">
+                        @foreach (var level in levels)
+                        {
+                            <span>@level</span>
+                        }
+                    </span>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] [EditorRequired] public PumbilityPeersPageRecord Page { get; set; } = null!;
+
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+
+    /// <summary>The figure per lit type, "9" alone or "9 / 3" under All.</summary>
+    private string Figure(Func<PeerCompare, int> pick) =>
+        string.Join(" / ", Page.Compare.OrderBy(kv => kv.Key).Select(kv => pick(kv.Value)));
+
+    private string Say(Func<PeerCompare, int> pick, string format) =>
+        string.Join(" ", Page.Compare.OrderBy(kv => kv.Key)
+            .Select(kv => string.Format(format, pick(kv.Value), kv.Key == ChartType.Single ? L["singles"] : L["doubles"])));
+
+    /// <summary>The levels either side of the strip covers, so the two rows share an axis.</summary>
+    private static IReadOnlyList<int> Levels(PeerCompare compare)
+    {
+        var all = compare.MyLevels.Keys.Concat(compare.PeerShareByLevel.Where(kv => kv.Value > 0).Select(kv => kv.Key)).ToArray();
+        if (all.Length == 0) return Array.Empty<int>();
+        return Enumerable.Range(all.Min(), all.Max() - all.Min() + 1).ToArray();
+    }
+
+    private static int MaxMine(PeerCompare compare) => compare.MyLevels.Count == 0 ? 1 : Math.Max(1, compare.MyLevels.Values.Max());
+
+    private static double MaxShare(PeerCompare compare) => compare.PeerShareByLevel.Count == 0 ? 1 : Math.Max(1e-9, compare.PeerShareByLevel.Values.Max());
+
+    private static string Height(double value, double max) => $"{Math.Max(2, 100 * value / max).ToString("0", System.Globalization.CultureInfo.InvariantCulture)}%";
+}
