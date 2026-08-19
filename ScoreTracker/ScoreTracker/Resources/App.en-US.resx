@@ -7677,9 +7677,6 @@
   <data name="Top scores among peers" xml:space="preserve">
     <value>Top scores among peers</value>
   </data>
-  <data name="top stripe: prevalence tier" xml:space="preserve">
-    <value>top stripe: prevalence tier</value>
-  </data>
   <data name="Top {0}" xml:space="preserve">
     <value>Top {0}</value>
   </data>
@@ -8097,9 +8094,6 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Waiting room</value>
-  </data>
-  <data name="Waiting room #{0}" xml:space="preserve">
-    <value>Waiting room #{0}</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>Warming up the pad</value>
@@ -9182,9 +9176,6 @@
   <data name="{0} of your doubles pool" xml:space="preserve">
     <value>{0} of your doubles pool</value>
   </data>
-  <data name="{0} of your Phoenix 1 scores would pay here · no peer holds these" xml:space="preserve">
-    <value>{0} of your Phoenix 1 scores would pay here · no peer holds these</value>
-  </data>
   <data name="{0} of your singles pool" xml:space="preserve">
     <value>{0} of your singles pool</value>
   </data>
@@ -9205,9 +9196,6 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} of {1} folders</value>
-  </data>
-  <data name="{0} of {1} in your pool" xml:space="preserve">
-    <value>{0} of {1} in your pool</value>
   </data>
   <data name="{0} of {1} peers" xml:space="preserve">
     <value>{0} of {1} peers</value>

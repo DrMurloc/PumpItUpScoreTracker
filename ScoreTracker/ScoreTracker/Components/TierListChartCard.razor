@@ -23,13 +23,6 @@
                 <div class="tier-chart-card-bubble">
                     <DifficultyBubble Chart="Chart" Height="18"></DifficultyBubble>
                 </div>
-                @if (TopStripeColor != null)
-                {
-                    @* A second, quieter annotation along the top edge — the peers page's
-                       prevalence tier while its corner is the gain's and its dot is the
-                       variability's. The tooltip carries the word (rule 8). *@
-                    <span class="tier-chart-card-stripe" style="background:@TopStripeColor" title="@TopStripeTitle"></span>
-                }
                 @if (TopRightDotColor != null)
                 {
                     @* A caller-supplied mark in the lens dot's place, with its own word. *@
@@ -216,11 +209,6 @@ else
     [Parameter] public string? TopRightDotColor { get; set; }
 
     [Parameter] public string? TopRightDotTitle { get; set; }
-
-    /// <summary>Compact only: a hairline along the jacket's top edge, with its word — a second annotation when the corners are spoken for.</summary>
-    [Parameter] public string? TopStripeColor { get; set; }
-
-    [Parameter] public string? TopStripeTitle { get; set; }
 
     // Optional column info (the drawer's Display switches) — Comfortable only; the page
     // passes null in other densities.

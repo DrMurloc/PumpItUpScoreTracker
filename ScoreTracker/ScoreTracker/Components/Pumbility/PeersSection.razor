@@ -6,11 +6,13 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
+@inject CommunityGlowReader Glow
 
 @* The Play page's block (docs/design/pumbility-overhaul.md §3.10, D32, D43): what your peers
    build their number from, grouped by prevalence or by projected gain, and who they are — the
@@ -81,7 +83,7 @@
                 </MudButtonGroup>
             </span>
         </div>
-        <PeerPoolLegend Density="_density" GroupBy="_groupBy" HasCarried="HasCarried && _projectPhoenix1"></PeerPoolLegend>
+        <PeerPoolLegend Density="_density" HasCarried="HasCarried && _projectPhoenix1 && _groupBy == PeerGrouping.ProjectedGains"></PeerPoolLegend>
         <PeerPoolList Page="_peers" Charts="Charts" Gains="Gains" Mix="Page.Mix" Density="_density" PoolRecord="Page"
                       GroupBy="_groupBy" GainsOnly="_gainsOnly"
                       ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
@@ -100,7 +102,8 @@
                 ? L["Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit."]
                 : L["Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit."])
         </p>
-        <PeerRoster Rows="_peers.Roster" You="_peers.You" PrivatePeers="_peers.PrivatePeers" ShowPeerFor="Pool == null"></PeerRoster>
+        <PeerRoster Rows="_peers.Roster" You="_peers.You" PrivatePeers="_peers.PrivatePeers" ShowPeerFor="Pool == null"
+                    Rivals="_rivals" Clubmates="_clubmates"></PeerRoster>
     </section>
 }
 
@@ -148,6 +151,11 @@
     /// <summary>The peer-only projection, read once when the Phoenix 1 switch first goes off.</summary>
     private IReadOnlyDictionary<Guid, PumbilityTarget>? _peerOnlyGains;
 
+    // Who among the peers you already know. Both reads are the shared reader's, cached per
+    // circuit, and neither gates the list — the roster simply renders unglowed until they land.
+    private IReadOnlySet<Guid>? _rivals;
+    private IReadOnlySet<Guid>? _clubmates;
+
     /// <summary>The Phoenix 1 switch only exists for a player whose Phoenix 1 record would change the list (D36).</summary>
     private bool HasCarried => Page.Targets.Any(t => t.Source == TargetSource.Phoenix1);
 
@@ -187,6 +195,11 @@
         _peerOnlyGains = null;
         _peers = await Mediator.Send(new GetPumbilityPeersPageQuery(CurrentUser.User.Id, Page.Mix, Pool));
         if (!_projectPhoenix1) await ReadPeerOnlyGains();
+        if (_rivals == null)
+        {
+            _rivals = await Glow.GetMyRivalIds(Page.Mix);
+            _clubmates = await Glow.GetMyCommunityMemberIds();
+        }
     }
 
     private async Task ReadSettings()

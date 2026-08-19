@@ -7677,9 +7677,6 @@
   <data name="Top scores among peers" xml:space="preserve">
     <value>Punteggi alti tra i pari</value>
   </data>
-  <data name="top stripe: prevalence tier" xml:space="preserve">
-    <value>striscia in alto: tier di prevalenza</value>
-  </data>
   <data name="Top {0}" xml:space="preserve">
     <value>Top {0}</value>
   </data>
@@ -8097,9 +8094,6 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Sala d'attesa</value>
-  </data>
-  <data name="Waiting room #{0}" xml:space="preserve">
-    <value>Sala d'attesa #{0}</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>Riscaldamento della pedana</value>
@@ -9182,9 +9176,6 @@
   <data name="{0} of your doubles pool" xml:space="preserve">
     <value>{0} del tuo insieme doubles</value>
   </data>
-  <data name="{0} of your Phoenix 1 scores would pay here · no peer holds these" xml:space="preserve">
-    <value>{0} dei tuoi punteggi Phoenix 1 renderebbero qui · nessun pari le tiene</value>
-  </data>
   <data name="{0} of your singles pool" xml:space="preserve">
     <value>{0} del tuo insieme singles</value>
   </data>
@@ -9205,9 +9196,6 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} di {1} cartelle</value>
-  </data>
-  <data name="{0} of {1} in your pool" xml:space="preserve">
-    <value>{0} di {1} nel tuo insieme</value>
   </data>
   <data name="{0} of {1} peers" xml:space="preserve">
     <value>{0} pari su {1}</value>

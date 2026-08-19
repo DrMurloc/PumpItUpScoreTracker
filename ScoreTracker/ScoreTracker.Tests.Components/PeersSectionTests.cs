@@ -12,9 +12,14 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Communities.Contracts.Queries;
+using ScoreTracker.Domain.Records;
+using ScoreTracker.Rivals.Contracts;
+using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Enums;
 using ScoreTracker.Web.Services.Contracts;
+using ScoreTracker.Web.Services.HomeDashboard;
 using Xunit;
 
 namespace ScoreTracker.Tests.Components;
@@ -37,6 +42,12 @@ public sealed class PeersSectionTests : ComponentTestBase
         CurrentUser.Setup(c => c.IsLoggedIn).Returns(true);
         CurrentUser.Setup(c => c.User).Returns(new User(Viewer, Name.From("Viewer"), true, Name.From("Viewer"),
             new Uri("https://piu.test/a.png"), Name.From("US")));
+        // The roster glows crews and rivals through the shared reader, which the block resolves.
+        Mediator.Setup(m => m.Send(It.IsAny<GetMyCommunitiesQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommunityOverviewRecord>().AsEnumerable());
+        Mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<RivalSubject>)Array.Empty<RivalSubject>());
+        Services.AddScoped<CommunityGlowReader>();
     }
 
     [Fact]

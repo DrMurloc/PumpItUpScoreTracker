@@ -158,14 +158,12 @@ else
                                                PassedInAnotherMix="row.Carried"
                                                ShowToDo="ShowToDo"
                                                ShowPlay="@(Density == UiDensity.Comfortable)"
-                                               CornerBadge="@(row.Pays ? $"+{PumbilityFormat.Gain(row.Gain)}" : null)"
+                                               CornerBadge="@CornerBadgeFor(row)"
                                                CornerBadgeClass="pmb-corner-gain"
-                                               CornerBadgeStart="@(Density == UiDensity.Compact && row.Pays ? ProjectedGrade(row) : null)"
+                                               CornerBadgeStart="@CornerBadgeStartFor(row)"
                                                CornerBadgeStartClass="pmb-corner-gain"
                                                TopRightDotColor="@(Density == UiDensity.Compact && row.Entry?.Variability is { } v ? ThemeScales.VariabilityColor(v) : null)"
                                                TopRightDotTitle="@(row.Entry?.Variability is { } w ? L[VariabilityMeter.Word(w)].ToString() : null)"
-                                               TopStripeColor="@(Density == UiDensity.Compact && GroupBy != PeerGrouping.Prevalence && row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : null)"
-                                               TopStripeTitle="@(row.Entry != null ? TierCaption(row) : null)"
                                                TierLabel="@(Density == UiDensity.Comfortable ? CaptionFor(row) : null)"
                                                TierColor="@(row.Entry != null ? ThemeScales.PumbilityColor(row.Entry.Tier) : ThemeScales.PumbilityColor(TierListCategory.Unrecorded))"
                                                TooltipNote="@CompactNote(row)"
@@ -231,9 +229,8 @@ else
 
     public const string AloneKey = "Alone";
 
-    public const string PoolKey = "Pool";
-
-    public const string WaitingKey = "Waiting";
+    /// <summary>The list the pool lens bands under — a name for the processor, never rendered.</summary>
+    private const string PoolListName = "PumbilityPool";
 
     public static readonly IReadOnlySet<string> DefaultCollapsed = new HashSet<string>
     {
@@ -249,10 +246,10 @@ else
     /// <summary>
     ///     One chart in the list. <paramref name="Slot" /> is its place in the frame's pool under
     ///     the Your top 50 lens — the pool's own score and value win there, since the pool is what
-    ///     the lens is about — and <paramref name="Waiting" /> says the slot is below the bar.
+    ///     the lens is about.
     /// </summary>
     private sealed record Row(Chart Chart, PeerPoolEntry? Entry, PumbilityTarget? Target, PeerAloneEntry? Alone,
-        PoolEntry? Slot = null, bool Waiting = false)
+        PoolEntry? Slot = null)
     {
         public bool Pays => Target is { Gain: > 0 };
         public double Gain => Target?.Gain ?? 0;
@@ -262,7 +259,7 @@ else
                                        (Target is { Current: not null, CurrentIsBroken: false } ? Target.Current : null);
 
         public PhoenixPlate? MyPlate => Slot != null ? Slot.Plate : Entry?.MyPlate ?? Alone?.Plate;
-        public int? MyPoolRank => Slot != null ? Waiting ? null : Slot.Place : Entry?.MyPoolRank ?? Alone?.MyPoolRank;
+        public int? MyPoolRank => Slot?.Place ?? Entry?.MyPoolRank ?? Alone?.MyPoolRank;
     }
 
     private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows, string? Stat,
@@ -306,26 +303,30 @@ else
         var sections = new List<Section>();
         if (IsPoolLens)
         {
-            // The frame's pool by place, split at the bar (D44): the peers' entry rides each row
+            // The frame's pool, banded by what each chart is worth to you the way every other list
+            // on the site bands — the shared processor's standard-deviation cuts, the page's own
+            // tier names and colours (D44, field test round one). The peers' entry rides each row
             // where one exists, the yours-alone entry where none does, and the gain as everywhere.
             if (PoolRecord == null) return sections;
             var entries = held.ToDictionary(r => r.Chart.Id);
             var alone = Page.YoursAlone.ToDictionary(a => a.ChartId);
-            Row Slot(PoolEntry slot, bool waiting) => new(Charts[slot.ChartId],
-                entries.GetValueOrDefault(slot.ChartId)?.Entry, Gains.GetValueOrDefault(slot.ChartId),
-                alone.GetValueOrDefault(slot.ChartId), slot, waiting);
-
             var pool = PoolRecord.Pool.Where(s => Charts.ContainsKey(s.ChartId)).OrderBy(s => s.Place)
-                .Select(s => Slot(s, false)).ToArray();
-            if (pool.Length > 0)
-                sections.Add(new Section(PoolKey, L["Your top 50"], "var(--mix-primary)", pool,
-                    L["{0} charts · {1} down to {2}", pool.Length, PoolRecord.PoolTop.ToString("N2"), PoolRecord.PoolBottom.ToString("N2")],
-                    "pmb-pool-section"));
-            var waiting = PoolRecord.WaitingRoom.Where(s => Charts.ContainsKey(s.ChartId)).OrderBy(s => s.Place)
-                .Select(s => Slot(s, true)).ToArray();
-            if (waiting.Length > 0)
-                sections.Add(new Section(WaitingKey, L["Waiting room"], "var(--mix-ink-muted)", waiting,
-                    L["{0} charts", waiting.Length], "pmb-waiting-section"));
+                .Select(s => new Row(Charts[s.ChartId], entries.GetValueOrDefault(s.ChartId)?.Entry,
+                    Gains.GetValueOrDefault(s.ChartId), alone.GetValueOrDefault(s.ChartId), s))
+                .ToArray();
+            if (pool.Length == 0) return sections;
+
+            var banded = TierListProcessor
+                .ProcessIntoTierList(PoolListName, pool.ToDictionary(r => r.Chart.Id, r => r.Slot!.Value))
+                .ToDictionary(e => e.ChartId, e => e.Category);
+            foreach (var tier in PumbilityTierNames.Tiers)
+            {
+                var rows = pool.Where(r => banded[r.Chart.Id] == tier).ToArray();
+                if (rows.Length == 0) continue;
+                sections.Add(new Section(tier.ToString(), L[PumbilityTierNames.NameOf(tier)],
+                    ThemeScales.PumbilityColor(tier), rows, null, "pmb-tier-section"));
+            }
+
             return sections;
         }
 
@@ -346,14 +347,10 @@ else
             return sections;
         }
 
-        if (GainsOnly)
-        {
-            held = held.Where(r => r.Pays).ToList();
-            if (carriedUnheld.Count > 0)
-                sections.Add(new Section(CarriedKey, L["Carried from Phoenix 1"], "var(--mud-palette-success)",
-                    carriedUnheld.OrderByDescending(r => r.Gain).ToArray(),
-                    L["{0} of your Phoenix 1 scores would pay here · no peer holds these", carriedUnheld.Count], "pmb-carried-section"));
-        }
+        // Prevalence is what the peers hold, so a carried Phoenix 1 row no peer holds has no
+        // place in it — it has no prevalence to sort on, and the switch that produced it does not
+        // even show under this grouping (owner, field test round one). Projected gains keeps them.
+        if (GainsOnly) held = held.Where(r => r.Pays).ToList();
 
         foreach (var tier in PumbilityTierNames.Tiers)
         {
@@ -363,9 +360,8 @@ else
                     : rows.OrderByDescending(r => r.Entry!.Share).ThenByDescending(r => r.Entry!.Points))
                 .ToArray();
             if (ordered.Length == 0) continue;
-            var inPool = ordered.Count(r => r.MyPoolRank != null);
             sections.Add(new Section(tier.ToString(), L[PumbilityTierNames.NameOf(tier)], ThemeScales.PumbilityColor(tier),
-                ordered, L["{0} of {1} in your pool", inPool, ordered.Length], "pmb-tier-section"));
+                ordered, null, "pmb-tier-section"));
         }
 
         if (!GainsOnly)
@@ -427,7 +423,7 @@ else
     private string PoolText(Row row)
     {
         if (row.Slot is { } slot)
-            return (row.Waiting ? L["Waiting room #{0}", slot.Place] : L["In your pool #{0}", slot.Place]) + $" · {slot.Value.ToString("N2")}";
+            return L["In your pool #{0}", slot.Place] + $" · {slot.Value.ToString("N2")}";
         return row.MyPoolRank is { } rank ? L["In your pool #{0}", rank] : row.MyScore != null ? L["Played, not in your pool"] : L["Not yet played"];
     }
 
@@ -458,6 +454,36 @@ else
         if (row.Pays) parts.Add($"+{PumbilityFormat.Gain(row.Gain)}" + (row.Carried ? $" · {L["Carried from Phoenix 1"]}" : string.Empty));
         return string.Join(" · ", parts);
     }
+
+    /// <summary>
+    ///     The printed corner, bottom-right. Under the pool lens it is what the chart is worth in
+    ///     your pool — the lens's whole subject — and everywhere else the gain, when it pays.
+    /// </summary>
+    private string? CornerBadgeFor(Row row)
+    {
+        if (IsPoolLens && Density == UiDensity.Compact) return row.Slot?.Value.ToString("N2");
+        return row.Pays ? $"+{PumbilityFormat.Gain(row.Gain)}" : null;
+    }
+
+    /// <summary>
+    ///     Compact's other corner, bottom-left: your own grade under the pool lens — where every
+    ///     chart is one you passed — and the grade a paying tile lands on everywhere else.
+    /// </summary>
+    private RenderFragment? CornerBadgeStartFor(Row row)
+    {
+        if (Density != UiDensity.Compact) return null;
+        if (IsPoolLens) return row.MyScore is { } mine ? Grade(mine) : null;
+        return row.Pays ? ProjectedGrade(row) : null;
+    }
+
+    // A pool row is never a broken one: a broken run prices at zero and can hold no slot.
+    private RenderFragment Grade(PhoenixScore score) => builder =>
+    {
+        builder.OpenComponent<LetterGradeIcon>(0);
+        builder.AddComponentParameter(1, nameof(LetterGradeIcon.Grade), score.LetterGradeFor(Mix));
+        builder.AddComponentParameter(2, nameof(LetterGradeIcon.Height), 14);
+        builder.CloseComponent();
+    };
 
     // The grade a paying tile lands on, in Compact's other corner: your peers' median for a peer
     // row, your own Phoenix 1 grade for a carried one — the target list's own rule.

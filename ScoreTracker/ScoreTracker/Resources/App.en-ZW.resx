@@ -7677,9 +7677,6 @@
   <data name="Top scores among peers" xml:space="preserve">
     <value>Blarg mgrlgmrg lurgplgl maglmurp</value>
   </data>
-  <data name="top stripe: prevalence tier" xml:space="preserve">
-    <value>mrrgl blgrl: murgroblarg mrgl</value>
-  </data>
   <data name="Top {0}" xml:space="preserve">
     <value>Blarg {0}</value>
   </data>
@@ -8097,9 +8094,6 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>Blargmo Gurg</value>
-  </data>
-  <data name="Waiting room #{0}" xml:space="preserve">
-    <value>Blargmo Gurg #{0}</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>Bramogl uppa</value>
@@ -9182,9 +9176,6 @@
   <data name="{0} of your doubles pool" xml:space="preserve">
     <value>{0} blarg morp groggl blubgro</value>
   </data>
-  <data name="{0} of your Phoenix 1 scores would pay here · no peer holds these" xml:space="preserve">
-    <value>{0} blarg morp Phoenix 1 mgrlgmrg roglub ap · mo maglmurp mrgloru</value>
-  </data>
   <data name="{0} of your singles pool" xml:space="preserve">
     <value>{0} blarg morp mrglrlgl blubgro</value>
   </data>
@@ -9205,9 +9196,6 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} mrgl {1} blargblgrlmurp</value>
-  </data>
-  <data name="{0} of {1} in your pool" xml:space="preserve">
-    <value>{0} ub {1} argl morp blubgro</value>
   </data>
   <data name="{0} of {1} peers" xml:space="preserve">
     <value>{0} ub {1} maglmurp</value>

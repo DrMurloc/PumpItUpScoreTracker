@@ -37,7 +37,8 @@ public sealed class PeerPoolListTests : ComponentTestBase
         Assert.Equal(new[] { "Staple", "Solid", "Slim", "Poor" }, names);
         // Slim and Poor start folded (D34): headers present, bodies absent.
         Assert.Equal(2, cut.FindAll(".tier-section-body").Count);
-        Assert.Contains("1 of 1 in your pool", cut.FindAll(".tier-section-stat")[1].TextContent);
+        // No "X of Y in your pool" under a tier — it read as a claim about the tier (owner, field test).
+        Assert.Empty(cut.FindAll(".tier-section-stat"));
         // No X/Y corner on the jacket in either density (D38); the count is the caption.
         Assert.Empty(cut.FindAll(".tier-chart-card-corner"));
         Assert.Contains("17 of 23 peers", cut.Markup);
@@ -112,7 +113,7 @@ public sealed class PeerPoolListTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheGainsCutUnderPrevalenceKeepsTheTiersAddsTheCarriedSectionAndHidesYoursAlone()
+    public void TheGainsCutUnderPrevalenceKeepsTheTiersAndHidesYoursAloneAndTheCarriedRows()
     {
         var f = new Fixture()
             .Held("Pays", TierListCategory.Overrated, holders: 12, points: 500, mine: null, gain: 18.4, projected: 987_475)
@@ -127,7 +128,10 @@ public sealed class PeerPoolListTests : ComponentTestBase
 
         var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
             .Add(x => x.Gains, f.Gains).Add(x => x.GainsOnly, true).Add(x => x.Density, UiDensity.Comfortable));
-        Assert.Equal(new[] { "Carried from Phoenix 1", "Staple" }, cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        // Prevalence is what the peers hold: a carried row nobody holds has none, and its own
+        // switch does not even show under this grouping (owner, field test round one).
+        Assert.Equal(new[] { "Staple" }, cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        Assert.DoesNotContain("Carried from Phoenix 1", cut.Markup);
         Assert.DoesNotContain("Free", cut.Markup);
         Assert.DoesNotContain("Paradoxx", cut.Markup);
     }
@@ -178,58 +182,67 @@ public sealed class PeerPoolListTests : ComponentTestBase
     }
 
     [Fact]
-    public void YourTop50ListsTheFramesPoolByPlaceSplitAtTheBarWithThePeersDataOnEveryRow()
+    public void YourTop50BandsThePoolByWhatEachChartIsWorthWithThePeersDataOnEveryRow()
     {
-        // D44: the pool is the frame's, by place; the peers' entry rides where one exists, the
-        // yours-alone row reads "No peer holds it", the waiting room is its own section.
+        // D44 + field test round one: the pool is banded by value the way every other list bands,
+        // in the page's own tier names — no waiting room, no place-ordered slab. The peers' entry
+        // rides where one exists; a chart no peer holds says so.
         var f = new Fixture()
             .Held("Shared", TierListCategory.Easy, holders: 8, points: 200, mine: 966_887, myRank: 2,
                 median: 985_000, variability: PeerVariabilityLevel.Mixed, gain: 10.2, projected: 985_000)
             .Alone("Mine", myRank: 1, score: 990_000)
             .Held("Unplayed", TierListCategory.Overrated, holders: 17, points: 550, mine: null)
-            .InPool("Mine", place: 1, value: 412.5).InPool("Shared", place: 2, value: 398.25)
-            .Waiting("Below", place: 51, value: 301.22);
+            .InPool("Mine", place: 1, value: 460).InPool("Shared", place: 2, value: 300);
 
         var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
             .Add(x => x.Gains, f.Gains).Add(x => x.PoolRecord, f.PoolRecord()).Add(x => x.GroupBy, PeerGrouping.YourTop50)
             .Add(x => x.Density, UiDensity.Comfortable));
 
-        var names = cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray();
-        Assert.Equal(new[] { "Your top 50", "Waiting room" }, names);
-        Assert.Contains("2 charts · 412.50 down to 398.25", cut.FindAll(".tier-section-stat")[0].TextContent);
-        var cards = cut.FindAll("[data-testid=ppl-section-Pool] .tier-chart-card");
-        Assert.Equal(2, cards.Count);
-        // By place: Mine first, then Shared — and the unplayed peer chart is nowhere in this lens.
-        Assert.Contains("Mine", cards[0].TextContent);
-        Assert.Contains("No peer holds it", cards[0].TextContent);
-        Assert.Contains("In your pool #1 · 412.50", cards[0].TextContent);
-        Assert.Contains("Shared", cards[1].TextContent);
-        Assert.Contains("8 of 23 peers", cards[1].TextContent);
-        Assert.Contains("In your pool #2 · 398.25", cards[1].TextContent);
-        Assert.StartsWith("+10", cards[1].QuerySelector(".tier-chart-card-corner")!.TextContent.Trim());
+        // The processor's own cuts over 460 and 300: mean 380, sigma 80, so one lands a sigma above
+        // (Strong) and one half a sigma below (Modest) — derived by its rule, not chosen here.
+        Assert.Equal(new[] { "Strong", "Modest" }, cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        Assert.Empty(cut.FindAll(".tier-section-stat"));
+        var top = cut.Find("[data-testid=ppl-section-VeryEasy] .tier-chart-card");
+        Assert.Contains("Mine", top.TextContent);
+        Assert.Contains("No peer holds it", top.TextContent);
+        Assert.Contains("In your pool #1 · 460.00", top.TextContent);
+        var bottom = cut.Find("[data-testid=ppl-section-Hard] .tier-chart-card");
+        Assert.Contains("Shared", bottom.TextContent);
+        Assert.Contains("8 of 23 peers", bottom.TextContent);
+        // The pool is the pool: a chart the peers hold that you have never played is not in it.
         Assert.DoesNotContain("Unplayed", cut.Markup);
-        var waiting = cut.Find("[data-testid=ppl-section-Waiting] .tier-chart-card");
-        Assert.Contains("Waiting room #51 · 301.22", waiting.TextContent);
+        Assert.DoesNotContain("Waiting room", cut.Markup);
     }
 
     [Fact]
-    public void YourTop50TableCarriesPlaceAndValueInsteadOfThePoolColumn()
+    public void YourTop50CompactPutsYourGradeOnOneCornerAndWhatItIsWorthOnTheOther()
     {
+        // Owner, field test round one. The badges are the page's own corner treatment, so a pool
+        // card sits beside a peers card without looking like a different component.
         var f = new Fixture()
-            .Held("Shared", TierListCategory.Easy, holders: 8, points: 200, mine: 966_887, myRank: 1, median: 985_000)
+            .Held("Shared", TierListCategory.Easy, holders: 8, points: 200, mine: 966_887, myRank: 1,
+                median: 985_000, gain: 10.2, projected: 985_000)
             .InPool("Shared", place: 1, value: 398.25);
 
-        var cut = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
-            .Add(x => x.PoolRecord, f.PoolRecord()).Add(x => x.GroupBy, PeerGrouping.YourTop50).Add(x => x.Density, UiDensity.Table));
+        var compact = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.Gains, f.Gains).Add(x => x.PoolRecord, f.PoolRecord()).Add(x => x.GroupBy, PeerGrouping.YourTop50)
+            .Add(x => x.Density, UiDensity.Compact));
 
-        var headers = cut.FindAll("thead th").Select(h => h.TextContent.Trim()).ToArray();
-        Assert.Equal("#", headers[1]);
-        Assert.Contains("Value", headers);
-        Assert.DoesNotContain("Your pool", headers);
-        var row = cut.Find("tbody tr");
-        Assert.Equal("1", row.QuerySelectorAll("td")[1].TextContent.Trim());
-        Assert.Contains("398.25", row.TextContent);
-        Assert.Contains("8 of 23 peers", row.TextContent);
+        var start = compact.Find(".tier-chart-card-corner-start");
+        Assert.Contains("pmb-corner-gain", start.ClassName);
+        Assert.NotNull(start.QuerySelector("img"));
+        var end = compact.Find(".tier-chart-card-compact-grade.tier-chart-card-corner");
+        Assert.Equal("398.25", end.TextContent.Trim());
+        Assert.Contains("pmb-corner-gain", end.ClassName);
+        // No prevalence stripe anywhere on this page any more (owner, field test round one).
+        Assert.Empty(compact.FindAll(".tier-chart-card-stripe"));
+
+        // Comfortable keeps the gain badge it wears everywhere else; the body prints place and value.
+        var comfortable = RenderComponent<PeerPoolList>(p => p.Add(x => x.Page, f.Page()).Add(x => x.Charts, f.Charts)
+            .Add(x => x.Gains, f.Gains).Add(x => x.PoolRecord, f.PoolRecord()).Add(x => x.GroupBy, PeerGrouping.YourTop50)
+            .Add(x => x.Density, UiDensity.Comfortable));
+        Assert.StartsWith("+10", comfortable.Find(".tier-chart-card-corner").TextContent.Trim());
+        Assert.Contains("In your pool #1 · 398.25", comfortable.Markup);
     }
 
     [Fact]
@@ -252,7 +265,6 @@ public sealed class PeerPoolListTests : ComponentTestBase
         private readonly Dictionary<Guid, PumbilityTarget> _gains = new();
         private readonly Dictionary<string, Guid> _ids = new();
         private readonly List<PoolEntry> _pool = new();
-        private readonly List<PoolEntry> _waiting = new();
 
         public Dictionary<Guid, Chart> Charts { get; } = new();
 
@@ -294,19 +306,11 @@ public sealed class PeerPoolListTests : ComponentTestBase
             return this;
         }
 
-        /// <summary>A new chart below the bar, in the frame's waiting room.</summary>
-        public Fixture Waiting(string name, int place, double value)
-        {
-            var chart = NewChart(name);
-            _waiting.Add(new PoolEntry(place, chart.Id, 950_000, PhoenixPlate.FairGame, false, DateTimeOffset.MinValue, value));
-            return this;
-        }
-
-        /// <summary>The frame's record: the pool and the waiting room this fixture declared, nothing else.</summary>
+        /// <summary>The frame's record: the pool this fixture declared, nothing else.</summary>
         public PumbilityPageRecord PoolRecord()
         {
             return new PumbilityPageRecord(MixEnum.Phoenix2, ChartType.Single, _pool.Sum(p => p.Value), null, null,
-                _pool.OrderBy(p => p.Place).ToArray(), _waiting.OrderBy(p => p.Place).ToArray(), Array.Empty<PumbilityTarget>());
+                _pool.OrderBy(p => p.Place).ToArray(), Array.Empty<PoolEntry>(), Array.Empty<PumbilityTarget>());
         }
 
         public PumbilityPeersPageRecord Page()

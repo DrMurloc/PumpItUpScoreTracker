@@ -2176,14 +2176,6 @@ html.sheet-open .more-sheet-scrim {
     box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
 }
 
-.tier-chart-card-stripe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-}
-
 .tier-chart-card-tier {
     display: block;
 }
@@ -13923,8 +13915,12 @@ span.ct-console-pick { cursor: default; }
     margin: 6px 0 4px;
 }
 
+/* The select sizes to its longest option and no further: at desktop width a flex item with
+   only a min-width took the whole row, which put the density trio a screen away from it. */
 .pmb-peers-controls-select {
     min-width: 170px;
+    max-width: 230px;
+    flex: 0 1 230px;
 }
 
 .pmb-peers-controls-end {
@@ -14034,21 +14030,44 @@ span.ct-console-pick { cursor: default; }
     letter-spacing: .01em;
 }
 
-/* The Your top 50 lens (D44): the pool section reads like the gain bands — a name, not a ramp
-   tier — and the waiting room is ghosted the way the curve ghosts it, because it is the same
-   six charts below the same bar. */
-.pmb-pool-section .tier-section-name,
-.pmb-waiting-section .tier-section-name {
-    font-family: var(--font-display);
-    font-weight: 700;
-    letter-spacing: .01em;
+/* The roster (D39): the tier table's skin, your own row highlighted where you would sit, and
+   the site's you/crew/rival vocabulary over it (field test round one). The utility set paints a
+   row element; a table row cannot carry that shadow across collapsed cells, so the same geometry
+   is drawn on the cells here — tint on every cell, the edge bars on the first and the last. */
+.pmb-roster tr.is-rival td {
+    background: color-mix(in srgb, var(--daily-rival) 13%, transparent);
 }
 
-.pmb-waiting-section .tier-section-body {
-    opacity: .72;
+.pmb-roster tr.is-community td {
+    background: color-mix(in srgb, var(--daily-community) 13%, transparent);
 }
 
-/* The roster (D39): the tier table's skin, your own row highlighted where you would sit. */
+/* Both: the utility set splits the fill left-to-right and puts a different colour at each end.
+   A cell cannot carry half of a row-wide gradient, so the fill is the two tints over each other
+   and the ends still say which is which. */
+.pmb-roster tr.is-both td {
+    background: color-mix(in srgb, var(--daily-rival) 8%,
+        color-mix(in srgb, var(--daily-community) 9%, transparent));
+}
+
+.pmb-roster tr.is-rival td:first-child,
+.pmb-roster tr.is-both td:first-child {
+    box-shadow: inset 3px 0 0 var(--daily-rival);
+}
+
+.pmb-roster tr.is-rival td:last-child {
+    box-shadow: inset -3px 0 0 var(--daily-rival);
+}
+
+.pmb-roster tr.is-community td:first-child {
+    box-shadow: inset 3px 0 0 var(--daily-community);
+}
+
+.pmb-roster tr.is-community td:last-child,
+.pmb-roster tr.is-both td:last-child {
+    box-shadow: inset -3px 0 0 var(--daily-community);
+}
+
 .pmb-roster tr.pmb-roster-you td {
     background: color-mix(in srgb, var(--daily-you) 12%, transparent);
 }

@@ -7618,9 +7618,6 @@
   <data name="Top scores among peers" xml:space="preserve">
     <value>동급 유저 중 상위 점수</value>
   </data>
-  <data name="top stripe: prevalence tier" xml:space="preserve">
-    <value>상단 띠: 보편성 등급</value>
-  </data>
   <data name="Top {0}" xml:space="preserve">
     <value>상위 {0}</value>
   </data>
@@ -8034,9 +8031,6 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>대기실</value>
-  </data>
-  <data name="Waiting room #{0}" xml:space="preserve">
-    <value>대기실 #{0}</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>발판 예열하는 중</value>
@@ -9112,9 +9106,6 @@
   <data name="{0} of your doubles pool" xml:space="preserve">
     <value>내 더블 풀 중 {0}개</value>
   </data>
-  <data name="{0} of your Phoenix 1 scores would pay here · no peer holds these" xml:space="preserve">
-    <value>Phoenix 1 점수 {0}개가 여기서 이득 · 보유한 동료 없음</value>
-  </data>
   <data name="{0} of your singles pool" xml:space="preserve">
     <value>내 싱글 풀 중 {0}개</value>
   </data>
@@ -9135,9 +9126,6 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>폴더 {1}개 중 {0}개</value>
-  </data>
-  <data name="{0} of {1} in your pool" xml:space="preserve">
-    <value>{1}개 중 {0}개가 내 풀에</value>
   </data>
   <data name="{0} of {1} peers" xml:space="preserve">
     <value>동료 {1}명 중 {0}명</value>

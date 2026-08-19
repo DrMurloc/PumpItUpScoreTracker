@@ -7677,9 +7677,6 @@
   <data name="Top scores among peers" xml:space="preserve">
     <value>同レベル帯で上位スコア</value>
   </data>
-  <data name="top stripe: prevalence tier" xml:space="preserve">
-    <value>上端の帯: 普及度ティア</value>
-  </data>
   <data name="Top {0}" xml:space="preserve">
     <value>上位{0}</value>
   </data>
@@ -8097,9 +8094,6 @@
   </data>
   <data name="Waiting room" xml:space="preserve">
     <value>待機中</value>
-  </data>
-  <data name="Waiting room #{0}" xml:space="preserve">
-    <value>待機中 #{0}</value>
   </data>
   <data name="Warming up the pad" xml:space="preserve">
     <value>パッドを温めています</value>
@@ -9182,9 +9176,6 @@
   <data name="{0} of your doubles pool" xml:space="preserve">
     <value>あなたの Doubles プールのうち {0}</value>
   </data>
-  <data name="{0} of your Phoenix 1 scores would pay here · no peer holds these" xml:space="preserve">
-    <value>Phoenix 1 のスコア {0} がここで加算 · 持っているピアはいない</value>
-  </data>
   <data name="{0} of your singles pool" xml:space="preserve">
     <value>あなたの Singles プールのうち {0}</value>
   </data>
@@ -9205,9 +9196,6 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{1} 中 {0} フォルダ</value>
-  </data>
-  <data name="{0} of {1} in your pool" xml:space="preserve">
-    <value>{1} のうち {0} があなたのプール</value>
   </data>
   <data name="{0} of {1} peers" xml:space="preserve">
     <value>ピア {1} 人中 {0} 人</value>

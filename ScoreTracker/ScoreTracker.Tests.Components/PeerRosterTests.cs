@@ -118,6 +118,31 @@ public sealed class PeerRosterTests : ComponentTestBase
         Assert.Contains(cut.FindAll("thead th"), th => th.TextContent.Trim() == "Level");
     }
 
+    [Fact]
+    public void ACrewmateGlowsGreenARivalRedAndBothCarriesBothEnds()
+    {
+        // Owner, field test round one: the site's own row vocabulary, through the shared ladder.
+        var rival = Row("Rival", 18_000, 24, 21, 21, 3);
+        var crew = Row("Crew", 17_800, 24, 21, 21, 3);
+        var both = Row("Both", 17_600, 24, 21, 21, 3);
+        var stranger = Row("Stranger", 17_400, 24, 21, 21, 3);
+        var you = Row("Viewer", 17_500, 24, 21, 21, 0);
+
+        var cut = RenderComponent<PeerRoster>(p => p
+            .Add(x => x.Rows, new[] { rival, crew, both, stranger }).Add(x => x.You, you)
+            .Add(x => x.Rivals, (IReadOnlySet<Guid>)new HashSet<Guid> { rival.User.Id, both.User.Id })
+            .Add(x => x.Clubmates, (IReadOnlySet<Guid>)new HashSet<Guid> { crew.User.Id, both.User.Id }));
+
+        string ClassOf(string name) => cut.FindAll("tbody tr")
+            .First(r => r.QuerySelector("td:nth-child(2)")!.TextContent.Contains(name)).ClassName ?? string.Empty;
+        Assert.Equal("is-rival", ClassOf("Rival"));
+        Assert.Equal("is-community", ClassOf("Crew"));
+        Assert.Equal("is-both", ClassOf("Both"));
+        Assert.Equal(string.Empty, ClassOf("Stranger"));
+        // You win the ladder outright — a viewer who is somehow also in the sets stays your colour.
+        Assert.Equal("pmb-roster-you", ClassOf("Viewer"));
+    }
+
     private static PeerRosterEntry Row(string name, double total, int? rung, double singles, double doubles, int overlap,
         params ChartType[] peerFor)
     {

@@ -2,6 +2,7 @@
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.HomeDashboard
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 
@@ -12,7 +13,10 @@
    number on the page and named nowhere; the line beneath says how many there are.
 
    A competitive band is several hundred players (D43), so past fifty rows the table keeps the fifty
-   nearest the viewer in the sort — the viewer in place — and says how many sit above and below. *@
+   nearest the viewer in the sort — the viewer in place — and says how many sit above and below.
+
+   Row colour is the site's own vocabulary through the shared ladder (you → both → rival → crew),
+   so a peer you already know is one you can pick out of the band (owner, field test round one). *@
 @if (Rows.Count == 0 && PrivatePeers == 0)
 {
     <p class="pmb-empty" data-testid="roster-empty">@L["No peers yet."]</p>
@@ -48,7 +52,7 @@ else
             <tbody>
             @foreach (var (row, place, isYou) in Visible.Rows)
             {
-                <tr class="@(isYou ? "pmb-roster-you" : null)" data-testid="@(isYou ? "roster-you" : "roster-peer")">
+                <tr class="@RowClass(row, isYou)" data-testid="@(isYou ? "roster-you" : "roster-peer")">
                     <td class="pmb-num pmb-muted">@(isYou ? string.Empty : place.ToString())</td>
                     <td>
                         <UserLabel User="row.User"></UserLabel>
@@ -112,6 +116,16 @@ else
 
     /// <summary>Under All the roster spans both types, and which type each peer is a peer for is worth a column.</summary>
     [Parameter] public bool ShowPeerFor { get; set; }
+
+    /// <summary>The site-user rivals to glow red, from the shared reader.</summary>
+    [Parameter] public IReadOnlySet<Guid>? Rivals { get; set; }
+
+    /// <summary>The members of your own communities, to glow green.</summary>
+    [Parameter] public IReadOnlySet<Guid>? Clubmates { get; set; }
+
+    private string RowClass(PeerRosterEntry row, bool isYou) =>
+        CommunityGlowReader.RowClass(isYou, Rivals?.Contains(row.User.Id) == true,
+            Clubmates?.Contains(row.User.Id) == true, "pmb-roster-you");
 
     /// <summary>Rows shown at most; past it the table is a window around the viewer (D43).</summary>
     public const int Window = 50;
