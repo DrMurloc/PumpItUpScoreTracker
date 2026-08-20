@@ -12,6 +12,7 @@ using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services;
+using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.PlayerProgress.Application;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
@@ -502,6 +503,75 @@ public sealed partial class PumbilityProjectionSagaTests
     }
 
     [Fact]
+    public async Task AShortMergedPoolIsPlacedByItsExtrapolatedFinishAndSaysSo()
+    {
+        // Twenty-five charts: too few for a settled total, enough to extrapolate one. The pool's
+        // own sum would seat this player at the bottom of the ladder; their average out to fifty
+        // seats them where they are actually heading (D48).
+        var ctx = new ProjectionContext().WithPhoenix2Pool(25, 0)
+            .WithPoolOf(25, 970_000, ChartType.Single, 20)
+            .WithChart(out var chart, ChartType.Single, 20);
+        for (var i = 0; i < 6; i++) ctx.WithPumbilityPeer(chart, phoenix2Score: 985_000);
+        var expected = Phoenix2PumbilityLevel.From(
+            ProjectionContext.PricedAt(ctx.ChartsInPool.First(), 970_000) * PeerGroup.PumbilityPoolSize).Index;
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var group = result.Peers![ChartType.Single];
+        Assert.True(group.IsLit);
+        Assert.True(group.PlacedByEstimate);
+        Assert.Equal(expected, group.Center);
+        Assert.Equal(PeerGroup.PumbilityProjectionGate, group.PoolSize);
+        Assert.Equal(25, group.PoolCount);
+        Assert.Contains(chart.Id, result.ExpectedScores.Keys);
+    }
+
+    [Fact]
+    public async Task AFullMergedPoolIsASettledNumberEvenWhereOneTypeIsShort()
+    {
+        // The shape the note used to lie about: fifty singles and twenty-nine doubles. The doubles
+        // band lights up on the shorter gate, but the rung it is drawn around came off a real,
+        // finished total — so nothing here was projected and the page must not say it was.
+        // The singles pool sits at level 15 so the merged bar is comfortably below what a level-20
+        // doubles chart is worth — the doubles row has to clear it to reach ExpectedScores at all.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_609.59)
+            .WithFullPoolAt(900_000, ChartType.Single, 15)
+            .WithChart(out var dbl, ChartType.Double, 20);
+        ctx.WithPhoenix2DoublesPool(29);
+        for (var i = 0; i < 6; i++) ctx.WithPumbilityPeer(dbl, phoenix2Score: 985_000);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var doubles = result.Peers![ChartType.Double];
+        Assert.True(doubles.IsLit);
+        Assert.False(doubles.PlacedByEstimate);
+        Assert.Equal(29, doubles.PoolCount);
+        Assert.Contains(dbl.Id, result.ExpectedScores.Keys);
+    }
+
+    [Fact]
+    public async Task UnderTheGateTheChipCountsTowardTwentyRatherThanFifty()
+    {
+        // Nineteen charts and dark. The threshold quoted has to be the one that will actually
+        // light this player up, not a fifty they never have to reach.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(19, 0)
+            .WithPoolOf(19, 970_000, ChartType.Single, 20)
+            .WithChart(out var chart, ChartType.Single, 20);
+        for (var i = 0; i < 6; i++) ctx.WithPumbilityPeer(chart, phoenix2Score: 985_000);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var group = result.Peers![ChartType.Single];
+        Assert.False(group.IsLit);
+        Assert.Equal(19, group.PoolCount);
+        Assert.Equal(PeerGroup.PumbilityProjectionGate, group.PoolSize);
+        Assert.Empty(result.ExpectedScores);
+    }
+
+    [Fact]
     public async Task AnAccountWithoutAFullPhoenix2PoolOfTheTypeGetsNothingForThatType()
     {
         // D28: the peers exist, the viewer is not yet in a position to have any. Twenty-nine
@@ -801,7 +871,17 @@ public sealed partial class PumbilityProjectionSagaTests
         /// <summary>Fills the top-50 pool so gains price against a real bar rather than zero.</summary>
         public ProjectionContext WithFullPoolAt(int score, ChartType type, int level)
         {
-            for (var i = 0; i < 50; i++)
+            return WithPoolOf(50, score, type, level);
+        }
+
+        /// <summary>
+        ///     A pool of exactly <paramref name="count" /> charts, all priced the same. What
+        ///     GetTop50ForPlayerQuery returns, which is what the projected finish is read from —
+        ///     so a test can put the merged pool either side of fifty and of the projection gate.
+        /// </summary>
+        public ProjectionContext WithPoolOf(int count, int score, ChartType type, int level)
+        {
+            for (var i = 0; i < count; i++)
             {
                 WithChart(out var filler, type, level);
                 _topScores.Add(new RecordedPhoenixScore(filler.Id, score, PhoenixPlate.MarvelousGame, false,
@@ -809,6 +889,16 @@ public sealed partial class PumbilityProjectionSagaTests
             }
 
             return this;
+        }
+
+        /// <summary>The charts this fixture has made, so a test can price one the way the pool was.</summary>
+        public IReadOnlyList<Chart> ChartsInPool => _charts;
+
+        /// <summary>What one chart of the pool above is worth, for a test that predicts the finish.</summary>
+        public static double PricedAt(Chart chart, int score)
+        {
+            return ScoringConfiguration.PumbilityScoring(MixEnum.Phoenix2, false)
+                .GetScore(chart, score, PhoenixPlate.MarvelousGame, false);
         }
 
         public double PoolBaseline(ScoringConfiguration scoring)

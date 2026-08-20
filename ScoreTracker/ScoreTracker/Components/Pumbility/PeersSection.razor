@@ -1,4 +1,4 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.PlayerProgress.Contracts
 @using ScoreTracker.PlayerProgress.Contracts.Queries
@@ -61,7 +61,7 @@
     @if (ThinBand is { } thin)
     {
         <p class="pmb-block-note" data-testid="peers-thin-note">
-            @L["Only {0} players share your band right now, so most of these are read off one or two scores rather than five. Expect them to move as more players reach your level.", thin.Size]
+            @L["Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs.", thin.Size]
         </p>
     }
     @if (Page.Peers is { } peers)
@@ -238,22 +238,23 @@
         : null;
 
     /// <summary>
-    ///     A lit band whose pool is still short of fifty is one the projection placed by where the
-    ///     player would finish rather than by what they hold (D48), so the note names the estimate
-    ///     it leaned on. Same All rule as the thin-band note: every lit type has to be short, and
-    ///     the largest count is the one printed. The rung is shared across types, so the gem is
-    ///     whichever group answers.
+    ///     A band the projection placed by an extrapolated finish rather than by the player's
+    ///     settled number (D48), so the note names the estimate it leaned on. The flag decides it,
+    ///     never the pool count: the rung is read off the MERGED pool, so a player with a full
+    ///     merged fifty and twenty-odd of the type being viewed was placed by a real total and must
+    ///     not be told otherwise. Same All rule as the thin-band note — every lit type has to
+    ///     qualify — and the largest count is the one printed.
     /// </summary>
-    private PeerGroup? ShortPool => Lit.Length > 0 && Lit.All(g => g.PoolCount < PeerGroup.PumbilityPoolSize)
+    private PeerGroup? ShortPool => Lit.Length > 0 && Lit.All(g => g.PlacedByEstimate)
         ? Lit.MaxBy(g => g.PoolCount)
         : null;
 
     /// <summary>The PUMBILITY bands actually serving this view — one per lit type in the pool's scope.</summary>
-    private PeerGroup[] Lit => !IsPumbilityBand
+    private PeerGroup[] Lit => !IsPumbilityBand || Page.Peers is not { } groups
         ? Array.Empty<PeerGroup>()
         : (Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
-        .Where(t => Page.Peers.TryGetValue(t, out var group) && group.IsLit && group.Size > 0)
-        .Select(t => Page.Peers[t])
+        .Where(t => groups.TryGetValue(t, out var group) && group.IsLit && group.Size > 0)
+        .Select(t => groups[t])
         .ToArray();
 
     private string Lede => _groupBy == PeerGrouping.YourTop50

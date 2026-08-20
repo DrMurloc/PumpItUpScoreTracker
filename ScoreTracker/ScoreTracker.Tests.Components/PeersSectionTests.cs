@@ -1,4 +1,4 @@
-using Bunit;
+﻿using Bunit;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -317,7 +317,7 @@ public sealed class PeersSectionTests : ComponentTestBase
         cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
 
         var note = cut.Find("[data-testid=peers-thin-note]");
-        Assert.Contains("Only 2 players share your band", note.TextContent);
+        Assert.Contains("Players at your level with a full pool: 2", note.TextContent);
         // It belongs to the lede's own slot, not the chips line.
         Assert.Empty(cut.FindAll(".pmb-peer-line [data-testid=peers-thin-note]"));
     }
@@ -357,7 +357,8 @@ public sealed class PeersSectionTests : ComponentTestBase
 
         var cut = RenderComponent<PeersSection>(p => p
             // Rung 13 is GOLD LV.3; the viewer holds 31 charts against a gate of 20.
-            .Add(x => x.Page, Page(carried: false, group: PeerGroup.Pumbility(13, 23, 31, 20)))
+            .Add(x => x.Page, Page(carried: false,
+                group: PeerGroup.Pumbility(13, 23, 31, 20, placedByEstimate: true)))
             .Add(x => x.Charts, _charts));
         cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
 
@@ -375,6 +376,24 @@ public sealed class PeersSectionTests : ComponentTestBase
 
         var cut = RenderComponent<PeersSection>(p => p
             .Add(x => x.Page, Page(carried: false)).Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        Assert.Empty(cut.FindAll("[data-testid=peers-short-pool-note]"));
+    }
+
+    [Fact]
+    public void AShortTypePoolOnASettledTotalIsNotAProjection()
+    {
+        // A full merged fifty and twenty-nine doubles: the band lights on the shorter gate, but
+        // the rung came off a real number. The pool count alone would read this as a projection
+        // and tell the player their peers came from an estimate that never happened.
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page(carried: false, group: PeerGroup.Pumbility(24, 23, 29, 20)))
+            .Add(x => x.Charts, _charts));
         cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
 
         Assert.Empty(cut.FindAll("[data-testid=peers-short-pool-note]"));

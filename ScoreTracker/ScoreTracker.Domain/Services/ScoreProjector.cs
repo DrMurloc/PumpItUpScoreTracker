@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Models.Titles.Phoenix2;
+﻿using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
@@ -71,7 +71,7 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromCompetitiveBand(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, window, catalog, _, _) = request;
+        var (mix, chartType, userId, targets, window, catalog, _, _, _) = request;
 
         var myLevel = await CompetitiveLevel(mix, chartType, userId, cancellationToken);
         // Competitive level 1 is the no-data floor: there is no band to draw peers from.
@@ -184,7 +184,7 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromPumbilityPeers(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, _, catalog, _, projectedTotal) = request;
+        var (mix, chartType, userId, targets, _, catalog, _, projectedTotal, totalIsEstimate) = request;
 
         var mine = await _stats.GetStats(mix, userId, cancellationToken);
         var myLevel = CompetitiveLevelFor(mine, chartType);
@@ -206,7 +206,8 @@ public sealed class ScoreProjector : IScoreProjector
         var gate = projectedTotal is null ? PeerGroup.PumbilityPoolSize : PeerGroup.PumbilityProjectionGate;
         var rung = Phoenix2PumbilityLevel.From(projectedTotal ?? mine.SkillRating);
         if (ownPool < gate)
-            return ScoreProjection.None(myLevel, PeerGroup.Pumbility(rung.Index, 0, ownPool, gate));
+            return ScoreProjection.None(myLevel,
+                PeerGroup.Pumbility(rung.Index, 0, ownPool, gate, totalIsEstimate));
 
         var (lowestIndex, highestIndex) = PeerGroup.PumbilityBand(rung.Index);
         var lowest = Phoenix2PumbilityLevel.FromIndex(lowestIndex)!.Value;
@@ -231,7 +232,7 @@ public sealed class ScoreProjector : IScoreProjector
             .Where(g => PoolCount(g) >= PeerGroup.PumbilityPoolSize)
             .Select(g => g.Key)
             .ToHashSet();
-        var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool, gate);
+        var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool, gate, totalIsEstimate);
         if (peers.Count == 0) return ScoreProjection.None(myLevel, group);
 
         // The peers' pools ride the same read when the caller brought the catalog to price it with

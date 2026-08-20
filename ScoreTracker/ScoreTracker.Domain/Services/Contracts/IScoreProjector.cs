@@ -40,13 +40,20 @@ public readonly record struct ProjectionTarget(Guid ChartId, int Level);
 /// </param>
 /// <param name="ProjectedTotal">
 ///     Phoenix 2 only: the PUMBILITY total to place the viewer on the rung ladder by — their real
-///     one where their pool is full, and where they would finish at their current average where it
-///     is not (D48). Supplying it is also what lowers the pool gate from
+///     one where their merged pool is full, and where they would finish at their current average
+///     where it is not (D48). Supplying it is also what lowers the pool gate from
 ///     <see cref="PeerGroup.PumbilityPoolSize" /> to <see cref="PeerGroup.PumbilityProjectionGate" />,
 ///     because the two go together: a short pool's own total is the sum of the charts it happens to
 ///     hold, which would seat a strong player at the bottom of the ladder among peers who tell them
 ///     nothing. A caller with no answer to "where will they finish" leaves this null and keeps the
 ///     full-pool gate. Ignored on Phoenix 1, which seats nobody on a ladder.
+/// </param>
+/// <param name="ProjectedTotalIsEstimate">
+///     Whether <paramref name="ProjectedTotal" /> was extrapolated or is the player's settled
+///     number. Only the caller knows: a full MERGED pool yields a real total even while the type
+///     being viewed holds twenty-odd charts, and a surface that told that player their peers came
+///     from an estimate would be describing something that did not happen. Rides out on
+///     <see cref="PeerGroup.PlacedByEstimate" />.
 /// </param>
 public sealed record ScoreProjectionRequest(
     MixEnum Mix,
@@ -56,7 +63,8 @@ public sealed record ScoreProjectionRequest(
     double CompetitiveWindow,
     IReadOnlyDictionary<Guid, Chart>? Charts = null,
     bool RelaxFloorWhenEmpty = false,
-    double? ProjectedTotal = null);
+    double? ProjectedTotal = null,
+    bool ProjectedTotalIsEstimate = false);
 
 /// <summary>How a peer group was drawn — the two definitions the site has.</summary>
 public enum PeerGroupKind
@@ -100,8 +108,14 @@ public enum PeerGroupKind
 ///     competitive band, which has no such gate.
 /// </param>
 /// <param name="PoolSize">Fifty on a PUMBILITY band (D28); zero on a competitive band.</param>
+/// <param name="PlacedByEstimate">
+///     Whether <paramref name="Center" /> came from an extrapolated finish rather than the viewer's
+///     settled total (D48). A short pool of ONE TYPE does not imply it: a player with a full merged
+///     pool and twenty-odd doubles is placed by a real number, and a surface must not tell them
+///     otherwise. False on a competitive band, which places nobody on a ladder.
+/// </param>
 public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWidth, int Size, int PoolCount,
-    int PoolSize)
+    int PoolSize, bool PlacedByEstimate = false)
 {
     /// <summary>The rung half-width of a Phoenix 2 peer group: DIAMOND LV.4 reaches DIAMOND LV.1 and RED BERYL LV.2.</summary>
     public const int PumbilityRungWindow = 3;
@@ -159,14 +173,14 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
     ///     up — twenty where the caller supplied a projected finish, fifty otherwise (D48).
     /// </summary>
     public static PeerGroup Pumbility(int rungIndex, int size, int poolCount,
-        int poolSize = PumbilityPoolSize)
+        int poolSize = PumbilityPoolSize, bool placedByEstimate = false)
     {
         // Counted against the FULL pool rather than the gate, so a lit-but-short viewer still
         // knows how many of the fifty they hold — which is what the note that explains their
         // projection has to say (D48). The cap only ever bites above fifty, where the viewer is
         // lit under either gate and no surface prints the count anyway.
         return new PeerGroup(PeerGroupKind.PumbilityBand, rungIndex, PumbilityRungWindow, size,
-            Math.Min(poolCount, PumbilityPoolSize), poolSize);
+            Math.Min(poolCount, PumbilityPoolSize), poolSize, placedByEstimate);
     }
 }
 

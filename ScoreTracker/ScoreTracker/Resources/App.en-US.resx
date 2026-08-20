@@ -4747,9 +4747,6 @@
   </data>  <data name="only {0} pass it" xml:space="preserve">
     <value>only {0} pass it</value>
   </data>
-  <data name="Only {0} players share your band right now, so most of these are read off one or two scores rather than five. Expect them to move as more players reach your level." xml:space="preserve">
-    <value>Only {0} players share your band right now, so most of these are read off one or two scores rather than five. Expect them to move as more players reach your level.</value>
-  </data>
   <data name="Open" xml:space="preserve">
 	  <value>Open</value>
 	  <comment>Open</comment>
@@ -5297,6 +5294,9 @@
   </data>
   <data name="Players at your level" xml:space="preserve">
     <value>Players at your level</value>
+  </data>
+  <data name="Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs." xml:space="preserve">
+    <value>Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs.</value>
   </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access.</value>
@@ -8519,8 +8519,8 @@
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
 	  <value>You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again.</value>
   </data>
-  <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
-    <value>You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up.</value>
+  <data name="You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up." xml:space="preserve">
+    <value>You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up.</value>
   </data>
   <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
     <value>You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills.</value>

@@ -4747,9 +4747,6 @@
   </data>  <data name="only {0} pass it" xml:space="preserve">
     <value>mrpmurg {0} maglplgl gl</value>
   </data>
-  <data name="Only {0} players share your band right now, so most of these are read off one or two scores rather than five. Expect them to move as more players reach your level." xml:space="preserve">
-    <value>Ub {0} morp grogblub gromurp grolgub ap, op mrrgl mrgl blarg mo romurg argl ol blurg mgrlgmrg grogrgl blugro. Blarggro grglblarg ro mrogl ap mrrgl morp murgro gromurp grorpmurm.</value>
-  </data>
   <data name="Open" xml:space="preserve">
 	  <value>Mrprgl</value>
 	  <comment>Open</comment>
@@ -5297,6 +5294,9 @@
   </data>
   <data name="Players at your level" xml:space="preserve">
     <value>Morp ogl gromurp grorpmurm</value>
+  </data>
+  <data name="Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs." xml:space="preserve">
+    <value>Morp op gromurp grorpmurm murm mrglmr blubgro: {0}. Mrrgl mrgl blarg mo romurg argl ol blurg mgrlgmrg grogrgl blugro, ap murgro mrrgl mrgl grglblarg murpblub grglblarg.</value>
   </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>Morp blu PIU Plglmurgblub murpmurp murgm blu gromurp Mgrlgmrg — PUMBILITY murgargl, murgl blgrlgromrrgl, Discord murgblarg. Blorm murgm blaromurp gromurp murp murgl murm murgargl bo argla.</value>
@@ -8519,8 +8519,8 @@
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
 	  <value>Blub urg gro rgl murgl blubgrrgl glmagl murm grorpmrgl grgl glorg murpmurgmurp. Blub grorp murlg gro CSV mrgl mrp rglgrglmr grgl glorggrorp blubglorgmaglurg ro lurg morgro.</value>
   </data>
-  <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
-    <value>Blub mo PUMBILITY maglmurp ro morg blub — mrglmr blubgro 50 grrgl.</value>
+  <data name="You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up." xml:space="preserve">
+    <value>Blub mo PUMBILITY maglmurp ro morg blub — blubgro mrgl {0} murgl grrgl.</value>
   </data>
   <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
     <value>Blub grubmarg {0} mrgl {1} murgl, op gromurp maglmurp mo blgrlargl romurg gromurp mrglmrgro — {2} — om blub grubmarg gromurp rorg. Blarg murgroblub op gromurp blubgro mrglmr.</value>
