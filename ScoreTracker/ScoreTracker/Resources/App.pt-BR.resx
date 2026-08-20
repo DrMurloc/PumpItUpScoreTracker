@@ -4716,6 +4716,9 @@
   </data>  <data name="only {0} pass it" xml:space="preserve">
     <value>só {0} passam</value>
   </data>
+  <data name="Only {0} players share your band right now, so most of these are read off one or two scores rather than five. Expect them to move as more players reach your level." xml:space="preserve">
+    <value>No momento apenas {0} jogadores estão na sua faixa, então a maioria destes é calculada com um ou dois placares em vez de cinco. Espere que mudem conforme mais jogadores alcançarem seu nível.</value>
+  </data>
   <data name="Open" xml:space="preserve">
     <value>Abrir</value>
   </data>

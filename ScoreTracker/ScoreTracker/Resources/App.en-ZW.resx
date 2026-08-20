@@ -4747,6 +4747,9 @@
   </data>  <data name="only {0} pass it" xml:space="preserve">
     <value>mrpmurg {0} maglplgl gl</value>
   </data>
+  <data name="Only {0} players share your band right now, so most of these are read off one or two scores rather than five. Expect them to move as more players reach your level." xml:space="preserve">
+    <value>Ub {0} morp grogblub gromurp grolgub ap, op mrrgl mrgl blarg mo romurg argl ol blurg mgrlgmrg grogrgl blugro. Blarggro grglblarg ro mrogl ap mrrgl morp murgro gromurp grorpmurm.</value>
+  </data>
   <data name="Open" xml:space="preserve">
 	  <value>Mrprgl</value>
 	  <comment>Open</comment>

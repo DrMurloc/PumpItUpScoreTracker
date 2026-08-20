@@ -7,6 +7,8 @@
 @using Microsoft.JSInterop
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Records
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.Domain.Services.Contracts
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Enums
 @using ScoreTracker.Web.Services
@@ -48,6 +50,12 @@
             <PeerCompareStrip Page="_peers" Charts="Charts"></PeerCompareStrip>
         }
     </div>
+    @if (ThinBand is { } thin)
+    {
+        <p class="pmb-block-note" data-testid="peers-thin-note">
+            @L["Only {0} players share your band right now, so most of these are read off one or two scores rather than five. Expect them to move as more players reach your level.", thin.Size]
+        </p>
+    }
     @if (Page.Peers is { } peers)
     {
         <PumbilityPeerLine Peers="peers" Pool="Pool"></PumbilityPeerLine>
@@ -203,6 +211,34 @@
 
     /// <summary>Who a peer is: the PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
     private bool IsPumbilityBand => Page.Mix == MixEnum.Phoenix2;
+
+    /// <summary>
+    ///     A band with fewer players than the five-peer floor asks for can never meet it, so every
+    ///     row below is running on the D47 fallback — one or two scores rather than five. The note
+    ///     says so once, under the lede, rather than a chip: the per-row "Fewer than 5 peers scored
+    ///     it" already carries the detail, and what a player needs here is why the whole list reads
+    ///     thin. Phoenix 1 has no floor and never shows it.
+    ///     <para>
+    ///         Under All the list merges both types, so the note only stands when EVERY lit type is
+    ///         thin — otherwise half the rows have real evidence and a blanket sentence would be
+    ///         wrong about them. It then names the largest of those bands, which overstates none of
+    ///         them.
+    ///     </para>
+    /// </summary>
+    private PeerGroup? ThinBand
+    {
+        get
+        {
+            if (!IsPumbilityBand) return null;
+            var lit = (Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
+                .Where(t => Page.Peers.TryGetValue(t, out var group) && group.IsLit && group.Size > 0)
+                .Select(t => Page.Peers[t])
+                .ToArray();
+            return lit.Length > 0 && lit.All(g => g.Size < PeerEstimator.Phoenix2MinimumPeers)
+                ? lit.MaxBy(g => g.Size)
+                : null;
+        }
+    }
 
     private string Lede => _groupBy == PeerGrouping.YourTop50
         ? L["Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar."]

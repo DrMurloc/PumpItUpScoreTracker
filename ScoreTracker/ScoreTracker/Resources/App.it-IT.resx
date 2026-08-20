@@ -4747,6 +4747,9 @@
   </data>  <data name="only {0} pass it" xml:space="preserve">
     <value>solo il {0} la passa</value>
   </data>
+  <data name="Only {0} players share your band right now, so most of these are read off one or two scores rather than five. Expect them to move as more players reach your level." xml:space="preserve">
+    <value>Al momento solo {0} giocatori condividono la tua fascia, quindi la maggior parte di questi si basa su uno o due punteggi invece che cinque. È normale che cambino man mano che altri giocatori raggiungono il tuo livello.</value>
+  </data>
   <data name="Open" xml:space="preserve">
     <value>Apri</value>
     <comment>Open</comment>
