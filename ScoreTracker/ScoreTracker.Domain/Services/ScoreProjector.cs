@@ -71,7 +71,7 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromCompetitiveBand(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, window, catalog, _) = request;
+        var (mix, chartType, userId, targets, window, catalog, _, _) = request;
 
         var myLevel = await CompetitiveLevel(mix, chartType, userId, cancellationToken);
         // Competitive level 1 is the no-data floor: there is no band to draw peers from.
@@ -184,24 +184,29 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromPumbilityPeers(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, _, catalog, _) = request;
+        var (mix, chartType, userId, targets, _, catalog, _, projectedTotal) = request;
 
-        // The viewer's rung, from the total pool — the merged top fifty across both types, which
-        // is the number the game's own badge is drawn from. One rung serves both chart types.
         var mine = await _stats.GetStats(mix, userId, cancellationToken);
         var myLevel = CompetitiveLevelFor(mine, chartType);
-        var rung = Phoenix2PumbilityLevel.From(mine.SkillRating);
 
         // The viewer's own pool of the type first, and alone. On Phoenix 2 every non-broken pass
         // at the pool floor or above prices above zero, so a player's records of the type at
-        // those levels ARE their pool, and fifty of them is a full one. A short one is the common
-        // case at a mix launch and costs one player's records to find out; their group means
-        // nothing for them until the pool is real (D28), so the band is not swept for a viewer it
-        // cannot yet serve — the page says how far they are rather than estimating.
+        // those levels ARE their pool. A short one is the common case at a mix launch and costs
+        // one player's records to find out.
         var ownPool = PoolCount(await _scores.GetPlayerScoresInLevelRange(mix, new[] { userId }, chartType,
             PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken));
-        if (ownPool < PeerGroup.PumbilityPoolSize)
-            return ScoreProjection.None(myLevel, PeerGroup.Pumbility(rung.Index, 0, ownPool));
+
+        // The viewer's rung, from the total pool — the merged top fifty across both types, which
+        // is the number the game's own badge is drawn from. One rung serves both chart types. A
+        // caller that can say where this player will finish supplies it, and the run is placed and
+        // gated by that instead (D48): a twenty-chart pool's own total seats a strong player at the
+        // bottom of the ladder, among peers who would tell them nothing. Without one the band is
+        // not swept for a viewer it cannot yet serve (D28) — the page says how far they are rather
+        // than estimating.
+        var gate = projectedTotal is null ? PeerGroup.PumbilityPoolSize : PeerGroup.PumbilityProjectionGate;
+        var rung = Phoenix2PumbilityLevel.From(projectedTotal ?? mine.SkillRating);
+        if (ownPool < gate)
+            return ScoreProjection.None(myLevel, PeerGroup.Pumbility(rung.Index, 0, ownPool, gate));
 
         var (lowestIndex, highestIndex) = PeerGroup.PumbilityBand(rung.Index);
         var lowest = Phoenix2PumbilityLevel.FromIndex(lowestIndex)!.Value;
@@ -216,7 +221,8 @@ public sealed class ScoreProjector : IScoreProjector
         candidates.Remove(userId);
 
         // One read answers two questions: what everyone in the band scored on the charts asked
-        // about, and which of them hold a full pool of the type.
+        // about, and which of them hold a full pool of the type. A PEER's gate stays fifty
+        // whatever the viewer's was: their pool is the evidence, and half a pool is half a vote.
         var records = (await _scores.GetPlayerScoresInLevelRange(mix, candidates, chartType,
                 PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken))
             .ToArray();
@@ -225,7 +231,7 @@ public sealed class ScoreProjector : IScoreProjector
             .Where(g => PoolCount(g) >= PeerGroup.PumbilityPoolSize)
             .Select(g => g.Key)
             .ToHashSet();
-        var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool);
+        var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool, gate);
         if (peers.Count == 0) return ScoreProjection.None(myLevel, group);
 
         // The peers' pools ride the same read when the caller brought the catalog to price it with

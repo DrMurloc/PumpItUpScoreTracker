@@ -189,6 +189,56 @@ public sealed class ScoreProjectorTests
     }
 
     [Fact]
+    public async Task ATwentyChartPoolProjectsWhenTheCallerSaysWhereItFinishes()
+    {
+        // The viewer's own gate drops to twenty; a PEER's stays at fifty, because their pool is
+        // the evidence. Both peers here hold a full one, so the band is real.
+        var ctx = new Context(viewerTotal: 4_000, viewerPoolSize: 20);
+        for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 975_000);
+
+        var result = await ctx.ProjectFromFinish(ChartType.Single, 17_500, ChartA);
+
+        Assert.Equal(975_000, (int)result.Scores[ChartA]);
+        // Placed by the finish, not by the twenty charts they happen to hold: 17,500 is DIAMOND
+        // LV.3, whose band reaches down to PLATINUM LV.5 (16,800) and up through RED BERYL LV.1,
+        // ending where LV.2 starts (18,200). Their own standing total of 4,000 is rung 0.
+        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, 16_800, 18_200,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WithoutAFinishTheGateIsStillTheFullFiftyAndTheGroupSaysSo()
+    {
+        // The tier list's own call supplies no finish, so a short pool stays dark rather than
+        // being seated by the sum of the charts it happens to hold.
+        var ctx = new Context(viewerTotal: 4_000, viewerPoolSize: 20);
+        for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 975_000);
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        Assert.Empty(result.Scores);
+        Assert.False(result.Group!.IsLit);
+        // The chip counts toward the gate the run was actually made under.
+        Assert.Equal(50, result.Group.PoolSize);
+        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(),
+            It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UnderTwentyChartsAFinishChangesNothingAndTheChipCountsToTwenty()
+    {
+        var ctx = new Context(viewerTotal: 2_000, viewerPoolSize: 12);
+        for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 975_000);
+
+        var result = await ctx.ProjectFromFinish(ChartType.Single, 17_500, ChartA);
+
+        Assert.Empty(result.Scores);
+        Assert.False(result.Group!.IsLit);
+        Assert.Equal(12, result.Group.PoolCount);
+        Assert.Equal(20, result.Group.PoolSize);
+    }
+
+    [Fact]
     public async Task TheFallbackRunsOnlyFromZeroAndNeverPerChart()
     {
         // The rescue is all-or-nothing for the run. One chart clearing the floor means the band
@@ -526,6 +576,15 @@ public sealed class ScoreProjectorTests
         {
             return Projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, Viewer,
                     charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), 1.0, null, RelaxFloorWhenEmpty: true),
+                CancellationToken.None);
+        }
+
+        /// <summary>The PUMBILITY caller's run for a short pool: placed and gated by a finish (D48).</summary>
+        public Task<ScoreProjection> ProjectFromFinish(ChartType type, double finishedTotal, params Guid[] charts)
+        {
+            return Projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, Viewer,
+                    charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), 1.0, null,
+                    ProjectedTotal: finishedTotal),
                 CancellationToken.None);
         }
 

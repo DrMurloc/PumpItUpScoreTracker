@@ -38,6 +38,16 @@ public readonly record struct ProjectionTarget(Guid ChartId, int Level);
 ///     list, which is a better answer than a folder ranked on single scores. Nothing here changes
 ///     what a full band produces — the second pass runs only from zero.
 /// </param>
+/// <param name="ProjectedTotal">
+///     Phoenix 2 only: the PUMBILITY total to place the viewer on the rung ladder by — their real
+///     one where their pool is full, and where they would finish at their current average where it
+///     is not (D48). Supplying it is also what lowers the pool gate from
+///     <see cref="PeerGroup.PumbilityPoolSize" /> to <see cref="PeerGroup.PumbilityProjectionGate" />,
+///     because the two go together: a short pool's own total is the sum of the charts it happens to
+///     hold, which would seat a strong player at the bottom of the ladder among peers who tell them
+///     nothing. A caller with no answer to "where will they finish" leaves this null and keeps the
+///     full-pool gate. Ignored on Phoenix 1, which seats nobody on a ladder.
+/// </param>
 public sealed record ScoreProjectionRequest(
     MixEnum Mix,
     ChartType ChartType,
@@ -45,7 +55,8 @@ public sealed record ScoreProjectionRequest(
     IReadOnlyCollection<ProjectionTarget> Targets,
     double CompetitiveWindow,
     IReadOnlyDictionary<Guid, Chart>? Charts = null,
-    bool RelaxFloorWhenEmpty = false);
+    bool RelaxFloorWhenEmpty = false,
+    double? ProjectedTotal = null);
 
 /// <summary>How a peer group was drawn — the two definitions the site has.</summary>
 public enum PeerGroupKind
@@ -99,6 +110,16 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
     public const int PumbilityPoolSize = 50;
 
     /// <summary>
+    ///     The shorter pool a viewer may be projected from when the caller can say where they will
+    ///     finish (D48). A peer still needs a full <see cref="PumbilityPoolSize" /> — their pool is
+    ///     the evidence, and half a pool is half a vote — but the viewer only has to be placeable,
+    ///     and twenty charts places them: backtested across 111 full-pool accounts, their top
+    ///     twenty averaged out to fifty lands within two rungs of their real total 97% of the time,
+    ///     which the ±3 band absorbs.
+    /// </summary>
+    public const int PumbilityProjectionGate = 20;
+
+    /// <summary>
     ///     The lowest level a Phoenix 2 chart prices above zero at — the pool's floor, so a
     ///     player's non-broken records of the type from here up ARE their pool, and
     ///     <see cref="PumbilityPoolSize" /> of them is a full one. One constant, because the
@@ -121,9 +142,9 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
     }
 
     /// <summary>
-    ///     False only for a Phoenix 2 viewer whose pool of the type is short of fifty: the group
-    ///     is defined but the viewer is not yet in a position to have one, and the surface says
-    ///     so instead of estimating.
+    ///     False only for a Phoenix 2 viewer whose pool of the type is short of the gate its run
+    ///     was made under: the group is defined but the viewer is not yet in a position to have
+    ///     one, and the surface says so instead of estimating.
     /// </summary>
     public bool IsLit => PoolSize == 0 || PoolCount >= PoolSize;
 
@@ -132,10 +153,16 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
         return new PeerGroup(PeerGroupKind.CompetitiveBand, level, window, size, 0, 0);
     }
 
-    public static PeerGroup Pumbility(int rungIndex, int size, int poolCount)
+    /// <summary>
+    ///     A PUMBILITY band. <paramref name="poolSize" /> is the gate the run was made under, so a
+    ///     surface printing "N of M charts" names the number that would actually light this viewer
+    ///     up — twenty where the caller supplied a projected finish, fifty otherwise (D48).
+    /// </summary>
+    public static PeerGroup Pumbility(int rungIndex, int size, int poolCount,
+        int poolSize = PumbilityPoolSize)
     {
         return new PeerGroup(PeerGroupKind.PumbilityBand, rungIndex, PumbilityRungWindow, size,
-            Math.Min(poolCount, PumbilityPoolSize), PumbilityPoolSize);
+            Math.Min(poolCount, poolSize), poolSize);
     }
 }
 

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Models;
@@ -261,6 +261,8 @@ namespace ScoreTracker.PlayerProgress.Application
                 (await BuildPool(ChartType.Single, userId, mix, charts, scoring, CancellationToken.None)).Baseline,
                 (await BuildPool(ChartType.Double, userId, mix, charts, scoring, CancellationToken.None)).Baseline);
 
+            var merged = await BuildPool(null, userId, mix, charts, scoring, CancellationToken.None);
+
             // Phoenix 1 scopes its window on scoring levels; Phoenix 2 has no window and does
             // not read them.
             var scoringLevels = mix == MixEnum.Phoenix2
@@ -271,7 +273,8 @@ namespace ScoreTracker.PlayerProgress.Application
             var spreads = new Dictionary<Guid, PeerSpread>();
             var peers = new Dictionary<ChartType, PeerGroup>();
             var pools = new Dictionary<ChartType, PeerPoolSummary>();
-            var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor);
+            var scope = new ProjectionScope(mix, charts, scoringLevels, scoring, floor,
+                FinishedTotal(merged));
 
             foreach (var chartType in new[] { ChartType.Single, ChartType.Double })
                 await ProjectType(chartType, userId, scope, expectedScore, spreads, peers, pools, CancellationToken.None);
@@ -347,16 +350,36 @@ namespace ScoreTracker.PlayerProgress.Application
                 sweep.Spreads.Where(kv => ranked.ContainsKey(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
         }
 
+        /// <summary>
+        ///     Where this player's PUMBILITY ends up if they keep the average they are holding
+        ///     now: their real total once the pool is full, and the pool's average out to fifty
+        ///     slots while it is not (D48). Null below the projection gate, where there is not
+        ///     enough of an average to extrapolate and the projector would refuse anyway.
+        ///     <para>
+        ///         The merged pool, not a per-type one, because the rung ladder is read off the
+        ///         merged top fifty — the number the game's own badge is drawn from.
+        ///     </para>
+        /// </summary>
+        private static double? FinishedTotal(PoolState merged)
+        {
+            var ranked = merged.Ratings.Values.OrderByDescending(v => v).ToArray();
+            if (ranked.Length < PeerGroup.PumbilityProjectionGate) return null;
+            if (ranked.Length >= PumbilityPeerPools.PoolSize)
+                return ranked.Take(PumbilityPeerPools.PoolSize).Sum();
+            return ranked.Take(PeerGroup.PumbilityProjectionGate).Average() * PumbilityPeerPools.PoolSize;
+        }
+
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
         private sealed record ProjectionScope(MixEnum Mix, IReadOnlyDictionary<Guid, Chart> Charts,
-            IDictionary<Guid, double> ScoringLevels, ScoringConfiguration Scoring, double Baseline);
+            IDictionary<Guid, double> ScoringLevels, ScoringConfiguration Scoring, double Baseline,
+            double? FinishedTotal);
 
         private async Task ProjectType(ChartType chartType, Guid userId, ProjectionScope scope,
             IDictionary<Guid, PhoenixScore> into, IDictionary<Guid, PeerSpread> spreads,
             IDictionary<ChartType, PeerGroup> peers, IDictionary<ChartType, PeerPoolSummary> pools,
             CancellationToken cancellationToken)
         {
-            var (mix, charts, scoringLevels, scoring, baseline) = scope;
+            var (mix, charts, scoringLevels, scoring, baseline, finishedTotal) = scope;
 
             var candidates = charts.Values.Where(c => c.Type == chartType);
             if (mix != MixEnum.Phoenix2)
@@ -394,7 +417,7 @@ namespace ScoreTracker.PlayerProgress.Application
             // own call deliberately does not ask.
             var projected = await _projector.Project(
                 new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow, charts,
-                    RelaxFloorWhenEmpty: true),
+                    RelaxFloorWhenEmpty: true, ProjectedTotal: finishedTotal),
                 cancellationToken);
 
             foreach (var (chartId, score) in projected.Scores) into[chartId] = score;
