@@ -13920,9 +13920,21 @@ span.ct-console-pick { cursor: default; }
 .pmb-peers-controls {
     display: flex;
     align-items: flex-end;
+    justify-content: space-between;
     gap: 6px 14px;
     flex-wrap: wrap;
     margin: 6px 0 4px;
+}
+
+/* The left half: the select and whichever switch that grouping owns, side by side. Their
+   position is structural — space-between over two groups — rather than the result of an auto
+   margin, because two auto margins in one row split the slack and put the switch in the middle. */
+.pmb-peers-controls-start {
+    display: inline-flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    min-width: 0;
 }
 
 /* The select sizes to its longest option and no further: at desktop width a flex item with
@@ -13933,11 +13945,8 @@ span.ct-console-pick { cursor: default; }
     flex: 0 1 230px;
 }
 
-/* The switches sit immediately right of the select. They must NOT claim the slack themselves:
-   the trio at the end already takes it with margin-left:auto, and two auto margins in one flex
-   row SPLIT the free space between them — which parked the switch in the middle of the row
-   rather than beside the select (owner, field test rounds three and four). MudBlazor's own left
-   offset on a switch is taken out so the group starts where the select's text does. */
+/* The switch group, immediately right of the select inside the left half. MudBlazor's own left
+   offset on a switch is taken out so it starts where the select's text does when the row wraps. */
 .pmb-peers-controls-switches {
     display: inline-flex;
     align-items: center;
@@ -13950,7 +13959,6 @@ span.ct-console-pick { cursor: default; }
 }
 
 .pmb-peers-controls-end {
-    margin-left: auto;
     display: inline-flex;
     align-items: center;
 }

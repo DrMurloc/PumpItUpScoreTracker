@@ -71,7 +71,12 @@ public sealed class PeersSectionTests : ComponentTestBase
         Assert.Empty(cut.FindAll(".pmb-block-head .mud-button-group-root"));
         var controls = cut.Find("[data-testid=peers-controls]");
         Assert.NotNull(controls.QuerySelector(".pmb-peers-controls-end .mud-button-group-root"));
-        Assert.NotNull(controls.QuerySelector("[data-testid=peers-gains-switch]"));
+        // The switch is in the left group with the select, not adrift between it and the trio
+        // (owner, field test rounds three–five): structure, not margins, decides where it sits.
+        var start = controls.QuerySelector(".pmb-peers-controls-start")!;
+        Assert.NotNull(start.QuerySelector("[data-testid=peers-groupby]"));
+        Assert.NotNull(start.QuerySelector("[data-testid=peers-gains-switch]"));
+        Assert.Null(start.QuerySelector(".mud-button-group-root"));
         Assert.Null(controls.QuerySelector("[data-testid=peers-p1-switch]"));
         // Prevalence + the gains cut: only the paying chart shows, in its tier.
         Assert.Contains("Staple", cut.Markup);

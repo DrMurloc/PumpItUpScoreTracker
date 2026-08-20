@@ -60,6 +60,10 @@
     else
     {
         <div class="pmb-peers-controls" data-testid="peers-controls">
+            @* Two groups, not four items with margins between them: the select and its switch are
+               one element of the row and the actions are the other, so nothing can drift into the
+               middle however the free space is distributed (owner, field test rounds three–five). *@
+            <span class="pmb-peers-controls-start">
             <MudSelect T="PeerGrouping" Class="pmb-peers-controls-select" Label="@L["Grouped by"]" Dense="true"
                        Value="_groupBy" ValueChanged="SetGrouping" data-testid="peers-groupby">
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.Prevalence">@L["Prevalence"]</MudSelectItem>
@@ -77,6 +81,7 @@
                     <MudSwitch T="bool" Value="_gainsOnly" ValueChanged="SetGainsOnly" Color="Color.Primary"
                                Label="@L["Only projected PUMBILITY gains"]" data-testid="peers-gains-switch"></MudSwitch>
                 }
+            </span>
             </span>
             <span class="pmb-peers-controls-end">
                 @* The tier list's Download, on the tier list's own share card: this page is the
