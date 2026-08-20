@@ -387,8 +387,14 @@ namespace ScoreTracker.PlayerProgress.Application
             // quotes the number, so its accuracy is what matters rather than the ranking.
             // Phoenix 2 ignores the window; its peers are the PUMBILITY band. Both are handed the
             // catalog, so the same read also yields what the peers' pools are made of (D43).
+            //
+            // This is the caller that asks for the thin-band fallback (D47): what the page and
+            // the home widget do with this is suggest charts to play, and one peer's score is a
+            // worse suggestion than five but a better one than an empty board. The tier list's
+            // own call deliberately does not ask.
             var projected = await _projector.Project(
-                new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow, charts),
+                new ScoreProjectionRequest(mix, chartType, userId, scoped, PeerEstimator.CompetitiveWindow, charts,
+                    RelaxFloorWhenEmpty: true),
                 cancellationToken);
 
             foreach (var (chartId, score) in projected.Scores) into[chartId] = score;

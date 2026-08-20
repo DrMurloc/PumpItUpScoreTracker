@@ -160,6 +160,52 @@ public sealed class ScoreProjectorTests
     }
 
     [Fact]
+    public async Task ABandTooThinForTheFloorAnswersOnWhatItHasWhenAskedTo()
+    {
+        // Two peers can never put five voices on a chart, so the floor takes the whole run to
+        // nothing rather than filtering it (D47). The spread still counts the real voices, so a
+        // page can say how thin the evidence is.
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 2).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
+        ctx.WithScore(peers[0], ChartA, 960_000);
+        ctx.WithScore(peers[1], ChartA, 980_000);
+
+        var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA);
+
+        Assert.Equal(970_000, (int)relaxed.Scores[ChartA]);
+        Assert.Equal(2, relaxed.Spreads![ChartA].PeerCount);
+    }
+
+    [Fact]
+    public async Task TheFloorStandsForACallerThatDidNotAskToRelaxIt()
+    {
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 2).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
+        foreach (var peer in peers) ctx.WithScore(peer, ChartA, 970_000);
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        Assert.Empty(result.Scores);
+    }
+
+    [Fact]
+    public async Task TheFallbackRunsOnlyFromZeroAndNeverPerChart()
+    {
+        // The rescue is all-or-nothing for the run. One chart clearing the floor means the band
+        // could answer, so the four-peer chart beside it stays "no opinion" exactly as it would
+        // for anyone else — relaxing per chart would quietly lower the bar for a healthy band.
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
+        foreach (var peer in peers) ctx.WithScore(peer, ChartB, 975_000);
+        foreach (var peer in peers.Take(4)) ctx.WithScore(peer, ChartA, 985_000);
+
+        var result = await ctx.ProjectRelaxed(ChartType.Single, ChartA, ChartB);
+
+        Assert.Equal(975_000, (int)result.Scores[ChartB]);
+        Assert.DoesNotContain(ChartA, result.Scores.Keys);
+    }
+
+    [Fact]
     public async Task Phoenix2ReadsNothingFromPhoenix1AndWeighsNoGrowth()
     {
         var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
@@ -473,6 +519,14 @@ public sealed class ScoreProjectorTests
         {
             return Projector.Project(new ScoreProjectionRequest(mix, type, Viewer,
                 charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), window, catalog), CancellationToken.None);
+        }
+
+        /// <summary>The PUMBILITY caller's run: the same request asking for the thin-band fallback (D47).</summary>
+        public Task<ScoreProjection> ProjectRelaxed(ChartType type, params Guid[] charts)
+        {
+            return Projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, Viewer,
+                    charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), 1.0, null, RelaxFloorWhenEmpty: true),
+                CancellationToken.None);
         }
 
         /// <summary>A Phoenix 2 catalog of the given singles charts at level 22 — the pools price against it.</summary>

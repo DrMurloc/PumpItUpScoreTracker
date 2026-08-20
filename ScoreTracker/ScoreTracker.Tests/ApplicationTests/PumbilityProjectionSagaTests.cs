@@ -439,8 +439,38 @@ public sealed partial class PumbilityProjectionSagaTests
     }
 
     [Fact]
-    public async Task FourPumbilityPeersAreNotAnOpinion()
+    public async Task FourPumbilityPeersAreNotAnOpinionWhileTheBandAnswersElsewhere()
     {
+        // The floor still stands per chart. A band that answered anywhere is a band that could
+        // answer, so the four-peer chart beside the five-peer one stays absent — the D47 fallback
+        // is a rescue from an empty run, not a lower bar.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
+            .WithChart(out var thin, ChartType.Single, 20)
+            .WithChart(out var answered, ChartType.Single, 20);
+        var peers = new List<Guid>();
+        foreach (var score in new[] { 985_000, 985_000, 990_000, 990_000 })
+        {
+            ctx.WithPumbilityPeer(out var peer, thin, phoenix2Score: score);
+            peers.Add(peer);
+        }
+
+        ctx.WithPumbilityPeer(out var fifth, answered, phoenix2Score: 975_000);
+        foreach (var peer in peers) ctx.WithPeerPhoenix2Score(peer, answered, 975_000);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        Assert.NotNull(fifth);
+        Assert.Contains(answered.Id, result.ExpectedScores.Keys);
+        Assert.DoesNotContain(thin.Id, result.ExpectedScores.Keys);
+    }
+
+    [Fact]
+    public async Task ABandTooThinToMeetTheFloorGetsAnAnswerRatherThanAnEmptyPage()
+    {
+        // Four peers can never put five voices on anything, so the floor takes the whole run
+        // rather than filtering it. The page suggests charts, and one peer's score is a worse
+        // suggestion than five but a better one than an empty board (D47).
         var ctx = new ProjectionContext().WithPhoenix2Pool(50, 17_500)
             .WithChart(out var chart, ChartType.Single, 20);
         foreach (var score in new[] { 985_000, 985_000, 990_000, 990_000 })
@@ -449,7 +479,10 @@ public sealed partial class PumbilityProjectionSagaTests
         var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
             CancellationToken.None);
 
-        Assert.DoesNotContain(chart.Id, result.ExpectedScores.Keys);
+        Assert.Contains(chart.Id, result.ExpectedScores.Keys);
+        // The spread counts the voices that were actually heard, so the page can still say how
+        // thin the evidence is — four, under its own five-peer floor, which prints as a dash.
+        Assert.Equal(4, result.Spreads![chart.Id].PeerCount);
     }
 
     [Fact]

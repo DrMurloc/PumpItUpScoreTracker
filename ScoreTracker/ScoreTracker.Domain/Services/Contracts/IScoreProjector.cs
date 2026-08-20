@@ -29,13 +29,23 @@ public readonly record struct ProjectionTarget(Guid ChartId, int Level);
 ///     projector reads no catalog of its own; without this the Phoenix 2 run still estimates and
 ///     simply returns no pools. Ignored on Phoenix 1, whose peers hold no PUMBILITY pool.
 /// </param>
+/// <param name="RelaxFloorWhenEmpty">
+///     Phoenix 2 only: when the five-peer floor (<see cref="PeerEstimator.Phoenix2MinimumPeers" />)
+///     leaves the run with nothing at all, read the same records again with no floor rather than
+///     answer empty (D47). Opt-in per caller, because the two consumers want different things from
+///     an unanswerable question: a push list would rather name a chart on one peer's evidence than
+///     show a player an empty board, while the personalized tier list falls back to the community
+///     list, which is a better answer than a folder ranked on single scores. Nothing here changes
+///     what a full band produces — the second pass runs only from zero.
+/// </param>
 public sealed record ScoreProjectionRequest(
     MixEnum Mix,
     ChartType ChartType,
     Guid UserId,
     IReadOnlyCollection<ProjectionTarget> Targets,
     double CompetitiveWindow,
-    IReadOnlyDictionary<Guid, Chart>? Charts = null);
+    IReadOnlyDictionary<Guid, Chart>? Charts = null,
+    bool RelaxFloorWhenEmpty = false);
 
 /// <summary>How a peer group was drawn — the two definitions the site has.</summary>
 public enum PeerGroupKind
