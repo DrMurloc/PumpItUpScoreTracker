@@ -598,8 +598,17 @@ card's CTA before it gets linked from other UI surfaces.
    heuristic: flag the improved side's rows whose score rating meets the old level; tune at
    implementation.
 6. 🆕 **Folder debut** — one of the **first 3 passes ever in a (type, level) folder**,
-   S23 and D23 counted separately (owner-added 2026-07-05). When one batch lands more than
-   3 passes in a brand-new folder, the top 3 by noteworthy ordering get the flag.
+   S23 and D23 counted separately (owner-added 2026-07-05), the folder sitting **at or above
+   the player's floored competitive level** for that discipline — the overall level for co-op,
+   which has no discipline of its own (owner, 2026-08-20). Below that line a first pass is a
+   back-fill of ground already held rather than a debut, and it was the loudest false positive
+   on the Sessions page: the folders a player has never touched are the easy ones, so the flag
+   fired *hardest* the further below their level they played. The community and rival feeds
+   already applied this bar to the same event; both sides now read one helper
+   (`CompetitiveLevels.Floor`) so a debut cannot be marked on one surface and withheld by the
+   other. The 📁 nearly-complete-folder flag is deliberately **not** floored — finishing an easy
+   folder is the achievement, not the pass. When one batch lands more than 3 passes in a
+   brand-new folder, the top 3 by noteworthy ordering get the flag.
 
 **Write-time capture, not read-time derivation** (supersedes the earlier read-time-badges
 design). PlayerProgress already consumes `PlayerScoresUpdatedEvent` to compute ratings,

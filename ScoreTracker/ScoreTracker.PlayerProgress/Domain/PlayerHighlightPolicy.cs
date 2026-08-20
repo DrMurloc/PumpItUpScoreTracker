@@ -214,21 +214,11 @@ internal static class PlayerHighlightPolicy
         // discipline — an early pass in a folder well below your skill isn't a community big win.
         if (change.Flags.HasFlag(HighlightFlags.FolderDebut)
             && change.Detail?.FolderDebutOrdinal is { } ordinal && ordinal <= FolderFirstMaxOrdinal
-            && (int)chart.Level >= FlooredCompetitiveLevel(chart.Type, stats))
+            && (int)chart.Level >= CompetitiveLevels.Floor(chart.Type, stats))
             return (PriorityFolderFirst, Win(WinKind.FolderFirst, chart, change.NewScore, rank: ordinal));
 
         return null;
     }
-
-    // A (type, level) folder is gated by the competitive level for its own discipline, falling back
-    // to the overall level for non-Singles/Doubles folders.
-    private static int FlooredCompetitiveLevel(ChartType type, PlayerStatsRecord stats) =>
-        (int)Math.Floor(type switch
-        {
-            ChartType.Single => stats.SinglesCompetitiveLevel,
-            ChartType.Double => stats.DoublesCompetitiveLevel,
-            _ => stats.CompetitiveLevel
-        });
 
     private static SignificantWin Win(WinKind kind, Chart chart, int? score, double? rarityShare = null,
         int? rank = null) =>
