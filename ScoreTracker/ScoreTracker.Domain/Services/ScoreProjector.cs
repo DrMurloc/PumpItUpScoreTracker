@@ -3,6 +3,7 @@ using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
 
 namespace ScoreTracker.Domain.Services;
@@ -70,32 +71,45 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromCompetitiveBand(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, window) = request;
+        var (mix, chartType, userId, targets, window, catalog) = request;
 
         var myLevel = await CompetitiveLevel(mix, chartType, userId, cancellationToken);
         // Competitive level 1 is the no-data floor: there is no band to draw peers from.
         if (myLevel <= 1) return ScoreProjection.None(myLevel);
 
+        // The band IS the peer group here — the viewer out, nobody gated on a pool (D43): a
+        // competitive level is real at any pool size, unlike a PUMBILITY rung.
         var peers = (await _stats.GetPlayersByCompetitiveRange(mix, chartType, myLevel, window, cancellationToken))
             .ToHashSet();
         peers.Remove(userId);
-        if (peers.Count == 0) return ScoreProjection.None(myLevel, PeerGroup.Competitive(myLevel, window, 0));
+        var group = PeerGroup.Competitive(myLevel, window, peers.Count);
+        if (peers.Count == 0) return ScoreProjection.None(myLevel, group);
 
         // The target set spans a level band, so it is asked for as one: a range scan the index
         // can serve, rather than several hundred chart GUIDs in an IN list. The exact set is
-        // applied in memory below, so the result is identical either way.
+        // applied in memory below, so the result is identical either way. When the caller brought
+        // the catalog, the read reaches down to the pool floor instead, so the same read also
+        // says what the band's pools are made of (D43) — the floor is the formula's own: nothing
+        // below level 10 prices above zero on either mix.
         var wanted = targets.Select(t => t.ChartId).ToHashSet();
-        var peerScores = (await _scores.GetPlayerScoresInLevelRange(mix, peers, chartType,
-                targets.Min(t => t.Level), targets.Max(t => t.Level), cancellationToken))
-            .Where(s => wanted.Contains(s.ChartId))
-            .ToArray();
+        var records = catalog == null
+            ? (await _scores.GetPlayerScoresInLevelRange(mix, peers, chartType,
+                targets.Min(t => t.Level), targets.Max(t => t.Level), cancellationToken)).ToArray()
+            : (await _scores.GetPlayerScoresInLevelRange(mix, peers, chartType,
+                PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken)).ToArray();
+        var pools = catalog == null
+            ? null
+            : PumbilityPeerPools.Build(records, peers, catalog, ScoringConfiguration.PumbilityScoring(mix, false));
+        var peerScores = records.Where(s => wanted.Contains(s.ChartId)).ToArray();
 
         // Their level NOW, and their level history, so a score can be dated against the player
-        // they were when they set it. History is read for the peers who ACTUALLY turned up in
-        // the sweep, not for the whole band — a band is several hundred players and each carries
+        // they were when they set it. History is read for the peers who ACTUALLY turned up on
+        // the targets, not for the whole band — a band is several hundred players and each carries
         // a full timeline, so the ones who never played one of these charts were pure freight.
         var voices = peerScores.Select(s => s.UserId).Distinct().ToArray();
-        if (voices.Length == 0) return ScoreProjection.None(myLevel, PeerGroup.Competitive(myLevel, window, 0));
+        if (voices.Length == 0)
+            return new ScoreProjection(new Dictionary<Guid, PhoenixScore>(), 0, myLevel, 0, group,
+                new Dictionary<Guid, PeerSpread>(), pools);
 
         var levelNow = (await _stats.GetStats(mix, voices, cancellationToken))
             .ToDictionary(s => s.UserId, s => CompetitiveLevelFor(s, chartType));
@@ -111,9 +125,9 @@ public sealed class ScoreProjector : IScoreProjector
         var contributors = new HashSet<Guid>();
         var freshnessSum = 0.0;
         var freshnessCount = 0;
-        foreach (var group in peerScores.GroupBy(s => s.ChartId))
+        foreach (var chart in peerScores.GroupBy(s => s.ChartId))
         {
-            var contributing = group.Where(s => levelNow.ContainsKey(s.UserId)).ToArray();
+            var contributing = chart.Where(s => levelNow.ContainsKey(s.UserId)).ToArray();
             var scored = contributing
                 .Select(s => new PeerScore((int)s.Score, levelNow[s.UserId],
                     LevelWhenSet(history, s.UserId, s.RecordedAt, chartType, levelNow[s.UserId])))
@@ -131,13 +145,12 @@ public sealed class ScoreProjector : IScoreProjector
             }
 
             freshnessCount += scored.Length;
-            projected[group.Key] = estimate.Value;
-            spreads[group.Key] = SpreadOf(scored, PeerEstimator.GrowthDecayLevels);
+            projected[chart.Key] = estimate.Value;
+            spreads[chart.Key] = SpreadOf(scored, PeerEstimator.GrowthDecayLevels);
         }
 
         return new ScoreProjection(projected, contributors.Count, myLevel,
-            freshnessCount == 0 ? 0 : freshnessSum / freshnessCount,
-            PeerGroup.Competitive(myLevel, window, contributors.Count), spreads);
+            freshnessCount == 0 ? 0 : freshnessSum / freshnessCount, group, spreads, pools);
     }
 
     /// <summary>
@@ -171,7 +184,7 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromPumbilityPeers(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, _) = request;
+        var (mix, chartType, userId, targets, _, catalog) = request;
 
         // The viewer's rung, from the total pool — the merged top fifty across both types, which
         // is the number the game's own badge is drawn from. One rung serves both chart types.
@@ -215,6 +228,12 @@ public sealed class ScoreProjector : IScoreProjector
         var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool);
         if (peers.Count == 0) return ScoreProjection.None(myLevel, group);
 
+        // The peers' pools ride the same read when the caller brought the catalog to price it with
+        // (§3.10): every chart they hold and everything they scored, the viewer already out.
+        var pools = catalog == null
+            ? null
+            : PumbilityPeerPools.Build(records, peers, catalog, ScoringConfiguration.PumbilityScoring(mix, false));
+
         var wanted = targets.Select(t => t.ChartId).ToHashSet();
         var projected = new Dictionary<Guid, PhoenixScore>();
         var spreads = new Dictionary<Guid, PeerSpread>();
@@ -235,7 +254,7 @@ public sealed class ScoreProjector : IScoreProjector
             spreads[chart.Key] = SpreadOf(scored, 0);
         }
 
-        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group, spreads);
+        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group, spreads, pools);
     }
 
     /// <summary>

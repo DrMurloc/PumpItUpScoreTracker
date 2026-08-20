@@ -23,6 +23,29 @@ public sealed record TierListShareCard(
     [ExcludeFromCodeCoverage]
     public sealed record Row(string Name, string ColorHex, IReadOnlyList<Tile> Tiles);
 
+    /// <summary>
+    ///     One chart. <paramref name="BadgeHex" /> is the state colour; how it is drawn is
+    ///     <paramref name="Outline" /> — the same border language the Compact card uses on the
+    ///     page, so a downloaded list looks like the list it came from. <paramref name="Outline" />
+    ///     defaults to the dot the card drew before that language existed, so a caller that has
+    ///     not been taught the borders renders exactly as it did.
+    /// </summary>
+    /// <param name="CornerLabel">A printed value in the jacket's bottom-right, e.g. a PUMBILITY gain.</param>
+    /// <param name="CornerHex">Its text and outline colour; the caller's accent when null.</param>
     [ExcludeFromCodeCoverage]
-    public sealed record Tile(string JacketUrl, string? GradeUrl, string? PlateUrl, string? BadgeHex);
+    public sealed record Tile(string JacketUrl, string? GradeUrl, string? PlateUrl, string? BadgeHex,
+        string? CornerLabel = null, string? CornerHex = null, TileOutline Outline = TileOutline.Dot);
+}
+
+/// <summary>
+///     How a tile's state colour is drawn — the Compact card's own vocabulary: solid for passed,
+///     dashed for To-Do and for a pass carried from another mix, dotted for a broken run.
+/// </summary>
+public enum TileOutline
+{
+    /// <summary>The corner dot the card drew before it had borders.</summary>
+    Dot,
+    Solid,
+    Dashed,
+    Dotted
 }

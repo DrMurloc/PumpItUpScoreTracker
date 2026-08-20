@@ -31,11 +31,24 @@
     {
         <button type="button" class="@ScopeClass(scope)" disabled="@(!IsAvailable(scope))"
                 data-testid="@($"cld-scope-{scope}")"
-                @onclick="() => SelectScope(scope)">
+                @onclick="() => SelectChip(scope)">
             @ScopeLabel(scope)
         </button>
     }
 </div>
+
+@* Two peer pools behind one chip (docs/design/pumbility-overhaul.md D40, peers-abstraction.md):
+   the competitive band and, on Phoenix 2, the PUMBILITY peers. The sub-row only earns its place
+   where both exist — on Phoenix 1 the chip IS the competitive board and no row appears. *@
+@if (IsPeerScope(_scope) && IsAvailable(LeaderboardScope.PumbilityPeers))
+{
+    <div class="cld-sub" data-testid="cld-peer-picker">
+        <button type="button" class="@SubClass(LeaderboardScope.CompetitivePeers)" data-testid="cld-peers-competitive"
+                @onclick="() => SelectScope(LeaderboardScope.CompetitivePeers)">@L["Competitive"]</button>
+        <button type="button" class="@SubClass(LeaderboardScope.PumbilityPeers)" data-testid="cld-peers-pumbility"
+                @onclick="() => SelectScope(LeaderboardScope.PumbilityPeers)">PUMBILITY</button>
+    </div>
+}
 
 @* The picker is a control with one choice below two communities, so it only earns its
    row when there is actually something to pick. *@
@@ -66,7 +79,7 @@ else
             <span class="cld-standing-place" style="@ThemeScales.RarityStyle(MyPercentile)">
                 @L["#{0} of {1}", _myPlace.Value, _rows.Count]
             </span>
-            <span class="cld-standing-scope">@ScopeLabel(_scope)</span>
+            <span class="cld-standing-scope">@StandingLabel(_scope)</span>
         </div>
     }
     <div class="cld-body">
@@ -128,6 +141,14 @@ else
         CompetitivePeers,
 
         /// <summary>
+        ///     Phoenix 2 only: your PUMBILITY peers — the players within three levels of you on the
+        ///     PUMBILITY ladder holding a full pool of the chart's type — the other peer pool the
+        ///     site draws (docs/design/pumbility-overhaul.md D22, D40). Shares the Peers chip with
+        ///     CompetitivePeers; the sub-row under it picks between the two.
+        /// </summary>
+        PumbilityPeers,
+
+        /// <summary>
         ///     The mirrored piugame board at the latest sealed snapshot. Not a live board and
         ///     not this site's players: it is what the official game says about this chart, up
         ///     to a week old, which is why it is its own scope rather than rows mixed into
@@ -145,6 +166,8 @@ else
         LowestPassing
     }
 
+    // The chip row. CompetitivePeers stands for the Peers chip; PumbilityPeers is never a chip
+    // of its own — it is the second choice of the sub-row that chip opens on Phoenix 2 (D40).
     private static readonly LeaderboardScope[] Scopes =
     {
         LeaderboardScope.World, LeaderboardScope.Region, LeaderboardScope.Community,
@@ -155,6 +178,9 @@ else
     /// <summary>Limbo is the one scope that vanishes rather than greying — see the enum member.</summary>
     private IEnumerable<LeaderboardScope> VisibleScopes =>
         Scopes.Where(s => s != LeaderboardScope.LowestPassing || _isLimboChart);
+
+    private static bool IsPeerScope(LeaderboardScope scope) =>
+        scope is LeaderboardScope.CompetitivePeers or LeaderboardScope.PumbilityPeers;
 
     [Parameter] public Guid ChartId { get; set; }
 
@@ -197,6 +223,12 @@ else
     private IReadOnlySet<Guid> _rivalUserIds = new HashSet<Guid>();
     private IReadOnlySet<string> _rivalGhostNames = new HashSet<string>();
     private bool _isLimboChart;
+    /// <summary>
+    ///     Fetched on first selection and kept, like the Official board: knowing who your PUMBILITY
+    ///     peers are can mean running the projection sweep for a viewer who has not opened the
+    ///     PUMBILITY page today, and that is not a cost to pay on every chart view.
+    /// </summary>
+    private IReadOnlySet<Guid>? _pumbilityPeers;
     private OfficialChartBoardRecord? _officialBoard;
     private IReadOnlySet<Guid> _officialPublicLinks = new HashSet<Guid>();
     private IReadOnlyDictionary<string, Uri?> _officialAvatars = new Dictionary<string, Uri?>();
@@ -215,6 +247,7 @@ else
         _loadedFor = (ChartId, Mix);
         _scope = InitialScope;
         _officialBoard = null;
+        _pumbilityPeers = null;
         await LoadChartAsync();
     }
 
@@ -267,6 +300,18 @@ else
 
         if (!IsAvailable(_scope)) _scope = LeaderboardScope.World;
         await BuildRowsAsync();
+    }
+
+    /// <summary>
+    ///     A chip in the top row. The Peers chip is one control over two pools: clicked cold it
+    ///     opens on Competitive (owner, 2026-08-18 — "do competitive for now"), and while either
+    ///     peer scope is showing it is already on, so a click does nothing; the sub-row is what
+    ///     switches pools. Hosts that want the PUMBILITY board pass it as the initial scope.
+    /// </summary>
+    private Task SelectChip(LeaderboardScope scope)
+    {
+        if (scope == LeaderboardScope.CompetitivePeers && IsPeerScope(_scope)) return Task.CompletedTask;
+        return SelectScope(scope);
     }
 
     private async Task SelectScope(LeaderboardScope scope)
@@ -337,6 +382,16 @@ else
                 var peers = (await Mediator.Send(new GetCompetitivePlayersQuery(_chart.Type, Mix))).ToHashSet();
                 _communityUserIds = _clubmates;
                 return _world.Where(s => peers.Contains(s.UserId)).ToArray();
+            }
+            case LeaderboardScope.PumbilityPeers:
+            {
+                // A cohort rather than a roster, exactly like Competitive Peers: private peers
+                // stay on the board as Anonymous rows, because dropping them would disagree
+                // with every count the PUMBILITY page prints for the same group.
+                if (_chart == null) return Array.Empty<UserPhoenixScore>();
+                _pumbilityPeers ??= (await Mediator.Send(new GetPumbilityPeersQuery(_chart.Type, Mix))).ToHashSet();
+                _communityUserIds = _clubmates;
+                return _world.Where(s => _pumbilityPeers.Contains(s.UserId)).ToArray();
             }
             case LeaderboardScope.LowestPassing:
             {
@@ -459,6 +514,11 @@ else
         // Competitive cohorts have no co-op side. The chip greys and says nothing further —
         // a sentence about cohorts costs more confusion than it buys (owner call).
         LeaderboardScope.CompetitivePeers => _chart is { Type: not ScoreTracker.SharedKernel.Enums.ChartType.CoOp },
+        // Phoenix 2, signed in, not co-op. Whether the viewer actually HAS peers of the type
+        // is learned on selection, not on every chart view (see _pumbilityPeers) — a viewer
+        // whose pool is short gets the empty state naming what lights it up.
+        LeaderboardScope.PumbilityPeers => Mix == MixEnum.Phoenix2 && CurrentUser.IsLoggedIn &&
+                                           _chart is { Type: not ScoreTracker.SharedKernel.Enums.ChartType.CoOp },
         // Always lit: knowing whether a board exists costs a query, and paying it on every
         // chart view to grey one chip is not a trade worth making (see LoadChartAsync). A chart
         // the mirror does not cover says so in the empty state instead.
@@ -468,8 +528,18 @@ else
         _ => true
     };
 
+    // The Peers chip lights for either peer scope; the sub-row says which.
     private string ScopeClass(LeaderboardScope scope) =>
-        _scope == scope ? "cld-chip cld-chip-on" : IsAvailable(scope) ? "cld-chip" : "cld-chip cld-chip-off";
+        _scope == scope || (scope == LeaderboardScope.CompetitivePeers && IsPeerScope(_scope))
+            ? "cld-chip cld-chip-on"
+            : IsAvailable(scope) ? "cld-chip" : "cld-chip cld-chip-off";
+
+    /// <summary>The scope's own name for the standing line — "Competitive Peers" under a competitive board even when the chip reads "Peers".</summary>
+    private string StandingLabel(LeaderboardScope scope) =>
+        scope == LeaderboardScope.CompetitivePeers ? L["Competitive Peers"] : ScopeLabel(scope);
+
+    private string SubClass(LeaderboardScope scope) =>
+        _scope == scope ? "cld-chip cld-chip-on" : "cld-chip";
 
     private string CommunityClass(Name community) =>
         _community == community ? "cld-chip cld-chip-on" : "cld-chip";
@@ -521,17 +591,27 @@ else
         LeaderboardScope.Region => L["Region"],
         LeaderboardScope.Community => L["Community"],
         LeaderboardScope.Rivals => L["Rivals"],
-        LeaderboardScope.CompetitivePeers => L["Competitive Peers"],
+        // The chip reads "Peers" once two pools share it (Phoenix 2); the standing line under a
+        // board still names the pool it was ranked in — see StandingLabel.
+        LeaderboardScope.CompetitivePeers => IsAvailable(LeaderboardScope.PumbilityPeers)
+            ? L["Peers"]
+            : L["Competitive Peers"],
+        LeaderboardScope.PumbilityPeers => L["PUMBILITY peers"],
         LeaderboardScope.Official => L["Official board"],
         LeaderboardScope.LowestPassing => L["Lowest Passing"],
         _ => L["World"]
     };
 
-    private string EmptyText => _scope == LeaderboardScope.Official
+    private string EmptyText => _scope switch
+    {
         // The mirror covers a scattering of boards rather than every chart, so "nobody has played
         // this" would be a lie about a chart plenty of people have played.
-        ? L["The official site doesn't publish a board for this chart."]
-        : L["Nobody here has played this yet."];
+        LeaderboardScope.Official => L["The official site doesn't publish a board for this chart."],
+        // No peers at all is a pool that is not yet fifty (D28), not a chart nobody played.
+        LeaderboardScope.PumbilityPeers when _pumbilityPeers is { Count: 0 } =>
+            L["You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up."],
+        _ => L["Nobody here has played this yet."]
+    };
 
     /// <summary>
     ///     One line under the board rather than a marker on every row: the asterisk beside a

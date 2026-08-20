@@ -6,14 +6,22 @@ using ScoreTracker.SharedKernel.ValueTypes;
 namespace ScoreTracker.PlayerProgress.Application
 {
     /// <summary>
-    ///     What one sweep produced: the estimate per chart, and the peer group per chart type it
-    ///     was drawn from — held together because both are answers about the same population at
-    ///     the same moment, and the page prints the group beside the estimates.
+    ///     What one sweep produced: the estimate per chart, the peer group per chart type it was
+    ///     drawn from, and — on Phoenix 2 — what those peers' pools are made of. Held together
+    ///     because all of them are answers about the same population at the same moment: the page
+    ///     prints the group beside the estimates, and lists the pools under them
+    ///     (docs/design/pumbility-overhaul.md §3.10).
     /// </summary>
+    /// <param name="PeerPools">
+    ///     Per lit chart type on Phoenix 2, the peers' pools from the same read the estimates
+    ///     came from. Empty on Phoenix 1 and for a dark type — absent means "no peers", never
+    ///     "nobody holds anything".
+    /// </param>
     internal sealed record ProjectionSweep(
         IReadOnlyDictionary<Guid, PhoenixScore> ExpectedScores,
         IReadOnlyDictionary<ChartType, PeerGroup> Peers,
-        IReadOnlyDictionary<Guid, PeerSpread> Spreads);
+        IReadOnlyDictionary<Guid, PeerSpread> Spreads,
+        IReadOnlyDictionary<ChartType, PeerPoolSummary> PeerPools);
 
     /// <summary>
     ///     Holds the peer sweep behind a player's Pumbility projection between visits.

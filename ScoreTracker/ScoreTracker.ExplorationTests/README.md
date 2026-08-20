@@ -83,3 +83,16 @@ the Phoenix 2 pricing.
 dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj \
   --filter "FullyQualifiedName~PumbilityProjection"
 ```
+
+`PumbilityPeerPoolProbeTests` is the round-five measurement (design doc §4.9): one account's
+PUMBILITY peers' pools, cross-folder — the slot-weighted prevalence beside the plain hold count and
+the raw value sum, the peers' median and quartile spread per chart with the five variability bands
+on raw and log widths, the viewer's overlay (their own pool against the band's top fifty, what
+they alone hold), what the target list would hold from the same evidence against the shipping
+list, and how many of its carried Phoenix 1 rows no peer holds. Same gate, same user setting;
+`SCORETRACKER_PROBE_OUT` names a directory to drop `peers-<Type>.json` into — the export the
+page mock was drawn from. Read-only.
+
+```sh
+dotnet test ScoreTracker/ScoreTracker.ExplorationTests/ScoreTracker.ExplorationTests.csproj   --filter "FullyQualifiedName~PumbilityPeerPool"
+```

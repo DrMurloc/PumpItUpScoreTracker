@@ -22,7 +22,7 @@
    the site's navigation model anyway. That is also why the pool selection is a UiSetting
    and not circuit state — anything held in a circuit dies on the way to the next tab. *@
 
-<PageTitle>@L[ActiveLabel] · @L["PUMBILITY"]</PageTitle>
+<PageTitle>@Title</PageTitle>
 
 <p class="pmb-eyebrow">@MixName · @L["PUMBILITY"]</p>
 
@@ -78,10 +78,12 @@ else if (_mixKnown)
 
     private const string Phoenix1Key = "phoenix1";
 
+    private const string BreakdownKey = "breakdown";
+
     private static readonly (string Key, string Href, string Label)[] AllLinks =
     {
         ("play", "/Pumbility", "Play"),
-        ("pool", "/Pumbility/Pool", "Your Pool"),
+        (BreakdownKey, "/Pumbility/Breakdown", "PUMBILITY Breakdown"),
         (Phoenix1Key, "/Pumbility/Phoenix1", "Phoenix 1")
     };
 
@@ -103,6 +105,9 @@ else if (_mixKnown)
     private string MixName => _currentMix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix";
 
     private string ActiveLabel => AllLinks.First(l => l.Key == Active).Label;
+
+    // "<page> · PUMBILITY", except where the page's own name already says PUMBILITY (D45).
+    private string Title => Active == BreakdownKey ? L[ActiveLabel] : $"{L[ActiveLabel]} · {L["PUMBILITY"]}";
 
     // Phoenix 1 has no carryover to show, so it is a two-page section. The chip comes out
     // rather than rendering inert — the same move the official frame makes for What It Takes.

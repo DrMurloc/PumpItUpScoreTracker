@@ -261,3 +261,22 @@ row, the chart journey and the admin backfill.
 | judged | blgrlmurgro | Coined 2026-08-17 — a score the game handed a breakdown for. |
 | note (a step) | roblub | Recovered from the life-calculator's `clean notes` → `plglmurm **roblub**`. |
 | history | lurgmrmorg | Recovered from the existing `History` entry. |
+
+## The peers page batch (2026-08-18)
+
+| English | en-ZW | Notes |
+|---|---|---|
+| Prevalence | Murgroblarg | Coined for the Phoenix 2 Play page's grouping — how much of the peers' pools a chart accounts for. |
+| Variability | Blgrlmurm | `blgrl` (split) + `murm`. The five levels build off it: `Mrgl Grrrogmurm` (very consistent), `Grogmurm` (consistent), `Argmurg` (mixed), `Blgrl` (split), `Mrgl Blgrrrl` (very split) — intensity rides the repeated `r`, the owner's own device. |
+| repriced | murgroblub | Coined for the carried Phoenix 1 line. |
+| weighted sum | murmgro grubgro | `murm` (weight, from Weekly's `Murmmr`) + `gro`; `grubgro` is the sum. |
+| overlap / in common | grogblub | Coined for the roster's column and the compare strip's tile. |
+| and | ap | Recovered from the existing "on" — Murloc does not distinguish them. |
+| here | ap | Same word; position is carried by word order. |
+| there | gro | Coined alongside it for the carried line. |
+| most | mrrgl | Recovered from `More than` → `Mrrgl grogrgl`. |
+| below / under | glub | Coined for the roster's window and the waiting room, opposite `mrrgl` (above/most). |
+| worth / value | grumb | Recovered from `Value` → `Grumb`. |
+| target | murgroblub | Reused from `repriced` — a Murloc names the thing by what it does to the number. `PUMBILITY Targets` is `PUMBILITY Murgroblub`. |
+| Highest / Lowest | Mrrglmrrgl / Glubglub | The doubled root is the superlative, the owner's own repetition device: `mrrgl` (most/above) and `glub` (below). `Mrgl Mrrgl` is very high; `Mrrgl` alone is high. |
+| only | ub | Recovered from `#{0} of {1}` → `#{0} ub {1}` — the same particle carries "of" and "only". |

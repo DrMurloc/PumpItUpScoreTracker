@@ -1,0 +1,35 @@
+@using ScoreTracker.Domain.Services
+@using ScoreTracker.Web.Services.Theming
+@namespace ScoreTracker.Web.Components
+
+@* How split the peers are on one chart, as five dots and the word (docs/design/pumbility-overhaul.md
+   D35). The dots that are lit take the level's own token; the word always prints beside them, so
+   the colour never carries the level alone (UX rule 8). *@
+<span class="pmb-vary" style="--pmb-vary-color:@ThemeScales.VariabilityColor(Level)" title="@Title" data-testid="pmb-vary" data-level="@Level">
+    <span class="pmb-vary-dots" aria-hidden="true">
+        @for (var i = 1; i <= 5; i++)
+        {
+            <i class="@(i <= Lit ? "on" : null)"></i>
+        }
+    </span>
+    <span class="pmb-vary-word">@L[Word(Level)]</span>
+</span>
+
+@code {
+    [Parameter] [EditorRequired] public PeerVariabilityLevel Level { get; set; }
+
+    /// <summary>The native tooltip; the caller says how many peers the read rests on.</summary>
+    [Parameter] public string? Title { get; set; }
+
+    private int Lit => (int)Level + 1;
+
+    /// <summary>The level's word, as a localization key.</summary>
+    public static string Word(PeerVariabilityLevel level) => level switch
+    {
+        PeerVariabilityLevel.VeryConsistent => "Very consistent",
+        PeerVariabilityLevel.Consistent => "Consistent",
+        PeerVariabilityLevel.Mixed => "Mixed",
+        PeerVariabilityLevel.Split => "Split",
+        _ => "Very split"
+    };
+}

@@ -220,6 +220,9 @@
   <data name="+5 more per level above 24" xml:space="preserve">
     <value>+5 más por nivel a partir de 25</value>
   </data>
+  <data name="+{0} and up" xml:space="preserve">
+    <value>+{0} o más</value>
+  </data>
   <data name="+{0} levels up" xml:space="preserve">
     <value>+{0} niveles</value>
   </data>
@@ -235,6 +238,9 @@
   <data name="+{0} over P1" xml:space="preserve">
     <value>+{0} sobre P1</value>
   </data>
+  <data name="+{0} to +{1}" xml:space="preserve">
+    <value>de +{0} a +{1}</value>
+  </data>
   <data name=", plate under half a percent" xml:space="preserve">
     <value>, plate por debajo del medio por ciento</value>
   </data>
@@ -244,6 +250,12 @@
   <data name="0 -&gt; 10%" xml:space="preserve">
     <value>0 -&gt; 10%</value>
   </data>
+  <data name="1 more peer above" xml:space="preserve">
+    <value>1 par más arriba</value>
+  </data>
+  <data name="1 more peer below" xml:space="preserve">
+    <value>1 par más abajo</value>
+  </data>
   <data name="1 paragon" xml:space="preserve">
     <value>1 paragon</value>
   </data>
@@ -252,6 +264,9 @@
   </data>
   <data name="1 Player" xml:space="preserve">
     <value>1 jugador</value>
+  </data>
+  <data name="1 private account is a peer but is not shown." xml:space="preserve">
+    <value>1 cuenta privada es par pero no se muestra.</value>
   </data>
   <data name="1 title" xml:space="preserve">
     <value>1 título</value>
@@ -414,9 +429,6 @@
   </data>
   <data name="A public API with full docs powers community-made tools — bots, overlays, stat sites. Grab a token from your account and build on the same data we use." xml:space="preserve">
     <value>Una API pública con documentación completa impulsa las herramientas de la comunidad — bots, overlays, sitios de estadísticas. Consigue un token en tu cuenta y construye sobre los mismos datos que usamos.</value>
-  </data>
-  <data name="A score you already hit in Phoenix 1, repriced for Phoenix 2." xml:space="preserve">
-    <value>Una puntuación que ya lograste en Phoenix 1, revalorada para Phoenix 2.</value>
   </data>
   <data name="A Single is priced one level up: an S17 pays Base(18). Below level 10 a chart is worth 0." xml:space="preserve">
     <value>Un Single se valora un nivel más arriba: un S17 paga Base(18). Por debajo del nivel 10 un chart vale 0.</value>
@@ -672,9 +684,6 @@
   </data>
   <data name="An additive bonus, not a multiplier — at most {0} of a chart." xml:space="preserve">
     <value>Una bonificación aditiva, no un multiplicador — como mucho {0} de un chart.</value>
-  </data>
-  <data name="An estimate from players at your competitive level." xml:space="preserve">
-    <value>Una estimación a partir de jugadores de tu nivel competitivo.</value>
   </data>
   <data name="An import is already running" xml:space="preserve">
     <value>Ya hay una importación en curso</value>
@@ -943,9 +952,6 @@
   <data name="Base({0}) — a Single is priced one level up" xml:space="preserve">
     <value>Base({0}) — un Single se valora un nivel más arriba</value>
   </data>
-  <data name="Based on" xml:space="preserve">
-    <value>Basado en</value>
-  </data>
   <data name="based on your scores" xml:space="preserve">
     <value>según tus scores</value>
   </data>
@@ -1210,6 +1216,9 @@
   <data name="Carried from Phoenix 1" xml:space="preserve">
     <value>Heredado de Phoenix 1</value>
   </data>
+  <data name="Carried from Phoenix 1: your {0} there, repriced here" xml:space="preserve">
+    <value>Heredado de Phoenix 1: tu {0} de allí, revalorado aquí</value>
+  </data>
   <data name="Category" xml:space="preserve">
     <value>Categoría</value>
   </data>
@@ -1314,9 +1323,6 @@
   </data>
   <data name="Charts covered" xml:space="preserve">
     <value>Charts cubiertos</value>
-  </data>
-  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
-    <value>Los charts que menos de 5 de ellos han pasado no se muestran.</value>
   </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>Tablas en el grupo</value>
@@ -1609,6 +1615,12 @@
   <data name="Competitive Level over time for your selected mixes." xml:space="preserve">
     <value>Tu Nivel Competitivo a lo largo del tiempo en las versiones que elijas.</value>
   </data>
+  <data name="Competitive level, doubles" xml:space="preserve">
+    <value>Nivel competitivo, Doubles</value>
+  </data>
+  <data name="Competitive level, singles" xml:space="preserve">
+    <value>Nivel competitivo, Singles</value>
+  </data>
   <data name="Competitive Peers" xml:space="preserve">
     <value>Nivel competitivo similar</value>
   </data>
@@ -1680,6 +1692,9 @@
   </data>
   <data name="Connecting one tool you trust works fine on a private profile — it's a direct connection, not public sharing. Your profile stays private and no other tool gains access." xml:space="preserve">
     <value>Conectar una herramienta en la que confías funciona bien con un perfil privado — es una conexión directa, no uso compartido público. Tu perfil sigue siendo privado y ninguna otra herramienta obtiene acceso.</value>
+  </data>
+  <data name="Consistent" xml:space="preserve">
+    <value>Consistente</value>
   </data>
   <data name="Content" xml:space="preserve">
     <value>Contenido</value>
@@ -2113,9 +2128,6 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Tabla de Doubles; un Single lee AA e inferiores un punto más bajo (AA {0}, A+ {1} …). Escalera completa abajo.</value>
   </data>
-  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
-    <value>Doubles: {0} pares de PUMBILITY</value>
-  </data>
   <data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>Doubles: {0}/{1} charts</value>
   </data>
@@ -2421,6 +2433,9 @@
   </data>
   <data name="Feeds — register a channel once, the bot keeps it fed" xml:space="preserve">
     <value>Feeds — registra un canal una vez y el bot lo mantiene al día</value>
+  </data>
+  <data name="Fewer than 5 peers scored it" xml:space="preserve">
+    <value>Menos de 5 pares lo han puntuado</value>
   </data>
   <data name="Fiesta" xml:space="preserve">
     <value>Fiesta</value>
@@ -2818,6 +2833,12 @@
   <data name="Hide Zero Scoring Charts" xml:space="preserve">
     <value>Ocultar charts con score cero</value>
   </data>
+  <data name="High" xml:space="preserve">
+    <value>Alto</value>
+  </data>
+  <data name="Highest" xml:space="preserve">
+    <value>Máximo</value>
+  </data>
   <data name="Highest Clear" xml:space="preserve">
     <value>Máximo superado</value>
   </data>
@@ -2895,6 +2916,12 @@
   </data>
   <data name="How many co-op charts you've cleared, by player count." xml:space="preserve">
     <value>Cuántos charts de Co-Op has superado, por número de jugadores.</value>
+  </data>
+  <data name="How many of your 50 they also hold" xml:space="preserve">
+    <value>Cuántos de tus 50 también tienen</value>
+  </data>
+  <data name="How many of your PUMBILITY peers hold it in their top 50" xml:space="preserve">
+    <value>Cuántos de tus pares de PUMBILITY lo tienen en su top 50</value>
   </data>
   <data name="How much clean combo you have to buy back between breaks, and where your life ends up if you keep paying exactly that." xml:space="preserve">
     <value>Cuánto combo limpio tienes que recomprar entre fallos, y dónde acaba tu vida si pagas exactamente eso.</value>
@@ -3117,6 +3144,9 @@
   </data>
   <data name="In this folder" xml:space="preserve">
     <value>En este folder</value>
+  </data>
+  <data name="In your pool #{0}" xml:space="preserve">
+    <value>En tu conjunto #{0}</value>
   </data>
   <data name="In your PUMBILITY top 50" xml:space="preserve">
     <value>En tu top 50 de PUMBILITY</value>
@@ -3538,6 +3568,9 @@
   <data name="Low" xml:space="preserve">
     <value>Bajo</value>
   </data>
+  <data name="Lowest" xml:space="preserve">
+    <value>Mínimo</value>
+  </data>
   <data name="Lowest level" xml:space="preserve">
     <value>Nivel más bajo</value>
   </data>
@@ -3747,6 +3780,9 @@
   </data>
   <data name="Mix set to {0}" xml:space="preserve">
     <value>Versión cambiada a {0}</value>
+  </data>
+  <data name="Mixed" xml:space="preserve">
+    <value>Mixto</value>
   </data>
   <data name="Mixes" xml:space="preserve">
     <value>Versiones</value>
@@ -4114,6 +4150,12 @@
   <data name="No new scores found" xml:space="preserve">
     <value>No se encontraron puntuaciones nuevas</value>
   </data>
+  <data name="No peer holds it" xml:space="preserve">
+    <value>Ningún par lo tiene</value>
+  </data>
+  <data name="No peers yet." xml:space="preserve">
+    <value>Todavía no hay pares.</value>
+  </data>
   <data name="No Phoenix 2 chart" xml:space="preserve">
     <value>Sin gráfico en Phoenix 2</value>
   </data>
@@ -4405,14 +4447,14 @@
   <data name="Nothing gets sent when you ask, so post in the PIU Scores Discord and someone will look. Your tool keeps working in the meantime." xml:space="preserve">
     <value>Pedirlo no envía nada, así que escribe en el Discord de PIU Scores y alguien lo mirará. Mientras tanto tu herramienta sigue funcionando.</value>
   </data>
-  <data name="Nothing here clears your bar yet — play a few more charts and check back." xml:space="preserve">
-    <value>Aquí todavía nada supera tu límite: juega algunos gráficos más y vuelve.</value>
-  </data>
   <data name="Nothing here yet." xml:space="preserve">
     <value>Todavía no hay nada.</value>
   </data>
   <data name="Nothing here yet. Share what you know about this chart." xml:space="preserve">
     <value>Todavía no hay nada. Comparte lo que sepas de este chart.</value>
+  </data>
+  <data name="Nothing in your pool yet — every non-broken pass at level 10 or above takes a slot." xml:space="preserve">
+    <value>Aún no hay nada en tu conjunto: todo pase sin romper de nivel 10 o superior ocupa una plaza.</value>
   </data>
   <data name="Nothing is deleted. The tools, their activity logs and their delivery history stay exactly as they are, so you can look at what happened — or undo this." xml:space="preserve">
     <value>No se borra nada. Las herramientas, su actividad y su historial de entregas quedan tal cual, así que puedes ver qué pasó — o deshacer esto.</value>
@@ -4461,6 +4503,9 @@
   </data>
   <data name="Nothing yet." xml:space="preserve">
     <value>Nada todavía.</value>
+  </data>
+  <data name="Nothing your peers hold would clear your bar right now — play a few more charts and check back." xml:space="preserve">
+    <value>Nada de lo que tienen tus pares superaría ahora tu límite: juega algunos charts más y vuelve.</value>
   </data>
   <data name="Nothing." xml:space="preserve">
     <value>Nada.</value>
@@ -4645,6 +4690,9 @@
   <data name="Only improvements are kept. Score and grade rise separately." xml:space="preserve">
     <value>Solo se guardan las mejoras. El score y la nota suben por separado.</value>
   </data>
+  <data name="Only projected PUMBILITY gains" xml:space="preserve">
+    <value>Solo ganancias de PUMBILITY previstas</value>
+  </data>
   <data name="Only songs with a changed chart are listed." xml:space="preserve">
     <value>Solo aparecen las canciones con algún chart que cambió.</value>
   </data>
@@ -4737,6 +4785,9 @@
   <data name="Overflow — 3 x level squared" xml:space="preserve">
     <value>Desbordamiento: nivel al cuadrado × 3</value>
   </data>
+  <data name="Overlap with you" xml:space="preserve">
+    <value>Coincidencia contigo</value>
+  </data>
   <data name="Overrated" xml:space="preserve">
     <value>Sobrevalorado</value>
   </data>
@@ -4821,17 +4872,29 @@
   <data name="Paste the whole link, or just the code at the end of it." xml:space="preserve">
     <value>Pega el enlace completo, o solo el código del final.</value>
   </data>
+  <data name="Peer for" xml:space="preserve">
+    <value>Par en</value>
+  </data>
   <data name="Peer projections show once your doubles pool has {0} charts." xml:space="preserve">
     <value>Las proyecciones de pares aparecen cuando tu conjunto de Doubles tenga {0} charts.</value>
   </data>
   <data name="Peer projections show once your singles pool has {0} charts." xml:space="preserve">
     <value>Las proyecciones de pares aparecen cuando tu conjunto de Singles tenga {0} charts.</value>
   </data>
+  <data name="Peers" xml:space="preserve">
+    <value>Pares</value>
+  </data>
   <data name="Peers IQR" xml:space="preserve">
     <value>IQR de pares</value>
   </data>
+  <data name="Peers' median" xml:space="preserve">
+    <value>Mediana de pares</value>
+  </data>
   <data name="peers:" xml:space="preserve">
     <value>tu nivel:</value>
+  </data>
+  <data name="Peers: {0}% of their pool weight at {1}" xml:space="preserve">
+    <value>Pares: {0}% del peso de su conjunto en {1}</value>
   </data>
   <data name="Pending" xml:space="preserve">
     <value>Pendiente</value>
@@ -4911,8 +4974,14 @@
   <data name="PG · {0} of {1} peers have it" xml:space="preserve">
     <value>PG · {0} de {1} iguales lo tienen</value>
   </data>
+  <data name="Phoenix 1" xml:space="preserve">
+    <value>Phoenix 1</value>
+  </data>
   <data name="Phoenix 1 · your real top 50" xml:space="preserve">
     <value>Phoenix 1 · tu top 50 real</value>
+  </data>
+  <data name="Phoenix 1:" xml:space="preserve">
+    <value>Phoenix 1:</value>
   </data>
   <data name="Phoenix 2 does price a CO-OP chart, at a flat base of {0} — the way Phoenix priced one at {1} — but that is the CO-OP Rating, a separate number with its own titles and board. It adds nothing to PUMBILITY on either mix." xml:space="preserve">
 	  <value>Phoenix 2 sí pone precio a un chart CO-OP, con una base plana de {0} — igual que Phoenix lo ponía en {1} —, pero eso es el Rating CO-OP, un número aparte con sus propios títulos y su propia tabla. No suma nada a la PUMBILITY en ninguna de las dos versiones.</value>
@@ -5160,6 +5229,9 @@
   <data name="Played Not Counting" xml:space="preserve">
     <value>Jugada, no cuenta</value>
   </data>
+  <data name="Played, not in your pool" xml:space="preserve">
+    <value>Jugado, fuera de tu conjunto</value>
+  </data>
   <data name="Played, not passed" xml:space="preserve">
     <value>Jugada, no superada</value>
   </data>
@@ -5196,8 +5268,14 @@
   <data name="Players opening your site or your source from the directory, counted since the tool was listed." xml:space="preserve">
     <value>Jugadores que abren tu sitio o tu código desde el directorio, contados desde que la herramienta se listó.</value>
   </data>
+  <data name="Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
+    <value>Jugadores a ±1 nivel competitivo de ti en ese tipo. Nunca eres tu propio par; la fila resaltada es donde estarías.</value>
+  </data>
   <data name="Players within one competitive level of you — closer players count more, and so do those whose folder ratings agree with yours." xml:space="preserve">
     <value>Jugadores a un nivel competitivo del tuyo: los más cercanos cuentan más, igual que los que valoran los folders de forma parecida a ti.</value>
+  </data>
+  <data name="Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit." xml:space="preserve">
+    <value>Jugadores a ±3 niveles de PUMBILITY de ti con el conjunto del tipo lleno. Nunca eres tu propio par; la fila resaltada es donde estarías.</value>
   </data>
   <data name="Plays" xml:space="preserve">
     <value>Intentos</value>
@@ -5283,6 +5361,9 @@
   <data name="Premiere / Prex" xml:space="preserve">
     <value>Premiere / Prex</value>
   </data>
+  <data name="Prevalence" xml:space="preserve">
+    <value>Prevalencia</value>
+  </data>
   <data name="Previous Folder" xml:space="preserve">
     <value>Folder anterior</value>
   </data>
@@ -5328,11 +5409,20 @@
   <data name="Progression" xml:space="preserve">
     <value>Progresión</value>
   </data>
+  <data name="Project Phoenix 1 scores" xml:space="preserve">
+    <value>Proyectar scores de Phoenix 1</value>
+  </data>
   <data name="Projected" xml:space="preserve">
     <value>Previsto</value>
   </data>
   <data name="projected Doubles PUMBILITY" xml:space="preserve">
     <value>PUMBILITY proyectado de Doubles</value>
+  </data>
+  <data name="projected gain" xml:space="preserve">
+    <value>ganancia prevista</value>
+  </data>
+  <data name="Projected gains" xml:space="preserve">
+    <value>Ganancias previstas</value>
   </data>
   <data name="Projected Score" xml:space="preserve">
     <value>Puntuación proyectada</value>
@@ -5388,6 +5478,9 @@
   <data name="PUMBILITY" xml:space="preserve">
     <value>PUMBILITY</value>
   </data>
+  <data name="PUMBILITY Breakdown" xml:space="preserve">
+    <value>Desglose de PUMBILITY</value>
+  </data>
   <data name="PUMBILITY Calculator" xml:space="preserve">
     <value>Calculadora de PUMBILITY</value>
   </data>
@@ -5417,6 +5510,9 @@
   </data>
   <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
     <value>Rating Pumbility, títulos y un resumen de temporada digno de capturar.</value>
+  </data>
+  <data name="PUMBILITY Targets" xml:space="preserve">
+    <value>Objetivos de PUMBILITY</value>
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>Top 50 de PUMBILITY</value>
@@ -5535,6 +5631,9 @@
   <data name="Ranked by the official PUMBILITY board, mirrored weekly." xml:space="preserve">
     <value>Clasificación según el leaderboard PUMBILITY oficial, replicado semanalmente.</value>
   </data>
+  <data name="Ranked by what each chart would add if you played it to the standard your peers set — priced against your bar as it stands now, so every row means what the first one does. Everything here clears your bar." xml:space="preserve">
+    <value>Ordenado por lo que sumaría cada chart si lo jugaras al nivel que marcan tus pares: valorado frente a tu límite tal como está ahora, así que cada fila significa lo mismo que la primera. Todo lo de aquí supera tu límite.</value>
+  </data>
   <data name="Ranked by what each would add if you played it to the standard players at your level reach. Everything here clears your bar." xml:space="preserve">
     <value>Ordenado por lo que sumaría cada uno si lo jugaras al nivel que alcanzan los jugadores de tu nivel. Todo lo de aquí supera tu límite.</value>
   </data>
@@ -5602,6 +5701,9 @@
   </data>
   <data name="Reading the step chart" xml:space="preserve">
     <value>Leyendo el patrón</value>
+  </data>
+  <data name="Reading your peers' pools. This reads a few hundred players at your level, so it takes a moment." xml:space="preserve">
+    <value>Leyendo los conjuntos de tus pares. Esto consulta a unos cientos de jugadores de tu nivel, así que tarda un momento.</value>
   </data>
   <data name="Reads As Grade" xml:space="preserve">
     <value>Eso equivale a {0}.</value>
@@ -5821,6 +5923,9 @@
   </data>
   <data name="Reports" xml:space="preserve">
     <value>Denuncias</value>
+  </data>
+  <data name="repriced here" xml:space="preserve">
+    <value>revalorado aquí</value>
   </data>
   <data name="Request Header" xml:space="preserve">
     <value>Cabecera de la petición</value>
@@ -6524,6 +6629,9 @@
   <data name="Singles + Doubles" xml:space="preserve">
     <value>Singles + Doubles</value>
   </data>
+  <data name="Singles and doubles" xml:space="preserve">
+    <value>Singles y Doubles</value>
+  </data>
   <data name="Singles are priced one level up and read a few grades and plates differently." xml:space="preserve">
     <value>Los Singles se valoran un nivel más arriba y leen algunos grados y plates de otra forma.</value>
   </data>
@@ -6535,9 +6643,6 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>Singles vs Doubles</value>
-  </data>
-  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
-    <value>Singles: {0} pares de PUMBILITY</value>
   </data>
   <data name="Singles: {0}/{1} charts" xml:space="preserve">
     <value>Singles: {0}/{1} charts</value>
@@ -6670,6 +6775,9 @@
   </data>
   <data name="Spikes" xml:space="preserve">
     <value>Ráfagas</value>
+  </data>
+  <data name="Split" xml:space="preserve">
+    <value>Dividido</value>
   </data>
   <data name="Splits" xml:space="preserve">
     <value>Splits</value>
@@ -6950,9 +7058,6 @@
   <data name="The bar this pool would set" xml:space="preserve">
     <value>El límite que fijaría este conjunto</value>
   </data>
-  <data name="The bar — everything below is waiting" xml:space="preserve">
-    <value>El límite: todo lo de abajo está esperando</value>
-  </data>
   <data name="The Best" xml:space="preserve">
     <value>El mejor</value>
   </data>
@@ -6976,9 +7081,6 @@
   </data>
   <data name="the charts themselves" xml:space="preserve">
     <value>las gráficas en sí</value>
-  </data>
-  <data name="The charts your PUMBILITY is made of" xml:space="preserve">
-    <value>Los gráficos que componen tu PUMBILITY</value>
   </data>
   <data name="The ciphertext lives in your browser; the wrapped key lives in our database; the master key lives in Key Vault. Decryption needs all three — a dump of any one, or any two, yields nothing. No password is ever written to our database or logs." xml:space="preserve">
     <value>El texto cifrado vive en tu navegador; la clave envuelta vive en nuestra base de datos; la clave maestra vive en Key Vault. El descifrado necesita las tres: un volcado de una, o de dos, no revela nada. Ninguna contraseña se escribe jamás en nuestra base de datos ni en los registros.</value>
@@ -7640,6 +7742,9 @@
   <data name="Unconfirmed against Phoenix and Phoenix 2 — see the note at the top of the page." xml:space="preserve">
     <value>Sin confirmar en Phoenix ni en Phoenix 2: consulta la nota al principio de la página.</value>
   </data>
+  <data name="Under +{0}" xml:space="preserve">
+    <value>Menos de +{0}</value>
+  </data>
   <data name="under {0}" xml:space="preserve">
     <value>menos de {0}</value>
   </data>
@@ -7796,6 +7901,12 @@
   <data name="Vanished while still ranking" xml:space="preserve">
     <value>Desaparecieron sin salir del ranking</value>
   </data>
+  <data name="Variability" xml:space="preserve">
+    <value>Variabilidad</value>
+  </data>
+  <data name="variability, consistent to split" xml:space="preserve">
+    <value>variabilidad, de consistente a dividido</value>
+  </data>
   <data name="Verified from official import" xml:space="preserve">
     <value>Verificado por importación oficial</value>
   </data>
@@ -7810,6 +7921,9 @@
   </data>
   <data name="Verify the other account" xml:space="preserve">
     <value>Verifica la otra cuenta</value>
+  </data>
+  <data name="Very consistent" xml:space="preserve">
+    <value>Muy consistente</value>
   </data>
   <data name="Very Easy" xml:space="preserve">
     <value>Muy fácil</value>
@@ -7826,6 +7940,9 @@
   <data name="Very hard to pass for its level" xml:space="preserve">
     <value>Muy difícil de pasar para su nivel</value>
   </data>
+  <data name="Very High" xml:space="preserve">
+    <value>Muy alto</value>
+  </data>
   <data name="Very Low" xml:space="preserve">
     <value>Muy bajo</value>
   </data>
@@ -7837,6 +7954,9 @@
   </data>
   <data name="Very Popular" xml:space="preserve">
     <value>Muy popular</value>
+  </data>
+  <data name="Very split" xml:space="preserve">
+    <value>Muy dividido</value>
   </data>
   <data name="Very Unpopular" xml:space="preserve">
     <value>Muy impopular</value>
@@ -7973,6 +8093,9 @@
   <data name="Weighted Sum Popularity" xml:space="preserve">
     <value>Popularidad por suma ponderada</value>
   </data>
+  <data name="Weighted sum: {0}" xml:space="preserve">
+    <value>Suma ponderada: {0}</value>
+  </data>
   <data name="Welcome" xml:space="preserve">
     <value>Bienvenido/a</value>
   </data>
@@ -8009,17 +8132,35 @@
   <data name="What it will be able to read" xml:space="preserve">
     <value>Lo que podrá leer</value>
   </data>
+  <data name="What it would add to your PUMBILITY, measured against your bar as it stands" xml:space="preserve">
+    <value>Lo que sumaría a tu PUMBILITY, medido frente a tu límite actual</value>
+  </data>
   <data name="What Phoenix 1 is worth here" xml:space="preserve">
     <value>Cuánto vale aquí tu Phoenix 1</value>
   </data>
   <data name="What players at your level score here" xml:space="preserve">
     <value>Lo que puntúan los jugadores de tu nivel aquí</value>
   </data>
+  <data name="What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
+    <value>De qué construyen su PUMBILITY los jugadores a ±1 nivel competitivo de ti, limitado a los charts que superarían tu límite: cada uno valorado frente al límite tal como está ahora, y agrupado por cuántos de tus pares lo tienen.</value>
+  </data>
+  <data name="What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
+    <value>De qué construyen su PUMBILITY los jugadores a ±1 nivel competitivo de ti: cada chart que tus pares tienen en su top 50, ordenado por lo alto que está en sus conjuntos, con cómo lo puntúan y dónde estás tú.</value>
+  </data>
+  <data name="What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it." xml:space="preserve">
+    <value>De qué construyen su PUMBILITY los jugadores a ±3 niveles de ti, limitado a los charts que superarían tu límite: cada uno valorado frente al límite tal como está ahora, y agrupado por cuántos de tus pares lo tienen.</value>
+  </data>
+  <data name="What players within three levels of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand." xml:space="preserve">
+    <value>De qué construyen su PUMBILITY los jugadores a ±3 niveles de ti: cada chart que tus pares tienen en su top 50, ordenado por lo alto que está en sus conjuntos, con cómo lo puntúan y dónde estás tú.</value>
+  </data>
   <data name="What scoring buys, in levels" xml:space="preserve">
     <value>Lo que compra el score, en niveles</value>
   </data>
   <data name="What should they change?" xml:space="preserve">
     <value>¿Qué deberían cambiar?</value>
+  </data>
+  <data name="What the chart is worth in your pool right now" xml:space="preserve">
+    <value>Lo que vale el chart en tu conjunto ahora mismo</value>
   </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>Lo que esta jugada añadió a tu PUMBILITY</value>
@@ -8072,6 +8213,15 @@
   <data name="Where PUMBILITY comes from on {0} — the average pool" xml:space="preserve">
     <value>De dónde viene el PUMBILITY en {0} — el pool medio</value>
   </data>
+  <data name="Where the levels sit" xml:space="preserve">
+    <value>Dónde caen los niveles</value>
+  </data>
+  <data name="Where the levels sit · doubles" xml:space="preserve">
+    <value>Dónde caen los niveles · Doubles</value>
+  </data>
+  <data name="Where the levels sit · singles" xml:space="preserve">
+    <value>Dónde caen los niveles · Singles</value>
+  </data>
   <data name="Where this chart's passes sit, by competitive level." xml:space="preserve">
     <value>Dónde se sitúan los passes de este chart, por nivel competitivo.</value>
   </data>
@@ -8116,6 +8266,9 @@
   </data>
   <data name="who played these charts" xml:space="preserve">
     <value>que han jugado estos charts</value>
+  </data>
+  <data name="Who your peers are" xml:space="preserve">
+    <value>Quiénes son tus pares</value>
   </data>
   <data name="Why" xml:space="preserve">
     <value>Por qué</value>
@@ -8291,8 +8444,8 @@
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
     <value>Algunos charts no se pudieron descargar. Puedes descargar un CSV con los fallos para hacer ajustes y volver a intentarlo.</value>
   </data>
-  <data name="You have" xml:space="preserve">
-    <value>Tienes</value>
+  <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
+    <value>Todavía no tienes pares de PUMBILITY en este tipo: un conjunto lleno de 50 los enciende.</value>
   </data>
   <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
     <value>Tienes {0} puntuaciones en Phoenix 2. Este es tu historial de Phoenix 1 valorado con las reglas de Phoenix 2: en qué se convierte tu conjunto si vuelves a superarlo todo al mismo nivel.</value>
@@ -8362,6 +8515,9 @@
   </data>
   <data name="you:" xml:space="preserve">
     <value>tú:</value>
+  </data>
+  <data name="You: {0} charts at {1}" xml:space="preserve">
+    <value>Tú: {0} charts en {1}</value>
   </data>
   <data name="You: {0} · similar players average {1}" xml:space="preserve">
     <value>Tú: {0} · media de jugadores similares {1}</value>
@@ -8462,6 +8618,9 @@
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>Tu sesión más reciente, al completo</value>
   </data>
+  <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
+    <value>Los conjuntos de tus pares aún no tienen nada.</value>
+  </data>
   <data name="Your personalized list moves {0} of {1} charts away from the community's." xml:space="preserve">
     <value>Tu lista personalizada mueve {0} de {1} charts respecto a la comunidad.</value>
   </data>
@@ -8485,6 +8644,9 @@
   </data>
   <data name="Your pool" xml:space="preserve">
     <value>Tu conjunto</value>
+  </data>
+  <data name="Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar." xml:space="preserve">
+    <value>Tu conjunto por puesto, con lo que hacen tus pares en cada chart — cuántos lo tienen, su mediana y qué tan repartidos están — y la sala de espera bajo el límite.</value>
   </data>
   <data name="Your pool holds {0} of 50. Until it's full, every chart you play counts whole — there's no bar to beat yet." xml:space="preserve">
     <value>Tu conjunto tiene {0} de 50. Hasta que se llene, cada gráfico que juegues cuenta entero: todavía no hay límite que superar.</value>
@@ -8614,6 +8776,9 @@
   </data>
   <data name="Your username and password are sent directly to piugame.com and are never stored" xml:space="preserve">
     <value>Tu nombre de usuario y tu contraseña se envían directamente a piugame.com y nunca se almacenan</value>
+  </data>
+  <data name="Yours alone" xml:space="preserve">
+    <value>Solo tuyos</value>
   </data>
   <data name="Yours only. Editable afterwards from the tool list." xml:space="preserve">
     <value>Solo para ti. Editable después desde la lista de herramientas.</value>
@@ -8756,6 +8921,9 @@
   <data name="{0} charts · rotates Monday midnight ET" xml:space="preserve">
     <value>{0} charts · rota el lunes a medianoche (ET)</value>
   </data>
+  <data name="{0} charts · {1} already in your pool" xml:space="preserve">
+    <value>{0} charts · {1} ya en tu conjunto</value>
+  </data>
   <data name="{0} charts · {1} down to {2}" xml:space="preserve">
     <value>{0} gráficos · de {1} a {2}</value>
   </data>
@@ -8825,6 +8993,9 @@
   <data name="{0} improved" xml:space="preserve">
     <value>{0} mejoradas</value>
   </data>
+  <data name="{0} in your pool that no peer holds" xml:space="preserve">
+    <value>{0} en tu conjunto que ningún par tiene</value>
+  </data>
   <data name="{0} is not in {1} — the whole song left." xml:space="preserve">
     <value>{0} no está en {1} — la canción entera se fue.</value>
   </data>
@@ -8857,6 +9028,12 @@
   </data>
   <data name="{0} more keep their profile private." xml:space="preserve">
     <value>Otros {0} mantienen su perfil privado.</value>
+  </data>
+  <data name="{0} more peers above" xml:space="preserve">
+    <value>{0} pares más arriba</value>
+  </data>
+  <data name="{0} more peers below" xml:space="preserve">
+    <value>{0} pares más abajo</value>
   </data>
   <data name="{0} more perfects to cap" xml:space="preserve">
     <value>{0} Perfects más para llegar al tope</value>
@@ -8900,6 +9077,12 @@
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>{0} charts de esta canción fueron repisados.</value>
   </data>
+  <data name="{0} of your doubles pool" xml:space="preserve">
+    <value>{0} de tu conjunto de doubles</value>
+  </data>
+  <data name="{0} of your singles pool" xml:space="preserve">
+    <value>{0} de tu conjunto de singles</value>
+  </data>
   <data name="{0} of {1} charts" xml:space="preserve">
     <value>{0} de {1} charts</value>
   </data>
@@ -8917,6 +9100,9 @@
   </data>
   <data name="{0} of {1} folders" xml:space="preserve">
     <value>{0} de {1} carpetas</value>
+  </data>
+  <data name="{0} of {1} peers" xml:space="preserve">
+    <value>{0} de {1} pares</value>
   </data>
   <data name="{0} of {1} rating" xml:space="preserve">
     <value>{0} de {1} de valoración</value>
@@ -8987,8 +9173,8 @@
   <data name="{0} pools · average level {1}" xml:space="preserve">
     <value>{0} pools · nivel medio {1}</value>
   </data>
-  <data name="{0} PUMBILITY peers" xml:space="preserve">
-    <value>{0} pares de PUMBILITY</value>
+  <data name="{0} private accounts are peers but are not shown." xml:space="preserve">
+    <value>{0} cuentas privadas son pares pero no se muestran.</value>
   </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>{0} PUMBILITY restantes</value>

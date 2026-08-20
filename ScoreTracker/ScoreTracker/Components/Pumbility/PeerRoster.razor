@@ -1,0 +1,178 @@
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* Who the peers are (docs/design/pumbility-overhaul.md D39): public accounts strongest first with
+   their level, total, competitive levels, which types they are a peer for under All, and how many of
+   the viewer's fifty of each type they also hold. The viewer's own row rides the sort, unnumbered
+   and highlighted, so the table also answers "where do I sit". Private peers are counted in every
+   number on the page and named nowhere; the line beneath says how many there are.
+
+   A competitive band is several hundred players (D43), so past fifty rows the table keeps the fifty
+   nearest the viewer in the sort — the viewer in place — and says how many sit above and below.
+
+   Row colour is the site's own vocabulary through the shared ladder (you → both → rival → crew),
+   so a peer you already know is one you can pick out of the band (owner, field test round one). *@
+@if (Rows.Count == 0 && PrivatePeers == 0)
+{
+    <p class="pmb-empty" data-testid="roster-empty">@L["No peers yet."]</p>
+}
+else
+{
+    @if (Visible.Above > 0)
+    {
+        <p class="pmb-roster-note" data-testid="roster-more-above">
+            @(Visible.Above == 1 ? L["1 more peer above"] : L["{0} more peers above", Visible.Above])
+        </p>
+    }
+    <div class="tier-table-wrap">
+        <table class="tier-table pmb-table pmb-roster" data-testid="roster">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>@L["Player"]</th>
+                @if (ShowLevel)
+                {
+                    <th>@L["Level"]</th>
+                }
+                <th class="pmb-r">@L["PUMBILITY"]</th>
+                <th title="@L["Competitive level, singles"]">@L["Singles"]</th>
+                <th title="@L["Competitive level, doubles"]">@L["Doubles"]</th>
+                @if (ShowPeerFor)
+                {
+                    <th>@L["Peer for"]</th>
+                }
+                <th title="@L["How many of your 50 they also hold"]">@L["Overlap with you"]</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var (row, place, isYou) in Visible.Rows)
+            {
+                <tr class="@RowClass(row, isYou)" data-testid="@(isYou ? "roster-you" : "roster-peer")">
+                    <td class="pmb-num pmb-muted">@(isYou ? string.Empty : place.ToString())</td>
+                    <td>
+                        <UserLabel User="row.User"></UserLabel>
+                        @if (isYou)
+                        {
+                            <span class="pmb-roster-you-tag">@L["You"]</span>
+                        }
+                    </td>
+                    @if (ShowLevel)
+                    {
+                        <td>
+                            <span class="pmb-roster-level" title="@LevelText(row)">
+                                <PumbilityLevelBadge Level="Rung(row)" Height="18"></PumbilityLevelBadge>
+                                @LevelText(row)
+                            </span>
+                        </td>
+                    }
+                    <td class="pmb-r pmb-num">@row.Total.ToString("N2")</td>
+                    <td class="pmb-num">@(row.SinglesLevel > 1 ? row.SinglesLevel.ToString("N2") : "—")</td>
+                    <td class="pmb-num">@(row.DoublesLevel > 1 ? row.DoublesLevel.ToString("N2") : "—")</td>
+                    @if (ShowPeerFor)
+                    {
+                        <td>@PeerForText(row)</td>
+                    }
+                    <td>
+                        @foreach (var (type, count) in row.Overlap.OrderBy(kv => kv.Key))
+                        {
+                            <span class="pmb-overlap" title="@OverlapTitle(type, count)">
+                                <span class="pmb-overlap-bar"><b style="width:@((2 * count).ToString())%"></b></span>
+                                <span class="pmb-num">@count</span>
+                            </span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    @if (Visible.Below > 0)
+    {
+        <p class="pmb-roster-note" data-testid="roster-more-below">
+            @(Visible.Below == 1 ? L["1 more peer below"] : L["{0} more peers below", Visible.Below])
+        </p>
+    }
+    @if (PrivatePeers > 0)
+    {
+        <p class="pmb-roster-note" data-testid="roster-private">
+            @(PrivatePeers == 1
+                ? L["1 private account is a peer but is not shown."]
+                : L["{0} private accounts are peers but are not shown.", PrivatePeers])
+        </p>
+    }
+}
+
+@code {
+    [Parameter] [EditorRequired] public IReadOnlyList<PeerRosterEntry> Rows { get; set; } = Array.Empty<PeerRosterEntry>();
+
+    [Parameter] public PeerRosterEntry? You { get; set; }
+
+    [Parameter] public int PrivatePeers { get; set; }
+
+    /// <summary>Under All the roster spans both types, and which type each peer is a peer for is worth a column.</summary>
+    [Parameter] public bool ShowPeerFor { get; set; }
+
+    /// <summary>The site-user rivals to glow red, from the shared reader.</summary>
+    [Parameter] public IReadOnlySet<Guid>? Rivals { get; set; }
+
+    /// <summary>The members of your own communities, to glow green.</summary>
+    [Parameter] public IReadOnlySet<Guid>? Clubmates { get; set; }
+
+    private string RowClass(PeerRosterEntry row, bool isYou) =>
+        CommunityGlowReader.RowClass(isYou, Rivals?.Contains(row.User.Id) == true,
+            Clubmates?.Contains(row.User.Id) == true, "pmb-roster-you");
+
+    /// <summary>Rows shown at most; past it the table is a window around the viewer (D43).</summary>
+    public const int Window = 50;
+
+    private IEnumerable<PeerRosterEntry> Ordered =>
+        (You == null ? Rows : Rows.Append(You)).OrderByDescending(r => r.Total);
+
+    /// <summary>
+    ///     The rows that render, each with its place among the peers (the viewer is unnumbered and
+    ///     does not shift the places), and how many rows the window leaves out above and below it.
+    /// </summary>
+    private (IReadOnlyList<(PeerRosterEntry Row, int Place, bool IsYou)> Rows, int Above, int Below) Visible
+    {
+        get
+        {
+            var all = new List<(PeerRosterEntry Row, int Place, bool IsYou)>();
+            var place = 0;
+            foreach (var row in Ordered)
+            {
+                var isYou = You != null && row.User.Id == You.User.Id;
+                if (!isYou) place++;
+                all.Add((row, place, isYou));
+            }
+
+            if (all.Count <= Window) return (all, 0, 0);
+            var me = all.FindIndex(r => r.IsYou);
+            var start = me < 0 ? 0 : Math.Clamp(me - Window / 2, 0, all.Count - Window);
+            return (all.GetRange(start, Window), start, all.Count - start - Window);
+        }
+    }
+
+    private string PeerForText(PeerRosterEntry row)
+    {
+        if (row.PeerFor.Count == 0) return string.Empty;
+        if (row.PeerFor.Count > 1) return L["Singles and doubles"];
+        return row.PeerFor.Contains(ChartType.Single) ? L["Singles"] : L["Doubles"];
+    }
+
+    /// <summary>The gem column exists only where the mix has a ladder to read one from (Phoenix 2; D43).</summary>
+    private bool ShowLevel => Rows.Any(r => r.RungIndex != null) || You?.RungIndex != null;
+
+    private static Phoenix2PumbilityLevel? Rung(PeerRosterEntry row) =>
+        row.RungIndex is { } index ? Phoenix2PumbilityLevel.FromIndex(index) : null;
+
+    private string LevelText(PeerRosterEntry row) =>
+        Rung(row) is { } rung ? PumbilityLevelLabel.Of(rung, L["Unranked"]) : string.Empty;
+
+    private string OverlapTitle(ChartType type, int count) =>
+        type == ChartType.Single ? L["{0} of your singles pool", count] : L["{0} of your doubles pool", count];
+}

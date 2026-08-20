@@ -18,11 +18,12 @@ using ScoreTracker.PlayerProgress.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Tests.TestData;
 using Xunit;
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
-public sealed class PumbilityProjectionSagaTests
+public sealed partial class PumbilityProjectionSagaTests
 {
     [Fact]
     public async Task AChartNobodyComparableHasPlayedGetsNoProjection()
@@ -502,6 +503,8 @@ public sealed class PumbilityProjectionSagaTests
         private double _phoenix2Total;
         private readonly Dictionary<ChartType, int> _phoenix2PoolSizes = new();
         private readonly Dictionary<Guid, int> _pumbilityPeerPools = new();
+        private readonly Dictionary<Guid, double> _peerTotals = new();
+        private readonly Dictionary<Guid, (string Name, bool IsPublic)> _peerIdentity = new();
 
         public ProjectionContext(double singlesCompetitive = 20, double doublesCompetitive = 20)
         {
@@ -518,8 +521,24 @@ public sealed class PumbilityProjectionSagaTests
             Stats.Setup(s => s.GetStats(It.IsAny<MixEnum>(), It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum mix, IEnumerable<Guid> ids, CancellationToken _) => ids
-                    .Where(id => KnownIn(id, mix))
-                    .Select(id => StatsFor(id, _peerLevelNow[id], _peerLevelNow[id])).ToArray().AsEnumerable());
+                    .Where(id => id == UserId || KnownIn(id, mix))
+                    .Select(id => id == UserId
+                        ? StatsFor(UserId, _singles, _doubles, mix == MixEnum.Phoenix2 ? _phoenix2Total : 0)
+                        : StatsFor(id, _peerLevelNow[id], _peerLevelNow[id], _peerTotals.GetValueOrDefault(id)))
+                    .ToArray().AsEnumerable());
+            // The roster names peers through the user reader; the viewer's own scores come off
+            // the best-score read, the same list the top-fifty query answers with.
+            Users.Setup(u => u.GetUsers(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IEnumerable<Guid> ids, CancellationToken _) => ids
+                    .Where(id => id == UserId || _peerIdentity.ContainsKey(id))
+                    .Select(id => id == UserId
+                        ? new UserBuilder().WithId(UserId).WithName("Viewer").WithIsPublic(true).Build()
+                        : new UserBuilder().WithId(id).WithName(_peerIdentity[id].Name).WithIsPublic(_peerIdentity[id].IsPublic).Build())
+                    .ToArray().AsEnumerable());
+            CurrentUser.Setup(c => c.IsLoggedIn).Returns(true);
+            CurrentUser.Setup(c => c.User).Returns(() => new UserBuilder().WithId(UserId).WithName("Viewer").Build());
+            Scores.Setup(s => s.GetBestScores(It.IsAny<MixEnum>(), It.Is<Guid>(g => g == UserId), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => _topScores.ToArray().AsEnumerable());
             Stats.Setup(s => s.GetPlayersByCompetitiveRange(It.IsAny<MixEnum>(), It.IsAny<ChartType?>(),
                     It.IsAny<double>(), It.IsAny<double>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((MixEnum mix, ChartType? _, double _, double _, CancellationToken _) =>
@@ -589,7 +608,8 @@ public sealed class PumbilityProjectionSagaTests
             // are written against cohort membership and level-when-set, so faking it would leave
             // the plumbing this fixture exists to drive unexercised.
             Saga = new PumbilityProjectionSaga(Mediator.Object,
-                new ScoreProjector(Scores.Object, Stats.Object, History.Object), Cache);
+                new ScoreProjector(Scores.Object, Stats.Object, History.Object), Cache, Scores.Object, Stats.Object,
+                Users.Object, CurrentUser.Object);
         }
 
         public Guid UserId { get; } = Guid.NewGuid();
@@ -597,6 +617,8 @@ public sealed class PumbilityProjectionSagaTests
         public Mock<IPlayerStatsReader> Stats { get; } = new();
         public Mock<IScoreReader> Scores { get; } = new();
         public Mock<IPlayerHistoryRepository> History { get; } = new();
+        public Mock<IUserReader> Users { get; } = new();
+        public Mock<ICurrentUserAccessor> CurrentUser { get; } = new();
         public PumbilityProjectionSaga Saga { get; }
 
         public PumbilityProjectionCache Cache { get; }
@@ -659,9 +681,21 @@ public sealed class PumbilityProjectionSagaTests
         public ProjectionContext WithPumbilityPeer(Chart chart, int? phoenix2Score = null, int? phoenix1Score = null,
             int poolSize = 50)
         {
-            var peer = Guid.NewGuid();
+            return WithPumbilityPeer(out _, chart, phoenix2Score, phoenix1Score, poolSize);
+        }
+
+        /// <summary>
+        ///     The same, handing the peer's id back so a test can score them on more charts, name
+        ///     them, or hide them.
+        /// </summary>
+        public ProjectionContext WithPumbilityPeer(out Guid peer, Chart chart, int? phoenix2Score = null,
+            int? phoenix1Score = null, int poolSize = 50, string? name = null, bool isPublic = true, double total = 17_500)
+        {
+            peer = Guid.NewGuid();
             _pumbilityPeerPools[peer] = poolSize;
             _peerLevelNow[peer] = 20;
+            _peerTotals[peer] = total;
+            _peerIdentity[peer] = (name ?? $"Peer {_peerIdentity.Count + 1}", isPublic);
             _peerCohortMixes[peer] = new HashSet<MixEnum> { MixEnum.Phoenix, MixEnum.Phoenix2 };
             if (phoenix2Score is { } p2)
                 _peerScores.Add((MixEnum.Phoenix2, new UserPhoenixScore(peer, chart.Id, "Peer", p2,
@@ -669,6 +703,29 @@ public sealed class PumbilityProjectionSagaTests
             if (phoenix1Score is { } p1)
                 _peerScores.Add((MixEnum.Phoenix, new UserPhoenixScore(peer, chart.Id, "Peer", p1,
                     PhoenixPlate.MarvelousGame, false, true, Now.AddDays(-400))));
+            return this;
+        }
+
+        /// <summary>A Phoenix 2 score for a peer this fixture already knows, on another chart.</summary>
+        public ProjectionContext WithPeerPhoenix2Score(Guid peer, Chart chart, int score)
+        {
+            _peerScores.Add((MixEnum.Phoenix2, new UserPhoenixScore(peer, chart.Id, "Peer", score,
+                PhoenixPlate.MarvelousGame, false, true, Now.AddDays(-10))));
+            return this;
+        }
+
+        /// <summary>A Phoenix 1 score for a peer this fixture already knows, on another chart.</summary>
+        public ProjectionContext WithPeerPhoenix1Score(Guid peer, Chart chart, int score)
+        {
+            _peerScores.Add((MixEnum.Phoenix, new UserPhoenixScore(peer, chart.Id, "Peer", score,
+                PhoenixPlate.MarvelousGame, false, true, Now.AddDays(-400))));
+            return this;
+        }
+
+        /// <summary>One of the viewer's own scores, as the best-score read and the top-fifty query both see it.</summary>
+        public ProjectionContext WithOwnScore(Chart chart, int score, PhoenixPlate plate = PhoenixPlate.MarvelousGame)
+        {
+            _topScores.Add(new RecordedPhoenixScore(chart.Id, score, plate, false, Now.AddDays(-30)));
             return this;
         }
 

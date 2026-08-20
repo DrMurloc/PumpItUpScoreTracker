@@ -1,0 +1,73 @@
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+
+@* Where your pool's levels sit against your peers' (docs/design/pumbility-overhaul.md D41), one
+   tile per lit type, beside the list's lede. The bars are you against peers in the you-and-peers
+   colours, each carrying its number in the title.
+
+   The In-common and Yours-alone tiles that stood beside it are cut: neither said anything a player
+   could act on (owner, field test round two). *@
+@if (Page.Compare.Count > 0)
+{
+    <div class="pmb-compare" data-testid="peers-compare">
+        @foreach (var (type, compare) in Page.Compare.OrderBy(kv => kv.Key))
+        {
+            var levels = Levels(compare);
+            <div class="pmb-compare-tile" data-testid="@($"peers-compare-levels-{type}")">
+                <div class="pmb-compare-label">
+                    @(Page.Compare.Count > 1
+                        ? type == ChartType.Single ? L["Where the levels sit · singles"] : L["Where the levels sit · doubles"]
+                        : L["Where the levels sit"])
+                </div>
+                <div class="pmb-levelbars">
+                    <span>@L["You"]</span>
+                    <span class="pmb-levelrow pmb-levelrow-you">
+                        @foreach (var level in levels)
+                        {
+                            var mine = compare.MyLevels.GetValueOrDefault(level);
+                            <i style="height:@Height(mine, MaxMine(compare))" title="@L["You: {0} charts at {1}", mine, level]"></i>
+                        }
+                    </span>
+                    <span>@L["Peers"]</span>
+                    <span class="pmb-levelrow pmb-levelrow-peers">
+                        @foreach (var level in levels)
+                        {
+                            var share = compare.PeerShareByLevel.GetValueOrDefault(level);
+                            <i style="height:@Height(share, MaxShare(compare))" title="@L["Peers: {0}% of their pool weight at {1}", (100 * share).ToString("N0"), level]"></i>
+                        }
+                    </span>
+                    <span></span>
+                    <span class="pmb-levelaxis">
+                        @foreach (var level in levels)
+                        {
+                            <span>@level</span>
+                        }
+                    </span>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] [EditorRequired] public PumbilityPeersPageRecord Page { get; set; } = null!;
+
+    [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
+
+    /// <summary>The levels either side of the strip covers, so the two rows share an axis.</summary>
+    private static IReadOnlyList<int> Levels(PeerCompare compare)
+    {
+        var all = compare.MyLevels.Keys.Concat(compare.PeerShareByLevel.Where(kv => kv.Value > 0).Select(kv => kv.Key)).ToArray();
+        if (all.Length == 0) return Array.Empty<int>();
+        return Enumerable.Range(all.Min(), all.Max() - all.Min() + 1).ToArray();
+    }
+
+    private static int MaxMine(PeerCompare compare) => compare.MyLevels.Count == 0 ? 1 : Math.Max(1, compare.MyLevels.Values.Max());
+
+    private static double MaxShare(PeerCompare compare) => compare.PeerShareByLevel.Count == 0 ? 1 : Math.Max(1e-9, compare.PeerShareByLevel.Values.Max());
+
+    private static string Height(double value, double max) => $"{Math.Max(2, 100 * value / max).ToString("0", System.Globalization.CultureInfo.InvariantCulture)}%";
+}

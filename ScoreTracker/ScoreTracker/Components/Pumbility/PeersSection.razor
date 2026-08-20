@@ -1,0 +1,348 @@
+@using MediatR
+@using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.PlayerProgress.Contracts
+@using ScoreTracker.PlayerProgress.Contracts.Queries
+@using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.Models
+@using Microsoft.JSInterop
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.SharedKernel.ValueTypes
+@using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
+@using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
+@using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
+@namespace ScoreTracker.Web.Components
+@inject IMediator Mediator
+@inject ICurrentUserAccessor CurrentUser
+@inject IUiSettingsAccessor UiSettings
+@inject CommunityGlowReader Glow
+@inject IJSRuntime JSRuntime
+@inject IDateTimeOffsetAccessor Clock
+
+@* The Play page's block (docs/design/pumbility-overhaul.md §3.10, D32, D43): what your peers
+   build their number from, grouped by prevalence or by projected gain, and who they are — the
+   PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1, and the ledes say which. Held
+   by a component rather than the page because the pool it is scoped to arrives
+   from the section frame — a parameter, so a pool change re-fetches on its own — and because
+   the page record the frame already loaded is where the gains come from (D38): the target
+   list's own answer per chart, carried Phoenix 1 winning, so this page and the old one can
+   never disagree about a number. With the Phoenix 1 switch off the peer-only projection stands
+   in, read once and kept.
+
+   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then, left-aligned
+   beside it, the one switch that means something under that grouping — Project Phoenix 1 scores
+   under Projected gains and only when the record holds carried rows; Only projected PUMBILITY
+   gains under Prevalence; nothing under Your top 50 — then the density trio at the far end, right
+   above the list (D34, D36). Every preference persists as a UiSetting. *@
+<section class="pmb-block" data-testid="peers-section">
+    <div class="pmb-block-head">
+        <h2 class="pmb-block-title">@L["PUMBILITY Targets"]</h2>
+    </div>
+    <div class="pmb-peers-head">
+        <p class="pmb-block-lede">@Lede</p>
+        @if (_peers != null)
+        {
+            <PeerCompareStrip Page="_peers" Charts="Charts"></PeerCompareStrip>
+        }
+    </div>
+    @if (Page.Peers is { } peers)
+    {
+        <PumbilityPeerLine Peers="peers" Pool="Pool"></PumbilityPeerLine>
+    }
+
+    @if (_peers == null)
+    {
+        <PatienceCard Explanation="@L["Reading your peers' pools. This reads a few hundred players at your level, so it takes a moment."]"></PatienceCard>
+    }
+    else
+    {
+        <div class="pmb-peers-controls" data-testid="peers-controls">
+            @* Two groups, not four items with margins between them: the select and its switch are
+               one element of the row and the actions are the other, so nothing can drift into the
+               middle however the free space is distributed (owner, field test rounds three–five). *@
+            <span class="pmb-peers-controls-start">
+            <MudSelect T="PeerGrouping" Class="pmb-peers-controls-select" Label="@L["Grouped by"]" Dense="true"
+                       Value="_groupBy" ValueChanged="SetGrouping" data-testid="peers-groupby">
+                <MudSelectItem T="PeerGrouping" Value="PeerGrouping.Prevalence">@L["Prevalence"]</MudSelectItem>
+                <MudSelectItem T="PeerGrouping" Value="PeerGrouping.ProjectedGains">@L["Projected gains"]</MudSelectItem>
+                <MudSelectItem T="PeerGrouping" Value="PeerGrouping.YourTop50">@L["Your top 50"]</MudSelectItem>
+            </MudSelect>
+            <span class="pmb-peers-controls-switches">
+                @if (_groupBy == PeerGrouping.ProjectedGains && HasCarried)
+                {
+                    <MudSwitch T="bool" Value="_projectPhoenix1" ValueChanged="SetProjectPhoenix1" Color="Color.Primary"
+                               Label="@L["Project Phoenix 1 scores"]" data-testid="peers-p1-switch"></MudSwitch>
+                }
+                @if (_groupBy == PeerGrouping.Prevalence)
+                {
+                    <MudSwitch T="bool" Value="_gainsOnly" ValueChanged="SetGainsOnly" Color="Color.Primary"
+                               Label="@L["Only projected PUMBILITY gains"]" data-testid="peers-gains-switch"></MudSwitch>
+                }
+            </span>
+            </span>
+            <span class="pmb-peers-controls-end">
+                @* The tier list's Download, on the tier list's own share card: this page is the
+                   same shape, so the picture is the same picture (owner, field test round three). *@
+                @if (_building)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
+                }
+                else
+                {
+                    <MudTooltip Text="@L["Download"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary"
+                                       OnClick="Download" aria-label="@L["Download"]" data-testid="peers-download"></MudIconButton>
+                    </MudTooltip>
+                }
+                <MudButtonGroup OverrideStyles="false">
+                    <MudTooltip Text="@L["Comfortable"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
+                                       Color="@(_density == UiDensity.Comfortable ? Color.Primary : Color.Default)"
+                                       OnClick="() => SetDensity(UiDensity.Comfortable)" aria-label="@L["Comfortable"]"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="@L["Compact"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.GridView"
+                                       Color="@(_density == UiDensity.Compact ? Color.Primary : Color.Default)"
+                                       OnClick="() => SetDensity(UiDensity.Compact)" aria-label="@L["Compact"]"></MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="@L["Table"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.TableRows"
+                                       Color="@(_density == UiDensity.Table ? Color.Primary : Color.Default)"
+                                       OnClick="() => SetDensity(UiDensity.Table)" aria-label="@L["Table"]"></MudIconButton>
+                    </MudTooltip>
+                </MudButtonGroup>
+            </span>
+        </div>
+        <PeerPoolLegend Density="_density" HasCarried="HasCarried && _projectPhoenix1 && _groupBy == PeerGrouping.ProjectedGains"></PeerPoolLegend>
+        <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Page.Mix" Density="_density" PoolRecord="Page"
+                      GroupBy="_groupBy" GainsOnly="_gainsOnly"
+                      ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
+                      Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
+    }
+</section>
+
+@if (_peers != null && (_peers.Roster.Count > 0 || _peers.PrivatePeers > 0))
+{
+    <section class="pmb-block" data-testid="peers-roster">
+        <div class="pmb-block-head">
+            <h2 class="pmb-block-title">@L["Who your peers are"]</h2>
+        </div>
+        <p class="pmb-block-lede">
+            @(IsPumbilityBand
+                ? L["Players within three PUMBILITY levels of you holding a full pool of the type. You are never one of your own peers; the highlighted row is where you would sit."]
+                : L["Players within one competitive level of you for the type. You are never one of your own peers; the highlighted row is where you would sit."])
+        </p>
+        <PeerRoster Rows="_peers.Roster" You="_peers.You" PrivatePeers="_peers.PrivatePeers" ShowPeerFor="Pool == null"
+                    Rivals="_rivals" Clubmates="_clubmates"></PeerRoster>
+    </section>
+}
+
+@code {
+    /// <summary>The frame's page record — the totals, the bar, and the target list this block prices its gains from.</summary>
+    [Parameter] [EditorRequired] public PumbilityPageRecord Page { get; set; } = null!;
+
+    [Parameter] [EditorRequired] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } =
+        new Dictionary<Guid, Chart>();
+
+    [Parameter] public ChartType? Pool { get; set; }
+
+    [Parameter] public ISet<Guid> ToDos { get; set; } = new HashSet<Guid>();
+
+    [Parameter] public EventCallback<Guid> OnToDo { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnOpen { get; set; }
+
+    [Parameter] public EventCallback<Chart> OnPlay { get; set; }
+
+    // Kept as the section's original key rather than a new one: the convention is per page,
+    // and this IS the Play page — renaming would reset the preference for everyone holding one.
+    public const string DensitySettingKey = "Density__Pumbility";
+
+    public const string GroupBySettingKey = "Pumbility__GroupBy";
+
+    public const string ProjectPhoenix1SettingKey = "Pumbility__ProjectPhoenix1";
+
+    public const string GainsOnlySettingKey = "Pumbility__GainsOnly";
+
+    public const string CollapsedSettingKey = "Pumbility__CollapsedTiers";
+
+    private PumbilityPeersPageRecord? _peers;
+    private ChartType? _loadedPool;
+    private bool _loaded;
+    private bool _settingsRead;
+
+    private UiDensity _density = UiDensity.Comfortable;
+    private PeerGrouping _groupBy = PeerGrouping.Prevalence;
+    private bool _projectPhoenix1 = true;
+    // The front page opens on what pays (D42); the whole prevalence list is one switch away.
+    private bool _gainsOnly = true;
+    private HashSet<string> _collapsed = new(PeerPoolList.DefaultCollapsed);
+
+    /// <summary>The peer-only projection, read once when the Phoenix 1 switch first goes off.</summary>
+    private IReadOnlyDictionary<Guid, PumbilityTarget>? _peerOnlyGains;
+
+    // Who among the peers you already know. Both reads are the shared reader's, cached per
+    // circuit, and neither gates the list — the roster simply renders unglowed until they land.
+    private IReadOnlySet<Guid>? _rivals;
+    private IReadOnlySet<Guid>? _clubmates;
+
+    private PeerPoolList? _list;
+    private bool _building;
+
+    /// <summary>The Phoenix 1 switch only exists for a player whose Phoenix 1 record would change the list (D36).</summary>
+    private bool HasCarried => Page.Targets.Any(t => t.Source == TargetSource.Phoenix1);
+
+    /// <summary>The target list's own gains, or the peer-only projection with the Phoenix 1 switch off.</summary>
+    private IReadOnlyDictionary<Guid, PumbilityTarget> Gains =>
+        !_projectPhoenix1 && _peerOnlyGains != null
+            ? _peerOnlyGains
+            : Page.Targets.GroupBy(t => t.ChartId).ToDictionary(g => g.Key, g => g.First());
+
+    /// <summary>Who a peer is: the PUMBILITY band on Phoenix 2, the competitive band on Phoenix 1 (D43). The ledes say which.</summary>
+    private bool IsPumbilityBand => Page.Mix == MixEnum.Phoenix2;
+
+    private string Lede => _groupBy == PeerGrouping.YourTop50
+        ? L["Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar."]
+        : _groupBy == PeerGrouping.ProjectedGains
+        ? L["Ranked by what each chart would add if you played it to the standard your peers set — priced against your bar as it stands now, so every row means what the first one does. Everything here clears your bar."]
+        : _gainsOnly
+            ? IsPumbilityBand
+                ? L["What players within three levels of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it."]
+                : L["What players within one competitive level of you build their PUMBILITY from, cut to the charts that would clear your bar — each priced against the bar as it stands now, and grouped by how many of your peers hold it."]
+            : IsPumbilityBand
+                ? L["What players within three levels of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."]
+                : L["What players within one competitive level of you build their PUMBILITY from: every chart your peers hold in their top 50, ranked by how high it sits in their pools, with how they score on it and where you stand."];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_settingsRead)
+        {
+            _settingsRead = true;
+            await ReadSettings();
+        }
+
+        if (_loaded && _loadedPool == Pool) return;
+        _loaded = true;
+        _loadedPool = Pool;
+        _peers = null;
+        _peerOnlyGains = null;
+        _peers = await Mediator.Send(new GetPumbilityPeersPageQuery(CurrentUser.User.Id, Page.Mix, Pool));
+        if (!_projectPhoenix1) await ReadPeerOnlyGains();
+        if (_rivals == null)
+        {
+            _rivals = await Glow.GetMyRivalIds(Page.Mix);
+            _clubmates = await Glow.GetMyCommunityMemberIds();
+        }
+    }
+
+    private async Task ReadSettings()
+    {
+        if (Enum.TryParse<UiDensity>(await UiSettings.GetSetting(DensitySettingKey), out var density)) _density = density;
+        if (Enum.TryParse<PeerGrouping>(await UiSettings.GetSetting(GroupBySettingKey), out var grouping)) _groupBy = grouping;
+        if (bool.TryParse(await UiSettings.GetSetting(ProjectPhoenix1SettingKey), out var project)) _projectPhoenix1 = project;
+        if (bool.TryParse(await UiSettings.GetSetting(GainsOnlySettingKey), out var gainsOnly)) _gainsOnly = gainsOnly;
+        var collapsed = await UiSettings.GetSetting(CollapsedSettingKey);
+        if (!string.IsNullOrWhiteSpace(collapsed))
+            _collapsed = collapsed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
+    }
+
+    private async Task ReadPeerOnlyGains()
+    {
+        var projection = await Mediator.Send(new ProjectPumbilityGainsQuery(CurrentUser.User.Id, Page.Mix, Pool));
+        _peerOnlyGains = projection.ProjectedGains.ToDictionary(kv => kv.Key,
+            kv => new PumbilityTarget(kv.Key, projection.ExpectedScores[kv.Key], kv.Value, null, false, null));
+    }
+
+    /// <summary>
+    ///     The list as a PNG, through the tier list's own share-card query and renderer — the same
+    ///     model, so nothing here is a second layout to keep in step. Sections and their colours
+    ///     come off the rendered list, so the image says what the screen says.
+    /// </summary>
+    private async Task Download()
+    {
+        if (_list == null) return;
+        _building = true;
+        try
+        {
+            var palette = MixThemes.PaletteFor(Page.Mix);
+            var rows = _list.ShareSections()
+                .Where(s => s.Tiles.Count > 0)
+                .Select(s => new TierListShareCard.Row(s.Name,
+                    s.Tier is { } tier ? MixThemes.PumbilityHex(Page.Mix, tier) : palette.Primary,
+                    s.Tiles.Select(t => new TierListShareCard.Tile(
+                        t.Chart.Song.ImagePath.ToString(),
+                        t.Score is { } score ? ShareCardImages.LetterGrade(score.LetterGradeFor(Page.Mix), false) : null,
+                        // Compact prints the corner value where the plate would sit, so the card
+                        // does too: a tile carrying a number does not also carry plate art.
+                        t.CornerLabel == null && t.Plate is { } plate ? ShareCardImages.Plate(plate) : null,
+                        _list.ShareOutlineHexFor(t.Chart.Id),
+                        t.CornerLabel,
+                        palette.Primary,
+                        t.Outline)).ToArray()))
+                .ToArray();
+            if (rows.Length == 0) return;
+
+            var now = Clock.Now;
+            var card = new TierListShareCard(
+                L["PUMBILITY Targets"],
+                $"{GroupingName} · {(Page.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix")} · {now:yyyy-MM-dd}",
+                L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString(),
+                palette.Primary, palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
+                "https://piuscores.arroweclip.se/Pumbility",
+                null,
+                rows);
+
+            var bytes = await Mediator.Send(new GetTierListShareCardQuery(card));
+            using var stream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream);
+            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+            await module.InvokeVoidAsync("downloadFileFromStream",
+                $"PumbilityTargets_{Page.Mix}_{_groupBy}_{now:yyyy-MM-dd}.png", streamRef);
+        }
+        finally
+        {
+            _building = false;
+        }
+    }
+
+    private string GroupingName => _groupBy switch
+    {
+        PeerGrouping.ProjectedGains => L["Projected gains"],
+        PeerGrouping.YourTop50 => L["Your top 50"],
+        _ => L["Prevalence"]
+    };
+
+    private async Task SetDensity(UiDensity density)
+    {
+        _density = density;
+        await UiSettings.SetSetting(DensitySettingKey, density.ToString());
+    }
+
+    private async Task SetGrouping(PeerGrouping grouping)
+    {
+        _groupBy = grouping;
+        await UiSettings.SetSetting(GroupBySettingKey, grouping.ToString());
+    }
+
+    private async Task SetProjectPhoenix1(bool on)
+    {
+        _projectPhoenix1 = on;
+        await UiSettings.SetSetting(ProjectPhoenix1SettingKey, on.ToString());
+        if (!on && _peerOnlyGains == null) await ReadPeerOnlyGains();
+    }
+
+    private async Task SetGainsOnly(bool on)
+    {
+        _gainsOnly = on;
+        await UiSettings.SetSetting(GainsOnlySettingKey, on.ToString());
+    }
+
+    private async Task SetCollapsed(IReadOnlySet<string> collapsed)
+    {
+        _collapsed = collapsed.ToHashSet();
+        await UiSettings.SetSetting(CollapsedSettingKey, string.Join(",", _collapsed));
+    }
+}

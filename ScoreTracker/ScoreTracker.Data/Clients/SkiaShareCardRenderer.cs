@@ -113,22 +113,47 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
                     canvas.Restore();
                 }
 
+                // The bottom edge, right to left, exactly as the Compact card stacks it: a printed
+                // corner value wins the right, the grade steps to the LEFT corner when there is one
+                // (the card's corner-start slot), and the plate takes what is left in between.
+                var right = rect.Right - 4;
+                if (tile.CornerLabel != null)
+                    right = DrawCorner(canvas, tile.CornerLabel, tile.CornerHex ?? card.AccentHex, right,
+                        rect.Bottom - 4, card.InkHex);
+
                 if (plate != null)
+                {
                     canvas.DrawBitmap(plate,
-                        SKRect.Create(rect.Right - GradeWidth - 4, rect.Bottom - GradeHeight - 4, GradeWidth,
-                            GradeHeight));
+                        SKRect.Create(right - GradeWidth, rect.Bottom - GradeHeight - 4, GradeWidth, GradeHeight));
+                    right -= GradeWidth + 4;
+                }
+
                 if (grade != null)
-                    canvas.DrawBitmap(grade,
-                        SKRect.Create(rect.Right - (GradeWidth + 4) * 2, rect.Bottom - GradeHeight - 4, GradeWidth,
-                            GradeHeight));
+                    canvas.DrawBitmap(grade, tile.CornerLabel == null
+                        ? SKRect.Create(right - GradeWidth, rect.Bottom - GradeHeight - 4, GradeWidth, GradeHeight)
+                        : SKRect.Create(rect.Left + 4, rect.Bottom - GradeHeight - 4, GradeWidth, GradeHeight));
+
                 if (tile.BadgeHex != null)
-                    using (var badge = new SKPaint
-                           {
-                               Style = SKPaintStyle.Fill, Color = SKColor.Parse(tile.BadgeHex), IsAntialias = true
-                           })
-                    {
-                        canvas.DrawCircle(rect.Right - 9, rect.Top + 9, 6, badge);
-                    }
+                {
+                    if (tile.Outline == TileOutline.Dot)
+                        using (var badge = new SKPaint
+                               {
+                                   Style = SKPaintStyle.Fill, Color = SKColor.Parse(tile.BadgeHex), IsAntialias = true
+                               })
+                        {
+                            canvas.DrawCircle(rect.Right - 9, rect.Top + 9, 6, badge);
+                        }
+                    else
+                        using (var border = new SKPaint
+                               {
+                                   Style = SKPaintStyle.Stroke, StrokeWidth = 2,
+                                   Color = SKColor.Parse(tile.BadgeHex), IsAntialias = true,
+                                   PathEffect = DashFor(tile.Outline)
+                               })
+                        {
+                            canvas.DrawRoundRect(new SKRoundRect(SKRect.Inflate(rect, -1, -1), 6), border);
+                        }
+                }
 
                 x += TileWidth + Pad;
             }
@@ -153,6 +178,41 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
         using var data = image.Encode(SKEncodedImageFormat.Png, 95);
         return data.ToArray();
     }
+
+    /// <summary>
+    ///     The printed corner: the Compact card's chip — a near-black plate, a hairline border in
+    ///     the value's own colour, the value in it — drawn right-aligned at <paramref name="right" />.
+    ///     Returns the x its left edge took, so the next mark can stack beside it.
+    /// </summary>
+    private static float DrawCorner(SKCanvas canvas, string label, string hex, float right, float bottom,
+        string inkHex)
+    {
+        using var text = TextPaint(hex, 13, true);
+        var width = text.MeasureText(label) + 10;
+        var box = SKRect.Create(right - width, bottom - 19, width, 19);
+        using (var fill = new SKPaint { Style = SKPaintStyle.Fill, Color = new SKColor(0, 0, 0, 209), IsAntialias = true })
+        {
+            canvas.DrawRoundRect(new SKRoundRect(box, 4), fill);
+        }
+
+        using (var border = new SKPaint
+               {
+                   Style = SKPaintStyle.Stroke, StrokeWidth = 1, Color = SKColor.Parse(hex), IsAntialias = true
+               })
+        {
+            canvas.DrawRoundRect(new SKRoundRect(box, 4), border);
+        }
+
+        canvas.DrawText(label, box.Left + 5, box.Bottom - 5, text);
+        return box.Left - 4;
+    }
+
+    private static SKPathEffect? DashFor(TileOutline outline) => outline switch
+    {
+        TileOutline.Dashed => SKPathEffect.CreateDash(new[] { 6f, 4f }, 0),
+        TileOutline.Dotted => SKPathEffect.CreateDash(new[] { 2f, 3f }, 0),
+        _ => null
+    };
 
     private static SKPaint TextPaint(string hex, float size, bool bold)
     {
