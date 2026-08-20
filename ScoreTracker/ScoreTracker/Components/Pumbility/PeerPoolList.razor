@@ -323,7 +323,7 @@ else
             {
                 var rows = pool.Where(r => banded[r.Chart.Id] == tier).ToArray();
                 if (rows.Length == 0) continue;
-                sections.Add(new Section(tier.ToString(), L[PumbilityTierNames.NameOf(tier)],
+                sections.Add(new Section(tier.ToString(), L[PumbilityTierNames.PoolNameOf(tier)],
                     ThemeScales.PumbilityColor(tier), rows, null, "pmb-tier-section"));
             }
 

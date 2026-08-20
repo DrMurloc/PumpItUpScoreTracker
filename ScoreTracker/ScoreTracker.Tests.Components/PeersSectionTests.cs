@@ -129,23 +129,24 @@ public sealed class PeersSectionTests : ComponentTestBase
     }
 
     [Fact]
-    public void TheCompareStripSaysHowYourPoolDiffersPerLitType()
+    public void TheCompareStripIsTheLevelBarsAndNothingElse()
     {
         var page = new PumbilityPeersPageRecord(MixEnum.Phoenix2, null,
             new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = PeerGroup.Pumbility(24, 23, 50) },
             Array.Empty<PeerPoolEntry>(), Array.Empty<PeerAloneEntry>(), Array.Empty<PeerRosterEntry>(), 0, null,
             new Dictionary<ChartType, PeerCompare>
             {
-                [ChartType.Single] = new(9, 21, 10,
+                [ChartType.Single] = new(
                     new Dictionary<int, int> { [20] = 16, [21] = 19, [26] = 1 },
                     new Dictionary<int, double> { [20] = .26, [21] = .26, [22] = .27 })
             });
 
         var cut = RenderComponent<PeerCompareStrip>(p => p.Add(x => x.Page, page));
 
-        Assert.Contains("9 of your 50 singles sit in your peers' top 50.", cut.Markup);
-        Assert.Contains("10 singles no peer holds.", cut.Markup);
-        Assert.Contains("21 singles held by one at most.", cut.Markup);
+        // The In-common and Yours-alone tiles are cut (owner, field test round two).
+        Assert.Single(cut.FindAll(".pmb-compare-tile"));
+        Assert.DoesNotContain("In common", cut.Markup);
+        Assert.DoesNotContain("Yours alone", cut.Markup);
         // One axis for both rows, spanning every level either side reaches: 20 through 26.
         Assert.Equal(7, cut.FindAll(".pmb-levelaxis span").Count);
         Assert.Equal(7, cut.FindAll(".pmb-levelrow-you i").Count);
@@ -174,11 +175,11 @@ public sealed class PeersSectionTests : ComponentTestBase
         var cut = RenderComponent<PeersSection>(p => p.Add(x => x.Page, Page(carried: false, MixEnum.Phoenix)).Add(x => x.Charts, _charts));
         cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
 
-        Assert.Equal("Your peers", cut.Find(".pmb-block-title").TextContent.Trim());
+        Assert.Equal("PUMBILITY Targets", cut.Find(".pmb-block-title").TextContent.Trim());
         Assert.Contains("within one competitive level of you", cut.Find(".pmb-block-lede").TextContent);
         Assert.DoesNotContain("PUMBILITY levels", cut.Markup);
-        // The chips line counts the band; the list and the controls are the Phoenix 2 page's.
-        Assert.Equal("Singles: 144 peers", cut.Find(".pmb-peer-chip").TextContent.Trim());
+        // A competitive band is lit, so no chips line renders (field test round two).
+        Assert.Empty(cut.FindAll(".pmb-peer-chip"));
         Assert.NotNull(cut.Find("[data-testid=peers-controls]").QuerySelector("[data-testid=peers-gains-switch]"));
         Assert.Contains("Staple", cut.Markup);
         Mediator.Verify(m => m.Send(It.Is<GetPumbilityPeersPageQuery>(q => q.UserId == Viewer && q.Mix == MixEnum.Phoenix),

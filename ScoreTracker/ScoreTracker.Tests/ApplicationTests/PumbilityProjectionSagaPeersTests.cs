@@ -64,10 +64,8 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Equal(990_000, (int)alone.Score);
 
         var compare = page.Compare[ChartType.Single];
-        Assert.Equal(1, compare.InCommon);
-        Assert.Equal(1, compare.Alone);
-        Assert.Equal(1, compare.HeldByAtMostOne);
         Assert.Equal(2, compare.MyLevels.Values.Sum());
+        Assert.Equal(1, compare.PeerShareByLevel.Values.Sum(), 6);
     }
 
     [Fact]

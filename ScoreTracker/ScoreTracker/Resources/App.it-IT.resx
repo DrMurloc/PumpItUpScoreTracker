@@ -1333,9 +1333,6 @@
   <data name="Charts covered" xml:space="preserve">
     <value>Chart coperti</value>
   </data>
-  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
-    <value>I chart che meno di 5 di loro hanno passato non vengono mostrati.</value>
-  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>Chart nel pool</value>
   </data>
@@ -2145,12 +2142,6 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Tabella dei Doubles; un Single legge AA e inferiori una tacca più in basso (AA {0}, A+ {1} …). Scala completa sotto.</value>
   </data>
-  <data name="Doubles: {0} peers" xml:space="preserve">
-    <value>Doubles: {0} pari</value>
-  </data>
-  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
-    <value>Doubles: {0} pari PUMBILITY</value>
-  </data>
   <data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>Doubles: {0}/{1} chart</value>
   </data>
@@ -2859,6 +2850,12 @@
   <data name="Hide Zero Scoring Charts" xml:space="preserve">
     <value>Nascondi i chart con scoring a zero</value>
   </data>
+  <data name="High" xml:space="preserve">
+    <value>Alto</value>
+  </data>
+  <data name="Highest" xml:space="preserve">
+    <value>Massimo</value>
+  </data>
   <data name="Highest Clear" xml:space="preserve">
     <value>Livello max superato</value>
   </data>
@@ -3143,9 +3140,6 @@
   </data>
   <data name="In" xml:space="preserve">
     <value>In</value>
-  </data>
-  <data name="In common" xml:space="preserve">
-    <value>In comune</value>
   </data>
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>nel nostro database, bloccata così da non poter essere aperta da sola.</value>
@@ -3595,6 +3589,9 @@
   </data>
   <data name="Low" xml:space="preserve">
     <value>Basso</value>
+  </data>
+  <data name="Lowest" xml:space="preserve">
+    <value>Minimo</value>
   </data>
   <data name="Lowest level" xml:space="preserve">
     <value>Livello minimo</value>
@@ -4570,9 +4567,6 @@
   </data>
   <data name="Of Note" xml:space="preserve">
     <value>Da segnalare</value>
-  </data>
-  <data name="of {0}" xml:space="preserve">
-    <value>di {0}</value>
   </data>
   <data name="of {0} in range" xml:space="preserve">
     <value>su {0} nel tuo range</value>
@@ -5553,6 +5547,9 @@
   </data>
   <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
     <value>Rating Pumbility, titoli e un riepilogo di stagione da screenshot.</value>
+  </data>
+  <data name="PUMBILITY Targets" xml:space="preserve">
+    <value>Obiettivi PUMBILITY</value>
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>Top 50 PUMBILITY</value>
@@ -6701,12 +6698,6 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>Singles vs Doubles</value>
-  </data>
-  <data name="Singles: {0} peers" xml:space="preserve">
-    <value>Singles: {0} pari</value>
-  </data>
-  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
-    <value>Singles: {0} pari PUMBILITY</value>
   </data>
   <data name="Singles: {0}/{1} charts" xml:space="preserve">
     <value>Singles: {0}/{1} chart</value>
@@ -8014,6 +8005,9 @@
   <data name="Very hard to pass for its level" xml:space="preserve">
     <value>Molto difficile da passare per il suo livello</value>
   </data>
+  <data name="Very High" xml:space="preserve">
+    <value>Molto alto</value>
+  </data>
   <data name="Very Low" xml:space="preserve">
     <value>Molto basso</value>
   </data>
@@ -8372,9 +8366,6 @@
   <data name="Within days" xml:space="preserve">
     <value>Giorni (max)</value>
   </data>
-  <data name="within one competitive level of you" xml:space="preserve">
-    <value>entro ±1 livello competitivo da te</value>
-  </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>Senza di essi funziona lo stesso — per te, sui tuoi punteggi.</value>
   </data>
@@ -8698,9 +8689,6 @@
   </data>
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>La tua sessione più recente, per intero</value>
-  </data>
-  <data name="Your peers" xml:space="preserve">
-    <value>I tuoi pari</value>
   </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>Gli insiemi dei tuoi pari non hanno ancora niente.</value>
@@ -9038,12 +9026,6 @@
   <data name="{0} don't have enough skill data to move:" xml:space="preserve">
     <value>{0} non hanno dati di abilità sufficienti per spostarsi:</value>
   </data>
-  <data name="{0} doubles held by one at most." xml:space="preserve">
-    <value>{0} doubles tenute da uno al massimo.</value>
-  </data>
-  <data name="{0} doubles no peer holds." xml:space="preserve">
-    <value>{0} doubles che nessun pari tiene.</value>
-  </data>
   <data name="{0} easier for you" xml:space="preserve">
     <value>{0} più facili per te</value>
   </data>
@@ -9167,12 +9149,6 @@
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>{0} chart di questa canzone sono state ripassate.</value>
   </data>
-  <data name="{0} of your 50 doubles sit in your peers' top 50." xml:space="preserve">
-    <value>{0} delle tue 50 doubles stanno nella top 50 dei tuoi pari.</value>
-  </data>
-  <data name="{0} of your 50 singles sit in your peers' top 50." xml:space="preserve">
-    <value>{0} delle tue 50 singles stanno nella top 50 dei tuoi pari.</value>
-  </data>
   <data name="{0} of your doubles pool" xml:space="preserve">
     <value>{0} del tuo insieme doubles</value>
   </data>
@@ -9272,9 +9248,6 @@
   <data name="{0} private accounts are peers but are not shown." xml:space="preserve">
     <value>{0} account privati sono pari ma non vengono mostrati.</value>
   </data>
-  <data name="{0} PUMBILITY peers" xml:space="preserve">
-    <value>{0} pari PUMBILITY</value>
-  </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>{0} PUMBILITY rimanenti</value>
   </data>
@@ -9301,12 +9274,6 @@
   </data>
   <data name="{0} shared perfect games" xml:space="preserve">
     <value>{0} perfect game in comune</value>
-  </data>
-  <data name="{0} singles held by one at most." xml:space="preserve">
-    <value>{0} singles tenute da uno al massimo.</value>
-  </data>
-  <data name="{0} singles no peer holds." xml:space="preserve">
-    <value>{0} singles che nessun pari tiene.</value>
   </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>{0} singles · {1} doubles superate</value>

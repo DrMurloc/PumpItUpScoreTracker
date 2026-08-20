@@ -24,16 +24,22 @@
    never disagree about a number. With the Phoenix 1 switch off the peer-only projection stands
    in, read once and kept.
 
-   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then the one
-   switch that means something under that grouping — Project Phoenix 1 scores under Projected
-   gains and only when the record holds carried rows; Only projected PUMBILITY gains under
-   Prevalence; nothing under Your top 50 — then the density trio at the far end, right above the
-   list (D34, D36). Every preference persists as a UiSetting. *@
+   The controls: Grouped by — Prevalence, Projected gains, Your top 50 (D44) — then, left-aligned
+   beside it, the one switch that means something under that grouping — Project Phoenix 1 scores
+   under Projected gains and only when the record holds carried rows; Only projected PUMBILITY
+   gains under Prevalence; nothing under Your top 50 — then the density trio at the far end, right
+   above the list (D34, D36). Every preference persists as a UiSetting. *@
 <section class="pmb-block" data-testid="peers-section">
     <div class="pmb-block-head">
-        <h2 class="pmb-block-title">@L["Your peers"]</h2>
+        <h2 class="pmb-block-title">@L["PUMBILITY Targets"]</h2>
     </div>
-    <p class="pmb-block-lede">@Lede</p>
+    <div class="pmb-peers-head">
+        <p class="pmb-block-lede">@Lede</p>
+        @if (_peers != null)
+        {
+            <PeerCompareStrip Page="_peers" Charts="Charts"></PeerCompareStrip>
+        }
+    </div>
     @if (Page.Peers is { } peers)
     {
         <PumbilityPeerLine Peers="peers" Pool="Pool"></PumbilityPeerLine>
@@ -45,7 +51,6 @@
     }
     else
     {
-        <PeerCompareStrip Page="_peers" Charts="Charts"></PeerCompareStrip>
         <div class="pmb-peers-controls" data-testid="peers-controls">
             <MudSelect T="PeerGrouping" Class="pmb-peers-controls-select" Label="@L["Grouped by"]" Dense="true"
                        Value="_groupBy" ValueChanged="SetGrouping" data-testid="peers-groupby">
@@ -53,16 +58,18 @@
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.ProjectedGains">@L["Projected gains"]</MudSelectItem>
                 <MudSelectItem T="PeerGrouping" Value="PeerGrouping.YourTop50">@L["Your top 50"]</MudSelectItem>
             </MudSelect>
-            @if (_groupBy == PeerGrouping.ProjectedGains && HasCarried)
-            {
-                <MudSwitch T="bool" Value="_projectPhoenix1" ValueChanged="SetProjectPhoenix1" Color="Color.Primary"
-                           Label="@L["Project Phoenix 1 scores"]" data-testid="peers-p1-switch"></MudSwitch>
-            }
-            @if (_groupBy == PeerGrouping.Prevalence)
-            {
-                <MudSwitch T="bool" Value="_gainsOnly" ValueChanged="SetGainsOnly" Color="Color.Primary"
-                           Label="@L["Only projected PUMBILITY gains"]" data-testid="peers-gains-switch"></MudSwitch>
-            }
+            <span class="pmb-peers-controls-switches">
+                @if (_groupBy == PeerGrouping.ProjectedGains && HasCarried)
+                {
+                    <MudSwitch T="bool" Value="_projectPhoenix1" ValueChanged="SetProjectPhoenix1" Color="Color.Primary"
+                               Label="@L["Project Phoenix 1 scores"]" data-testid="peers-p1-switch"></MudSwitch>
+                }
+                @if (_groupBy == PeerGrouping.Prevalence)
+                {
+                    <MudSwitch T="bool" Value="_gainsOnly" ValueChanged="SetGainsOnly" Color="Color.Primary"
+                               Label="@L["Only projected PUMBILITY gains"]" data-testid="peers-gains-switch"></MudSwitch>
+                }
+            </span>
             <span class="pmb-peers-controls-end">
                 <MudButtonGroup OverrideStyles="false">
                     <MudTooltip Text="@L["Comfortable"]">

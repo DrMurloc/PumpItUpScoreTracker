@@ -1333,9 +1333,6 @@
   <data name="Charts covered" xml:space="preserve">
     <value>対象の譜面</value>
   </data>
-  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
-    <value>そのうち5人未満しかクリアしていない譜面は表示されません。</value>
-  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>課題譜面数</value>
   </data>
@@ -2145,12 +2142,6 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>Doublesの表です。SinglesはAA以下が一段低くなります（AA {0}、A+ {1} …）。全段は下に。</value>
   </data>
-  <data name="Doubles: {0} peers" xml:space="preserve">
-    <value>Doubles: ピア {0}人</value>
-  </data>
-  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
-    <value>Doubles: PUMBILITYピア {0}人</value>
-  </data>
   <data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>Doubles: {0}/{1} 譜面</value>
   </data>
@@ -2859,6 +2850,12 @@
   <data name="Hide Zero Scoring Charts" xml:space="preserve">
 	  <value>スコアレベル0の譜面を隠す</value>
   </data>
+  <data name="High" xml:space="preserve">
+    <value>高い</value>
+  </data>
+  <data name="Highest" xml:space="preserve">
+    <value>最上位</value>
+  </data>
   <data name="Highest Clear" xml:space="preserve">
     <value>最高クリア</value>
   </data>
@@ -3143,9 +3140,6 @@
   </data>
   <data name="In" xml:space="preserve">
     <value>収録</value>
-  </data>
-  <data name="In common" xml:space="preserve">
-    <value>共通</value>
   </data>
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>私たちのデータベース内にあり、単体では開けないようロックされています。</value>
@@ -3595,6 +3589,9 @@
   </data>
   <data name="Low" xml:space="preserve">
     <value>低い</value>
+  </data>
+  <data name="Lowest" xml:space="preserve">
+    <value>最下位</value>
   </data>
   <data name="Lowest level" xml:space="preserve">
     <value>最低レベル</value>
@@ -4570,9 +4567,6 @@
   </data>
   <data name="Of Note" xml:space="preserve">
     <value>注目</value>
-  </data>
-  <data name="of {0}" xml:space="preserve">
-    <value>/ {0}</value>
   </data>
   <data name="of {0} in range" xml:space="preserve">
     <value>（同範囲{0}人中）</value>
@@ -5553,6 +5547,9 @@
   </data>
   <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
     <value>Pumbility レーティング、タイトル、スクショしたくなるシーズンリキャップ。</value>
+  </data>
+  <data name="PUMBILITY Targets" xml:space="preserve">
+    <value>PUMBILITY ターゲット</value>
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY トップ 50</value>
@@ -6701,12 +6698,6 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
 	  <value>Singles対Doubles</value>
-  </data>
-  <data name="Singles: {0} peers" xml:space="preserve">
-    <value>Singles: ピア {0}人</value>
-  </data>
-  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
-    <value>Singles: PUMBILITYピア {0}人</value>
   </data>
   <data name="Singles: {0}/{1} charts" xml:space="preserve">
     <value>Singles: {0}/{1} 譜面</value>
@@ -8014,6 +8005,9 @@
   <data name="Very hard to pass for its level" xml:space="preserve">
     <value>レベルの割にクリアがとても難しい</value>
   </data>
+  <data name="Very High" xml:space="preserve">
+    <value>非常に高い</value>
+  </data>
   <data name="Very Low" xml:space="preserve">
     <value>とても低い</value>
   </data>
@@ -8372,9 +8366,6 @@
   <data name="Within days" xml:space="preserve">
     <value>最大日数</value>
   </data>
-  <data name="within one competitive level of you" xml:space="preserve">
-    <value>あなたと競技レベル 1 以内のプレイヤー</value>
-  </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>なくても動きます — あなた自身の、あなたのスコアに対しては。</value>
   </data>
@@ -8698,9 +8689,6 @@
   </data>
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>最新のセッションのすべて</value>
-  </data>
-  <data name="Your peers" xml:space="preserve">
-    <value>あなたのピア</value>
   </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>ピアのプールにはまだ何もありません。</value>
@@ -9038,12 +9026,6 @@
   <data name="{0} don't have enough skill data to move:" xml:space="preserve">
     <value>{0}譜面はスキルデータ不足で動きません:</value>
   </data>
-  <data name="{0} doubles held by one at most." xml:space="preserve">
-    <value>Doubles {0} は持っているピアが多くて 1 人。</value>
-  </data>
-  <data name="{0} doubles no peer holds." xml:space="preserve">
-    <value>Doubles {0} は持っているピアがいない。</value>
-  </data>
   <data name="{0} easier for you" xml:space="preserve">
     <value>あなたに易しいのは{0}譜面</value>
   </data>
@@ -9167,12 +9149,6 @@
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>この曲の譜面のうち {0} 件が変更されています。</value>
   </data>
-  <data name="{0} of your 50 doubles sit in your peers' top 50." xml:space="preserve">
-    <value>あなたの Doubles 50 のうち {0} がピアのトップ50にあります。</value>
-  </data>
-  <data name="{0} of your 50 singles sit in your peers' top 50." xml:space="preserve">
-    <value>あなたの Singles 50 のうち {0} がピアのトップ50にあります。</value>
-  </data>
   <data name="{0} of your doubles pool" xml:space="preserve">
     <value>あなたの Doubles プールのうち {0}</value>
   </data>
@@ -9272,9 +9248,6 @@
   <data name="{0} private accounts are peers but are not shown." xml:space="preserve">
     <value>非公開アカウント {0} 件はピアですが表示されません。</value>
   </data>
-  <data name="{0} PUMBILITY peers" xml:space="preserve">
-    <value>PUMBILITYピア {0}人</value>
-  </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>PUMBILITY 残り {0}</value>
   </data>
@@ -9301,12 +9274,6 @@
   </data>
   <data name="{0} shared perfect games" xml:space="preserve">
     <value>パーフェクトゲーム{0}件が一致</value>
-  </data>
-  <data name="{0} singles held by one at most." xml:space="preserve">
-    <value>Singles {0} は持っているピアが多くて 1 人。</value>
-  </data>
-  <data name="{0} singles no peer holds." xml:space="preserve">
-    <value>Singles {0} は持っているピアがいない。</value>
   </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>シングル{0}・ダブル{1}クリア</value>

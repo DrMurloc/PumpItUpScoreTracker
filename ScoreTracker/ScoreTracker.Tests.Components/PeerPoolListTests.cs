@@ -199,8 +199,9 @@ public sealed class PeerPoolListTests : ComponentTestBase
             .Add(x => x.Density, UiDensity.Comfortable));
 
         // The processor's own cuts over 460 and 300: mean 380, sigma 80, so one lands a sigma above
-        // (Strong) and one half a sigma below (Modest) — derived by its rule, not chosen here.
-        Assert.Equal(new[] { "Strong", "Modest" }, cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
+        // and one half a sigma below — derived by its rule, not chosen here. The names are the pool
+        // vocabulary, not the prevalence one: these bands are what a chart is worth to you.
+        Assert.Equal(new[] { "Very High", "Low" }, cut.FindAll(".tier-section-name").Select(n => n.TextContent).ToArray());
         Assert.Empty(cut.FindAll(".tier-section-stat"));
         var top = cut.Find("[data-testid=ppl-section-VeryEasy] .tier-chart-card");
         Assert.Contains("Mine", top.TextContent);

@@ -277,4 +277,6 @@ row, the chart journey and the admin backfill.
 | most | mrrgl | Recovered from `More than` → `Mrrgl grogrgl`. |
 | below / under | glub | Coined for the roster's window and the waiting room, opposite `mrrgl` (above/most). |
 | worth / value | grumb | Recovered from `Value` → `Grumb`. |
+| target | murgroblub | Reused from `repriced` — a Murloc names the thing by what it does to the number. `PUMBILITY Targets` is `PUMBILITY Murgroblub`. |
+| Highest / Lowest | Mrrglmrrgl / Glubglub | The doubled root is the superlative, the owner's own repetition device: `mrrgl` (most/above) and `glub` (below). `Mrgl Mrrgl` is very high; `Mrrgl` alone is high. |
 | only | ub | Recovered from `#{0} of {1}` → `#{0} ub {1}` — the same particle carries "of" and "only". |

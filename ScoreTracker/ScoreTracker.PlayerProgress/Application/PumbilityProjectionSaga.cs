@@ -177,26 +177,18 @@ namespace ScoreTracker.PlayerProgress.Application
         }
 
         /// <summary>
-        ///     How the viewer's pool of one type differs from what the peers hold (D41): how many of
-        ///     it sit in the peers' fifty most prevalent, how many are held by one peer or none, and
-        ///     where the levels sit on each side.
+        ///     Where the viewer's pool of one type sits against the peers' by level (D41): their
+        ///     charts per level, and the peers' prevalence points per level as a share of the type.
         /// </summary>
         private static PeerCompare CompareWith(PeerPoolSummary summary, IReadOnlyCollection<Guid> myPool,
             IReadOnlyDictionary<Guid, Chart> charts)
         {
-            var topFifty = summary.Charts.Where(kv => kv.Value.Holders > 0)
-                .OrderByDescending(kv => kv.Value.Points).ThenByDescending(kv => kv.Value.Holders)
-                .Take(PumbilityPeerPools.PoolSize).Select(kv => kv.Key).ToHashSet();
-            int HoldersOf(Guid id) => summary.Charts.TryGetValue(id, out var c) ? c.Holders : 0;
             var totalPoints = summary.Charts.Values.Sum(c => (double)c.Points);
             var shareByLevel = summary.Charts
                 .Where(kv => kv.Value.Points > 0 && charts.ContainsKey(kv.Key))
                 .GroupBy(kv => (int)charts[kv.Key].Level)
                 .ToDictionary(g => g.Key, g => totalPoints == 0 ? 0 : g.Sum(kv => kv.Value.Points) / totalPoints);
             return new PeerCompare(
-                myPool.Count(topFifty.Contains),
-                myPool.Count(id => HoldersOf(id) <= 1),
-                myPool.Count(id => HoldersOf(id) == 0),
                 myPool.Where(charts.ContainsKey).GroupBy(id => (int)charts[id].Level).ToDictionary(g => g.Key, g => g.Count()),
                 shareByLevel);
         }

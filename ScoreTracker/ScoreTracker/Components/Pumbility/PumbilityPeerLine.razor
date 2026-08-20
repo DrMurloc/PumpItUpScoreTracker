@@ -2,39 +2,22 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 
-@* The section's one line about its evidence (docs/design/pumbility-overhaul.md §3.3, D27, D28,
-   D43): a chip per chart type the selected pool covers — the peer count for a lit type, "N/50
-   charts" for a Phoenix 2 type whose pool is not yet fifty — with the definition and the five-peer
-   clause in the chip's title (a native tooltip) rather than on the line. The line is a count, not a
-   paragraph (owner, 2026-08-16); nothing per row changes (D12 stands). A competitive band is
-   always lit and names itself as one. *@
+@* Why a chart type has no peers yet (docs/design/pumbility-overhaul.md §3.3, D28): "N/50 charts"
+   for a Phoenix 2 type whose pool is not yet full, with the rule in the chip's title.
+
+   A LIT type prints nothing here any more — its count said what the roster below says, and said it
+   twice for a player with both pools (owner, field test round two). The dark chip stays because
+   there is no roster to be redundant with: it is the only thing that explains the gate. *@
 @if (Chips.Any())
 {
     <p class="pmb-peer-line">
         @foreach (var (type, group) in Chips)
         {
-            <span class="pmb-peer-chip" data-type="@type" data-lit="@(group.IsLit ? "true" : "false")"
+            <span class="pmb-peer-chip" data-type="@type" data-lit="false"
                   title="@TooltipFor(type, group)">
-                    @if (group.IsLit)
-                    {
-                        @(group.Kind == PeerGroupKind.PumbilityBand
-                            ? Pool == null
-                                ? type == ChartType.Single
-                                    ? L["Singles: {0} PUMBILITY peers", group.Size]
-                                    : L["Doubles: {0} PUMBILITY peers", group.Size]
-                                : L["{0} PUMBILITY peers", group.Size]
-                            : Pool == null
-                                ? type == ChartType.Single
-                                    ? L["Singles: {0} peers", group.Size]
-                                    : L["Doubles: {0} peers", group.Size]
-                                : L["{0} peers", group.Size])
-                    }
-                    else
-                    {
-                        @(type == ChartType.Single
-                            ? L["Singles: {0}/{1} charts", group.PoolCount, group.PoolSize]
-                            : L["Doubles: {0}/{1} charts", group.PoolCount, group.PoolSize])
-                    }
+                @(type == ChartType.Single
+                    ? L["Singles: {0}/{1} charts", group.PoolCount, group.PoolSize]
+                    : L["Doubles: {0}/{1} charts", group.PoolCount, group.PoolSize])
             </span>
         }
     </p>
@@ -51,18 +34,11 @@
 
     private IEnumerable<(ChartType Type, PeerGroup Group)> Chips =>
         (Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
-        .Where(Peers.ContainsKey)
+        .Where(type => Peers.TryGetValue(type, out var group) && !group.IsLit)
         .Select(type => (type, Peers[type]));
 
-    private string TooltipFor(ChartType type, PeerGroup group)
-    {
-        if (!group.IsLit)
-            return type == ChartType.Single
-                ? L["Peer projections show once your singles pool has {0} charts.", group.PoolSize]
-                : L["Peer projections show once your doubles pool has {0} charts.", group.PoolSize];
-        var who = group.Kind == PeerGroupKind.PumbilityBand
-            ? L["within 3 levels of you with a full pool"]
-            : L["within one competitive level of you"];
-        return $"{who} — {L["Charts fewer than 5 of them have passed are not shown."]}";
-    }
+    private string TooltipFor(ChartType type, PeerGroup group) =>
+        type == ChartType.Single
+            ? L["Peer projections show once your singles pool has {0} charts.", group.PoolSize]
+            : L["Peer projections show once your doubles pool has {0} charts.", group.PoolSize];
 }

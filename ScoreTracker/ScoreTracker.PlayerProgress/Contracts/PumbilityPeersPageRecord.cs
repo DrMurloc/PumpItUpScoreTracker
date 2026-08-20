@@ -111,17 +111,13 @@ public sealed record PeerRosterEntry(
     IReadOnlyDictionary<ChartType, int> Overlap);
 
 /// <summary>
-///     How the viewer's pool of one type differs from what the peers hold (D41).
+///     Where the viewer's pool sits against the peers' by level (D41). The in-common, held-by-one
+///     and yours-alone counts were computed here too until the field test cut the tiles that
+///     printed them — a count nobody can act on is not worth a read.
 /// </summary>
-/// <param name="InCommon">Viewer pool charts inside the peers' fifty most prevalent.</param>
-/// <param name="HeldByAtMostOne">Viewer pool charts held by one peer or none.</param>
-/// <param name="Alone">Viewer pool charts held by no peer.</param>
 /// <param name="MyLevels">The viewer's pool charts per level.</param>
 /// <param name="PeerShareByLevel">The peers' prevalence points per level, as a share of the type's total.</param>
 [ExcludeFromCodeCoverage]
 public sealed record PeerCompare(
-    int InCommon,
-    int HeldByAtMostOne,
-    int Alone,
     IReadOnlyDictionary<int, int> MyLevels,
     IReadOnlyDictionary<int, double> PeerShareByLevel);

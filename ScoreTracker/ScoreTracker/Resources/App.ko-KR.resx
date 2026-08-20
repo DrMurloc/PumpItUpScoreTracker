@@ -1324,9 +1324,6 @@
   <data name="Charts covered" xml:space="preserve">
     <value>포함된 채보</value>
   </data>
-  <data name="Charts fewer than 5 of them have passed are not shown." xml:space="preserve">
-    <value>그중 5명 미만이 클리어한 채보는 표시하지 않습니다.</value>
-  </data>
   <data name="Charts In Pool" xml:space="preserve">
     <value>채보 수</value>
   </data>
@@ -2131,12 +2128,6 @@
   <data name="Doubles table; a Single reads AA and below a notch lower (AA {0}, A+ {1} …). Full ladder below." xml:space="preserve">
     <value>더블 표입니다; 싱글은 AA 이하를 한 칸씩 낮게 읽습니다 (AA {0}, A+ {1} …). 전체 사다리는 아래에.</value>
   </data>
-  <data name="Doubles: {0} peers" xml:space="preserve">
-    <value>더블: 동료 {0}명</value>
-  </data>
-  <data name="Doubles: {0} PUMBILITY peers" xml:space="preserve">
-    <value>더블: PUMBILITY 동료 {0}명</value>
-  </data>
   <data name="Doubles: {0}/{1} charts" xml:space="preserve">
     <value>더블: {0}/{1}곡</value>
   </data>
@@ -2842,6 +2833,12 @@
   <data name="Hide Zero Scoring Charts" xml:space="preserve">
     <value>점수 없는 채보 숨기기</value>
   </data>
+  <data name="High" xml:space="preserve">
+    <value>높음</value>
+  </data>
+  <data name="Highest" xml:space="preserve">
+    <value>최상</value>
+  </data>
   <data name="Highest Clear" xml:space="preserve">
     <value>최고 클리어</value>
   </data>
@@ -3126,9 +3123,6 @@
   </data>
   <data name="In" xml:space="preserve">
     <value>수록</value>
-  </data>
-  <data name="In common" xml:space="preserve">
-    <value>공통</value>
   </data>
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>우리 데이터베이스에 있으며, 단독으로는 열 수 없도록 잠겨 있습니다.</value>
@@ -3573,6 +3567,9 @@
   </data>
   <data name="Low" xml:space="preserve">
     <value>낮음</value>
+  </data>
+  <data name="Lowest" xml:space="preserve">
+    <value>최하</value>
   </data>
   <data name="Lowest level" xml:space="preserve">
     <value>최저 레벨</value>
@@ -4539,9 +4536,6 @@
   </data>
   <data name="Of Note" xml:space="preserve">
     <value>주목할 만한</value>
-  </data>
-  <data name="of {0}" xml:space="preserve">
-    <value>/ {0}</value>
   </data>
   <data name="of {0} in range" xml:space="preserve">
     <value>(범위 내 {0}명 중)</value>
@@ -5516,6 +5510,9 @@
   </data>
   <data name="Pumbility rating, titles, and a season recap worth screenshotting." xml:space="preserve">
     <value>Pumbility 레이팅, 타이틀, 그리고 스크린샷하고 싶어지는 시즌 리캡.</value>
+  </data>
+  <data name="PUMBILITY Targets" xml:space="preserve">
+    <value>PUMBILITY 목표</value>
   </data>
   <data name="PUMBILITY top 50" xml:space="preserve">
     <value>PUMBILITY 톱 50</value>
@@ -6648,12 +6645,6 @@
   </data>
   <data name="Singles vs Doubles" xml:space="preserve">
     <value>싱글 vs 더블</value>
-  </data>
-  <data name="Singles: {0} peers" xml:space="preserve">
-    <value>싱글: 동료 {0}명</value>
-  </data>
-  <data name="Singles: {0} PUMBILITY peers" xml:space="preserve">
-    <value>싱글: PUMBILITY 동료 {0}명</value>
   </data>
   <data name="Singles: {0}/{1} charts" xml:space="preserve">
     <value>싱글: {0}/{1}곡</value>
@@ -7951,6 +7942,9 @@
   <data name="Very hard to pass for its level" xml:space="preserve">
     <value>레벨 대비 클리어가 매우 어려움</value>
   </data>
+  <data name="Very High" xml:space="preserve">
+    <value>매우 높음</value>
+  </data>
   <data name="Very Low" xml:space="preserve">
     <value>매우 낮음</value>
   </data>
@@ -8308,9 +8302,6 @@
   <data name="Within days" xml:space="preserve">
     <value>최대 일수</value>
   </data>
-  <data name="within one competitive level of you" xml:space="preserve">
-    <value>나와 경쟁 레벨 1 이내의 플레이어</value>
-  </data>
   <data name="Without them it still works — for you, on your own scores." xml:space="preserve">
     <value>없어도 동작합니다 — 여러분 자신의 점수에 대해서는요.</value>
   </data>
@@ -8628,9 +8619,6 @@
   </data>
   <data name="Your most recent session, in full" xml:space="preserve">
     <value>가장 최근 세션 전체</value>
-  </data>
-  <data name="Your peers" xml:space="preserve">
-    <value>나의 동료</value>
   </data>
   <data name="Your peers' pools have nothing in them yet." xml:space="preserve">
     <value>동료들의 풀에 아직 아무것도 없습니다.</value>
@@ -8968,12 +8956,6 @@
   <data name="{0} don't have enough skill data to move:" xml:space="preserve">
     <value>{0}개는 스킬 데이터가 부족해 움직이지 않음:</value>
   </data>
-  <data name="{0} doubles held by one at most." xml:space="preserve">
-    <value>더블 {0}개는 최대 한 명만 보유.</value>
-  </data>
-  <data name="{0} doubles no peer holds." xml:space="preserve">
-    <value>더블 {0}개는 보유한 동료 없음.</value>
-  </data>
   <data name="{0} easier for you" xml:space="preserve">
     <value>{0}개가 나에게 더 쉬움</value>
   </data>
@@ -9097,12 +9079,6 @@
   <data name="{0} of this song's charts were re-stepped." xml:space="preserve">
     <value>이 노래의 채보 중 {0}개가 변경되었습니다.</value>
   </data>
-  <data name="{0} of your 50 doubles sit in your peers' top 50." xml:space="preserve">
-    <value>내 더블 50개 중 {0}개가 동료들의 상위 50에 있습니다.</value>
-  </data>
-  <data name="{0} of your 50 singles sit in your peers' top 50." xml:space="preserve">
-    <value>내 싱글 50개 중 {0}개가 동료들의 상위 50에 있습니다.</value>
-  </data>
   <data name="{0} of your doubles pool" xml:space="preserve">
     <value>내 더블 풀 중 {0}개</value>
   </data>
@@ -9202,9 +9178,6 @@
   <data name="{0} private accounts are peers but are not shown." xml:space="preserve">
     <value>비공개 계정 {0}개가 동료이지만 표시되지 않습니다.</value>
   </data>
-  <data name="{0} PUMBILITY peers" xml:space="preserve">
-    <value>PUMBILITY 동료 {0}명</value>
-  </data>
   <data name="{0} PUMBILITY remaining" xml:space="preserve">
     <value>PUMBILITY {0} 남음</value>
   </data>
@@ -9231,12 +9204,6 @@
   </data>
   <data name="{0} shared perfect games" xml:space="preserve">
     <value>퍼펙트 게임 {0}개 일치</value>
-  </data>
-  <data name="{0} singles held by one at most." xml:space="preserve">
-    <value>싱글 {0}개는 최대 한 명만 보유.</value>
-  </data>
-  <data name="{0} singles no peer holds." xml:space="preserve">
-    <value>싱글 {0}개는 보유한 동료 없음.</value>
   </data>
   <data name="{0} singles · {1} doubles passed" xml:space="preserve">
     <value>싱글 {0} · 더블 {1} 클리어</value>

@@ -13923,6 +13923,21 @@ span.ct-console-pick { cursor: default; }
     flex: 0 1 230px;
 }
 
+/* The switches sit against the select, not adrift between it and the trio: they are their own
+   group, they do not grow, and MudBlazor's own left offset on a switch is taken out so the group
+   starts where the select does when the row wraps. */
+.pmb-peers-controls-switches {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 14px;
+    margin-right: auto;
+}
+
+.pmb-peers-controls-switches .mud-switch {
+    margin-left: 0;
+}
+
 .pmb-peers-controls-end {
     margin-left: auto;
     display: inline-flex;
@@ -14155,7 +14170,35 @@ span.ct-console-pick { cursor: default; }
     margin: 8px 0 0;
 }
 
-/* The compare strip (D41): three surface tiles, the level bars in you-vs-peers colours. */
+/* The lede and the level-bars tile share a row on a wide screen and stack once the viewport is
+   square or taller, which is where the lede's own line length runs out (owner, field test round
+   two). The tile keeps its natural width; the lede takes the rest. */
+.pmb-peers-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px 20px;
+    flex-wrap: wrap;
+    margin: 0 0 10px;
+}
+
+.pmb-peers-head .pmb-block-lede {
+    flex: 1 1 26rem;
+    min-width: 0;
+    margin: 0;
+}
+
+.pmb-peers-head .pmb-compare {
+    flex: 0 1 auto;
+    margin: 0;
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .pmb-peers-head .pmb-compare {
+        flex-basis: 100%;
+    }
+}
+
+/* The compare strip (D41): the level bars in you-vs-peers colours, one tile per lit type. */
 .pmb-compare {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));

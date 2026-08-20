@@ -4,24 +4,15 @@
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 
-@* How your pool differs from what your peers hold (docs/design/pumbility-overhaul.md D41): how
-   much of it sits in their fifty most prevalent, how much of it is yours alone, and where the
-   levels sit on each side. Three surface tiles, per lit type; the level bars are you against
-   peers in the you-and-peers colours, each bar carrying its number in the title. Cuttable by
-   ruling — its own commit, its own component, nothing depends on it. *@
+@* Where your pool's levels sit against your peers' (docs/design/pumbility-overhaul.md D41), one
+   tile per lit type, beside the list's lede. The bars are you against peers in the you-and-peers
+   colours, each carrying its number in the title.
+
+   The In-common and Yours-alone tiles that stood beside it are cut: neither said anything a player
+   could act on (owner, field test round two). *@
 @if (Page.Compare.Count > 0)
 {
     <div class="pmb-compare" data-testid="peers-compare">
-        <div class="pmb-compare-tile">
-            <div class="pmb-compare-label">@L["In common"]</div>
-            <div class="pmb-compare-num">@Figure(c => c.InCommon)<small>@L["of {0}", 50]</small></div>
-            <div class="pmb-compare-say">@Say(c => c.InCommon, L["{0} of your 50 singles sit in your peers' top 50."], L["{0} of your 50 doubles sit in your peers' top 50."])</div>
-        </div>
-        <div class="pmb-compare-tile">
-            <div class="pmb-compare-label">@L["Yours alone"]</div>
-            <div class="pmb-compare-num">@Figure(c => c.Alone)<small>@L["of {0}", 50]</small></div>
-            <div class="pmb-compare-say">@Say(c => c.Alone, L["{0} singles no peer holds."], L["{0} doubles no peer holds."]) @Say(c => c.HeldByAtMostOne, L["{0} singles held by one at most."], L["{0} doubles held by one at most."])</div>
-        </div>
         @foreach (var (type, compare) in Page.Compare.OrderBy(kv => kv.Key))
         {
             var levels = Levels(compare);
@@ -65,16 +56,6 @@
     [Parameter] [EditorRequired] public PumbilityPeersPageRecord Page { get; set; } = null!;
 
     [Parameter] public IReadOnlyDictionary<Guid, Chart> Charts { get; set; } = new Dictionary<Guid, Chart>();
-
-    /// <summary>The figure per lit type, "9" alone or "9 / 3" under All.</summary>
-    private string Figure(Func<PeerCompare, int> pick) =>
-        string.Join(" / ", Page.Compare.OrderBy(kv => kv.Key).Select(kv => pick(kv.Value)));
-
-    // One sentence per type rather than a word slotted into one: the type's name inflects
-    // differently per language, so the whole sentence is the localizable unit.
-    private string Say(Func<PeerCompare, int> pick, string singles, string doubles) =>
-        string.Join(" ", Page.Compare.OrderBy(kv => kv.Key)
-            .Select(kv => string.Format(kv.Key == ChartType.Single ? singles : doubles, pick(kv.Value))));
 
     /// <summary>The levels either side of the strip covers, so the two rows share an axis.</summary>
     private static IReadOnlyList<int> Levels(PeerCompare compare)
