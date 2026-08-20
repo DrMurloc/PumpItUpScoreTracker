@@ -507,7 +507,12 @@ the **Download** button and the density trio at the far end (field test rounds t
 download is the tier list's own share card (`GetTierListShareCardQuery`, `TierListShareCard`), fed
 from the rendered list's sections and their ramp colours, so the picture cannot disagree with the
 screen it was taken from; folded sections are in it, because a fold is a reading convenience rather
-than a filter.
+than a filter. **A tile is drawn as the Compact tile is** (field test round four): the border is
+the state — solid passed, dashed To-Do or carried, dotted broken — the printed corner is the gain,
+or what the chart is worth under the pool lens, and a tile carrying a corner value shows the grade
+in the other corner instead of plate art. `Tile` grew `CornerLabel`/`CornerHex`/`Outline` for it,
+defaulting to the dot it drew before, and **the tier-list download speaks the same language** — it
+was the same card model all along.
 
 **Table** — Song · Chart · Peers (`17 of 23`, weighted sum in the title) · Peers' median · Variability
 · Gain · My Score · Your pool · the two actions.

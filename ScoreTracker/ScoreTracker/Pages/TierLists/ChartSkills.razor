@@ -1382,14 +1382,24 @@ else
                     {
                         var chart = _charts[e.ChartId];
                         var score = _scores.TryGetValue(chart.Id, out var s) ? s : null;
+                        // The Compact card's own border language (field test round four): solid
+                        // for a pass, dotted for a broken run, dashed for a To-Do — the picture
+                        // says what the grid said.
+                        var passed = score is { IsBroken: false };
+                        var broken = score is { IsBroken: true };
+                        var todo = _todos.Contains(chart.Id);
                         return new TierListShareCard.Tile(
                             chart.Song.ImagePath.ToString(),
                             score?.Score != null
                                 ? LetterGradeImage(score.Score.Value.LetterGradeFor(_currentMix), score.IsBroken)
                                 : null,
                             score?.Plate != null ? PlateImage(score.Plate.Value) : null,
-                            score is { IsBroken: false } ? MixPalette.Success :
-                            _todos.Contains(chart.Id) ? MixPalette.Info : null);
+                            passed ? MixPalette.Success :
+                            broken ? palette.InkMuted :
+                            todo ? MixPalette.Info : null,
+                            Outline: passed ? TileOutline.Solid :
+                            broken ? TileOutline.Dotted :
+                            todo ? TileOutline.Dashed : TileOutline.Dot);
                     })
                     .ToArray()))
                 .ToArray();

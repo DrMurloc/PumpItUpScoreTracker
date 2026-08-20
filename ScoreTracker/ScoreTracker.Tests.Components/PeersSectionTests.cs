@@ -22,6 +22,7 @@ using ScoreTracker.Web.Components;
 using ScoreTracker.Web.Enums;
 using ScoreTracker.Web.Services.Contracts;
 using ScoreTracker.Web.Services.HomeDashboard;
+using ScoreTracker.Web.Services.Theming;
 using Xunit;
 
 namespace ScoreTracker.Tests.Components;
@@ -218,9 +219,59 @@ public sealed class PeersSectionTests : ComponentTestBase
         Assert.Equal("Staple", row.Name);
         var tile = Assert.Single(row.Tiles);
         Assert.Equal("https://piu.test/i.png", tile.JacketUrl);
-        // A chart the fixture has no score on is neither passed nor To-Do: no badge, no grade art.
+        // A chart the fixture has no score on is neither passed nor To-Do: no border, no grade art.
         Assert.Null(tile.GradeUrl);
         Assert.Null(tile.BadgeHex);
+        Assert.Equal(TileOutline.Dot, tile.Outline);
+        // It pays, so the tile prints the same corner the Compact tile does (field test round four).
+        Assert.Equal("+18", tile.CornerLabel); // PumbilityFormat: whole at 10 and up
+    }
+
+    [Fact]
+    public async Task ADownloadedTileWearsTheCompactCardsBorderAndItsGrade()
+    {
+        // Passed → solid green with the grade art; To-Do → dashed blue. The card is the grid.
+        var pays = NewChart("Pays");
+        var free = _charts.Values.FirstOrDefault(c => c.Song.Name == "Free") ?? NewChart("Free");
+        var peers = new PumbilityPeersPageRecord(MixEnum.Phoenix2, null,
+            new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = Group(MixEnum.Phoenix2) },
+            new[]
+            {
+                new PeerPoolEntry(pays.Id, ChartType.Single, 12, 23, 500, TierListCategory.Overrated, 0, 12,
+                    987_475, 980_000, 991_000, null, 3, 966_887, PhoenixPlate.MarvelousGame, null),
+                new PeerPoolEntry(free.Id, ChartType.Single, 10, 23, 450, TierListCategory.Overrated, 1, 10,
+                    null, null, null, null, null, null, null, null)
+            },
+            Array.Empty<PeerAloneEntry>(), Array.Empty<PeerRosterEntry>(), 0, null, new Dictionary<ChartType, PeerCompare>());
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(peers);
+        TierListShareCard? sent = null;
+        Mediator.Setup(m => m.Send(It.IsAny<GetTierListShareCardQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IRequest<byte[]> request, CancellationToken _) =>
+            {
+                sent = ((GetTierListShareCardQuery)request).Card;
+                return new byte[] { 1 };
+            });
+        var settings = new Mock<IUiSettingsAccessor>();
+        settings.Setup(s => s.GetSetting(PeersSection.GainsOnlySettingKey)).ReturnsAsync(false.ToString());
+        Services.AddSingleton(settings.Object);
+
+        this.RenderInteractive();
+        var cut = RenderComponent<PeersSection>(p => p.Add(x => x.Page, Page(carried: false)).Add(x => x.Charts, _charts)
+            .Add(x => x.ToDos, (ISet<Guid>)new HashSet<Guid> { free.Id }));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-download]").Count > 0);
+        await cut.Find("[data-testid=peers-download]").ClickAsync(new MouseEventArgs());
+
+        var tiles = Assert.Single(sent!.Rows).Tiles;
+        var passed = tiles.First(t => t.GradeUrl != null);
+        Assert.Equal(TileOutline.Solid, passed.Outline);
+        Assert.Equal(MixPalette.Success, passed.BadgeHex);
+        Assert.Contains("letters/aa", passed.GradeUrl);
+        // The corner value takes the plate's place, exactly as it does on the Compact tile.
+        Assert.Null(passed.PlateUrl);
+        var todo = tiles.First(t => t.GradeUrl == null);
+        Assert.Equal(TileOutline.Dashed, todo.Outline);
+        Assert.Equal(MixPalette.Info, todo.BadgeHex);
     }
 
     [Fact]

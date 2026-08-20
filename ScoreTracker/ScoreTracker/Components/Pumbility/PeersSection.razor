@@ -270,8 +270,13 @@
                     s.Tiles.Select(t => new TierListShareCard.Tile(
                         t.Chart.Song.ImagePath.ToString(),
                         t.Score is { } score ? ShareCardImages.LetterGrade(score.LetterGradeFor(Page.Mix), false) : null,
-                        t.Plate is { } plate ? ShareCardImages.Plate(plate) : null,
-                        t.Score != null ? MixPalette.Success : t.IsToDo ? MixPalette.Info : null)).ToArray()))
+                        // Compact prints the corner value where the plate would sit, so the card
+                        // does too: a tile carrying a number does not also carry plate art.
+                        t.CornerLabel == null && t.Plate is { } plate ? ShareCardImages.Plate(plate) : null,
+                        _list.ShareOutlineHexFor(t.Chart.Id),
+                        t.CornerLabel,
+                        palette.Primary,
+                        t.Outline)).ToArray()))
                 .ToArray();
             if (rows.Length == 0) return;
 
