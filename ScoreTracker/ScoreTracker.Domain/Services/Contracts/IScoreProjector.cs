@@ -161,8 +161,12 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
     public static PeerGroup Pumbility(int rungIndex, int size, int poolCount,
         int poolSize = PumbilityPoolSize)
     {
+        // Counted against the FULL pool rather than the gate, so a lit-but-short viewer still
+        // knows how many of the fifty they hold — which is what the note that explains their
+        // projection has to say (D48). The cap only ever bites above fifty, where the viewer is
+        // lit under either gate and no surface prints the count anyway.
         return new PeerGroup(PeerGroupKind.PumbilityBand, rungIndex, PumbilityRungWindow, size,
-            Math.Min(poolCount, poolSize), poolSize);
+            Math.Min(poolCount, PumbilityPoolSize), poolSize);
     }
 }
 

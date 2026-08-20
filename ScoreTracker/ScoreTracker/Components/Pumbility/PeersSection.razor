@@ -6,6 +6,7 @@
 @using ScoreTracker.SharedKernel.Models
 @using Microsoft.JSInterop
 @using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.Services
 @using ScoreTracker.Domain.Services.Contracts
@@ -50,6 +51,13 @@
             <PeerCompareStrip Page="_peers" Charts="Charts"></PeerCompareStrip>
         }
     </div>
+    @if (ShortPool is { } short_ && Phoenix2PumbilityLevel.FromIndex((int)short_.Center) is { Gem: { } gem })
+    {
+        <p class="pmb-block-note" data-testid="peers-short-pool-note">
+            @L["You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills.",
+                short_.PoolCount, PeerGroup.PumbilityPoolSize, gem.ToString()]
+        </p>
+    }
     @if (ThinBand is { } thin)
     {
         <p class="pmb-block-note" data-testid="peers-thin-note">
@@ -225,20 +233,28 @@
     ///         them.
     ///     </para>
     /// </summary>
-    private PeerGroup? ThinBand
-    {
-        get
-        {
-            if (!IsPumbilityBand) return null;
-            var lit = (Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
-                .Where(t => Page.Peers.TryGetValue(t, out var group) && group.IsLit && group.Size > 0)
-                .Select(t => Page.Peers[t])
-                .ToArray();
-            return lit.Length > 0 && lit.All(g => g.Size < PeerEstimator.Phoenix2MinimumPeers)
-                ? lit.MaxBy(g => g.Size)
-                : null;
-        }
-    }
+    private PeerGroup? ThinBand => Lit.Length > 0 && Lit.All(g => g.Size < PeerEstimator.Phoenix2MinimumPeers)
+        ? Lit.MaxBy(g => g.Size)
+        : null;
+
+    /// <summary>
+    ///     A lit band whose pool is still short of fifty is one the projection placed by where the
+    ///     player would finish rather than by what they hold (D48), so the note names the estimate
+    ///     it leaned on. Same All rule as the thin-band note: every lit type has to be short, and
+    ///     the largest count is the one printed. The rung is shared across types, so the gem is
+    ///     whichever group answers.
+    /// </summary>
+    private PeerGroup? ShortPool => Lit.Length > 0 && Lit.All(g => g.PoolCount < PeerGroup.PumbilityPoolSize)
+        ? Lit.MaxBy(g => g.PoolCount)
+        : null;
+
+    /// <summary>The PUMBILITY bands actually serving this view — one per lit type in the pool's scope.</summary>
+    private PeerGroup[] Lit => !IsPumbilityBand
+        ? Array.Empty<PeerGroup>()
+        : (Pool is { } one ? new[] { one } : new[] { ChartType.Single, ChartType.Double })
+        .Where(t => Page.Peers.TryGetValue(t, out var group) && group.IsLit && group.Size > 0)
+        .Select(t => Page.Peers[t])
+        .ToArray();
 
     private string Lede => _groupBy == PeerGrouping.YourTop50
         ? L["Your pool by place, with what your peers do on each chart — how many hold it, their median and how split they are — and the waiting room below the bar."]

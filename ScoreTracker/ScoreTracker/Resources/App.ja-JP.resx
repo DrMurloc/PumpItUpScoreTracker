@@ -8522,6 +8522,9 @@
   <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
     <value>この種別のPUMBILITYピアはまだいません。プールが 50 で埋まると現れます。</value>
   </data>
+  <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
+    <value>譜面は{1}譜面中{0}譜面なので、現在の平均を保った場合の最終到達点——{2}——を基準にピアを選んでいます。プールが埋まるにつれて落ち着きます。</value>
+  </data>
   <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
     <value>Phoenix 2 でのスコアは {0} 件です。これは Phoenix 1 の記録を Phoenix 2 のルールで計算したもので、同じ水準で再クリアした場合のプールです。</value>
   </data>

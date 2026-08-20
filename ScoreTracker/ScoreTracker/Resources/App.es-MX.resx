@@ -8452,6 +8452,9 @@
   <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
     <value>Todavía no tienes pares de PUMBILITY en este tipo: un conjunto lleno de 50 los enciende.</value>
   </data>
+  <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
+    <value>Tienes {0} de {1} charts, así que tus pares se eligen a partir de dónde terminarías — {2} — si mantienes tu promedio actual. Esto se acomoda conforme se llena tu conjunto.</value>
+  </data>
   <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
     <value>Tienes {0} puntuaciones en Phoenix 2. Este es tu historial de Phoenix 1 valorado con las reglas de Phoenix 2: en qué se convierte tu conjunto si vuelves a superarlo todo al mismo nivel.</value>
   </data>

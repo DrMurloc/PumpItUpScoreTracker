@@ -345,6 +345,41 @@ public sealed class PeersSectionTests : ComponentTestBase
         Assert.Empty(phoenix1.FindAll("[data-testid=peers-thin-note]"));
     }
 
+    [Fact]
+    public void AShortPoolSaysWhichFinishItsPeersWereDrawnFrom()
+    {
+        // Lit on twenty charts, so the band was drawn from where this player would finish rather
+        // than from the thirty-one they hold (D48) — the note names both, and the gem comes off
+        // the group's own centre so the page cannot name a rung the projection did not use.
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p
+            // Rung 13 is GOLD LV.3; the viewer holds 31 charts against a gate of 20.
+            .Add(x => x.Page, Page(carried: false, group: PeerGroup.Pumbility(13, 23, 31, 20)))
+            .Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        var note = cut.Find("[data-testid=peers-short-pool-note]").TextContent;
+        Assert.Contains("You have 31 of 50 charts", note);
+        Assert.Contains("[P.B] GOLD", note);
+    }
+
+    [Fact]
+    public void AFullPoolSaysNothingAboutAProjectedFinish()
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page(carried: false)).Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        Assert.Empty(cut.FindAll("[data-testid=peers-short-pool-note]"));
+    }
+
     private static PeerGroup Group(MixEnum mix) =>
         mix == MixEnum.Phoenix2 ? PeerGroup.Pumbility(24, 23, 50) : PeerGroup.Competitive(21.4, 1.0, 144);
 

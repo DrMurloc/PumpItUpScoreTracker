@@ -8522,6 +8522,9 @@
   <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
     <value>Blub mo PUMBILITY maglmurp ro morg blub — mrglmr blubgro 50 grrgl.</value>
   </data>
+  <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
+    <value>Blub grubmarg {0} mrgl {1} murgl, op gromurp maglmurp mo blgrlargl romurg gromurp mrglmrgro — {2} — om blub grubmarg gromurp rorg. Blarg murgroblub op gromurp blubgro mrglmr.</value>
+  </data>
   <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
     <value>Morp mrgl {0} Mrglrgl blub Phoenix 2. Blub morp Phoenix 1 grolgub mrglrg Phoenix 2 mrgl — blarg Blubgro mrgloru morp mrglrlgl mrgl morgl.</value>
   </data>

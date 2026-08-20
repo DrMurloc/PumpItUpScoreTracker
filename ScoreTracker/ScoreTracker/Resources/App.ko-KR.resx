@@ -8452,6 +8452,9 @@
   <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
     <value>이 유형의 PUMBILITY 동료가 아직 없습니다 — 풀 50개를 채우면 나타납니다.</value>
   </data>
+  <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
+    <value>보유한 차트가 {1}개 중 {0}개라, 지금 평균을 유지했을 때 도달할 지점—{2}—을 기준으로 동료를 고릅니다. 풀이 채워지면 안정됩니다.</value>
+  </data>
   <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
     <value>Phoenix 2에 점수가 {0}개 있습니다. 이것은 Phoenix 1 기록을 Phoenix 2 규칙으로 계산한 값 — 같은 수준으로 전부 다시 클리어했을 때의 풀입니다.</value>
   </data>
