@@ -263,7 +263,26 @@ else
     }
 
     private sealed record Section(string Key, string Name, string Color, IReadOnlyList<Row> Rows, string? Stat,
-        string WrapperClass);
+        string WrapperClass, TierListCategory? Tier = null);
+
+    /// <summary>One tile of a downloadable card: the jacket, what you did on it, and its state.</summary>
+    public sealed record ShareTile(Chart Chart, PhoenixScore? Score, PhoenixPlate? Plate, bool IsToDo);
+
+    /// <summary>
+    ///     One section of a downloadable card: its printed name, the ramp category it took its
+    ///     colour from (null for a gain band, which is not on the ramp), and its tiles in order.
+    /// </summary>
+    public sealed record ShareSection(string Name, TierListCategory? Tier, IReadOnlyList<ShareTile> Tiles);
+
+    /// <summary>
+    ///     What the list is showing, for the page's Download button — the same sections in the same
+    ///     order, so the image cannot disagree with the screen it was taken from. Folded sections
+    ///     are included: a fold is a reading convenience, not a filter.
+    /// </summary>
+    public IReadOnlyList<ShareSection> ShareSections() =>
+        _sections.Select(s => new ShareSection(s.Name, s.Tier,
+            s.Rows.Select(r => new ShareTile(r.Chart, r.MyScore, r.MyPlate, ToDos.Contains(r.Chart.Id))).ToArray()))
+            .ToArray();
 
     private HashSet<string> _collapsed = new();
     private bool _collapsedInitialised;
@@ -324,7 +343,7 @@ else
                 var rows = pool.Where(r => banded[r.Chart.Id] == tier).ToArray();
                 if (rows.Length == 0) continue;
                 sections.Add(new Section(tier.ToString(), L[PumbilityTierNames.PoolNameOf(tier)],
-                    ThemeScales.PumbilityColor(tier), rows, null, "pmb-tier-section"));
+                    ThemeScales.PumbilityColor(tier), rows, null, "pmb-tier-section", tier));
             }
 
             return sections;
@@ -361,7 +380,7 @@ else
                 .ToArray();
             if (ordered.Length == 0) continue;
             sections.Add(new Section(tier.ToString(), L[PumbilityTierNames.NameOf(tier)], ThemeScales.PumbilityColor(tier),
-                ordered, null, "pmb-tier-section"));
+                ordered, null, "pmb-tier-section", tier));
         }
 
         if (!GainsOnly)

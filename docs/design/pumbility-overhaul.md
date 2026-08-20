@@ -455,7 +455,7 @@ both. Two traps worth remembering —
 taken the count silently to zero; and three sites rendered a raw `@value` with no format string at
 all, harmless while the value was an int and full-precision noise the moment it stopped being one.
 
-### 3.10 Your PUMBILITY peers — the Phoenix 2 Play page (round five)
+### 3.10 PUMBILITY Targets — the Play page (round five, both mixes since round six)
 
 The owner's framing: *"a page/tab for the PUMBILITY page called 'Your Peers' … breaks down the peer
 based suggestions and creates a cross-folder tier list based on how many charts show up in how many
@@ -503,7 +503,11 @@ corner and the section already annotate one tile, and a fourth mark made the gri
 legend under the trio names every mark the grid contains, as the target list's did.
 
 **The controls** are left-aligned as one group — the select, then the grouping's own switch — with
-the density trio at the far end (field test round two).
+the **Download** button and the density trio at the far end (field test rounds two and three). The
+download is the tier list's own share card (`GetTierListShareCardQuery`, `TierListShareCard`), fed
+from the rendered list's sections and their ramp colours, so the picture cannot disagree with the
+screen it was taken from; folded sections are in it, because a fold is a reading convenience rather
+than a filter.
 
 **Table** — Song · Chart · Peers (`17 of 23`, weighted sum in the title) · Peers' median · Variability
 · Gain · My Score · Your pool · the two actions.

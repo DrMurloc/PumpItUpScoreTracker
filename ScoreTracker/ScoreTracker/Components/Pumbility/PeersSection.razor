@@ -4,15 +4,23 @@
 @using ScoreTracker.PlayerProgress.Contracts.Queries
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
+@using Microsoft.JSInterop
+@using ScoreTracker.Application.Queries
+@using ScoreTracker.Domain.Records
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Enums
+@using ScoreTracker.Web.Services
 @using ScoreTracker.Web.Services.Contracts
 @using ScoreTracker.Web.Services.HomeDashboard
+@using ScoreTracker.Web.Services.Theming
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
 @inject IMediator Mediator
 @inject ICurrentUserAccessor CurrentUser
 @inject IUiSettingsAccessor UiSettings
 @inject CommunityGlowReader Glow
+@inject IJSRuntime JSRuntime
+@inject IDateTimeOffsetAccessor Clock
 
 @* The Play page's block (docs/design/pumbility-overhaul.md §3.10, D32, D43): what your peers
    build their number from, grouped by prevalence or by projected gain, and who they are — the
@@ -71,6 +79,19 @@
                 }
             </span>
             <span class="pmb-peers-controls-end">
+                @* The tier list's Download, on the tier list's own share card: this page is the
+                   same shape, so the picture is the same picture (owner, field test round three). *@
+                @if (_building)
+                {
+                    <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2"></MudProgressCircular>
+                }
+                else
+                {
+                    <MudTooltip Text="@L["Download"]">
+                        <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary"
+                                       OnClick="Download" aria-label="@L["Download"]" data-testid="peers-download"></MudIconButton>
+                    </MudTooltip>
+                }
                 <MudButtonGroup OverrideStyles="false">
                     <MudTooltip Text="@L["Comfortable"]">
                         <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.ViewComfy"
@@ -91,7 +112,7 @@
             </span>
         </div>
         <PeerPoolLegend Density="_density" HasCarried="HasCarried && _projectPhoenix1 && _groupBy == PeerGrouping.ProjectedGains"></PeerPoolLegend>
-        <PeerPoolList Page="_peers" Charts="Charts" Gains="Gains" Mix="Page.Mix" Density="_density" PoolRecord="Page"
+        <PeerPoolList @ref="_list" Page="_peers" Charts="Charts" Gains="Gains" Mix="Page.Mix" Density="_density" PoolRecord="Page"
                       GroupBy="_groupBy" GainsOnly="_gainsOnly"
                       ShowToDo="true" ToDos="ToDos" OnToDo="OnToDo" OnOpen="OnOpen" OnPlay="OnPlay"
                       Collapsed="_collapsed" CollapsedChanged="SetCollapsed"></PeerPoolList>
@@ -163,6 +184,9 @@
     private IReadOnlySet<Guid>? _rivals;
     private IReadOnlySet<Guid>? _clubmates;
 
+    private PeerPoolList? _list;
+    private bool _building;
+
     /// <summary>The Phoenix 1 switch only exists for a player whose Phoenix 1 record would change the list (D36).</summary>
     private bool HasCarried => Page.Targets.Any(t => t.Source == TargetSource.Phoenix1);
 
@@ -226,6 +250,60 @@
         _peerOnlyGains = projection.ProjectedGains.ToDictionary(kv => kv.Key,
             kv => new PumbilityTarget(kv.Key, projection.ExpectedScores[kv.Key], kv.Value, null, false, null));
     }
+
+    /// <summary>
+    ///     The list as a PNG, through the tier list's own share-card query and renderer — the same
+    ///     model, so nothing here is a second layout to keep in step. Sections and their colours
+    ///     come off the rendered list, so the image says what the screen says.
+    /// </summary>
+    private async Task Download()
+    {
+        if (_list == null) return;
+        _building = true;
+        try
+        {
+            var palette = MixThemes.PaletteFor(Page.Mix);
+            var rows = _list.ShareSections()
+                .Where(s => s.Tiles.Count > 0)
+                .Select(s => new TierListShareCard.Row(s.Name,
+                    s.Tier is { } tier ? MixThemes.PumbilityHex(Page.Mix, tier) : palette.Primary,
+                    s.Tiles.Select(t => new TierListShareCard.Tile(
+                        t.Chart.Song.ImagePath.ToString(),
+                        t.Score is { } score ? ShareCardImages.LetterGrade(score.LetterGradeFor(Page.Mix), false) : null,
+                        t.Plate is { } plate ? ShareCardImages.Plate(plate) : null,
+                        t.Score != null ? MixPalette.Success : t.IsToDo ? MixPalette.Info : null)).ToArray()))
+                .ToArray();
+            if (rows.Length == 0) return;
+
+            var now = Clock.Now;
+            var card = new TierListShareCard(
+                L["PUMBILITY Targets"],
+                $"{GroupingName} · {(Page.Mix == MixEnum.Phoenix2 ? "Phoenix 2" : "Phoenix")} · {now:yyyy-MM-dd}",
+                L["Personalized for {0}", CurrentUser.User.GameTag ?? CurrentUser.User.Name].ToString(),
+                palette.Primary, palette.Background, palette.Surface, palette.Ink, palette.InkMuted,
+                "https://piuscores.arroweclip.se/Pumbility",
+                null,
+                rows);
+
+            var bytes = await Mediator.Send(new GetTierListShareCardQuery(card));
+            using var stream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream);
+            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/helpers.js");
+            await module.InvokeVoidAsync("downloadFileFromStream",
+                $"PumbilityTargets_{Page.Mix}_{_groupBy}_{now:yyyy-MM-dd}.png", streamRef);
+        }
+        finally
+        {
+            _building = false;
+        }
+    }
+
+    private string GroupingName => _groupBy switch
+    {
+        PeerGrouping.ProjectedGains => L["Projected gains"],
+        PeerGrouping.YourTop50 => L["Your top 50"],
+        _ => L["Prevalence"]
+    };
 
     private async Task SetDensity(UiDensity density)
     {

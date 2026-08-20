@@ -12,8 +12,10 @@ using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.Models;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.SharedKernel.ValueTypes;
+using ScoreTracker.Application.Queries;
 using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Records;
+using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Rivals.Contracts;
 using ScoreTracker.Rivals.Contracts.Queries;
 using ScoreTracker.Web.Components;
@@ -48,6 +50,9 @@ public sealed class PeersSectionTests : ComponentTestBase
         Mediator.Setup(m => m.Send(It.IsAny<GetMyRivalsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((IReadOnlyList<RivalSubject>)Array.Empty<RivalSubject>());
         Services.AddScoped<CommunityGlowReader>();
+        // The share card stamps a date; a fixed clock keeps the subtitle assertable.
+        Services.AddSingleton(Mock.Of<IDateTimeOffsetAccessor>(c =>
+            c.Now == new DateTimeOffset(2026, 8, 19, 0, 0, 0, TimeSpan.Zero)));
     }
 
     [Fact]
@@ -184,6 +189,38 @@ public sealed class PeersSectionTests : ComponentTestBase
         Assert.Contains("Staple", cut.Markup);
         Mediator.Verify(m => m.Send(It.Is<GetPumbilityPeersPageQuery>(q => q.UserId == Viewer && q.Mix == MixEnum.Phoenix),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task TheDownloadButtonRendersTheSectionsThroughTheSharedCard()
+    {
+        // Owner, field test round three: the tier list's own Download, on the tier list's own
+        // card model — the sections and their ramp colours come off the rendered list.
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        TierListShareCard? sent = null;
+        Mediator.Setup(m => m.Send(It.IsAny<GetTierListShareCardQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IRequest<byte[]> request, CancellationToken _) =>
+            {
+                sent = ((GetTierListShareCardQuery)request).Card;
+                return new byte[] { 1, 2, 3 };
+            });
+
+        this.RenderInteractive();
+        var cut = RenderComponent<PeersSection>(p => p.Add(x => x.Page, Page(carried: false)).Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-download]").Count > 0);
+        await cut.Find("[data-testid=peers-download]").ClickAsync(new MouseEventArgs());
+
+        Assert.NotNull(sent);
+        Assert.Equal("PUMBILITY Targets", sent!.Title);
+        Assert.Contains("Prevalence", sent.Subtitle);
+        var row = Assert.Single(sent.Rows);
+        Assert.Equal("Staple", row.Name);
+        var tile = Assert.Single(row.Tiles);
+        Assert.Equal("https://piu.test/i.png", tile.JacketUrl);
+        // A chart the fixture has no score on is neither passed nor To-Do: no badge, no grade art.
+        Assert.Null(tile.GradeUrl);
+        Assert.Null(tile.BadgeHex);
     }
 
     [Fact]

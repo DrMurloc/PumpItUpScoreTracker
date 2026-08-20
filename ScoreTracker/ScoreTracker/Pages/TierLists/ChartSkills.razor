@@ -1351,11 +1351,13 @@ else
 
     // --- Share image (SkiaSharp renderer via IShareCardRenderer, C8) --------------------
 
-    public string DifficultyBubblePath(ChartType chartType, DifficultyLevel level) => $"https://piuimages.arroweclip.se/difficulty/{_currentMix}/{chartType.GetShortHand().ToLower()}{level}.png";
-    private string LetterGradeImage(PhoenixLetterGrade letterGrade, bool isBroken) =>
-        $"https://piuimages.arroweclip.se/letters/{letterGrade.ToString().ToLower()}{(isBroken ? "_broken" : "")}.png";
+    public string DifficultyBubblePath(ChartType chartType, DifficultyLevel level) =>
+        ShareCardImages.DifficultyBubble(_currentMix, chartType, level);
 
-    private string PlateImage(PhoenixPlate plate) => $"https://piuimages.arroweclip.se/plates/{plate.GetShorthand().ToLower()}.png";
+    private string LetterGradeImage(PhoenixLetterGrade letterGrade, bool isBroken) =>
+        ShareCardImages.LetterGrade(letterGrade, isBroken);
+
+    private string PlateImage(PhoenixPlate plate) => ShareCardImages.Plate(plate);
 
     private string LensDisplayName(string lens) => lens switch
     {

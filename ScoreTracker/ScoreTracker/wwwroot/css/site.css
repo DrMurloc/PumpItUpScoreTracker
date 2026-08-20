@@ -2029,6 +2029,16 @@ html.sheet-open .more-sheet-scrim {
     gap: 6px;
 }
 
+/* Two per row on a phone rather than one. auto-fill against a 170px minimum needs 350px of
+   content box for a second column, and a narrow handset does not have it once the page's own
+   padding is out — so the tiles went full width and a fold showed two charts (owner, field test
+   round three). Below the fold-out width the count is stated instead of derived. */
+@media (max-width: 479.98px) {
+    .tier-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .tier-chart-card {
     border: 2px solid var(--mud-palette-lines-default);
     border-radius: 8px;
@@ -14188,7 +14198,7 @@ span.ct-console-pick { cursor: default; }
 }
 
 .pmb-peers-head .pmb-compare {
-    flex: 0 1 auto;
+    flex: 1 1 24rem;
     margin: 0;
 }
 
