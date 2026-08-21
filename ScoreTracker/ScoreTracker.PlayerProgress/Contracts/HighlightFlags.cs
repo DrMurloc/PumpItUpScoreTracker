@@ -26,7 +26,9 @@ public enum HighlightFlags
 
     /// <summary>
     ///     One of the first 3 passes ever in this (type, level) folder, the folder being at or
-    ///     above the player's floored competitive level for its discipline.
+    ///     above the player's floored competitive level for its discipline. Never set on a
+    ///     Co-Op chart: a co-op folder is a party size rather than a rung, so it never clears
+    ///     the bar (by design — see <c>CompetitiveLevels.Floor</c>).
     /// </summary>
     FolderDebut = 32,
 

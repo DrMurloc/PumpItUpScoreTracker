@@ -445,6 +445,10 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         // touched are the easy ones. Same bar the community and rival feeds apply to the same
         // event, so a row cannot be marked here and withheld there.
         //
+        // CO-OP NEVER DEBUTS, by design: its "level" is a player count of 2–5 and the bar it
+        // reads is the overall competitive level, so the gate always closes. See
+        // CompetitiveLevels.Floor — a co-op folder names a party size, not a rung.
+        //
         // A batch landing several at once debuts its top ones by noteworthy ordering; the ordinal
         // (First/Second/Third) is the prior clear count plus place.
         if ((int)folder.Level < CompetitiveLevels.Floor(folder.Type, data.Stats)) return;

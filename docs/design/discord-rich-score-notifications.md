@@ -600,7 +600,12 @@ card's CTA before it gets linked from other UI surfaces.
 6. 🆕 **Folder debut** — one of the **first 3 passes ever in a (type, level) folder**,
    S23 and D23 counted separately (owner-added 2026-07-05), the folder sitting **at or above
    the player's floored competitive level** for that discipline — the overall level for co-op,
-   which has no discipline of its own (owner, 2026-08-20). Below that line a first pass is a
+   which has no discipline of its own (owner, 2026-08-20). **Co-op therefore never debuts, and
+   that is the intent** (owner, 2026-08-21): a mainline co-op chart has no difficulty at all —
+   its level slot holds the player count, 2 to 5 — so the bar is a real 15–25 against a 2 and no
+   co-op folder clears it. "First ever pass in the CoOp3 folder" would announce a party size
+   rather than an achievement, and it is a folder a player of any level walks into. Co-op passes
+   still earn every other flag, 📁 included. Below that line a first pass is a
    back-fill of ground already held rather than a debut, and it was the loudest false positive
    on the Sessions page: the folders a player has never touched are the easy ones, so the flag
    fired *hardest* the further below their level they played. The community and rival feeds
