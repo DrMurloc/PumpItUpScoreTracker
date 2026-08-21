@@ -355,9 +355,10 @@ namespace ScoreTracker.PlayerProgress.Application
         }
 
         /// <summary>
-        ///     Where this player's PUMBILITY ends up if they keep the average they are holding
+        ///     Where this player's PUMBILITY ends up if they keep the standard they are holding
         ///     now, and whether that is a guess: their real total once the merged pool holds fifty,
-        ///     and the pool's average out to fifty slots while it does not (D48).
+        ///     and everything they hold plus the empty slots priced at their weakest held chart
+        ///     while it does not (D48).
         ///     <para>
         ///         The merged pool, not a per-type one, because the rung ladder is read off the
         ///         merged top fifty — the number the game's own badge is drawn from. Which also
@@ -372,6 +373,21 @@ namespace ScoreTracker.PlayerProgress.Application
         ///         toward the threshold that will actually light this player up rather than toward
         ///         a fifty they never have to reach.
         ///     </para>
+        ///     <para>
+        ///         The empty slots price at the WEAKEST chart held, not at the pool's average.
+        ///         Averaging is upward-biased by construction — the mean of a descending list's
+        ///         head can only exceed the mean of the whole — and it is biased by the same
+        ///         amount however much the player holds, because an average over their top twenty
+        ///         discards slots 21 and up. That is what this used to do, and it read every one
+        ///         of 111 full-pool Phoenix 2 accounts high: +1.69% mean at every pool size,
+        ///         landing the exact rung 8 times in 111 and up to four rungs high. Filling from
+        ///         the floor instead lands it 39 times in 111 at a twenty-chart pool and 111 in
+        ///         111 at forty-eight, converging as the pool fills rather than staying flat. It
+        ///         reads high too (+0.89% at twenty, +0.01% at forty-eight): the slots a player
+        ///         adds next are usually worth a little less than the one they hold last, and a
+        ///         floor-filled estimate never prices them lower than that. Owner call: it is a
+        ///         residual, not a term to tune — no calibration constant.
+        ///     </para>
         /// </summary>
         private static (double Total, bool IsEstimate)? FinishedTotal(PoolState merged)
         {
@@ -382,7 +398,10 @@ namespace ScoreTracker.PlayerProgress.Application
             // player the stats know the rung of at the bottom of the ladder. Null hands the
             // placement back to their standing total, which is what it was before.
             if (ranked.Length == 0) return null;
-            return (ranked.Take(PeerGroup.PumbilityProjectionGate).Average() * PumbilityPeerPools.PoolSize, true);
+            // Everything held counts for exactly what it is worth; only the empty slots are
+            // guessed, and they are guessed at the standard the player is already holding at
+            // the bottom of their pool.
+            return (ranked.Sum() + (PumbilityPeerPools.PoolSize - ranked.Length) * ranked[^1], true);
         }
 
         /// <summary>What a projection run reads: the same for every chart type in the run.</summary>
