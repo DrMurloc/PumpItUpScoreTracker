@@ -5262,8 +5262,8 @@
   <data name="Players at your level" xml:space="preserve">
     <value>내 레벨 플레이어</value>
   </data>
-  <data name="Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs." xml:space="preserve">
-    <value>같은 레벨에서 풀을 가득 채운 플레이어: {0}명. 대부분은 5개가 아닌 1~2개의 점수로 계산되며, 풀을 채우는 사람이 늘어나면 달라집니다.</value>
+  <data name="Players at your level with a full pool: {0}. Every row here is read off fewer than five scores, and will move as more peers fill their pools." xml:space="preserve">
+    <value>같은 레벨에서 풀을 가득 채운 플레이어: {0}명. 여기 각 행은 5개 미만의 점수로 계산되며, 풀을 채우는 사람이 늘어나면 달라집니다.</value>
   </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>PIU 커뮤니티의 플레이어들이 여러분의 점수를 활용해 다양한 것을 만듭니다 — PUMBILITY 플래너, 패턴 분석, Discord 랭킹 봇 등. 이제 그 도구들을 보고 누구에게 허용할지 정할 수 있는 페이지가 생겼습니다.</value>

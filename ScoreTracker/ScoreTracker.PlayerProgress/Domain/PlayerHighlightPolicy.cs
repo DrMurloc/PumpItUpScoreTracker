@@ -212,6 +212,8 @@ internal static class PlayerHighlightPolicy
 
         // A folder debut only counts at or above the player's floored competitive level for that
         // discipline — an early pass in a folder well below your skill isn't a community big win.
+        // Co-Op clears this bar never (its level is a party size), which is the wanted answer on
+        // a feed as much as on a card: see CompetitiveLevels.Floor.
         if (change.Flags.HasFlag(HighlightFlags.FolderDebut)
             && change.Detail?.FolderDebutOrdinal is { } ordinal && ordinal <= FolderFirstMaxOrdinal
             && (int)chart.Level >= CompetitiveLevels.Floor(chart.Type, stats))

@@ -506,8 +506,10 @@ public sealed partial class PumbilityProjectionSagaTests
     public async Task AShortMergedPoolIsPlacedByItsExtrapolatedFinishAndSaysSo()
     {
         // Twenty-five charts: too few for a settled total, enough to extrapolate one. The pool's
-        // own sum would seat this player at the bottom of the ladder; their average out to fifty
-        // seats them where they are actually heading (D48).
+        // own sum would seat this player at the bottom of the ladder; filling the empty slots at
+        // the standard they already hold seats them where they are actually heading (D48). Every
+        // chart is priced the same here, so the twenty-five they hold and the twenty-five they do
+        // not come to fifty of one value.
         var ctx = new ProjectionContext().WithPhoenix2Pool(25, 0)
             .WithPoolOf(25, 970_000, ChartType.Single, 20)
             .WithChart(out var chart, ChartType.Single, 20);
@@ -525,6 +527,36 @@ public sealed partial class PumbilityProjectionSagaTests
         Assert.Equal(PeerGroup.PumbilityProjectionGate, group.PoolSize);
         Assert.Equal(25, group.PoolCount);
         Assert.Contains(chart.Id, result.ExpectedScores.Keys);
+    }
+
+    [Fact]
+    public async Task AnUnevenShortPoolFillsItsEmptySlotsAtTheWeakestChartHeld()
+    {
+        // The case a uniform pool cannot tell apart. Twenty strong charts and five weak ones: an
+        // average over the top twenty would price all twenty-five empty slots at the STRONG value
+        // and read the player high, which is what it did for all 111 backtested accounts. What
+        // they hold counts for what it is worth, and only the twenty-five slots they do not hold
+        // are guessed — at the weakest chart in the pool, the standard they are already holding
+        // at its bottom.
+        var ctx = new ProjectionContext().WithPhoenix2Pool(25, 0)
+            .WithPoolOf(20, 995_000, ChartType.Single, 23)
+            .WithPoolOf(5, 850_000, ChartType.Single, 11)
+            .WithChart(out var chart, ChartType.Single, 20);
+        for (var i = 0; i < 6; i++) ctx.WithPumbilityPeer(chart, phoenix2Score: 985_000);
+
+        var strong = ProjectionContext.PricedAt(ctx.ChartsInPool[0], 995_000);
+        var weak = ProjectionContext.PricedAt(ctx.ChartsInPool[20], 850_000);
+        // Held: 20 strong + 5 weak. Empty: 25 more at the weak value, the pool's floor.
+        var expected = Phoenix2PumbilityLevel.From(20 * strong + 30 * weak).Index;
+        // The test is only worth anything if the old estimator would have answered differently.
+        Assert.NotEqual(expected, Phoenix2PumbilityLevel.From(strong * PeerGroup.PumbilityPoolSize).Index);
+
+        var result = await ctx.Saga.Handle(new ProjectPumbilityGainsQuery(ctx.UserId, MixEnum.Phoenix2),
+            CancellationToken.None);
+
+        var group = result.Peers![ChartType.Single];
+        Assert.True(group.PlacedByEstimate);
+        Assert.Equal(expected, group.Center);
     }
 
     [Fact]

@@ -114,8 +114,16 @@ public enum PeerGroupKind
 ///     pool and twenty-odd doubles is placed by a real number, and a surface must not tell them
 ///     otherwise. False on a competitive band, which places nobody on a ladder.
 /// </param>
+/// <param name="AnsweredBelowFloor">
+///     Whether this run fell back below the five-peer floor (D47) and produced rows from it —
+///     every score in the projection then rests on FEWER than five peers, because a single chart
+///     meeting the floor is what would have stopped the fallback. This, not the band's size, is
+///     what a surface warns on: a band of nine whose charts were each scored by two or three
+///     relaxes exactly as a band of two does, and a warning keyed off size would miss it.
+///     False when the strict floor answered, and on a competitive band, which has no floor.
+/// </param>
 public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWidth, int Size, int PoolCount,
-    int PoolSize, bool PlacedByEstimate = false)
+    int PoolSize, bool PlacedByEstimate = false, bool AnsweredBelowFloor = false)
 {
     /// <summary>The rung half-width of a Phoenix 2 peer group: DIAMOND LV.4 reaches DIAMOND LV.1 and RED BERYL LV.2.</summary>
     public const int PumbilityRungWindow = 3;
@@ -127,9 +135,13 @@ public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWid
     ///     The shorter pool a viewer may be projected from when the caller can say where they will
     ///     finish (D48). A peer still needs a full <see cref="PumbilityPoolSize" /> — their pool is
     ///     the evidence, and half a pool is half a vote — but the viewer only has to be placeable,
-    ///     and twenty charts places them: backtested across 111 full-pool accounts, their top
-    ///     twenty averaged out to fifty lands within two rungs of their real total 97% of the time,
-    ///     which the ±3 band absorbs.
+    ///     and twenty charts places them: backtested across 111 full-pool Phoenix 2 accounts, their
+    ///     top twenty with the remaining thirty slots filled at their weakest held chart lands on
+    ///     the exact rung 39 times, within two rungs 110 times, and within three 110 times. What
+    ///     is left is one-directional — the estimate reads high, never low — so the ±3 band is not
+    ///     symmetric around the truth: at a twenty-chart pool it reaches roughly [−2, +4] rather
+    ///     than [−3, +3]. That is the accepted cost of placing a short pool at all; a caller who
+    ///     cannot afford it supplies no finish and keeps the full-pool gate.
     /// </summary>
     public const int PumbilityProjectionGate = 20;
 

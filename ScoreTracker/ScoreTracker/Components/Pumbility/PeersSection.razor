@@ -8,7 +8,6 @@
 @using ScoreTracker.Application.Queries
 @using ScoreTracker.Domain.Models.Titles.Phoenix2
 @using ScoreTracker.Domain.Records
-@using ScoreTracker.Domain.Services
 @using ScoreTracker.Domain.Services.Contracts
 @using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Enums
@@ -61,7 +60,7 @@
     @if (ThinBand is { } thin)
     {
         <p class="pmb-block-note" data-testid="peers-thin-note">
-            @L["Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs.", thin.Size]
+            @L["Players at your level with a full pool: {0}. Every row here is read off fewer than five scores, and will move as more peers fill their pools.", thin.Size]
         </p>
     }
     @if (Page.Peers is { } peers)
@@ -221,19 +220,24 @@
     private bool IsPumbilityBand => Page.Mix == MixEnum.Phoenix2;
 
     /// <summary>
-    ///     A band with fewer players than the five-peer floor asks for can never meet it, so every
-    ///     row below is running on the D47 fallback — one or two scores rather than five. The note
-    ///     says so once, under the lede, rather than a chip: the per-row "Fewer than 5 peers scored
-    ///     it" already carries the detail, and what a player needs here is why the whole list reads
-    ///     thin. Phoenix 1 has no floor and never shows it.
+    ///     A run that fell back below the five-peer floor (D47) has every row resting on fewer
+    ///     than five scores, so the note says so once, under the lede, rather than a chip: the
+    ///     per-row "Fewer than 5 peers scored it" already carries the detail, and what a player
+    ///     needs here is why the whole list reads thin. Phoenix 1 has no floor and never shows it.
     ///     <para>
-    ///         Under All the list merges both types, so the note only stands when EVERY lit type is
-    ///         thin — otherwise half the rows have real evidence and a blanket sentence would be
+    ///         Read off the projector's own answer, never off the band's size. A band too small to
+    ///         put five voices on any chart is only the obvious case; a band of nine whose charts
+    ///         were each scored by two or three relaxes identically, and a size test stays silent
+    ///         through exactly that. Whether the fallback ran is the only thing that decides it.
+    ///     </para>
+    ///     <para>
+    ///         Under All the list merges both types, so the note only stands when EVERY lit type
+    ///         relaxed — otherwise half the rows have real evidence and a blanket sentence would be
     ///         wrong about them. It then names the largest of those bands, which overstates none of
     ///         them.
     ///     </para>
     /// </summary>
-    private PeerGroup? ThinBand => Lit.Length > 0 && Lit.All(g => g.Size < PeerEstimator.Phoenix2MinimumPeers)
+    private PeerGroup? ThinBand => Lit.Length > 0 && Lit.All(g => g.AnsweredBelowFloor)
         ? Lit.MaxBy(g => g.Size)
         : null;
 

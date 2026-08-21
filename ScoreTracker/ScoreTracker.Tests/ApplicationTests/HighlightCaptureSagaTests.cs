@@ -139,16 +139,14 @@ public sealed class HighlightCaptureSagaTests
     public async Task ACoOpChartCarriesNoPeerStanding()
     {
         // Competitive cohorts have no co-op side, so there is nothing to measure this
-        // against. The row still exists — folder flags are type-agnostic and this one is a
-        // folder debut — but it carries no percentile, and the page renders it in plain ink
-        // rather than inventing a band for it.
+        // against. The row still exists — folder completion is type-agnostic and a one-chart
+        // folder is complete — but it carries no percentile, and the page renders it in plain
+        // ink rather than inventing a band for it.
         //
-        // The overall competitive level is what a co-op folder's debut floor reads, so it is
-        // set at the chart's level here: below it there would be no debut, hence no row, and
-        // the test would pass for the wrong reason.
-        var chart = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(18).Build();
+        // Level 3 because that is what a co-op chart's level IS: the player count. Nothing in
+        // Phoenix or Phoenix 2 carries a co-op above 5.
+        var chart = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(3).Build();
         var ctx = new HandlerContext();
-        ctx.GivenCompetitive(singles: 20, doubles: 20, overall: 18);
         ctx.GivenCharts(chart);
         ctx.GivenBest(chart, 910000);
 
@@ -157,9 +155,34 @@ public sealed class HighlightCaptureSagaTests
         ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
                 x.ChartId == chart.Id
-                && x.Detail!.PeerPercentile == null
+                && x.Flags.HasFlag(HighlightFlags.FolderCompletion90)
+                // Written out rather than ?. — Moq's predicate is an expression tree, and a
+                // null-propagating operator cannot appear in one.
+                && (x.Detail == null || x.Detail.PeerPercentile == null)
                 && !x.Flags.HasFlag(HighlightFlags.ScoreQuality90))),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ACoOpFolderNeverDebuts()
+    {
+        // BY DESIGN (owner, 2026-08-21), not an accident of the units. A mainline co-op chart
+        // has no difficulty — its level slot holds the player count — so the debut floor, which
+        // reads the overall competitive level for a type with no discipline of its own, is a bar
+        // no co-op folder can clear. "First ever pass in the CoOp3 folder" would announce a party
+        // size rather than an achievement. Default competitive levels here are 20; the chart is
+        // a co-op x2, which is as real as co-op levels get.
+        var chart = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(2).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCharts(chart);
+        ctx.GivenBest(chart, 910000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.Flags.HasFlag(HighlightFlags.FolderDebut))),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

@@ -330,7 +330,7 @@ public sealed class PeersSectionTests : ComponentTestBase
     }
 
     [Fact]
-    public void ABandUnderTheFivePeerFloorSaysSoUnderTheLede()
+    public void ARunThatFellBelowTheFivePeerFloorSaysSoUnderTheLede()
     {
         // A two-peer band can never put five voices on a chart, so every row below is running on
         // the D47 fallback. The note says it once, under the lede — not a chip (owner).
@@ -339,7 +339,8 @@ public sealed class PeersSectionTests : ComponentTestBase
         this.RenderInteractive();
 
         var cut = RenderComponent<PeersSection>(p => p
-            .Add(x => x.Page, Page(carried: false, group: PeerGroup.Pumbility(24, 2, 50)))
+            .Add(x => x.Page, Page(carried: false,
+                group: PeerGroup.Pumbility(24, 2, 50) with { AnsweredBelowFloor = true }))
             .Add(x => x.Charts, _charts));
         cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
 
@@ -347,6 +348,44 @@ public sealed class PeersSectionTests : ComponentTestBase
         Assert.Contains("Players at your level with a full pool: 2", note.TextContent);
         // It belongs to the lede's own slot, not the chips line.
         Assert.Empty(cut.FindAll(".pmb-peer-line [data-testid=peers-thin-note]"));
+    }
+
+    [Fact]
+    public void ABigBandWhoseChartsWereThinSaysSoToo()
+    {
+        // The case the old size test missed. Twenty-three peers is far over the floor, so nothing
+        // about the BAND is thin — but if no chart of theirs collected five of them the run still
+        // relaxed, and every row on screen rests on fewer than five scores. The projector says
+        // whether that happened; the size of the band cannot.
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page(carried: false,
+                group: PeerGroup.Pumbility(24, 23, 50) with { AnsweredBelowFloor = true }))
+            .Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        Assert.Contains("Players at your level with a full pool: 23",
+            cut.Find("[data-testid=peers-thin-note]").TextContent);
+    }
+
+    [Fact]
+    public void ASmallBandThatStillMetTheFloorSaysNothing()
+    {
+        // The mirror of the above: a three-peer band whose one chart all three plus two others
+        // scored answered at full strength. The note would be describing evidence that is there.
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page(carried: false, group: PeerGroup.Pumbility(24, 3, 50)))
+            .Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        Assert.Empty(cut.FindAll("[data-testid=peers-thin-note]"));
     }
 
     [Fact]

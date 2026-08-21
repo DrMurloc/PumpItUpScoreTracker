@@ -5298,8 +5298,8 @@
   <data name="Players at your level" xml:space="preserve">
     <value>Morp ogl gromurp grorpmurm</value>
   </data>
-  <data name="Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs." xml:space="preserve">
-    <value>Morp op gromurp grorpmurm murm mrglmr blubgro: {0}. Mrrgl mrgl blarg mo romurg argl ol blurg mgrlgmrg grogrgl blugro, ap murgro mrrgl mrgl grglblarg murpblub grglblarg.</value>
+  <data name="Players at your level with a full pool: {0}. Every row here is read off fewer than five scores, and will move as more peers fill their pools." xml:space="preserve">
+    <value>Morp op gromurp grorpmurm murm mrglmr blubgro: {0}. Blarg murgl blur murgm mrgl blarg blurg mgrlgmrg grogrgl, ap murgro mrrgl mrgl maglmurp grglblarg gromurp blubgro.</value>
   </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>Morp blu PIU Plglmurgblub murpmurp murgm blu gromurp Mgrlgmrg — PUMBILITY murgargl, murgl blgrlgromrrgl, Discord murgblarg. Blorm murgm blaromurp gromurp murp murgl murm murgargl bo argla.</value>

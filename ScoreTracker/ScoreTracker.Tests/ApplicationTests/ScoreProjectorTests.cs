@@ -174,6 +174,54 @@ public sealed class ScoreProjectorTests
 
         Assert.Equal(970_000, (int)relaxed.Scores[ChartA]);
         Assert.Equal(2, relaxed.Spreads![ChartA].PeerCount);
+        Assert.True(relaxed.Group!.AnsweredBelowFloor);
+    }
+
+    [Fact]
+    public async Task ABandBigEnoughForTheFloorStillSaysSoWhenItsChartsAreThin()
+    {
+        // The case a size test cannot see, and the reason the flag exists at all. Nine peers is
+        // comfortably over the five-peer floor, so nothing about the BAND is thin — but no single
+        // chart was scored by five of them, so the run relaxes exactly as a two-peer band does and
+        // every row rests on fewer than five voices. A surface warning off Size would say nothing
+        // here, about the whole board.
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 9).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
+        foreach (var peer in peers.Take(4)) ctx.WithScore(peer, ChartA, 970_000);
+        foreach (var peer in peers.Skip(4).Take(3)) ctx.WithScore(peer, ChartB, 980_000);
+
+        var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA, ChartB);
+
+        Assert.Equal(9, relaxed.Group!.Size);
+        Assert.True(relaxed.Group.AnsweredBelowFloor);
+        Assert.Equal(970_000, (int)relaxed.Scores[ChartA]);
+        Assert.Equal(980_000, (int)relaxed.Scores[ChartB]);
+    }
+
+    [Fact]
+    public async Task ARunTheFloorAnsweredIsNotMarkedBelowIt()
+    {
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 970_000);
+
+        var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA);
+
+        Assert.Equal(970_000, (int)relaxed.Scores[ChartA]);
+        Assert.False(relaxed.Group!.AnsweredBelowFloor);
+    }
+
+    [Fact]
+    public async Task ABandThatScoredNoneOfTheChartsClaimsNoEvidenceEitherWay()
+    {
+        // The fallback ran and still found nothing, so there is no thin evidence to warn about —
+        // only an empty board, which the page already reads as an empty board.
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        for (var i = 0; i < 3; i++) ctx.WithPeer(poolSize: 50);
+
+        var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA);
+
+        Assert.Empty(relaxed.Scores);
+        Assert.False(relaxed.Group!.AnsweredBelowFloor);
     }
 
     [Fact]
