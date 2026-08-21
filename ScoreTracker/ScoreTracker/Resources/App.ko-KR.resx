@@ -2905,6 +2905,9 @@
   <data name="How is this personalized?" xml:space="preserve">
     <value>어떻게 개인화되나요?</value>
   </data>
+  <data name="How it works" xml:space="preserve">
+    <value>작동 방식</value>
+  </data>
   <data name="How long you survive" xml:space="preserve">
     <value>얼마나 버티는지</value>
   </data>

@@ -2922,6 +2922,9 @@
   <data name="How is this personalized?" xml:space="preserve">
     <value>どうパーソナライズされている？</value>
   </data>
+  <data name="How it works" xml:space="preserve">
+    <value>仕組み</value>
+  </data>
   <data name="How long you survive" xml:space="preserve">
     <value>生存できる長さ</value>
   </data>
