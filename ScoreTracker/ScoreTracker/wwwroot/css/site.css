@@ -13465,8 +13465,16 @@ span.ct-console-pick { cursor: default; }
    ============================================================================ */
 
 /* The shell leaves the page flush against the nav, and this one opens on an eyebrow rather
-   than on a heading, so it owes itself the breathing room. */
+   than on a heading, so it owes itself the breathing room. It also carries the section's one
+   outbound link on its right: space-between rather than margin-left:auto, so a label too long
+   for the line drops to the left of the next line instead of stranding itself against the far
+   edge (docs/design/pumbility-overhaul.md D15). */
 .pmb-eyebrow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 16px;
     font-family: var(--font-display);
     font-weight: 600;
     font-size: 11px;
@@ -13474,6 +13482,24 @@ span.ct-console-pick { cursor: default; }
     text-transform: uppercase;
     color: var(--mix-ink-muted);
     margin: 16px 0 8px;
+}
+
+/* The only thing on the line that leaves the section, so it carries the primary rather than
+   the eyebrow's muted ink. */
+.pmb-eyebrow-link {
+    color: var(--mix-primary);
+    border-bottom: 1px dotted color-mix(in srgb, var(--mix-primary) 55%, transparent);
+    text-decoration: none;
+    padding-bottom: 1px;
+}
+
+.pmb-eyebrow-link:hover {
+    border-bottom-color: var(--mix-primary);
+}
+
+.pmb-eyebrow-link:focus-visible {
+    outline: 2px solid var(--mix-primary);
+    outline-offset: 2px;
 }
 
 /* The section frame: the number, the pool selector and the bar, above the nav and shared by
@@ -15565,6 +15591,18 @@ span.ct-console-pick { cursor: default; }
 
 .pc-eyebrow a:hover {
     color: var(--mix-ink);
+}
+
+/* The one link on the line that leaves for your own data rather than for the same page on
+   another mix, so it carries the primary the way the section's eyebrow does. */
+.pc-eyebrow a.pc-mine {
+    color: var(--mix-primary);
+    border-bottom-color: color-mix(in srgb, var(--mix-primary) 55%, transparent);
+}
+
+.pc-eyebrow a.pc-mine:hover {
+    color: var(--mix-primary);
+    border-bottom-color: var(--mix-primary);
 }
 
 .pc-h1 {

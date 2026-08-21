@@ -2,6 +2,7 @@
 @page "/PumbilityCalculator/{MixSlug}"
 @using MediatR
 @using ScoreTracker.ChartIntelligence.Contracts
+@using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
@@ -11,6 +12,7 @@
 @inject IMediator Mediator
 @inject IUiSettingsAccessor UiSettings
 @inject NavigationManager Nav
+@inject ICurrentUserAccessor CurrentUser
 
 @* The PUMBILITY formula page (docs/design/pumbility-calculator.md). Static SSR — no
    @rendermode — so the formula, every constant, both chart types' tables and the ruler are
@@ -29,6 +31,14 @@
                     @foreach (var other in PumbilityCalculatorMixes.All.Where(m => m != _model.Mix))
                     {
                         <span class="pc-sep">·</span><a href="@PumbilityCalculatorMixes.PathFor(other)">@other.GetName() →</a>
+                    }
+                    @* The way back to the number this page is the formula for, and the return
+                       trip for the link on the section's own eyebrow (D49). Signed in only: the
+                       PUMBILITY section sends an anonymous visitor to the front door, so an
+                       always-on link would be a dead end for the readers this page exists for. *@
+                    @if (CurrentUser.IsLoggedIn)
+                    {
+                        <span class="pc-sep">·</span><a class="pc-mine" href="/Pumbility">@L["Your PUMBILITY"] →</a>
                     }
                 </div>
                 <h1 class="pc-h1"><span>PUMBILITY</span> @L["Calculator"]</h1>
