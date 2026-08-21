@@ -512,7 +512,13 @@ the state — solid passed, dashed To-Do or carried, dotted broken — the print
 or what the chart is worth under the pool lens, and a tile carrying a corner value shows the grade
 in the other corner instead of plate art. `Tile` grew `CornerLabel`/`CornerHex`/`Outline` for it,
 defaulting to the dot it drew before, and **the tier-list download speaks the same language** — it
-was the same card model all along.
+was the same card model all along. **The tile carries its own difficulty bubble** (field test round
+six): a tier list's card prints its bubble once, in the header, because the whole list is one folder,
+and this list is every difficulty at once — without it the picture cannot say what any tile is. It is
+`Tile.BubbleUrl`, drawn in the jacket's top-left where the page's card wears it, null by default so
+the tier-list card is unchanged; the URL comes from `ShareCardImages`, which now owns the page's own
+spelling of it (flat art for SP/DP and the legacy sets, none where the page draws a legacy chip),
+so the card and the screen can never ask for different pictures.
 
 **Table** — Song · Chart · Peers (`17 of 23`, weighted sum in the title) · Peers' median · Variability
 · Gain · My Score · Your pool · the two actions.
