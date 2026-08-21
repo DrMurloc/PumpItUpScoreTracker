@@ -114,11 +114,9 @@
 
     // Modern mixes keep their per-mix bubble art; every numbered legacy mix
     // (Exceed → Prime 2, Infinity, Pro) reuses the XX image set — same S/D notation,
-    // zero new assets. SP/DP predate per-mix art and were always served flat.
+    // zero new assets. SP/DP predate per-mix art and were always served flat. The rule lives
+    // in ShareCardImages so a downloaded card and the page ask for the same picture.
     public string DifficultyBubblePath =>
-        EffectiveType == ChartType.DoublePerformance || EffectiveType == ChartType.SinglePerformance ||
-        EffectiveMix == MixEnum.XX || EffectiveMix?.UsesLegacyScoring() == true
-            ? $"https://piuimages.arroweclip.se/difficulty/{DiffString.ToLower()}.png"
-            : $"https://piuimages.arroweclip.se/difficulty/{EffectiveMix}/{DiffString.ToLower()}.png";
+        ShareCardImages.DifficultyBubble(EffectiveMix, EffectiveType ?? ChartType.Single, DiffString);
 
 }

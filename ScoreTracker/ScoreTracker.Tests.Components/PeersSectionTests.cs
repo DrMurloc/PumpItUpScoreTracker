@@ -233,6 +233,33 @@ public sealed class PeersSectionTests : ComponentTestBase
     }
 
     [Fact]
+    public async Task ADownloadedTileCarriesItsOwnDifficultyBubble()
+    {
+        // A tier list's card says its difficulty once, in the header, because the whole list is
+        // one folder. This list is every difficulty at once, so the bubble has to ride the tile
+        // or the picture cannot say what any of it is (owner, field test round six).
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        TierListShareCard? sent = null;
+        Mediator.Setup(m => m.Send(It.IsAny<GetTierListShareCardQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IRequest<byte[]> request, CancellationToken _) =>
+            {
+                sent = ((GetTierListShareCardQuery)request).Card;
+                return new byte[] { 1 };
+            });
+
+        this.RenderInteractive();
+        var cut = RenderComponent<PeersSection>(p => p.Add(x => x.Page, Page(carried: false)).Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-download]").Count > 0);
+        await cut.Find("[data-testid=peers-download]").ClickAsync(new MouseEventArgs());
+
+        var tile = Assert.Single(Assert.Single(sent!.Rows).Tiles);
+        // The fixture's charts are Phoenix 2 singles at 21 — the mix's own bubble art, the same
+        // URL the page's card asks for.
+        Assert.Equal("https://piuimages.arroweclip.se/difficulty/Phoenix2/s21.png", tile.BubbleUrl);
+    }
+
+    [Fact]
     public async Task ADownloadedTileWearsTheCompactCardsBorderAndItsGrade()
     {
         // Passed → solid green with the grade art; To-Do → dashed blue. The card is the grid.
