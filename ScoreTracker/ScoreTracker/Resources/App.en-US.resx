@@ -5298,8 +5298,8 @@
   <data name="Players at your level" xml:space="preserve">
     <value>Players at your level</value>
   </data>
-  <data name="Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs." xml:space="preserve">
-    <value>Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs.</value>
+  <data name="Players at your level with a full pool: {0}. Every row here is read off fewer than five scores, and will move as more peers fill their pools." xml:space="preserve">
+    <value>Players at your level with a full pool: {0}. Every row here is read off fewer than five scores, and will move as more peers fill their pools.</value>
   </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access.</value>

@@ -5298,8 +5298,8 @@
   <data name="Players at your level" xml:space="preserve">
     <value>Giocatori del tuo livello</value>
   </data>
-  <data name="Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs." xml:space="preserve">
-    <value>Giocatori del tuo livello con un pool completo: {0}. La maggior parte di questi si basa su uno o due punteggi invece che cinque, e cambierà man mano che altri completano il proprio.</value>
+  <data name="Players at your level with a full pool: {0}. Every row here is read off fewer than five scores, and will move as more peers fill their pools." xml:space="preserve">
+    <value>Giocatori del tuo livello con un pool completo: {0}. Ogni riga qui è calcolata su meno di cinque punteggi e cambierà man mano che altri giocatori completano il loro pool.</value>
   </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>I giocatori della community PIU costruiscono cose sui tuoi punteggi — pianificatori di PUMBILITY, analisi dei pattern, bot di classifica per Discord. Ora c'è una pagina dove puoi vederli e scegliere chi ha accesso.</value>

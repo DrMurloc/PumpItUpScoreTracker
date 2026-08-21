@@ -5298,8 +5298,8 @@
   <data name="Players at your level" xml:space="preserve">
     <value>同水準のプレイヤー</value>
   </data>
-  <data name="Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs." xml:space="preserve">
-    <value>あなたと同じレベルでプールが埋まっているプレイヤー：{0}人。ここの多くは5件ではなく1〜2件のスコアから算出されており、プールを埋める人が増えれば変動します。</value>
+  <data name="Players at your level with a full pool: {0}. Every row here is read off fewer than five scores, and will move as more peers fill their pools." xml:space="preserve">
+    <value>同じレベルでプールが埋まっているプレイヤー: {0}人。ここの各行は5件未満のスコアから算出されており、プールを埋めるプレイヤーが増えると変動します。</value>
   </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>PIUコミュニティのプレイヤーが、あなたのスコアを使っていろいろなものを作っています — PUMBILITYプランナー、譜面分析、Discordのランクボットなど。今後はそれらを見て、誰に許可するかを選べるページがあります。</value>

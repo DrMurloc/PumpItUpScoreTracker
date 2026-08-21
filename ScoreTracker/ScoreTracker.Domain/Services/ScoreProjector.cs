@@ -255,10 +255,19 @@ public sealed class ScoreProjector : IScoreProjector
         // go from a full board to nothing over one player. Where it leaves the run with literally
         // nothing, the same records answer again with no floor: one peer's score is thin evidence
         // and the page says so, but it is evidence, and an empty board is not (D47).
-        if (projected.Count == 0 && request.RelaxFloorWhenEmpty)
-            (projected, spreads, contributors) = Estimate(heard, 1);
+        //
+        // Whether it happened rides out on the group, because a surface cannot infer it: the band
+        // being small is neither necessary nor sufficient. A band of nine whose charts were each
+        // scored by two or three relaxes exactly as a band of two does, and a warning keyed off
+        // the band's SIZE stays silent through it — which is the whole board it stays silent
+        // about, since a relaxed run means every row rests on fewer than five peers.
+        var relaxed = projected.Count == 0 && request.RelaxFloorWhenEmpty;
+        if (relaxed) (projected, spreads, contributors) = Estimate(heard, 1);
 
-        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group, spreads, pools);
+        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0,
+            // Only claimed when the second pass actually produced rows: a band nobody in it has
+            // touched these charts at all answers empty either way, and has no evidence to warn about.
+            group with { AnsweredBelowFloor = relaxed && projected.Count > 0 }, spreads, pools);
     }
 
     /// <summary>

@@ -114,8 +114,16 @@ public enum PeerGroupKind
 ///     pool and twenty-odd doubles is placed by a real number, and a surface must not tell them
 ///     otherwise. False on a competitive band, which places nobody on a ladder.
 /// </param>
+/// <param name="AnsweredBelowFloor">
+///     Whether this run fell back below the five-peer floor (D47) and produced rows from it —
+///     every score in the projection then rests on FEWER than five peers, because a single chart
+///     meeting the floor is what would have stopped the fallback. This, not the band's size, is
+///     what a surface warns on: a band of nine whose charts were each scored by two or three
+///     relaxes exactly as a band of two does, and a warning keyed off size would miss it.
+///     False when the strict floor answered, and on a competitive band, which has no floor.
+/// </param>
 public sealed record PeerGroup(PeerGroupKind Kind, double Center, double HalfWidth, int Size, int PoolCount,
-    int PoolSize, bool PlacedByEstimate = false)
+    int PoolSize, bool PlacedByEstimate = false, bool AnsweredBelowFloor = false)
 {
     /// <summary>The rung half-width of a Phoenix 2 peer group: DIAMOND LV.4 reaches DIAMOND LV.1 and RED BERYL LV.2.</summary>
     public const int PumbilityRungWindow = 3;
