@@ -1,8 +1,9 @@
-@using MediatR
+﻿@using MediatR
 @using ScoreTracker.Catalog.Contracts.Queries
 @using ScoreTracker.Communities.Contracts.Queries
 @using ScoreTracker.Domain.Records
 @using ScoreTracker.Domain.SecondaryPorts
+@using ScoreTracker.Domain.Services.Contracts
 @using ScoreTracker.OfficialMirror.Contracts
 @using ScoreTracker.OfficialMirror.Contracts.Queries
 @using ScoreTracker.PlayerProgress.Contracts.Queries
@@ -607,9 +608,12 @@ else
         // The mirror covers a scattering of boards rather than every chart, so "nobody has played
         // this" would be a lie about a chart plenty of people have played.
         LeaderboardScope.Official => L["The official site doesn't publish a board for this chart."],
-        // No peers at all is a pool that is not yet fifty (D28), not a chart nobody played.
+        // No peers at all is a pool short of the projection gate (D28, D48), not a chart nobody
+        // played. Named off the constant rather than spelled out: this board reads the same sweep
+        // the page does, so it lights at the same count.
         LeaderboardScope.PumbilityPeers when _pumbilityPeers is { Count: 0 } =>
-            L["You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up."],
+            L["You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up.",
+                PeerGroup.PumbilityProjectionGate],
         _ => L["Nobody here has played this yet."]
     };
 

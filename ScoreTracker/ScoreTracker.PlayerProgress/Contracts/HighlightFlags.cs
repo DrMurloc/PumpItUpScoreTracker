@@ -24,7 +24,10 @@ public enum HighlightFlags
     /// <summary>The batch raised Singles or Doubles competitive level and this score drove it.</summary>
     CompetitiveImprover = 16,
 
-    /// <summary>One of the first 3 passes ever in this (type, level) folder.</summary>
+    /// <summary>
+    ///     One of the first 3 passes ever in this (type, level) folder, the folder being at or
+    ///     above the player's floored competitive level for its discipline.
+    /// </summary>
     FolderDebut = 32,
 
     /// <summary>

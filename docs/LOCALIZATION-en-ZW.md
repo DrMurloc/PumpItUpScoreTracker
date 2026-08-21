@@ -1,4 +1,4 @@
-# en-ZW (Murloc) localization glossary
+﻿# en-ZW (Murloc) localization glossary
 
 Working reference for translating `App.en-US.resx` into `App.en-ZW.resx`. Murloc is the site's
 joke locale — it is not a human language and has no volunteer translator, so unlike every other
@@ -273,6 +273,7 @@ row, the chart journey and the admin backfill.
 | overlap / in common | grogblub | Coined for the roster's column and the compare strip's tile. |
 | and | ap | Recovered from the existing "on" — Murloc does not distinguish them. |
 | here | ap | Same word; position is carried by word order. |
+
 | there | gro | Coined alongside it for the carried line. |
 | most | mrrgl | Recovered from `More than` → `Mrrgl grogrgl`. |
 | below / under | glub | Coined for the roster's window and the waiting room, opposite `mrrgl` (above/most). |
@@ -280,3 +281,16 @@ row, the chart journey and the admin backfill.
 | target | murgroblub | Reused from `repriced` — a Murloc names the thing by what it does to the number. `PUMBILITY Targets` is `PUMBILITY Murgroblub`. |
 | Highest / Lowest | Mrrglmrrgl / Glubglub | The doubled root is the superlative, the owner's own repetition device: `mrrgl` (most/above) and `glub` (below). `Mrgl Mrrgl` is very high; `Mrrgl` alone is high. |
 | only | ub | Recovered from `#{0} of {1}` → `#{0} ub {1}` — the same particle carries "of" and "only". |
+
+## The thin-band note (2026-08-20)
+
+Coined for the `/Pumbility` evidence note (D47) — the line that says the peer band is too small
+for the five-peer floor.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| so (therefore) | op | The connective. Distinct from `ap` (and/on/here), which joins rather than concludes. |
+| two | blurg | Straight from the syllable inventory. English spells this one out rather than using a numeral, so it needs a word; `5` in the same sentence stays a digit as always. |
+| five | blugro | `blub` + `gro`, following `blurg`. Same reason. |
+| expect | Blarggro | Coined rather than reusing `Murgblarg` (insights/activity), which already means something else. |
+| reach (a level) | murgro | What a player does to a level they are climbing toward. Distinct from `grubmarg` (clear), which is what they do to a bar. |

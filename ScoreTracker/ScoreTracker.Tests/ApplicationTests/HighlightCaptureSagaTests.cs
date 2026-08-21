@@ -142,8 +142,13 @@ public sealed class HighlightCaptureSagaTests
         // against. The row still exists — folder flags are type-agnostic and this one is a
         // folder debut — but it carries no percentile, and the page renders it in plain ink
         // rather than inventing a band for it.
+        //
+        // The overall competitive level is what a co-op folder's debut floor reads, so it is
+        // set at the chart's level here: below it there would be no debut, hence no row, and
+        // the test would pass for the wrong reason.
         var chart = new ChartBuilder().WithType(ChartType.CoOp).WithLevel(18).Build();
         var ctx = new HandlerContext();
+        ctx.GivenCompetitive(singles: 20, doubles: 20, overall: 18);
         ctx.GivenCharts(chart);
         ctx.GivenBest(chart, 910000);
 
@@ -380,6 +385,93 @@ public sealed class HighlightCaptureSagaTests
             It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
                 x.Flags.HasFlag(HighlightFlags.FolderDebut))),
             It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FolderDebutIsSuppressedBelowFlooredCompetitiveLevel()
+    {
+        // Doubles competitive 24.5 floors to 24, so a first-ever pass in the D20 folder is a
+        // back-fill of ground already held rather than a debut.
+        var chart = new ChartBuilder().WithType(ChartType.Double).WithLevel(20).Build();
+        var others = Enumerable.Range(0, 9)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Double).WithLevel(20).Build()).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenCompetitive(singles: 24.5, doubles: 24.5);
+        ctx.GivenCharts(others.Append(chart).ToArray());
+        ctx.GivenBest(chart, 910000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(It.IsAny<MixEnum>(), It.IsAny<Guid>(),
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.Flags.HasFlag(HighlightFlags.FolderDebut))),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task FolderDebutStillFlagsAtTheFlooredCompetitiveLevel()
+    {
+        // The cutoff is inclusive, and it floors: 24.5 competitive still debuts the D24 folder.
+        var chart = new ChartBuilder().WithType(ChartType.Double).WithLevel(24).Build();
+        var others = Enumerable.Range(0, 9)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Double).WithLevel(24).Build()).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenCompetitive(singles: 24.5, doubles: 24.5);
+        ctx.GivenCharts(others.Append(chart).ToArray());
+        ctx.GivenBest(chart, 910000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.FolderDebut)
+                && x.Detail != null && x.Detail.FolderDebutOrdinal == 1)),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task FolderDebutIsGatedByTheCompetitiveLevelForItsOwnType()
+    {
+        // A Singles folder gates on Singles competitive level, not the higher Doubles one —
+        // matching PlayerHighlightPolicy, which reads the same helper.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build();
+        var others = Enumerable.Range(0, 9)
+            .Select(_ => new ChartBuilder().WithType(ChartType.Single).WithLevel(20).Build()).ToArray();
+        var ctx = new HandlerContext();
+        ctx.GivenCompetitive(singles: 18, doubles: 26);
+        ctx.GivenCharts(others.Append(chart).ToArray());
+        ctx.GivenBest(chart, 910000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.FolderDebut))),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task FolderCompletionIsNotGatedByCompetitiveLevel()
+    {
+        // Only the debut carries the floor (owner call): finishing an easy folder is the
+        // achievement, so the pass that completes it stays marked however far below you play.
+        // Two-chart S15 folder, one already passed — completion AND a free debut slot, so the
+        // debut's absence here is the floor and nothing else.
+        var chart = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var other = new ChartBuilder().WithType(ChartType.Single).WithLevel(15).Build();
+        var ctx = new HandlerContext();
+        ctx.GivenCompetitive(singles: 24.5, doubles: 24.5);
+        ctx.GivenCharts(other, chart);
+        ctx.GivenBest(other, 920000);
+        ctx.GivenBest(chart, 910000);
+
+        await ctx.Saga.Consume(ctx.Context(NewPassEvent(chart)));
+
+        ctx.Highlights.Verify(h => h.UpsertFlags(MixEnum.Phoenix, UserId,
+            It.Is<IEnumerable<ScoreHighlightWrite>>(w => w.Any(x =>
+                x.ChartId == chart.Id && x.Flags.HasFlag(HighlightFlags.FolderCompletion90)
+                && !x.Flags.HasFlag(HighlightFlags.FolderDebut))),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -685,6 +777,17 @@ public sealed class HighlightCaptureSagaTests
                 new MemoryCache(new MemoryCacheOptions()), FakeDateTime.At(Now).Object,
                 Attempts.Object, OfficialPlacements.Object,
                 NullLogger<HighlightCaptureSaga>.Instance);
+        }
+
+        /// <summary>
+        ///     Overrides the default 20/20/20 competitive levels. Singles and Doubles are set
+        ///     separately because the folder gates read the one for the folder's own discipline.
+        /// </summary>
+        public void GivenCompetitive(double singles, double doubles, double overall = 20)
+        {
+            PlayerStats.Setup(p => p.GetStats(It.IsAny<MixEnum>(), UserId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PlayerStatsRecord(UserId, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1,
+                    overall, singles, doubles));
         }
 
         public void GivenCharts(params Chart[] charts)

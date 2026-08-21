@@ -13799,6 +13799,17 @@ span.ct-console-pick { cursor: default; }
     margin: 2px 0 14px;
 }
 
+/* What the list is standing on when it is standing on very little — a thin peer band, a pool
+   short of fifty. A muted line in the lede's own slot rather than a chip: a chip reads as a
+   status badge, and this is a sentence the player has to actually read once. */
+.pmb-block-note {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: color-mix(in srgb, var(--mix-ink-muted) 88%, var(--mix-bg));
+    max-width: 62ch;
+    margin: 0 0 12px;
+}
+
 /* The Phoenix 2 peer line under the targets' lede: one chip per chart type in the selected pool —
    the peer count, or "N/50 charts" for a type whose pool is not yet full — with the definition in
    the chip's tooltip. A count, not a sentence (docs/design/pumbility-overhaul.md §3.3). */

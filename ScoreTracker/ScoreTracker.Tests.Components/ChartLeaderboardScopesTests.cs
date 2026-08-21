@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -14,6 +14,7 @@ using ScoreTracker.Communities.Contracts.Queries;
 using ScoreTracker.Domain.Models;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
+using ScoreTracker.Domain.Services.Contracts;
 using ScoreTracker.OfficialMirror.Contracts;
 using ScoreTracker.OfficialMirror.Contracts.Queries;
 using ScoreTracker.PlayerProgress.Contracts.Queries;
@@ -441,7 +442,9 @@ public sealed class ChartLeaderboardScopesTests : ComponentTestBase
         var dialog = RenderDialog(MixEnum.Phoenix2, ChartLeaderboardScopes.LeaderboardScope.PumbilityPeers);
 
         dialog.WaitForAssertion(() => Assert.NotEmpty(dialog.FindAll("[data-testid='cld-empty']")));
-        Assert.Contains("a full pool of 50", dialog.Find("[data-testid='cld-empty']").TextContent);
+        // The board reads the same sweep the PUMBILITY page does, so it names the same gate (D48).
+        Assert.Contains($"a pool of {PeerGroup.PumbilityProjectionGate} charts",
+            dialog.Find("[data-testid='cld-empty']").TextContent);
     }
 
     private void SignedIn()

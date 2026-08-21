@@ -6,6 +6,7 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.ChartIntelligence.Contracts.Queries;
 using ScoreTracker.Domain.Events;
 using ScoreTracker.Domain.Models;
+using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.PlayerProgress.Contracts;
 using ScoreTracker.PlayerProgress.Contracts.Events;
@@ -199,8 +200,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
         IDictionary<Guid, double> ScoringLevels,
         Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderSizes,
         Dictionary<(ChartType Type, DifficultyLevel Level), int> FolderClears,
-        double SinglesCompetitive,
-        double DoublesCompetitive);
+        PlayerStatsRecord Stats);
 
     private async Task<List<ScoreHighlightWrite>> ComputeFlags(PlayerScoresUpdatedEvent e,
         Dictionary<Guid, HighlightFlags> flags, Dictionary<Guid, HighlightDetail> details,
@@ -337,9 +337,9 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .ToDictionary(x => x.ChartId, x => x.Rank);
         var scoringLevels = await _mediator.Send(new GetChartScoringLevelsQuery(e.Mix), cancellationToken);
 
-        // Competitive levels gate Score Quality (and are cheap to carry): a back-filled chart
-        // more than 5 levels under the player's competitive level for its type is noise, not a
-        // peer flag — the cohort is never even built for it.
+        // Competitive levels gate two flags: a chart more than 5 levels under the player's
+        // competitive level for its type never gets a peer cohort built at all, and a folder
+        // below that level debuts nothing.
         var stats = await _playerStats.GetStats(e.Mix, e.UserId, cancellationToken);
 
         // Folder totals and clears come from data already in hand — no extra queries.
@@ -349,8 +349,7 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
             .Where(b => !b.IsBroken && b.Score != null && charts.ContainsKey(b.ChartId))
             .GroupBy(b => (charts[b.ChartId].Type, charts[b.ChartId].Level))
             .ToDictionary(g => g.Key, g => g.Count());
-        return new CaptureData(charts, bests, top50, scoringLevels, folderSizes, folderClears,
-            stats.SinglesCompetitiveLevel, stats.DoublesCompetitiveLevel);
+        return new CaptureData(charts, bests, top50, scoringLevels, folderSizes, folderClears, stats);
     }
 
     private const int PerfectGameScore = 1_000_000;
@@ -388,7 +387,9 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
 
         // Owner call: below (competitive − 5) for the chart's type, peer comparison is noise
         // (a 23-competitive player back-filling S5s). Skip the whole folder — no cohort, no flag.
-        var competitive = folder.Type == ChartType.Single ? data.SinglesCompetitive : data.DoublesCompetitive;
+        var competitive = folder.Type == ChartType.Single
+            ? data.Stats.SinglesCompetitiveLevel
+            : data.Stats.DoublesCompetitiveLevel;
         if ((int)folder.Level < competitive - 5) return;
 
         var cohort = await GetCohortScores(e.Mix, e.UserId, folder.Type, folder.Level, competitive,
@@ -438,8 +439,15 @@ internal sealed class HighlightCaptureSaga : IConsumer<PlayerScoresUpdatedEvent>
                 flags[chartId] = flags.GetValueOrDefault(chartId) | HighlightFlags.FolderCompletion90;
 
         // Folder debut: the first 3 passes ever in this folder (S and D counted
-        // separately). A batch landing several at once debuts its top ones by noteworthy
-        // ordering; the ordinal (First/Second/Third) is the prior clear count plus place.
+        // separately), at or above the player's floored competitive level for the folder's
+        // discipline. Below that line a first pass is a back-fill of ground already held, not a
+        // debut — and it is the case that fires hardest, because the folders a player has never
+        // touched are the easy ones. Same bar the community and rival feeds apply to the same
+        // event, so a row cannot be marked here and withheld there.
+        //
+        // A batch landing several at once debuts its top ones by noteworthy ordering; the ordinal
+        // (First/Second/Third) is the prior clear count plus place.
+        if ((int)folder.Level < CompetitiveLevels.Floor(folder.Type, data.Stats)) return;
         var priorClears = clears - newPasses.Length;
         var debutSlots = 3 - priorClears;
         if (debutSlots <= 0) return;
