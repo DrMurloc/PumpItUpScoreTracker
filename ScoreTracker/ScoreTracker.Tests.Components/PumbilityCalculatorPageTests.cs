@@ -101,6 +101,24 @@ public sealed class PumbilityCalculatorPageTests : ComponentTestBase
         Assert.NotNull(next.QuerySelector(".pc-ruler"));
     }
 
+    /// <summary>
+    ///     The return trip to your own number (docs/design/pumbility-overhaul.md D47), beside
+    ///     the eyebrow's cross-mix links. Signed in only: the PUMBILITY section sends an
+    ///     anonymous visitor to the front door, so an always-on link would be a dead end for
+    ///     exactly the reader who arrived here from a search result.
+    /// </summary>
+    [Fact]
+    public void TheEyebrowLinksBackToYourOwnPumbilityOnlyWhenSignedIn()
+    {
+        Assert.Null(RenderPhoenix2().Find(".pc-eyebrow").QuerySelector("a.pc-mine"));
+
+        CurrentUser.Setup(u => u.IsLoggedIn).Returns(true);
+
+        var link = RenderPhoenix2().Find(".pc-eyebrow").QuerySelector("a.pc-mine");
+        Assert.NotNull(link);
+        Assert.Equal("/Pumbility", link!.GetAttribute("href"));
+    }
+
     [Fact]
     public void EveryValueCellIsExactlyWhatTheConfigurationSays()
     {

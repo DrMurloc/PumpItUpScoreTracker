@@ -7,6 +7,7 @@
 @using ScoreTracker.SharedKernel.Models
 @using ScoreTracker.Web.Components
 @using ScoreTracker.Web.Services.Contracts
+@using ScoreTracker.Web.Services.PumbilityCalculator
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @inject IMediator Mediator
 @inject NavigationManager NavManager
@@ -24,7 +25,17 @@
 
 <PageTitle>@Title</PageTitle>
 
-<p class="pmb-eyebrow">@MixName · @L["PUMBILITY"]</p>
+@* The right of the eyebrow is the way out of the section: everything under it is your own
+   number, and the formula behind it lives on the calculator (D47). The link waits for the
+   mix so it points at that mix's page from its first paint rather than flipping under the
+   reader, and it carries the primary because it is the only thing on the line that leaves. *@
+<p class="pmb-eyebrow">
+    <span>@MixName · @L["PUMBILITY"]</span>
+    @if (_mixKnown)
+    {
+        <a class="pmb-eyebrow-link" href="@PumbilityCalculatorMixes.PathFor(_currentMix)">@L["How it works"] →</a>
+    }
+</p>
 
 @if (_page != null)
 {
