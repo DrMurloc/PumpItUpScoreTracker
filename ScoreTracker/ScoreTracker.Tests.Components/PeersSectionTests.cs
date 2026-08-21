@@ -1,4 +1,4 @@
-using Bunit;
+﻿using Bunit;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -302,11 +302,108 @@ public sealed class PeersSectionTests : ComponentTestBase
         Assert.DoesNotContain("Staple", cut.Markup);
     }
 
+    [Fact]
+    public void ABandUnderTheFivePeerFloorSaysSoUnderTheLede()
+    {
+        // A two-peer band can never put five voices on a chart, so every row below is running on
+        // the D47 fallback. The note says it once, under the lede — not a chip (owner).
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page(carried: false, group: PeerGroup.Pumbility(24, 2, 50)))
+            .Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        var note = cut.Find("[data-testid=peers-thin-note]");
+        Assert.Contains("Players at your level with a full pool: 2", note.TextContent);
+        // It belongs to the lede's own slot, not the chips line.
+        Assert.Empty(cut.FindAll(".pmb-peer-line [data-testid=peers-thin-note]"));
+    }
+
+    [Fact]
+    public void AHealthyBandAndPhoenix1SayNothingAboutTheFloor()
+    {
+        // Phoenix 1 has no five-peer floor at all — a thin competitive band simply casts a
+        // shorter vote (D43), so the note would be describing a rule that does not apply there.
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var healthy = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page(carried: false)).Add(x => x.Charts, _charts));
+        healthy.WaitForState(() => healthy.FindAll("[data-testid=peers-controls]").Count > 0);
+        Assert.Empty(healthy.FindAll("[data-testid=peers-thin-note]"));
+
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers(MixEnum.Phoenix));
+        var phoenix1 = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page(carried: false, MixEnum.Phoenix, PeerGroup.Competitive(21.4, 1.0, 2)))
+            .Add(x => x.Charts, _charts));
+        phoenix1.WaitForState(() => phoenix1.FindAll("[data-testid=peers-controls]").Count > 0);
+        Assert.Empty(phoenix1.FindAll("[data-testid=peers-thin-note]"));
+    }
+
+    [Fact]
+    public void AShortPoolSaysWhichFinishItsPeersWereDrawnFrom()
+    {
+        // Lit on twenty charts, so the band was drawn from where this player would finish rather
+        // than from the thirty-one they hold (D48) — the note names both, and the gem comes off
+        // the group's own centre so the page cannot name a rung the projection did not use.
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p
+            // Rung 13 is GOLD LV.3; the viewer holds 31 charts against a gate of 20.
+            .Add(x => x.Page, Page(carried: false,
+                group: PeerGroup.Pumbility(13, 23, 31, 20, placedByEstimate: true)))
+            .Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        var note = cut.Find("[data-testid=peers-short-pool-note]").TextContent;
+        Assert.Contains("You have 31 of 50 charts", note);
+        Assert.Contains("[P.B] GOLD", note);
+    }
+
+    [Fact]
+    public void AFullPoolSaysNothingAboutAProjectedFinish()
+    {
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page(carried: false)).Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        Assert.Empty(cut.FindAll("[data-testid=peers-short-pool-note]"));
+    }
+
+    [Fact]
+    public void AShortTypePoolOnASettledTotalIsNotAProjection()
+    {
+        // A full merged fifty and twenty-nine doubles: the band lights on the shorter gate, but
+        // the rung came off a real number. The pool count alone would read this as a projection
+        // and tell the player their peers came from an estimate that never happened.
+        Mediator.Setup(m => m.Send(It.IsAny<GetPumbilityPeersPageQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Peers());
+        this.RenderInteractive();
+
+        var cut = RenderComponent<PeersSection>(p => p
+            .Add(x => x.Page, Page(carried: false, group: PeerGroup.Pumbility(24, 23, 29, 20)))
+            .Add(x => x.Charts, _charts));
+        cut.WaitForState(() => cut.FindAll("[data-testid=peers-controls]").Count > 0);
+
+        Assert.Empty(cut.FindAll("[data-testid=peers-short-pool-note]"));
+    }
+
     private static PeerGroup Group(MixEnum mix) =>
         mix == MixEnum.Phoenix2 ? PeerGroup.Pumbility(24, 23, 50) : PeerGroup.Competitive(21.4, 1.0, 144);
 
     /// <summary>A page record whose target list holds one paying peer row and, optionally, one carried row.</summary>
-    private PumbilityPageRecord Page(bool carried, MixEnum mix = MixEnum.Phoenix2)
+    private PumbilityPageRecord Page(bool carried, MixEnum mix = MixEnum.Phoenix2, PeerGroup? group = null)
     {
         var pays = _charts.Values.FirstOrDefault(c => c.Song.Name == "Pays") ?? NewChart("Pays");
         _ = _charts.Values.FirstOrDefault(c => c.Song.Name == "Free") ?? NewChart("Free");
@@ -319,7 +416,7 @@ public sealed class PeersSectionTests : ComponentTestBase
 
         return new PumbilityPageRecord(mix, null, 17_609.59, 345.94, null, Array.Empty<PoolEntry>(),
             Array.Empty<PoolEntry>(), targets,
-            Peers: new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = Group(mix) });
+            Peers: new Dictionary<ChartType, PeerGroup> { [ChartType.Single] = group ?? Group(mix) });
     }
 
     private PumbilityPeersPageRecord Peers(MixEnum mix = MixEnum.Phoenix2)

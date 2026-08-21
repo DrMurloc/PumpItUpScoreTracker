@@ -1,4 +1,4 @@
-using ScoreTracker.Domain.Models.Titles.Phoenix2;
+﻿using ScoreTracker.Domain.Models.Titles.Phoenix2;
 using ScoreTracker.Domain.Records;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.Domain.Services.Contracts;
@@ -71,7 +71,7 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromCompetitiveBand(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, window, catalog) = request;
+        var (mix, chartType, userId, targets, window, catalog, _, _, _) = request;
 
         var myLevel = await CompetitiveLevel(mix, chartType, userId, cancellationToken);
         // Competitive level 1 is the no-data floor: there is no band to draw peers from.
@@ -184,24 +184,30 @@ public sealed class ScoreProjector : IScoreProjector
     private async Task<ScoreProjection> ProjectFromPumbilityPeers(ScoreProjectionRequest request,
         CancellationToken cancellationToken)
     {
-        var (mix, chartType, userId, targets, _, catalog) = request;
+        var (mix, chartType, userId, targets, _, catalog, _, projectedTotal, totalIsEstimate) = request;
 
-        // The viewer's rung, from the total pool — the merged top fifty across both types, which
-        // is the number the game's own badge is drawn from. One rung serves both chart types.
         var mine = await _stats.GetStats(mix, userId, cancellationToken);
         var myLevel = CompetitiveLevelFor(mine, chartType);
-        var rung = Phoenix2PumbilityLevel.From(mine.SkillRating);
 
         // The viewer's own pool of the type first, and alone. On Phoenix 2 every non-broken pass
         // at the pool floor or above prices above zero, so a player's records of the type at
-        // those levels ARE their pool, and fifty of them is a full one. A short one is the common
-        // case at a mix launch and costs one player's records to find out; their group means
-        // nothing for them until the pool is real (D28), so the band is not swept for a viewer it
-        // cannot yet serve — the page says how far they are rather than estimating.
+        // those levels ARE their pool. A short one is the common case at a mix launch and costs
+        // one player's records to find out.
         var ownPool = PoolCount(await _scores.GetPlayerScoresInLevelRange(mix, new[] { userId }, chartType,
             PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken));
-        if (ownPool < PeerGroup.PumbilityPoolSize)
-            return ScoreProjection.None(myLevel, PeerGroup.Pumbility(rung.Index, 0, ownPool));
+
+        // The viewer's rung, from the total pool — the merged top fifty across both types, which
+        // is the number the game's own badge is drawn from. One rung serves both chart types. A
+        // caller that can say where this player will finish supplies it, and the run is placed and
+        // gated by that instead (D48): a twenty-chart pool's own total seats a strong player at the
+        // bottom of the ladder, among peers who would tell them nothing. Without one the band is
+        // not swept for a viewer it cannot yet serve (D28) — the page says how far they are rather
+        // than estimating.
+        var gate = projectedTotal is null ? PeerGroup.PumbilityPoolSize : PeerGroup.PumbilityProjectionGate;
+        var rung = Phoenix2PumbilityLevel.From(projectedTotal ?? mine.SkillRating);
+        if (ownPool < gate)
+            return ScoreProjection.None(myLevel,
+                PeerGroup.Pumbility(rung.Index, 0, ownPool, gate, totalIsEstimate));
 
         var (lowestIndex, highestIndex) = PeerGroup.PumbilityBand(rung.Index);
         var lowest = Phoenix2PumbilityLevel.FromIndex(lowestIndex)!.Value;
@@ -216,7 +222,8 @@ public sealed class ScoreProjector : IScoreProjector
         candidates.Remove(userId);
 
         // One read answers two questions: what everyone in the band scored on the charts asked
-        // about, and which of them hold a full pool of the type.
+        // about, and which of them hold a full pool of the type. A PEER's gate stays fifty
+        // whatever the viewer's was: their pool is the evidence, and half a pool is half a vote.
         var records = (await _scores.GetPlayerScoresInLevelRange(mix, candidates, chartType,
                 PeerGroup.PumbilityPoolFloor, DifficultyLevel.Max, cancellationToken))
             .ToArray();
@@ -225,7 +232,7 @@ public sealed class ScoreProjector : IScoreProjector
             .Where(g => PoolCount(g) >= PeerGroup.PumbilityPoolSize)
             .Select(g => g.Key)
             .ToHashSet();
-        var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool);
+        var group = PeerGroup.Pumbility(rung.Index, peers.Count, ownPool, gate, totalIsEstimate);
         if (peers.Count == 0) return ScoreProjection.None(myLevel, group);
 
         // The peers' pools ride the same read when the caller brought the catalog to price it with
@@ -235,18 +242,42 @@ public sealed class ScoreProjector : IScoreProjector
             : PumbilityPeerPools.Build(records, peers, catalog, ScoringConfiguration.PumbilityScoring(mix, false));
 
         var wanted = targets.Select(t => t.ChartId).ToHashSet();
+        var heard = records
+            .Where(s => peers.Contains(s.UserId) && wanted.Contains(s.ChartId))
+            .GroupBy(s => s.ChartId)
+            .ToArray();
+
+        var (projected, spreads, contributors) = Estimate(heard, PeerEstimator.Phoenix2MinimumPeers);
+
+        // The floor asks for five peers ON A CHART, not five in the band, so at a band size of
+        // five it is asking for unanimity and at three it can never be met at all. That is a
+        // cliff rather than a filter: the thinnest bands — the bottom of the ladder and the top —
+        // go from a full board to nothing over one player. Where it leaves the run with literally
+        // nothing, the same records answer again with no floor: one peer's score is thin evidence
+        // and the page says so, but it is evidence, and an empty board is not (D47).
+        if (projected.Count == 0 && request.RelaxFloorWhenEmpty)
+            (projected, spreads, contributors) = Estimate(heard, 1);
+
+        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group, spreads, pools);
+    }
+
+    /// <summary>
+    ///     The Phoenix 2 estimate over records already grouped by chart, at the given floor. A
+    ///     chart too few peers scored is absent rather than zero, which is what
+    ///     <paramref name="minimumPeers" /> decides.
+    /// </summary>
+    private static (Dictionary<Guid, PhoenixScore> Projected, Dictionary<Guid, PeerSpread> Spreads,
+        HashSet<Guid> Contributors) Estimate(IEnumerable<IGrouping<Guid, UserPhoenixScore>> heard, int minimumPeers)
+    {
         var projected = new Dictionary<Guid, PhoenixScore>();
         var spreads = new Dictionary<Guid, PeerSpread>();
         var contributors = new HashSet<Guid>();
-        foreach (var chart in records
-                     .Where(s => peers.Contains(s.UserId) && wanted.Contains(s.ChartId))
-                     .GroupBy(s => s.ChartId))
+        foreach (var chart in heard)
         {
             var voices = chart.ToArray();
             // Full voice for every score: nothing here is dated against a level (D25).
             var scored = voices.Select(s => new PeerScore((int)s.Score, 0, 0)).ToArray();
-            var estimate = PeerEstimator.Estimate(scored, 0, PeerEstimator.Phoenix2Quantile,
-                PeerEstimator.Phoenix2MinimumPeers);
+            var estimate = PeerEstimator.Estimate(scored, 0, PeerEstimator.Phoenix2Quantile, minimumPeers);
             if (estimate == null) continue;
 
             foreach (var voice in voices) contributors.Add(voice.UserId);
@@ -254,7 +285,7 @@ public sealed class ScoreProjector : IScoreProjector
             spreads[chart.Key] = SpreadOf(scored, 0);
         }
 
-        return new ScoreProjection(projected, contributors.Count, myLevel, 1.0, group, spreads, pools);
+        return (projected, spreads, contributors);
     }
 
     /// <summary>

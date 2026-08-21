@@ -28,8 +28,12 @@ public static class PumbilityPeerPools
     public const int PoolSize = PeerGroup.PumbilityPoolSize;
 
     /// <summary>
-    ///     Peers who must have scored a chart before its median means anything — the projection's
-    ///     own floor (D24), so the page never prints a median the projection would refuse to.
+    ///     Peers who must have scored a chart before its median means anything (D24). The same
+    ///     number the projection's own floor starts at, but held here rather than relaxed with it:
+    ///     where a band is too thin to meet the floor the projection answers on what it has (D47)
+    ///     and this does not, so a row can carry a gain and still say "Fewer than 5 peers scored
+    ///     it" beside a blank IQR. That pairing IS the disclaimer — the number is the page's
+    ///     stricter statement about the evidence, not a disagreement with the projection.
     /// </summary>
     public const int MinimumScored = PeerEstimator.Phoenix2MinimumPeers;
 

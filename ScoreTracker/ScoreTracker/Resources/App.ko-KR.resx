@@ -5259,6 +5259,9 @@
   <data name="Players at your level" xml:space="preserve">
     <value>내 레벨 플레이어</value>
   </data>
+  <data name="Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs." xml:space="preserve">
+    <value>같은 레벨에서 풀을 가득 채운 플레이어: {0}명. 대부분은 5개가 아닌 1~2개의 점수로 계산되며, 풀을 채우는 사람이 늘어나면 달라집니다.</value>
+  </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>PIU 커뮤니티의 플레이어들이 여러분의 점수를 활용해 다양한 것을 만듭니다 — PUMBILITY 플래너, 패턴 분석, Discord 랭킹 봇 등. 이제 그 도구들을 보고 누구에게 허용할지 정할 수 있는 페이지가 생겼습니다.</value>
   </data>
@@ -8446,8 +8449,11 @@
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
     <value>일부 채보를 다운로드하지 못했습니다. 실패 목록의 CSV를 다운로드하여 조정 후 다시 시도하실 수 있습니다.</value>
   </data>
-  <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
-    <value>이 유형의 PUMBILITY 동료가 아직 없습니다 — 풀 50개를 채우면 나타납니다.</value>
+  <data name="You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up." xml:space="preserve">
+    <value>이 유형의 PUMBILITY 동료가 아직 없습니다. 차트 {0}개의 풀이 모이면 표시됩니다.</value>
+  </data>
+  <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
+    <value>보유한 차트가 {1}개 중 {0}개라, 지금 평균을 유지했을 때 도달할 지점—{2}—을 기준으로 동료를 고릅니다. 풀이 채워지면 안정됩니다.</value>
   </data>
   <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
     <value>Phoenix 2에 점수가 {0}개 있습니다. 이것은 Phoenix 1 기록을 Phoenix 2 규칙으로 계산한 값 — 같은 수준으로 전부 다시 클리어했을 때의 풀입니다.</value>

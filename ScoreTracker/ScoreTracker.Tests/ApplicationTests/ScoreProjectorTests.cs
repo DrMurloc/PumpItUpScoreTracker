@@ -160,6 +160,102 @@ public sealed class ScoreProjectorTests
     }
 
     [Fact]
+    public async Task ABandTooThinForTheFloorAnswersOnWhatItHasWhenAskedTo()
+    {
+        // Two peers can never put five voices on a chart, so the floor takes the whole run to
+        // nothing rather than filtering it (D47). The spread still counts the real voices, so a
+        // page can say how thin the evidence is.
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 2).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
+        ctx.WithScore(peers[0], ChartA, 960_000);
+        ctx.WithScore(peers[1], ChartA, 980_000);
+
+        var relaxed = await ctx.ProjectRelaxed(ChartType.Single, ChartA);
+
+        Assert.Equal(970_000, (int)relaxed.Scores[ChartA]);
+        Assert.Equal(2, relaxed.Spreads![ChartA].PeerCount);
+    }
+
+    [Fact]
+    public async Task TheFloorStandsForACallerThatDidNotAskToRelaxIt()
+    {
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 2).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
+        foreach (var peer in peers) ctx.WithScore(peer, ChartA, 970_000);
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        Assert.Empty(result.Scores);
+    }
+
+    [Fact]
+    public async Task ATwentyChartPoolProjectsWhenTheCallerSaysWhereItFinishes()
+    {
+        // The viewer's own gate drops to twenty; a PEER's stays at fifty, because their pool is
+        // the evidence. Both peers here hold a full one, so the band is real.
+        var ctx = new Context(viewerTotal: 4_000, viewerPoolSize: 20);
+        for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 975_000);
+
+        var result = await ctx.ProjectFromFinish(ChartType.Single, 17_500, ChartA);
+
+        Assert.Equal(975_000, (int)result.Scores[ChartA]);
+        // Placed by the finish, not by the twenty charts they happen to hold: 17,500 is DIAMOND
+        // LV.3, whose band reaches down to PLATINUM LV.5 (16,800) and up through RED BERYL LV.1,
+        // ending where LV.2 starts (18,200). Their own standing total of 4,000 is rung 0.
+        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, 16_800, 18_200,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task WithoutAFinishTheGateIsStillTheFullFiftyAndTheGroupSaysSo()
+    {
+        // The tier list's own call supplies no finish, so a short pool stays dark rather than
+        // being seated by the sum of the charts it happens to hold.
+        var ctx = new Context(viewerTotal: 4_000, viewerPoolSize: 20);
+        for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 975_000);
+
+        var result = await ctx.Project(ChartType.Single, ChartA);
+
+        Assert.Empty(result.Scores);
+        Assert.False(result.Group!.IsLit);
+        // The chip counts toward the gate the run was actually made under.
+        Assert.Equal(50, result.Group.PoolSize);
+        ctx.Stats.Verify(s => s.GetPlayersByPumbilityRange(MixEnum.Phoenix2, It.IsAny<double>(),
+            It.IsAny<double>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task UnderTwentyChartsAFinishChangesNothingAndTheChipCountsToTwenty()
+    {
+        var ctx = new Context(viewerTotal: 2_000, viewerPoolSize: 12);
+        for (var i = 0; i < 5; i++) ctx.WithScore(ctx.WithPeer(poolSize: 50), ChartA, 975_000);
+
+        var result = await ctx.ProjectFromFinish(ChartType.Single, 17_500, ChartA);
+
+        Assert.Empty(result.Scores);
+        Assert.False(result.Group!.IsLit);
+        Assert.Equal(12, result.Group.PoolCount);
+        Assert.Equal(20, result.Group.PoolSize);
+    }
+
+    [Fact]
+    public async Task TheFallbackRunsOnlyFromZeroAndNeverPerChart()
+    {
+        // The rescue is all-or-nothing for the run. One chart clearing the floor means the band
+        // could answer, so the four-peer chart beside it stays "no opinion" exactly as it would
+        // for anyone else — relaxing per chart would quietly lower the bar for a healthy band.
+        var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
+        var peers = Enumerable.Range(0, 5).Select(_ => ctx.WithPeer(poolSize: 50)).ToArray();
+        foreach (var peer in peers) ctx.WithScore(peer, ChartB, 975_000);
+        foreach (var peer in peers.Take(4)) ctx.WithScore(peer, ChartA, 985_000);
+
+        var result = await ctx.ProjectRelaxed(ChartType.Single, ChartA, ChartB);
+
+        Assert.Equal(975_000, (int)result.Scores[ChartB]);
+        Assert.DoesNotContain(ChartA, result.Scores.Keys);
+    }
+
+    [Fact]
     public async Task Phoenix2ReadsNothingFromPhoenix1AndWeighsNoGrowth()
     {
         var ctx = new Context(viewerTotal: 17_500, viewerPoolSize: 50);
@@ -473,6 +569,23 @@ public sealed class ScoreProjectorTests
         {
             return Projector.Project(new ScoreProjectionRequest(mix, type, Viewer,
                 charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), window, catalog), CancellationToken.None);
+        }
+
+        /// <summary>The PUMBILITY caller's run: the same request asking for the thin-band fallback (D47).</summary>
+        public Task<ScoreProjection> ProjectRelaxed(ChartType type, params Guid[] charts)
+        {
+            return Projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, Viewer,
+                    charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), 1.0, null, RelaxFloorWhenEmpty: true),
+                CancellationToken.None);
+        }
+
+        /// <summary>The PUMBILITY caller's run for a short pool: placed and gated by a finish (D48).</summary>
+        public Task<ScoreProjection> ProjectFromFinish(ChartType type, double finishedTotal, params Guid[] charts)
+        {
+            return Projector.Project(new ScoreProjectionRequest(MixEnum.Phoenix2, type, Viewer,
+                    charts.Select(c => new ProjectionTarget(c, 22)).ToArray(), 1.0, null,
+                    ProjectedTotal: finishedTotal),
+                CancellationToken.None);
         }
 
         /// <summary>A Phoenix 2 catalog of the given singles charts at level 22 — the pools price against it.</summary>

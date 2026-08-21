@@ -5259,6 +5259,9 @@
   <data name="Players at your level" xml:space="preserve">
     <value>Jogadores do seu nível</value>
   </data>
+  <data name="Players at your level with a full pool: {0}. Most of these are read off one or two scores rather than five, and will move as more of them fill theirs." xml:space="preserve">
+    <value>Jogadores do seu nível com um pool completo: {0}. A maioria destes é calculada com um ou dois placares em vez de cinco, e vai mudar conforme mais deles completarem o seu.</value>
+  </data>
   <data name="Players in the PIU community build things on top of your scores — pumbility planners, pattern analysis, Discord rank bots. There's now a page where you can see them and choose who gets access." xml:space="preserve">
     <value>Jogadores da comunidade PIU constroem coisas em cima das suas pontuações — planejadores de PUMBILITY, análise de padrões, bots de ranking do Discord. Agora existe uma página onde você pode vê-las e escolher quem tem acesso.</value>
   </data>
@@ -8446,8 +8449,11 @@
   <data name="You had a few charts that were not able to be downloaded. You can download a CSV of the failures to make adjustments and try again." xml:space="preserve">
     <value>Você tinha alguns charts que não puderam ser baixados. Você pode baixar o CSV das falhas para fazer ajustes e tentar novamente.</value>
   </data>
-  <data name="You have no PUMBILITY peers for this type yet — a full pool of 50 lights them up." xml:space="preserve">
-    <value>Você ainda não tem pares de PUMBILITY neste tipo — um conjunto cheio de 50 os acende.</value>
+  <data name="You have no PUMBILITY peers for this type yet — a pool of {0} charts lights them up." xml:space="preserve">
+    <value>Você ainda não tem pares de PUMBILITY para este tipo: um pool de {0} charts os revela.</value>
+  </data>
+  <data name="You have {0} of {1} charts, so your peers are drawn from where you'd finish — {2} — if you hold your current average. This settles as your pool fills." xml:space="preserve">
+    <value>Você tem {0} de {1} charts, então seus pares são escolhidos a partir de onde você terminaria — {2} — se mantiver sua média atual. Isso se estabiliza conforme seu pool enche.</value>
   </data>
   <data name="You have {0} scores in Phoenix 2. This is your Phoenix 1 record priced under Phoenix 2's rules — what your pool becomes if you re-clear everything to the same standard." xml:space="preserve">
     <value>Você tem {0} pontuações no Phoenix 2. Este é o seu histórico do Phoenix 1 avaliado pelas regras do Phoenix 2 — no que seu conjunto se transforma se você refizer tudo no mesmo padrão.</value>
