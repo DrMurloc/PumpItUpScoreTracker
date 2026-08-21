@@ -23,6 +23,7 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
     private const int FooterHeight = 96;
     private const int GradeWidth = 34;
     private const int GradeHeight = 24;
+    private const int BubbleHeight = 24;
     private const int QrSize = 64;
 
     private static readonly HttpClient Http = new();
@@ -35,7 +36,7 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
         // cold render take ~10s. All the URLs are independent, so fetch them together —
         // one pre-load pass de-duped by URL, then the per-tile lookups hit the cache.
         var allUrls = card.Rows.SelectMany(r => r.Tiles)
-            .SelectMany(t => new[] { t.JacketUrl, t.GradeUrl, t.PlateUrl })
+            .SelectMany(t => new[] { t.JacketUrl, t.GradeUrl, t.PlateUrl, t.BubbleUrl })
             .Append(card.BubbleUrl)
             .Where(u => u != null)
             .Select(u => u!)
@@ -43,11 +44,13 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
         await Task.WhenAll(allUrls.Select(u => LoadImage(u, cancellationToken)));
 
         var bubble = card.BubbleUrl == null ? null : await LoadImage(card.BubbleUrl, cancellationToken);
-        var tiles = new Dictionary<TierListShareCard.Tile, (SKBitmap? Jacket, SKBitmap? Grade, SKBitmap? Plate)>();
+        var tiles = new Dictionary<TierListShareCard.Tile,
+            (SKBitmap? Jacket, SKBitmap? Grade, SKBitmap? Plate, SKBitmap? Bubble)>();
         foreach (var tile in card.Rows.SelectMany(r => r.Tiles))
             tiles[tile] = (await LoadImage(tile.JacketUrl, cancellationToken),
                 tile.GradeUrl == null ? null : await LoadImage(tile.GradeUrl, cancellationToken),
-                tile.PlateUrl == null ? null : await LoadImage(tile.PlateUrl, cancellationToken));
+                tile.PlateUrl == null ? null : await LoadImage(tile.PlateUrl, cancellationToken),
+                tile.BubbleUrl == null ? null : await LoadImage(tile.BubbleUrl, cancellationToken));
 
         var tilesPerRow = (Width - Pad) / (TileWidth + Pad);
         var height = HeaderHeight + FooterHeight + card.Rows.Sum(row =>
@@ -104,13 +107,25 @@ public sealed class SkiaShareCardRenderer : IShareCardRenderer
                 }
 
                 var rect = SKRect.Create(x, y, TileWidth, TileHeight);
-                var (jacket, grade, plate) = tiles[tile];
+                var (jacket, grade, plate, tileBubble) = tiles[tile];
                 if (jacket != null)
                 {
                     canvas.Save();
                     canvas.ClipRoundRect(new SKRoundRect(rect, 6));
                     canvas.DrawBitmap(jacket, rect);
                     canvas.Restore();
+                }
+
+                // The top-left, where the page's card wears it. Width comes off the art rather
+                // than a constant: the bubble sets are wider than they are tall, and a co-op
+                // bubble is wider still, so a square box would squash whichever it wasn't cut for.
+                if (tileBubble != null)
+                {
+                    var bubbleWidth = tileBubble.Height == 0
+                        ? BubbleHeight
+                        : BubbleHeight * (float)tileBubble.Width / tileBubble.Height;
+                    canvas.DrawBitmap(tileBubble,
+                        SKRect.Create(rect.Left + 4, rect.Top + 4, bubbleWidth, BubbleHeight));
                 }
 
                 // The bottom edge, right to left, exactly as the Compact card stacks it: a printed

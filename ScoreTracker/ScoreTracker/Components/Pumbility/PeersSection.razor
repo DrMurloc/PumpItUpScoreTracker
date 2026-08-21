@@ -281,7 +281,11 @@
                         _list.ShareOutlineHexFor(t.Chart.Id),
                         t.CornerLabel,
                         palette.Primary,
-                        t.Outline)).ToArray()))
+                        t.Outline,
+                        // A tier list is one difficulty, so its card says so once in the header.
+                        // This list is every difficulty at once: without the bubble on the tile
+                        // the picture cannot say what any of it is (owner, field test round six).
+                        ShareCardImages.DifficultyBubble(t.Chart))).ToArray()))
                 .ToArray();
             if (rows.Length == 0) return;
 

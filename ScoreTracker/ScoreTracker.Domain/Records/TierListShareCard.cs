@@ -32,9 +32,15 @@ public sealed record TierListShareCard(
     /// </summary>
     /// <param name="CornerLabel">A printed value in the jacket's bottom-right, e.g. a PUMBILITY gain.</param>
     /// <param name="CornerHex">Its text and outline colour; the caller's accent when null.</param>
+    /// <param name="BubbleUrl">
+    ///     The difficulty bubble, in the jacket's top-left where the page's card wears it. Null for
+    ///     a list that is already one difficulty — a tier list carries its bubble in the header, and
+    ///     repeating it on sixty tiles says nothing — and for the charts that have no bubble art.
+    /// </param>
     [ExcludeFromCodeCoverage]
     public sealed record Tile(string JacketUrl, string? GradeUrl, string? PlateUrl, string? BadgeHex,
-        string? CornerLabel = null, string? CornerHex = null, TileOutline Outline = TileOutline.Dot);
+        string? CornerLabel = null, string? CornerHex = null, TileOutline Outline = TileOutline.Dot,
+        string? BubbleUrl = null);
 }
 
 /// <summary>
