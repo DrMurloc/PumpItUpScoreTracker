@@ -7413,6 +7413,12 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>Nessun dato di {0} per questa chart</value>
   </data>
+  <data name="This chart is on the left side of the video" xml:space="preserve">
+    <value>Questa chart è sul lato sinistro del video</value>
+  </data>
+  <data name="This chart is on the right side of the video" xml:space="preserve">
+    <value>Questa chart è sul lato destro del video</value>
+  </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>Questo non invia niente.</value>
   </data>

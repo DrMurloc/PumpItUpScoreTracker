@@ -282,6 +282,18 @@ row, the chart journey and the admin backfill.
 | Highest / Lowest | Mrrglmrrgl / Glubglub | The doubled root is the superlative, the owner's own repetition device: `mrrgl` (most/above) and `glub` (below). `Mrgl Mrrgl` is very high; `Mrrgl` alone is high. |
 | only | ub | Recovered from `#{0} of {1}` → `#{0} ub {1}` — the same particle carries "of" and "only". |
 
+## The video sides batch (2026-08-24)
+
+Coined for the chart-details side caption ([video-sides.md](design/video-sides.md)) — the two
+screen-reader sentences are the feature's only strings.
+
+| English | en-ZW | Notes |
+|---|---|---|
+| side (of a video) | blgrlgro | `blgrl` (split) + `gro` — one half of the split frame. |
+| right (direction) | rulurg | Pairs with the recovered `Rolurg` (the existing `Left` key). |
+| the | la | Recovered from `The Charts` → `La Murgl`. |
+| is | urg | Recovered from `This page is full.` → `Grglmrp urggrgl urg mrglmr.` |
+
 ## The thin-band note (2026-08-20)
 
 Coined for the `/Pumbility` evidence note (D47) — the line that says the peer band is too small

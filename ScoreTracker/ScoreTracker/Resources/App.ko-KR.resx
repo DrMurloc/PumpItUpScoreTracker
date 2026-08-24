@@ -7354,6 +7354,12 @@
   <data name="This chart has no {0} on record" xml:space="preserve">
     <value>이 채보에는 {0} 데이터가 없습니다</value>
   </data>
+  <data name="This chart is on the left side of the video" xml:space="preserve">
+    <value>이 채보는 영상의 왼쪽에 있습니다</value>
+  </data>
+  <data name="This chart is on the right side of the video" xml:space="preserve">
+    <value>이 채보는 영상의 오른쪽에 있습니다</value>
+  </data>
   <data name="This does not send anything." xml:space="preserve">
     <value>이 버튼은 아무것도 보내지 않습니다.</value>
   </data>
