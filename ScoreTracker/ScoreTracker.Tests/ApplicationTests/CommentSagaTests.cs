@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MassTransit;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
@@ -38,6 +39,8 @@ public sealed class CommentSagaTests
     private readonly Mock<ICommentRestrictionRepository> _restrictions = new();
     private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly Mock<IMediator> _mediator = new();
+    private readonly Mock<IBus> _bus = new();
+    private readonly Mock<ICommentRenderingRepository> _renderings = new();
     private readonly Mock<IUserReader> _users = new();
     private readonly User _viewer = new(Guid.NewGuid(), Name.From("ERRLENA"), true, null,
         new Uri("https://example.com/a.png"), Name.From("US"));
@@ -66,13 +69,17 @@ public sealed class CommentSagaTests
             .ReturnsAsync(Array.Empty<CommentRestriction>());
         _reports.Setup(r => r.GetOpenForComment(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<CommentReport>());
+        _renderings.Setup(r => r.GetFor(It.IsAny<IReadOnlyList<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<CommentRenderingRow>());
+        _renderings.Setup(r => r.AnyFor(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
     }
 
     private CommentSaga Subject()
     {
         return new CommentSaga(_comments.Object, _consents.Object, _reports.Object,
-            _restrictions.Object, _currentUser.Object, FakeDateTime.At(Now).Object, _mediator.Object,
-            _users.Object, new MemoryCache(new MemoryCacheOptions()));
+            _restrictions.Object, _renderings.Object, _currentUser.Object, FakeDateTime.At(Now).Object,
+            _mediator.Object, _users.Object, new MemoryCache(new MemoryCacheOptions()), _bus.Object);
     }
 
     /// <summary>Gives the viewer a seat (and optionally others their roles) in ClubId.</summary>
@@ -727,5 +734,100 @@ public sealed class CommentSagaTests
             .ReturnsAsync(rows);
         _comments.Setup(c => c.CountRoots(ChartId, It.IsAny<CommentAudience>(), It.IsAny<Guid>(),
             It.IsAny<CancellationToken>())).ReturnsAsync(rows.Count(r => r.ParentCommentId == null));
+    }
+
+    // ----- translation queueing ----------------------------------------------------------------
+
+    [Fact]
+    public async Task PostingQueuesTheMarkedTextForTranslation()
+    {
+        await Subject().Handle(
+            new PostCommentCommand(ChartId, CommentAudience.Public, "proof: https://youtu.be/abc"),
+            CancellationToken.None);
+
+        // The model never sees a URL: the queued text carries the marker, and the saved comment
+        // carries the stamp the edit cooldown will read.
+        _bus.Verify(b => b.Publish(It.Is<ScoreTracker.Translations.Contracts.Messages
+                .QueueTextForTranslationCommand>(queued =>
+                queued.Text == "proof: ⟦1⟧" && queued.SourceKey.StartsWith("chart-comment:")),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _comments.Verify(c => c.Save(It.Is<Comment>(saved => saved.TranslationQueuedAt == Now),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ANoteNeverQueuesForTranslation()
+    {
+        await Subject().Handle(new PostCommentCommand(ChartId, CommentAudience.Private, "just for me"),
+            CancellationToken.None);
+
+        _bus.Verify(b => b.Publish(
+            It.IsAny<ScoreTracker.Translations.Contracts.Messages.QueueTextForTranslationCommand>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _comments.Verify(c => c.Save(It.Is<Comment>(saved => saved.TranslationQueuedAt == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnEditDropsStaleRenderingsAndRequeues()
+    {
+        var comment = Comment.Post(ChartId, _viewer.Id, CommentAudience.Public, "before", Now.AddDays(-2));
+        comment.StampTranslationQueued(Now.AddDays(-2));
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+        _renderings.Setup(r => r.AnyFor(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await Subject().Handle(new EditCommentCommand(comment.Id, "after"), CancellationToken.None);
+
+        _renderings.Verify(r => r.DeleteFor(comment.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _bus.Verify(b => b.Publish(It.Is<ScoreTracker.Translations.Contracts.Messages
+                .QueueTextForTranslationCommand>(queued => queued.Text == "after"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AnEditInsideTheCooldownStillDropsRenderingsButDoesNotRequeue()
+    {
+        // Translated an hour ago: the old renderings must go — a translation of the previous
+        // words must never show — but the re-queue waits out the cooldown.
+        var comment = Comment.Post(ChartId, _viewer.Id, CommentAudience.Public, "before", Now.AddDays(-2));
+        comment.StampTranslationQueued(Now.AddHours(-1));
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+        _renderings.Setup(r => r.AnyFor(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+
+        await Subject().Handle(new EditCommentCommand(comment.Id, "after"), CancellationToken.None);
+
+        _renderings.Verify(r => r.DeleteFor(comment.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _bus.Verify(b => b.Publish(
+            It.IsAny<ScoreTracker.Translations.Contracts.Messages.QueueTextForTranslationCommand>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AnEditWhileStillPendingReplacesTheRequestFree()
+    {
+        var comment = Comment.Post(ChartId, _viewer.Id, CommentAudience.Public, "before", Now.AddDays(-2));
+        comment.StampTranslationQueued(Now.AddHours(-1));
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+        _renderings.Setup(r => r.AnyFor(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        await Subject().Handle(new EditCommentCommand(comment.Id, "after"), CancellationToken.None);
+
+        _bus.Verify(b => b.Publish(It.Is<ScoreTracker.Translations.Contracts.Messages
+                .QueueTextForTranslationCommand>(queued => queued.Text == "after"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeletingDiscardsWhatThePipelineHolds()
+    {
+        var comment = Comment.Post(ChartId, _viewer.Id, CommentAudience.Public, "gone soon", Now.AddDays(-1));
+        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
+
+        await Subject().Handle(new DeleteCommentCommand(comment.Id), CancellationToken.None);
+
+        _renderings.Verify(r => r.DeleteFor(comment.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _bus.Verify(b => b.Publish(It.Is<ScoreTracker.Translations.Contracts.Messages
+                .DiscardTranslationRequestsCommand>(discard => discard.SourceKeys.Count == 1),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 }

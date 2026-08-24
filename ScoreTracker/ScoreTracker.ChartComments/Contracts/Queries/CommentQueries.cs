@@ -10,7 +10,19 @@ public sealed record GetChartCommentsQuery(
     Guid ChartId,
     CommentAudience Audience,
     CommentSort Sort = CommentSort.Top,
-    int TakeRoots = 20) : IQuery<CommentPageRecord>;
+    int TakeRoots = 20,
+    /// <summary>
+    ///     The locale the reader browses the site in — display resolution judges by its language,
+    ///     region ignored. Null (a caller that has not adopted translation display) reads as
+    ///     originals-only.
+    /// </summary>
+    string? ReaderLocale = null,
+    /// <summary>
+    ///     A localization the reader picked by hand, remembered in UiSettings by Web and passed
+    ///     through. Replaces the language-mapping step only: a comment in the reader's own
+    ///     language stays the original even against a stored pick.
+    /// </summary>
+    string? PreferredLocale = null) : IQuery<CommentPageRecord>;
 
 /// <summary>
 ///     The scope rail: Public, Notes, then the reader's non-regional communities. Empty for a

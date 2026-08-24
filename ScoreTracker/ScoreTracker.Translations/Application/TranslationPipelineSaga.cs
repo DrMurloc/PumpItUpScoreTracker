@@ -329,7 +329,7 @@ internal sealed class TranslationPipelineSaga :
         }
 
         await _requests.CompleteTranslation(work.Id, now, context.CancellationToken);
-        await context.Publish(new TextTranslatedEvent(work.SourceKey, pivot.SourceLanguage, kept,
+        await context.Publish(new TextTranslatedEvent(work.SourceKey, work.Text, pivot.SourceLanguage, kept,
             $"{_configuration.PivotModelId}+{_configuration.FanOutModelId} via {TranslationTarget.Pivot} pivot"));
     }
 

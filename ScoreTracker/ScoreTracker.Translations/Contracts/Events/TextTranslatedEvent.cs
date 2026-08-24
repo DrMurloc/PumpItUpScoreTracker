@@ -20,6 +20,12 @@ namespace ScoreTracker.Translations.Contracts.Events;
 [ExcludeFromCodeCoverage]
 public sealed record TextTranslatedEvent(
     string SourceKey,
+    /// <summary>
+    ///     The marked text these renderings were produced from, verbatim. The consumer compares
+    ///     it against what the source says <i>now</i> — a mismatch means an edit landed while the
+    ///     batch was in flight, and these renderings describe words that no longer exist.
+    /// </summary>
+    string SourceText,
     string SourceLanguage,
     IReadOnlyDictionary<string, string> Translations,
     string TranslatedBy);

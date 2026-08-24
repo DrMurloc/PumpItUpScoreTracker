@@ -56,4 +56,6 @@ internal sealed record CommentRow(
     DateTimeOffset? DeletedAt,
     Guid? DeletedByUserId,
     int Votes,
-    bool ViewerVoted);
+    bool ViewerVoted,
+    string? SourceLanguage = null,
+    DateTimeOffset? TranslationQueuedAt = null);

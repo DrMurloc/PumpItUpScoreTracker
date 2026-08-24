@@ -26,4 +26,5 @@ internal sealed record CommentState(
     DateTimeOffset? EditedAt = null,
     DateTimeOffset? DeletedAt = null,
     Guid? DeletedByUserId = null,
-    string? SourceLanguage = null);
+    string? SourceLanguage = null,
+    DateTimeOffset? TranslationQueuedAt = null);
