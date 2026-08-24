@@ -18,8 +18,8 @@
                 }
                 <MudAlert Severity="Severity.Info" Class="mb-4">@L["Your username and password are sent directly to piugame.com and are never stored"]</MudAlert>
                 <form method="post" action="/Login/PiuGame">
-                    <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" Disabled="_isSubmitting" UserAttributes="@UsernameAttributes"></MudTextField>
-                    <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" Disabled="_isSubmitting" UserAttributes="@PasswordAttributes"></MudTextField>
+                    <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" Disabled="_isSubmitting" UserAttributes="@PasswordManagerHints.PiuGameUsername"></MudTextField>
+                    <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" Disabled="_isSubmitting" UserAttributes="@PasswordManagerHints.PiuGamePassword"></MudTextField>
                     <input type="hidden" name="returnUrl" value="@_returnUrl"/>
                     @* OnClick only flips the working indicator — the browser's default submit
                        fires synchronously on click, before the circuit re-renders the disabled
@@ -43,18 +43,6 @@
     private string? _error;
     private string _returnUrl = "/";
     private bool _isSubmitting = false;
-
-    private static readonly Dictionary<string, object> UsernameAttributes = new()
-    {
-        { "name", "username" },
-        { "autocomplete", "username" }
-    };
-
-    private static readonly Dictionary<string, object> PasswordAttributes = new()
-    {
-        { "name", "password" },
-        { "autocomplete", "current-password" }
-    };
 
     protected override void OnInitialized()
     {

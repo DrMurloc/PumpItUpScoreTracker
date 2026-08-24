@@ -80,9 +80,11 @@
                 }
                 else
                 {
-                    <MudTextField Label="@L["PIUGame.com Username"]" Disabled="_isImporting" @bind-Value="_username"></MudTextField>
+                    <MudTextField Label="@L["PIUGame.com Username"]" Disabled="_isImporting" @bind-Value="_username"
+                                  UserAttributes="@PasswordManagerHints.PiuGameUsername"></MudTextField>
                     <MudTextField InputType="InputType.Password" Disabled="_isImporting" Label="@L["PIUGame.com Password"]"
-                                  HelperText="@L["Import Password Helper"]" @bind-Value="_password"></MudTextField>
+                                  HelperText="@L["Import Password Helper"]" @bind-Value="_password"
+                                  UserAttributes="@PasswordManagerHints.PiuGamePassword"></MudTextField>
                     @* Remembering is its own action, sitting with the fields it acts on — as a
                        checkbox in the options column it read as an import option and left people
                        unsure which of the page's two credential surfaces it belonged to. *@

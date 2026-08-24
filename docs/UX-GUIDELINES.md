@@ -196,6 +196,20 @@ a convenience, never a fact. Islands are for things that need a server round tri
 value ramp on such a page (`pc-ramp-0…9`) is a set of classes built with `color-mix` on the mix's
 tokens, never a literal.
 
+**14. A masked field tells password managers what it is.** ⚙ *Ratcheted by
+`PasswordFieldAutofillTests`.* MudTextField renders its input with no `name` and no
+`autocomplete`, and a bare masked field fails in one of two directions: a credential field a
+manager cannot find (so nothing fills — the import page sat invisible while `/PiuGameLogin`
+worked), or a secret field it guesses at (offering to fill a piugame password into a webhook
+header). Every `InputType.Password` field therefore carries a bundle from
+[`PasswordManagerHints`](../ScoreTracker/ScoreTracker/Services/PasswordManagerHints.cs) in its
+`UserAttributes`: the piugame credential pair takes `PiuGameUsername` / `PiuGamePassword` — the
+values are shared, not copied per page, because managers key a saved entry on our domain, so
+identical attributes are what let the entry saved on one surface fill all of them — and a masked
+secret or token takes `NotALogin` (`autocomplete="off"`), whose masking is for shoulders, not for
+credential storage. No `<form>` wrapper on circuit-rendered surfaces: an action-less form makes
+Enter navigate; the attributes alone are the discovery signal.
+
 ---
 
 ### Writing a PUMBILITY figure

@@ -112,7 +112,8 @@
             {
                 <div class="ct-reveal">
                     <MudTextField T="string" @bind-Value="_headerValue" Label=@L["Value"]
-                                  MaxLength="128" InputType="InputType.Password"></MudTextField>
+                                  MaxLength="128" InputType="InputType.Password"
+                                  UserAttributes="@PasswordManagerHints.NotALogin"></MudTextField>
                 </div>
             }
 
@@ -140,7 +141,8 @@
             {
                 <div class="ct-reveal">
                     <MudTextField T="string" @bind-Value="_verificationSecret" Label=@L["Secret"]
-                                  MaxLength="128" InputType="InputType.Password"></MudTextField>
+                                  MaxLength="128" InputType="InputType.Password"
+                                  UserAttributes="@PasswordManagerHints.NotALogin"></MudTextField>
                     <MudButton Variant="Variant.Text" Size="Size.Small" Class="mt-1"
                                OnClick="GenerateSecret">@L["Generate one"]</MudButton>
                 </div>

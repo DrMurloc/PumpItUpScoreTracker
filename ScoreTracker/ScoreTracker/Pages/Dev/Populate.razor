@@ -85,7 +85,8 @@
                                       InputType="InputType.Password"
                                       Immediate="true"
                                       Variant="Variant.Outlined" Margin="Margin.Dense" Class="mt-1"
-                                      Disabled="@(!CurrentUser.IsLoggedIn)"/>
+                                      Disabled="@(!CurrentUser.IsLoggedIn)"
+                                      UserAttributes="@PasswordManagerHints.NotALogin"/>
                     </MudListItem>
                     <MudListItem Icon="@(_syncComplete ? Icons.Material.Filled.CheckCircle : Icons.Material.Outlined.Circle)"
                                  IconColor="@(_syncComplete ? Color.Success : Color.Default)">

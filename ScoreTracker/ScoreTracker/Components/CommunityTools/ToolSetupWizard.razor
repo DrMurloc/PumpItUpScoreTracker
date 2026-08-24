@@ -194,7 +194,8 @@
                     <div class="d-flex gap-3 flex-wrap mt-1">
                         <MudTextField T="string" @bind-Value="_headerValue" Label=@L["Value"]
                                       MaxLength="128" InputType="InputType.Password"
-                                      Style="max-width:260px;"></MudTextField>
+                                      Style="max-width:260px;"
+                                      UserAttributes="@PasswordManagerHints.NotALogin"></MudTextField>
                     </div>
                     <MudText Typo="Typo.body2" Style="opacity:.7;" Class="mt-1">
                         @L["This header is sent verbatim on every delivery, so your server can reject anything that is not PIU Scores."]
