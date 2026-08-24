@@ -31,6 +31,7 @@ using ScoreTracker.PlayerProgress.Wiring;
 using ScoreTracker.Randomizer.Wiring;
 using ScoreTracker.Rivals.Wiring;
 using ScoreTracker.ScoreLedger.Wiring;
+using ScoreTracker.Translations.Wiring;
 using ScoreTracker.WeeklyChallenge.Wiring;
 using ScoreTracker.Web;
 using ScoreTracker.Web.Accessors;
@@ -92,6 +93,8 @@ builder.Services.Configure<ScoreTracker.CommunityTools.Wiring.CommunityToolsConf
     builder.Configuration.GetSection(
         ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration.SectionName));
 builder.Services.Configure<PiuGameConfiguration>(builder.Configuration.GetSection("PiuGame"));
+builder.Services.Configure<ScoreTracker.Translations.Wiring.TranslationsConfiguration>(
+    builder.Configuration.GetSection("Translations"));
 builder.Services.Configure<PiuCenterConfiguration>(builder.Configuration.GetSection("PiuCenter"));
 builder.Services.Configure<GoogleConfiguration>(builder.Configuration.GetSection("Google"));
 var sqlConfig = builder.Configuration.GetSection("SQL").Get<SqlConfiguration>()!;
@@ -109,6 +112,7 @@ builder.Services.AddMassTransit(o =>
     o.AddWeeklyChallengeConsumers();
     o.AddCommunityToolsConsumers();
     o.AddChartCommentsConsumers();
+    o.AddTranslationsConsumers();
     o.AddEventCompetitionConsumers();
     o.AddCommunitiesConsumers();
     o.AddCatalogConsumers();

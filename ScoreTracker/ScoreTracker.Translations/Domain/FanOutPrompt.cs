@@ -74,6 +74,14 @@ internal static class FanOutPrompt
                 if it has one, otherwise the canonical form unchanged. Never translate or reformat
                 a difficulty code, a score, or a timestamp.
 
+                ## Link markers
+
+                The English may contain markers such as ⟦1⟧ or ⟦·2⟧. Each one stands for a link
+                the author placed there; you are not shown where it points. Every rendering must
+                carry every marker exactly as written, positioned where the link reads naturally
+                in that language. Never drop one, invent one, repeat one, or alter one — and never
+                write a URL of your own.
+
                 {TranslationGlossary.Text}
 
                 {TranslationGlossary.RegisterCaveat}

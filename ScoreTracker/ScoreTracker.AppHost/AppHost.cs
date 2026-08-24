@@ -61,7 +61,7 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
 // reads, so one `dotnet user-secrets set "ClaudeApi:ApiKey" ...` arms both. Without it the
 // pipeline parks itself, which is the intended local default.
 string[] forwardedSections =
-    ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid", "KeyVault", "PiuGame", "ChartComments", "ClaudeApi"];
+    ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid", "KeyVault", "PiuGame", "ChartComments", "ClaudeApi", "Translations"];
 foreach (var sectionName in forwardedSections)
 foreach (var entry in builder.Configuration.GetSection(sectionName).AsEnumerable())
     if (entry.Value is not null)
