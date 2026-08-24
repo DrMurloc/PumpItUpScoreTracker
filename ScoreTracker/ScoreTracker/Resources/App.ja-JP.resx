@@ -575,6 +575,9 @@
   <data name="Added {0}" xml:space="preserve">
     <value>{0} に追加</value>
   </data>
+  <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
+    <value>{0}件の譜面を追加し、セッションに入らない{1}件をスキップしました。</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
 	  <value>追加コメント</value>
   </data>
@@ -4326,6 +4329,12 @@
   </data>
   <data name="None given" xml:space="preserve">
     <value>指定なし</value>
+  </data>
+  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
+    <value>それらのプレイは追加できませんでした。すでにセッションにある譜面と重複しているか、セッションが満杯です。</value>
+  </data>
+  <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
+    <value>最近のプレイはこのボードで得点になりません。譜面タイプが合っているか確認してください。</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>100%に正規化</value>

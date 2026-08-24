@@ -575,6 +575,9 @@
   <data name="Added {0}" xml:space="preserve">
     <value>Ajouté {0}</value>
   </data>
+  <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
+    <value>{0} charts ajoutés, {1} ignorés que la session ne pouvait pas accepter.</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
     <value>Commentaires supplémentaires</value>
   </data>
@@ -4325,6 +4328,12 @@
   </data>
   <data name="None given" xml:space="preserve">
     <value>Non renseigné</value>
+  </data>
+  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
+    <value>Aucune de ces parties n’a pu être ajoutée : elles répètent des charts déjà dans la session, ou la session est déjà pleine.</value>
+  </data>
+  <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
+    <value>Aucune de vos parties récentes ne marque de points sur ce leaderboard. Vérifiez que vous êtes sur le bon type de chart.</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Normaliser à 100 %</value>

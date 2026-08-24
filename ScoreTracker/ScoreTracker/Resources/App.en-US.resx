@@ -575,6 +575,9 @@
   <data name="Added {0}" xml:space="preserve">
     <value>Added {0}</value>
   </data>
+  <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
+    <value>Added {0} charts, skipped {1} the session could not take.</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
 	  <value>Additional Comments</value>
   </data>
@@ -4326,6 +4329,12 @@
   </data>
   <data name="None given" xml:space="preserve">
     <value>None given</value>
+  </data>
+  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
+    <value>None of those plays could be added — they repeat charts already in the session, or it is already full.</value>
+  </data>
+  <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
+    <value>None of your recent plays score on this board. Check you are on the right chart type.</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Normalize to 100%</value>

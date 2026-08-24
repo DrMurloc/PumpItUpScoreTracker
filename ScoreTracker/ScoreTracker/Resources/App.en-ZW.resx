@@ -575,6 +575,9 @@
   <data name="Added {0}" xml:space="preserve">
     <value>Glorg {0}</value>
   </data>
+  <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
+    <value>Glorg {0} murgl, rorolurg {1} mrp grrglgrrglgl plglurg bo margro.</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
 	  <value>Rgllurgblub Gromorggro</value>
   </data>
@@ -4326,6 +4329,12 @@
   </data>
   <data name="None given" xml:space="preserve">
     <value>Alla</value>
+  </data>
+  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
+    <value>Rglmagl mrgl blgrlmrp mrpplgl plglurg gl glorg — maglgro mrgblub murgl glglgrrgl mrp mrp grrglgrrglgl, ol grg mrp glglgrrgl blubgro.</value>
+  </data>
+  <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
+    <value>Rglmagl mrgl gromurp blarggrrgl mrpplgl gogl ap grglmrp mrglblarg. Margurg blub mrp ap mrp arglgro murgl morg.</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>Grglblgrlurg grgl 100%</value>

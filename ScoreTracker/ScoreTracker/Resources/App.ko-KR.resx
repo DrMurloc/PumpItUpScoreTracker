@@ -574,6 +574,9 @@
   <data name="Added {0}" xml:space="preserve">
     <value>{0} 에 추가함</value>
   </data>
+  <data name="Added {0} charts, skipped {1} the session could not take." xml:space="preserve">
+    <value>{0}개 채보를 추가하고, 세션에 들어갈 수 없는 {1}개는 건너뛰었습니다.</value>
+  </data>
   <data name="Additional Comments" xml:space="preserve">
     <value>추가 의견</value>
   </data>
@@ -4296,6 +4299,12 @@
   </data>
   <data name="None given" xml:space="preserve">
     <value>없음</value>
+  </data>
+  <data name="None of those plays could be added — they repeat charts already in the session, or it is already full." xml:space="preserve">
+    <value>해당 플레이는 추가할 수 없습니다. 이미 세션에 있는 채보와 겹치거나 세션이 이미 가득 찼습니다.</value>
+  </data>
+  <data name="None of your recent plays score on this board. Check you are on the right chart type." xml:space="preserve">
+    <value>최근 플레이 중 이 보드에서 점수가 되는 것이 없습니다. 채보 종류가 맞는지 확인하세요.</value>
   </data>
   <data name="Normalize to 100%" xml:space="preserve">
     <value>100%로 정규화</value>
