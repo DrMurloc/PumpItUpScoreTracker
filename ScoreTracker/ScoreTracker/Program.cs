@@ -83,6 +83,10 @@ builder.Services.AddCors(o =>
 builder.Services.Configure<DiscordConfiguration>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<DevAuthConfiguration>(builder.Configuration.GetSection("DevAuth"));
 builder.Services.Configure<ChartCommentsConfiguration>(builder.Configuration.GetSection("ChartComments"));
+// The Claude API credential for the translation batch client. Absent by default, and the
+// pipeline parks itself without it — configuration is what arms metered spend, never code.
+builder.Services.Configure<ScoreTracker.Data.Configuration.ClaudeApiConfiguration>(
+    builder.Configuration.GetSection("ClaudeApi"));
 builder.Services.Configure<ProdSyncConfiguration>(builder.Configuration.GetSection("ProdSync"));
 builder.Services.Configure<ScoreTracker.CommunityTools.Wiring.CommunityToolsConfiguration>(
     builder.Configuration.GetSection(

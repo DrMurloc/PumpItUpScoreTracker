@@ -57,8 +57,11 @@ var web = builder.AddProject<Projects.ScoreTracker_Web>("web")
 // checking anything in. Setting it here with WithEnvironment instead would be worse than
 // useless — environment variables are read AFTER user-secrets, so it would override the very
 // setting it is meant to be controlled by.
+// ClaudeApi is the translation pipeline's key — the same store the ExplorationTests workbench
+// reads, so one `dotnet user-secrets set "ClaudeApi:ApiKey" ...` arms both. Without it the
+// pipeline parks itself, which is the intended local default.
 string[] forwardedSections =
-    ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid", "KeyVault", "PiuGame", "ChartComments"];
+    ["Discord", "Google", "Facebook", "AzureBlob", "Sendgrid", "KeyVault", "PiuGame", "ChartComments", "ClaudeApi"];
 foreach (var sectionName in forwardedSections)
 foreach (var entry in builder.Configuration.GetSection(sectionName).AsEnumerable())
     if (entry.Value is not null)

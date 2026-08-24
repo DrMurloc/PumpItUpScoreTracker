@@ -82,8 +82,8 @@ OpenAPI generation for the partner API — `/swagger`. The source of truth for A
 ### Application Insights (Blazor)
 Client-side telemetry; no-ops without an instrumentation key.
 
-### Anthropic SDK (`Anthropic`) — exploration only
-Referenced by `ScoreTracker.ExplorationTests` alone, for the community-text translation workbench ([comment-translation.md](design/comment-translation.md)). The `ILanguageModelClient` Domain port has no implementation in `Data` and no DI registration, so no shipping code path can spend a metered token — the workbench supplies the only adapter, gated on a `ClaudeApi:ApiKey` secret and inert without it.
+### Anthropic SDK (`Anthropic`)
+Two references. `ScoreTracker.Data` carries `AnthropicBatchClient : ILanguageModelBatchClient` — the comment-translation pipeline's Batch API adapter (half-price, asynchronous, results keyed by custom id), which reports itself unconfigured and stays inert unless a `ClaudeApi:ApiKey` is supplied; the submit job checks that before building any work, so spending a metered token requires configuration, never just deployed code. `ScoreTracker.ExplorationTests` keeps the synchronous workbench adapter for the sweep (the only implementation of `ILanguageModelClient`, never registered in the app) — see [comment-translation.md](design/comment-translation.md).
 
 ## Testing
 
