@@ -52,19 +52,6 @@
         return 'Rough Game';
     }
 
-    // The metal each letter and plate wears, as the site's tokens — classes stay in the
-    // stylesheet, but chip backgrounds are set inline from these custom-property names.
-    var GRADE_TOKEN = {
-        'SSS+': '--grade-sssplus', 'SSS': '--grade-sss', 'SS+': '--grade-ssplus', 'SS': '--grade-ss',
-        'S+': '--grade-splus', 'S': '--grade-s', 'AAA+': '--grade-aaaplus', 'AAA': '--grade-aaa',
-        'AA+': '--grade-aaplus', 'AA': '--grade-aa', 'A+': '--grade-aplus', 'A': '--grade-a',
-        'B': '--grade-b', 'C': '--grade-c', 'D': '--grade-d', 'F': '--grade-f'
-    };
-    var PLATE_TOKEN = {
-        'Perfect Game': '--plate-pg', 'Ultimate Game': '--plate-ug', 'Extreme Game': '--plate-eg',
-        'Superb Game': '--plate-sg', 'Marvelous Game': '--plate-mg', 'Talented Game': '--plate-tg',
-        'Fair Game': '--plate-fg', 'Rough Game': '--plate-rg'
-    };
 
     // ---- the calculator.
     var calc = page.querySelector('[data-sc-calc]');
@@ -244,13 +231,15 @@
         }
         s.score = value;
         out('score').textContent = n0(value);
+        // The letter and plate render as the site's art (LetterGradeIcon / ScoreBreakdown
+        // vocabulary) from the URLs the server emitted — never as invented chips.
         var grade = gradeFor(value, MIX);
-        gradeChip.textContent = grade.grade;
-        gradeChip.style.background = 'var(' + GRADE_TOKEN[grade.grade] + ')';
+        gradeChip.src = CONST.gradeImages[grade.grade];
+        gradeChip.alt = grade.grade;
         gradeChip.hidden = false;
         var plate = plateFor(s.gr, s.gd, s.bd, s.m);
-        plateChip.textContent = plate;
-        plateChip.style.background = 'var(' + PLATE_TOKEN[plate] + ')';
+        plateChip.src = CONST.plateImages[plate];
+        plateChip.alt = plate;
         plateChip.hidden = false;
         var other = gradeFor(value, OTHER_MIX);
         var cross = out('crossmix');
@@ -358,17 +347,20 @@
             var query = playFilter.value.trim().toLowerCase();
             var rows = plays.filter(function (play) {
                 return !query || (play.song + ' ' + play.difficulty).toLowerCase().indexOf(query) >= 0;
-            }).map(function (play, index) {
+            }).map(function (play) {
                 var value = score(play.perfects, play.greats, play.goods, play.bads, play.misses, play.combo);
                 var grade = value === null ? null : gradeFor(value, MIX);
                 var plate = plateFor(play.greats, play.goods, play.bads, play.misses);
-                var bubbleClass = play.type === 'Double' ? 'sc-bub-double' : 'sc-bub-single';
+                // The site's row vocabulary, exactly as SessionScoreRow composes it: the plain
+                // jacket, the bubble art (text only where no art exists), and the letter and
+                // plate as images — a finished fail wears the broken letter art.
+                var gradeImages = play.isBroken ? CONST.gradeImagesBroken : CONST.gradeImages;
                 return '<tr data-sc-play="' + play.index + '" tabindex="0">' +
                     '<td><img class="sc-jk" src="' + esc(play.jacket) + '" alt="" loading="lazy"></td>' +
-                    '<td><span class="sc-bub ' + bubbleClass + '">' + esc(play.difficulty) + '</span></td>' +
-                    '<td class="sc-pt-name">' + esc(play.song) +
-                    (play.isBroken ? '<span class="sc-pt-fail">' + esc(playList.getAttribute('data-t-fail')) + '</span>' : '') +
-                    '</td>' +
+                    '<td>' + (play.bubble
+                        ? '<img class="sc-bub" src="' + esc(play.bubble) + '" alt="' + esc(play.difficulty) + '" loading="lazy">'
+                        : '<span class="sc-bubtext">' + esc(play.difficulty) + '</span>') + '</td>' +
+                    '<td class="sc-pt-name">' + esc(play.song) + '</td>' +
                     '<td class="sc-pt-j">' +
                     '<span class="judg-perfect">' + n0(play.perfects) + '</span><span class="sc-sl">/</span>' +
                     '<span class="judg-great">' + n0(play.greats) + '</span><span class="sc-sl">/</span>' +
@@ -380,15 +372,11 @@
                     '<span class="sc-n">' + (value === null ? '—' : n0(value)) + '</span>' +
                     '<span class="sc-gstack">' +
                     (grade === null ? '' :
-                        '<span class="sc-gradechip" style="background:var(' + GRADE_TOKEN[grade.grade] + ')">' + grade.grade + '</span>') +
-                    '<span class="sc-pl" style="color:var(' + PLATE_TOKEN[plate] + ')">' + plateShort(plate) + '</span>' +
+                        '<img class="sc-gstack-grade" src="' + esc(gradeImages[grade.grade]) + '" alt="' + grade.grade + '">') +
+                    '<img class="sc-gstack-plate" src="' + esc(CONST.plateImages[plate]) + '" alt="' + esc(plate) + '">' +
                     '</span></span></td></tr>';
             });
             playList.innerHTML = rows.length ? rows.join('') : messageRow(playList.getAttribute('data-t-none-match'));
-        }
-
-        function plateShort(plate) {
-            return plate.split(' ').map(function (word) { return word.charAt(0); }).join('');
         }
 
         function openDialog() {

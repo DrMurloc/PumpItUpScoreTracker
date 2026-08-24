@@ -39,8 +39,8 @@
         <div class="sc-result">
             <div class="sc-scoreline">
                 <span class="sc-bigscore" data-sc-out="score">—</span>
-                <span class="sc-gradechip" data-sc-out="grade" hidden></span>
-                <span class="sc-platechip" data-sc-out="plate" hidden></span>
+                <img class="sc-gradeimg" data-sc-out="grade" alt="" hidden />
+                <img class="sc-plateimg" data-sc-out="plate" alt="" hidden />
             </div>
             <p class="sc-crossmix" data-sc-out="crossmix"
                data-t-other="@L["On {0} this is {1}."]" data-other-mix="@Model.OtherMix.GetName()"></p>
@@ -83,8 +83,7 @@
                                    data-endpoint="@($"{ScoreCalculatorMixes.Root}/MyPlays?mix={Model.Mix}")"
                                    data-t-loading="@L["Loading your plays…"]"
                                    data-t-empty="@L["No plays with judgement counts yet — they arrive with recent-plays imports."]"
-                                   data-t-none-match="@L["No plays match."]"
-                                   data-t-fail="@L["fail"]"></tbody>
+                                   data-t-none-match="@L["No plays match."]"></tbody>
                         </table>
                     </div>
                     <p class="sc-playsnote">@L["Plays that carry judgement counts — imported from your recent plays. Stage breaks are excluded; finished fails are listed."]</p>

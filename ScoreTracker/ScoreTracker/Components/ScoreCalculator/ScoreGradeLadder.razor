@@ -1,6 +1,6 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services.ScoreCalculator
-@using ScoreTracker.Web.Services.Theming
+@using ScoreTracker.Web.Services
 @namespace ScoreTracker.Web.Components
 
 @* This mix's letter table with the other mix's floor beside every rung — "Phoenix 2 grade
@@ -25,7 +25,7 @@
         <div class="sc-moved">
             @foreach (var grade in ScoreCalculatorModel.MovedGrades)
             {
-                <span class="sc-pill"><b>@grade.GetName()</b>&nbsp;
+                <span class="sc-pill"><LetterGradeIcon Grade="grade" />&nbsp;
                     <s class="sc-num">@(((int)grade.GetMinimumScoreFor(MixEnum.Phoenix)).ToString("N0"))</s>
                     → <span class="sc-num">@(((int)grade.GetMinimumScoreFor(MixEnum.Phoenix2)).ToString("N0"))</span></span>
             }
@@ -45,8 +45,8 @@
             </tr>
             @foreach (var rung in Model.Ladder)
             {
-                <tr>
-                    <td><span class="sc-gradechip" style="background:@ThemeScales.GradeColor(rung.Grade)">@rung.Grade.GetName()</span></td>
+                <tr data-sc-grade="@rung.Grade.GetName()">
+                    <td><LetterGradeIcon Grade="rung.Grade" /></td>
                     <td class="sc-num">@rung.Floor.ToString("N0")</td>
                     <td class="sc-num">@rung.Top.ToString("N0")</td>
                     <td class="sc-td-left">
@@ -69,7 +69,7 @@
         @foreach (var (plate, rule) in PlateRules)
         {
             <div class="sc-platerow">
-                <span class="sc-gradechip" style="background:@ThemeScales.PlateColor(plate)">@plate.GetShorthand()</span>
+                <MudImage Src="@ShareCardImages.Plate(plate)" Height="24" ObjectFit="ObjectFit.ScaleDown" Alt="@plate.GetName()" />
                 <span>@plate.GetName()<br /><span class="sc-platerule">@rule</span></span>
             </div>
         }

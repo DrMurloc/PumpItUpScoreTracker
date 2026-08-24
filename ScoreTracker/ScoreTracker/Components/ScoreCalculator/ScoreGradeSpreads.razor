@@ -1,6 +1,5 @@
 @using ScoreTracker.Web.Services.ScoreCalculator
 @using ScoreTracker.SharedKernel.Enums
-@using ScoreTracker.Web.Services.Theming
 @namespace ScoreTracker.Web.Components
 
 @* What a grade actually looks like, measured from judgement-carrying bests and scaled to
@@ -32,7 +31,7 @@
                 @foreach (var spread in Model.Spreads)
                 {
                     <tr data-sc-spread-grade="@spread.Grade.GetName()">
-                        <td><span class="sc-gradechip" style="background:@ThemeScales.GradeColor(spread.Grade)">@spread.Grade.GetName()</span></td>
+                        <td><LetterGradeIcon Grade="spread.Grade" /></td>
                         <td class="sc-num">@spread.PerfectsPer1000.ToString("N1")</td>
                         <td class="sc-num">@spread.GreatsPer1000.ToString("N1")</td>
                         <td class="sc-num">@spread.GoodsPer1000.ToString("N1")</td>

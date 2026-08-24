@@ -276,6 +276,14 @@ public sealed class ScoreCalculatorModel
         return JsonSerializer.Serialize(new
         {
             weights = new { perfect = 1.0, great = .6, good = .2, bad = .1, combo = .005, accuracy = .995 },
+            // The site's letter, broken-letter and plate art, spelled by ShareCardImages — the
+            // script renders images, never chips, and never builds a URL of its own.
+            gradeImages = Enum.GetValues<PhoenixLetterGrade>()
+                .ToDictionary(g => g.GetName(), g => ShareCardImages.LetterGrade(g, false)),
+            gradeImagesBroken = Enum.GetValues<PhoenixLetterGrade>()
+                .ToDictionary(g => g.GetName(), g => ShareCardImages.LetterGrade(g, true)),
+            plateImages = Enum.GetValues<PhoenixPlate>()
+                .ToDictionary(p => p.GetName(), p => ShareCardImages.Plate(p)),
             floors = new[] { MixEnum.Phoenix, MixEnum.Phoenix2 }.ToDictionary(
                 m => m.ToString(),
                 m => Enum.GetValues<PhoenixLetterGrade>()

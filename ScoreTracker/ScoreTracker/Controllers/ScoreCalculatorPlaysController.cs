@@ -5,6 +5,7 @@ using ScoreTracker.Catalog.Contracts.Queries;
 using ScoreTracker.Domain.SecondaryPorts;
 using ScoreTracker.ScoreLedger.Contracts.Queries;
 using ScoreTracker.SharedKernel.Enums;
+using ScoreTracker.Web.Services;
 using ScoreTracker.Web.Services.ScoreCalculator;
 
 namespace ScoreTracker.Web.Controllers;
@@ -50,6 +51,9 @@ public class ScoreCalculatorPlaysController : Controller
                     song = chart.Song.Name.ToString(),
                     type = chart.Type.ToString(),
                     difficulty = chart.DifficultyString,
+                    // The bubble art DifficultyBubble would draw; null where none exists
+                    // (Half-Double and friends) and the script falls back to the text.
+                    bubble = ShareCardImages.DifficultyBubble(chart),
                     jacket = chart.Song.ImagePath.ToString(),
                     perfects = play.Judgements!.Perfects,
                     greats = play.Judgements.Greats,

@@ -28,6 +28,13 @@ namespace ScoreTracker.Tests.Components;
 /// </summary>
 public sealed class PhoenixCalculatorPageTests : ComponentTestBase
 {
+    public PhoenixCalculatorPageTests()
+    {
+        // The page is static SSR; DifficultyBubble gates its tooltip on RendererInfo, so the
+        // test declares the same world the real page renders in.
+        Renderer.SetRendererInfo(new Microsoft.AspNetCore.Components.RendererInfo("Static", false));
+    }
+
     private static Chart Make(ChartType type, int level, MixEnum mix, int? noteCount)
     {
         return new Chart(Guid.NewGuid(), MixEnum.Phoenix,
@@ -88,14 +95,16 @@ public sealed class PhoenixCalculatorPageTests : ComponentTestBase
         foreach (var mix in new[] { MixEnum.Phoenix, MixEnum.Phoenix2 })
         {
             var page = Render(mix);
-            var rows = page.FindAll(".sc-table tr")
-                .Where(r => r.QuerySelector(".sc-gradechip") != null && r.Children.Length == 4)
+            var rows = page.FindAll(".sc-table tr[data-sc-grade]")
+                .Where(r => r.Children.Length == 4)
                 .ToArray();
             Assert.Equal(16, rows.Length);
             foreach (var row in rows)
             {
                 var grade = PhoenixLetterGradeHelperMethods.TryParse(
-                    row.QuerySelector(".sc-gradechip")!.TextContent.Trim())!.Value;
+                    row.GetAttribute("data-sc-grade")!)!.Value;
+                // The letter renders as the site's art, not text.
+                Assert.Contains("letters/", row.QuerySelector("td img")!.GetAttribute("src"));
                 Assert.Equal(((int)grade.GetMinimumScoreFor(mix)).ToString("N0"),
                     row.Children[1].TextContent.Trim());
                 Assert.Equal(((int)grade.GetMaximumScoreFor(mix)).ToString("N0"),

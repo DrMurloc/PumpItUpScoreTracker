@@ -1,5 +1,6 @@
 @using ScoreTracker.Catalog.Contracts
 @using ScoreTracker.SharedKernel.Enums
+@using ScoreTracker.SharedKernel.ValueTypes
 @using ScoreTracker.Web.Services.ScoreCalculator
 @using ChartType = ScoreTracker.SharedKernel.Enums.ChartType
 @namespace ScoreTracker.Web.Components
@@ -55,7 +56,7 @@
                         @foreach (var chart in Model.Holds.MostTicks)
                         {
                             <tr>
-                                <td class="sc-td-left">@chart.SongName <b>@chart.Type.GetShortHand()@chart.Level</b></td>
+                                <td class="sc-td-left"><span class="sc-chartcell">@chart.SongName <DifficultyBubble Type="chart.Type" Level="DifficultyLevel.From(chart.Level)" Mix="Model.Mix" Small="true" Tooltip="false" /></span></td>
                                 <td class="sc-num">@chart.HoldTicks.ToString("N0") / @chart.NoteCount.ToString("N0")</td>
                                 <td class="sc-num">@chart.Share.ToString("P0")</td>
                             </tr>
@@ -71,7 +72,7 @@
                         @foreach (var chart in Model.Holds.FewestTicksFifteenPlus)
                         {
                             <tr>
-                                <td class="sc-td-left">@chart.SongName <b>@chart.Type.GetShortHand()@chart.Level</b></td>
+                                <td class="sc-td-left"><span class="sc-chartcell">@chart.SongName <DifficultyBubble Type="chart.Type" Level="DifficultyLevel.From(chart.Level)" Mix="Model.Mix" Small="true" Tooltip="false" /></span></td>
                                 <td class="sc-num">@chart.HoldTicks.ToString("N0") / @chart.NoteCount.ToString("N0")</td>
                                 <td class="sc-num">@chart.Share.ToString("P0")</td>
                             </tr>

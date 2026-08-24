@@ -1,6 +1,5 @@
 @using ScoreTracker.SharedKernel.Enums
 @using ScoreTracker.Web.Services.ScoreCalculator
-@using ScoreTracker.Web.Services.Theming
 @namespace ScoreTracker.Web.Components
 
 @* What each judgement costs, priced by the engine itself (design doc §2.4): the server
@@ -60,8 +59,8 @@
             </tr>
             @foreach (var rung in Model.BudgetRungs)
             {
-                <tr>
-                    <td><span class="sc-gradechip" style="background:@ThemeScales.GradeColor(rung.Grade)">@rung.Grade.GetName()</span></td>
+                <tr data-sc-grade="@rung.Grade.GetName()">
+                    <td><LetterGradeIcon Grade="rung.Grade" /></td>
                     <td class="sc-num">@rung.Floor.ToString("N0")</td>
                     <td class="sc-num" data-sc-budget="@rung.Grade.GetName()">@ScoreCalculatorModel.GreatsAllowedFor(rung.Grade, Model.Mix, DefaultSize).ToString("N0")</td>
                 </tr>

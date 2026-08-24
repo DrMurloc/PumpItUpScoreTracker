@@ -2492,9 +2492,6 @@
   <data name="extremes {0}–{1}" xml:space="preserve">
     <value>極値 {0}–{1}</value>
   </data>
-  <data name="fail" xml:space="preserve">
-    <value>失敗</value>
-  </data>
   <data name="Failed" xml:space="preserve">
     <value>失敗</value>
   </data>

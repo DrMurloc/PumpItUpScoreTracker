@@ -2476,9 +2476,6 @@
   <data name="extremes {0}–{1}" xml:space="preserve">
     <value>극단값 {0}–{1}</value>
   </data>
-  <data name="fail" xml:space="preserve">
-    <value>실패</value>
-  </data>
   <data name="Failed" xml:space="preserve">
     <value>실패</value>
   </data>
