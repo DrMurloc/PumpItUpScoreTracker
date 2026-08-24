@@ -187,6 +187,21 @@ public sealed class UploadPhoenixScoresPageTests : ComponentTestBase
     }
 
     [Fact]
+    public void CredentialFieldsCarryPasswordManagerAttributes()
+    {
+        var cut = RenderComponent<UploadPhoenixScores>();
+
+        // Password managers anchor a fill on name/autocomplete; MudBlazor emits neither on its
+        // own, so the attributes must ride UserAttributes through to the rendered input. The
+        // values match /PiuGameLogin's, which is what lets one saved entry fill every surface.
+        var username = cut.Find("input[name=username]");
+        Assert.Equal("username", username.GetAttribute("autocomplete"));
+        var password = cut.Find("input[name=password]");
+        Assert.Equal("current-password", password.GetAttribute("autocomplete"));
+        Assert.Equal("password", password.GetAttribute("type"));
+    }
+
+    [Fact]
     public void ManualImportIsCollapsedByDefault()
     {
         var cut = RenderComponent<UploadPhoenixScores>();

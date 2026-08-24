@@ -44,8 +44,10 @@
                     @if (_otherProviders.Any(p => p.Equals("PiuGame", StringComparison.OrdinalIgnoreCase)))
                     {
                         <MudAlert Severity="Severity.Info" Class="mt-4 mb-2">@L["Your username and password are sent directly to piugame.com and are never stored"]</MudAlert>
-                        <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" Disabled="_isVerifyingPiuGame" @bind-Value="_piuGameUsername"></MudTextField>
-                        <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" Disabled="_isVerifyingPiuGame" @bind-Value="_piuGamePassword"></MudTextField>
+                        <MudTextField T="string" Label="@L["PIUGame.com Username"].Value" Disabled="_isVerifyingPiuGame" @bind-Value="_piuGameUsername"
+                                      UserAttributes="@PasswordManagerHints.PiuGameUsername"></MudTextField>
+                        <MudTextField T="string" InputType="InputType.Password" Label="@L["PIUGame.com Password"].Value" Disabled="_isVerifyingPiuGame" @bind-Value="_piuGamePassword"
+                                      UserAttributes="@PasswordManagerHints.PiuGamePassword"></MudTextField>
                         <MudButton Class="mt-2" Variant="Variant.Filled" Color="Color.Primary"
                                    Disabled="@(_isVerifyingPiuGame || string.IsNullOrWhiteSpace(_piuGameUsername) || string.IsNullOrWhiteSpace(_piuGamePassword))"
                                    OnClick="VerifyPiuGame">@L["Log In With", "PIUGAME"]</MudButton>
