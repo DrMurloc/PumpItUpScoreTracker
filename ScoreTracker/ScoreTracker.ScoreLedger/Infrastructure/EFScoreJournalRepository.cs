@@ -241,6 +241,23 @@ internal sealed class EFScoreJournalRepository : IScoreJournalRepository
             .ToArray();
     }
 
+    public async Task<IReadOnlyList<ScoreJournalEntry>> GetJudgedPlays(Guid userId, MixEnum mix, int limit,
+        CancellationToken cancellationToken)
+    {
+        var mixId = MixIds.For(mix);
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        // Judgement-carrying complete screens only: the five counts arrive together, so one
+        // non-null column implies the set, and a stage break's counts stop mid-chart.
+        return (await database.Set<ScoreEventJournalEntity>()
+                .Where(e => e.UserId == userId && e.MixId == mixId && e.Perfects != null && !e.IsStageBroken)
+                .OrderByDescending(e => e.OccurredAt)
+                .ThenByDescending(e => e.ChartId)
+                .Take(limit)
+                .ToArrayAsync(cancellationToken))
+            .Select(Map)
+            .ToArray();
+    }
+
     public async Task<IReadOnlyList<UserPhoenixScore>> GetLowestPassingPlays(MixEnum mix, Guid chartId,
         int limit, CancellationToken cancellationToken)
     {
