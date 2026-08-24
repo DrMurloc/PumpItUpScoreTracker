@@ -3063,6 +3063,9 @@
   <data name="Import Failures" xml:space="preserve">
     <value>Some rows couldn't be imported. Download the failures, fix them, and re-upload.</value>
   </data>
+  <data name="Import from your recent plays" xml:space="preserve">
+    <value>Import from your recent plays</value>
+  </data>
   <data name="Import Lede" xml:space="preserve">
     <value>PIU Scores signs into your piugame.com account and imports your new and improved scores. Once it starts, you can leave — it finishes in the background.</value>
   </data>
@@ -4203,6 +4206,9 @@
   </data>
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>No rankings yet - they appear after the first weekly import.</value>
+  </data>
+  <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
+    <value>No recent plays found in your score journal. Run Import Scores first, then come back.</value>
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>No Recorded Scores</value>

@@ -3046,6 +3046,9 @@
   <data name="Import Failures" xml:space="preserve">
     <value>Algumas linhas não puderam ser importadas. Baixe as falhas, corrija e envie de novo.</value>
   </data>
+  <data name="Import from your recent plays" xml:space="preserve">
+    <value>Importar das suas partidas recentes</value>
+  </data>
   <data name="Import Lede" xml:space="preserve">
     <value>O PIU Scores entra na sua conta do piugame.com e importa suas pontuações novas e melhoradas. Depois de iniciar, você pode sair — ele termina em segundo plano.</value>
   </data>
@@ -4173,6 +4176,9 @@
   </data>
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>Ainda não há classificações - elas aparecem após a primeira importação semanal.</value>
+  </data>
+  <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
+    <value>Nenhuma partida recente encontrada no seu registro de pontuações. Use primeiro Importar pontuações e depois volte.</value>
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
     <value>Sem pontuações registradas</value>

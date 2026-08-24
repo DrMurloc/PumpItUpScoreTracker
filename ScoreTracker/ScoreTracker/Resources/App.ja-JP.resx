@@ -3063,6 +3063,9 @@
   <data name="Import Failures" xml:space="preserve">
     <value>インポートできなかった行があります。失敗分をダウンロードして修正し、再アップロードしてください。</value>
   </data>
+  <data name="Import from your recent plays" xml:space="preserve">
+    <value>最近のプレイからインポート</value>
+  </data>
   <data name="Import Lede" xml:space="preserve">
     <value>PIU Scores が piugame.com のアカウントにログインし、新しいスコアと更新されたスコアをインポートします。開始後はこのページを離れても、バックグラウンドで完了します。</value>
   </data>
@@ -4203,6 +4206,9 @@
   </data>
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>ランキングはまだありません - 最初の週次インポート後に表示されます。</value>
+  </data>
+  <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
+    <value>スコアジャーナルに最近のプレイが見つかりません。先にスコアインポートを実行してから、戻ってきてください。</value>
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
 	  <value>スコア記録なし</value>

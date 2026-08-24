@@ -3046,6 +3046,9 @@
   <data name="Import Failures" xml:space="preserve">
     <value>가져오지 못한 행이 있습니다. 실패 목록을 다운로드해 수정한 뒤 다시 업로드하세요.</value>
   </data>
+  <data name="Import from your recent plays" xml:space="preserve">
+    <value>최근 플레이에서 가져오기</value>
+  </data>
   <data name="Import Lede" xml:space="preserve">
     <value>PIU Scores가 piugame.com 계정에 로그인해 새 점수와 갱신된 점수를 가져옵니다. 시작한 후에는 페이지를 떠나도 백그라운드에서 완료됩니다.</value>
   </data>
@@ -4173,6 +4176,9 @@
   </data>
   <data name="No rankings yet - they appear after the first weekly import." xml:space="preserve">
     <value>아직 랭킹이 없습니다 - 첫 주간 가져오기 후에 표시됩니다.</value>
+  </data>
+  <data name="No recent plays found in your score journal. Run Import Scores first, then come back." xml:space="preserve">
+    <value>점수 저널에서 최근 플레이를 찾을 수 없습니다. 먼저 점수 가져오기를 실행한 다음 다시 돌아오세요.</value>
   </data>
   <data name="No Recorded Scores" xml:space="preserve">
     <value>기록된 점수 없음</value>
