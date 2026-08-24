@@ -68,8 +68,8 @@ else
         </MudText>
         <MudText Typo="Typo.caption" Class="mud-text-secondary d-block mt-1">
             @L["Last submitted {0} · last collected {1}",
-                _status.LastSubmittedAt is { } s ? Ago(s) : L["never"].Value,
-                _status.LastCollectedAt is { } c ? Ago(c) : L["never"].Value]
+                _status.LastSubmittedAt is { } s ? Ago(s) : L["Never"].Value,
+                _status.LastCollectedAt is { } c ? Ago(c) : L["Never"].Value]
         </MudText>
     </MudPaper>
 

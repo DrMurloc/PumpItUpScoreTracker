@@ -2166,6 +2166,9 @@
   <data name="Download Scores" xml:space="preserve">
     <value>Download Scores</value>
   </data>
+  <data name="Drain now" xml:space="preserve">
+    <value>Drain now</value>
+  </data>
   <data name="Draw a random set of charts" xml:space="preserve">
     <value>Draw a random set of charts</value>
   </data>
@@ -3144,6 +3147,9 @@
   <data name="In" xml:space="preserve">
     <value>In</value>
   </data>
+  <data name="In flight" xml:space="preserve">
+    <value>In flight</value>
+  </data>
   <data name="in our database, locked so it can't be opened alone." xml:space="preserve">
     <value>in our database, locked so it can't be opened alone.</value>
   </data>
@@ -3378,6 +3384,9 @@
   </data>
   <data name="Last seen" xml:space="preserve">
     <value>Last seen</value>
+  </data>
+  <data name="Last submitted {0} · last collected {1}" xml:space="preserve">
+    <value>Last submitted {0} · last collected {1}</value>
   </data>
   <data name="Last Updated" xml:space="preserve">
     <value>Last Updated</value>
@@ -4499,6 +4508,9 @@
   <data name="Nothing is shared with tools" xml:space="preserve">
     <value>Nothing is shared with tools</value>
   </data>
+  <data name="Nothing is translated yet, so there is nothing to re-translate." xml:space="preserve">
+    <value>Nothing is translated yet, so there is nothing to re-translate.</value>
+  </data>
   <data name="Nothing matches these filters. Clear one to see the rest." xml:space="preserve">
     <value>Nothing matches these filters. Clear one to see the rest.</value>
   </data>
@@ -4655,6 +4667,9 @@
   <data name="Oldest Score" xml:space="preserve">
     <value>Oldest Score</value>
   </data>
+  <data name="oldest {0}" xml:space="preserve">
+    <value>oldest {0}</value>
+  </data>
   <data name="On a {0} each plate is worth +{1} a step through {2} and +{3} a step from {4} up, so Rough Game to Perfect Game on one chart is +{5}." xml:space="preserve">
     <value>On a {0} each plate is worth +{1} a step through {2} and +{3} a step from {4} up, so Rough Game to Perfect Game on one chart is +{5}.</value>
   </data>
@@ -4795,6 +4810,9 @@
   </data>
   <data name="Order by" xml:space="preserve">
     <value>Order by</value>
+  </data>
+  <data name="Original" xml:space="preserve">
+    <value>Original</value>
   </data>
   <data name="Original Chabala Tier List" xml:space="preserve">
     <value>Original Chabala Tier List</value>
@@ -5633,6 +5651,9 @@
   <data name="Queued" xml:space="preserve">
     <value>Queued</value>
   </data>
+  <data name="Queued for translation" xml:space="preserve">
+    <value>Queued for translation</value>
+  </data>
   <data name="Quick calculator" xml:space="preserve">
     <value>Quick calculator</value>
   </data>
@@ -5719,6 +5740,9 @@
   <data name="Re-pricing stored {0} ratings. Nothing is announced." xml:space="preserve">
     <value>Re-pricing stored {0} ratings. Nothing is announced.</value>
   </data>
+  <data name="Re-queue {0} texts, about {1} — confirm" xml:space="preserve">
+    <value>Re-queue {0} texts, about {1} — confirm</value>
+  </data>
   <data name="Re-rated" xml:space="preserve">
     <value>Re-rated</value>
   </data>
@@ -5728,6 +5752,9 @@
   <data name="Re-stepped — {0} notes, was {1}." xml:space="preserve">
     <value>Re-stepped — {0} notes, was {1}.</value>
   </data>
+  <data name="Re-translate everything" xml:space="preserve">
+    <value>Re-translate everything</value>
+  </data>
   <data name="Reachable" xml:space="preserve">
     <value>Reachable</value>
   </data>
@@ -5736,6 +5763,9 @@
   </data>
   <data name="Reached {0}" xml:space="preserve">
     <value>Reached {0}</value>
+  </data>
+  <data name="Read in" xml:space="preserve">
+    <value>Read in</value>
   </data>
   <data name="Read straight up from the end of a bar to see which level it matches." xml:space="preserve">
     <value>Read straight up from the end of a bar to see which level it matches.</value>
@@ -5791,6 +5821,9 @@
   <data name="Recent deliveries" xml:space="preserve">
     <value>Recent deliveries</value>
   </data>
+  <data name="Recent failures" xml:space="preserve">
+    <value>Recent failures</value>
+  </data>
   <data name="Recent imports" xml:space="preserve">
     <value>Recent imports</value>
   </data>
@@ -5836,6 +5869,9 @@
   </data>
   <data name="Recorded {0} days ago" xml:space="preserve">
     <value>Recorded {0} days ago</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
   </data>
   <data name="Refresh popularity" xml:space="preserve">
     <value>Refresh popularity</value>
@@ -6076,6 +6112,9 @@
   </data>
   <data name="Roll up supplemented leaderboards" xml:space="preserve">
     <value>Roll up supplemented leaderboards</value>
+  </data>
+  <data name="Rolling 30-day spend" xml:space="preserve">
+    <value>Rolling 30-day spend</value>
   </data>
   <data name="Rotate this week's board now? This closes the current week and draws the next set." xml:space="preserve">
     <value>Rotate this week's board now? This closes the current week and draws the next set.</value>
@@ -6549,6 +6588,9 @@
   <data name="Show more of {0} scores" xml:space="preserve">
     <value>Show more of {0} scores</value>
   </data>
+  <data name="Show original" xml:space="preserve">
+    <value>Show original</value>
+  </data>
   <data name="Show Passed in Another Mix" xml:space="preserve">
     <value>Show Passed in Another Mix</value>
   </data>
@@ -6590,6 +6632,9 @@
   </data>
   <data name="Show the least matching charts instead" xml:space="preserve">
     <value>Show the least matching charts instead</value>
+  </data>
+  <data name="Show translation" xml:space="preserve">
+    <value>Show translation</value>
   </data>
   <data name="Show what this channel is registered for" xml:space="preserve">
     <value>Show what this channel is registered for</value>
@@ -6980,6 +7025,9 @@
   <data name="Submit" xml:space="preserve">
     <value>Submit</value>
   </data>
+  <data name="Submit and collect are running. Batches can take up to an hour." xml:space="preserve">
+    <value>Submit and collect are running. Batches can take up to an hour.</value>
+  </data>
   <data name="Submit for approval" xml:space="preserve">
     <value>Submit for approval</value>
   </data>
@@ -7232,6 +7280,9 @@
   </data>
   <data name="The opposite is picked from everything in reach, so ranges don't apply to it" xml:space="preserve">
     <value>The opposite is picked from everything in reach, so ranges don't apply to it</value>
+  </data>
+  <data name="The pipeline is parked: no Claude API key is configured. Queued comments wait; nothing is spent." xml:space="preserve">
+    <value>The pipeline is parked: no Claude API key is configured. Queued comments wait; nothing is spent.</value>
   </data>
   <data name="The PIU Scores bot" xml:space="preserve">
     <value>The PIU Scores bot</value>
@@ -7732,6 +7783,15 @@
   <data name="Track the grind." xml:space="preserve">
     <value>Track the grind.</value>
   </data>
+  <data name="Translated" xml:space="preserve">
+    <value>Translated</value>
+  </data>
+  <data name="Translated from {0}" xml:space="preserve">
+    <value>Translated from {0}</value>
+  </data>
+  <data name="Translations" xml:space="preserve">
+    <value>Translations</value>
+  </data>
   <data name="Treat very old scores as unplayed" xml:space="preserve">
     <value>Treat very old scores as unplayed</value>
   </data>
@@ -7891,6 +7951,9 @@
   </data>
   <data name="Up" xml:space="preserve">
     <value>Up</value>
+  </data>
+  <data name="Up to {0} new texts a night. The ceiling is a fuse, not a budget — if it parks the pipeline, find the bug before raising it." xml:space="preserve">
+    <value>Up to {0} new texts a night. The ceiling is a fuse, not a budget — if it parks the pipeline, find the bug before raising it.</value>
   </data>
   <data name="Update Chart" xml:space="preserve">
 	  <value>Update Chart</value>
@@ -8086,6 +8149,9 @@
   <data name="Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet." xml:space="preserve">
     <value>Vs. Peers: how your scores rank against players of similar competitive level, averaged over this folder's charts featuring the skill. Greyed skills don't have enough evidence to vote yet.</value>
   </data>
+  <data name="Waiting" xml:space="preserve">
+    <value>Waiting</value>
+  </data>
   <data name="Waiting on a human — give them a nudge" xml:space="preserve">
     <value>Waiting on a human — give them a nudge</value>
   </data>
@@ -8233,6 +8299,9 @@
   </data>
   <data name="What the chart is worth in your pool right now" xml:space="preserve">
     <value>What the chart is worth in your pool right now</value>
+  </data>
+  <data name="What the reporter saw ({0})" xml:space="preserve">
+    <value>What the reporter saw ({0})</value>
   </data>
   <data name="What this play added to your PUMBILITY" xml:space="preserve">
     <value>What this play added to your PUMBILITY</value>
@@ -9017,6 +9086,9 @@
   <data name="{0} connected" xml:space="preserve">
     <value>{0} connected</value>
   </data>
+  <data name="{0} d ago" xml:space="preserve">
+    <value>{0} d ago</value>
+  </data>
   <data name="{0} days ago" xml:space="preserve">
     <value>{0} days ago</value>
   </data>
@@ -9055,6 +9127,9 @@
   </data>
   <data name="{0} folders at 90% or better" xml:space="preserve">
     <value>{0} folders at 90% or better</value>
+  </data>
+  <data name="{0} h ago" xml:space="preserve">
+    <value>{0} h ago</value>
   </data>
   <data name="{0} harder for you" xml:space="preserve">
     <value>{0} harder for you</value>
@@ -9098,8 +9173,14 @@
   <data name="{0} members" xml:space="preserve">
     <value>{0} members</value>
   </data>
+  <data name="{0} mid-pipeline" xml:space="preserve">
+    <value>{0} mid-pipeline</value>
+  </data>
   <data name="{0} min" xml:space="preserve">
     <value>{0} min</value>
+  </data>
+  <data name="{0} min ago" xml:space="preserve">
+    <value>{0} min ago</value>
   </data>
   <data name="{0} mixes" xml:space="preserve">
     <value>{0} mixes</value>
@@ -9292,6 +9373,12 @@
   </data>
   <data name="{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile." xml:space="preserve">
     <value>{0} songs left the catalog, taking {1} charts with them. Your scores on them stay on your profile.</value>
+  </data>
+  <data name="{0} spent, {1} committed in flight, against a {2} ceiling." xml:space="preserve">
+    <value>{0} spent, {1} committed in flight, against a {2} ceiling.</value>
+  </data>
+  <data name="{0} texts re-queued. They spend against the ceiling on the coming nights." xml:space="preserve">
+    <value>{0} texts re-queued. They spend against the ceiling on the coming nights.</value>
   </data>
   <data name="{0} titles" xml:space="preserve">
     <value>{0} titles</value>
