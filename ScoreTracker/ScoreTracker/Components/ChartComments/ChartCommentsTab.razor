@@ -51,32 +51,49 @@ else
     @* No sort control on Notes: with no votes there is only one order. *@
     @if (!IsNotes && (_page.TotalRoots > 1 || ReadInLocales.Count > 0))
     {
+        @* Two quiet text menus, not boxes (owner pick from the density mock, 2026-08-24): the
+           thread's chrome speaks the tab's own language, where the composer is a line and the
+           actions are text. *@
         <div class="cmt-subbar">
             @if (_page.TotalRoots > 1)
             {
-                <span>@L["Sort"]</span>
-                <MudSelect T="CommentSort" Value="_sort" ValueChanged="SelectSort" Dense="true" Margin="Margin.Dense"
-                           Variant="Variant.Outlined" Class="cmt-sort" data-testid="cmt-sort">
-                    <MudSelectItem Value="CommentSort.Top">@L["Top"]</MudSelectItem>
-                    <MudSelectItem Value="CommentSort.Newest">@L["Newest"]</MudSelectItem>
-                </MudSelect>
+                <MudMenu Dense="true" AriaLabel="@L["Sort"]">
+                    <ActivatorContent>
+                        <span class="cmt-tmenu" data-testid="cmt-sort">@L["Sort"]:
+                            <b>@SortLabel(_sort)</b> <span class="cmt-car">▾</span></span>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem data-testid="cmt-sort-top"
+                                     OnClick="() => SelectSort(CommentSort.Top)">@Ticked(_sort == CommentSort.Top, L["Top"])</MudMenuItem>
+                        <MudMenuItem data-testid="cmt-sort-newest"
+                                     OnClick="() => SelectSort(CommentSort.Newest)">@Ticked(_sort == CommentSort.Newest, L["Newest"])</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
             }
+            <MudSpacer></MudSpacer>
             @if (ReadInLocales.Count > 0)
             {
                 @* The sticky pick, owner-worded: choosing a localization is remembered and
                    becomes this reader's default wherever a rendering exists; choosing Original
                    clears it. It replaces the language-mapping step only — a comment in the
                    reader's own language stays the original whatever is picked here. *@
-                <span class="cmt-subbar-right">@L["Read in"]</span>
-                <MudSelect T="string" Value="@(_preferredLocale ?? string.Empty)" ValueChanged="SelectReadIn"
-                           Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined" Class="cmt-sort"
-                           data-testid="cmt-read-in">
-                    <MudSelectItem Value="@string.Empty">@L["Original"]</MudSelectItem>
-                    @foreach (var locale in ReadInLocales)
-                    {
-                        <MudSelectItem Value="@locale">@RenderingLocaleName(locale)</MudSelectItem>
-                    }
-                </MudSelect>
+                <MudMenu Dense="true" AriaLabel="@L["Read in"]">
+                    <ActivatorContent>
+                        <span class="cmt-tmenu" data-testid="cmt-read-in">@L["Read in"]:
+                            <b>@(_preferredLocale == null ? L["Original"] : RenderingLocaleName(_preferredLocale))</b>
+                            <span class="cmt-car">▾</span></span>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem data-testid="cmt-read-in-original"
+                                     OnClick="() => SelectReadIn(string.Empty)">@Ticked(_preferredLocale == null, L["Original"])</MudMenuItem>
+                        @foreach (var locale in ReadInLocales)
+                        {
+                            var l = locale;
+                            <MudMenuItem data-testid="@($"cmt-read-in-{l}")"
+                                         OnClick="() => SelectReadIn(l)">@Ticked(_preferredLocale == l, RenderingLocaleName(l))</MudMenuItem>
+                        }
+                    </ChildContent>
+                </MudMenu>
             }
         </div>
     }
@@ -336,8 +353,30 @@ else
         color: var(--mud-palette-warning);
     }
 
-    .cmt-subbar-right {
-        margin-left: auto;
+    .cmt-tmenu {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: .74rem;
+        color: var(--mud-palette-text-secondary);
+        padding: 2px 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .cmt-tmenu:hover {
+        background: var(--mud-palette-action-default-hover);
+        color: var(--mud-palette-text-primary);
+    }
+
+    .cmt-tmenu b {
+        color: var(--mud-palette-text-primary);
+        font-weight: 650;
+    }
+
+    .cmt-car {
+        font-size: .56rem;
     }
 
     .cmt-meta {
@@ -575,16 +614,32 @@ else
         await Reload();
     }
 
+    /// <summary>
+    ///     The language alone, in itself — 한국어, español — never the full culture name, whose
+    ///     region suffix (한국어(대한민국)) is what truncated the first cut's control.
+    /// </summary>
     private static string RenderingLocaleName(string locale)
     {
+        var primary = locale.Split('-')[0];
         try
         {
-            return CultureInfo.GetCultureInfo(locale).NativeName;
+            return CultureInfo.GetCultureInfo(primary).NativeName;
         }
         catch (CultureNotFoundException)
         {
             return locale;
         }
+    }
+
+    private string SortLabel(CommentSort sort)
+    {
+        return sort == CommentSort.Top ? L["Top"] : L["Newest"];
+    }
+
+    /// <summary>The current choice wears its tick inside the item, popover-menu style.</summary>
+    private static string Ticked(bool on, string label)
+    {
+        return on ? $"✓ {label}" : label;
     }
 
     private void ShowInterstitial(string? url)

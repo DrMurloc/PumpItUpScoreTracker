@@ -128,28 +128,46 @@ public sealed class CommentTranslationDisplayTests : TestContext
         Assert.Empty(row.FindAll("[data-testid^='show-original-']"));
     }
 
+    /// <summary>
+    ///     The menus render their items through a popover, so these tests put a
+    ///     MudPopoverProvider in the tree — the same shape PersonalizedBreakdownPageTests uses.
+    /// </summary>
+    private IRenderedFragment RenderTabWithPopovers()
+    {
+        return Render(builder =>
+        {
+            builder.OpenComponent<MudBlazor.MudPopoverProvider>(0);
+            builder.CloseComponent();
+            builder.OpenComponent<ChartCommentsTab>(1);
+            builder.AddAttribute(2, nameof(ChartCommentsTab.ChartId), Chart);
+            builder.AddAttribute(3, nameof(ChartCommentsTab.Active), true);
+            builder.CloseComponent();
+        });
+    }
+
     [Fact]
     public async Task PickingALocalizationIsRememberedAndPickingOriginalClearsIt()
     {
-        var page = new CommentPageRecord(new[] { Translated(out _) }, 1, false);
+        var page = new CommentPageRecord(new[] { Translated(out _) }, 1, false, TranslationOffered: true);
         _mediator.Setup(m => m.Send(It.IsAny<GetChartCommentsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(page);
-        var tab = RenderComponent<ChartCommentsTab>(p => p.Add(c => c.ChartId, Chart).Add(c => c.Active, true));
+        var tab = RenderTabWithPopovers();
 
-        var readIn = tab.FindComponent<MudBlazor.MudSelect<string>>();
-        await tab.InvokeAsync(() => readIn.Instance.ValueChanged.InvokeAsync("es-ES"));
+        await tab.Find("[data-testid='cmt-read-in']").ClickAsync(new MouseEventArgs());
+        await tab.Find("[data-testid='cmt-read-in-es-ES']").ClickAsync(new MouseEventArgs());
         _uiSettings.Verify(u => u.SetSetting("Comments__ReadIn", "es-ES", It.IsAny<CancellationToken>()),
             Times.Once);
         _mediator.Verify(m => m.Send(It.Is<GetChartCommentsQuery>(q => q.PreferredLocale == "es-ES"),
             It.IsAny<CancellationToken>()), Times.AtLeastOnce);
 
-        await tab.InvokeAsync(() => readIn.Instance.ValueChanged.InvokeAsync(string.Empty));
+        await tab.Find("[data-testid='cmt-read-in']").ClickAsync(new MouseEventArgs());
+        await tab.Find("[data-testid='cmt-read-in-original']").ClickAsync(new MouseEventArgs());
         _uiSettings.Verify(u => u.SetSetting("Comments__ReadIn", string.Empty, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
     [Fact]
-    public void AnArmedPageOffersTheFullLanguageSetBeforeAnythingIsTranslated()
+    public async Task AnArmedPageOffersTheFullLanguageSetBeforeAnythingIsTranslated()
     {
         // The picker's whole audience is the reader whose language never renders — they state
         // the preference FIRST, and renderings meet it as they land. A picker built from what
@@ -163,11 +181,14 @@ public sealed class CommentTranslationDisplayTests : TestContext
         _mediator.Setup(m => m.Send(It.IsAny<GetChartCommentsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CommentPageRecord(new[] { untranslated }, 1, false, TranslationOffered: true));
 
-        var tab = RenderComponent<ChartCommentsTab>(p => p.Add(c => c.ChartId, Chart).Add(c => c.Active, true));
+        var tab = RenderTabWithPopovers();
 
-        var readIn = tab.FindComponent<MudBlazor.MudSelect<string>>();
-        Assert.NotNull(readIn);
-        Assert.Contains("cmt-read-in", tab.Markup);
+        await tab.Find("[data-testid='cmt-read-in']").ClickAsync(new MouseEventArgs());
+        // All five fixed languages on offer, language-only labels, before any rendering exists.
+        foreach (var locale in new[] { "en-US", "es-ES", "fr-FR", "ko-KR", "pt-BR" })
+            Assert.NotNull(tab.Find($"[data-testid='cmt-read-in-{locale}']"));
+        Assert.Contains("한국어", tab.Find("[data-testid='cmt-read-in-ko-KR']").TextContent);
+        Assert.DoesNotContain("대한민국", tab.Markup);
     }
 
     [Fact]
