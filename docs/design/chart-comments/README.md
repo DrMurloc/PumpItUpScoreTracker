@@ -289,19 +289,22 @@ Five renderings: the **en-US pivot** plus **es-ES, fr-FR, ko-KR, pt-BR**.
 Display resolution (owner-worded, 2026-08-24), per comment, judged against the **language** of the
 locale the reader browses the site in:
 
-1. **Comment written in the reader's own language — region ignored — → the original.** Always, and
-   this outranks everything below including a stored manual pick: a Mexican reader sees a
-   peninsular-Spanish comment as written, and vice versa. Nothing is ever translated inside one
-   language.
-2. **Otherwise map by language, not region** → show the rendering for the reader's *language* when
-   one exists (es-MX → es-ES, en-ZW → the pivot), badged *Translated from 한국어*, with a
+1. **Comment written in the effective language — region ignored — → the original.** The
+   *effective* language is the reader's own locale, or their Read-in pick where one stands (the
+   pick is total — see below): a Mexican reader sees a peninsular-Spanish comment as written, and
+   vice versa. Nothing is ever translated into its own language.
+2. **Otherwise map by language, not region** → show the rendering for the effective *language*
+   when one exists (es-MX → es-ES, en-ZW → the pivot), badged *Translated from 한국어*, with a
    per-comment **Show original**.
 3. **No rendering for the reader's language** (ja-JP, it-IT) → the **original**. The first draft's
    "everything else falls back to English" is retired — nobody is handed a language they did not
    ask for.
 4. A step-2 reader whose rendering does not exist yet sees the **original** badged *Queued for
    translation*. A reader whose default is already the original sees no badge at all — the comment
-   exists in *some* language, and an empty box is worse than the author's own words.
+   exists in *some* language, and an empty box is worse than the author's own words. The badge
+   makes no claim about languages (owner: it also tells same-language readers "others will read
+   this soon"), renders only while the pipeline is armed, and expires after three days with
+   nothing arrived — a promise, never a lie.
 
 **A manually picked localization is sticky, and total.** Choosing a rendering by hand — the way a
 ja-JP reader opts into English — is stored in UiSettings and **substitutes for the reader's locale
