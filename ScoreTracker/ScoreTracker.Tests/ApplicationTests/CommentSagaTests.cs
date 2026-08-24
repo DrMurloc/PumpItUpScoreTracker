@@ -788,10 +788,11 @@ public sealed class CommentSagaTests
     }
 
     [Fact]
-    public async Task AnEditInsideTheCooldownStillDropsRenderingsButDoesNotRequeue()
+    public async Task AnEditMinutesAfterTranslationStillRequeues()
     {
-        // Translated an hour ago: the old renderings must go — a translation of the previous
-        // words must never show — but the re-queue waits out the cooldown.
+        // The once-per-24h cost cap lives in the pipeline's submit step, where waiting cannot
+        // lose a translation. The old edit-side block dropped renderings and never re-queued —
+        // and was bypassed by editing twice anyway.
         var comment = Comment.Post(ChartId, _viewer.Id, CommentAudience.Public, "before", Now.AddDays(-2));
         comment.StampTranslationQueued(Now.AddHours(-1));
         _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
@@ -800,24 +801,27 @@ public sealed class CommentSagaTests
         await Subject().Handle(new EditCommentCommand(comment.Id, "after"), CancellationToken.None);
 
         _renderings.Verify(r => r.DeleteFor(comment.Id, It.IsAny<CancellationToken>()), Times.Once);
-        _bus.Verify(b => b.Publish(
-            It.IsAny<ScoreTracker.Translations.Contracts.Messages.QueueTextForTranslationCommand>(),
-            It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task AnEditWhileStillPendingReplacesTheRequestFree()
-    {
-        var comment = Comment.Post(ChartId, _viewer.Id, CommentAudience.Public, "before", Now.AddDays(-2));
-        comment.StampTranslationQueued(Now.AddHours(-1));
-        _comments.Setup(c => c.GetById(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(comment);
-        _renderings.Setup(r => r.AnyFor(comment.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-
-        await Subject().Handle(new EditCommentCommand(comment.Id, "after"), CancellationToken.None);
-
         _bus.Verify(b => b.Publish(It.Is<ScoreTracker.Translations.Contracts.Messages
                 .QueueTextForTranslationCommand>(queued => queued.Text == "after"),
             It.IsAny<CancellationToken>()), Times.Once);
+        _comments.Verify(c => c.Save(It.Is<Comment>(saved => saved.TranslationQueuedAt == Now),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AStalePromiseStopsShowingQueued()
+    {
+        // Something silently lost this text — the badge must not promise forever. Failures are
+        // announced and clear the stamp; the three-day horizon is the backstop for losses
+        // nothing announces.
+        SetupRows(new CommentRow(Guid.NewGuid(), ChartId, Guid.NewGuid(), null, "algo en español",
+            Now.AddDays(-5), null, null, null, 0, false, null, Now.AddDays(-4)));
+
+        var page = await Subject().Handle(
+            new GetChartCommentsQuery(ChartId, CommentAudience.Public, ReaderLocale: "en-US"),
+            CancellationToken.None);
+
+        Assert.False(Assert.Single(page.Roots).Translation!.Pending);
     }
 
     [Fact]

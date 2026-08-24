@@ -106,21 +106,23 @@ public sealed class CommentTranslationPolicyTests
     private static readonly DateTimeOffset Now = new(2026, 8, 24, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public void AnEditWhileStillPendingReplacesFree()
+    public void AFreshStampKeepsThePromiseStanding()
     {
-        Assert.True(CommentTranslationPolicy.MayQueueAfterEdit(false, Now.AddMinutes(-5), Now));
+        Assert.True(CommentTranslationPolicy.PromiseStands(Now.AddDays(-1), Now));
     }
 
     [Fact]
-    public void ATranslatedCommentWaitsOutTheCooldown()
+    public void AStalePromiseExpiresInsteadOfLyingForever()
     {
-        Assert.False(CommentTranslationPolicy.MayQueueAfterEdit(true, Now.AddHours(-23), Now));
-        Assert.True(CommentTranslationPolicy.MayQueueAfterEdit(true, Now.AddHours(-24), Now));
+        // Whatever silently lost this text — a dropped in-memory message, a crash between
+        // complete and publish — the badge stops promising once nothing has arrived in three
+        // days. The pipeline turns a text around in at most two nights.
+        Assert.False(CommentTranslationPolicy.PromiseStands(Now - CommentTranslationPolicy.QueuedPromiseHorizon, Now));
     }
 
     [Fact]
-    public void ATranslatedCommentThatWasSomehowNeverQueuedMayQueue()
+    public void NoStampNoPromise()
     {
-        Assert.True(CommentTranslationPolicy.MayQueueAfterEdit(true, null, Now));
+        Assert.False(CommentTranslationPolicy.PromiseStands(null, Now));
     }
 }

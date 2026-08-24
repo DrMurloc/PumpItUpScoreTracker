@@ -27,13 +27,17 @@ internal sealed class EFCommentRenderingRepository : ICommentRenderingRepository
             .Where(r => r.CommentId == commentId)
             .ExecuteDeleteAsync(cancellationToken);
 
-        database.Set<CommentRenderingEntity>().AddRange(renderings.Select(pair =>
-            new CommentRenderingEntity
+        // Oversize is discarded, never truncated: a cut rendering's link set was never the one
+        // that passed verification, and mid-URL is exactly where a cut would land. The caller
+        // filtered with a log line already; this is the belt.
+        database.Set<CommentRenderingEntity>().AddRange(renderings
+            .Where(pair => pair.Value.Length <= 2000)
+            .Select(pair => new CommentRenderingEntity
             {
                 Id = Guid.NewGuid(),
                 CommentId = commentId,
                 Locale = pair.Key,
-                Text = pair.Value.Length > 2000 ? pair.Value[..2000] : pair.Value,
+                Text = pair.Value,
                 TranslatedBy = translatedBy,
                 CreatedAt = now
             }));
@@ -75,5 +79,14 @@ internal sealed class EFCommentRenderingRepository : ICommentRenderingRepository
         await database.Set<CommentRenderingEntity>()
             .Where(r => r.CommentId == commentId)
             .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task ClearTranslationQueued(Guid commentId, CancellationToken cancellationToken = default)
+    {
+        await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        await database.Set<CommentEntity>()
+            .Where(c => c.Id == commentId)
+            .ExecuteUpdateAsync(u => u.SetProperty(c => c.TranslationQueuedAt, (DateTimeOffset?)null),
+                cancellationToken);
     }
 }

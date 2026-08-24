@@ -74,7 +74,9 @@ public sealed class TranslationPipelineRepositoryTests : IAsyncLifetime
         var work = (await Requests.NextIn(TranslationState.Pending, 1)).Single();
         var batchId = Guid.NewGuid();
 
-        await Requests.MarkSubmitted(new[] { work.Id }, batchId, TranslationState.PivotSubmitted, Now);
+        var marked = await Requests.MarkSubmitted(new[] { work }, batchId,
+            TranslationState.PivotSubmitted, Now);
+        Assert.Equal(work.Id, Assert.Single(marked));
         var inBatch = Assert.Single(await Requests.InBatch(batchId));
         Assert.Equal(work.Id, inBatch.Id);
 
@@ -115,6 +117,54 @@ public sealed class TranslationPipelineRepositoryTests : IAsyncLifetime
 
         Assert.Equal(0, await Requests.CountIn(TranslationState.Pending));
         Assert.Equal(0, await Requests.CountIn(TranslationState.Translated));
+    }
+
+    [Fact]
+    public async Task AMidSubmitEditKeepsItsFresherRowUnmarked()
+    {
+        await Requests.Upsert("chart-comment:a", "first words", Now);
+        var read = (await Requests.NextIn(TranslationState.Pending, 1)).Single();
+        // The edit lands between the read and the mark — the row's UpdatedAt moves on.
+        await Requests.Upsert("chart-comment:a", "second words", Now.AddMinutes(1));
+
+        var marked = await Requests.MarkSubmitted(new[] { read }, Guid.NewGuid(),
+            TranslationState.PivotSubmitted, Now.AddMinutes(2));
+
+        Assert.Empty(marked);
+        var row = Assert.Single(await Requests.NextIn(TranslationState.Pending, 10));
+        Assert.Equal("second words", row.Text);
+    }
+
+    [Fact]
+    public async Task TheSubmitCooldownHoldsARecentlySubmittedTextBack()
+    {
+        await Requests.Upsert("chart-comment:a", "words", Now);
+        var work = (await Requests.NextIn(TranslationState.Pending, 1)).Single();
+        await Requests.MarkSubmitted(new[] { work }, Guid.NewGuid(), TranslationState.PivotSubmitted, Now);
+        // The edit re-queues — free, as always — but the text entered a batch an hour ago.
+        await Requests.Upsert("chart-comment:a", "edited words", Now.AddHours(1));
+
+        Assert.Empty(await Requests.NextIn(TranslationState.Pending, 10, Now.AddHours(1).AddHours(-24)));
+        // Next night, the window has passed and the newest words go out.
+        var eligible = Assert.Single(await Requests.NextIn(TranslationState.Pending, 10, Now.AddHours(25)));
+        Assert.Equal("edited words", eligible.Text);
+    }
+
+    [Fact]
+    public async Task RetryFailedRequeuesOnlyTheFailed()
+    {
+        await Requests.Upsert("chart-comment:a", "broke", Now);
+        await Requests.Upsert("chart-comment:b", "fine", Now);
+        var rows = await Requests.NextIn(TranslationState.Pending, 10);
+        await Requests.Fail(rows.Single(r => r.SourceKey.EndsWith(":a")).Id, "refusal", Now);
+        await Requests.CompleteTranslation(rows.Single(r => r.SourceKey.EndsWith(":b")).Id, Now);
+
+        Assert.Equal(1, await Requests.RequeueFailed(Now.AddHours(1)));
+
+        var requeued = Assert.Single(await Requests.NextIn(TranslationState.Pending, 10));
+        Assert.Equal("chart-comment:a", requeued.SourceKey);
+        Assert.Null(requeued.FailureReason);
+        Assert.Equal(1, await Requests.CountIn(TranslationState.Translated));
     }
 
     [Fact]

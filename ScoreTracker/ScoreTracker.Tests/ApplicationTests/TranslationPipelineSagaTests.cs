@@ -28,14 +28,21 @@ public sealed class TranslationPipelineSagaTests
     private readonly Mock<ITranslationRequestRepository> _requests = new();
     private readonly Mock<ITranslationBatchRepository> _batches = new();
     private readonly Mock<ILanguageModelBatchClient> _client = new();
+    private readonly Mock<ICurrentUserAccessor> _currentUser = new();
     private readonly TranslationsConfiguration _configuration = new();
+
+    /// <summary>The site admin, whose id User.IsAdmin computes against — no flag, no seed row.</summary>
+    private static readonly ScoreTracker.Domain.Models.User Admin = new(
+        Guid.Parse("E38954C4-B1B1-418A-93F6-C4B25C98B713"),
+        ScoreTracker.SharedKernel.ValueTypes.Name.From("DrMurloc"), true, null,
+        new Uri("https://example.com/d.png"), ScoreTracker.SharedKernel.ValueTypes.Name.From("US"));
 
     public TranslationPipelineSagaTests()
     {
         _client.SetupGet(c => c.IsConfigured).Returns(true);
         _client.Setup(c => c.SubmitBatch(It.IsAny<IReadOnlyList<LanguageModelBatchItem>>(),
             It.IsAny<CancellationToken>())).ReturnsAsync("provider-batch-1");
-        _requests.Setup(r => r.NextIn(It.IsAny<TranslationState>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _requests.Setup(r => r.NextIn(It.IsAny<TranslationState>(), It.IsAny<int>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<TranslationWork>());
         _requests.Setup(r => r.CountIn(It.IsAny<TranslationState>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
@@ -45,12 +52,18 @@ public sealed class TranslationPipelineSagaTests
             .ReturnsAsync(Array.Empty<TranslationBatchInfo>());
         _requests.Setup(r => r.RecentFailures(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<TranslationWork>());
+        _requests.Setup(r => r.MarkSubmitted(It.IsAny<IReadOnlyList<TranslationWork>>(), It.IsAny<Guid>(),
+                It.IsAny<TranslationState>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<TranslationWork> works, Guid _, TranslationState _, DateTimeOffset _,
+                CancellationToken _) => works.Select(w => w.Id).ToArray());
+        _currentUser.SetupGet(c => c.IsLoggedIn).Returns(true);
+        _currentUser.SetupGet(c => c.User).Returns(Admin);
     }
 
     private TranslationPipelineSaga Saga()
     {
         return new TranslationPipelineSaga(_requests.Object, _batches.Object, _client.Object,
-            FakeDateTime.At(Now).Object, Options.Create(_configuration),
+            FakeDateTime.At(Now).Object, _currentUser.Object, Options.Create(_configuration),
             NullLogger<TranslationPipelineSaga>.Instance);
     }
 
@@ -120,7 +133,7 @@ public sealed class TranslationPipelineSagaTests
         await Saga().Consume(ContextFor(new SubmitTranslationBatchesCommand()));
 
         _requests.Verify(r => r.NextIn(It.IsAny<TranslationState>(), It.IsAny<int>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Never);
         _client.Verify(c => c.SubmitBatch(It.IsAny<IReadOnlyList<LanguageModelBatchItem>>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -130,7 +143,7 @@ public sealed class TranslationPipelineSagaTests
     {
         var first = Work("chart-comment:a", "check ⟦1⟧ out");
         var second = Work("chart-comment:b", "FATALITY");
-        _requests.Setup(r => r.NextIn(TranslationState.Pending, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _requests.Setup(r => r.NextIn(TranslationState.Pending, It.IsAny<int>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { first, second });
         IReadOnlyList<LanguageModelBatchItem>? submitted = null;
         _client.Setup(c => c.SubmitBatch(It.IsAny<IReadOnlyList<LanguageModelBatchItem>>(),
@@ -149,7 +162,7 @@ public sealed class TranslationPipelineSagaTests
                 info.ProviderBatchId == "provider-batch-1" && info.Stage == TranslationState.PivotSubmitted),
             2, It.IsAny<CancellationToken>()), Times.Once);
         _requests.Verify(r => r.MarkSubmitted(
-            It.Is<IReadOnlyList<Guid>>(ids => ids.SequenceEqual(new[] { first.Id, second.Id })),
+            It.Is<IReadOnlyList<TranslationWork>>(w => w.Select(x => x.Id).SequenceEqual(new[] { first.Id, second.Id })),
             It.IsAny<Guid>(), TranslationState.PivotSubmitted, Now, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -162,7 +175,9 @@ public sealed class TranslationPipelineSagaTests
 
         await Saga().Consume(ContextFor(new SubmitTranslationBatchesCommand()));
 
-        _requests.Verify(r => r.NextIn(TranslationState.Pending, 12, It.IsAny<CancellationToken>()), Times.Once);
+        // The cooldown cutoff rides every pivot intake: a text enters a batch at most once per 24h.
+        _requests.Verify(r => r.NextIn(TranslationState.Pending, 12,
+            Now - TranslationPipelineSaga.SubmitCooldown, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -176,7 +191,8 @@ public sealed class TranslationPipelineSagaTests
         await Saga().Consume(ContextFor(new SubmitTranslationBatchesCommand()));
 
         // Ten in flight at $0.016 eats $0.16 of the $0.20 headroom, leaving room for two.
-        _requests.Verify(r => r.NextIn(TranslationState.Pending, 2, It.IsAny<CancellationToken>()), Times.Once);
+        _requests.Verify(r => r.NextIn(TranslationState.Pending, 2,
+            It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -186,7 +202,7 @@ public sealed class TranslationPipelineSagaTests
             .ReturnsAsync(30m);
         var pivoted = Work("chart-comment:a", "hola ⟦1⟧", TranslationState.PivotDone, "ko",
             PivotJson("hi ⟦1⟧"));
-        _requests.Setup(r => r.NextIn(TranslationState.PivotDone, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _requests.Setup(r => r.NextIn(TranslationState.PivotDone, It.IsAny<int>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { pivoted });
 
         await Saga().Consume(ContextFor(new SubmitTranslationBatchesCommand()));
@@ -194,7 +210,7 @@ public sealed class TranslationPipelineSagaTests
         _client.Verify(c => c.SubmitBatch(It.IsAny<IReadOnlyList<LanguageModelBatchItem>>(),
             It.IsAny<CancellationToken>()), Times.Once);
         _requests.Verify(r => r.NextIn(TranslationState.Pending, It.IsAny<int>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -202,7 +218,7 @@ public sealed class TranslationPipelineSagaTests
     {
         var pivoted = Work("chart-comment:a", "안녕 ⟦1⟧", TranslationState.PivotDone, "ko",
             PivotJson("hi ⟦1⟧"));
-        _requests.Setup(r => r.NextIn(TranslationState.PivotDone, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _requests.Setup(r => r.NextIn(TranslationState.PivotDone, It.IsAny<int>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { pivoted });
         IReadOnlyList<LanguageModelBatchItem>? submitted = null;
         _client.Setup(c => c.SubmitBatch(It.IsAny<IReadOnlyList<LanguageModelBatchItem>>(),
@@ -404,6 +420,61 @@ public sealed class TranslationPipelineSagaTests
             It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
         _requests.Verify(r => r.Fail(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        // Paid for and ignored — but RECORDED: the fuse reads this ledger, and an under-counting
+        // fuse fires late.
+        _batches.Verify(b => b.Complete(It.IsAny<Guid>(),
+            It.Is<LanguageModelUsage>(u => u.InputTokens == 1 && u.OutputTokens == 1),
+            It.IsAny<decimal>(), Now, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AFailureIsAnnouncedSoTheBadgeCanStopPromising()
+    {
+        var work = Work("chart-comment:a", "안녕", TranslationState.PivotSubmitted);
+        EndedBatch(TranslationState.PivotSubmitted, work);
+        _client.Setup(c => c.GetResults("pb", It.IsAny<CancellationToken>()))
+            .Returns(Results(new LanguageModelBatchResult(work.Id.ToString("N"), null, "errored")));
+        var context = ContextFor(new CollectTranslationBatchesCommand());
+
+        await Saga().Consume(context);
+
+        Mock.Get(context).Verify(c => c.Publish(It.Is<TextTranslationFailedEvent>(e =>
+            e.SourceKey == "chart-comment:a"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CollectParksWithoutAnApiKeyInsteadOfFaultingHourly()
+    {
+        _client.SetupGet(c => c.IsConfigured).Returns(false);
+        _batches.Setup(b => b.Open(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { new TranslationBatchInfo(Guid.NewGuid(), "pb", TranslationState.PivotSubmitted, Now) });
+
+        await Saga().Consume(ContextFor(new CollectTranslationBatchesCommand()));
+
+        _client.Verify(c => c.GetStatus(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RetryFailedRequeuesAndReportsTheCount()
+    {
+        _requests.Setup(r => r.RequeueFailed(Now, It.IsAny<CancellationToken>())).ReturnsAsync(4);
+
+        Assert.Equal(4, await Saga().Handle(new RetryFailedTranslationsCommand(), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task TheMoneyLeversAreTheSiteAdminsAlone()
+    {
+        _currentUser.SetupGet(c => c.User).Returns(new ScoreTracker.Domain.Models.User(Guid.NewGuid(),
+            ScoreTracker.SharedKernel.ValueTypes.Name.From("NotAdmin"), true, null,
+            new Uri("https://example.com/n.png"), ScoreTracker.SharedKernel.ValueTypes.Name.From("US")));
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            Saga().Handle(new RetranslateAllCommand(), CancellationToken.None));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            Saga().Handle(new RetryFailedTranslationsCommand(), CancellationToken.None));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            Saga().Handle(new GetTranslationPipelineStatusQuery(), CancellationToken.None));
     }
 
     [Fact]

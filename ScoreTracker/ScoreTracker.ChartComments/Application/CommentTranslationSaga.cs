@@ -13,7 +13,7 @@ namespace ScoreTracker.ChartComments.Application;
 ///     the same parser that autolinks at render — is never written. The failure mode everywhere
 ///     is "that locale keeps the original", never a broken comment.
 /// </summary>
-internal sealed class CommentTranslationSaga : IConsumer<TextTranslatedEvent>
+internal sealed class CommentTranslationSaga : IConsumer<TextTranslatedEvent>, IConsumer<TextTranslationFailedEvent>
 {
     private readonly ICommentRepository _comments;
     private readonly ICommentRenderingRepository _renderings;
@@ -56,6 +56,17 @@ internal sealed class CommentTranslationSaga : IConsumer<TextTranslatedEvent>
                 continue;
             }
 
+            // Discarded, never truncated: the column is 2000 and a cut rendering's link set was
+            // never the one verified above. Unreachable from sane model output — a 500-character
+            // source should not quadruple — which is exactly why it gets a hard rule, not trust.
+            if (substituted.Length > 2000)
+            {
+                _logger.LogWarning(
+                    "Discarding the {Locale} rendering of comment {CommentId}: {Length} characters is over the column",
+                    locale, commentId, substituted.Length);
+                continue;
+            }
+
             kept[locale] = substituted;
         }
 
@@ -63,5 +74,19 @@ internal sealed class CommentTranslationSaga : IConsumer<TextTranslatedEvent>
 
         await _renderings.StoreTranslation(comment.Id, context.Message.SourceLanguage, kept,
             context.Message.TranslatedBy, _clock.Now, context.CancellationToken);
+    }
+
+    /// <summary>
+    ///     The pipeline gave up on this text — a refusal, a malformed response, every rendering
+    ///     losing the marker check. Clearing the stamp is what stops "Queued for translation"
+    ///     promising something nothing will deliver; the admin's Retry failed re-queues the
+    ///     pipeline row, and its completion arrives here like any other.
+    /// </summary>
+    public async Task Consume(ConsumeContext<TextTranslationFailedEvent> context)
+    {
+        var commentId = CommentSourceKeys.TryParse(context.Message.SourceKey);
+        if (commentId == null) return;
+
+        await _renderings.ClearTranslationQueued(commentId.Value, context.CancellationToken);
     }
 }

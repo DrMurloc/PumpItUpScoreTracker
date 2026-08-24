@@ -35,6 +35,13 @@ internal sealed class TranslationRequestEntity
     /// <summary>The batch currently carrying this text, while one is.</summary>
     public Guid? BatchId { get; set; }
 
+    /// <summary>
+    ///     When this source key last entered a batch — the submit-side cooldown's clock. Survives
+    ///     an upsert on purpose: a text translates at most once per 24 h however often its author
+    ///     edits, and this is the fact that enforces it.
+    /// </summary>
+    public DateTimeOffset? LastSubmittedAt { get; set; }
+
     [MaxLength(400)] public string? FailureReason { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }

@@ -11,6 +11,9 @@
          DynamicProxyGenAssembly2 is Moq's proxy assembly — required to mock internal ports. -->
     <InternalsVisibleTo Include="ScoreTracker.Tests" />
     <InternalsVisibleTo Include="ScoreTracker.Tests.Integration" />
+    <!-- The workbench sweep runs production's actual link gate — ExtractLinks, Substitute,
+         LinkSetsMatch — so the paid run measures the real discard rate, not a proxy assertion. -->
+    <InternalsVisibleTo Include="ScoreTracker.ExplorationTests" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
   </ItemGroup>
 

@@ -30,4 +30,5 @@ internal sealed record TranslationWork(
     string? PivotJson,
     string? FailureReason,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    DateTimeOffset? LastSubmittedAt = null);

@@ -32,8 +32,17 @@ internal sealed class TranslationPipelineSaga :
     IConsumer<CollectTranslationBatchesCommand>,
     IRequestHandler<GetTranslationPipelineStatusQuery, TranslationPipelineStatusRecord>,
     IRequestHandler<GetRetranslationCostEstimateQuery, RetranslationEstimateRecord>,
-    IRequestHandler<RetranslateAllCommand, int>
+    IRequestHandler<RetranslateAllCommand, int>,
+    IRequestHandler<RetryFailedTranslationsCommand, int>
 {
+    /// <summary>
+    ///     The submit-side cooldown: a source key enters a batch at most once per this window,
+    ///     however often its author edits. Edits always re-queue (the replace is free); the wait
+    ///     happens here, where it cannot lose a translation — the ChartComments-side edit block
+    ///     this replaces dropped renderings and then never re-queued, stranding the comment.
+    /// </summary>
+    internal static readonly TimeSpan SubmitCooldown = TimeSpan.FromHours(24);
+
     /// <summary>
     ///     The entity's column width. A text longer than this cannot be stored, and no legitimate
     ///     caller produces one — the comment cap is 500 characters plus markers — so oversize is
@@ -45,17 +54,20 @@ internal sealed class TranslationPipelineSaga :
     private readonly ITranslationBatchRepository _batches;
     private readonly ILanguageModelBatchClient _batchClient;
     private readonly IDateTimeOffsetAccessor _clock;
+    private readonly ICurrentUserAccessor _currentUser;
     private readonly TranslationsConfiguration _configuration;
     private readonly ILogger<TranslationPipelineSaga> _logger;
 
     public TranslationPipelineSaga(ITranslationRequestRepository requests, ITranslationBatchRepository batches,
         ILanguageModelBatchClient batchClient, IDateTimeOffsetAccessor clock,
-        IOptions<TranslationsConfiguration> configuration, ILogger<TranslationPipelineSaga> logger)
+        ICurrentUserAccessor currentUser, IOptions<TranslationsConfiguration> configuration,
+        ILogger<TranslationPipelineSaga> logger)
     {
         _requests = requests;
         _batches = batches;
         _batchClient = batchClient;
         _clock = clock;
+        _currentUser = currentUser;
         _configuration = configuration.Value;
         _logger = logger;
     }
@@ -92,9 +104,10 @@ internal sealed class TranslationPipelineSaga :
 
         // Fan-out first, and outside the allowance: a pivoted text is money already committed —
         // its night was the night its pivot was allowed in — and holding it hostage to tonight's
-        // budget would strand half-translated work behind new work.
+        // budget would strand half-translated work behind new work. No cooldown either: the
+        // cooldown gates a text ENTERING the pipeline, not finishing what it already started.
         var pivoted = await _requests.NextIn(TranslationState.PivotDone, _configuration.NightlyCount,
-            context.CancellationToken);
+            null, context.CancellationToken);
         if (pivoted.Count > 0)
             await SubmitStage(pivoted, TranslationState.FanOutSubmitted, ToFanOutItem, now,
                 context.CancellationToken);
@@ -115,13 +128,18 @@ internal sealed class TranslationPipelineSaga :
             return;
         }
 
-        var pending = await _requests.NextIn(TranslationState.Pending, allowance, context.CancellationToken);
+        var pending = await _requests.NextIn(TranslationState.Pending, allowance,
+            now - SubmitCooldown, context.CancellationToken);
         if (pending.Count > 0)
             await SubmitStage(pending, TranslationState.PivotSubmitted, ToPivotItem, now, context.CancellationToken);
     }
 
     public async Task Consume(ConsumeContext<CollectTranslationBatchesCommand> context)
     {
+        // Disarming the key with batches in flight must not turn the hourly tick into an hourly
+        // fault. The batches wait at the provider (results keep 29 days); re-arming resumes them.
+        if (!_batchClient.IsConfigured) return;
+
         foreach (var batch in await _batches.Open(context.CancellationToken))
         {
             var status = await _batchClient.GetStatus(batch.ProviderBatchId, context.CancellationToken);
@@ -134,6 +152,7 @@ internal sealed class TranslationPipelineSaga :
     public async Task<TranslationPipelineStatusRecord> Handle(GetTranslationPipelineStatusQuery request,
         CancellationToken cancellationToken)
     {
+        RequireAdmin();
         var inFlight = await _requests.CountIn(TranslationState.PivotSubmitted, cancellationToken)
                        + await _requests.CountIn(TranslationState.FanOutSubmitted, cancellationToken);
         var failures = await _requests.RecentFailures(10, cancellationToken);
@@ -159,6 +178,7 @@ internal sealed class TranslationPipelineSaga :
     public async Task<RetranslationEstimateRecord> Handle(GetRetranslationCostEstimateQuery request,
         CancellationToken cancellationToken)
     {
+        RequireAdmin();
         var count = await _requests.CountIn(TranslationState.Translated, cancellationToken);
 
         return new RetranslationEstimateRecord(count, count * _configuration.EstimatedCostPerTextUsd);
@@ -166,7 +186,27 @@ internal sealed class TranslationPipelineSaga :
 
     public async Task<int> Handle(RetranslateAllCommand request, CancellationToken cancellationToken)
     {
+        RequireAdmin();
+
         return await _requests.RequeueTranslated(_clock.Now, cancellationToken);
+    }
+
+    public async Task<int> Handle(RetryFailedTranslationsCommand request, CancellationToken cancellationToken)
+    {
+        RequireAdmin();
+
+        return await _requests.RequeueFailed(_clock.Now, cancellationToken);
+    }
+
+    /// <summary>
+    ///     In the handler, not just on the page: the page redirect is one layer, and a command
+    ///     that re-queues the corpus for paid re-translation deserves the same in-handler check
+    ///     the moderation saga's site-admin handlers carry.
+    /// </summary>
+    private void RequireAdmin()
+    {
+        if (!_currentUser.IsLoggedIn || !_currentUser.User.IsAdmin)
+            throw new UnauthorizedAccessException("The translation pipeline is the site admin's.");
     }
 
     /// <summary>
@@ -188,14 +228,14 @@ internal sealed class TranslationPipelineSaga :
         CancellationToken cancellationToken)
     {
         var items = new List<LanguageModelBatchItem>();
-        var ids = new List<Guid>();
+        var submitted = new List<TranslationWork>();
         foreach (var work in works)
         {
             var item = toItem(work);
             if (item == null) continue;
 
             items.Add(item);
-            ids.Add(work.Id);
+            submitted.Add(work);
         }
 
         if (items.Count == 0) return;
@@ -206,7 +246,13 @@ internal sealed class TranslationPipelineSaga :
         var providerBatchId = await _batchClient.SubmitBatch(items, cancellationToken);
         var batch = new TranslationBatchInfo(Guid.NewGuid(), providerBatchId, submittedState, now);
         await _batches.Record(batch, items.Count, cancellationToken);
-        await _requests.MarkSubmitted(ids, batch.Id, submittedState, now, cancellationToken);
+        var marked = await _requests.MarkSubmitted(submitted, batch.Id, submittedState, now, cancellationToken);
+        if (marked.Count < submitted.Count)
+            // An edit re-queued a row mid-submit. Its fresher text stays Pending for a later
+            // night, and the in-flight result finds no BatchId pointing at it — paid for and
+            // ignored, which is the cheap side of the race the guard exists to win.
+            _logger.LogInformation("{Count} texts were re-queued mid-submit and keep their newer text",
+                submitted.Count - marked.Count);
 
         _logger.LogInformation("Submitted {Count} texts as {Stage} batch {ProviderBatchId}",
             items.Count, submittedState, providerBatchId);
@@ -244,22 +290,25 @@ internal sealed class TranslationPipelineSaga :
 
         await foreach (var result in _batchClient.GetResults(batch.ProviderBatchId, context.CancellationToken))
         {
+            // The ledger records the money BEFORE any skip: a result whose text was re-queued or
+            // discarded mid-flight is paid for whether or not anything uses it, and a fuse that
+            // under-counts committed money is a fuse that fires late.
+            if (result.Response != null) usage = Add(usage, result.Response.Usage);
+
             // A text re-queued or discarded while its batch was in flight no longer points here;
-            // its result is paid for and ignored, which is the cheap side of that race.
+            // its result is paid for (and recorded above) but ignored.
             if (!byCustomId.TryGetValue(result.CustomId, out var work)) continue;
 
             if (result.Response == null)
             {
-                await _requests.Fail(work.Id, $"the model returned {result.Error}", now, context.CancellationToken);
+                await FailAndReport(work, $"the model returned {result.Error}", now, context);
                 continue;
             }
-
-            usage = Add(usage, result.Response.Usage);
 
             try
             {
                 if (batch.Stage == TranslationState.PivotSubmitted)
-                    await CollectPivot(work, result.Response.Text, now, context.CancellationToken);
+                    await CollectPivot(work, result.Response.Text, now, context);
                 else
                     await CollectFanOut(work, result.Response.Text, now, context);
             }
@@ -267,7 +316,7 @@ internal sealed class TranslationPipelineSaga :
             {
                 // A malformed response fails its own text, never the batch around it — the other
                 // forty-nine results are real money already spent.
-                await _requests.Fail(work.Id, exception.Message, now, context.CancellationToken);
+                await FailAndReport(work, exception.Message, now, context);
             }
         }
 
@@ -277,7 +326,7 @@ internal sealed class TranslationPipelineSaga :
     }
 
     private async Task CollectPivot(TranslationWork work, string responseText, DateTimeOffset now,
-        CancellationToken cancellationToken)
+        ConsumeContext context)
     {
         var pivot = TranslationResponseReader.ReadPivot(responseText);
 
@@ -286,11 +335,23 @@ internal sealed class TranslationPipelineSaga :
         var violation = TranslationMarkers.Violation(work.Text, pivot.English);
         if (violation != null)
         {
-            await _requests.Fail(work.Id, $"the pivot {violation}", now, cancellationToken);
+            await FailAndReport(work, $"the pivot {violation}", now, context);
             return;
         }
 
-        await _requests.CompletePivot(work.Id, pivot.SourceLanguage, responseText, now, cancellationToken);
+        await _requests.CompletePivot(work.Id, pivot.SourceLanguage, responseText, now,
+            context.CancellationToken);
+    }
+
+    /// <summary>
+    ///     Failure is told, not just recorded: the text's owner is promising readers a
+    ///     translation, and a Failed row nobody announces leaves that promise standing forever.
+    /// </summary>
+    private async Task FailAndReport(TranslationWork work, string reason, DateTimeOffset now,
+        ConsumeContext context)
+    {
+        await _requests.Fail(work.Id, reason, now, context.CancellationToken);
+        await context.Publish(new TextTranslationFailedEvent(work.SourceKey), context.CancellationToken);
     }
 
     private async Task CollectFanOut(TranslationWork work, string responseText, DateTimeOffset now,
@@ -324,7 +385,7 @@ internal sealed class TranslationPipelineSaga :
 
         if (kept.Count == 0)
         {
-            await _requests.Fail(work.Id, "every rendering failed the marker check", now, context.CancellationToken);
+            await FailAndReport(work, "every rendering failed the marker check", now, context);
             return;
         }
 

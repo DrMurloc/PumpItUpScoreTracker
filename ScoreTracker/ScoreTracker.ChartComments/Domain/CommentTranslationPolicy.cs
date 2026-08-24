@@ -1,21 +1,25 @@
 namespace ScoreTracker.ChartComments.Domain;
 
 /// <summary>
-///     When an edit may re-queue a comment for translation. An edit while the text is still
-///     waiting replaces the pending request free — the pipeline upserts by key and nothing has
-///     been spent. Once a comment has been translated, an edit re-queues at most once per
-///     24 hours: the spend ceiling is a fuse against bugs, and an edit loop is a user-driven cost
-///     amplifier the fuse cannot see. The nightly batch already collapses same-day edits into one
-///     translation; this is what holds when Drain now runs the submit off-schedule.
+///     How long a "Queued for translation" badge may keep promising. The stamp is written at
+///     queue time and trusted after that, so every way the pipeline can silently lose a text — a
+///     dropped in-memory message, a crash between complete and publish — would leave the badge
+///     lying forever. Failures are announced and clear the stamp; this horizon is the backstop
+///     for the losses nothing announces. Three days is generous: the pipeline turns a text
+///     around in at most two nights.
+///     <para>
+///         The edit-requeue cooldown that used to live here moved to the pipeline's submit step
+///         (owner-approved fix, 2026-08-24): blocking at the edit dropped renderings and then
+///         never re-queued, stranding the comment — and was bypassed by editing twice anyway.
+///         Edits always re-queue now; the once-per-24h wait happens where it cannot lose work.
+///     </para>
 /// </summary>
 internal static class CommentTranslationPolicy
 {
-    public static readonly TimeSpan RequeueCooldown = TimeSpan.FromHours(24);
+    public static readonly TimeSpan QueuedPromiseHorizon = TimeSpan.FromDays(3);
 
-    public static bool MayQueueAfterEdit(bool hadRenderings, DateTimeOffset? lastQueuedAt, DateTimeOffset now)
+    public static bool PromiseStands(DateTimeOffset? translationQueuedAt, DateTimeOffset now)
     {
-        if (!hadRenderings || lastQueuedAt == null) return true;
-
-        return now - lastQueuedAt.Value >= RequeueCooldown;
+        return translationQueuedAt != null && now - translationQueuedAt.Value < QueuedPromiseHorizon;
     }
 }

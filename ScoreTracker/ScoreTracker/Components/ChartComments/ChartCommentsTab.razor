@@ -700,11 +700,10 @@ else
         if (!_readInLoaded)
         {
             _readInLoaded = true;
-            if (CurrentUser.IsLoggedIn)
-            {
-                var stored = await UiSettings.GetSetting(ReadInSettingKey);
-                _preferredLocale = string.IsNullOrWhiteSpace(stored) ? null : stored;
-            }
+            // Anonymous readers included: the accessor falls back to browser storage for them,
+            // and a pick that saves but never loads is a control that silently resets.
+            var stored = await UiSettings.GetSetting(ReadInSettingKey);
+            _preferredLocale = string.IsNullOrWhiteSpace(stored) ? null : stored;
         }
 
         if (_scopes.Count == 0 && CurrentUser.IsLoggedIn)

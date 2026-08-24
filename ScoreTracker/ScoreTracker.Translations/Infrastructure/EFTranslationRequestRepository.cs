@@ -53,30 +53,45 @@ internal sealed class EFTranslationRequestRepository : ITranslationRequestReposi
     }
 
     public async Task<IReadOnlyList<TranslationWork>> NextIn(TranslationState state, int take,
-        CancellationToken cancellationToken = default)
+        DateTimeOffset? notSubmittedSince = null, CancellationToken cancellationToken = default)
     {
         var name = state.ToString();
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
+        var query = database.Set<TranslationRequestEntity>().AsNoTracking()
+            .Where(r => r.State == name);
+        if (notSubmittedSince is { } cutoff)
+            query = query.Where(r => r.LastSubmittedAt == null || r.LastSubmittedAt < cutoff);
 
-        return (await database.Set<TranslationRequestEntity>().AsNoTracking()
-                .Where(r => r.State == name)
+        return (await query
                 .OrderBy(r => r.CreatedAt)
                 .Take(take)
                 .ToArrayAsync(cancellationToken))
             .Select(ToWork).ToArray();
     }
 
-    public async Task MarkSubmitted(IReadOnlyList<Guid> ids, Guid batchId, TranslationState newState,
-        DateTimeOffset now, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Guid>> MarkSubmitted(IReadOnlyList<TranslationWork> works, Guid batchId,
+        TranslationState newState, DateTimeOffset now, CancellationToken cancellationToken = default)
     {
         var name = newState.ToString();
+        var marked = new List<Guid>(works.Count);
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-        await database.Set<TranslationRequestEntity>()
-            .Where(r => ids.Contains(r.Id))
-            .ExecuteUpdateAsync(u => u
-                .SetProperty(r => r.State, name)
-                .SetProperty(r => r.BatchId, batchId)
-                .SetProperty(r => r.UpdatedAt, now), cancellationToken);
+        foreach (var work in works)
+        {
+            // Per-row and guarded on UpdatedAt: an edit that upserted between the read and this
+            // mark keeps its fresher Pending row untouched — the fifty-row loop is cheap next to
+            // displaying renderings of old words against new ones, which is what the blind
+            // update allowed.
+            var touched = await database.Set<TranslationRequestEntity>()
+                .Where(r => r.Id == work.Id && r.UpdatedAt == work.UpdatedAt)
+                .ExecuteUpdateAsync(u => u
+                    .SetProperty(r => r.State, name)
+                    .SetProperty(r => r.BatchId, batchId)
+                    .SetProperty(r => r.LastSubmittedAt, now)
+                    .SetProperty(r => r.UpdatedAt, now), cancellationToken);
+            if (touched > 0) marked.Add(work.Id);
+        }
+
+        return marked;
     }
 
     public async Task<IReadOnlyList<TranslationWork>> InBatch(Guid batchId,
@@ -162,15 +177,26 @@ internal sealed class EFTranslationRequestRepository : ITranslationRequestReposi
 
     public async Task<int> RequeueTranslated(DateTimeOffset now, CancellationToken cancellationToken = default)
     {
+        return await Requeue(nameof(TranslationState.Translated), now, cancellationToken);
+    }
+
+    public async Task<int> RequeueFailed(DateTimeOffset now, CancellationToken cancellationToken = default)
+    {
+        return await Requeue(nameof(TranslationState.Failed), now, cancellationToken);
+    }
+
+    private async Task<int> Requeue(string fromState, DateTimeOffset now, CancellationToken cancellationToken)
+    {
         await using var database = await _factory.CreateDbContextAsync(cancellationToken);
 
         return await database.Set<TranslationRequestEntity>()
-            .Where(r => r.State == nameof(TranslationState.Translated))
+            .Where(r => r.State == fromState)
             .ExecuteUpdateAsync(u => u
                 .SetProperty(r => r.State, nameof(TranslationState.Pending))
                 .SetProperty(r => r.SourceLanguage, (string?)null)
                 .SetProperty(r => r.PivotJson, (string?)null)
                 .SetProperty(r => r.BatchId, (Guid?)null)
+                .SetProperty(r => r.FailureReason, (string?)null)
                 .SetProperty(r => r.UpdatedAt, now), cancellationToken);
     }
 
@@ -178,6 +204,6 @@ internal sealed class EFTranslationRequestRepository : ITranslationRequestReposi
     {
         return new TranslationWork(entity.Id, entity.SourceKey, entity.Text,
             Enum.Parse<TranslationState>(entity.State), entity.SourceLanguage, entity.PivotJson,
-            entity.FailureReason, entity.CreatedAt, entity.UpdatedAt);
+            entity.FailureReason, entity.CreatedAt, entity.UpdatedAt, entity.LastSubmittedAt);
     }
 }

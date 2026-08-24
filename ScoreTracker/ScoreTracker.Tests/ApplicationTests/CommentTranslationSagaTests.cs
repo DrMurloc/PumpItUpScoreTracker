@@ -11,6 +11,7 @@ using ScoreTracker.ChartComments.Domain;
 using ScoreTracker.Tests.TestHelpers;
 using ScoreTracker.Translations.Contracts.Events;
 using Xunit;
+// The 2000-char rendering limit and the failed-event stamp clearing are both exercised below.
 
 namespace ScoreTracker.Tests.ApplicationTests;
 
@@ -102,6 +103,42 @@ public sealed class CommentTranslationSagaTests
             new Dictionary<string, string> { ["es-ES"] = "hola" }, "sonnet+sonnet")));
 
         _comments.Verify(c => c.GetById(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AFailureClearsTheStampSoTheBadgeStopsPromising()
+    {
+        var commentId = Guid.NewGuid();
+        var context = new Mock<ConsumeContext<TextTranslationFailedEvent>>();
+        context.SetupGet(c => c.Message)
+            .Returns(new TextTranslationFailedEvent(CommentSourceKeys.For(commentId)));
+        context.SetupGet(c => c.CancellationToken).Returns(CancellationToken.None);
+
+        await Saga().Consume(context.Object);
+
+        _renderings.Verify(r => r.ClearTranslationQueued(commentId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AnOversizeRenderingIsDiscardedNeverTruncated()
+    {
+        // A cut rendering's link set was never the one verified; mid-URL is exactly where a cut
+        // would land.
+        var comment = StoredComment("short source");
+
+        await Saga().Consume(ContextFor(new TextTranslatedEvent(CommentSourceKeys.For(comment.Id),
+            "short source", "en",
+            new Dictionary<string, string>
+            {
+                ["es-ES"] = new string('a', 2001),
+                ["fr-FR"] = "court"
+            }, "sonnet+sonnet")));
+
+        _renderings.Verify(r => r.StoreTranslation(comment.Id, "en",
+            It.Is<IReadOnlyDictionary<string, string>>(kept =>
+                kept.Count == 1 && kept.ContainsKey("fr-FR")),
+            It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

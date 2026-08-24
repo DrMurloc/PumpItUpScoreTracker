@@ -126,14 +126,11 @@ internal sealed class CommentSaga :
         // it. Delete deliberately stays ungated below — taking your own words down always works.
         await EnsureMayWriteTo(comment.Audience, actor, cancellationToken);
 
-        // The cooldown reads state as it stood before this edit: renderings mean money was
-        // already spent on these words once.
-        var hadRenderings = !comment.Audience.IsPrivate
-                            && await _renderings.AnyFor(comment.Id, cancellationToken);
         var replaced = comment.Edit(actor, request.Text, _clock.Now);
-        var mayQueue = !comment.Audience.IsPrivate && CommentTranslationPolicy.MayQueueAfterEdit(
-            hadRenderings, comment.TranslationQueuedAt, _clock.Now);
-        if (mayQueue) comment.StampTranslationQueued(_clock.Now);
+        // Every edit re-queues. The once-per-24h cost cap lives in the pipeline's submit step
+        // now, where waiting cannot lose a translation — the old edit-side block dropped the
+        // renderings and then never re-queued, stranding the comment behind a lying badge.
+        if (!comment.Audience.IsPrivate) comment.StampTranslationQueued(_clock.Now);
 
         // The revision goes in first. If the save then fails, the history has a row the comment
         // never had — which is recoverable; the reverse loses what a moderator would need.
@@ -143,9 +140,9 @@ internal sealed class CommentSaga :
         if (!comment.Audience.IsPrivate)
         {
             // Old renderings describe words that no longer exist — an edited comment must never
-            // show a translation of its previous self, whether or not a new one may queue yet.
+            // show a translation of its previous self.
             await _renderings.DeleteFor(comment.Id, cancellationToken);
-            if (mayQueue) await QueueForTranslation(comment, cancellationToken);
+            await QueueForTranslation(comment, cancellationToken);
         }
     }
 
@@ -338,7 +335,9 @@ internal sealed class CommentSaga :
         var translation = deletion == null && !audience.IsPrivate
             ? ResolveTranslation(row, trust,
                 renderings.TryGetValue(row.Id, out var mine) ? mine : Array.Empty<CommentRenderingRow>(),
-                request.ReaderLocale, request.PreferredLocale, translationArmed, out var body)
+                request.ReaderLocale, request.PreferredLocale,
+                translationArmed && CommentTranslationPolicy.PromiseStands(row.TranslationQueuedAt, _clock.Now),
+                out var body)
             : null;
 
         return new CommentRecord(
@@ -373,12 +372,12 @@ internal sealed class CommentSaga :
     /// </summary>
     private static CommentTranslationRecord ResolveTranslation(CommentRow row, LinkTrust trust,
         IReadOnlyList<CommentRenderingRow> mine, string? readerLocale, string? preferredLocale,
-        bool translationArmed, out IReadOnlyList<CommentSpan> originalBody)
+        bool promiseStands, out IReadOnlyList<CommentSpan> originalBody)
     {
         var available = mine.Select(rendering => rendering.Locale).OrderBy(l => l, StringComparer.Ordinal)
             .ToArray();
         var resolution = CommentDisplayResolution.Resolve(readerLocale, preferredLocale,
-            row.SourceLanguage, available, translationArmed && row.TranslationQueuedAt != null);
+            row.SourceLanguage, available, promiseStands);
         var translated = resolution.RenderingLocale != null;
         originalBody = translated ? CommentText.Parse(row.Text, trust) : Array.Empty<CommentSpan>();
 

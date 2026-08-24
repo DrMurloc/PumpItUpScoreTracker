@@ -415,16 +415,23 @@ two deterministic layers, and its failure mode is "no translation", never a brok
 - **Model ids and the ceiling live in config**, not in the command — the probe-shaped
   `TranslateCommentCommand` keeps its model parameters for the workbench, and production reads its
   own from the `Translations` section.
-- **An edit re-queues with a cooldown** (owner, 2026-08-24): an edit while the text is still pending
-  replaces the pending request free; an edit after translation re-queues at most **once per comment
-  per 24 h**. The ceiling is a fuse against bugs — an edit loop is a user-driven cost amplifier the
-  fuse cannot see, and this is what sees it.
+- **Edits always re-queue; the cooldown lives at submit** (owner-approved fix from the 2026-08-24
+  bug check, replacing the edit-side block): a source key **enters a batch at most once per 24 h**
+  (`LastSubmittedAt` survives the upsert). The edit-side block turned out to lose translations —
+  it dropped the stale renderings, never re-queued, and was bypassed by editing twice — while the
+  submit-side wait cannot lose anything: the newest text simply goes next night. The ceiling is a
+  fuse against bugs; an edit loop is a user-driven cost amplifier the fuse cannot see, and this is
+  what sees it.
 - A `translated_by` provenance column on every rendering — model and path. It is what makes "why do
   these two hundred read differently?" answerable.
 - Re-translation after a prompt or glossary change is **admin-triggered only**, and quotes its cost
   first.
+- **Failure is told, not just recorded**: every path into `Failed` publishes
+  `TextTranslationFailedEvent`, which clears the comment's queued stamp so the badge stops
+  promising. The badge also carries a **three-day horizon** as the backstop for losses nothing
+  announces (a dropped in-memory message, a crash between complete and publish).
 - Admin page: backlog depth, oldest pending age, rolling spend against the ceiling, last run,
-  failures, **Drain now**.
+  failures with **Retry failed** beside them (Failed is not a dead end), **Drain now**.
 - **No `ClaudeApi:ApiKey` configured ⇒ Submit parks itself** and logs once. The retired "nothing
   that ships can spend a token" property survives as the default posture; configuration is what
   arms the pipeline.

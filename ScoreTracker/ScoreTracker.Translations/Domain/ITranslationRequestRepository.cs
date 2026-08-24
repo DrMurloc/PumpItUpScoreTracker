@@ -11,12 +11,23 @@ internal interface ITranslationRequestRepository
     /// <summary>Removes rows whose originals stopped existing, whatever state they were in.</summary>
     Task Discard(IReadOnlyList<string> sourceKeys, CancellationToken cancellationToken = default);
 
-    /// <summary>Oldest first — starvation-free, which newest-first is not.</summary>
+    /// <summary>
+    ///     Oldest first — starvation-free, which newest-first is not. A non-null
+    ///     <paramref name="notSubmittedSince" /> is the submit-side cooldown: rows whose
+    ///     <c>LastSubmittedAt</c> is on or after it wait for a later night, which is what makes
+    ///     "a text translates at most once per 24 h" true however often its author edits.
+    /// </summary>
     Task<IReadOnlyList<TranslationWork>> NextIn(TranslationState state, int take,
-        CancellationToken cancellationToken = default);
+        DateTimeOffset? notSubmittedSince = null, CancellationToken cancellationToken = default);
 
-    Task MarkSubmitted(IReadOnlyList<Guid> ids, Guid batchId, TranslationState newState, DateTimeOffset now,
-        CancellationToken cancellationToken = default);
+    /// <summary>
+    ///     Guarded per row on <see cref="TranslationWork.UpdatedAt" />: a row an edit re-queued
+    ///     between the read and this mark is left alone — its batch result will find no BatchId
+    ///     pointing here and be ignored, which is the cheap side of that race. Returns the rows
+    ///     actually marked.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> MarkSubmitted(IReadOnlyList<TranslationWork> works, Guid batchId,
+        TranslationState newState, DateTimeOffset now, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<TranslationWork>> InBatch(Guid batchId, CancellationToken cancellationToken = default);
 
@@ -35,4 +46,7 @@ internal interface ITranslationRequestRepository
 
     /// <summary>Every translated row back to Pending — the re-translation sweep. Returns the count.</summary>
     Task<int> RequeueTranslated(DateTimeOffset now, CancellationToken cancellationToken = default);
+
+    /// <summary>Every failed row back to Pending — the admin's retry lever. Returns the count.</summary>
+    Task<int> RequeueFailed(DateTimeOffset now, CancellationToken cancellationToken = default);
 }

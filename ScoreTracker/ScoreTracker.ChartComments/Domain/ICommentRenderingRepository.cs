@@ -26,4 +26,10 @@ internal interface ICommentRenderingRepository
 
     /// <summary>An edit or a delete: the text these rendered no longer exists.</summary>
     Task DeleteFor(Guid commentId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     The pipeline gave up on this text; the badge must stop promising. The stamp comes back
+    ///     the next time something queues.
+    /// </summary>
+    Task ClearTranslationQueued(Guid commentId, CancellationToken cancellationToken = default);
 }

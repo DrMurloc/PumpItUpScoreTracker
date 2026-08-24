@@ -119,9 +119,13 @@ internal static partial class CommentText
     }
 
     // A fixed list of known trackers and nothing heuristic: stripping a parameter a site
-    // actually needs breaks the link, so anything not listed stays.
+    // actually needs breaks the link, so anything not listed stays. "si" is scoped to YouTube —
+    // the one place it is known to be a share tracker — because the name is short enough that
+    // some other site legitimately uses it, and a stripped functional parameter breaks the link.
     private static readonly HashSet<string> TrackingParameters = new(StringComparer.OrdinalIgnoreCase)
-        { "si", "fbclid", "gclid", "dclid", "msclkid", "twclid", "ttclid", "igshid", "yclid", "mc_cid", "mc_eid" };
+        { "fbclid", "gclid", "dclid", "msclkid", "twclid", "ttclid", "igshid", "yclid", "mc_cid", "mc_eid" };
+
+    private static readonly string[] YouTubeHosts = { "youtube.com", "youtu.be" };
 
     /// <summary>
     ///     Removes known tracking parameters (every <c>utm_*</c>, YouTube's <c>si</c>, the ad
@@ -209,13 +213,19 @@ internal static partial class CommentText
         var queryAt = beforeFragment.IndexOf('?');
         if (queryAt < 0) return url;
 
+        var host = LinkTrust.TryParse(url)?.Host ?? string.Empty;
+        var isYouTube = YouTubeHosts.Any(d =>
+            string.Equals(host, d, StringComparison.OrdinalIgnoreCase)
+            || host.EndsWith("." + d, StringComparison.OrdinalIgnoreCase));
+
         var kept = beforeFragment[(queryAt + 1)..]
             .Split('&')
             .Where(parameter =>
             {
                 var name = parameter.Split('=', 2)[0];
                 return !name.StartsWith("utm_", StringComparison.OrdinalIgnoreCase)
-                       && !TrackingParameters.Contains(name);
+                       && !TrackingParameters.Contains(name)
+                       && !(isYouTube && string.Equals(name, "si", StringComparison.OrdinalIgnoreCase));
             })
             .ToArray();
 

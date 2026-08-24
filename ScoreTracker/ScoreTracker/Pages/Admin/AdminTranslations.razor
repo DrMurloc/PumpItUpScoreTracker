@@ -6,6 +6,7 @@
 @using ScoreTracker.Domain.SecondaryPorts
 @using ScoreTracker.Translations.Contracts
 @using ScoreTracker.Translations.Contracts.Commands
+@using ScoreTracker.Translations.Contracts.Events
 @using ScoreTracker.Translations.Contracts.Messages
 @using ScoreTracker.Translations.Contracts.Queries
 
@@ -97,7 +98,13 @@ else
 
     @if (_status.RecentFailures.Count > 0)
     {
-        <MudText Typo="Typo.h6" Class="mb-2">@L["Recent failures"]</MudText>
+        <div class="d-flex align-center gap-3 mb-2">
+            <MudText Typo="Typo.h6">@L["Recent failures"]</MudText>
+            @* Failed must not be a dead end whose only exit is the author editing. The re-queued
+               texts spend against the ceiling on the coming nights like any other pending work. *@
+            <MudButton Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined" Disabled="_working"
+                       data-testid="translations-retry-failed" OnClick="RetryFailed">@L["Retry failed"]</MudButton>
+        </div>
         <MudSimpleTable Dense="true" Class="mb-4" data-testid="translations-failures">
             <tbody>
             @foreach (var failure in _status.RecentFailures)
@@ -223,6 +230,23 @@ else
             Snackbar.Add(L["Nothing is translated yet, so there is nothing to re-translate."], Severity.Info);
             _estimate = null;
         }
+    }
+
+    private async Task RetryFailed()
+    {
+        _working = true;
+        try
+        {
+            var count = await Mediator.Send(new RetryFailedTranslationsCommand());
+            Snackbar.Add(L["{0} texts re-queued. They spend against the ceiling on the coming nights.", count],
+                Severity.Success);
+        }
+        finally
+        {
+            _working = false;
+        }
+
+        await Load();
     }
 
     private async Task RetranslateAll()
