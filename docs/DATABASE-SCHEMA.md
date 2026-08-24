@@ -92,7 +92,7 @@ One SQL Server database, one EF Core `DbContext` ([`ChartAttemptDbContext`](../S
 
 | Table | Purpose |
 |---|---|
-| `scores.ChartVideo` | YouTube video links per chart with uploader metadata |
+| `scores.ChartVideo` | YouTube video links per chart with uploader metadata; `Side` (Left/Right, null) marks which half of a two-sided singles video the chart plays on ([video-sides.md](design/video-sides.md)) |
 | `scores.ChartSkill` | Skill tags on charts with highlight flags — regenerated per piucenter crawl since the PiuCenter integration (hand tags archived) |
 | `scores.ChartSkillArchive` | One-time snapshot of the pre-crawler hand-maintained ChartSkill rows; never read by the app |
 | `scores.ChartSkillMetric` | Banked per-chart numeric step-analysis facts per external source ((ChartId, Source, MetricName) → decimal + optional grade): badge fractions, top-3 ranks, practice ranks, NPS/sustain/difficulty prediction |

@@ -1,5 +1,6 @@
-using ScoreTracker.Catalog.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using ScoreTracker.Catalog.Infrastructure;
 using ScoreTracker.Data.Repositories;
 using ScoreTracker.SharedKernel.Enums;
 using ScoreTracker.SharedKernel.ValueTypes;
@@ -135,6 +136,119 @@ public sealed class EFChartRepositoryTests : IAsyncLifetime
 
         Assert.Equal(2, charts[coOpId].PlayerCount);
         Assert.Equal(1, charts[singleId].PlayerCount);
+    }
+
+    // --- Video sides (docs/design/video-sides.md) ---
+    // Sharing a URL between two of a song's singles IS the registration: the write paths
+    // recompute sides themselves, so the admin flows need no pairing support of their own.
+
+    private async Task<Guid> CreateSongAsync(EFChartRepository writer, string name)
+    {
+        return await writer.CreateSong(name, name,
+            new Uri("https://piuimages.arroweclip.se/songs/VideoSides.png"), SongType.Arcade,
+            TimeSpan.FromSeconds(100), "Doin", Bpm.From(150, 150));
+    }
+
+    [Fact]
+    public async Task CreateChartRegistersSidesWhenTwoSinglesOfOneSongShareAVideo()
+    {
+        await _seed.EnsurePhoenixMixAsync();
+        var writer = BuildRepository();
+        var songId = await CreateSongAsync(writer, "Uh-Heung");
+        var shared = new Uri("https://www.youtube.com/embed/ccccccccccc");
+        var lower = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 17,
+            "NEVSISTER", shared, "EXC");
+        var higher = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 22,
+            "NEVSISTER", shared, "EXC");
+
+        var videos = (await BuildRepository().GetChartVideoInformation(new[] { lower, higher }))
+            .ToDictionary(v => v.ChartId);
+
+        Assert.Equal(VideoSide.Left, videos[lower].Side);
+        Assert.Equal(VideoSide.Right, videos[higher].Side);
+        Assert.Equal(higher, videos[lower].PartnerChartId);
+        Assert.Equal(lower, videos[higher].PartnerChartId);
+    }
+
+    [Fact]
+    public async Task SetChartVideoMovingOneChartOffASharedVideoClearsTheStrandedPartnerToo()
+    {
+        await _seed.EnsurePhoenixMixAsync();
+        var writer = BuildRepository();
+        var songId = await CreateSongAsync(writer, "Uh-Heung");
+        var shared = new Uri("https://www.youtube.com/embed/ccccccccccc");
+        var lower = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 17,
+            "NEVSISTER", shared, "EXC");
+        var higher = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 22,
+            "NEVSISTER", shared, "EXC");
+
+        await writer.SetChartVideo(higher, new Uri("https://www.youtube.com/embed/ddddddddddd"),
+            "NEVSISTER");
+
+        var videos = (await BuildRepository().GetChartVideoInformation(new[] { lower, higher }))
+            .ToDictionary(v => v.ChartId);
+        Assert.Null(videos[lower].Side);
+        Assert.Null(videos[higher].Side);
+        Assert.Null(videos[lower].PartnerChartId);
+        Assert.Null(videos[higher].PartnerChartId);
+    }
+
+    [Fact]
+    public async Task ChartsOfDifferentSongsSharingAVideoGetNoSides()
+    {
+        // The cross-song mislink shape: each song sees a solo row and the URL's total row count
+        // says it is shared, so both stay sideless rather than pairing across songs.
+        await _seed.EnsurePhoenixMixAsync();
+        var writer = BuildRepository();
+        var shared = new Uri("https://www.youtube.com/embed/eeeeeeeeeee");
+        var songA = await CreateSongAsync(writer, "PICK ME");
+        var songB = await CreateSongAsync(writer, "Nekkoya");
+        var chartA = await writer.CreateChart(MixEnum.Phoenix, songA, ChartType.Single, 4,
+            "NEVSISTER", shared, "EXC");
+        var chartB = await writer.CreateChart(MixEnum.Phoenix, songB, ChartType.Single, 6,
+            "NEVSISTER", shared, "EXC");
+
+        var videos = (await BuildRepository().GetChartVideoInformation(new[] { chartA, chartB }))
+            .ToDictionary(v => v.ChartId);
+
+        Assert.Null(videos[chartA].Side);
+        Assert.Null(videos[chartB].Side);
+    }
+
+    [Fact]
+    public async Task RecomputePreservesHandResearchedSidesOnASinglePlusPerformancePair()
+    {
+        // S+SP sides come from watching the video, not from levels — a later write to the same
+        // song must leave them exactly as set.
+        await _seed.EnsurePhoenixMixAsync();
+        var writer = BuildRepository();
+        var songId = await CreateSongAsync(writer, "Come to Me");
+        var shared = new Uri("https://www.youtube.com/embed/fffffffffff");
+        var single = await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Single, 4,
+            "NEVSISTER", shared, "EXC");
+        var performance = await writer.CreateChart(MixEnum.Phoenix, songId,
+            ChartType.SinglePerformance, 3, "NEVSISTER", shared, "EXC");
+
+        await using (var ctx = await _fixture.DbContextFactory.CreateDbContextAsync())
+        {
+            var rows = await ctx.Set<ScoreTracker.Catalog.Infrastructure.Entities.ChartVideoEntity>()
+                .Where(v => v.ChartId == single || v.ChartId == performance)
+                .ToArrayAsync();
+            foreach (var row in rows)
+                row.Side = row.ChartId == performance ? "Left" : "Right";
+            await ctx.SaveChangesAsync();
+        }
+
+        // Any same-song write triggers the recompute; the S+SP pair must come through untouched.
+        await writer.CreateChart(MixEnum.Phoenix, songId, ChartType.Double, 20, "NEVSISTER",
+            new Uri("https://www.youtube.com/embed/ggggggggggg"), "EXC");
+
+        var videos = (await BuildRepository().GetChartVideoInformation(new[] { single, performance }))
+            .ToDictionary(v => v.ChartId);
+        Assert.Equal(VideoSide.Left, videos[performance].Side);
+        Assert.Equal(VideoSide.Right, videos[single].Side);
+        Assert.Equal(single, videos[performance].PartnerChartId);
+        Assert.Equal(performance, videos[single].PartnerChartId);
     }
 
     [Fact]

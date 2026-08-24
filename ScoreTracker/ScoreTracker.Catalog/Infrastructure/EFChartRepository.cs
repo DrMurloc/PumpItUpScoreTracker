@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using ScoreTracker.Data.Persistence;
+using ScoreTracker.Catalog.Domain;
 using ScoreTracker.Catalog.Infrastructure.Entities;
 using ScoreTracker.Data.Persistence.Entities;
 using ScoreTracker.SharedKernel.Enums;
@@ -64,9 +65,22 @@ internal sealed class EFChartRepository : IChartRepository
             || chartVideos == null)
         {
             await using var database = await _factory.CreateDbContextAsync(cancellationToken);
-            chartVideos = await database.Set<ChartVideoEntity>()
-                .Select(c => new ChartVideoInformation(c.ChartId, new Uri(c.VideoUrl), c.ChannelName))
-                .ToDictionaryAsync(c => c.ChartId, cancellationToken);
+            var rows = await database.Set<ChartVideoEntity>()
+                .Select(v => new { v.ChartId, v.VideoUrl, v.ChannelName, v.Side })
+                .ToArrayAsync(cancellationToken);
+            // A stored side is the pair-validity marker: sides only ever exist on a URL held by
+            // exactly one same-song singles pair, so the partner is simply the URL's other row —
+            // no song or type joins needed at read time.
+            var chartsOnUrl = rows.GroupBy(r => r.VideoUrl, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.ToArray(), StringComparer.Ordinal);
+            chartVideos = rows.ToDictionary(r => r.ChartId, r =>
+            {
+                var side = r.Side == null ? default(VideoSide?) : Enum.Parse<VideoSide>(r.Side);
+                var partner = side != null && chartsOnUrl[r.VideoUrl].Length == 2
+                    ? chartsOnUrl[r.VideoUrl].Single(o => o.ChartId != r.ChartId).ChartId
+                    : default(Guid?);
+                return new ChartVideoInformation(r.ChartId, new Uri(r.VideoUrl), r.ChannelName, side, partner);
+            });
 
             // One key holds the whole table, so an empty read asserts "no chart anywhere has a
             // video" — true only of a database still being filled, and a fortnight's expiry
@@ -133,6 +147,46 @@ internal sealed class EFChartRepository : IChartRepository
             entity.ChannelName = channelName;
         }
 
+        await database.SaveChangesAsync(cancellationToken);
+
+        var songId = await database.Chart.Where(c => c.Id == id).Select(c => (Guid?)c.SongId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (songId != null) await RecomputeVideoSidesForSong(database, songId.Value, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Re-derives the song's video sides after any video write, so pairing needs no call-site
+    ///     support: sharing a URL between two of the song's singles is itself the registration,
+    ///     and editing a URL away from a pair clears the stranded partner. Chart.Level is the
+    ///     comparison level — the write flows create a chart with the level of the mix being
+    ///     added, and no real same-song pair ties on it.
+    /// </summary>
+    private static async Task RecomputeVideoSidesForSong(ChartAttemptDbContext database, Guid songId,
+        CancellationToken cancellationToken)
+    {
+        var songRows = await (from v in database.Set<ChartVideoEntity>()
+            join c in database.Chart on v.ChartId equals c.Id
+            where c.SongId == songId
+            select new { Video = v, c.Type, c.Level }).ToArrayAsync(cancellationToken);
+        if (songRows.Length == 0) return;
+
+        // The assigner needs each URL's total row count to tell a same-song pair from a
+        // cross-song mislink, which must stay sideless.
+        var urls = songRows.Select(r => r.Video.VideoUrl).Distinct().ToArray();
+        var chartsOnUrl = await database.Set<ChartVideoEntity>()
+            .Where(v => urls.Contains(v.VideoUrl))
+            .GroupBy(v => v.VideoUrl)
+            .Select(g => new { Url = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.Url, g => g.Count, cancellationToken);
+
+        var sides = VideoSideAssigner.ComputeSides(
+            songRows.Select(r =>
+                    new VideoChart(r.Video.ChartId, Enum.Parse<ChartType>(r.Type), r.Level, r.Video.VideoUrl))
+                .ToArray(),
+            url => chartsOnUrl[url]);
+        foreach (var row in songRows)
+            if (sides.TryGetValue(row.Video.ChartId, out var side))
+                row.Video.Side = side?.ToString();
         await database.SaveChangesAsync(cancellationToken);
     }
 
@@ -388,6 +442,7 @@ internal sealed class EFChartRepository : IChartRepository
         await database.ChartMix.AddAsync(newChartMix, cancellationToken);
         await database.Set<ChartVideoEntity>().AddAsync(newChartVideo, cancellationToken);
         await database.SaveChangesAsync(cancellationToken);
+        await RecomputeVideoSidesForSong(database, songId, cancellationToken);
         return newChart.Id;
     }
 
